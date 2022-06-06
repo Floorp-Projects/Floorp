@@ -11,12 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { ServiceRequest } = ChromeUtils.import(
   "resource://gre/modules/ServiceRequest.jsm"
 );
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SharedUtils: "resource://services-settings/SharedUtils.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -62,7 +64,7 @@ XPCOMUtils.defineLazyGetter(lazy, "isRunningTests", () => {
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
 XPCOMUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
-  if (!lazy.AppConstants.RELEASE_OR_BETA) {
+  if (!AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;
   }
@@ -87,7 +89,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "gServerURL",
   "services.settings.server",
-  lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL
+  AppConstants.REMOTE_SETTINGS_SERVER_URL
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -105,7 +107,7 @@ var Utils = {
   get SERVER_URL() {
     return lazy.allowServerURLOverride
       ? lazy.gServerURL
-      : lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL;
+      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
@@ -116,7 +118,7 @@ var Utils = {
   log: lazy.log,
 
   get CERT_CHAIN_ROOT_IDENTIFIER() {
-    if (this.SERVER_URL == lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL) {
+    if (this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL) {
       return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
     }
     if (this.SERVER_URL.includes("stage.")) {
@@ -137,7 +139,7 @@ var Utils = {
   get LOAD_DUMPS() {
     // Load dumps only if pulling data from the production server, or in tests.
     return (
-      this.SERVER_URL == lazy.AppConstants.REMOTE_SETTINGS_SERVER_URL ||
+      this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL ||
       lazy.isRunningTests
     );
   },
