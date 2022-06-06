@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Deferred: "chrome://remote/content/shared/Sync.jsm",
   EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
   Log: "chrome://remote/content/shared/Log.jsm",
@@ -22,14 +24,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TCPListener: "chrome://remote/content/marionette/server.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
-XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+XPCOMUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "env",
   "@mozilla.org/process/environment;1",
   "nsIEnvironment"
@@ -76,11 +78,11 @@ class MarionetteParentProcess {
     this.helpInfo = "  --marionette       Enable remote control server.\n";
 
     // Initially set the enabled state based on the environment variable.
-    this.enabled = env.exists(ENV_ENABLED);
+    this.enabled = lazy.env.exists(ENV_ENABLED);
 
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
 
-    this.#browserStartupFinished = Deferred();
+    this.#browserStartupFinished = lazy.Deferred();
   }
 
   /**
@@ -105,7 +107,7 @@ class MarionetteParentProcess {
     }
 
     this._enabled = value;
-    logger.info(`Marionette enabled`);
+    lazy.logger.info(`Marionette enabled`);
   }
 
   get running() {
@@ -118,7 +120,7 @@ class MarionetteParentProcess {
         return this.running;
 
       default:
-        logger.warn("Unknown IPC message to parent process: " + name);
+        lazy.logger.warn("Unknown IPC message to parent process: " + name);
         return null;
     }
   }
@@ -135,7 +137,7 @@ class MarionetteParentProcess {
 
   async observe(subject, topic) {
     if (this.enabled) {
-      logger.trace(`Received observer notification ${topic}`);
+      lazy.logger.trace(`Received observer notification ${topic}`);
     }
 
     switch (topic) {
@@ -162,12 +164,14 @@ class MarionetteParentProcess {
             Services.obs.addObserver(this, "domwindowopened");
           }
 
-          RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
+          lazy.RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
           // Only set preferences to preserve in a new profile
           // when Marionette is enabled.
-          for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
-            Preferences.set(pref, value);
+          for (let [pref, value] of lazy.EnvironmentPrefs.from(
+            ENV_PRESERVE_PREFS
+          )) {
+            lazy.Preferences.set(pref, value);
           }
         }
         break;
@@ -212,7 +216,7 @@ class MarionetteParentProcess {
         let dialog = win.document.getElementById("safeModeDialog");
         if (dialog) {
           // accept the dialog to start in safe-mode
-          logger.trace("Safe mode detected, supressing dialog");
+          lazy.logger.trace("Safe mode detected, supressing dialog");
           win.setTimeout(() => {
             dialog.getButton("accept").click();
           });
@@ -224,25 +228,25 @@ class MarionetteParentProcess {
 
   async init() {
     if (!this.enabled || this.running) {
-      logger.debug(
+      lazy.logger.debug(
         `Init aborted (enabled=${this.enabled}, running=${this.running})`
       );
       return;
     }
 
     try {
-      this.server = new TCPListener(MarionettePrefs.port);
+      this.server = new lazy.TCPListener(lazy.MarionettePrefs.port);
       this.server.start();
     } catch (e) {
-      logger.fatal("Marionette server failed to start", e);
+      lazy.logger.fatal("Marionette server failed to start", e);
       await this.uninit();
       Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       return;
     }
 
-    env.set(ENV_ENABLED, "1");
+    lazy.env.set(ENV_ENABLED, "1");
     Services.obs.notifyObservers(this, NOTIFY_LISTENING, true);
-    logger.debug("Marionette is listening");
+    lazy.logger.debug("Marionette is listening");
 
     // Write Marionette port to MarionetteActivePort file within the profile.
     this._activePortPath = PathUtils.join(
@@ -252,9 +256,11 @@ class MarionetteParentProcess {
 
     const data = `${this.server.port}`;
     try {
-      await IOUtils.write(this._activePortPath, textEncoder.encode(data));
+      await IOUtils.write(this._activePortPath, lazy.textEncoder.encode(data));
     } catch (e) {
-      logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
+      lazy.logger.warn(
+        `Failed to create ${this._activePortPath} (${e.message})`
+      );
     }
   }
 
@@ -262,12 +268,14 @@ class MarionetteParentProcess {
     if (this.running) {
       this.server.stop();
       Services.obs.notifyObservers(this, NOTIFY_LISTENING);
-      logger.debug("Marionette stopped listening");
+      lazy.logger.debug("Marionette stopped listening");
 
       try {
         await IOUtils.remove(this._activePortPath);
       } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
+        lazy.logger.warn(
+          `Failed to remove ${this._activePortPath} (${e.message})`
+        );
       }
     }
   }
@@ -289,7 +297,7 @@ class MarionetteContentProcess {
   get running() {
     let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
     if (reply.length == 0) {
-      logger.warn("No reply from parent process");
+      lazy.logger.warn("No reply from parent process");
       return false;
     }
     return reply[0];
