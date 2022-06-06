@@ -1698,9 +1698,15 @@ void nsJSContext::MaybePokeGC() {
   }
 
   JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
-  if (JS::IsIdleGCTaskNeeded(rt)) {
-    sScheduler.PokeMinorGC(JS::GCReason::EAGER_NURSERY_COLLECTION);
+  JS::GCReason reason = JS::WantEagerMinorGC(rt);
+  if (reason != JS::GCReason::NO_REASON) {
+    MOZ_ASSERT(reason == JS::GCReason::EAGER_NURSERY_COLLECTION);
+    sScheduler.PokeMinorGC(reason);
   }
+
+  // Bug 1772638: For now, only do eager minor GCs. Eager major GCs regress some
+  // benchmarks. Hopefully that will be worked out and this will check for
+  // whether an eager major GC is needed.
 }
 
 void nsJSContext::DoLowMemoryGC() {

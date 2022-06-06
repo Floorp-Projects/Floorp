@@ -331,6 +331,7 @@ class GCRuntime {
   bool triggerZoneGC(Zone* zone, JS::GCReason reason, size_t usedBytes,
                      size_t thresholdBytes);
   void maybeGC();
+  JS::GCReason wantMajorGC();
   bool checkEagerAllocTrigger(const HeapSize& size,
                               const HeapThreshold& threshold);
   // The return value indicates whether a major GC was performed.
