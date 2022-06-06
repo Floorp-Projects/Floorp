@@ -463,6 +463,10 @@ def verify_options(parser, args):
     if args.binary is None and args.app != "chrome-m":
         parser.error("--binary is required!")
 
+    # Debug-mode is disabled in CI (check for attribute in case of mach_interface issues)
+    if hasattr(args, "run_local") and (not args.run_local and args.debug_mode):
+        parser.error("Cannot run debug mode in CI")
+
     # make sure that browsertime_video is set if visual metrics are requested
     if args.browsertime_visualmetrics and not args.browsertime_video:
         args.browsertime_video = True

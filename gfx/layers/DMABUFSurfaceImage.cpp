@@ -37,69 +37,8 @@ DMABUFSurfaceImage::~DMABUFSurfaceImage() {
   mSurface->GlobalRefRelease();
 }
 
-StaticRefPtr<GLContext> sSnapshotContext;
-static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
-
 already_AddRefed<gfx::SourceSurface> DMABUFSurfaceImage::GetAsSourceSurface() {
-  StaticMutexAutoLock lock(sSnapshotContextMutex);
-  if (!sSnapshotContext) {
-    nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
-    if (!sSnapshotContext) {
-      gfxCriticalError() << "Failed to create snapshot GLContext.";
-      return nullptr;
-    }
-  }
-
-  sSnapshotContext->MakeCurrent();
-
-  auto releaseTextures =
-      mozilla::MakeScopeExit([&] { mSurface->ReleaseTextures(); });
-
-  for (int i = 0; i < mSurface->GetTextureCount(); i++) {
-    if (!mSurface->GetTexture(i) &&
-        !mSurface->CreateTexture(sSnapshotContext, i)) {
-      gfxCriticalError()
-          << "GetAsSourceSurface: Failed to create DMABuf textures.";
-      return nullptr;
-    }
-  }
-
-  ScopedTexture scopedTex(sSnapshotContext);
-  ScopedBindTexture boundTex(sSnapshotContext, scopedTex.Texture());
-
-  gfx::IntSize size = GetSize();
-  sSnapshotContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA,
-                                size.width, size.height, 0, LOCAL_GL_RGBA,
-                                LOCAL_GL_UNSIGNED_BYTE, nullptr);
-
-  ScopedFramebufferForTexture autoFBForTex(sSnapshotContext,
-                                           scopedTex.Texture());
-  if (!autoFBForTex.IsComplete()) {
-    gfxCriticalError()
-        << "GetAsSourceSurface: ScopedFramebufferForTexture failed.";
-    return nullptr;
-  }
-
-  const gl::OriginPos destOrigin = gl::OriginPos::BottomLeft;
-  {
-    const ScopedBindFramebuffer bindFB(sSnapshotContext, autoFBForTex.FB());
-    if (!sSnapshotContext->BlitHelper()->BlitImageToFramebuffer(this, size,
-                                                                destOrigin)) {
-      return nullptr;
-    }
-  }
-
-  RefPtr<gfx::DataSourceSurface> source =
-      gfx::Factory::CreateDataSourceSurface(size, gfx::SurfaceFormat::B8G8R8A8);
-  if (NS_WARN_IF(!source)) {
-    return nullptr;
-  }
-
-  ScopedBindFramebuffer bind(sSnapshotContext, autoFBForTex.FB());
-  ReadPixelsIntoDataSurface(sSnapshotContext, source);
-
-  return source.forget();
+  return mSurface->GetAsSourceSurface();
 }
 
 TextureClient* DMABUFSurfaceImage::GetTextureClient(
