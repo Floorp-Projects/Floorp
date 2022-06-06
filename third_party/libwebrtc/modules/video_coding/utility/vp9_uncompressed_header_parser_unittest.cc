@@ -55,11 +55,7 @@ TEST(Vp9UncompressedHeaderParserTest, FrameWithSegmentation) {
   EXPECT_EQ(frame_info->updated_buffers, 0b10000000);
   EXPECT_EQ(frame_info->tile_cols_log2, 0u);
   EXPECT_EQ(frame_info->tile_rows_log2, 0u);
-  EXPECT_THAT(
-      frame_info->render_size_position,
-      Optional(AllOf(
-          Field(&Vp9UncompressedHeader::BitstreamPosition::byte_offset, 8u),
-          Field(&Vp9UncompressedHeader::BitstreamPosition::bit_offset, 0u))));
+  EXPECT_EQ(frame_info->render_size_offset_bits, 64u);
   EXPECT_EQ(frame_info->compressed_header_size, 23u);
   EXPECT_EQ(frame_info->uncompressed_header_size, 37u);
 
