@@ -9,6 +9,7 @@ const EXPORTED_SYMBOLS = ["ExperimentManager", "_ExperimentManager"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
@@ -18,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   FirstStartup: "resource://gre/modules/FirstStartup.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {

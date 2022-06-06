@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -19,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 const DEFAULT_EXTENSION_ICON =

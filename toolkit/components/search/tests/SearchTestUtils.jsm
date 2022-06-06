@@ -7,6 +7,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -14,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 

@@ -9,11 +9,11 @@ var EXPORTED_SYMBOLS = ["UrlbarView"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   L10nCache: "resource:///modules/UrlbarUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",

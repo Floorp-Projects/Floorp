@@ -9,11 +9,11 @@ var EXPORTED_SYMBOLS = ["Sqlite"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   Log: "resource://gre/modules/Log.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",

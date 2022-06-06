@@ -9,10 +9,10 @@ var EXPORTED_SYMBOLS = ["InteractionsBlocklist"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 

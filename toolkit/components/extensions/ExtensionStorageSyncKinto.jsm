@@ -44,6 +44,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -56,7 +57,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Kinto: "resource://services-common/kinto-offline-client.js",
   FirefoxAdapter: "resource://services-common/kinto-storage-adapter.js",
   Observers: "resource://services-common/observers.js",
-  Services: "resource://gre/modules/Services.jsm",
   Utils: "resource://services-sync/util.js",
 });
 

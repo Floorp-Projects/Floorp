@@ -6,13 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["TabManager"];
 
-var { XPCOMUtils } = ChromeUtils.import(
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   EventPromise: "chrome://remote/content/shared/Sync.jsm",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.jsm",

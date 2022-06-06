@@ -17,12 +17,12 @@ const EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "d3", () => {

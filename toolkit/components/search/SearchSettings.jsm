@@ -7,11 +7,11 @@ var EXPORTED_SYMBOLS = ["SearchSettings"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", () => {

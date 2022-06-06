@@ -9,10 +9,10 @@ var EXPORTED_SYMBOLS = ["SearchSuggestionController"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";

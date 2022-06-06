@@ -7,11 +7,11 @@ var EXPORTED_SYMBOLS = ["BuiltInThemes"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 const kActiveThemePref = "extensions.activeThemeID";

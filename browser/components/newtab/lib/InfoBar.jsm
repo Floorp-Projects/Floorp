@@ -6,11 +6,11 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 class InfoBarNotification {

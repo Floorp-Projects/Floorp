@@ -9,9 +9,9 @@ var EXPORTED_SYMBOLS = ["AppUpdater"];
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 

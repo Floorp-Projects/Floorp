@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UITour"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -22,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
