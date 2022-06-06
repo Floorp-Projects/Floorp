@@ -7,13 +7,13 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",

@@ -6,13 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CDPConnection: "chrome://remote/content/cdp/CDPConnection.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
 });
 

@@ -6,6 +6,7 @@
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -18,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PushService: "resource://gre/modules/PushService.jsm",
   PushServiceHttp2: "resource://gre/modules/PushService.jsm",
   PushServiceWebSocket: "resource://gre/modules/PushService.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 var {
   clearInterval,

@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -23,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSettings: "resource://gre/modules/SearchSettings.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 

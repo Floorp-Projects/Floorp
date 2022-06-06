@@ -13,6 +13,7 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -23,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
