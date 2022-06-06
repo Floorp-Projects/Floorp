@@ -59,14 +59,12 @@ std::unique_ptr<NetEqController> CreateNetEqController(
     const NetEqControllerFactory& controller_factory,
     int base_min_delay,
     int max_packets_in_buffer,
-    bool enable_rtx_handling,
     bool allow_time_stretching,
     TickTimer* tick_timer,
     webrtc::Clock* clock) {
   NetEqController::Config config;
   config.base_min_delay_ms = base_min_delay;
   config.max_packets_in_buffer = max_packets_in_buffer;
-  config.enable_rtx_handling = enable_rtx_handling;
   config.allow_time_stretching = allow_time_stretching;
   config.tick_timer = tick_timer;
   config.clock = clock;
@@ -111,7 +109,6 @@ NetEqImpl::Dependencies::Dependencies(
           CreateNetEqController(controller_factory,
                                 config.min_delay_ms,
                                 config.max_packets_in_buffer,
-                                config.enable_rtx_handling,
                                 !config.for_test_no_time_stretching,
                                 tick_timer.get(),
                                 clock)),
@@ -158,7 +155,6 @@ NetEqImpl::NetEqImpl(const NetEq::Config& config,
                                 10,  // Report once every 10 s.
                                 tick_timer_.get()),
       no_time_stretching_(config.for_test_no_time_stretching),
-      enable_rtx_handling_(config.enable_rtx_handling),
       output_delay_chain_ms_(
           GetDelayChainLengthMs(config.extra_output_delay_ms)),
       output_delay_chain_(rtc::CheckedDivExact(output_delay_chain_ms_, 10)) {
@@ -825,14 +821,8 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
   info.main_sequence_number = main_sequence_number;
   info.is_dtx = is_dtx;
   info.buffer_flush = buffer_flush_occured;
-  // Only update statistics if incoming packet is not older than last played
-  // out packet or RTX handling is enabled, and if new codec flag is not
-  // set.
-  const bool should_update_stats =
-      (enable_rtx_handling_ ||
-       static_cast<int32_t>(main_timestamp - timestamp_) >= 0) &&
-      !new_codec_;
 
+  const bool should_update_stats = !new_codec_;
   auto relative_delay =
       controller_->PacketArrived(fs_hz_, should_update_stats, info);
   if (relative_delay) {
