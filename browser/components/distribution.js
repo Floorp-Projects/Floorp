@@ -14,18 +14,19 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -120,14 +121,14 @@ DistributionCustomizer.prototype = {
   },
 
   async _removeDistributionBookmarks() {
-    await PlacesUtils.bookmarks.fetch(
+    await lazy.PlacesUtils.bookmarks.fetch(
       { guidPrefix: this.BOOKMARK_GUID_PREFIX },
-      bookmark => PlacesUtils.bookmarks.remove(bookmark).catch()
+      bookmark => lazy.PlacesUtils.bookmarks.remove(bookmark).catch()
     );
-    await PlacesUtils.bookmarks.fetch(
+    await lazy.PlacesUtils.bookmarks.fetch(
       { guidPrefix: this.FOLDER_GUID_PREFIX },
       folder => {
-        PlacesUtils.bookmarks.remove(folder).catch();
+        lazy.PlacesUtils.bookmarks.remove(folder).catch();
       }
     );
   },
@@ -178,7 +179,7 @@ DistributionCustomizer.prototype = {
         continue;
       }
 
-      let index = PlacesUtils.bookmarks.DEFAULT_INDEX;
+      let index = lazy.PlacesUtils.bookmarks.DEFAULT_INDEX;
       let item = items[itemIndex];
 
       switch (item.type) {
@@ -190,9 +191,11 @@ DistributionCustomizer.prototype = {
             index = prependIndex++;
           }
 
-          let folder = await PlacesUtils.bookmarks.insert({
-            type: PlacesUtils.bookmarks.TYPE_FOLDER,
-            guid: PlacesUtils.generateGuidWithPrefix(this.FOLDER_GUID_PREFIX),
+          let folder = await lazy.PlacesUtils.bookmarks.insert({
+            type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+            guid: lazy.PlacesUtils.generateGuidWithPrefix(
+              this.FOLDER_GUID_PREFIX
+            ),
             parentGuid,
             index,
             title: item.title,
@@ -209,8 +212,8 @@ DistributionCustomizer.prototype = {
             index = prependIndex++;
           }
 
-          await PlacesUtils.bookmarks.insert({
-            type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          await lazy.PlacesUtils.bookmarks.insert({
+            type: lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR,
             parentGuid,
             index,
           });
@@ -226,7 +229,7 @@ DistributionCustomizer.prototype = {
             index = prependIndex++;
           }
 
-          await PlacesUtils.bookmarks.insert({
+          await lazy.PlacesUtils.bookmarks.insert({
             parentGuid,
             index,
             title: item.title,
@@ -240,8 +243,10 @@ DistributionCustomizer.prototype = {
             index = prependIndex++;
           }
 
-          await PlacesUtils.bookmarks.insert({
-            guid: PlacesUtils.generateGuidWithPrefix(this.BOOKMARK_GUID_PREFIX),
+          await lazy.PlacesUtils.bookmarks.insert({
+            guid: lazy.PlacesUtils.generateGuidWithPrefix(
+              this.BOOKMARK_GUID_PREFIX
+            ),
             parentGuid,
             index,
             title: item.title,
@@ -251,18 +256,18 @@ DistributionCustomizer.prototype = {
           if (item.icon && item.iconData) {
             try {
               let faviconURI = Services.io.newURI(item.icon);
-              PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+              lazy.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
                 faviconURI,
                 item.iconData,
                 0,
                 Services.scriptSecurityManager.getSystemPrincipal()
               );
 
-              PlacesUtils.favicons.setAndFetchFaviconForPage(
+              lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
                 Services.io.newURI(item.link),
                 faviconURI,
                 false,
-                PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+                lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
                 null,
                 Services.scriptSecurityManager.getSystemPrincipal()
               );
@@ -308,7 +313,7 @@ DistributionCustomizer.prototype = {
         "ntp-okru@corp.mail.ru",
       ];
       for (let extensionID of extensionIDs) {
-        let addon = await AddonManager.getAddonByID(extensionID);
+        let addon = await lazy.AddonManager.getAddonByID(extensionID);
         if (addon) {
           await addon.disable();
         }
@@ -369,13 +374,13 @@ DistributionCustomizer.prototype = {
     if (!resetDate) {
       if (sections.BookmarksMenu) {
         await this._parseBookmarksSection(
-          PlacesUtils.bookmarks.menuGuid,
+          lazy.PlacesUtils.bookmarks.menuGuid,
           "BookmarksMenu"
         );
       }
       if (sections.BookmarksToolbar) {
         await this._parseBookmarksSection(
-          PlacesUtils.bookmarks.toolbarGuid,
+          lazy.PlacesUtils.bookmarks.toolbarGuid,
           "BookmarksToolbar"
         );
       }
@@ -406,7 +411,7 @@ DistributionCustomizer.prototype = {
       return this._checkCustomizationComplete();
     }
 
-    let defaults = new Preferences({ defaultBranch: true });
+    let defaults = new lazy.Preferences({ defaultBranch: true });
 
     // Global really contains info we set as prefs.  They're only
     // separate because they are "special" (read: required)
