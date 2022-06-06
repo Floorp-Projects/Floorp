@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
 });
 
@@ -73,7 +75,7 @@ function getBrowserActionWidgetId(extensionId) {
 }
 
 function getBrowserActionWidget(extensionId) {
-  return CustomizableUI.getWidget(getBrowserActionWidgetId(extensionId));
+  return lazy.CustomizableUI.getWidget(getBrowserActionWidgetId(extensionId));
 }
 
 async function showBrowserAction(window, extensionId) {
@@ -83,9 +85,9 @@ async function showBrowserAction(window, extensionId) {
     return;
   }
 
-  if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
+  if (group.areaType == lazy.CustomizableUI.TYPE_TOOLBAR) {
     Assert.ok(!widget.overflowed, "Expect widget not to be overflowed");
-  } else if (group.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+  } else if (group.areaType == lazy.CustomizableUI.TYPE_MENU_PANEL) {
     await window.document.getElementById("nav-bar").overflowable.show();
   }
 }
@@ -165,7 +167,7 @@ function closeBrowserAction(window, extensionId) {
   let group = getBrowserActionWidget(extensionId);
 
   let node = window.document.getElementById(group.viewId);
-  CustomizableUI.hidePanelForNode(node);
+  lazy.CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
 }
