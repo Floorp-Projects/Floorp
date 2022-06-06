@@ -15,7 +15,9 @@ const { RemotePageChild } = ChromeUtils.import(
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
 });
@@ -47,9 +49,9 @@ class AboutPrivateBrowsingChild extends RemotePageChild {
 
   PrivateBrowsingRecordClick(source) {
     const experiment =
-      ExperimentAPI.getExperimentMetaData({
+      lazy.ExperimentAPI.getExperimentMetaData({
         featureId: "privatebrowsing",
-      }) || ExperimentAPI.getExperimentMetaData({ featureId: "pbNewtab" });
+      }) || lazy.ExperimentAPI.getExperimentMetaData({ featureId: "pbNewtab" });
     if (experiment) {
       Services.telemetry.recordEvent("aboutprivatebrowsing", "click", source);
     }
@@ -57,18 +59,18 @@ class AboutPrivateBrowsingChild extends RemotePageChild {
   }
 
   PrivateBrowsingShouldHideDefault() {
-    const config = NimbusFeatures.pbNewtab.getAllVariables() || {};
+    const config = lazy.NimbusFeatures.pbNewtab.getAllVariables() || {};
     return config?.content?.hideDefault;
   }
 
   PrivateBrowsingExposureTelemetry() {
-    NimbusFeatures.pbNewtab.recordExposureEvent({ once: false });
+    lazy.NimbusFeatures.pbNewtab.recordExposureEvent({ once: false });
   }
 
   PrivateBrowsingFeatureConfig() {
-    const config = NimbusFeatures.privatebrowsing.getAllVariables() || {};
+    const config = lazy.NimbusFeatures.privatebrowsing.getAllVariables() || {};
 
-    NimbusFeatures.privatebrowsing.recordExposureEvent();
+    lazy.NimbusFeatures.privatebrowsing.recordExposureEvent();
 
     // Format urls if any are defined
     ["infoLinkUrl", "promoLinkUrl"].forEach(key => {

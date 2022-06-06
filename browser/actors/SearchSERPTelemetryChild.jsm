@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -162,13 +164,13 @@ class SearchSERPTelemetryChild extends JSWindowActorChild {
   handleEvent(event) {
     const cancelCheck = () => {
       if (this._waitForContentTimeout) {
-        clearTimeout(this._waitForContentTimeout);
+        lazy.clearTimeout(this._waitForContentTimeout);
       }
     };
 
     const check = () => {
       cancelCheck();
-      this._waitForContentTimeout = setTimeout(() => {
+      this._waitForContentTimeout = lazy.setTimeout(() => {
         this._checkForAdLink();
       }, ADLINK_CHECK_TIMEOUT_MS);
     };

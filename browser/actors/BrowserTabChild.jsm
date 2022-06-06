@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -87,7 +89,7 @@ class BrowserTabChild extends JSWindowActorChild {
         }
 
         try {
-          E10SUtils.wrapHandlingUserInput(
+          lazy.E10SUtils.wrapHandlingUserInput(
             this.document.defaultView,
             message.data.handlingUserInput,
             () => webNav.reload(reloadFlags)

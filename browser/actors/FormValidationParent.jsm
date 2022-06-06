@@ -10,8 +10,10 @@
 
 var EXPORTED_SYMBOLS = ["FormValidationParent"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
@@ -53,7 +55,7 @@ class FormValidationParent extends JSWindowActorParent {
   }
 
   static hasOpenPopups() {
-    for (let win of BrowserWindowTracker.orderedWindows) {
+    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       let popups = win.document.querySelectorAll("panel,menupopup");
       for (let popup of popups) {
         let { state } = popup;

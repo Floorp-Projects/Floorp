@@ -10,24 +10,26 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -101,13 +103,15 @@ class ClickHandlerChild extends JSWindowActorChild {
       return;
     }
 
-    let [href, node, principal] = BrowserUtils.hrefAndLinkNodeForClickEvent(
-      event
-    );
+    let [
+      href,
+      node,
+      principal,
+    ] = lazy.BrowserUtils.hrefAndLinkNodeForClickEvent(event);
 
     let csp = ownerDoc.csp;
     if (csp) {
-      csp = E10SUtils.serializeCSP(csp);
+      csp = lazy.E10SUtils.serializeCSP(csp);
     }
 
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
@@ -118,8 +122,8 @@ class ClickHandlerChild extends JSWindowActorChild {
     } else {
       referrerInfo.initWithDocument(ownerDoc);
     }
-    referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
-    let frameID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
+    referrerInfo = lazy.E10SUtils.serializeReferrerInfo(referrerInfo);
+    let frameID = lazy.WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 
     let json = {
       button: event.button,
@@ -134,7 +138,7 @@ class ClickHandlerChild extends JSWindowActorChild {
       csp,
       referrerInfo,
       originAttributes: principal ? principal.originAttributes : {},
-      isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(
+      isContentWindowPrivate: lazy.PrivateBrowsingUtils.isContentWindowPrivate(
         ownerDoc.defaultView
       ),
     };
@@ -151,7 +155,7 @@ class ClickHandlerChild extends JSWindowActorChild {
 
       if (
         !event.isTrusted &&
-        BrowserUtils.whereToOpenLink(event) != "current"
+        lazy.BrowserUtils.whereToOpenLink(event) != "current"
       ) {
         // If we'll open the link, we want to consume the user gesture
         // activation to ensure that we don't allow multiple links to open

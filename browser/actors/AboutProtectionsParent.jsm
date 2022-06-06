@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
@@ -23,14 +25,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Region: "resource://gre/modules/Region.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
@@ -175,8 +177,8 @@ class AboutProtectionsParent extends JSWindowActorParent {
     }
 
     try {
-      if (await fxAccounts.getSignedInUser()) {
-        await fxAccounts.device.refreshDeviceList();
+      if (await lazy.fxAccounts.getSignedInUser()) {
+        await lazy.fxAccounts.device.refreshDeviceList();
       }
     } catch (e) {
       Cu.reportError("There was an error fetching login data: ", e.message);
@@ -184,21 +186,25 @@ class AboutProtectionsParent extends JSWindowActorParent {
 
     const userFacingLogins =
       Services.logins.countLogins("", "", "") -
-      Services.logins.countLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      Services.logins.countLogins(
+        lazy.FXA_PWDMGR_HOST,
+        null,
+        lazy.FXA_PWDMGR_REALM
+      );
 
     let potentiallyBreachedLogins = null;
     // Get the stats for number of potentially breached Lockwise passwords
     // if the Primary Password isn't locked.
     if (userFacingLogins && Services.logins.isLoggedIn) {
-      const logins = await LoginHelper.getAllUserFacingLogins();
-      potentiallyBreachedLogins = await LoginBreaches.getPotentialBreachesByLoginGUID(
+      const logins = await lazy.LoginHelper.getAllUserFacingLogins();
+      potentiallyBreachedLogins = await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(
         logins
       );
     }
 
     let mobileDeviceConnected =
-      fxAccounts.device.recentDeviceList &&
-      fxAccounts.device.recentDeviceList.filter(
+      lazy.fxAccounts.device.recentDeviceList &&
+      lazy.fxAccounts.device.recentDeviceList.filter(
         device => device.type == "mobile"
       ).length;
 
@@ -240,7 +246,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
 
         // Send back user's email so the protections report can direct them to the proper
         // OAuth flow on Monitor.
-        const { email } = await fxAccounts.getSignedInUser();
+        const { email } = await lazy.fxAccounts.getSignedInUser();
         userEmail = email;
       } else {
         // If no account exists, then the user is not logged in with an fxAccount.
@@ -256,7 +262,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
       // again. If OAuth token is invalid after the second fetch, then the monitor UI
       // will simply show the "no logins" UI version.
       if (e.message === INVALID_OAUTH_TOKEN) {
-        await fxAccounts.removeCachedOAuthToken({ token });
+        await lazy.fxAccounts.removeCachedOAuthToken({ token });
         token = await this.getMonitorScopedOAuthToken();
 
         try {
@@ -267,7 +273,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
       } else if (e.message === USER_UNSUBSCRIBED_TO_MONITOR) {
         // Send back user's email so the protections report can direct them to the proper
         // OAuth flow on Monitor.
-        const { email } = await fxAccounts.getSignedInUser();
+        const { email } = await lazy.fxAccounts.getSignedInUser();
         userEmail = email;
       } else {
         monitorData.errorMessage = e.message || "An error ocurred.";
@@ -285,7 +291,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
     let token = null;
 
     try {
-      token = await fxAccounts.getOAuthToken({ scope: SCOPE_MONITOR });
+      token = await lazy.fxAccounts.getOAuthToken({ scope: SCOPE_MONITOR });
     } catch (e) {
       Cu.reportError(
         "There was an error fetching the user's token: ",
@@ -301,12 +307,12 @@ class AboutProtectionsParent extends JSWindowActorParent {
    * and does not yet have Proxy installed.
    */
   async shouldShowProxyCard() {
-    const region = Region.home || "";
+    const region = lazy.Region.home || "";
     const languages = Services.prefs.getComplexValue(
       "intl.accept_languages",
       Ci.nsIPrefLocalizedString
     );
-    const alreadyInstalled = await AddonManager.getAddonByID(
+    const alreadyInstalled = await lazy.AddonManager.getAddonByID(
       SECURE_PROXY_ADDON_ID
     );
 
@@ -325,7 +331,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
 
     let vpnToken;
     try {
-      vpnToken = await fxAccounts.getOAuthToken({ scope: SCOPE_VPN });
+      vpnToken = await lazy.fxAccounts.getOAuthToken({ scope: SCOPE_VPN });
     } catch (e) {
       Cu.reportError(
         "There was an error fetching the user's token: ",
@@ -355,7 +361,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
     let win = this.browsingContext.top.embedderElement.ownerGlobal;
     switch (aMessage.name) {
       case "OpenAboutLogins":
-        LoginHelper.openPasswordManager(win, {
+        lazy.LoginHelper.openPasswordManager(win, {
           entryPoint: "aboutprotections",
         });
         break;
@@ -379,13 +385,13 @@ class AboutProtectionsParent extends JSWindowActorParent {
         let weekdays = [7, 1, 2, 3, 4, 5, 6].map(day => displayNames.of(day));
         dataToSend.weekdays = weekdays;
 
-        if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+        if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
           dataToSend.isPrivate = true;
           return dataToSend;
         }
-        let sumEvents = await TrackingDBService.sumAllEvents();
-        let earliestDate = await TrackingDBService.getEarliestRecordedDate();
-        let eventsByDate = await TrackingDBService.getEventsByDateRange(
+        let sumEvents = await lazy.TrackingDBService.sumAllEvents();
+        let earliestDate = await lazy.TrackingDBService.getEarliestRecordedDate();
+        let eventsByDate = await lazy.TrackingDBService.getEventsByDateRange(
           aMessage.data.from,
           aMessage.data.to
         );
@@ -435,7 +441,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
         return this.VPNSubStatus();
 
       case "FetchShowVPNCard":
-        return BrowserUtils.shouldShowVPNPromo();
+        return lazy.BrowserUtils.shouldShowVPNPromo();
     }
 
     return undefined;

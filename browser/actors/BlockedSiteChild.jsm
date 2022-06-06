@@ -7,8 +7,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SafeBrowsing",
   "resource://gre/modules/SafeBrowsing.jsm"
 );
@@ -94,7 +96,7 @@ class BlockedSiteChild extends JSWindowActorChild {
           .getElementById("report_detection")
           .setAttribute(
             "href",
-            SafeBrowsing.getReportURL("MalwareMistake", blockedInfo)
+            lazy.SafeBrowsing.getReportURL("MalwareMistake", blockedInfo)
           );
         break;
       case "unwanted":
@@ -110,7 +112,7 @@ class BlockedSiteChild extends JSWindowActorChild {
           .getElementById("report_detection")
           .setAttribute(
             "href",
-            SafeBrowsing.getReportURL("PhishMistake", blockedInfo) ||
+            lazy.SafeBrowsing.getReportURL("PhishMistake", blockedInfo) ||
               "https://safebrowsing.google.com/safebrowsing/report_error/?tpl=mozilla"
           );
         doc

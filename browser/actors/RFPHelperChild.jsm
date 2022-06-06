@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "isLetterboxingEnabled",
   kPrefLetterboxing,
   false
@@ -20,7 +22,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 class RFPHelperChild extends JSWindowActorChild {
   handleEvent(event) {
-    if (isLetterboxingEnabled && event.type == "resize") {
+    if (lazy.isLetterboxingEnabled && event.type == "resize") {
       this.sendAsyncMessage("Letterboxing:ContentSizeUpdated");
     }
   }

@@ -5,14 +5,15 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["AboutPocketParent"];
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SaveToPocket",
   "chrome://pocket/content/SaveToPocket.jsm"
 );
@@ -66,13 +67,13 @@ class AboutPocketParent extends JSWindowActorParent {
         break;
       }
       case "PKT_getTags": {
-        this.sendResponseMessageToPanel("PKT_getTags", pktApi.getTags());
+        this.sendResponseMessageToPanel("PKT_getTags", lazy.pktApi.getTags());
         break;
       }
       case "PKT_getSuggestedTags": {
         // Ask for suggested tags based on passed url
         const result = await new Promise(resolve => {
-          pktApi.getSuggestedTagsForURL(message.data.url, {
+          lazy.pktApi.getSuggestedTagsForURL(message.data.url, {
             success: data => {
               var successResponse = {
                 status: "success",
@@ -95,7 +96,7 @@ class AboutPocketParent extends JSWindowActorParent {
       case "PKT_addTags": {
         // Pass url and array list of tags, add to existing save item accordingly
         const result = await new Promise(resolve => {
-          pktApi.addTagsToURL(message.data.url, message.data.tags, {
+          lazy.pktApi.addTagsToURL(message.data.url, message.data.tags, {
             success: () => resolve({ status: "success" }),
             error: error => resolve({ status: "error", error }),
           });
@@ -110,10 +111,10 @@ class AboutPocketParent extends JSWindowActorParent {
       case "PKT_deleteItem": {
         // Based on clicking "remove page" CTA, and passed unique item id, remove the item
         const result = await new Promise(resolve => {
-          pktApi.deleteItem(message.data.itemId, {
+          lazy.pktApi.deleteItem(message.data.itemId, {
             success: () => {
               resolve({ status: "success" });
-              SaveToPocket.itemDeleted();
+              lazy.SaveToPocket.itemDeleted();
             },
             error: error => resolve({ status: "error", error }),
           });

@@ -13,8 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "MediaManagerService",
   "@mozilla.org/mediaManagerService;1",
   "nsIMediaManagerService"
@@ -535,7 +536,7 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
     window = {},
     browser = {},
     devices = {};
-  MediaManagerService.mediaCaptureWindowState(
+  lazy.MediaManagerService.mediaCaptureWindowState(
     aContentWindow,
     camera,
     microphone,
@@ -546,11 +547,11 @@ function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
   );
 
   if (
-    camera.value == MediaManagerService.STATE_NOCAPTURE &&
-    microphone.value == MediaManagerService.STATE_NOCAPTURE &&
-    screen.value == MediaManagerService.STATE_NOCAPTURE &&
-    window.value == MediaManagerService.STATE_NOCAPTURE &&
-    browser.value == MediaManagerService.STATE_NOCAPTURE
+    camera.value == lazy.MediaManagerService.STATE_NOCAPTURE &&
+    microphone.value == lazy.MediaManagerService.STATE_NOCAPTURE &&
+    screen.value == lazy.MediaManagerService.STATE_NOCAPTURE &&
+    window.value == lazy.MediaManagerService.STATE_NOCAPTURE &&
+    browser.value == lazy.MediaManagerService.STATE_NOCAPTURE
   ) {
     return { remove: true };
   }

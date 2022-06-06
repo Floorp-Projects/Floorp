@@ -9,7 +9,8 @@ var EXPORTED_SYMBOLS = ["AboutTabCrashedParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
 });
@@ -39,26 +40,26 @@ class AboutTabCrashedParent extends JSWindowActorParent {
         gAboutTabCrashedPages.set(this, browser);
         this.updateTabCrashedCount();
 
-        let report = TabCrashHandler.onAboutTabCrashedLoad(browser);
+        let report = lazy.TabCrashHandler.onAboutTabCrashedLoad(browser);
         this.sendAsyncMessage("SetCrashReportAvailable", report);
         break;
       }
 
       case "closeTab": {
-        TabCrashHandler.maybeSendCrashReport(browser, message);
+        lazy.TabCrashHandler.maybeSendCrashReport(browser, message);
         gBrowser.removeTab(tab, { animate: true });
         break;
       }
 
       case "restoreTab": {
-        TabCrashHandler.maybeSendCrashReport(browser, message);
-        SessionStore.reviveCrashedTab(tab);
+        lazy.TabCrashHandler.maybeSendCrashReport(browser, message);
+        lazy.SessionStore.reviveCrashedTab(tab);
         break;
       }
 
       case "restoreAll": {
-        TabCrashHandler.maybeSendCrashReport(browser, message);
-        SessionStore.reviveAllCrashedTabs();
+        lazy.TabCrashHandler.maybeSendCrashReport(browser, message);
+        lazy.SessionStore.reviveAllCrashedTabs();
         break;
       }
     }
@@ -72,7 +73,7 @@ class AboutTabCrashedParent extends JSWindowActorParent {
     gAboutTabCrashedPages.delete(this);
     this.updateTabCrashedCount();
 
-    TabCrashHandler.onAboutTabCrashedUnload(browser);
+    lazy.TabCrashHandler.onAboutTabCrashedUnload(browser);
   }
 
   updateTabCrashedCount() {

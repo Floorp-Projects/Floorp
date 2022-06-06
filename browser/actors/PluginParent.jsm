@@ -15,13 +15,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
   return Services.strings.createBundle(url);
 });
@@ -92,10 +94,14 @@ const PluginManager = {
     }
 
     let { pluginDumpID } = report;
-    CrashSubmit.submit(pluginDumpID, CrashSubmit.SUBMITTED_FROM_CRASH_TAB, {
-      recordSubmission: true,
-      extraExtraKeyVals: keyVals,
-    });
+    lazy.CrashSubmit.submit(
+      pluginDumpID,
+      lazy.CrashSubmit.SUBMITTED_FROM_CRASH_TAB,
+      {
+        recordSubmission: true,
+        extraExtraKeyVals: keyVals,
+      }
+    );
 
     this.gmpCrashes.delete(pluginCrashID.pluginID);
   },
@@ -147,10 +153,10 @@ class PluginParent extends JSWindowActorParent {
     // Configure the notification bar
     let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
     let iconURL = "chrome://global/skin/icons/plugin.svg";
-    let reloadLabel = gNavigatorBundle.GetStringFromName(
+    let reloadLabel = lazy.gNavigatorBundle.GetStringFromName(
       "crashedpluginsMessage.reloadButton.label"
     );
-    let reloadKey = gNavigatorBundle.GetStringFromName(
+    let reloadKey = lazy.gNavigatorBundle.GetStringFromName(
       "crashedpluginsMessage.reloadButton.accesskey"
     );
 
@@ -166,10 +172,10 @@ class PluginParent extends JSWindowActorParent {
     ];
 
     if (AppConstants.MOZ_CRASHREPORTER) {
-      let submitLabel = gNavigatorBundle.GetStringFromName(
+      let submitLabel = lazy.gNavigatorBundle.GetStringFromName(
         "crashedpluginsMessage.submitButton.label"
       );
-      let submitKey = gNavigatorBundle.GetStringFromName(
+      let submitKey = lazy.gNavigatorBundle.GetStringFromName(
         "crashedpluginsMessage.submitButton.accesskey"
       );
       let submitButton = {
@@ -184,7 +190,7 @@ class PluginParent extends JSWindowActorParent {
       buttons.push(submitButton);
     }
 
-    let messageString = gNavigatorBundle.formatStringFromName(
+    let messageString = lazy.gNavigatorBundle.formatStringFromName(
       "crashedpluginsMessage.title",
       [report.pluginName]
     );
@@ -204,7 +210,7 @@ class PluginParent extends JSWindowActorParent {
     });
     link.setAttribute(
       "value",
-      gNavigatorBundle.GetStringFromName("crashedpluginsMessage.learnMore")
+      lazy.gNavigatorBundle.GetStringFromName("crashedpluginsMessage.learnMore")
     );
     let crashurl = Services.urlFormatter.formatURLPref("app.support.baseURL");
     crashurl += "plugin-crashed-notificationbar";

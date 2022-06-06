@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -91,7 +93,7 @@ class PageInfoChild extends JSWindowActorChild {
     docInfo.characterSet = document.characterSet;
     docInfo.lastModified = document.lastModified;
     docInfo.principal = document.nodePrincipal;
-    docInfo.cookieJarSettings = E10SUtils.serializeCookieJarSettings(
+    docInfo.cookieJarSettings = lazy.E10SUtils.serializeCookieJarSettings(
       document.cookieJarSettings
     );
 
@@ -99,7 +101,7 @@ class PageInfoChild extends JSWindowActorChild {
     documentURIObject.spec = document.documentURIObject.spec;
     docInfo.documentURIObject = documentURIObject;
 
-    docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(
+    docInfo.isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
       document.ownerGlobal
     );
 
@@ -126,7 +128,7 @@ class PageInfoChild extends JSWindowActorChild {
 
       if (++nodeCount % 500 == 0) {
         // setTimeout every 500 elements so we don't keep blocking the content process.
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => lazy.setTimeout(resolve, 10));
       }
       totalMediaItems.push(...mediaItems);
     }

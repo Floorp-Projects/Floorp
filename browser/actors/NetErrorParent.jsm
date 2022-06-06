@@ -24,14 +24,16 @@ const PREF_SSL_IMPACT_ROOTS = [
   "security.tls13.",
 ];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gSerializationHelper",
   "@mozilla.org/network/serialization-helper;1",
   "nsISerializationHelper"
@@ -82,7 +84,7 @@ class NetErrorParent extends JSWindowActorParent {
       return null;
     }
 
-    let securityInfo = gSerializationHelper.deserializeObject(
+    let securityInfo = lazy.gSerializationHelper.deserializeObject(
       securityInfoAsString
     );
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -226,13 +228,13 @@ class NetErrorParent extends JSWindowActorParent {
             !Services.prefs.getBoolPref("security.enterprise_roots.enabled")
           ) {
             // Loading enterprise roots happens on a background thread, so wait for import to finish.
-            BrowserUtils.promiseObserved("psm:enterprise-certs-imported").then(
-              () => {
-                if (browser.documentURI.spec.startsWith("about:certerror")) {
-                  browser.reload();
-                }
+            lazy.BrowserUtils.promiseObserved(
+              "psm:enterprise-certs-imported"
+            ).then(() => {
+              if (browser.documentURI.spec.startsWith("about:certerror")) {
+                browser.reload();
               }
-            );
+            });
 
             Services.prefs.setBoolPref(
               "security.enterprise_roots.enabled",
