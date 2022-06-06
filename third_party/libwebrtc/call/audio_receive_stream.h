@@ -97,9 +97,6 @@ class AudioReceiveStream : public MediaReceiveStream {
     uint32_t sender_reports_packets_sent = 0;
     uint64_t sender_reports_bytes_sent = 0;
     uint64_t sender_reports_reports_count = 0;
-    absl::optional<TimeDelta> round_trip_time;
-    TimeDelta total_round_trip_time = TimeDelta::Zero();
-    int round_trip_time_measurements;
   };
 
   struct Config {
@@ -120,9 +117,6 @@ class AudioReceiveStream : public MediaReceiveStream {
 
       RtcpEventObserver* rtcp_event_observer = nullptr;
     } rtp;
-
-    // Receive-side RTT.
-    bool enable_non_sender_rtt = false;
 
     Transport* rtcp_send_transport = nullptr;
 
@@ -167,8 +161,6 @@ class AudioReceiveStream : public MediaReceiveStream {
   virtual void SetDecoderMap(std::map<int, SdpAudioFormat> decoder_map) = 0;
   virtual void SetUseTransportCcAndNackHistory(bool use_transport_cc,
                                                int history_ms) = 0;
-  virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
-
   // Set/change the rtp header extensions. Must be called on the packet
   // delivery thread.
   virtual void SetRtpExtensions(std::vector<RtpExtension> extensions) = 0;

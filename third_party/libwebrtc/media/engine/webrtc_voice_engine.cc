@@ -255,7 +255,6 @@ webrtc::AudioReceiveStream::Config BuildReceiveStreamConfig(
     uint32_t local_ssrc,
     bool use_transport_cc,
     bool use_nack,
-    bool enable_non_sender_rtt,
     const std::vector<std::string>& stream_ids,
     const std::vector<webrtc::RtpExtension>& extensions,
     webrtc::Transport* rtcp_send_transport,
@@ -279,7 +278,6 @@ webrtc::AudioReceiveStream::Config BuildReceiveStreamConfig(
   }
   config.rtp.extensions = extensions;
   config.rtcp_send_transport = rtcp_send_transport;
-  config.enable_non_sender_rtt = enable_non_sender_rtt;
   config.decoder_factory = decoder_factory;
   config.decoder_map = decoder_map;
   config.codec_pair_id = codec_pair_id;
@@ -1247,11 +1245,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
                                              use_nack ? kNackRtpHistoryMs : 0);
   }
 
-  void SetNonSenderRttMeasurement(bool enabled) {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    stream_->SetNonSenderRttMeasurement(enabled);
-  }
-
   void SetRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     stream_->SetRtpExtensions(extensions);
@@ -1722,7 +1715,6 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
       }
       send_codec_spec->transport_cc_enabled = HasTransportCc(voice_codec);
       send_codec_spec->nack_enabled = HasNack(voice_codec);
-      send_codec_spec->enable_non_sender_rtt = HasRrtr(voice_codec);
       bitrate_config = GetBitrateConfigForCodec(voice_codec);
       break;
     }
@@ -1798,24 +1790,13 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
   // preferred send codec, and in that case reconfigure all receive streams.
   if (recv_transport_cc_enabled_ != send_codec_spec_->transport_cc_enabled ||
       recv_nack_enabled_ != send_codec_spec_->nack_enabled) {
-    RTC_LOG(LS_INFO) << "Changing transport cc and NACK status on receive "
-                        "streams.";
+    RTC_LOG(LS_INFO) << "Recreate all the receive streams because the send "
+                        "codec has changed.";
     recv_transport_cc_enabled_ = send_codec_spec_->transport_cc_enabled;
     recv_nack_enabled_ = send_codec_spec_->nack_enabled;
-    enable_non_sender_rtt_ = send_codec_spec_->enable_non_sender_rtt;
     for (auto& kv : recv_streams_) {
       kv.second->SetUseTransportCc(recv_transport_cc_enabled_,
                                    recv_nack_enabled_);
-    }
-  }
-
-  // Check if the receive-side RTT status has changed on the preferred send
-  // codec, in that case reconfigure all receive streams.
-  if (enable_non_sender_rtt_ != send_codec_spec_->enable_non_sender_rtt) {
-    RTC_LOG(LS_INFO) << "Changing receive-side RTT status on receive streams.";
-    enable_non_sender_rtt_ = send_codec_spec_->enable_non_sender_rtt;
-    for (auto& kv : recv_streams_) {
-      kv.second->SetNonSenderRttMeasurement(enable_non_sender_rtt_);
     }
   }
 
@@ -1982,9 +1963,9 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
   // Create a new channel for receiving audio data.
   auto config = BuildReceiveStreamConfig(
       ssrc, receiver_reports_ssrc_, recv_transport_cc_enabled_,
-      recv_nack_enabled_, enable_non_sender_rtt_, sp.stream_ids(),
-      recv_rtp_extensions_, this, engine()->decoder_factory_, decoder_map_,
-      codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
+      recv_nack_enabled_, sp.stream_ids(), recv_rtp_extensions_, this,
+      engine()->decoder_factory_, decoder_map_, codec_pair_id_,
+      engine()->audio_jitter_buffer_max_packets_,
       engine()->audio_jitter_buffer_fast_accelerate_,
       engine()->audio_jitter_buffer_min_delay_ms_,
       engine()->audio_jitter_buffer_enable_rtx_handling_,
@@ -2443,9 +2424,6 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
     rinfo.sender_reports_packets_sent = stats.sender_reports_packets_sent;
     rinfo.sender_reports_bytes_sent = stats.sender_reports_bytes_sent;
     rinfo.sender_reports_reports_count = stats.sender_reports_reports_count;
-    rinfo.round_trip_time = stats.round_trip_time;
-    rinfo.round_trip_time_measurements = stats.round_trip_time_measurements;
-    rinfo.total_round_trip_time = stats.total_round_trip_time;
 
     if (recv_nack_enabled_) {
       rinfo.nacks_sent = stats.nacks_sent;

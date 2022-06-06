@@ -559,17 +559,6 @@ ModuleRtpRtcpImpl2::GetSenderReportStats() const {
   return absl::nullopt;
 }
 
-absl::optional<RtpRtcpInterface::NonSenderRttStats>
-ModuleRtpRtcpImpl2::GetNonSenderRttStats() const {
-  RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
-      rtcp_receiver_.GetNonSenderRTT();
-  return {{
-      non_sender_rtt_stats.round_trip_time(),
-      non_sender_rtt_stats.total_round_trip_time(),
-      non_sender_rtt_stats.round_trip_time_measurements(),
-  }};
-}
-
 // (REMB) Receiver Estimated Max Bitrate.
 void ModuleRtpRtcpImpl2::SetRemb(int64_t bitrate_bps,
                                  std::vector<uint32_t> ssrcs) {
