@@ -47,6 +47,11 @@ class ErrorBuffer {
     return errorBuf;
   }
 
+  // If an error message was stored in this buffer, return Some(m)
+  // where m is the message as a UTF-8 nsCString. Otherwise, return Nothing.
+  //
+  // Mark this ErrorBuffer as having been handled, so its destructor
+  // won't assert.
   Maybe<nsCString> GetError() {
     mGuard = false;
     if (!mUtf8[0]) {
@@ -244,6 +249,8 @@ bool WebGPUParent::ForwardError(RawId aDeviceId, ErrorBuffer& aError) {
   return true;
 }
 
+// Generate an error on the Device timeline of aDeviceId.
+// aMessage is interpreted as UTF-8.
 void WebGPUParent::ReportError(RawId aDeviceId, const nsCString& aMessage) {
   // find the appropriate error scope
   const auto& lookup = mErrorScopeMap.find(aDeviceId);

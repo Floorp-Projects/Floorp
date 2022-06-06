@@ -94,6 +94,9 @@ void Device::CleanupUnregisteredInParent() {
   mValid = false;
 }
 
+// Generate an error on the Device timeline for this device.
+//
+// aMessage is interpreted as UTF-8.
 void Device::GenerateError(const nsCString& aMessage) {
   if (mBridge->CanSend()) {
     mBridge->SendGenerateError(mId, aMessage);

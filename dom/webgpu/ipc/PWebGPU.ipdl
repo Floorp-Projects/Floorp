@@ -71,7 +71,10 @@ parent:
   async DevicePushErrorScope(RawId selfId);
   async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);
 
+  // Generate an error on the Device timeline for `deviceId`.
+  // The `message` parameter is interpreted as UTF-8.
   async GenerateError(RawId deviceId, nsCString message);
+
 child:
   async DeviceUncapturedError(RawId aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);

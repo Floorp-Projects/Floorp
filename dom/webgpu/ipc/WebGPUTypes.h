@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include "mozilla/Maybe.h"
+#include "nsString.h"
 
 namespace mozilla::webgpu {
 
@@ -15,7 +16,12 @@ using RawId = uint64_t;
 using BufferAddress = uint64_t;
 
 struct ScopedError {
+  // Did an error occur as a result the attempt to retrieve an error
+  // (e.g. from a dead device, from an empty scope stack)?
   bool operationError = false;
+
+  // If non-empty, the first error generated when this scope was on
+  // the top of the stack. This is interpreted as UTF-8.
   nsCString validationMessage;
 };
 using MaybeScopedError = Maybe<ScopedError>;
