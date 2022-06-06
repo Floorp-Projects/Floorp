@@ -7,8 +7,9 @@
 var EXPORTED_SYMBOLS = ["BrowserTestUtilsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -327,7 +328,7 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
 
     let result;
 
-    E10SUtils.wrapHandlingUserInput(window, data.handlingUserInput, () => {
+    lazy.E10SUtils.wrapHandlingUserInput(window, data.handlingUserInput, () => {
       if (data.event && data.event.wheel) {
         this.EventUtils.synthesizeWheelAtPoint(left, top, data.event, window);
       } else {
