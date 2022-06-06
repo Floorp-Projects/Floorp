@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
 });
@@ -443,7 +445,7 @@ var ScreenshotsUtils = {
         filename += ".png";
       }
 
-      const downloadsDir = await Downloads.getPreferredDownloadsDirectory();
+      const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
       const downloadsDirExists = await IOUtils.exists(downloadsDir);
       if (downloadsDirExists) {
         // If filename is absolute, it will override the downloads directory and
@@ -452,15 +454,15 @@ var ScreenshotsUtils = {
       }
 
       const sourceURI = Services.io.newURI(url);
-      const targetFile = new FileUtils.File(filename);
+      const targetFile = new lazy.FileUtils.File(filename);
 
       // Create download and track its progress.
       try {
-        const download = await Downloads.createDownload({
+        const download = await lazy.Downloads.createDownload({
           source: sourceURI,
           target: targetFile,
         });
-        const list = await Downloads.getList(Downloads.ALL);
+        const list = await lazy.Downloads.getList(lazy.Downloads.ALL);
         // add the download to the download list in the Downloads list in the Browser UI
         list.add(download);
 

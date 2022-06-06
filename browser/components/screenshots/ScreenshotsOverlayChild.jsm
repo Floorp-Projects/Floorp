@@ -46,7 +46,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "overlayLocalization", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "overlayLocalization", () => {
   return new Localization(["browser/screenshotsOverlay.ftl"], true);
 });
 
@@ -261,7 +263,7 @@ class AnonymousContentOverlay {
       instrustions,
       download,
       copy,
-    ] = overlayLocalization.formatMessagesSync([
+    ] = lazy.overlayLocalization.formatMessagesSync([
       { id: "screenshots-overlay-cancel-button" },
       { id: "screenshots-overlay-instructions" },
       { id: "screenshots-overlay-download-button" },
