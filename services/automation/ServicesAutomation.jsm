@@ -28,11 +28,11 @@ var EXPORTED_SYMBOLS = ["Sync", "Authentication", "initConfig", "triggerSync"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Services: "resource://gre/modules/Services.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Weave: "resource://services-sync/main.js",
   Svc: "resource://services-sync/util.js",
@@ -146,7 +146,7 @@ var Authentication = {
 
   async _confirmUser(uri) {
     LOG("Open new tab and load verification page");
-    let mainWindow = lazy.Services.wm.getMostRecentWindow("navigator:browser");
+    let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let newtab = mainWindow.gBrowser.addWebTab(uri);
     let win = mainWindow.gBrowser.getBrowserForTab(newtab);
     win.addEventListener("load", function(e) {
@@ -414,7 +414,7 @@ var Sync = {
 };
 
 function initConfig(autoconfig) {
-  lazy.Services.prefs.setCharPref(AUTOCONFIG_PREF, autoconfig);
+  Services.prefs.setCharPref(AUTOCONFIG_PREF, autoconfig);
 }
 
 async function triggerSync(username, password, autoconfig) {

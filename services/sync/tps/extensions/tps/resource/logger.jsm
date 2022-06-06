@@ -12,12 +12,12 @@ var EXPORTED_SYMBOLS = ["Logger"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 var Logger = {
@@ -32,9 +32,9 @@ var Logger = {
     }
 
     if (path) {
-      lazy.Services.prefs.setCharPref("tps.logfile", path);
+      Services.prefs.setCharPref("tps.logfile", path);
     } else {
-      path = lazy.Services.prefs.getCharPref("tps.logfile");
+      path = Services.prefs.getCharPref("tps.logfile");
     }
 
     this._file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
