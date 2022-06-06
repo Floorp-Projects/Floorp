@@ -4,8 +4,10 @@
 
 var EXPORTED_SYMBOLS = ["MockColorPicker"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "WrapPrivileged",
   "resource://specialpowers/WrapPrivileged.jsm"
 );
@@ -90,7 +92,7 @@ MockColorPickerInstance.prototype = {
           if (MockColorPicker.showCallback != this.showCallback) {
             this.showCallback = MockColorPicker.showCallback;
             if (Cu.isXrayWrapper(this.window)) {
-              this.showCallbackWrapped = WrapPrivileged.wrapCallback(
+              this.showCallbackWrapped = lazy.WrapPrivileged.wrapCallback(
                 MockColorPicker.showCallback,
                 this.window
               );
