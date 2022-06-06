@@ -12,7 +12,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
   gExternalProtocolService: [
     "@mozilla.org/uriloader/external-protocol-service;1",
@@ -26,7 +28,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gXulStore: ["@mozilla.org/xul/xulstore;1", "nsIXULStore"],
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
@@ -44,7 +46,7 @@ let env = Cc["@mozilla.org/process/environment;1"].getService(
 );
 const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "Policies.jsm",
@@ -155,44 +157,44 @@ var Policies = {
       let pinParts = param.split(".");
 
       if (pinParts.length < 2) {
-        log.error("AppUpdatePin has too few dots.");
+        lazy.log.error("AppUpdatePin has too few dots.");
         return false;
       }
       if (pinParts.length > 3) {
-        log.error("AppUpdatePin has too many dots.");
+        lazy.log.error("AppUpdatePin has too many dots.");
         return false;
       }
 
       const trailingPinPart = pinParts.pop();
       if (trailingPinPart != "") {
-        log.error("AppUpdatePin does not end with a trailing dot.");
+        lazy.log.error("AppUpdatePin does not end with a trailing dot.");
         return false;
       }
 
       const pinMajorVersionStr = pinParts.shift();
       if (!pinMajorVersionStr.length) {
-        log.error("AppUpdatePin's major version is empty.");
+        lazy.log.error("AppUpdatePin's major version is empty.");
         return false;
       }
       if (!/^\d+$/.test(pinMajorVersionStr)) {
-        log.error(
+        lazy.log.error(
           "AppUpdatePin's major version contains a non-numeric character."
         );
         return false;
       }
       if (/^0/.test(pinMajorVersionStr)) {
-        log.error("AppUpdatePin's major version contains a leading 0.");
+        lazy.log.error("AppUpdatePin's major version contains a leading 0.");
         return false;
       }
       const pinMajorVersionInt = parseInt(pinMajorVersionStr, 10);
       if (isNaN(pinMajorVersionInt)) {
-        log.error(
+        lazy.log.error(
           "AppUpdatePin's major version could not be parsed to an integer."
         );
         return false;
       }
       if (pinMajorVersionInt < earliestPinMajorVersion) {
-        log.error(
+        lazy.log.error(
           `AppUpdatePin must not be earlier than '${earliestPinMajorVersion}.${earliestPinMinorVersion}.'.`
         );
         return false;
@@ -201,22 +203,22 @@ var Policies = {
       if (pinParts.length) {
         const pinMinorVersionStr = pinParts.shift();
         if (!pinMinorVersionStr.length) {
-          log.error("AppUpdatePin's minor version is empty.");
+          lazy.log.error("AppUpdatePin's minor version is empty.");
           return false;
         }
         if (!/^\d+$/.test(pinMinorVersionStr)) {
-          log.error(
+          lazy.log.error(
             "AppUpdatePin's minor version contains a non-numeric character."
           );
           return false;
         }
         if (/^0\d/.test(pinMinorVersionStr)) {
-          log.error("AppUpdatePin's minor version contains a leading 0.");
+          lazy.log.error("AppUpdatePin's minor version contains a leading 0.");
           return false;
         }
         const pinMinorVersionInt = parseInt(pinMinorVersionStr, 10);
         if (isNaN(pinMinorVersionInt)) {
-          log.error(
+          lazy.log.error(
             "AppUpdatePin's minor version could not be parsed to an integer."
           );
           return false;
@@ -225,7 +227,7 @@ var Policies = {
           pinMajorVersionInt == earliestPinMajorVersion &&
           pinMinorVersionInt < earliestPinMinorVersion
         ) {
-          log.error(
+          lazy.log.error(
             `AppUpdatePin must not be earlier than '${earliestPinMajorVersion}.${earliestPinMinorVersion}.'.`
           );
           return false;
@@ -369,7 +371,7 @@ var Policies = {
 
   Bookmarks: {
     onAllWindowsRestored(manager, param) {
-      BookmarksPolicies.processBookmarks(param);
+      lazy.BookmarksPolicies.processBookmarks(param);
     },
   },
 
@@ -429,13 +431,13 @@ var Policies = {
             try {
               file = await File.createFromNsIFile(certfile);
             } catch (e) {
-              log.error(`Unable to find certificate - ${certfilename}`);
+              lazy.log.error(`Unable to find certificate - ${certfilename}`);
               continue;
             }
             let reader = new FileReader();
             reader.onloadend = function() {
               if (reader.readyState != reader.DONE) {
-                log.error(`Unable to read certificate - ${certfile.path}`);
+                lazy.log.error(`Unable to read certificate - ${certfile.path}`);
                 return;
               }
               let certFile = reader.result;
@@ -445,21 +447,26 @@ var Policies = {
               }
               let cert;
               try {
-                cert = gCertDB.constructX509(certFileArray);
+                cert = lazy.gCertDB.constructX509(certFileArray);
               } catch (e) {
-                log.debug(
+                lazy.log.debug(
                   `constructX509 failed with error '${e}' - trying constructX509FromBase64.`
                 );
                 try {
                   // It might be PEM instead of DER.
-                  cert = gCertDB.constructX509FromBase64(pemToBase64(certFile));
+                  cert = lazy.gCertDB.constructX509FromBase64(
+                    pemToBase64(certFile)
+                  );
                 } catch (ex) {
-                  log.error(`Unable to add certificate - ${certfile.path}`, ex);
+                  lazy.log.error(
+                    `Unable to add certificate - ${certfile.path}`,
+                    ex
+                  );
                 }
               }
               if (cert) {
                 if (
-                  gCertDB.isCertTrusted(
+                  lazy.gCertDB.isCertTrusted(
                     cert,
                     Ci.nsIX509Cert.CA_CERT,
                     Ci.nsIX509CertDB.TRUSTED_SSL
@@ -469,10 +476,13 @@ var Policies = {
                   return;
                 }
                 try {
-                  gCertDB.addCert(certFile, "CT,CT,");
+                  lazy.gCertDB.addCert(certFile, "CT,CT,");
                 } catch (e) {
                   // It might be PEM instead of DER.
-                  gCertDB.addCertFromBase64(pemToBase64(certFile), "CT,CT,");
+                  lazy.gCertDB.addCertFromBase64(
+                    pemToBase64(certFile),
+                    "CT,CT,"
+                  );
                 }
               }
             };
@@ -499,7 +509,7 @@ var Policies = {
               Ci.nsIPermissionManager.EXPIRE_POLICY
             );
           } catch (ex) {
-            log.error(
+            lazy.log.error(
               `Unable to add cookie session permission - ${origin.href}`
             );
           }
@@ -861,7 +871,7 @@ var Policies = {
         let visibilityPref = "browser.toolbars.bookmarks.visibility";
         let visibility = param ? "always" : "newtab";
         Services.prefs.setCharPref(visibilityPref, visibility);
-        gXulStore.setValue(
+        lazy.gXulStore.setValue(
           BROWSER_DOCUMENT_URL,
           "PersonalToolbar",
           "collapsed",
@@ -894,7 +904,7 @@ var Policies = {
         // If this policy was already applied and the user chose to re-hide the
         // menu bar, do not show it again.
         runOncePerModification("displayMenuBar", value, () => {
-          gXulStore.setValue(
+          lazy.gXulStore.setValue(
             BROWSER_DOCUMENT_URL,
             "toolbar-menubar",
             "autohide",
@@ -912,7 +922,7 @@ var Policies = {
             value = "true";
             break;
         }
-        gXulStore.setValue(
+        lazy.gXulStore.setValue(
           BROWSER_DOCUMENT_URL,
           "toolbar-menubar",
           "autohide",
@@ -1038,14 +1048,18 @@ var Policies = {
             Services.prefs.clearUserPref(
               "browser.policies.runOncePerModification.extensionsInstall"
             );
-            let addons = await AddonManager.getAddonsByIDs(param.Uninstall);
+            let addons = await lazy.AddonManager.getAddonsByIDs(
+              param.Uninstall
+            );
             for (let addon of addons) {
               if (addon) {
                 try {
                   await addon.uninstall();
                 } catch (e) {
                   // This can fail for add-ons that can't be uninstalled.
-                  log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
+                  lazy.log.debug(
+                    `Add-on ID (${addon.id}) couldn't be uninstalled.`
+                  );
                 }
               }
             }
@@ -1064,7 +1078,7 @@ var Policies = {
                 // We need to try as a file first because
                 // Windows paths are valid URIs.
                 // This is done for legacy support (old API)
-                let xpiFile = new FileUtils.File(location);
+                let xpiFile = new lazy.FileUtils.File(location);
                 uri = Services.io.newFileURI(xpiFile);
               } catch (e) {
                 uri = Services.io.newURI(location);
@@ -1088,7 +1102,7 @@ var Policies = {
       try {
         manager.setExtensionSettings(param);
       } catch (e) {
-        log.error("Invalid ExtensionSettings");
+        lazy.log.error("Invalid ExtensionSettings");
       }
     },
     async onBeforeUIStartup(manager, param) {
@@ -1122,7 +1136,7 @@ var Policies = {
           );
         }
       }
-      let addons = await AddonManager.getAllAddons();
+      let addons = await lazy.AddonManager.getAllAddons();
       let allowedExtensions = [];
       for (let extensionID in extensionSettings) {
         if (extensionID == "*") {
@@ -1161,12 +1175,14 @@ var Policies = {
           ) {
             if (addons.find(addon => addon.id == extensionID)) {
               // Can't use the addon from getActiveAddons since it doesn't have uninstall.
-              let addon = await AddonManager.getAddonByID(extensionID);
+              let addon = await lazy.AddonManager.getAddonByID(extensionID);
               try {
                 await addon.uninstall();
               } catch (e) {
                 // This can fail for add-ons that can't be uninstalled.
-                log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
+                lazy.log.debug(
+                  `Add-on ID (${addon.id}) couldn't be uninstalled.`
+                );
               }
             }
           }
@@ -1177,18 +1193,22 @@ var Policies = {
           if (
             addon.isSystem ||
             addon.isBuiltin ||
-            !(addon.scope & AddonManager.SCOPE_PROFILE)
+            !(addon.scope & lazy.AddonManager.SCOPE_PROFILE)
           ) {
             continue;
           }
           if (!allowedExtensions.includes(addon.id)) {
             try {
               // Can't use the addon from getActiveAddons since it doesn't have uninstall.
-              let addonToUninstall = await AddonManager.getAddonByID(addon.id);
+              let addonToUninstall = await lazy.AddonManager.getAddonByID(
+                addon.id
+              );
               await addonToUninstall.uninstall();
             } catch (e) {
               // This can fail for add-ons that can't be uninstalled.
-              log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
+              lazy.log.debug(
+                `Add-on ID (${addon.id}) couldn't be uninstalled.`
+              );
             }
           }
         }
@@ -1290,7 +1310,10 @@ var Policies = {
       if ("mimeTypes" in param) {
         for (let mimeType in param.mimeTypes) {
           let mimeInfo = param.mimeTypes[mimeType];
-          let realMIMEInfo = gMIMEService.getFromTypeAndExtension(mimeType, "");
+          let realMIMEInfo = lazy.gMIMEService.getFromTypeAndExtension(
+            mimeType,
+            ""
+          );
           processMIMEInfo(mimeInfo, realMIMEInfo);
         }
       }
@@ -1298,20 +1321,20 @@ var Policies = {
         for (let extension in param.extensions) {
           let mimeInfo = param.extensions[extension];
           try {
-            let realMIMEInfo = gMIMEService.getFromTypeAndExtension(
+            let realMIMEInfo = lazy.gMIMEService.getFromTypeAndExtension(
               "",
               extension
             );
             processMIMEInfo(mimeInfo, realMIMEInfo);
           } catch (e) {
-            log.error(`Invalid file extension (${extension})`);
+            lazy.log.error(`Invalid file extension (${extension})`);
           }
         }
       }
       if ("schemes" in param) {
         for (let scheme in param.schemes) {
           let handlerInfo = param.schemes[scheme];
-          let realHandlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
+          let realHandlerInfo = lazy.gExternalProtocolService.getProtocolHandlerInfo(
             scheme
           );
           processMIMEInfo(handlerInfo, realHandlerInfo);
@@ -1497,7 +1520,7 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       let policies = Services.policies.getActivePolicies();
       if ("OfferToSaveLogins" in policies) {
-        log.error(
+        lazy.log.error(
           `OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.`
         );
       } else {
@@ -1714,14 +1737,14 @@ var Policies = {
 
       for (let preference in param) {
         if (blockedPrefs.includes(preference)) {
-          log.error(
+          lazy.log.error(
             `Unable to set preference ${preference}. Preference not allowed for security reasons.`
           );
           continue;
         }
         if (preference.startsWith("security.")) {
           if (!allowedSecurityPrefs.includes(preference)) {
-            log.error(
+            lazy.log.error(
               `Unable to set preference ${preference}. Preference not allowed for security reasons.`
             );
             continue;
@@ -1729,7 +1752,7 @@ var Policies = {
         } else if (
           !allowedPrefixes.some(prefix => preference.startsWith(prefix))
         ) {
-          log.error(
+          lazy.log.error(
             `Unable to set preference ${preference}. Preference not allowed for stability reasons.`
           );
           continue;
@@ -1781,7 +1804,7 @@ var Policies = {
                 break;
             }
           } catch (e) {
-            log.error(
+            lazy.log.error(
               `Unable to set preference ${preference}. Probable type mismatch.`
             );
           }
@@ -1814,9 +1837,9 @@ var Policies = {
     onBeforeAddons(manager, param) {
       if (param.Locked) {
         manager.disallowFeature("changeProxySettings");
-        ProxyPolicies.configureProxySettings(param, setAndLockPref);
+        lazy.ProxyPolicies.configureProxySettings(param, setAndLockPref);
       } else {
-        ProxyPolicies.configureProxySettings(
+        lazy.ProxyPolicies.configureProxySettings(
           param,
           PoliciesUtils.setDefaultPref
         );
@@ -1972,13 +1995,14 @@ var Policies = {
       // bar, don't move it again.
       runOncePerModification("searchInNavBar", param, () => {
         if (param == "separate") {
-          CustomizableUI.addWidgetToArea(
+          lazy.CustomizableUI.addWidgetToArea(
             "search-container",
-            CustomizableUI.AREA_NAVBAR,
-            CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
+            lazy.CustomizableUI.AREA_NAVBAR,
+            lazy.CustomizableUI.getPlacementOfWidget("urlbar-container")
+              .position + 1
           );
         } else if (param == "unified") {
-          CustomizableUI.removeWidgetFromArea("search-container");
+          lazy.CustomizableUI.removeWidgetFromArea("search-container");
         }
       });
     },
@@ -2004,7 +2028,7 @@ var Policies = {
                   try {
                     await Services.search.removeEngine(engine);
                   } catch (ex) {
-                    log.error("Unable to remove the search engine", ex);
+                    lazy.log.error("Unable to remove the search engine", ex);
                   }
                 }
               }
@@ -2043,13 +2067,13 @@ var Policies = {
                   try {
                     await Services.search.updatePolicyEngine(manifest);
                   } catch (ex) {
-                    log.error("Unable to update the search engine", ex);
+                    lazy.log.error("Unable to update the search engine", ex);
                   }
                 } else {
                   try {
                     await Services.search.addPolicyEngine(manifest);
                   } catch (ex) {
-                    log.error("Unable to add search engine", ex);
+                    lazy.log.error("Unable to add search engine", ex);
                   }
                 }
               }
@@ -2068,7 +2092,7 @@ var Policies = {
                   throw new Error("No engine by that name could be found");
                 }
               } catch (ex) {
-                log.error(
+                lazy.log.error(
                   `Search engine lookup failed when attempting to set ` +
                     `the default engine. Requested engine was ` +
                     `"${param.Default}".`,
@@ -2079,7 +2103,7 @@ var Policies = {
                 try {
                   await Services.search.setDefault(defaultEngine);
                 } catch (ex) {
-                  log.error("Unable to set the default search engine", ex);
+                  lazy.log.error("Unable to set the default search engine", ex);
                 }
               }
             }
@@ -2099,7 +2123,7 @@ var Policies = {
                   throw new Error("No engine by that name could be found");
                 }
               } catch (ex) {
-                log.error(
+                lazy.log.error(
                   `Search engine lookup failed when attempting to set ` +
                     `the default private engine. Requested engine was ` +
                     `"${param.DefaultPrivate}".`,
@@ -2110,7 +2134,7 @@ var Policies = {
                 try {
                   await Services.search.setDefaultPrivate(defaultPrivateEngine);
                 } catch (ex) {
-                  log.error(
+                  lazy.log.error(
                     "Unable to set the default private search engine",
                     ex
                   );
@@ -2151,8 +2175,8 @@ var Policies = {
         try {
           pkcs11db.addModule(deviceName, securityDevices[deviceName], 0, 0);
         } catch (ex) {
-          log.error(`Unable to add security device ${deviceName}`);
-          log.debug(ex);
+          lazy.log.error(`Unable to add security device ${deviceName}`);
+          lazy.log.debug(ex);
         }
       }
     },
@@ -2166,19 +2190,21 @@ var Policies = {
     },
     onAllWindowsRestored(manager, param) {
       if (param) {
-        let homeButtonPlacement = CustomizableUI.getPlacementOfWidget(
+        let homeButtonPlacement = lazy.CustomizableUI.getPlacementOfWidget(
           "home-button"
         );
         if (!homeButtonPlacement) {
-          let placement = CustomizableUI.getPlacementOfWidget("forward-button");
-          CustomizableUI.addWidgetToArea(
+          let placement = lazy.CustomizableUI.getPlacementOfWidget(
+            "forward-button"
+          );
+          lazy.CustomizableUI.addWidgetToArea(
             "home-button",
-            CustomizableUI.AREA_NAVBAR,
+            lazy.CustomizableUI.AREA_NAVBAR,
             placement.position + 2
           );
         }
       } else {
-        CustomizableUI.removeWidgetFromArea("home-button");
+        lazy.CustomizableUI.removeWidgetFromArea("home-button");
       }
     },
   },
@@ -2292,7 +2318,7 @@ var Policies = {
 
   WebsiteFilter: {
     onBeforeUIStartup(manager, param) {
-      WebsiteFilter.init(param.Block || [], param.Exceptions || []);
+      lazy.WebsiteFilter.init(param.Block || [], param.Exceptions || []);
     },
   },
 
@@ -2436,7 +2462,7 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
       );
     } catch (ex) {
       // It's possible if the origin was invalid, we'll have a string instead of an origin.
-      log.error(
+      lazy.log.error(
         `Unable to add ${permissionName} permission for ${origin.href ||
           origin}`
       );
@@ -2467,7 +2493,7 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
 function runOnce(actionName, callback) {
   let prefName = `browser.policies.runonce.${actionName}`;
   if (Services.prefs.getBoolPref(prefName, false)) {
-    log.debug(
+    lazy.log.debug(
       `Not running action ${actionName} again because it has already run.`
     );
     return;
@@ -2504,7 +2530,7 @@ async function runOncePerModification(actionName, policyValue, callback) {
   let prefName = `browser.policies.runOncePerModification.${actionName}`;
   let oldPolicyValue = Services.prefs.getStringPref(prefName, undefined);
   if (policyValue === oldPolicyValue) {
-    log.debug(
+    lazy.log.debug(
       `Not running action ${actionName} again because the policy's value is unchanged`
     );
     return Promise.resolve();
@@ -2549,11 +2575,11 @@ function installAddonFromURL(url, extensionID, addon) {
     // It's the same addon, don't reinstall.
     return;
   }
-  AddonManager.getInstallForURL(url, {
+  lazy.AddonManager.getInstallForURL(url, {
     telemetryInfo: { source: "enterprise-policy" },
   }).then(install => {
     if (install.addon && install.addon.appDisabled) {
-      log.error(`Incompatible add-on - ${install.addon.id}`);
+      lazy.log.error(`Incompatible add-on - ${install.addon.id}`);
       install.cancel();
       return;
     }
@@ -2565,14 +2591,14 @@ function installAddonFromURL(url, extensionID, addon) {
           return;
         }
         if (extensionID && install.addon.id != extensionID) {
-          log.error(
+          lazy.log.error(
             `Add-on downloaded from ${url} had unexpected id (got ${install.addon.id} expected ${extensionID})`
           );
           install.removeListener(listener);
           install.cancel();
         }
         if (install.addon.appDisabled) {
-          log.error(`Incompatible add-on - ${url}`);
+          lazy.log.error(`Incompatible add-on - ${url}`);
           install.removeListener(listener);
           install.cancel();
         }
@@ -2580,15 +2606,17 @@ function installAddonFromURL(url, extensionID, addon) {
           addon &&
           Services.vc.compare(addon.version, install.addon.version) == 0
         ) {
-          log.debug("Installation cancelled because versions are the same");
+          lazy.log.debug(
+            "Installation cancelled because versions are the same"
+          );
           install.removeListener(listener);
           install.cancel();
         }
       },
       onDownloadFailed: () => {
         install.removeListener(listener);
-        log.error(
-          `Download failed - ${AddonManager.errorToString(
+        lazy.log.error(
+          `Download failed - ${lazy.AddonManager.errorToString(
             install.error
           )} - ${url}`
         );
@@ -2596,8 +2624,8 @@ function installAddonFromURL(url, extensionID, addon) {
       },
       onInstallFailed: () => {
         install.removeListener(listener);
-        log.error(
-          `Installation failed - ${AddonManager.errorToString(
+        lazy.log.error(
+          `Installation failed - ${lazy.AddonManager.errorToString(
             install.error
           )} - {url}`
         );
@@ -2608,14 +2636,14 @@ function installAddonFromURL(url, extensionID, addon) {
           addon.enable();
         }
         install.removeListener(listener);
-        log.debug(`Installation succeeded - ${url}`);
+        lazy.log.debug(`Installation succeeded - ${url}`);
       },
     };
     // If it's a local file install, onDownloadEnded is never called.
     // So we call it manually, to handle some error cases.
     if (url.startsWith("file:")) {
       listener.onDownloadEnded(install);
-      if (install.state == AddonManager.STATE_CANCELLED) {
+      if (install.state == lazy.AddonManager.STATE_CANCELLED) {
         return;
       }
     }
@@ -2717,26 +2745,32 @@ function processMIMEInfo(mimeInfo, realMIMEInfo) {
         let handlerApp;
         if ("path" in handler) {
           try {
-            let file = new FileUtils.File(handler.path);
+            let file = new lazy.FileUtils.File(handler.path);
             handlerApp = Cc[
               "@mozilla.org/uriloader/local-handler-app;1"
             ].createInstance(Ci.nsILocalHandlerApp);
             handlerApp.executable = file;
           } catch (ex) {
-            log.error(`Unable to create handler executable (${handler.path})`);
+            lazy.log.error(
+              `Unable to create handler executable (${handler.path})`
+            );
             continue;
           }
         } else if ("uriTemplate" in handler) {
           let templateURL = new URL(handler.uriTemplate);
           if (templateURL.protocol != "https:") {
-            log.error(`Web handler must be https (${handler.uriTemplate})`);
+            lazy.log.error(
+              `Web handler must be https (${handler.uriTemplate})`
+            );
             continue;
           }
           if (
             !templateURL.pathname.includes("%s") &&
             !templateURL.search.includes("%s")
           ) {
-            log.error(`Web handler must contain %s (${handler.uriTemplate})`);
+            lazy.log.error(
+              `Web handler must contain %s (${handler.uriTemplate})`
+            );
             continue;
           }
           handlerApp = Cc[
@@ -2744,7 +2778,7 @@ function processMIMEInfo(mimeInfo, realMIMEInfo) {
           ].createInstance(Ci.nsIWebHandlerApp);
           handlerApp.uriTemplate = handler.uriTemplate;
         } else {
-          log.error("Invalid handler");
+          lazy.log.error("Invalid handler");
           continue;
         }
         if ("name" in handler) {
@@ -2764,7 +2798,7 @@ function processMIMEInfo(mimeInfo, realMIMEInfo) {
       action == realMIMEInfo.useHelperApp &&
       !realMIMEInfo.possibleApplicationHandlers.length
     ) {
-      log.error("useHelperApp requires a handler");
+      lazy.log.error("useHelperApp requires a handler");
       return;
     }
     realMIMEInfo.preferredAction = action;
@@ -2772,7 +2806,7 @@ function processMIMEInfo(mimeInfo, realMIMEInfo) {
   if ("ask" in mimeInfo) {
     realMIMEInfo.alwaysAskBeforeHandling = mimeInfo.ask;
   }
-  gHandlerService.store(realMIMEInfo);
+  lazy.gHandlerService.store(realMIMEInfo);
 }
 
 // Copied from PlacesUIUtils.jsm
