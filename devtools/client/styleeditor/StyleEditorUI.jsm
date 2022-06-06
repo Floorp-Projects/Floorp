@@ -25,45 +25,47 @@ const { PrefObserver } = require("devtools/client/shared/prefs");
 
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
+const lazy = {};
+
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "KeyCodes",
   "devtools/client/shared/keycodes",
   true
 );
 
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "OriginalSource",
   "devtools/client/styleeditor/original-source",
   true
 );
 
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm",
   true
 );
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm",
   true
 );
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "ResponsiveUIManager",
   "devtools/client/responsive/manager"
 );
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "openContentLink",
   "devtools/client/shared/link",
   true
 );
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "copyString",
   "devtools/shared/platform/clipboard",
   true
@@ -422,21 +424,21 @@ class StyleEditorUI extends EventEmitter {
 
     let elementToFocus;
     if (
-      event.keyCode == KeyCodes.DOM_VK_PAGE_UP ||
-      event.keyCode == KeyCodes.DOM_VK_HOME
+      event.keyCode == lazy.KeyCodes.DOM_VK_PAGE_UP ||
+      event.keyCode == lazy.KeyCodes.DOM_VK_HOME
     ) {
       elementToFocus = visibleElements[0];
     } else if (
-      event.keyCode == KeyCodes.DOM_VK_PAGE_DOWN ||
-      event.keyCode == KeyCodes.DOM_VK_END
+      event.keyCode == lazy.KeyCodes.DOM_VK_PAGE_DOWN ||
+      event.keyCode == lazy.KeyCodes.DOM_VK_END
     ) {
       elementToFocus = visibleElements.at(-1);
-    } else if (event.keyCode == KeyCodes.DOM_VK_UP) {
+    } else if (event.keyCode == lazy.KeyCodes.DOM_VK_UP) {
       const focusedIndex = visibleElements.indexOf(
         getFocusedItemWithin(this.#nav)
       );
       elementToFocus = visibleElements[focusedIndex - 1];
-    } else if (event.keyCode == KeyCodes.DOM_VK_DOWN) {
+    } else if (event.keyCode == lazy.KeyCodes.DOM_VK_DOWN) {
       const focusedIndex = visibleElements.indexOf(
         getFocusedItemWithin(this.#nav)
       );
@@ -580,7 +582,7 @@ class StyleEditorUI extends EventEmitter {
           editor = null;
 
           for (const { id: originalId, url: originalURL } of sources) {
-            const original = new OriginalSource(
+            const original = new lazy.OriginalSource(
               originalURL,
               originalId,
               sourceMapService
@@ -703,9 +705,9 @@ class StyleEditorUI extends EventEmitter {
         // nothing selected
         return;
       }
-      NetUtil.asyncFetch(
+      lazy.NetUtil.asyncFetch(
         {
-          uri: NetUtil.newURI(selectedFile),
+          uri: lazy.NetUtil.newURI(selectedFile),
           loadingNode: this.#window.document,
           securityFlags:
             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
@@ -716,7 +718,7 @@ class StyleEditorUI extends EventEmitter {
             this.emit("error", { key: LOAD_ERROR, level: "warning" });
             return;
           }
-          const source = NetUtil.readInputStreamToString(
+          const source = lazy.NetUtil.readInputStreamToString(
             stream,
             stream.available()
           );
@@ -798,7 +800,7 @@ class StyleEditorUI extends EventEmitter {
    */
   #openLinkNewTab = () => {
     if (this.#contextMenuStyleSheet) {
-      openContentLink(this.#contextMenuStyleSheet.href);
+      lazy.openContentLink(this.#contextMenuStyleSheet.href);
     }
   };
 
@@ -807,7 +809,7 @@ class StyleEditorUI extends EventEmitter {
    */
   #copyUrl = () => {
     if (this.#contextMenuStyleSheet) {
-      copyString(this.#contextMenuStyleSheet.href);
+      lazy.copyString(this.#contextMenuStyleSheet.href);
     }
   };
 
@@ -900,7 +902,7 @@ class StyleEditorUI extends EventEmitter {
     summary.querySelector(".stylesheet-name").addEventListener(
       "keypress",
       event => {
-        if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
+        if (event.keyCode == lazy.KeyCodes.DOM_VK_RETURN) {
           this.setActiveSummary(summary);
         }
       },
@@ -1405,12 +1407,14 @@ class StyleEditorUI extends EventEmitter {
     const tab = this.currentTarget.localTab;
     const win = this.currentTarget.localTab.ownerDocument.defaultView;
 
-    await ResponsiveUIManager.openIfNeeded(win, tab, {
+    await lazy.ResponsiveUIManager.openIfNeeded(win, tab, {
       trigger: "style_editor",
     });
     this.emit("responsive-mode-opened");
 
-    ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(options);
+    lazy.ResponsiveUIManager.getResponsiveUIForTab(tab).setViewportSize(
+      options
+    );
   }
 
   /**
@@ -1444,7 +1448,7 @@ class StyleEditorUI extends EventEmitter {
     try {
       // The fileName is in resource means this stylesheet was imported from file by user.
       const { fileName } = resource;
-      let file = fileName ? new FileUtils.File(fileName) : null;
+      let file = fileName ? new lazy.FileUtils.File(fileName) : null;
 
       // recall location of saved file for this sheet after page reload
       if (!file) {

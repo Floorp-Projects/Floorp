@@ -18,14 +18,16 @@ const { throttle } = require("devtools/shared/throttle");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
+const lazy = {};
+
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm",
   true
 );
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm",
   true
@@ -239,14 +241,14 @@ StyleSheetEditor.prototype = {
 
     let path;
     const href = removeQuery(relatedSheet.href);
-    const uri = NetUtil.newURI(href);
+    const uri = lazy.NetUtil.newURI(href);
 
     if (uri.scheme == "file") {
       const file = uri.QueryInterface(Ci.nsIFileURL).file;
       path = file.path;
     } else if (this.savedFile) {
       const origHref = removeQuery(this.styleSheet.href);
-      const origUri = NetUtil.newURI(origHref);
+      const origUri = lazy.NetUtil.newURI(origHref);
       path = findLinkedFilePath(uri, origUri, this.savedFile);
     } else {
       // we can't determine path to generated file on disk
@@ -749,14 +751,14 @@ StyleSheetEditor.prototype = {
         this._state.text = this.sourceEditor.getText();
       }
 
-      const ostream = FileUtils.openSafeFileOutputStream(returnFile);
+      const ostream = lazy.FileUtils.openSafeFileOutputStream(returnFile);
       const converter = Cc[
         "@mozilla.org/intl/scriptableunicodeconverter"
       ].createInstance(Ci.nsIScriptableUnicodeConverter);
       converter.charset = "UTF-8";
       const istream = converter.convertToInputStream(this._state.text);
 
-      NetUtil.asyncCopy(istream, ostream, status => {
+      lazy.NetUtil.asyncCopy(istream, ostream, status => {
         if (!Components.isSuccessCode(status)) {
           if (callback) {
             callback(null);
@@ -764,7 +766,7 @@ StyleSheetEditor.prototype = {
           this.emit("error", { key: SAVE_ERROR });
           return;
         }
-        FileUtils.closeSafeFileOutputStream(ostream);
+        lazy.FileUtils.closeSafeFileOutputStream(ostream);
 
         this.onFileSaved(returnFile);
 

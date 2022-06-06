@@ -24,9 +24,11 @@ const { loader, require } = ChromeUtils.import(
 const Services = require("Services");
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 
-loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+const lazy = {};
+
+loader.lazyRequireGetter(lazy, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(
-  this,
+  lazy,
   "MenuItem",
   "devtools/client/framework/menu-item"
 );
@@ -209,9 +211,9 @@ function showFilePicker(
  *         A Menu object holding the MenuItems
  */
 function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
-  const popupMenu = new Menu();
+  const popupMenu = new lazy.Menu();
   popupMenu.append(
-    new MenuItem({
+    new lazy.MenuItem({
       id: "options-origsources",
       label: getString("showOriginalSources.label"),
       accesskey: getString("showOriginalSources.accesskey"),
@@ -221,7 +223,7 @@ function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
     })
   );
   popupMenu.append(
-    new MenuItem({
+    new lazy.MenuItem({
       id: "options-show-media",
       label: getString("showMediaSidebar.label"),
       accesskey: getString("showMediaSidebar.accesskey"),
