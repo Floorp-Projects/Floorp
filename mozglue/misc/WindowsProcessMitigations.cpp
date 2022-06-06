@@ -44,10 +44,6 @@ MFBT_API bool IsWin32kLockedDown() {
       return sWin32kLockedDownInPolicy;
     }
 
-    MOZ_RELEASE_ASSERT(
-        !sWin32kLockedDownInPolicy || !!polInfo.DisallowWin32kSystemCalls,
-        "Win32k Lockdown enabled in sandbox policy but not process.");
-
     return !!polInfo.DisallowWin32kSystemCalls;
   }();
 
