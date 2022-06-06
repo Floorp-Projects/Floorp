@@ -115,10 +115,10 @@ class WallpaperManager(
         }
 
     private fun getCurrentWallpaperFromSettings(): Wallpaper {
-        val currentWallpaper = settings.currentWallpaper
-        return if (currentWallpaper.isEmpty()) {
+        return if (isDefaultTheCurrentWallpaper(settings)) {
             defaultWallpaper
         } else {
+            val currentWallpaper = settings.currentWallpaper
             wallpapers.find { it.name == currentWallpaper }
                 ?: fileManager.lookupExpiredWallpaper(currentWallpaper)
                 ?: defaultWallpaper
@@ -240,6 +240,13 @@ class WallpaperManager(
     }
 
     companion object {
+        /**
+         *  Get whether the default wallpaper should be used.
+         */
+        fun isDefaultTheCurrentWallpaper(settings: Settings): Boolean = with(settings.currentWallpaper) {
+            return isEmpty() || equals(defaultWallpaper.name)
+        }
+
         val defaultWallpaper = Wallpaper.Default
         private val localWallpapers: List<Wallpaper.Local> = listOf(
             Wallpaper.Local.Firefox("amethyst", R.drawable.amethyst),
