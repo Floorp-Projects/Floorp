@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   WebDriverNewSessionHandler:
@@ -18,10 +20,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.WEBDRIVER_BIDI)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
-XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+XPCOMUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
 
 /**
  * Entry class for the WebDriver BiDi support.
@@ -80,12 +82,15 @@ class WebDriverBiDi {
    */
   async createSession(capabilities, sessionlessConnection) {
     if (this.session) {
-      throw new error.SessionNotCreatedError(
+      throw new lazy.error.SessionNotCreatedError(
         "Maximum number of active sessions"
       );
     }
 
-    const session = new WebDriverSession(capabilities, sessionlessConnection);
+    const session = new lazy.WebDriverSession(
+      capabilities,
+      sessionlessConnection
+    );
 
     // When the Remote Agent is listening, and a BiDi WebSocket connection
     // has been requested, register a path handler for the session.
@@ -99,13 +104,13 @@ class WebDriverBiDi {
       // Also when closing the application while it's still starting up can
       // cause shutdown hangs. As such WebDriver BiDi will return a new session
       // once the initial application window has finished initializing.
-      logger.debug(`Waiting for initial application window`);
+      lazy.logger.debug(`Waiting for initial application window`);
       await this.agent.browserStartupFinished;
 
       this.agent.server.registerPathHandler(session.path, session);
       webSocketUrl = `${this.address}${session.path}`;
 
-      logger.debug(`Registered session handler: ${session.path}`);
+      lazy.logger.debug(`Registered session handler: ${session.path}`);
 
       if (sessionlessConnection) {
         // Remove temporary session-less connection
@@ -137,7 +142,7 @@ class WebDriverBiDi {
     // unregister the path handler for the session.
     if (this.agent.running && this.session.capabilities.get("webSocketUrl")) {
       this.agent.server.registerPathHandler(this.session.path, null);
-      logger.debug(`Unregistered session handler: ${this.session.path}`);
+      lazy.logger.debug(`Unregistered session handler: ${this.session.path}`);
     }
 
     this.session.destroy();
@@ -181,7 +186,7 @@ class WebDriverBiDi {
     // Install a HTTP handler for direct WebDriver BiDi connection requests.
     this.agent.server.registerPathHandler(
       "/session",
-      new WebDriverNewSessionHandler(this)
+      new lazy.WebDriverNewSessionHandler(this)
     );
 
     Cu.printStderr(`WebDriver BiDi listening on ${this.address}\n`);
@@ -194,9 +199,11 @@ class WebDriverBiDi {
 
     const data = `${this.agent.port}`;
     try {
-      await IOUtils.write(this._activePortPath, textEncoder.encode(data));
+      await IOUtils.write(this._activePortPath, lazy.textEncoder.encode(data));
     } catch (e) {
-      logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
+      lazy.logger.warn(
+        `Failed to create ${this._activePortPath} (${e.message})`
+      );
     }
   }
 
@@ -212,7 +219,9 @@ class WebDriverBiDi {
       try {
         await IOUtils.remove(this._activePortPath);
       } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
+        lazy.logger.warn(
+          `Failed to remove ${this._activePortPath} (${e.message})`
+        );
       }
 
       this.deleteSession();

@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   WebDriverBiDiConnection:
     "chrome://remote/content/webdriver-bidi/WebDriverBiDiConnection.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
@@ -45,8 +47,11 @@ class WebDriverNewSessionHandler {
    *     Response to an HTTP request (httpd.js)
    */
   async handle(request, response) {
-    const webSocket = await WebSocketHandshake.upgrade(request, response);
-    const conn = new WebDriverBiDiConnection(webSocket, response._connection);
+    const webSocket = await lazy.WebSocketHandshake.upgrade(request, response);
+    const conn = new lazy.WebDriverBiDiConnection(
+      webSocket,
+      response._connection
+    );
 
     this.webDriverBiDi.addSessionlessConnection(conn);
   }
