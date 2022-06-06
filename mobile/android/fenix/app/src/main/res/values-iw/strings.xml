@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">השבתת גלישה פרטית</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">חיפוש או הכנסת כתובת</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">נא להקליד מונחים לחיפוש</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">הלשוניות הפתוחות שלך יופיעו כאן.</string>
 
@@ -39,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">סימניות אחרונות</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">סימניות שנשמרו לאחרונה</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">הצגת הכול</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -237,8 +237,6 @@
     <string name="search_suggestions_onboarding_title">לאפשר הצעות חיפוש בהפעלות פרטיות?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">‏%s ישתף את מה שיוקלד בשורת הכתובת עם מנוע החיפוש ברירת המחדל שלך.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">מידע נוסף</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">חיפוש ב־%s</string>
@@ -729,7 +727,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">שמירת לשוניות לאוסף</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">תפריט לשוניות</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">תפריט לשוניות</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">מחיקת אוסף</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1177,40 +1175,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">הקבוצה נמחקה</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">‏Firefox Preview הוא עכשיו Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">‏Firefox Nightly מתעדכן כל לילה ויש לו תכונות ניסיוניות חדשות.
-        עם זאת, יתכן שיהיה פחות יציב. ניתן להוריד את הדפדפן במהדורת beta לחוויה יציבה יותר.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">קבלת Firefox עבור Android בטא</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">‏Firefox Nightly עבר</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">יישומון זה כבר לא יקבל עדכוני אבטחה. יש להפסיק להשתמש ביישומון זה ולעבור ל־Nightly החדש.
-        \n\nכדי להעביר את הסימניות, כניסות והיסטוריה ליישומון אחר, ניתן ליצור חשבון Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">מעבר ל־NIghtly החדש</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">‏Firefox Nightly עבר</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">יישומון זה כבר לא יקבל עדכוני אבטחה. יש להשתמש ב־Nightly החדש ולהפסיק להשתמש ביישומון זה.
-        \n\nכדי להעביר את הסימניות, כניסות והיסטוריה ליישומון אחר, ניתן ליצור חשבון Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">קבלת ה־Nightly החדש</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">ברוכים הבאים אל %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">סנכרון Firefox בין מכשירים</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">סנכרון %1$s בין מכשירים</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">משיכת הסימניות, ההיסטוריה והססמאות ל־%1$s במכשיר הזה.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1625,8 +1595,10 @@
     <string name="addresses_street_address">כתובת רחוב</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">עיר</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">מדינה</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">מחוז</string>
     <!-- The header for the country or region of an address -->
     <string name="addresses_country">ארץ או איזור</string>
     <!-- The header for the phone number of an address -->
@@ -1692,20 +1664,6 @@
     <string name="search_edit_custom_engine_success_message">נשמר %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">נמחק %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">ברוך בואך ל־%s חדש לגמרי</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">דפדפן שעוצב מחדש לגמרי ממתין לך, עם ביצועים משופרים ותכונות שיסייעו לך לעשות יותר ברשת.\n\nנא להמתין בזמן שאנו מעדכנים את %s עם הנתונים שלך</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">בעדכון %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">הפעלת %s</string>
-
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">ההעברה הושלמה</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">ססמאות</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">כדי לאפשר את ההרשאה:</string>
@@ -1797,8 +1755,6 @@
     <string name="synced_tabs_enable_tab_syncing">נא להפעיל סנכרון לשוניות.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">אין לך לשוניות פתוחות ב־Firefox בשאר המכשירים שלך.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">אין לך לשוניות פתוחות ב־%1$s בשאר המכשירים שלך.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">הצגת רשימת הלשוניות מהמכשירים האחרים שלך.</string>
 
@@ -1850,6 +1806,11 @@
     <string name="inactive_tabs_title">לשוניות לא פעילות</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">סגירת כל הלשוניות שאינן פעילות</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">הרחבת לשוניות לא פעילות</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">צמצום לשוניות לא פעילות</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
