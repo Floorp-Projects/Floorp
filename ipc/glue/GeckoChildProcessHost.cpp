@@ -1128,6 +1128,10 @@ bool PosixProcessLauncher::DoSetup() {
     mLaunchOptions->env_map["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
 #  elif OS_MACOSX  // defined(OS_LINUX) || defined(OS_BSD)
+    // With signed production Mac builds, the dynamic linker (dyld) will
+    // ignore dyld environment variables preventing the use of variables
+    // such as DYLD_LIBRARY_PATH and DYLD_INSERT_LIBRARIES.
+
     // If we're running with gtests, add the gtest XUL ahead of normal XUL on
     // the DYLD_LIBRARY_PATH so that plugin-container.app loads it instead.
     nsCString new_dyld_lib_path(path.get());

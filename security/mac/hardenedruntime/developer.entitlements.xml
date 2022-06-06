@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-     Entitlements to apply to the .app bundle and all executable files
-     contained within it during codesigning of developer builds. These
-     entitlements configure hardened runtime and allow debugging of the
-     application. The com.apple.security.get-task-allow entitlement must be
-     set to true to allow debuggers to attach to application processes but
-     this prohibits notarization with the notary service. Aside from allowing
-     debugging, these entitlements enable hardened runtime protections to the
-     extent possible for Firefox.
+     Entitlements to apply during codesigning of developer builds. These
+     differ from the production entitlements in that they allow debugging of
+     executables and allow dyld environment variables to be used. This set of
+     entitlements is intended to be used for signing of builds used in
+     automated testing or local developer builds where debugging of a signed
+     build might be necessary. The com.apple.security.get-task-allow
+     entitlement must be set to true to allow debuggers to attach to
+     application processes but prohibits notarization with the notary service.
+     dyld environment variables are used for some tests and may be useful for
+     developers.
 -->
 <plist version="1.0">
   <dict>
@@ -24,8 +26,7 @@
     <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
     <key>com.apple.security.cs.disable-library-validation</key><true/>
 
-    <!-- Allow dyld environment variables. Needed because Firefox uses
-         dyld variables to load libaries from within the .app bundle. -->
+    <!-- Allow dyld environment variables for gtests and debugging -->
     <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
 
     <!-- Allow debuggers to attach to running executables -->
@@ -39,7 +40,7 @@
 
     <!-- Firefox needs to access the location on sites the user allows -->
     <key>com.apple.security.personal-information.location</key><true/>
-    
+
     <!-- For SmartCardServices(7) -->
     <key>com.apple.security.smartcard</key><true/>
   </dict>
