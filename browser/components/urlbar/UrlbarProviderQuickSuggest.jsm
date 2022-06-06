@@ -28,11 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, [
-  "AbortController",
-  "crypto",
-  "fetch",
-]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "fetch"]);
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
 const TIMESTAMP_LENGTH = 10;

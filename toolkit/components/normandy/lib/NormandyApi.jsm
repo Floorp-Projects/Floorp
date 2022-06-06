@@ -15,10 +15,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/CanonicalJSON.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, [
-  "fetch",
-  "URL",
-]); /* globals fetch, URL */
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]); /* globals fetch */
 
 var EXPORTED_SYMBOLS = ["NormandyApi"];
 

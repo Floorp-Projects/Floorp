@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["Qihoo360seMigrationUtils"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
