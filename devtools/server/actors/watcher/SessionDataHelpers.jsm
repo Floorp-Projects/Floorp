@@ -11,19 +11,21 @@
 
 var EXPORTED_SYMBOLS = ["SessionDataHelpers"];
 
+const lazy = {};
+
 if (typeof module == "object") {
   // Allow this JSM to also be loaded as a CommonJS module
   // Because this module is used from the worker thread,
   // (via target-actor-mixin), and workers can't load JSMs via ChromeUtils.import.
   loader.lazyRequireGetter(
-    this,
+    lazy,
     "validateBreakpointLocation",
     "devtools/shared/validate-breakpoint.jsm",
     true
   );
 
   loader.lazyRequireGetter(
-    this,
+    lazy,
     "validateEventBreakpoint",
     "devtools/server/actors/utils/event-breakpoints",
     true
@@ -32,12 +34,12 @@ if (typeof module == "object") {
   const { XPCOMUtils } = ChromeUtils.import(
     "resource://gre/modules/XPCOMUtils.jsm"
   );
-  XPCOMUtils.defineLazyGetter(this, "validateBreakpointLocation", () => {
+  XPCOMUtils.defineLazyGetter(lazy, "validateBreakpointLocation", () => {
     return ChromeUtils.import(
       "resource://devtools/shared/validate-breakpoint.jsm"
     ).validateBreakpointLocation;
   });
-  XPCOMUtils.defineLazyGetter(this, "validateEventBreakpoint", () => {
+  XPCOMUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
     const { loader } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"
     );
@@ -70,7 +72,7 @@ const DATA_KEY_FUNCTION = {
     );
   },
   [SUPPORTED_DATA.BREAKPOINTS]: function({ location }) {
-    validateBreakpointLocation(location);
+    lazy.validateBreakpointLocation(location);
     const { sourceUrl, sourceId, line, column } = location;
     return `${sourceUrl}:${sourceId}:${line}:${column}`;
   },
@@ -102,7 +104,7 @@ const DATA_KEY_FUNCTION = {
         `Event Breakpoints expect the id to be a string , got ${typeof id} instead.`
       );
     }
-    if (!validateEventBreakpoint(id)) {
+    if (!lazy.validateEventBreakpoint(id)) {
       throw new Error(
         `The id string should be a valid event breakpoint id, ${id} is not.`
       );
