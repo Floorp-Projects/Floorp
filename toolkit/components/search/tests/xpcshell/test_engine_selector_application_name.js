@@ -7,8 +7,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
 });
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const CONFIG = [
   {
     webExtension: {
