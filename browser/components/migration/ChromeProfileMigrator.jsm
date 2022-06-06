@@ -19,7 +19,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
   MigratorPrototype: "resource:///modules/MigrationUtils.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
@@ -57,7 +58,7 @@ function convertBookmarks(items, errorAccumulator) {
         itemsToInsert.push({ url: item.url, title: item.name });
       } else if (item.type == "folder") {
         let folderItem = {
-          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
           title: item.name,
         };
         folderItem.children = convertBookmarks(item.children, errorAccumulator);
@@ -75,7 +76,7 @@ function ChromeProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chrome";
 }
 
-ChromeProfileMigrator.prototype = Object.create(MigratorPrototype);
+ChromeProfileMigrator.prototype = Object.create(lazy.MigratorPrototype);
 
 ChromeProfileMigrator.prototype._keychainServiceName = "Chrome Safe Storage";
 ChromeProfileMigrator.prototype._keychainAccountName = "Chrome";
@@ -84,8 +85,10 @@ ChromeProfileMigrator.prototype._getChromeUserDataPathIfExists = async function(
   if (this._chromeUserDataPath) {
     return this._chromeUserDataPath;
   }
-  let path = ChromeMigrationUtils.getDataPath(this._chromeUserDataPathSuffix);
-  let exists = await OS.File.exists(path);
+  let path = lazy.ChromeMigrationUtils.getDataPath(
+    this._chromeUserDataPathSuffix
+  );
+  let exists = await lazy.OS.File.exists(path);
   if (exists) {
     this._chromeUserDataPath = path;
   } else {
@@ -99,14 +102,14 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
 ) {
   let chromeUserDataPath = await this._getChromeUserDataPathIfExists();
   if (chromeUserDataPath) {
-    let profileFolder = OS.Path.join(chromeUserDataPath, aProfile.id);
-    if (await OS.File.exists(profileFolder)) {
+    let profileFolder = lazy.OS.Path.join(chromeUserDataPath, aProfile.id);
+    if (await lazy.OS.File.exists(profileFolder)) {
       let possibleResourcePromises = [
         GetBookmarksResource(profileFolder, this.getBrowserKey()),
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
-      if (ChromeMigrationUtils.supportsLoginsForPlatform) {
+      if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
         possibleResourcePromises.push(
           this._GetPasswordsResource(profileFolder)
         );
@@ -125,11 +128,11 @@ ChromeProfileMigrator.prototype.getLastUsedDate = async function Chrome_getLastU
     return new Date(0);
   }
   let datePromises = sourceProfiles.map(async profile => {
-    let basePath = OS.Path.join(chromeUserDataPath, profile.id);
+    let basePath = lazy.OS.Path.join(chromeUserDataPath, profile.id);
     let fileDatePromises = ["Bookmarks", "History", "Cookies"].map(
       async leafName => {
-        let path = OS.Path.join(basePath, leafName);
-        let info = await OS.File.stat(path).catch(() => null);
+        let path = lazy.OS.Path.join(basePath, leafName);
+        let info = await lazy.OS.File.stat(path).catch(() => null);
         return info ? info.lastModificationDate : 0;
       }
     );
@@ -154,7 +157,7 @@ ChromeProfileMigrator.prototype.getSourceProfiles = async function Chrome_getSou
   let localState;
   let profiles = [];
   try {
-    localState = await ChromeMigrationUtils.getLocalState(
+    localState = await lazy.ChromeMigrationUtils.getLocalState(
       this._chromeUserDataPathSuffix
     );
     let info_cache = localState.profile.info_cache;
@@ -205,17 +208,17 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
 });
 
 async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
-  let bookmarksPath = OS.Path.join(aProfileFolder, "Bookmarks");
+  let bookmarksPath = lazy.OS.Path.join(aProfileFolder, "Bookmarks");
 
   if (aBrowserKey === "chromium-360se") {
     let localState = {};
     try {
-      localState = await ChromeMigrationUtils.getLocalState("360 SE");
+      localState = await lazy.ChromeMigrationUtils.getLocalState("360 SE");
     } catch (ex) {
       Cu.reportError(ex);
     }
 
-    let alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
+    let alternativeBookmarks = await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks(
       { bookmarksPath, localState }
     );
     if (alternativeBookmarks.resource) {
@@ -225,12 +228,12 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
     bookmarksPath = alternativeBookmarks.path;
   }
 
-  if (!(await OS.File.exists(bookmarksPath))) {
+  if (!(await lazy.OS.File.exists(bookmarksPath))) {
     return null;
   }
 
   return {
-    type: MigrationUtils.resourceTypes.BOOKMARKS,
+    type: lazy.MigrationUtils.resourceTypes.BOOKMARKS,
 
     migrate(aCallback) {
       return (async function() {
@@ -239,7 +242,7 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           gotErrors = true;
         };
         // Parse Chrome bookmark file that is JSON format
-        let bookmarkJSON = await OS.File.read(bookmarksPath, {
+        let bookmarkJSON = await lazy.OS.File.read(bookmarksPath, {
           encoding: "UTF-8",
         });
         let roots = JSON.parse(bookmarkJSON).roots;
@@ -247,24 +250,24 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
         // Importing bookmark bar items
         if (roots.bookmark_bar.children && roots.bookmark_bar.children.length) {
           // Toolbar
-          let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+          let parentGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
           let bookmarks = convertBookmarks(
             roots.bookmark_bar.children,
             errorGatherer
           );
-          await MigrationUtils.insertManyBookmarksWrapper(
+          await lazy.MigrationUtils.insertManyBookmarksWrapper(
             bookmarks,
             parentGuid
           );
-          PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
+          lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
         }
 
         // Importing bookmark menu items
         if (roots.other.children && roots.other.children.length) {
           // Bookmark menu
-          let parentGuid = PlacesUtils.bookmarks.menuGuid;
+          let parentGuid = lazy.PlacesUtils.bookmarks.menuGuid;
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
-          await MigrationUtils.insertManyBookmarksWrapper(
+          await lazy.MigrationUtils.insertManyBookmarksWrapper(
             bookmarks,
             parentGuid
           );
@@ -281,13 +284,13 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
 }
 
 async function GetHistoryResource(aProfileFolder) {
-  let historyPath = OS.Path.join(aProfileFolder, "History");
-  if (!(await OS.File.exists(historyPath))) {
+  let historyPath = lazy.OS.Path.join(aProfileFolder, "History");
+  if (!(await lazy.OS.File.exists(historyPath))) {
     return null;
   }
 
   return {
-    type: MigrationUtils.resourceTypes.HISTORY,
+    type: lazy.MigrationUtils.resourceTypes.HISTORY,
 
     migrate(aCallback) {
       (async function() {
@@ -301,7 +304,7 @@ async function GetHistoryResource(aProfileFolder) {
         let query =
           "SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0";
         if (MAX_AGE_IN_DAYS) {
-          let maxAge = ChromeMigrationUtils.dateToChromeTime(
+          let maxAge = lazy.ChromeMigrationUtils.dateToChromeTime(
             Date.now() - MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000
           );
           query += " AND last_visit_time > " + maxAge;
@@ -310,7 +313,7 @@ async function GetHistoryResource(aProfileFolder) {
           query += " ORDER BY last_visit_time DESC LIMIT " + LIMIT;
         }
 
-        let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+        let rows = await lazy.MigrationUtils.getRowsFromDBWithoutLocks(
           historyPath,
           "Chrome history",
           query
@@ -320,9 +323,9 @@ async function GetHistoryResource(aProfileFolder) {
         for (let row of rows) {
           try {
             // if having typed_count, we changes transition type to typed.
-            let transition = PlacesUtils.history.TRANSITIONS.LINK;
+            let transition = lazy.PlacesUtils.history.TRANSITIONS.LINK;
             if (row.getResultByName("typed_count") > 0) {
-              transition = PlacesUtils.history.TRANSITIONS.TYPED;
+              transition = lazy.PlacesUtils.history.TRANSITIONS.TYPED;
             }
 
             pageInfos.push({
@@ -331,7 +334,7 @@ async function GetHistoryResource(aProfileFolder) {
               visits: [
                 {
                   transition,
-                  date: ChromeMigrationUtils.chromeTimeToDate(
+                  date: lazy.ChromeMigrationUtils.chromeTimeToDate(
                     row.getResultByName("last_visit_time"),
                     fallbackVisitDate
                   ),
@@ -344,7 +347,7 @@ async function GetHistoryResource(aProfileFolder) {
         }
 
         if (pageInfos.length) {
-          await MigrationUtils.insertVisitsWrapper(pageInfos);
+          await lazy.MigrationUtils.insertVisitsWrapper(pageInfos);
         }
       })().then(
         () => {
@@ -360,17 +363,17 @@ async function GetHistoryResource(aProfileFolder) {
 }
 
 async function GetCookiesResource(aProfileFolder) {
-  let cookiesPath = OS.Path.join(aProfileFolder, "Cookies");
-  if (!(await OS.File.exists(cookiesPath))) {
+  let cookiesPath = lazy.OS.Path.join(aProfileFolder, "Cookies");
+  if (!(await lazy.OS.File.exists(cookiesPath))) {
     return null;
   }
 
   return {
-    type: MigrationUtils.resourceTypes.COOKIES,
+    type: lazy.MigrationUtils.resourceTypes.COOKIES,
 
     async migrate(aCallback) {
       // Get columns names and set is_sceure, is_httponly fields accordingly.
-      let columns = await MigrationUtils.getRowsFromDBWithoutLocks(
+      let columns = await lazy.MigrationUtils.getRowsFromDBWithoutLocks(
         cookiesPath,
         "Chrome cookies",
         `PRAGMA table_info(cookies)`
@@ -394,7 +397,7 @@ async function GetCookiesResource(aProfileFolder) {
         : `"${Ci.nsICookie.SCHEME_UNSET}" as source_scheme`;
 
       // We don't support decrypting cookies yet so only import plaintext ones.
-      let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+      let rows = await lazy.MigrationUtils.getRowsFromDBWithoutLocks(
         cookiesPath,
         "Chrome cookies",
         `SELECT host_key, name, value, path, expires_utc, ${isSecure}, ${isHttponly}, encrypted_value, ${source_scheme}
@@ -431,7 +434,7 @@ async function GetCookiesResource(aProfileFolder) {
 
         try {
           let expiresUtc =
-            ChromeMigrationUtils.chromeTimeToDate(
+            lazy.ChromeMigrationUtils.chromeTimeToDate(
               row.getResultByName("expires_utc"),
               fallbackExpiryDate
             ) / 1000;
@@ -465,8 +468,8 @@ async function GetCookiesResource(aProfileFolder) {
 ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
   aProfileFolder
 ) {
-  let loginPath = OS.Path.join(aProfileFolder, "Login Data");
-  if (!(await OS.File.exists(loginPath))) {
+  let loginPath = lazy.OS.Path.join(aProfileFolder, "Login Data");
+  if (!(await lazy.OS.File.exists(loginPath))) {
     return null;
   }
 
@@ -478,10 +481,10 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
   } = this;
 
   return {
-    type: MigrationUtils.resourceTypes.PASSWORDS,
+    type: lazy.MigrationUtils.resourceTypes.PASSWORDS,
 
     async migrate(aCallback) {
-      let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+      let rows = await lazy.MigrationUtils.getRowsFromDBWithoutLocks(
         loginPath,
         "Chrome passwords",
         `SELECT origin_url, action_url, username_element, username_value,
@@ -535,7 +538,9 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
       let fallbackCreationDate = new Date();
       for (let row of rows) {
         try {
-          let origin_url = NetUtil.newURI(row.getResultByName("origin_url"));
+          let origin_url = lazy.NetUtil.newURI(
+            row.getResultByName("origin_url")
+          );
           // Ignore entries for non-http(s)/ftp URLs because we likely can't
           // use them anyway.
           const kValidSchemes = new Set(["https", "http", "ftp"]);
@@ -553,7 +558,7 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
             httpRealm: null,
             usernameElement: row.getResultByName("username_element"),
             passwordElement: row.getResultByName("password_element"),
-            timeCreated: ChromeMigrationUtils.chromeTimeToDate(
+            timeCreated: lazy.ChromeMigrationUtils.chromeTimeToDate(
               row.getResultByName("date_created") + 0,
               fallbackCreationDate
             ).getTime(),
@@ -569,7 +574,7 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
                 loginInfo.formActionOrigin = "";
                 break;
               }
-              let action_uri = NetUtil.newURI(action_url);
+              let action_uri = lazy.NetUtil.newURI(action_url);
               if (!kValidSchemes.has(action_uri.scheme)) {
                 continue; // This continues the outer for loop.
               }
@@ -595,7 +600,7 @@ ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
       }
       try {
         if (logins.length) {
-          await MigrationUtils.insertLoginsWrapper(logins);
+          await lazy.MigrationUtils.insertLoginsWrapper(logins);
         }
       } catch (e) {
         Cu.reportError(e);

@@ -9,7 +9,8 @@ var EXPORTED_SYMBOLS = ["Qihoo360seMigrationUtils"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -17,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "filenamesRegex",
   () => /^360(?:default_ori|sefav)_([0-9_]+)\.favdb$/i
 );
@@ -31,7 +32,7 @@ function Bookmarks(aProfileFolder) {
   this._file = file;
 }
 Bookmarks.prototype = {
-  type: MigrationUtils.resourceTypes.BOOKMARKS,
+  type: lazy.MigrationUtils.resourceTypes.BOOKMARKS,
 
   get exists() {
     return this._file.exists() && this._file.isReadable();
@@ -42,7 +43,7 @@ Bookmarks.prototype = {
       let folderMap = new Map();
       let toolbarBMs = [];
 
-      let connection = await Sqlite.openConnection({
+      let connection = await lazy.Sqlite.openConnection({
         path: this._file.path,
       });
 
@@ -73,7 +74,7 @@ Bookmarks.prototype = {
             bmToInsert = {
               children: [],
               title,
-              type: PlacesUtils.bookmarks.TYPE_FOLDER,
+              type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
             };
             folderMap.set(id, bmToInsert);
           } else {
@@ -103,9 +104,12 @@ Bookmarks.prototype = {
       }
 
       if (toolbarBMs.length) {
-        let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
-        await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
-        PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
+        let parentGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
+        await lazy.MigrationUtils.insertManyBookmarksWrapper(
+          toolbarBMs,
+          parentGuid
+        );
+        lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
       }
     })().then(
       () => aCallback(true),
@@ -158,7 +162,7 @@ var Qihoo360seMigrationUtils = {
       ignoreAbsent: true,
     })) {
       let filename = PathUtils.filename(entry);
-      let matches = filenamesRegex.exec(filename);
+      let matches = lazy.filenamesRegex.exec(filename);
       if (!matches) {
         continue;
       }
