@@ -12,6 +12,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
@@ -19,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
   LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("LoginStorageDelegate");
@@ -67,7 +67,7 @@ class LoginStorageDelegate {
         }
 
         const loginInfo = lazy.LoginEntry.parse(selectedLogin).toLoginInfo();
-        lazy.Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
+        Services.obs.notifyObservers(loginInfo, "passwordmgr-prompt-save");
 
         lazy.GeckoViewAutocomplete.onLoginSave(selectedLogin);
       }
@@ -108,7 +108,7 @@ class LoginStorageDelegate {
         lazy.GeckoViewAutocomplete.onLoginSave(selectedLogin);
 
         const loginInfo = lazy.LoginEntry.parse(selectedLogin).toLoginInfo();
-        lazy.Services.obs.notifyObservers(
+        Services.obs.notifyObservers(
           loginInfo,
           "passwordmgr-prompt-change",
           oldGuid

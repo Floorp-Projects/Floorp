@@ -12,12 +12,12 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 ChromeUtils.defineModuleGetter(
@@ -866,7 +866,7 @@ class PromptDelegate {
       realm = realm.substring(0, 50) + "\u2026";
     }
 
-    const bundle = lazy.Services.strings.createBundle(
+    const bundle = Services.strings.createBundle(
       "chrome://global/locale/commonDialogs.properties"
     );
     let text;
