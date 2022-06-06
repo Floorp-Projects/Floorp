@@ -10,11 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ConsoleAPIStorage", () => {
+XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
   return Cc["@mozilla.org/consoleAPI-storage;1"].getService(
     Ci.nsIConsoleAPIStorage
   );
@@ -56,7 +58,7 @@ class ConsoleAPIListener {
    *     The inner window id to filter the messages for.
    */
   constructor(innerWindowId) {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
 
     this.#emittedMessages = new Set();
     this.#innerWindowId = innerWindowId;
@@ -73,7 +75,7 @@ class ConsoleAPIListener {
       return;
     }
 
-    ConsoleAPIStorage.addLogEventListener(
+    lazy.ConsoleAPIStorage.addLogEventListener(
       this.#onConsoleAPIMessage,
       Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
     );
@@ -90,12 +92,14 @@ class ConsoleAPIListener {
       return;
     }
 
-    ConsoleAPIStorage.removeLogEventListener(this.#onConsoleAPIMessage);
+    lazy.ConsoleAPIStorage.removeLogEventListener(this.#onConsoleAPIMessage);
     this.#listening = false;
   }
 
   #emitCachedMessages() {
-    const cachedMessages = ConsoleAPIStorage.getEvents(this.#innerWindowId);
+    const cachedMessages = lazy.ConsoleAPIStorage.getEvents(
+      this.#innerWindowId
+    );
     for (const message of cachedMessages) {
       this.#onConsoleAPIMessage(message);
     }

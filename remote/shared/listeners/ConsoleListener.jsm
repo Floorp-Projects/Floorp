@@ -11,14 +11,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * The ConsoleListener can be used to listen for console messages related to
@@ -62,7 +64,7 @@ class ConsoleListener {
    *     The inner window id to filter the messages for.
    */
   constructor(innerWindowId) {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
 
     this.#emittedMessages = new Set();
     this.#innerWindowId = innerWindowId;
@@ -140,7 +142,7 @@ class ConsoleListener {
     } else if ((message.flags & errorFlag) == errorFlag) {
       level = "error";
     } else {
-      logger.warn(
+      lazy.logger.warn(
         `Not able to process console message with unknown flags ${message.flags}`
       );
       return;
@@ -150,7 +152,7 @@ class ConsoleListener {
     this.emit(level, {
       level,
       message: message.errorMessage,
-      stacktrace: getFramesFromStack(message.stack),
+      stacktrace: lazy.getFramesFromStack(message.stack),
       timeStamp: message.timeStamp,
     });
   };

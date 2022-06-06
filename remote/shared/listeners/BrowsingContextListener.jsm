@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
@@ -50,7 +52,7 @@ class BrowsingContextListener {
    * Create a new BrowsingContextListener instance.
    */
   constructor() {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
 
     this.#listening = false;
   }
