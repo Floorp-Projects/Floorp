@@ -65,6 +65,10 @@ class GeckoExceptionsMigrator(
 
     private fun migrate(uri: String) {
         val privateMode = true
+
+        // This usage be removed BEFORE v106.
+        // See: https://github.com/mozilla-mobile/focus-android/issues/7180
+        @Suppress("DEPRECATION")
         storageController.setPermission(
             "https://$uri",
             null,
