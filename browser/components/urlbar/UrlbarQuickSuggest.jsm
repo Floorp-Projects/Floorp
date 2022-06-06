@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder"]);
-
 const log = console.createInstance({
   prefix: "QuickSuggest",
   maxLogLevel: UrlbarPrefs.get("quicksuggest.log") ? "All" : "Warn",

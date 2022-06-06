@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["File", "FileReader"]);
-
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 const BROWSER_DOCUMENT_URL = AppConstants.BROWSER_CHROME_URL;
 const ABOUT_CONTRACT = "@mozilla.org/network/protocol/about;1?what=";

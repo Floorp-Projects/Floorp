@@ -12,9 +12,6 @@ const { AppConstants } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
@@ -37,8 +34,6 @@ ChromeUtils.defineModuleGetter(
   "OSCrypto",
   "resource://gre/modules/OSCrypto.jsm"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 // Resources
 

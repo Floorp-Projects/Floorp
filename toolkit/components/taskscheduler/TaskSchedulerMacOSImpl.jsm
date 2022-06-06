@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLSerializer"]);
-
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {

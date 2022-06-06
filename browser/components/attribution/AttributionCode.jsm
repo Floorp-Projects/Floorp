@@ -37,7 +37,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   };
   return new ConsoleAPI(consoleOptions);
 });
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 // This maximum length was originally based on how much space we have in the PE
 // file header that we store attribution codes in for full and stub installers.
