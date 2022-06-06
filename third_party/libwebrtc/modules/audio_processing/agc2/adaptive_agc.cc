@@ -41,17 +41,6 @@ AvailableCpuFeatures GetAllowedCpuFeatures(
   return features;
 }
 
-std::unique_ptr<NoiseLevelEstimator> CreateNoiseLevelEstimator(
-    NoiseEstimatorType estimator_type,
-    ApmDataDumper* apm_data_dumper) {
-  switch (estimator_type) {
-    case NoiseEstimatorType::kStationaryNoise:
-      return CreateStationaryNoiseEstimator(apm_data_dumper);
-    case NoiseEstimatorType::kNoiseFloor:
-      return CreateNoiseFloorEstimator(apm_data_dumper);
-  }
-}
-
 }  // namespace
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
@@ -65,8 +54,7 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
                        config.max_output_noise_level_dbfs,
                        config.dry_run),
       apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(
-          CreateNoiseLevelEstimator(config.noise_estimator, apm_data_dumper)),
+      noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
       saturation_protector_(
           CreateSaturationProtector(kSaturationProtectorInitialHeadroomDb,
                                     kSaturationProtectorExtraHeadroomDb,

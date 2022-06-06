@@ -46,17 +46,6 @@ std::string GainController1ModeToString(const Agc1Config::Mode& mode) {
   RTC_CHECK_NOTREACHED();
 }
 
-std::string GainController2NoiseEstimatorToString(
-    const Agc2Config::NoiseEstimator& type) {
-  switch (type) {
-    case Agc2Config::NoiseEstimator::kStationaryNoise:
-      return "StationaryNoise";
-    case Agc2Config::NoiseEstimator::kNoiseFloor:
-      return "NoiseFloor";
-  }
-  RTC_CHECK_NOTREACHED();
-}
-
 }  // namespace
 
 constexpr int AudioProcessing::kNativeSampleRatesHz[];
@@ -99,7 +88,6 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
 bool Agc2Config::AdaptiveDigital::operator==(
     const Agc2Config::AdaptiveDigital& rhs) const {
   return enabled == rhs.enabled && dry_run == rhs.dry_run &&
-         noise_estimator == rhs.noise_estimator &&
          vad_reset_period_ms == rhs.vad_reset_period_ms &&
          adjacent_speech_frames_threshold ==
              rhs.adjacent_speech_frames_threshold &&
@@ -204,9 +192,6 @@ std::string AudioProcessing::Config::ToString() const {
       << " }, adaptive_digital: { enabled: "
       << gain_controller2.adaptive_digital.enabled
       << ", dry_run: " << gain_controller2.adaptive_digital.dry_run
-      << ", noise_estimator: "
-      << GainController2NoiseEstimatorToString(
-             gain_controller2.adaptive_digital.noise_estimator)
       << ", vad_reset_period_ms: "
       << gain_controller2.adaptive_digital.vad_reset_period_ms
       << ", adjacent_speech_frames_threshold: "
