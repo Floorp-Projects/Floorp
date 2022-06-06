@@ -4,6 +4,9 @@
 // @ts-check
 "use strict";
 
+/** @type {any} */
+const lazy = {};
+
 /**
  * @typedef {import("./@types/perf").Library} Library
  * @typedef {import("./@types/perf").PerfFront} PerfFront
@@ -18,12 +21,12 @@
  */
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "clearTimeout",
   "resource://gre/modules/Timer.jsm"
 );
@@ -81,8 +84,8 @@ function getWASMProfilerGetSymbolsModule() {
   }
 
   // Reset expiry timer.
-  clearTimeout(gCachedWASMModuleExpiryTimer);
-  gCachedWASMModuleExpiryTimer = setTimeout(
+  lazy.clearTimeout(gCachedWASMModuleExpiryTimer);
+  gCachedWASMModuleExpiryTimer = lazy.setTimeout(
     clearCachedWASMModule,
     EXPIRY_TIME_IN_MS
   );
