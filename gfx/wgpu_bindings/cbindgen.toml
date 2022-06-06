@@ -43,6 +43,7 @@ exclude = [
 	"Option_BufferSize", "Option_NonZeroU32", "Option_NonZeroU8",
 	"ANativeWindow_setBuffersGeometry",
 ]
+include = ["BufferUsages"]
 
 [export.rename]
 "BufferDescriptor_RawString" = "BufferDescriptor"

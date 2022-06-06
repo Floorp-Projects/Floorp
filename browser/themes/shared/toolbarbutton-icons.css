@@ -248,7 +248,7 @@ toolbar {
 }
 
 #sync-button {
-  list-style-image: url("chrome://browser/skin/tab.svg");
+  list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
 
 #characterencoding-button {

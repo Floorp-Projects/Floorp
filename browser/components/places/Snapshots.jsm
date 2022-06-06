@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["Snapshots"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
@@ -20,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 /**

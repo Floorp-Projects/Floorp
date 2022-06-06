@@ -9,11 +9,13 @@ const EXPORTED_SYMBOLS = ["AppTestDelegateParent"];
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const lazy = {};
 
 // Each app needs to implement this
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 class AppTestDelegateParent extends JSWindowActorParent {
@@ -45,24 +47,33 @@ class AppTestDelegateParent extends JSWindowActorParent {
         );
       }
       case "clickPageAction":
-        return AppUiTestDelegate.clickPageAction(this.window, extensionId);
+        return lazy.AppUiTestDelegate.clickPageAction(this.window, extensionId);
       case "clickBrowserAction":
-        return AppUiTestDelegate.clickBrowserAction(this.window, extensionId);
+        return lazy.AppUiTestDelegate.clickBrowserAction(
+          this.window,
+          extensionId
+        );
       case "closePageAction":
-        return AppUiTestDelegate.closePageAction(this.window, extensionId);
+        return lazy.AppUiTestDelegate.closePageAction(this.window, extensionId);
       case "closeBrowserAction":
-        return AppUiTestDelegate.closeBrowserAction(this.window, extensionId);
+        return lazy.AppUiTestDelegate.closeBrowserAction(
+          this.window,
+          extensionId
+        );
       case "awaitExtensionPanel":
         // The desktop delegate returns a <browser>, but that cannot be sent
         // over IPC, so just ignore it. The promise resolves when the panel and
         // its content is fully loaded.
-        await AppUiTestDelegate.awaitExtensionPanel(this.window, extensionId);
+        await lazy.AppUiTestDelegate.awaitExtensionPanel(
+          this.window,
+          extensionId
+        );
         return null;
       case "openNewForegroundTab": {
         // We cannot send the tab object across process so let's store it with
         // a unique ID here.
         const uuid = Services.uuid.generateUUID().toString();
-        const tab = await AppUiTestDelegate.openNewForegroundTab(
+        const tab = await lazy.AppUiTestDelegate.openNewForegroundTab(
           this.window,
           url,
           waitForLoad
@@ -73,7 +84,7 @@ class AppTestDelegateParent extends JSWindowActorParent {
       case "removeTab": {
         const tab = this._tabs.get(tabId);
         this._tabs.delete(tabId);
-        return AppUiTestDelegate.removeTab(tab);
+        return lazy.AppUiTestDelegate.removeTab(tab);
       }
 
       default:

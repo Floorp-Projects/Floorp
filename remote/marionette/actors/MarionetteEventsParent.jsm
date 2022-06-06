@@ -11,13 +11,12 @@ const EXPORTED_SYMBOLS = [
   "MarionetteEventsParent",
 ];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });

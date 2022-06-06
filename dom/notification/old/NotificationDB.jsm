@@ -11,11 +11,7 @@ function debug(s) {
   dump("-*- NotificationDB component: " + s + "\n");
 }
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const NOTIFICATION_STORE_DIR = PathUtils.profileDir;
 const NOTIFICATION_STORE_PATH = PathUtils.join(

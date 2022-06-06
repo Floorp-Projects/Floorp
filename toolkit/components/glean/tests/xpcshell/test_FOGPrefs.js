@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const TELEMETRY_SERVER_PREF = "toolkit.telemetry.server";
 const UPLOAD_PREF = "datareporting.healthreport.uploadEnabled";
 const LOCALHOST_PREF = "telemetry.fog.test.localhost_port";

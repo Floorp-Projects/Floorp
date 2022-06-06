@@ -34,6 +34,8 @@ class WebGPUParent final : public PWebGPUParent {
       AdapterRequestDeviceResolver&& resolver);
   ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
+  ipc::IPCResult RecvCreateBuffer(RawId aSelfId, RawId aBufferId,
+                                  dom::GPUBufferDescriptor&& aDesc);
   ipc::IPCResult RecvBufferReturnShmem(RawId aSelfId, Shmem&& aShmem);
   ipc::IPCResult RecvBufferMap(RawId aSelfId, ffi::WGPUHostMap aHostMap,
                                uint64_t aOffset, uint64_t size,

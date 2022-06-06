@@ -9,22 +9,16 @@ var EXPORTED_SYMBOLS = ["UptakeTelemetry", "Policy"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AppConstants",
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
@@ -84,7 +78,7 @@ var Policy = {
   },
 
   getChannel() {
-    return lazy.AppConstants.MOZ_UPDATE_CHANNEL;
+    return AppConstants.MOZ_UPDATE_CHANNEL;
   },
 };
 
@@ -186,10 +180,7 @@ class UptakeTelemetry {
     // Contrary to histograms, Telemetry Events are not enabled by default.
     // Enable them on first call to `report()`.
     if (!this._eventsEnabled) {
-      lazy.Services.telemetry.setEventRecordingEnabled(
-        TELEMETRY_EVENTS_ID,
-        true
-      );
+      Services.telemetry.setEventRecordingEnabled(TELEMETRY_EVENTS_ID, true);
       this._eventsEnabled = true;
     }
 
@@ -203,7 +194,7 @@ class UptakeTelemetry {
         acc[k] = extra[k].toString();
         return acc;
       }, {});
-      lazy.Services.telemetry.recordEvent(
+      Services.telemetry.recordEvent(
         TELEMETRY_EVENTS_ID,
         "uptake",
         component,

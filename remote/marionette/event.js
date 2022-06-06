@@ -7,13 +7,13 @@
 
 const EXPORTED_SYMBOLS = ["event"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   keyData: "chrome://remote/content/shared/webdriver/KeyData.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 /** Provides functionality for creating and sending DOM events. */

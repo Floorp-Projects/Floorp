@@ -4781,7 +4781,8 @@ void TestProfiler() {
     // are done in gtest's.
 
     printf("baseprofiler_save_profile_to_file()...\n");
-    baseprofiler::profiler_save_profile_to_file("TestProfiler_profile.json");
+    baseprofiler::baseprofiler_save_profile_to_file(
+        "TestProfiler_profile.json");
 
     printf("profiler_stop()...\n");
     baseprofiler::profiler_stop();

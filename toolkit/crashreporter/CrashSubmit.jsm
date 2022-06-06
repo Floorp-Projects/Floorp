@@ -6,14 +6,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-XPCOMUtils.defineLazyGlobalGetters(this, [
-  "File",
-  "FormData",
-  "XMLHttpRequest",
-]);
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 

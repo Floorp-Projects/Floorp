@@ -352,23 +352,11 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
                                       const dom::GPUBufferDescriptor& aDesc) {
-  ffi::WGPUBufferDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
-  desc.size = aDesc.mSize;
-  desc.usage = aDesc.mUsage;
-  desc.mapped_at_creation = aDesc.mMappedAtCreation;
-
-  ByteBuf bb;
-  RawId id =
-      ffi::wgpu_client_create_buffer(mClient.get(), aSelfId, &desc, ToFFI(&bb));
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
+  RawId bufferId = ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId);
+  if (!SendCreateBuffer(aSelfId, bufferId, aDesc)) {
     MOZ_CRASH("IPC failure");
   }
-  return id;
+  return bufferId;
 }
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,

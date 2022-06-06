@@ -13,12 +13,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { IndexedDB } = ChromeUtils.import(
   "resource://gre/modules/IndexedDB.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 

@@ -33,6 +33,9 @@ DEFINE_IPC_SERIALIZER_WITHOUT_FIELDS(mozilla::dom::GPUCommandBufferDescriptor);
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPURequestAdapterOptions,
                                   mPowerPreference, mForceFallbackAdapter);
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUBufferDescriptor, mSize,
+                                  mUsage, mMappedAtCreation);
+
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ScopedError, operationError,
                                   validationMessage);
 

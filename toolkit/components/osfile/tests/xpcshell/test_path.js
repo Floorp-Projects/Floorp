@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 Services.prefs.setBoolPref("toolkit.osfile.test.syslib_necessary", false);
 // We don't need libc/kernel32.dll for this test
 

@@ -6,13 +6,13 @@
 
 const EXPORTED_SYMBOLS = ["ConsoleListener"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 
   getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",

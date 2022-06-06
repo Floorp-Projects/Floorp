@@ -9,15 +9,10 @@ var EXPORTED_SYMBOLS = ["MSMigrationUtils"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { MigrationUtils } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -58,8 +53,6 @@ const WEB_CREDENTIALS_VAULT_ID = [
   0x4add80b3,
   0x28db4d70,
 ];
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
 const wintypes = {
   BOOL: ctypes.int,

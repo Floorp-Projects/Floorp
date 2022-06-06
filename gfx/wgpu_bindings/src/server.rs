@@ -52,23 +52,23 @@ impl ErrorBuffer {
             e = source.source();
         }
 
-        self.init_str(string);
+        self.init_str(&string);
     }
 
-    fn init_str(&mut self, string: String) {
+    fn init_str(&mut self, message: &str) {
         assert_ne!(self.capacity, 0);
-        let length = if string.len() >= self.capacity {
+        let length = if message.len() >= self.capacity {
             log::warn!(
                 "Error length {} reached capacity {}",
-                string.len(),
+                message.len(),
                 self.capacity
             );
             self.capacity - 1
         } else {
-            string.len()
+            message.len()
         };
         unsafe {
-            ptr::copy_nonoverlapping(string.as_ptr(), self.string as *mut u8, length);
+            ptr::copy_nonoverlapping(message.as_ptr(), self.string as *mut u8, length);
             *self.string.add(length) = 0;
         }
     }
@@ -211,12 +211,30 @@ pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId
 pub extern "C" fn wgpu_server_device_create_buffer(
     global: &Global,
     self_id: id::DeviceId,
-    desc: &wgt::BufferDescriptor<RawString>,
-    new_id: id::BufferId,
+    buffer_id: id::BufferId,
+    label_or_null: RawString,
+    size: wgt::BufferAddress,
+    usage: u32,
+    mapped_at_creation: bool,
     mut error_buf: ErrorBuffer,
 ) {
-    let desc = desc.map_label(cow_label);
-    let (_, error) = gfx_select!(self_id => global.device_create_buffer(self_id, &desc, new_id));
+    let label = cow_label(&label_or_null);
+    let usage = match wgt::BufferUsages::from_bits(usage) {
+        Some(usage) => usage,
+        None => {
+            error_buf.init_str("GPUBufferDescriptor's 'usage' includes invalid unimplemented bits \
+                                or unimplemented usages");
+            gfx_select!(self_id => global.create_buffer_error(buffer_id, label));
+            return;
+        }
+    };
+    let desc = wgc::resource::BufferDescriptor {
+        label,
+        size,
+        usage,
+        mapped_at_creation,
+    };
+    let (_, error) = gfx_select!(self_id => global.device_create_buffer(self_id, &desc, buffer_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -285,12 +303,6 @@ impl Global {
         mut error_buf: ErrorBuffer,
     ) {
         match action {
-            DeviceAction::CreateBuffer(id, desc) => {
-                let (_, error) = self.device_create_buffer::<A>(self_id, &desc, id);
-                if let Some(err) = error {
-                    error_buf.init(err);
-                }
-            }
             DeviceAction::CreateTexture(id, desc) => {
                 let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
@@ -367,7 +379,7 @@ impl Global {
                 }
             }
             DeviceAction::Error(message) => {
-                error_buf.init_str(message);
+                error_buf.init_str(&message);
             }
         }
     }

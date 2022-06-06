@@ -5,6 +5,9 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 /* eslint-disable prettier/prettier */
 ChromeUtils.defineModuleGetter(this, "ShellService", "resource:///modules/ShellService.jsm");
@@ -12,7 +15,6 @@ ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/Add
 ChromeUtils.defineModuleGetter(this, "TelemetryArchive", "resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryController", "resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "AttributionCode", "resource:///modules/AttributionCode.jsm");
 ChromeUtils.defineModuleGetter(this, "WindowsVersionInfo", "resource://gre/modules/components-utils/WindowsVersionInfo.jsm");
 ChromeUtils.defineModuleGetter(this, "NormandyUtils", "resource://normandy/lib/NormandyUtils.jsm");
