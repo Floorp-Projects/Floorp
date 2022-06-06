@@ -15,19 +15,21 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
-XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
+XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
 });
 
-XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
+XPCOMUtils.defineLazyGetter(lazy, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
 });
 
@@ -37,12 +39,12 @@ XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
  * be converted to a URI. Call sites interested in checking for null should use
  * `allowedOrigins`, those interested in URIs should use `allowedOriginURIs`.
  */
-XPCOMUtils.defineLazyGetter(this, "allowedOrigins", () =>
-  RemoteAgent.allowOrigins !== null ? RemoteAgent.allowOrigins : []
+XPCOMUtils.defineLazyGetter(lazy, "allowedOrigins", () =>
+  lazy.RemoteAgent.allowOrigins !== null ? lazy.RemoteAgent.allowOrigins : []
 );
 
-XPCOMUtils.defineLazyGetter(this, "allowedOriginURIs", () => {
-  return allowedOrigins
+XPCOMUtils.defineLazyGetter(lazy, "allowedOriginURIs", () => {
+  return lazy.allowedOrigins
     .map(origin => {
       try {
         const originURI = Services.io.newURI(origin);
@@ -86,7 +88,7 @@ function writeString(output, data) {
         },
         0,
         0,
-        threadManager.currentThread
+        lazy.threadManager.currentThread
       );
     };
 
@@ -128,9 +130,9 @@ function isHostValid(hostHeader) {
     const hostUri = Services.io.newURI(`https://${hostHeader}`);
     const { host, port } = hostUri;
     const isHostnameValid =
-      isIPAddress(hostUri) || RemoteAgent.allowHosts.includes(host);
+      isIPAddress(hostUri) || lazy.RemoteAgent.allowHosts.includes(host);
     // For nsIURI a port value of -1 corresponds to the protocol's default port.
-    const isPortValid = [-1, RemoteAgent.port].includes(port);
+    const isPortValid = [-1, lazy.RemoteAgent.port].includes(port);
     return isHostnameValid && isPortValid;
   } catch (e) {
     return false;
@@ -145,14 +147,14 @@ function isOriginValid(originHeader) {
 
   // Special case "null" origins, used for privacy sensitive or opaque origins.
   if (originHeader === "null") {
-    return allowedOrigins.includes("null");
+    return lazy.allowedOrigins.includes("null");
   }
 
   try {
     // Extract the host, port and scheme from the provided origin header.
     const { host, port, scheme } = Services.io.newURI(originHeader);
     // Check if any allowed origin matches the provided host, port and scheme.
-    return allowedOriginURIs.some(
+    return lazy.allowedOriginURIs.some(
       uri => uri.host === host && uri.port === port && uri.scheme === scheme
     );
   } catch (e) {
@@ -167,8 +169,8 @@ function isOriginValid(originHeader) {
  */
 function processRequest({ requestLine, headers }) {
   if (!isOriginValid(headers.get("origin"))) {
-    logger.debug(
-      `Incorrect Origin header, allowed origins: [${allowedOrigins}]`
+    lazy.logger.debug(
+      `Incorrect Origin header, allowed origins: [${lazy.allowedOrigins}]`
     );
     throw new Error(
       `The handshake request has incorrect Origin header ${headers.get(
@@ -178,8 +180,8 @@ function processRequest({ requestLine, headers }) {
   }
 
   if (!isHostValid(headers.get("host"))) {
-    logger.debug(
-      `Incorrect Host header, allowed hosts: [${RemoteAgent.allowHosts}]`
+    lazy.logger.debug(
+      `Incorrect Host header, allowed hosts: [${lazy.RemoteAgent.allowHosts}]`
     );
     throw new Error(
       `The handshake request has incorrect Host header ${headers.get("host")}`
@@ -230,7 +232,7 @@ function processRequest({ requestLine, headers }) {
 function computeKey(key) {
   const str = `${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`;
   const data = Array.from(str, ch => ch.charCodeAt(0));
-  const hash = new CryptoHash("sha1");
+  const hash = new lazy.CryptoHash("sha1");
   hash.update(data, data.length);
   return hash.finish(true);
 }
@@ -272,7 +274,7 @@ async function createWebSocket(transport, input, output) {
   const transportProvider = {
     setListener(upgradeListener) {
       // onTransportAvailable callback shouldn't be called synchronously
-      executeSoon(() => {
+      lazy.executeSoon(() => {
         upgradeListener.onTransportAvailable(transport, input, output);
       });
     },

@@ -12,12 +12,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
 function WebSocketTransport(socket) {
-  EventEmitter.decorate(this);
+  lazy.EventEmitter.decorate(this);
 
   this.active = false;
   this.hooks = null;
