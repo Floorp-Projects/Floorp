@@ -71,7 +71,6 @@
 #include "mozilla/dom/XULFrameElementBinding.h"
 #include "mozilla/dom/XULMenuElementBinding.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
-#include "mozilla/dom/XULResizerElementBinding.h"
 #include "mozilla/dom/XULTextElementBinding.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -3839,8 +3838,6 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     if (definition->mLocalName == nsGkAtoms::description ||
         definition->mLocalName == nsGkAtoms::label) {
       cb = XULTextElement_Binding::GetConstructorObject;
-    } else if (definition->mLocalName == nsGkAtoms::resizer) {
-      cb = XULResizerElement_Binding::GetConstructorObject;
     } else if (definition->mLocalName == nsGkAtoms::menupopup ||
                definition->mLocalName == nsGkAtoms::popup ||
                definition->mLocalName == nsGkAtoms::panel ||

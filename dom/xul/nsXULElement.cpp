@@ -14,7 +14,6 @@
 #include "XULFrameElement.h"
 #include "XULMenuElement.h"
 #include "XULPopupElement.h"
-#include "XULResizerElement.h"
 #include "XULTextElement.h"
 #include "XULTooltipElement.h"
 #include "XULTreeElement.h"
@@ -156,10 +155,6 @@ nsXULElement* nsXULElement::Construct(
   // them into account, otherwise you'll start getting "Illegal constructor"
   // exceptions in chrome code.
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
-  if (nodeInfo->Equals(nsGkAtoms::resizer)) {
-    return NS_NewXULResizerElement(nodeInfo.forget());
-  }
-
   if (nodeInfo->Equals(nsGkAtoms::label) ||
       nodeInfo->Equals(nsGkAtoms::description)) {
     auto* nim = nodeInfo->NodeInfoManager();

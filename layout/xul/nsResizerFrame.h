@@ -3,43 +3,49 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifndef nsResizerFrame_h___
+#define nsResizerFrame_h___
 
-#ifndef mozilla_dom_XULResizerElement_h
-#define mozilla_dom_XULResizerElement_h
+#include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
+#include "nsTitleBarFrame.h"
 
-#include "nsXULElement.h"
-#include "Units.h"
 class nsIBaseWindow;
 
 namespace mozilla {
-namespace dom {
+class PresShell;
+}  // namespace mozilla
 
-nsXULElement* NS_NewXULResizerElement(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-
-class XULResizerElement final : public nsXULElement {
- public:
-  explicit XULResizerElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsXULElement(std::move(aNodeInfo)) {}
-
-  MOZ_CAN_RUN_SCRIPT
-  nsresult PostHandleEvent(mozilla::EventChainPostVisitor&) override;
-
- private:
-  virtual ~XULResizerElement() = default;
-  JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
-
-  MOZ_CAN_RUN_SCRIPT
-  void PostHandleEventInternal(mozilla::EventChainPostVisitor&);
+class nsResizerFrame final : public nsTitleBarFrame {
+ protected:
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
 
   struct Direction {
     int8_t mHorizontal;
     int8_t mVertical;
   };
-  Direction GetDirection();
 
-  nsIContent* GetContentToResize(nsIBaseWindow** aWindow);
+ public:
+  NS_DECL_FRAMEARENA_HELPERS(nsResizerFrame)
+
+  friend nsIFrame* NS_NewResizerFrame(mozilla::PresShell* aPresShell,
+                                      ComputedStyle* aStyle);
+
+  explicit nsResizerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
+
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
+                               mozilla::WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus) override;
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual void MouseClicked(mozilla::WidgetMouseEvent* aEvent) override;
+
+ protected:
+  nsIContent* GetContentToResize(mozilla::PresShell* aPresShell,
+                                 nsIBaseWindow** aWindow);
+
+  Direction GetDirection();
 
   /**
    * Adjust the window position and size in a direction according to the mouse
@@ -69,12 +75,9 @@ class XULResizerElement final : public nsXULElement {
                                        const SizeInfo& aSizeInfo);
   static void RestoreOriginalSize(nsIContent* aContent);
 
+ protected:
   LayoutDeviceIntRect mMouseDownRect;
   LayoutDeviceIntPoint mMouseDownPoint;
-  bool mTrackingMouseMove = false;
-};
+};  // class nsResizerFrame
 
-}  // namespace dom
-}  // namespace mozilla
-
-#endif  // XULResizerElement_h
+#endif /* nsResizerFrame_h___ */

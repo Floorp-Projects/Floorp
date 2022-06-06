@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     "nsMenuPopupFrame.cpp",
     "nsPopupSetFrame.cpp",
     "nsRepeatService.cpp",
+    "nsResizerFrame.cpp",
     "nsRootBoxFrame.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",
@@ -45,6 +46,7 @@ UNIFIED_SOURCES += [
     "nsSprocketLayout.cpp",
     "nsStackLayout.cpp",
     "nsTextBoxFrame.cpp",
+    "nsTitleBarFrame.cpp",
     "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
 ]
