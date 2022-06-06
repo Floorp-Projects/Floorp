@@ -18,8 +18,6 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const { DefaultMap } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder"]);
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "mimeHeader",

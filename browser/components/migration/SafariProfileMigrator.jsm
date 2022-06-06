@@ -8,9 +8,6 @@ const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
@@ -35,8 +32,6 @@ ChromeUtils.defineModuleGetter(
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;

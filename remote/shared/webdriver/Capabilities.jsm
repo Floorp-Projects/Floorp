@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 XPCOMUtils.defineLazyGetter(this, "remoteAgent", () => {
   return Cc["@mozilla.org/remote/agent;1"].createInstance(Ci.nsIRemoteAgent);
 });

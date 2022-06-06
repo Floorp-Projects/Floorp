@@ -6,12 +6,7 @@
 
 const EXPORTED_SYMBOLS = ["FaviconLoader"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
 ChromeUtils.defineModuleGetter(
   this,

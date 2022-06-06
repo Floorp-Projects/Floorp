@@ -89,8 +89,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "mozIAsyncHistory"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 /**
  * Whenever we update or remove numerous pages, it is preferable
  * to yield time to the main thread every so often to avoid janking.

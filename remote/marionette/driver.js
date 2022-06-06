@@ -68,7 +68,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.MARIONETTE)
 );
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
