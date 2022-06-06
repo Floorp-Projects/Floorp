@@ -511,6 +511,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean parserCreatedScript;
 
   /**
+   * True if this request is known to have been triggered by a user
+   * manually requesting the URI to be saved.
+   */
+  [infallible] attribute boolean isUserTriggeredSave;
+
+  /**
    * True if this request is from DevTools.
    */
   [infallible] attribute boolean isInDevToolsContext;

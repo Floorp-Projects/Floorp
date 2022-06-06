@@ -12,6 +12,20 @@ MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 var tempDir;
 
+async function promiseDownloadFinished(list) {
+  return new Promise(resolve => {
+    list.addView({
+      onDownloadChanged(download) {
+        download.launchWhenSucceeded = false;
+        if (download.succeeded || download.error) {
+          list.removeView(this);
+          resolve(download);
+        }
+      },
+    });
+  });
+}
+
 function createPromiseForFilePicker() {
   return new Promise(resolve => {
     MockFilePicker.showCallback = fp => {
@@ -77,10 +91,7 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
 
       let filePickerShown = createPromiseForFilePicker();
 
-      let downloadsPanelPromise = BrowserTestUtils.waitForEvent(
-        DownloadsPanel.panel,
-        "popupshown"
-      );
+      let downloadFinishedPromise = promiseDownloadFinished(downloadList);
 
       info("Clicking on the download button...");
       await SpecialPowers.spawn(browser, [], () => {
@@ -89,14 +100,13 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
       info("Waiting for a filename to be picked from the file picker");
       await filePickerShown;
 
-      // check that resulted in a download being added to the list
-      // and the dl panel opened
-      info("Waiting for download panel to open when the download is complete");
-      await downloadsPanelPromise;
+      // check that resulted in a download being added to the list. The
+      // download panel should not open.
+      await downloadFinishedPromise;
       is(
         DownloadsPanel.panel.state,
-        "open",
-        "Check the download panel state is 'open'"
+        "closed",
+        "Check the download panel state is 'closed'"
       );
       downloadList = await Downloads.getList(Downloads.PUBLIC);
       const allDownloads = await downloadList.getAll();
@@ -120,7 +130,6 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
         tabCount,
         "No new tab was opened to view the downloaded PDF"
       );
-      await closeDownloadsPanel();
     }
   );
 });
