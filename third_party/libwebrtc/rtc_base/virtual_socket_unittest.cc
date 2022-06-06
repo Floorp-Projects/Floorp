@@ -189,36 +189,36 @@ class VirtualSocketServerTest : public ::testing::Test {
   }
 
   // Test a client can bind to the any address, and all sent packets will have
-  // the default route as the source address. Also, it can receive packets sent
-  // to the default route.
-  void TestDefaultRoute(const IPAddress& default_route) {
-    ss_.SetDefaultRoute(default_route);
+  // the default source address. Also, it can receive packets sent to the
+  // default address.
+  void TestDefaultSourceAddress(const IPAddress& default_address) {
+    ss_.SetDefaultSourceAddress(default_address);
 
     // Create client1 bound to the any address.
-    Socket* socket = ss_.CreateSocket(default_route.family(), SOCK_DGRAM);
-    socket->Bind(EmptySocketAddressWithFamily(default_route.family()));
+    Socket* socket = ss_.CreateSocket(default_address.family(), SOCK_DGRAM);
+    socket->Bind(EmptySocketAddressWithFamily(default_address.family()));
     SocketAddress client1_any_addr = socket->GetLocalAddress();
     EXPECT_TRUE(client1_any_addr.IsAnyIP());
     auto client1 = std::make_unique<TestClient>(
         std::make_unique<AsyncUDPSocket>(socket), &fake_clock_);
 
-    // Create client2 bound to the default route.
-    Socket* socket2 = ss_.CreateSocket(default_route.family(), SOCK_DGRAM);
-    socket2->Bind(SocketAddress(default_route, 0));
+    // Create client2 bound to the address route.
+    Socket* socket2 = ss_.CreateSocket(default_address.family(), SOCK_DGRAM);
+    socket2->Bind(SocketAddress(default_address, 0));
     SocketAddress client2_addr = socket2->GetLocalAddress();
     EXPECT_FALSE(client2_addr.IsAnyIP());
     auto client2 = std::make_unique<TestClient>(
         std::make_unique<AsyncUDPSocket>(socket2), &fake_clock_);
 
-    // Client1 sends to client2, client2 should see the default route as
+    // Client1 sends to client2, client2 should see the default address as
     // client1's address.
     SocketAddress client1_addr;
     EXPECT_EQ(6, client1->SendTo("bizbaz", 6, client2_addr));
     EXPECT_TRUE(client2->CheckNextPacket("bizbaz", 6, &client1_addr));
     EXPECT_EQ(client1_addr,
-              SocketAddress(default_route, client1_any_addr.port()));
+              SocketAddress(default_address, client1_any_addr.port()));
 
-    // Client2 can send back to client1's default route address.
+    // Client2 can send back to client1's default address.
     EXPECT_EQ(3, client2->SendTo("foo", 3, client1_addr));
     EXPECT_TRUE(client1->CheckNextPacket("foo", 3, &client2_addr));
   }
@@ -871,14 +871,14 @@ TEST_F(VirtualSocketServerTest, basic_v6) {
 
 TEST_F(VirtualSocketServerTest, TestDefaultRoute_v4) {
   IPAddress ipv4_default_addr(0x01020304);
-  TestDefaultRoute(ipv4_default_addr);
+  TestDefaultSourceAddress(ipv4_default_addr);
 }
 
 TEST_F(VirtualSocketServerTest, TestDefaultRoute_v6) {
   IPAddress ipv6_default_addr;
   EXPECT_TRUE(
       IPFromString("2401:fa00:4:1000:be30:5bff:fee5:c3", &ipv6_default_addr));
-  TestDefaultRoute(ipv6_default_addr);
+  TestDefaultSourceAddress(ipv6_default_addr);
 }
 
 TEST_F(VirtualSocketServerTest, connect_v4) {
