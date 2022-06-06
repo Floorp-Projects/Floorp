@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
@@ -20,16 +22,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.import(
     "resource://messaging-system/lib/Logger.jsm"
   );
   return new Logger("AboutWelcomeChild");
 });
 
-XPCOMUtils.defineLazyGetter(this, "tippyTopProvider", () =>
+XPCOMUtils.defineLazyGetter(lazy, "tippyTopProvider", () =>
   (async () => {
-    const provider = new TippyTopProvider();
+    const provider = new lazy.TippyTopProvider();
     await provider.init();
     return provider;
   })()
@@ -38,7 +40,7 @@ XPCOMUtils.defineLazyGetter(this, "tippyTopProvider", () =>
 const SEARCH_REGION_PREF = "browser.search.region";
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "searchRegion",
   SEARCH_REGION_PREF,
   ""
@@ -52,7 +54,7 @@ function getImportableSites(child) {
     getImportableSites.cache ??
     (getImportableSites.cache = (async () => {
       // Use tippy top to get packaged rich icons
-      const tippyTop = await tippyTopProvider;
+      const tippyTop = await lazy.tippyTopProvider;
       // Remove duplicate entries if they would appear the same
       return `[${[
         ...new Set(
@@ -62,7 +64,7 @@ function getImportableSites(child) {
             tippyTop.processSite(site, "*");
             return JSON.stringify({
               icon: site.tippyTopIcon,
-              label: shortURL(site),
+              label: lazy.shortURL(site),
             });
           })
         ),
@@ -73,18 +75,18 @@ function getImportableSites(child) {
 
 async function getDefaultSites(child) {
   // Get default TopSites by region
-  let sites = DEFAULT_SITES.get(
-    DEFAULT_SITES.has(searchRegion) ? searchRegion : ""
+  let sites = lazy.DEFAULT_SITES.get(
+    lazy.DEFAULT_SITES.has(lazy.searchRegion) ? lazy.searchRegion : ""
   );
 
   // Use tippy top to get packaged rich icons
-  const tippyTop = await tippyTopProvider;
+  const tippyTop = await lazy.tippyTopProvider;
   let defaultSites = sites.split(",").map(link => {
     let site = { url: link };
     tippyTop.processSite(site);
     return {
       icon: site.tippyTopIcon,
-      title: shortURL(site),
+      title: lazy.shortURL(site),
     };
   });
   return Cu.cloneInto(defaultSites, child.contentWindow);
@@ -105,7 +107,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * @param {{type: string, data?: any}} action
    */
   sendToPage(action) {
-    log.debug(`Sending to page: ${action.type}`);
+    lazy.log.debug(`Sending to page: ${action.type}`);
     const win = this.document.defaultView;
     const event = new win.CustomEvent("AboutWelcomeChromeToContent", {
       detail: Cu.cloneInto(action, win),
@@ -221,23 +223,23 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
     // Return to AMO gets returned early.
     if (attributionData?.template) {
-      log.debug("Loading about:welcome with RTAMO attribution data");
+      lazy.log.debug("Loading about:welcome with RTAMO attribution data");
       return Cu.cloneInto(attributionData, this.contentWindow);
     } else if (attributionData?.ua) {
-      log.debug("Loading about:welcome with UA attribution");
+      lazy.log.debug("Loading about:welcome with UA attribution");
     }
 
     let experimentMetadata =
-      ExperimentAPI.getExperimentMetaData({
+      lazy.ExperimentAPI.getExperimentMetaData({
         featureId: "aboutwelcome",
       }) || {};
 
-    log.debug(
+    lazy.log.debug(
       `Loading about:welcome with ${experimentMetadata?.slug ??
         "no"} experiment`
     );
 
-    let featureConfig = NimbusFeatures.aboutwelcome.getAllVariables();
+    let featureConfig = lazy.NimbusFeatures.aboutwelcome.getAllVariables();
     featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
     featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
     if (featureConfig.languageMismatchEnabled) {
@@ -245,12 +247,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
         "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO"
       );
     }
-    let defaults = AboutWelcomeDefaults.getDefaults();
+    let defaults = lazy.AboutWelcomeDefaults.getDefaults();
     // FeatureConfig (from prefs or experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
     // override the default with `null`
     return Cu.cloneInto(
-      await AboutWelcomeDefaults.prepareContentForReact({
+      await lazy.AboutWelcomeDefaults.prepareContentForReact({
         ...attributionData,
         ...experimentMetadata,
         ...defaults,
@@ -347,6 +349,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * @override
    */
   handleEvent(event) {
-    log.debug(`Received page event ${event.type}`);
+    lazy.log.debug(`Received page event ${event.type}`);
   }
 }

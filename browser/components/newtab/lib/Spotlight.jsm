@@ -7,7 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
@@ -16,9 +18,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "AWTelemetry",
-  () => new AboutWelcomeTelemetry()
+  () => new lazy.AboutWelcomeTelemetry()
 );
 
 const Spotlight = {
@@ -38,7 +40,7 @@ const Spotlight = {
   defaultDispatch(message) {
     if (message.type === "SPOTLIGHT_TELEMETRY") {
       const { message_id, event } = message.data;
-      AWTelemetry.sendTelemetry({ message_id, event });
+      lazy.AWTelemetry.sendTelemetry({ message_id, event });
     }
   },
 
@@ -66,7 +68,7 @@ const Spotlight = {
     this.sendUserEventTelemetry("IMPRESSION", message, dispatchCFRAction);
     dispatchCFRAction({ type: "IMPRESSION", data: message });
 
-    const unload = await RemoteImages.patchMessage(message.content.logo);
+    const unload = await lazy.RemoteImages.patchMessage(message.content.logo);
 
     if (message.content?.modal === "tab") {
       let { closedPromise } = win.gBrowser.getTabDialogBox(browser).open(
@@ -94,7 +96,7 @@ const Spotlight = {
 
     if (params.secondaryBtn) {
       this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
-      SpecialMessageActions.handleAction(
+      lazy.SpecialMessageActions.handleAction(
         message.content.body.secondary.action,
         browser
       );
@@ -102,7 +104,7 @@ const Spotlight = {
 
     if (params.primaryBtn) {
       this.sendUserEventTelemetry("CLICK", message, dispatchCFRAction);
-      SpecialMessageActions.handleAction(
+      lazy.SpecialMessageActions.handleAction(
         message.content.body.primary.action,
         browser
       );

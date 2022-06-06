@@ -21,7 +21,8 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PersonalityProvider:
     "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm",
 });
@@ -49,7 +50,7 @@ class RecommendationProvider {
       return;
     }
     // At this point we've determined we can successfully create a v2 personalization provider.
-    this.provider = new PersonalityProvider(this.modelKeys);
+    this.provider = new lazy.PersonalityProvider(this.modelKeys);
     this.provider.setScores(scores);
   }
 

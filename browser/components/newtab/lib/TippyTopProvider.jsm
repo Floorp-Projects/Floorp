@@ -7,7 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+const lazy = {};
+
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const TIPPYTOP_PATH = "chrome://activity-stream/content/data/content/tippytop/";
 const TIPPYTOP_JSON_PATH =
@@ -41,7 +43,7 @@ class TippyTopProvider {
     // Load the Tippy Top sites from the json manifest.
     try {
       for (const site of await (
-        await fetch(TIPPYTOP_JSON_PATH, {
+        await lazy.fetch(TIPPYTOP_JSON_PATH, {
           credentials: "omit",
         })
       ).json()) {

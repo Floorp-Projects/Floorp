@@ -3,14 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
@@ -20,7 +22,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
@@ -65,7 +67,7 @@ class PersonalityProvider {
     }
     const server = Services.prefs.getCharPref("services.settings.server");
     const serverInfo = await (
-      await fetch(`${server}/`, {
+      await lazy.fetch(`${server}/`, {
         credentials: "omit",
       })
     ).json();
@@ -92,11 +94,11 @@ class PersonalityProvider {
   }
 
   setupSyncAttachment(collection) {
-    RemoteSettings(collection).on("sync", this.onSync);
+    lazy.RemoteSettings(collection).on("sync", this.onSync);
   }
 
   teardownSyncAttachment(collection) {
-    RemoteSettings(collection).off("sync", this.onSync);
+    lazy.RemoteSettings(collection).off("sync", this.onSync);
   }
 
   onSync(event) {
@@ -117,7 +119,7 @@ class PersonalityProvider {
    */
   async getRecipe() {
     if (!this.recipes || !this.recipes.length) {
-      const result = await RemoteSettings(RECIPE_NAME).get();
+      const result = await lazy.RemoteSettings(RECIPE_NAME).get();
       this.recipes = await Promise.all(
         result.map(async record => ({
           ...(await this.getAttachment(record)),
@@ -141,7 +143,7 @@ class PersonalityProvider {
     });
     sql += " LIMIT 30000";
 
-    const { activityStreamProvider } = NewTabUtils;
+    const { activityStreamProvider } = lazy.NewTabUtils;
     const history = await activityStreamProvider.executePlacesQuery(sql, {
       columns,
       params: {},
@@ -192,7 +194,7 @@ class PersonalityProvider {
   }
 
   async fetchModels() {
-    const models = await RemoteSettings(MODELS_NAME).get();
+    const models = await lazy.RemoteSettings(MODELS_NAME).get();
     return this.personalityProviderWorker.post("fetchModels", [models]);
   }
 

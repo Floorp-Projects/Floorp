@@ -22,48 +22,50 @@ const { classifySite } = ChromeUtils.import(
   "resource://activity-stream/lib/SiteClassifier.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PingCentre",
   "resource:///modules/PingCentre.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UTEventReporting",
   "resource://activity-stream/lib/UTEventReporting.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "HomePage",
   "resource:///modules/HomePage.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
@@ -110,16 +112,16 @@ const ONBOARDING_ALLOWED_PAGE_VALUES = [
 ];
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "browserSessionId",
-  () => TelemetrySession.getMetadata("").sessionId
+  () => lazy.TelemetrySession.getMetadata("").sessionId
 );
 
 // The scalar category for TopSites of Contextual Services
 const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites";
 // `contextId` is a unique identifier used by Contextual Services
 const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
-XPCOMUtils.defineLazyGetter(this, "contextId", () => {
+XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
   let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
   if (!_contextId) {
     _contextId = String(Services.uuid.generateUUID());
@@ -154,7 +156,7 @@ class TelemetryFeed {
 
   get telemetryClientId() {
     Object.defineProperty(this, "telemetryClientId", {
-      value: ClientID.getClientID(),
+      value: lazy.ClientID.getClientID(),
     });
     return this.telemetryClientId;
   }
@@ -185,7 +187,7 @@ class TelemetryFeed {
       "deletion.request.impression_id",
       this._impressionId
     );
-    Services.telemetry.scalarSet("deletion.request.context_id", contextId);
+    Services.telemetry.scalarSet("deletion.request.context_id", lazy.contextId);
   }
 
   handleEvent(event) {
@@ -211,7 +213,7 @@ class TelemetryFeed {
 
   countPinnedTab(target, source = "TAB_CONTEXT_MENU") {
     const win = target.ownerGlobal;
-    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return;
     }
     const event = Object.assign(this.createPing(), {
@@ -229,7 +231,7 @@ class TelemetryFeed {
   countTotalPinnedTabs() {
     let pinnedTabs = 0;
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
-      if (win.closed || PrivateBrowsingUtils.isWindowPrivate(win)) {
+      if (win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
         continue;
       }
       for (let tab of win.gBrowser.tabs) {
@@ -303,7 +305,7 @@ class TelemetryFeed {
    */
   get pingCentre() {
     Object.defineProperty(this, "pingCentre", {
-      value: new PingCentre({ topic: ACTIVITY_STREAM_ID }),
+      value: new lazy.PingCentre({ topic: ACTIVITY_STREAM_ID }),
     });
     return this.pingCentre;
   }
@@ -312,7 +314,9 @@ class TelemetryFeed {
    * Lazily initialize UTEventReporting to send pings
    */
   get utEvents() {
-    Object.defineProperty(this, "utEvents", { value: new UTEventReporting() });
+    Object.defineProperty(this, "utEvents", {
+      value: new lazy.UTEventReporting(),
+    });
     return this.utEvents;
   }
 
@@ -337,7 +341,7 @@ class TelemetryFeed {
    *  @return {bool}
    */
   get isInCFRCohort() {
-    const experimentData = ExperimentAPI.getExperimentMetaData({
+    const experimentData = lazy.ExperimentAPI.getExperimentMetaData({
       featureId: "cfr",
     });
     if (experimentData && experimentData.slug) {
@@ -588,8 +592,8 @@ class TelemetryFeed {
       action: "activity_stream_session",
       perf: session.perf,
       profile_creation_date:
-        TelemetryEnvironment.currentEnvironment.profile.resetDate ||
-        TelemetryEnvironment.currentEnvironment.profile.creationDate,
+        lazy.TelemetryEnvironment.currentEnvironment.profile.resetDate ||
+        lazy.TelemetryEnvironment.currentEnvironment.profile.creationDate,
     });
   }
 
@@ -649,7 +653,7 @@ class TelemetryFeed {
    */
   async applyCFRPolicy(ping) {
     if (
-      UpdateUtils.getUpdateChannel(true) === "release" &&
+      lazy.UpdateUtils.getUpdateChannel(true) === "release" &&
       !this.isInCFRCohort
     ) {
       ping.message_id = "n/a";
@@ -667,7 +671,7 @@ class TelemetryFeed {
    */
   async applyWhatsNewPolicy(ping) {
     ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
+    ping.browser_session_id = lazy.browserSessionId;
     // Attach page info to `event_context` if there is a session associated with this ping
     delete ping.action;
     return { ping, pingType: "whats-new-panel" };
@@ -675,14 +679,14 @@ class TelemetryFeed {
 
   async applyInfoBarPolicy(ping) {
     ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
+    ping.browser_session_id = lazy.browserSessionId;
     delete ping.action;
     return { ping, pingType: "infobar" };
   }
 
   async applySpotlightPolicy(ping) {
     ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
+    ping.browser_session_id = lazy.browserSessionId;
     delete ping.action;
     return { ping, pingType: "spotlight" };
   }
@@ -695,7 +699,7 @@ class TelemetryFeed {
    */
   async applyMomentsPolicy(ping) {
     if (
-      UpdateUtils.getUpdateChannel(true) === "release" &&
+      lazy.UpdateUtils.getUpdateChannel(true) === "release" &&
       !this.isInCFRCohort
     ) {
       ping.message_id = "n/a";
@@ -723,7 +727,7 @@ class TelemetryFeed {
    */
   async applyOnboardingPolicy(ping, session) {
     ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
+    ping.browser_session_id = lazy.browserSessionId;
     // Attach page info to `event_context` if there is a session associated with this ping
     if (ping.action === "onboarding_user_event" && session && session.page) {
       let event_context;
@@ -769,7 +773,7 @@ class TelemetryFeed {
   async sendEventPing(ping) {
     delete ping.action;
     ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
+    ping.browser_session_id = lazy.browserSessionId;
     if (ping.value && typeof ping.value === "object") {
       ping.value = JSON.stringify(ping.value);
     }
@@ -863,7 +867,7 @@ class TelemetryFeed {
       return;
     }
 
-    let payload = { ...data, context_id: contextId };
+    let payload = { ...data, context_id: lazy.contextId };
     delete payload.type;
     this.sendStructuredIngestionEvent(
       payload,
@@ -913,17 +917,17 @@ class TelemetryFeed {
       // If so, classify them.
       if (
         Services.prefs.getBoolPref("browser.newtabpage.enabled") &&
-        AboutNewTab.newTabURLOverridden &&
-        !AboutNewTab.newTabURL.startsWith("moz-extension://")
+        lazy.AboutNewTab.newTabURLOverridden &&
+        !lazy.AboutNewTab.newTabURL.startsWith("moz-extension://")
       ) {
         value.newtab_url_category = await this._classifySite(
-          AboutNewTab.newTabURL
+          lazy.AboutNewTab.newTabURL
         );
         newtabAffected = true;
       }
       // Check if the newtab page setting is controlled by an extension.
-      await ExtensionSettingsStore.initialize();
-      const newtabExtensionInfo = ExtensionSettingsStore.getSetting(
+      await lazy.ExtensionSettingsStore.initialize();
+      const newtabExtensionInfo = lazy.ExtensionSettingsStore.getSetting(
         "url_overrides",
         "newTabURL"
       );
@@ -932,7 +936,7 @@ class TelemetryFeed {
         newtabAffected = true;
       }
 
-      const homePageURL = HomePage.get();
+      const homePageURL = lazy.HomePage.get();
       if (
         !["about:home", "about:blank"].includes(homePageURL) &&
         !homePageURL.startsWith("moz-extension://")
@@ -940,7 +944,7 @@ class TelemetryFeed {
         value.home_url_category = await this._classifySite(homePageURL);
         homeAffected = true;
       }
-      const homeExtensionInfo = ExtensionSettingsStore.getSetting(
+      const homeExtensionInfo = lazy.ExtensionSettingsStore.getSetting(
         "prefs",
         "homepage_override"
       );
@@ -1135,10 +1139,10 @@ class TelemetryFeed {
     if (
       timestamp &&
       session.page === "about:home" &&
-      !HomePage.overridden &&
+      !lazy.HomePage.overridden &&
       Services.prefs.getIntPref("browser.startup.page") === 1
     ) {
-      AboutNewTab.maybeRecordTopsitesPainted(timestamp);
+      lazy.AboutNewTab.maybeRecordTopsitesPainted(timestamp);
     }
 
     Object.assign(session.perf, data);

@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.jsm",
 });
 
@@ -372,7 +374,7 @@ const OnboardingMessageProvider = {
     return translatedMessages;
   },
   async _doesAppNeedPin() {
-    const needPin = await ShellService.doesAppNeedPin();
+    const needPin = await lazy.ShellService.doesAppNeedPin();
     return needPin;
   },
   async _doesAppNeedDefault() {
@@ -380,7 +382,7 @@ const OnboardingMessageProvider = {
       "browser.shell.checkDefaultBrowser",
       false
     );
-    let isDefault = await ShellService.isDefaultBrowser();
+    let isDefault = await lazy.ShellService.isDefaultBrowser();
     return checkDefault && !isDefault;
   },
   async getUpgradeMessage() {

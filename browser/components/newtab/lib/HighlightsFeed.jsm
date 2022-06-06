@@ -23,33 +23,35 @@ const { Dedupe } = ChromeUtils.import(
   "resource://activity-stream/common/Dedupe.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FilterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LinksCache",
   "resource://activity-stream/lib/LinksCache.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DownloadsManager",
   "resource://activity-stream/lib/DownloadsManager.jsm"
 );
@@ -67,13 +69,13 @@ const RECENT_DOWNLOAD_THRESHOLD = 36 * 60 * 60 * 1000;
 class HighlightsFeed {
   constructor() {
     this.dedupe = new Dedupe(this._dedupeKey);
-    this.linksCache = new LinksCache(
-      NewTabUtils.activityStreamLinks,
+    this.linksCache = new lazy.LinksCache(
+      lazy.NewTabUtils.activityStreamLinks,
       "getHighlights",
       ["image"]
     );
-    PageThumbs.addExpirationFilter(this);
-    this.downloadsManager = new DownloadsManager();
+    lazy.PageThumbs.addExpirationFilter(this);
+    this.downloadsManager = new lazy.DownloadsManager();
   }
 
   _dedupeKey(site) {
@@ -101,7 +103,7 @@ class HighlightsFeed {
 
   uninit() {
     SectionsManager.disableSection(SECTION_ID);
-    PageThumbs.removeExpirationFilter(this);
+    lazy.PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, SYNC_BOOKMARKS_FINISHED_EVENT);
     Services.obs.removeObserver(this, BOOKMARKS_RESTORE_SUCCESS_EVENT);
     Services.obs.removeObserver(this, BOOKMARKS_RESTORE_FAILED_EVENT);
@@ -217,7 +219,7 @@ class HighlightsFeed {
     const orderedPages = this._orderHighlights(manyPages);
 
     // Remove adult highlights if we need to
-    const checkedAdult = FilterAdult.filter(orderedPages);
+    const checkedAdult = lazy.FilterAdult.filter(orderedPages);
 
     // Remove any Highlights that are in Top Sites already
     const [, deduped] = this.dedupe.group(
@@ -295,7 +297,7 @@ class HighlightsFeed {
   fetchImage(page, isStartup = false) {
     // Request a screenshot if we don't already have one pending
     const { preview_image_url: imageUrl, url } = page;
-    return Screenshots.maybeCacheScreenshot(
+    return lazy.Screenshots.maybeCacheScreenshot(
       page,
       imageUrl || url,
       "image",

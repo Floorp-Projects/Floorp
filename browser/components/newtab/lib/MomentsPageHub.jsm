@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   setInterval: "resource://gre/modules/Timer.jsm",
   clearInterval: "resource://gre/modules/Timer.jsm",
 });
@@ -54,7 +56,7 @@ class _MomentsPageHub {
       template: "update_action",
     });
 
-    const _intervalId = setInterval(
+    const _intervalId = lazy.setInterval(
       () => this.checkHomepageOverridePref(),
       SYSTEM_TICK_INTERVAL
     );
@@ -162,7 +164,7 @@ class _MomentsPageHub {
   }
 
   uninit() {
-    clearInterval(this.state._intervalId);
+    lazy.clearInterval(this.state._intervalId);
     this.state = {};
     this._initialized = false;
   }

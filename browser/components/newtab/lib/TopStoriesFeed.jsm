@@ -10,7 +10,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NewTabUtils } = ChromeUtils.import(
   "resource://gre/modules/NewTabUtils.jsm"
 );
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+const lazy = {};
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
@@ -29,7 +30,7 @@ const { PersistentCache } = ChromeUtils.import(
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
@@ -136,7 +137,10 @@ class TopStoriesFeed {
   }
 
   getPocketState(target) {
-    const action = { type: at.POCKET_LOGGED_IN, data: pktApi.isUserLoggedIn() };
+    const action = {
+      type: at.POCKET_LOGGED_IN,
+      data: lazy.pktApi.isUserLoggedIn(),
+    };
     this.store.dispatch(ac.OnlyToOneContent(action, target));
   }
 
@@ -192,7 +196,7 @@ class TopStoriesFeed {
       return null;
     }
     try {
-      const response = await fetch(this.stories_endpoint, {
+      const response = await lazy.fetch(this.stories_endpoint, {
         credentials: "omit",
       });
       if (!response.ok) {
@@ -292,7 +296,7 @@ class TopStoriesFeed {
       return null;
     }
     try {
-      const response = await fetch(this.topics_endpoint, {
+      const response = await lazy.fetch(this.topics_endpoint, {
         credentials: "omit",
       });
       if (!response.ok) {

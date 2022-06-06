@@ -17,7 +17,9 @@ const { getDefaultOptions } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamStorage.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
@@ -188,7 +190,7 @@ const SectionsManager = {
   sections: new Map(),
   async init(prefs = {}, storage) {
     this._storage = storage;
-    const featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
+    const featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
 
     for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS(featureConfig))) {
       const optionsPrefName = `${feedPrefName}.options`;
@@ -237,7 +239,7 @@ const SectionsManager = {
   async addBuiltInSection(feedPrefName, optionsPrefValue = "{}") {
     let options;
     let storedPrefs;
-    const featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
+    const featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
     try {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
@@ -323,14 +325,14 @@ const SectionsManager = {
             card.title &&
             card.image
           ) {
-            PlacesUtils.history.update({
+            lazy.PlacesUtils.history.update({
               url: card.url,
               title: card.title,
               description: card.description,
               previewImageURL: card.image,
             });
             // Highlights query skips bookmarks with no visits.
-            PlacesUtils.history.insert({
+            lazy.PlacesUtils.history.insert({
               url,
               title: card.title,
               visits: [{}],

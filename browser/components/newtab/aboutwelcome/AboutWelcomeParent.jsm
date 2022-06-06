@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
@@ -29,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.import(
     "resource://messaging-system/lib/Logger.jsm"
   );
@@ -37,9 +39,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "Telemetry",
-  () => new AboutWelcomeTelemetry()
+  () => new lazy.AboutWelcomeTelemetry()
 );
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
@@ -80,7 +82,7 @@ async function getImportableSites() {
   // Just handle these chromium-based browsers for now
   for (const browserId of ["chrome", "chromium-edge", "chromium"]) {
     // Skip if there's no profile data.
-    const migrator = await MigrationUtils.getMigrator(browserId);
+    const migrator = await lazy.MigrationUtils.getMigrator(browserId);
     if (!migrator) {
       continue;
     }
@@ -96,7 +98,7 @@ async function getImportableSites() {
       }
 
       try {
-        for (const row of await MigrationUtils.getRowsFromDBWithoutLocks(
+        for (const row of await lazy.MigrationUtils.getRowsFromDBWithoutLocks(
           path,
           `Importable ${browserId} top sites`,
           `SELECT url
@@ -152,7 +154,7 @@ class AboutWelcomeObserver {
   }
 
   stop() {
-    log.debug(`Terminate reason is ${this.terminateReason}`);
+    lazy.log.debug(`Terminate reason is ${this.terminateReason}`);
     Services.obs.removeObserver(this, "quit-application");
     if (!this.win) {
       return;
@@ -166,9 +168,9 @@ class AboutWelcomeObserver {
 class RegionHomeObserver {
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case Region.REGION_TOPIC:
-        Services.obs.removeObserver(this, Region.REGION_TOPIC);
-        this.regionHomeDeferred.resolve(Region.home);
+      case lazy.Region.REGION_TOPIC:
+        Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
+        this.regionHomeDeferred.resolve(lazy.Region.home);
         this.regionHomeDeferred = null;
         break;
     }
@@ -179,15 +181,15 @@ class RegionHomeObserver {
     // with region or rejected inside didDestroy if user exits
     // before region is available
     if (!this.regionHomeDeferred) {
-      Services.obs.addObserver(this, Region.REGION_TOPIC);
-      this.regionHomeDeferred = PromiseUtils.defer();
+      Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
+      this.regionHomeDeferred = lazy.PromiseUtils.defer();
     }
     return this.regionHomeDeferred.promise;
   }
 
   stop() {
     if (this.regionHomeDeferred) {
-      Services.obs.removeObserver(this, Region.REGION_TOPIC);
+      Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
       // Reject unresolved deferred promise on exit
       this.regionHomeDeferred.reject(
         new Error("Unresolved region home promise")
@@ -206,11 +208,11 @@ class AboutWelcomeParent extends JSWindowActorParent {
   // Static methods that calls into ShellService to check
   // if Firefox is pinned or already default
   static doesAppNeedPin() {
-    return ShellService.doesAppNeedPin();
+    return lazy.ShellService.doesAppNeedPin();
   }
 
   static isDefaultBrowser() {
-    return ShellService.isDefaultBrowser();
+    return lazy.ShellService.isDefaultBrowser();
   }
 
   didDestroy() {
@@ -219,7 +221,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
     }
     this.RegionHomeObserver?.stop();
 
-    Telemetry.sendTelemetry({
+    lazy.Telemetry.sendTelemetry({
       event: "SESSION_END",
       event_context: {
         reason: this.AboutWelcomeObserver.terminateReason,
@@ -237,36 +239,36 @@ class AboutWelcomeParent extends JSWindowActorParent {
    * @param {Browser} the xul:browser rendering the page
    */
   async onContentMessage(type, data, browser) {
-    log.debug(`Received content event: ${type}`);
+    lazy.log.debug(`Received content event: ${type}`);
     switch (type) {
       case "AWPage:SET_WELCOME_MESSAGE_SEEN":
         this.AWMessageId = data;
         try {
           Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, true);
         } catch (e) {
-          log.debug(`Fails to set ${DID_SEE_ABOUT_WELCOME_PREF}.`);
+          lazy.log.debug(`Fails to set ${DID_SEE_ABOUT_WELCOME_PREF}.`);
         }
         break;
       case "AWPage:SPECIAL_ACTION":
-        SpecialMessageActions.handleAction(data, browser);
+        lazy.SpecialMessageActions.handleAction(data, browser);
         break;
       case "AWPage:FXA_METRICS_FLOW_URI":
-        return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
+        return lazy.FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
       case "AWPage:IMPORTABLE_SITES":
         return getImportableSites();
       case "AWPage:TELEMETRY_EVENT":
-        Telemetry.sendTelemetry(data);
+        lazy.Telemetry.sendTelemetry(data);
         break;
       case "AWPage:GET_ATTRIBUTION_DATA":
-        let attributionData = await AboutWelcomeDefaults.getAttributionContent();
+        let attributionData = await lazy.AboutWelcomeDefaults.getAttributionContent();
         return attributionData;
       case "AWPage:SELECT_THEME":
-        await BuiltInThemes.ensureBuiltInThemes();
-        return AddonManager.getAddonByID(
+        await lazy.BuiltInThemes.ensureBuiltInThemes();
+        return lazy.AddonManager.getAddonByID(
           LIGHT_WEIGHT_THEMES[data]
         ).then(addon => addon.enable());
       case "AWPage:GET_SELECTED_THEME":
-        let themes = await AddonManager.getAddonsByTypes(["theme"]);
+        let themes = await lazy.AddonManager.getAddonsByTypes(["theme"]);
         let activeTheme = themes.find(addon => addon.isActive);
 
         // convert this to the short form name that the front end code
@@ -276,8 +278,8 @@ class AboutWelcomeParent extends JSWindowActorParent {
         );
         return themeShortName?.toLowerCase();
       case "AWPage:GET_REGION":
-        if (Region.home !== null) {
-          return Region.home;
+        if (lazy.Region.home !== null) {
+          return lazy.Region.home;
         }
         if (!this.RegionHomeObserver) {
           this.RegionHomeObserver = new RegionHomeObserver(this);
@@ -305,18 +307,18 @@ class AboutWelcomeParent extends JSWindowActorParent {
           })
         );
       case "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO":
-        return LangPackMatcher.getAppAndSystemLocaleInfo();
+        return lazy.LangPackMatcher.getAppAndSystemLocaleInfo();
       case "AWPage:NEGOTIATE_LANGPACK":
-        return LangPackMatcher.negotiateLangPackForLanguageMismatch(data);
+        return lazy.LangPackMatcher.negotiateLangPackForLanguageMismatch(data);
       case "AWPage:ENSURE_LANG_PACK_INSTALLED":
-        return LangPackMatcher.ensureLangPackInstalled(data);
+        return lazy.LangPackMatcher.ensureLangPackInstalled(data);
       case "AWPage:SET_REQUESTED_LOCALES":
-        return LangPackMatcher.setRequestedAppLocales(data);
+        return lazy.LangPackMatcher.setRequestedAppLocales(data);
       case "AWPage:SEND_TO_DEVICE_EMAILS_SUPPORTED": {
-        return BrowserUtils.sendToDeviceEmailsSupported();
+        return lazy.BrowserUtils.sendToDeviceEmailsSupported();
       }
       default:
-        log.debug(`Unexpected event ${type} was not handled.`);
+        lazy.log.debug(`Unexpected event ${type} was not handled.`);
     }
 
     return undefined;
@@ -335,7 +337,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
       return this.onContentMessage(name, data, browser);
     }
 
-    log.warn(`Not handling ${name} because the browser doesn't exist.`);
+    lazy.log.warn(`Not handling ${name} because the browser doesn't exist.`);
     return null;
   }
 }

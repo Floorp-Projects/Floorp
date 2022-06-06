@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   EveryWindow: "resource:///modules/EveryWindow.jsm",
@@ -21,7 +23,7 @@ function isPrivateWindow(win) {
   return (
     !(win instanceof Ci.nsIDOMWindow) ||
     win.closed ||
-    PrivateBrowsingUtils.isWindowPrivate(win)
+    lazy.PrivateBrowsingUtils.isWindowPrivate(win)
   );
 }
 
@@ -100,7 +102,7 @@ const ASRouterTriggerListeners = new Map([
       init(triggerHandler, hosts, patterns) {
         if (!this._initialized) {
           this.receiveMessage = this.receiveMessage.bind(this);
-          AboutReaderParent.addMessageListener(this.readerModeEvent, this);
+          lazy.AboutReaderParent.addMessageListener(this.readerModeEvent, this);
           this._triggerHandler = triggerHandler;
           this._initialized = true;
         }
@@ -129,7 +131,10 @@ const ASRouterTriggerListeners = new Map([
 
       uninit() {
         if (this._initialized) {
-          AboutReaderParent.removeMessageListener(this.readerModeEvent, this);
+          lazy.AboutReaderParent.removeMessageListener(
+            this.readerModeEvent,
+            this
+          );
           this._initialized = false;
           this._triggerHandler = null;
           this._hosts = new Set();
@@ -189,7 +194,7 @@ const ASRouterTriggerListeners = new Map([
       init(triggerHandler, hosts = [], patterns) {
         if (!this._initialized) {
           this.onTabSwitch = this.onTabSwitch.bind(this);
-          EveryWindow.registerCallback(
+          lazy.EveryWindow.registerCallback(
             this.id,
             win => {
               if (!isPrivateWindow(win)) {
@@ -299,7 +304,7 @@ const ASRouterTriggerListeners = new Map([
 
       uninit() {
         if (this._initialized) {
-          EveryWindow.unregisterCallback(this.id);
+          lazy.EveryWindow.unregisterCallback(this.id);
 
           this._initialized = false;
           this._triggerHandler = null;
@@ -333,7 +338,7 @@ const ASRouterTriggerListeners = new Map([
       init(triggerHandler, hosts = [], patterns) {
         if (!this._initialized) {
           this.onLocationChange = this.onLocationChange.bind(this);
-          EveryWindow.registerCallback(
+          lazy.EveryWindow.registerCallback(
             this.id,
             win => {
               if (!isPrivateWindow(win)) {
@@ -368,7 +373,7 @@ const ASRouterTriggerListeners = new Map([
 
       uninit() {
         if (this._initialized) {
-          EveryWindow.unregisterCallback(this.id);
+          lazy.EveryWindow.unregisterCallback(this.id);
 
           this._initialized = false;
           this._triggerHandler = null;
@@ -488,7 +493,7 @@ const ASRouterTriggerListeners = new Map([
             "SiteProtection:ContentBlockingMilestone"
           );
           this.onLocationChange = this._onLocationChange.bind(this);
-          EveryWindow.registerCallback(
+          lazy.EveryWindow.registerCallback(
             this.id,
             win => {
               if (!isPrivateWindow(win)) {
@@ -517,7 +522,7 @@ const ASRouterTriggerListeners = new Map([
             this,
             "SiteProtection:ContentBlockingMilestone"
           );
-          EveryWindow.unregisterCallback(this.id);
+          lazy.EveryWindow.unregisterCallback(this.id);
           this.onLocationChange = null;
           this._initialized = false;
         }
@@ -595,7 +600,7 @@ const ASRouterTriggerListeners = new Map([
       _triggerHandler: null,
 
       _shouldShowCaptivePortalVPNPromo() {
-        return BrowserUtils.shouldShowVPNPromo();
+        return lazy.BrowserUtils.shouldShowVPNPromo();
       },
 
       init(triggerHandler) {

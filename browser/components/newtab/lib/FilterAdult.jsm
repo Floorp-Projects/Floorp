@@ -9,8 +9,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gFilterAdultEnabled",
   "browser.newtabpage.activity-stream.filterAdult",
   true
@@ -55,7 +57,7 @@ const FilterAdult = {
    *   A filtered array without adult links.
    */
   filter(links) {
-    if (!gFilterAdultEnabled) {
+    if (!lazy.gFilterAdultEnabled) {
       return links;
     }
 
@@ -78,7 +80,7 @@ const FilterAdult = {
    *   True if it is an adult url.
    */
   isAdultUrl(url) {
-    if (!gFilterAdultEnabled) {
+    if (!lazy.gFilterAdultEnabled) {
       return false;
     }
     try {

@@ -7,7 +7,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
@@ -16,12 +17,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PanelMultiView",
   "resource:///modules/PanelMultiView.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "TrackingDBService",
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
@@ -85,8 +86,8 @@ class _ToolbarPanelHub {
 
   uninit() {
     this._initialized = false;
-    EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
-    EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
+    lazy.EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
+    lazy.EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
   }
 
   get messages() {
@@ -101,7 +102,7 @@ class _ToolbarPanelHub {
     // Checkbox onclick handler gets called before the checkbox state gets toggled,
     // so we have to call it with the opposite value.
     let newValue = !event.target.checked;
-    Preferences.set(WHATSNEW_ENABLED_PREF, newValue);
+    lazy.Preferences.set(WHATSNEW_ENABLED_PREF, newValue);
 
     this.sendUserEventTelemetry(
       event.target.ownerGlobal,
@@ -131,7 +132,7 @@ class _ToolbarPanelHub {
   // Turns on the Appmenu (hamburger menu) button for all open windows and future windows.
   async enableAppmenuButton() {
     if ((await this.messages).length) {
-      EveryWindow.registerCallback(
+      lazy.EveryWindow.registerCallback(
         APPMENU_BUTTON_ID,
         this._showAppmenuButton,
         this._hideAppmenuButton
@@ -142,13 +143,13 @@ class _ToolbarPanelHub {
   // Removes the button from the Appmenu.
   // Only used in tests.
   disableAppmenuButton() {
-    EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
+    lazy.EveryWindow.unregisterCallback(APPMENU_BUTTON_ID);
   }
 
   // Turns on the Toolbar button for all open windows and future windows.
   async enableToolbarButton() {
     if ((await this.messages).length) {
-      EveryWindow.registerCallback(
+      lazy.EveryWindow.registerCallback(
         TOOLBAR_BUTTON_ID,
         this._showToolbarButton,
         this._hideToolbarButton
@@ -164,7 +165,7 @@ class _ToolbarPanelHub {
     // When the panel is hidden we want to remove any toolbar buttons that
     // might have been added as an entry point to the panel
     const removeToolbarButton = () => {
-      EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
+      lazy.EveryWindow.unregisterCallback(TOOLBAR_BUTTON_ID);
     };
     if (!panelContainer) {
       return;
@@ -191,7 +192,7 @@ class _ToolbarPanelHub {
   // Render what's new messages into the panel.
   async renderMessages(win, doc, containerId, options = {}) {
     // Set the checked status of the footer checkbox
-    let value = Preferences.get(WHATSNEW_ENABLED_PREF);
+    let value = lazy.Preferences.get(WHATSNEW_ENABLED_PREF);
     let checkbox = win.document.getElementById("panelMenu-toggleWhatsNew");
 
     checkbox.checked = value;
@@ -200,7 +201,7 @@ class _ToolbarPanelHub {
     const messages =
       (options.force && options.messages) ||
       (await this.messages).sort(this._sortWhatsNewMessages);
-    const container = PanelMultiView.getViewNode(doc, containerId);
+    const container = lazy.PanelMultiView.getViewNode(doc, containerId);
 
     if (messages) {
       // Targeting attribute state might have changed making new messages
@@ -239,7 +240,7 @@ class _ToolbarPanelHub {
 
   removeMessages(win, containerId) {
     const doc = win.document;
-    const messageNodes = PanelMultiView.getViewNode(
+    const messageNodes = lazy.PanelMultiView.getViewNode(
       doc,
       containerId
     ).querySelectorAll(".whatsNew-message");
@@ -260,7 +261,7 @@ class _ToolbarPanelHub {
       Cu.reportError(e);
       url = message.content.cta_url;
     }
-    SpecialMessageActions.handleAction(
+    lazy.SpecialMessageActions.handleAction(
       {
         type: message.content.cta_type,
         data: {
@@ -293,13 +294,13 @@ class _ToolbarPanelHub {
 
   _createMessageElements(win, doc, message, previousDate) {
     const { content } = message;
-    const messageEl = RemoteL10n.createElement(doc, "div");
+    const messageEl = lazy.RemoteL10n.createElement(doc, "div");
     messageEl.classList.add("whatsNew-message");
 
     // Only render date if it is different from the one rendered before.
     if (content.published_date !== previousDate) {
       messageEl.appendChild(
-        RemoteL10n.createElement(doc, "p", {
+        lazy.RemoteL10n.createElement(doc, "p", {
           classList: "whatsNew-message-date",
           content: new Date(content.published_date).toLocaleDateString(
             "default",
@@ -313,14 +314,14 @@ class _ToolbarPanelHub {
       );
     }
 
-    const wrapperEl = RemoteL10n.createElement(doc, "div");
+    const wrapperEl = lazy.RemoteL10n.createElement(doc, "div");
     wrapperEl.doCommand = () => this._dispatchUserAction(win, message);
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
 
     if (content.icon_url) {
       wrapperEl.classList.add("has-icon");
-      const iconEl = RemoteL10n.createElement(doc, "img");
+      const iconEl = lazy.RemoteL10n.createElement(doc, "img");
       iconEl.src = content.icon_url;
       iconEl.classList.add("whatsNew-message-icon");
       if (content.icon_alt && content.icon_alt.string_id) {
@@ -334,7 +335,7 @@ class _ToolbarPanelHub {
     wrapperEl.appendChild(this._createMessageContent(win, doc, content));
 
     if (content.link_text) {
-      const anchorEl = RemoteL10n.createElement(doc, "a", {
+      const anchorEl = lazy.RemoteL10n.createElement(doc, "a", {
         classList: "text-link",
         content: content.link_text,
       });
@@ -355,7 +356,7 @@ class _ToolbarPanelHub {
     const wrapperEl = new win.DocumentFragment();
 
     wrapperEl.appendChild(
-      RemoteL10n.createElement(doc, "h2", {
+      lazy.RemoteL10n.createElement(doc, "h2", {
         classList: "whatsNew-message-title",
         content: content.title,
         attributes: this.state.contentArguments,
@@ -363,7 +364,7 @@ class _ToolbarPanelHub {
     );
 
     wrapperEl.appendChild(
-      RemoteL10n.createElement(doc, "p", {
+      lazy.RemoteL10n.createElement(doc, "p", {
         content: content.body,
         classList: "whatsNew-message-content",
         attributes: this.state.contentArguments,
@@ -376,28 +377,28 @@ class _ToolbarPanelHub {
   _createHeroElement(win, doc, message) {
     this.maybeLoadCustomElement(win);
 
-    const messageEl = RemoteL10n.createElement(doc, "div");
+    const messageEl = lazy.RemoteL10n.createElement(doc, "div");
     messageEl.setAttribute("id", "protections-popup-message");
     messageEl.classList.add("whatsNew-hero-message");
-    const wrapperEl = RemoteL10n.createElement(doc, "div");
+    const wrapperEl = lazy.RemoteL10n.createElement(doc, "div");
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
 
     wrapperEl.appendChild(
-      RemoteL10n.createElement(doc, "h2", {
+      lazy.RemoteL10n.createElement(doc, "h2", {
         classList: "whatsNew-message-title",
         content: message.content.title,
       })
     );
     wrapperEl.appendChild(
-      RemoteL10n.createElement(doc, "p", {
+      lazy.RemoteL10n.createElement(doc, "p", {
         classList: "protections-popup-content",
         content: message.content.body,
       })
     );
 
     if (message.content.link_text) {
-      let linkEl = RemoteL10n.createElement(doc, "a", {
+      let linkEl = lazy.RemoteL10n.createElement(doc, "a", {
         classList: "text-link",
         content: message.content.link_text,
       });
@@ -416,7 +417,7 @@ class _ToolbarPanelHub {
     // Between now and 6 weeks ago
     const dateTo = new Date();
     const dateFrom = new Date(dateTo.getTime() - 42 * 24 * 60 * 60 * 1000);
-    const eventsByDate = await TrackingDBService.getEventsByDateRange(
+    const eventsByDate = await lazy.TrackingDBService.getEventsByDateRange(
       dateFrom,
       dateTo
     );
@@ -441,7 +442,7 @@ class _ToolbarPanelHub {
       // `earliestDate` will be either 6 weeks ago or when tracking recording
       // started. Whichever is more recent.
       earliestDate: Math.max(
-        new Date(await TrackingDBService.getEarliestRecordedDate()),
+        new Date(await lazy.TrackingDBService.getEarliestRecordedDate()),
         dateFrom
       ),
       ...totalEvents,
@@ -479,13 +480,13 @@ class _ToolbarPanelHub {
   }
 
   _showElement(document, id, string_id) {
-    const el = PanelMultiView.getViewNode(document, id);
+    const el = lazy.PanelMultiView.getViewNode(document, id);
     document.l10n.setAttributes(el, string_id);
     el.hidden = false;
   }
 
   _hideElement(document, id) {
-    const el = PanelMultiView.getViewNode(document, id);
+    const el = lazy.PanelMultiView.getViewNode(document, id);
     if (el) {
       el.hidden = true;
     }
@@ -502,7 +503,7 @@ class _ToolbarPanelHub {
     // Only send pings for non private browsing windows
     if (
       win &&
-      !PrivateBrowsingUtils.isBrowserPrivate(
+      !lazy.PrivateBrowsingUtils.isBrowserPrivate(
         win.ownerGlobal.gBrowser.selectedBrowser
       )
     ) {

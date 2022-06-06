@@ -9,7 +9,9 @@ const { actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -38,10 +40,10 @@ class DownloadsManager {
       hostname: new URL(download.source.url).hostname,
       url: download.source.url,
       path: download.target.path,
-      title: DownloadsViewUI.getDisplayName(download),
+      title: lazy.DownloadsViewUI.getDisplayName(download),
       description:
-        DownloadsViewUI.getSizeWithUnits(download) ||
-        DownloadsCommon.strings.sizeUnknown,
+        lazy.DownloadsViewUI.getSizeWithUnits(download) ||
+        lazy.DownloadsCommon.strings.sizeUnknown,
       referrer,
       date_added: download.endTime,
     };
@@ -49,7 +51,7 @@ class DownloadsManager {
 
   init(store) {
     this._store = store;
-    this._downloadData = DownloadsCommon.getData(
+    this._downloadData = lazy.DownloadsCommon.getData(
       null /* null for non-private downloads */,
       true,
       false,
@@ -104,7 +106,7 @@ class DownloadsManager {
       // Ignore blocked links, but allow long (data:) uris to avoid high CPU
       if (
         download.source.url.length < 10000 &&
-        NewTabUtils.blockedLinks.isBlocked(download.source)
+        lazy.NewTabUtils.blockedLinks.isBlocked(download.source)
       ) {
         continue;
       }
@@ -154,18 +156,18 @@ class DownloadsManager {
     switch (action.type) {
       case at.COPY_DOWNLOAD_LINK:
         doDownloadAction(download => {
-          DownloadsCommon.copyDownloadLink(download);
+          lazy.DownloadsCommon.copyDownloadLink(download);
         });
         break;
       case at.REMOVE_DOWNLOAD_FILE:
         doDownloadAction(download => {
-          DownloadsCommon.deleteDownload(download).catch(Cu.reportError);
+          lazy.DownloadsCommon.deleteDownload(download).catch(Cu.reportError);
         });
         break;
       case at.SHOW_DOWNLOAD_FILE:
         doDownloadAction(download => {
-          DownloadsCommon.showDownloadedFile(
-            new FileUtils.File(download.target.path)
+          lazy.DownloadsCommon.showDownloadedFile(
+            new lazy.FileUtils.File(download.target.path)
           );
         });
         break;
@@ -174,7 +176,7 @@ class DownloadsManager {
         const openWhere =
           action.data.event && win.whereToOpenLink(action.data.event);
         doDownloadAction(download => {
-          DownloadsCommon.openDownload(download, {
+          lazy.DownloadsCommon.openDownload(download, {
             // Replace "current" or unknown value with "tab" as the default behavior
             // for opening downloads when handled internally
             openWhere: ["window", "tab", "tabshifted"].includes(openWhere)
