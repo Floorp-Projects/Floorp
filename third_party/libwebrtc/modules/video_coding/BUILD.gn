@@ -357,6 +357,7 @@ rtc_library("video_coding_utility") {
     "../../api/video_codecs:video_codecs_api",
     "../../common_video",
     "../../modules/rtp_rtcp",
+    "../../rtc_base:bitstream_reader",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_numerics",
@@ -376,6 +377,7 @@ rtc_library("video_coding_utility") {
     "../rtp_rtcp:rtp_rtcp_format",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/numeric:bits",
     "//third_party/abseil-cpp/absl/strings:strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
