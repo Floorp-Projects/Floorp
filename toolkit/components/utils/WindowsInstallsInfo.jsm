@@ -6,11 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["WindowsInstallsInfo"];
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var WindowsInstallsInfo = {
   /**

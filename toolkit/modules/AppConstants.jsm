@@ -7,7 +7,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+);
 ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 this.EXPORTED_SYMBOLS = ["AppConstants"];
