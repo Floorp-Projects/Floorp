@@ -294,11 +294,14 @@
     <string name="preference_privacy_should_block_cookies_yes_option2">Tak, proszę</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
-    <string name="preference_security_biometric">Odblokowywanie aplikacji odciskiem palca</string>
+    <string name="preference_security_biometric">Odcisk palca odblokowuje aplikację</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Można odblokować %1$s za pomocą odcisku palca, jeśli w aplikacji jest już otwarty adres. Tryb ukryty będzie włączony.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Można odblokować %1$s za pomocą odcisku palca, jeśli w aplikacji jest już otwarty adres. Tryb ukryty będzie włączony.</string>
+
+    <string name="preference_security_biometric_summary2">Odblokowywanie za pomocą odcisku palca, jeśli dodano skróty lub kiedy witryna jest już otwarta w %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
