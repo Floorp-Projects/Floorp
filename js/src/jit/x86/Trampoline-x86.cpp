@@ -453,10 +453,8 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 
   masm.moveValue(UndefinedValue(), ValueOperand(ebx, edi));
 
-  // NOTE: The fact that x86 ArgumentsRectifier saves the FramePointer
-  // is relied upon by the baseline bailout code.  If this changes,
-  // fix that code!  See the |#if defined(JS_CODEGEN_X86) portions of
-  // BaselineStackBuilder::calculatePrevFramePtr and
+  // NOTE: if this changes, fix the Baseline bailout code too!
+  // See BaselineStackBuilder::calculatePrevFramePtr and
   // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
   masm.push(FramePointer);
   masm.movl(esp, FramePointer);  // Save %esp.
@@ -484,7 +482,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   }
 
   // Get the topmost argument. We did a push of %ebp earlier, so be sure to
-  // account for this in the offset
+  // account for this in the offset.
   BaseIndex b(FramePointer, esi, TimesEight,
               sizeof(RectifierFrameLayout) + sizeof(void*));
   masm.lea(Operand(b), ecx);

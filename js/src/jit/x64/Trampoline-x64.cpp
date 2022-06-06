@@ -506,37 +506,41 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   static_assert(
       sizeof(JitFrameLayout) % JitStackAlignment == 0,
       "No need to consider the JitFrameLayout for aligning the stack");
+  static_assert((sizeof(Value) + sizeof(void*)) % JitStackAlignment == 0,
+                "No need to consider |this| and the frame pointer for "
+                "aligning the stack");
   static_assert(
       JitStackAlignment % sizeof(Value) == 0,
       "Ensure that we can pad the stack by pushing extra UndefinedValue");
   static_assert(IsPowerOfTwo(JitStackValueAlignment),
                 "must have power of two for masm.andl to do its job");
 
-  masm.addl(
-      Imm32(JitStackValueAlignment - 1 /* for padding */ + 1 /* for |this| */),
-      rcx);
+  masm.addl(Imm32(JitStackValueAlignment - 1 /* for padding */), rcx);
   masm.addl(rdx, rcx);
   masm.andl(Imm32(~(JitStackValueAlignment - 1)), rcx);
 
   // Load the number of |undefined|s to push into %rcx.
   masm.subq(r8, rcx);
-  masm.subq(Imm32(1), rcx);  // TODO: remove in the next patch
+
+  // NOTE: if this changes, fix the Baseline bailout code too!
+  // See BaselineStackBuilder::calculatePrevFramePtr and
+  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
+  masm.push(FramePointer);
+  masm.movq(rsp, FramePointer);
 
   // Caller:
-  // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- rsp <- r9
+  // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- rsp
   // '--- #r8 ---'
   //
   // Rectifier frame:
-  // [undef] [undef] [undef] [arg2] [arg1] [this] [ [argc] [callee]
-  //                                                [descr] [raddr] ]
-  // '------- #rcx --------' '--- #r8 ---'
+  // [rbp'] [undef] [undef] [undef] [arg2] [arg1] [this] [ [argc] [callee]
+  //                                                          [descr] [raddr] ]
+  //        '------- #rcx --------' '--- #r8 ---'
 
   // Copy the number of actual arguments into rdx.
   masm.mov(r8, rdx);
 
   masm.moveValue(UndefinedValue(), ValueOperand(r10));
-
-  masm.movq(rsp, r9);  // Save %rsp.
 
   // Push undefined. (including the padding)
   {
@@ -551,8 +555,10 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Get the topmost argument.
   static_assert(sizeof(Value) == 8, "TimesEight is used to skip arguments");
 
-  // Get the topmost argument.
-  BaseIndex b(r9, r8, TimesEight, sizeof(RectifierFrameLayout));
+  // Get the topmost argument. We did a push of %rbp earlier, so be sure to
+  // account for this in the offset.
+  BaseIndex b(FramePointer, r8, TimesEight,
+              sizeof(RectifierFrameLayout) + sizeof(void*));
   masm.lea(Operand(b), rcx);
 
   // Push arguments, |nargs| + 1 times (to include |this|).
@@ -578,9 +584,11 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
     // thisFrame[numFormals] = prevFrame[argc]
     ValueOperand newTarget(r10);
 
-    // +1 for |this|. We want vp[argc], so don't subtract 1
-    BaseIndex newTargetSrc(r9, rdx, TimesEight,
-                           sizeof(RectifierFrameLayout) + sizeof(Value));
+    // Load vp[argc]. Add sizeof(Value) for |this| and sizeof(void*) for the
+    // saved frame pointer.
+    BaseIndex newTargetSrc(
+        FramePointer, rdx, TimesEight,
+        sizeof(RectifierFrameLayout) + sizeof(Value) + sizeof(void*));
     masm.loadValue(newTargetSrc, newTarget);
 
     // Again, 1 for |this|
@@ -591,15 +599,16 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   }
 
   // Caller:
-  // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- r9
+  // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ]
   //
   //
   // Rectifier frame:
-  // [undef] [undef] [undef] [arg2] [arg1] [this] <- rsp [ [argc] [callee]
-  //                                                       [descr] [raddr] ]
+  // [rbp'] <- rbp [undef] [undef] [undef] [arg2] [arg1] [this] <- rsp [ [argc]
+  //                                                 [callee] [descr] [raddr] ]
   //
 
-  // Construct descriptor.
+  // Construct descriptor, accounting for pushed frame pointer above
+  masm.lea(Operand(FramePointer, sizeof(void*)), r9);
   masm.subq(rsp, r9);
   masm.makeFrameDescriptor(r9, FrameType::Rectifier, JitFrameLayout::Size());
 
@@ -632,10 +641,14 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Remove the rectifier frame.
   masm.pop(r9);  // r9 <- descriptor with FrameType.
   masm.shrq(Imm32(FRAMESIZE_SHIFT), r9);
-  masm.pop(r11);       // Discard calleeToken.
-  masm.pop(r11);       // Discard numActualArgs.
-  masm.addq(r9, rsp);  // Discard pushed arguments.
+  masm.pop(r11);  // Discard calleeToken.
+  masm.pop(r11);  // Discard numActualArgs.
 
+  // Discard pushed arguments, but not the pushed frame pointer.
+  BaseIndex unwind(rsp, r9, TimesOne, -int32_t(sizeof(void*)));
+  masm.lea(Operand(unwind), rsp);
+
+  masm.pop(FramePointer);
   masm.ret();
 }
 

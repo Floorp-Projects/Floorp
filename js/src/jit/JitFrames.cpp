@@ -2468,10 +2468,7 @@ void AssertJitStackInvariants(JSContext* cx) {
                              "The rectifier frame should keep the alignment");
 
           size_t expectedFrameSize =
-              0
-#if defined(JS_CODEGEN_X86)
-              + sizeof(void*) /* frame pointer */
-#endif
+              sizeof(void*) /* frame pointer */
               + sizeof(Value) *
                     (frames.callee()->nargs() + 1 /* |this| argument */ +
                      frames.isConstructing() /* new.target */) +

@@ -432,6 +432,8 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   }
   masm.pushReturnAddress();
 
+#error "Port changes from bug 1772506"
+
   Register numActArgsReg = t6;
   Register calleeTokenReg = t7;
   Register numArgsReg = t5;
