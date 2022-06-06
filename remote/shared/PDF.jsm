@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   clearInterval: "resource://gre/modules/Timer.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
@@ -18,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const print = {
   maxScaleValue: 2.0,
@@ -134,14 +136,14 @@ function parseRanges(ranges) {
     let limits;
     if (typeof range !== "string") {
       // We got a single integer so the limits are just that page
-      assert.positiveInteger(range);
+      lazy.assert.positiveInteger(range);
       limits = [range, range];
     } else {
       // We got a string presumably of the form <int> | <int>? "-" <int>?
       const msg = `Expected a range of the form <int> or <int>-<int>, got ${range}`;
 
       limits = range.split("-").map(x => x.trim());
-      assert.that(o => [1, 2].includes(o.length), msg)(limits);
+      lazy.assert.that(o => [1, 2].includes(o.length), msg)(limits);
 
       // Single numbers map to a range with that page at the start and the end
       if (limits.length == 1) {
@@ -150,7 +152,7 @@ function parseRanges(ranges) {
 
       // Need to check that both limits are strings conisting only of
       // decimal digits (or empty strings)
-      const assertNumeric = assert.that(o => /^\d*$/.test(o), msg);
+      const assertNumeric = lazy.assert.that(o => /^\d*$/.test(o), msg);
       limits.every(x => assertNumeric(x));
 
       // Convert from strings representing numbers to actual numbers
@@ -163,7 +165,7 @@ function parseRanges(ranges) {
         return parseInt(limitStr);
       });
     }
-    assert.that(
+    lazy.assert.that(
       x => x[0] <= x[1],
       "Lower limit ${parts[0]} is higher than upper limit ${parts[1]}"
     )(limits);
@@ -189,7 +191,7 @@ function parseRanges(ranges) {
   }
 
   let rv = parsedRanges.flat();
-  logger.debug(`Got page ranges [${rv.join(", ")}]`);
+  lazy.logger.debug(`Got page ranges [${rv.join(", ")}]`);
   return rv;
 }
 
@@ -211,16 +213,16 @@ print.printToFile = async function(browser, settings) {
     const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
 
     let lastSize = 0;
-    const timerId = setInterval(async () => {
+    const timerId = lazy.setInterval(async () => {
       const fileInfo = await IOUtils.stat(filePath);
       if (lastSize > 0 && fileInfo.size == lastSize) {
-        clearInterval(timerId);
+        lazy.clearInterval(timerId);
         resolve();
       }
       lastSize = fileInfo.size;
     }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
   });
 
-  logger.debug(`PDF output written to ${filePath}`);
+  lazy.logger.debug(`PDF output written to ${filePath}`);
   return filePath;
 };

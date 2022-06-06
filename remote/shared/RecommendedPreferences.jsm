@@ -11,20 +11,22 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "useRecommendedPrefs",
   "remote.prefs.recommended",
   false
 );
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 // Ensure we are in the parent process.
 if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
@@ -283,7 +285,7 @@ const RecommendedPreferences = {
    *     Map of preference key to preference value.
    */
   applyPreferences(preferences) {
-    if (!useRecommendedPrefs) {
+    if (!lazy.useRecommendedPrefs) {
       // If remote.prefs.recommended is set to false, do not set any preference
       // here. Needed for our Firefox CI.
       return;
@@ -299,9 +301,9 @@ const RecommendedPreferences = {
     }
 
     for (const [k, v] of preferences) {
-      if (!Preferences.isSet(k)) {
-        logger.debug(`Setting recommended pref ${k} to ${v}`);
-        Preferences.set(k, v);
+      if (!lazy.Preferences.isSet(k)) {
+        lazy.logger.debug(`Setting recommended pref ${k} to ${v}`);
+        lazy.Preferences.set(k, v);
 
         // Keep track all the altered preferences to restore them on
         // quit-application.
@@ -333,8 +335,8 @@ const RecommendedPreferences = {
    */
   restorePreferences(preferences) {
     for (const k of preferences.keys()) {
-      logger.debug(`Resetting recommended pref ${k}`);
-      Preferences.reset(k);
+      lazy.logger.debug(`Resetting recommended pref ${k}`);
+      lazy.Preferences.reset(k);
       this.alteredPrefs.delete(k);
     }
   },
