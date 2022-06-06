@@ -17,14 +17,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
 const { TYPE_REPEATING_SLACK } = Ci.nsITimer;
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.REMOTE_AGENT)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.REMOTE_AGENT)
 );
 
 /**
@@ -144,14 +146,14 @@ function EventPromise(subject, eventName, options = {}) {
 
   return new Promise((resolve, reject) => {
     function listener(event) {
-      logger.trace(`Received DOM event ${event.type} for ${event.target}`);
+      lazy.logger.trace(`Received DOM event ${event.type} for ${event.target}`);
       try {
         if (checkFn && !checkFn(event)) {
           return;
         }
       } catch (e) {
         // Treat an exception in the callback as a falsy value
-        logger.warn(`Event check failed: ${e.message}`);
+        lazy.logger.warn(`Event check failed: ${e.message}`);
       }
 
       subject.removeEventListener(eventName, listener, capture);

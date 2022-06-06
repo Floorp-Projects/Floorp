@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 
@@ -22,8 +24,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.REMOTE_AGENT)
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.REMOTE_AGENT)
 );
 
 // Used to keep weak references of webProgressListeners alive.
@@ -68,8 +70,8 @@ async function waitForInitialNavigationCompleted(webProgress, options = {}) {
   // If the current document is not the initial "about:blank" and is also
   // no longer loading, assume the navigation is done and return.
   if (!isInitial && !listener.isLoadingDocument) {
-    logger.trace(
-      truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
+    lazy.logger.trace(
+      lazy.truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
     );
 
     // Will resolve the navigated promise.
@@ -172,12 +174,12 @@ class ProgressListener {
 
       this.#targetURI = this.#getTargetURI(request);
 
-      logger.trace(
-        truncate`${messagePrefix} state=start: ${this.targetURI?.spec}`
+      lazy.logger.trace(
+        lazy.truncate`${messagePrefix} state=start: ${this.targetURI?.spec}`
       );
 
       if (this.#unloadTimerId !== null) {
-        clearTimeout(this.#unloadTimerId);
+        lazy.clearTimeout(this.#unloadTimerId);
         this.#unloadTimerId = null;
       }
 
@@ -206,8 +208,8 @@ class ProgressListener {
 
         // The navigation request caused an error.
         const errorName = ChromeUtils.getXPCOMErrorName(status);
-        logger.trace(
-          truncate`${messagePrefix} state=stop: error=0x${status.toString(
+        lazy.logger.trace(
+          lazy.truncate`${messagePrefix} state=stop: error=0x${status.toString(
             16
           )} (${errorName})`
         );
@@ -215,8 +217,8 @@ class ProgressListener {
         return;
       }
 
-      logger.trace(
-        truncate`${messagePrefix} state=stop: ${this.currentURI.spec}`
+      lazy.logger.trace(
+        lazy.truncate`${messagePrefix} state=stop: ${this.currentURI.spec}`
       );
 
       // If a non initial page finished loading the navigation is done.
@@ -226,7 +228,7 @@ class ProgressListener {
       }
 
       // Otherwise wait for a potential additional page load.
-      logger.trace(
+      lazy.logger.trace(
         `${messagePrefix} Initial document loaded. Wait for a potential further navigation.`
       );
       this.#seenStartFlag = false;
@@ -244,9 +246,9 @@ class ProgressListener {
 
   #setUnloadTimer() {
     if (!this.#expectNavigation) {
-      this.#unloadTimerId = setTimeout(() => {
-        logger.trace(
-          truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
+      this.#unloadTimerId = lazy.setTimeout(() => {
+        lazy.logger.trace(
+          lazy.truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
         );
         // Assume the target is the currently loaded URI.
         this.#targetURI = this.currentURI;
@@ -268,8 +270,8 @@ class ProgressListener {
 
     // If an error page has been loaded abort the navigation.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      logger.trace(
-        truncate`${messagePrefix} location=errorPage: ${location.spec}`
+      lazy.logger.trace(
+        lazy.truncate`${messagePrefix} location=errorPage: ${location.spec}`
       );
       this.stop({ error: new Error("Address restricted") });
       return;
@@ -278,8 +280,8 @@ class ProgressListener {
     // If location has changed in the same document the navigation is done.
     if (flag & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       this.#targetURI = location;
-      logger.trace(
-        truncate`${messagePrefix} location=sameDocument: ${this.targetURI?.spec}`
+      lazy.logger.trace(
+        lazy.truncate`${messagePrefix} location=sameDocument: ${this.targetURI?.spec}`
       );
       this.stop();
     }
@@ -306,7 +308,7 @@ class ProgressListener {
       }
     }
 
-    this.#deferredNavigation = new Deferred();
+    this.#deferredNavigation = new lazy.Deferred();
 
     // Enable all location change and state notifications to get informed about an upcoming load
     // as early as possible.
@@ -344,7 +346,7 @@ class ProgressListener {
       throw new Error(`Progress listener not yet started`);
     }
 
-    clearTimeout(this.#unloadTimerId);
+    lazy.clearTimeout(this.#unloadTimerId);
     this.#unloadTimerId = null;
 
     this.#webProgress.removeProgressListener(
