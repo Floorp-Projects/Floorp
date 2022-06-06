@@ -46,6 +46,15 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    bbc: {
+      "https://*.bbc.com/*": {
+        videoWrapperScriptPath: "video-wrappers/bbc.js",
+      },
+      "https://*.bbc.co.uk/*": {
+        videoWrapperScriptPath: "video-wrappers/bbc.js",
+      },
+    },
+
     dailymotion: {
       "https://*.dailymotion.com/*": {
         videoWrapperScriptPath: "video-wrappers/dailymotion.js",
