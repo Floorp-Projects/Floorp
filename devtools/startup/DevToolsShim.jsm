@@ -9,7 +9,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "DevToolsStartup", () => {
+const lazy = {};
+XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
   return Cc["@mozilla.org/devtools/startup-clh;1"].getService(
     Ci.nsICommandLineHandler
   ).wrappedJSObject;
@@ -17,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "DevToolsStartup", () => {
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
-XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
   const { require } = ChromeUtils.import(
     "resource://devtools/shared/loader/Loader.jsm"
   );
@@ -52,7 +53,7 @@ const DevToolsShim = {
 
   get telemetry() {
     if (!this._telemetry) {
-      this._telemetry = new Telemetry();
+      this._telemetry = new lazy.Telemetry();
       this._telemetry.setEventRecordingEnabled(true);
     }
     return this._telemetry;
@@ -189,7 +190,7 @@ const DevToolsShim = {
   },
 
   isDevToolsUser() {
-    return DevToolsStartup.isDevToolsUser();
+    return lazy.DevToolsStartup.isDevToolsUser();
   },
 
   /**
@@ -208,7 +209,7 @@ const DevToolsShim = {
   inspectA11Y: function(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
-        DevToolsStartup.openInstallPage("ContextMenu");
+        lazy.DevToolsStartup.openInstallPage("ContextMenu");
       }
       return Promise.resolve();
     }
@@ -238,7 +239,7 @@ const DevToolsShim = {
   inspectNode: function(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
-        DevToolsStartup.openInstallPage("ContextMenu");
+        lazy.DevToolsStartup.openInstallPage("ContextMenu");
       }
       return Promise.resolve();
     }
@@ -298,7 +299,7 @@ const DevToolsShim = {
     }
 
     if (!this.isInitialized()) {
-      DevToolsStartup.initDevTools(reason);
+      lazy.DevToolsStartup.initDevTools(reason);
     }
   },
 };
