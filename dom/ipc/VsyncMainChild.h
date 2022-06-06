@@ -8,8 +8,6 @@
 #define mozilla_dom_ipc_VsyncMainChild_h
 
 #include "mozilla/dom/VsyncChild.h"
-#include "mozilla/RefPtr.h"
-#include "nsISupportsImpl.h"
 #include "nsTObserverArray.h"
 
 namespace mozilla {

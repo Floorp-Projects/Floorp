@@ -9,12 +9,9 @@
 
 #include "nsIDOMGeoPositionCoords.h"
 #include "nsIDOMGeoPosition.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/Nullable.h"
 #include "js/TypeDecls.h"
 
 ////////////////////////////////////////////////////

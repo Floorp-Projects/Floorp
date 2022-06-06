@@ -6,11 +6,8 @@
 
 #include "VsyncParent.h"
 
-#include "mozilla/ipc/BackgroundParent.h"
-#include "gfxPlatform.h"
 #include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
-#include "VsyncSource.h"
 #include "nsIThread.h"
 
 namespace mozilla::dom {

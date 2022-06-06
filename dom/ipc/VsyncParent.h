@@ -11,7 +11,6 @@
 #include "mozilla/VsyncDispatcher.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
-#include "VsyncSource.h"
 
 class nsIThread;
 

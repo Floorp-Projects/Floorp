@@ -11,7 +11,6 @@
 
 #  include "AudioSampleFormat.h"
 #  include "nsString.h"
-#  include "mozilla/RefPtr.h"
 
 class AudioDeviceInfo;
 

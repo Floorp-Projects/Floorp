@@ -7,10 +7,8 @@
 #include "CubebUtils.h"
 
 #include "audio_thread_priority.h"
-#include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -20,7 +18,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UnderrunHandler.h"
-#include "nsAutoRef.h"
 #include "nsDebug.h"
 #include "nsIStringBundle.h"
 #include "nsString.h"
