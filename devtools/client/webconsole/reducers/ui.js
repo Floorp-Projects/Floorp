@@ -20,6 +20,7 @@ const {
   EDITOR_TOGGLE,
   EDITOR_PRETTY_PRINT,
   EDITOR_SET_WIDTH,
+  ENABLE_NETWORK_MONITORING,
 } = require("devtools/client/webconsole/constants");
 
 const { PANELS } = require("devtools/client/netmonitor/src/constants");
@@ -44,6 +45,9 @@ const UiState = overrides =>
         showEditorOnboarding: false,
         filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
         cacheGeneration: 0,
+        // Only used in the browser toolbox console/ browser console
+        // turned off by default
+        enableNetworkMonitoring: false,
       },
       overrides
     )
@@ -111,6 +115,11 @@ function ui(state = UiState(), action) {
       return {
         ...state,
         editorPrettifiedAt: Date.now(),
+      };
+    case ENABLE_NETWORK_MONITORING:
+      return {
+        ...state,
+        enableNetworkMonitoring: !state.enableNetworkMonitoring,
       };
   }
 

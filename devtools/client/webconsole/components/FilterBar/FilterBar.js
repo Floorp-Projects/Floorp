@@ -61,24 +61,16 @@ class FilterBar extends Component {
       dispatch: PropTypes.func.isRequired,
       displayMode: PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)])
         .isRequired,
+      enableNetworkMonitoring: PropTypes.bool.isRequired,
       filter: PropTypes.object.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
-      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
-      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       eagerEvaluation: PropTypes.bool.isRequired,
       showContentMessages: PropTypes.bool.isRequired,
       timestampsVisible: PropTypes.bool.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
       autocomplete: PropTypes.bool.isRequired,
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      hidePersistLogsCheckbox: false,
-      hideShowContentMessagesCheckbox: true,
     };
   }
 
@@ -110,6 +102,7 @@ class FilterBar extends Component {
     const {
       closeButtonVisible,
       displayMode,
+      enableNetworkMonitoring,
       filter,
       filteredMessagesCount,
       groupWarnings,
@@ -123,6 +116,7 @@ class FilterBar extends Component {
     if (
       nextProps.closeButtonVisible !== closeButtonVisible ||
       nextProps.displayMode !== displayMode ||
+      nextProps.enableNetworkMonitoring !== enableNetworkMonitoring ||
       nextProps.filter !== filter ||
       nextProps.groupWarnings !== groupWarnings ||
       nextProps.persistLogs !== persistLogs ||
@@ -332,10 +326,9 @@ class FilterBar extends Component {
   renderSettingsButton() {
     const {
       dispatch,
+      enableNetworkMonitoring,
       eagerEvaluation,
       groupWarnings,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       persistLogs,
       showContentMessages,
       timestampsVisible,
@@ -345,10 +338,9 @@ class FilterBar extends Component {
 
     return ConsoleSettings({
       dispatch,
+      enableNetworkMonitoring,
       eagerEvaluation,
       groupWarnings,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       persistLogs,
       showContentMessages,
       timestampsVisible,
@@ -440,6 +432,7 @@ function mapStateToProps(state) {
     showContentMessages: uiState.showContentMessages,
     timestampsVisible: uiState.timestampsVisible,
     autocomplete: prefsState.autocomplete,
+    enableNetworkMonitoring: uiState.enableNetworkMonitoring,
   };
 }
 

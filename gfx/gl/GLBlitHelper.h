@@ -40,6 +40,10 @@ class MacIOSurface;
 #  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif
 
+#ifdef MOZ_WAYLAND
+class DMABufSurface;
+#endif
+
 namespace mozilla {
 
 namespace layers {
@@ -190,6 +194,8 @@ class GLBlitHelper final {
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
 #endif
 #ifdef MOZ_WAYLAND
+  bool Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
+            OriginPos destOrigin) const;
   bool BlitImage(layers::DMABUFSurfaceImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
 #endif
