@@ -419,11 +419,23 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Save the return address for later.
   masm.push(lr);
 
+  // Frame prologue.
+  //
+  // NOTE: if this changes, fix the Baseline bailout code too!
+  // See BaselineStackBuilder::calculatePrevFramePtr and
+  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
+  static_assert(sizeof(Value) == sizeof(void*));
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   // Load the information that the rectifier needs from the stack.
-  masm.Ldr(w0, MemOperand(masm.GetStackPointer64(),
-                          RectifierFrameLayout::offsetOfNumActualArgs()));
-  masm.Ldr(x1, MemOperand(masm.GetStackPointer64(),
-                          RectifierFrameLayout::offsetOfCalleeToken()));
+  constexpr size_t FrameOffset = sizeof(void*);  // Frame pointer.
+  constexpr size_t NargsOffset =
+      FrameOffset + RectifierFrameLayout::offsetOfNumActualArgs();
+  constexpr size_t TokenOffset =
+      FrameOffset + RectifierFrameLayout::offsetOfCalleeToken();
+  masm.Ldr(w0, MemOperand(masm.GetStackPointer64(), NargsOffset));
+  masm.Ldr(x1, MemOperand(masm.GetStackPointer64(), TokenOffset));
 
   // Extract a JSFunction pointer from the callee token and keep the
   // intermediary to avoid later recalculation.
@@ -436,24 +448,14 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
                 "Constructing must be low-order bit");
   masm.And(x4, x1, Operand(CalleeToken_FunctionConstructing));
   masm.Add(x7, x6, x4);
+  masm.Add(x7, x7, Operand(1));  // Account for saved frame pointer.
 
   // Copy the number of actual arguments into r8.
   masm.mov(r0, r8);
 
   // Calculate the position that our arguments are at before sp gets modified.
   masm.Add(x3, masm.GetStackPointer64(), Operand(x8, vixl::LSL, 3));
-  masm.Add(x3, x3, Operand(sizeof(RectifierFrameLayout)));
-
-  // Save the frame pointer. Add 1 to x7 to account for this in frame alignment
-  // and frame size computations.
-  //
-  // NOTE: if this changes, fix the Baseline bailout code too!
-  // See BaselineStackBuilder::calculatePrevFramePtr and
-  // BaselineStackBuilder::buildRectifierFrame (in BaselineBailouts.cpp).
-  static_assert(sizeof(Value) == sizeof(void*));
-  masm.push(FramePointer);
-  masm.moveStackPtrTo(FramePointer);
-  masm.Add(x7, x7, Operand(1));
+  masm.Add(x3, x3, Operand(FrameOffset + sizeof(RectifierFrameLayout)));
 
   // Pad to a multiple of 16 bytes. This neglects the |this| value,
   // which will also be pushed, because the rest of the frame will

@@ -252,17 +252,17 @@ class JitFrameLayout : public CommonFrameLayout {
     calleeToken_ = calleeToken;
   }
 
-  static size_t offsetOfCalleeToken() {
+  static constexpr size_t offsetOfCalleeToken() {
     return offsetof(JitFrameLayout, calleeToken_);
   }
-  static size_t offsetOfNumActualArgs() {
+  static constexpr size_t offsetOfNumActualArgs() {
     return offsetof(JitFrameLayout, numActualArgs_);
   }
-  static size_t offsetOfThis() { return sizeof(JitFrameLayout); }
-  static size_t offsetOfActualArgs() {
+  static constexpr size_t offsetOfThis() { return sizeof(JitFrameLayout); }
+  static constexpr size_t offsetOfActualArgs() {
     return offsetOfThis() + sizeof(JS::Value);
   }
-  static size_t offsetOfActualArg(size_t arg) {
+  static constexpr size_t offsetOfActualArg(size_t arg) {
     return offsetOfActualArgs() + arg * sizeof(JS::Value);
   }
 
