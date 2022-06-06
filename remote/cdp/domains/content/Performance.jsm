@@ -10,12 +10,14 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentProcessDomain:
     "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
 });
 
-class Performance extends ContentProcessDomain {
+class Performance extends lazy.ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;

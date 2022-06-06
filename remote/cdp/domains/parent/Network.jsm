@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
@@ -41,7 +43,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "WebManifest",
 };
 
-class Network extends Domain {
+class Network extends lazy.Domain {
   constructor(session) {
     super(session);
     this.enabled = false;

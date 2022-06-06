@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearInterval: "resource://gre/modules/Timer.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -40,7 +42,7 @@ const PDF_TRANSFER_MODES = {
 
 const TIMEOUT_SET_HISTORY_INDEX = 1000;
 
-class Page extends Domain {
+class Page extends lazy.Domain {
   constructor(session) {
     super(session);
 
@@ -100,7 +102,7 @@ class Page extends Domain {
     }
     const topFrameId = this.session.browsingContext.id.toString();
     if (frameId && frameId != topFrameId) {
-      throw new UnsupportedError("frameId not supported");
+      throw new lazy.UnsupportedError("frameId not supported");
     }
 
     const hitsNetwork = ["https", "http"].includes(validURL.scheme);
@@ -214,7 +216,7 @@ class Page extends Domain {
     const { clip, format = "png", quality = 80 } = options;
 
     if (options.fromSurface) {
-      throw new UnsupportedError("fromSurface not supported");
+      throw new lazy.UnsupportedError("fromSurface not supported");
     }
 
     let rect;
@@ -314,7 +316,7 @@ class Page extends Domain {
 
     const url = canvas.toDataURL(`image/${format}`, quality / 100);
     if (!url.startsWith(`data:image/${format}`)) {
-      throw new UnsupportedError(`Unsupported MIME type: image/${format}`);
+      throw new lazy.UnsupportedError(`Unsupported MIME type: image/${format}`);
     }
 
     // only return the base64 encoded data without the data URL prefix
@@ -331,7 +333,7 @@ class Page extends Domain {
     this.enabled = true;
 
     const { browser } = this.session.target;
-    this._dialogHandler = new DialogHandler(browser);
+    this._dialogHandler = new lazy.DialogHandler(browser);
     this._dialogHandler.on("dialog-loaded", this._onDialogLoaded);
     await this.executeInChild("enable");
   }
@@ -357,8 +359,8 @@ class Page extends Domain {
     const { tab, window } = this.session.target;
 
     // Focus the window, and select the corresponding tab
-    await windowManager.focusWindow(window);
-    await TabManager.selectTab(tab);
+    await lazy.windowManager.focusWindow(window);
+    await lazy.TabManager.selectTab(tab);
   }
 
   /**
@@ -441,7 +443,7 @@ class Page extends Domain {
         });
       }
 
-      SessionStore.getSessionHistory(
+      lazy.SessionStore.getSessionHistory(
         window.gBrowser.selectedTab,
         updateSessionHistory
       );
@@ -490,7 +492,7 @@ class Page extends Domain {
     window.gBrowser.gotoIndex(index);
 
     // On some platforms the requested index isn't set immediately.
-    await PollPromise(
+    await lazy.PollPromise(
       async (resolve, reject) => {
         const currentIndex = await this._getCurrentHistoryIndex();
         if (currentIndex == index) {
@@ -595,8 +597,11 @@ class Page extends Domain {
     }
 
     // Create a unique filename for the temporary PDF file
-    const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "remote-agent.pdf");
-    const { file, path: filePath } = await OS.File.openUnique(basePath);
+    const basePath = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.tmpDir,
+      "remote-agent.pdf"
+    );
+    const { file, path: filePath } = await lazy.OS.File.openUnique(basePath);
     await file.close();
 
     const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
@@ -650,21 +655,21 @@ class Page extends Domain {
       const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
 
       let lastSize = 0;
-      const timerId = setInterval(async () => {
-        const fileInfo = await OS.File.stat(filePath);
+      const timerId = lazy.setInterval(async () => {
+        const fileInfo = await lazy.OS.File.stat(filePath);
         if (lastSize > 0 && fileInfo.size == lastSize) {
-          clearInterval(timerId);
+          lazy.clearInterval(timerId);
           resolve();
         }
         lastSize = fileInfo.size;
       }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
     });
 
-    const fp = await OS.File.open(filePath);
+    const fp = await lazy.OS.File.open(filePath);
 
     const retval = { data: null, stream: null };
     if (transferMode == PDF_TRANSFER_MODES.stream) {
-      retval.stream = streamRegistry.add(fp);
+      retval.stream = lazy.streamRegistry.add(fp);
     } else {
       // return all data as a base64 encoded string
       let bytes;
@@ -672,7 +677,7 @@ class Page extends Domain {
         bytes = await fp.read();
       } finally {
         fp.close();
-        await OS.File.remove(filePath);
+        await lazy.OS.File.remove(filePath);
       }
 
       // Each UCS2 character has an upper byte of 0 and a lower byte matching
@@ -700,9 +705,12 @@ class Page extends Domain {
     const { window } = this.session.target;
 
     return new Promise(resolve => {
-      SessionStore.getSessionHistory(window.gBrowser.selectedTab, history => {
-        resolve(history.index);
-      });
+      lazy.SessionStore.getSessionHistory(
+        window.gBrowser.selectedTab,
+        history => {
+          resolve(history.index);
+        }
+      );
     });
   }
 
@@ -720,7 +728,7 @@ class Page extends Domain {
         resolve(null);
       }
 
-      SessionStore.getSessionHistory(
+      lazy.SessionStore.getSessionHistory(
         window.gBrowser.selectedTab,
         updateSessionHistory
       );

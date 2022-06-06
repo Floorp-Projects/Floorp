@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
   UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
 });
@@ -58,14 +60,14 @@ class DomainCache {
     if (!inst) {
       const Cls = this.modules[name];
       if (!Cls) {
-        throw new UnknownMethodError(name);
+        throw new lazy.UnknownMethodError(name);
       }
       if (!isConstructor(Cls)) {
         throw new TypeError("Domain cannot be constructed");
       }
 
       inst = new Cls(this.session);
-      if (!(inst instanceof Domain)) {
+      if (!(inst instanceof lazy.Domain)) {
         throw new TypeError("Instance not a domain");
       }
 
@@ -95,7 +97,7 @@ class DomainCache {
    */
   execute(domain, command, params) {
     if (!this.domainSupportsMethod(domain, command)) {
-      throw new UnknownMethodError(domain, command);
+      throw new lazy.UnknownMethodError(domain, command);
     }
     const inst = this.get(domain);
     return inst[command](params);

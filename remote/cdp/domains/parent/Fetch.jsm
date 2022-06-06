@@ -10,14 +10,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
 // Note: For now this domain has only been added so that clients using CDP
 // (like Selenium) don't break when trying to disable Fetch events.
 
-class Fetch extends Domain {
+class Fetch extends lazy.Domain {
   constructor(session) {
     super(session);
 

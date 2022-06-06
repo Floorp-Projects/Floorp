@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
 
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
@@ -20,9 +22,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
 
 // Global singleton for managing open streams
-const streamRegistry = new StreamRegistry();
+const streamRegistry = new lazy.StreamRegistry();
 
-class IO extends Domain {
+class IO extends lazy.Domain {
   // commands
 
   /**
@@ -76,7 +78,7 @@ class IO extends Domain {
 
       // To keep compatibility with Chrome clip invalid offsets
       const seekTo = Math.max(0, Math.min(offset, fileInfo.size));
-      await stream.setPosition(seekTo, OS.File.POS_START);
+      await stream.setPosition(seekTo, lazy.OS.File.POS_START);
     }
 
     const curPos = await stream.getPosition();

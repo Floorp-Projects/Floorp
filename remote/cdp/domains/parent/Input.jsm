@@ -11,11 +11,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
-class Input extends Domain {
+class Input extends lazy.Domain {
   // commands
 
   /**

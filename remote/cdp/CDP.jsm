@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   JSONHandler: "chrome://remote/content/cdp/JSONHandler.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   RecommendedPreferences:
@@ -18,8 +20,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
-XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.CDP)
+);
+XPCOMUtils.defineLazyGetter(lazy, "textEncoder", () => new TextEncoder());
 
 // Map of CDP-specific preferences that should be set via
 // RecommendedPreferences.
@@ -80,11 +84,14 @@ class CDP {
     // avoid potential race conditions.
     this._running = true;
 
-    RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
+    lazy.RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
-    this.agent.server.registerPrefixHandler("/json/", new JSONHandler(this));
+    this.agent.server.registerPrefixHandler(
+      "/json/",
+      new lazy.JSONHandler(this)
+    );
 
-    this.targetList = new TargetList();
+    this.targetList = new lazy.TargetList();
     this.targetList.on("target-created", (eventName, target) => {
       this.agent.server.registerPathHandler(target.path, target);
     });
@@ -98,7 +105,7 @@ class CDP {
     // to find any available target. Also when closing the application while
     // it's still starting up can cause shutdown hangs. As such CDP will be
     // started when the initial application window has finished initializing.
-    logger.debug(`Waiting for initial application window`);
+    lazy.logger.debug(`Waiting for initial application window`);
     await this.agent.browserStartupFinished;
 
     Cu.printStderr(`DevTools listening on ${this.address}\n`);
@@ -111,9 +118,11 @@ class CDP {
 
     const data = `${this.agent.port}\n${this.mainTargetPath}`;
     try {
-      await IOUtils.write(this._activePortPath, textEncoder.encode(data));
+      await IOUtils.write(this._activePortPath, lazy.textEncoder.encode(data));
     } catch (e) {
-      logger.warn(`Failed to create ${this._activePortPath} (${e.message})`);
+      lazy.logger.warn(
+        `Failed to create ${this._activePortPath} (${e.message})`
+      );
     }
   }
 
@@ -129,13 +138,15 @@ class CDP {
       try {
         await IOUtils.remove(this._activePortPath);
       } catch (e) {
-        logger.warn(`Failed to remove ${this._activePortPath} (${e.message})`);
+        lazy.logger.warn(
+          `Failed to remove ${this._activePortPath} (${e.message})`
+        );
       }
 
       this.targetList?.destructor();
       this.targetList = null;
 
-      RecommendedPreferences.restorePreferences(RECOMMENDED_PREFS);
+      lazy.RecommendedPreferences.restorePreferences(RECOMMENDED_PREFS);
     } finally {
       this._running = false;
     }

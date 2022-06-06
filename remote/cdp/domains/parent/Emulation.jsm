@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 
   Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
@@ -18,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const MAX_WINDOW_SIZE = 10000000;
 
-class Emulation extends Domain {
+class Emulation extends lazy.Domain {
   destructor() {
     this.setUserAgentOverride({ userAgent: "", platform: "" });
 
@@ -167,7 +169,7 @@ class Emulation extends Domain {
 
   _isValidHTTPRequestHeaderValue(value) {
     try {
-      const channel = NetUtil.newChannel({
+      const channel = lazy.NetUtil.newChannel({
         uri: "http://localhost",
         loadUsingSystemPrincipal: true,
       });

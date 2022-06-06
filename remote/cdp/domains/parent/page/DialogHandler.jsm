@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 });
 
@@ -34,7 +36,7 @@ const DIALOG_TYPES = {
  */
 class DialogHandler {
   constructor(browser) {
-    EventEmitter.decorate(this);
+    lazy.EventEmitter.decorate(this);
     this._dialog = null;
     this._browser = browser;
 

@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentProcessDomains:
     "chrome://remote/content/cdp/domains/ContentProcessDomains.jsm",
   ContextObserver: "chrome://remote/content/cdp/observers/ContextObserver.jsm",
@@ -27,7 +29,7 @@ class ContentProcessSession {
     // implements the following interface. So do the QI only once from here.
     this.docShell.QueryInterface(Ci.nsIWebNavigation);
 
-    this.domains = new DomainCache(this, ContentProcessDomains);
+    this.domains = new lazy.DomainCache(this, lazy.ContentProcessDomains);
     this.messageManager.addMessageListener("remote:request", this);
     this.messageManager.addMessageListener("remote:destroy", this);
   }
@@ -42,7 +44,7 @@ class ContentProcessSession {
 
   get contextObserver() {
     if (!this._contextObserver) {
-      this._contextObserver = new ContextObserver(
+      this._contextObserver = new lazy.ContextObserver(
         this.docShell.chromeEventHandler
       );
     }
