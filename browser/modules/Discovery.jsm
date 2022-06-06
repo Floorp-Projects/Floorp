@@ -10,13 +10,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ContextualIdentityService",
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
@@ -28,14 +30,14 @@ const TAAR_COOKIE_NAME = "taarId";
 const Discovery = {
   set enabled(val) {
     val = !!val;
-    if (val && !gTelemetryEnabled) {
+    if (val && !lazy.gTelemetryEnabled) {
       throw Error("unable to turn on recommendations");
     }
     Services.prefs.setBoolPref(RECOMMENDATION_ENABLED, val);
   },
 
   get enabled() {
-    return gTelemetryEnabled && gRecommendationEnabled;
+    return lazy.gTelemetryEnabled && lazy.gRecommendationEnabled;
   },
 
   reset() {
@@ -48,28 +50,28 @@ const Discovery = {
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gRecommendationEnabled",
   RECOMMENDATION_ENABLED,
   false,
   Discovery.update
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTelemetryEnabled",
   TELEMETRY_ENABLED,
   false,
   Discovery.update
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gCachedClientID",
   "toolkit.telemetry.cachedClientID",
   "",
   Discovery.reset
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gContainersEnabled",
   "browser.discovery.containers.enabled",
   false,
@@ -90,8 +92,8 @@ const DiscoveryInternal = {
   getContextualIDs() {
     // There is never a zero id, this is just for use in update.
     let IDs = [0];
-    if (gContainersEnabled) {
-      ContextualIdentityService.getPublicIdentities().forEach(identity => {
+    if (lazy.gContainersEnabled) {
+      lazy.ContextualIdentityService.getPublicIdentities().forEach(identity => {
         IDs.push(identity.userContextId);
       });
     }
@@ -102,12 +104,14 @@ const DiscoveryInternal = {
     if (reset || !Discovery.enabled) {
       for (let site of this.sites) {
         Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", {});
-        ContextualIdentityService.getPublicIdentities().forEach(identity => {
-          let { userContextId } = identity;
-          Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", {
-            userContextId,
-          });
-        });
+        lazy.ContextualIdentityService.getPublicIdentities().forEach(
+          identity => {
+            let { userContextId } = identity;
+            Services.cookies.remove(site, TAAR_COOKIE_NAME, "/", {
+              userContextId,
+            });
+          }
+        );
       }
     }
 
@@ -116,10 +120,10 @@ const DiscoveryInternal = {
       // cached.  This will happen shortly after startup in TelemetryController.jsm.
       // When that happens, we'll get a pref notification for the cached id,
       // which will call update again.
-      if (!gCachedClientID) {
+      if (!lazy.gCachedClientID) {
         return;
       }
-      let id = await ClientID.getClientIdHash();
+      let id = await lazy.ClientID.getClientIdHash();
       for (let site of this.sites) {
         // This cookie gets tied down as much as possible.  Specifically,
         // SameSite, Secure, HttpOnly and non-PrivateBrowsing.

@@ -20,7 +20,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
@@ -36,7 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // This pref is in seconds!
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gRecentVisitedOriginsExpiry",
   "browser.engagement.recent_visited_origins.expiry"
 );
@@ -183,7 +185,7 @@ function telemetryId(widgetId, obscureAddons = true) {
     }
 
     if (actionId) {
-      let action = PageActions.actionForID(actionId);
+      let action = lazy.PageActions.actionForID(actionId);
       widgetId = action?._isMozillaAction ? actionId : addonId(actionId);
     }
   } else if (widgetId.startsWith("ext-keyset-id-")) {
@@ -261,7 +263,7 @@ let URICountListener = {
       webProgress.isTopLevel
     ) {
       // By default, assume we no longer need to track this tab.
-      SearchSERPTelemetry.stopTrackingBrowser(browser);
+      lazy.SearchSERPTelemetry.stopTrackingBrowser(browser);
     }
 
     // Don't count this URI if it's an error page.
@@ -288,7 +290,7 @@ let URICountListener = {
 
     // Don't include URI and domain counts when in private mode.
     let shouldCountURI =
-      !PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
       Services.prefs.getBoolPref(
         "browser.engagement.total_uri_count.pbm",
         false
@@ -333,7 +335,7 @@ let URICountListener = {
     }
 
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      SearchSERPTelemetry.updateTrackingStatus(
+      lazy.SearchSERPTelemetry.updateTrackingStatus(
         browser,
         uriSpec,
         webProgress.loadType
@@ -379,11 +381,11 @@ let URICountListener = {
     }
 
     this._domain24hrSet.add(baseDomain);
-    if (gRecentVisitedOriginsExpiry) {
-      let timeoutId = setTimeout(() => {
+    if (lazy.gRecentVisitedOriginsExpiry) {
+      let timeoutId = lazy.setTimeout(() => {
         this._domain24hrSet.delete(baseDomain);
         this._timeouts.delete(timeoutId);
-      }, gRecentVisitedOriginsExpiry * 1000);
+      }, lazy.gRecentVisitedOriginsExpiry * 1000);
       this._timeouts.add(timeoutId);
     }
   },
@@ -407,7 +409,7 @@ let URICountListener = {
    * Resets the number of unique domains visited in this session.
    */
   resetUniqueDomainsVisitedInPast24Hours() {
-    this._timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    this._timeouts.forEach(timeoutId => lazy.clearTimeout(timeoutId));
     this._timeouts.clear();
     this._domain24hrSet.clear();
   },
@@ -423,7 +425,7 @@ let BrowserUsageTelemetry = {
    * This is a policy object used to override behavior for testing.
    */
   Policy: {
-    getTelemetryClientId: async () => ClientID.getClientID(),
+    getTelemetryClientId: async () => lazy.ClientID.getClientID(),
     getUpdateDirectory: () => Services.dirsvc.get("UpdRootD", Ci.nsIFile),
     readProfileCountFile: async path => IOUtils.readUTF8(path),
     writeProfileCountFile: async (path, data) => IOUtils.writeUTF8(path, data),
@@ -441,7 +443,7 @@ let BrowserUsageTelemetry = {
 
     this._recordUITelemetry();
 
-    this._recordContentProcessCountInterval = setInterval(
+    this._recordContentProcessCountInterval = lazy.setInterval(
       () => this._recordContentProcessCount(),
       CONTENT_PROCESS_COUNT_INTERVAL_MS
     );
@@ -487,7 +489,7 @@ let BrowserUsageTelemetry = {
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
 
-    clearInterval(this._recordContentProcessCountInterval);
+    lazy.clearInterval(this._recordContentProcessCountInterval);
   },
 
   observe(subject, topic, data) {
@@ -607,7 +609,7 @@ let BrowserUsageTelemetry = {
     // Drawing in the titlebar means not showing the titlebar, hence the negation.
     widgetMap.set("titlebar", Services.appinfo.drawInTitlebar ? "off" : "on");
 
-    for (let area of CustomizableUI.areas) {
+    for (let area of lazy.CustomizableUI.areas) {
       if (!(area in BROWSER_UI_CONTAINER_IDS)) {
         continue;
       }
@@ -617,7 +619,7 @@ let BrowserUsageTelemetry = {
         position = `${BROWSER_UI_CONTAINER_IDS[area]}-start`;
       }
 
-      let widgets = CustomizableUI.getWidgetsInArea(area);
+      let widgets = lazy.CustomizableUI.getWidgetsInArea(area);
 
       for (let widget of widgets) {
         if (!widget) {
@@ -637,7 +639,7 @@ let BrowserUsageTelemetry = {
       }
     }
 
-    let actions = PageActions.actions;
+    let actions = lazy.PageActions.actions;
     for (let action of actions) {
       if (action.pinnedToUrlbar) {
         widgetMap.set(action.id, "pageaction-urlbar");
@@ -656,9 +658,9 @@ let BrowserUsageTelemetry = {
     // See if this is a customizable widget.
     if (node.ownerDocument.URL == AppConstants.BROWSER_CHROME_URL) {
       // First find if it is inside one of the customizable areas.
-      for (let area of CustomizableUI.areas) {
+      for (let area of lazy.CustomizableUI.areas) {
         if (node.closest(`#${CSS.escape(area)}`)) {
-          for (let widget of CustomizableUI.getWidgetIdsInArea(area)) {
+          for (let widget of lazy.CustomizableUI.getWidgetIdsInArea(area)) {
             if (
               // We care about the buttons on the tabs themselves.
               widget == "tabbrowser-tabs" ||
@@ -873,10 +875,10 @@ let BrowserUsageTelemetry = {
       }
 
       if (newPos == "nav-bar") {
-        let { position } = CustomizableUI.getPlacementOfWidget(widgetId);
-        let { position: urlPosition } = CustomizableUI.getPlacementOfWidget(
-          "urlbar-container"
-        );
+        let { position } = lazy.CustomizableUI.getPlacementOfWidget(widgetId);
+        let {
+          position: urlPosition,
+        } = lazy.CustomizableUI.getPlacementOfWidget("urlbar-container");
         newPos = newPos + (urlPosition > position ? "-start" : "-end");
       }
 
@@ -909,7 +911,7 @@ let BrowserUsageTelemetry = {
       // and before nav-bar-end. But moving it means the widgets around it have
       // effectively moved so update those.
       let position = "nav-bar-start";
-      let widgets = CustomizableUI.getWidgetsInArea("nav-bar");
+      let widgets = lazy.CustomizableUI.getWidgetsInArea("nav-bar");
 
       for (let widget of widgets) {
         if (!widget) {
@@ -1238,7 +1240,7 @@ let BrowserUsageTelemetry = {
     function getInstallData() {
       // We only care about where _any_ other install existed - no
       // need to count more than 1.
-      const installPaths = WindowsInstallsInfo.getInstallPaths(
+      const installPaths = lazy.WindowsInstallsInfo.getInstallPaths(
         1,
         new Set([Services.dirsvc.get("GreBinD", Ci.nsIFile).path])
       );

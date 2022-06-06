@@ -13,8 +13,10 @@ const gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gZoomPropertyName = "browser.content.full-zoom";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PanelMultiView",
   "resource:///modules/PanelMultiView.jsm"
 );
@@ -129,7 +131,7 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
     return;
   }
 
-  let appMenuZoomReset = PanelMultiView.getViewNode(
+  let appMenuZoomReset = lazy.PanelMultiView.getViewNode(
     win.document,
     "appMenu-zoomReset-button2"
   );

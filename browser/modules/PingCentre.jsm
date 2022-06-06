@@ -7,18 +7,19 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "sendStandalonePing",
   "resource://gre/modules/TelemetrySend.jsm"
 );
@@ -76,7 +77,7 @@ class PingCentre {
   }
 
   _createExperimentsPayload() {
-    let activeExperiments = TelemetryEnvironment.getActiveExperiments();
+    let activeExperiments = lazy.TelemetryEnvironment.getActiveExperiments();
     let experiments = {};
     for (let experimentID in activeExperiments) {
       if (
@@ -98,7 +99,7 @@ class PingCentre {
       experiments,
       locale,
       version: AppConstants.MOZ_APP_VERSION,
-      release_channel: UpdateUtils.getUpdateChannel(false),
+      release_channel: lazy.UpdateUtils.getUpdateChannel(false),
       ...data,
     };
 
@@ -107,7 +108,7 @@ class PingCentre {
 
   // We route through this helper because it gets hooked in testing.
   static _sendStandalonePing(endpoint, payload) {
-    return sendStandalonePing(endpoint, payload);
+    return lazy.sendStandalonePing(endpoint, payload);
   }
 
   /**

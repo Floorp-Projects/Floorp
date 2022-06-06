@@ -14,8 +14,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 // Lazy getters
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
@@ -163,8 +165,8 @@ const BrowserWindowTracker = {
         !win.closed &&
         (options.allowPopups || win.toolbar.visible) &&
         (!("private" in options) ||
-          PrivateBrowsingUtils.permanentPrivateBrowsing ||
-          PrivateBrowsingUtils.isWindowPrivate(win) == options.private)
+          lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
+          lazy.PrivateBrowsingUtils.isWindowPrivate(win) == options.private)
       ) {
         return win;
       }

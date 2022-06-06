@@ -13,7 +13,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.jsm",
@@ -160,7 +162,7 @@ var Sanitizer = {
     Services.prefs.addObserver(Sanitizer.PREF_SHUTDOWN_BRANCH, this, true);
 
     // Make sure that we are triggered during shutdown.
-    let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
+    let shutdownClient = lazy.PlacesUtils.history.shutdownClient.jsclient;
     // We need to pass to sanitize() (through sanitizeOnShutdown) a state object
     // that tracks the status of the shutdown blocker. This `progress` object
     // will be updated during sanitization and reported with the crash in case of
@@ -293,7 +295,7 @@ var Sanitizer = {
     // hasn't been closed by the time we use it.
     // Though, if this is a sanitize on shutdown, we already have a blocker.
     if (!progress.isShutdown) {
-      let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
+      let shutdownClient = lazy.PlacesUtils.history.shutdownClient.jsclient;
       shutdownClient.addBlocker("sanitize.js: Sanitize", promise, {
         fetchState: () => ({ progress }),
       });
@@ -426,7 +428,7 @@ var Sanitizer = {
         // indicates that we can purge cookies and site data for tracking origins without
         // user interaction, we need to ensure that we only delete those permissions that
         // do not have any existing storage.
-        let principalsCollector = new PrincipalsCollector();
+        let principalsCollector = new lazy.PrincipalsCollector();
         let principals = await principalsCollector.getAllPrincipals();
         await new Promise(resolve => {
           Services.clearData.deleteUserInteractionForClearingHistory(
@@ -487,7 +489,7 @@ var Sanitizer = {
             [change.firstUsedStart, change.firstUsedEnd] = range;
           }
           await new Promise(resolve => {
-            FormHistory.update(change, {
+            lazy.FormHistory.update(change, {
               handleError(e) {
                 seenException = new Error(
                   "Error " + e.result + ": " + e.message
@@ -754,7 +756,7 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
 
   // When clearing on shutdown we clear by principal for certain cleaning categories, to consider the users exceptions
   if (progress.clearHonoringExceptions) {
-    let principalsCollector = new PrincipalsCollector();
+    let principalsCollector = new lazy.PrincipalsCollector();
     let principals = await principalsCollector.getAllPrincipals(progress);
     options.principalsForShutdownClearing = principals;
     options.progress = progress;
@@ -858,7 +860,7 @@ async function sanitizeOnShutdown(progress) {
     Services.prefs.savePrefFile(null);
   }
 
-  let principalsCollector = new PrincipalsCollector();
+  let principalsCollector = new lazy.PrincipalsCollector();
 
   // Clear out QuotaManager storage for principals that have been marked as
   // session only.  The cookie service has special logic that avoids writing
@@ -1069,7 +1071,7 @@ async function sanitizeSessionPrincipal(progress, principal, flags) {
 }
 
 function sanitizeNewTabSegregation() {
-  let identity = ContextualIdentityService.getPrivateIdentity(
+  let identity = lazy.ContextualIdentityService.getPrivateIdentity(
     "userContextIdInternal.thumbnail"
   );
   if (identity) {

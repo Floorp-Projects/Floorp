@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -113,10 +115,10 @@ const TemporaryPermissions = {
     let expireTimeout = uriToPerm[setKey][id]?.expireTimeout;
     // If overwriting a permission state. We need to cancel the old timeout.
     if (expireTimeout) {
-      clearTimeout(expireTimeout);
+      lazy.clearTimeout(expireTimeout);
     }
     // Construct the new timeout to remove the permission once it has expired.
-    expireTimeout = setTimeout(() => {
+    expireTimeout = lazy.setTimeout(() => {
       let entryBrowser = entry.browser.get();
       // Exit early if the browser is no longer alive when we get the timeout
       // callback.
@@ -143,7 +145,7 @@ const TemporaryPermissions = {
     }
     expireTimeout = permissions[id]?.expireTimeout;
     if (expireTimeout) {
-      clearTimeout(expireTimeout);
+      lazy.clearTimeout(expireTimeout);
     }
     delete permissions[id];
   },
@@ -165,7 +167,7 @@ const TemporaryPermissions = {
       if (uriToPerm[key]?.[id] != null) {
         let { expireTimeout } = uriToPerm[key][id];
         if (expireTimeout) {
-          clearTimeout(expireTimeout);
+          lazy.clearTimeout(expireTimeout);
         }
         delete uriToPerm[key][id];
         // Individual permissions can only ever be keyed either strict or
@@ -273,7 +275,7 @@ const TemporaryPermissions = {
           if (!expireTimeout) {
             return;
           }
-          clearTimeout(expireTimeout);
+          lazy.clearTimeout(expireTimeout);
         }
       );
       // If there are no more permissions, remove the entry from the URI map.
