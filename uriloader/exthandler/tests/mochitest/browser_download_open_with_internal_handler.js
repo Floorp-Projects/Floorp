@@ -760,6 +760,7 @@ add_task(async function test_check_open_with_internal_handler_noask() {
     {
       "application/pdf": "pdf",
       "binary/octet-stream": "pdf",
+      "application/octet-stream": "pdf",
     },
     false
   );
@@ -767,7 +768,11 @@ add_task(async function test_check_open_with_internal_handler_noask() {
   // Build the matrix of tests to perform.
   let matrix = {
     expectDialog: [false, true],
-    file: ["file_pdf_application_pdf.pdf", "file_pdf_binary_octet_stream.pdf"],
+    file: [
+      "file_pdf_application_pdf.pdf",
+      "file_pdf_binary_octet_stream.pdf",
+      "file_pdf_application_octet_stream.pdf",
+    ],
     where: ["top", "popup", "frame"],
   };
   let tests = [{}];
@@ -816,7 +821,9 @@ add_task(async function test_check_open_with_internal_handler_noask() {
     }
 
     let openPDFDirectly =
-      !expectDialog && file == "file_pdf_application_pdf.pdf";
+      !expectDialog &&
+      (file == "file_pdf_application_pdf.pdf" ||
+        (file == "file_pdf_application_octet_stream.pdf" && where != "frame"));
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_PATH + "blank.html" },
       async browser => {
