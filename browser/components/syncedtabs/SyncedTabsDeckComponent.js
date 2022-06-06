@@ -29,7 +29,9 @@ let { getChromeWindow } = ChromeUtils.import(
 );
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 

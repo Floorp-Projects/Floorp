@@ -6,8 +6,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -555,7 +557,7 @@ TabListView.prototype = {
       let show = false;
       if (showTabOptions) {
         if (el.getAttribute("id") == "syncedTabsOpenSelectedInPrivateWindow") {
-          show = PrivateBrowsingUtils.enabled;
+          show = lazy.PrivateBrowsingUtils.enabled;
         } else if (
           el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
           el.getAttribute("id") != "syncedTabsManageDevices"
