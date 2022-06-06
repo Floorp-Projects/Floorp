@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = ["SessionCookies"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm"
 );
@@ -144,7 +146,7 @@ var SessionCookiesInternal = {
     cookie.QueryInterface(Ci.nsICookie);
 
     // Store only session cookies, obey the privacy level.
-    if (cookie.isSession && PrivacyLevel.canSave(cookie.isSecure)) {
+    if (cookie.isSession && lazy.PrivacyLevel.canSave(cookie.isSecure)) {
       CookieStore.add(cookie);
     }
   },
@@ -156,7 +158,7 @@ var SessionCookiesInternal = {
     cookie.QueryInterface(Ci.nsICookie);
 
     // Store only session cookies, obey the privacy level.
-    if (cookie.isSession && PrivacyLevel.canSave(cookie.isSecure)) {
+    if (cookie.isSession && lazy.PrivacyLevel.canSave(cookie.isSecure)) {
       CookieStore.add(cookie);
     } else {
       CookieStore.delete(cookie);
@@ -191,7 +193,7 @@ var SessionCookiesInternal = {
     CookieStore.clear();
 
     // Bail out if we're not supposed to store cookies at all.
-    if (!PrivacyLevel.canSave(false)) {
+    if (!lazy.PrivacyLevel.canSave(false)) {
       return;
     }
 

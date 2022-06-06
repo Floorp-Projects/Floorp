@@ -35,23 +35,25 @@ var EXPORTED_SYMBOLS = ["SessionStartup"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "StartupPerformance",
   "resource:///modules/sessionstore/StartupPerformance.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CrashMonitor",
   "resource://gre/modules/CrashMonitor.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -118,10 +120,10 @@ var SessionStartup = {
    */
   init() {
     Services.obs.notifyObservers(null, "sessionstore-init-started");
-    StartupPerformance.init();
+    lazy.StartupPerformance.init();
 
     // do not need to initialize anything in auto-started private browsing sessions
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+    if (lazy.PrivateBrowsingUtils.permanentPrivateBrowsing) {
       this._initialized = true;
       gOnceInitializedDeferred.resolve();
       return;
@@ -148,7 +150,10 @@ var SessionStartup = {
       );
     }
 
-    SessionFile.read().then(this._onSessionFileRead.bind(this), console.error);
+    lazy.SessionFile.read().then(
+      this._onSessionFileRead.bind(this),
+      console.error
+    );
   },
 
   // Wrap a string as a nsISupports.
@@ -220,7 +225,7 @@ var SessionStartup = {
       delete this._initialState.lastSessionState;
     }
 
-    CrashMonitor.previousCheckpoints.then(checkpoints => {
+    lazy.CrashMonitor.previousCheckpoints.then(checkpoints => {
       if (checkpoints) {
         // If the previous session finished writing the final state, we'll
         // assume there was no crash.
@@ -318,7 +323,7 @@ var SessionStartup = {
   isAutomaticRestoreEnabled() {
     if (this._resumeSessionEnabled === null) {
       this._resumeSessionEnabled =
-        !PrivateBrowsingUtils.permanentPrivateBrowsing &&
+        !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing &&
         (Services.prefs.getBoolPref(
           "browser.sessionstore.resume_session_once"
         ) ||

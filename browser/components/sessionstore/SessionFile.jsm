@@ -24,7 +24,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionWriter: "resource:///modules/sessionstore/SessionWriter.jsm",
@@ -245,7 +247,7 @@ var SessionFileInternal = {
         }
 
         if (
-          !SessionStore.isFormatVersionCompatible(
+          !lazy.SessionStore.isFormatVersionCompatible(
             parsed.version || [
               "sessionrestore",
               0,
@@ -350,7 +352,7 @@ var SessionFileInternal = {
       }
 
       this._initialized = true;
-      SessionWriter.init(
+      lazy.SessionWriter.init(
         this._readOrigin,
         this._usingOldExtension,
         this.Paths,
@@ -371,23 +373,24 @@ var SessionFileInternal = {
       );
     }
 
-    return Promise.resolve(SessionWriter);
+    return Promise.resolve(lazy.SessionWriter);
   },
 
   write(aData) {
-    if (RunState.isClosed) {
+    if (lazy.RunState.isClosed) {
       return Promise.reject(new Error("SessionFile is closed"));
     }
 
     let isFinalWrite = false;
-    if (RunState.isClosing) {
+    if (lazy.RunState.isClosing) {
       // If shutdown has started, we will want to stop receiving
       // write instructions.
       isFinalWrite = true;
-      RunState.setClosed();
+      lazy.RunState.setClosed();
     }
 
-    let performShutdownCleanup = isFinalWrite && !SessionStore.willAutoRestore;
+    let performShutdownCleanup =
+      isFinalWrite && !lazy.SessionStore.willAutoRestore;
 
     this._attempts++;
     let options = { isFinalWrite, performShutdownCleanup };

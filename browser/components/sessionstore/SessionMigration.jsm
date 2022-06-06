@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["SessionMigration"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -57,7 +59,7 @@ var SessionMigrationInternal = {
     let formdata = { id: { sessionData: state }, url };
     let entry = {
       url,
-      triggeringPrincipal_base64: E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
+      triggeringPrincipal_base64: lazy.E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
     };
     return { windows: [{ tabs: [{ entries: [entry], formdata }] }] };
   },
