@@ -26,6 +26,7 @@
         `(module
            (import "m" "exn" (tag $exn))
            (tag $localExn (param i32))
+           (type $t (func))
            (import "m" "tab" (table $importTable 2 funcref))
            (import "m" "throwsExn" (func $importFuncThrowsExn))
            (memory $mem (data "foo"))
@@ -65,11 +66,11 @@
       ["(call $anotherLocalFuncThrowsExn)",
        "(call $importFuncThrowsExn)",
        // Calls $localFuncThrowsExn.
-       "(call_indirect (table $localTable) (i32.const 0))",
+       "(call_indirect $localTable (type $t) (i32.const 0))",
        // Calls $importFuncThrowsExn.
-       "(call_indirect (table $localTable) (i32.const 1))",
+       "(call_indirect $localTable (type $t) (i32.const 1))",
        // Calls non exported function of the exports module $anotherThrowsExn.
-       "(call_indirect (table $importTable) (i32.const 0))"];
+       "(call_indirect $importTable (type $t) (i32.const 0))"];
 
   for (let callInstruction of callInstructions) {
     testMemoryAfterCall(callInstruction);

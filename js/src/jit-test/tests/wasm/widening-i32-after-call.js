@@ -27,7 +27,7 @@ var ins = wasmEvalText(`
   (func (export "wasm2import") (result i32)
     (call $g))
   (func (export "wasmIndirect") (result i32)
-    (call_indirect (type $ty) $t (i32.const 0)))
+    (call_indirect $t (type $ty) (i32.const 0)))
   (func (export "instanceCall") (result i32)
     (memory.size))
 )`, {'':{'wasm2import': function() {}}});

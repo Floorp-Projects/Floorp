@@ -49,7 +49,7 @@ fn parse_comments() -> anyhow::Result<()> {
     "#,
     )?;
 
-    let d: Documented<wast::Module> = parser::parse(&buf)?;
+    let d: Documented<wast::core::Module> = parser::parse(&buf)?;
     assert_eq!(d.comments.comments, vec![" hello", " again "]);
     drop(d.item);
 
@@ -66,7 +66,7 @@ multiple;)
     "#,
     )?;
 
-    let d: Documented<wast::Func> = parser::parse(&buf)?;
+    let d: Documented<wast::core::Func> = parser::parse(&buf)?;
     assert_eq!(
         d.comments.comments,
         vec![" this", " is\non\nmultiple", " lines"]

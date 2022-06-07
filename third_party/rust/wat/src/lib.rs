@@ -218,7 +218,7 @@ pub fn parse_str(wat: impl AsRef<str>) -> Result<Vec<u8>> {
 fn _parse_str(wat: &str) -> Result<Vec<u8>> {
     let buf = ParseBuffer::new(&wat).map_err(|e| Error::cvt(e, wat))?;
     let mut ast = parser::parse::<wast::Wat>(&buf).map_err(|e| Error::cvt(e, wat))?;
-    Ok(ast.module.encode().map_err(|e| Error::cvt(e, wat))?)
+    Ok(ast.encode().map_err(|e| Error::cvt(e, wat))?)
 }
 
 /// A convenience type definition for `Result` where the error is [`Error`]

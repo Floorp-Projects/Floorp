@@ -20,9 +20,10 @@
 //!   around working with a [`Parser`](`parser::Parser`) to parse streams of
 //!   tokens.
 //!
-//! * [`Module`] - this contains an Abstract Syntax Tree (AST) of the
-//!   WebAssembly Text format (WAT) as well as the unofficial WAST format. This
-//!   also has a [`Module::encode`] method to emit a module in its binary form.
+//! * [`Module`](crate::core::Module) - this contains an Abstract Syntax Tree
+//!   (AST) of the WebAssembly Text format (WAT) as well as the unofficial WAST
+//!   format. This also has a [`Module::encode`](crate::core::Module::encode)
+//!   method to emit a module in its binary form.
 //!
 //! # Stability and WebAssembly Features
 //!
@@ -47,209 +48,463 @@
 
 #![deny(missing_docs, rustdoc::broken_intra_doc_links)]
 
-use std::fmt;
-use std::path::{Path, PathBuf};
-use unicode_width::UnicodeWidthStr;
+/// A macro to create a custom keyword parser.
+///
+/// This macro is invoked in one of two forms:
+///
+/// ```
+/// // keyword derived from the Rust identifier:
+/// wast::custom_keyword!(foo);
+///
+/// // or an explicitly specified string representation of the keyword:
+/// wast::custom_keyword!(my_keyword = "the-wasm-keyword");
+/// ```
+///
+/// This can then be used to parse custom keyword for custom items, such as:
+///
+/// ```
+/// use wast::parser::{Parser, Result, Parse};
+///
+/// struct InlineModule<'a> {
+///     inline_text: &'a str,
+/// }
+///
+/// mod kw {
+///     wast::custom_keyword!(inline);
+/// }
+///
+/// // Parse an inline string module of the form:
+/// //
+/// //    (inline "(module (func))")
+/// impl<'a> Parse<'a> for InlineModule<'a> {
+///     fn parse(parser: Parser<'a>) -> Result<Self> {
+///         parser.parse::<kw::inline>()?;
+///         Ok(InlineModule {
+///             inline_text: parser.parse()?,
+///         })
+///     }
+/// }
+/// ```
+///
+/// Note that the keyword name can only start with a lower-case letter, i.e. 'a'..'z'.
+#[macro_export]
+macro_rules! custom_keyword {
+    ($name:ident) => {
+        $crate::custom_keyword!($name = stringify!($name));
+    };
+    ($name:ident = $kw:expr) => {
+        #[allow(non_camel_case_types)]
+        #[allow(missing_docs)]
+        #[derive(Debug, Copy, Clone)]
+        pub struct $name(pub $crate::token::Span);
 
-#[cfg(feature = "wasm-module")]
-mod binary;
-#[cfg(feature = "wasm-module")]
-mod resolve;
+        impl<'a> $crate::parser::Parse<'a> for $name {
+            fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
+                parser.step(|c| {
+                    if let Some((kw, rest)) = c.keyword() {
+                        if kw == $kw {
+                            return Ok(($name(c.cur_span()), rest));
+                        }
+                    }
+                    Err(c.error(concat!("expected keyword `", $kw, "`")))
+                })
+            }
+        }
 
-mod ast;
-pub use self::ast::*;
+        impl $crate::parser::Peek for $name {
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
+                if let Some((kw, _rest)) = cursor.keyword() {
+                    kw == $kw
+                } else {
+                    false
+                }
+            }
+
+            fn display() -> &'static str {
+                concat!("`", $kw, "`")
+            }
+        }
+    };
+}
+
+/// A macro for defining custom reserved symbols.
+///
+/// This is like `custom_keyword!` but for reserved symbols (`Token::Reserved`)
+/// instead of keywords (`Token::Keyword`).
+///
+/// ```
+/// use wast::parser::{Parser, Result, Parse};
+///
+/// // Define a custom reserved symbol, the "spaceship" operator: `<=>`.
+/// wast::custom_reserved!(spaceship = "<=>");
+///
+/// /// A "three-way comparison" like `(<=> a b)` that returns -1 if `a` is less
+/// /// than `b`, 0 if they're equal, and 1 if `a` is greater than `b`.
+/// struct ThreeWayComparison<'a> {
+///     lhs: wast::core::Expression<'a>,
+///     rhs: wast::core::Expression<'a>,
+/// }
+///
+/// impl<'a> Parse<'a> for ThreeWayComparison<'a> {
+///     fn parse(parser: Parser<'a>) -> Result<Self> {
+///         parser.parse::<spaceship>()?;
+///         let lhs = parser.parse()?;
+///         let rhs = parser.parse()?;
+///         Ok(ThreeWayComparison { lhs, rhs })
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! custom_reserved {
+    ($name:ident) => {
+        $crate::custom_reserved!($name = stringify!($name));
+    };
+    ($name:ident = $rsv:expr) => {
+        #[allow(non_camel_case_types)]
+        #[allow(missing_docs)]
+        #[derive(Debug)]
+        pub struct $name(pub $crate::token::Span);
+
+        impl<'a> $crate::parser::Parse<'a> for $name {
+            fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
+                parser.step(|c| {
+                    if let Some((rsv, rest)) = c.reserved() {
+                        if rsv == $rsv {
+                            return Ok(($name(c.cur_span()), rest));
+                        }
+                    }
+                    Err(c.error(concat!("expected reserved symbol `", $rsv, "`")))
+                })
+            }
+        }
+
+        impl $crate::parser::Peek for $name {
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
+                if let Some((rsv, _rest)) = cursor.reserved() {
+                    rsv == $rsv
+                } else {
+                    false
+                }
+            }
+
+            fn display() -> &'static str {
+                concat!("`", $rsv, "`")
+            }
+        }
+    };
+}
+
+/// A macro, like [`custom_keyword`], to create a type which can be used to
+/// parse/peek annotation directives.
+///
+/// Note that when you're parsing custom annotations it can be somewhat tricky
+/// due to the nature that most of them are skipped. You'll want to be sure to
+/// consult the documentation of [`Parser::register_annotation`][register] when
+/// using this macro.
+///
+/// # Examples
+///
+/// To see an example of how to use this macro, let's invent our own syntax for
+/// the [producers section][section] which looks like:
+///
+/// ```wat
+/// (@producer "wat" "1.0.2")
+/// ```
+///
+/// Here, for simplicity, we'll assume everything is a `processed-by` directive,
+/// but you could get much more fancy with this as well.
+///
+/// ```
+/// # use wast::*;
+/// # use wast::parser::*;
+///
+/// // First we define the custom annotation keyword we're using, and by
+/// // convention we define it in an `annotation` module.
+/// mod annotation {
+///     wast::annotation!(producer);
+/// }
+///
+/// struct Producer<'a> {
+///     name: &'a str,
+///     version: &'a str,
+/// }
+///
+/// impl<'a> Parse<'a> for Producer<'a> {
+///     fn parse(parser: Parser<'a>) -> Result<Self> {
+///         // Remember that parser conventionally parse the *interior* of an
+///         // s-expression, so we parse our `@producer` annotation and then we
+///         // parse the payload of our annotation.
+///         parser.parse::<annotation::producer>()?;
+///         Ok(Producer {
+///             name: parser.parse()?,
+///             version: parser.parse()?,
+///         })
+///     }
+/// }
+/// ```
+///
+/// Note though that this is only half of the parser for annotations. The other
+/// half is calling the [`register_annotation`][register] method at the right
+/// time to ensure the parser doesn't automatically skip our `@producer`
+/// directive. Note that we *can't* call it inside the `Parse for Producer`
+/// definition because that's too late and the annotation would already have
+/// been skipped.
+///
+/// Instead we'll need to call it from a higher level-parser before the
+/// parenthesis have been parsed, like so:
+///
+/// ```
+/// # use wast::*;
+/// # use wast::parser::*;
+/// struct Module<'a> {
+///     fields: Vec<ModuleField<'a>>,
+/// }
+///
+/// impl<'a> Parse<'a> for Module<'a> {
+///     fn parse(parser: Parser<'a>) -> Result<Self> {
+///         // .. parse module header here ...
+///
+///         // register our custom `@producer` annotation before we start
+///         // parsing the parentheses of each field
+///         let _r = parser.register_annotation("producer");
+///
+///         let mut fields = Vec::new();
+///         while !parser.is_empty() {
+///             fields.push(parser.parens(|p| p.parse())?);
+///         }
+///         Ok(Module { fields })
+///     }
+/// }
+///
+/// enum ModuleField<'a> {
+///     Producer(Producer<'a>),
+///     // ...
+/// }
+/// # struct Producer<'a>(&'a str);
+/// # impl<'a> Parse<'a> for Producer<'a> {
+/// #   fn parse(parser: Parser<'a>) -> Result<Self> { Ok(Producer(parser.parse()?)) }
+/// # }
+/// # mod annotation { wast::annotation!(producer); }
+///
+/// impl<'a> Parse<'a> for ModuleField<'a> {
+///     fn parse(parser: Parser<'a>) -> Result<Self> {
+///         // and here `peek` works and our delegated parsing works because the
+///         // annotation has been registered.
+///         if parser.peek::<annotation::producer>() {
+///             return Ok(ModuleField::Producer(parser.parse()?));
+///         }
+///
+///         // .. typically we'd parse other module fields here...
+///
+///         Err(parser.error("unknown module field"))
+///     }
+/// }
+/// ```
+///
+/// [register]: crate::parser::Parser::register_annotation
+/// [section]: https://github.com/WebAssembly/tool-conventions/blob/master/ProducersSection.md
+#[macro_export]
+macro_rules! annotation {
+    ($name:ident) => {
+        $crate::annotation!($name = stringify!($name));
+    };
+    ($name:ident = $annotation:expr) => {
+        #[allow(non_camel_case_types)]
+        #[allow(missing_docs)]
+        #[derive(Debug)]
+        pub struct $name(pub $crate::token::Span);
+
+        impl<'a> $crate::parser::Parse<'a> for $name {
+            fn parse(parser: $crate::parser::Parser<'a>) -> $crate::parser::Result<Self> {
+                parser.step(|c| {
+                    if let Some((a, rest)) = c.annotation() {
+                        if a == $annotation {
+                            return Ok(($name(c.cur_span()), rest));
+                        }
+                    }
+                    Err(c.error(concat!("expected annotation `@", $annotation, "`")))
+                })
+            }
+        }
+
+        impl $crate::parser::Peek for $name {
+            fn peek(cursor: $crate::parser::Cursor<'_>) -> bool {
+                if let Some((a, _rest)) = cursor.annotation() {
+                    a == $annotation
+                } else {
+                    false
+                }
+            }
+
+            fn display() -> &'static str {
+                concat!("`@", $annotation, "`")
+            }
+        }
+    };
+}
 
 pub mod lexer;
 pub mod parser;
+pub mod token;
 
-/// A convenience error type to tie together all the detailed errors produced by
-/// this crate.
-///
-/// This type can be created from a [`lexer::LexError`] or [`parser::Error`].
-/// This also contains storage for file/text information so a nice error can be
-/// rendered along the same lines of rustc's own error messages (minus the
-/// color).
-///
-/// This type is typically suitable for use in public APIs for consumers of this
-/// crate.
-#[derive(Debug)]
-pub struct Error {
-    inner: Box<ErrorInner>,
+mod encode;
+mod error;
+mod gensym;
+mod names;
+pub use self::error::*;
+
+macro_rules! id {
+    ($($t:tt)*) => ($($t)*)
 }
 
-#[derive(Debug)]
-struct ErrorInner {
-    text: Option<Text>,
-    file: Option<PathBuf>,
-    span: Span,
-    kind: ErrorKind,
+#[cfg(feature = "wasm-module")]
+id! {
+    mod assert_expr;
+    mod wast;
+    mod wat;
+    pub use self::assert_expr::*;
+    pub use self::wast::*;
+    pub use self::wat::*;
+
+    // Support for core wasm parsing
+    pub mod core;
+
+    // Support for component model parsing
+    pub mod component;
 }
 
-#[derive(Debug)]
-struct Text {
-    line: usize,
-    col: usize,
-    snippet: String,
+/// Common keyword used to parse WebAssembly text files.
+pub mod kw {
+    custom_keyword!(after);
+    custom_keyword!(alias);
+    custom_keyword!(any);
+    custom_keyword!(anyfunc);
+    custom_keyword!(anyref);
+    custom_keyword!(arg);
+    custom_keyword!(array);
+    custom_keyword!(assert_exception);
+    custom_keyword!(assert_exhaustion);
+    custom_keyword!(assert_invalid);
+    custom_keyword!(assert_malformed);
+    custom_keyword!(assert_return);
+    custom_keyword!(assert_trap);
+    custom_keyword!(assert_unlinkable);
+    custom_keyword!(before);
+    custom_keyword!(binary);
+    custom_keyword!(block);
+    custom_keyword!(catch);
+    custom_keyword!(catch_all);
+    custom_keyword!(code);
+    custom_keyword!(component);
+    custom_keyword!(data);
+    custom_keyword!(dataref);
+    custom_keyword!(declare);
+    custom_keyword!(delegate);
+    custom_keyword!(r#do = "do");
+    custom_keyword!(elem);
+    custom_keyword!(end);
+    custom_keyword!(tag);
+    custom_keyword!(export);
+    custom_keyword!(r#extern = "extern");
+    custom_keyword!(externref);
+    custom_keyword!(eq);
+    custom_keyword!(eqref);
+    custom_keyword!(f32);
+    custom_keyword!(f32x4);
+    custom_keyword!(f64);
+    custom_keyword!(f64x2);
+    custom_keyword!(field);
+    custom_keyword!(first);
+    custom_keyword!(func);
+    custom_keyword!(funcref);
+    custom_keyword!(get);
+    custom_keyword!(global);
+    custom_keyword!(i16);
+    custom_keyword!(i16x8);
+    custom_keyword!(i31);
+    custom_keyword!(i31ref);
+    custom_keyword!(i32);
+    custom_keyword!(i32x4);
+    custom_keyword!(i64);
+    custom_keyword!(i64x2);
+    custom_keyword!(i8);
+    custom_keyword!(i8x16);
+    custom_keyword!(import);
+    custom_keyword!(instance);
+    custom_keyword!(instantiate);
+    custom_keyword!(invoke);
+    custom_keyword!(item);
+    custom_keyword!(last);
+    custom_keyword!(local);
+    custom_keyword!(memory);
+    custom_keyword!(module);
+    custom_keyword!(modulecode);
+    custom_keyword!(nan_arithmetic = "nan:arithmetic");
+    custom_keyword!(nan_canonical = "nan:canonical");
+    custom_keyword!(null);
+    custom_keyword!(nullref);
+    custom_keyword!(offset);
+    custom_keyword!(outer);
+    custom_keyword!(param);
+    custom_keyword!(parent);
+    custom_keyword!(passive);
+    custom_keyword!(quote);
+    custom_keyword!(r#else = "else");
+    custom_keyword!(r#if = "if");
+    custom_keyword!(r#loop = "loop");
+    custom_keyword!(r#mut = "mut");
+    custom_keyword!(r#type = "type");
+    custom_keyword!(r#ref = "ref");
+    custom_keyword!(ref_func = "ref.func");
+    custom_keyword!(ref_null = "ref.null");
+    custom_keyword!(register);
+    custom_keyword!(result);
+    custom_keyword!(rtt);
+    custom_keyword!(shared);
+    custom_keyword!(start);
+    custom_keyword!(r#struct = "struct");
+    custom_keyword!(table);
+    custom_keyword!(then);
+    custom_keyword!(r#try = "try");
+    custom_keyword!(v128);
+    custom_keyword!(value);
+    custom_keyword!(s8);
+    custom_keyword!(s16);
+    custom_keyword!(s32);
+    custom_keyword!(s64);
+    custom_keyword!(u8);
+    custom_keyword!(u16);
+    custom_keyword!(u32);
+    custom_keyword!(u64);
+    custom_keyword!(char);
+    custom_keyword!(case);
+    custom_keyword!(defaults_to = "defaults-to");
+    custom_keyword!(record);
+    custom_keyword!(string);
+    custom_keyword!(bool_ = "bool");
+    custom_keyword!(float32);
+    custom_keyword!(float64);
+    custom_keyword!(variant);
+    custom_keyword!(unit);
+    custom_keyword!(flags);
+    custom_keyword!(option);
+    custom_keyword!(tuple);
+    custom_keyword!(list);
+    custom_keyword!(union);
+    custom_keyword!(expected);
+    custom_keyword!(canon_lift = "canon.lift");
+    custom_keyword!(canon_lower = "canon.lower");
+    custom_keyword!(enum_ = "enum");
+    custom_keyword!(string_utf8 = "string=utf8");
+    custom_keyword!(string_utf16 = "string=utf16");
+    custom_keyword!(string_latin1_utf16 = "string=latin1+utf16");
+    custom_keyword!(into);
+    custom_keyword!(with);
+    custom_keyword!(core);
 }
 
-#[derive(Debug)]
-enum ErrorKind {
-    Lex(lexer::LexError),
-    Custom(String),
-}
-
-impl Error {
-    fn lex(span: Span, content: &str, kind: lexer::LexError) -> Error {
-        let mut ret = Error {
-            inner: Box::new(ErrorInner {
-                text: None,
-                file: None,
-                span,
-                kind: ErrorKind::Lex(kind),
-            }),
-        };
-        ret.set_text(content);
-        return ret;
-    }
-
-    fn parse(span: Span, content: &str, message: String) -> Error {
-        let mut ret = Error {
-            inner: Box::new(ErrorInner {
-                text: None,
-                file: None,
-                span,
-                kind: ErrorKind::Custom(message),
-            }),
-        };
-        ret.set_text(content);
-        return ret;
-    }
-
-    /// Creates a new error with the given `message` which is targeted at the
-    /// given `span`
-    ///
-    /// Note that you'll want to ensure that `set_text` or `set_path` is called
-    /// on the resulting error to improve the rendering of the error message.
-    pub fn new(span: Span, message: String) -> Error {
-        Error {
-            inner: Box::new(ErrorInner {
-                text: None,
-                file: None,
-                span,
-                kind: ErrorKind::Custom(message),
-            }),
-        }
-    }
-
-    /// Return the `Span` for this error.
-    pub fn span(&self) -> Span {
-        self.inner.span
-    }
-
-    /// To provide a more useful error this function can be used to extract
-    /// relevant textual information about this error into the error itself.
-    ///
-    /// The `contents` here should be the full text of the original file being
-    /// parsed, and this will extract a sub-slice as necessary to render in the
-    /// `Display` implementation later on.
-    pub fn set_text(&mut self, contents: &str) {
-        if self.inner.text.is_some() {
-            return;
-        }
-        self.inner.text = Some(Text::new(contents, self.inner.span));
-    }
-
-    /// To provide a more useful error this function can be used to set
-    /// the file name that this error is associated with.
-    ///
-    /// The `path` here will be stored in this error and later rendered in the
-    /// `Display` implementation.
-    pub fn set_path(&mut self, path: &Path) {
-        if self.inner.file.is_some() {
-            return;
-        }
-        self.inner.file = Some(path.to_path_buf());
-    }
-
-    /// Returns the underlying `LexError`, if any, that describes this error.
-    pub fn lex_error(&self) -> Option<&lexer::LexError> {
-        match &self.inner.kind {
-            ErrorKind::Lex(e) => Some(e),
-            _ => None,
-        }
-    }
-
-    /// Returns the underlying message, if any, that describes this error.
-    pub fn message(&self) -> String {
-        match &self.inner.kind {
-            ErrorKind::Lex(e) => e.to_string(),
-            ErrorKind::Custom(e) => e.clone(),
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let err = match &self.inner.kind {
-            ErrorKind::Lex(e) => e as &dyn fmt::Display,
-            ErrorKind::Custom(e) => e as &dyn fmt::Display,
-        };
-        let text = match &self.inner.text {
-            Some(text) => text,
-            None => {
-                return write!(f, "{} at byte offset {}", err, self.inner.span.offset);
-            }
-        };
-        let file = self
-            .inner
-            .file
-            .as_ref()
-            .and_then(|p| p.to_str())
-            .unwrap_or("<anon>");
-        write!(
-            f,
-            "\
-{err}
-     --> {file}:{line}:{col}
-      |
- {line:4} | {text}
-      | {marker:>0$}",
-            text.col + 1,
-            file = file,
-            line = text.line + 1,
-            col = text.col + 1,
-            err = err,
-            text = text.snippet,
-            marker = "^",
-        )
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl Text {
-    fn new(content: &str, span: Span) -> Text {
-        let (line, col) = span.linecol_in(content);
-        let contents = content.lines().nth(line).unwrap_or("");
-        let mut snippet = String::new();
-        for ch in contents.chars() {
-            match ch {
-                // Replace tabs with spaces to render consistently
-                '\t' => {
-                    snippet.push_str("    ");
-                }
-                // these codepoints change how text is rendered so for clarity
-                // in error messages they're dropped.
-                '\u{202a}' | '\u{202b}' | '\u{202d}' | '\u{202e}' | '\u{2066}' | '\u{2067}'
-                | '\u{2068}' | '\u{206c}' | '\u{2069}' => {}
-
-                c => snippet.push(c),
-            }
-        }
-        // Use the `unicode-width` crate to figure out how wide the snippet, up
-        // to our "column", actually is. That'll tell us how many spaces to
-        // place before the `^` character that points at the problem
-        let col = snippet.get(..col).map(|s| s.width()).unwrap_or(col);
-        Text { line, col, snippet }
-    }
+/// Common annotations used to parse WebAssembly text files.
+pub mod annotation {
+    annotation!(custom);
+    annotation!(name);
 }
