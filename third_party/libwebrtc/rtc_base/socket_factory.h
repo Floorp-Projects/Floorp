@@ -21,10 +21,6 @@ class SocketFactory {
 
   // Returns a new socket.  The type can be SOCK_DGRAM and SOCK_STREAM.
   virtual Socket* CreateSocket(int family, int type) = 0;
-  // TODO(nisse): Delete old alias, ASAP when downstream code is updated.
-  virtual Socket* CreateAsyncSocket(int family, int type) {
-    return CreateSocket(family, type);
-  }
 };
 
 }  // namespace rtc
