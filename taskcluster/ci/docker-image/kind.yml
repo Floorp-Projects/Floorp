@@ -108,7 +108,7 @@ jobs:
             - deb11-valgrind
     lint:
         symbol: I(lnt)
-        parent: ubuntu1804-base
+        parent: debian11-base
     # Neither the debian10-raw nor the debian10-packages images can have
     # packages dependencies.
     debian10-raw:
