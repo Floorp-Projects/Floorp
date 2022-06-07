@@ -495,14 +495,15 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
       case rtcp::Sdes::kPacketType:
         HandleSdes(rtcp_block, packet_information);
         break;
-      case rtcp::ExtendedReports::kPacketType:
-        bool contains_dlrr;
-        uint32_t ssrc;
+      case rtcp::ExtendedReports::kPacketType: {
+        bool contains_dlrr = false;
+        uint32_t ssrc = 0;
         HandleXr(rtcp_block, packet_information, contains_dlrr, ssrc);
         if (contains_dlrr) {
           received_blocks[ssrc].dlrr = true;
         }
         break;
+      }
       case rtcp::Bye::kPacketType:
         HandleBye(rtcp_block);
         break;
