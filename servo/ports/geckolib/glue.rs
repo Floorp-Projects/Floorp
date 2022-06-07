@@ -6290,7 +6290,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
         let timing_function = nsTimingFunction {
             mTiming: match step.get_animation_timing_function(&guard) {
                 Some(val) => val.to_computed_value_without_context(),
-                None => (*inherited_timing_function).mTiming,
+                None => (*inherited_timing_function).mTiming.clone(),
             },
         };
 
