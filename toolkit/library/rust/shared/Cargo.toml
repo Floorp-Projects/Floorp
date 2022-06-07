@@ -86,6 +86,9 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
+# Force url to stay at 2.1.0. See bug 1734538.
+url = "=2.1.0"
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
