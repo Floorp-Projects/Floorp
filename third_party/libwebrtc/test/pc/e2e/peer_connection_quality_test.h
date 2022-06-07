@@ -71,6 +71,10 @@ class PeerConnectionE2EQualityTest
   void AddPeer(rtc::Thread* network_thread,
                rtc::NetworkManager* network_manager,
                rtc::FunctionView<void(PeerConfigurer*)> configurer) override;
+  PeerHandle* AddAndReturnPeer(
+      rtc::Thread* network_thread,
+      rtc::NetworkManager* network_manager,
+      rtc::FunctionView<void(PeerConfigurer*)> configurer) override;
   void Run(RunParams run_params) override;
 
   TimeDelta GetRealTestDuration() const override {
@@ -80,6 +84,11 @@ class PeerConnectionE2EQualityTest
   }
 
  private:
+  class PeerHandleImpl : public PeerHandle {
+   public:
+    ~PeerHandleImpl() override = default;
+  };
+
   // For some functionality some field trials have to be enabled, they will be
   // enabled in Run().
   std::string GetFieldTrials(const RunParams& run_params);
@@ -114,6 +123,7 @@ class PeerConnectionE2EQualityTest
   std::unique_ptr<TestActivitiesExecutor> executor_;
 
   std::vector<std::unique_ptr<PeerConfigurerImpl>> peer_configurations_;
+  std::vector<PeerHandleImpl> peer_handles_;
 
   std::unique_ptr<TestPeer> alice_;
   std::unique_ptr<TestPeer> bob_;
