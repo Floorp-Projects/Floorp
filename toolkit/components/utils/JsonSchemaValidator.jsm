@@ -19,7 +19,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "JsonSchemaValidator.jsm",
@@ -182,17 +184,17 @@ class JsonSchemaValidator {
 
   // eslint-disable-next-line complexity
   _validateRecursive(param, properties, keyPath, state) {
-    log.debug(`checking @${param}@ for type ${properties.type}`);
+    lazy.log.debug(`checking @${param}@ for type ${properties.type}`);
 
     if (Array.isArray(properties.type)) {
-      log.debug("type is an array");
+      lazy.log.debug("type is an array");
       // For an array of types, the value is valid if it matches any of the
       // listed types. To check this, make versions of the object definition
       // that include only one type at a time, and check the value against each
       // one.
       for (const type of properties.type) {
         let typeProperties = Object.assign({}, properties, { type });
-        log.debug(`checking subtype ${type}`);
+        lazy.log.debug(`checking subtype ${type}`);
         let result = this._validateRecursive(
           param,
           typeProperties,
@@ -271,7 +273,7 @@ class JsonSchemaValidator {
         let parsedArray = [];
         for (let i = 0; i < param.length; i++) {
           let item = param[i];
-          log.debug(
+          lazy.log.debug(
             `in array, checking @${item}@ for type ${properties.items.type}`
           );
           let result = this._validateRecursive(
@@ -332,7 +334,7 @@ class JsonSchemaValidator {
         if (properties.required) {
           for (let required of properties.required) {
             if (!(required in param)) {
-              log.error(`Object is missing required property ${required}`);
+              lazy.log.error(`Object is missing required property ${required}`);
               return {
                 valid: false,
                 error: new JsonSchemaValidatorError({
@@ -421,7 +423,7 @@ class JsonSchemaValidator {
           }
           return { valid: true, parsedValue: json };
         } catch (e) {
-          log.error("JSON string couldn't be parsed");
+          lazy.log.error("JSON string couldn't be parsed");
           return {
             valid: false,
             error: new JsonSchemaValidatorError({
@@ -496,7 +498,7 @@ class JsonSchemaValidator {
             let pathQueryRef = parsedParam.pathname + parsedParam.hash;
             // Make sure that "origin" types won't accept full URLs.
             if (pathQueryRef != "/" && pathQueryRef != "") {
-              log.error(
+              lazy.log.error(
                 `Ignoring parameter "${param}" - origin was expected but received full URL.`
               );
               valid = false;
@@ -505,7 +507,7 @@ class JsonSchemaValidator {
             }
           }
         } catch (ex) {
-          log.error(`Ignoring parameter "${param}" - not a valid origin.`);
+          lazy.log.error(`Ignoring parameter "${param}" - not a valid origin.`);
           valid = false;
         }
         break;
@@ -526,7 +528,7 @@ class JsonSchemaValidator {
           valid = true;
         } catch (ex) {
           if (!param.startsWith("http")) {
-            log.error(
+            lazy.log.error(
               `Ignoring parameter "${param}" - scheme (http or https) must be specified.`
             );
           }

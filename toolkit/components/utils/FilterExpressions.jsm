@@ -9,33 +9,35 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceFilters",
   "resource://gre/modules/components-utils/PreferenceFilters.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Sampling",
   "resource://gre/modules/components-utils/Sampling.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "mozjexl",
   "resource://gre/modules/components-utils/mozjexl.js"
 );
 
 var EXPORTED_SYMBOLS = ["FilterExpressions"];
 
-XPCOMUtils.defineLazyGetter(this, "jexl", () => {
-  const jexl = new mozjexl.Jexl();
+XPCOMUtils.defineLazyGetter(lazy, "jexl", () => {
+  const jexl = new lazy.mozjexl.Jexl();
   jexl.addTransforms({
     date: dateString => new Date(dateString),
-    stableSample: Sampling.stableSample,
-    bucketSample: Sampling.bucketSample,
-    preferenceValue: PreferenceFilters.preferenceValue,
-    preferenceIsUserSet: PreferenceFilters.preferenceIsUserSet,
-    preferenceExists: PreferenceFilters.preferenceExists,
+    stableSample: lazy.Sampling.stableSample,
+    bucketSample: lazy.Sampling.bucketSample,
+    preferenceValue: lazy.PreferenceFilters.preferenceValue,
+    preferenceIsUserSet: lazy.PreferenceFilters.preferenceIsUserSet,
+    preferenceExists: lazy.PreferenceFilters.preferenceExists,
     keys,
     length,
     mapToProperty,
@@ -48,12 +50,12 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
 
 var FilterExpressions = {
   getAvailableTransforms() {
-    return Object.keys(jexl._transforms);
+    return Object.keys(lazy.jexl._transforms);
   },
 
   eval(expr, context = {}) {
     const onelineExpr = expr.replace(/[\t\n\r]/g, " ");
-    return jexl.eval(onelineExpr, context);
+    return lazy.jexl.eval(onelineExpr, context);
   },
 };
 

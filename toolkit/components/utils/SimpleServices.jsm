@@ -18,15 +18,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "streamConv",
   "@mozilla.org/streamConverters;1",
   "nsIStreamConverterService"
@@ -97,7 +99,7 @@ AddonLocalizationConverter.prototype = {
 
     let count = aStream.available();
     let string = count
-      ? new TextDecoder().decode(NetUtil.readInputStream(aStream, count))
+      ? new TextDecoder().decode(lazy.NetUtil.readInputStream(aStream, count))
       : "";
     return this.convertToStream(addon, string);
   },
@@ -114,7 +116,7 @@ AddonLocalizationConverter.prototype = {
   },
 
   onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
-    let bytes = NetUtil.readInputStream(aInputStream, aCount);
+    let bytes = lazy.NetUtil.readInputStream(aInputStream, aCount);
     this.parts.push(this.decoder.decode(bytes, { stream: true }));
   },
 
@@ -168,7 +170,7 @@ HttpIndexViewer.prototype = {
       listener
     );
 
-    aDocListenerResult.value = streamConv.asyncConvertData(
+    aDocListenerResult.value = lazy.streamConv.asyncConvertData(
       "application/http-index-format",
       "text/html",
       listener.value,
