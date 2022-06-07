@@ -171,12 +171,12 @@ static RTCErrorType ParseIceServerUrl(
   std::vector<std::string> tokens;
   cricket::ProtocolType turn_transport_type = cricket::PROTO_UDP;
   RTC_DCHECK(!url.empty());
-  rtc::tokenize_with_empty_tokens(url, '?', &tokens);
+  rtc::split(url, '?', &tokens);
   std::string uri_without_transport = tokens[0];
   // Let's look into transport= param, if it exists.
   if (tokens.size() == kTurnTransportTokensNum) {  // ?transport= is present.
     std::string uri_transport_param = tokens[1];
-    rtc::tokenize_with_empty_tokens(uri_transport_param, '=', &tokens);
+    rtc::split(uri_transport_param, '=', &tokens);
     if (tokens[0] != kTransport) {
       RTC_LOG(LS_WARNING) << "Invalid transport parameter key.";
       return RTCErrorType::SYNTAX_ERROR;

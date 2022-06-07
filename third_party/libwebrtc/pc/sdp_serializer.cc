@@ -102,7 +102,7 @@ rtc::StringBuilder& operator<<(rtc::StringBuilder& builder,
 // rid-id       = 1*(alpha-numeric / "-" / "_") ; see: I-D.ietf-mmusic-rid
 RTCErrorOr<SimulcastLayerList> ParseSimulcastLayerList(const std::string& str) {
   std::vector<std::string> tokens;
-  rtc::tokenize_with_empty_tokens(str, kDelimiterSemicolonChar, &tokens);
+  rtc::split(str, kDelimiterSemicolonChar, &tokens);
   if (tokens.empty()) {
     return ParseError("Layer list cannot be empty.");
   }
@@ -114,7 +114,7 @@ RTCErrorOr<SimulcastLayerList> ParseSimulcastLayerList(const std::string& str) {
     }
 
     std::vector<std::string> rid_tokens;
-    rtc::tokenize_with_empty_tokens(token, kDelimiterCommaChar, &rid_tokens);
+    rtc::split(token, kDelimiterCommaChar, &rid_tokens);
 
     if (rid_tokens.empty()) {
       return ParseError("Simulcast alternative layer list is malformed.");

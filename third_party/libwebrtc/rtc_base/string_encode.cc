@@ -171,21 +171,6 @@ size_t tokenize(const std::string& source,
   return fields->size();
 }
 
-size_t tokenize_with_empty_tokens(const std::string& source,
-                                  char delimiter,
-                                  std::vector<std::string>* fields) {
-  fields->clear();
-  size_t last = 0;
-  for (size_t i = 0; i < source.length(); ++i) {
-    if (source[i] == delimiter) {
-      fields->push_back(source.substr(last, i - last));
-      last = i + 1;
-    }
-  }
-  fields->push_back(source.substr(last, source.length() - last));
-  return fields->size();
-}
-
 bool tokenize_first(const std::string& source,
                     const char delimiter,
                     std::string* token,

@@ -169,22 +169,6 @@ TEST(TokenizeTest, CompareSubstrings) {
   ASSERT_EQ(0ul, fields.size());
 }
 
-TEST(TokenizeTest, TokenizeWithEmptyTokens) {
-  std::vector<std::string> fields;
-  EXPECT_EQ(3ul, tokenize_with_empty_tokens("a.b.c", '.', &fields));
-  EXPECT_EQ("a", fields[0]);
-  EXPECT_EQ("b", fields[1]);
-  EXPECT_EQ("c", fields[2]);
-
-  EXPECT_EQ(3ul, tokenize_with_empty_tokens("..c", '.', &fields));
-  EXPECT_TRUE(fields[0].empty());
-  EXPECT_TRUE(fields[1].empty());
-  EXPECT_EQ("c", fields[2]);
-
-  EXPECT_EQ(1ul, tokenize_with_empty_tokens("", '.', &fields));
-  EXPECT_TRUE(fields[0].empty());
-}
-
 TEST(TokenizeFirstTest, NoLeadingSpaces) {
   std::string token;
   std::string rest;
@@ -265,6 +249,22 @@ TEST(SplitTest, CompareSubstrings) {
   split("", ',', &fields);
   ASSERT_EQ(1ul, fields.size());
   ASSERT_STREQ("", fields.at(0).c_str());
+}
+
+TEST(SplitTest, EmptyTokens) {
+  std::vector<std::string> fields;
+  EXPECT_EQ(3ul, split("a.b.c", '.', &fields));
+  EXPECT_EQ("a", fields[0]);
+  EXPECT_EQ("b", fields[1]);
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(3ul, split("..c", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
+  EXPECT_TRUE(fields[1].empty());
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(1ul, split("", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
 }
 
 TEST(ToString, SanityCheck) {
