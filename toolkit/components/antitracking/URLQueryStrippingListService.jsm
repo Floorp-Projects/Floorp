@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
@@ -39,7 +41,7 @@ class URLQueryStrippingListService {
     // We can only access the remote settings in the parent process. For content
     // processes, we will use sharedData to sync the list to content processes.
     if (this.isParentProcess) {
-      let rs = RemoteSettings(COLLECTION_NAME);
+      let rs = lazy.RemoteSettings(COLLECTION_NAME);
 
       rs.on("sync", event => {
         let {

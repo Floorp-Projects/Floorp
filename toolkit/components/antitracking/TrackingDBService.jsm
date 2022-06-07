@@ -17,26 +17,28 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const SCHEMA_VERSION = 1;
 const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";
 
-XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "social_enabled",
   "privacy.socialtracking.block_cookies.enabled",
   false
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "milestoneMessagingEnabled",
   "browser.contentblocking.cfr-milestone.enabled",
   false
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "milestones",
   "browser.contentblocking.cfr-milestone.milestones",
   "[]",
@@ -45,7 +47,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "oldMilestone",
   "browser.contentblocking.cfr-milestone.milestone-achieved",
   0
@@ -54,13 +56,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // How often we check if the user is eligible for seeing a "milestone"
 // doorhanger. 24 hours by default.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "MILESTONE_UPDATE_INTERVAL",
   "browser.contentblocking.cfr-milestone.update-interval",
   24 * 60 * 60 * 1000
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
@@ -136,7 +138,7 @@ TrackingDBService.prototype = {
   },
 
   async _initialize() {
-    let db = await Sqlite.openConnection({ path: DB_PATH });
+    let db = await Sqlite.openConnection({ path: lazy.DB_PATH });
 
     try {
       // Check to see if we need to perform any migrations.
@@ -158,7 +160,7 @@ TrackingDBService.prototype = {
       throw e;
     }
 
-    AsyncShutdown.profileBeforeChange.addBlocker(
+    lazy.AsyncShutdown.profileBeforeChange.addBlocker(
       "TrackingDBService: Shutting down the content blocking database.",
       () => this._shutdown()
     );
@@ -178,7 +180,7 @@ TrackingDBService.prototype = {
       // The database has already been closed.
       return;
     }
-    let task = new DeferredTask(async () => {
+    let task = new lazy.DeferredTask(async () => {
       try {
         await this.saveEvents(data);
       } finally {
@@ -207,7 +209,7 @@ TrackingDBService.prototype = {
           result = Ci.nsITrackingDBService.FINGERPRINTERS_ID;
         } else if (
           // If STP is enabled and either a social tracker or cookie is blocked.
-          social_enabled &&
+          lazy.social_enabled &&
           (state &
             Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
             state &
@@ -298,9 +300,9 @@ TrackingDBService.prototype = {
     // If milestone CFR messaging is not enabled we don't need to update the milestone pref or send the event.
     // We don't do this check too frequently, for performance reasons.
     if (
-      !milestoneMessagingEnabled ||
+      !lazy.milestoneMessagingEnabled ||
       (this.lastChecked &&
-        Date.now() - this.lastChecked < MILESTONE_UPDATE_INTERVAL)
+        Date.now() - this.lastChecked < lazy.MILESTONE_UPDATE_INTERVAL)
     ) {
       return;
     }
@@ -309,10 +311,10 @@ TrackingDBService.prototype = {
 
     let reachedMilestone = null;
     let nextMilestone = null;
-    for (let [index, milestone] of milestones.entries()) {
+    for (let [index, milestone] of lazy.milestones.entries()) {
       if (totalSaved >= milestone) {
         reachedMilestone = milestone;
-        nextMilestone = milestones[index + 1];
+        nextMilestone = lazy.milestones[index + 1];
       }
     }
 
@@ -321,7 +323,7 @@ TrackingDBService.prototype = {
     if (
       reachedMilestone &&
       (!nextMilestone || nextMilestone - totalSaved > 3000) &&
-      (!oldMilestone || oldMilestone < reachedMilestone)
+      (!lazy.oldMilestone || lazy.oldMilestone < reachedMilestone)
     ) {
       Services.obs.notifyObservers(
         {

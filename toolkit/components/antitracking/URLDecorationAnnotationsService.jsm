@@ -4,8 +4,10 @@
 
 function URLDecorationAnnotationsService() {}
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
@@ -54,7 +56,7 @@ URLDecorationAnnotationsService.prototype = {
     }
     this._initialized = true;
 
-    const client = RemoteSettings(COLLECTION_NAME);
+    const client = lazy.RemoteSettings(COLLECTION_NAME);
     client.on("sync", event => {
       let {
         data: { current },
