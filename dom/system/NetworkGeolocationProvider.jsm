@@ -9,26 +9,28 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   LocationHelper: "resource://gre/modules/LocationHelper.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 // GeolocationPositionError has no interface object, so we can't use that here.
 const POSITION_UNAVAILABLE = 2;
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gLoggingEnabled",
   "geo.provider.network.logging.enabled",
   false
 );
 
 function LOG(aMsg) {
-  if (gLoggingEnabled) {
+  if (lazy.gLoggingEnabled) {
     dump("*** WIFI GEO: " + aMsg + "\n");
   }
 }
@@ -360,7 +362,7 @@ NetworkGeolocationProvider.prototype = {
 
     let wifiData = null;
     if (accessPoints) {
-      wifiData = LocationHelper.formatWifiAccessPoints(accessPoints);
+      wifiData = lazy.LocationHelper.formatWifiAccessPoints(accessPoints);
     }
     this.sendLocationRequest(wifiData);
   },
@@ -485,13 +487,13 @@ NetworkGeolocationProvider.prototype = {
       fetchOpts.body = JSON.stringify({ wifiAccessPoints: wifiData });
     }
 
-    let timeoutId = setTimeout(
+    let timeoutId = lazy.setTimeout(
       () => fetchController.abort(),
       Services.prefs.getIntPref("geo.provider.network.timeout")
     );
 
-    let req = await fetch(url, fetchOpts);
-    clearTimeout(timeoutId);
+    let req = await lazy.fetch(url, fetchOpts);
+    lazy.clearTimeout(timeoutId);
     let result = req.json();
     return result;
   },
