@@ -4,8 +4,10 @@
 
 var EXPORTED_SYMBOLS = ["PeerConnectionIdp"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "IdpSandbox",
   "resource://gre/modules/media/IdpSandbox.jsm"
 );
@@ -55,7 +57,7 @@ PeerConnectionIdp.prototype = {
       }
       this._idp.stop();
     }
-    this._idp = new IdpSandbox(provider, protocol, this._win);
+    this._idp = new lazy.IdpSandbox(provider, protocol, this._win);
   },
 
   // start the IdP and do some error fixup
