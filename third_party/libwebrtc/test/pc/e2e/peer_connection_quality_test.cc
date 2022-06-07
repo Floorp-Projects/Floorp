@@ -103,6 +103,21 @@ class FixturePeerConnectionObserver : public MockPeerConnectionObserver {
   std::function<void()> on_connected_callback_;
 };
 
+void ValidateP2PSimulcastParams(
+    const std::vector<std::unique_ptr<PeerConfigurerImpl>>& peers) {
+  for (size_t i = 0; i < peers.size(); ++i) {
+    Params* p = peers[i]->params();
+    for (const VideoConfig& video_config : p->video_configs) {
+      if (video_config.simulcast_config) {
+        // When we simulate SFU we support only one video codec.
+        RTC_CHECK_EQ(p->video_codecs.size(), 1)
+            << "Only 1 video codec is supported when simulcast is enabled in "
+            << "at least 1 video config";
+      }
+    }
+  }
+}
+
 }  // namespace
 
 PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
@@ -168,6 +183,7 @@ PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
 void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   SetDefaultValuesForMissingParams(&run_params, &peer_configurations_);
   ValidateParams(run_params, peer_configurations_);
+  ValidateP2PSimulcastParams(peer_configurations_);
   RTC_CHECK_EQ(peer_configurations_.size(), 2)
       << "Only peer to peer calls are allowed, please add 2 peers";
 
