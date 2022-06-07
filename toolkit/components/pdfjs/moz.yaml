@@ -47,7 +47,7 @@ vendoring:
       cwd: '{yaml_dir}'
 
 updatebot:
-    maintainer-phab: "#pdfjs-reviewers"
+    maintainer-phab: "pdfjs-reviewers"
     maintainer-bz: cdenizet@mozilla.com
     fuzzy-query: "'debug | 'opt"
     fuzzy-paths:
