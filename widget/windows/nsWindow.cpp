@@ -35,7 +35,7 @@
  * Blocks should be split out into separate files if they
  * become unmanageable.
  *
- * Related source:
+ * Notable related sources:
  *
  *  nsWindowDefs.h     - Definitions, macros, structs, enums
  *                       and general setup.
@@ -76,6 +76,7 @@
 #include <limits>
 
 #include "nsWindow.h"
+#include "nsWindowTaskbarConcealer.h"
 #include "nsAppRunner.h"
 
 #include <shellapi.h>
@@ -185,9 +186,6 @@
 #    include <winable.h>
 #  endif  // !defined(WINABLEAPI)
 #endif    // defined(ACCESSIBILITY)
-
-#include "nsIWinTaskbar.h"
-#define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 #include "WindowsUIUtils.h"
 
@@ -3728,14 +3726,6 @@ void nsWindow::OnFullscreenWillChange(bool aFullScreen) {
 }
 
 void nsWindow::OnFullscreenChanged(bool aFullScreen) {
-  // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
-  nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
-
-  // Notify the taskbar that we will be entering full screen mode.
-  if (aFullScreen && taskbarInfo) {
-    taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
-  }
-
   // If we are going fullscreen, the window size continues to change
   // and the window will be reflow again then.
   UpdateNonClientMargins(mFrameState->GetSizeMode(), /* Reflow */ !aFullScreen);
@@ -3752,16 +3742,14 @@ void nsWindow::OnFullscreenChanged(bool aFullScreen) {
     DispatchFocusToTopLevelWindow(true);
   }
 
-  // Notify the taskbar that we have exited full screen mode.
-  if (!aFullScreen && taskbarInfo) {
-    taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
-  }
-
   OnSizeModeChange(mFrameState->GetSizeMode());
 
   if (mWidgetListener) {
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
+
+  // Possibly notify the taskbar that we have changed our fullscreen mode.
+  TaskbarConcealer::OnFullscreenChanged(this, aFullScreen);
 }
 
 nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
@@ -6106,6 +6094,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (sJustGotActivate) {
         DispatchFocusToTopLevelWindow(true);
       }
+      TaskbarConcealer::OnFocusAcquired(this);
       break;
 
     case WM_KILLFOCUS:
@@ -6119,6 +6108,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_WINDOWPOSCHANGED: {
       WINDOWPOS* wp = (LPWINDOWPOS)lParam;
       OnWindowPosChanged(wp);
+      TaskbarConcealer::OnWindowPosChanged(this);
       result = true;
     } break;
 
@@ -7346,6 +7336,12 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
 void nsWindow::OnDestroy() {
   mOnDestroyCalled = true;
 
+  // If this is a toplevel window, notify the taskbar concealer to clean up any
+  // relevant state.
+  if (!mParent) {
+    TaskbarConcealer::OnWindowDestroyed(mWnd);
+  }
+
   // Make sure we don't get destroyed in the process of tearing down.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
 
@@ -7626,9 +7622,15 @@ void nsWindow::OnCloakEvent(HWND aWnd, bool aCloaked) {
     }
   });
 
+  if (changedWindows.IsEmpty()) {
+    return;
+  }
+
   for (const Item& item : changedWindows) {
     item.win->OnCloakChanged(item.nowCloaked);
   }
+
+  nsWindow::TaskbarConcealer::OnCloakChanged();
 }
 
 void nsWindow::OnCloakChanged(bool aCloaked) {
