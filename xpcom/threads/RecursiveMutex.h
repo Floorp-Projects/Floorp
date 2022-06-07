@@ -79,7 +79,9 @@ class MOZ_RAII SCOPED_CAPABILITY RecursiveMutexAutoLock {
     mRecursiveMutex->Lock();
   }
 
-  ~RecursiveMutexAutoLock(void) CAPABILITY_RELEASE() { mRecursiveMutex->Unlock(); }
+  ~RecursiveMutexAutoLock(void) CAPABILITY_RELEASE() {
+    mRecursiveMutex->Unlock();
+  }
 
  private:
   RecursiveMutexAutoLock() = delete;

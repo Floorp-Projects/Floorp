@@ -135,9 +135,7 @@ struct BaseMargin {
     return Sub(top - aMargin.top, right - aMargin.right,
                bottom - aMargin.bottom, left - aMargin.left);
   }
-  Sub operator-() const {
-    return Sub(-top, -right, -bottom, -left);
-  }
+  Sub operator-() const { return Sub(-top, -right, -bottom, -left); }
   Sub& operator+=(const Sub& aMargin) {
     top += aMargin.top;
     right += aMargin.right;

@@ -261,25 +261,25 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool mutedErrors() const { return mutedErrors_; }
   bool forceFullParse() const {
     return eagerDelazificationIsOneOf<
-      DelazificationOption::ParseEverythingEagerly>();
+        DelazificationOption::ParseEverythingEagerly>();
   }
   bool forceStrictMode() const { return forceStrictMode_; }
   bool consumeDelazificationCache() const {
     return eagerDelazificationIsOneOf<
-      DelazificationOption::ConcurrentDepthFirst>();
+        DelazificationOption::ConcurrentDepthFirst>();
   }
   bool populateDelazificationCache() const {
     return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand,
-      DelazificationOption::ConcurrentDepthFirst>();
+        DelazificationOption::CheckConcurrentWithOnDemand,
+        DelazificationOption::ConcurrentDepthFirst>();
   }
   bool waitForDelazificationCache() const {
     return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand>();
+        DelazificationOption::CheckConcurrentWithOnDemand>();
   }
   bool checkDelazificationCache() const {
     return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand>();
+        DelazificationOption::CheckConcurrentWithOnDemand>();
   }
   DelazificationOption eagerDelazificationStrategy() const {
     return eagerDelazificationStrategy_;

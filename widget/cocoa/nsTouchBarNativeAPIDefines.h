@@ -13,7 +13,8 @@
 @end
 
 typedef NSString* NSTouchBarItemIdentifier;
-__attribute__((weak_import)) @interface NSTouchBarItem : NSObject
+__attribute__((weak_import))
+@interface NSTouchBarItem : NSObject
 @property(readonly) NSView* view;
 @property(readonly) NSString* customizationLabel;
 - (instancetype)initWithIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
@@ -22,12 +23,14 @@ __attribute__((weak_import)) @interface NSTouchBarItem : NSObject
 @protocol NSSharingServicePickerTouchBarItemDelegate
 @end
 
-__attribute__((weak_import)) @interface NSSharingServicePickerTouchBarItem : NSTouchBarItem
+__attribute__((weak_import))
+@interface NSSharingServicePickerTouchBarItem : NSTouchBarItem
 @property(strong) id<NSSharingServicePickerTouchBarItemDelegate> delegate;
 @property(strong) NSImage* buttonImage;
 @end
 
-__attribute__((weak_import)) @interface NSCustomTouchBarItem : NSTouchBarItem
+__attribute__((weak_import))
+@interface NSCustomTouchBarItem : NSTouchBarItem
 @property(strong) NSView* view;
 @property(strong) NSString* customizationLabel;
 @end
@@ -36,7 +39,8 @@ __attribute__((weak_import)) @interface NSCustomTouchBarItem : NSTouchBarItem
 @end
 
 typedef NSString* NSTouchBarCustomizationIdentifier;
-__attribute__((weak_import)) @interface NSTouchBar : NSObject
+__attribute__((weak_import))
+@interface NSTouchBar : NSObject
 @property(strong) NSArray<NSTouchBarItemIdentifier>* defaultItemIdentifiers;
 @property(strong) id<NSTouchBarDelegate> delegate;
 @property(strong) NSTouchBarCustomizationIdentifier customizationIdentifier;
@@ -44,7 +48,8 @@ __attribute__((weak_import)) @interface NSTouchBar : NSObject
 - (NSTouchBarItem*)itemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 @end
 
-__attribute__((weak_import)) @interface NSPopoverTouchBarItem : NSTouchBarItem
+__attribute__((weak_import))
+@interface NSPopoverTouchBarItem : NSTouchBarItem
 @property(strong) NSString* customizationLabel;
 @property(strong) NSView* collapsedRepresentation;
 @property(strong) NSImage* collapsedRepresentationImage;

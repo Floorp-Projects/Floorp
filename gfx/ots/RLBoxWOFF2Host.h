@@ -33,7 +33,8 @@ class RLBoxWOFF2SandboxData : public mozilla::RLBoxSandboxDataBase {
   friend class RLBoxWOFF2SandboxPool;
 
  public:
-  RLBoxWOFF2SandboxData(uint64_t aSize, mozilla::UniquePtr<rlbox_sandbox_woff2> aSandbox);
+  RLBoxWOFF2SandboxData(uint64_t aSize,
+                        mozilla::UniquePtr<rlbox_sandbox_woff2> aSandbox);
   ~RLBoxWOFF2SandboxData();
 
   rlbox_sandbox_woff2* Sandbox() const { return mSandbox.get(); }

@@ -464,12 +464,11 @@ int32_t WebrtcGmpVideoEncoder::SetRates(
 }
 
 WebrtcVideoEncoder::EncoderInfo WebrtcGmpVideoEncoder::GetEncoderInfo() const {
-
   WebrtcVideoEncoder::EncoderInfo info;
   info.supports_native_handle = false;
   info.implementation_name = "GMPOpenH264";
-  info.scaling_settings =
-      WebrtcVideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  info.scaling_settings = WebrtcVideoEncoder::ScalingSettings(
+      kLowH264QpThreshold, kHighH264QpThreshold);
   info.is_hardware_accelerated = false;
   info.supports_simulcast = false;
   return info;

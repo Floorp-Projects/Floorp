@@ -675,8 +675,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
 
   // Create a new DelazifyTask and initialize it.
   static UniquePtr<DelazifyTask> Create(
-      JSContext* cx,
-      JSRuntime* runtime,
+      JSContext* cx, JSRuntime* runtime,
       const JS::ContextOptions& contextOptions,
       const JS::ReadOnlyCompileOptions& options,
       const frontend::CompilationStencil& stencil);

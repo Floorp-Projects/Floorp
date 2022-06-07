@@ -1143,7 +1143,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         Arg<unsigned long> request(1);
 #ifdef MOZ_ASAN
         Arg<int> fd(0);
-#endif // MOZ_ASAN
+#endif  // MOZ_ASAN
         // Make isatty() return false, because none of the terminal
         // ioctls will be allowed; libraries sometimes call this for
         // various reasons (e.g., to decide whether to emit ANSI/VT
@@ -1156,7 +1156,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #ifdef MOZ_ASAN
             // ASAN's error reporter wants to know if stderr is a tty.
             .ElseIf(fd == STDERR_FILENO, Error(ENOTTY))
-#endif // MOZ_ASAN
+#endif  // MOZ_ASAN
             .Else(SandboxPolicyBase::EvaluateSyscall(sysno));
       }
 
@@ -1177,7 +1177,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // (See also bug 1081242 comment #7.)
       CASES_FOR_stat:
         return Error(ENOENT);
-#endif // MOZ_ASAN
+#endif  // MOZ_ASAN
 
       default:
         return SandboxPolicyBase::EvaluateSyscall(sysno);
