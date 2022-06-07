@@ -17,24 +17,26 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 var PushServiceWebSocket, PushServiceHttp2;
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gPushNotifier",
   "@mozilla.org/push/Notifier;1",
   "nsIPushNotifier"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "pushBroadcastService",
   "resource://gre/modules/PushBroadcastService.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PushServiceAndroidGCM",
   "resource://gre/modules/PushServiceAndroidGCM.jsm"
 );
@@ -49,7 +51,7 @@ const CONNECTION_PROTOCOLS = (function() {
     ));
     return [PushServiceWebSocket, PushServiceHttp2];
   }
-  return [PushServiceAndroidGCM];
+  return [lazy.PushServiceAndroidGCM];
 })();
 
 const EXPORTED_SYMBOLS = [
@@ -59,7 +61,7 @@ const EXPORTED_SYMBOLS = [
   "PushServiceWebSocket",
 ];
 
-XPCOMUtils.defineLazyGetter(this, "console", () => {
+XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
@@ -161,14 +163,14 @@ var PushService = {
     this._stateChangeProcessQueue = this._stateChangeProcessQueue
       .then(op)
       .catch(error => {
-        console.error(
+        lazy.console.error(
           "stateChangeProcessEnqueue: Error transitioning state",
           error
         );
         return this._shutdownService();
       })
       .catch(error => {
-        console.error(
+        lazy.console.error(
           "stateChangeProcessEnqueue: Error shutting down service",
           error
         );
@@ -220,7 +222,7 @@ var PushService = {
   },
 
   _setState(aNewState) {
-    console.debug(
+    lazy.console.debug(
       "setState()",
       "new state",
       aNewState,
@@ -249,7 +251,7 @@ var PushService = {
   },
 
   async _changeStateOfflineEvent(offline, calledFromConnEnabledEvent) {
-    console.debug("changeStateOfflineEvent()", offline);
+    lazy.console.debug("changeStateOfflineEvent()", offline);
 
     if (
       this._state < PUSH_SERVICE_ACTIVE_OFFLINE &&
@@ -274,7 +276,7 @@ var PushService = {
       this._service.disconnect();
     }
 
-    let broadcastListeners = await pushBroadcastService.getListeners();
+    let broadcastListeners = await lazy.pushBroadcastService.getListeners();
 
     // In principle, a listener could be added to the
     // pushBroadcastService here, after we have gotten listeners and
@@ -290,7 +292,7 @@ var PushService = {
   },
 
   _changeStateConnectionEnabledEvent(enabled) {
-    console.debug("changeStateConnectionEnabledEvent()", enabled);
+    lazy.console.debug("changeStateConnectionEnabledEvent()", enabled);
 
     if (
       this._state < PUSH_SERVICE_CONNECTION_DISABLE &&
@@ -312,11 +314,11 @@ var PushService = {
 
   // Used for testing.
   changeTestServer(url, options = {}) {
-    console.debug("changeTestServer()");
+    lazy.console.debug("changeTestServer()");
 
     return this._stateChangeProcessEnqueue(_ => {
       if (this._state < PUSH_SERVICE_ACTIVATING) {
-        console.debug("changeTestServer: PushService not activated?");
+        lazy.console.debug("changeTestServer: PushService not activated?");
         return Promise.resolve();
       }
 
@@ -342,7 +344,7 @@ var PushService = {
 
       case "nsPref:changed":
         if (aData == "serverURL") {
-          console.debug(
+          lazy.console.debug(
             "observe: dom.push.serverURL changed for websocket",
             prefs.getStringPref("serverURL")
           );
@@ -363,13 +365,16 @@ var PushService = {
 
       case "idle-daily":
         this._dropExpiredRegistrations().catch(error => {
-          console.error("Failed to drop expired registrations on idle", error);
+          lazy.console.error(
+            "Failed to drop expired registrations on idle",
+            error
+          );
         });
         break;
 
       case "perm-changed":
         this._onPermissionChange(aSubject, aData).catch(error => {
-          console.error(
+          lazy.console.error(
             "onPermissionChange: Error updating registrations:",
             error
           );
@@ -378,14 +383,17 @@ var PushService = {
 
       case "clear-origin-attributes-data":
         this._clearOriginData(aData).catch(error => {
-          console.error("clearOriginData: Error clearing origin data:", error);
+          lazy.console.error(
+            "clearOriginData: Error clearing origin data:",
+            error
+          );
         });
         break;
     }
   },
 
   _clearOriginData(data) {
-    console.log("clearOriginData()");
+    lazy.console.log("clearOriginData()");
 
     if (!data) {
       return Promise.resolve();
@@ -406,30 +414,30 @@ var PushService = {
    *  indicating why this record was removed.
    */
   _backgroundUnregister(record, reason) {
-    console.debug("backgroundUnregister()");
+    lazy.console.debug("backgroundUnregister()");
 
     if (!this._service.isConnected() || !record) {
       return;
     }
 
-    console.debug("backgroundUnregister: Notifying server", record);
+    lazy.console.debug("backgroundUnregister: Notifying server", record);
     this._sendUnregister(record, reason)
       .then(() => {
-        gPushNotifier.notifySubscriptionModified(
+        lazy.gPushNotifier.notifySubscriptionModified(
           record.scope,
           record.principal
         );
       })
       .catch(e => {
-        console.error("backgroundUnregister: Error notifying server", e);
+        lazy.console.error("backgroundUnregister: Error notifying server", e);
       });
   },
 
   _findService(serverURL) {
-    console.debug("findService()");
+    lazy.console.debug("findService()");
 
     if (!serverURL) {
-      console.warn("findService: No dom.push.serverURL found");
+      lazy.console.warn("findService: No dom.push.serverURL found");
       return [];
     }
 
@@ -437,7 +445,7 @@ var PushService = {
     try {
       uri = Services.io.newURI(serverURL);
     } catch (e) {
-      console.warn(
+      lazy.console.warn(
         "findService: Error creating valid URI from",
         "dom.push.serverURL",
         serverURL
@@ -450,7 +458,7 @@ var PushService = {
   },
 
   _changeServerURL(serverURI, event, options = {}) {
-    console.debug("changeServerURL()");
+    lazy.console.debug("changeServerURL()");
 
     switch (event) {
       case UNINIT_EVENT:
@@ -500,7 +508,7 @@ var PushService = {
         return this._stopService(STOPPING_SERVICE_EVENT);
 
       default:
-        console.error("Unexpected event in _changeServerURL", event);
+        lazy.console.error("Unexpected event in _changeServerURL", event);
         return Promise.reject(new Error(`Unexpected event ${event}`));
     }
   },
@@ -521,7 +529,7 @@ var PushService = {
    *                                        PUSH_SERVICE_CONNECTION_DISABLE.
    */
   async init(options = {}) {
-    console.debug("init()");
+    lazy.console.debug("init()");
 
     if (this._state > PUSH_SERVICE_UNINIT) {
       return;
@@ -555,7 +563,7 @@ var PushService = {
   },
 
   _startObservers() {
-    console.debug("startObservers()");
+    lazy.console.debug("startObservers()");
 
     if (this._state != PUSH_SERVICE_ACTIVATING) {
       return;
@@ -580,7 +588,7 @@ var PushService = {
   },
 
   _startService(service, serverURI, options) {
-    console.debug("startService()");
+    lazy.console.debug("startService()");
 
     if (this._state != PUSH_SERVICE_ACTIVATING) {
       return Promise.reject();
@@ -609,7 +617,7 @@ var PushService = {
    *            state is change to PUSH_SERVICE_UNINIT
    */
   _stopService(event) {
-    console.debug("stopService()");
+    lazy.console.debug("stopService()");
 
     if (this._state < PUSH_SERVICE_ACTIVATING) {
       return Promise.resolve();
@@ -647,7 +655,7 @@ var PushService = {
   },
 
   _stopObservers() {
-    console.debug("stopObservers()");
+    lazy.console.debug("stopObservers()");
 
     if (this._state < PUSH_SERVICE_ACTIVATING) {
       return;
@@ -664,12 +672,12 @@ var PushService = {
   _shutdownService() {
     let promiseChangeURL = this._changeServerURL("", UNINIT_EVENT);
     this._setState(PUSH_SERVICE_UNINIT);
-    console.debug("shutdownService: shutdown complete!");
+    lazy.console.debug("shutdownService: shutdown complete!");
     return promiseChangeURL;
   },
 
   async uninit() {
-    console.debug("uninit()");
+    lazy.console.debug("uninit()");
 
     if (this._state == PUSH_SERVICE_UNINIT) {
       return;
@@ -706,7 +714,7 @@ var PushService = {
     if (!record) {
       return;
     }
-    gPushNotifier.notifySubscriptionChange(record.scope, record.principal);
+    lazy.gPushNotifier.notifySubscriptionChange(record.scope, record.principal);
   },
 
   /**
@@ -759,7 +767,7 @@ var PushService = {
 
     let keygen = Promise.resolve([]);
     if (!record.p256dhPublicKey || !record.p256dhPrivateKey) {
-      keygen = PushCrypto.generateKeys();
+      keygen = lazy.PushCrypto.generateKeys();
     }
     // We do not have a encryption key. so we need to generate it. This
     // is only going to happen on db upgrade from version 4 to higher.
@@ -771,7 +779,7 @@ var PushService = {
             record.p256dhPrivateKey = privKey;
           }
           if (!record.hasAuthenticationSecret()) {
-            record.authenticationSecret = PushCrypto.generateAuthenticationSecret();
+            record.authenticationSecret = lazy.PushCrypto.generateAuthenticationSecret();
           }
           return record;
         });
@@ -805,7 +813,7 @@ var PushService = {
    *  code, indicating whether the message was delivered successfully.
    */
   receivedPushMessage(keyID, messageID, headers, data, updateFunc) {
-    console.debug("receivedPushMessage()");
+    lazy.console.debug("receivedPushMessage()");
 
     return this._updateRecordAfterPush(keyID, updateFunc)
       .then(record => {
@@ -815,7 +823,7 @@ var PushService = {
           let timeoutID = setTimeout(_ => {
             this._updateQuota(keyID);
             if (!this._updateQuotaTimeouts.delete(timeoutID)) {
-              console.debug(
+              lazy.console.debug(
                 "receivedPushMessage: quota update timeout missing?"
               );
             }
@@ -825,7 +833,7 @@ var PushService = {
         return this._decryptAndNotifyApp(record, messageID, headers, data);
       })
       .catch(error => {
-        console.error("receivedPushMessage: Error notifying app", error);
+        lazy.console.error("receivedPushMessage: Error notifying app", error);
         return Ci.nsIPushErrorReporter.ACK_NOT_DELIVERED;
       });
   },
@@ -838,10 +846,10 @@ var PushService = {
    *  notification was received.
    */
   receivedBroadcastMessage(message, context) {
-    pushBroadcastService
+    lazy.pushBroadcastService
       .receivedBroadcastMessage(message.broadcasts, context)
       .catch(e => {
-        console.error(e);
+        lazy.console.error(e);
       });
   },
 
@@ -890,7 +898,7 @@ var PushService = {
           });
       })
       .then(record => {
-        gPushNotifier.notifySubscriptionModified(
+        lazy.gPushNotifier.notifySubscriptionModified(
           record.scope,
           record.principal
         );
@@ -908,7 +916,7 @@ var PushService = {
    * @returns {Promise} Resolves with an ack status code.
    */
   _decryptAndNotifyApp(record, messageID, headers, data) {
-    return PushCrypto.decrypt(
+    return lazy.PushCrypto.decrypt(
       record.p256dhPrivateKey,
       record.p256dhPublicKey,
       record.authenticationSecret,
@@ -917,7 +925,7 @@ var PushService = {
     ).then(
       message => this._notifyApp(record, messageID, message),
       error => {
-        console.warn(
+        lazy.console.warn(
           "decryptAndNotifyApp: Error decrypting message",
           record.scope,
           messageID,
@@ -925,7 +933,7 @@ var PushService = {
         );
 
         let message = error.format(record.scope);
-        gPushNotifier.notifyError(
+        lazy.gPushNotifier.notifyError(
           record.scope,
           record.principal,
           message,
@@ -937,13 +945,13 @@ var PushService = {
   },
 
   _updateQuota(keyID) {
-    console.debug("updateQuota()");
+    lazy.console.debug("updateQuota()");
 
     this._db
       .update(keyID, record => {
         // Record may have expired from an earlier quota update.
         if (record.isExpired()) {
-          console.debug(
+          lazy.console.debug(
             "updateQuota: Trying to update quota for expired record",
             record
           );
@@ -966,7 +974,7 @@ var PushService = {
             Ci.nsIPushErrorReporter.UNSUBSCRIBE_QUOTA_EXCEEDED
           );
         } else {
-          gPushNotifier.notifySubscriptionModified(
+          lazy.gPushNotifier.notifySubscriptionModified(
             record.scope,
             record.principal
           );
@@ -977,12 +985,15 @@ var PushService = {
         }
       })
       .catch(error => {
-        console.debug("updateQuota: Error while trying to update quota", error);
+        lazy.console.debug(
+          "updateQuota: Error while trying to update quota",
+          error
+        );
       });
   },
 
   notificationForOriginShown(origin) {
-    console.debug("notificationForOriginShown()", origin);
+    lazy.console.debug("notificationForOriginShown()", origin);
     let count;
     if (this._visibleNotifications.has(origin)) {
       count = this._visibleNotifications.get(origin);
@@ -993,12 +1004,12 @@ var PushService = {
   },
 
   notificationForOriginClosed(origin) {
-    console.debug("notificationForOriginClosed()", origin);
+    lazy.console.debug("notificationForOriginClosed()", origin);
     let count;
     if (this._visibleNotifications.has(origin)) {
       count = this._visibleNotifications.get(origin);
     } else {
-      console.debug(
+      lazy.console.debug(
         "notificationForOriginClosed: closing notification that has not been shown?"
       );
       return;
@@ -1011,7 +1022,7 @@ var PushService = {
   },
 
   reportDeliveryError(messageID, reason) {
-    console.debug("reportDeliveryError()", messageID, reason);
+    lazy.console.debug("reportDeliveryError()", messageID, reason);
     if (this._state == PUSH_SERVICE_RUNNING && this._service.isConnected()) {
       // Only report errors if we're initialized and connected.
       this._service.reportDeliveryError(messageID, reason);
@@ -1024,15 +1035,15 @@ var PushService = {
       !aPushRecord.scope ||
       aPushRecord.originAttributes === undefined
     ) {
-      console.error("notifyApp: Invalid record", aPushRecord);
+      lazy.console.error("notifyApp: Invalid record", aPushRecord);
       return Ci.nsIPushErrorReporter.ACK_NOT_DELIVERED;
     }
 
-    console.debug("notifyApp()", aPushRecord.scope);
+    lazy.console.debug("notifyApp()", aPushRecord.scope);
 
     // If permission has been revoked, trash the message.
     if (!aPushRecord.hasPermission()) {
-      console.warn("notifyApp: Missing push permission", aPushRecord);
+      lazy.console.warn("notifyApp: Missing push permission", aPushRecord);
       return Ci.nsIPushErrorReporter.ACK_NOT_DELIVERED;
     }
 
@@ -1046,14 +1057,14 @@ var PushService = {
     }
 
     if (payload) {
-      gPushNotifier.notifyPushWithData(
+      lazy.gPushNotifier.notifyPushWithData(
         aPushRecord.scope,
         aPushRecord.principal,
         messageID,
         payload
       );
     } else {
-      gPushNotifier.notifyPush(
+      lazy.gPushNotifier.notifyPush(
         aPushRecord.scope,
         aPushRecord.principal,
         messageID
@@ -1097,7 +1108,7 @@ var PushService = {
    * the push manager, identifying the sending page and other fields.
    */
   _registerWithServer(aPageRecord) {
-    console.debug("registerWithServer()", aPageRecord);
+    lazy.console.debug("registerWithServer()", aPageRecord);
 
     return this._sendRequest("register", aPageRecord)
       .then(
@@ -1107,7 +1118,7 @@ var PushService = {
       .then(
         record => {
           this._deletePendingRequest(aPageRecord);
-          gPushNotifier.notifySubscriptionModified(
+          lazy.gPushNotifier.notifySubscriptionModified(
             record.scope,
             record.principal
           );
@@ -1129,7 +1140,7 @@ var PushService = {
    * from _service.request, causing the promise to be rejected instead.
    */
   _onRegisterSuccess(aRecord) {
-    console.debug("_onRegisterSuccess()");
+    lazy.console.debug("_onRegisterSuccess()");
 
     return this._db.put(aRecord).catch(error => {
       // Unable to save. Destroy the subscription in the background.
@@ -1146,10 +1157,10 @@ var PushService = {
    * from _service.request, causing the promise to be rejected instead.
    */
   _onRegisterError(reply) {
-    console.debug("_onRegisterError()");
+    lazy.console.debug("_onRegisterError()");
 
     if (!reply.error) {
-      console.warn(
+      lazy.console.warn(
         "onRegisterError: Called without valid error message!",
         reply
       );
@@ -1169,20 +1180,22 @@ var PushService = {
   },
 
   register(aPageRecord) {
-    console.debug("register()", aPageRecord);
+    lazy.console.debug("register()", aPageRecord);
 
     let keyPromise;
     if (aPageRecord.appServerKey && aPageRecord.appServerKey.length != 0) {
       let keyView = new Uint8Array(aPageRecord.appServerKey);
-      keyPromise = PushCrypto.validateAppServerKey(keyView).catch(error => {
-        // Normalize Web Crypto exceptions. `nsIPushService` will forward the
-        // error result to the DOM API implementation in `PushManager.cpp` or
-        // `Push.js`, which will convert it to the correct `DOMException`.
-        throw errorWithResult(
-          "Invalid app server key",
-          Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR
-        );
-      });
+      keyPromise = lazy.PushCrypto.validateAppServerKey(keyView).catch(
+        error => {
+          // Normalize Web Crypto exceptions. `nsIPushService` will forward the
+          // error result to the DOM API implementation in `PushManager.cpp` or
+          // `Push.js`, which will convert it to the correct `DOMException`.
+          throw errorWithResult(
+            "Invalid app server key",
+            Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR
+          );
+        }
+      );
     } else {
       keyPromise = Promise.resolve(null);
     }
@@ -1258,7 +1271,7 @@ var PushService = {
    * not.
    */
   unregister(aPageRecord) {
-    console.debug("unregister()", aPageRecord);
+    lazy.console.debug("unregister()", aPageRecord);
 
     return this._getByPageRecord(aPageRecord).then(record => {
       if (record === null) {
@@ -1270,7 +1283,10 @@ var PushService = {
         this._sendUnregister(record, reason),
         this._db.delete(record.keyID).then(rec => {
           if (rec) {
-            gPushNotifier.notifySubscriptionModified(rec.scope, rec.principal);
+            lazy.gPushNotifier.notifySubscriptionModified(
+              rec.scope,
+              rec.principal
+            );
           }
         }),
       ]).then(([success]) => success);
@@ -1288,7 +1304,7 @@ var PushService = {
         );
       })
       .catch(e => {
-        console.warn(
+        lazy.console.warn(
           "clear: Error dropping subscriptions for domain",
           info.domain,
           e
@@ -1298,7 +1314,7 @@ var PushService = {
   },
 
   registration(aPageRecord) {
-    console.debug("registration()");
+    lazy.console.debug("registration()");
 
     return this._getByPageRecord(aPageRecord).then(record => {
       if (!record) {
@@ -1319,7 +1335,7 @@ var PushService = {
   },
 
   _dropExpiredRegistrations() {
-    console.debug("dropExpiredRegistrations()");
+    lazy.console.debug("dropExpiredRegistrations()");
 
     return this._db.getAllExpired().then(records => {
       return Promise.all(
@@ -1334,7 +1350,7 @@ var PushService = {
               }
             })
             .catch(error => {
-              console.error(
+              lazy.console.error(
                 "dropExpiredRegistrations: Error dropping registration",
                 record.keyID,
                 error
@@ -1346,7 +1362,7 @@ var PushService = {
   },
 
   _onPermissionChange(subject, data) {
-    console.debug("onPermissionChange()");
+    lazy.console.debug("onPermissionChange()");
 
     if (data == "cleared") {
       return this._clearPermissions();
@@ -1361,7 +1377,7 @@ var PushService = {
   },
 
   _clearPermissions() {
-    console.debug("clearPermissions()");
+    lazy.console.debug("clearPermissions()");
 
     return this._db.clearIf(record => {
       if (!record.quotaApplies()) {
@@ -1377,7 +1393,7 @@ var PushService = {
   },
 
   _updatePermission(permission, type) {
-    console.debug("updatePermission()");
+    lazy.console.debug("updatePermission()");
 
     let isAllow = permission.capability == Ci.nsIPermissionManager.ALLOW_ACTION;
     let isChange = type == "added" || type == "changed";
@@ -1419,7 +1435,7 @@ var PushService = {
    * @param {IDBCursor} cursor The IndexedDB cursor.
    */
   _permissionDenied(record, cursor) {
-    console.debug("permissionDenied()");
+    lazy.console.debug("permissionDenied()");
 
     if (!record.quotaApplies() || record.isExpired()) {
       // Ignore already-expired records.
@@ -1443,7 +1459,7 @@ var PushService = {
    * @param {IDBCursor} cursor The IndexedDB cursor.
    */
   _permissionAllowed(record, cursor) {
-    console.debug("permissionAllowed()");
+    lazy.console.debug("permissionAllowed()");
 
     if (!record.quotaApplies()) {
       return;
