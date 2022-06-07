@@ -50,10 +50,6 @@ absl::optional<int> ClippingPredictorEvaluator::Observe(
   RTC_DCHECK_LT(ring_buffer_tail_, ring_buffer_capacity_);
 
   DecreaseTimesToLive();
-  if (clipping_predicted) {
-    // TODO(bugs.webrtc.org/12874): Use designated initializers one fixed.
-    Push(/*expected_detection=*/{/*ttl=*/history_size_, /*detected=*/false});
-  }
   // Clipping is expected if there are expected detections regardless of
   // whether all the expected detections have been previously matched - i.e.,
   // `ExpectedDetection::detected` is true.
@@ -80,13 +76,27 @@ absl::optional<int> ClippingPredictorEvaluator::Observe(
     RTC_DCHECK(!clipping_expected && !clipping_detected);
     counters_.true_negatives++;
   }
+
+  if (clipping_predicted) {
+    // TODO(bugs.webrtc.org/12874): Use designated initializers one fixed.
+    Push(/*expected_detection=*/{/*ttl=*/history_size_, /*detected=*/false});
+  }
+
   return prediction_interval;
 }
 
-void ClippingPredictorEvaluator::Reset() {
+void ClippingPredictorEvaluator::RemoveExpectations() {
   // Empty the ring buffer of expected detections.
   ring_buffer_tail_ = 0;
   ring_buffer_size_ = 0;
+}
+
+void ClippingPredictorEvaluator::Reset() {
+  counters_.true_positives = 0;
+  counters_.true_negatives = 0;
+  counters_.false_positives = 0;
+  counters_.false_negatives = 0;
+  RemoveExpectations();
 }
 
 // Cost: O(1).

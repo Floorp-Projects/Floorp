@@ -57,6 +57,9 @@ class ClippingPredictorEvaluator {
 
   // Removes any expectation recently set after a call to `Observe()` having
   // `clipping_predicted` set to true. Counters won't be reset.
+  void RemoveExpectations();
+
+  // Resets counters and removes any expectation (see `RemoveExpectations()`).
   void Reset();
 
   ClippingPredictionCounters counters() const { return counters_; }
