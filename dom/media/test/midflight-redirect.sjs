@@ -20,9 +20,7 @@ function handleRequest(request, response) {
   var redirected = parseQuery(query, "redirected") || false;
   var useCors = parseQuery(query, "cors") || false;
 
-  var file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("CurWorkD", Ci.nsIFile);
+  var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
   );

@@ -64,9 +64,7 @@ function handleRequest(request, response) {
       }
       var startOffset = parseInt(offsets[0]);
       var endOffset = parseInt(offsets[1]);
-      var file = Cc["@mozilla.org/file/directory_service;1"]
-        .getService(Ci.nsIProperties)
-        .get("CurWorkD", Ci.nsIFile);
+      var file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
       var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
         Ci.nsIFileInputStream
       );
