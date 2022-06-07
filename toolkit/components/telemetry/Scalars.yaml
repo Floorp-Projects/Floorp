@@ -83,23 +83,6 @@ a11y:
     release_channel_collection: opt-out
     keyed: false
 
-  indicator_acted_on:
-    bug_numbers:
-      - 1412358
-    description: >
-      Recorded on click or SPACE/ENTER keypress event. Boolean stating if the
-      accessibility indicactor button was acted on.
-    expires: "62"
-    kind: boolean
-    notification_emails:
-      - accessibility@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-
   theme:
     bug_numbers:
       - 1022528
