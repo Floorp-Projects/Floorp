@@ -183,7 +183,7 @@ jobs:
             build: build-android-arm-shippable/opt
         fetches:
             build:
-                - artifact: target.condprof.tests.tar.gz
+                - artifact: en-US/target.condprof.tests.tar.gz
             toolchain:
                 - linux64-geckodriver
         run:
