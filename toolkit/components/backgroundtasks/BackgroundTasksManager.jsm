@@ -10,11 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -48,7 +50,7 @@ function registerModulesProtocolHandler() {
   );
   // Log loudly so that when testing, we always actually use the
   // console logging mechanism and therefore deterministically load that code.
-  log.error(
+  lazy.log.error(
     `Substitution set: resource://testing-common aliases ${_TESTING_MODULES_URI}`
   );
 
@@ -88,11 +90,11 @@ function locationsForBackgroundTaskNamed(name) {
  */
 function findBackgroundTaskModule(name) {
   for (const URI of locationsForBackgroundTaskNamed(name)) {
-    log.debug(`Looking for background task at URI: ${URI}`);
+    lazy.log.debug(`Looking for background task at URI: ${URI}`);
 
     try {
       const taskModule = ChromeUtils.import(URI);
-      log.info(`Found background task at URI: ${URI}`);
+      lazy.log.info(`Found background task at URI: ${URI}`);
       return taskModule;
     } catch (ex) {
       if (ex.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
@@ -101,7 +103,7 @@ function findBackgroundTaskModule(name) {
     }
   }
 
-  log.warn(`No backgroundtask named '${name}' registered`);
+  lazy.log.warn(`No backgroundtask named '${name}' registered`);
   throw new Components.Exception(
     `No backgroundtask named '${name}' registered`,
     Cr.NS_ERROR_NOT_AVAILABLE
@@ -128,12 +130,14 @@ class BackgroundTasksManager {
     );
 
     if (!bts.isBackgroundTaskMode) {
-      log.info(`${Services.appinfo.processID}: !isBackgroundTaskMode, exiting`);
+      lazy.log.info(
+        `${Services.appinfo.processID}: !isBackgroundTaskMode, exiting`
+      );
       return;
     }
 
     const name = bts.backgroundTaskName();
-    log.info(
+    lazy.log.info(
       `${Services.appinfo.processID}: Preparing to run background task named '${name}'` +
         ` (with ${commandLine.length} arguments)`
     );
@@ -148,7 +152,7 @@ class BackgroundTasksManager {
       commandLine.findFlag("jsdebugger", CASE_INSENSITIVE) < 0 &&
       commandLine.findFlag("start-debugger-server", CASE_INSENSITIVE) < 0
     ) {
-      log.info(
+      lazy.log.info(
         `${Services.appinfo.processID}: No devtools flag found; not preparing devtools thread`
       );
       return;
@@ -158,7 +162,7 @@ class BackgroundTasksManager {
       commandLine.findFlag("wait-for-jsdebugger", CASE_INSENSITIVE) != -1;
     if (waitFlag) {
       function onDevtoolsThreadReady(subject, topic, data) {
-        log.info(
+        lazy.log.info(
           `${Services.appinfo.processID}: Setting breakpoints for background task named '${name}'` +
             ` (with ${commandLine.length} arguments)`
         );
@@ -184,7 +188,7 @@ class BackgroundTasksManager {
     }
     addMarker("BackgroundTasksManager:AfterRunBackgroundTaskNamed");
 
-    log.info(
+    lazy.log.info(
       `${Services.appinfo.processID}: Running background task named '${name}'` +
         ` (with ${commandLine.length} arguments)`
     );
@@ -205,24 +209,24 @@ class BackgroundTasksManager {
       try {
         exitCode = await Promise.race([
           new Promise(resolve =>
-            setTimeout(() => {
-              log.error(`Background task named '${name}' timed out`);
+            lazy.setTimeout(() => {
+              lazy.log.error(`Background task named '${name}' timed out`);
               resolve(BackgroundTasksManager.EXIT_CODE.TIMEOUT);
             }, timeoutSec * 1000)
           ),
           taskModule.runBackgroundTask(commandLine),
         ]);
-        log.info(
+        lazy.log.info(
           `Backgroundtask named '${name}' completed with exit code ${exitCode}`
         );
       } catch (e) {
-        log.error(`Backgroundtask named '${name}' threw exception`, e);
+        lazy.log.error(`Backgroundtask named '${name}' threw exception`, e);
         exitCode = BackgroundTasksManager.EXIT_CODE.EXCEPTION;
       }
     } finally {
       addMarker("BackgroundTasksManager:AfterAwaitRunBackgroundTask");
 
-      log.info(`Invoking Services.startup.quit(..., ${exitCode})`);
+      lazy.log.info(`Invoking Services.startup.quit(..., ${exitCode})`);
       Services.startup.quit(Ci.nsIAppStartup.eForceQuit, exitCode);
     }
 

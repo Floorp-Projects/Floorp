@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -23,7 +25,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ProfileService",
   "@mozilla.org/toolkit/profile-service;1",
   "nsIToolkitProfileService"
@@ -54,23 +56,25 @@ var BackgroundTasksUtils = {
       );
       let noDefaultProfile = env.get("MOZ_BACKGROUNDTASKS_NO_DEFAULT_PROFILE");
       if (defaultProfilePath) {
-        log.info(
+        lazy.log.info(
           `getDefaultProfile: using default profile path ${defaultProfilePath}`
         );
         var tmpd = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         tmpd.initWithPath(defaultProfilePath);
         // Sadly this writes to `profiles.ini`, but there's little to be done.
-        this._defaultProfile = ProfileService.createProfile(
+        this._defaultProfile = lazy.ProfileService.createProfile(
           tmpd,
           `MOZ_BACKGROUNDTASKS_DEFAULT_PROFILE_PATH-${Date.now()}`
         );
       } else if (noDefaultProfile) {
-        log.info(`getDefaultProfile: setting default profile to null`);
+        lazy.log.info(`getDefaultProfile: setting default profile to null`);
         this._defaultProfile = null;
       } else {
         try {
-          log.info(`getDefaultProfile: using ProfileService.defaultProfile`);
-          this._defaultProfile = ProfileService.defaultProfile;
+          lazy.log.info(
+            `getDefaultProfile: using ProfileService.defaultProfile`
+          );
+          this._defaultProfile = lazy.ProfileService.defaultProfile;
         } catch (e) {}
       }
     }
@@ -83,7 +87,7 @@ var BackgroundTasksUtils = {
 
   currentProfileIsDefaultProfile() {
     let defaultProfile = this.getDefaultProfile();
-    let currentProfile = ProfileService.currentProfile;
+    let currentProfile = lazy.ProfileService.currentProfile;
     // This comparison needs to accommodate null on both sides.
     let isDefaultProfile = defaultProfile && currentProfile == defaultProfile;
     return isDefaultProfile;
@@ -132,7 +136,9 @@ var BackgroundTasksUtils = {
     let lock;
     try {
       lock = profile.lock({});
-      log.info(`withProfileLock: locked profile at ${lock.directory.path}`);
+      lazy.log.info(
+        `withProfileLock: locked profile at ${lock.directory.path}`
+      );
     } catch (e) {
       throw new CannotLockProfileError(`Cannot lock profile: ${e}`);
     }
@@ -142,13 +148,13 @@ var BackgroundTasksUtils = {
       return await callback(lock);
     } finally {
       try {
-        log.info(
+        lazy.log.info(
           `withProfileLock: unlocking profile at ${lock.directory.path}`
         );
         lock.unlock();
-        log.info(`withProfileLock: unlocked profile`);
+        lazy.log.info(`withProfileLock: unlocked profile`);
       } catch (e) {
-        log.warn(`withProfileLock: error unlocking profile`, e);
+        lazy.log.warn(`withProfileLock: error unlocking profile`, e);
       }
     }
   },
@@ -174,7 +180,7 @@ var BackgroundTasksUtils = {
     }
 
     this._throwIfNotLocked(lock);
-    log.info(`readPreferences: profile is locked`);
+    lazy.log.info(`readPreferences: profile is locked`);
 
     let prefs = {};
     let addPref = (kind, name, value, sticky, locked) => {
@@ -188,10 +194,10 @@ var BackgroundTasksUtils = {
     // requires implementing a bit more of `nsIPrefsService` than feels safe.
     let prefsFile = lock.directory.clone();
     prefsFile.append("prefs.js");
-    log.info(`readPreferences: will parse prefs ${prefsFile.path}`);
+    lazy.log.info(`readPreferences: will parse prefs ${prefsFile.path}`);
 
     let data = await IOUtils.read(prefsFile.path);
-    log.debug(
+    lazy.log.debug(
       `readPreferences: parsing prefs from buffer of length ${data.length}`
     );
 
@@ -203,13 +209,13 @@ var BackgroundTasksUtils = {
         onBoolPref: addPref,
         onError(message) {
           // Firefox itself manages "prefs.js", so errors should be infrequent.
-          log.error(message);
+          lazy.log.error(message);
         },
       },
       prefsFile.path
     );
 
-    log.debug(`readPreferences: parsed prefs from buffer`, prefs);
+    lazy.log.debug(`readPreferences: parsed prefs from buffer`, prefs);
     return prefs;
   },
 
@@ -235,7 +241,7 @@ var BackgroundTasksUtils = {
     stateFile.append("datareporting");
     stateFile.append("state.json");
 
-    log.info(
+    lazy.log.info(
       `readPreferences: will read Telemetry client ID from ${stateFile.path}`
     );
 
