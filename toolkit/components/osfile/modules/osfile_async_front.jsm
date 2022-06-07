@@ -51,9 +51,11 @@ var Type = SysAll.Type;
 
 var Path = ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm");
 
+const lazy = {};
+
 // The library of promises.
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -293,7 +295,7 @@ var Scheduler = {
     // to an obsolete worker (we reactivate it in the `finally`).
     // This needs to be done right now so that we maintain relative
     // ordering with calls to post(), etc.
-    let deferred = PromiseUtils.defer();
+    let deferred = lazy.PromiseUtils.defer();
     let savedQueue = this.queue;
     this.queue = deferred.promise;
 

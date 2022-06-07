@@ -30,11 +30,13 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 /**
  * The native service holding the implementation of the functions.
  */
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "Internals",
   "@mozilla.org/toolkit/osfile/native-internals;1",
   "nsINativeOSFileInternalsService"
@@ -58,7 +60,7 @@ var read = function(path, options = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    Internals.read(
+    lazy.Internals.read(
       path,
       options,
       function onSuccess(success) {
@@ -105,7 +107,7 @@ var writeAtomic = function(path, buffer, options = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    Internals.writeAtomic(
+    lazy.Internals.writeAtomic(
       path,
       buffer,
       options,
