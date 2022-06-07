@@ -52,6 +52,7 @@ ScalabilityStructureFullSvc::StreamConfig() const {
     result.scaling_factor_den[sid - 1] =
         resolution_factor_.den * result.scaling_factor_den[sid];
   }
+  result.uses_reference_scaling = num_spatial_layers_ > 1;
   return result;
 }
 
