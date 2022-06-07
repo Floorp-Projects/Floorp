@@ -15,6 +15,8 @@
     <string name="content_description_disable_private_browsing_button">Desativar navegação privada</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Pesquise ou insira o endereço</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Introduza os termos de pesquisa</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Os seus separadores abertos serão mostrados aqui.</string>
 
@@ -1518,6 +1520,11 @@
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gerir endereços</string>
 
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Guardar e preencher automaticamente endereços</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Incluir informações como números, e-mail e endereços de entrega</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Adicionar cartão</string>
     <!-- Title of the "Edit card" screen -->
@@ -1801,6 +1808,11 @@
     <string name="inactive_tabs_title">Separadores inativos</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Fechar todos os separadores inativos</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Expandir separadores inativos</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Colapsar todos os separadores inativos</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

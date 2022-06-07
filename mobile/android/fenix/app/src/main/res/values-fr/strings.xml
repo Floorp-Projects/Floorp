@@ -17,6 +17,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Recherche ou adresse</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Saisissez les termes à rechercher</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Vos onglets ouverts seront affichés ici.</string>
 
@@ -41,8 +43,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Marque-pages récents</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Marque-pages récemment enregistrés</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Tout afficher</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -241,8 +241,6 @@
     <string name="search_suggestions_onboarding_title">Autoriser les suggestions de recherche dans les sessions privées ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s enverra tout ce que vous saisirez dans la barre d’adresse à votre moteur de recherche par défaut.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">En savoir plus</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Recherche %s</string>
@@ -736,7 +734,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Enregistrer les onglets dans une collection</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Menu de l’onglet</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu de l’onglet</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Supprimer la collection</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1205,34 +1203,6 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Groupe supprimé</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview est désormais Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly est mis à jour chaque nuit et propose de nouvelles fonctionnalités expérimentales.
-Cependant, il peut être moins stable. Téléchargez la version bêta de notre navigateur pour une expérience plus stable.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Installer Firefox pour Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly a déménagé</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Cette application ne recevra plus de mises à jour de sécurité. Vous devriez arrêter d’utiliser cette application et utiliser le nouveau Nightly à la place.
-\n\nPour transférer vos marque-pages, vos identifiants et votre historique vers une autre application, créez un compte Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Passer à Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly a déménagé</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Cette application ne recevra plus de mises à jour de sécurité. Vous devriez utiliser le nouveau Nightly et arrêter d’utiliser cette application.
-\n\nPour transférer vos marque-pages, vos identifiants et votre historique vers une autre application, créez un compte Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Obtenir le nouveau Nightly</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1241,8 +1211,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Synchronisez Firefox entre vos appareils</string>
 
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synchronisez %1$s entre vos appareils</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Importez vos marque-pages, votre historique et vos mots de passe dans %1$s sur cet appareil.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1654,7 +1622,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="addresses_street_address">Adresse postale</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Ville</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">État</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Code postal</string>
@@ -1721,19 +1689,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="search_edit_custom_engine_success_message">%s : enregistrement effectué</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s : suppression effectuée</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Bienvenue dans un tout nouveau %s</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Un navigateur entièrement repensé vous attend, avec des performances et des fonctionnalités améliorées pour vous aider à faire plus en ligne.\n\nVeuillez patienter pendant que nous mettons à jour %s :</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Mise à jour de %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Démarrer %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migration terminée</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Mots de passe</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Pour l’autoriser :</string>
@@ -1827,8 +1782,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="synced_tabs_enable_tab_syncing">Veuillez activer la synchronisation des onglets.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Vous n’avez aucun onglet ouvert dans Firefox sur vos autres appareils.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Vous n’avez aucun onglet ouvert dans %1$s sur vos autres appareils.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Affichez la liste des onglets de vos autres appareils.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->

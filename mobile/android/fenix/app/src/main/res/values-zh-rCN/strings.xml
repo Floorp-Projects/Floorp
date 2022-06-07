@@ -1640,6 +1640,8 @@
     <string name="addresses_city">城市</string>
     <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">省/自治区/直辖市</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">省/直辖市/自治区</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">邮编</string>
     <!-- The header for the country or region of an address -->
@@ -1848,6 +1850,11 @@
     <string name="inactive_tabs_title">休眠标签页</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">关闭所有休眠标签页</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">展开休眠标签页</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">折叠休眠标签页</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
