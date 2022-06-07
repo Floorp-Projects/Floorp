@@ -2091,6 +2091,7 @@ dependencies = [
  "tokio-threadpool",
  "unic-langid",
  "unic-langid-ffi",
+ "url",
  "viaduct",
  "webext_storage_bridge",
  "webrender_bindings",
