@@ -9,7 +9,6 @@ use crate::applicable_declarations::{
 };
 use crate::context::{CascadeInputs, QuirksMode};
 use crate::dom::{TElement, TShadowRoot};
-use crate::element_state::{DocumentState, ElementState};
 use crate::font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
@@ -43,6 +42,7 @@ use crate::stylesheets::{
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
+use dom::{DocumentState, ElementState};
 use fxhash::FxHashMap;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]

@@ -20,7 +20,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
@@ -195,7 +194,7 @@ nsIContent::IMEState nsIContent::GetDesiredIMEState() {
     // Check for the special case where we're dealing with elements which don't
     // have the editable flag set, but are readwrite (such as text controls).
     if (!IsElement() ||
-        !AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
+        !AsElement()->State().HasState(ElementState::READWRITE)) {
       return IMEState(IMEEnabled::Disabled);
     }
   }

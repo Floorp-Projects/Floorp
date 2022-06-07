@@ -68,7 +68,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
   // nsIContent
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

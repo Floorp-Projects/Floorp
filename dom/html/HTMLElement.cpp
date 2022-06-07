@@ -15,7 +15,7 @@ namespace mozilla::dom {
 HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLFormElement(std::move(aNodeInfo)) {
   if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
-    AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
+    AddStatesSilently(ElementState::HAS_DIR_ATTR_LIKE_AUTO);
   }
 }
 
@@ -198,14 +198,14 @@ nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
-EventStates HTMLElement::IntrinsicState() const {
-  EventStates state = nsGenericHTMLFormElement::IntrinsicState();
+ElementState HTMLElement::IntrinsicState() const {
+  ElementState state = nsGenericHTMLFormElement::IntrinsicState();
   if (ElementInternals* internals = GetElementInternals()) {
     if (internals->IsCandidateForConstraintValidation()) {
       if (internals->IsValid()) {
-        state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
+        state |= ElementState::VALID | ElementState::MOZ_UI_VALID;
       } else {
-        state |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+        state |= ElementState::INVALID | ElementState::MOZ_UI_INVALID;
       }
     }
   }

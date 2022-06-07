@@ -32,7 +32,6 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
-class EventStates;
 class PresState;
 namespace dom {
 class ElementInternals;
@@ -55,7 +54,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
       : nsGenericHTMLElementBase(std::move(aNodeInfo)) {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
-    AddStatesSilently(NS_EVENT_STATE_LTR);
+    AddStatesSilently(mozilla::dom::ElementState::LTR);
     SetFlags(NODE_HAS_DIRECTION_LTR);
   }
 
@@ -316,7 +315,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
   virtual void UpdateEditableState(bool aNotify) override;
 
-  virtual mozilla::EventStates IntrinsicState() const override;
+  virtual mozilla::dom::ElementState IntrinsicState() const override;
 
   // Helper for setting our editable flag and notifying
   void DoSetEditableFlag(bool aEditable, bool aNotify) {
@@ -1144,7 +1143,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   virtual ~nsGenericHTMLFormControlElement();
 
   // Element
-  virtual mozilla::EventStates IntrinsicState() const override;
+  virtual mozilla::dom::ElementState IntrinsicState() const override;
   virtual bool IsLabelable() const override;
 
   // nsGenericHTMLFormElement

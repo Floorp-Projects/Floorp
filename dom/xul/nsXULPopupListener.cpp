@@ -23,7 +23,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
@@ -215,7 +214,7 @@ nsresult nsXULPopupListener::FireFocusOnTargetContent(
   }
 
   EventStateManager* esm = context->EventStateManager();
-  esm->SetContentState(newFocusElement, NS_EVENT_STATE_ACTIVE);
+  esm->SetContentState(newFocusElement, ElementState::ACTIVE);
 
   return NS_OK;
 }

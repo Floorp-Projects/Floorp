@@ -27,20 +27,20 @@ class ScrollbarDrawingAndroid final : public ScrollbarDrawing {
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
                              ScrollbarKind, nsIFrame* aFrame,
                              const ComputedStyle& aStyle,
-                             const EventStates& aElementState,
-                             const EventStates& aDocumentState, const Colors&,
+                             const ElementState& aElementState,
+                             const DocumentState& aDocumentState, const Colors&,
                              const DPIRatio&);
   bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect& aRect,
                            ScrollbarKind, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aElementState,
-                           const EventStates& aDocumentState, const Colors&,
+                           const ElementState& aElementState,
+                           const DocumentState& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                            ScrollbarKind, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aElementState,
-                           const EventStates& aDocumentState, const Colors&,
+                           const ElementState& aElementState,
+                           const DocumentState& aDocumentState, const Colors&,
                            const DPIRatio&) override;
 
   void RecomputeScrollbarParams() override;

@@ -25,7 +25,6 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"

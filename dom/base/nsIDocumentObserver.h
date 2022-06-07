@@ -8,10 +8,10 @@
 
 #include "nsISupports.h"
 #include "nsIMutationObserver.h"
+#include "mozilla/dom/RustTypes.h"
 
 class nsIContent;
 namespace mozilla {
-class EventStates;
 
 namespace dom {
 class Document;
@@ -72,7 +72,7 @@ class nsIDocumentObserver : public nsIMutationObserver {
    */
   virtual void ContentStateChanged(mozilla::dom::Document*,
                                    nsIContent* aContent,
-                                   mozilla::EventStates aStateMask) = 0;
+                                   mozilla::dom::ElementState aStateMask) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -89,10 +89,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD \
   virtual void EndLoad(mozilla::dom::Document*) override;
 
-#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED     \
-  virtual void ContentStateChanged(mozilla::dom::Document*, \
-                                   nsIContent* aContent,    \
-                                   mozilla::EventStates aStateMask) override;
+#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED \
+  virtual void ContentStateChanged(                     \
+      mozilla::dom::Document*, nsIContent* aContent,    \
+      mozilla::dom::ElementState aStateMask) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER               \
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE         \
@@ -114,7 +114,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)      \
   void _class::ContentStateChanged(mozilla::dom::Document*, \
                                    nsIContent* aContent,    \
-                                   mozilla::EventStates aStateMask) {}
+                                   mozilla::dom::ElementState aStateMask) {}
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class) \
   NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)

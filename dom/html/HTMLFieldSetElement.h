@@ -87,7 +87,7 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
 
   // XPCOM SetCustomValidity is OK for us
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   /*
    * This method will update the fieldset's validity.  This method has to be

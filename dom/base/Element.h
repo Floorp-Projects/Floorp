@@ -26,7 +26,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PseudoStyleType.h"
@@ -40,6 +39,7 @@
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/NodeInfo.h"
+#include "mozilla/dom/RustTypes.h"
 #include "mozilla/dom/ShadowRootBinding.h"
 #include "nsAtom.h"
 #include "nsAttrValue.h"
@@ -221,7 +221,7 @@ class Element : public FragmentOrElement {
 #ifdef MOZILLA_INTERNAL_API
   explicit Element(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : FragmentOrElement(std::move(aNodeInfo)),
-        mState(NS_EVENT_STATE_READONLY | NS_EVENT_STATE_DEFINED) {
+        mState(ElementState::READONLY | ElementState::DEFINED) {
     MOZ_ASSERT(mNodeInfo->NodeType() == ELEMENT_NODE,
                "Bad NodeType in aNodeInfo");
     SetIsElement();
@@ -242,10 +242,10 @@ class Element : public FragmentOrElement {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   /**
-   * Method to get the full state of this element.  See mozilla/EventStates.h
-   * for the possible bits that could be set here.
+   * Method to get the full state of this element. See dom/base/rust/lib.rs for
+   * the possible bits that could be set here.
    */
-  EventStates State() const {
+  ElementState State() const {
     // mState is maintained by having whoever might have changed it
     // call UpdateState() or one of the other mState mutators.
     return mState;
@@ -266,12 +266,12 @@ class Element : public FragmentOrElement {
   /**
    * Method to update mState with link state information.  This does not notify.
    */
-  void UpdateLinkState(EventStates aState);
+  void UpdateLinkState(ElementState aState);
 
   /**
    * Returns the current disabled state of the element.
    */
-  bool IsDisabled() const { return State().HasState(NS_EVENT_STATE_DISABLED); }
+  bool IsDisabled() const { return State().HasState(ElementState::DISABLED); }
 
   virtual int32_t TabIndexDefault() { return -1; }
 
@@ -316,7 +316,7 @@ class Element : public FragmentOrElement {
    * The style state of this element. This is the real state of the element
    * with any style locks applied for pseudo-class inspecting.
    */
-  EventStates StyleState() const {
+  ElementState StyleState() const {
     if (!HasLockedStyleStates()) {
       return mState;
     }
@@ -329,9 +329,9 @@ class Element : public FragmentOrElement {
    */
   struct StyleStateLocks {
     // mLocks tracks which event states should be locked.
-    EventStates mLocks;
+    ElementState mLocks;
     // mValues tracks if the locked state should be on or off.
-    EventStates mValues;
+    ElementState mValues;
   };
 
   /**
@@ -343,12 +343,12 @@ class Element : public FragmentOrElement {
    * Add a style state lock on this element.
    * aEnabled is the value to lock the given state bits to.
    */
-  void LockStyleStates(EventStates aStates, bool aEnabled);
+  void LockStyleStates(ElementState aStates, bool aEnabled);
 
   /**
    * Remove a style state lock on this element.
    */
-  void UnlockStyleStates(EventStates aStates);
+  void UnlockStyleStates(ElementState aStates);
 
   /**
    * Clear all style state locks on this element.
@@ -359,15 +359,15 @@ class Element : public FragmentOrElement {
    * Accessors for the state of our dir attribute.
    */
   bool HasDirAuto() const {
-    return State().HasState(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
+    return State().HasState(ElementState::HAS_DIR_ATTR_LIKE_AUTO);
   }
 
   /**
    * Elements with dir="rtl" or dir="ltr".
    */
   bool HasFixedDir() const {
-    return State().HasAtLeastOneOfStates(NS_EVENT_STATE_DIR_ATTR_LTR |
-                                         NS_EVENT_STATE_DIR_ATTR_RTL);
+    return State().HasAtLeastOneOfStates(ElementState::HAS_DIR_ATTR_LTR |
+                                         ElementState::HAS_DIR_ATTR_RTL);
   }
 
   /**
@@ -478,21 +478,21 @@ class Element : public FragmentOrElement {
   inline void SetDirectionality(Directionality aDir, bool aNotify) {
     UnsetFlags(NODE_ALL_DIRECTION_FLAGS);
     if (!aNotify) {
-      RemoveStatesSilently(DIRECTION_STATES);
+      RemoveStatesSilently(ElementState::DIR_STATES);
     }
 
     switch (aDir) {
       case (eDir_RTL):
         SetFlags(NODE_HAS_DIRECTION_RTL);
         if (!aNotify) {
-          AddStatesSilently(NS_EVENT_STATE_RTL);
+          AddStatesSilently(ElementState::RTL);
         }
         break;
 
       case (eDir_LTR):
         SetFlags(NODE_HAS_DIRECTION_LTR);
         if (!aNotify) {
-          AddStatesSilently(NS_EVENT_STATE_LTR);
+          AddStatesSilently(ElementState::LTR);
         }
         break;
 
@@ -601,9 +601,9 @@ class Element : public FragmentOrElement {
 
   void SetDefined(bool aSet) {
     if (aSet) {
-      AddStates(NS_EVENT_STATE_DEFINED);
+      AddStates(ElementState::DEFINED);
     } else {
-      RemoveStates(NS_EVENT_STATE_DEFINED);
+      RemoveStates(ElementState::DEFINED);
     }
   }
 
@@ -657,10 +657,9 @@ class Element : public FragmentOrElement {
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
    * state that is independent of the element's presentation.  To get the full
-   * content state, use State().  See mozilla/EventStates.h for
    * the possible bits that could be set here.
    */
-  virtual EventStates IntrinsicState() const;
+  virtual ElementState IntrinsicState() const;
 
   /**
    * Method to add state bits.  This should be called from subclass
@@ -668,7 +667,7 @@ class Element : public FragmentOrElement {
    * time and other places where we don't want to notify a state
    * change.
    */
-  void AddStatesSilently(EventStates aStates) { mState |= aStates; }
+  void AddStatesSilently(ElementState aStates) { mState |= aStates; }
 
   /**
    * Method to remove state bits.  This should be called from subclass
@@ -676,7 +675,7 @@ class Element : public FragmentOrElement {
    * time and other places where we don't want to notify a state
    * change.
    */
-  void RemoveStatesSilently(EventStates aStates) { mState &= ~aStates; }
+  void RemoveStatesSilently(ElementState aStates) { mState &= ~aStates; }
 
   already_AddRefed<ShadowRoot> AttachShadowInternal(ShadowRootMode,
                                                     ErrorResult& aError);
@@ -701,12 +700,12 @@ class Element : public FragmentOrElement {
   // Also need to allow Link to call UpdateLinkState.
   friend class Link;
 
-  void NotifyStateChange(EventStates aStates);
+  void NotifyStateChange(ElementState aStates);
 
-  void NotifyStyleStateChange(EventStates aStates);
+  void NotifyStyleStateChange(ElementState aStates);
 
   // Style state computed from element's state and style locks.
-  EventStates StyleStateFromLocks() const;
+  ElementState StyleStateFromLocks() const;
 
  protected:
   // Methods for the ESM, nsGlobalWindow, focus manager and Document to
@@ -714,22 +713,22 @@ class Element : public FragmentOrElement {
   // These will handle setting up script blockers when they notify, so no need
   // to do it in the callers unless desired.  States passed here must only be
   // those in EXTERNALLY_MANAGED_STATES.
-  void AddStates(EventStates aStates) {
-    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+  void AddStates(ElementState aStates) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
                "Should only be adding externally-managed states here");
-    EventStates old = mState;
+    ElementState old = mState;
     AddStatesSilently(aStates);
     NotifyStateChange(old ^ mState);
   }
-  void RemoveStates(EventStates aStates) {
-    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+  void RemoveStates(ElementState aStates) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
                "Should only be removing externally-managed states here");
-    EventStates old = mState;
+    ElementState old = mState;
     RemoveStatesSilently(aStates);
     NotifyStateChange(old ^ mState);
   }
-  void ToggleStates(EventStates aStates, bool aNotify) {
-    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+  void ToggleStates(ElementState aStates, bool aNotify) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
                "Should only be removing externally-managed states here");
     mState ^= aStates;
     if (aNotify) {
@@ -739,13 +738,13 @@ class Element : public FragmentOrElement {
 
  public:
   // Public methods to manage state bits in MANUALLY_MANAGED_STATES.
-  void AddManuallyManagedStates(EventStates aStates) {
-    MOZ_ASSERT(MANUALLY_MANAGED_STATES.HasAllStates(aStates),
+  void AddManuallyManagedStates(ElementState aStates) {
+    MOZ_ASSERT(ElementState::MANUALLY_MANAGED_STATES.HasAllStates(aStates),
                "Should only be adding manually-managed states here");
     AddStates(aStates);
   }
-  void RemoveManuallyManagedStates(EventStates aStates) {
-    MOZ_ASSERT(MANUALLY_MANAGED_STATES.HasAllStates(aStates),
+  void RemoveManuallyManagedStates(ElementState aStates) {
+    MOZ_ASSERT(ElementState::MANUALLY_MANAGED_STATES.HasAllStates(aStates),
                "Should only be removing manually-managed states here");
     RemoveStates(aStates);
   }
@@ -1970,8 +1969,8 @@ class Element : public FragmentOrElement {
    * :any-link pseudo-class.
    */
   bool IsLink() const {
-    return mState.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
-                                        NS_EVENT_STATE_UNVISITED);
+    return mState.HasAtLeastOneOfStates(ElementState::VISITED |
+                                        ElementState::UNVISITED);
   }
 
   /**
@@ -2047,7 +2046,7 @@ class Element : public FragmentOrElement {
   void AsElement() = delete;
 
   // Data members
-  EventStates mState;
+  ElementState mState;
   // Per-node data managed by Servo.
   //
   // There should not be data on nodes that are not in the flattened tree, or

@@ -47,7 +47,6 @@
 #include <algorithm>
 #include "nsTextNode.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -632,8 +631,8 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+  ElementState eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(ElementState::DISABLED)) {
     return NS_OK;
   }
 
@@ -917,7 +916,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUSRING)) {
+  if (mContent->AsElement()->State().HasState(ElementState::FOCUSRING)) {
     nsPresContext* pc = PresContext();
     const nsStyleDisplay* disp = StyleDisplay();
     if (IsThemed(disp) &&
@@ -933,9 +932,9 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt) {
   /* Do we need to do anything? */
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) ||
-      !eventStates.HasState(NS_EVENT_STATE_FOCUS)) {
+  ElementState eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(ElementState::DISABLED) ||
+      !eventStates.HasState(ElementState::FOCUS)) {
     return;
   }
 

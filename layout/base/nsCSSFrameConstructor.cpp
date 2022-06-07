@@ -23,7 +23,6 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSharedListElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -3615,7 +3614,7 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
   // cases when the object is broken/suppressed/etc (e.g. a broken image), but
   // we want to treat those cases as TYPE_NULL
   uint32_t type;
-  if (aElement.State().HasState(NS_EVENT_STATE_BROKEN)) {
+  if (aElement.State().HasState(ElementState::BROKEN)) {
     type = nsIObjectLoadingContent::TYPE_NULL;
   } else {
     nsCOMPtr<nsIObjectLoadingContent> objContent =

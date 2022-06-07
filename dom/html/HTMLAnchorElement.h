@@ -69,7 +69,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   // WebIDL API
 

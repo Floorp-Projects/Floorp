@@ -6,6 +6,7 @@ extern crate bincode;
 extern crate cssparser;
 #[macro_use]
 extern crate cstr;
+extern crate dom;
 #[macro_use]
 extern crate gecko_profiler;
 extern crate libc;

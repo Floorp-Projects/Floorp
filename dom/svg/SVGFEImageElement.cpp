@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/SVGFEImageElement.h"
 
-#include "mozilla/EventStates.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/BindContext.h"
@@ -50,7 +49,7 @@ SVGFEImageElement::SVGFEImageElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGFEImageElementBase(std::move(aNodeInfo)), mImageAnimationMode(0) {
   // We start out broken
-  AddStatesSilently(NS_EVENT_STATE_BROKEN);
+  AddStatesSilently(ElementState::BROKEN);
 }
 
 SVGFEImageElement::~SVGFEImageElement() { nsImageLoadingContent::Destroy(); }
@@ -165,7 +164,7 @@ void SVGFEImageElement::UnbindFromTree(bool aNullParent) {
   SVGFEImageElementBase::UnbindFromTree(aNullParent);
 }
 
-EventStates SVGFEImageElement::IntrinsicState() const {
+ElementState SVGFEImageElement::IntrinsicState() const {
   return SVGFEImageElementBase::IntrinsicState() |
          nsImageLoadingContent::ImageState();
 }

@@ -68,7 +68,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
@@ -3769,8 +3768,8 @@ bool nsDisplayThemedBackground::CreateWebRenderCommands(
 }
 
 bool nsDisplayThemedBackground::IsWindowActive() const {
-  EventStates docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
-  return !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  DocumentState docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
+  return !docState.HasState(DocumentState::WINDOW_INACTIVE);
 }
 
 void nsDisplayThemedBackground::ComputeInvalidationRegion(

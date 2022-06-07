@@ -27,7 +27,6 @@
 #include "nsIURI.h"
 
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/dom/MathMLElementBinding.h"
 
@@ -815,10 +814,10 @@ nsresult MathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 
 NS_IMPL_ELEMENT_CLONE(MathMLElement)
 
-EventStates MathMLElement::IntrinsicState() const {
+ElementState MathMLElement::IntrinsicState() const {
   return Link::LinkState() | MathMLElementBase::IntrinsicState() |
-         (mIncrementScriptLevel ? NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL
-                                : EventStates());
+         (mIncrementScriptLevel ? ElementState::INCREMENT_SCRIPT_LEVEL
+                                : ElementState());
 }
 
 bool MathMLElement::IsNodeOfType(uint32_t aFlags) const { return false; }

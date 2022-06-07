@@ -41,6 +41,7 @@ exclude = [
   "xpcom/rust/gkrust_utils",
   "tools/lint/test/files/clippy",
   "tools/fuzzing/rust",
+  "dom/base/rust",
   "dom/origin-trials/ffi",
 ]
 

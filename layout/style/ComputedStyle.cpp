@@ -185,9 +185,9 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   // Note that we do not check whether this->RelevantLinkVisited() !=
   // aNewContext->RelevantLinkVisited(); we don't need to since
   // nsCSSFrameConstructor::DoContentStateChanged always adds
-  // nsChangeHint_RepaintFrame for NS_EVENT_STATE_VISITED changes (and
+  // nsChangeHint_RepaintFrame for ElementState::VISITED changes (and
   // needs to, since HasStateDependentStyle probably doesn't work right
-  // for NS_EVENT_STATE_VISITED).  Hopefully this doesn't actually
+  // for ElementState::VISITED).  Hopefully this doesn't actually
   // expose whether links are visited to performance tests since all
   // link coloring happens asynchronously at a time when it's hard for
   // the page to measure.

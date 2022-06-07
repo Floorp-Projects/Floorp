@@ -334,7 +334,7 @@ nsresult PrototypeDocumentContentSink::PrepareToWalk() {
 
   // TODO(emilio): Should this really notify? We don't notify of appends anyhow,
   // and we just appended the root so no styles can possibly depend on it.
-  mDocument->UpdateDocumentStates(NS_DOCUMENT_STATE_RTL_LOCALE, true);
+  mDocument->UpdateDocumentStates(DocumentState::RTL_LOCALE, true);
 
   nsContentUtils::AddScriptRunner(
       new nsDocElementCreatedNotificationRunner(mDocument));

@@ -71,7 +71,6 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextControlState.h"
@@ -997,8 +996,8 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
   // right now), optional, and valid.  We are NOT readwrite by default
   // until someone calls UpdateEditableState on us, apparently!  Also
   // by default we don't have to show validity UI and so forth.
-  AddStatesSilently(NS_EVENT_STATE_ENABLED | NS_EVENT_STATE_OPTIONAL |
-                    NS_EVENT_STATE_VALID);
+  AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
+                    ElementState::VALID);
   UpdateApzAwareFlag();
 }
 
@@ -2201,7 +2200,7 @@ void HTMLInputElement::SetFocusState(bool aIsFocused) {
     return;
   }
 
-  EventStates focusStates = NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
+  ElementState focusStates = ElementState::FOCUS | ElementState::FOCUSRING;
   if (aIsFocused) {
     AddStates(focusStates);
   } else {
@@ -4471,9 +4470,9 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     bool isRequired = HasAttr(kNameSpaceID_None, nsGkAtoms::required);
     UpdateRequiredState(isRequired, aNotify);
   } else if (aNotify) {
-    RemoveStates(REQUIRED_STATES);
+    RemoveStates(ElementState::REQUIRED_STATES);
   } else {
-    RemoveStatesSilently(REQUIRED_STATES);
+    RemoveStatesSilently(ElementState::REQUIRED_STATES);
   }
 
   UpdateHasRange();
@@ -5913,22 +5912,22 @@ void HTMLInputElement::DestroyContent() {
   TextControlElement::DestroyContent();
 }
 
-EventStates HTMLInputElement::IntrinsicState() const {
+ElementState HTMLInputElement::IntrinsicState() const {
   // If you add states here, and they're type-dependent, you need to add them
   // to the type case in AfterSetAttr.
 
-  EventStates state =
+  ElementState state =
       nsGenericHTMLFormControlElementWithState::IntrinsicState();
   if (mType == FormControlType::InputCheckbox ||
       mType == FormControlType::InputRadio) {
     // Check current checked state (:checked)
     if (mChecked) {
-      state |= NS_EVENT_STATE_CHECKED;
+      state |= ElementState::CHECKED;
     }
 
     // Check current indeterminate state (:indeterminate)
     if (mType == FormControlType::InputCheckbox && mIndeterminate) {
-      state |= NS_EVENT_STATE_INDETERMINATE;
+      state |= ElementState::INDETERMINATE;
     }
 
     if (mType == FormControlType::InputRadio) {
@@ -5936,13 +5935,13 @@ EventStates HTMLInputElement::IntrinsicState() const {
       bool indeterminate = !selected && !mChecked;
 
       if (indeterminate) {
-        state |= NS_EVENT_STATE_INDETERMINATE;
+        state |= ElementState::INDETERMINATE;
       }
     }
 
     // Check whether we are the default checked element (:default)
     if (DefaultChecked()) {
-      state |= NS_EVENT_STATE_DEFAULT;
+      state |= ElementState::DEFAULT;
     }
   } else if (mType == FormControlType::InputImage) {
     state |= nsImageLoadingContent::ImageState();
@@ -5950,13 +5949,13 @@ EventStates HTMLInputElement::IntrinsicState() const {
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= NS_EVENT_STATE_VALID;
+      state |= ElementState::VALID;
     } else {
-      state |= NS_EVENT_STATE_INVALID;
+      state |= ElementState::INVALID;
 
       if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
           (mCanShowInvalidUI && ShouldShowValidityUI())) {
-        state |= NS_EVENT_STATE_MOZ_UI_INVALID;
+        state |= ElementState::MOZ_UI_INVALID;
       }
     }
 
@@ -5968,9 +5967,9 @@ EventStates HTMLInputElement::IntrinsicState() const {
     // 3. The element has already been modified or the user tried to submit the
     //    form owner while invalid.
     if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() || (!state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+        (IsValid() || (!state.HasState(ElementState::MOZ_UI_INVALID) &&
                        !mCanShowInvalidUI))) {
-      state |= NS_EVENT_STATE_MOZ_UI_VALID;
+      state |= ElementState::MOZ_UI_VALID;
     }
 
     // :in-range and :out-of-range only apply if the element currently has a
@@ -5978,15 +5977,15 @@ EventStates HTMLInputElement::IntrinsicState() const {
     if (mHasRange) {
       state |= (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) ||
                 GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW))
-                   ? NS_EVENT_STATE_OUTOFRANGE
-                   : NS_EVENT_STATE_INRANGE;
+                   ? ElementState::OUTOFRANGE
+                   : ElementState::INRANGE;
     }
   }
 
   if (mType != FormControlType::InputFile && IsValueEmpty()) {
-    state |= NS_EVENT_STATE_VALUE_EMPTY;
+    state |= ElementState::VALUE_EMPTY;
     if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
-      state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
+      state |= ElementState::PLACEHOLDER_SHOWN;
     }
   }
 
@@ -6720,9 +6719,9 @@ void HTMLInputElement::SetRevealPassword(bool aValue) {
     return;
   }
   if (aValue) {
-    AddStates(NS_EVENT_STATE_REVEALED);
+    AddStates(ElementState::REVEALED);
   } else {
-    RemoveStates(NS_EVENT_STATE_REVEALED);
+    RemoveStates(ElementState::REVEALED);
   }
 }
 
@@ -6730,7 +6729,7 @@ bool HTMLInputElement::RevealPassword() const {
   if (NS_WARN_IF(mType != FormControlType::InputPassword)) {
     return false;
   }
-  return State().HasState(NS_EVENT_STATE_REVEALED);
+  return State().HasState(ElementState::REVEALED);
 }
 
 void HTMLInputElement::FieldSetDisabledChanged(bool aNotify) {

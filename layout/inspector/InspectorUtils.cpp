@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EventStates.h"
 
 #include "inLayoutUtils.h"
 
@@ -556,7 +555,7 @@ bool InspectorUtils::SetContentState(GlobalObject& aGlobalObject,
                                      ErrorResult& aRv) {
   RefPtr<EventStateManager> esm =
       inLayoutUtils::GetEventStateManagerFor(aElement);
-  EventStates state(aState);
+  ElementState state(aState);
   if (!esm || !EventStateManager::ManagesState(state)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return false;
@@ -571,7 +570,7 @@ bool InspectorUtils::RemoveContentState(GlobalObject& aGlobalObject,
                                         ErrorResult& aRv) {
   RefPtr<EventStateManager> esm =
       inLayoutUtils::GetEventStateManagerFor(aElement);
-  EventStates state(aState);
+  ElementState state(aState);
   if (!esm || !EventStateManager::ManagesState(state)) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     return false;
@@ -579,7 +578,7 @@ bool InspectorUtils::RemoveContentState(GlobalObject& aGlobalObject,
 
   bool result = esm->SetContentState(nullptr, state);
 
-  if (aClearActiveDocument && state == NS_EVENT_STATE_ACTIVE) {
+  if (aClearActiveDocument && state == ElementState::ACTIVE) {
     EventStateManager* activeESM = static_cast<EventStateManager*>(
         EventStateManager::GetActiveEventStateManager());
     if (activeESM == esm) {
@@ -594,7 +593,7 @@ bool InspectorUtils::RemoveContentState(GlobalObject& aGlobalObject,
 uint64_t InspectorUtils::GetContentState(GlobalObject& aGlobalObject,
                                          Element& aElement) {
   // NOTE: if this method is removed,
-  // please remove GetInternalValue from EventStates
+  // please remove GetInternalValue from ElementState
   return aElement.State().GetInternalValue();
 }
 
@@ -612,12 +611,12 @@ void InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
   }
 }
 
-static EventStates GetStatesForPseudoClass(const nsAString& aStatePseudo) {
+static ElementState GetStatesForPseudoClass(const nsAString& aStatePseudo) {
   if (aStatePseudo.IsEmpty() || aStatePseudo[0] != u':') {
-    return EventStates();
+    return ElementState();
   }
   NS_ConvertUTF16toUTF8 statePseudo(Substring(aStatePseudo, 1));
-  return EventStates(Servo_PseudoClass_GetStates(&statePseudo));
+  return ElementState(Servo_PseudoClass_GetStates(&statePseudo));
 }
 
 /* static */
@@ -643,7 +642,7 @@ void InspectorUtils::AddPseudoClassLock(GlobalObject& aGlobalObject,
                                         Element& aElement,
                                         const nsAString& aPseudoClass,
                                         bool aEnabled) {
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  ElementState state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     return;
   }
@@ -655,7 +654,7 @@ void InspectorUtils::AddPseudoClassLock(GlobalObject& aGlobalObject,
 void InspectorUtils::RemovePseudoClassLock(GlobalObject& aGlobal,
                                            Element& aElement,
                                            const nsAString& aPseudoClass) {
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  ElementState state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     return;
   }
@@ -667,12 +666,12 @@ void InspectorUtils::RemovePseudoClassLock(GlobalObject& aGlobal,
 bool InspectorUtils::HasPseudoClassLock(GlobalObject& aGlobalObject,
                                         Element& aElement,
                                         const nsAString& aPseudoClass) {
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  ElementState state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
     return false;
   }
 
-  EventStates locks = aElement.LockedStyleStates().mLocks;
+  ElementState locks = aElement.LockedStyleStates().mLocks;
   return locks.HasAllStates(state);
 }
 
