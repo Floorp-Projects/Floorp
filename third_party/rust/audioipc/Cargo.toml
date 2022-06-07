@@ -17,7 +17,7 @@ futures = "0.1.29"
 log = "0.4"
 serde = "1"
 serde_derive = "1"
-tokio = "0.1"
+tokio = { version="0.1", default-features=false, features = ["rt-full"] }
 tokio-io = "0.1"
 
 [target.'cfg(unix)'.dependencies]
@@ -29,9 +29,7 @@ tokio-reactor = "0.1"
 memmap2 = "0.2"
 
 [target.'cfg(target_os = "linux")'.dependencies.audio_thread_priority]
-version = "0.26.0"
-default_features = false
-features = ["winapi"]
+version = "0.26.1"
 
 [target.'cfg(windows)'.dependencies]
 mio = "0.6.19"
