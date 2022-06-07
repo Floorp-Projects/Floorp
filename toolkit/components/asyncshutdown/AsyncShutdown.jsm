@@ -43,18 +43,20 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gDebug",
   "@mozilla.org/xpcom/debug;1",
   "nsIDebug2"
 );
-Object.defineProperty(this, "gCrashReporter", {
+Object.defineProperty(lazy, "gCrashReporter", {
   get() {
     delete this.gCrashReporter;
     try {
@@ -150,7 +152,7 @@ PromiseSet.prototype = {
       throw new Error("Wait is complete, cannot add further promises.");
     }
     this._ensurePromise(key);
-    let indirection = PromiseUtils.defer();
+    let indirection = lazy.PromiseUtils.defer();
     key
       .then(
         x => {
@@ -296,7 +298,7 @@ function looseTimer(delay) {
   let DELAY_BEAT = 1000;
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let beats = Math.ceil(delay / DELAY_BEAT);
-  let deferred = PromiseUtils.defer();
+  let deferred = lazy.PromiseUtils.defer();
   timer.initWithCallback(
     function() {
       if (beats <= 0) {
@@ -1002,12 +1004,12 @@ Barrier.prototype = Object.freeze({
             " ensure that we do not leave the user with an unresponsive" +
             " process draining resources.";
           fatalerr(msg);
-          if (gCrashReporter && gCrashReporter.enabled) {
+          if (lazy.gCrashReporter && lazy.gCrashReporter.enabled) {
             let data = {
               phase: topic,
               conditions: state,
             };
-            gCrashReporter.annotateCrashReport(
+            lazy.gCrashReporter.annotateCrashReport(
               "AsyncShutdownTimeout",
               JSON.stringify(data)
             );
@@ -1026,7 +1028,7 @@ Barrier.prototype = Object.freeze({
             ({ filename, lineNumber } = blocker.getOrigin());
             break;
           }
-          gDebug.abort(filename, lineNumber);
+          lazy.gDebug.abort(filename, lineNumber);
         },
         function onSatisfied() {
           // The promise has been rejected, which means that we have satisfied
