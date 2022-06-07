@@ -1,5 +1,5 @@
 function handleRequest(request, response) {
-  if (request.queryString.indexOf("report") != -1) {
+  if (request.queryString.includes("report")) {
     response.setHeader("Content-Type", "text/javascript", false);
     if (getState("loaded") == "loaded") {
       response.write(

@@ -1,6 +1,6 @@
 function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/javascript", false);
-  if (request.queryString.indexOf("report") != -1) {
+  if (request.queryString.includes("report")) {
     if (getState("loaded") == "loaded") {
       response.write("ok(true, 'This script was supposed to get fetched.');");
     } else {
