@@ -10,7 +10,7 @@ authors = ["Mozilla"]
 edition = "2018"
 
 [dependencies]
-base64 = "0.12"
+base64 = "0.13"
 chrono = "0.4.6"
 clap = { version = "3.1", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help"] }
 hyper = "0.14"
