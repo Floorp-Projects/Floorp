@@ -16,7 +16,6 @@ from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
 from mozboot.util import MINIMUM_RUST_VERSION
-from mozbuild.mach_commands import cargo_vet
 from pathlib import Path
 
 import pytoml
@@ -573,6 +572,8 @@ license file's hash.
     def vendor(
         self, ignore_modified=False, build_peers_said_large_imports_were_ok=False
     ):
+        from mozbuild.mach_commands import cargo_vet
+
         self.populate_logger()
         self.log_manager.enable_unstructured()
         if not ignore_modified and self.has_modified_files():
