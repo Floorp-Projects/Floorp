@@ -17,23 +17,24 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManagerPrivate",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "jexlFilterFunc",
   "resource://services-settings/remote-settings.js"
 );
@@ -87,11 +88,11 @@ const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 // may be additional requirements such as requiring the add-on to be signed.
 // See the uses of kXPIAddonTypes before introducing new addon types or
 // providers that differ from the existing types.
-XPCOMUtils.defineLazyGetter(this, "kXPIAddonTypes", () => {
+XPCOMUtils.defineLazyGetter(lazy, "kXPIAddonTypes", () => {
   // In practice, this result is equivalent to ALL_XPI_TYPES in XPIProvider.jsm.
   // "plugin" (from GMPProvider.jsm) is intentionally omitted, as we decided to
   // not support blocklisting of GMP plugins in bug 1086668.
-  return AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
+  return lazy.AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
 });
 
 // For a given input string matcher, produce either a string to compare with,
@@ -265,14 +266,14 @@ const Utils = {
   matchesOSABI(item) {
     if (item.os) {
       let os = item.os.split(",");
-      if (!os.includes(gAppOS)) {
+      if (!os.includes(lazy.gAppOS)) {
         return false;
       }
     }
 
     if (item.xpcomabi) {
       let xpcomabi = item.xpcomabi.split(",");
-      if (!xpcomabi.includes(gApp.XPCOMABI)) {
+      if (!xpcomabi.includes(lazy.gApp.XPCOMABI)) {
         return false;
       }
     }
@@ -338,7 +339,7 @@ const Utils = {
     // Check if the application or toolkit version matches
     for (let tA of versionRange.targetApplication) {
       if (
-        tA.guid == gAppID &&
+        tA.guid == lazy.gAppID &&
         this.versionInRange(appVersion, tA.minVersion, tA.maxVersion)
       ) {
         return true;
@@ -383,7 +384,7 @@ const Utils = {
       }
       vr.targetApplication.forEach(tA => {
         if (!tA.guid) {
-          tA.guid = gAppID;
+          tA.guid = lazy.gAppID;
         }
       });
     }
@@ -417,7 +418,7 @@ async function targetAppFilter(entry, environment) {
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
   const { filter_expression } = entry;
   if (filter_expression) {
-    return jexlFilterFunc(entry, environment);
+    return lazy.jexlFilterFunc(entry, environment);
   }
 
   // Keep entries without target information.
@@ -434,7 +435,8 @@ async function targetAppFilter(entry, environment) {
   // Gfx blocklist has a specific versionRange object, which is not a list.
   if (!Array.isArray(versionRange)) {
     const { maxVersion = "*" } = versionRange;
-    const matchesRange = Services.vc.compare(gApp.version, maxVersion) <= 0;
+    const matchesRange =
+      Services.vc.compare(lazy.gApp.version, maxVersion) <= 0;
     return matchesRange ? entry : null;
   }
 
@@ -455,8 +457,8 @@ async function targetAppFilter(entry, environment) {
       }
       const { maxVersion = "*" } = ta;
       if (
-        guid == gAppID &&
-        Services.vc.compare(gApp.version, maxVersion) <= 0
+        guid == lazy.gAppID &&
+        Services.vc.compare(lazy.gApp.version, maxVersion) <= 0
       ) {
         return entry;
       }
@@ -501,7 +503,7 @@ const GfxBlocklistRS = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings("gfx", {
+    this._client = lazy.RemoteSettings("gfx", {
       bucketName: BLOCKLIST_BUCKET,
       filterFunc: targetAppFilter,
     });
@@ -728,7 +730,7 @@ const ExtensionBlocklistRS = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings("addons", {
+    this._client = lazy.RemoteSettings("addons", {
       bucketName: BLOCKLIST_BUCKET,
       filterFunc: this._filterItem,
     });
@@ -756,7 +758,7 @@ const ExtensionBlocklistRS = {
     await this.ensureInitialized();
     await this._updateEntries();
 
-    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
+    let addons = await lazy.AddonManager.getAddonsByTypes(lazy.kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       if (addon.updateBlocklistState) {
@@ -823,7 +825,7 @@ const ExtensionBlocklistRS = {
       }
     }
 
-    AddonManagerPrivate.updateAddonAppDisabledStates();
+    lazy.AddonManagerPrivate.updateAddonAppDisabledStates();
   },
 
   async getState(addon, appVersion, toolkitVersion) {
@@ -842,15 +844,15 @@ const ExtensionBlocklistRS = {
     }
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
-    if (!appVersion && !gApp.version) {
+    if (!appVersion && !lazy.gApp.version) {
       return null;
     }
 
     if (!appVersion) {
-      appVersion = gApp.version;
+      appVersion = lazy.gApp.version;
     }
     if (!toolkitVersion) {
-      toolkitVersion = gApp.platformVersion;
+      toolkitVersion = lazy.gApp.platformVersion;
     }
 
     let addonProps = {};
@@ -1088,7 +1090,7 @@ const ExtensionBlocklistMLBF = {
       return;
     }
     this._initialized = true;
-    this._client = RemoteSettings("addons-bloomfilters", {
+    this._client = lazy.RemoteSettings("addons-bloomfilters", {
       bucketName: BLOCKLIST_BUCKET,
     });
     this._onUpdate = this._onUpdate.bind(this);
@@ -1114,7 +1116,7 @@ const ExtensionBlocklistMLBF = {
     this.ensureInitialized();
     await this._updateMLBF(true);
 
-    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
+    let addons = await lazy.AddonManager.getAddonsByTypes(lazy.kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       await addon.updateBlocklistState(false);
@@ -1146,7 +1148,7 @@ const ExtensionBlocklistMLBF = {
       );
     }
 
-    AddonManagerPrivate.updateAddonAppDisabledStates();
+    lazy.AddonManagerPrivate.updateAddonAppDisabledStates();
   },
 
   async getState(addon) {
@@ -1207,8 +1209,8 @@ const ExtensionBlocklistMLBF = {
 
     let { signedState } = addon;
     if (
-      signedState !== AddonManager.SIGNEDSTATE_PRELIMINARY &&
-      signedState !== AddonManager.SIGNEDSTATE_SIGNED
+      signedState !== lazy.AddonManager.SIGNEDSTATE_PRELIMINARY &&
+      signedState !== lazy.AddonManager.SIGNEDSTATE_SIGNED
     ) {
       // The block decision can only be relied upon for known add-ons, i.e.
       // signed via AMO. Anything else is unknown and ignored:
@@ -1299,7 +1301,7 @@ var gBlocklistLevel = DEFAULT_LEVEL;
 // Services.jsm since it will not successfully QueryInterface nsIXULAppInfo in
 // xpcshell tests due to other code calling Services.appinfo before the
 // nsIXULAppInfo is created by the tests.
-XPCOMUtils.defineLazyGetter(this, "gApp", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gApp", function() {
   // eslint-disable-next-line mozilla/use-services
   let appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   try {
@@ -1316,11 +1318,11 @@ XPCOMUtils.defineLazyGetter(this, "gApp", function() {
   return appinfo;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gAppID", function() {
-  return gApp.ID;
+XPCOMUtils.defineLazyGetter(lazy, "gAppID", function() {
+  return lazy.gApp.ID;
 });
-XPCOMUtils.defineLazyGetter(this, "gAppOS", function() {
-  return gApp.OS;
+XPCOMUtils.defineLazyGetter(lazy, "gAppOS", function() {
+  return lazy.gApp.OS;
 });
 
 /**

@@ -13,14 +13,15 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "separatePrivilegedMozillaWebContentProcess",
   "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "extensionsWebAPITesting",
   "extensions.webapi.testing",
   false
@@ -242,8 +243,8 @@ amManager.prototype = {
 
       case MSG_PROMISE_REQUEST: {
         if (
-          !extensionsWebAPITesting &&
-          separatePrivilegedMozillaWebContentProcess &&
+          !lazy.extensionsWebAPITesting &&
+          lazy.separatePrivilegedMozillaWebContentProcess &&
           aMessage.target &&
           aMessage.target.remoteType != null &&
           aMessage.target.remoteType !== "privilegedmozilla"
@@ -279,8 +280,8 @@ amManager.prototype = {
 
       case MSG_INSTALL_CLEANUP: {
         if (
-          !extensionsWebAPITesting &&
-          separatePrivilegedMozillaWebContentProcess &&
+          !lazy.extensionsWebAPITesting &&
+          lazy.separatePrivilegedMozillaWebContentProcess &&
           aMessage.target &&
           aMessage.target.remoteType != null &&
           aMessage.target.remoteType !== "privilegedmozilla"
@@ -294,8 +295,8 @@ amManager.prototype = {
 
       case MSG_ADDON_EVENT_REQ: {
         if (
-          !extensionsWebAPITesting &&
-          separatePrivilegedMozillaWebContentProcess &&
+          !lazy.extensionsWebAPITesting &&
+          lazy.separatePrivilegedMozillaWebContentProcess &&
           aMessage.target &&
           aMessage.target.remoteType != null &&
           aMessage.target.remoteType !== "privilegedmozilla"
@@ -340,7 +341,7 @@ amManager.prototype = {
 };
 
 const BLOCKLIST_JSM = "resource://gre/modules/Blocklist.jsm";
-ChromeUtils.defineModuleGetter(this, "Blocklist", BLOCKLIST_JSM);
+ChromeUtils.defineModuleGetter(lazy, "Blocklist", BLOCKLIST_JSM);
 
 function BlocklistService() {
   this.wrappedJSObject = this;
@@ -352,15 +353,15 @@ BlocklistService.prototype = {
   STATE_BLOCKED: Ci.nsIBlocklistService.STATE_BLOCKED,
 
   get isLoaded() {
-    return Cu.isModuleLoaded(BLOCKLIST_JSM) && Blocklist.isLoaded;
+    return Cu.isModuleLoaded(BLOCKLIST_JSM) && lazy.Blocklist.isLoaded;
   },
 
   observe(...args) {
-    return Blocklist.observe(...args);
+    return lazy.Blocklist.observe(...args);
   },
 
   notify() {
-    Blocklist.notify();
+    lazy.Blocklist.notify();
   },
 
   classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),

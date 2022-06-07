@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
 });
 
@@ -89,7 +91,7 @@ amContentHandler.prototype = {
       sourceHost,
       sourceURL,
       browsingContext,
-      hasCrossOriginAncestor: ThirdPartyUtil.isThirdPartyChannel(aRequest),
+      hasCrossOriginAncestor: lazy.ThirdPartyUtil.isThirdPartyChannel(aRequest),
     };
 
     Services.cpmm.sendAsyncMessage(MSG_INSTALL_ADDON, install);
