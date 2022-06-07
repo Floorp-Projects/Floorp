@@ -962,29 +962,31 @@ void nsXULPopupManager::ShowPopupAtScreenRect(
   BeginShowingPopup(pendingPopup, aIsContextMenu, false);
 }
 
-void nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
-                                            nsIContent* aTriggerContent,
-                                            int32_t aXPos, int32_t aYPos) {
+void nsXULPopupManager::ShowTooltipAtScreen(
+    nsIContent* aPopup, nsIContent* aTriggerContent,
+    const LayoutDeviceIntPoint& aScreenPoint) {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
-  if (!popupFrame || !MayShowPopup(popupFrame)) return;
+  if (!popupFrame || !MayShowPopup(popupFrame)) {
+    return;
+  }
 
   PendingPopup pendingPopup(aPopup, nullptr);
 
   nsPresContext* pc = popupFrame->PresContext();
-  LayoutDeviceIntPoint mousePoint = LayoutDeviceIntPoint(
-      pc->CSSPixelsToDevPixels(aXPos), pc->CSSPixelsToDevPixels(aYPos));
-
-  // coordinates are relative to the root widget
-  nsPresContext* rootPresContext = pc->GetRootPresContext();
-  if (rootPresContext) {
-    nsCOMPtr<nsIWidget> rootWidget = rootPresContext->GetRootWidget();
-    if (rootWidget) {
-      mousePoint -= rootWidget->WidgetToScreenOffset();
+  pendingPopup.SetMousePoint([&] {
+    // Event coordinates are relative to the root widget
+    if (nsPresContext* rootPresContext = pc->GetRootPresContext()) {
+      if (nsCOMPtr<nsIWidget> rootWidget = rootPresContext->GetRootWidget()) {
+        return aScreenPoint - rootWidget->WidgetToScreenOffset();
+      }
     }
-  }
-  pendingPopup.SetMousePoint(mousePoint);
+    return aScreenPoint;
+  }());
 
-  popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, false);
+  auto screenCSSPoint =
+      CSSIntPoint::Round(aScreenPoint / pc->CSSToDevPixelScale());
+  popupFrame->InitializePopupAtScreen(aTriggerContent, screenCSSPoint.x,
+                                      screenCSSPoint.y, false);
 
   BeginShowingPopup(pendingPopup, false, false);
 }
