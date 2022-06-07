@@ -12,6 +12,7 @@
 #define CALL_FLEXFEC_RECEIVE_STREAM_IMPL_H_
 
 #include <memory>
+#include <vector>
 
 #include "call/flexfec_receive_stream.h"
 #include "call/rtp_packet_sink_interface.h"
@@ -58,13 +59,14 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   Stats GetStats() const override;
 
   // ReceiveStream impl.
+  void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   const RtpConfig& rtp_config() const override { return config_.rtp; }
 
  private:
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
 
-  // Config.
-  const Config config_;
+  // Config. Mostly const, header extensions may change.
+  Config config_ RTC_GUARDED_BY(packet_sequence_checker_);
 
   // Erasure code interfacing.
   const std::unique_ptr<FlexfecReceiver> receiver_;

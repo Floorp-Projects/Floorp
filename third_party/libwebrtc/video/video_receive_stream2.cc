@@ -220,8 +220,8 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  this,     // NackSender
                                  nullptr,  // Use default KeyFrameRequestSender
                                  this,     // OnCompleteFrameCallback
-                                 config_.frame_decryptor,
-                                 config_.frame_transformer),
+                                 std::move(config_.frame_decryptor),
+                                 std::move(config_.frame_transformer)),
       rtp_stream_sync_(call->worker_thread(), this),
       max_wait_for_keyframe_ms_(DetermineMaxWaitForFrame(config, true)),
       max_wait_for_frame_ms_(DetermineMaxWaitForFrame(config, false)),
@@ -450,6 +450,25 @@ void VideoReceiveStream2::Stop() {
   video_stream_decoder_.reset();
   incoming_video_stream_.reset();
   transport_adapter_.Disable();
+}
+
+void VideoReceiveStream2::SetRtpExtensions(
+    std::vector<RtpExtension> extensions) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetRtpExtensions(extensions);
+  // TODO(tommi): We don't use the `c.rtp.extensions` member in the
+  // VideoReceiveStream2 class, so this const_cast<> is a temporary hack to keep
+  // things consistent between VideoReceiveStream2 and RtpVideoStreamReceiver2
+  // for debugging purposes. The `packet_sequence_checker_` gives us assurances
+  // that from a threading perspective, this is still safe. The accessors that
+  // give read access to this state, run behind the same check.
+  // The alternative to the const_cast<> would be to make `config_` non-const
+  // and guarded by `packet_sequence_checker_`. However the scope of that state
+  // is huge (the whole Config struct), and would require all methods that touch
+  // the struct to abide the needs of the `extensions` member.
+  VideoReceiveStream::Config& c =
+      const_cast<VideoReceiveStream::Config&>(config_);
+  c.rtp.extensions = std::move(extensions);
 }
 
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(

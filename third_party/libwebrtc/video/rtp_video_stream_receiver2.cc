@@ -922,6 +922,12 @@ void RtpVideoStreamReceiver2::SetDepacketizerToDecoderFrameTransformer(
   frame_transformer_delegate_->Init();
 }
 
+void RtpVideoStreamReceiver2::SetRtpExtensions(
+    const std::vector<RtpExtension>& extensions) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_header_extensions_.Reset(extensions);
+}
+
 void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   if (nack_module_)
