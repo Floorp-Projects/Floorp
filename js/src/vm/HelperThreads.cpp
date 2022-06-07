@@ -654,8 +654,8 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     JSContext* cx = TlsContext.get();
     AutoSetContextRuntime ascr(runtime);
 
-    task = DelazifyTask::Create(cx, runtime, contextOptions, options,
-                                *stencil_);
+    task =
+        DelazifyTask::Create(cx, runtime, contextOptions, options, *stencil_);
     if (!task) {
       return;
     }
@@ -840,7 +840,6 @@ void MultiStencilsDecodeTask::parse(JSContext* cx) {
 bool js::StartOffThreadDelazification(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const frontend::CompilationStencil& stencil) {
-
   // Skip delazify tasks if we parse everything on-demand or ahead.
   auto strategy = options.eagerDelazificationStrategy();
   if (strategy == JS::DelazificationOption::OnDemandOnly ||
@@ -919,12 +918,9 @@ bool DepthFirstDelazification::add(JSContext* cx,
 }
 
 UniquePtr<DelazifyTask> DelazifyTask::Create(
-    JSContext* cx,
-    JSRuntime* runtime,
-    const JS::ContextOptions& contextOptions,
+    JSContext* cx, JSRuntime* runtime, const JS::ContextOptions& contextOptions,
     const JS::ReadOnlyCompileOptions& options,
-    const frontend::CompilationStencil& stencil)
-{
+    const frontend::CompilationStencil& stencil) {
   // DelazifyTask are capturing errors. This is created here to capture errors
   // as-if they were part of the to-be constructed DelazifyTask. This is also
   // the reason why we move this structure to the DelazifyTask once created.

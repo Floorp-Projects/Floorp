@@ -12,7 +12,6 @@
 #include "nsMai.h"
 #include "nsIAccessibleTypes.h"
 
-
 using namespace mozilla;
 using namespace mozilla::a11y;
 

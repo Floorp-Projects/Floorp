@@ -377,8 +377,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
             local.mFrameHeight.Construct(streamStats->height);
             local.mFramesSent.Construct(streamStats->frames_encoded);
             local.mHugeFramesSent.Construct(streamStats->huge_frames_sent);
-            local.mTotalEncodeTime.Construct(double(streamStats->total_encode_time_ms) /
-                                             1000.);
+            local.mTotalEncodeTime.Construct(
+                double(streamStats->total_encode_time_ms) / 1000.);
             /*
              * Potential new stats that are now available upstream.
             local.mTargetBitrate.Construct(videoStats->target_media_bitrate_bps);

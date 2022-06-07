@@ -14,7 +14,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
-
 namespace mozilla {
 
 class MediaEngineWebRTC : public MediaEngine {

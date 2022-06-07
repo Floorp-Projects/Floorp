@@ -1084,10 +1084,10 @@ class JS_PUBLIC_API AutoCheckCannotGC : public AutoAssertNoGC {
   AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
 #  endif
 #else
-class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC{
-  public :
-      explicit AutoCheckCannotGC(JSContext* cx = nullptr){} AutoCheckCannotGC(
-          const AutoCheckCannotGC& other) : AutoCheckCannotGC(){}
+class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC {
+ public:
+  explicit AutoCheckCannotGC(JSContext* cx = nullptr) {}
+  AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
 #endif
 } JS_HAZ_GC_INVALIDATED;
 

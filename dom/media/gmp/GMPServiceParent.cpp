@@ -576,12 +576,12 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
   const uint32_t NO_H264_DIR_IN_PROGRESS = 4;
   uint32_t hasH264 = NO_H264;
   if (mDirectoriesAdded == 1) {
-      hasH264 = NO_H264_1_DIR;
+    hasH264 = NO_H264_1_DIR;
   } else if (mDirectoriesAdded > 1) {
-      hasH264 = NO_H264_2_PLUS_DIRS;
+    hasH264 = NO_H264_2_PLUS_DIRS;
   }
   if (mDirectoriesInProgress) {
-      hasH264 = NO_H264_DIR_IN_PROGRESS;
+    hasH264 = NO_H264_DIR_IN_PROGRESS;
   }
   nsTArray<GMPCapabilityData> caps;
   {

@@ -62,9 +62,7 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 
 nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
 
-nsClipboard::~nsClipboard() {
-  ClearSelectionCache();
-}
+nsClipboard::~nsClipboard() { ClearSelectionCache(); }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsClipboard, nsBaseClipboard)
 

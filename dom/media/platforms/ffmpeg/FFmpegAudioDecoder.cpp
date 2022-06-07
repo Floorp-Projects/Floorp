@@ -21,7 +21,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
   if (mCodecID == AV_CODEC_ID_AAC &&
       aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
     const AacCodecSpecificData& aacCodecSpecificData =
-      aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
+        aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
     mExtraData = new MediaByteBuffer;
     // Ffmpeg expects the DecoderConfigDescriptor blob.
     mExtraData->AppendElements(

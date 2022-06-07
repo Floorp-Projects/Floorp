@@ -231,7 +231,8 @@ template <typename Unit>
       if (input.options.populateDelazificationCache() &&
           !cx->isHelperThreadContext()) {
         BorrowingCompilationStencil borrowingStencil(*extensibleStencil);
-        if (!StartOffThreadDelazification(cx, input.options, borrowingStencil)) {
+        if (!StartOffThreadDelazification(cx, input.options,
+                                          borrowingStencil)) {
           return false;
         }
 
@@ -1208,11 +1209,15 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     // Cached results might be removed by GCs.
     if (res == GetCachedResult::Found) {
       auto& concurrentSharedData = cached.as<OutputType>().get()->sharedData;
-      auto concurrentData = concurrentSharedData.isSingle() ?
-        concurrentSharedData.asSingle()->get()->immutableData() :
-        concurrentSharedData.asBorrow()->asSingle()->get()->immutableData();
+      auto concurrentData =
+          concurrentSharedData.isSingle()
+              ? concurrentSharedData.asSingle()->get()->immutableData()
+              : concurrentSharedData.asBorrow()
+                    ->asSingle()
+                    ->get()
+                    ->immutableData();
       auto ondemandData =
-        compilationState.sharedData.asSingle()->get()->immutableData();
+          compilationState.sharedData.asSingle()->get()->immutableData();
       MOZ_RELEASE_ASSERT(concurrentData.Length() == ondemandData.Length(),
                          "Non-deterministic stencils");
       for (size_t i = 0; i < concurrentData.Length(); i++) {

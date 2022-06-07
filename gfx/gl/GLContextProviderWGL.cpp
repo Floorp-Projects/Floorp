@@ -93,13 +93,11 @@ bool WGLLibrary::EnsureInitialized() {
     }
   }
 
-#define SYMBOL(X)                 \
-  {                               \
-    (PRFuncPtr*)&mSymbols.f##X, { \
-      { "wgl" #X }                \
-    }                             \
+#define SYMBOL(X) {(PRFuncPtr*)&mSymbols.f##X, {{"wgl" #X}}}
+#define END_OF_SYMBOLS \
+  {                    \
+    nullptr, {}        \
   }
-#define END_OF_SYMBOLS {nullptr, {}}
 
   {
     const auto loader = SymbolLoader(*mOGLLibrary);

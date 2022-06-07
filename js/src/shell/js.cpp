@@ -4523,11 +4523,9 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
     }
 
     JS::CompileOptions options(cx);
-    options
-        .setFileAndLine("<string>", 1)
+    options.setFileAndLine("<string>", 1)
         .setIsRunOnce(true)
         .setEagerDelazificationStrategy(defaultDelazificationMode);
-
 
     AutoReportException are(cx);
     JS::SourceText<char16_t> srcBuf;
@@ -10911,8 +10909,8 @@ static bool OptionFailure(const char* option, const char* str) {
       const char* code = codeChunks.front();
 
       JS::CompileOptions opts(cx);
-      opts.setFileAndLine("-e", 1)
-          .setEagerDelazificationStrategy(defaultDelazificationMode);
+      opts.setFileAndLine("-e", 1).setEagerDelazificationStrategy(
+          defaultDelazificationMode);
 
       JS::SourceText<Utf8Unit> srcBuf;
       if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed)) {
