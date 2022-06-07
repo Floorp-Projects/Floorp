@@ -315,14 +315,18 @@ class WinUtils {
                               bool aStopIfNotPopup = true);
 
   /**
-   * SetNSWindowBasePtr() associates an nsWindow to aWnd.  If aWidget is
-   * nullptr, it dissociate any nsBaseWidget pointer from aWnd.
-   * GetNSWindowBasePtr() returns an nsWindow pointer which was associated
-   * by SetNSWindowBasePtr(). GetNSWindowPtr() is a legacy api for win32
-   * nsWindow and should be avoided outside of nsWindow src.
+   * SetNSWindowPtr() associates aWindow with aWnd. If aWidget is nullptr, it
+   * instead dissociates any nsWindow from aWnd.
+   *
+   * No AddRef is performed. May not be used off of the main thread.
    */
-  static bool SetNSWindowBasePtr(HWND aWnd, nsWindow* aWidget);
-  static nsWindow* GetNSWindowBasePtr(HWND aWnd);
+  static void SetNSWindowPtr(HWND aWnd, nsWindow* aWindow);
+  /**
+   * GetNSWindowPtr() returns a pointer to the associated nsWindow pointer, if
+   * one exists, or nullptr, if not.
+   *
+   * No AddRef is performed. May not be used off of the main thread.
+   */
   static nsWindow* GetNSWindowPtr(HWND aWnd);
 
   /**
