@@ -539,4 +539,19 @@ TEST(NackTrackerTest, PacketLossRateCorrect) {
   EXPECT_NEAR(nack->GetPacketLossRateForTest(), 1 << 28, (1 << 30) / 100);
 }
 
+TEST(NackTrackerTest, DoNotNackAfterDtx) {
+  const int kNackListSize = 200;
+  std::unique_ptr<NackTracker> nack(NackTracker::Create(0));
+  nack->UpdateSampleRate(kSampleRateHz);
+  nack->SetMaxNackListSize(kNackListSize);
+  uint16_t seq_num = 0;
+  uint32_t timestamp = 0x87654321;
+  nack->UpdateLastReceivedPacket(seq_num, timestamp);
+  EXPECT_TRUE(nack->GetNackList(0).empty());
+  constexpr int kDtxPeriod = 400;
+  nack->UpdateLastReceivedPacket(seq_num + 2,
+                                 timestamp + kDtxPeriod * kSampleRateHz / 1000);
+  EXPECT_TRUE(nack->GetNackList(0).empty());
+}
+
 }  // namespace webrtc
