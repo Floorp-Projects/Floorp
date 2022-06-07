@@ -114,9 +114,6 @@ memmap2 = { path = "build/rust/memmap2" }
 # Patch getrandom 0.7 to 0.8
 rand = { path = "build/rust/rand" }
 
-# Patch hashbrown 0.9 to 0.11
-hashbrown = { path = "build/rust/hashbrown" }
-
 # Patch tokio-util 0.6 to 0.7
 tokio-util = { path = "build/rust/tokio-util" }
 

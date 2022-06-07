@@ -22,16 +22,16 @@
 //! can't return a Result to indicate allocation failure.
 
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(feature = "unstable", feature(try_reserve))]
-#![cfg_attr(feature = "unstable", feature(specialization))]
+#![cfg_attr(all(feature = "unstable", not(feature = "rust_1_57")), feature(try_reserve))]
+#![cfg_attr(feature = "unstable", feature(min_specialization))]
 #![cfg_attr(feature = "unstable", feature(allocator_api))]
 #![cfg_attr(feature = "unstable", feature(dropck_eyepatch))]
 #![cfg_attr(feature = "unstable", feature(ptr_internals))]
 #![cfg_attr(feature = "unstable", feature(core_intrinsics))]
-#![cfg_attr(feature = "unstable", feature(maybe_uninit_ref))]
+#![cfg_attr(all(feature = "unstable", not(feature = "rust_1_57")), feature(maybe_uninit_ref))]
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_slice))]
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_extra))]
-#![cfg_attr(feature = "unstable", feature(internal_uninit_const))]
+#![cfg_attr(feature = "unstable", feature(maybe_uninit_uninit_array))]
 extern crate alloc;
 #[cfg(feature = "std_io")]
 extern crate std;
@@ -55,9 +55,9 @@ pub use hashmap::*;
 pub mod format;
 pub mod try_clone;
 
-#[cfg(feature = "unstable")]
+#[cfg(all(feature = "unstable", not(feature = "rust_1_57")))]
 pub use alloc::collections::TryReserveError;
-#[cfg(not(feature = "unstable"))]
+#[cfg(not(all(feature = "unstable", not(feature = "rust_1_57"))))]
 pub use hashbrown::TryReserveError;
 
 #[cfg(feature = "std_io")]
@@ -78,4 +78,14 @@ pub trait TryClone {
     fn try_clone(&self) -> Result<Self, TryReserveError>
     where
         Self: core::marker::Sized;
+}
+
+#[cfg(feature = "rust_1_57")]
+fn make_try_reserve_error(len: usize, additional: usize, elem_size: usize, align: usize) -> hashbrown::TryReserveError {
+    if let Some(size) = len.checked_add(additional).and_then(|l| l.checked_mul(elem_size)) {
+        if let Ok(layout) = alloc::alloc::Layout::from_size_align(size, align) {
+            return TryReserveError::AllocError { layout }
+        }
+    }
+    TryReserveError::CapacityOverflow
 }

@@ -4,6 +4,7 @@ use crate::TryReserveError;
 use alloc::alloc::Layout;
 use alloc::boxed::Box;
 use core::borrow::Borrow;
+use core::ops::Deref;
 use core::ptr::NonNull;
 
 /// trait to implement Fallible Box
@@ -53,17 +54,27 @@ impl<T: TryClone> TryClone for TryBox<T> {
     }
 }
 
+impl<T> Deref for TryBox<T> {
+    type Target = T;
+
+    #[inline(always)]
+    fn deref(&self) -> &T {
+        self.inner.deref()
+    }
+}
+
 fn alloc(layout: Layout) -> Result<NonNull<u8>, TryReserveError> {
     #[cfg(feature = "unstable")] // requires allocator_api
     {
-        use core::alloc::AllocRef as _;
-        let mut g = alloc::alloc::Global;
-        g.alloc(layout, alloc::alloc::AllocInit::Uninitialized)
+        use core::alloc::Allocator;
+        alloc::alloc::Global
+            .allocate(layout)
             .map_err(|_e| TryReserveError::AllocError {
                 layout,
+                #[cfg(not(feature = "rust_1_57"))]
                 non_exhaustive: (),
             })
-            .map(|memory_block| memory_block.ptr)
+            .map(|v| v.cast())
     }
     #[cfg(not(feature = "unstable"))]
     {
@@ -121,5 +132,20 @@ mod tests {
     fn trybox_zst() {
         let b = <Box<_> as FallibleBox<_>>::try_new(()).expect("ok");
         assert_eq!(b, Box::new(()));
+    }
+
+    struct NonCopyType;
+
+    #[test]
+    fn trybox_deref() {
+        let try_box: TryBox<NonCopyType> = TryBox::try_new(NonCopyType {}).unwrap();
+        let _derefed: &NonCopyType = try_box.deref();
+    }
+
+    #[test]
+    fn trybox_as_deref() {
+        let try_box_option: Option<TryBox<NonCopyType>> =
+            Some(TryBox::try_new(NonCopyType).unwrap());
+        let _ref_option: Option<&NonCopyType> = try_box_option.as_deref();
     }
 }

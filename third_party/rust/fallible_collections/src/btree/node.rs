@@ -38,7 +38,7 @@ use core::slice;
 
 use crate::boxed::FallibleBox;
 use crate::TryReserveError;
-use alloc::alloc::{AllocRef, Global, Layout};
+use alloc::alloc::{Allocator, Global, Layout};
 use alloc::boxed::Box;
 
 const B: usize = 6;
@@ -108,8 +108,8 @@ impl<K, V> LeafNode<K, V> {
         LeafNode {
             // As a general policy, we leave fields uninitialized if they can be, as this should
             // be both slightly faster and easier to track in Valgrind.
-            keys: [MaybeUninit::UNINIT; CAPACITY],
-            vals: [MaybeUninit::UNINIT; CAPACITY],
+            keys: MaybeUninit::uninit_array::<CAPACITY>(),
+            vals: MaybeUninit::uninit_array::<CAPACITY>(),
             parent: ptr::null(),
             parent_idx: MaybeUninit::uninit(),
             len: 0,
@@ -161,7 +161,7 @@ impl<K, V> InternalNode<K, V> {
     unsafe fn new() -> Self {
         InternalNode {
             data: LeafNode::new(),
-            edges: [MaybeUninit::UNINIT; 2 * B],
+            edges: MaybeUninit::uninit_array::<{ 2 * B }>(),
         }
     }
 }
@@ -176,9 +176,8 @@ struct BoxedNode<K, V> {
 
 impl<K, V> BoxedNode<K, V> {
     fn from_leaf(node: Box<LeafNode<K, V>>) -> Self {
-        BoxedNode {
-            ptr: Box::into_unique(node),
-        }
+        let (ptr, _g) = Box::into_unique(node);
+        BoxedNode { ptr: ptr }
     }
 
     fn from_internal(node: Box<InternalNode<K, V>>) -> Self {
@@ -228,7 +227,9 @@ impl<K, V> Root<K, V> {
 
     pub fn new_leaf() -> Result<Self, TryReserveError> {
         Ok(Root {
-            node: BoxedNode::from_leaf(<Box<_> as FallibleBox<_>>::try_new(unsafe { LeafNode::new() })?),
+            node: BoxedNode::from_leaf(<Box<_> as FallibleBox<_>>::try_new(unsafe {
+                LeafNode::new()
+            })?),
             height: 0,
         })
     }
@@ -310,7 +311,7 @@ impl<K, V> Root<K, V> {
         }
 
         unsafe {
-            Global.dealloc(
+            Global.deallocate(
                 NonNull::from(top).cast(),
                 Layout::new::<InternalNode<K, V>>(),
             );
@@ -488,7 +489,7 @@ impl<K, V> NodeRef<marker::Owned, K, V, marker::Leaf> {
         debug_assert!(!self.is_shared_root());
         let node = self.node;
         let ret = self.ascend().ok();
-        Global.dealloc(node.cast(), Layout::new::<LeafNode<K, V>>());
+        Global.deallocate(node.cast(), Layout::new::<LeafNode<K, V>>());
         ret
     }
 }
@@ -502,7 +503,7 @@ impl<K, V> NodeRef<marker::Owned, K, V, marker::Internal> {
     ) -> Option<Handle<NodeRef<marker::Owned, K, V, marker::Internal>, marker::Edge>> {
         let node = self.node;
         let ret = self.ascend().ok();
-        Global.dealloc(node.cast(), Layout::new::<InternalNode<K, V>>());
+        Global.deallocate(node.cast(), Layout::new::<InternalNode<K, V>>());
         ret
     }
 }
@@ -597,7 +598,9 @@ impl<'a, K: 'a, V: 'a, Type> NodeRef<marker::Immut<'a>, K, V, Type> {
     fn into_val_slice(self) -> &'a [V] {
         debug_assert!(!self.is_shared_root());
         // We cannot be the root, so `as_leaf` is okay
-        unsafe { slice::from_raw_parts(MaybeUninit::first_ptr(&self.as_leaf().vals), self.len()) }
+        unsafe {
+            slice::from_raw_parts(MaybeUninit::slice_as_ptr(&self.as_leaf().vals), self.len())
+        }
     }
 
     fn into_slices(self) -> (&'a [K], &'a [V]) {
@@ -621,7 +624,7 @@ impl<'a, K: 'a, V: 'a, Type> NodeRef<marker::Mut<'a>, K, V, Type> {
         } else {
             unsafe {
                 slice::from_raw_parts_mut(
-                    MaybeUninit::first_ptr_mut(&mut (*self.as_leaf_mut()).keys),
+                    MaybeUninit::slice_as_mut_ptr(&mut (*self.as_leaf_mut()).keys),
                     self.len(),
                 )
             }
@@ -632,7 +635,7 @@ impl<'a, K: 'a, V: 'a, Type> NodeRef<marker::Mut<'a>, K, V, Type> {
         debug_assert!(!self.is_shared_root());
         unsafe {
             slice::from_raw_parts_mut(
-                MaybeUninit::first_ptr_mut(&mut (*self.as_leaf_mut()).vals),
+                MaybeUninit::slice_as_mut_ptr(&mut (*self.as_leaf_mut()).vals),
                 self.len(),
             )
         }
@@ -649,9 +652,9 @@ impl<'a, K: 'a, V: 'a, Type> NodeRef<marker::Mut<'a>, K, V, Type> {
             let len = self.len();
             let leaf = self.as_leaf_mut();
             let keys =
-                slice::from_raw_parts_mut(MaybeUninit::first_ptr_mut(&mut (*leaf).keys), len);
+                slice::from_raw_parts_mut(MaybeUninit::slice_as_mut_ptr(&mut (*leaf).keys), len);
             let vals =
-                slice::from_raw_parts_mut(MaybeUninit::first_ptr_mut(&mut (*leaf).vals), len);
+                slice::from_raw_parts_mut(MaybeUninit::slice_as_mut_ptr(&mut (*leaf).vals), len);
             (keys, vals)
         }
     }
@@ -736,7 +739,7 @@ impl<'a, K, V> NodeRef<marker::Mut<'a>, K, V, marker::Internal> {
             slice_insert(self.vals_mut(), 0, val);
             slice_insert(
                 slice::from_raw_parts_mut(
-                    MaybeUninit::first_ptr_mut(&mut self.as_internal_mut().edges),
+                    MaybeUninit::slice_as_mut_ptr(&mut self.as_internal_mut().edges),
                     self.len() + 1,
                 ),
                 0,
@@ -797,7 +800,7 @@ impl<'a, K, V> NodeRef<marker::Mut<'a>, K, V, marker::LeafOrInternal> {
                 ForceResult::Internal(mut internal) => {
                     let edge = slice_remove(
                         slice::from_raw_parts_mut(
-                            MaybeUninit::first_ptr_mut(&mut internal.as_internal_mut().edges),
+                            MaybeUninit::slice_as_mut_ptr(&mut internal.as_internal_mut().edges),
                             old_len + 1,
                         ),
                         0,
@@ -1069,7 +1072,7 @@ impl<'a, K, V> Handle<NodeRef<marker::Mut<'a>, K, V, marker::Internal>, marker::
 
             slice_insert(
                 slice::from_raw_parts_mut(
-                    MaybeUninit::first_ptr_mut(&mut self.node.as_internal_mut().edges),
+                    MaybeUninit::slice_as_mut_ptr(&mut self.node.as_internal_mut().edges),
                     self.node.len(),
                 ),
                 self.idx + 1,
@@ -1378,9 +1381,9 @@ impl<'a, K, V> Handle<NodeRef<marker::Mut<'a>, K, V, marker::Internal>, marker::
                         .correct_parent_link();
                 }
 
-                Global.dealloc(right_node.node.cast(), Layout::new::<InternalNode<K, V>>());
+                Global.deallocate(right_node.node.cast(), Layout::new::<InternalNode<K, V>>());
             } else {
-                Global.dealloc(right_node.node.cast(), Layout::new::<LeafNode<K, V>>());
+                Global.deallocate(right_node.node.cast(), Layout::new::<LeafNode<K, V>>());
             }
 
             Handle::new_edge(self.node, self.idx)
