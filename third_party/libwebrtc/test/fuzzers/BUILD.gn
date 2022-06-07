@@ -559,6 +559,17 @@ webrtc_fuzzer_test("rtp_dependency_descriptor_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("rtp_video_layers_allocation_fuzzer") {
+  sources = [ "rtp_video_layers_allocation_fuzzer.cc" ]
+  seed_corpus = "corpora/video_layers_allocation-corpus"
+  deps = [
+    "../../api:array_view",
+    "../../api/video:video_layers_allocation",
+    "../../modules/rtp_rtcp:rtp_rtcp_format",
+    "../../rtc_base:checks",
+  ]
+}
+
 webrtc_fuzzer_test("rtp_frame_reference_finder_fuzzer") {
   sources = [ "rtp_frame_reference_finder_fuzzer.cc" ]
   deps = [

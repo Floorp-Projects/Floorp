@@ -289,7 +289,7 @@ bool RtpVideoLayersAllocationExtension::Parse(
   if (data.size() == 1 && *read_at == 0) {
     allocation->rtp_stream_index = 0;
     allocation->resolution_and_frame_rate_is_valid = true;
-    return true;
+    return AllocationIsValid(*allocation);
   }
 
   // Header byte.
@@ -366,7 +366,7 @@ bool RtpVideoLayersAllocationExtension::Parse(
 
   if (read_at == end) {
     allocation->resolution_and_frame_rate_is_valid = false;
-    return true;
+    return AllocationIsValid(*allocation);
   }
 
   if (read_at + 5 * allocation->active_spatial_layers.size() != end) {
@@ -383,7 +383,8 @@ bool RtpVideoLayersAllocationExtension::Parse(
     layer.frame_rate_fps = *read_at;
     ++read_at;
   }
-  return true;
+
+  return AllocationIsValid(*allocation);
 }
 
 size_t RtpVideoLayersAllocationExtension::ValueSize(
