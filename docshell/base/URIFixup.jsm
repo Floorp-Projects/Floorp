@@ -29,53 +29,55 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "externalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "defaultProtocolHandler",
   "@mozilla.org/network/protocol;1?name=default",
   "nsIProtocolHandler"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "fileProtocolHandler",
   "@mozilla.org/network/protocol;1?name=file",
   "nsIFileProtocolHandler"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fixupSchemeTypos",
   "browser.fixup.typo.scheme",
   true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "dnsFirstForSingleWords",
   "browser.fixup.dns_first_for_single_words",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "keywordEnabled",
   "keyword.enabled",
   true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "alternateEnabled",
   "browser.fixup.alternate.enabled",
   true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "alternateProtocol",
   "browser.fixup.alternate.protocol",
   "https"
@@ -95,19 +97,19 @@ const COMMON_PROTOCOLS = ["http", "https", "file"];
 // This is not a strict valid characters check, because we try to fixup this
 // part of the url too.
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "userPasswordRegex",
   () => /^([a-z+.-]+:\/{0,3})*([^\/@]+@).+/i
 );
 
 // Regex used to identify the string that starts with port expression.
-XPCOMUtils.defineLazyGetter(this, "portRegex", () => /^:\d{1,5}([?#/]|$)/);
+XPCOMUtils.defineLazyGetter(lazy, "portRegex", () => /^:\d{1,5}([?#/]|$)/);
 
 // Regex used to identify numbers.
-XPCOMUtils.defineLazyGetter(this, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
+XPCOMUtils.defineLazyGetter(lazy, "numberRegex", () => /^[0-9]+(\.[0-9]+)?$/);
 
 // Regex used to identify tab separated content (having at least 2 tabs).
-XPCOMUtils.defineLazyGetter(this, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
+XPCOMUtils.defineLazyGetter(lazy, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
 
 // Regex used to test if a string with a protocol might instead be a url
 // without a protocol but with a port:
@@ -127,20 +129,20 @@ XPCOMUtils.defineLazyGetter(this, "maxOneTabRegex", () => /^[^\t]*\t?[^\t]*$/);
 // Note: Parser could be a lot tighter, tossing out silly hostnames
 //       such as those containing consecutive dots and so on.
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "possiblyHostPortRegex",
   () => /^[a-z0-9-]+(\.[a-z0-9-]+)*:[0-9]{1,5}([/?#]|$)/i
 );
 
 // Regex used to strip newlines.
-XPCOMUtils.defineLazyGetter(this, "newLinesRegex", () => /[\r\n]/g);
+XPCOMUtils.defineLazyGetter(lazy, "newLinesRegex", () => /[\r\n]/g);
 
 // Regex used to match a possible protocol.
 // This resembles the logic in Services.io.extractScheme, thus \t is admitted
 // and stripped later. We don't use Services.io.extractScheme because of
 // performance bottleneck caused by crossing XPConnect.
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "possibleProtocolRegex",
   () => /^([a-z][a-z0-9.+\t-]*)(:|;)?(\/\/)?/i
 );
@@ -149,19 +151,19 @@ XPCOMUtils.defineLazyGetter(
 // just to detect strings that look like an IP. They also skip protocol.
 // For IPv4 this also accepts a shorthand format with just 2 dots.
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "IPv4LikeRegex",
   () => /^(?:[a-z+.-]+:\/*(?!\/))?(?:\d{1,3}\.){2,3}\d{1,3}(?::\d+|\/)?/i
 );
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "IPv6LikeRegex",
   () =>
     /^(?:[a-z+.-]+:\/*(?!\/))?\[(?:[0-9a-f]{0,4}:){0,7}[0-9a-f]{0,4}\]?(?::\d+|\/)?/i
 );
 
 // Cache of known domains.
-XPCOMUtils.defineLazyGetter(this, "knownDomains", () => {
+XPCOMUtils.defineLazyGetter(lazy, "knownDomains", () => {
   const branch = "browser.fixup.domainwhitelist.";
   let domains = new Set(
     Services.prefs
@@ -198,7 +200,7 @@ XPCOMUtils.defineLazyGetter(this, "knownDomains", () => {
 // When searching we can restrict the linear scan based on the last part.
 // The ideal structure for this would be a Directed Acyclic Word Graph, but
 // since we expect this list to be small it's not worth the complication.
-XPCOMUtils.defineLazyGetter(this, "knownSuffixes", () => {
+XPCOMUtils.defineLazyGetter(lazy, "knownSuffixes", () => {
   const branch = "browser.fixup.domainsuffixwhitelist.";
   let suffixes = new Map();
   let prefs = Services.prefs
@@ -270,7 +272,7 @@ URIFixup.prototype = {
 
     // Eliminate embedded newlines, which single-line text fields now allow,
     // and cleanup the empty spaces and tabs that might be on each end.
-    uriString = uriString.trim().replace(newLinesRegex, "");
+    uriString = uriString.trim().replace(lazy.newLinesRegex, "");
 
     if (!uriString) {
       throw new Components.Exception(
@@ -312,16 +314,16 @@ URIFixup.prototype = {
     let canHandleProtocol =
       scheme &&
       (isCommonProtocol ||
-        Services.io.getProtocolHandler(scheme) != defaultProtocolHandler ||
-        externalProtocolService.externalProtocolHandlerExists(scheme));
+        Services.io.getProtocolHandler(scheme) != lazy.defaultProtocolHandler ||
+        lazy.externalProtocolService.externalProtocolHandlerExists(scheme));
 
     if (
       canHandleProtocol ||
       // If it's an unknown handler and the given URL looks like host:port or
       // has a user:password we can't pass it to the external protocol handler.
       // We'll instead try fixing it with http later.
-      (!possiblyHostPortRegex.test(uriString) &&
-        !userPasswordRegex.test(uriString))
+      (!lazy.possiblyHostPortRegex.test(uriString) &&
+        !lazy.userPasswordRegex.test(uriString))
     ) {
       // Just try to create an URL out of it.
       try {
@@ -341,7 +343,7 @@ URIFixup.prototype = {
     // instead of FIXUP_FLAG_FIX_SCHEME_TYPOS.
     if (
       info.fixedURI &&
-      keywordEnabled &&
+      lazy.keywordEnabled &&
       fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS &&
       scheme &&
       !canHandleProtocol
@@ -372,7 +374,7 @@ URIFixup.prototype = {
     // Avoid fixing up content that looks like tab-separated values.
     // Assume that 1 tab is accidental, but more than 1 implies this is
     // supposed to be tab-separated content.
-    if (!isCommonProtocol && maxOneTabRegex.test(uriString)) {
+    if (!isCommonProtocol && lazy.maxOneTabRegex.test(uriString)) {
       let uriWithProtocol = fixupURIProtocol(uriString);
       if (uriWithProtocol) {
         info.fixedURI = uriWithProtocol;
@@ -410,7 +412,7 @@ URIFixup.prototype = {
 
     // See if it is a keyword and whether a keyword must be fixed up.
     if (
-      keywordEnabled &&
+      lazy.keywordEnabled &&
       fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol &&
       !checkSuffix(info).suffix &&
@@ -430,7 +432,7 @@ URIFixup.prototype = {
 
     // If we still haven't been able to construct a valid URI, try to force a
     // keyword match.
-    if (keywordEnabled && fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
+    if (lazy.keywordEnabled && fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
       tryKeywordFixupForURIInfo(info.originalInput, info, isPrivateContext);
     }
 
@@ -608,7 +610,7 @@ URIFixupInfo.prototype = {
  * @returns {boolean} whether the domain is known
  */
 function isDomainKnown(asciiHost) {
-  if (dnsFirstForSingleWords) {
+  if (lazy.dnsFirstForSingleWords) {
     return true;
   }
   // Check if this domain is known as an actual
@@ -620,7 +622,7 @@ function isDomainKnown(asciiHost) {
     asciiHost = asciiHost.substring(0, asciiHost.length - 1);
     lastDotIndex = asciiHost.lastIndexOf(".");
   }
-  if (knownDomains.has(asciiHost.toLowerCase())) {
+  if (lazy.knownDomains.has(asciiHost.toLowerCase())) {
     return true;
   }
   // If there's no dot or only a leading dot we are done, otherwise we'll check
@@ -632,7 +634,7 @@ function isDomainKnown(asciiHost) {
   // thus it couldn't tell if the suffix is made up of one or multiple
   // dot-separated parts.
   let lastPart = asciiHost.substr(lastDotIndex + 1);
-  let suffixes = knownSuffixes.get(lastPart);
+  let suffixes = lazy.knownSuffixes.get(lastPart);
   if (suffixes) {
     return Array.from(suffixes).some(s => asciiHost.endsWith(s));
   }
@@ -686,7 +688,7 @@ function checkAndFixPublicSuffix(info) {
   // Suffix is unknown, try to fix most common 3 chars TLDs typos.
   // .com is the most commonly mistyped tld, so it has more cases.
   let suffix = Services.eTLD.getPublicSuffix(uri);
-  if (!suffix || numberRegex.test(suffix)) {
+  if (!suffix || lazy.numberRegex.test(suffix)) {
     return { suffix: "", hasUnknownSuffix: false };
   }
   for (let [typo, fixed] of [
@@ -748,7 +750,7 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
   let uri = info.fixedURI;
   if (
     !(fixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) ||
-    !alternateEnabled ||
+    !lazy.alternateEnabled ||
     // Code only works for http. Not for any other protocol including https!
     !uri.schemeIs("http") ||
     // Security - URLs with user / password info should NOT be fixed up
@@ -797,7 +799,7 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
   try {
     info.fixedURI = uri
       .mutate()
-      .setScheme(alternateProtocol)
+      .setScheme(lazy.alternateProtocol)
       .setHost(newHost)
       .finalize();
   } catch (ex) {
@@ -834,7 +836,7 @@ function fileURIFixup(uriString) {
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(uriString);
       return Services.io.newURI(
-        fileProtocolHandler.getURLSpecFromActualFile(file)
+        lazy.fileProtocolHandler.getURLSpecFromActualFile(file)
       );
     } catch (ex) {
       // Not a file uri.
@@ -906,11 +908,11 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
   }
 
   // Check for IPs.
-  const userPassword = userPasswordRegex.exec(uriString);
+  const userPassword = lazy.userPasswordRegex.exec(uriString);
   const ipString = userPassword
     ? uriString.replace(userPassword[2], "")
     : uriString;
-  if (IPv4LikeRegex.test(ipString) || IPv6LikeRegex.test(ipString)) {
+  if (lazy.IPv4LikeRegex.test(ipString) || lazy.IPv6LikeRegex.test(ipString)) {
     return false;
   }
 
@@ -961,12 +963,12 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
  *          fixupChangedProtocol: true if the scheme is fixed up
  */
 function extractScheme(uriString, fixupFlags = FIXUP_FLAG_NONE) {
-  const matches = uriString.match(possibleProtocolRegex);
+  const matches = uriString.match(lazy.possibleProtocolRegex);
   const hasColon = matches?.[2] === ":";
   const hasSlash2 = matches?.[3] === "//";
 
   const isFixupSchemeTypos =
-    fixupSchemeTypos && fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS;
+    lazy.fixupSchemeTypos && fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS;
 
   if (
     !matches ||
@@ -1121,5 +1123,5 @@ function isURILike(uriString, host) {
     uriString = uriString.substring(host.length);
   }
 
-  return portRegex.test(uriString);
+  return lazy.portRegex.test(uriString);
 }
