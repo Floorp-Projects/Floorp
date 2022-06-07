@@ -9,7 +9,7 @@ edition = "2021"
 rusqlite = { version = "0.27.0", optional = true, features = ["bundled"] }
 serde = { version = "1", optional = true }
 rand = { version = "0.8", optional = true }
-base64 = { version = "0.12", optional = true }
+base64 = { version = "0.13", optional = true }
 
 [features]
 random = ["rand", "base64"]

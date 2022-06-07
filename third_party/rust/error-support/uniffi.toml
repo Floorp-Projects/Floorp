@@ -1,0 +1,3 @@
+[bindings.kotlin]
+package_name = "mozilla.appservices.errorsupport"
+cdylib_name = "megazord"
