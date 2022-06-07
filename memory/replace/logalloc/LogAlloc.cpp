@@ -28,8 +28,8 @@ static Mutex sMutex MOZ_UNANNOTATED;
 
 #ifndef _WIN32
 static void prefork() { sMutex.Lock(); }
-
-static void postfork() { sMutex.Unlock(); }
+static void postfork_parent() { sMutex.Unlock(); }
+static void postfork_child() { sMutex.Init(); }
 #endif
 
 static size_t GetPid() { return size_t(getpid()); }
@@ -206,8 +206,11 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
    * in the child process, will never release it, leading to a dead-lock
    * whenever the child process gets the lock. We thus need to ensure no
    * other thread is holding the lock before forking, by acquiring it
-   * ourselves, and releasing it after forking, both in the parent and child
-   * processes.
+   * ourselves, and releasing it after forking in the parent process and
+   * resetting it to its initial state in the child process. The latter is
+   * important because some implementations (notably macOS) prevent a lock from
+   * being unlocked by a different thread than the one which locked it in the
+   * first place.
    * Windows doesn't have this problem since there is no fork().
    * The real allocator, however, might be doing the same thing (jemalloc
    * does). But pthread_atfork `prepare` handlers (first argument) are
@@ -230,6 +233,6 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
    * So trick the real allocator into initializing itself without more side
    * effects by calling malloc with a size it can't possibly allocate. */
   sFuncs.malloc(-1);
-  pthread_atfork(prefork, postfork, postfork);
+  pthread_atfork(prefork, postfork_parent, postfork_child);
 #endif
 }
