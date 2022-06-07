@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
+source = "git+https://github.com/mozilla/audioipc?rev=6848974a4a91ebd3e18333c9a96a421d619a2dc8#6848974a4a91ebd3e18333c9a96a421d619a2dc8"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -234,7 +234,7 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
+source = "git+https://github.com/mozilla/audioipc?rev=6848974a4a91ebd3e18333c9a96a421d619a2dc8#6848974a4a91ebd3e18333c9a96a421d619a2dc8"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -248,7 +248,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=c144368c4e084ec0f076af6262970655c2d99e8d#c144368c4e084ec0f076af6262970655c2d99e8d"
+source = "git+https://github.com/mozilla/audioipc?rev=6848974a4a91ebd3e18333c9a96a421d619a2dc8#6848974a4a91ebd3e18333c9a96a421d619a2dc8"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -1482,7 +1482,10 @@ dependencies = [
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "etagere"
@@ -2084,8 +2087,11 @@ dependencies = [
  "rust_minidump_writer_linux",
  "static_prefs",
  "storage",
+ "tokio-reactor",
+ "tokio-threadpool",
  "unic-langid",
  "unic-langid-ffi",
+ "url",
  "viaduct",
  "webext_storage_bridge",
  "webrender_bindings",
@@ -2549,7 +2555,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "lazy_static",
  "parking_lot",
@@ -3626,7 +3632,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 
 [[package]]
 name = "nsstring"
@@ -4783,7 +4789,7 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "ffi-support",
  "interrupt-support",
@@ -4964,9 +4970,9 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
- "base64 0.12.3",
+ "base64 0.13.0",
  "rand 0.8.5",
  "rusqlite",
  "serde",
@@ -4975,7 +4981,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "anyhow",
  "ffi-support",
@@ -5144,17 +5150,12 @@ dependencies = [
  "futures 0.1.31",
  "mio 0.6.23",
  "num_cpus",
- "tokio-codec",
  "tokio-current-thread",
  "tokio-executor",
- "tokio-fs",
  "tokio-io",
  "tokio-reactor",
- "tokio-tcp",
  "tokio-threadpool",
  "tokio-timer",
- "tokio-udp",
- "tokio-uds",
 ]
 
 [[package]]
@@ -5175,17 +5176,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-codec"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25b2998660ba0e70d18684de5d06b70b70a3a747469af9dea7618cc59e75976b"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.31",
- "tokio-io",
-]
-
-[[package]]
 name = "tokio-current-thread"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5203,17 +5193,6 @@ checksum = "fb2d1b8f4548dbf5e1f7818512e9c406860678f29c300cdf0ebac72d1a3a1671"
 dependencies = [
  "crossbeam-utils 0.7.2",
  "futures 0.1.31",
-]
-
-[[package]]
-name = "tokio-fs"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "297a1206e0ca6302a0eed35b700d292b275256f596e2f3fea7729d5e629b6ff4"
-dependencies = [
- "futures 0.1.31",
- "tokio-io",
- "tokio-threadpool",
 ]
 
 [[package]]
@@ -5264,20 +5243,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-tcp"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98df18ed66e3b72e742f185882a9e201892407957e45fbff8da17ae7a7c51f72"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.31",
- "iovec",
- "mio 0.6.23",
- "tokio-io",
- "tokio-reactor",
-]
-
-[[package]]
 name = "tokio-threadpool"
 version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5304,39 +5269,6 @@ dependencies = [
  "futures 0.1.31",
  "slab",
  "tokio-executor",
-]
-
-[[package]]
-name = "tokio-udp"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2a0b10e610b39c38b031a2fcab08e4b82f16ece36504988dcbd81dbba650d82"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.31",
- "log",
- "mio 0.6.23",
- "tokio-codec",
- "tokio-io",
- "tokio-reactor",
-]
-
-[[package]]
-name = "tokio-uds"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab57a4ac4111c8c9dbcf70779f6fc8bc35ae4b2454809febac840ad19bd7e4e0"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.31",
- "iovec",
- "libc",
- "log",
- "mio 0.6.23",
- "mio-uds",
- "tokio-codec",
- "tokio-io",
- "tokio-reactor",
 ]
 
 [[package]]
@@ -5609,7 +5541,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "ffi-support",
  "log",
@@ -5761,7 +5693,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=a44feb6b6a2151bf094f3385145a0827a9fbc7cc#a44feb6b6a2151bf094f3385145a0827a9fbc7cc"
+source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "error-support",
  "ffi-support",

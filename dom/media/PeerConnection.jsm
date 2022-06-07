@@ -5,8 +5,9 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm"
 );
@@ -605,8 +606,8 @@ class RTCPeerConnection {
 
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
-    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout);
-    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout);
+    this._localIdp = new lazy.PeerConnectionIdp(this._win, idpTimeout);
+    this._remoteIdp = new lazy.PeerConnectionIdp(this._win, idpTimeout);
   }
 
   // Add a function to the internal operations chain.

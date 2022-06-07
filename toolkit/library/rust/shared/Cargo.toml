@@ -25,8 +25,17 @@ cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="df4dc028
 cubeb-sys = { version = "0.10", optional = true, features=["gecko-in-tree"] }
 audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
 audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "85e9839059f4bf8f68130825b8fd02c39a6a51b9", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "c144368c4e084ec0f076af6262970655c2d99e8d", optional = true }
+audioipc-client = { git = "https://github.com/mozilla/audioipc", rev = "6848974a4a91ebd3e18333c9a96a421d619a2dc8", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc", rev = "6848974a4a91ebd3e18333c9a96a421d619a2dc8", optional = true }
+# Force tokio-reactor on an old version to avoid new dependencies of newer versions.
+# Remove when audioipc-client and audioipc-server above are replaced with
+# audioipc2-client and audioipc2-server.
+tokio-reactor = { version = "=0.1.3", optional = true }
+# Force tokio-threadpool on an old version that doesn't depend on crossbeam-queue 0.2
+# that has licensing issues.
+# Remove when audioipc-client and audioipc-server above are replaced with
+# audioipc2-client and audioipc2-server.
+tokio-threadpool = { version = "=0.1.17", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -76,6 +85,9 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
+
+# Force url to stay at 2.1.0. See bug 1734538.
+url = "=2.1.0"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
