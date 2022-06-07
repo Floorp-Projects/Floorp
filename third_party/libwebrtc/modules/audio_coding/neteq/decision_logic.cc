@@ -22,21 +22,28 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/field_trial.h"
 
+namespace webrtc {
+
 namespace {
 
 constexpr int kPostponeDecodingLevel = 50;
 constexpr int kDefaultTargetLevelWindowMs = 100;
 constexpr int kDecelerationTargetLevelOffsetMs = 85;
 
-}  // namespace
+std::unique_ptr<DelayManager> CreateDelayManager(
+    const NetEqController::Config& neteq_config) {
+  DelayManager::Config config;
+  config.max_packets_in_buffer = neteq_config.max_packets_in_buffer;
+  config.base_minimum_delay_ms = neteq_config.base_min_delay_ms;
+  config.Log();
+  return std::make_unique<DelayManager>(config, neteq_config.tick_timer);
+}
 
-namespace webrtc {
+}  // namespace
 
 DecisionLogic::DecisionLogic(NetEqController::Config config)
     : DecisionLogic(config,
-                    DelayManager::Create(config.max_packets_in_buffer,
-                                         config.base_min_delay_ms,
-                                         config.tick_timer),
+                    CreateDelayManager(config),
                     std::make_unique<BufferLevelFilter>()) {}
 
 DecisionLogic::DecisionLogic(
