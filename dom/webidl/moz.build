@@ -1012,6 +1012,7 @@ WEBIDL_FILES = [
     "XULCommandEvent.webidl",
     "XULElement.webidl",
     "XULPopupElement.webidl",
+    "XULResizerElement.webidl",
 ]
 
 if CONFIG["MOZ_DOM_STREAMS"]:

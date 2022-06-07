@@ -22,7 +22,7 @@
 <panel id="panel" onpopupshown="doPanelTest(this)" onpopuphidden="nextPopupTest(this)"
        orient="vertical"
        align="start" pack="start" style="appearance: none; margin: 0; border: 0; padding: 0;">
-  <resizer id="popupresizer" dir="bottomright" flex="1" width="60" height="60"
+  <hbox id="popupresizer" dir="bottomright" flex="1" width="60" height="60"
            style="appearance: none; margin: 0; border: 0; padding: 0;"/>
 </panel>
 
@@ -80,10 +80,6 @@ var popupTests = [
   { testname: "popup with maximum size",
     maxwidth: 50, maxheight: 45,
     width: 50, height: 45,
-  },
-  { testname: "popup with minimum and size",
-    minwidth: 80, minheight: 70, maxwidth: 250, maxheight: 220,
-    width: 80, height: 70, last: true
   }
 ];
 
@@ -155,24 +151,6 @@ function doPanelTest(panel)
   is(rect.width, popupTests[gTestId].width, popupTests[gTestId].testname + " width");
   is(rect.height, popupTests[gTestId].height, popupTests[gTestId].testname + " height");
 
-  if ('last' in popupTests[gTestId]) {
-    var resizer = document.getElementById("popupresizer");
-    synthesizeMouse(resizer, 4, 4, { type:"mousedown" });
-    synthesizeMouse(resizer, 800, 800, { type:"mousemove" });
-
-    rect = panel.getBoundingClientRect();
-    is(rect.width, 250, "Popup width after maximum resize");
-    is(rect.height, 220, "Popup height after maximum resize");
-
-    synthesizeMouse(resizer, -100, -100, { type:"mousemove" });
-
-    rect = panel.getBoundingClientRect();
-    is(rect.width, 80, "Popup width after minimum resize");
-    is(rect.height, 70, "Popup height after minimum resize");
-
-    synthesizeMouse(resizer, 4, 4, { type:"mouseup" });
-  }
-
   panel.hidePopup();
 }
 
@@ -195,11 +173,6 @@ function nextPopupTest(panel)
     setattr("minheight");
     setattr("maxwidth");
     setattr("maxheight");
-
-    // Remove the flexibility as it causes the resizer to not shrink down
-    // when resizing.
-    if ("last" in popupTests[gTestId])
-      document.getElementById("popupresizer").removeAttribute("flex");
 
     // Prevent event loop starvation as a result of popup events being
     // synchronous. See bug 1131576.
