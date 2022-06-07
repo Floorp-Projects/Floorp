@@ -66,7 +66,10 @@ class TransmissionControlBlock : public Context {
         t3_rtx_(timer_manager_.CreateTimer(
             "t3-rtx",
             absl::bind_front(&TransmissionControlBlock::OnRtxTimerExpiry, this),
-            TimerOptions(options.rto_initial))),
+            TimerOptions(options.rto_initial,
+                         TimerBackoffAlgorithm::kExponential,
+                         /*max_restarts=*/absl::nullopt,
+                         options.max_timer_backoff_duration))),
         delayed_ack_timer_(timer_manager_.CreateTimer(
             "delayed-ack",
             absl::bind_front(&TransmissionControlBlock::OnDelayedAckTimerExpiry,

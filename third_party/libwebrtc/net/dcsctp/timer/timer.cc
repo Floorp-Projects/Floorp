@@ -26,10 +26,10 @@ TimeoutID MakeTimeoutId(TimerID timer_id, TimerGeneration generation) {
   return TimeoutID(static_cast<uint64_t>(*timer_id) << 32 | *generation);
 }
 
-DurationMs GetBackoffDuration(TimerBackoffAlgorithm algorithm,
+DurationMs GetBackoffDuration(const TimerOptions& options,
                               DurationMs base_duration,
                               int expiration_count) {
-  switch (algorithm) {
+  switch (options.backoff_algorithm) {
     case TimerBackoffAlgorithm::kFixed:
       return base_duration;
     case TimerBackoffAlgorithm::kExponential: {
@@ -38,6 +38,11 @@ DurationMs GetBackoffDuration(TimerBackoffAlgorithm algorithm,
       while (expiration_count > 0 && duration_ms < *Timer::kMaxTimerDuration) {
         duration_ms *= 2;
         --expiration_count;
+
+        if (options.max_backoff_duration.has_value() &&
+            duration_ms > **options.max_backoff_duration) {
+          return *options.max_backoff_duration;
+        }
       }
 
       return DurationMs(std::min(duration_ms, *Timer::kMaxTimerDuration));
@@ -99,8 +104,8 @@ void Timer::Trigger(TimerGeneration generation) {
       // timer. Note that it might be very quickly restarted again, if the
       // `on_expired_` callback returns a new duration.
       is_running_ = true;
-      DurationMs duration = GetBackoffDuration(options_.backoff_algorithm,
-                                               duration_, expiration_count_);
+      DurationMs duration =
+          GetBackoffDuration(options_, duration_, expiration_count_);
       generation_ = TimerGeneration(*generation_ + 1);
       timeout_->Start(duration, MakeTimeoutId(id_, generation_));
     }
@@ -112,8 +117,8 @@ void Timer::Trigger(TimerGeneration generation) {
         // Restart it with new duration.
         timeout_->Stop();
 
-        DurationMs duration = GetBackoffDuration(options_.backoff_algorithm,
-                                                 duration_, expiration_count_);
+        DurationMs duration =
+            GetBackoffDuration(options_, duration_, expiration_count_);
         generation_ = TimerGeneration(*generation_ + 1);
         timeout_->Start(duration, MakeTimeoutId(id_, generation_));
       }
