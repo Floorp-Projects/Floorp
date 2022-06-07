@@ -128,9 +128,9 @@ function handleRequest(request, response) {
 
   // Prepare content in two parts for responses.
   var partialContent =
-    '<html><head></head><body><p id="firstResponse">' + "First response</p>";
+    '<html><head></head><body><p id="firstResponse">First response</p>';
   var remainderContent =
-    '<p id="secondResponse">Second response</p>' + "</body></html>";
+    '<p id="secondResponse">Second response</p></body></html>';
   var totalLength = partialContent.length + remainderContent.length;
 
   DBG("totalLength: " + totalLength);
