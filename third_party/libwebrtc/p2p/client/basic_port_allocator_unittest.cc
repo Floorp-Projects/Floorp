@@ -470,7 +470,8 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
           rtc::NAT_OPEN_CONE, vss_.get(), kNatUdpAddr, kNatTcpAddr, vss_.get(),
           rtc::SocketAddress(kNatUdpAddr.ipaddr(), 0)));
     } else {
-      nat_socket_factory_.reset(new rtc::BasicPacketSocketFactory());
+      nat_socket_factory_ =
+          std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get());
     }
 
     ServerAddresses stun_servers;
