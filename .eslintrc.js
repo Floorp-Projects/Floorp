@@ -93,19 +93,6 @@ module.exports = {
       },
     },
     {
-      files: "*.sjs",
-      rules: {
-        "no-empty": "warn",
-        "no-shadow": "warn",
-        "no-fallthrough": "warn",
-        "no-control-regex": "warn",
-        "no-throw-literal": "warn",
-        "no-useless-concat": "warn",
-        "mozilla/use-includes-instead-of-indexOf": "warn",
-        "mozilla/no-compare-against-boolean-literals": "warn",
-      },
-    },
-    {
       files: [
         "*.html",
         "*.xhtml",

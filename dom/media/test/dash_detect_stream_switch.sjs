@@ -48,19 +48,25 @@ function handleRequest(request, response) {
         range == "bytes=25514-32767") ||
       (name == "dash-webm-video-428x240.webm" && range == "bytes=228-35852")
     ) {
-      throw "Should not request " + name + " with byte-range " + range;
+      throw new Error(
+        "Should not request " + name + " with byte-range " + range
+      );
     } else {
       var rangeSplit = range.split("=");
       if (rangeSplit.length != 2) {
-        throw "DASH-SJS: ERROR: invalid number of tokens (" +
-          rangeSplit.length +
-          ") delimited by '=' in 'Range' header.";
+        throw new Error(
+          "DASH-SJS: ERROR: invalid number of tokens (" +
+            rangeSplit.length +
+            ") delimited by '=' in 'Range' header."
+        );
       }
       var offsets = rangeSplit[1].split("-");
       if (offsets.length != 2) {
-        throw "DASH-SJS: ERROR: invalid number of tokens (" +
-          offsets.length +
-          ") delimited by '-' in 'Range' header.";
+        throw new Error(
+          "DASH-SJS: ERROR: invalid number of tokens (" +
+            offsets.length +
+            ") delimited by '-' in 'Range' header."
+        );
       }
       var startOffset = parseInt(offsets[0]);
       var endOffset = parseInt(offsets[1]);
@@ -81,11 +87,13 @@ function handleRequest(request, response) {
       fis.init(file, -1, -1, false);
       // Exception: start offset should be within file bounds.
       if (startOffset > file.fileSize) {
-        throw "Starting offset [" +
-          startOffset +
-          "] is after end of file [" +
-          file.fileSize +
-          "].";
+        throw new Error(
+          "Starting offset [" +
+            startOffset +
+            "] is after end of file [" +
+            file.fileSize +
+            "]."
+        );
       }
       // End offset may be too large in the MPD. Real world HTTP servers just
       // return what data they can; do the same here - reduce the end offset.

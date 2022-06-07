@@ -58,9 +58,9 @@ function handleRequest(request, response) {
     bis.setInputStream(fis);
 
     var sendContentType = parseQuery(request, "nomime");
-    if (sendContentType == false) {
+    if (!sendContentType) {
       var contentType = parseQuery(request, "type");
-      if (contentType == false) {
+      if (!contentType) {
         // This should not happen.
         dump("No type specified without having 'nomime' in parameters.");
         return;
