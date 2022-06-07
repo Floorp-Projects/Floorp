@@ -39,11 +39,23 @@ impl CustomDistributionMetric {
         if need_ipc() {
             CustomDistributionMetric::Child(CustomDistributionMetricIpc(id))
         } else {
+            debug_assert!(
+                range_min <= i64::MAX as u64,
+                "sensible limits enforced by glean_parser"
+            );
+            debug_assert!(
+                range_max <= i64::MAX as u64,
+                "sensible limits enforced by glean_parser"
+            );
+            debug_assert!(
+                bucket_count <= i64::MAX as u64,
+                "sensible limits enforced by glean_parser"
+            );
             let inner = glean::private::CustomDistributionMetric::new(
                 meta,
-                range_min,
-                range_max,
-                bucket_count,
+                range_min as i64,
+                range_max as i64,
+                bucket_count as i64,
                 histogram_type,
             );
             CustomDistributionMetric::Parent { id, inner }
@@ -63,13 +75,11 @@ impl CustomDistributionMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl CustomDistribution for CustomDistributionMetric {
-    fn accumulate_samples_signed(&self, samples: Vec<i64>) {
+    pub fn accumulate_samples_signed(&self, samples: Vec<i64>) {
         match self {
-            CustomDistributionMetric::Parent { inner, .. } => {
-                inner.accumulate_samples_signed(samples)
-            }
+            CustomDistributionMetric::Parent { inner, .. } => inner.accumulate_samples(samples),
             CustomDistributionMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
                     if let Some(v) = payload.custom_samples.get_mut(&c.0) {
@@ -82,10 +92,11 @@ impl CustomDistribution for CustomDistributionMetric {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
     ) -> Option<DistributionData> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             CustomDistributionMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             CustomDistributionMetric::Child(c) => {
@@ -94,11 +105,12 @@ impl CustomDistribution for CustomDistributionMetric {
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             CustomDistributionMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)

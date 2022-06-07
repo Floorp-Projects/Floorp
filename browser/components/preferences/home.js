@@ -604,7 +604,6 @@ var gHomePane = {
     if (browserHomePage.length > 4 && browserHomePage.includes(".")) {
       this._telemetryHomePageTimer = setTimeout(() => {
         let homePageNumber = browserHomePage.split("|").length;
-        Services.telemetry.scalarAdd("preferences.browser_home_page_change", 1);
         Services.telemetry.keyedScalarAdd(
           "preferences.browser_home_page_count",
           homePageNumber,

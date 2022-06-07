@@ -61,12 +61,12 @@ impl DenominatorMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Counter for DenominatorMetric {
-    fn add(&self, amount: i32) {
+    pub fn add(&self, amount: i32) {
         match self {
             DenominatorMetric::Parent { inner, .. } => {
-                Counter::add(&*inner, amount);
+                inner.add(amount);
             }
             DenominatorMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -80,7 +80,8 @@ impl Counter for DenominatorMetric {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<i32> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<i32> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             DenominatorMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             DenominatorMetric::Child(c) => {
@@ -89,11 +90,12 @@ impl Counter for DenominatorMetric {
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             DenominatorMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)
@@ -146,14 +148,16 @@ mod test {
             });
         }
 
-        assert!(
-            false == ipc::need_ipc(),
+        assert_eq!(
+            false,
+            ipc::need_ipc(),
             "RAII dropped, should not need ipc any more"
         );
         assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
 
-        assert!(
-            45 == parent_metric.test_get_value("store1").unwrap(),
+        assert_eq!(
+            45,
+            parent_metric.test_get_value("store1").unwrap(),
             "Values from the 'processes' should be summed"
         );
     }

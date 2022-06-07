@@ -73,6 +73,7 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   ~WorkletGlobalScope();
 
   const RefPtr<WorkletImpl> mImpl;
+
  private:
   TimeStamp mCreationTimeStamp;
   RefPtr<Console> mConsole;

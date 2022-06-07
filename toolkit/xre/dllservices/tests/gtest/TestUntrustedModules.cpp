@@ -41,12 +41,14 @@ class ModuleLoadCounter final {
     for (size_t i = 0; i < N; ++i) {
       auto entry = mCounters.Lookup(aNames[i]);
       if (!entry) {
-        wprintf(L"%s is not registered.\n", static_cast<const wchar_t*>(aNames[i].get()));
+        wprintf(L"%s is not registered.\n",
+                static_cast<const wchar_t*>(aNames[i].get()));
         result = false;
       } else if (*entry != aCounts[i]) {
         // We can return false, but let's print out all unmet modules
         // which may be helpful to investigate test failures.
-        wprintf(L"%s:%4d\n", static_cast<const wchar_t*>(aNames[i].get()), *entry);
+        wprintf(L"%s:%4d\n", static_cast<const wchar_t*>(aNames[i].get()),
+                *entry);
         result = false;
       }
     }

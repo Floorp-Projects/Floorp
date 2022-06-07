@@ -1,0 +1,539 @@
+namespace glean {
+    void glean_enable_logging();
+
+    // Initialize the logging system to send JSON messages to a file descriptor
+    // (Unix) or file handle (Windows).
+    //
+    // No-op on Android and iOS. Use `glean_enable_logging` instead.
+    void glean_enable_logging_to_fd(u64 fd);
+
+    // Initializes Glean.
+    //
+    // This will fully initialize Glean in a separate thread.
+    // It will return immediately.
+    void glean_initialize(InternalConfiguration cfg, ClientInfoMetrics client_info, OnGleanEvents callbacks);
+
+    // Creates and initializes a new Glean object for use in a subprocess.
+    //
+    // Importantly, this will not send any pings at startup, since that
+    // sort of management should only happen in the main process.
+    //
+    // Must only be used for an uploader process.
+    // The general API or any metrics API **will not work**.
+    boolean glean_initialize_for_subprocess(InternalConfiguration cfg);
+
+    void glean_set_upload_enabled(boolean enabled);
+
+    // Experiment reporting API
+    void glean_set_experiment_active(string experiment_id, string branch, record<DOMString, string> extra);
+    void glean_set_experiment_inactive(string experiment_id);
+    RecordedExperiment? glean_test_get_experiment_data(string experiment_id);
+
+    boolean glean_set_debug_view_tag(string tag);
+    boolean glean_set_source_tags(sequence<string> tags);
+    void glean_set_log_pings(boolean value);
+
+    void glean_handle_client_active();
+    void glean_handle_client_inactive();
+
+    void glean_submit_ping_by_name(string ping_name, optional string? reason = null);
+    boolean glean_submit_ping_by_name_sync(string ping_name, optional string? reason = null);
+
+    void glean_set_test_mode(boolean enabled);
+    void glean_test_destroy_glean(boolean clear_stores);
+
+    void glean_set_dirty_flag(boolean flag);
+
+    PingUploadTask glean_get_upload_task();
+    void glean_process_ping_upload_response(string uuid, UploadResult result);
+};
+
+// The Glean configuration.
+//
+// This exposes all configurable parameters to the SDK side.
+// They should not be exposed directly to users of the SDK (except `upload_enabled`).
+dictionary InternalConfiguration {
+    string data_path;
+    string application_id;
+    string language_binding_name;
+    boolean upload_enabled;
+    u32? max_events;
+    boolean delay_ping_lifetime_io;
+    string app_build;
+    boolean use_core_mps;
+};
+
+// Values for the `client_info` metrics.
+// The language SDK should collect them on `initialize` once.
+// They will be re-used, e.g. when upload is toggled from off to on, to re-set them.
+//
+// See https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section for details.
+dictionary ClientInfoMetrics {
+    string app_build;
+    string app_display_version;
+    Datetime app_build_date;
+    string architecture;
+    string os_version;
+
+    string? channel = null;
+    string? locale = null;
+    string? device_manufacturer = null;
+    string? device_model = null;
+    string? android_sdk_version = null;
+};
+
+// A callback object, that is stored within the core logic for the entire lifetime of the application.
+//
+// This is used to trigger certain actions that need to happen on the foreign-language side.
+callback interface OnGleanEvents {
+    // Initialization finished.
+    //
+    // The language SDK can do additional things from within the same initializer thread,
+    // e.g. starting to observe application events for foreground/background behavior.
+    // The observer then needs to call the respective client activity API.
+    void on_initialize_finished();
+
+    // Trigger the uploader whenever a ping was submitted.
+    //
+    // This should not block.
+    // The uploader needs to asynchronously poll Glean for new pings to upload.
+    void trigger_upload();
+
+    // Start the Metrics Ping Scheduler.
+    //
+    // *Note*: The implementor
+    // * DOES NOT need to schedule the uploader.
+    // * MUST NOT use a dispatched call in the immediate invocation.
+    //
+    // Returns whether it submitted a ping immediately.
+    boolean start_metrics_ping_scheduler();
+
+    // Called when upload is disabled and uploads should be stopped
+    void cancel_uploads();
+};
+
+// Deserialized experiment data.
+dictionary RecordedExperiment {
+    // The experiment's branch.
+    string branch;
+    // Any extra data associated with this experiment.
+    record<DOMString, string>? extra;
+};
+
+// Represents a request to upload a ping.
+dictionary PingRequest {
+    // The Job ID to identify this request,
+    // this is the same as the ping UUID.
+    string document_id;
+    // The path for the server to upload the ping to.
+    string path;
+    // The body of the request, as a byte array.
+    // If gzip encoded, then the `headers` list will
+    // contain a `Content-Encoding` header with the value `gzip`.
+    sequence<u8> body;
+    // A map with all the headers to be sent with the request.
+    record<DOMString, string> headers;
+};
+
+// An enum representing the possible upload tasks to be performed by an uploader.
+[Enum]
+interface PingUploadTask {
+    // An upload task.
+    //
+    // * request: the ping request for upload
+    Upload(PingRequest request);
+    // A flag signaling that the pending pings directories are not done being processed,
+    // thus the requester should wait and come back later.
+    //
+    // * time: The time in milliseconds the requester should wait before requesting a new task.
+    Wait(u64 time);
+
+    // A flag signaling that requester doesn't need to request
+    // any more upload tasks at this moment.
+    //
+    // * unused: _ignored_.
+    Done(i8 unused);
+};
+
+// The result of an attempted ping upload.
+[Enum]
+interface UploadResult {
+    // A recoverable failure.
+    //
+    // During upload something went wrong,/ e.g. the network connection failed.
+    // The upload should be retried at a later time.
+    //
+    // * unused: _ignored_.
+    RecoverableFailure(i8 unused);
+
+    // An unrecoverable upload failure.
+    //
+    // A possible cause might be a malformed URL.
+    //
+    // * unused: _ignored_.
+    UnrecoverableFailure(i8 unused);
+
+    // A HTTP response code.
+    //
+    // This can still indicate an error, depending on the status code.
+    //
+    // * code: The HTTP status code
+    HttpStatus(i32 code);
+};
+
+// The supported metrics' lifetimes.
+//
+// A metric's lifetime determines when its stored data gets reset.
+enum Lifetime {
+    // The metric is reset with each sent ping
+    "Ping",
+    // The metric is reset on application restart
+    "Application",
+    // The metric is reset with each user profile
+    "User",
+};
+
+// The possible error types for metric recording.
+enum ErrorType {
+    // For when the value to be recorded does not match the metric-specific restrictions
+    "InvalidValue",
+    // For when the label of a labeled metric does not match the restrictions
+    "InvalidLabel",
+    // For when the metric caught an invalid state while recording
+    "InvalidState",
+    // For when the value to be recorded overflows the metric-specific upper range
+    "InvalidOverflow",
+};
+
+interface PingType {
+    constructor(string name, boolean include_client_id, boolean send_if_empty, sequence<string> reason_codes);
+    void submit(optional string? reason = null);
+};
+
+// The common set of data shared across all different metric types.
+dictionary CommonMetricData {
+    // The metric's category.
+    string category;
+    // The metric's name.
+    string name;
+
+    // List of ping names to include this metric in.
+    sequence<string> send_in_pings;
+    // The metric's lifetime.
+    Lifetime lifetime;
+
+    // Whether or not the metric is disabled.
+    //
+    // Disabled metrics are never recorded.
+    boolean disabled;
+
+    // Dynamic label.
+    //
+    // When a labeled metric factory creates the specific metric to be recorded to,
+    // dynamic labels are stored in the specific label so that
+    // we can validate them when the Glean singleton is available.
+    string? dynamic_label = null;
+};
+
+interface CounterMetric {
+    constructor(CommonMetricData meta);
+
+    void add(optional i32 amount = 1);
+
+    i32? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// Different resolutions supported by the time related metric types
+// (e.g. DatetimeMetric).
+enum TimeUnit {
+    // Represents nanosecond precision.
+    "Nanosecond",
+    // Represents microsecond precision.
+    "Microsecond",
+    // Represents millisecond precision.
+    "Millisecond",
+    // Represents second precision.
+    "Second",
+    // Represents minute precision.
+    "Minute",
+    // Represents hour precision.
+    "Hour",
+    // Represents day precision.
+    "Day",
+};
+
+interface TimespanMetric {
+    constructor(CommonMetricData meta, TimeUnit time_unit);
+
+    void start();
+
+    void stop();
+
+    void cancel();
+
+    void set_raw_nanos(i64 elapsed);
+
+    i64? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface BooleanMetric {
+    constructor(CommonMetricData meta);
+
+    void set(boolean value);
+
+    boolean? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface StringMetric {
+    constructor(CommonMetricData meta);
+
+    void set(string value);
+
+    string? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface LabeledCounter {
+    constructor(CommonMetricData meta, sequence<string>? labels);
+
+    CounterMetric get(string label);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface LabeledBoolean {
+    constructor(CommonMetricData meta, sequence<string>? labels);
+
+    BooleanMetric get(string label);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface LabeledString {
+    constructor(CommonMetricData meta, sequence<string>? labels);
+
+    StringMetric get(string label);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface StringListMetric {
+    constructor(CommonMetricData meta);
+
+    void add(string value);
+
+    void set(sequence<string> value);
+
+    sequence<string>? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface UrlMetric {
+    constructor(CommonMetricData meta);
+
+    void set(string value);
+
+    string? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface UuidMetric {
+    constructor(CommonMetricData meta);
+
+    void set(string value);
+
+    string generate_and_set();
+
+    string? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface QuantityMetric {
+    constructor(CommonMetricData meta);
+
+    void set(i64 value);
+
+    i64? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// A snapshot of all buckets and the accumulated sum of a distribution.
+dictionary DistributionData {
+    // A map containig the bucket index mapped to the accumulated count.
+    record<i64, i64> values;
+
+    // The accumulated sum of all the samples in the distribution.
+    i64 sum;
+};
+
+// Identifier for a running timer.
+//
+// Its internals are considered private,
+// but due to UniFFI's behavior we expose it as a dictionary for now.
+dictionary TimerId {
+    u64 id;
+};
+
+interface TimingDistributionMetric {
+    constructor(CommonMetricData meta, TimeUnit time_unit);
+
+    TimerId start();
+
+    void stop_and_accumulate(TimerId timer_id);
+
+    void cancel(TimerId timer_id);
+
+    void accumulate_samples(sequence<i64> samples);
+
+    DistributionData? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// Different resolutions supported by the memory related metric types
+// (e.g. MemoryDistributionMetric).
+enum MemoryUnit {
+    // 1 byte
+    "Byte",
+    // 2^10 bytes
+    "Kilobyte",
+    // 2^20 bytes
+    "Megabyte",
+    // 2^30 bytes
+    "Gigabyte",
+};
+
+interface MemoryDistributionMetric {
+    constructor(CommonMetricData meta, MemoryUnit memory_unit);
+
+    void accumulate(i64 sample);
+
+    void accumulate_samples(sequence<i64> samples);
+
+    DistributionData? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// Different kinds of histograms.
+enum HistogramType {
+    // A histogram with linear distributed buckets.
+    "Linear",
+    // A histogram with exponential distributed buckets.
+    "Exponential",
+};
+
+interface CustomDistributionMetric {
+    constructor(CommonMetricData meta, i64 range_min, i64 range_max, i64 bucket_count, HistogramType histogram_type);
+
+    void accumulate_samples(sequence<i64> samples);
+
+    DistributionData? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// Representation of a date, time and timezone.
+dictionary Datetime {
+    i32 year;
+    u32 month;
+    u32 day;
+    u32 hour;
+    u32 minute;
+    u32 second;
+    u32 nanosecond;
+    i32 offset_seconds;
+};
+
+interface DatetimeMetric {
+    constructor(CommonMetricData meta, TimeUnit time_unit);
+
+    void set(optional Datetime? value = null);
+
+    Datetime? test_get_value(optional string? ping_name = null);
+
+    string? test_get_value_as_string(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+// Represents the recorded data for a single event.
+dictionary RecordedEvent {
+    // The timestamp of when the event was recorded.
+    //
+    // This allows to order events from a single process run.
+    u64 timestamp;
+
+    // The event's category.
+    //
+    // This is defined by users in the metrics file.
+    string category;
+
+    // The event's name.
+    //
+    // This is defined by users in the metrics file.
+    string name;
+
+    // A map of all extra data values.
+    //
+    // The set of allowed extra keys is defined by users in the metrics file.
+    record<DOMString, string>? extra;
+};
+
+interface EventMetric {
+    constructor(CommonMetricData meta, sequence<string> allowed_extra_keys);
+
+    void record(record<DOMString, string> extra);
+
+    sequence<RecordedEvent>? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+dictionary Rate {
+    i32 numerator;
+    i32 denominator;
+};
+
+interface RateMetric {
+    constructor(CommonMetricData meta);
+
+    void add_to_numerator(i32 amount);
+
+    void add_to_denominator(i32 amount);
+
+    Rate? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface DenominatorMetric {
+    constructor(CommonMetricData meta, sequence<CommonMetricData> numerators);
+
+    void add(i32 amount);
+
+    i32? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};
+
+interface NumeratorMetric {
+    constructor(CommonMetricData meta);
+
+    void add_to_numerator(i32 amount);
+
+    Rate? test_get_value(optional string? ping_name = null);
+
+    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+};

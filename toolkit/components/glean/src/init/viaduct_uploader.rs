@@ -29,7 +29,7 @@ impl PingUploader for ViaductUploader {
                 || (localhost_port == 0 && !debug_tagged && cfg!(feature = "disable_upload"))
             {
                 log::info!("FOG Ping uploader faking success");
-                return Ok(UploadResult::HttpStatus(200));
+                return Ok(UploadResult::http_status(200));
             }
             let parsed_url = Url::parse(&url_clone)?;
 
@@ -42,7 +42,7 @@ impl PingUploader for ViaductUploader {
 
             log::trace!("FOG Ping Uploader sending ping to {}", parsed_url);
             let res = req.send()?;
-            Ok(UploadResult::HttpStatus(res.status.into()))
+            Ok(UploadResult::http_status(res.status as i32))
         })();
         log::trace!(
             "FOG Ping Uploader completed uploading to {} (Result {:?})",
@@ -51,7 +51,7 @@ impl PingUploader for ViaductUploader {
         );
         match result {
             Ok(result) => result,
-            _ => UploadResult::UnrecoverableFailure,
+            _ => UploadResult::unrecoverable_failure(),
         }
     }
 }

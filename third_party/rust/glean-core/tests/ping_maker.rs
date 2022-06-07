@@ -25,7 +25,7 @@ fn set_up_basic_ping() -> (Glean, PingMaker, PingType, tempfile::TempDir) {
         lifetime: Lifetime::User,
         ..Default::default()
     });
-    metric.set(&glean, true);
+    metric.set_sync(&glean, true);
 
     (glean, ping_maker, ping_type, t)
 }
@@ -102,7 +102,7 @@ fn seq_number_must_be_sequential() {
         lifetime: Lifetime::User,
         ..Default::default()
     });
-    metric.set(&glean, true);
+    metric.set_sync(&glean, true);
 
     for i in 0..=1 {
         for ping_name in ["store1", "store2"].iter() {
@@ -175,9 +175,9 @@ fn clear_pending_pings() {
         lifetime: Lifetime::User,
         ..Default::default()
     });
-    metric.set(&glean, true);
+    metric.set_sync(&glean, true);
 
-    assert!(glean.submit_ping(&ping_type, None));
+    assert!(ping_type.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     assert!(ping_maker
@@ -194,17 +194,14 @@ fn no_pings_submitted_if_upload_disabled() {
     let ping_type = PingType::new("store1", true, true, vec![]);
     glean.register_ping_type(&ping_type);
 
-    assert!(glean.submit_ping(&ping_type, None));
+    assert!(ping_type.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     // Disable upload, then try to sumbit
     glean.set_upload_enabled(false);
 
-    assert!(!glean.submit_ping(&ping_type, None));
-    assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
-
     // Test again through the direct call
-    assert!(!ping_type.submit(&glean, None));
+    assert!(!ping_type.submit_sync(&glean, None));
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
 
@@ -215,7 +212,7 @@ fn metadata_is_correctly_added_when_necessary() {
     let ping_type = PingType::new("store1", true, true, vec![]);
     glean.register_ping_type(&ping_type);
 
-    assert!(glean.submit_ping(&ping_type, None));
+    assert!(ping_type.submit_sync(&glean, None));
 
     let (_, _, metadata) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
     let headers = metadata.as_ref().unwrap().get("headers").unwrap();

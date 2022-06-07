@@ -82,15 +82,15 @@ impl AdditionalMetrics {
                 dynamic_label: None,
             }),
 
-            pings_submitted: LabeledMetric::new(
-                CounterMetric::new(CommonMetricData {
+            pings_submitted: LabeledMetric::<CounterMetric>::new(
+                CommonMetricData {
                     name: "pings_submitted".into(),
                     category: "glean.validation".into(),
                     send_in_pings: vec!["metrics".into(), "baseline".into()],
                     lifetime: Lifetime::Ping,
                     disabled: false,
                     dynamic_label: None,
-                }),
+                },
                 None,
             ),
         }
@@ -109,15 +109,15 @@ pub struct UploadMetrics {
 impl UploadMetrics {
     pub fn new() -> UploadMetrics {
         UploadMetrics {
-            ping_upload_failure: LabeledMetric::new(
-                CounterMetric::new(CommonMetricData {
+            ping_upload_failure: LabeledMetric::<CounterMetric>::new(
+                CommonMetricData {
                     name: "ping_upload_failure".into(),
                     category: "glean.upload".into(),
                     send_in_pings: vec!["metrics".into()],
                     lifetime: Lifetime::Ping,
                     disabled: false,
                     dynamic_label: None,
-                }),
+                },
                 Some(vec![
                     "status_code_4xx".into(),
                     "status_code_5xx".into(),

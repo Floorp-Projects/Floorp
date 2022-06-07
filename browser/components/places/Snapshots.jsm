@@ -146,6 +146,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   The date/time the snapshot was created.
  * @property {Date} removedAt
  *   The date/time the snapshot was deleted.
+ * @property {Snapshots.REMOVED_REASON} removedReason
+ *   The reason the snapshot was deleted, can be one of REMOVED_REASON.*.
  * @property {Date} firstInteractionAt
  *   The date/time of the first interaction with the snapshot.
  * @property {Date} lastInteractionAt
@@ -539,7 +541,8 @@ const Snapshots = new (class Snapshots {
     let rows = await db.executeCached(
       `
       SELECT h.url AS url, IFNULL(s.title, h.title) AS title, created_at,
-             removed_at, document_type, first_interaction_at, last_interaction_at,
+             removed_at, removed_reason, document_type,
+             first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -659,7 +662,8 @@ const Snapshots = new (class Snapshots {
     let rows = await db.executeCached(
       `
       SELECT h.url, IFNULL(s.title, h.title) AS title, created_at,
-             removed_at, document_type, first_interaction_at, last_interaction_at,
+             removed_at, removed_reason, document_type,
+             first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -730,7 +734,7 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `SELECT h.url AS url, IFNULL(s.title, h.title) AS title,
-              o.overlappingVisitScore, created_at, removed_at,
+              o.overlappingVisitScore, created_at, removed_at, removed_reason,
               document_type, first_interaction_at, last_interaction_at,
               user_persisted, description, site_name, preview_image_url,
               group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
@@ -792,7 +796,8 @@ const Snapshots = new (class Snapshots {
     let rows = await db.executeCached(
       `
       SELECT h.id, h.url AS url, IFNULL(s.title, h.title) AS title, s.created_at,
-             removed_at, s.document_type, first_interaction_at, last_interaction_at,
+             removed_at, removed_reason, s.document_type,
+             first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url, h.visit_count,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
       FROM moz_places_metadata_snapshots s
@@ -840,7 +845,8 @@ const Snapshots = new (class Snapshots {
         SELECT time(:context_time_s, 'unixepoch') AS time
       )
       SELECT h.id, h.url AS url, IFNULL(s.title, h.title) AS title, s.created_at,
-            removed_at, s.document_type, first_interaction_at, last_interaction_at,
+            removed_at, removed_reason, s.document_type,
+            first_interaction_at, last_interaction_at,
             user_persisted, description, site_name, preview_image_url, h.visit_count,
             (SELECT group_concat('[' || e.type || ', ' || e.data || ']')
              FROM moz_places_metadata_snapshots
@@ -955,6 +961,7 @@ const Snapshots = new (class Snapshots {
       image: row.getResultByName("preview_image_url"),
       createdAt: this.#toDate(row.getResultByName("created_at")),
       removedAt: this.#toDate(row.getResultByName("removed_at")),
+      removedReason: row.getResultByName("removed_reason"),
       firstInteractionAt: this.#toDate(
         row.getResultByName("first_interaction_at")
       ),

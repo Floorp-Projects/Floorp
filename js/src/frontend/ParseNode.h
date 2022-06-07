@@ -1239,8 +1239,7 @@ class ListNode : public ParseNode {
 
   void checkConsistency() const
 #ifndef DEBUG
-  {
-  }
+      {}
 #endif
   ;
 

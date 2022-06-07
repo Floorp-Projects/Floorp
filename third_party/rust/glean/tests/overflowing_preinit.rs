@@ -68,7 +68,6 @@ fn overflowing_the_task_queue_records_telemetry() {
         upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: false,
-        channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
         use_core_mps: false,
@@ -90,7 +89,7 @@ fn overflowing_the_task_queue_records_telemetry() {
     let val = metrics::preinit_tasks_overflow
         .test_get_value(None)
         .unwrap();
-    assert!(val >= 1010);
+    assert!(val >= 10);
 
     glean::shutdown();
 }

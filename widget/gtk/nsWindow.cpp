@@ -4314,7 +4314,21 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   }
 
   // check to see if we should rollup
-  if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) return;
+  if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) {
+    if (aEvent->button == 3 &&
+        mDraggableRegion.Contains(GetRefPoint(this, aEvent))) {
+      GUniquePtr<GdkEvent> eventCopy;
+      if (aEvent->type != GDK_BUTTON_PRESS) {
+        // If the user double-clicks too fast we'll get a 2BUTTON_PRESS event
+        // instead, and that isn't handled by open_window_menu, so coerce it
+        // into a regular press.
+        eventCopy.reset(gdk_event_copy((GdkEvent*)aEvent));
+        eventCopy->type = GDK_BUTTON_PRESS;
+      }
+      TryToShowNativeWindowMenu(eventCopy ? &eventCopy->button : aEvent);
+    }
+    return;
+  }
 
   // Check to see if the event is within our window's resize region
   GdkWindowEdge edge;

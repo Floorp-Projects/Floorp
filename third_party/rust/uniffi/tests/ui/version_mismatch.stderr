@@ -1,0 +1,7 @@
+error[E0080]: evaluation of constant value failed
+ --> tests/ui/version_mismatch.rs:2:1
+  |
+2 | uniffi::assert_compatible_version!("0.0.1"); // An error message would go here.
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ attempt to compute `0_usize - 1_usize`, which would overflow
+  |
+  = note: this error originates in the macro `uniffi::deps::static_assertions::const_assert` (in Nightly builds, run with -Z macro-backtrace for more info)

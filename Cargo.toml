@@ -129,6 +129,13 @@ paste = { path = "build/rust/paste" }
 # Patch paste 0.1 to 1.0
 toml = { path = "build/rust/toml" }
 
+# Patch cargo_metadata 0.13 to 0.14.2
+# FIXME(bug 1772132): To be removed with the next Glean update
+cargo_metadata = { path = "build/rust/cargo_metadata" }
+
+# Patch nom 5 to nom 6
+nom = { path = "build/rust/nom" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlsplit, parse_qs
 
 
+from . import __version__
 from . import metrics
 from . import pings
 from . import util
@@ -262,6 +263,7 @@ def output_markdown(
     with filepath.open("w", encoding="utf-8") as fd:
         fd.write(
             template.render(
+                parser_version=__version__,
                 metrics_by_pings=metrics_by_pings,
                 project_title=project_title,
                 introduction_extra=introduction_extra,

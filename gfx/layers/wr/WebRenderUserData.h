@@ -210,7 +210,7 @@ class WebRenderImageProviderData final : public WebRenderUserData {
  protected:
   RefPtr<image::WebRenderImageProvider> mProvider;
   Maybe<wr::ImageKey> mKey;
-  image::ImgDrawResult mDrawResult;
+  image::ImgDrawResult mDrawResult = image::ImgDrawResult::NOT_READY;
 };
 
 class WebRenderInProcessImageData final : public WebRenderUserData {

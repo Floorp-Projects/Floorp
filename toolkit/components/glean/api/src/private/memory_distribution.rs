@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use inherent::inherent;
+use std::convert::TryInto;
 
 use super::{CommonMetricData, DistributionData, MemoryUnit, MetricId};
 
@@ -51,7 +52,7 @@ impl MemoryDistributionMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl MemoryDistribution for MemoryDistributionMetric {
     /// Accumulates the provided sample in the metric.
     ///
@@ -64,10 +65,15 @@ impl MemoryDistribution for MemoryDistributionMetric {
     ///
     /// Values bigger than 1 Terabyte (2<sup>40</sup> bytes) are truncated
     /// and an `ErrorType::InvalidValue` error is recorded.
-    fn accumulate(&self, sample: u64) {
+    pub fn accumulate(&self, sample: u64) {
         match self {
             MemoryDistributionMetric::Parent { inner, .. } => {
-                MemoryDistribution::accumulate(&*inner, sample);
+                // values are capped at 2**40.
+                // If the value doesn't fit into `i64` it's definitely to large
+                // and cause an error.
+                // glean-core handles that.
+                let sample = sample.try_into().unwrap_or(i64::MAX);
+                inner.accumulate(sample);
             }
             MemoryDistributionMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -93,10 +99,11 @@ impl MemoryDistribution for MemoryDistributionMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
     ) -> Option<DistributionData> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             MemoryDistributionMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             MemoryDistributionMetric::Child(c) => {
@@ -118,11 +125,12 @@ impl MemoryDistribution for MemoryDistributionMetric {
     /// # Returns
     ///
     /// The number of errors recorded.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             MemoryDistributionMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)

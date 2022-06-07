@@ -18,29 +18,12 @@ include!(mozbuild::objdir_path!(
 ));
 
 #[cfg(not(feature = "cargo-clippy"))]
-use crate::private::{EventMetric, EventRecordingError, ExtraKeys};
+use crate::private::{EventMetric, ExtraKeys};
 
 /// Helper to get the number of allowed extra keys for a given event metric.
 #[cfg(not(feature = "cargo-clippy"))]
 fn extra_keys_len<K: ExtraKeys>(_event: &EventMetric<K>) -> usize {
     K::ALLOWED_KEYS.len()
-}
-
-/// Helper to get the extra key ID from its string representation.
-///
-/// Takes a reference to the conrete event metric to use the associated `ALLOWED_KEYS`.
-///
-/// Returns the numeric key ID or an `InvalidExtraKey` error if the key is not allowed.
-#[cfg(not(feature = "cargo-clippy"))]
-fn id_for_extra_key<K: ExtraKeys>(
-    key: &str,
-    _event: &EventMetric<K>,
-) -> Result<i32, EventRecordingError> {
-    K::ALLOWED_KEYS
-        .iter()
-        .position(|&elem| elem == key)
-        .map(|pos| pos as i32)
-        .ok_or(EventRecordingError::InvalidExtraKey)
 }
 
 // When running clippy the linter, `MOZ_TOPOBJDIR` is not set

@@ -89,9 +89,9 @@ fluent.migrate==0.11 \
 fluent.syntax==0.18.1 \
     --hash=sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a \
     --hash=sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f
-glean-parser==5.0.1 \
-    --hash=sha256:7357aac9a857883db99121abb15b9fdb9bcb5437cecee28c9b8a09a2123408ed \
-    --hash=sha256:309f36ed55f2f1ed82472ab8b18e1dd01edeb71060464e3f859c9b60e38b87d4
+glean-parser==6.0.1 \
+    --hash=sha256:d7cc9c12b1b64bb2ac84db10d2e853c1aa94b036351e2f41f6bafc94ba29b2e4 \
+    --hash=sha256:05acc5d25285ecf9d59adb402719bc9ffbddb11b156e8f0479c3d503bf7ad347
 idna-ssl==1.1.0; python_version < "3.7" and python_version >= "3.6" \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c
 idna==2.10; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" or python_version >= "3.6" and python_full_version < "3.0.0" and python_version < "3.7" or python_version < "3.7" and python_version >= "3.6" and python_full_version >= "3.4.0" or python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6" \
@@ -113,7 +113,7 @@ json-e==2.7.0 \
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
     --hash=sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a
-markupsafe==1.1.1; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" \
+markupsafe==1.1.1; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" or python_full_version >= "3.5.0" \
     --hash=sha256:09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161 \
     --hash=sha256:e249096428b3ae81b08327a63a485ad0878de3fb939049038579ac0ef61e17e7 \
     --hash=sha256:500d4957e52ddc3351cabf489e79c91c17f6e0899158447047588650b5e69183 \

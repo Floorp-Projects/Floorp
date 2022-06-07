@@ -25,10 +25,6 @@ use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
 
-// Needed for re-export.
-#[cfg(target_os = "android")]
-pub use glean_ffi;
-
 #[macro_use]
 extern crate cstr;
 #[cfg_attr(not(target_os = "android"), macro_use)]
@@ -186,10 +182,12 @@ pub extern "C" fn fog_test_get_experiment_data(
     extra_values: &mut ThinVec<nsCString>,
 ) {
     let data = glean::test_get_experiment_data(experiment_id.to_string());
-    branch.assign(&data.branch);
-    if let Some(extra) = data.extra {
-        let (data_keys, data_values): (Vec<_>, Vec<_>) = extra.iter().unzip();
-        extra_keys.extend(data_keys.into_iter().map(|key| key.into()));
-        extra_values.extend(data_values.into_iter().map(|value| value.into()));
+    if let Some(data) = data {
+        branch.assign(&data.branch);
+        if let Some(extra) = data.extra {
+            let (data_keys, data_values): (Vec<_>, Vec<_>) = extra.iter().unzip();
+            extra_keys.extend(data_keys.into_iter().map(|key| key.into()));
+            extra_values.extend(data_values.into_iter().map(|value| value.into()));
+        }
     }
 }

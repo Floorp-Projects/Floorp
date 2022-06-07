@@ -44,6 +44,10 @@ ComputedTimingFunction::Function ComputedTimingFunction::ConstructFunction(
     case StyleComputedTimingFunction::Tag::Steps:
       return AsVariant(
           StepFunc{static_cast<uint32_t>(timing.steps._0), timing.steps._1});
+    case StyleComputedTimingFunction::Tag::LinearFunction: {
+      // TODO(dshin): To be implemented (bug 1764126)
+      return ConstructFunction(nsTimingFunction{StyleTimingKeyword::Linear});
+    }
   }
   MOZ_ASSERT_UNREACHABLE("Unknown timing function.");
   return ConstructFunction(nsTimingFunction{StyleTimingKeyword::Linear});

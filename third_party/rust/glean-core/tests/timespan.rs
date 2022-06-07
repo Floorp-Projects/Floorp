@@ -28,7 +28,7 @@ fn serializer_should_correctly_serialize_timespans() {
         // And then we get it back once that function returns.
         tempdir = dir;
 
-        let mut metric = TimespanMetric::new(
+        let metric = TimespanMetric::new(
             CommonMetricData {
                 name: "timespan_metric".into(),
                 category: "telemetry".into(),
@@ -44,7 +44,7 @@ fn serializer_should_correctly_serialize_timespans() {
         metric.set_stop(&glean, duration);
 
         let val = metric
-            .test_get_value(&glean, "store1")
+            .get_value(&glean, "store1")
             .expect("Value should be stored");
         assert_eq!(duration, val, "Recorded timespan should be positive.");
     }
@@ -68,7 +68,7 @@ fn serializer_should_correctly_serialize_timespans() {
 fn single_elapsed_time_must_be_recorded() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -86,7 +86,7 @@ fn single_elapsed_time_must_be_recorded() {
     metric.set_stop(&glean, duration);
 
     let val = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
     assert_eq!(duration, val, "Recorded timespan should be positive.");
 }
@@ -98,7 +98,7 @@ fn single_elapsed_time_must_be_recorded() {
 fn second_timer_run_is_skipped() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -119,13 +119,13 @@ fn second_timer_run_is_skipped() {
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidState, None).is_err()
     );
 
-    let first_value = metric.test_get_value(&glean, "store1").unwrap();
+    let first_value = metric.get_value(&glean, "store1").unwrap();
     assert_eq!(duration, first_value);
 
     metric.set_start(&glean, 0);
     metric.set_stop(&glean, duration * 2);
 
-    let second_value = metric.test_get_value(&glean, "store1").unwrap();
+    let second_value = metric.get_value(&glean, "store1").unwrap();
     assert_eq!(second_value, first_value);
 
     // Make sure that the error has been recorded: we had a stored value, the
@@ -140,7 +140,7 @@ fn second_timer_run_is_skipped() {
 fn recorded_time_conforms_to_resolution() {
     let (glean, _t) = new_glean(None);
 
-    let mut ns_metric = TimespanMetric::new(
+    let ns_metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_ns".into(),
             category: "telemetry".into(),
@@ -152,7 +152,7 @@ fn recorded_time_conforms_to_resolution() {
         TimeUnit::Nanosecond,
     );
 
-    let mut minute_metric = TimespanMetric::new(
+    let minute_metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_m".into(),
             category: "telemetry".into(),
@@ -168,7 +168,7 @@ fn recorded_time_conforms_to_resolution() {
     ns_metric.set_start(&glean, 0);
     ns_metric.set_stop(&glean, duration);
 
-    let ns_value = ns_metric.test_get_value(&glean, "store1").unwrap();
+    let ns_value = ns_metric.get_value(&glean, "store1").unwrap();
     assert_eq!(duration, ns_value);
 
     // 1 minute in nanoseconds
@@ -176,7 +176,7 @@ fn recorded_time_conforms_to_resolution() {
     minute_metric.set_start(&glean, 0);
     minute_metric.set_stop(&glean, duration_minute);
 
-    let minute_value = minute_metric.test_get_value(&glean, "store1").unwrap();
+    let minute_value = minute_metric.get_value(&glean, "store1").unwrap();
     assert_eq!(1, minute_value);
 }
 
@@ -186,7 +186,7 @@ fn recorded_time_conforms_to_resolution() {
 fn cancel_does_not_store() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -201,14 +201,14 @@ fn cancel_does_not_store() {
     metric.set_start(&glean, 0);
     metric.cancel();
 
-    assert_eq!(None, metric.test_get_value(&glean, "store1"));
+    assert_eq!(None, metric.get_value(&glean, "store1"));
 }
 
 #[test]
 fn nothing_stored_before_stop() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -224,10 +224,10 @@ fn nothing_stored_before_stop() {
 
     metric.set_start(&glean, 0);
 
-    assert_eq!(None, metric.test_get_value(&glean, "store1"));
+    assert_eq!(None, metric.get_value(&glean, "store1"));
 
     metric.set_stop(&glean, duration);
-    assert_eq!(duration, metric.test_get_value(&glean, "store1").unwrap());
+    assert_eq!(duration, metric.get_value(&glean, "store1").unwrap());
 }
 
 #[test]
@@ -247,17 +247,17 @@ fn set_raw_time() {
     );
 
     let time = Duration::from_secs(1);
-    metric.set_raw(&glean, time);
+    metric.set_raw_sync(&glean, time);
 
     let time_in_ns = time.as_nanos() as u64;
-    assert_eq!(Some(time_in_ns), metric.test_get_value(&glean, "store1"));
+    assert_eq!(Some(time_in_ns), metric.get_value(&glean, "store1"));
 }
 
 #[test]
 fn set_raw_time_does_nothing_when_timer_running() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -272,11 +272,11 @@ fn set_raw_time_does_nothing_when_timer_running() {
     let time = Duration::from_secs(42);
 
     metric.set_start(&glean, 0);
-    metric.set_raw(&glean, time);
+    metric.set_raw_sync(&glean, time);
     metric.set_stop(&glean, 60);
 
     // We expect the start/stop value, not the raw value.
-    assert_eq!(Some(60), metric.test_get_value(&glean, "store1"));
+    assert_eq!(Some(60), metric.get_value(&glean, "store1"));
 
     // Make sure that the error has been recorded
     assert_eq!(
@@ -289,7 +289,7 @@ fn set_raw_time_does_nothing_when_timer_running() {
 fn timespan_is_not_tracked_across_upload_toggle() {
     let (mut glean, _t) = new_glean(None);
 
-    let mut metric = TimespanMetric::new(
+    let metric = TimespanMetric::new(
         CommonMetricData {
             name: "timespan_metric".into(),
             category: "telemetry".into(),
@@ -319,7 +319,7 @@ fn timespan_is_not_tracked_across_upload_toggle() {
     metric.set_stop(&glean, 200);
 
     // Nothing should have been recorded.
-    assert_eq!(None, metric.test_get_value(&glean, "store1"));
+    assert_eq!(None, metric.get_value(&glean, "store1"));
 
     // Make sure that the error has been recorded
     assert_eq!(
@@ -332,7 +332,7 @@ fn timespan_is_not_tracked_across_upload_toggle() {
 fn time_cannot_go_backwards() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric: TimespanMetric = TimespanMetric::new(
+    let metric: TimespanMetric = TimespanMetric::new(
         CommonMetricData {
             name: "raw_timespan".into(),
             category: "test".into(),
@@ -345,7 +345,7 @@ fn time_cannot_go_backwards() {
     // Time cannot go backwards.
     metric.set_start(&glean, 10);
     metric.set_stop(&glean, 0);
-    assert!(metric.test_get_value(&glean, "test1").is_none());
+    assert!(metric.get_value(&glean, "test1").is_none());
     assert_eq!(
         Ok(1),
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None),

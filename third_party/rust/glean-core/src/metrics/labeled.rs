@@ -2,14 +2,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::collections::{hash_map::Entry, HashMap};
+use std::sync::{Arc, Mutex};
+
 use crate::common_metric_data::CommonMetricData;
-use crate::error_recording::{record_error, ErrorType};
-use crate::metrics::{Metric, MetricType};
+use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
+use crate::metrics::{BooleanMetric, CounterMetric, Metric, MetricType, StringMetric};
 use crate::Glean;
 
 const MAX_LABELS: usize = 16;
 const OTHER_LABEL: &str = "__other__";
 const MAX_LABEL_LENGTH: usize = 61;
+
+/// A labeled counter.
+pub type LabeledCounter = LabeledMetric<CounterMetric>;
+
+/// A labeled boolean.
+pub type LabeledBoolean = LabeledMetric<BooleanMetric>;
+
+/// A labeled string.
+pub type LabeledString = LabeledMetric<StringMetric>;
 
 /// Checks whether the given label is sane.
 ///
@@ -74,32 +86,98 @@ fn matches_label_regex(value: &str) -> bool {
 /// A labeled metric.
 ///
 /// Labeled metrics allow to record multiple sub-metrics of the same type under different string labels.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct LabeledMetric<T> {
     labels: Option<Vec<String>>,
     /// Type of the underlying metric
     /// We hold on to an instance of it, which is cloned to create new modified instances.
     submetric: T,
+
+    /// A map from a unique ID for the labeled submetric to a handle of an instantiated
+    /// metric type.
+    label_map: Mutex<HashMap<String, Arc<T>>>,
+}
+
+/// Sealed traits protect against downstream implementations.
+///
+/// We wrap it in a private module that is inaccessible outside of this module.
+mod private {
+    use crate::{
+        metrics::BooleanMetric, metrics::CounterMetric, metrics::StringMetric, CommonMetricData,
+    };
+
+    /// The sealed labeled trait.
+    ///
+    /// This also allows us to hide methods, that are only used internally
+    /// and should not be visible to users of the object implementing the
+    /// `Labeled<T>` trait.
+    pub trait Sealed {
+        /// Create a new `glean_core` metric from the metadata.
+        fn new_inner(meta: crate::CommonMetricData) -> Self;
+    }
+
+    impl Sealed for CounterMetric {
+        fn new_inner(meta: CommonMetricData) -> Self {
+            Self::new(meta)
+        }
+    }
+
+    impl Sealed for BooleanMetric {
+        fn new_inner(meta: CommonMetricData) -> Self {
+            Self::new(meta)
+        }
+    }
+
+    impl Sealed for StringMetric {
+        fn new_inner(meta: CommonMetricData) -> Self {
+            Self::new(meta)
+        }
+    }
+}
+
+/// Trait for metrics that can be nested inside a labeled metric.
+pub trait AllowLabeled: MetricType {
+    /// Create a new labeled metric.
+    fn new_labeled(meta: CommonMetricData) -> Self;
+}
+
+// Implement the trait for everything we marked as allowed.
+impl<T> AllowLabeled for T
+where
+    T: MetricType,
+    T: private::Sealed,
+{
+    fn new_labeled(meta: CommonMetricData) -> Self {
+        T::new_inner(meta)
+    }
 }
 
 impl<T> LabeledMetric<T>
 where
-    T: MetricType + Clone,
+    T: AllowLabeled + Clone,
 {
     /// Creates a new labeled metric from the given metric instance and optional list of labels.
     ///
     /// See [`get`](LabeledMetric::get) for information on how static or dynamic labels are handled.
-    pub fn new(submetric: T, labels: Option<Vec<String>>) -> LabeledMetric<T> {
-        LabeledMetric { labels, submetric }
+    pub fn new(meta: CommonMetricData, labels: Option<Vec<String>>) -> LabeledMetric<T> {
+        let submetric = T::new_labeled(meta);
+        LabeledMetric::new_inner(submetric, labels)
+    }
+
+    fn new_inner(submetric: T, labels: Option<Vec<String>>) -> LabeledMetric<T> {
+        let label_map = Default::default();
+        LabeledMetric {
+            labels,
+            submetric,
+            label_map,
+        }
     }
 
     /// Creates a new metric with a specific label.
     ///
     /// This is used for static labels where we can just set the name to be `name/label`.
     fn new_metric_with_name(&self, name: String) -> T {
-        let mut t = self.submetric.clone();
-        t.meta_mut().name = name;
-        t
+        self.submetric.with_name(name)
     }
 
     /// Creates a new metric with a specific label.
@@ -107,9 +185,7 @@ where
     /// This is used for dynamic labels where we have to actually validate and correct the
     /// label later when we have a Glean object.
     fn new_metric_with_dynamic_label(&self, label: String) -> T {
-        let mut t = self.submetric.clone();
-        t.meta_mut().dynamic_label = Some(label);
-        t
+        self.submetric.with_dynamic_label(label)
     }
 
     /// Creates a static label.
@@ -147,31 +223,59 @@ where
     ///
     /// Labels must be `snake_case` and less than 30 characters.
     /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
-    pub fn get(&self, label: &str) -> T {
-        // We have 2 scenarios to consider:
-        // * Static labels. No database access needed. We just look at what is in memory.
-        // * Dynamic labels. We look up in the database all previously stored
-        //   labels in order to keep a maximum of allowed labels. This is done later
-        //   when the specific metric is actually recorded, when we are guaranteed to have
-        //   an initialized Glean object.
-        match self.labels {
-            Some(_) => {
-                let label = self.static_label(label);
-                self.new_metric_with_name(combine_base_identifier_and_label(
-                    &self.submetric.meta().name,
-                    label,
-                ))
+    pub fn get<S: AsRef<str>>(&self, label: S) -> Arc<T> {
+        let label = label.as_ref();
+
+        // The handle is a unique number per metric.
+        // The label identifies the submetric.
+        let id = format!("{}/{}", self.submetric.meta().base_identifier(), label);
+
+        let mut map = self.label_map.lock().unwrap();
+        match map.entry(id) {
+            Entry::Occupied(entry) => Arc::clone(entry.get()),
+            Entry::Vacant(entry) => {
+                // We have 2 scenarios to consider:
+                // * Static labels. No database access needed. We just look at what is in memory.
+                // * Dynamic labels. We look up in the database all previously stored
+                //   labels in order to keep a maximum of allowed labels. This is done later
+                //   when the specific metric is actually recorded, when we are guaranteed to have
+                //   an initialized Glean object.
+                let metric = match self.labels {
+                    Some(_) => {
+                        let label = self.static_label(label);
+                        self.new_metric_with_name(combine_base_identifier_and_label(
+                            &self.submetric.meta().name,
+                            label,
+                        ))
+                    }
+                    None => self.new_metric_with_dynamic_label(label.to_string()),
+                };
+                let metric = Arc::new(metric);
+                entry.insert(Arc::clone(&metric));
+                metric
             }
-            None => self.new_metric_with_dynamic_label(label.to_string()),
         }
     }
 
-    /// Gets the template submetric.
+    /// **Exported for test purposes.**
     ///
-    /// The template submetric is the actual metric that is cloned and modified
-    /// to record for a specific label.
-    pub fn get_submetric(&self) -> &T {
-        &self.submetric
+    /// Gets the number of recorded errors for the given metric and error type.
+    ///
+    /// # Arguments
+    ///
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The number of errors reported.
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType, ping_name: Option<String>) -> i32 {
+        crate::block_on_dispatcher();
+        crate::core::with_glean(|glean| {
+            test_get_num_recorded_errors(glean, self.submetric.meta(), error, ping_name.as_deref())
+                .unwrap_or(0)
+        })
     }
 }
 

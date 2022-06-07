@@ -62,9 +62,7 @@ class EventMetric {
         auto keys = std::move(Get<0>(serializedExtras));
         auto values = std::move(Get<1>(serializedExtras));
         for (size_t i = 0; i < keys.Length(); i++) {
-          auto extraString = ExtraStringForKey(keys[i]);
-          extras.EmplaceBack(
-              Telemetry::EventExtraEntry{extraString, values[i]});
+          extras.EmplaceBack(Telemetry::EventExtraEntry{keys[i], values[i]});
         }
         telExtras = Some(extras);
       }
@@ -74,7 +72,7 @@ class EventMetric {
       auto extra = aExtras->ToFfiExtra();
       fog_event_record(mId, &mozilla::Get<0>(extra), &mozilla::Get<1>(extra));
     } else {
-      nsTArray<uint32_t> keys;
+      nsTArray<nsCString> keys;
       nsTArray<nsCString> vals;
       fog_event_record(mId, &keys, &vals);
     }
@@ -143,8 +141,8 @@ class EventMetric {
 }  // namespace impl
 
 struct NoExtraKeys {
-  Tuple<nsTArray<uint32_t>, nsTArray<nsCString>> ToFfiExtra() const {
-    nsTArray<uint32_t> extraKeys;
+  Tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+    nsTArray<nsCString> extraKeys;
     nsTArray<nsCString> extraValues;
     return MakeTuple(std::move(extraKeys), std::move(extraValues));
   }

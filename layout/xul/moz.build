@@ -7,9 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "XUL")
 
-with Files("*Menu*"):
-    BUG_COMPONENT = ("Firefox", "Menus")
-
 if CONFIG["ENABLE_TESTS"]:
     MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
     MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]

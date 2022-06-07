@@ -115,7 +115,7 @@ class SetStatusRunnable final : public MIDIBackgroundRunnable {
   void RunInternal() override;
 
  private:
-  MIDIPortParent* mPort;
+  RefPtr<MIDIPortParent> mPort;
   MIDIPortDeviceState mState;
   MIDIPortConnectionState mConnection;
 };

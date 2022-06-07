@@ -212,6 +212,13 @@ def snake_case(value: str) -> str:
     return value.lower().replace(".", "_").replace("-", "_")
 
 
+def screaming_case(value: str) -> str:
+    """
+    Convert the value to SCREAMING_SNAKE_CASE.
+    """
+    return value.upper().replace(".", "_").replace("-", "_")
+
+
 @functools.lru_cache()
 def get_jinja2_template(
     template_name: str, filters: Iterable[Tuple[str, Callable]] = ()
@@ -233,6 +240,7 @@ def get_jinja2_template(
 
     env.filters["camelize"] = camelize
     env.filters["Camelize"] = Camelize
+    env.filters["scream"] = screaming_case
     for filter_name, filter_func in filters:
         env.filters[filter_name] = filter_func
 
@@ -541,9 +549,9 @@ metric_args = common_metric_args + extra_metric_args
 
 # Names of ping parameters to pass to constructors.
 ping_args = [
+    "name",
     "include_client_id",
     "send_if_empty",
-    "name",
     "reason_codes",
 ]
 

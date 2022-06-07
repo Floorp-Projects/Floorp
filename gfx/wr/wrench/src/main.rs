@@ -484,7 +484,7 @@ fn rawtest(mut wrench: Wrench, window: &mut WindowWrapper, rx: Receiver<Notifier
 fn reftest<'a>(
     mut wrench: Wrench,
     window: &mut WindowWrapper,
-    subargs: &clap::ArgMatches<'a>,
+    subargs: &clap::ArgMatches,
     rx: Receiver<NotifierEvent>
 ) -> usize {
     let dim = window.get_inner_size();
@@ -571,9 +571,11 @@ pub fn main() {
         );
     }
 
+    #[allow(deprecated)] // FIXME(bug 1771450): Use clap-serde or another way
     let args_yaml = load_yaml!("args.yaml");
-    let clap = clap::App::from_yaml(args_yaml)
-        .setting(clap::AppSettings::ArgRequiredElseHelp);
+    #[allow(deprecated)] // FIXME(bug 1771450): Use clap-serde or another way
+    let clap = clap::Command::from_yaml(args_yaml)
+        .arg_required_else_help(true);
 
     // On android devices, attempt to read command line arguments from a text
     // file located at <external_data_dir>/wrench/args.
@@ -835,7 +837,7 @@ fn render<'a>(
     wrench: &mut Wrench,
     window: &mut WindowWrapper,
     events_loop: &mut winit::event_loop::EventLoop<()>,
-    subargs: &clap::ArgMatches<'a>,
+    subargs: &clap::ArgMatches,
     no_block: bool,
     no_batch: bool,
 ) {

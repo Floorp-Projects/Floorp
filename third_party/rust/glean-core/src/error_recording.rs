@@ -137,7 +137,7 @@ pub fn record_error<O: Into<Option<i32>>>(
     log::warn!("{}: {}", meta.base_identifier(), message);
     let to_report = num_errors.into().unwrap_or(1);
     debug_assert!(to_report > 0);
-    metric.add(glean, to_report);
+    metric.add_sync(glean, to_report);
 }
 
 /// Gets the number of recorded errors for the given metric and error type.
@@ -162,7 +162,7 @@ pub fn test_get_num_recorded_errors(
     let use_ping_name = ping_name.unwrap_or(&meta.send_in_pings[0]);
     let metric = get_error_metric_for_metric(meta, error);
 
-    metric.test_get_value(glean, use_ping_name).ok_or_else(|| {
+    metric.get_value(glean, Some(use_ping_name)).ok_or_else(|| {
         format!(
             "No error recorded for {} in '{}' store",
             meta.base_identifier(),

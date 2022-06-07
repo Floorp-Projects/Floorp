@@ -19,6 +19,6 @@ impl PingUploader for HttpUploader {
     ///   the request, i.e. (Name, Value).
     fn upload(&self, url: String, _body: Vec<u8>, _headers: Vec<(String, String)>) -> UploadResult {
         log::debug!("TODO bug 1675468: submitting to {:?}", url);
-        UploadResult::HttpStatus(200)
+        UploadResult::http_status(200)
     }
 }

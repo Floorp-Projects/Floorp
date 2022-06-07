@@ -30,7 +30,7 @@ fn can_snapshot() {
         ..Default::default()
     });
 
-    local_metric.set(&glean, "snapshot 42");
+    local_metric.set_sync(&glean, "snapshot 42");
 
     assert!(StorageManager
         .snapshot(glean.storage(), "store", true)
@@ -51,7 +51,7 @@ fn snapshot_correctly_clears_the_stores() {
         ..Default::default()
     });
 
-    metric.add(&glean, 1);
+    metric.add_sync(&glean, 1);
 
     // Get the snapshot from "store1" and clear it.
     let snapshot = StorageManager.snapshot(glean.storage(), "store1", true);
@@ -87,14 +87,14 @@ fn storage_is_thread_safe() {
     let threadsafe_metric_clone = threadsafe_metric.clone();
     let glean_clone = glean.clone();
     let child = thread::spawn(move || {
-        threadsafe_metric_clone.add(&*glean_clone.lock().unwrap(), 1);
+        threadsafe_metric_clone.add_sync(&*glean_clone.lock().unwrap(), 1);
         c.wait();
-        threadsafe_metric_clone.add(&*glean_clone.lock().unwrap(), 1);
+        threadsafe_metric_clone.add_sync(&*glean_clone.lock().unwrap(), 1);
     });
 
-    threadsafe_metric.add(&*glean.lock().unwrap(), 1);
+    threadsafe_metric.add_sync(&*glean.lock().unwrap(), 1);
     barrier.wait();
-    threadsafe_metric.add(&*glean.lock().unwrap(), 1);
+    threadsafe_metric.add_sync(&*glean.lock().unwrap(), 1);
 
     child.join().unwrap();
 
