@@ -43,6 +43,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
@@ -313,7 +314,7 @@ class BrowserRobot {
     fun clickLinkMatchingText(expectedText: String) {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
             .waitForExists(waitingTime)
-        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTimeLong)
 
         val element = mDevice.findObject(UiSelector().textContains(expectedText))
         element.click()
