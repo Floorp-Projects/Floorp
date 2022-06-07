@@ -531,6 +531,45 @@ license file's hash.
         ]
         return all(results)
 
+    def _check_build_rust(self, cargo_lock):
+        ret = True
+        crates = {}
+        for path in Path(self.topsrcdir).glob("build/rust/**/Cargo.toml"):
+            with open(path) as fh:
+                cargo_toml = pytoml.load(fh)
+                path = path.relative_to(self.topsrcdir)
+                package = cargo_toml["package"]
+                key = (package["name"], package["version"])
+                if key in crates:
+                    self.log(
+                        logging.ERROR,
+                        "build_rust",
+                        {
+                            "path": crates[key],
+                            "path2": path,
+                            "crate": key[0],
+                            "version": key[1],
+                        },
+                        "{path} and {path2} both contain {crate} {version}",
+                    )
+                    ret = False
+                crates[key] = path
+
+        for package in cargo_lock["package"]:
+            key = (package["name"], package["version"])
+            if key in crates and "source" not in package:
+                crates.pop(key)
+
+        for ((name, version), path) in crates.items():
+            self.log(
+                logging.ERROR,
+                "build_rust",
+                {"path": path, "crate": name, "version": version},
+                "{crate} {version} has an override in {path} that is not used",
+            )
+            ret = False
+        return ret
+
     def vendor(
         self, ignore_modified=False, build_peers_said_large_imports_were_ok=False
     ):
@@ -565,6 +604,9 @@ license file's hash.
                     {"crate": package["name"]},
                     """Unused patch in top-level Cargo.toml for {crate}.""",
                 )
+                failed = True
+
+            if not self._check_build_rust(cargo_lock):
                 failed = True
 
             grouped = defaultdict(list)
