@@ -629,7 +629,7 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
     frames_since_clipped_ = 0;
     if (!!clipping_predictor_) {
       clipping_predictor_->Reset();
-      clipping_predictor_evaluator_.Reset();
+      clipping_predictor_evaluator_.RemoveExpectations();
     }
   }
   AggregateChannelLevels();
