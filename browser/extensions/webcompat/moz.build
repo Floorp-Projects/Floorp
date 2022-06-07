@@ -91,6 +91,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
     "shims/bmauth.js",
+    "shims/branch.js",
     "shims/chartbeat.js",
     "shims/crave-ca.js",
     "shims/criteo.js",
