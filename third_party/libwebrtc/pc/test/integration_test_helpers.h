@@ -214,32 +214,6 @@ class MockRtpReceiverObserver : public webrtc::RtpReceiverObserverInterface {
 class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
                                          public SignalingMessageReceiver {
  public:
-  // Different factory methods for convenience.
-  // TODO(deadbeef): Could use the pattern of:
-  //
-  // PeerConnectionIntegrationWrapper =
-  //     WrapperBuilder.WithConfig(...).WithOptions(...).build();
-  //
-  // To reduce some code duplication.
-  static PeerConnectionIntegrationWrapper* CreateWithDtlsIdentityStore(
-      const std::string& debug_name,
-      std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
-      rtc::Thread* network_thread,
-      rtc::Thread* worker_thread) {
-    PeerConnectionIntegrationWrapper* client(
-        new PeerConnectionIntegrationWrapper(debug_name));
-    webrtc::PeerConnectionDependencies dependencies(nullptr);
-    dependencies.cert_generator = std::move(cert_generator);
-    if (!client->Init(nullptr, nullptr, std::move(dependencies), network_thread,
-                      worker_thread, nullptr,
-                      /*reset_encoder_factory=*/false,
-                      /*reset_decoder_factory=*/false)) {
-      delete client;
-      return nullptr;
-    }
-    return client;
-  }
-
   webrtc::PeerConnectionFactoryInterface* pc_factory() const {
     return peer_connection_factory_.get();
   }
@@ -711,6 +685,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   }
 
  private:
+  // Constructor used by friend class PeerConnectionIntegrationBaseTest.
   explicit PeerConnectionIntegrationWrapper(const std::string& debug_name)
       : debug_name_(debug_name) {}
 
