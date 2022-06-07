@@ -5,8 +5,9 @@
 var EXPORTED_SYMBOLS = ["CommonDialog"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "EnableDelayHelper",
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
@@ -224,7 +225,7 @@ CommonDialog.prototype = {
     }
 
     if (this.args.enableDelay) {
-      this.delayHelper = new EnableDelayHelper({
+      this.delayHelper = new lazy.EnableDelayHelper({
         disableDialog: () => this.setButtonsEnabledState(false),
         enableDialog: () => this.setButtonsEnabledState(true),
         focusTarget: this.ui.focusTarget,
