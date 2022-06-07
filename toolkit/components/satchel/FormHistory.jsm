@@ -93,9 +93,11 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Sqlite",
   "resource://gre/modules/Sqlite.jsm"
 );
@@ -784,7 +786,7 @@ var DB = {
 
   /** String representing where the FormHistory database is on the filesystem */
   get path() {
-    return OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+    return lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, DB_FILENAME);
   },
 
   /**
@@ -838,8 +840,8 @@ var DB = {
     log(`Establishing database connection - attempt # ${attemptNum}`);
     let conn;
     try {
-      conn = await Sqlite.openConnection({ path: this.path });
-      Sqlite.shutdown.addBlocker("Closing FormHistory database.", () =>
+      conn = await lazy.Sqlite.openConnection({ path: this.path });
+      lazy.Sqlite.shutdown.addBlocker("Closing FormHistory database.", () =>
         conn.close()
       );
     } catch (e) {
@@ -979,12 +981,12 @@ var DB = {
       await conn.close();
     }
     let backupFile = this.path + ".corrupt";
-    let { file, path: uniquePath } = await OS.File.openUnique(backupFile, {
+    let { file, path: uniquePath } = await lazy.OS.File.openUnique(backupFile, {
       humanReadable: true,
     });
     await file.close();
-    await OS.File.copy(this.path, uniquePath);
-    await OS.File.remove(this.path);
+    await lazy.OS.File.copy(this.path, uniquePath);
+    await lazy.OS.File.remove(this.path);
     log("Completed DB cleanup.");
   },
 
