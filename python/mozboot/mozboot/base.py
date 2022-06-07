@@ -19,6 +19,7 @@ from mozboot.util import (
     http_download_and_save,
 )
 from mozfile import which
+from mozbuild.bootstrap import bootstrap_toolchain
 from mach.util import to_optional_path, win_to_msys_path
 
 NO_MERCURIAL = """
@@ -147,7 +148,6 @@ class BaseBootstrapper(object):
         self.no_system_changes = no_system_changes
         self.state_dir = None
         self.srcdir = None
-        self.configure_sandbox = None
 
     def validate_environment(self):
         """
@@ -380,28 +380,7 @@ class BaseBootstrapper(object):
             return self.install_toolchain_artifact_impl(
                 self.state_dir, toolchain_job, no_unpack
             )
-
-        if not self.configure_sandbox:
-            from mozbuild.configure import ConfigureSandbox
-
-            # Here, we don't want an existing mozconfig to interfere with what we
-            # do, neither do we want the default for --enable-bootstrap (which is not
-            # always on) to prevent this from doing something.
-            self.configure_sandbox = sandbox = ConfigureSandbox(
-                {}, argv=["configure", "--enable-bootstrap", f"MOZCONFIG={os.devnull}"]
-            )
-            moz_configure = self.srcdir / "build" / "moz.configure"
-            sandbox.include_file(str(moz_configure / "init.configure"))
-            # bootstrap_search_path_order has a dependency on developer_options, which
-            # is not defined in init.configure. Its value doesn't matter for us, though.
-            sandbox["developer_options"] = sandbox["always"]
-            sandbox.include_file(str(moz_configure / "bootstrap.configure"))
-
-        # Expand the `bootstrap_path` template for the given toolchain_job, and execute the
-        # expanded function via `_value_for`, which will trigger autobootstrap.
-        self.configure_sandbox._value_for(
-            self.configure_sandbox["bootstrap_path"](toolchain_job)
-        )
+        bootstrap_toolchain(toolchain_job)
 
     def install_toolchain_artifact_impl(
         self, install_dir: Path, toolchain_job, no_unpack=False
