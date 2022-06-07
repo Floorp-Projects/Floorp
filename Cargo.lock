@@ -1461,6 +1461,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dom"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+]
+
+[[package]]
 name = "dtoa"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2077,6 +2084,7 @@ dependencies = [
  "bincode",
  "cssparser",
  "cstr",
+ "dom",
  "gecko-profiler",
  "libc",
  "log",
@@ -2162,6 +2170,7 @@ dependencies = [
  "cubeb-coreaudio",
  "cubeb-pulse",
  "cubeb-sys",
+ "dom",
  "encoding_glue",
  "fluent",
  "fluent-fallback",
@@ -3126,6 +3135,7 @@ version = "0.0.1"
 dependencies = [
  "app_units",
  "cssparser",
+ "dom",
  "euclid",
  "selectors",
  "servo_arc",
@@ -4996,6 +5006,7 @@ dependencies = [
  "byteorder",
  "cssparser",
  "derive_more",
+ "dom",
  "euclid",
  "fxhash",
  "gecko-profiler",

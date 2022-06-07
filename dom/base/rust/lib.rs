@@ -2,143 +2,180 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-//! States elements can be in.
+//! DOM types to be shared between Rust and C++.
+
+use bitflags::bitflags;
 
 bitflags! {
     /// Event-based element states.
-    ///
-    /// NB: Is important for this to remain in sync with Gecko's
-    /// dom/events/EventStates.h.
-    ///
-    /// Please keep in that order in order for this to be easily auditable.
-    ///
-    /// TODO(emilio): We really really want to use the NS_EVENT_STATE bindings
-    /// for this.
-    #[derive(MallocSizeOf)]
+    #[repr(C)]
     pub struct ElementState: u64 {
         /// The mouse is down on this element.
         /// <https://html.spec.whatwg.org/multipage/#selector-active>
         /// FIXME(#7333): set/unset this when appropriate
-        const IN_ACTIVE_STATE = 1 << 0;
+        const ACTIVE = 1 << 0;
         /// This element has focus.
         /// <https://html.spec.whatwg.org/multipage/#selector-focus>
-        const IN_FOCUS_STATE = 1 << 1;
+        const FOCUS = 1 << 1;
         /// The mouse is hovering over this element.
         /// <https://html.spec.whatwg.org/multipage/#selector-hover>
-        const IN_HOVER_STATE = 1 << 2;
+        const HOVER = 1 << 2;
         /// Content is enabled (and can be disabled).
         /// <http://www.whatwg.org/html/#selector-enabled>
-        const IN_ENABLED_STATE = 1 << 3;
+        const ENABLED = 1 << 3;
         /// Content is disabled.
         /// <http://www.whatwg.org/html/#selector-disabled>
-        const IN_DISABLED_STATE = 1 << 4;
+        const DISABLED = 1 << 4;
         /// Content is checked.
         /// <https://html.spec.whatwg.org/multipage/#selector-checked>
-        const IN_CHECKED_STATE = 1 << 5;
+        const CHECKED = 1 << 5;
         /// <https://html.spec.whatwg.org/multipage/#selector-indeterminate>
-        const IN_INDETERMINATE_STATE = 1 << 6;
+        const INDETERMINATE = 1 << 6;
         /// <https://html.spec.whatwg.org/multipage/#selector-placeholder-shown>
-        const IN_PLACEHOLDER_SHOWN_STATE = 1 << 7;
+        const PLACEHOLDER_SHOWN = 1 << 7;
         /// <https://html.spec.whatwg.org/multipage/#selector-target>
-        const IN_TARGET_STATE = 1 << 8;
+        const URLTARGET = 1 << 8;
         /// <https://fullscreen.spec.whatwg.org/#%3Afullscreen-pseudo-class>
-        const IN_FULLSCREEN_STATE = 1 << 9;
+        const FULLSCREEN = 1 << 9;
         /// <https://html.spec.whatwg.org/multipage/#selector-valid>
-        const IN_VALID_STATE = 1 << 10;
+        const VALID = 1 << 10;
         /// <https://html.spec.whatwg.org/multipage/#selector-invalid>
-        const IN_INVALID_STATE = 1 << 11;
+        const INVALID = 1 << 11;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-ui-valid
-        const IN_MOZ_UI_VALID_STATE = 1 << 12;
+        const MOZ_UI_VALID = 1 << 12;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-ui-invalid
-        const IN_MOZ_UI_INVALID_STATE = 1 << 13;
+        const MOZ_UI_INVALID = 1 << 13;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-broken
-        const IN_BROKEN_STATE = 1 << 14;
+        const BROKEN = 1 << 14;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-loading
-        const IN_LOADING_STATE = 1 << 15;
+        const LOADING = 1 << 15;
         /// <https://html.spec.whatwg.org/multipage/#selector-required>
-        const IN_REQUIRED_STATE = 1 << 16;
+        const REQUIRED = 1 << 16;
         /// <https://html.spec.whatwg.org/multipage/#selector-optional>
-        const IN_OPTIONAL_STATE = 1 << 17;
+        /// We use an underscore to workaround a silly windows.h define.
+        const OPTIONAL_ = 1 << 17;
         /// <https://html.spec.whatwg.org/multipage/#selector-defined>
-        const IN_DEFINED_STATE = 1 << 18;
+        const DEFINED = 1 << 18;
         /// <https://html.spec.whatwg.org/multipage/#selector-visited>
-        const IN_VISITED_STATE = 1 << 19;
+        const VISITED = 1 << 19;
         /// <https://html.spec.whatwg.org/multipage/#selector-link>
-        const IN_UNVISITED_STATE = 1 << 20;
+        const UNVISITED = 1 << 20;
         /// <https://drafts.csswg.org/selectors-4/#the-any-link-pseudo>
-        const IN_VISITED_OR_UNVISITED_STATE = ElementState::IN_VISITED_STATE.bits |
-                                              ElementState::IN_UNVISITED_STATE.bits;
+        const VISITED_OR_UNVISITED = Self::VISITED.bits | Self::UNVISITED.bits;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-drag-over
-        const IN_DRAGOVER_STATE = 1 << 21;
+        const DRAGOVER = 1 << 21;
         /// <https://html.spec.whatwg.org/multipage/#selector-in-range>
-        const IN_INRANGE_STATE = 1 << 22;
+        const INRANGE = 1 << 22;
         /// <https://html.spec.whatwg.org/multipage/#selector-out-of-range>
-        const IN_OUTOFRANGE_STATE = 1 << 23;
+        const OUTOFRANGE = 1 << 23;
         /// <https://html.spec.whatwg.org/multipage/#selector-read-only>
-        const IN_READONLY_STATE = 1 << 24;
+        const READONLY = 1 << 24;
         /// <https://html.spec.whatwg.org/multipage/#selector-read-write>
-        const IN_READWRITE_STATE = 1 << 25;
+        const READWRITE = 1 << 25;
         /// <https://html.spec.whatwg.org/multipage/#selector-default>
-        const IN_DEFAULT_STATE = 1 << 26;
+        const DEFAULT = 1 << 26;
         /// Non-standard & undocumented.
-        const IN_OPTIMUM_STATE = 1 << 28;
+        const OPTIMUM = 1 << 28;
         /// Non-standard & undocumented.
-        const IN_SUB_OPTIMUM_STATE = 1 << 29;
+        const SUB_OPTIMUM = 1 << 29;
         /// Non-standard & undocumented.
-        const IN_SUB_SUB_OPTIMUM_STATE = 1 << 30;
+        const SUB_SUB_OPTIMUM = 1 << 30;
         /// Non-standard & undocumented.
-        const IN_INCREMENT_SCRIPT_LEVEL_STATE = 1 << 31;
+        const INCREMENT_SCRIPT_LEVEL = 1u64 << 31;
         /// <https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo>
-        const IN_FOCUSRING_STATE = 1 << 32;
+        const FOCUSRING = 1u64 << 32;
         /// <https://drafts.csswg.org/selectors-4/#the-focus-within-pseudo>
-        const IN_FOCUS_WITHIN_STATE = 1 << 33;
+        const FOCUS_WITHIN = 1u64 << 33;
         /// :dir matching; the states are used for dynamic change detection.
         /// State that elements that match :dir(ltr) are in.
-        const IN_LTR_STATE = 1 << 34;
+        const LTR = 1u64 << 34;
         /// State that elements that match :dir(rtl) are in.
-        const IN_RTL_STATE = 1 << 35;
+        const RTL = 1u64 << 35;
         /// State that HTML elements that have a "dir" attr are in.
-        const IN_HAS_DIR_ATTR_STATE = 1 << 36;
+        const HAS_DIR_ATTR = 1u64 << 36;
         /// State that HTML elements with dir="ltr" (or something
         /// case-insensitively equal to "ltr") are in.
-        const IN_HAS_DIR_ATTR_LTR_STATE = 1 << 37;
+        const HAS_DIR_ATTR_LTR = 1u64 << 37;
         /// State that HTML elements with dir="rtl" (or something
         /// case-insensitively equal to "rtl") are in.
-        const IN_HAS_DIR_ATTR_RTL_STATE = 1 << 38;
+        const HAS_DIR_ATTR_RTL = 1u64 << 38;
         /// State that HTML <bdi> elements without a valid-valued "dir" attr or
         /// any HTML elements (including <bdi>) with dir="auto" (or something
         /// case-insensitively equal to "auto") are in.
-        const IN_HAS_DIR_ATTR_LIKE_AUTO_STATE = 1 << 39;
+        const HAS_DIR_ATTR_LIKE_AUTO = 1u64 << 39;
         /// Non-standard & undocumented.
-        const IN_AUTOFILL_STATE = 1 << 40;
+        const AUTOFILL = 1u64 << 40;
         /// Non-standard & undocumented.
-        const IN_AUTOFILL_PREVIEW_STATE = 1 << 41;
+        const AUTOFILL_PREVIEW = 1u64 << 41;
         /// State that dialog element is modal, for centered alignment
         /// <https://html.spec.whatwg.org/multipage/#centered-alignment>
-        const IN_MODAL_DIALOG_STATE = 1 << 42;
+        const MODAL_DIALOG = 1u64 << 42;
         /// <https://html.spec.whatwg.org/multipage/#inert-subtrees>
-        const IN_MOZINERT_STATE = 1 << 43;
+        const INERT = 1u64 << 43;
         /// State for the topmost modal element in top layer
-        const IN_TOPMOST_MODAL_TOP_LAYER_STATE = 1 << 44;
+        const TOPMOST_MODAL = 1u64 << 44;
         /// Initially used for the devtools highlighter, but now somehow only
         /// used for the devtools accessibility inspector.
-        const IN_DEVTOOLS_HIGHLIGHTED_STATE = 1 << 45;
+        const DEVTOOLS_HIGHLIGHTED = 1u64 << 45;
         /// Used for the devtools style editor. Probably should go away.
-        const IN_STYLEEDITOR_TRANSITIONING_STATE = 1 << 46;
+        const STYLEEDITOR_TRANSITIONING = 1u64 << 46;
         /// For :-moz-value-empty (to show widgets like the reveal password
         /// button or the clear button).
-        const IN_VALUE_EMPTY_STATE = 1 << 47;
+        const VALUE_EMPTY = 1u64 << 47;
         /// For :-moz-revealed.
-        const IN_REVEALED_STATE = 1 << 48;
+        const REVEALED = 1u64 << 48;
+
+        /// Some convenience unions.
+        const DIR_STATES = Self::LTR.bits | Self::RTL.bits;
+
+        const DIR_ATTR_STATES = Self::HAS_DIR_ATTR.bits |
+                                Self::HAS_DIR_ATTR_LTR.bits |
+                                Self::HAS_DIR_ATTR_RTL.bits |
+                                Self::HAS_DIR_ATTR_LIKE_AUTO.bits;
+
+        const DISABLED_STATES = Self::DISABLED.bits | Self::ENABLED.bits;
+
+        const REQUIRED_STATES = Self::REQUIRED.bits | Self::OPTIONAL_.bits;
+
+        /// Event states that can be added and removed through
+        /// Element::{Add,Remove}ManuallyManagedStates.
+        ///
+        /// Take care when manually managing state bits.  You are responsible
+        /// for setting or clearing the bit when an Element is added or removed
+        /// from a document (e.g. in BindToTree and UnbindFromTree), if that is
+        /// an appropriate thing to do for your state bit.
+        const MANUALLY_MANAGED_STATES = Self::AUTOFILL.bits | Self::AUTOFILL_PREVIEW.bits;
+
+        /// Event states that are managed externally to an element (by the
+        /// EventStateManager, or by other code).  As opposed to those in
+        /// INTRINSIC_STATES, which are are computed by the element itself
+        /// and returned from Element::IntrinsicState.
+        const EXTERNALLY_MANAGED_STATES =
+            Self::MANUALLY_MANAGED_STATES.bits |
+            Self::DIR_ATTR_STATES.bits |
+            Self::DISABLED_STATES.bits |
+            Self::REQUIRED_STATES.bits |
+            Self::ACTIVE.bits |
+            Self::DEFINED.bits |
+            Self::DRAGOVER.bits |
+            Self::FOCUS.bits |
+            Self::FOCUSRING.bits |
+            Self::FOCUS_WITHIN.bits |
+            Self::FULLSCREEN.bits |
+            Self::HOVER.bits |
+            Self::URLTARGET.bits |
+            Self::MODAL_DIALOG.bits |
+            Self::INERT.bits |
+            Self::TOPMOST_MODAL.bits |
+            Self::REVEALED.bits;
+
+        const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }
 }
 
 bitflags! {
     /// Event-based document states.
-    ///
-    /// NB: Is important for this to remain in sync with Gecko's
-    /// dom/base/Document.h.
-    #[derive(MallocSizeOf)]
+    #[repr(C)]
     pub struct DocumentState: u64 {
         /// Window activation status
         const WINDOW_INACTIVE = 1 << 0;
@@ -148,5 +185,7 @@ bitflags! {
         const LTR_LOCALE = 1 << 2;
         /// LWTheme status
         const LWTHEME = 1 << 3;
+
+        const ALL_LOCALEDIR_BITS = Self::LTR_LOCALE.bits | Self::RTL_LOCALE.bits;
     }
 }

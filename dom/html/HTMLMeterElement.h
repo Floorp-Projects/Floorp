@@ -21,7 +21,7 @@ class HTMLMeterElement final : public nsGenericHTMLElement {
   explicit HTMLMeterElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -86,15 +86,15 @@ class HTMLMeterElement final : public nsGenericHTMLElement {
 
   /**
    * Returns the optimum state of the element.
-   * NS_EVENT_STATE_OPTIMUM if the actual value is in the optimum region.
-   * NS_EVENT_STATE_SUB_OPTIMUM if the actual value is in the sub-optimal
+   * ElementState::OPTIMUM if the actual value is in the optimum region.
+   * ElementState::SUB_OPTIMUM if the actual value is in the sub-optimal
    *                            region.
-   * NS_EVENT_STATE_SUB_SUB_OPTIMUM if the actual value is in the
+   * ElementState::SUB_SUB_OPTIMUM if the actual value is in the
    *                                sub-sub-optimal region.
    *
    * @return the optimum state of the element.
    */
-  EventStates GetOptimumState() const;
+  ElementState GetOptimumState() const;
 };
 
 }  // namespace mozilla::dom

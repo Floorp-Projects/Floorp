@@ -12,7 +12,6 @@
 #include "States.h"
 
 #include "nsContentUtils.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
 
@@ -39,10 +38,10 @@ uint64_t HTMLLinkAccessible::NativeState() const {
 }
 
 uint64_t HTMLLinkAccessible::NativeLinkState() const {
-  EventStates eventState = mContent->AsElement()->State();
-  if (eventState.HasState(NS_EVENT_STATE_UNVISITED)) return states::LINKED;
+  dom::ElementState eventState = mContent->AsElement()->State();
+  if (eventState.HasState(dom::ElementState::UNVISITED)) return states::LINKED;
 
-  if (eventState.HasState(NS_EVENT_STATE_VISITED)) {
+  if (eventState.HasState(dom::ElementState::VISITED)) {
     return states::LINKED | states::TRAVERSED;
   }
 
@@ -128,7 +127,6 @@ already_AddRefed<nsIURI> HTMLLinkAccessible::AnchorURIAt(
 // HTMLLinkAccessible
 
 bool HTMLLinkAccessible::IsLinked() const {
-  EventStates state = mContent->AsElement()->State();
-  return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
-                                     NS_EVENT_STATE_UNVISITED);
+  dom::ElementState state = mContent->AsElement()->State();
+  return state.HasAtLeastOneOfStates(dom::ElementState::VISITED_OR_UNVISITED);
 }

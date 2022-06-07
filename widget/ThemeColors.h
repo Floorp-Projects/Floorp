@@ -103,7 +103,7 @@ class ThemeColors {
   static nscolor ComputeCustomAccentForeground(nscolor aColor);
 
   static nscolor AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
-                                                   EventStates aStates);
+                                                   dom::ElementState aStates);
 };
 
 }  // namespace mozilla::widget

@@ -139,7 +139,6 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 
-class EventStates;
 class ServoRestyleState;
 class EffectSet;
 class LazyLogModule;
@@ -2360,7 +2359,7 @@ class nsIFrame : public nsQueryFrame {
    *
    * @param aStates the changed states
    */
-  virtual void ContentStatesChanged(mozilla::EventStates aStates);
+  virtual void ContentStatesChanged(mozilla::dom::ElementState aStates);
 
   /**
    * Continuation member functions

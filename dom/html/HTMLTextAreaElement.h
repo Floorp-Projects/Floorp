@@ -27,7 +27,6 @@ namespace mozilla {
 
 class EventChainPostVisitor;
 class EventChainPreVisitor;
-class EventStates;
 class PresState;
 
 namespace dom {
@@ -70,7 +69,7 @@ class HTMLTextAreaElement final : public TextControlElement,
 
   virtual void FieldSetDisabledChanged(bool aNotify) override;
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   void SetLastValueChangeWasInteractive(bool);
 
@@ -218,7 +217,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetReadOnly(bool aReadOnly, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::readonly, aReadOnly, aError);
   }
-  bool Required() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
+  bool Required() const { return State().HasState(ElementState::REQUIRED); }
 
   MOZ_CAN_RUN_SCRIPT void SetRangeText(const nsAString& aReplacement,
                                        ErrorResult& aRv);

@@ -3119,7 +3119,7 @@ void CanvasRenderingContext2D::DrawFocusIfNeeded(
 }
 
 bool CanvasRenderingContext2D::DrawCustomFocusRing(Element& aElement) {
-  if (!aElement.State().HasState(NS_EVENT_STATE_FOCUSRING)) {
+  if (!aElement.State().HasState(ElementState::FOCUSRING)) {
     return false;
   }
 

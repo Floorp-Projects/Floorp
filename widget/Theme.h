@@ -31,6 +31,7 @@ class Theme : protected nsNativeTheme, public nsITheme {
   using RectCornerRadii = gfx::RectCornerRadii;
   using Colors = ThemeColors;
   using AccentColor = ThemeAccentColor;
+  using ElementState = dom::ElementState;
 
  public:
   explicit Theme(UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
@@ -103,30 +104,30 @@ class Theme : protected nsNativeTheme, public nsITheme {
   static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
 
-  std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
+  std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const ElementState&,
                                                         StyleAppearance,
                                                         const Colors&);
-  sRGBColor ComputeCheckmarkColor(const EventStates&, const Colors&);
+  sRGBColor ComputeCheckmarkColor(const ElementState&, const Colors&);
   enum class OutlineCoversBorder : bool { No, Yes };
-  sRGBColor ComputeBorderColor(const EventStates&, const Colors&,
+  sRGBColor ComputeBorderColor(const ElementState&, const Colors&,
                                OutlineCoversBorder);
 
-  std::pair<sRGBColor, sRGBColor> ComputeButtonColors(const EventStates&,
+  std::pair<sRGBColor, sRGBColor> ComputeButtonColors(const ElementState&,
                                                       const Colors&,
                                                       nsIFrame* = nullptr);
-  std::pair<sRGBColor, sRGBColor> ComputeTextfieldColors(const EventStates&,
+  std::pair<sRGBColor, sRGBColor> ComputeTextfieldColors(const ElementState&,
                                                          const Colors&,
                                                          OutlineCoversBorder);
-  std::pair<sRGBColor, sRGBColor> ComputeRangeProgressColors(const EventStates&,
-                                                             const Colors&);
-  std::pair<sRGBColor, sRGBColor> ComputeRangeTrackColors(const EventStates&,
+  std::pair<sRGBColor, sRGBColor> ComputeRangeProgressColors(
+      const ElementState&, const Colors&);
+  std::pair<sRGBColor, sRGBColor> ComputeRangeTrackColors(const ElementState&,
                                                           const Colors&);
-  std::pair<sRGBColor, sRGBColor> ComputeRangeThumbColors(const EventStates&,
+  std::pair<sRGBColor, sRGBColor> ComputeRangeThumbColors(const ElementState&,
                                                           const Colors&);
   std::pair<sRGBColor, sRGBColor> ComputeProgressColors(const Colors&);
   std::pair<sRGBColor, sRGBColor> ComputeProgressTrackColors(const Colors&);
   std::pair<sRGBColor, sRGBColor> ComputeMeterchunkColors(
-      const EventStates& aMeterState, const Colors&);
+      const ElementState& aMeterState, const Colors&);
   std::array<sRGBColor, 3> ComputeFocusRectColors(const Colors&);
 
   template <typename PaintBackendData>
@@ -138,11 +139,11 @@ class Theme : protected nsNativeTheme, public nsITheme {
                              const LayoutDeviceRect&, const Colors&, DPIRatio);
 
   void PaintCheckboxControl(DrawTarget& aDrawTarget, const LayoutDeviceRect&,
-                            const EventStates&, const Colors&, DPIRatio);
-  void PaintCheckMark(DrawTarget&, const LayoutDeviceRect&, const EventStates&,
+                            const ElementState&, const Colors&, DPIRatio);
+  void PaintCheckMark(DrawTarget&, const LayoutDeviceRect&, const ElementState&,
                       const Colors&);
   void PaintIndeterminateMark(DrawTarget&, const LayoutDeviceRect&,
-                              const EventStates&, const Colors&);
+                              const ElementState&, const Colors&);
 
   template <typename PaintBackendData>
   void PaintStrokedCircle(PaintBackendData&, const LayoutDeviceRect&,
@@ -160,35 +161,35 @@ class Theme : protected nsNativeTheme, public nsITheme {
                          CSSCoord aShadowBlurStdDev, DPIRatio);
   template <typename PaintBackendData>
   void PaintRadioControl(PaintBackendData&, const LayoutDeviceRect&,
-                         const EventStates&, const Colors&, DPIRatio);
+                         const ElementState&, const Colors&, DPIRatio);
   template <typename PaintBackendData>
   void PaintRadioCheckmark(PaintBackendData&, const LayoutDeviceRect&,
-                           const EventStates&, DPIRatio);
+                           const ElementState&, DPIRatio);
   template <typename PaintBackendData>
   void PaintTextField(PaintBackendData&, const LayoutDeviceRect&,
-                      const EventStates&, const Colors&, DPIRatio);
+                      const ElementState&, const Colors&, DPIRatio);
   template <typename PaintBackendData>
   void PaintListbox(PaintBackendData&, const LayoutDeviceRect&,
-                    const EventStates&, const Colors&, DPIRatio);
+                    const ElementState&, const Colors&, DPIRatio);
   template <typename PaintBackendData>
   void PaintMenulist(PaintBackendData&, const LayoutDeviceRect&,
-                     const EventStates&, const Colors&, DPIRatio);
+                     const ElementState&, const Colors&, DPIRatio);
   void PaintMenulistArrowButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
-                                const EventStates&);
+                                const ElementState&);
   void PaintSpinnerButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
-                          const EventStates&, StyleAppearance, const Colors&,
+                          const ElementState&, StyleAppearance, const Colors&,
                           DPIRatio);
   template <typename PaintBackendData>
   void PaintRange(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                  const EventStates&, const Colors&, DPIRatio,
+                  const ElementState&, const Colors&, DPIRatio,
                   bool aHorizontal);
   template <typename PaintBackendData>
   void PaintProgress(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                     const EventStates&, const Colors&, DPIRatio,
+                     const ElementState&, const Colors&, DPIRatio,
                      bool aIsMeter);
   template <typename PaintBackendData>
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                   const EventStates&, const Colors&, DPIRatio);
+                   const ElementState&, const Colors&, DPIRatio);
 
   static void PrefChangedCallback(const char*, void*) {
     LookAndFeel::NotifyChangedAllWindows(ThemeChangeKind::Layout);

@@ -8,7 +8,6 @@
 #define mozilla_RestyleManager_h
 
 #include "mozilla/AutoRestore.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OverflowChangedTracker.h"
 #include "mozilla/ServoElementSnapshot.h"
@@ -28,7 +27,6 @@ class nsStyleChangeList;
 
 namespace mozilla {
 
-class EventStates;
 class ServoStyleSet;
 
 namespace dom {
@@ -362,7 +360,7 @@ class RestyleManager {
   void ProcessPendingRestyles();
   void ProcessAllPendingAttributeAndStateInvalidations();
 
-  void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
+  void ContentStateChanged(nsIContent* aContent, dom::ElementState aStateMask);
   void AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
                            nsAtom* aAttribute, int32_t aModType);
   void ClassAttributeWillBeChangedBySMIL(dom::Element* aElement);

@@ -18,7 +18,6 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/GeckoMVMContext.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerRange.h"
@@ -3163,7 +3162,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   // code-path as "top"!
   if (aAnchorName.IsEmpty()) {
     NS_ASSERTION(!aScroll, "can't scroll to empty anchor name");
-    esm->SetContentState(nullptr, NS_EVENT_STATE_URLTARGET);
+    esm->SetContentState(nullptr, ElementState::URLTARGET);
     return NS_OK;
   }
 
@@ -3226,7 +3225,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   //    target element to null.
   // 2.1. Set the Document's target element to null.
   // 3.2. Set the Document's target element to target.
-  esm->SetContentState(target, NS_EVENT_STATE_URLTARGET);
+  esm->SetContentState(target, ElementState::URLTARGET);
 
   // TODO: Spec probably needs a section to account for this.
   if (nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable()) {
@@ -4429,7 +4428,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::CharacterDataChanged(
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentStateChanged(
-    Document* aDocument, nsIContent* aContent, EventStates aStateMask) {
+    Document* aDocument, nsIContent* aContent, ElementState aStateMask) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentStateChanged");
   MOZ_ASSERT(aDocument == mDocument, "Unexpected aDocument");
@@ -4440,7 +4439,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentStateChanged(
   }
 }
 
-void PresShell::DocumentStatesChanged(EventStates aStateMask) {
+void PresShell::DocumentStatesChanged(DocumentState aStateMask) {
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
   MOZ_ASSERT(mDocument);
   MOZ_ASSERT(!aStateMask.IsEmpty());
@@ -4449,7 +4448,7 @@ void PresShell::DocumentStatesChanged(EventStates aStateMask) {
     StyleSet()->InvalidateStyleForDocumentStateChanges(aStateMask);
   }
 
-  if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+  if (aStateMask.HasState(DocumentState::WINDOW_INACTIVE)) {
     if (nsIFrame* root = mFrameConstructor->GetRootFrame()) {
       root->SchedulePaint();
     }

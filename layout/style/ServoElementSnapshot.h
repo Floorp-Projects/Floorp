@@ -8,9 +8,9 @@
 #define mozilla_ServoElementSnapshot_h
 
 #include "AttrArray.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
+#include "mozilla/dom/RustTypes.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsChangeHint.h"
@@ -47,7 +47,10 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
 class ServoElementSnapshot {
   typedef dom::BorrowedAttrInfo BorrowedAttrInfo;
   typedef dom::Element Element;
-  typedef EventStates::ServoType ServoStateType;
+
+  // TODO: Now that the element state shares a representation with rust we
+  // should be able to do better and not use the internal type.
+  typedef dom::ElementState::InternalType ServoStateType;
 
  public:
   typedef ServoElementSnapshotFlags Flags;
@@ -70,9 +73,9 @@ class ServoElementSnapshot {
   /**
    * Captures the given state (if not previously captured).
    */
-  void AddState(EventStates aState) {
+  void AddState(dom::ElementState aState) {
     if (!HasAny(Flags::State)) {
-      mState = aState.ServoValue();
+      mState = aState.GetInternalValue();
       mContains |= Flags::State;
     }
   }
@@ -87,7 +90,7 @@ class ServoElementSnapshot {
 
   /**
    * Captures some other pseudo-class matching state not included in
-   * EventStates.
+   * ElementState.
    */
   void AddOtherPseudoClassState(const Element&);
 

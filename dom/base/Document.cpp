@@ -7677,7 +7677,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
 
   // IsTopLevelWindowInactive depends on the docshell, so
   // update the cached value now that it's available.
-  UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, false);
+  UpdateDocumentStates(DocumentState::WINDOW_INACTIVE, false);
   if (!aContainer) {
     return;
   }
@@ -8236,7 +8236,7 @@ void Document::UnblockDOMContentLoaded() {
 }
 
 void Document::ContentStateChanged(nsIContent* aContent,
-                                   EventStates aStateMask) {
+                                   ElementState aStateMask) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
              "Someone forgot a scriptblocker");
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
@@ -12492,36 +12492,36 @@ void Document::ForgetImagePreload(nsIURI* aURI) {
   }
 }
 
-void Document::UpdateDocumentStates(EventStates aMaybeChangedStates,
+void Document::UpdateDocumentStates(DocumentState aMaybeChangedStates,
                                     bool aNotify) {
-  const EventStates oldStates = mDocumentState;
+  const DocumentState oldStates = mDocumentState;
   if (aMaybeChangedStates.HasAtLeastOneOfStates(
-          NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS)) {
-    mDocumentState &= ~NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS;
+          DocumentState::ALL_LOCALEDIR_BITS)) {
+    mDocumentState &= ~DocumentState::ALL_LOCALEDIR_BITS;
     if (IsDocumentRightToLeft()) {
-      mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
+      mDocumentState |= DocumentState::RTL_LOCALE;
     } else {
-      mDocumentState |= NS_DOCUMENT_STATE_LTR_LOCALE;
+      mDocumentState |= DocumentState::LTR_LOCALE;
     }
   }
 
-  if (aMaybeChangedStates.HasAtLeastOneOfStates(NS_DOCUMENT_STATE_LWTHEME)) {
+  if (aMaybeChangedStates.HasAtLeastOneOfStates(DocumentState::LWTHEME)) {
     if (ComputeDocumentLWTheme()) {
-      mDocumentState |= NS_DOCUMENT_STATE_LWTHEME;
+      mDocumentState |= DocumentState::LWTHEME;
     } else {
-      mDocumentState &= ~NS_DOCUMENT_STATE_LWTHEME;
+      mDocumentState &= ~DocumentState::LWTHEME;
     }
   }
 
-  if (aMaybeChangedStates.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+  if (aMaybeChangedStates.HasState(DocumentState::WINDOW_INACTIVE)) {
     if (IsTopLevelWindowInactive()) {
-      mDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
+      mDocumentState |= DocumentState::WINDOW_INACTIVE;
     } else {
-      mDocumentState &= ~NS_DOCUMENT_STATE_WINDOW_INACTIVE;
+      mDocumentState &= ~DocumentState::WINDOW_INACTIVE;
     }
   }
 
-  EventStates changedStates = oldStates ^ mDocumentState;
+  const DocumentState changedStates = oldStates ^ mDocumentState;
   if (aNotify && !changedStates.IsEmpty()) {
     if (PresShell* ps = GetObservingPresShell()) {
       ps->DocumentStatesChanged(changedStates);
@@ -12583,7 +12583,7 @@ void Document::ResetDocumentDirection() {
   if (!nsContentUtils::IsChromeDoc(this)) {
     return;
   }
-  UpdateDocumentStates(NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS, true);
+  UpdateDocumentStates(DocumentState::ALL_LOCALEDIR_BITS, true);
 }
 
 bool Document::IsDocumentRightToLeft() {
@@ -14202,7 +14202,7 @@ size_t Document::CountFullscreenElements() const {
   size_t count = 0;
   for (const nsWeakPtr& ptr : mTopLayer) {
     if (nsCOMPtr<Element> elem = do_QueryReferent(ptr)) {
-      if (elem->State().HasState(NS_EVENT_STATE_FULLSCREEN)) {
+      if (elem->State().HasState(ElementState::FULLSCREEN)) {
         count++;
       }
     }
@@ -14570,15 +14570,15 @@ void Document::CleanupFullscreenState() {
 
 bool Document::PopFullscreenElement() {
   Element* removedElement = TopLayerPop([](Element* element) -> bool {
-    return element->State().HasState(NS_EVENT_STATE_FULLSCREEN);
+    return element->State().HasState(ElementState::FULLSCREEN);
   });
 
   if (!removedElement) {
     return false;
   }
 
-  MOZ_ASSERT(removedElement->State().HasState(NS_EVENT_STATE_FULLSCREEN));
-  removedElement->RemoveStates(NS_EVENT_STATE_FULLSCREEN);
+  MOZ_ASSERT(removedElement->State().HasState(ElementState::FULLSCREEN));
+  removedElement->RemoveStates(ElementState::FULLSCREEN);
   NotifyFullScreenChangedForMediaElement(*removedElement);
   // Reset iframe fullscreen flag.
   if (auto* iframe = HTMLIFrameElement::FromNode(removedElement)) {
@@ -14589,16 +14589,16 @@ bool Document::PopFullscreenElement() {
 }
 
 void Document::SetFullscreenElement(Element& aElement) {
-  aElement.AddStates(NS_EVENT_STATE_FULLSCREEN);
+  aElement.AddStates(ElementState::FULLSCREEN);
   TopLayerPush(aElement);
   NotifyFullScreenChangedForMediaElement(aElement);
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
-static EventStates TopLayerModalStates() {
-  EventStates modalStates = NS_EVENT_STATE_MODAL_DIALOG;
+static ElementState TopLayerModalStates() {
+  ElementState modalStates = ElementState::MODAL_DIALOG;
   if (StaticPrefs::dom_fullscreen_modal()) {
-    modalStates |= NS_EVENT_STATE_FULLSCREEN;
+    modalStates |= ElementState::FULLSCREEN;
   }
   return modalStates;
 }
@@ -14616,14 +14616,14 @@ void Document::TopLayerPush(Element& aElement) {
   NS_ASSERTION(GetTopLayerTop() == &aElement, "Should match");
 
   if (modal) {
-    aElement.AddStates(NS_EVENT_STATE_TOPMOST_MODAL);
+    aElement.AddStates(ElementState::TOPMOST_MODAL);
 
     bool foundExistingModalElement = false;
     for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
       nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
       if (element && element != &aElement &&
-          element->State().HasState(NS_EVENT_STATE_TOPMOST_MODAL)) {
-        element->RemoveStates(NS_EVENT_STATE_TOPMOST_MODAL);
+          element->State().HasState(ElementState::TOPMOST_MODAL)) {
+        element->RemoveStates(ElementState::TOPMOST_MODAL);
         foundExistingModalElement = true;
         break;
       }
@@ -14635,14 +14635,14 @@ void Document::TopLayerPush(Element& aElement) {
       if (&aElement != root) {
         // Add inert to the root element so that the inertness is applied to the
         // entire document.
-        root->AddStates(NS_EVENT_STATE_MOZINERT);
+        root->AddStates(ElementState::INERT);
       }
     }
   }
 }
 
 void Document::AddModalDialog(HTMLDialogElement& aDialogElement) {
-  aDialogElement.AddStates(NS_EVENT_STATE_MODAL_DIALOG);
+  aDialogElement.AddStates(ElementState::MODAL_DIALOG);
   TopLayerPush(aDialogElement);
 }
 
@@ -14652,7 +14652,7 @@ void Document::RemoveModalDialog(HTMLDialogElement& aDialogElement) {
   };
   DebugOnly<Element*> removedElement = TopLayerPop(predicate);
   MOZ_ASSERT(removedElement == &aDialogElement);
-  aDialogElement.RemoveStates(NS_EVENT_STATE_MODAL_DIALOG);
+  aDialogElement.RemoveStates(ElementState::MODAL_DIALOG);
 }
 
 Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
@@ -14693,16 +14693,16 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
     return nullptr;
   }
 
-  const EventStates modalStates = TopLayerModalStates();
+  const ElementState modalStates = TopLayerModalStates();
   const bool modal = removedElement->State().HasAtLeastOneOfStates(modalStates);
 
   if (modal) {
-    removedElement->RemoveStates(NS_EVENT_STATE_TOPMOST_MODAL);
+    removedElement->RemoveStates(ElementState::TOPMOST_MODAL);
     bool foundExistingModalElement = false;
     for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
       nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
       if (element && element->State().HasAtLeastOneOfStates(modalStates)) {
-        element->AddStates(NS_EVENT_STATE_TOPMOST_MODAL);
+        element->AddStates(ElementState::TOPMOST_MODAL);
         foundExistingModalElement = true;
         break;
       }
@@ -14711,7 +14711,7 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
     if (!foundExistingModalElement) {
       Element* root = GetRootElement();
       if (root && !root->GetBoolAttr(nsGkAtoms::inert)) {
-        root->RemoveStates(NS_EVENT_STATE_MOZINERT);
+        root->RemoveStates(ElementState::INERT);
       }
     }
   }
@@ -14844,7 +14844,7 @@ Element* Document::GetUnretargetedFullScreenElement() const {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
     // Per spec, the fullscreen element is the topmost element in the document’s
     // top layer whose fullscreen flag is set, if any, and null otherwise.
-    if (element && element->State().HasState(NS_EVENT_STATE_FULLSCREEN)) {
+    if (element && element->State().HasState(ElementState::FULLSCREEN)) {
       return element;
     }
   }

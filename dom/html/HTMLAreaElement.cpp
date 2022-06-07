@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsWindowSizes.h"
 
@@ -112,7 +111,7 @@ already_AddRefed<nsIURI> HTMLAreaElement::GetHrefURI() const {
   return GetHrefURIForAnchors();
 }
 
-EventStates HTMLAreaElement::IntrinsicState() const {
+ElementState HTMLAreaElement::IntrinsicState() const {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 

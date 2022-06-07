@@ -6,7 +6,6 @@
 
 #include "Link.h"
 
-#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAElement.h"
@@ -75,8 +74,8 @@ void Link::VisitedQueryFinished(bool aVisited) {
   // Set our current state as appropriate.
   mState = newState;
 
-  MOZ_ASSERT(LinkState() == NS_EVENT_STATE_VISITED ||
-                 LinkState() == NS_EVENT_STATE_UNVISITED,
+  MOZ_ASSERT(LinkState() == ElementState::VISITED ||
+                 LinkState() == ElementState::UNVISITED,
              "Unexpected state obtained from LinkState()!");
 
   // Tell the element to update its visited state.
@@ -90,7 +89,7 @@ void Link::VisitedQueryFinished(bool aVisited) {
   }
 }
 
-EventStates Link::LinkState() const {
+ElementState Link::LinkState() const {
   // We are a constant method, but we are just lazily doing things and have to
   // track that state.  Cast away that constness!
   //
@@ -125,14 +124,14 @@ EventStates Link::LinkState() const {
 
   // Otherwise, return our known state.
   if (mState == State::Visited) {
-    return NS_EVENT_STATE_VISITED;
+    return ElementState::VISITED;
   }
 
   if (mState == State::Unvisited) {
-    return NS_EVENT_STATE_UNVISITED;
+    return ElementState::UNVISITED;
   }
 
-  return EventStates();
+  return ElementState();
 }
 
 nsIURI* Link::GetURI() const {
@@ -500,9 +499,9 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
     mElement->UpdateState(aNotify);
   } else {
     if (mState == State::Unvisited) {
-      mElement->UpdateLinkState(NS_EVENT_STATE_UNVISITED);
+      mElement->UpdateLinkState(ElementState::UNVISITED);
     } else {
-      mElement->UpdateLinkState(EventStates());
+      mElement->UpdateLinkState(ElementState());
     }
   }
 }

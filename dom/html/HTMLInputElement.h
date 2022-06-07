@@ -201,7 +201,7 @@ class HTMLInputElement final : public TextControlElement,
 
   void DestroyContent() override;
 
-  EventStates IntrinsicState() const override;
+  ElementState IntrinsicState() const override;
 
   void SetLastValueChangeWasInteractive(bool);
 
@@ -835,7 +835,7 @@ class HTMLInputElement final : public TextControlElement,
    * that @required attribute applies and the attribute is set; in contrast,
    * Required() returns true whenever @required attribute is set.
    */
-  bool IsRequired() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
+  bool IsRequired() const { return State().HasState(ElementState::REQUIRED); }
 
   bool HasBeenTypePassword() const { return mHasBeenTypePassword; }
 

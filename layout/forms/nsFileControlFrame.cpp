@@ -21,7 +21,6 @@
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -532,8 +531,8 @@ nscoord nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
 }
 
 void nsFileControlFrame::SyncDisabledState() {
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+  ElementState eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(ElementState::DISABLED)) {
     mBrowseFilesOrDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, u""_ns,
                                 true);
   } else {
@@ -541,8 +540,8 @@ void nsFileControlFrame::SyncDisabledState() {
   }
 }
 
-void nsFileControlFrame::ContentStatesChanged(EventStates aStates) {
-  if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
+void nsFileControlFrame::ContentStatesChanged(ElementState aStates) {
+  if (aStates.HasState(ElementState::DISABLED)) {
     nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
   }
 }

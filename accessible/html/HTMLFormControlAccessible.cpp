@@ -23,7 +23,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "mozilla/EditorBase.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditor.h"
@@ -181,8 +180,8 @@ uint64_t HTMLButtonAccessible::State() {
 uint64_t HTMLButtonAccessible::NativeState() const {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
-  EventStates elmState = mContent->AsElement()->State();
-  if (elmState.HasState(NS_EVENT_STATE_DEFAULT)) state |= states::DEFAULT;
+  ElementState elmState = mContent->AsElement()->State();
+  if (elmState.HasState(ElementState::DEFAULT)) state |= states::DEFAULT;
 
   return state;
 }

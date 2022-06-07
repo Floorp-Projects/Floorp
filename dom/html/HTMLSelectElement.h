@@ -139,7 +139,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   void SetName(const nsAString& aName, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::name, aName, aRv);
   }
-  bool Required() const { return State().HasState(NS_EVENT_STATE_REQUIRED); }
+  bool Required() const { return State().HasState(ElementState::REQUIRED); }
   void SetRequired(bool aVal, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::required, aVal, aRv);
   }
@@ -213,7 +213,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   virtual void FieldSetDisabledChanged(bool aNotify) override;
 
-  EventStates IntrinsicState() const override;
+  ElementState IntrinsicState() const override;
 
   /**
    * To be called when stuff is added under a child of the select--but *before*

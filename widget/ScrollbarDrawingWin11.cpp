@@ -100,7 +100,7 @@ LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
 
 sRGBColor ScrollbarDrawingWin11::ComputeScrollbarTrackColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, const Colors& aColors) {
+    const DocumentState& aDocumentState, const Colors& aColors) {
   if (aColors.HighContrast()) {
     return ScrollbarDrawingWin::ComputeScrollbarTrackColor(
         aFrame, aStyle, aDocumentState, aColors);
@@ -116,7 +116,7 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarTrackColor(
 
 sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors) {
   if (aColors.HighContrast()) {
     return ScrollbarDrawingWin::ComputeScrollbarThumbColor(
@@ -130,15 +130,15 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
     return aColors.IsDark() ? NS_RGBA(149, 149, 149, 255)
                             : NS_RGBA(133, 133, 133, 255);
   }();
-  EventStates state = aElementState;
+  ElementState state = aElementState;
   if (!IsScrollbarWidthThin(aStyle)) {
     // non-thin scrollbars get hover feedback by changing thumb shape, so we
     // only provide active feedback (and we use the hover state for that as it's
     // more subtle).
-    state &= ~NS_EVENT_STATE_HOVER;
-    if (state.HasState(NS_EVENT_STATE_ACTIVE)) {
-      state &= ~NS_EVENT_STATE_ACTIVE;
-      state |= NS_EVENT_STATE_HOVER;
+    state &= ~ElementState::HOVER;
+    if (state.HasState(ElementState::ACTIVE)) {
+      state &= ~ElementState::ACTIVE;
+      state |= ElementState::HOVER;
     }
   }
   return sRGBColor::FromABGR(
@@ -148,7 +148,7 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
 std::pair<sRGBColor, sRGBColor>
 ScrollbarDrawingWin11::ComputeScrollbarButtonColors(
     nsIFrame* aFrame, StyleAppearance aAppearance, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors) {
   if (aColors.HighContrast()) {
     return ScrollbarDrawingWin::ComputeScrollbarButtonColors(
@@ -165,7 +165,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
     const LayoutDeviceRect& aRect, ScrollbarKind aScrollbarKind,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   if (!ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
     return true;
@@ -215,10 +215,10 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
                                 : float(kDefaultWinScrollbarSize);
   const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
 
-  if (aElementState.HasState(NS_EVENT_STATE_ACTIVE)) {
+  if (aElementState.HasState(ElementState::ACTIVE)) {
     arrowX = arrowPolygonXActive;
     arrowY = arrowPolygonYActive;
-  } else if (aElementState.HasState(NS_EVENT_STATE_HOVER)) {
+  } else if (aElementState.HasState(ElementState::HOVER)) {
     arrowX = arrowPolygonXHover;
     arrowY = arrowPolygonYHover;
   }
@@ -262,7 +262,7 @@ template <typename PaintBackendData>
 bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
       aFrame, aStyle, aElementState, aDocumentState, aColors);
@@ -358,7 +358,7 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 bool ScrollbarDrawingWin11::PaintScrollbarThumb(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   return DoPaintScrollbarThumb(aDrawTarget, aRect, aScrollbarKind, aFrame,
                                aStyle, aElementState, aDocumentState, aColors,
@@ -368,7 +368,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarThumb(
 bool ScrollbarDrawingWin11::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,

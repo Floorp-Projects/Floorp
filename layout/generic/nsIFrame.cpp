@@ -121,7 +121,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -444,7 +443,7 @@ void nsIFrame::FindCloserFrameForSelection(
   }
 }
 
-void nsIFrame::ContentStatesChanged(mozilla::EventStates aStates) {}
+void nsIFrame::ContentStatesChanged(mozilla::dom::ElementState aStates) {}
 
 void WeakFrame::Clear(mozilla::PresShell* aPresShell) {
   if (aPresShell) {

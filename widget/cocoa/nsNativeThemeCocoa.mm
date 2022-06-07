@@ -31,7 +31,6 @@
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Range.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
@@ -982,13 +981,13 @@ static bool IsInsideToolbar(nsIFrame* aFrame) {
 }
 
 nsNativeThemeCocoa::TextFieldParams nsNativeThemeCocoa::ComputeTextFieldParams(
-    nsIFrame* aFrame, EventStates aEventState) {
+    nsIFrame* aFrame, ElementState aEventState) {
   TextFieldParams params;
   params.insideToolbar = IsInsideToolbar(aFrame);
-  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
+  params.disabled = aEventState.HasState(ElementState::DISABLED);
 
   // See ShouldUnconditionallyDrawFocusRingIfFocused.
-  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  params.focused = aEventState.HasState(ElementState::FOCUS);
 
   params.rtl = IsFrameRTL(aFrame);
   params.verticalAlignFactor = VerticalAlignFactor(aFrame);
@@ -1066,8 +1065,8 @@ NSSize nsNativeThemeCocoa::GetMenuIconSize(MenuIcon aIcon) {
 }
 
 nsNativeThemeCocoa::MenuIconParams nsNativeThemeCocoa::ComputeMenuIconParams(
-    nsIFrame* aFrame, EventStates aEventState, MenuIcon aIcon) {
-  bool isDisabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
+    nsIFrame* aFrame, ElementState aEventState, MenuIcon aIcon) {
+  bool isDisabled = aEventState.HasState(ElementState::DISABLED);
 
   MenuIconParams params;
   params.icon = aIcon;
@@ -1115,8 +1114,8 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
 }
 
 nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
-    nsIFrame* aFrame, EventStates aEventState, bool aIsChecked) {
-  bool isDisabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
+    nsIFrame* aFrame, ElementState aEventState, bool aIsChecked) {
+  bool isDisabled = aEventState.HasState(ElementState::DISABLED);
 
   MenuItemParams params;
   params.checked = aIsChecked;
@@ -1181,13 +1180,13 @@ static bool ShouldUnconditionallyDrawFocusRingIfFocused(nsIFrame* aFrame) {
 }
 
 nsNativeThemeCocoa::ControlParams nsNativeThemeCocoa::ComputeControlParams(
-    nsIFrame* aFrame, EventStates aEventState) {
+    nsIFrame* aFrame, ElementState aEventState) {
   ControlParams params;
-  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
+  params.disabled = aEventState.HasState(ElementState::DISABLED);
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
-  params.pressed = aEventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
-  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS) &&
-                   (aEventState.HasState(NS_EVENT_STATE_FOCUSRING) ||
+  params.pressed = aEventState.HasAllStates(ElementState::ACTIVE | ElementState::HOVER);
+  params.focused = aEventState.HasState(ElementState::FOCUS) &&
+                   (aEventState.HasState(ElementState::FOCUSRING) ||
                     ShouldUnconditionallyDrawFocusRingIfFocused(aFrame));
   params.rtl = IsFrameRTL(aFrame);
   return params;
@@ -1459,7 +1458,7 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxR
 }
 
 nsNativeThemeCocoa::TreeHeaderCellParams nsNativeThemeCocoa::ComputeTreeHeaderCellParams(
-    nsIFrame* aFrame, EventStates aEventState) {
+    nsIFrame* aFrame, ElementState aEventState) {
   TreeHeaderCellParams params;
   params.controlParams = ComputeControlParams(aFrame, aEventState);
   params.sortDirection = GetTreeSortDirection(aFrame);
@@ -1768,13 +1767,13 @@ static const CellRenderSettings progressSettings[2][2] = {
        }}}}};
 
 nsNativeThemeCocoa::ProgressParams nsNativeThemeCocoa::ComputeProgressParams(
-    nsIFrame* aFrame, EventStates aEventState, bool aIsHorizontal) {
+    nsIFrame* aFrame, ElementState aEventState, bool aIsHorizontal) {
   ProgressParams params;
   params.value = GetProgressValue(aFrame);
   params.max = GetProgressMaxValue(aFrame);
   params.verticalAlignFactor = VerticalAlignFactor(aFrame);
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
-  params.indeterminate = aEventState.HasState(NS_EVENT_STATE_INDETERMINATE);
+  params.indeterminate = aEventState.HasState(ElementState::INDETERMINATE);
   params.horizontal = aIsHorizontal;
   params.rtl = IsFrameRTL(aFrame);
   return params;
@@ -1833,10 +1832,10 @@ nsNativeThemeCocoa::MeterParams nsNativeThemeCocoa::ComputeMeterParams(nsIFrame*
   params.value = meterElement->Value();
   params.min = meterElement->Min();
   params.max = meterElement->Max();
-  EventStates states = meterElement->State();
-  if (states.HasState(NS_EVENT_STATE_SUB_OPTIMUM)) {
+  ElementState states = meterElement->State();
+  if (states.HasState(ElementState::SUB_OPTIMUM)) {
     params.optimumState = OptimumState::eSubOptimum;
-  } else if (states.HasState(NS_EVENT_STATE_SUB_SUB_OPTIMUM)) {
+  } else if (states.HasState(ElementState::SUB_SUB_OPTIMUM)) {
     params.optimumState = OptimumState::eSubSubOptimum;
   }
   params.horizontal = !IsVerticalMeter(aFrame);
@@ -1934,7 +1933,7 @@ void nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBo
 }
 
 Maybe<nsNativeThemeCocoa::ScaleParams> nsNativeThemeCocoa::ComputeHTMLScaleParams(
-    nsIFrame* aFrame, EventStates aEventState) {
+    nsIFrame* aFrame, ElementState aEventState) {
   nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
   if (!rangeFrame) {
     return Nothing();
@@ -1950,8 +1949,8 @@ Maybe<nsNativeThemeCocoa::ScaleParams> nsNativeThemeCocoa::ComputeHTMLScaleParam
   params.max = 1000;
   params.reverse = !isHorizontal || rangeFrame->IsRightToLeft();
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
-  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUSRING);
-  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
+  params.focused = aEventState.HasState(ElementState::FOCUSRING);
+  params.disabled = aEventState.HasState(ElementState::DISABLED);
   params.horizontal = isHorizontal;
   return Some(params);
 }
@@ -2043,13 +2042,13 @@ static const SegmentedControlRenderSettings toolbarButtonRenderSettings = {
     toolbarButtonHeights, @"kCUIWidgetButtonSegmentedSCurve"};
 
 nsNativeThemeCocoa::SegmentParams nsNativeThemeCocoa::ComputeSegmentParams(
-    nsIFrame* aFrame, EventStates aEventState, SegmentType aSegmentType) {
+    nsIFrame* aFrame, ElementState aEventState, SegmentType aSegmentType) {
   SegmentParams params;
   params.segmentType = aSegmentType;
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
   params.pressed = IsPressedButton(aFrame);
   params.selected = IsSelectedButton(aFrame);
-  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUSRING);
+  params.focused = aEventState.HasState(ElementState::FOCUSRING);
   bool isRTL = IsFrameRTL(aFrame);
   nsIFrame* left = GetAdjacentSiblingFrameWithSameAppearance(aFrame, isRTL);
   nsIFrame* right = GetAdjacentSiblingFrameWithSameAppearance(aFrame, !isRTL);
@@ -2238,7 +2237,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     originalHeight *= 0.5f;
   }
 
-  EventStates eventState = GetContentState(aFrame, aAppearance);
+  ElementState eventState = GetContentState(aFrame, aAppearance);
 
   switch (aAppearance) {
     case StyleAppearance::Menupopup:
@@ -2273,9 +2272,9 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
       CheckboxOrRadioParams params;
       params.state = CheckboxOrRadioState::eOff;
-      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+      if (eventState.HasState(ElementState::INDETERMINATE)) {
         params.state = CheckboxOrRadioState::eIndeterminate;
-      } else if (eventState.HasState(NS_EVENT_STATE_CHECKED)) {
+      } else if (eventState.HasState(ElementState::CHECKED)) {
         params.state = CheckboxOrRadioState::eOn;
       }
       params.controlParams = ComputeControlParams(aFrame, eventState);
@@ -2297,9 +2296,9 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // default buttons in active windows have blue background and white
         // text, and default buttons in inactive windows have white background
         // and black text.)
-        EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
+        DocumentState docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
         ControlParams params = ComputeControlParams(aFrame, eventState);
-        params.insideActiveWindow = !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+        params.insideActiveWindow = !docState.HasState(DocumentState::WINDOW_INACTIVE);
         return Some(WidgetInfo::Button(ButtonParams{params, ButtonType::eDefaultPushButton}));
       }
       if (IsButtonTypeMenu(aFrame)) {
@@ -2359,7 +2358,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
           params.pressedButton = Some(SpinButton::eDown);
         }
       }
-      params.disabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
+      params.disabled = eventState.HasState(ElementState::DISABLED);
       params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
 
       return Some(WidgetInfo::SpinButtons(params));
@@ -2376,7 +2375,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         } else if (numberControlFrame->SpinnerDownButtonIsDepressed()) {
           params.pressedButton = Some(SpinButton::eDown);
         }
-        params.disabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
+        params.disabled = eventState.HasState(ElementState::DISABLED);
         params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
         if (aAppearance == StyleAppearance::SpinnerUpbutton) {
           return Some(WidgetInfo::SpinButtonUp(params));
@@ -2439,7 +2438,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::SearchField(ComputeTextFieldParams(aFrame, eventState)));
 
     case StyleAppearance::ProgressBar: {
-      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+      if (eventState.HasState(ElementState::INDETERMINATE)) {
         if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
           NS_WARNING("Unable to animate progressbar!");
         }
@@ -2488,7 +2487,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     }
 
     case StyleAppearance::Textarea:
-      return Some(WidgetInfo::MultilineTextField(eventState.HasState(NS_EVENT_STATE_FOCUS)));
+      return Some(WidgetInfo::MultilineTextField(eventState.HasState(ElementState::FOCUS)));
 
     case StyleAppearance::Listbox:
       return Some(WidgetInfo::ListBox());
@@ -3461,8 +3460,8 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeMenu;
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem: {
-      EventStates eventState = GetContentState(aFrame, aAppearance);
-      bool isDisabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
+      ElementState eventState = GetContentState(aFrame, aAppearance);
+      bool isDisabled = eventState.HasState(ElementState::DISABLED);
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
     }

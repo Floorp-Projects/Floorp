@@ -76,7 +76,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   virtual void SetValueMissingState(const nsAString& aName,
                                     bool aValue) override;
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;

@@ -81,7 +81,7 @@ void HTMLDialogElement::Show() {
 }
 
 bool HTMLDialogElement::IsInTopLayer() const {
-  return State().HasState(NS_EVENT_STATE_MODAL_DIALOG);
+  return State().HasState(ElementState::MODAL_DIALOG);
 }
 
 void HTMLDialogElement::AddToTopLayerIfNeeded() {

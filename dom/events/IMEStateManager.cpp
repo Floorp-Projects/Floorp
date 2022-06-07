@@ -12,7 +12,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -1996,7 +1995,7 @@ bool IMEStateManager::IsEditable(nsINode* node) {
   }
   // |node| might be readwrite (for example, a text control)
   if (node->IsElement() &&
-      node->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
+      node->AsElement()->State().HasState(ElementState::READWRITE)) {
     return true;
   }
   return false;

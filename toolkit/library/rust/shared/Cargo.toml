@@ -68,6 +68,7 @@ regex-ffi = { path = "../../../components/regex-ffi" }
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
+dom = { path = "../../../../dom/base/rust" }
 origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with

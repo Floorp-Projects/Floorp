@@ -23,7 +23,6 @@
 #include "nsCSSRendering.h"
 #include "ImageContainer.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -40,15 +39,15 @@ nsNativeTheme::nsNativeTheme() : mAnimatedContentTimeout(UINT32_MAX) {}
 
 NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
 
-/* static */ EventStates nsNativeTheme::GetContentState(
+/* static */ ElementState nsNativeTheme::GetContentState(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (!aFrame) {
-    return EventStates();
+    return ElementState();
   }
 
   nsIContent* frameContent = aFrame->GetContent();
   if (!frameContent || !frameContent->IsElement()) {
-    return EventStates();
+    return ElementState();
   }
 
   const bool isXULElement = frameContent->IsXULElement();
@@ -71,13 +70,13 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     MOZ_ASSERT(frameContent && frameContent->IsElement());
   }
 
-  EventStates flags = frameContent->AsElement()->StyleState();
+  ElementState flags = frameContent->AsElement()->StyleState();
   nsNumberControlFrame* numberControlFrame =
       nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
   if (numberControlFrame &&
       numberControlFrame->GetContent()->AsElement()->StyleState().HasState(
-          NS_EVENT_STATE_DISABLED)) {
-    flags |= NS_EVENT_STATE_DISABLED;
+          ElementState::DISABLED)) {
+    flags |= ElementState::DISABLED;
   }
 
   if (!isXULElement) {
@@ -85,31 +84,31 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
   }
 
   if (CheckBooleanAttr(aFrame, nsGkAtoms::disabled)) {
-    flags |= NS_EVENT_STATE_DISABLED;
+    flags |= ElementState::DISABLED;
   }
 
   switch (aAppearance) {
     case StyleAppearance::RadioLabel:
     case StyleAppearance::Radio: {
       if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
-        flags |= NS_EVENT_STATE_FOCUS;
+        flags |= ElementState::FOCUS;
         nsPIDOMWindowOuter* window =
             aFrame->GetContent()->OwnerDoc()->GetWindow();
         if (window && window->ShouldShowFocusRing()) {
-          flags |= NS_EVENT_STATE_FOCUSRING;
+          flags |= ElementState::FOCUSRING;
         }
       }
       if (CheckBooleanAttr(aFrame, nsGkAtoms::selected)) {
-        flags |= NS_EVENT_STATE_CHECKED;
+        flags |= ElementState::CHECKED;
       }
       break;
     }
     case StyleAppearance::CheckboxLabel:
     case StyleAppearance::Checkbox: {
       if (CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
-        flags |= NS_EVENT_STATE_CHECKED;
+        flags |= ElementState::CHECKED;
       } else if (CheckBooleanAttr(aFrame, nsGkAtoms::indeterminate)) {
-        flags |= NS_EVENT_STATE_INDETERMINATE;
+        flags |= ElementState::INDETERMINATE;
       }
       break;
     }
@@ -120,7 +119,7 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     case StyleAppearance::Searchfield:
     case StyleAppearance::Textarea: {
       if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
-        flags |= NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
+        flags |= ElementState::FOCUS | ElementState::FOCUSRING;
       }
       break;
     }
@@ -193,12 +192,12 @@ bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
 }
 
 bool nsNativeTheme::IsPressedButton(nsIFrame* aFrame) {
-  EventStates eventState =
+  ElementState eventState =
       GetContentState(aFrame, StyleAppearance::Toolbarbutton);
-  if (eventState.HasState(NS_EVENT_STATE_DISABLED)) return false;
+  if (eventState.HasState(ElementState::DISABLED)) return false;
 
   return IsOpenButton(aFrame) ||
-         eventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
+         eventState.HasAllStates(ElementState::ACTIVE | ElementState::HOVER);
 }
 
 bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,

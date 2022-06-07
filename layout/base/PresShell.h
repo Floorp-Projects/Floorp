@@ -96,7 +96,6 @@ class nsDisplayListBuilder;
 class FallbackRenderer;
 
 class AccessibleCaretEventHub;
-class EventStates;
 class GeckoMVMContext;
 class OverflowChangedTracker;
 class StyleSheet;
@@ -1362,7 +1361,7 @@ class PresShell final : public nsStubDocumentObserver,
                                   int16_t aEndOffset, bool* aRetval) override;
 
   // Notifies that the state of the document has changed.
-  void DocumentStatesChanged(EventStates);
+  void DocumentStatesChanged(dom::DocumentState);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD

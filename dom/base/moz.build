@@ -294,6 +294,17 @@ if CONFIG["FUZZING"]:
         "FuzzingFunctions.h",
     ]
 
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    EXPORTS.mozilla.dom += [
+        "!rust_generated.h",
+        "RustTypes.h",
+    ]
+
+    CbindgenHeader(
+        "rust_generated.h",
+        inputs=["rust"],
+    )
+
 UNIFIED_SOURCES += [
     "AbstractRange.cpp",
     "AnimationFrameProvider.cpp",

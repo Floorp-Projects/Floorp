@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Components.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"

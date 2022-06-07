@@ -7,7 +7,6 @@
 #include "nsNumberControlFrame.h"
 
 #include "mozilla/BasicEvents.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PresShell.h"
 #include "HTMLInputElement.h"

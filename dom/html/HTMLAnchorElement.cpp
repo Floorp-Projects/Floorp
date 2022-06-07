@@ -10,7 +10,6 @@
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -225,7 +224,7 @@ nsresult HTMLAnchorElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-EventStates HTMLAnchorElement::IntrinsicState() const {
+ElementState HTMLAnchorElement::IntrinsicState() const {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 

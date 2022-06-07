@@ -1,0 +1,14 @@
+[package]
+name = "dom"
+version = "0.1.0"
+edition = "2021"
+authors = [
+  "Emilio Cobos Álvarez <emilio@crisal.io>",
+]
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+bitflags = "1.0"

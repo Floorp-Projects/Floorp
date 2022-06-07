@@ -20,6 +20,7 @@
 #include "nsINamed.h"
 #include "nsITimer.h"
 #include "nsIContent.h"
+#include "mozilla/dom/RustTypes.h"
 
 class nsIFrame;
 class nsPresContext;
@@ -27,7 +28,6 @@ class nsPresContext;
 namespace mozilla {
 class ComputedStyle;
 enum class StyleAppearance : uint8_t;
-class EventStates;
 }  // namespace mozilla
 
 class nsNativeTheme : public nsITimerCallback, public nsINamed {
@@ -53,7 +53,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
     eTreeSortDirection_Ascending
   };
   // Returns the content state (hover, focus, etc), see EventStateManager.h
-  static mozilla::EventStates GetContentState(
+  static mozilla::dom::ElementState GetContentState(
       nsIFrame* aFrame, mozilla::StyleAppearance aAppearance);
 
   // Returns whether the widget is already styled by content

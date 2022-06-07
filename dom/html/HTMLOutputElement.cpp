@@ -7,7 +7,6 @@
 #include "mozilla/dom/HTMLOutputElement.h"
 
 #include "mozAutoDocUpdate.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsContentUtils.h"
