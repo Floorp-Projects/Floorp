@@ -88,7 +88,12 @@ rtc::AdapterType AdapterTypeFromInterfaceType(nw_interface_type_t interfaceType)
               rtc::AdapterType adapterType = AdapterTypeFromInterfaceType(interfaceType);
               map->insert(std::pair<std::string, rtc::AdapterType>(name, adapterType));
             });
-        strongSelf->_observer->OnPathUpdate(std::move(*map));
+        @synchronized(strongSelf) {
+          webrtc::NetworkMonitorObserver *observer = strongSelf->_observer;
+          if (observer) {
+            observer->OnPathUpdate(std::move(*map));
+          }
+        }
         delete map;
       });
       nw_path_monitor_set_queue(
@@ -100,10 +105,20 @@ rtc::AdapterType AdapterTypeFromInterfaceType(nw_interface_type_t interfaceType)
   return self;
 }
 
-- (void)dealloc {
+- (void)cancel {
   if (@available(iOS 12, *)) {
     nw_path_monitor_cancel(_pathMonitor);
   }
+}
+- (void)stop {
+  [self cancel];
+  @synchronized(self) {
+    _observer = nil;
+  }
+}
+
+- (void)dealloc {
+  [self cancel];
 }
 
 @end
