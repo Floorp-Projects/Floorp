@@ -27,6 +27,7 @@ ObjCNetworkMonitor::ObjCNetworkMonitor() {
 }
 
 ObjCNetworkMonitor::~ObjCNetworkMonitor() {
+  [network_monitor_ stop];
   network_monitor_ = nil;
 }
 
@@ -50,6 +51,7 @@ void ObjCNetworkMonitor::Stop() {
     return;
   }
   safety_flag_->SetNotAlive();
+  [network_monitor_ stop];
   network_monitor_ = nil;
   started_ = false;
 }
