@@ -2059,9 +2059,9 @@ class Document : public nsINode,
 
   void NotifyAbortedLoad();
 
-  // notify that a content node changed state.  This must happen under
-  // a scriptblocker but NOT within a begin/end update.
-  void ContentStateChanged(nsIContent* aContent, ElementState aStateMask);
+  // Notify that an element changed state. This must happen under a
+  // scriptblocker but NOT within a begin/end update.
+  void ElementStateChanged(Element*, ElementState);
 
   // Update a set of document states that may have changed.
   // This should only be called by callers whose state is also reflected in the

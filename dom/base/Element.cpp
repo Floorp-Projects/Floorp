@@ -353,7 +353,7 @@ void Element::NotifyStateChange(ElementState aStates) {
 
   if (Document* doc = GetComposedDoc()) {
     nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(this, aStates);
+    doc->ElementStateChanged(this, aStates);
   }
 }
 
@@ -373,7 +373,7 @@ void Element::UpdateState(bool aNotify) {
       Document* doc = GetComposedDoc();
       if (doc) {
         nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(this, changedStates);
+        doc->ElementStateChanged(this, changedStates);
       }
     }
   }
@@ -525,12 +525,10 @@ Element::StyleStateLocks Element::LockedStyleStates() const {
 }
 
 void Element::NotifyStyleStateChange(ElementState aStates) {
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    RefPtr<PresShell> presShell = doc->GetPresShell();
-    if (presShell) {
+  if (RefPtr<Document> doc = GetComposedDoc()) {
+    if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
       nsAutoScriptBlocker scriptBlocker;
-      presShell->ContentStateChanged(doc, this, aStates);
+      presShell->ElementStateChanged(doc, this, aStates);
     }
   }
 }

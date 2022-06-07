@@ -2354,12 +2354,12 @@ class nsIFrame : public nsQueryFrame {
                                     int32_t aModType);
 
   /**
-   * When the content states of a content object change, this method is invoked
-   * on the primary frame of that content object.
+   * When the element states of mContent change, this method is invoked on the
+   * primary frame of that element.
    *
    * @param aStates the changed states
    */
-  virtual void ContentStatesChanged(mozilla::dom::ElementState aStates);
+  virtual void ElementStateChanged(mozilla::dom::ElementState aStates);
 
   /**
    * Continuation member functions

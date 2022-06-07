@@ -443,7 +443,7 @@ void nsIFrame::FindCloserFrameForSelection(
   }
 }
 
-void nsIFrame::ContentStatesChanged(mozilla::dom::ElementState aStates) {}
+void nsIFrame::ElementStateChanged(mozilla::dom::ElementState aStates) {}
 
 void WeakFrame::Clear(mozilla::PresShell* aPresShell) {
   if (aPresShell) {
