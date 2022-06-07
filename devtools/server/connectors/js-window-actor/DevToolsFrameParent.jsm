@@ -216,7 +216,12 @@ class DevToolsFrameParent extends JSWindowActorParent {
       case "DevToolsFrameChild:destroy":
         for (const { form, watcherActorID } of message.data.actors) {
           const watcher = WatcherRegistry.getWatcher(watcherActorID);
-          watcher.notifyTargetDestroyed(form);
+          // As we instruct to destroy all targets when the watcher is destroyed,
+          // we may easily receive the target destruction notification *after*
+          // the watcher has been removed from the registry.
+          if (watcher) {
+            watcher.notifyTargetDestroyed(form);
+          }
         }
         return this._closeAllConnections();
       case "DevToolsFrameChild:bf-cache-navigation-pageshow":
