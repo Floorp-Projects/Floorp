@@ -402,8 +402,7 @@ nsresult HTMLSelectEventListener::MouseDown(dom::Event* aMouseEvent) {
   MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
-  ElementState eventStates = mElement->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mElement->State().HasState(ElementState::DISABLED)) {
     return NS_OK;
   }
 
@@ -446,8 +445,7 @@ nsresult HTMLSelectEventListener::MouseUp(dom::Event* aMouseEvent) {
 
   mButtonDown = false;
 
-  ElementState eventStates = mElement->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mElement->State().HasState(ElementState::DISABLED)) {
     return NS_OK;
   }
 
@@ -490,8 +488,7 @@ nsresult HTMLSelectEventListener::MouseMove(dom::Event* aMouseEvent) {
 nsresult HTMLSelectEventListener::KeyPress(dom::Event* aKeyEvent) {
   MOZ_ASSERT(aKeyEvent, "aKeyEvent is null.");
 
-  ElementState eventStates = mElement->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mElement->State().HasState(ElementState::DISABLED)) {
     return NS_OK;
   }
 
@@ -653,8 +650,7 @@ nsresult HTMLSelectEventListener::KeyPress(dom::Event* aKeyEvent) {
 nsresult HTMLSelectEventListener::KeyDown(dom::Event* aKeyEvent) {
   MOZ_ASSERT(aKeyEvent, "aKeyEvent is null.");
 
-  ElementState eventStates = mElement->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mElement->State().HasState(ElementState::DISABLED)) {
     return NS_OK;
   }
 

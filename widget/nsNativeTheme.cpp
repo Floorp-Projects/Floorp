@@ -192,12 +192,13 @@ bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
 }
 
 bool nsNativeTheme::IsPressedButton(nsIFrame* aFrame) {
-  ElementState eventState =
-      GetContentState(aFrame, StyleAppearance::Toolbarbutton);
-  if (eventState.HasState(ElementState::DISABLED)) return false;
+  ElementState state = GetContentState(aFrame, StyleAppearance::Toolbarbutton);
+  if (state.HasState(ElementState::DISABLED)) {
+    return false;
+  }
 
   return IsOpenButton(aFrame) ||
-         eventState.HasAllStates(ElementState::ACTIVE | ElementState::HOVER);
+         state.HasAllStates(ElementState::ACTIVE | ElementState::HOVER);
 }
 
 bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,

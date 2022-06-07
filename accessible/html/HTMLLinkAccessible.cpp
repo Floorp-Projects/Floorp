@@ -38,10 +38,12 @@ uint64_t HTMLLinkAccessible::NativeState() const {
 }
 
 uint64_t HTMLLinkAccessible::NativeLinkState() const {
-  dom::ElementState eventState = mContent->AsElement()->State();
-  if (eventState.HasState(dom::ElementState::UNVISITED)) return states::LINKED;
+  dom::ElementState state = mContent->AsElement()->State();
+  if (state.HasState(dom::ElementState::UNVISITED)) {
+    return states::LINKED;
+  }
 
-  if (eventState.HasState(dom::ElementState::VISITED)) {
+  if (state.HasState(dom::ElementState::VISITED)) {
     return states::LINKED | states::TRAVERSED;
   }
 
