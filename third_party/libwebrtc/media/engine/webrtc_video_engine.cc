@@ -1452,18 +1452,18 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
   if (!ValidateStreamParams(sp))
     return false;
 
-  uint32_t ssrc = sp.first_ssrc();
-
-  // Remove running stream if this was a default stream.
-  const auto& prev_stream = receive_streams_.find(ssrc);
-  if (prev_stream != receive_streams_.end()) {
-    if (default_stream || !prev_stream->second->IsDefaultStream()) {
-      RTC_LOG(LS_ERROR) << "Receive stream for SSRC '" << ssrc
-                        << "' already exists.";
-      return false;
+  for (uint32_t ssrc : sp.ssrcs) {
+    // Remove running stream if this was a default stream.
+    const auto& prev_stream = receive_streams_.find(ssrc);
+    if (prev_stream != receive_streams_.end()) {
+      if (default_stream || !prev_stream->second->IsDefaultStream()) {
+        RTC_LOG(LS_ERROR) << "Receive stream for SSRC '" << ssrc
+                          << "' already exists.";
+        return false;
+      }
+      DeleteReceiveStream(prev_stream->second);
+      receive_streams_.erase(prev_stream);
     }
-    DeleteReceiveStream(prev_stream->second);
-    receive_streams_.erase(prev_stream);
   }
 
   if (!ValidateReceiveSsrcAvailability(sp))
@@ -1486,7 +1486,7 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
   if (unsignaled_frame_transformer_ && !config.frame_transformer)
     config.frame_transformer = unsignaled_frame_transformer_;
 
-  receive_streams_[ssrc] = new WebRtcVideoReceiveStream(
+  receive_streams_[sp.first_ssrc()] = new WebRtcVideoReceiveStream(
       this, call_, sp, std::move(config), default_stream, recv_codecs_,
       flexfec_config);
 
