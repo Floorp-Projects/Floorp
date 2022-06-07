@@ -863,16 +863,16 @@ void DocAccessible::ContentAppended(nsIContent* aFirstNewContent) {
   MaybeHandleChangeToHiddenNameOrDescription(aFirstNewContent);
 }
 
-void DocAccessible::ContentStateChanged(dom::Document* aDocument,
-                                        nsIContent* aContent,
+void DocAccessible::ElementStateChanged(dom::Document* aDocument,
+                                        dom::Element* aElement,
                                         dom::ElementState aStateMask) {
   if (aStateMask.HasState(dom::ElementState::READWRITE) &&
-      aContent == mDocumentNode->GetRootElement()) {
+      aElement == mDocumentNode->GetRootElement()) {
     // This handles changes to designMode. contentEditable is handled by
     // LocalAccessible::AttributeChangesState and
     // LocalAccessible::DOMAttributeChanged.
     const bool isEditable =
-        aContent->AsElement()->State().HasState(dom::ElementState::READWRITE);
+        aElement->State().HasState(dom::ElementState::READWRITE);
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(this, states::EDITABLE, isEditable);
     FireDelayedEvent(event);
@@ -880,14 +880,14 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
     FireDelayedEvent(event);
   }
 
-  LocalAccessible* accessible = GetAccessible(aContent);
+  LocalAccessible* accessible = GetAccessible(aElement);
   if (!accessible) return;
 
   if (aStateMask.HasState(dom::ElementState::CHECKED)) {
     LocalAccessible* widget = accessible->ContainerWidget();
     if (widget && widget->IsSelect()) {
       AccSelChangeEvent::SelChangeType selChangeType =
-          aContent->AsElement()->State().HasState(dom::ElementState::CHECKED)
+          aElement->State().HasState(dom::ElementState::CHECKED)
               ? AccSelChangeEvent::eSelectionAdd
               : AccSelChangeEvent::eSelectionRemove;
       RefPtr<AccEvent> event =
@@ -898,7 +898,7 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
 
     RefPtr<AccEvent> event = new AccStateChangeEvent(
         accessible, states::CHECKED,
-        aContent->AsElement()->State().HasState(dom::ElementState::CHECKED));
+        aElement->State().HasState(dom::ElementState::CHECKED));
     FireDelayedEvent(event);
   }
 

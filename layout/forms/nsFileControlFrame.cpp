@@ -540,7 +540,7 @@ void nsFileControlFrame::SyncDisabledState() {
   }
 }
 
-void nsFileControlFrame::ContentStatesChanged(ElementState aStates) {
+void nsFileControlFrame::ElementStateChanged(ElementState aStates) {
   if (aStates.HasState(ElementState::DISABLED)) {
     nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
   }

@@ -6545,7 +6545,7 @@ void HTMLInputElement::UpdateValueMissingValidityStateForRadio(
 
     SetValidityState(VALIDITY_STATE_VALUE_MISSING, valueMissing);
 
-    // nsRadioSetValueMissingState will call ContentStateChanged while visiting.
+    // nsRadioSetValueMissingState will call ElementStateChanged while visiting.
     nsAutoScriptBlocker scriptBlocker;
     nsCOMPtr<nsIRadioVisitor> visitor =
         new nsRadioSetValueMissingState(this, valueMissing);

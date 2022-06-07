@@ -8235,12 +8235,11 @@ void Document::UnblockDOMContentLoaded() {
   }
 }
 
-void Document::ContentStateChanged(nsIContent* aContent,
-                                   ElementState aStateMask) {
+void Document::ElementStateChanged(Element* aElement, ElementState aStateMask) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
              "Someone forgot a scriptblocker");
-  NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
-                               (this, aContent, aStateMask));
+  NS_DOCUMENT_NOTIFY_OBSERVERS(ElementStateChanged,
+                               (this, aElement, aStateMask));
 }
 
 void Document::RuleChanged(StyleSheet& aSheet, css::Rule*,

@@ -2331,7 +2331,7 @@ bool nsGenericHTMLElement::IsEditableRoot() const {
 static void MakeContentDescendantsEditable(nsIContent* aContent) {
   // If aContent is not an element, we just need to update its
   // internal editable state and don't need to notify anyone about
-  // that.  For elements, we need to send a ContentStateChanged
+  // that.  For elements, we need to send a ElementStateChanged
   // notification.
   if (!aContent->IsElement()) {
     aContent->UpdateEditableState(false);
@@ -2364,7 +2364,7 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
     previousEditingState = document->GetEditingState();
   }
 
-  // MakeContentDescendantsEditable is going to call ContentStateChanged for
+  // MakeContentDescendantsEditable is going to call ElementStateChanged for
   // this element and all descendants if editable state has changed.
   // We might as well wrap it all in one script blocker.
   nsAutoScriptBlocker scriptBlocker;

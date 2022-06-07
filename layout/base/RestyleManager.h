@@ -20,7 +20,6 @@
 
 class nsAttrValue;
 class nsAtom;
-class nsIContent;
 class nsIFrame;
 class nsStyleChangeList;
 class nsStyleChangeList;
@@ -360,7 +359,7 @@ class RestyleManager {
   void ProcessPendingRestyles();
   void ProcessAllPendingAttributeAndStateInvalidations();
 
-  void ContentStateChanged(nsIContent* aContent, dom::ElementState aStateMask);
+  void ElementStateChanged(Element*, dom::ElementState);
   void AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
                            nsAtom* aAttribute, int32_t aModType);
   void ClassAttributeWillBeChangedBySMIL(dom::Element* aElement);

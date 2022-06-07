@@ -10,12 +10,12 @@
 #include "nsIMutationObserver.h"
 #include "mozilla/dom/RustTypes.h"
 
-class nsIContent;
 namespace mozilla {
 
 namespace dom {
 class Document;
-}
+class Element;
+}  // namespace dom
 }  // namespace mozilla
 
 #define NS_IDOCUMENT_OBSERVER_IID                    \
@@ -55,24 +55,22 @@ class nsIDocumentObserver : public nsIMutationObserver {
   virtual void EndLoad(mozilla::dom::Document*) = 0;
 
   /**
-   * Notification that the state of a content node has changed.
-   * (ie: gained or lost focus, became active or hovered over)
-   * This method is called automatically by content objects
-   * when their state is changed (therefore there is normally
-   * no need to invoke this method directly).  The notification
-   * is passed to any IDocumentObservers. The notification is
-   * passed on to all of the document observers. <p>
+   * Notification that the state of an element has changed. (ie: gained or lost
+   * focus, became active or hovered over)
    *
-   * This notification is not sent when a piece of content is
-   * added/removed from the document or the content itself changed
-   * (the other notifications are used for that).
+   * This method is called automatically by elements when their state is changed
+   * (therefore there is normally no need to invoke this method directly).
    *
-   * @param aDocument The document being observed
-   * @param aContent the piece of content that changed
+   * This notification is not sent when elements are added/removed from the
+   * document (the other notifications are used for that).
+   *
+   * @param Document The document being observed
+   * @param Element the piece of content that changed
+   * @param ElementState the element states that changed
    */
-  virtual void ContentStateChanged(mozilla::dom::Document*,
-                                   nsIContent* aContent,
-                                   mozilla::dom::ElementState aStateMask) = 0;
+  virtual void ElementStateChanged(mozilla::dom::Document*,
+                                   mozilla::dom::Element*,
+                                   mozilla::dom::ElementState) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -89,10 +87,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD \
   virtual void EndLoad(mozilla::dom::Document*) override;
 
-#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED \
-  virtual void ContentStateChanged(                     \
-      mozilla::dom::Document*, nsIContent* aContent,    \
-      mozilla::dom::ElementState aStateMask) override;
+#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED     \
+  virtual void ElementStateChanged(mozilla::dom::Document*, \
+                                   mozilla::dom::Element*,  \
+                                   mozilla::dom::ElementState) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER               \
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE         \
@@ -112,9 +110,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
   void _class::EndLoad(mozilla::dom::Document*) {}
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)      \
-  void _class::ContentStateChanged(mozilla::dom::Document*, \
-                                   nsIContent* aContent,    \
-                                   mozilla::dom::ElementState aStateMask) {}
+  void _class::ElementStateChanged(mozilla::dom::Document*, \
+                                   mozilla::dom::Element*,  \
+                                   mozilla::dom::ElementState) {}
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class) \
   NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)

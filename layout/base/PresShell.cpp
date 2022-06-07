@@ -4427,15 +4427,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::CharacterDataChanged(
   mFrameConstructor->CharacterDataChanged(aContent, aInfo);
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentStateChanged(
-    Document* aDocument, nsIContent* aContent, ElementState aStateMask) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ElementStateChanged(
+    Document* aDocument, Element* aElement, ElementState aStateMask) {
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentStateChanged");
   MOZ_ASSERT(aDocument == mDocument, "Unexpected aDocument");
 
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
-    mPresContext->RestyleManager()->ContentStateChanged(aContent, aStateMask);
+    mPresContext->RestyleManager()->ElementStateChanged(aElement, aStateMask);
   }
 }
 

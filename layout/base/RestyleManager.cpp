@@ -525,7 +525,7 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
         }
       }
     }
-    primaryFrame->ContentStatesChanged(aStateMask);
+    primaryFrame->ElementStateChanged(aStateMask);
   }
 
   if (aStateMask.HasState(ElementState::VISITED)) {
@@ -3220,15 +3220,9 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
   DoProcessPendingRestyles(ServoTraversalFlags::FlushThrottledAnimations);
 }
 
-void RestyleManager::ContentStateChanged(nsIContent* aContent,
+void RestyleManager::ElementStateChanged(Element* aElement,
                                          ElementState aChangedBits) {
   MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
-
-  if (!aContent->IsElement()) {
-    return;
-  }
-
-  Element& element = *aContent->AsElement();
 
   const ElementState kVisitedAndUnvisited =
       ElementState::VISITED | ElementState::UNVISITED;
@@ -3245,7 +3239,7 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // changes to unvisited or vice-versa, but not when we start or stop being a
   // link itself.
   if (aChangedBits.HasAllStates(kVisitedAndUnvisited)) {
-    if (!Gecko_VisitedStylesEnabled(element.OwnerDoc()) ||
+    if (!Gecko_VisitedStylesEnabled(aElement->OwnerDoc()) ||
         StaticPrefs::layout_css_always_repaint_on_unvisited()) {
       aChangedBits &= ~kVisitedAndUnvisited;
       if (aChangedBits.IsEmpty()) {
@@ -3254,8 +3248,8 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
     }
   }
 
-  if (auto changeHint = ChangeForContentStateChange(element, aChangedBits)) {
-    Servo_NoteExplicitHints(&element, RestyleHint{0}, changeHint);
+  if (auto changeHint = ChangeForContentStateChange(*aElement, aChangedBits)) {
+    Servo_NoteExplicitHints(aElement, RestyleHint{0}, changeHint);
   }
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
@@ -3264,7 +3258,7 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
   if (!aChangedBits.HasAtLeastOneOfStates(ElementState::DIR_STATES) &&
-      !StyleSet()->HasStateDependency(element, aChangedBits)) {
+      !StyleSet()->HasStateDependency(*aElement, aChangedBits)) {
     return;
   }
 
@@ -3272,12 +3266,12 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // undisplayed elements, since we don't know if it is needed.
   IncrementUndisplayedRestyleGeneration();
 
-  if (!element.HasServoData()) {
+  if (!aElement->HasServoData()) {
     return;
   }
 
-  ServoElementSnapshot& snapshot = SnapshotFor(element);
-  ElementState previousState = element.StyleState() ^ aChangedBits;
+  ServoElementSnapshot& snapshot = SnapshotFor(*aElement);
+  ElementState previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 }
 

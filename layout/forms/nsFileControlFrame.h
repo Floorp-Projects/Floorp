@@ -59,8 +59,7 @@ class nsFileControlFrame final : public nsBlockFrame,
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual void ContentStatesChanged(
-      mozilla::dom::ElementState aStates) override;
+  void ElementStateChanged(mozilla::dom::ElementState aStates) override;
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(
