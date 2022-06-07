@@ -32,6 +32,16 @@ constexpr int kMinBaseMinimumDelayMs = 0;
 constexpr int kMaxBaseMinimumDelayMs = 10000;
 constexpr int kStartDelayMs = 80;
 
+std::unique_ptr<ReorderOptimizer> MaybeCreateReorderOptimizer(
+    const DelayManager::Config& config) {
+  if (!config.use_reorder_optimizer) {
+    return nullptr;
+  }
+  return std::make_unique<ReorderOptimizer>(
+      (1 << 15) * config.reorder_forget_factor, config.ms_per_loss_percent,
+      config.start_forget_weight);
+}
+
 }  // namespace
 
 DelayManager::Config::Config() {
@@ -47,16 +57,22 @@ void DelayManager::Config::Log() {
                    << " start_forget_weight=" << start_forget_weight.value_or(0)
                    << " resample_interval_ms="
                    << resample_interval_ms.value_or(0)
-                   << " max_history_ms=" << max_history_ms;
+                   << " max_history_ms=" << max_history_ms
+                   << " use_reorder_optimizer=" << use_reorder_optimizer
+                   << " reorder_forget_factor=" << reorder_forget_factor
+                   << " ms_per_loss_percent=" << ms_per_loss_percent;
 }
 
 std::unique_ptr<StructParametersParser> DelayManager::Config::Parser() {
-  return StructParametersParser::Create(              //
-      "quantile", &quantile,                          //
-      "forget_factor", &forget_factor,                //
-      "start_forget_weight", &start_forget_weight,    //
-      "resample_interval_ms", &resample_interval_ms,  //
-      "max_history_ms", &max_history_ms);
+  return StructParametersParser::Create(                //
+      "quantile", &quantile,                            //
+      "forget_factor", &forget_factor,                  //
+      "start_forget_weight", &start_forget_weight,      //
+      "resample_interval_ms", &resample_interval_ms,    //
+      "max_history_ms", &max_history_ms,                //
+      "use_reorder_optimizer", &use_reorder_optimizer,  //
+      "reorder_forget_factor", &reorder_forget_factor,  //
+      "ms_per_loss_percent", &ms_per_loss_percent);
 }
 
 // TODO(jakobi): remove legacy field trial.
@@ -90,6 +106,7 @@ DelayManager::DelayManager(const Config& config, const TickTimer* tick_timer)
                           (1 << 15) * config.forget_factor,
                           config.start_forget_weight,
                           config.resample_interval_ms),
+      reorder_optimizer_(MaybeCreateReorderOptimizer(config)),
       relative_arrival_delay_tracker_(tick_timer, config.max_history_ms),
       base_minimum_delay_ms_(config.base_minimum_delay_ms),
       effective_minimum_delay_ms_(config.base_minimum_delay_ms),
@@ -115,9 +132,18 @@ absl::optional<int> DelayManager::Update(uint32_t timestamp,
     return absl::nullopt;
   }
 
-  underrun_optimizer_.Update(*relative_delay);
+  bool reordered =
+      relative_arrival_delay_tracker_.newest_timestamp() != timestamp;
+  if (!reorder_optimizer_ || !reordered) {
+    underrun_optimizer_.Update(*relative_delay);
+  }
   target_level_ms_ =
       underrun_optimizer_.GetOptimalDelayMs().value_or(kStartDelayMs);
+  if (reorder_optimizer_) {
+    reorder_optimizer_->Update(*relative_delay, reordered, target_level_ms_);
+    target_level_ms_ = std::max(
+        target_level_ms_, reorder_optimizer_->GetOptimalDelayMs().value_or(0));
+  }
   target_level_ms_ = std::max(target_level_ms_, effective_minimum_delay_ms_);
   if (maximum_delay_ms_ > 0) {
     target_level_ms_ = std::min(target_level_ms_, maximum_delay_ms_);
@@ -148,6 +174,9 @@ void DelayManager::Reset() {
   underrun_optimizer_.Reset();
   relative_arrival_delay_tracker_.Reset();
   target_level_ms_ = kStartDelayMs;
+  if (reorder_optimizer_) {
+    reorder_optimizer_->Reset();
+  }
 }
 
 int DelayManager::TargetDelayMs() const {

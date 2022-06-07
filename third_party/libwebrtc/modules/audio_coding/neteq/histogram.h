@@ -42,7 +42,7 @@ class Histogram {
   virtual int NumBuckets() const;
 
   // Returns the probability for each bucket in Q30.
-  std::vector<int> buckets() const { return buckets_; }
+  const std::vector<int>& buckets() const { return buckets_; }
 
   // Accessors only intended for testing purposes.
   int base_forget_factor_for_testing() const { return base_forget_factor_; }

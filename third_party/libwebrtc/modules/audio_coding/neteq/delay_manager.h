@@ -20,6 +20,7 @@
 #include "api/neteq/tick_timer.h"
 #include "modules/audio_coding/neteq/histogram.h"
 #include "modules/audio_coding/neteq/relative_arrival_delay_tracker.h"
+#include "modules/audio_coding/neteq/reorder_optimizer.h"
 #include "modules/audio_coding/neteq/underrun_optimizer.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
@@ -38,6 +39,10 @@ class DelayManager {
     absl::optional<double> start_forget_weight = 2;
     absl::optional<int> resample_interval_ms;
     int max_history_ms = 2000;
+
+    bool use_reorder_optimizer = true;
+    double reorder_forget_factor = 0.9993;
+    int ms_per_loss_percent = 20;
 
     // Options that are externally populated.
     int max_packets_in_buffer = 200;
@@ -104,6 +109,7 @@ class DelayManager {
   // TODO(jakobi): set maximum buffer delay instead of number of packets.
   const int max_packets_in_buffer_;
   UnderrunOptimizer underrun_optimizer_;
+  std::unique_ptr<ReorderOptimizer> reorder_optimizer_;
   RelativeArrivalDelayTracker relative_arrival_delay_tracker_;
 
   int base_minimum_delay_ms_;
