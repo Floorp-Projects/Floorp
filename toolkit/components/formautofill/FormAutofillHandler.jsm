@@ -65,8 +65,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
 });
 
-this.log = null;
-FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 const { FIELD_STATES } = lazy.FormAutofillUtils;
 
@@ -90,7 +89,7 @@ class FormAutofillSection {
 
     if (!this.isValidSection()) {
       this.fieldDetails = [];
-      log.debug(
+      lazy.log.debug(
         `Ignoring ${this.constructor.name} related fields since it is an invalid section`
       );
     }
@@ -345,7 +344,7 @@ class FormAutofillSection {
     }
 
     if (!(await this.prepareFillingProfile(profile))) {
-      log.debug("profile cannot be filled");
+      lazy.log.debug("profile cannot be filled");
       return false;
     }
 
@@ -471,12 +470,12 @@ class FormAutofillSection {
    * Clear preview text and background highlight of all fields.
    */
   clearPreviewedFormFields() {
-    log.debug("clear previewed fields");
+    lazy.log.debug("clear previewed fields");
 
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
-        log.warn(fieldDetail.fieldName, "is unreachable");
+        lazy.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
       }
 
@@ -499,7 +498,7 @@ class FormAutofillSection {
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
-        log.warn(fieldDetail.fieldName, "is unreachable");
+        lazy.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
       }
 
@@ -526,11 +525,14 @@ class FormAutofillSection {
     let element = fieldDetail.elementWeakRef.get();
 
     if (!element) {
-      log.warn(fieldDetail.fieldName, "is unreachable while changing state");
+      lazy.log.warn(
+        fieldDetail.fieldName,
+        "is unreachable while changing state"
+      );
       return;
     }
     if (!(nextState in this._FIELD_STATE_ENUM)) {
-      log.warn(
+      lazy.log.warn(
         fieldDetail.fieldName,
         "is trying to change to an invalid state"
       );
@@ -778,7 +780,10 @@ class FormAutofillAddressSection extends FormAutofillSection {
     ) {
       // We don't want to save data in the wrong fields due to not having proper
       // heuristic regexes in countries we don't yet support.
-      log.warn("isRecordCreatable: Country not supported:", record.country);
+      lazy.log.warn(
+        "isRecordCreatable: Country not supported:",
+        record.country
+      );
       return false;
     }
 
@@ -997,7 +1002,10 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
     // Identifier used to correlate events relating to the same form
     this.flowId = Services.uuid.generateUUID().toString();
-    log.debug("Creating new credit card section with flowId =", this.flowId);
+    lazy.log.debug(
+      "Creating new credit card section with flowId =",
+      this.flowId
+    );
 
     if (!this.isValidSection()) {
       return;
@@ -1008,7 +1016,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     // Check whether the section is in an <iframe>; and, if so,
     // watch for the <iframe> to pagehide.
     if (handler.window.location != handler.window.parent?.location) {
-      log.debug(
+      lazy.log.debug(
         "Credit card form is in an iframe -- watching for pagehide",
         fieldDetails
       );
@@ -1024,7 +1032,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       "pagehide",
       this._handlePageHide.bind(this)
     );
-    log.debug("Credit card subframe is pagehideing", this.handler.form);
+    lazy.log.debug("Credit card subframe is pagehideing", this.handler.form);
     this.handler.onFormSubmitted();
   }
 
@@ -1461,13 +1469,13 @@ class FormAutofillHandler {
     }
 
     if (currentForm.elements.length != this.form.elements.length) {
-      log.debug("The count of form elements is changed.");
+      lazy.log.debug("The count of form elements is changed.");
       this._updateForm(getFormLike());
       return true;
     }
 
     if (!this.form.elements.includes(element)) {
-      log.debug("The element can not be found in the current form.");
+      lazy.log.debug("The element can not be found in the current form.");
       this._updateForm(getFormLike());
       return true;
     }
@@ -1585,7 +1593,7 @@ class FormAutofillHandler {
 
     if (noFilledSectionsPreviously) {
       // Handle the highlight style resetting caused by user's correction afterward.
-      log.debug("register change handler for filled form:", this.form);
+      lazy.log.debug("register change handler for filled form:", this.form);
       this.form.rootElement.addEventListener("input", onChangeHandler, {
         mozSystemGroup: true,
       });

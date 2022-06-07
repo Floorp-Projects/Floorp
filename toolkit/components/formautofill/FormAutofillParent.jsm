@@ -50,8 +50,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
-this.log = null;
-FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
@@ -143,7 +142,7 @@ let FormAutofillStatus = {
    * Broadcast the status to frames when the form autofill status changes.
    */
   onStatusChanged() {
-    log.debug("onStatusChanged: Status changed to", this._active);
+    lazy.log.debug("onStatusChanged: Status changed to", this._active);
     Services.ppmm.sharedData.set("FormAutofill:enabled", this._active);
     // Sync autofill enabled to make sure the value is up-to-date
     // no matter when the new content process is initialized.
@@ -173,7 +172,7 @@ let FormAutofillStatus = {
    * Update the status and trigger onStatusChanged, if necessary.
    */
   updateStatus() {
-    log.debug("updateStatus");
+    lazy.log.debug("updateStatus");
     let wasActive = this._active;
     this._active = this.computeStatus();
     if (this._active !== wasActive) {
@@ -182,7 +181,7 @@ let FormAutofillStatus = {
   },
 
   async updateSavedFieldNames() {
-    log.debug("updateSavedFieldNames");
+    lazy.log.debug("updateSavedFieldNames");
 
     let savedFieldNames;
     const addressNames = await lazy.gFormAutofillStorage.addresses.getSavedFieldNames();
@@ -230,7 +229,7 @@ let FormAutofillStatus = {
   onCloseWindow() {},
 
   async observe(subject, topic, data) {
-    log.debug("observe:", topic, "with data:", data);
+    lazy.log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "privacy-pane-loaded": {
         let formAutofillPreferences = new lazy.FormAutofillPreferences();
@@ -274,7 +273,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
   let { formAutofillStorage } = ChromeUtils.import(
     "resource://autofill/FormAutofillStorage.jsm"
   );
-  log.debug("Loading formAutofillStorage");
+  lazy.log.debug("Loading formAutofillStorage");
 
   formAutofillStorage.initialize().then(() => {
     // Update the saved field names to compute the status and update child processes.
@@ -327,7 +326,7 @@ class FormAutofillParent extends JSWindowActorParent {
       case "FormAutofill:GetDecryptedString": {
         let { cipherText, reauth } = data;
         if (!lazy.FormAutofillUtils._reauthEnabledByUser) {
-          log.debug("Reauth is disabled");
+          lazy.log.debug("Reauth is disabled");
           reauth = false;
         }
         let string;
@@ -337,7 +336,7 @@ class FormAutofillParent extends JSWindowActorParent {
           if (e.result != Cr.NS_ERROR_ABORT) {
             throw e;
           }
-          log.warn("User canceled encryption login");
+          lazy.log.warn("User canceled encryption login");
         }
         return string;
       }
@@ -363,7 +362,7 @@ class FormAutofillParent extends JSWindowActorParent {
       }
       case "FormAutofill:SaveCreditCard": {
         if (!(await lazy.FormAutofillUtils.ensureLoggedIn()).authenticated) {
-          log.warn("User canceled encryption login");
+          lazy.log.warn("User canceled encryption login");
           return undefined;
         }
         await lazy.gFormAutofillStorage.creditCards.add(data.creditcard);

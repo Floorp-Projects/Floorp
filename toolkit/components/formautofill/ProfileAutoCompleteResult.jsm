@@ -30,8 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "security.insecure_field_warning.contextual.enabled"
 );
 
-this.log = null;
-FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 class ProfileAutoCompleteResult {
   constructor(
