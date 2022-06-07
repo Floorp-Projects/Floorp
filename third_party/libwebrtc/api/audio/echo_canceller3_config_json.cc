@@ -264,6 +264,8 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
     ReadParam(section, "bounded_erl", &cfg.ep_strength.bounded_erl);
     ReadParam(section, "erle_onset_compensation_in_dominant_nearend",
               &cfg.ep_strength.erle_onset_compensation_in_dominant_nearend);
+    ReadParam(section, "use_conservative_tail_frequency_response",
+              &cfg.ep_strength.use_conservative_tail_frequency_response);
   }
 
   if (rtc::GetValueFromJsonObject(aec3_root, "echo_audibility", &section)) {
@@ -568,6 +570,10 @@ std::string Aec3ConfigToJsonString(const EchoCanceller3Config& config) {
       << (config.ep_strength.bounded_erl ? "true" : "false") << ",";
   ost << "\"erle_onset_compensation_in_dominant_nearend\": "
       << (config.ep_strength.erle_onset_compensation_in_dominant_nearend
+              ? "true"
+              : "false") << ",";
+  ost << "\"use_conservative_tail_frequency_response\": "
+      << (config.ep_strength.use_conservative_tail_frequency_response
               ? "true"
               : "false");
   ost << "},";
