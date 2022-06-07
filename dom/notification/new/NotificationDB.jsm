@@ -11,13 +11,15 @@ function debug(s) {
   dump("-*- NotificationDB component: " + s + "\n");
 }
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "KeyValueService",
   "resource://gre/modules/kvstore.jsm"
 );
@@ -159,8 +161,11 @@ var NotificationDB = {
   // Attempt to read notification file, if it's not there we will create it.
   async load() {
     // Get and cache a handle to the kvstore.
-    const dir = FileUtils.getDir("ProfD", ["notificationstore"], true);
-    this._store = await KeyValueService.getOrCreate(dir.path, "notifications");
+    const dir = lazy.FileUtils.getDir("ProfD", ["notificationstore"], true);
+    this._store = await lazy.KeyValueService.getOrCreate(
+      dir.path,
+      "notifications"
+    );
 
     // Migrate data from the old JSON file to the new kvstore if the old file
     // is present in the user's profile directory.

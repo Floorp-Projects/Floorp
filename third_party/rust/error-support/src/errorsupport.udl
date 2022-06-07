@@ -1,0 +1,12 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace errorsupport {
+    void set_application_error_reporter(ApplicationErrorReporter error_reporter);
+};
+
+callback interface ApplicationErrorReporter {
+    void report_error(string type_name, string message);
+    void report_breadcrumb(string message, string module, u32 line, u32 column);
+};

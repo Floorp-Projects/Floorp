@@ -15,9 +15,7 @@ cubeb-backend = "0.10"
 futures = { version="0.1.18", default-features=false, features=["use_std"] }
 futures-cpupool = { version="0.1.8", default-features=false }
 log = "0.4"
-tokio = "0.1"
+tokio = { version="0.1", default-features=false, features = ["rt-full"] }
 
 [dependencies.audio_thread_priority]
-version = "0.26.0"
-default_features = false
-features = ["winapi"]
+version = "0.26.1"

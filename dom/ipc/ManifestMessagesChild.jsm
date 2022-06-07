@@ -15,18 +15,20 @@
 
 var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ManifestObtainer",
   "resource://gre/modules/ManifestObtainer.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ManifestFinder",
   "resource://gre/modules/ManifestFinder.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ManifestIcons",
   "resource://gre/modules/ManifestIcons.jsm"
 );
@@ -49,7 +51,9 @@ class ManifestMessagesChild extends JSWindowActorChild {
    */
   hasManifestLink() {
     const response = makeMsgResponse();
-    response.result = ManifestFinder.contentHasManifestLink(this.contentWindow);
+    response.result = lazy.ManifestFinder.contentHasManifestLink(
+      this.contentWindow
+    );
     response.success = true;
     return response;
   }
@@ -63,7 +67,7 @@ class ManifestMessagesChild extends JSWindowActorChild {
     const { checkConformance } = options;
     const response = makeMsgResponse();
     try {
-      response.result = await ManifestObtainer.contentObtainManifest(
+      response.result = await lazy.ManifestObtainer.contentObtainManifest(
         this.contentWindow,
         { checkConformance }
       );
@@ -81,7 +85,7 @@ class ManifestMessagesChild extends JSWindowActorChild {
   async fetchIcon({ data: { manifest, iconSize } }) {
     const response = makeMsgResponse();
     try {
-      response.result = await ManifestIcons.contentFetchIcon(
+      response.result = await lazy.ManifestIcons.contentFetchIcon(
         this.contentWindow,
         manifest,
         iconSize
