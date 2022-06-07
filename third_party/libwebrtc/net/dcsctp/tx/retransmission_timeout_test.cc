@@ -88,7 +88,7 @@ TEST(RetransmissionTimeoutTest, CalculatesRtoForStableRtt) {
   rto_.ObserveRTT(DurationMs(125));
   EXPECT_EQ(*rto_.rto(), 233);
   rto_.ObserveRTT(DurationMs(127));
-  EXPECT_EQ(*rto_.rto(), 208);
+  EXPECT_EQ(*rto_.rto(), 209);
 }
 
 TEST(RetransmissionTimeoutTest, CalculatesRtoForUnstableRtt) {
@@ -116,21 +116,21 @@ TEST(RetransmissionTimeoutTest, WillStabilizeAfterAWhile) {
   rto_.ObserveRTT(DurationMs(124));
   EXPECT_EQ(*rto_.rto(), 800);
   rto_.ObserveRTT(DurationMs(122));
-  EXPECT_EQ(*rto_.rto(), 709);
+  EXPECT_EQ(*rto_.rto(), 710);
   rto_.ObserveRTT(DurationMs(123));
-  EXPECT_EQ(*rto_.rto(), 630);
+  EXPECT_EQ(*rto_.rto(), 631);
   rto_.ObserveRTT(DurationMs(124));
-  EXPECT_EQ(*rto_.rto(), 561);
+  EXPECT_EQ(*rto_.rto(), 562);
   rto_.ObserveRTT(DurationMs(122));
-  EXPECT_EQ(*rto_.rto(), 504);
+  EXPECT_EQ(*rto_.rto(), 505);
   rto_.ObserveRTT(DurationMs(124));
-  EXPECT_EQ(*rto_.rto(), 453);
+  EXPECT_EQ(*rto_.rto(), 454);
   rto_.ObserveRTT(DurationMs(124));
-  EXPECT_EQ(*rto_.rto(), 409);
+  EXPECT_EQ(*rto_.rto(), 410);
   rto_.ObserveRTT(DurationMs(124));
   EXPECT_EQ(*rto_.rto(), 372);
   rto_.ObserveRTT(DurationMs(124));
-  EXPECT_EQ(*rto_.rto(), 339);
+  EXPECT_EQ(*rto_.rto(), 340);
 }
 
 TEST(RetransmissionTimeoutTest, WillAlwaysStayAboveRTT) {
