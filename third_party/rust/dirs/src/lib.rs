@@ -1,6 +1,6 @@
 //! The _dirs_ crate is
 //!
-//! - a tiny library with a minimal API (16 functions)
+//! - a tiny library with a minimal API (18 public functions)
 //! - that provides the platform-specific, user-accessible locations
 //! - for finding and storing configuration, cache and other data
 //! - on Linux, Redox, Windows (≥ Vista) and macOS.
@@ -13,26 +13,35 @@
 
 #![deny(missing_docs)]
 
-#[macro_use]
-extern crate cfg_if;
-
 use std::path::PathBuf;
 
-cfg_if! {
-    if #[cfg(target_os = "windows")] {
-        mod win;
-        use win as sys;
-    } else if #[cfg(any(target_os = "macos", target_os = "ios"))] {
-        mod mac;
-        use mac as sys;
-    } else if #[cfg(target_arch = "wasm32")] {
-        mod wasm;
-        use wasm as sys;
-    } else {
-        mod lin;
-        use lin as sys;
-    }
-}
+#[cfg(target_os = "windows")]
+mod win;
+#[cfg(target_os = "windows")]
+use win as sys;
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+mod mac;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+use mac as sys;
+
+#[cfg(target_arch = "wasm32")]
+mod wasm;
+#[cfg(target_arch = "wasm32")]
+use wasm as sys;
+
+#[cfg(not(any(
+    target_os = "windows",
+    target_os = "macos", target_os = "ios",
+    target_arch = "wasm32"
+)))]
+mod lin;
+#[cfg(not(any(
+    target_os = "windows",
+    target_os = "macos", target_os = "ios",
+    target_arch = "wasm32"
+)))]
+use lin as sys;
 
 /// Returns the path to the user's home directory.
 ///
@@ -81,11 +90,11 @@ pub fn cache_dir() -> Option<PathBuf> {
 ///
 /// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
-/// |Platform | Value                                 | Example                          |
-/// | ------- | ------------------------------------- | -------------------------------- |
-/// | Linux   | `$XDG_CONFIG_HOME` or `$HOME`/.config | /home/alice/.config              |
-/// | macOS   | `$HOME`/Library/Preferences           | /Users/Alice/Library/Preferences |
-/// | Windows | `{FOLDERID_RoamingAppData}`           | C:\Users\Alice\AppData\Roaming   |
+/// |Platform | Value                                 | Example                                  |
+/// | ------- | ------------------------------------- | ---------------------------------------- |
+/// | Linux   | `$XDG_CONFIG_HOME` or `$HOME`/.config | /home/alice/.config                      |
+/// | macOS   | `$HOME`/Library/Application Support   | /Users/Alice/Library/Application Support |
+/// | Windows | `{FOLDERID_RoamingAppData}`           | C:\Users\Alice\AppData\Roaming           |
 pub fn config_dir() -> Option<PathBuf> {
     sys::config_dir()
 }
@@ -125,7 +134,22 @@ pub fn data_local_dir() -> Option<PathBuf> {
 pub fn executable_dir() -> Option<PathBuf> {
     sys::executable_dir()
 }
+/// Returns the path to the user's preference directory.
+///
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
+///
+/// |Platform | Value                                 | Example                          |
+/// | ------- | ------------------------------------- | -------------------------------- |
+/// | Linux   | `$XDG_CONFIG_HOME` or `$HOME`/.config | /home/alice/.config              |
+/// | macOS   | `$HOME`/Library/Preferences           | /Users/Alice/Library/Preferences |
+/// | Windows | `{FOLDERID_RoamingAppData}`           | C:\Users\Alice\AppData\Roaming   |
+pub fn preference_dir() -> Option<PathBuf> {
+    sys::preference_dir()
+}
 /// Returns the path to the user's runtime directory.
+///
+/// The runtime directory contains transient, non-essential data (like sockets or named pipes) that
+/// is expected to be cleared when the user's session ends.
 ///
 /// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
 ///
@@ -136,6 +160,22 @@ pub fn executable_dir() -> Option<PathBuf> {
 /// | Windows | –                  | –               |
 pub fn runtime_dir() -> Option<PathBuf> {
     sys::runtime_dir()
+}
+/// Returns the path to the user's state directory.
+///
+/// The state directory contains data that should be retained between sessions (unlike the runtime
+/// directory), but may not be important/portable enough to be synchronized across machines (unlike
+/// the config/preferences/data directories).
+///
+/// The returned value depends on the operating system and is either a `Some`, containing a value from the following table, or a `None`.
+///
+/// |Platform | Value                                     | Example                  |
+/// | ------- | ----------------------------------------- | ------------------------ |
+/// | Linux   | `$XDG_STATE_HOME` or `$HOME`/.local/state | /home/alice/.local/state |
+/// | macOS   | –                                         | –                        |
+/// | Windows | –                                         | –                        |
+pub fn state_dir() -> Option<PathBuf> {
+    sys::state_dir()
 }
 
 /// Returns the path to the user's audio directory.
@@ -253,14 +293,18 @@ mod tests {
     #[test]
     fn test_dirs() {
         println!("home_dir:       {:?}", ::home_dir());
+        println!();
         println!("cache_dir:      {:?}", ::cache_dir());
         println!("config_dir:     {:?}", ::config_dir());
         println!("data_dir:       {:?}", ::data_dir());
         println!("data_local_dir: {:?}", ::data_local_dir());
         println!("executable_dir: {:?}", ::executable_dir());
+        println!("preference_dir: {:?}", ::preference_dir());
         println!("runtime_dir:    {:?}", ::runtime_dir());
+        println!("state_dir:      {:?}", ::state_dir());
+        println!();
         println!("audio_dir:      {:?}", ::audio_dir());
-        println!("home_dir:       {:?}", ::desktop_dir());
+        println!("desktop_dir:    {:?}", ::desktop_dir());
         println!("cache_dir:      {:?}", ::document_dir());
         println!("config_dir:     {:?}", ::download_dir());
         println!("font_dir:       {:?}", ::font_dir());
