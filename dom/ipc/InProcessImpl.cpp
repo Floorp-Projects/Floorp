@@ -264,14 +264,14 @@ static IProtocol* GetOtherInProcessActor(IProtocol* aActor) {
 
   // Discover the manager of aActor which is PInProcess.
   IProtocol* current = aActor;
-  while (current) {
+  while (current && current->CanRecv()) {
     if (current->GetProtocolId() == PInProcessMsgStart) {
       break;  // Found the correct actor.
     }
     current = current->Manager();
   }
-  if (!current) {
-    return nullptr;  // Not a PInProcess actor, return |nullptr|
+  if (!current || !current->CanRecv()) {
+    return nullptr;  // Not a live PInProcess actor, return |nullptr|
   }
 
   MOZ_ASSERT(current->GetSide() == aActor->GetSide(), "side changed?");
