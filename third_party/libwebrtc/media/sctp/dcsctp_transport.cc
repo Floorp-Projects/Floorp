@@ -328,8 +328,8 @@ SendPacketStatus DcSctpTransport::SendPacketWithStatus(
   if (!transport_ || !transport_->writable())
     return SendPacketStatus::kError;
 
-  RTC_LOG(LS_VERBOSE) << debug_name_ << "->SendPacket(length=" << data.size()
-                      << ")";
+  RTC_DLOG(LS_VERBOSE) << debug_name_ << "->SendPacket(length=" << data.size()
+                       << ")";
 
   auto result =
       transport_->SendPacket(reinterpret_cast<const char*>(data.data()),
@@ -510,8 +510,8 @@ void DcSctpTransport::OnTransportReadPacket(
     return;
   }
 
-  RTC_LOG(LS_VERBOSE) << debug_name_
-                      << "->OnTransportReadPacket(), length=" << length;
+  RTC_DLOG(LS_VERBOSE) << debug_name_
+                       << "->OnTransportReadPacket(), length=" << length;
   if (socket_) {
     socket_->ReceivePacket(rtc::ArrayView<const uint8_t>(
         reinterpret_cast<const uint8_t*>(data), length));
