@@ -8623,6 +8623,24 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_FALSE(rtp_parameters.encodings[0].ssrc);
 }
 
+// Test that if a default stream is created for a non-primary stream (for
+// example, RTX before we know it's RTX), we are still able to explicitly add
+// the stream later.
+TEST_F(WebRtcVideoChannelTest,
+       AddReceiveStreamAfterReceivingNonPrimaryUnsignaledSsrc) {
+  // Receive VP8 RTX packet.
+  RtpPacket rtp_packet;
+  const cricket::VideoCodec vp8 = GetEngineCodec("VP8");
+  rtp_packet.SetPayloadType(default_apt_rtx_types_[vp8.id]);
+  rtp_packet.SetSsrc(2);
+  ReceivePacketAndAdvanceTime(rtp_packet.Buffer(), /* packet_time_us */ -1);
+  EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
+
+  cricket::StreamParams params = cricket::StreamParams::CreateLegacy(1);
+  params.AddFidSsrc(1, 2);
+  EXPECT_TRUE(channel_->AddRecvStream(params));
+}
+
 void WebRtcVideoChannelTest::TestReceiverLocalSsrcConfiguration(
     bool receiver_first) {
   EXPECT_TRUE(channel_->SetSendParameters(send_parameters_));
