@@ -41,17 +41,17 @@ impl BooleanMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Boolean for BooleanMetric {
     /// Set to the specified boolean value.
     ///
     /// ## Arguments
     ///
     /// * `value` - the value to set.
-    fn set(&self, value: bool) {
+    pub fn set(&self, value: bool) {
         match self {
             BooleanMetric::Parent(p) => {
-                Boolean::set(&*p, value);
+                p.set(value);
             }
             BooleanMetric::Child(_) => {
                 log::error!("Unable to set boolean metric in non-parent process. Ignoring.");
@@ -72,12 +72,40 @@ impl Boolean for BooleanMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<bool> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<bool> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             BooleanMetric::Parent(p) => p.test_get_value(ping_name),
             BooleanMetric::Child(_) => {
                 panic!("Cannot get test value for boolean metric in non-parent process!",)
             }
+        }
+    }
+
+    /// **Exported for test purposes.**
+    ///
+    /// Gets the number of recorded errors for the given metric and error type.
+    ///
+    /// # Arguments
+    ///
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The number of errors reported.
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+        &self,
+        error: glean::ErrorType,
+        ping_name: S,
+    ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
+        match self {
+            BooleanMetric::Parent(p) => p.test_get_num_recorded_errors(error, ping_name),
+            BooleanMetric::Child(_) => panic!(
+                "Cannot get the number of recorded errors for boolean metric in non-parent process!"
+            ),
         }
     }
 }

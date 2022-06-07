@@ -5,6 +5,7 @@
 use inherent::inherent;
 
 use super::{CommonMetricData, MetricId, TimeUnit};
+use std::convert::TryInto;
 use std::time::Duration;
 
 use glean::traits::Timespan;
@@ -49,11 +50,11 @@ impl TimespanMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Timespan for TimespanMetric {
-    fn start(&self) {
+    pub fn start(&self) {
         match self {
-            TimespanMetric::Parent(p, _) => Timespan::start(p),
+            TimespanMetric::Parent(p, _) => p.start(),
             TimespanMetric::Child => {
                 log::error!("Unable to start timespan metric in non-main process. Ignoring.");
                 // TODO: Record an error. bug 1704504.
@@ -61,9 +62,9 @@ impl Timespan for TimespanMetric {
         }
     }
 
-    fn stop(&self) {
+    pub fn stop(&self) {
         match self {
-            TimespanMetric::Parent(p, _) => Timespan::stop(p),
+            TimespanMetric::Parent(p, _) => p.stop(),
             TimespanMetric::Child => {
                 log::error!("Unable to stop timespan metric in non-main process. Ignoring.");
                 // TODO: Record an error. bug 1704504.
@@ -71,9 +72,9 @@ impl Timespan for TimespanMetric {
         }
     }
 
-    fn cancel(&self) {
+    pub fn cancel(&self) {
         match self {
-            TimespanMetric::Parent(p, _) => Timespan::cancel(p),
+            TimespanMetric::Parent(p, _) => p.cancel(),
             TimespanMetric::Child => {
                 log::error!("Unable to cancel timespan metric in non-main process. Ignoring.");
                 // TODO: Record an error. bug 1704504.
@@ -81,9 +82,10 @@ impl Timespan for TimespanMetric {
         }
     }
 
-    fn set_raw(&self, elapsed: Duration) {
+    pub fn set_raw(&self, elapsed: Duration) {
+        let elapsed = elapsed.as_nanos().try_into().unwrap_or(i64::MAX);
         match self {
-            TimespanMetric::Parent(p, _) => Timespan::set_raw(p, elapsed),
+            TimespanMetric::Parent(p, _) => p.set_raw_nanos(elapsed),
             TimespanMetric::Child => {
                 log::error!("Unable to set_raw on timespan in non-main process. Ignoring.");
                 // TODO: Record an error. bug 1704504.
@@ -91,20 +93,24 @@ impl Timespan for TimespanMetric {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<u64> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<u64> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
-            TimespanMetric::Parent(p, _) => p.test_get_value(ping_name),
+            // Conversion is ok here:
+            // Timespans are really tricky to set to excessive values with the pleasant APIs.
+            TimespanMetric::Parent(p, _) => p.test_get_value(ping_name).map(|i| i as u64),
             TimespanMetric::Child => {
                 panic!("Cannot get test value for in non-parent process!");
             }
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             TimespanMetric::Parent(p, _) => p.test_get_num_recorded_errors(error, ping_name),
             TimespanMetric::Child => {

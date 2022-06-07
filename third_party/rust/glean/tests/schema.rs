@@ -8,8 +8,9 @@ use flate2::read::GzDecoder;
 use jsonschema_valid::{self, schemas::Draft};
 use serde_json::Value;
 
-use glean::private::{DenominatorMetric, NumeratorMetric, RateMetric};
-use glean::{ClientInfoMetrics, CommonMetricData, Configuration};
+//use glean::private::{DenominatorMetric, NumeratorMetric, RateMetric};
+use glean::net::UploadResult;
+use glean::{ClientInfoMetrics, Configuration};
 
 const SCHEMA_JSON: &str = include_str!("../../../glean.1.schema.json");
 
@@ -33,7 +34,6 @@ fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
             upload_enabled: true,
             max_events: None,
             delay_ping_lifetime_io: false,
-            channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
             use_core_mps: false,
@@ -43,6 +43,7 @@ fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
     let client_info = ClientInfoMetrics {
         app_build: env!("CARGO_PKG_VERSION").to_string(),
         app_display_version: env!("CARGO_PKG_VERSION").to_string(),
+        channel: Some("testing".to_string()),
     };
 
     glean::initialize(cfg, client_info);
@@ -68,9 +69,9 @@ fn validate_against_schema() {
             _url: String,
             body: Vec<u8>,
             _headers: Vec<(String, String)>,
-        ) -> glean::net::UploadResult {
+        ) -> UploadResult {
             self.sender.send(body).unwrap();
-            glean::net::UploadResult::HttpStatus(200)
+            UploadResult::http_status(200)
         }
     }
 
@@ -84,7 +85,6 @@ fn validate_against_schema() {
         upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: false,
-        channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: Some(Box::new(ValidatingUploader { sender: s })),
         use_core_mps: false,
@@ -98,6 +98,7 @@ fn validate_against_schema() {
 
     // TODO: 1695762 Test all of the metric types against the schema from Rust
 
+    /*
     let rate_metric: RateMetric = RateMetric::new(CommonMetricData {
         category: "test".into(),
         name: "rate".into(),
@@ -145,6 +146,7 @@ fn validate_against_schema() {
     numerator_metric1.add_to_numerator(1);
     numerator_metric2.add_to_numerator(2);
     denominator_metric.add(3);
+    */
 
     // Define a new ping and submit it.
     let custom_ping = glean::private::PingType::new(PING_NAME, true, true, vec![]);

@@ -23,9 +23,9 @@ fn write_ping_to_disk() {
         send_in_pings: vec!["metrics".into()],
         ..Default::default()
     });
-    counter.add(&glean, 1);
+    counter.add_sync(&glean, 1);
 
-    assert!(ping.submit(&glean, None));
+    assert!(ping.submit_sync(&glean, None));
 
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
@@ -45,8 +45,8 @@ fn disabling_upload_clears_pending_pings() {
         ..Default::default()
     });
 
-    counter.add(&glean, 1);
-    assert!(ping.submit(&glean, None));
+    counter.add_sync(&glean, 1);
+    assert!(ping.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
     // At this point no deletion_request ping should exist
     // (that is: it's directory should not exist at all)
@@ -68,8 +68,8 @@ fn disabling_upload_clears_pending_pings() {
     glean.set_upload_enabled(true);
     assert_eq!(0, get_queued_pings(glean.get_data_path()).unwrap().len());
 
-    counter.add(&glean, 1);
-    assert!(ping.submit(&glean, None));
+    counter.add_sync(&glean, 1);
+    assert!(ping.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
 
@@ -111,11 +111,11 @@ fn empty_pings_with_flag_are_sent() {
     // No data is stored in either of the custom pings
 
     // Sending this should succeed.
-    assert!(ping1.submit(&glean, None));
+    assert!(ping1.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 
     // Sending this should fail.
-    assert!(!ping2.submit(&glean, None));
+    assert!(!ping2.submit_sync(&glean, None));
     assert_eq!(1, get_queued_pings(glean.get_data_path()).unwrap().len());
 }
 
@@ -125,15 +125,15 @@ fn test_pings_submitted_metric() {
 
     // Reconstructed here so we can test it without reaching into the library
     // internals.
-    let pings_submitted = LabeledMetric::new(
-        CounterMetric::new(CommonMetricData {
+    let pings_submitted = LabeledCounter::new(
+        CommonMetricData {
             name: "pings_submitted".into(),
             category: "glean.validation".into(),
             send_in_pings: vec!["metrics".into(), "baseline".into()],
             lifetime: Lifetime::Ping,
             disabled: false,
             dynamic_label: None,
-        }),
+        },
         None,
     );
 
@@ -150,57 +150,51 @@ fn test_pings_submitted_metric() {
         send_in_pings: vec!["metrics".into()],
         ..Default::default()
     });
-    counter.add(&glean, 1);
+    counter.add_sync(&glean, 1);
 
-    assert!(metrics_ping.submit(&glean, None));
+    assert!(metrics_ping.submit_sync(&glean, None));
 
     // Check recording in the metrics ping
     assert_eq!(
         Some(1),
-        pings_submitted
-            .get("metrics")
-            .test_get_value(&glean, "metrics")
+        pings_submitted.get("metrics").get_value(&glean, "metrics")
     );
     assert_eq!(
         None,
-        pings_submitted
-            .get("baseline")
-            .test_get_value(&glean, "metrics")
+        pings_submitted.get("baseline").get_value(&glean, "metrics")
     );
 
     // Check recording in the baseline ping
     assert_eq!(
         Some(1),
-        pings_submitted
-            .get("metrics")
-            .test_get_value(&glean, "baseline")
+        pings_submitted.get("metrics").get_value(&glean, "baseline")
     );
     assert_eq!(
         None,
         pings_submitted
             .get("baseline")
-            .test_get_value(&glean, "baseline")
+            .get_value(&glean, "baseline")
     );
 
     // Trigger 2 baseline pings.
     // This should record a count of 2 baseline pings in the metrics ping, but
     // it resets each time on the baseline ping, so we should only ever get 1
     // baseline ping recorded in the baseline ping itsef.
-    assert!(baseline_ping.submit(&glean, None));
-    assert!(baseline_ping.submit(&glean, None));
+    assert!(baseline_ping.submit_sync(&glean, None));
+    assert!(baseline_ping.submit_sync(&glean, None));
 
     // Check recording in the metrics ping
     assert_eq!(
         Some(1),
         pings_submitted
             .get("metrics")
-            .test_get_value(&glean, "metrics")
+            .get_value(&glean, Some("metrics"))
     );
     assert_eq!(
         Some(2),
         pings_submitted
             .get("baseline")
-            .test_get_value(&glean, "metrics")
+            .get_value(&glean, Some("metrics"))
     );
 
     // Check recording in the baseline ping
@@ -208,12 +202,12 @@ fn test_pings_submitted_metric() {
         None,
         pings_submitted
             .get("metrics")
-            .test_get_value(&glean, "baseline")
+            .get_value(&glean, Some("baseline"))
     );
     assert_eq!(
         Some(1),
         pings_submitted
             .get("baseline")
-            .test_get_value(&glean, "baseline")
+            .get_value(&glean, Some("baseline"))
     );
 }

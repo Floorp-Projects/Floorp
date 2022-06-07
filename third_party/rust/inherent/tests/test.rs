@@ -9,12 +9,10 @@ mod types {
 
     pub struct Struct;
 
-    #[inherent(pub)]
+    #[inherent]
     impl Trait for Struct {
-        fn f<T: ?Sized>(self) {}
-        default! {
-            fn g(&self);
-        }
+        pub fn f<T: ?Sized>(self) {}
+        pub fn g(&self);
     }
 }
 

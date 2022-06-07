@@ -1,106 +1,127 @@
-use crate::default_methods;
 use crate::parse::TraitImpl;
-use crate::visibility::Visibility;
-use proc_macro2::{Span, TokenStream};
-use quote::quote;
-use syn::{Attribute, FnArg, Ident, ImplItem, Signature};
+use proc_macro2::{Span, TokenStream, TokenTree};
+use quote::{quote, quote_spanned};
+use syn::{FnArg, Ident, ImplItem, ImplItemMethod, Item, Pat, Path, Stmt, Visibility};
 
-pub fn inherent(vis: Visibility, mut input: TraitImpl) -> TokenStream {
+pub fn inherent(mut input: TraitImpl) -> TokenStream {
     let generics = &input.generics;
     let where_clause = &input.generics.where_clause;
     let trait_ = &input.trait_;
     let ty = &input.self_ty;
 
-    let fwd_method = |attrs: &[Attribute], sig: &Signature| {
-        let constness = &sig.constness;
-        let asyncness = &sig.asyncness;
-        let unsafety = &sig.unsafety;
-        let abi = &sig.abi;
-        let ident = &sig.ident;
-        let generics = &sig.generics;
-        let output = &sig.output;
-        let where_clause = &sig.generics.where_clause;
-
-        let (arg_pat, arg_val): (Vec<_>, Vec<_>) = sig
-            .inputs
-            .iter()
-            .enumerate()
-            .map(|(i, input)| match input {
-                FnArg::Receiver(receiver) => {
-                    if receiver.reference.is_some() {
-                        (quote!(#receiver), quote!(self))
-                    } else {
-                        (quote!(self), quote!(self))
-                    }
-                }
-                FnArg::Typed(arg) => {
-                    let var = Ident::new(&format!("__arg{}", i), Span::call_site());
-                    let ty = &arg.ty;
-                    (quote!(#var: #ty), quote!(#var))
-                }
-            })
-            .unzip();
-
-        let types = generics.type_params().map(|param| &param.ident);
-
-        let has_doc = attrs.iter().any(|attr| attr.path.is_ident("doc"));
-        let default_doc = if has_doc {
-            None
-        } else {
-            let mut link = String::new();
-            for segment in &trait_.segments {
-                link += &segment.ident.to_string();
-                link += "::";
-            }
-            let msg = format!("See [`{}{}`]", link, ident);
-            Some(quote!(#[doc = #msg]))
-        };
-
-        quote! {
-            #(#attrs)*
-            #default_doc
-            #vis #constness #asyncness #unsafety #abi fn #ident #generics (
-                #(#arg_pat,)*
-            ) #output #where_clause {
-                <Self as #trait_>::#ident::<#(#types,)*>(#(#arg_val,)*)
-            }
-        }
-    };
-
-    let mut errors = Vec::new();
     let fwd_methods: Vec<_> = input
         .items
         .iter()
-        .flat_map(|item| match item {
-            ImplItem::Method(method) => vec![fwd_method(&method.attrs, &method.sig)],
-            ImplItem::Macro(item) if item.mac.path.is_ident("default") => {
-                match item.mac.parse_body_with(default_methods::parse) {
-                    Ok(body) => body
-                        .into_iter()
-                        .map(|item| fwd_method(&item.attrs, &item.sig))
-                        .collect(),
-                    Err(e) => {
-                        errors.push(e.to_compile_error());
-                        Vec::new()
-                    }
-                }
-            }
-            _ => Vec::new(),
+        .filter_map(|item| match item {
+            ImplItem::Method(method) => Some(fwd_method(trait_, method)),
+            _ => None,
         })
         .collect();
 
-    input.items.retain(|item| match item {
-        ImplItem::Macro(item) if item.mac.path.is_ident("default") => false,
-        _ => true,
-    });
+    input.items = input
+        .items
+        .into_iter()
+        .filter_map(|item| match item {
+            ImplItem::Method(mut method) => {
+                if inherit_default_implementation(&method) {
+                    None
+                } else {
+                    method.vis = Visibility::Inherited;
+                    Some(ImplItem::Method(method))
+                }
+            }
+            item => Some(item),
+        })
+        .collect();
 
     quote! {
-        #(#errors)*
-
         impl #generics #ty #where_clause {
             #(#fwd_methods)*
         }
 
         #input
     }
+}
+
+fn fwd_method(trait_: &Path, method: &ImplItemMethod) -> TokenStream {
+    let attrs = &method.attrs;
+    let vis = &method.vis;
+    let constness = &method.sig.constness;
+    let asyncness = &method.sig.asyncness;
+    let unsafety = &method.sig.unsafety;
+    let abi = &method.sig.abi;
+    let fn_token = method.sig.fn_token;
+    let ident = &method.sig.ident;
+    let generics = &method.sig.generics;
+    let output = &method.sig.output;
+    let where_clause = &method.sig.generics.where_clause;
+
+    let (arg_pat, arg_val): (Vec<_>, Vec<_>) = method
+        .sig
+        .inputs
+        .pairs()
+        .enumerate()
+        .map(|(i, pair)| {
+            let (input, comma_token) = pair.into_tuple();
+            match input {
+                FnArg::Receiver(receiver) => {
+                    let self_token = receiver.self_token;
+                    if receiver.reference.is_some() {
+                        (quote!(#receiver #comma_token), quote!(#self_token))
+                    } else {
+                        (quote!(#self_token #comma_token), quote!(#self_token))
+                    }
+                }
+                FnArg::Typed(arg) => {
+                    let var = match arg.pat.as_ref() {
+                        Pat::Ident(pat) => pat.ident.clone(),
+                        _ => Ident::new(&format!("__arg{}", i), Span::call_site()),
+                    };
+                    let colon_token = arg.colon_token;
+                    let ty = &arg.ty;
+                    (quote!(#var #colon_token #ty #comma_token), quote!(#var))
+                }
+            }
+        })
+        .unzip();
+
+    let types = generics.type_params().map(|param| &param.ident);
+    let body = quote!(<Self as #trait_>::#ident::<#(#types,)*>(#(#arg_val,)*));
+    let block = quote_spanned!(method.block.brace_token.span=> { #body });
+    let args = quote_spanned!(method.sig.paren_token.span=> (#(#arg_pat)*));
+
+    let has_doc = attrs.iter().any(|attr| attr.path.is_ident("doc"));
+    let default_doc = if has_doc {
+        None
+    } else {
+        let mut link = String::new();
+        for segment in &trait_.segments {
+            link += &segment.ident.to_string();
+            link += "::";
+        }
+        let msg = format!("See [`{}{}`]", link, ident);
+        Some(quote!(#[doc = #msg]))
+    };
+
+    quote! {
+        #(#attrs)*
+        #default_doc
+        #vis #constness #asyncness #unsafety #abi #fn_token #ident #generics #args #output #where_clause #block
+    }
+}
+
+fn inherit_default_implementation(method: &ImplItemMethod) -> bool {
+    method.block.stmts.len() == 1
+        && match &method.block.stmts[0] {
+            Stmt::Item(Item::Verbatim(verbatim)) => {
+                let mut iter = verbatim.clone().into_iter();
+                match iter.next() {
+                    Some(TokenTree::Punct(punct)) => {
+                        punct.as_char() == ';' && iter.next().is_none()
+                    }
+                    _ => false,
+                }
+            }
+            _ => false,
+        }
 }

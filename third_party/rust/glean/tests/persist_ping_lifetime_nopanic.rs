@@ -20,7 +20,6 @@ fn cfg_new(tmpname: PathBuf) -> Configuration {
         upload_enabled: true,
         max_events: None,
         delay_ping_lifetime_io: true,
-        channel: Some("testing".into()),
         server_endpoint: Some("invalid-test-host".into()),
         uploader: None,
         use_core_mps: false,
@@ -39,8 +38,6 @@ fn delayed_ping_data() {
     common::initialize(cfg_new(tmpname));
     glean::persist_ping_lifetime_data();
 
-    // This flushes the queue, including the ping lifetime persist.
     glean::shutdown();
-    // This shouldn't panic.
     glean::persist_ping_lifetime_data();
 }

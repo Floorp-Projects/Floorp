@@ -302,10 +302,10 @@ pub mod test_nested {
     impl ExtraKeys for EventMetricWithExtraExtra {
         const ALLOWED_KEYS: &'static [&'static str] = &["an_extra_key", "another_extra_key"];
 
-        fn into_ffi_extra(self) -> ::std::collections::HashMap<i32, String> {
+        fn into_ffi_extra(self) -> ::std::collections::HashMap<String, String> {
           let mut map = ::std::collections::HashMap::new();
-          self.an_extra_key.and_then(|val| map.insert(0, val.to_string()));
-          self.another_extra_key.and_then(|val| map.insert(1, val.to_string()));
+          self.an_extra_key.and_then(|val| map.insert("an_extra_key".into(), val.to_string()));
+          self.another_extra_key.and_then(|val| map.insert("another_extra_key".into(), val.to_string()));
           map
         }
     }
@@ -395,7 +395,7 @@ pub mod test_nested {
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
 
-    use super::{id_for_extra_key, extra_keys_len};
+    use crate::metrics::extra_keys_len;
     use crate::private::*;
     use once_cell::sync::Lazy;
 
@@ -517,7 +517,7 @@ pub(crate) mod __glean_metric_maps {
     /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
     /// or an `EventRecordingError::InvalidId` if no event by that ID exists
     /// or an `EventRecordingError::InvalidExtraKey` if the `extra` map could not be deserialized.
-    pub(crate) fn record_event_by_id(metric_id: u32, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+    pub(crate) fn record_event_by_id(metric_id: u32, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
         match metric_id {
           17 => {
               assert!(
@@ -555,7 +555,7 @@ pub(crate) mod __glean_metric_maps {
     /// or an `EventRecordingError::InvalidId` if no event by that ID exists
     /// or an `EventRecordingError::InvalidExtraKey` if the event doesn't take extra pairs,
     /// but some are passed in.
-    pub(crate) fn record_event_by_id_with_time(metric_id: MetricId, timestamp: u64, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+    pub(crate) fn record_event_by_id_with_time(metric_id: MetricId, timestamp: u64, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
         match metric_id {
           MetricId(17) => {
               if extra_keys_len(&super::test_nested::event_metric) == 0 && !extra.is_empty() {
@@ -597,10 +597,6 @@ pub(crate) mod __glean_metric_maps {
                   "No extra keys allowed, but some were passed"
               );
 
-              let extra = extra
-                  .into_iter()
-                  .map(|(k, v)| id_for_extra_key(&*k, &super::test_nested::event_metric).map(|k| (k, v)))
-                  .collect::<Result<HashMap<_, _>, _>>()?;
               super::test_nested::event_metric.record_raw(extra);
               Ok(())
           }
@@ -610,10 +606,6 @@ pub(crate) mod __glean_metric_maps {
                   "No extra keys allowed, but some were passed"
               );
 
-              let extra = extra
-                  .into_iter()
-                  .map(|(k, v)| id_for_extra_key(&*k, &super::test_nested::event_metric_with_extra).map(|k| (k, v)))
-                  .collect::<Result<HashMap<_, _>, _>>()?;
               super::test_nested::event_metric_with_extra.record_raw(extra);
               Ok(())
           }

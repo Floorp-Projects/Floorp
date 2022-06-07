@@ -34,7 +34,7 @@ fn string_serializer_should_correctly_serialize_strings() {
             ..Default::default()
         });
 
-        metric.set(&glean, "test_string_value");
+        metric.set_sync(&glean, "test_string_value");
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -73,7 +73,7 @@ fn set_properly_sets_the_value_in_all_stores() {
         ..Default::default()
     });
 
-    metric.set(&glean, "test_string_value");
+    metric.set_sync(&glean, "test_string_value");
 
     // Check that the data was correctly set in each store.
     for store_name in store_names {
@@ -105,12 +105,12 @@ fn long_string_values_are_truncated() {
     });
 
     let test_sting = "01234567890".repeat(20);
-    metric.set(&glean, test_sting.clone());
+    metric.set_sync(&glean, test_sting.clone());
 
     // Check that data was truncated
     assert_eq!(
         test_sting[..100],
-        metric.test_get_value(&glean, "store1").unwrap()
+        metric.get_value(&glean, "store1").unwrap()
     );
 
     // Make sure that the errors have been recorded

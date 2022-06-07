@@ -16,7 +16,6 @@ use crate::traits::{
 /// the input that matches the argument.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::streaming::tag;
 ///
@@ -58,7 +57,6 @@ where
 /// the input that matches the argument with no regard to case.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::streaming::tag_no_case;
 ///
@@ -104,7 +102,6 @@ where
 /// It will return a `Err::Incomplete(Needed::new(1))` if the pattern wasn't met.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::is_not;
 ///
@@ -140,7 +137,6 @@ where
 /// or if the pattern reaches the end of the input.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::is_a;
 ///
@@ -176,7 +172,6 @@ where
 /// *Streaming version* will return a `Err::Incomplete(Needed::new(1))` if the pattern reaches the end of the input.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::take_while;
 /// use nom::character::is_alphabetic;
@@ -212,7 +207,6 @@ where
 ///
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::streaming::take_while1;
 /// use nom::character::is_alphabetic;
@@ -249,7 +243,6 @@ where
 ///
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::streaming::take_while_m_n;
 /// use nom::character::is_alphabetic;
@@ -335,7 +328,6 @@ where
 ///
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::take_till;
 ///
@@ -368,7 +360,6 @@ where
 /// end of input or if there was not match.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::streaming::take_till1;
 ///
@@ -406,7 +397,6 @@ where
 ///
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::take;
 ///
@@ -441,7 +431,6 @@ where
 /// contain the pattern or if the input is smaller than the pattern.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::streaming::take_until;
 ///
@@ -472,6 +461,47 @@ where
   }
 }
 
+/// Returns the non empty input slice up to the first occurrence of the pattern.
+///
+/// It doesn't consume the pattern.
+///
+/// # Streaming Specific
+/// *Streaming version* will return a `Err::Incomplete(Needed::new(N))` if the input doesn't
+/// contain the pattern or if the input is smaller than the pattern.
+/// # Example
+/// ```rust
+/// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
+/// use nom::bytes::streaming::take_until1;
+///
+/// fn until_eof(s: &str) -> IResult<&str, &str> {
+///   take_until1("eof")(s)
+/// }
+///
+/// assert_eq!(until_eof("hello, worldeof"), Ok(("eof", "hello, world")));
+/// assert_eq!(until_eof("hello, world"), Err(Err::Incomplete(Needed::Unknown)));
+/// assert_eq!(until_eof("hello, worldeo"), Err(Err::Incomplete(Needed::Unknown)));
+/// assert_eq!(until_eof("1eof2eof"), Ok(("eof2eof", "1")));
+/// assert_eq!(until_eof("eof"),  Err(Err::Error(Error::new("eof", ErrorKind::TakeUntil))));
+/// ```
+pub fn take_until1<T, Input, Error: ParseError<Input>>(
+  tag: T,
+) -> impl Fn(Input) -> IResult<Input, Input, Error>
+where
+  Input: InputTake + InputLength + FindSubstring<T>,
+  T: Clone,
+{
+  move |i: Input| {
+    let t = tag.clone();
+
+    let res: IResult<_, _, Error> = match i.find_substring(t) {
+      None => Err(Err::Incomplete(Needed::Unknown)),
+      Some(0) => Err(Err::Error(Error::from_error_kind(i, ErrorKind::TakeUntil))),
+      Some(index) => Ok(i.take_split(index)),
+    };
+    res
+  }
+}
+
 /// Matches a byte string with escaped characters.
 ///
 /// * The first argument matches the normal characters (it must not accept the control character)
@@ -479,7 +509,6 @@ where
 /// * The third argument matches the escaped characters
 /// # Example
 /// ```
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// # use nom::character::complete::digit1;
 /// use nom::bytes::streaming::escaped;
@@ -517,10 +546,15 @@ where
     let mut i = input.clone();
 
     while i.input_len() > 0 {
+      let current_len = i.input_len();
+
       match normal.parse(i.clone()) {
         Ok((i2, _)) => {
           if i2.input_len() == 0 {
             return Err(Err::Incomplete(Needed::Unknown));
+          } else if i2.input_len() == current_len {
+            let index = input.offset(&i2);
+            return Ok(input.take_split(index));
           } else {
             i = i2;
           }
@@ -558,29 +592,6 @@ where
   }
 }
 
-#[doc(hidden)]
-pub fn escapedc<Input, Error, F, G, O1, O2>(
-  i: Input,
-  normal: F,
-  control_char: char,
-  escapable: G,
-) -> IResult<Input, Input, Error>
-where
-  Input: Clone
-    + crate::traits::Offset
-    + InputLength
-    + InputTake
-    + InputTakeAtPosition
-    + Slice<RangeFrom<usize>>
-    + InputIter,
-  <Input as InputIter>::Item: crate::traits::AsChar,
-  F: Fn(Input) -> IResult<Input, O1, Error>,
-  G: Fn(Input) -> IResult<Input, O2, Error>,
-  Error: ParseError<Input>,
-{
-  escaped(normal, control_char, escapable)(i)
-}
-
 /// Matches a byte string with escaped characters.
 ///
 /// * The first argument matches the normal characters (it must not match the control character)
@@ -590,7 +601,6 @@ where
 /// As an example, the chain `abc\tdef` could be `abc    def` (it also consumes the control character)
 ///
 /// ```
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// # use std::str::from_utf8;
 /// use nom::bytes::streaming::{escaped_transform, tag};
@@ -605,7 +615,7 @@ where
 ///     alt((
 ///       value("\\", tag("\\")),
 ///       value("\"", tag("\"")),
-///       value("n", tag("\n")),
+///       value("\n", tag("n")),
 ///     ))
 ///   )(input)
 /// }
@@ -644,12 +654,15 @@ where
     let i = input.clone();
 
     while index < i.input_len() {
+      let current_len = i.input_len();
       let remainder = i.slice(index..);
       match normal.parse(remainder.clone()) {
         Ok((i2, o)) => {
           o.extend_into(&mut res);
           if i2.input_len() == 0 {
             return Err(Err::Incomplete(Needed::Unknown));
+          } else if i2.input_len() == current_len {
+            return Ok((remainder, res));
           } else {
             index = input.offset(&i2);
           }
@@ -684,32 +697,4 @@ where
     }
     Err(Err::Incomplete(Needed::Unknown))
   }
-}
-
-#[doc(hidden)]
-#[cfg(feature = "alloc")]
-#[cfg_attr(feature = "docsrs", doc(cfg(feature = "alloc")))]
-pub fn escaped_transformc<Input, Error, F, G, O1, O2, ExtendItem, Output>(
-  i: Input,
-  normal: F,
-  control_char: char,
-  transform: G,
-) -> IResult<Input, Output, Error>
-where
-  Input: Clone
-    + crate::traits::Offset
-    + InputLength
-    + InputTake
-    + InputTakeAtPosition
-    + Slice<RangeFrom<usize>>
-    + InputIter,
-  Input: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  O1: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  O2: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  <Input as InputIter>::Item: crate::traits::AsChar,
-  F: Fn(Input) -> IResult<Input, O1, Error>,
-  G: Fn(Input) -> IResult<Input, O2, Error>,
-  Error: ParseError<Input>,
-{
-  escaped_transform(normal, control_char, transform)(i)
 }

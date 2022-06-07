@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union  # noqa
 
+from . import __version__
 from . import metrics
 from . import pings
 from . import tags
@@ -30,6 +31,8 @@ def kotlin_datatypes_filter(value: util.JSONType) -> str:
       - dicts to use mapOf
       - sets to use setOf
       - enums to use the like-named Kotlin enum
+      - Rate objects to a CommonMetricData initializer
+        (for external Denominators' Numerators lists)
     """
 
     class KotlinEncoder(json.JSONEncoder):
@@ -55,7 +58,8 @@ def kotlin_datatypes_filter(value: util.JSONType) -> str:
                     first = False
                 yield ")"
             elif isinstance(value, enum.Enum):
-                yield (value.__class__.__name__ + "." + util.Camelize(value.name))
+                # UniFFI generates SCREAMING_CASE enum variants.
+                yield (value.__class__.__name__ + "." + util.screaming_case(value.name))
             elif isinstance(value, set):
                 yield "setOf("
                 first = True
@@ -64,6 +68,17 @@ def kotlin_datatypes_filter(value: util.JSONType) -> str:
                         yield ", "
                     yield from self.iterencode(subvalue)
                     first = False
+                yield ")"
+            elif isinstance(value, metrics.Rate):
+                yield "CommonMetricData("
+                first = True
+                for arg_name in util.common_metric_args:
+                    if hasattr(value, arg_name):
+                        if not first:
+                            yield ", "
+                        yield f"{util.camelize(arg_name)} = "
+                        yield from self.iterencode(getattr(value, arg_name))
+                        first = False
                 yield ")"
             else:
                 yield from super().iterencode(value)
@@ -244,6 +259,7 @@ def output_gecko_lookup(
     with filepath.open("w", encoding="utf-8") as fd:
         fd.write(
             template.render(
+                parser_version=__version__,
                 gecko_metrics=gecko_metrics,
                 namespace=namespace,
                 glean_namespace=glean_namespace,
@@ -299,6 +315,7 @@ def output_kotlin(
         with (output_dir / "GleanBuildInfo.kt").open("w", encoding="utf-8") as fd:
             fd.write(
                 template.render(
+                    parser_version=__version__,
                     namespace=namespace,
                     namespace_package=namespace_package,
                     glean_namespace=glean_namespace,
@@ -331,10 +348,13 @@ def output_kotlin(
         with filepath.open("w", encoding="utf-8") as fd:
             fd.write(
                 template.render(
+                    parser_version=__version__,
                     category_name=category_key,
                     objs=category_val,
                     obj_types=obj_types,
-                    extra_args=util.extra_args,
+                    common_metric_args=util.common_metric_args,
+                    extra_metric_args=util.extra_metric_args,
+                    ping_args=util.ping_args,
                     namespace=namespace,
                     has_labeled_metrics=has_labeled_metrics,
                     glean_namespace=glean_namespace,

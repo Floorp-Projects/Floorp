@@ -21,9 +21,13 @@ from . import data_review as mod_data_review
 from . import lint
 from . import translate as mod_translate
 from . import validate_ping
+from . import translation_options
 
 
-@click.command()
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument(
     "input",
     type=click.Path(exists=False, dir_okay=False, file_okay=True, readable=True),
@@ -45,10 +49,13 @@ from . import validate_ping
 @click.option(
     "--option",
     "-s",
-    help="backend-specific option. Must be of the form key=value",
+    help="Backend-specific option. Must be of the form key=value.\
+ Pass 'help' for valid options",
     type=str,
     multiple=True,
     required=False,
+    is_eager=True,
+    callback=translation_options.translate_options,
 )
 @click.option(
     "--allow-reserved",

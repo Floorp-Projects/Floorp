@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ErrorType;
+use crate::Rate;
 
 // When changing this trait, ensure all operations are implemented in the
 // related type in `../metrics`. (Except test_get_num_errors)
@@ -29,7 +30,7 @@ pub trait Numerator {
     ///                 for. Defaults to the first value in `send_in_pings`.
     ///
     /// This doesn't clear the stored value.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<(i32, i32)>;
+    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<Rate>;
 
     /// **Exported for test purposes.**
     ///

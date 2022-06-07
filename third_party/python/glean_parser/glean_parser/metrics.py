@@ -407,6 +407,12 @@ class Rate(Metric):
         super().__init__(*args, **kwargs)
 
 
+class Denominator(Counter):
+    typename = "denominator"
+    # A denominator is a counter with an additional list of numerators.
+    numerators: List[Rate] = []
+
+
 class Text(Metric):
     typename = "text"
 

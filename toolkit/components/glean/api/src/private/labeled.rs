@@ -140,7 +140,7 @@ where
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl<U> glean::traits::Labeled<U> for LabeledMetric<U>
 where
     U: AllowLabeled + Clone,
@@ -156,8 +156,11 @@ where
     ///
     /// Labels must be `snake_case` and less than 30 characters.
     /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
-    fn get(&self, label: &str) -> U {
-        U::from_glean_metric(self.id, self.core.get(label), label)
+    pub fn get(&self, label: &str) -> U {
+        let metric = self.core.get(label);
+        // FIXME(bug 1771888): Avoid the clone here.
+        let metric = (*metric).clone();
+        U::from_glean_metric(self.id, metric, label)
     }
 
     /// **Exported for test purposes.**
@@ -173,7 +176,7 @@ where
     /// # Returns
     ///
     /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: ErrorType,
         ping_name: S,
@@ -181,6 +184,7 @@ where
         if need_ipc() {
             panic!("Use of labeled metrics in IPC land not yet implemented!");
         } else {
+            let ping_name = ping_name.into().map(|s| s.to_string());
             self.core.test_get_num_recorded_errors(error, ping_name)
         }
     }

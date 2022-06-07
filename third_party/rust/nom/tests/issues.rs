@@ -2,15 +2,7 @@
 #![allow(dead_code)]
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
 
-#[macro_use]
-extern crate nom;
-
-use nom::{
-  character::{is_digit, streaming::space1 as space},
-  error::ErrorKind,
-  number::streaming::le_u64,
-  Err, IResult, Needed,
-};
+use nom::{error::ErrorKind, Err, IResult, Needed};
 
 #[allow(dead_code)]
 struct Range {
@@ -26,78 +18,36 @@ pub fn take_char(input: &[u8]) -> IResult<&[u8], char> {
   }
 }
 
-//trace_macros!(true);
-
-#[allow(dead_code)]
-named!(range<&[u8], Range>,
-    alt!(
-        do_parse!(
-            start: take_char >>
-            tag!("-")        >>
-            end: take_char   >>
-            (Range {
-                start: start,
-                end:   end,
-            })
-        ) |
-        map!(
-            take_char,
-            |c| {
-                Range {
-                    start: c,
-                    end:   c,
-                }
-            }
-        )
-    )
-);
-
-#[allow(dead_code)]
-named!(literal<&[u8], Vec<char> >,
-    map!(
-        many1!(take_char),
-        |cs| {
-          cs
-        }
-    )
-);
-
-#[test]
-fn issue_58() {
-  let _ = range(&b"abcd"[..]);
-  let _ = literal(&b"abcd"[..]);
-}
-
-//trace_macros!(false);
-
 #[cfg(feature = "std")]
 mod parse_int {
   use nom::HexDisplay;
   use nom::{
     character::streaming::{digit1 as digit, space1 as space},
+    combinator::{complete, map, opt},
+    multi::many0,
     IResult,
   };
   use std::str;
 
-  named!(parse_ints<Vec<i32>>, many0!(spaces_or_int));
+  fn parse_ints(input: &[u8]) -> IResult<&[u8], Vec<i32>> {
+    many0(spaces_or_int)(input)
+  }
 
   fn spaces_or_int(input: &[u8]) -> IResult<&[u8], i32> {
     println!("{}", input.to_hex(8));
-    do_parse!(
-      input,
-      opt!(complete!(space))
-        >> res: map!(complete!(digit), |x| {
-          println!("x: {:?}", x);
-          let result = str::from_utf8(x).unwrap();
-          println!("Result: {}", result);
-          println!("int is empty?: {}", x.is_empty());
-          match result.parse() {
-            Ok(i) => i,
-            Err(e) => panic!("UH OH! NOT A DIGIT! {:?}", e),
-          }
-        })
-        >> (res)
-    )
+    let (i, _) = opt(complete(space))(input)?;
+    let (i, res) = map(complete(digit), |x| {
+      println!("x: {:?}", x);
+      let result = str::from_utf8(x).unwrap();
+      println!("Result: {}", result);
+      println!("int is empty?: {}", x.is_empty());
+      match result.parse() {
+        Ok(i) => i,
+        Err(e) => panic!("UH OH! NOT A DIGIT! {:?}", e),
+      }
+    })(i)?;
+
+    Ok((i, res))
   }
 
   #[test]
@@ -114,67 +64,34 @@ mod parse_int {
 
 #[test]
 fn usize_length_bytes_issue() {
+  use nom::multi::length_data;
   use nom::number::streaming::be_u16;
-  let _: IResult<&[u8], &[u8], (&[u8], ErrorKind)> = length_data!(b"012346", be_u16);
+  let _: IResult<&[u8], &[u8], (&[u8], ErrorKind)> = length_data(be_u16)(b"012346");
 }
-
-/*
- DOES NOT COMPILE
-#[test]
-fn issue_152() {
-  named!(take4, take!(4));
-  named!(xyz, tag!("XYZ"));
-  named!(abc, tag!("abc"));
-
-
-  named!(sw,
-    switch!(take4,
-      b"abcd" => xyz |
-      b"efgh" => abc
-    )
-  );
-}
-*/
 
 #[test]
 fn take_till_issue() {
-  named!(nothing, take_till!(call!(|_| true)));
+  use nom::bytes::streaming::take_till;
+
+  fn nothing(i: &[u8]) -> IResult<&[u8], &[u8]> {
+    take_till(|_| true)(i)
+  }
 
   assert_eq!(nothing(b""), Err(Err::Incomplete(Needed::new(1))));
   assert_eq!(nothing(b"abc"), Ok((&b"abc"[..], &b""[..])));
 }
 
-named!(
-  issue_498<Vec<&[u8]>>,
-  separated_list1!(opt!(space), tag!("abcd"))
-);
-
-named!(issue_308(&str) -> bool,
-    do_parse! (
-        tag! ("foo") >>
-        b: alt! (
-            complete!(map! (tag! ("1"), |_: &str|->bool {true})) |
-            value! (false)
-        ) >>
-        (b) ));
-
-#[cfg(feature = "alloc")]
-fn issue_302(input: &[u8]) -> IResult<&[u8], Option<Vec<u64>>> {
-  do_parse!(input, entries: cond!(true, count!(le_u64, 3)) >> (entries))
-}
-
 #[test]
 fn issue_655() {
   use nom::character::streaming::{line_ending, not_line_ending};
-  named!(twolines(&str) -> (&str, &str),
-    do_parse!(
-      l1 : not_line_ending >>
-           line_ending >>
-      l2 : not_line_ending >>
-           line_ending >>
-      ((l1, l2))
-    )
-  );
+  fn twolines(i: &str) -> IResult<&str, (&str, &str)> {
+    let (i, l1) = not_line_ending(i)?;
+    let (i, _) = line_ending(i)?;
+    let (i, l2) = not_line_ending(i)?;
+    let (i, _) = line_ending(i)?;
+
+    Ok((i, (l1, l2)))
+  }
 
   assert_eq!(twolines("foo\nbar\n"), Ok(("", ("foo", "bar"))));
   assert_eq!(twolines("féo\nbar\n"), Ok(("", ("féo", "bar"))));
@@ -182,79 +99,19 @@ fn issue_655() {
   assert_eq!(twolines("foé\r\nbar\n"), Ok(("", ("foé", "bar"))));
 }
 
-#[test]
-fn issue_721() {
-  named!(f1<&str, u16>, parse_to!(u16));
-  named!(f2<&str, String>, parse_to!(String));
-  assert_eq!(f1("1234"), Ok(("", 1234)));
-  assert_eq!(f2("foo"), Ok(("", "foo".to_string())));
-  //assert_eq!(parse_to!("1234", u16), Ok(("", 1234)));
-  //assert_eq!(parse_to!("foo", String), Ok(("", "foo".to_string())));
-}
-
 #[cfg(feature = "alloc")]
-named!(issue_717<&[u8], Vec<&[u8]> >,
-  separated_list0!(tag!([0x0]), is_not!([0x0u8]))
-);
+fn issue_717(i: &[u8]) -> IResult<&[u8], Vec<&[u8]>> {
+  use nom::bytes::complete::{is_not, tag};
+  use nom::multi::separated_list0;
 
-struct NoPartialEq {
-  value: i32,
+  separated_list0(tag([0x0]), is_not([0x0u8]))(i)
 }
-
-named!(issue_724<&str, i32>,
-  do_parse!(
-    metadata: permutation!(
-      map!(tag!("hello"), |_| NoPartialEq { value: 1 }),
-      map!(tag!("world"), |_| NoPartialEq { value: 2 })
-    ) >>
-    (metadata.0.value + metadata.1.value)
-  )
-);
-
-#[test]
-fn issue_752() {
-  assert_eq!(
-    Err::Error(("ab", nom::error::ErrorKind::ParseTo)),
-    parse_to!("ab", usize).unwrap_err()
-  )
-}
-
-fn atom_specials(c: u8) -> bool {
-  c == b'q'
-}
-
-named!(
-  capability<&str>,
-  do_parse!(tag!(" ") >> _atom: map_res!(take_till1!(atom_specials), std::str::from_utf8) >> ("a"))
-);
-
-#[test]
-fn issue_759() {
-  assert_eq!(capability(b" abcqd"), Ok((&b"qd"[..], "a")));
-}
-
-named_args!(issue_771(count: usize)<Vec<u32>>,
-  length_count!(value!(count), call!(nom::number::streaming::be_u32))
-);
-
-/// This test is in a separate module to check that all required symbols are imported in
-/// `escaped_transform!()`. Without the module, the `use`-es of the current module would
-/// mask the error ('"Use of undeclared type or module `Needed`" in escaped_transform!').
-mod issue_780 {
-  named!(issue_780<&str, String>,
-    escaped_transform!(call!(::nom::character::streaming::alpha1), '\\', tag!("n"))
-  );
-}
-
-// issue 617
-named!(digits, take_while1!(is_digit));
-named!(multi_617<&[u8], () >, fold_many0!( digits, (), |_, _| {}));
-
-// Sad :(
-named!(multi_617_fails<&[u8], () >, fold_many0!( take_while1!( is_digit ), (), |_, _| {}));
 
 mod issue_647 {
-  use nom::{error::Error, number::streaming::be_f64, Err};
+  use nom::bytes::streaming::tag;
+  use nom::combinator::complete;
+  use nom::multi::separated_list0;
+  use nom::{error::Error, number::streaming::be_f64, Err, IResult};
   pub type Input<'a> = &'a [u8];
 
   #[derive(PartialEq, Debug, Clone)]
@@ -267,33 +124,34 @@ mod issue_647 {
     input: Input<'a>,
     _cs: &'b f64,
   ) -> Result<(Input<'a>, Vec<f64>), Err<Error<&'a [u8]>>> {
-    separated_list0!(input, complete!(tag!(",")), complete!(be_f64))
+    separated_list0(complete(tag(",")), complete(be_f64))(input)
   }
 
-  named!(data<Input,Data>, map!(
-      do_parse!(
-          c: be_f64 >>
-          tag!("\n") >>
-          v: call!(list,&c) >>
-          (c,v)
-      ), |(c,v)| {
-          Data {
-              c: c,
-              v: v
-          }
-      }
-  ));
+  fn data(input: Input<'_>) -> IResult<Input<'_>, Data> {
+    let (i, c) = be_f64(input)?;
+    let (i, _) = tag("\n")(i)?;
+    let (i, v) = list(i, &c)?;
+    Ok((i, Data { c, v }))
+  }
 }
-
-named!(issue_775, take_till1!(|_| true));
 
 #[test]
 fn issue_848_overflow_incomplete_bits_to_bytes() {
-  named!(take, take!(0x2000000000000000));
-  named!(parser<&[u8], &[u8]>, bits!(bytes!(take)));
+  fn take(i: &[u8]) -> IResult<&[u8], &[u8]> {
+    use nom::bytes::streaming::take;
+    take(0x2000000000000000_usize)(i)
+  }
+  fn parser(i: &[u8]) -> IResult<&[u8], &[u8]> {
+    use nom::bits::{bits, bytes};
+
+    bits(bytes(take))(i)
+  }
   assert_eq!(
     parser(&b""[..]),
-    Err(Err::Failure(error_position!(&b""[..], ErrorKind::TooLarge)))
+    Err(Err::Failure(nom::error_position!(
+      &b""[..],
+      ErrorKind::TooLarge
+    )))
   );
 }
 
@@ -314,7 +172,7 @@ fn issue_many_m_n_with_zeros() {
   use nom::character::complete::char;
   use nom::multi::many_m_n;
   let mut parser = many_m_n::<_, _, (), _>(0, 0, char('a'));
-  assert_eq!(parser("aaa"), Ok(("aaa", vec!())));
+  assert_eq!(parser("aaa"), Ok(("aaa", vec![])));
 }
 
 #[test]
@@ -338,16 +196,6 @@ fn issue_1027_convert_error_panic_nonempty() {
   );
 }
 
-named!(issue_962<&[u8], Vec<&[u8]>>,
-    fold_many0!(
-        alt!(tag!("aaaa") | tag!("bbbb")),
-        Vec::new(), |mut acc: Vec<_>, item| {
-            acc.push(item);
-            acc
-        }
-    )
-);
-
 #[test]
 fn issue_1231_bits_expect_fn_closure() {
   use nom::bits::{bits, complete::take};
@@ -357,4 +205,12 @@ fn issue_1231_bits_expect_fn_closure() {
     bits::<_, _, Error<_>, _, _>(tuple((take(1usize), take(1usize))))(input)
   }
   assert_eq!(example(&[0xff]), Ok((&b""[..], (1, 1))));
+}
+
+#[test]
+fn issue_1282_findtoken_char() {
+  use nom::character::complete::one_of;
+  use nom::error::Error;
+  let parser = one_of::<_, _, Error<_>>(&['a', 'b', 'c'][..]);
+  assert_eq!(parser("aaa"), Ok(("aa", 'a')));
 }

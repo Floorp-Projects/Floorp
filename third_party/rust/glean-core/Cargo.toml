@@ -12,22 +12,39 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "44.1.1"
-authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
-include = ["/README.md", "/LICENSE", "/src", "/examples", "/tests", "/Cargo.toml"]
+version = "50.0.1"
+authors = [
+    "Jan-Erik Rediger <jrediger@mozilla.com>",
+    "The Glean Team <glean-team@mozilla.com>",
+]
+include = [
+    "/README.md",
+    "/LICENSE",
+    "/src",
+    "/examples",
+    "/tests",
+    "/Cargo.toml",
+    "/uniffi.toml",
+    "/build.rs",
+]
 description = "A modern Telemetry library"
 readme = "README.md"
 keywords = ["telemetry"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
+
 [package.metadata.glean]
-glean-parser = "5.0.1"
+glean-parser = "6.0.1"
+
 [dependencies.bincode]
 version = "1.2.1"
 
 [dependencies.chrono]
 version = "0.4.10"
 features = ["serde"]
+
+[dependencies.crossbeam-channel]
+version = "0.5"
 
 [dependencies.ffi-support]
 version = "0.4.0"
@@ -52,18 +69,38 @@ features = ["derive"]
 [dependencies.serde_json]
 version = "1.0.44"
 
+[dependencies.thiserror]
+version = "1.0.4"
+
+[dependencies.time]
+version = "0.1.40"
+
+[dependencies.uniffi]
+version = "0.18.0"
+
+[dependencies.uniffi_macros]
+version = "0.18.0"
+
 [dependencies.uuid]
 version = "0.8.1"
 features = ["v4"]
 
+[dependencies.whatsys]
+version = "0.1.2"
+
 [dependencies.zeitstempel]
 version = "0.1.0"
+
 [dev-dependencies.ctor]
 version = "0.1.12"
 
 [dev-dependencies.env_logger]
 version = "0.8.0"
-features = ["termcolor", "atty", "humantime"]
+features = [
+    "termcolor",
+    "atty",
+    "humantime",
+]
 default-features = false
 
 [dev-dependencies.iso8601]
@@ -72,10 +109,31 @@ version = "0.4"
 [dev-dependencies.tempfile]
 version = "3.1.0"
 
+[build-dependencies.uniffi_build]
+version = "0.18.0"
+features = ["builtin-bindgen"]
+
 [features]
 rkv-safe-mode = []
-[target."cfg(target_os = \"windows\")".dependencies.time]
-version = "0.1.40"
+
+[target."cfg(not(target_os = \"android\"))".dependencies.env_logger]
+version = "0.8.0"
+features = [
+    "termcolor",
+    "atty",
+    "humantime",
+]
+default-features = false
+
+[target."cfg(target_os = \"android\")".dependencies.android_logger]
+version = "0.10.0"
+default-features = false
+
+[target."cfg(target_os = \"ios\")".dependencies.oslog]
+version = "0.1.0"
+features = ["logger"]
+default-features = false
+
 [badges.circle-ci]
 branch = "main"
 repository = "mozilla/glean"

@@ -35,7 +35,6 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         application_id: GLOBAL_APPLICATION_ID.into(),
         max_events: None,
         delay_ping_lifetime_io: false,
-        channel: None,
         server_endpoint: None,
         uploader: None,
         use_core_mps: false,
@@ -44,6 +43,7 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
     let client_info = glean::ClientInfoMetrics {
         app_build: "test-build".into(),
         app_display_version: "1.2.3".into(),
+        channel: None,
     };
 
     glean::test_reset_glean(cfg, client_info, true);

@@ -57,7 +57,7 @@ impl CounterMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Counter for CounterMetric {
     /// Increase the counter by `amount`.
     ///
@@ -68,10 +68,10 @@ impl Counter for CounterMetric {
     /// ## Notes
     ///
     /// Logs an error if the `amount` is 0 or negative.
-    fn add(&self, amount: i32) {
+    pub fn add(&self, amount: i32) {
         match self {
             CounterMetric::Parent { inner, .. } => {
-                Counter::add(&*inner, amount);
+                inner.add(amount);
             }
             CounterMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -97,7 +97,8 @@ impl Counter for CounterMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<i32> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<i32> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             CounterMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             CounterMetric::Child(c) => {
@@ -119,11 +120,12 @@ impl Counter for CounterMetric {
     /// # Returns
     ///
     /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             CounterMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)

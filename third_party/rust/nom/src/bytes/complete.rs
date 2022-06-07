@@ -18,7 +18,6 @@ use crate::traits::{
 /// It will return `Err(Err::Error((_, ErrorKind::Tag)))` if the input doesn't match the pattern
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::tag;
 ///
@@ -59,7 +58,6 @@ where
 /// It will return `Err(Err::Error((_, ErrorKind::Tag)))` if the input doesn't match the pattern.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::tag_no_case;
 ///
@@ -104,7 +102,6 @@ where
 /// It will return a `Err::Error(("", ErrorKind::IsNot))` if the pattern wasn't met.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::is_not;
 ///
@@ -138,7 +135,6 @@ where
 /// It will return a `Err(Err::Error((_, ErrorKind::IsA)))` if the pattern wasn't met.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::is_a;
 ///
@@ -171,7 +167,6 @@ where
 /// takes the input and returns a bool)*.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::complete::take_while;
 /// use nom::character::is_alphabetic;
@@ -203,7 +198,6 @@ where
 /// It will return an `Err(Err::Error((_, ErrorKind::TakeWhile1)))` if the pattern wasn't met.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::take_while1;
 /// use nom::character::is_alphabetic;
@@ -238,7 +232,6 @@ where
 /// of range (m <= len <= n).
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::take_while_m_n;
 /// use nom::character::is_alphabetic;
@@ -322,7 +315,6 @@ where
 /// takes the input and returns a bool)*.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// use nom::bytes::complete::take_till;
 ///
@@ -354,7 +346,6 @@ where
 /// predicate matches the first input.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::take_till1;
 ///
@@ -385,7 +376,6 @@ where
 /// It will return `Err(Err::Error((_, ErrorKind::Eof)))` if the input is shorter than the argument.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::take;
 ///
@@ -397,6 +387,18 @@ where
 /// assert_eq!(take6("things"), Ok(("", "things")));
 /// assert_eq!(take6("short"), Err(Err::Error(Error::new("short", ErrorKind::Eof))));
 /// assert_eq!(take6(""), Err(Err::Error(Error::new("", ErrorKind::Eof))));
+/// ```
+///
+/// The units that are taken will depend on the input type. For example, for a
+/// `&str` it will take a number of `char`'s, whereas for a `&[u8]` it will
+/// take that many `u8`'s:
+///
+/// ```rust
+/// use nom::error::Error;
+/// use nom::bytes::complete::take;
+///
+/// assert_eq!(take::<_, _, Error<_>>(1usize)("💙"), Ok(("", "💙")));
+/// assert_eq!(take::<_, _, Error<_>>(1usize)("💙".as_bytes()), Ok((b"\x9F\x92\x99".as_ref(), b"\xF0".as_ref())));
 /// ```
 pub fn take<C, Input, Error: ParseError<Input>>(
   count: C,
@@ -418,7 +420,6 @@ where
 /// if the pattern wasn't met.
 /// # Example
 /// ```rust
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
 /// use nom::bytes::complete::take_until;
 ///
@@ -448,6 +449,43 @@ where
   }
 }
 
+/// Returns the non empty input slice up to the first occurrence of the pattern.
+///
+/// It doesn't consume the pattern. It will return `Err(Err::Error((_, ErrorKind::TakeUntil)))`
+/// if the pattern wasn't met.
+/// # Example
+/// ```rust
+/// # use nom::{Err, error::{Error, ErrorKind}, Needed, IResult};
+/// use nom::bytes::complete::take_until1;
+///
+/// fn until_eof(s: &str) -> IResult<&str, &str> {
+///   take_until1("eof")(s)
+/// }
+///
+/// assert_eq!(until_eof("hello, worldeof"), Ok(("eof", "hello, world")));
+/// assert_eq!(until_eof("hello, world"), Err(Err::Error(Error::new("hello, world", ErrorKind::TakeUntil))));
+/// assert_eq!(until_eof(""), Err(Err::Error(Error::new("", ErrorKind::TakeUntil))));
+/// assert_eq!(until_eof("1eof2eof"), Ok(("eof2eof", "1")));
+/// assert_eq!(until_eof("eof"), Err(Err::Error(Error::new("eof", ErrorKind::TakeUntil))));
+/// ```
+pub fn take_until1<T, Input, Error: ParseError<Input>>(
+  tag: T,
+) -> impl Fn(Input) -> IResult<Input, Input, Error>
+where
+  Input: InputTake + FindSubstring<T>,
+  T: InputLength + Clone,
+{
+  move |i: Input| {
+    let t = tag.clone();
+    let res: IResult<_, _, Error> = match i.find_substring(t) {
+      None => Err(Err::Error(Error::from_error_kind(i, ErrorKind::TakeUntil))),
+      Some(0) => Err(Err::Error(Error::from_error_kind(i, ErrorKind::TakeUntil))),
+      Some(index) => Ok(i.take_split(index)),
+    };
+    res
+  }
+}
+
 /// Matches a byte string with escaped characters.
 ///
 /// * The first argument matches the normal characters (it must not accept the control character)
@@ -455,7 +493,6 @@ where
 /// * The third argument matches the escaped characters
 /// # Example
 /// ```
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// # use nom::character::complete::digit1;
 /// use nom::bytes::complete::escaped;
@@ -493,10 +530,17 @@ where
     let mut i = input.clone();
 
     while i.input_len() > 0 {
+      let current_len = i.input_len();
+
       match normal.parse(i.clone()) {
         Ok((i2, _)) => {
+          // return if we consumed everything or if the normal parser
+          // does not consume anything
           if i2.input_len() == 0 {
             return Ok((input.slice(input.input_len()..), input));
+          } else if i2.input_len() == current_len {
+            let index = input.offset(&i2);
+            return Ok(input.take_split(index));
           } else {
             i = i2;
           }
@@ -543,29 +587,6 @@ where
   }
 }
 
-#[doc(hidden)]
-pub fn escapedc<Input, Error, F, G, O1, O2>(
-  i: Input,
-  normal: F,
-  control_char: char,
-  escapable: G,
-) -> IResult<Input, Input, Error>
-where
-  Input: Clone
-    + crate::traits::Offset
-    + InputLength
-    + InputTake
-    + InputTakeAtPosition
-    + Slice<RangeFrom<usize>>
-    + InputIter,
-  <Input as InputIter>::Item: crate::traits::AsChar,
-  F: Fn(Input) -> IResult<Input, O1, Error>,
-  G: Fn(Input) -> IResult<Input, O2, Error>,
-  Error: ParseError<Input>,
-{
-  escaped(normal, control_char, escapable)(i)
-}
-
 /// Matches a byte string with escaped characters.
 ///
 /// * The first argument matches the normal characters (it must not match the control character)
@@ -575,7 +596,6 @@ where
 /// As an example, the chain `abc\tdef` could be `abc    def` (it also consumes the control character)
 ///
 /// ```
-/// # #[macro_use] extern crate nom;
 /// # use nom::{Err, error::ErrorKind, Needed, IResult};
 /// # use std::str::from_utf8;
 /// use nom::bytes::complete::{escaped_transform, tag};
@@ -590,12 +610,13 @@ where
 ///     alt((
 ///       value("\\", tag("\\")),
 ///       value("\"", tag("\"")),
-///       value("n", tag("\n")),
+///       value("\n", tag("n")),
 ///     ))
 ///   )(input)
 /// }
 ///
 /// assert_eq!(parser("ab\\\"cd"), Ok(("", String::from("ab\"cd"))));
+/// assert_eq!(parser("ab\\ncd"), Ok(("", String::from("ab\ncd"))));
 /// ```
 #[cfg(feature = "alloc")]
 #[cfg_attr(feature = "docsrs", doc(cfg(feature = "alloc")))]
@@ -629,12 +650,15 @@ where
     let i = input.clone();
 
     while index < i.input_len() {
+      let current_len = i.input_len();
       let remainder = i.slice(index..);
       match normal.parse(remainder.clone()) {
         Ok((i2, o)) => {
           o.extend_into(&mut res);
           if i2.input_len() == 0 {
             return Ok((i.slice(i.input_len()..), res));
+          } else if i2.input_len() == current_len {
+            return Ok((remainder, res));
           } else {
             index = input.offset(&i2);
           }
@@ -680,34 +704,6 @@ where
   }
 }
 
-#[doc(hidden)]
-#[cfg(feature = "alloc")]
-#[cfg_attr(feature = "docsrs", doc(cfg(feature = "alloc")))]
-pub fn escaped_transformc<Input, Error, F, G, O1, O2, ExtendItem, Output>(
-  i: Input,
-  normal: F,
-  control_char: char,
-  transform: G,
-) -> IResult<Input, Output, Error>
-where
-  Input: Clone
-    + crate::traits::Offset
-    + InputLength
-    + InputTake
-    + InputTakeAtPosition
-    + Slice<RangeFrom<usize>>
-    + InputIter,
-  Input: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  O1: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  O2: crate::traits::ExtendInto<Item = ExtendItem, Extender = Output>,
-  <Input as InputIter>::Item: crate::traits::AsChar,
-  F: Fn(Input) -> IResult<Input, O1, Error>,
-  G: Fn(Input) -> IResult<Input, O2, Error>,
-  Error: ParseError<Input>,
-{
-  escaped_transform(normal, control_char, transform)(i)
-}
-
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -724,5 +720,37 @@ mod tests {
     let result: IResult<&str, &str> =
       super::take_while_m_n(1, 1, |c: char| c.is_alphabetic())("øn");
     assert_eq!(result, Ok(("n", "ø")));
+  }
+
+  // issue #1336 "escaped hangs if normal parser accepts empty"
+  fn escaped_string(input: &str) -> IResult<&str, &str> {
+    use crate::character::complete::{alpha0, one_of};
+    escaped(alpha0, '\\', one_of("n"))(input)
+  }
+
+  // issue #1336 "escaped hangs if normal parser accepts empty"
+  #[test]
+  fn escaped_hang() {
+    escaped_string("7").unwrap();
+    escaped_string("a7").unwrap();
+  }
+
+  // issue ##1118 escaped does not work with empty string
+  fn unquote<'a>(input: &'a str) -> IResult<&'a str, &'a str> {
+    use crate::bytes::complete::*;
+    use crate::character::complete::*;
+    use crate::combinator::opt;
+    use crate::sequence::delimited;
+
+    delimited(
+      char('"'),
+      escaped(opt(none_of(r#"\""#)), '\\', one_of(r#"\"rnt"#)),
+      char('"'),
+    )(input)
+  }
+
+  #[test]
+  fn escaped_hang_1118() {
+    assert_eq!(unquote(r#""""#), Ok(("", "")));
   }
 }

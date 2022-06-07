@@ -33,7 +33,7 @@ fn boolean_serializer_should_correctly_serialize_boolean() {
             ..Default::default()
         });
 
-        metric.set(&glean, true);
+        metric.set_sync(&glean, true);
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -72,7 +72,7 @@ fn set_properly_sets_the_value_in_all_stores() {
         ..Default::default()
     });
 
-    metric.set(&glean, true);
+    metric.set_sync(&glean, true);
 
     // Check that the data was correctly set in each store.
     for store_name in store_names {

@@ -28,7 +28,7 @@ pub trait ExtraKeys {
     /// 1. The list of extra key indices.
     ///    Unset keys will be skipped.
     /// 2. The list of extra values.
-    fn into_ffi_extra(self) -> HashMap<i32, String>;
+    fn into_ffi_extra(self) -> HashMap<String, String>;
 }
 
 /// Default of no extra keys for events.
@@ -44,7 +44,7 @@ pub enum NoExtraKeys {}
 impl ExtraKeys for NoExtraKeys {
     const ALLOWED_KEYS: &'static [&'static str] = &[];
 
-    fn into_ffi_extra(self) -> HashMap<i32, String> {
+    fn into_ffi_extra(self) -> HashMap<String, String> {
         unimplemented!("non-existing extra keys can't be turned into a list")
     }
 }

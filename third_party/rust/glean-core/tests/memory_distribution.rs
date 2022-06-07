@@ -37,10 +37,10 @@ fn serializer_should_correctly_serialize_memory_distribution() {
             memory_unit,
         );
 
-        metric.accumulate(&glean, 100_000);
+        metric.accumulate_sync(&glean, 100_000);
 
         let snapshot = metric
-            .test_get_value(&glean, "store1")
+            .get_value(&glean, "store1")
             .expect("Value should be stored");
 
         assert_eq!(snapshot.sum, 100_000 * kb);
@@ -78,7 +78,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
         MemoryUnit::Byte,
     );
 
-    metric.accumulate(&glean, 100_000);
+    metric.accumulate_sync(&glean, 100_000);
 
     for store_name in store_names {
         let snapshot = StorageManager
@@ -117,10 +117,10 @@ fn the_accumulate_samples_api_correctly_stores_memory_values() {
 
     // Accumulate the samples. We intentionally do not report
     // negative values to not trigger error reporting.
-    metric.accumulate_samples_signed(&glean, [1, 2, 3].to_vec());
+    metric.accumulate_samples_sync(&glean, [1, 2, 3].to_vec());
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     let kb = 1024;
@@ -162,10 +162,10 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
     );
 
     // Accumulate the samples.
-    metric.accumulate_samples_signed(&glean, [-1, 1, 2, 3].to_vec());
+    metric.accumulate_samples_sync(&glean, [-1, 1, 2, 3].to_vec());
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     let kb = 1024;

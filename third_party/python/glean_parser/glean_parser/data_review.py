@@ -147,7 +147,7 @@ TODO: Fill this in.
 
 TODO: Fill this in.
 
-12. Is there a third-party tool (i.e. not Telemetry) that you
+12. Is there a third-party tool (i.e. not Glean or Telemetry) that you
     are proposing to use for this data collection?
 
 No.

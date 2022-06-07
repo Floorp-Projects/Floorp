@@ -196,7 +196,7 @@ python-versions = "*"
 
 [[package]]
 name = "glean-parser"
-version = "5.0.1"
+version = "6.0.1"
 description = "Parser tools for Mozilla's Glean telemetry"
 category = "main"
 optional = false
@@ -209,6 +209,7 @@ diskcache = ">=4"
 iso8601 = {version = ">=0.1.10", markers = "python_version <= \"3.6\""}
 Jinja2 = ">=2.10.1"
 jsonschema = ">=3.0.2"
+MarkupSafe = ">=1.1.1,<=2.0.1"
 PyYAML = ">=5.3.1"
 yamllint = ">=1.18.0"
 
@@ -728,7 +729,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "2c8645955b35c4a1b90c8f5473f2b29a8d492613ea054cb17dbc20dadcaf19d6"
+content-hash = "9e86d62b3aa4e09f6c555e561e383a6a2e3c8935694858aea94db3a96eebdc1d"
 
 [metadata.files]
 aiohttp = [
@@ -842,8 +843,8 @@ esprima = [
     {file = "fluent.syntax-0.18.1.tar.gz", hash = "sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f"},
 ]
 glean-parser = [
-    {file = "glean_parser-5.0.1-py3-none-any.whl", hash = "sha256:7357aac9a857883db99121abb15b9fdb9bcb5437cecee28c9b8a09a2123408ed"},
-    {file = "glean_parser-5.0.1.tar.gz", hash = "sha256:309f36ed55f2f1ed82472ab8b18e1dd01edeb71060464e3f859c9b60e38b87d4"},
+    {file = "glean_parser-6.0.1-py3-none-any.whl", hash = "sha256:d7cc9c12b1b64bb2ac84db10d2e853c1aa94b036351e2f41f6bafc94ba29b2e4"},
+    {file = "glean_parser-6.0.1.tar.gz", hash = "sha256:05acc5d25285ecf9d59adb402719bc9ffbddb11b156e8f0479c3d503bf7ad347"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},

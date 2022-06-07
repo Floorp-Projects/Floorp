@@ -4,8 +4,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use inherent::inherent;
-
 type BoxedCallback = Box<dyn FnOnce(Option<&str>) + Send + 'static>;
 
 /// A ping is a bundle of related metrics, gathered in a payload to be transmitted.
@@ -13,8 +11,7 @@ type BoxedCallback = Box<dyn FnOnce(Option<&str>) + Send + 'static>;
 /// The ping payload will be encoded in JSON format and contains shared information data.
 #[derive(Clone)]
 pub struct PingType {
-    pub(crate) name: String,
-    pub(crate) ping_type: glean_core::metrics::PingType,
+    pub(crate) inner: glean_core::metrics::PingType,
 
     /// **Test-only API**
     ///
@@ -37,21 +34,39 @@ impl PingType {
         send_if_empty: bool,
         reason_codes: Vec<String>,
     ) -> Self {
-        let name = name.into();
-        let ping_type = glean_core::metrics::PingType::new(
-            name.clone(),
+        let inner = glean_core::metrics::PingType::new(
+            name.into(),
             include_client_id,
             send_if_empty,
             reason_codes,
         );
 
-        let me = Self {
-            name,
-            ping_type,
+        Self {
+            inner,
             test_callback: Arc::new(Default::default()),
-        };
-        crate::register_ping_type(&me);
-        me
+        }
+    }
+
+    /// Submits the ping for eventual uploading.
+    ///
+    /// The ping content is assembled as soon as possible, but upload is not
+    /// guaranteed to happen immediately, as that depends on the upload policies.
+    ///
+    /// If the ping currently contains no content, it will not be sent,
+    /// unless it is configured to be sent if empty.
+    ///
+    /// # Arguments
+    ///
+    /// * `reason` - the reason the ping was triggered. Included in the
+    ///   `ping_info.reason` part of the payload.
+    pub fn submit(&self, reason: Option<&str>) {
+        let mut cb = self.test_callback.lock().unwrap();
+        let cb = cb.take();
+        if let Some(cb) = cb {
+            cb(reason)
+        }
+
+        self.inner.submit(reason.map(|s| s.to_string()))
     }
 
     /// **Test-only API**
@@ -67,18 +82,5 @@ impl PingType {
 
         let cb = Box::new(cb);
         *test_callback = Some(cb);
-    }
-}
-
-#[inherent(pub)]
-impl glean_core::traits::Ping for PingType {
-    fn submit(&self, reason: Option<&str>) {
-        let mut cb = self.test_callback.lock().unwrap();
-        let cb = cb.take();
-        if let Some(cb) = cb {
-            cb(reason)
-        }
-
-        crate::submit_ping(self, reason)
     }
 }
