@@ -72,7 +72,7 @@ TEST(Vp9UncompressedHeaderParserTest, FrameWithSegmentation) {
 TEST(Vp9UncompressedHeaderParserTest, SegmentationWithDefaultPredProbs) {
   const uint8_t kHeader[] = {0x90, 0x49, 0x83, 0x42, 0x80, 0x2e,
                              0x30, 0x0,  0xb0, 0x0,  0x37, 0xff,
-                             0xd,  0x0,  0x0,  0x0,  0x0,  0x0};
+                             0x06, 0x80, 0x0,  0x0,  0x0,  0x0};
   absl::optional<Vp9UncompressedHeader> frame_info =
       ParseUncompressedVp9Header(kHeader);
   ASSERT_TRUE(frame_info.has_value());
@@ -82,7 +82,7 @@ TEST(Vp9UncompressedHeaderParserTest, SegmentationWithDefaultPredProbs) {
 
 TEST(Vp9UncompressedHeaderParserTest, SegmentationWithSkipLevel) {
   const uint8_t kHeader[] = {0x90, 0x49, 0x83, 0x42, 0x80, 0x2e, 0x30, 0x00,
-                             0xb0, 0x00, 0x37, 0xff, 0x0d, 0x00, 0x02, 0x10,
+                             0xb0, 0x00, 0x37, 0xff, 0x06, 0x80, 0x01, 0x08,
                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   absl::optional<Vp9UncompressedHeader> frame_info =
       ParseUncompressedVp9Header(kHeader);
