@@ -6,8 +6,10 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "console",
   "resource://gre/modules/Console.jsm"
 );
@@ -161,7 +163,7 @@ EventEmitter.prototype = {
         } catch (ex) {
           // Prevent a bad listener from interfering with the others.
           let msg = ex + ": " + ex.stack;
-          console.error(msg);
+          lazy.console.error(msg);
           if (loggingEnabled) {
             dump(msg + "\n");
           }

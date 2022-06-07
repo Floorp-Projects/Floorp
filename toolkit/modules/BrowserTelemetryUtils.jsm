@@ -12,10 +12,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 // The maximum number of concurrently-loaded origins allowed in order to
 // qualify for the Fission rollout experiment.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fissionExperimentMaxOrigins",
   "fission.experiment.max-origins.origin-cap",
   30
@@ -24,7 +26,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // the max origin cap. If the last time a user passed the max origin cap
 // fell outside of this window, they will requalify for the experiment.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fissionExperimentSlidingWindowMS",
   "fission.experiment.max-origins.sliding-window-ms",
   7 * 24 * 60 * 60 * 1000
@@ -34,7 +36,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const FISSION_EXPERIMENT_PREF_QUALIFIED =
   "fission.experiment.max-origins.qualified";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fissionExperimentQualified",
   FISSION_EXPERIMENT_PREF_QUALIFIED,
   false
@@ -45,7 +47,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const FISSION_EXPERIMENT_PREF_LAST_QUALIFIED =
   "fission.experiment.max-origins.last-qualified";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fissionExperimentLastQualified",
   FISSION_EXPERIMENT_PREF_LAST_QUALIFIED,
   0
@@ -55,7 +57,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED =
   "fission.experiment.max-origins.last-disqualified";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "fissionExperimentLastDisqualified",
   FISSION_EXPERIMENT_PREF_LAST_DISQUALIFIED,
   0
@@ -156,9 +158,9 @@ var BrowserTelemetryUtils = {
     }
 
     let currentTimeSec = currentTime / 1000;
-    if (originCount < fissionExperimentMaxOrigins) {
-      let lastDisqualified = fissionExperimentLastDisqualified;
-      let lastQualified = fissionExperimentLastQualified;
+    if (originCount < lazy.fissionExperimentMaxOrigins) {
+      let lastDisqualified = lazy.fissionExperimentLastDisqualified;
+      let lastQualified = lazy.fissionExperimentLastQualified;
 
       // If the last time we saw a qualifying origin count was earlier
       // than the last time we say a disqualifying count, update any
@@ -172,7 +174,7 @@ var BrowserTelemetryUtils = {
         );
       }
 
-      if (!fissionExperimentQualified) {
+      if (!lazy.fissionExperimentQualified) {
         Services.prefs.setIntPref(
           FISSION_EXPERIMENT_PREF_LAST_QUALIFIED,
           currentTimeSec
@@ -183,7 +185,7 @@ var BrowserTelemetryUtils = {
         // window, re-qualify the user.
         if (
           currentTimeSec - lastDisqualified >=
-          fissionExperimentSlidingWindowMS / 1000
+          lazy.fissionExperimentSlidingWindowMS / 1000
         ) {
           Services.prefs.setBoolPref(FISSION_EXPERIMENT_PREF_QUALIFIED, true);
         }

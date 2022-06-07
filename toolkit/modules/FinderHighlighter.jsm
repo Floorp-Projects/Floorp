@@ -11,17 +11,19 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Color",
   "resource://gre/modules/Color.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Rect",
   "resource://gre/modules/Geometry.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
+XPCOMUtils.defineLazyGetter(lazy, "kDebug", () => {
   const kDebugPref = "findbar.modalHighlight.debug";
   return (
     Services.prefs.getPrefType(kDebugPref) &&
@@ -839,7 +841,7 @@ FinderHighlighter.prototype = {
    */
   _getRootBounds(window, includeScroll = true) {
     let dwu = this._getDWU(this.getTopWindow(window, true));
-    let cssPageRect = Rect.fromRect(dwu.getRootBounds());
+    let cssPageRect = lazy.Rect.fromRect(dwu.getRootBounds());
     let scrollX = {};
     let scrollY = {};
     if (includeScroll && window == this.getTopWindow(window, true)) {
@@ -858,7 +860,7 @@ FinderHighlighter.prototype = {
       let el = currWin.browsingContext.embedderElement;
       currWin = currWin.parent;
       dwu = this._getDWU(currWin);
-      let parentRect = Rect.fromRect(dwu.getBoundsWithoutFlushing(el));
+      let parentRect = lazy.Rect.fromRect(dwu.getBoundsWithoutFlushing(el));
 
       if (includeScroll) {
         dwu.getScrollXY(false, scrollX, scrollY);
@@ -1032,7 +1034,7 @@ FinderHighlighter.prototype = {
       return false;
     }
     cssColor.shift();
-    return !new Color(...cssColor).useBrightText;
+    return !new lazy.Color(...cssColor).useBrightText;
   },
 
   /**
@@ -1155,7 +1157,7 @@ FinderHighlighter.prototype = {
     // encompassing rectangle, which is too much for our purpose here.
     let { rectList, textList } = range.getClientRectsAndTexts();
     for (let rect of rectList) {
-      rect = Rect.fromRect(rect);
+      rect = lazy.Rect.fromRect(rect);
       rect.x += bounds.x;
       rect.y += bounds.y;
       // If the rect is not even visible from the top document, we can ignore it.
@@ -1332,7 +1334,7 @@ FinderHighlighter.prototype = {
           ["width", rect.width + "px"],
         ],
         borderStyles,
-        kDebug ? kModalStyles.outlineNodeDebug : []
+        lazy.kDebug ? kModalStyles.outlineNodeDebug : []
       );
       fontStyle.lineHeight = rect.height + "px";
       let textStyle =
@@ -1372,7 +1374,7 @@ FinderHighlighter.prototype = {
     }
 
     if (rebuildOutline) {
-      dict.modalHighlightOutline = kDebug
+      dict.modalHighlightOutline = lazy.kDebug
         ? mockAnonymousContentNode(
             (document.body || document.documentElement).appendChild(outlineBox)
           )
@@ -1426,7 +1428,7 @@ FinderHighlighter.prototype = {
       return;
     }
 
-    if (kDebug) {
+    if (lazy.kDebug) {
       dict.modalHighlightOutline.remove();
     } else {
       try {
@@ -1505,7 +1507,7 @@ FinderHighlighter.prototype = {
       let document = window.document;
       let maskNode = document.createElementNS(kNSHTML, "div");
       maskNode.setAttribute("id", kMaskId);
-      dict.modalHighlightAllMask = kDebug
+      dict.modalHighlightAllMask = lazy.kDebug
         ? mockAnonymousContentNode(
             (document.body || document.documentElement).appendChild(maskNode)
           )
@@ -1528,7 +1530,7 @@ FinderHighlighter.prototype = {
       ],
       dict.brightText ? kModalStyles.maskNodeBrightText : [],
       paintContent ? kModalStyles.maskNodeTransition : [],
-      kDebug ? kModalStyles.maskNodeDebug : []
+      lazy.kDebug ? kModalStyles.maskNodeDebug : []
     );
     dict.modalHighlightAllMask.setAttributeForElement(
       kMaskId,
@@ -1592,7 +1594,7 @@ FinderHighlighter.prototype = {
 
     // If the current window isn't the one the content was inserted into, this
     // will fail, but that's fine.
-    if (kDebug) {
+    if (lazy.kDebug) {
       dict.modalHighlightAllMask.remove();
     } else {
       try {

@@ -18,19 +18,20 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "nativeOSKeyStore",
   "@mozilla.org/security/oskeystore;1",
   Ci.nsIOSKeyStore
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "osReauthenticator",
   "@mozilla.org/security/osreauthenticator;1",
   Ci.nsIOSReauthenticator
@@ -86,13 +87,13 @@ var OSKeyStore = {
       AppConstants.platform == "win" ||
       AppConstants.isPlatformAndVersionAtLeast("macosx", "16")
     ) {
-      log.debug(
+      lazy.log.debug(
         "canReauth, returning true, this._testReauth:",
         this._testReauth
       );
       return true;
     }
-    log.debug("canReauth, returning false");
+    lazy.log.debug("canReauth, returning false");
     return false;
   },
 
@@ -106,7 +107,7 @@ var OSKeyStore = {
   async _reauthInTests() {
     // Skip this reauth because there is no way to mock the
     // native dialog in the testing environment, for now.
-    log.debug("_reauthInTests: _testReauth: ", this._testReauth);
+    lazy.log.debug("_reauthInTests: _testReauth: ", this._testReauth);
     switch (this._testReauth) {
       case "pass":
         Services.obs.notifyObservers(
@@ -187,10 +188,10 @@ var OSKeyStore = {
     }
 
     if (this._pendingUnlockPromise) {
-      log.debug("ensureLoggedIn: Has a pending unlock operation");
+      lazy.log.debug("ensureLoggedIn: Has a pending unlock operation");
       return this._pendingUnlockPromise;
     }
-    log.debug(
+    lazy.log.debug(
       "ensureLoggedIn: Creating new pending unlock promise. reauth: ",
       reauth
     );
@@ -199,14 +200,14 @@ var OSKeyStore = {
     if (typeof reauth == "string") {
       // Only allow for local builds
       if (
-        UpdateUtils.getUpdateChannel(false) == "default" &&
+        lazy.UpdateUtils.getUpdateChannel(false) == "default" &&
         this._testReauth
       ) {
         unlockPromise = this._reauthInTests();
       } else if (this.canReauth()) {
         // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
         // On macOS this resolves to false, so we would need to check it.
-        unlockPromise = osReauthenticator
+        unlockPromise = lazy.osReauthenticator
           .asyncReauthenticateUser(reauth, dialogCaption, parentWindow)
           .then(reauthResult => {
             let auth_details_extra = {};
@@ -233,7 +234,9 @@ var OSKeyStore = {
             return result;
           });
       } else {
-        log.debug("ensureLoggedIn: Skipping reauth on unsupported platforms");
+        lazy.log.debug(
+          "ensureLoggedIn: Skipping reauth on unsupported platforms"
+        );
         unlockPromise = Promise.resolve({
           authenticated: true,
           auth_details: "success_unsupported_platform",
@@ -245,17 +248,19 @@ var OSKeyStore = {
 
     if (generateKeyIfNotAvailable) {
       unlockPromise = unlockPromise.then(async reauthResult => {
-        if (!(await nativeOSKeyStore.asyncSecretAvailable(this.STORE_LABEL))) {
-          log.debug(
+        if (
+          !(await lazy.nativeOSKeyStore.asyncSecretAvailable(this.STORE_LABEL))
+        ) {
+          lazy.log.debug(
             "ensureLoggedIn: Secret unavailable, attempt to generate new secret."
           );
-          let recoveryPhrase = await nativeOSKeyStore.asyncGenerateSecret(
+          let recoveryPhrase = await lazy.nativeOSKeyStore.asyncGenerateSecret(
             this.STORE_LABEL
           );
           // TODO We should somehow have a dialog to ask the user to write this down,
           // and another dialog somewhere for the user to restore the secret with it.
           // (Intentionally not printing it out in the console)
-          log.debug(
+          lazy.log.debug(
             "ensureLoggedIn: Secret generated. Recovery phrase length: " +
               recoveryPhrase.length
           );
@@ -266,14 +271,14 @@ var OSKeyStore = {
 
     unlockPromise = unlockPromise.then(
       reauthResult => {
-        log.debug("ensureLoggedIn: Logged in");
+        lazy.log.debug("ensureLoggedIn: Logged in");
         this._pendingUnlockPromise = null;
         this._isLocked = false;
 
         return reauthResult;
       },
       err => {
-        log.debug("ensureLoggedIn: Not logged in", err);
+        lazy.log.debug("ensureLoggedIn: Not logged in", err);
         this._pendingUnlockPromise = null;
         this._isLocked = true;
 
@@ -312,7 +317,7 @@ var OSKeyStore = {
         Cr.NS_ERROR_ABORT
       );
     }
-    let bytes = await nativeOSKeyStore.asyncDecryptBytes(
+    let bytes = await lazy.nativeOSKeyStore.asyncDecryptBytes(
       this.STORE_LABEL,
       cipherText
     );
@@ -342,7 +347,7 @@ var OSKeyStore = {
       textArr.push(char.charCodeAt(0));
     }
 
-    let rawEncryptedText = await nativeOSKeyStore.asyncEncryptBytes(
+    let rawEncryptedText = await lazy.nativeOSKeyStore.asyncEncryptBytes(
       this.STORE_LABEL,
       textArr
     );
@@ -370,11 +375,11 @@ var OSKeyStore = {
    * Remove the store. For tests.
    */
   async cleanup() {
-    return nativeOSKeyStore.asyncDeleteSecret(this.STORE_LABEL);
+    return lazy.nativeOSKeyStore.asyncDeleteSecret(this.STORE_LABEL);
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "toolkit.osKeyStore.loglevel",

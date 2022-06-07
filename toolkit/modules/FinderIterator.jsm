@@ -11,9 +11,11 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(lazy, "NLP", "resource://gre/modules/NLP.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Rect",
   "resource://gre/modules/Geometry.jsm"
 );
@@ -432,7 +434,7 @@ FinderIterator.prototype = {
       paramSet1.matchDiacritics === paramSet2.matchDiacritics &&
       paramSet1.window === paramSet2.window &&
       paramSet1.useSubFrames === paramSet2.useSubFrames &&
-      NLP.levenshtein(paramSet1.word, paramSet2.word) <= allowDistance
+      lazy.NLP.levenshtein(paramSet1.word, paramSet2.word) <= allowDistance
     );
   },
 
@@ -705,7 +707,7 @@ FinderIterator.prototype = {
       let frameEl = frame && frame.frameElement;
       if (
         !frameEl ||
-        Rect.fromRect(dwu.getBoundsWithoutFlushing(frameEl)).isEmpty()
+        lazy.Rect.fromRect(dwu.getBoundsWithoutFlushing(frameEl)).isEmpty()
       ) {
         continue;
       }

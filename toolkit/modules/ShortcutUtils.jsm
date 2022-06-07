@@ -14,13 +14,15 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "PlatformKeys", function() {
   return Services.strings.createBundle(
     "chrome://global-platform/locale/platformKeys.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "Keys", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Keys", function() {
   return Services.strings.createBundle(
     "chrome://global/locale/keys.properties"
   );
@@ -68,51 +70,51 @@ var ShortcutUtils = {
         haveCloverLeaf = true;
       } else {
         elemString +=
-          PlatformKeys.GetStringFromName("VK_CONTROL") +
-          PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+          lazy.PlatformKeys.GetStringFromName("VK_CONTROL") +
+          lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
     }
     if (elemMod.match("access")) {
       if (Services.appinfo.OS == "Darwin") {
         elemString +=
-          PlatformKeys.GetStringFromName("VK_CONTROL") +
-          PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+          lazy.PlatformKeys.GetStringFromName("VK_CONTROL") +
+          lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       } else {
         elemString +=
-          PlatformKeys.GetStringFromName("VK_ALT") +
-          PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+          lazy.PlatformKeys.GetStringFromName("VK_ALT") +
+          lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
       }
     }
     if (elemMod.match("os")) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_WIN") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_WIN") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("shift")) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_SHIFT") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_SHIFT") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("alt")) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_ALT") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_ALT") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("ctrl") || elemMod.match("control")) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_CONTROL") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_CONTROL") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
     if (elemMod.match("meta")) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_META") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_META") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
     if (haveCloverLeaf) {
       elemString +=
-        PlatformKeys.GetStringFromName("VK_META") +
-        PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+        lazy.PlatformKeys.GetStringFromName("VK_META") +
+        lazy.PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
 
     return elemString;
@@ -132,7 +134,7 @@ var ShortcutUtils = {
         }
       }
       try {
-        let bundle = keyCode == "VK_RETURN" ? PlatformKeys : Keys;
+        let bundle = keyCode == "VK_RETURN" ? lazy.PlatformKeys : lazy.Keys;
         // Some keys might not exist in the locale file, which will throw.
         key = bundle.GetStringFromName(keyCode);
       } catch (ex) {

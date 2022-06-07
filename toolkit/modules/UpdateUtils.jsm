@@ -13,14 +13,16 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ctypes: "resource://gre/modules/ctypes.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const PER_INSTALLATION_PREFS_PLATFORMS = ["win"];
 
@@ -129,7 +131,7 @@ var UpdateUtils = {
       const url = "resource://" + res + "/" + FILE_UPDATE_LOCALE;
       let data;
       try {
-        data = await fetch(url);
+        data = await lazy.fetch(url);
       } catch (e) {
         continue;
       }
@@ -937,7 +939,7 @@ function getDistributionPrefValue(aPrefName) {
 }
 
 function getSystemCapabilities() {
-  return "ISET:" + gInstructionSet + ",MEM:" + getMemoryMB();
+  return "ISET:" + lazy.gInstructionSet + ",MEM:" + getMemoryMB();
 }
 
 /**
@@ -962,7 +964,7 @@ function getMemoryMB() {
 /**
  * Gets the supported CPU instruction set.
  */
-XPCOMUtils.defineLazyGetter(this, "gInstructionSet", function aus_gIS() {
+XPCOMUtils.defineLazyGetter(lazy, "gInstructionSet", function aus_gIS() {
   const CPU_EXTENSIONS = [
     "hasSSE4_2",
     "hasSSE4_1",
@@ -986,21 +988,21 @@ XPCOMUtils.defineLazyGetter(this, "gInstructionSet", function aus_gIS() {
 });
 
 /* Windows only getter that returns the processor architecture. */
-XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
+XPCOMUtils.defineLazyGetter(lazy, "gWinCPUArch", function aus_gWinCPUArch() {
   // Get processor architecture
   let arch = "unknown";
 
-  const WORD = ctypes.uint16_t;
-  const DWORD = ctypes.uint32_t;
+  const WORD = lazy.ctypes.uint16_t;
+  const DWORD = lazy.ctypes.uint32_t;
 
   // This structure is described at:
   // http://msdn.microsoft.com/en-us/library/ms724958%28v=vs.85%29.aspx
-  const SYSTEM_INFO = new ctypes.StructType("SYSTEM_INFO", [
+  const SYSTEM_INFO = new lazy.ctypes.StructType("SYSTEM_INFO", [
     { wProcessorArchitecture: WORD },
     { wReserved: WORD },
     { dwPageSize: DWORD },
-    { lpMinimumApplicationAddress: ctypes.voidptr_t },
-    { lpMaximumApplicationAddress: ctypes.voidptr_t },
+    { lpMinimumApplicationAddress: lazy.ctypes.voidptr_t },
+    { lpMaximumApplicationAddress: lazy.ctypes.voidptr_t },
     { dwActiveProcessorMask: DWORD.ptr },
     { dwNumberOfProcessors: DWORD },
     { dwProcessorType: DWORD },
@@ -1011,7 +1013,7 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
 
   let kernel32 = false;
   try {
-    kernel32 = ctypes.open("Kernel32");
+    kernel32 = lazy.ctypes.open("Kernel32");
   } catch (e) {
     Cu.reportError("Unable to open kernel32! Exception: " + e);
   }
@@ -1020,8 +1022,8 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
     try {
       let GetNativeSystemInfo = kernel32.declare(
         "GetNativeSystemInfo",
-        ctypes.winapi_abi,
-        ctypes.void_t,
+        lazy.ctypes.winapi_abi,
+        lazy.ctypes.void_t,
         SYSTEM_INFO.ptr
       );
       let winSystemInfo = SYSTEM_INFO();
@@ -1063,7 +1065,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
 
   if (AppConstants.platform == "win") {
     // Windows build should report the CPU architecture that it's running on.
-    abi += "-" + gWinCPUArch;
+    abi += "-" + lazy.gWinCPUArch;
   }
 
   if (AppConstants.ASAN) {
@@ -1093,7 +1095,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
           servicePackMajor,
           servicePackMinor,
           buildNumber,
-        } = WindowsVersionInfo.get();
+        } = lazy.WindowsVersionInfo.get();
         osVersion += `.${servicePackMajor}.${servicePackMinor}.${buildNumber}`;
       } catch (err) {
         Cu.reportError(
@@ -1108,7 +1110,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
       ) {
         const WINDOWS_UBR_KEY_PATH =
           "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-        let ubr = WindowsRegistry.readRegKey(
+        let ubr = lazy.WindowsRegistry.readRegKey(
           Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
           WINDOWS_UBR_KEY_PATH,
           "UBR",
@@ -1122,7 +1124,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
       }
 
       // Add processor architecture
-      osVersion += " (" + gWinCPUArch + ")";
+      osVersion += " (" + lazy.gWinCPUArch + ")";
     }
 
     try {
