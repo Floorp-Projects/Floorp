@@ -772,6 +772,8 @@ TEST(RtpVideoSenderTest, SupportsDependencyDescriptorForVp9) {
 
 TEST(RtpVideoSenderTest,
      SupportsDependencyDescriptorForVp9NotProvidedByEncoder) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-Vp9DependencyDescriptor/Enabled/");
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
   test.router()->SetActive(true);
 
