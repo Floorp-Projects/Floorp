@@ -536,12 +536,10 @@ class TIPMessageHandler {
                                                 PDWORD_PTR aMsgResult) {
     // We don't want to handle this unless the message is a WM_GETOBJECT that we
     // want to block, and the aHwnd is a nsWindow that belongs to the current
-    // thread.
+    // (i.e., main) thread.
     if (!aMsgResult || aMsgCode != WM_GETOBJECT ||
-        static_cast<LONG>(aLParam) != OBJID_CLIENT ||
-        !WinUtils::GetNSWindowPtr(aHwnd) ||
-        ::GetWindowThreadProcessId(aHwnd, nullptr) != ::GetCurrentThreadId() ||
-        !IsA11yBlocked()) {
+        static_cast<LONG>(aLParam) != OBJID_CLIENT || !::NS_IsMainThread() ||
+        !WinUtils::GetNSWindowPtr(aHwnd) || !IsA11yBlocked()) {
       return sSendMessageTimeoutWStub(aHwnd, aMsgCode, aWParam, aLParam, aFlags,
                                       aTimeout, aMsgResult);
     }
@@ -916,6 +914,11 @@ void nsWindow::DestroyDirectManipulation() {
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
                           nsWidgetInitData* aInitData) {
+  // Historical note: there was once some belief and/or intent that nsWindows
+  // could be created on arbitrary threads, and this may still be reflected in
+  // some comments.
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsWidgetInitData defaultInitData;
   if (!aInitData) aInitData = &defaultInitData;
 
@@ -1011,6 +1014,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       MOZ_ASSERT(extendedStyle == kPreXULSkeletonUIWindowStyleEx,
                  "The skeleton UI window extended style should match the "
                  "expected extended style for the first window created");
+      MOZ_ASSERT(
+          ::GetWindowThreadProcessId(mWnd, nullptr) == ::GetCurrentThreadId(),
+          "The skeleton UI window should be created on the same thread as "
+          "other windows");
       mIsShowingPreXULSkeletonUI = true;
 
       // If we successfully consumed the pre-XUL skeleton UI, just update
@@ -1446,13 +1453,13 @@ void nsWindow::SubclassWindow(BOOL bState) {
         mWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
     NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
     // connect the this pointer to the nsWindow handle
-    WinUtils::SetNSWindowBasePtr(mWnd, this);
+    WinUtils::SetNSWindowPtr(mWnd, this);
   } else {
     if (IsWindow(mWnd)) {
       SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
                         reinterpret_cast<LONG_PTR>(mPrevWndProc));
     }
-    WinUtils::SetNSWindowBasePtr(mWnd, nullptr);
+    WinUtils::SetNSWindowPtr(mWnd, nullptr);
     mPrevWndProc = nullptr;
   }
 }
@@ -7296,8 +7303,8 @@ void nsWindow::OnDestroy() {
   // Unregister notifications from terminal services
   ::WTSUnRegisterSessionNotification(mWnd);
 
-  // Free our subclass and clear |this| stored in the window props. We will no
-  // longer receive events from Windows after this point.
+  // Free our subclass and clear the |this|-pointer associated with our HWND. We
+  // will no longer receive events from Windows after this point.
   SubclassWindow(FALSE);
 
   // Once mWidgetListener is cleared and the subclass is reset, sCurrentWindow

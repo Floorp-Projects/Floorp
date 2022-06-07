@@ -411,14 +411,14 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindow* aWidget,
   // except plugin window (MozillaWindowClass), we should handle the message
   // on the window.
   if (WinUtils::IsOurProcessWindow(underCursorWnd)) {
-    nsWindow* destWindow = WinUtils::GetNSWindowBasePtr(underCursorWnd);
+    nsWindow* destWindow = WinUtils::GetNSWindowPtr(underCursorWnd);
     if (!destWindow) {
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,
               ("MouseScroll::ProcessNativeMouseWheelMessage: "
                "Found window under the cursor isn't managed by nsWindow..."));
       HWND wnd = ::GetParent(underCursorWnd);
       for (; wnd; wnd = ::GetParent(wnd)) {
-        destWindow = WinUtils::GetNSWindowBasePtr(wnd);
+        destWindow = WinUtils::GetNSWindowPtr(wnd);
         if (destWindow) {
           break;
         }
