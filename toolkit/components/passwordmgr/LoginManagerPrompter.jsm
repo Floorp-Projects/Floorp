@@ -10,22 +10,24 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
+const lazy = {};
+
 /* eslint-disable block-scoped-var, no-var */
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "usernameAutocompleteSearch",
   "@mozilla.org/autocomplete/search;1?name=login-doorhanger-username",
   "nsIAutoCompleteSimpleSearch"
 );
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", () => {
+XPCOMUtils.defineLazyGetter(lazy, "strBundle", () => {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
@@ -136,7 +138,7 @@ class LoginManagerPrompter {
     autoFilledLoginGuid = "",
     possibleValues = undefined
   ) {
-    log.debug("promptToSavePassword");
+    lazy.log.debug("promptToSavePassword");
     let inPrivateBrowsing = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
     let notification = LoginManagerPrompter._showLoginCaptureDoorhanger(
       aBrowser,
@@ -203,10 +205,10 @@ class LoginManagerPrompter {
       autoFilledLoginGuid = "",
     } = {}
   ) {
-    log.debug(
+    lazy.log.debug(
       `_showLoginCaptureDoorhanger, got autoSavedLoginGuid: ${autoSavedLoginGuid}`
     );
-    log.debug(
+    lazy.log.debug(
       `_showLoginCaptureDoorhanger, got autoFilledLoginGuid: ${autoFilledLoginGuid}`
     );
 
@@ -277,11 +279,11 @@ class LoginManagerPrompter {
       if (!currentNotification) {
         Cu.reportError("updateButtonLabel, no currentNotification");
       }
-      let foundLogins = LoginHelper.searchLoginsWithObject({
+      let foundLogins = lazy.LoginHelper.searchLoginsWithObject({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
         httpRealm: login.httpRealm,
-        schemeUpgrades: LoginHelper.schemeUpgrades,
+        schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
       });
 
       let logins = this._filterUpdatableLogins(
@@ -399,11 +401,11 @@ class LoginManagerPrompter {
     };
 
     let persistData = () => {
-      let foundLogins = LoginHelper.searchLoginsWithObject({
+      let foundLogins = lazy.LoginHelper.searchLoginsWithObject({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
         httpRealm: login.httpRealm,
-        schemeUpgrades: LoginHelper.schemeUpgrades,
+        schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
       });
 
       let logins = this._filterUpdatableLogins(
@@ -412,7 +414,7 @@ class LoginManagerPrompter {
         autoSavedLoginGuid
       );
       let resolveBy = ["scheme", "timePasswordChanged"];
-      logins = LoginHelper.dedupeLogins(
+      logins = lazy.LoginHelper.dedupeLogins(
         logins,
         ["username"],
         resolveBy,
@@ -421,7 +423,7 @@ class LoginManagerPrompter {
       // sort exact username matches to the top
       logins.sort(l => (l.username == login.username ? -1 : 1));
 
-      log.debug(`persistData: Matched ${logins.length} logins`);
+      lazy.log.debug(`persistData: Matched ${logins.length} logins`);
 
       let loginToRemove;
       let loginToUpdate = logins.shift();
@@ -430,7 +432,7 @@ class LoginManagerPrompter {
         loginToRemove = logins.shift();
       }
       if (logins.length) {
-        log.warn(
+        lazy.log.warn(
           logins.length,
           "other updatable logins!",
           logins.map(l => l.guid),
@@ -463,7 +465,7 @@ class LoginManagerPrompter {
         loginToUpdate.username == login.username
       ) {
         // We only want to touch the login's use count and last used time.
-        log.debug("persistData: Touch matched login", loginToUpdate.guid);
+        lazy.log.debug("persistData: Touch matched login", loginToUpdate.guid);
         Services.logins.recordPasswordUse(
           loginToUpdate,
           PrivateBrowsingUtils.isBrowserPrivate(browser),
@@ -471,7 +473,7 @@ class LoginManagerPrompter {
           !!autoFilledLoginGuid
         );
       } else {
-        log.debug("persistData: Update matched login", loginToUpdate.guid);
+        lazy.log.debug("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
         // notify that this auto-saved login has been merged
         if (loginToRemove && loginToRemove.guid == autoSavedLoginGuid) {
@@ -483,7 +485,7 @@ class LoginManagerPrompter {
       }
 
       if (loginToRemove) {
-        log.debug("persistData: removing login", loginToRemove.guid);
+        lazy.log.debug("persistData: removing login", loginToRemove.guid);
         Services.logins.removeLogin(loginToRemove);
       }
     };
@@ -498,13 +500,13 @@ class LoginManagerPrompter {
           type == "password-save" &&
           !Services.policies.isAllowed("removeMasterPassword")
         ) {
-          if (!LoginHelper.isPrimaryPasswordSet()) {
+          if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
             browser.ownerGlobal.openDialog(
               "chrome://mozapps/content/preferences/changemp.xhtml",
               "",
               "centerscreen,chrome,modal,titlebar"
             );
-            if (!LoginHelper.isPrimaryPasswordSet()) {
+            if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
               return;
             }
           }
@@ -606,7 +608,7 @@ class LoginManagerPrompter {
           // at this point, so approximate the location with the next closest,
           // visible icon as the anchor.
           const anchor = browser.ownerDocument.getElementById("identity-icon");
-          log.debug("Showing the ConfirmationHint");
+          lazy.log.debug("Showing the ConfirmationHint");
           anchor.ownerGlobal.ConfirmationHint.show(anchor, "loginRemoved");
         },
       });
@@ -637,7 +639,7 @@ class LoginManagerPrompter {
         eventCallback(topic) {
           switch (topic) {
             case "showing":
-              log.debug("showing");
+              lazy.log.debug("showing");
               currentNotification = this;
 
               // Record the first time this instance of the doorhanger is shown.
@@ -708,7 +710,7 @@ class LoginManagerPrompter {
                 toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
 
                 let hideToggle =
-                  LoginHelper.isPrimaryPasswordSet() ||
+                  lazy.LoginHelper.isPrimaryPasswordSet() ||
                   // Don't show the toggle when the login was autofilled
                   !!autoFilledLoginGuid ||
                   // Dismissed-by-default prompts should still show the toggle.
@@ -734,7 +736,7 @@ class LoginManagerPrompter {
 
               break;
             case "shown": {
-              log.debug("shown");
+              lazy.log.debug("shown");
               writeDataToUI();
               let anchorIcon = this.anchorElement;
               if (anchorIcon && this.options.extraAttr == "attention") {
@@ -750,7 +752,7 @@ class LoginManagerPrompter {
             case "removed": {
               // Note that this can run after `showing` and `shown` for the
               // notification it's replacing.
-              log.debug(topic);
+              lazy.log.debug(topic);
               currentNotification = null;
 
               let usernameField = chromeDoc.getElementById(
@@ -788,7 +790,7 @@ class LoginManagerPrompter {
 
     if (notifySaved) {
       let anchor = notification.anchorElement;
-      log.debug("Showing the ConfirmationHint");
+      lazy.log.debug("Showing the ConfirmationHint");
       anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
     }
 
@@ -889,7 +891,10 @@ class LoginManagerPrompter {
    *       from the login selected by the user.
    */
   promptToChangePasswordWithUsernames(browser, logins, aNewLogin) {
-    log.debug("promptToChangePasswordWithUsernames with count:", logins.length);
+    lazy.log.debug(
+      "promptToChangePasswordWithUsernames with count:",
+      logins.length
+    );
 
     var usernames = logins.map(
       l => l.username || LoginManagerPrompter._getLocalizedString("noUsername")
@@ -914,7 +919,7 @@ class LoginManagerPrompter {
     if (ok) {
       // Now that we know which login to use, modify its password.
       var selectedLogin = logins[selectedIndex.value];
-      log.debug("Updating password for user", selectedLogin.username);
+      lazy.log.debug("Updating password for user", selectedLogin.username);
       var newLoginWithUsername = Cc[
         "@mozilla.org/login-manager/loginInfo;1"
       ].createInstance(Ci.nsILoginInfo);
@@ -971,9 +976,9 @@ class LoginManagerPrompter {
    */
   static _getLocalizedString(key, formatArgs) {
     if (formatArgs) {
-      return strBundle.formatStringFromName(key, formatArgs);
+      return lazy.strBundle.formatStringFromName(key, formatArgs);
     }
-    return strBundle.GetStringFromName(key);
+    return lazy.strBundle.GetStringFromName(key);
   }
 
   /**
@@ -992,7 +997,7 @@ class LoginManagerPrompter {
       var baseDomain = Services.eTLD.getBaseDomain(uri);
       displayHost = idnService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
-      log.warn("_getShortDisplayHost couldn't process", aURIString);
+      lazy.log.warn("_getShortDisplayHost couldn't process", aURIString);
     }
 
     if (!displayHost) {
@@ -1060,7 +1065,7 @@ class LoginManagerPrompter {
       result.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_NOMATCH);
     }
 
-    usernameAutocompleteSearch.overrideNextResult(result);
+    lazy.usernameAutocompleteSearch.overrideNextResult(result);
   }
 
   /**
@@ -1082,7 +1087,7 @@ class LoginManagerPrompter {
 
     let baseDomainLogins = await Services.logins.searchLoginsAsync({
       origin: login.origin,
-      schemeUpgrades: LoginHelper.schemeUpgrades,
+      schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
       acceptDifferentSubdomains: true,
     });
 
@@ -1113,8 +1118,8 @@ class LoginManagerPrompter {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("LoginManagerPrompter");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("LoginManagerPrompter");
 });
 
 const EXPORTED_SYMBOLS = ["LoginManagerPrompter"];

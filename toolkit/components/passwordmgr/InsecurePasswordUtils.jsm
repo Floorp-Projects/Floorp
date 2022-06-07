@@ -14,20 +14,22 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gContentSecurityManager",
   "@mozilla.org/contentsecuritymanager;1",
   "nsIContentSecurityManager"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("InsecurePasswordUtils");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("InsecurePasswordUtils");
 });
 
 /*
@@ -117,7 +119,7 @@ const InsecurePasswordUtils = {
   _isPrincipalForLocalIPAddress(aPrincipal) {
     let res = aPrincipal.isLocalIpAddress;
     if (res) {
-      log.debug(
+      lazy.log.debug(
         "hasInsecureLoginForms: detected local IP address:",
         aPrincipal.asciispec
       );

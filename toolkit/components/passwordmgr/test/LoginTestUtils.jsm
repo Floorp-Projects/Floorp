@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
@@ -632,7 +634,7 @@ LoginTestUtils.remoteSettings = {
   async setupWebsitesWithSharedCredentials(
     relatedRealms = [["other-example.com", "example.com", "example.co.uk"]]
   ) {
-    let db = RemoteSettings(this.relatedRealmsCollection).db;
+    let db = lazy.RemoteSettings(this.relatedRealmsCollection).db;
     await db.clear();
     await db.create({
       id: "some-fake-ID-abc",
@@ -641,7 +643,7 @@ LoginTestUtils.remoteSettings = {
     await db.importChanges({}, Date.now());
   },
   async cleanWebsitesWithSharedCredentials() {
-    let db = RemoteSettings(this.relatedRealmsCollection).db;
+    let db = lazy.RemoteSettings(this.relatedRealmsCollection).db;
     await db.importChanges({}, Date.now(), [], { clear: true });
   },
   improvedPasswordRulesCollection: "password-rules",
@@ -650,7 +652,7 @@ LoginTestUtils.remoteSettings = {
     origin = "example.com",
     rules = "minlength: 6; maxlength: 16; required: lower, upper; required: digit; required: [&<>'\"!#$%(),:;=?[^`{|}~]]; max-consecutive: 2;"
   ) {
-    let db = RemoteSettings(this.improvedPasswordRulesCollection).db;
+    let db = lazy.RemoteSettings(this.improvedPasswordRulesCollection).db;
     await db.clear();
     await db.create({
       id: "some-fake-ID",
@@ -665,7 +667,7 @@ LoginTestUtils.remoteSettings = {
     await db.importChanges({}, Date.now());
   },
   async cleanImprovedPasswordRules() {
-    let db = RemoteSettings(this.improvedPasswordRulesCollection).db;
+    let db = lazy.RemoteSettings(this.improvedPasswordRulesCollection).db;
     await db.importChanges({}, Date.now(), [], { clear: true });
   },
 };

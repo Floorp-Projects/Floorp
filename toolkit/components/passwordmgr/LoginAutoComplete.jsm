@@ -15,69 +15,71 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AutoCompleteChild",
   "resource://gre/actors/AutoCompleteChild.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "InsecurePasswordUtils",
   "resource://gre/modules/InsecurePasswordUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginFormFactory",
   "resource://gre/modules/LoginFormFactory.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginManagerChild",
   "resource://gre/modules/LoginManagerChild.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NewPasswordModel",
   "resource://gre/modules/NewPasswordModel.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "formFillController",
   "@mozilla.org/satchel/form-fill-controller;1",
   Ci.nsIFormFillController
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SHOULD_SHOW_ORIGIN",
   "signon.showAutoCompleteOrigins"
 );
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("LoginAutoComplete");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("LoginAutoComplete");
 });
-XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
+XPCOMUtils.defineLazyGetter(lazy, "passwordMgrBundle", () => {
   return Services.strings.createBundle(
     "chrome://passwordmgr/locale/passwordmgr.properties"
   );
 });
-XPCOMUtils.defineLazyGetter(this, "dateAndTimeFormatter", () => {
+XPCOMUtils.defineLazyGetter(lazy, "dateAndTimeFormatter", () => {
   return new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
   });
 });
 
 function loginSort(formHostPort, a, b) {
-  let maybeHostPortA = LoginHelper.maybeGetHostPortForURL(a.origin);
-  let maybeHostPortB = LoginHelper.maybeGetHostPortForURL(b.origin);
+  let maybeHostPortA = lazy.LoginHelper.maybeGetHostPortForURL(a.origin);
+  let maybeHostPortB = lazy.LoginHelper.maybeGetHostPortForURL(b.origin);
   if (formHostPort == maybeHostPortA && formHostPort != maybeHostPortB) {
     return -1;
   }
@@ -123,9 +125,9 @@ function findDuplicates(loginList) {
 
 function getLocalizedString(key, ...formatArgs) {
   if (formatArgs.length) {
-    return passwordMgrBundle.formatStringFromName(key, formatArgs);
+    return lazy.passwordMgrBundle.formatStringFromName(key, formatArgs);
   }
-  return passwordMgrBundle.GetStringFromName(key);
+  return lazy.passwordMgrBundle.GetStringFromName(key);
 }
 
 class AutocompleteItem {
@@ -165,7 +167,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
     actor,
     isOriginMatched
   ) {
-    super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+    super(lazy.SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
     this.login = login.QueryInterface(Ci.nsILoginMetaInfo);
     this.#actor = actor;
 
@@ -179,7 +181,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
         if (!username) {
           username = getLocalizedString("noUsername");
         }
-        let time = dateAndTimeFormatter.format(
+        let time = lazy.dateAndTimeFormatter.format(
           new Date(login.timePasswordChanged)
         );
         username = getLocalizedString("loginHostAge", username, time);
@@ -207,7 +209,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
 
   removeFromStorage() {
     if (this.#actor) {
-      let vanilla = LoginHelper.loginToVanillaObject(this.login);
+      let vanilla = lazy.LoginHelper.loginToVanillaObject(this.login);
       this.#actor.sendAsyncMessage("PasswordManager:removeLogin", {
         login: vanilla,
       });
@@ -324,14 +326,17 @@ class LoginAutoCompleteResult {
     function isFooterEnabled() {
       // We need to check LoginHelper.enabled here since the insecure warning should
       // appear even if pwmgr is disabled but the footer should never appear in that case.
-      if (!LoginHelper.showAutoCompleteFooter || !LoginHelper.enabled) {
+      if (
+        !lazy.LoginHelper.showAutoCompleteFooter ||
+        !lazy.LoginHelper.enabled
+      ) {
         return false;
       }
 
       // Don't show the footer on non-empty password fields as it's not providing
       // value and only adding noise since a password was already filled.
       if (hasBeenTypePassword && aSearchString && !generatedPassword) {
-        log.debug("Hiding footer: non-empty password field");
+        lazy.log.debug("Hiding footer: non-empty password field");
         return false;
       }
 
@@ -340,10 +345,10 @@ class LoginAutoCompleteResult {
         !matchingLogins.length &&
         !generatedPassword &&
         hasBeenTypePassword &&
-        formFillController.passwordPopupAutomaticallyOpened
+        lazy.formFillController.passwordPopupAutomaticallyOpened
       ) {
         hidingFooterOnPWFieldAutoOpened = true;
-        log.debug(
+        lazy.log.debug(
           "Hiding footer: no logins and the popup was opened upon focus of the pw. field"
         );
         return false;
@@ -355,12 +360,12 @@ class LoginAutoCompleteResult {
     this.searchString = aSearchString;
 
     // Insecure field warning comes first if it applies and is enabled.
-    if (!isSecure && LoginHelper.showInsecureFieldWarning) {
+    if (!isSecure && lazy.LoginHelper.showInsecureFieldWarning) {
       this.#rows.push(new InsecureLoginFormAutocompleteItem());
     }
 
     // Saved login items
-    let formHostPort = LoginHelper.maybeGetHostPortForURL(formOrigin);
+    let formHostPort = lazy.LoginHelper.maybeGetHostPortForURL(formOrigin);
     let logins = matchingLogins.sort(loginSort.bind(null, formHostPort));
     let duplicateUsernames = findDuplicates(matchingLogins);
 
@@ -370,8 +375,8 @@ class LoginAutoCompleteResult {
         hasBeenTypePassword,
         duplicateUsernames,
         actor,
-        LoginHelper.isOriginMatching(login.origin, formOrigin, {
-          schemeUpgrades: LoginHelper.schemeUpgrades,
+        lazy.LoginHelper.isOriginMatching(login.origin, formOrigin, {
+          schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
         })
       );
       this.#rows.push(item);
@@ -546,14 +551,17 @@ class LoginAutoComplete {
     //   reasons it's better to not load LMC at all for these sandboxed frames. Also, if the top-
     //   document is sandboxing a document, it probably doesn't want that sandboxed document to be
     //   able to affect the identity icon in the address bar by adding a password field.
-    let form = LoginFormFactory.createFromField(aElement);
-    let isSecure = !isNullPrincipal && InsecurePasswordUtils.isFormSecure(form);
+    let form = lazy.LoginFormFactory.createFromField(aElement);
+    let isSecure =
+      !isNullPrincipal && lazy.InsecurePasswordUtils.isFormSecure(form);
     let { hasBeenTypePassword } = aElement;
     let hostname = aElement.ownerDocument.documentURIObject.host;
-    let formOrigin = LoginHelper.getLoginOrigin(
+    let formOrigin = lazy.LoginHelper.getLoginOrigin(
       aElement.ownerDocument.documentURI
     );
-    let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
+    let loginManagerActor = lazy.LoginManagerChild.forWindow(
+      aElement.ownerGlobal
+    );
     let completeSearch = async autoCompleteLookupPromise => {
       // Assign to the member synchronously before awaiting the Promise.
       this.#autoCompleteLookupPromise = autoCompleteLookupPromise;
@@ -570,7 +578,7 @@ class LoginAutoComplete {
       // N.B. This check must occur after the `await` above for it to be
       // effective.
       if (this.#autoCompleteLookupPromise !== autoCompleteLookupPromise) {
-        log.debug("ignoring result from previous search");
+        lazy.log.debug("ignoring result from previous search");
         return;
       }
 
@@ -620,7 +628,7 @@ class LoginAutoComplete {
       return;
     }
 
-    if (!LoginHelper.enabled) {
+    if (!lazy.LoginHelper.enabled) {
       completeSearch(Promise.resolve({ logins: [] }));
       return;
     }
@@ -629,7 +637,7 @@ class LoginAutoComplete {
     if (aPreviousResult) {
       previousResult = {
         searchString: aPreviousResult.searchString,
-        logins: LoginHelper.loginsToVanillaObjects(
+        logins: lazy.LoginHelper.loginsToVanillaObjects(
           aPreviousResult.wrappedJSObject.logins
         ),
       };
@@ -644,7 +652,7 @@ class LoginAutoComplete {
       form,
       hasBeenTypePassword,
     });
-    completeSearch(acLookupPromise).catch(log.error.bind(log));
+    completeSearch(acLookupPromise).catch(lazy.log.error.bind(lazy.log));
   }
 
   stopSearch() {
@@ -658,10 +666,10 @@ class LoginAutoComplete {
     form,
     hasBeenTypePassword,
   }) {
-    let actionOrigin = LoginHelper.getFormActionOrigin(form);
+    let actionOrigin = lazy.LoginHelper.getFormActionOrigin(form);
     let autocompleteInfo = inputElement.getAutocompleteInfo();
 
-    let loginManagerActor = LoginManagerChild.forWindow(
+    let loginManagerActor = lazy.LoginManagerChild.forWindow(
       inputElement.ownerGlobal
     );
     let forcePasswordGeneration = false;
@@ -683,15 +691,15 @@ class LoginAutoComplete {
       previousResult,
       forcePasswordGeneration,
       hasBeenTypePassword,
-      isSecure: InsecurePasswordUtils.isFormSecure(form),
+      isSecure: lazy.InsecurePasswordUtils.isFormSecure(form),
       isProbablyANewPasswordField,
     };
 
-    if (LoginHelper.showAutoCompleteFooter) {
+    if (lazy.LoginHelper.showAutoCompleteFooter) {
       gAutoCompleteListener.init();
     }
 
-    log.debug("LoginAutoComplete search:", {
+    lazy.log.debug("LoginAutoComplete search:", {
       forcePasswordGeneration,
       isSecure: messageData.isSecure,
       hasBeenTypePassword,
@@ -707,13 +715,13 @@ class LoginAutoComplete {
     return {
       generatedPassword: result.generatedPassword,
       importable: result.importable,
-      logins: LoginHelper.vanillaObjectsToLogins(result.logins),
+      logins: lazy.LoginHelper.vanillaObjectsToLogins(result.logins),
       willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
     };
   }
 
   isProbablyANewPasswordField(inputElement) {
-    const threshold = LoginHelper.generationConfidenceThreshold;
+    const threshold = lazy.LoginHelper.generationConfidenceThreshold;
     if (threshold == -1) {
       // Fathom is disabled
       return false;
@@ -724,7 +732,7 @@ class LoginAutoComplete {
       return score >= threshold;
     }
 
-    const { rules, type } = NewPasswordModel;
+    const { rules, type } = lazy.NewPasswordModel;
     const results = rules.against(inputElement);
     score = results.get(inputElement).scoreFor(type);
     this.#cachedNewPasswordScore.set(inputElement, score);
@@ -757,7 +765,7 @@ let gAutoCompleteListener = {
       return;
     }
 
-    if (input != formFillController.controller.input) {
+    if (input != lazy.formFillController.controller.input) {
       return;
     }
 
@@ -768,7 +776,9 @@ let gAutoCompleteListener = {
 
     this.fillRequestId++;
     const fillRequestId = this.fillRequestId;
-    const child = LoginManagerChild.forWindow(input.focusedInput.ownerGlobal);
+    const child = lazy.LoginManagerChild.forWindow(
+      input.focusedInput.ownerGlobal
+    );
     const value = await child.sendQuery(fillMessageName, fillMessageData ?? {});
 
     // skip fill if another fill operation started during await

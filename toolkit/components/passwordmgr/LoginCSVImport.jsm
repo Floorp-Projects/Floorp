@@ -19,13 +19,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "d3", () => {
+XPCOMUtils.defineLazyGetter(lazy, "d3", () => {
   let d3Scope = Cu.Sandbox(null);
   Services.scriptloader.loadSubScript(
     "chrome://global/content/third_party/d3/d3.js",
@@ -140,12 +142,12 @@ class LoginCSVImport {
    */
   static async importFromCSV(filePath) {
     TelemetryStopwatch.start("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
-    let responsivenessMonitor = new ResponsivenessMonitor();
+    let responsivenessMonitor = new lazy.ResponsivenessMonitor();
     let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
     let csvFieldToColumnMap = new Map();
     let csvString;
     try {
-      csvString = await OS.File.read(filePath, { encoding: "utf-8" });
+      csvString = await lazy.OS.File.read(filePath, { encoding: "utf-8" });
     } catch (ex) {
       TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
       Cu.reportError(ex);
@@ -156,11 +158,11 @@ class LoginCSVImport {
     let parsedLines;
     let headerLine;
     if (filePath.endsWith(".csv")) {
-      headerLine = d3.csv.parseRows(csvString)[0];
-      parsedLines = d3.csv.parse(csvString);
+      headerLine = lazy.d3.csv.parseRows(csvString)[0];
+      parsedLines = lazy.d3.csv.parse(csvString);
     } else if (filePath.endsWith(".tsv")) {
-      headerLine = d3.tsv.parseRows(csvString)[0];
-      parsedLines = d3.tsv.parse(csvString);
+      headerLine = lazy.d3.tsv.parseRows(csvString)[0];
+      parsedLines = lazy.d3.tsv.parse(csvString);
     }
 
     if (parsedLines && headerLine) {
@@ -204,7 +206,7 @@ class LoginCSVImport {
       );
     });
 
-    let report = await LoginHelper.maybeImportLogins(loginsToImport);
+    let report = await lazy.LoginHelper.maybeImportLogins(loginsToImport);
 
     for (const reportRow of report) {
       if (reportRow.result === "error_missing_field") {

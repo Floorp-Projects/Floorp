@@ -7,8 +7,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -305,7 +307,7 @@ LoginManagerCrypto_SDR.prototype = {
 }; // end of nsLoginManagerCrypto_SDR implementation
 
 XPCOMUtils.defineLazyGetter(LoginManagerCrypto_SDR.prototype, "log", () => {
-  let logger = LoginHelper.createLogger("Login crypto");
+  let logger = lazy.LoginHelper.createLogger("Login crypto");
   return logger.log.bind(logger);
 });
 

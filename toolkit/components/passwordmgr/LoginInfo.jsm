@@ -7,8 +7,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -82,7 +84,7 @@ nsLoginInfo.prototype = {
   },
 
   matches(aLogin, ignorePassword) {
-    return LoginHelper.doLoginsMatch(this, aLogin, {
+    return lazy.LoginHelper.doLoginsMatch(this, aLogin, {
       ignorePassword,
     });
   },

@@ -15,7 +15,9 @@ let { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
@@ -82,8 +84,12 @@ class LoginExport {
     }
     // https://tools.ietf.org/html/rfc7111 suggests always using CRLF.
     let csvAsString = rows.map(e => e.join(",")).join("\r\n");
-    await OS.File.writeAtomic(path, new TextEncoder().encode(csvAsString), {
-      tmpPath: path + ".tmp",
-    });
+    await lazy.OS.File.writeAtomic(
+      path,
+      new TextEncoder().encode(csvAsString),
+      {
+        tmpPath: path + ".tmp",
+      }
+    );
   }
 }

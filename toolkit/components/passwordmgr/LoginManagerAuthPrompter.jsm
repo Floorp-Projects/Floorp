@@ -13,8 +13,10 @@ const { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gPrompterService",
   "@mozilla.org/login-manager/prompter;1",
   Ci.nsILoginManagerPrompter
@@ -23,12 +25,12 @@ XPCOMUtils.defineLazyServiceGetter(
 /* eslint-disable block-scoped-var, no-var */
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginManagerPrompter",
   "resource://gre/modules/LoginManagerPrompter.jsm"
 );
@@ -199,7 +201,7 @@ LoginManagerAuthPromptFactory.prototype = {
     let hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
     if (
       !hasLogins &&
-      LoginHelper.schemeUpgrades &&
+      lazy.LoginHelper.schemeUpgrades &&
       origin.startsWith("https://")
     ) {
       let httpOrigin = origin.replace(/^https:\/\//, "http://");
@@ -274,7 +276,7 @@ XPCOMUtils.defineLazyGetter(
   LoginManagerAuthPromptFactory.prototype,
   "log",
   () => {
-    let logger = LoginHelper.createLogger("LoginManagerAuthPromptFactory");
+    let logger = lazy.LoginHelper.createLogger("LoginManagerAuthPromptFactory");
     return logger.log.bind(logger);
   }
 );
@@ -352,7 +354,7 @@ LoginManagerAuthPrompter.prototype = {
     if (!this._inPrivateBrowsing) {
       return true;
     }
-    return LoginHelper.privateBrowsingCaptureEnabled;
+    return lazy.LoginHelper.privateBrowsingCaptureEnabled;
   },
 
   /* ---------- nsIAuthPrompt prompts ---------- */
@@ -636,11 +638,11 @@ LoginManagerAuthPrompter.prototype = {
       foundLogins = await Services.logins.searchLoginsAsync({
         origin,
         httpRealm,
-        schemeUpgrades: LoginHelper.schemeUpgrades,
+        schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
       });
       this.log("found", foundLogins.length, "matching logins.");
       let resolveBy = ["scheme", "timePasswordChanged"];
-      foundLogins = LoginHelper.dedupeLogins(
+      foundLogins = lazy.LoginHelper.dedupeLogins(
         foundLogins,
         ["username"],
         resolveBy,
@@ -761,8 +763,8 @@ LoginManagerAuthPrompter.prototype = {
             ")"
         );
 
-        let promptBrowser = LoginHelper.getBrowserForPrompt(browser);
-        let savePrompt = gPrompterService.promptToSavePassword(
+        let promptBrowser = lazy.LoginHelper.getBrowserForPrompt(browser);
+        let savePrompt = lazy.gPrompterService.promptToSavePassword(
           promptBrowser,
           newLogin
         );
@@ -777,8 +779,8 @@ LoginManagerAuthPrompter.prototype = {
             httpRealm +
             ")"
         );
-        let promptBrowser = LoginHelper.getBrowserForPrompt(browser);
-        let savePrompt = gPrompterService.promptToChangePassword(
+        let promptBrowser = lazy.LoginHelper.getBrowserForPrompt(browser);
+        let savePrompt = lazy.gPrompterService.promptToChangePassword(
           promptBrowser,
           selectedLogin,
           newLogin
@@ -1143,7 +1145,7 @@ LoginManagerAuthPrompter.prototype = {
 }; // end of LoginManagerAuthPrompter implementation
 
 XPCOMUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
-  let logger = LoginHelper.createLogger("LoginManagerAuthPrompter");
+  let logger = lazy.LoginHelper.createLogger("LoginManagerAuthPrompter");
   return logger.log.bind(logger);
 });
 
