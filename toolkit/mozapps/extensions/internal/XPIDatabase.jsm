@@ -16,16 +16,18 @@
 
 var EXPORTED_SYMBOLS = ["AddonInternal", "XPIDatabase", "XPIDatabaseReconcile"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
@@ -47,15 +49,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const { nsIBlocklistService } = Ci;
 
 // These are injected from XPIProvider.jsm
-/* globals BOOTSTRAP_REASONS, DB_SCHEMA, XPIStates, migrateAddonLoader */
-
 for (let sym of [
   "BOOTSTRAP_REASONS",
   "DB_SCHEMA",
   "XPIStates",
   "migrateAddonLoader",
 ]) {
-  XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
+  XPCOMUtils.defineLazyGetter(lazy, sym, () => lazy.XPIInternal[sym]);
 }
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -226,7 +226,7 @@ async function idleForEach(array, func, taskTimeMS = 5) {
  */
 async function getRepositoryAddon(aAddon) {
   if (aAddon) {
-    aAddon._repositoryAddon = await AddonRepository.getCachedAddonByID(
+    aAddon._repositoryAddon = await lazy.AddonRepository.getCachedAddonByID(
       aAddon.id
     );
   }
@@ -328,7 +328,7 @@ class AddonInternal {
   set sourceBundle(file) {
     this._sourceBundle = file;
     if (file) {
-      this.rootURI = XPIInternal.getURIForResourceInFile(file, "").spec;
+      this.rootURI = lazy.XPIInternal.getURIForResourceInFile(file, "").spec;
     }
   }
 
@@ -340,7 +340,7 @@ class AddonInternal {
   }
 
   get resolvedRootURI() {
-    return XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
+    return lazy.XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
   }
 
   /**
@@ -393,7 +393,7 @@ class AddonInternal {
         return false;
       }
 
-      if (ThirdPartyUtil.isThirdPartyURI(source, installFrom)) {
+      if (lazy.ThirdPartyUtil.isThirdPartyURI(source, installFrom)) {
         logger.warn(
           `Addon ${this.id} Installation not allowed, installFrom "${installFrom.spec}" is third party to the Addon install_origins`
         );
@@ -484,12 +484,12 @@ class AddonInternal {
         // Add-ons installed via Normandy must be signed by the system
         // key or the "Mozilla Extensions" key.
         return [
-          AddonManager.SIGNEDSTATE_SYSTEM,
-          AddonManager.SIGNEDSTATE_PRIVILEGED,
+          lazy.AddonManager.SIGNEDSTATE_SYSTEM,
+          lazy.AddonManager.SIGNEDSTATE_PRIVILEGED,
         ].includes(this.signedState);
       case KEY_APP_SYSTEM_ADDONS:
         // System add-ons must be signed by the system key.
-        return this.signedState == AddonManager.SIGNEDSTATE_SYSTEM;
+        return this.signedState == lazy.AddonManager.SIGNEDSTATE_SYSTEM;
 
       case KEY_APP_SYSTEM_DEFAULTS:
       case KEY_APP_BUILTINS:
@@ -508,10 +508,10 @@ class AddonInternal {
         break;
     }
 
-    if (this.signedState === AddonManager.SIGNEDSTATE_NOT_REQUIRED) {
+    if (this.signedState === lazy.AddonManager.SIGNEDSTATE_NOT_REQUIRED) {
       return true;
     }
-    return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
+    return this.signedState > lazy.AddonManager.SIGNEDSTATE_MISSING;
   }
 
   get isCompatible() {
@@ -519,7 +519,7 @@ class AddonInternal {
   }
 
   get isPrivileged() {
-    return ExtensionData.getIsPrivileged({
+    return lazy.ExtensionData.getIsPrivileged({
       signedState: this.signedState,
       builtIn: this.location.isBuiltin,
       temporarilyInstalled: this.location.isTemporary,
@@ -587,7 +587,7 @@ class AddonInternal {
         " targetPlatforms " +
         JSON.stringify(this.targetPlatforms);
       logger.error(message, e);
-      AddonManagerPrivate.recordException("XPI", message, e);
+      lazy.AddonManagerPrivate.recordException("XPI", message, e);
       // don't trust this add-on
       return false;
     }
@@ -624,7 +624,7 @@ class AddonInternal {
     // Dictionaries are compatible by default unless requested by the dictinary.
     if (
       !this.strictCompatibility &&
-      (!AddonManager.strictCompatibility || this.type == "dictionary")
+      (!lazy.AddonManager.strictCompatibility || this.type == "dictionary")
     ) {
       return Services.vc.compare(version, minVersion) >= 0;
     }
@@ -649,7 +649,7 @@ class AddonInternal {
   }
 
   async findBlocklistEntry() {
-    return Blocklist.getAddonBlocklistEntry(this.wrapper);
+    return lazy.Blocklist.getAddonBlocklistEntry(this.wrapper);
   }
 
   async updateBlocklistState(options = {}) {
@@ -701,7 +701,7 @@ class AddonInternal {
   }
 
   recordAddonBlockChangeTelemetry(reason) {
-    Blocklist.recordAddonBlockChangeTelemetry(this.wrapper, reason);
+    lazy.Blocklist.recordAddonBlockChangeTelemetry(this.wrapper, reason);
   }
 
   async setUserDisabled(val, allowSystemAddons = false) {
@@ -792,10 +792,10 @@ class AddonInternal {
 
     if (!this.appDisabled) {
       if (this.userDisabled || this.softDisabled) {
-        permissions |= AddonManager.PERM_CAN_ENABLE;
+        permissions |= lazy.AddonManager.PERM_CAN_ENABLE;
       } else if (this.type != "theme" || this.id != DEFAULT_THEME_ID) {
         // We do not expose disabling the default theme.
-        permissions |= AddonManager.PERM_CAN_DISABLE;
+        permissions |= lazy.AddonManager.PERM_CAN_DISABLE;
       }
     }
 
@@ -813,7 +813,7 @@ class AddonInternal {
       let isSystem = this.location.isSystem || this.location.isBuiltin;
       // Add-ons that are installed by a file link cannot be upgraded.
       if (!isSystem && !this.location.isLinkedAddon(this.id)) {
-        permissions |= AddonManager.PERM_CAN_UPGRADE;
+        permissions |= lazy.AddonManager.PERM_CAN_UPGRADE;
       }
     }
 
@@ -821,11 +821,11 @@ class AddonInternal {
     // but we do not remove the addon file in that case.
     let isLegacySideload =
       this.foreignInstall &&
-      !(this.location.scope & AddonSettings.SCOPES_SIDELOAD);
+      !(this.location.scope & lazy.AddonSettings.SCOPES_SIDELOAD);
     if (changesAllowed || isLegacySideload) {
-      permissions |= AddonManager.PERM_API_CAN_UNINSTALL;
+      permissions |= lazy.AddonManager.PERM_API_CAN_UNINSTALL;
       if (!this.location.isBuiltin) {
-        permissions |= AddonManager.PERM_CAN_UNINSTALL;
+        permissions |= lazy.AddonManager.PERM_CAN_UNINSTALL;
       }
     }
 
@@ -835,22 +835,22 @@ class AddonInternal {
     if (
       (this.type === "extension" || this.type == "sitepermission") &&
       this.incognito !== "not_allowed" &&
-      this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
-      this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&
+      this.signedState !== lazy.AddonManager.SIGNEDSTATE_PRIVILEGED &&
+      this.signedState !== lazy.AddonManager.SIGNEDSTATE_SYSTEM &&
       !this.location.isBuiltin
     ) {
-      permissions |= AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
+      permissions |= lazy.AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
     }
 
     if (Services.policies) {
       if (!Services.policies.isAllowed(`uninstall-extension:${this.id}`)) {
-        permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
+        permissions &= ~lazy.AddonManager.PERM_CAN_UNINSTALL;
       }
       if (!Services.policies.isAllowed(`disable-extension:${this.id}`)) {
-        permissions &= ~AddonManager.PERM_CAN_DISABLE;
+        permissions &= ~lazy.AddonManager.PERM_CAN_DISABLE;
       }
       if (Services.policies.getExtensionSettings(this.id)?.updates_disabled) {
-        permissions &= ~AddonManager.PERM_CAN_UPGRADE;
+        permissions &= ~lazy.AddonManager.PERM_CAN_UPGRADE;
       }
     }
 
@@ -953,8 +953,8 @@ AddonWrapper = class {
 
     if (addon.optionsType) {
       switch (parseInt(addon.optionsType, 10)) {
-        case AddonManager.OPTIONS_TYPE_TAB:
-        case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
+        case lazy.AddonManager.OPTIONS_TYPE_TAB:
+        case lazy.AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
           return hasOptionsURL ? addon.optionsType : null;
       }
       return null;
@@ -977,7 +977,7 @@ AddonWrapper = class {
   }
 
   get iconURL() {
-    return AddonManager.getPreferredIconURL(this, 48);
+    return lazy.AddonManager.getPreferredIconURL(this, 48);
   }
 
   get icons() {
@@ -1019,7 +1019,7 @@ AddonWrapper = class {
 
     if (addon.previewImage) {
       let url = this.getResourceURI(addon.previewImage).spec;
-      return [new AddonManagerPrivate.AddonScreenshot(url)];
+      return [new lazy.AddonManagerPrivate.AddonScreenshot(url)];
     }
 
     return null;
@@ -1049,8 +1049,8 @@ AddonWrapper = class {
     // that turn off the signing requirement) and has recommendation states,
     // or the extension is signed as privileged.
     return (
-      this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED ||
-      (this.signedState >= AddonManager.SIGNEDSTATE_SIGNED &&
+      this.signedState == lazy.AddonManager.SIGNEDSTATE_PRIVILEGED ||
+      (this.signedState >= lazy.AddonManager.SIGNEDSTATE_SIGNED &&
         this.recommendationStates.length)
     );
   }
@@ -1061,13 +1061,13 @@ AddonWrapper = class {
   set applyBackgroundUpdates(val) {
     let addon = addonFor(this);
     if (
-      val != AddonManager.AUTOUPDATE_DEFAULT &&
-      val != AddonManager.AUTOUPDATE_DISABLE &&
-      val != AddonManager.AUTOUPDATE_ENABLE
+      val != lazy.AddonManager.AUTOUPDATE_DEFAULT &&
+      val != lazy.AddonManager.AUTOUPDATE_DISABLE &&
+      val != lazy.AddonManager.AUTOUPDATE_ENABLE
     ) {
       val = val
-        ? AddonManager.AUTOUPDATE_DEFAULT
-        : AddonManager.AUTOUPDATE_DISABLE;
+        ? lazy.AddonManager.AUTOUPDATE_DEFAULT
+        : lazy.AddonManager.AUTOUPDATE_DISABLE;
     }
 
     if (val == addon.applyBackgroundUpdates) {
@@ -1077,7 +1077,7 @@ AddonWrapper = class {
     XPIDatabase.setAddonProperties(addon, {
       applyBackgroundUpdates: val,
     });
-    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
+    lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, [
       "applyBackgroundUpdates",
     ]);
   }
@@ -1119,7 +1119,7 @@ AddonWrapper = class {
       return addon.location.scope;
     }
 
-    return AddonManager.SCOPE_PROFILE;
+    return lazy.AddonManager.SCOPE_PROFILE;
   }
 
   get pendingOperations() {
@@ -1132,25 +1132,25 @@ AddonWrapper = class {
       // any other pending operations.
       if (
         !addon._install ||
-        addon._install.state == AddonManager.STATE_INSTALLING ||
-        addon._install.state == AddonManager.STATE_INSTALLED
+        addon._install.state == lazy.AddonManager.STATE_INSTALLING ||
+        addon._install.state == lazy.AddonManager.STATE_INSTALLED
       ) {
-        return AddonManager.PENDING_INSTALL;
+        return lazy.AddonManager.PENDING_INSTALL;
       }
     } else if (addon.pendingUninstall) {
       // If an add-on is pending uninstall then we ignore any other pending
       // operations
-      return AddonManager.PENDING_UNINSTALL;
+      return lazy.AddonManager.PENDING_UNINSTALL;
     }
 
     if (addon.active && addon.disabled) {
-      pending |= AddonManager.PENDING_DISABLE;
+      pending |= lazy.AddonManager.PENDING_DISABLE;
     } else if (!addon.active && !addon.disabled) {
-      pending |= AddonManager.PENDING_ENABLE;
+      pending |= lazy.AddonManager.PENDING_ENABLE;
     }
 
     if (addon.pendingUpgrade) {
-      pending |= AddonManager.PENDING_UPGRADE;
+      pending |= lazy.AddonManager.PENDING_UPGRADE;
     }
 
     return pending;
@@ -1176,7 +1176,7 @@ AddonWrapper = class {
     if (!Services.appinfo.inSafeMode) {
       return true;
     }
-    return XPIInternal.canRunInSafeMode(addon);
+    return lazy.XPIInternal.canRunInSafeMode(addon);
   }
 
   get startupPromise() {
@@ -1185,7 +1185,7 @@ AddonWrapper = class {
       return null;
     }
 
-    let activeAddon = XPIProvider.activeAddons.get(addon.id);
+    let activeAddon = lazy.XPIProvider.activeAddons.get(addon.id);
     if (activeAddon) {
       return activeAddon.startupPromise || null;
     }
@@ -1210,7 +1210,7 @@ AddonWrapper = class {
    * @returns {boolean}
    */
   get embedderDisabled() {
-    if (!AddonSettings.IS_EMBEDDED) {
+    if (!lazy.AddonSettings.IS_EMBEDDED) {
       return undefined;
     }
 
@@ -1232,7 +1232,7 @@ AddonWrapper = class {
    *        whether this addon should be embedder disabled or not.
    */
   async setEmbedderDisabled(val) {
-    if (!AddonSettings.IS_EMBEDDED) {
+    if (!lazy.AddonSettings.IS_EMBEDDED) {
       throw new Error("Setting embedder disabled while not embedding.");
     }
 
@@ -1327,16 +1327,16 @@ AddonWrapper = class {
 
   async uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
-    return XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
+    return lazy.XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
   }
 
   cancelUninstall() {
     let addon = addonFor(this);
-    XPIInstall.cancelUninstallAddon(addon);
+    lazy.XPIInstall.cancelUninstallAddon(addon);
   }
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    new UpdateChecker(
+    new lazy.UpdateChecker(
       addonFor(this),
       aListener,
       aReason,
@@ -1374,7 +1374,7 @@ AddonWrapper = class {
       });
     } else {
       // This function supports re-installing an existing add-on.
-      await AddonManager.installTemporaryAddon(addon._sourceBundle);
+      await lazy.AddonManager.installTemporaryAddon(addon._sourceBundle);
     }
   }
 
@@ -1589,7 +1589,7 @@ const updatedAddonFluentIds = new Map([
     }
 
     if (result && !usedRepository && aProp == "creator") {
-      return new AddonManagerPrivate.AddonAuthor(result);
+      return new lazy.AddonManagerPrivate.AddonAuthor(result);
     }
 
     return result;
@@ -1608,7 +1608,7 @@ const updatedAddonFluentIds = new Map([
 
     if (results && !usedRepository) {
       results = results.map(function(aResult) {
-        return new AddonManagerPrivate.AddonAuthor(aResult);
+        return new lazy.AddonManagerPrivate.AddonAuthor(aResult);
       });
     }
 
@@ -1659,7 +1659,7 @@ const XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
   // The database file
-  jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
+  jsonFile: lazy.FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   rebuildingDatabase: false,
   syncLoadingDB: false,
   // Add-ons from the database in locations which are no longer
@@ -1695,9 +1695,9 @@ const XPIDatabase = {
         // successfully save the database.
         logger.debug(
           "XPI Database saved, setting schema version preference to " +
-            DB_SCHEMA
+            lazy.DB_SCHEMA
         );
-        Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, lazy.DB_SCHEMA);
         this._schemaVersionSet = true;
 
         // Reading the DB worked once, so we don't need the load error
@@ -1721,18 +1721,18 @@ const XPIDatabase = {
       throw new Error("Attempt to use XPI database when it is not initialized");
     }
 
-    if (XPIProvider._closing) {
+    if (lazy.XPIProvider._closing) {
       // use an Error here so we get a stack trace.
       let err = new Error("XPI database modified after shutdown began");
       logger.warn(err);
-      AddonManagerPrivate.recordSimpleMeasure(
+      lazy.AddonManagerPrivate.recordSimpleMeasure(
         "XPIDB_late_stack",
         Log.stackTrace(err)
       );
     }
 
     if (!this._saveTask) {
-      this._saveTask = new DeferredTask(
+      this._saveTask = new lazy.DeferredTask(
         () => this._saveNow(),
         ASYNC_SAVE_DELAY_MS
       );
@@ -1763,7 +1763,7 @@ const XPIDatabase = {
     }
 
     let toSave = {
-      schemaVersion: DB_SCHEMA,
+      schemaVersion: lazy.DB_SCHEMA,
       addons: Array.from(this.addonDB.values()).filter(
         addon => !addon.location.isTemporary
       ),
@@ -1784,20 +1784,20 @@ const XPIDatabase = {
   syncLoadDB(aRebuildOnError) {
     let err = new Error("Synchronously loading the add-ons database");
     logger.debug(err.message);
-    AddonManagerPrivate.recordSimpleMeasure(
+    lazy.AddonManagerPrivate.recordSimpleMeasure(
       "XPIDB_sync_stack",
       Log.stackTrace(err)
     );
     try {
       this.syncLoadingDB = true;
-      XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
+      lazy.XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
     } finally {
       this.syncLoadingDB = false;
     }
   },
 
   _recordStartupError(reason) {
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", reason);
+    lazy.AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", reason);
   },
 
   /**
@@ -1810,7 +1810,7 @@ const XPIDatabase = {
    */
   async parseDB(aInputAddons, aRebuildOnError) {
     try {
-      let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
+      let parseTimer = lazy.AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
 
       if (!("schemaVersion" in aInputAddons) || !("addons" in aInputAddons)) {
         let error = new Error("Bad JSON file contents");
@@ -1821,9 +1821,9 @@ const XPIDatabase = {
       if (aInputAddons.schemaVersion <= 27) {
         // Types were translated in bug 857456.
         for (let addon of aInputAddons.addons) {
-          migrateAddonLoader(addon);
+          lazy.migrateAddonLoader(addon);
         }
-      } else if (aInputAddons.schemaVersion != DB_SCHEMA) {
+      } else if (aInputAddons.schemaVersion != lazy.DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
@@ -1831,7 +1831,7 @@ const XPIDatabase = {
           `schemaMismatch-${aInputAddons.schemaVersion}`
         );
         logger.debug(
-          `JSON schema mismatch: expected ${DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
+          `JSON schema mismatch: expected ${lazy.DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
         );
       }
 
@@ -1853,7 +1853,7 @@ const XPIDatabase = {
             );
           }
         }
-        loadedAddon.location = XPIStates.getLocation(loadedAddon.location);
+        loadedAddon.location = lazy.XPIStates.getLocation(loadedAddon.location);
 
         let newAddon = new AddonInternal(loadedAddon);
         if (loadedAddon.location) {
@@ -1936,13 +1936,13 @@ const XPIDatabase = {
       return this.addonDB;
     })();
 
-    XPIInternal.resolveDBReady(this._dbPromise);
+    lazy.XPIInternal.resolveDBReady(this._dbPromise);
 
     return this._dbPromise;
   },
 
   timeRebuildDatabase(timerName, rebuildOnError) {
-    AddonManagerPrivate.recordTiming(timerName, () => {
+    lazy.AddonManagerPrivate.recordTiming(timerName, () => {
       return this.rebuildDatabase(rebuildOnError);
     });
   },
@@ -1959,7 +1959,7 @@ const XPIDatabase = {
     this.addonDB = new Map();
     this.initialized = true;
 
-    if (XPIStates.size == 0) {
+    if (lazy.XPIStates.size == 0) {
       // No extensions installed, so we're done
       logger.debug("Rebuilding XPI database with no extensions");
       return;
@@ -2041,14 +2041,14 @@ const XPIDatabase = {
           continue;
         }
 
-        let signedState = await verifyBundleSignedState(
+        let signedState = await lazy.verifyBundleSignedState(
           addon._sourceBundle,
           addon
         );
 
         if (signedState != addon.signedState) {
           addon.signedState = signedState;
-          AddonManagerPrivate.callAddonListeners(
+          lazy.AddonManagerPrivate.callAddonListeners(
             "onPropertyChanged",
             addon.wrapper,
             ["signedState"]
@@ -2078,9 +2078,9 @@ const XPIDatabase = {
    * manager for the user to change later.
    */
   importPermissions() {
-    PermissionsUtils.importFromPrefs(
+    lazy.PermissionsUtils.importFromPrefs(
       PREF_XPI_PERMISSIONS_BRANCH,
-      XPIInternal.XPI_PERMISSION
+      lazy.XPIInternal.XPI_PERMISSION
     );
   },
 
@@ -2331,10 +2331,10 @@ const XPIDatabase = {
     }
 
     if (aType == "locale") {
-      return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
+      return lazy.AddonSettings.LANGPACKS_REQUIRE_SIGNING;
     }
 
-    return AddonSettings.REQUIRE_SIGNING;
+    return lazy.AddonSettings.REQUIRE_SIGNING;
   },
 
   /**
@@ -2355,7 +2355,7 @@ const XPIDatabase = {
       !addon.isWebExtension &&
       addon.type === "extension" &&
       // Test addons are privileged unless forced otherwise.
-      addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED
+      addon.signedState !== lazy.AddonManager.SIGNEDSTATE_PRIVILEGED
     );
   },
 
@@ -2386,7 +2386,10 @@ const XPIDatabase = {
       return false;
     }
 
-    if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely) {
+    if (
+      lazy.AddonManager.checkUpdateSecurity &&
+      !aAddon.providesUpdatesSecurely
+    ) {
       logger.warn(
         `Updates for add-on ${aAddon.id} must be provided over HTTPS.`
       );
@@ -2400,7 +2403,7 @@ const XPIDatabase = {
 
     if (aAddon.dependencies.length) {
       let isActive = id => {
-        let active = XPIProvider.activeAddons.get(id);
+        let active = lazy.XPIProvider.activeAddons.get(id);
         return active && !active._pendingDisable;
       };
 
@@ -2414,7 +2417,7 @@ const XPIDatabase = {
       return false;
     }
 
-    if (AddonManager.checkCompatibility) {
+    if (lazy.AddonManager.checkCompatibility) {
       if (!aAddon.isCompatible) {
         logger.warn(
           `Add-on ${aAddon.id} is not compatible with application version.`
@@ -2506,7 +2509,7 @@ const XPIDatabase = {
     let state = addon.location && addon.location.get(addon.id);
     if (state) {
       state.syncWithDB(addon);
-      XPIStates.save();
+      lazy.XPIStates.save();
     }
   },
 
@@ -2700,7 +2703,7 @@ const XPIDatabase = {
       softDisabled = aAddon.softDisabled;
     }
 
-    if (!AddonSettings.IS_EMBEDDED) {
+    if (!lazy.AddonSettings.IS_EMBEDDED) {
       // If embedderDisabled was accidentally set somehow, this will revert it
       // back to false.
       embedderDisabled = false;
@@ -2738,9 +2741,11 @@ const XPIDatabase = {
     let wrapper = aAddon.wrapper;
 
     if (appDisabledChanged) {
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged", wrapper, [
-        "appDisabled",
-      ]);
+      lazy.AddonManagerPrivate.callAddonListeners(
+        "onPropertyChanged",
+        wrapper,
+        ["appDisabled"]
+      );
     }
 
     // If the add-on is not visible or the add-on is not changing state then
@@ -2756,32 +2761,46 @@ const XPIDatabase = {
 
     // Have we just gone back to the current state?
     if (isDisabled != aAddon.active) {
-      AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
+      lazy.AddonManagerPrivate.callAddonListeners(
+        "onOperationCancelled",
+        wrapper
+      );
     } else {
       if (isDisabled) {
-        AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
+        lazy.AddonManagerPrivate.callAddonListeners(
+          "onDisabling",
+          wrapper,
+          false
+        );
       } else {
-        AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, false);
+        lazy.AddonManagerPrivate.callAddonListeners(
+          "onEnabling",
+          wrapper,
+          false
+        );
       }
 
       this.updateAddonActive(aAddon, !isDisabled);
 
-      let bootstrap = XPIInternal.BootstrapScope.get(aAddon);
+      let bootstrap = lazy.XPIInternal.BootstrapScope.get(aAddon);
       if (isDisabled) {
         await bootstrap.disable();
-        AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
+        lazy.AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
-        await bootstrap.startup(BOOTSTRAP_REASONS.ADDON_ENABLE);
-        AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
+        await bootstrap.startup(lazy.BOOTSTRAP_REASONS.ADDON_ENABLE);
+        lazy.AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
 
     // Notify any other providers that a new theme has been enabled
     if (aAddon.type === "theme") {
       if (!isDisabled) {
-        await AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
+        await lazy.AddonManagerPrivate.notifyAddonChanged(
+          aAddon.id,
+          aAddon.type
+        );
       } else if (isDisabled && !becauseSelecting) {
-        await AddonManagerPrivate.notifyAddonChanged(null, "theme");
+        await lazy.AddonManagerPrivate.notifyAddonChanged(null, "theme");
       }
     }
 
@@ -2808,7 +2827,7 @@ const XPIDatabase = {
 
     await Promise.all(
       addons.map(addon =>
-        AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
+        lazy.AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
           if (aRepoAddon) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
@@ -2828,7 +2847,7 @@ const XPIDatabase = {
    */
   recordAddonTelemetry(aAddon) {
     let locale = aAddon.defaultLocale;
-    XPIProvider.addTelemetry(aAddon.id, {
+    lazy.XPIProvider.addTelemetry(aAddon.id, {
       name: locale.name,
       creator: locale.creator,
     });
@@ -2849,7 +2868,7 @@ const XPIDatabaseReconcile = {
   flattenByID(addonMap, hideLocation) {
     let map = new Map();
 
-    for (let loc of XPIStates.locations()) {
+    for (let loc of lazy.XPIStates.locations()) {
       if (loc.name == hideLocation) {
         continue;
       }
@@ -2965,7 +2984,7 @@ const XPIDatabaseReconcile = {
 
       if (!aNewAddon) {
         // Load the manifest from the add-on.
-        aNewAddon = XPIInstall.syncLoadManifest(aAddonState, aLocation);
+        aNewAddon = lazy.XPIInstall.syncLoadManifest(aAddonState, aLocation);
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
@@ -3078,7 +3097,7 @@ const XPIDatabaseReconcile = {
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
-        aNewAddon = XPIInstall.syncLoadManifest(
+        aNewAddon = lazy.XPIInstall.syncLoadManifest(
           aAddonState,
           aLocation,
           aOldAddon
@@ -3114,7 +3133,7 @@ const XPIDatabaseReconcile = {
     // Set the additional properties on the new AddonInternal
     aNewAddon.updateDate = aAddonState.mtime;
 
-    XPIProvider.persistStartupData(aNewAddon, aAddonState);
+    lazy.XPIProvider.persistStartupData(aNewAddon, aAddonState);
 
     // Update the database
     return XPIDatabase.updateAddonMetadata(
@@ -3141,7 +3160,7 @@ const XPIDatabaseReconcile = {
     logger.debug(`Add-on ${aOldAddon.id} moved to ${aAddonState.path}`);
     aOldAddon.path = aAddonState.path;
     aOldAddon._sourceBundle = new nsIFile(aAddonState.path);
-    aOldAddon.rootURI = XPIInternal.getURIForResourceInFile(
+    aOldAddon.rootURI = lazy.XPIInternal.getURIForResourceInFile(
       aOldAddon._sourceBundle,
       ""
     ).spec;
@@ -3191,7 +3210,7 @@ const XPIDatabaseReconcile = {
     let manifest = null;
     if (checkSigning || aReloadMetadata || signedDateMissing) {
       try {
-        manifest = XPIInstall.syncLoadManifest(aAddonState, aLocation);
+        manifest = lazy.XPIInstall.syncLoadManifest(aAddonState, aLocation);
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
         aOldAddon.brokenManifest = true;
@@ -3379,8 +3398,8 @@ const XPIDatabaseReconcile = {
       return (aManifests[loc.name] && aManifests[loc.name][id]) || null;
     };
 
-    let previousAddons = new ExtensionUtils.DefaultMap(() => new Map());
-    let currentAddons = new ExtensionUtils.DefaultMap(() => new Map());
+    let previousAddons = new lazy.ExtensionUtils.DefaultMap(() => new Map());
+    let currentAddons = new lazy.ExtensionUtils.DefaultMap(() => new Map());
 
     // Get the previous add-ons from the database and put them into maps by location
     for (let addon of XPIDatabase.getAddons()) {
@@ -3395,7 +3414,7 @@ const XPIDatabaseReconcile = {
     // present we re-use the add-on objects from the database and update their
     // details directly
     let addonStates = new Map();
-    for (let location of XPIStates.locations()) {
+    for (let location of lazy.XPIStates.locations()) {
       let locationAddons = currentAddons.get(location.name);
 
       // Get all the on-disk XPI states for this location, and keep track of which
@@ -3455,7 +3474,9 @@ const XPIDatabaseReconcile = {
     // Validate the updated system add-ons
     let hideLocation;
     {
-      let systemAddonLocation = XPIStates.getLocation(KEY_APP_SYSTEM_ADDONS);
+      let systemAddonLocation = lazy.XPIStates.getLocation(
+        KEY_APP_SYSTEM_ADDONS
+      );
       let addons = currentAddons.get(systemAddonLocation.name);
 
       if (!systemAddonLocation.installer.isValid(addons)) {
@@ -3492,7 +3513,7 @@ const XPIDatabaseReconcile = {
     }
 
     if (promises.some(p => p)) {
-      XPIInternal.awaitPromise(Promise.all(promises));
+      lazy.XPIInternal.awaitPromise(Promise.all(promises));
     }
 
     for (let [id, addon] of previousVisible) {
@@ -3500,14 +3521,14 @@ const XPIDatabaseReconcile = {
         if (addon.location.name == KEY_APP_BUILTINS) {
           continue;
         }
-        XPIInternal.BootstrapScope.get(addon).uninstall();
+        lazy.XPIInternal.BootstrapScope.get(addon).uninstall();
         addon.location.removeAddon(id);
         addon.visible = false;
         addon.active = false;
       }
 
-      AddonManagerPrivate.addStartupChange(
-        AddonManager.STARTUP_CHANGE_UNINSTALLED,
+      lazy.AddonManagerPrivate.addStartupChange(
+        lazy.AddonManager.STARTUP_CHANGE_UNINSTALLED,
         id
       );
     }
@@ -3515,11 +3536,11 @@ const XPIDatabaseReconcile = {
     // Finally update XPIStates to match everything
     for (let [locationName, locationAddons] of currentAddons) {
       for (let [id, addon] of locationAddons) {
-        let xpiState = XPIStates.getAddon(locationName, id);
+        let xpiState = lazy.XPIStates.getAddon(locationName, id);
         xpiState.syncWithDB(addon);
       }
     }
-    XPIStates.save();
+    lazy.XPIStates.save();
     XPIDatabase.saveChanges();
     XPIDatabase.rebuildingDatabase = false;
 
@@ -3527,14 +3548,14 @@ const XPIDatabaseReconcile = {
       // Do some blocklist checks. These will happen after we've just saved everything,
       // because they're async and depend on the blocklist loading. When we're done, save
       // the data if any of the add-ons' blocklist state has changed.
-      AddonManager.beforeShutdown.addBlocker(
+      lazy.AddonManager.beforeShutdown.addBlocker(
         "Update add-on blocklist state into add-on DB",
         (async () => {
           // Avoid querying the AddonManager immediately to give startup a chance
           // to complete.
           await Promise.resolve();
 
-          let addons = await AddonManager.getAddonsByIDs(
+          let addons = await lazy.AddonManager.getAddonsByIDs(
             addonsToCheckAgainstBlocklist
           );
           await Promise.all(
@@ -3548,7 +3569,7 @@ const XPIDatabaseReconcile = {
               // AddonWrapper instead. Consequently updateDate:false is ignored.
               await addon.updateBlocklistState({ updateDatabase: false });
               if (oldState !== addon.blocklistState) {
-                Blocklist.recordAddonBlockChangeTelemetry(
+                lazy.Blocklist.recordAddonBlockChangeTelemetry(
                   addon,
                   "addon_db_modified"
                 );
@@ -3586,8 +3607,8 @@ const XPIDatabaseReconcile = {
 
     if (previousAddon) {
       if (previousAddon !== currentAddon) {
-        AddonManagerPrivate.addStartupChange(
-          AddonManager.STARTUP_CHANGE_CHANGED,
+        lazy.AddonManagerPrivate.addStartupChange(
+          lazy.AddonManager.STARTUP_CHANGE_CHANGED,
           id
         );
 
@@ -3599,13 +3620,13 @@ const XPIDatabaseReconcile = {
         // isActive alone is not sufficient as that changes the characteristics
         // of other updates and breaks many tests.
         let restart =
-          isActive && XPIInternal.BootstrapScope.get(currentAddon).started;
+          isActive && lazy.XPIInternal.BootstrapScope.get(currentAddon).started;
         if (restart) {
           logger.warn(
             `Updating and restart addon ${previousAddon.id} that changed on disk after being already started.`
           );
         }
-        promise = XPIInternal.BootstrapScope.get(previousAddon).update(
+        promise = lazy.XPIInternal.BootstrapScope.get(previousAddon).update(
           currentAddon,
           restart
         );
@@ -3613,9 +3634,9 @@ const XPIDatabaseReconcile = {
 
       if (isActive != wasActive) {
         let change = isActive
-          ? AddonManager.STARTUP_CHANGE_ENABLED
-          : AddonManager.STARTUP_CHANGE_DISABLED;
-        AddonManagerPrivate.addStartupChange(change, id);
+          ? lazy.AddonManager.STARTUP_CHANGE_ENABLED
+          : lazy.AddonManager.STARTUP_CHANGE_DISABLED;
+        lazy.AddonManagerPrivate.addStartupChange(change, id);
       }
     } else if (xpiState && xpiState.wasRestored) {
       isActive = xpiState.enabled;
@@ -3637,11 +3658,11 @@ const XPIDatabaseReconcile = {
         }
       }
     } else {
-      AddonManagerPrivate.addStartupChange(
-        AddonManager.STARTUP_CHANGE_INSTALLED,
+      lazy.AddonManagerPrivate.addStartupChange(
+        lazy.AddonManager.STARTUP_CHANGE_INSTALLED,
         id
       );
-      let scope = XPIInternal.BootstrapScope.get(currentAddon);
+      let scope = lazy.XPIInternal.BootstrapScope.get(currentAddon);
       scope.install();
     }
 
