@@ -10,19 +10,38 @@
 
 #include "modules/audio_coding/neteq/nack_tracker.h"
 
-
 #include <cstdint>
 #include <utility>
 
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
+#include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
 
 const int kDefaultSampleRateKhz = 48;
 const int kDefaultPacketSizeMs = 20;
+constexpr char kNackTrackerConfigFieldTrial[] =
+    "WebRTC-Audio-NetEqNackTrackerConfig";
 
 }  // namespace
+
+NackTracker::Config::Config() {
+  auto parser = StructParametersParser::Create(
+      "packet_loss_forget_factor", &packet_loss_forget_factor,
+      "ms_per_loss_percent", &ms_per_loss_percent, "never_nack_multiple_times",
+      &never_nack_multiple_times);
+  parser->Parse(
+      webrtc::field_trial::FindFullName(kNackTrackerConfigFieldTrial));
+  RTC_LOG(LS_INFO) << "Nack tracker config:"
+                      " packet_loss_forget_factor="
+                   << packet_loss_forget_factor
+                   << " ms_per_loss_percent=" << ms_per_loss_percent
+                   << " never_nack_multiple_times="
+                   << never_nack_multiple_times;
+}
 
 NackTracker::NackTracker(int nack_threshold_packets)
     : nack_threshold_packets_(nack_threshold_packets),
@@ -73,6 +92,8 @@ void NackTracker::UpdateLastReceivedPacket(uint16_t sequence_number,
   // If this is an old sequence number, no more action is required, return.
   if (IsNewerSequenceNumber(sequence_num_last_received_rtp_, sequence_number))
     return;
+
+  UpdatePacketLossRate(sequence_number - sequence_num_last_received_rtp_ - 1);
 
   UpdateSamplesPerPacket(sequence_number, timestamp);
 
@@ -215,17 +236,36 @@ int64_t NackTracker::TimeToPlay(uint32_t timestamp) const {
 }
 
 // We don't erase elements with time-to-play shorter than round-trip-time.
-std::vector<uint16_t> NackTracker::GetNackList(
-    int64_t round_trip_time_ms) const {
+std::vector<uint16_t> NackTracker::GetNackList(int64_t round_trip_time_ms) {
   RTC_DCHECK_GE(round_trip_time_ms, 0);
   std::vector<uint16_t> sequence_numbers;
+  // The estimated packet loss is between 0 and 1, so we need to multiply by 100
+  // here.
+  int max_wait_ms =
+      100.0 * config_.ms_per_loss_percent * packet_loss_rate_ / (1 << 30);
   for (NackList::const_iterator it = nack_list_.begin(); it != nack_list_.end();
        ++it) {
+    int64_t time_since_packet_ms =
+        (timestamp_last_received_rtp_ - it->second.estimated_timestamp) /
+        sample_rate_khz_;
     if (it->second.is_missing &&
-        it->second.time_to_play_ms > round_trip_time_ms)
+        (it->second.time_to_play_ms > round_trip_time_ms ||
+         time_since_packet_ms + round_trip_time_ms < max_wait_ms))
       sequence_numbers.push_back(it->first);
+  }
+  if (config_.never_nack_multiple_times) {
+    nack_list_.clear();
   }
   return sequence_numbers;
 }
 
+void NackTracker::UpdatePacketLossRate(int packets_lost) {
+  const uint64_t alpha_q30 = (1 << 30) * config_.packet_loss_forget_factor;
+  // Exponential filter.
+  packet_loss_rate_ = (alpha_q30 * packet_loss_rate_) >> 30;
+  for (int i = 0; i < packets_lost; ++i) {
+    packet_loss_rate_ =
+        ((alpha_q30 * packet_loss_rate_) >> 30) + ((1 << 30) - alpha_q30);
+  }
+}
 }  // namespace webrtc

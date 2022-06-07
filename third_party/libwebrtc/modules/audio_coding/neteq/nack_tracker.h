@@ -87,15 +87,33 @@ class NackTracker {
   // Get a list of "missing" packets which have expected time-to-play larger
   // than the given round-trip-time (in milliseconds).
   // Note: Late packets are not included.
-  std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms) const;
+  // Calling this method multiple times may give different results, since the
+  // internal nack list may get flushed if never_nack_multiple_times_ is true.
+  std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms);
 
   // Reset to default values. The NACK list is cleared.
   // `nack_threshold_packets_` & `max_nack_list_size_` preserve their values.
   void Reset();
 
+  // Returns the estimated packet loss rate in Q30, for testing only.
+  uint32_t GetPacketLossRateForTest() { return packet_loss_rate_; }
+
  private:
   // This test need to access the private method GetNackList().
   FRIEND_TEST_ALL_PREFIXES(NackTrackerTest, EstimateTimestampAndTimeToPlay);
+
+  // Options that can be configured via field trial.
+  struct Config {
+    Config();
+
+    // The exponential decay factor used to estimate the packet loss rate.
+    double packet_loss_forget_factor = 0.996;
+    // How many additional ms we are willing to wait (at most) for nacked
+    // packets for each additional percentage of packet loss.
+    int ms_per_loss_percent = 20;
+    // If true, never nack packets more than once.
+    bool never_nack_multiple_times = false;
+  };
 
   struct NackElement {
     NackElement(int64_t initial_time_to_play_ms,
@@ -173,6 +191,11 @@ class NackTracker {
   // Compute time-to-play given a timestamp.
   int64_t TimeToPlay(uint32_t timestamp) const;
 
+  // Updates the estimated packet lost rate.
+  void UpdatePacketLossRate(int packets_lost);
+
+  const Config config_;
+
   // If packet N is arrived, any packet prior to N - `nack_threshold_packets_`
   // which is not arrived is considered missing, and should be in NACK list.
   // Also any packet in the range of N-1 and N - `nack_threshold_packets_`,
@@ -204,6 +227,9 @@ class NackTracker {
   // NACK list will not keep track of missing packets prior to
   // `sequence_num_last_received_rtp_` - `max_nack_list_size_`.
   size_t max_nack_list_size_;
+
+  // Current estimate of the packet loss rate in Q30.
+  uint32_t packet_loss_rate_ = 0;
 };
 
 }  // namespace webrtc
