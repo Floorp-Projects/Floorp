@@ -29,9 +29,6 @@
 
 namespace rtc {
 
-BasicPacketSocketFactory::BasicPacketSocketFactory()
-    : thread_(Thread::Current()), socket_factory_(NULL) {}
-
 BasicPacketSocketFactory::BasicPacketSocketFactory(Thread* thread)
     : thread_(thread), socket_factory_(NULL) {}
 
