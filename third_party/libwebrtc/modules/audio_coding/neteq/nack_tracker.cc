@@ -22,7 +22,7 @@ namespace webrtc {
 namespace {
 
 const int kDefaultSampleRateKhz = 48;
-const int kDefaultPacketSizeMs = 20;
+const int kMaxPacketSizeMs = 120;
 constexpr char kNackTrackerConfigFieldTrial[] =
     "WebRTC-Audio-NetEqNackTrackerConfig";
 
@@ -52,7 +52,6 @@ NackTracker::NackTracker(int nack_threshold_packets)
       timestamp_last_decoded_rtp_(0),
       any_rtp_decoded_(false),
       sample_rate_khz_(kDefaultSampleRateKhz),
-      samples_per_packet_(sample_rate_khz_ * kDefaultPacketSizeMs),
       max_nack_list_size_(kNackListSizeLimit) {}
 
 NackTracker::~NackTracker() = default;
@@ -95,33 +94,39 @@ void NackTracker::UpdateLastReceivedPacket(uint16_t sequence_number,
 
   UpdatePacketLossRate(sequence_number - sequence_num_last_received_rtp_ - 1);
 
-  UpdateSamplesPerPacket(sequence_number, timestamp);
-
-  UpdateList(sequence_number);
+  UpdateList(sequence_number, timestamp);
 
   sequence_num_last_received_rtp_ = sequence_number;
   timestamp_last_received_rtp_ = timestamp;
   LimitNackListSize();
 }
 
-void NackTracker::UpdateSamplesPerPacket(
+absl::optional<int> NackTracker::GetSamplesPerPacket(
     uint16_t sequence_number_current_received_rtp,
-    uint32_t timestamp_current_received_rtp) {
+    uint32_t timestamp_current_received_rtp) const {
   uint32_t timestamp_increase =
       timestamp_current_received_rtp - timestamp_last_received_rtp_;
   uint16_t sequence_num_increase =
       sequence_number_current_received_rtp - sequence_num_last_received_rtp_;
 
-  samples_per_packet_ = timestamp_increase / sequence_num_increase;
+  int samples_per_packet = timestamp_increase / sequence_num_increase;
+  if (samples_per_packet == 0 ||
+      samples_per_packet > kMaxPacketSizeMs * sample_rate_khz_) {
+    // Not a valid samples per packet.
+    return absl::nullopt;
+  }
+  return samples_per_packet;
 }
 
-void NackTracker::UpdateList(uint16_t sequence_number_current_received_rtp) {
+void NackTracker::UpdateList(uint16_t sequence_number_current_received_rtp,
+                             uint32_t timestamp_current_received_rtp) {
   // Some of the packets which were considered late, now are considered missing.
   ChangeFromLateToMissing(sequence_number_current_received_rtp);
 
   if (IsNewerSequenceNumber(sequence_number_current_received_rtp,
                             sequence_num_last_received_rtp_ + 1))
-    AddToList(sequence_number_current_received_rtp);
+    AddToList(sequence_number_current_received_rtp,
+              timestamp_current_received_rtp);
 }
 
 void NackTracker::ChangeFromLateToMissing(
@@ -134,15 +139,23 @@ void NackTracker::ChangeFromLateToMissing(
     it->second.is_missing = true;
 }
 
-uint32_t NackTracker::EstimateTimestamp(uint16_t sequence_num) {
+uint32_t NackTracker::EstimateTimestamp(uint16_t sequence_num,
+                                        int samples_per_packet) {
   uint16_t sequence_num_diff = sequence_num - sequence_num_last_received_rtp_;
-  return sequence_num_diff * samples_per_packet_ + timestamp_last_received_rtp_;
+  return sequence_num_diff * samples_per_packet + timestamp_last_received_rtp_;
 }
 
-void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp) {
+void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp,
+                            uint32_t timestamp_current_received_rtp) {
   RTC_DCHECK(!any_rtp_decoded_ ||
              IsNewerSequenceNumber(sequence_number_current_received_rtp,
                                    sequence_num_last_decoded_rtp_));
+
+  absl::optional<int> samples_per_packet = GetSamplesPerPacket(
+      sequence_number_current_received_rtp, timestamp_current_received_rtp);
+  if (!samples_per_packet) {
+    return;
+  }
 
   // Packets with sequence numbers older than `upper_bound_missing` are
   // considered missing, and the rest are considered late.
@@ -152,7 +165,7 @@ void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp) {
   for (uint16_t n = sequence_num_last_received_rtp_ + 1;
        IsNewerSequenceNumber(sequence_number_current_received_rtp, n); ++n) {
     bool is_missing = IsNewerSequenceNumber(upper_bound_missing, n);
-    uint32_t timestamp = EstimateTimestamp(n);
+    uint32_t timestamp = EstimateTimestamp(n, *samples_per_packet);
     NackElement nack_element(TimeToPlay(timestamp), timestamp, is_missing);
     nack_list_.insert(nack_list_.end(), std::make_pair(n, nack_element));
   }
@@ -211,7 +224,6 @@ void NackTracker::Reset() {
   timestamp_last_decoded_rtp_ = 0;
   any_rtp_decoded_ = false;
   sample_rate_khz_ = kDefaultSampleRateKhz;
-  samples_per_packet_ = sample_rate_khz_ * kDefaultPacketSizeMs;
 }
 
 void NackTracker::SetMaxNackListSize(size_t max_nack_list_size) {

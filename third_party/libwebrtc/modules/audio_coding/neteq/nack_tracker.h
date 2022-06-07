@@ -17,6 +17,7 @@
 #include <map>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "modules/include/module_common_types_public.h"
 #include "rtc_base/gtest_prod_util.h"
 
@@ -159,22 +160,24 @@ class NackTracker {
 
   // Given the `sequence_number_current_received_rtp` of currently received RTP,
   // recognize packets which are not arrive and add to the list.
-  void AddToList(uint16_t sequence_number_current_received_rtp);
+  void AddToList(uint16_t sequence_number_current_received_rtp,
+                 uint32_t timestamp_current_received_rtp);
 
   // This function subtracts 10 ms of time-to-play for all packets in NACK list.
   // This is called when 10 ms elapsed with no new RTP packet decoded.
   void UpdateEstimatedPlayoutTimeBy10ms();
 
-  // Given the `sequence_number_current_received_rtp` and
-  // `timestamp_current_received_rtp` of currently received RTP update number
-  // of samples per packet.
-  void UpdateSamplesPerPacket(uint16_t sequence_number_current_received_rtp,
-                              uint32_t timestamp_current_received_rtp);
+  // Returns a valid number of samples per packet given the current received
+  // sequence number and timestamp or nullopt of none could be computed.
+  absl::optional<int> GetSamplesPerPacket(
+      uint16_t sequence_number_current_received_rtp,
+      uint32_t timestamp_current_received_rtp) const;
 
   // Given the `sequence_number_current_received_rtp` of currently received RTP
   // update the list. That is; some packets will change from late to missing,
   // some packets are inserted as missing and some inserted as late.
-  void UpdateList(uint16_t sequence_number_current_received_rtp);
+  void UpdateList(uint16_t sequence_number_current_received_rtp,
+                  uint32_t timestamp_current_received_rtp);
 
   // Packets which are considered late for too long (according to
   // `nack_threshold_packets_`) are flagged as missing.
@@ -186,7 +189,7 @@ class NackTracker {
   void LimitNackListSize();
 
   // Estimate timestamp of a missing packet given its sequence number.
-  uint32_t EstimateTimestamp(uint16_t sequence_number);
+  uint32_t EstimateTimestamp(uint16_t sequence_number, int samples_per_packet);
 
   // Compute time-to-play given a timestamp.
   int64_t TimeToPlay(uint32_t timestamp) const;
@@ -214,10 +217,6 @@ class NackTracker {
   bool any_rtp_decoded_;  // If any packet decoded.
 
   int sample_rate_khz_;  // Sample rate in kHz.
-
-  // Number of samples per packet. We update this every time we receive a
-  // packet, not only for consecutive packets.
-  int samples_per_packet_;
 
   // A list of missing packets to be retransmitted. Components of the list
   // contain the sequence number of missing packets and the estimated time that
