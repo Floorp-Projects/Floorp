@@ -131,7 +131,9 @@ class OpenSSLAdapter final : public SSLAdapter,
   enum ssl_verify_result_t SSLVerifyInternal(SSL* ssl, uint8_t* out_alert);
 #else
   static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
-  int SSLVerifyInternal(int ok, SSL* ssl, X509_STORE_CTX* store);
+  // Call a custom verifier, if installed.
+  // Returns 1 on success, `status_on_error` on error or verification failure.
+  int SSLVerifyInternal(int status_on_error, SSL* ssl, X509_STORE_CTX* store);
 #endif
   friend class OpenSSLStreamAdapter;  // for custom_verify_callback_;
 

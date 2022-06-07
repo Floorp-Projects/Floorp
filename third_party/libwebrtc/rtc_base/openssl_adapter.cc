@@ -848,27 +848,31 @@ enum ssl_verify_result_t OpenSSLAdapter::SSLVerifyInternal(SSL* ssl,
   return ssl_verify_ok;
 }
 #else  // WEBRTC_USE_CRYPTO_BUFFER_CALLBACK
-int OpenSSLAdapter::SSLVerifyCallback(int ok, X509_STORE_CTX* store) {
+int OpenSSLAdapter::SSLVerifyCallback(int status, X509_STORE_CTX* store) {
   // Get our stream pointer from the store
   SSL* ssl = reinterpret_cast<SSL*>(
       X509_STORE_CTX_get_ex_data(store, SSL_get_ex_data_X509_STORE_CTX_idx()));
 
   OpenSSLAdapter* stream =
       reinterpret_cast<OpenSSLAdapter*>(SSL_get_app_data(ssl));
-  ok = stream->SSLVerifyInternal(ok, ssl, store);
+  // Update status with the custom verifier.
+  // Status is unchanged if verification fails.
+  status = stream->SSLVerifyInternal(status, ssl, store);
 
   // Should only be used for debugging and development.
-  if (!ok && stream->ignore_bad_cert_) {
+  if (!status && stream->ignore_bad_cert_) {
     RTC_DLOG(LS_WARNING) << "Ignoring cert error while verifying cert chain";
     return 1;
   }
 
-  return ok;
+  return status;
 }
 
-int OpenSSLAdapter::SSLVerifyInternal(int ok, SSL* ssl, X509_STORE_CTX* store) {
+int OpenSSLAdapter::SSLVerifyInternal(int status_on_failure,
+                                      SSL* ssl,
+                                      X509_STORE_CTX* store) {
 #if !defined(NDEBUG)
-  if (!ok) {
+  if (!status_on_failure) {
     char data[256];
     X509* cert = X509_STORE_CTX_get_current_cert(store);
     int depth = X509_STORE_CTX_get_error_depth(store);
@@ -884,7 +888,7 @@ int OpenSSLAdapter::SSLVerifyInternal(int ok, SSL* ssl, X509_STORE_CTX* store) {
   }
 #endif
   if (ssl_cert_verifier_ == nullptr) {
-    return ok;
+    return status_on_failure;
   }
 
   RTC_LOG(LS_INFO) << "Invoking SSL Verify Callback.";
@@ -894,14 +898,14 @@ int OpenSSLAdapter::SSLVerifyInternal(int ok, SSL* ssl, X509_STORE_CTX* store) {
   int length = i2d_X509(X509_STORE_CTX_get_current_cert(store), &data);
   if (length < 0) {
     RTC_LOG(LS_ERROR) << "Failed to encode X509.";
-    return ok;
+    return status_on_failure;
   }
   bssl::UniquePtr<uint8_t> owned_data(data);
   bssl::UniquePtr<CRYPTO_BUFFER> crypto_buffer(
       CRYPTO_BUFFER_new(data, length, openssl::GetBufferPool()));
   if (!crypto_buffer) {
     RTC_LOG(LS_ERROR) << "Failed to allocate CRYPTO_BUFFER.";
-    return ok;
+    return status_on_failure;
   }
   const BoringSSLCertificate cert(std::move(crypto_buffer));
 #else
@@ -909,7 +913,7 @@ int OpenSSLAdapter::SSLVerifyInternal(int ok, SSL* ssl, X509_STORE_CTX* store) {
 #endif
   if (!ssl_cert_verifier_->Verify(cert)) {
     RTC_LOG(LS_INFO) << "Failed to verify certificate using custom callback";
-    return ok;
+    return status_on_failure;
   }
 
   custom_cert_verifier_status_ = true;
