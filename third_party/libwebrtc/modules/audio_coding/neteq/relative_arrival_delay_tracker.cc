@@ -12,6 +12,8 @@
 
 #include <algorithm>
 
+#include "modules/include/module_common_types_public.h"
+
 namespace webrtc {
 
 absl::optional<int> RelativeArrivalDelayTracker::Update(uint32_t timestamp,
@@ -23,6 +25,7 @@ absl::optional<int> RelativeArrivalDelayTracker::Update(uint32_t timestamp,
     // Restart relative delay esimation from this packet.
     delay_history_.clear();
     packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
+    newest_timestamp_ = timestamp;
     last_timestamp_ = timestamp;
     return absl::nullopt;
   }
@@ -37,6 +40,9 @@ absl::optional<int> RelativeArrivalDelayTracker::Update(uint32_t timestamp,
 
   packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
   last_timestamp_ = timestamp;
+  if (IsNewerTimestamp(timestamp, *newest_timestamp_)) {
+    newest_timestamp_ = timestamp;
+  }
 
   return relative_delay;
 }
@@ -44,6 +50,7 @@ absl::optional<int> RelativeArrivalDelayTracker::Update(uint32_t timestamp,
 void RelativeArrivalDelayTracker::Reset() {
   delay_history_.clear();
   packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
+  newest_timestamp_ = absl::nullopt;
   last_timestamp_ = absl::nullopt;
 }
 

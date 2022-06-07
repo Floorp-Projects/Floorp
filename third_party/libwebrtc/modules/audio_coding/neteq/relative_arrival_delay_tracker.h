@@ -28,6 +28,10 @@ class RelativeArrivalDelayTracker {
 
   void Reset();
 
+  absl::optional<uint32_t> newest_timestamp() const {
+    return newest_timestamp_;
+  }
+
  private:
   // Updates `delay_history_`.
   void UpdateDelayHistory(int iat_delay_ms,
@@ -46,8 +50,8 @@ class RelativeArrivalDelayTracker {
   };
   std::deque<PacketDelay> delay_history_;
 
-  absl::optional<uint32_t>
-      last_timestamp_;  // Timestamp for the last received packet.
+  absl::optional<uint32_t> newest_timestamp_;
+  absl::optional<uint32_t> last_timestamp_;
 
   std::unique_ptr<TickTimer::Stopwatch>
       packet_iat_stopwatch_;  // Time elapsed since last packet.
