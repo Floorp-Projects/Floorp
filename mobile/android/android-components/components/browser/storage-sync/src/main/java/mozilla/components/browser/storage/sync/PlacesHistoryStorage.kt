@@ -89,28 +89,38 @@ open class PlacesHistoryStorage(
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
-        return withContext(readScope.coroutineContext) { places.reader().getVisited(uris) }
+        return withContext(readScope.coroutineContext) {
+            handlePlacesExceptions("getVisited", default = uris.map { false }) {
+                places.reader().getVisited(uris)
+            }
+        }
     }
 
     override suspend fun getVisited(): List<String> {
         return withContext(readScope.coroutineContext) {
-            places.reader().getVisitedUrlsInRange(
-                start = 0,
-                end = System.currentTimeMillis(),
-                includeRemote = true
-            )
+            handlePlacesExceptions("getVisited", default = emptyList()) {
+                places.reader().getVisitedUrlsInRange(
+                    start = 0,
+                    end = System.currentTimeMillis(),
+                    includeRemote = true
+                )
+            }
         }
     }
 
     override suspend fun getDetailedVisits(start: Long, end: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
         return withContext(readScope.coroutineContext) {
-            places.reader().getVisitInfos(start, end, excludeTypes.map { it.into() }).map { it.into() }
+            handlePlacesExceptions("getDetailedVisits", default = emptyList()) {
+                places.reader().getVisitInfos(start, end, excludeTypes.map { it.into() }).map { it.into() }
+            }
         }
     }
 
     override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
         return withContext(readScope.coroutineContext) {
-            places.reader().getVisitPage(offset, count, excludeTypes.map { it.into() }).map { it.into() }
+            handlePlacesExceptions("getVisitsPaginated", default = emptyList()) {
+                places.reader().getVisitPage(offset, count, excludeTypes.map { it.into() }).map { it.into() }
+            }
         }
     }
 
@@ -123,20 +133,26 @@ open class PlacesHistoryStorage(
         }
 
         return withContext(readScope.coroutineContext) {
-            places.reader().getTopFrecentSiteInfos(numItems, frecencyThreshold.into())
-                .map { it.into() }
+            handlePlacesExceptions("getTopFrecentSites", default = emptyList()) {
+                places.reader().getTopFrecentSiteInfos(numItems, frecencyThreshold.into())
+                    .map { it.into() }
+            }
         }
     }
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> {
         require(limit >= 0) { "Limit must be a positive integer" }
-        return places.reader().queryAutocomplete(query, limit = limit).map {
-            SearchResult(it.url, it.url, it.frecency.toInt(), it.title)
+        return handlePlacesExceptions("getSuggestions", default = emptyList()) {
+            places.reader().queryAutocomplete(query, limit = limit).map {
+                SearchResult(it.url, it.url, it.frecency.toInt(), it.title)
+            }
         }
     }
 
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
-        val url = places.reader().matchUrl(query) ?: return null
+        val url = handlePlacesExceptions("getAutoCompleteSuggestions", default = null) {
+            places.reader().matchUrl(query)
+        } ?: return null
 
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
@@ -168,7 +184,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun deleteVisitsSince(since: Long) {
         withContext(writeScope.coroutineContext) {
-            places.writer().deleteVisitsSince(since)
+            handlePlacesExceptions("deleteVisitsSince") {
+                places.writer().deleteVisitsSince(since)
+            }
         }
     }
 
@@ -178,7 +196,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun deleteVisitsBetween(startTime: Long, endTime: Long) {
         withContext(writeScope.coroutineContext) {
-            places.writer().deleteVisitsBetween(startTime, endTime)
+            handlePlacesExceptions("deleteVisitsBetween") {
+                places.writer().deleteVisitsBetween(startTime, endTime)
+            }
         }
     }
 
@@ -187,7 +207,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun deleteVisitsFor(url: String) {
         withContext(writeScope.coroutineContext) {
-            places.writer().deleteVisitsFor(url)
+            handlePlacesExceptions("deleteVisitsFor") {
+                places.writer().deleteVisitsFor(url)
+            }
         }
     }
 
@@ -197,7 +219,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun deleteVisit(url: String, timestamp: Long) {
         withContext(writeScope.coroutineContext) {
-            places.writer().deleteVisit(url, timestamp)
+            handlePlacesExceptions("deleteVisit") {
+                places.writer().deleteVisit(url, timestamp)
+            }
         }
     }
 
@@ -208,7 +232,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun prune() {
         withContext(writeScope.coroutineContext) {
-            places.writer().pruneDestructively()
+            handlePlacesExceptions("prune") {
+                places.writer().pruneDestructively()
+            }
         }
     }
 

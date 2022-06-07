@@ -34,7 +34,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
         return withContext(readScope.coroutineContext) {
-            reader.getBookmarksTree(guid, recursive)?.asBookmarkNode()
+            handlePlacesExceptions("getTree", default = null) {
+                reader.getBookmarksTree(guid, recursive)?.asBookmarkNode()
+            }
         }
     }
 
@@ -46,7 +48,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getBookmark(guid: String): BookmarkNode? {
         return withContext(readScope.coroutineContext) {
-            reader.getBookmark(guid)?.asBookmarkNode()
+            handlePlacesExceptions("getBookmark", default = null) {
+                reader.getBookmark(guid)?.asBookmarkNode()
+            }
         }
     }
 
@@ -58,7 +62,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
         return withContext(readScope.coroutineContext) {
-            reader.getBookmarksWithURL(url).map { it.asBookmarkNode() }
+            handlePlacesExceptions("getBookmarkWithUrl", default = emptyList()) {
+                reader.getBookmarksWithURL(url).map { it.asBookmarkNode() }
+            }
         }
     }
 
@@ -71,7 +77,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> {
         return withContext(readScope.coroutineContext) {
-            reader.searchBookmarks(query, limit).map { it.asBookmarkNode() }
+            handlePlacesExceptions("searchBookmarks", default = emptyList()) {
+                reader.searchBookmarks(query, limit).map { it.asBookmarkNode() }
+            }
         }
     }
 
@@ -94,9 +102,11 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
             } else {
                 0
             }
-            reader.getRecentBookmarks(limit)
-                .map { it.asBookmarkNode() }
-                .filter { it.dateAdded >= threshold }
+            handlePlacesExceptions("getRecentBookmarks", default = emptyList()) {
+                reader.getRecentBookmarks(limit)
+                    .map { it.asBookmarkNode() }
+                    .filter { it.dateAdded >= threshold }
+            }
         }
     }
 
@@ -113,7 +123,21 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun addItem(parentGuid: String, url: String, title: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
-            writer.createBookmarkItem(parentGuid, url, title, position)
+            try {
+                writer.createBookmarkItem(parentGuid, url, title, position)
+            } catch (e: PlacesException.UrlParseFailed) {
+                // We re-throw this exception, it should be handled by the caller
+                throw e
+            } catch (e: PlacesException.UnexpectedPlacesException) {
+                // this is a fatal error, and should be rethrown
+                throw e
+            } catch (e: PlacesException) {
+                crashReporter?.submitCaughtException(e)
+                logger.warn("Ignoring PlacesException while running addItem", e)
+                // Should not return an empty string here. The function should be nullable
+                // however, it is better than the app crashing.
+                ""
+            }
         }
     }
 
@@ -129,7 +153,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
-            writer.createFolder(parentGuid, title, position)
+            handlePlacesExceptions("addFolder", default = "") {
+                writer.createFolder(parentGuid, title, position)
+            }
         }
     }
 
@@ -144,7 +170,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun addSeparator(parentGuid: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
-            writer.createSeparator(parentGuid, position)
+            handlePlacesExceptions("addSeparator", default = "") {
+                writer.createSeparator(parentGuid, position)
+            }
         }
     }
 
@@ -158,7 +186,18 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun updateNode(guid: String, info: BookmarkInfo) {
         return withContext(writeScope.coroutineContext) {
-            writer.updateBookmark(guid, info.parentGuid, info.position, info.title, info.url)
+            try {
+                writer.updateBookmark(guid, info.parentGuid, info.position, info.title, info.url)
+            } catch (e: PlacesException.CannotUpdateRoot) {
+                // We re-throw this exception, it should be handled by the caller
+                throw e
+            } catch (e: PlacesException.UnexpectedPlacesException) {
+                // this is a fatal error, and should be rethrown
+                throw e
+            } catch (e: PlacesException) {
+                crashReporter?.submitCaughtException(e)
+                logger.warn("Ignoring PlacesException while running updateNode", e)
+            }
         }
     }
 
@@ -170,7 +209,19 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @return Whether the bookmark existed or not.
      */
     override suspend fun deleteNode(guid: String): Boolean = withContext(writeScope.coroutineContext) {
-        writer.deleteBookmarkNode(guid)
+        try {
+            writer.deleteBookmarkNode(guid)
+        } catch (e: PlacesException.CannotUpdateRoot) {
+            // We re-throw this exception, it should be handled by the caller
+            throw e
+        } catch (e: PlacesException.UnexpectedPlacesException) {
+            // this is a fatal error, and should be rethrown
+            throw e
+        } catch (e: PlacesException) {
+            crashReporter?.submitCaughtException(e)
+            logger.warn("Ignoring PlacesException while running deleteNode", e)
+            false
+        }
     }
 
     /**

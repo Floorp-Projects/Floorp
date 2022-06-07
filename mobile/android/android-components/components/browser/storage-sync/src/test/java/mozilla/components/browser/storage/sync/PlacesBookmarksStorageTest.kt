@@ -189,7 +189,7 @@ class PlacesBookmarksStorageTest {
             try {
                 bookmarks.deleteNode(root.id)
                 fail("Expected root deletion for ${root.id} to fail")
-            } catch (e: PlacesException) {}
+            } catch (e: PlacesException.CannotUpdateRoot) {}
         }
 
         with(bookmarks.searchBookmarks("mozilla")) {

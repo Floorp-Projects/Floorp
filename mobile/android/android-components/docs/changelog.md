@@ -14,6 +14,9 @@ permalink: /changelog/
 * **feature-top-sites**
   * Replaced `frecencyConfig` from `TopSitesConfig` with `TopSitesFrecencyConfig`, which specifies the `FrecencyTresholdOption` and the frecency filter, an optional function used to filter the top frecent sites. [#12384] (https://github.com/mozilla-mobile/android-components/issues/12384)
 
+* **browser-storage-sync**:
+  * Added exception handling for all places history and bookmark calls. This prevents the app from crashing on SQL errors. [#12300](https://github.com/mozilla-mobile/android-components/pull/12300)
+
 # 103.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v102.0.0...v103.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/150?closed=1)
