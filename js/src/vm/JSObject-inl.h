@@ -17,6 +17,10 @@
 #include "vm/PropertyResult.h"
 #include "vm/TypedArrayObject.h"
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/TupleType.h"
+#endif
+
 #include "gc/GCContext-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
@@ -134,6 +138,10 @@ inline bool JSObject::isUnqualifiedVarObj() const {
     return as<js::DebugEnvironmentProxy>().environment().isUnqualifiedVarObj();
   }
   return is<js::GlobalObject>() || is<js::NonSyntacticVariablesObject>();
+}
+
+inline bool JSObject::canHaveFixedElements() const {
+  return (is<js::ArrayObject>() || IF_RECORD_TUPLE(is<js::TupleType>(), false));
 }
 
 namespace js {
