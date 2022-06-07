@@ -432,6 +432,13 @@ nsIInputStream* ReadStream::Inner::EnsureStream() {
 void ReadStream::Inner::AsyncOpenStreamOnOwningThread() {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
+  if (mSnappyStream) {
+    // Different threads might request opening the stream at the same time. If
+    // the earlier request succeeded, then use the result.
+    mCondVar.NotifyAll();
+    return;
+  }
+
   if (!mControl || mState == Closed) {
     MutexAutoLock lock(mMutex);
     OpenStreamFailed();
