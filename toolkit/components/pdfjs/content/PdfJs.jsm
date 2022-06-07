@@ -45,8 +45,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uriloader/handler-service;1",
   "nsIHandlerService"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PdfJsDefaultPreferences",
   "resource://pdf.js/PdfJsDefaultPreferences.jsm"
 );
@@ -54,14 +55,14 @@ ChromeUtils.defineModuleGetter(
 function initializeDefaultPreferences() {
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
   var defaultValue;
-  for (var key in PdfJsDefaultPreferences) {
+  for (var key in lazy.PdfJsDefaultPreferences) {
     // Skip prefs that are already defined, so we can enable/disable things
     // in all.js.
     let prefType = defaultBranch.getPrefType(key);
     if (prefType !== Ci.nsIPrefBranch.PREF_INVALID) {
       continue;
     }
-    defaultValue = PdfJsDefaultPreferences[key];
+    defaultValue = lazy.PdfJsDefaultPreferences[key];
     switch (typeof defaultValue) {
       case "boolean":
         defaultBranch.setBoolPref(key, defaultValue);

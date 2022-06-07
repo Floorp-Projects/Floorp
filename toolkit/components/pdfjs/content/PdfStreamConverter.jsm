@@ -33,39 +33,41 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AsyncPrefs",
   "resource://gre/modules/AsyncPrefs.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetworkManager",
   "resource://pdf.js/PdfJsNetwork.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PdfJsTelemetry",
   "resource://pdf.js/PdfJsTelemetry.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "PdfJs", "resource://pdf.js/PdfJs.jsm");
+ChromeUtils.defineModuleGetter(lazy, "PdfJs", "resource://pdf.js/PdfJs.jsm");
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PdfSandbox",
   "resource://pdf.js/PdfSandbox.jsm"
 );
@@ -84,7 +86,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gOurBinary", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gOurBinary", () => {
   let file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
   // Make sure to get the .app on macOS
   if (AppConstants.platform == "macosx") {
@@ -295,7 +297,7 @@ class ChromeActions {
     }
 
     try {
-      this.sandbox = new PdfSandbox(this.domWindow, data);
+      this.sandbox = new lazy.PdfSandbox(this.domWindow, data);
     } catch (err) {
       // If there's an error here, it means that something is really wrong
       // on pdf.js side during sandbox initialization phase.
@@ -326,7 +328,7 @@ class ChromeActions {
   }
 
   isInPrivateBrowsing() {
-    return PrivateBrowsingUtils.isContentWindowPrivate(this.domWindow);
+    return lazy.PrivateBrowsingUtils.isContentWindowPrivate(this.domWindow);
   }
 
   getWindowOriginAttributes() {
@@ -399,17 +401,17 @@ class ChromeActions {
     switch (probeInfo.type) {
       case "documentInfo":
         if (!this.telemetryState.documentInfo) {
-          PdfJsTelemetry.onDocumentVersion(probeInfo.version);
-          PdfJsTelemetry.onDocumentGenerator(probeInfo.generator);
+          lazy.PdfJsTelemetry.onDocumentVersion(probeInfo.version);
+          lazy.PdfJsTelemetry.onDocumentGenerator(probeInfo.generator);
           if (probeInfo.formType) {
-            PdfJsTelemetry.onForm(probeInfo.formType);
+            lazy.PdfJsTelemetry.onForm(probeInfo.formType);
           }
           this.telemetryState.documentInfo = true;
         }
         break;
       case "pageInfo":
         if (!this.telemetryState.firstPageInfo) {
-          PdfJsTelemetry.onTimeToView(probeInfo.timestamp);
+          lazy.PdfJsTelemetry.onTimeToView(probeInfo.timestamp);
           this.telemetryState.firstPageInfo = true;
         }
         break;
@@ -431,7 +433,7 @@ class ChromeActions {
             break;
           }
           if (!this.telemetryState.streamTypesUsed[key]) {
-            PdfJsTelemetry.onStreamType(key);
+            lazy.PdfJsTelemetry.onStreamType(key);
             this.telemetryState.streamTypesUsed[key] = true;
           }
         }
@@ -443,24 +445,24 @@ class ChromeActions {
             break;
           }
           if (!this.telemetryState.fontTypesUsed[key]) {
-            PdfJsTelemetry.onFontType(key);
+            lazy.PdfJsTelemetry.onFontType(key);
             this.telemetryState.fontTypesUsed[key] = true;
           }
         }
         break;
       case "print":
-        PdfJsTelemetry.onPrint();
+        lazy.PdfJsTelemetry.onPrint();
         break;
       case "unsupportedFeature":
         if (!this.telemetryState.fallbackErrorsReported[probeInfo.featureId]) {
-          PdfJsTelemetry.onFallbackError(probeInfo.featureId);
+          lazy.PdfJsTelemetry.onFallbackError(probeInfo.featureId);
           this.telemetryState.fallbackErrorsReported[
             probeInfo.featureId
           ] = true;
         }
         break;
       case "tagged":
-        PdfJsTelemetry.onTagged(probeInfo.tagged);
+        lazy.PdfJsTelemetry.onTagged(probeInfo.tagged);
         break;
     }
   }
@@ -541,10 +543,10 @@ class ChromeActions {
       prefName = PREF_PREFIX + "." + key;
       switch (typeof prefValue) {
         case "boolean":
-          AsyncPrefs.set(prefName, prefValue);
+          lazy.AsyncPrefs.set(prefName, prefValue);
           break;
         case "number":
-          AsyncPrefs.set(prefName, prefValue);
+          lazy.AsyncPrefs.set(prefName, prefValue);
           break;
         case "string":
           if (prefValue.length > MAX_STRING_PREF_LENGTH) {
@@ -553,7 +555,7 @@ class ChromeActions {
                 "for a string preference."
             );
           } else {
-            AsyncPrefs.set(prefName, prefValue);
+            lazy.AsyncPrefs.set(prefName, prefValue);
           }
           break;
       }
@@ -662,7 +664,7 @@ class RangedChromeActions extends ChromeActions {
       return xhr;
     };
 
-    this.networkManager = new NetworkManager(this.pdfUrl, {
+    this.networkManager = new lazy.NetworkManager(this.pdfUrl, {
       httpHeaders: httpHeaderVisitor.headers,
       getXhr,
     });
@@ -934,7 +936,7 @@ PdfStreamConverter.prototype = {
     if (!executable) {
       return false;
     }
-    return !executable.equals(gOurBinary);
+    return !executable.equals(lazy.gOurBinary);
   },
 
   /*
@@ -950,7 +952,7 @@ PdfStreamConverter.prototype = {
   _validateAndMaybeUpdatePDFPrefs() {
     let { processType, PROCESS_TYPE_DEFAULT } = Services.appinfo;
     // If we're not in the parent, or are the default, then just say yes.
-    if (processType != PROCESS_TYPE_DEFAULT || PdfJs.cachedIsDefault()) {
+    if (processType != PROCESS_TYPE_DEFAULT || lazy.PdfJs.cachedIsDefault()) {
       return { shouldOpen: true };
     }
 
@@ -1141,10 +1143,10 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader("Refresh", "", false);
     }
 
-    PdfJsTelemetry.onViewerIsUsed(
+    lazy.PdfJsTelemetry.onViewerIsUsed(
       contentDisposition == aRequest.DISPOSITION_ATTACHMENT
     );
-    PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
+    lazy.PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
 
     // The document will be loaded via the stream converter as html,
     // but since we may have come here via a download or attachment
@@ -1161,7 +1163,7 @@ PdfStreamConverter.prototype = {
     );
 
     // Create a new channel that is viewer loaded as a resource.
-    var channel = NetUtil.newChannel({
+    var channel = lazy.NetUtil.newChannel({
       uri: PDF_VIEWER_WEB_PAGE,
       loadUsingSystemPrincipal: true,
     });
@@ -1226,7 +1228,7 @@ PdfStreamConverter.prototype = {
             ? domWindow.frameElement.tagName == "OBJECT" ||
               domWindow.frameElement.tagName == "EMBED"
             : false;
-          PdfJsTelemetry.onEmbed(isObjectEmbed);
+          lazy.PdfJsTelemetry.onEmbed(isObjectEmbed);
         }
       },
     };
@@ -1239,7 +1241,7 @@ PdfStreamConverter.prototype = {
     // We can use the resource principal when data is fetched by the chrome,
     // e.g. useful for NoScript. Make make sure we reuse the origin attributes
     // from the request channel to keep isolation consistent.
-    var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
+    var uri = lazy.NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
     var resourcePrincipal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       aRequest.loadInfo.originAttributes
