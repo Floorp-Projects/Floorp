@@ -228,7 +228,9 @@ void ScreenCapturerX11::CaptureFrame() {
   int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
-  RTC_DCHECK(!queue_.current_frame() || !queue_.current_frame()->IsShared());
+  if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
+    RTC_DLOG(LS_WARNING) << "Overwriting frame that is still shared.";
+  }
 
   // Process XEvents for XDamage and cursor shape tracking.
   options_.x_display()->ProcessPendingXEvents();

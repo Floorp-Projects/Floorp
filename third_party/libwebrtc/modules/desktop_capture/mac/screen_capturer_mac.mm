@@ -199,7 +199,9 @@ void ScreenCapturerMac::CaptureFrame() {
   int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
-  RTC_DCHECK(!queue_.current_frame() || !queue_.current_frame()->IsShared());
+  if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
+    RTC_DLOG(LS_WARNING) << "Overwriting frame that is still shared.";
+  }
 
   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
   if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
