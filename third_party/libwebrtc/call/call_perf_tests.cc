@@ -1187,4 +1187,16 @@ TEST_F(CallPerfTest, TestEncodeFramerateVp8Simulcast) {
                       /*max_framerates=*/{20, 30});
 }
 
+TEST_F(CallPerfTest, TestEncodeFramerateVp8SimulcastLowerInputFps) {
+  InternalEncoderFactory internal_encoder_factory;
+  test::FunctionVideoEncoderFactory encoder_factory(
+      [&internal_encoder_factory]() {
+        return std::make_unique<SimulcastEncoderAdapter>(
+            &internal_encoder_factory, SdpVideoFormat("VP8"));
+      });
+
+  TestEncodeFramerate(&encoder_factory, "VP8",
+                      /*max_framerates=*/{14, 20});
+}
+
 }  // namespace webrtc
