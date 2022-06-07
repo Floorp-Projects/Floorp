@@ -11,23 +11,25 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UrlbarUtils",
   "resource:///modules/UrlbarUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "WebNavigationFrames",
   "resource://gre/modules/WebNavigationFrames.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClickHandlerParent",
   "resource:///actors/ClickHandlerParent.jsm"
 );
@@ -55,7 +57,7 @@ var WebNavigationManager = {
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
     if (AppConstants.MOZ_BUILD_APP == "browser") {
-      ClickHandlerParent.addContentClickListener(this);
+      lazy.ClickHandlerParent.addContentClickListener(this);
     }
   },
 
@@ -65,7 +67,7 @@ var WebNavigationManager = {
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
     if (AppConstants.MOZ_BUILD_APP == "browser") {
-      ClickHandlerParent.removeContentClickListener(this);
+      lazy.ClickHandlerParent.removeContentClickListener(this);
     }
 
     this.recentTabTransitionData = new WeakMap();
@@ -161,33 +163,35 @@ var WebNavigationManager = {
       tabTransitionData.typed = true;
     } else {
       switch (acData.result.type) {
-        case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
           tabTransitionData.keyword = true;
           break;
-        case UrlbarUtils.RESULT_TYPE.SEARCH:
+        case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
           tabTransitionData.generated = true;
           break;
-        case UrlbarUtils.RESULT_TYPE.URL:
-          if (acData.result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
+        case lazy.UrlbarUtils.RESULT_TYPE.URL:
+          if (
+            acData.result.source == lazy.UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+          ) {
             tabTransitionData.auto_bookmark = true;
           } else {
             tabTransitionData.typed = true;
           }
           break;
-        case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
           // Remote tab are autocomplete results related to
           // tab urls from a remote synchronized Firefox.
           tabTransitionData.typed = true;
           break;
-        case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+        case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         // This "switchtab" autocompletion should be ignored, because
         // it is not related to a navigation.
         // Fall through.
-        case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
         // "Omnibox" should be ignored as the add-on may or may not initiate
         // a navigation on the item being selected.
         // Fall through.
-        case UrlbarUtils.RESULT_TYPE.TIP:
+        case lazy.UrlbarUtils.RESULT_TYPE.TIP:
           // "Tip" should be ignored since the tip will only initiate navigation
           // if there is a valid buttonUrl property, which is optional.
           throw new Error(
@@ -218,7 +222,7 @@ var WebNavigationManager = {
    * @param {boolean} [tabTransitionData.typed]
    */
   setRecentTabTransitionData(tabTransitionData) {
-    let window = BrowserWindowTracker.getTopWindow();
+    let window = lazy.BrowserWindowTracker.getTopWindow();
     if (
       window &&
       window.gBrowser &&
@@ -284,7 +288,7 @@ var WebNavigationManager = {
 
     this.fire("onCreatedNavigationTarget", browser, null, {
       sourceTabBrowser: getBrowser(sourceBC),
-      sourceFrameId: WebNavigationFrames.getFrameId(sourceBC),
+      sourceFrameId: lazy.WebNavigationFrames.getFrameId(sourceBC),
       url,
     });
   },
@@ -380,8 +384,8 @@ var WebNavigationManager = {
     };
 
     if (bc) {
-      details.frameId = WebNavigationFrames.getFrameId(bc);
-      details.parentFrameId = WebNavigationFrames.getParentFrameId(bc);
+      details.frameId = lazy.WebNavigationFrames.getFrameId(bc);
+      details.parentFrameId = lazy.WebNavigationFrames.getParentFrameId(bc);
     }
 
     for (let prop in extra) {

@@ -11,20 +11,21 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const wpl = Ci.nsIWebProgressListener;
+const lazy = {};
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "NSSErrorsService",
   "@mozilla.org/nss_errors_service;1",
   "nsINSSErrorsService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "sss",
   "@mozilla.org/ssservice;1",
   "nsISiteSecurityService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "pkps",
   "@mozilla.org/security/publickeypinningservice;1",
   "nsIPublicKeyPinningService"
@@ -109,7 +110,7 @@ const SecurityInfo = {
 
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
 
-    if (NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
+    if (lazy.NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
       // The connection failed.
       info.state = "broken";
       info.errorMessage = securityInfo.errorMessage;
@@ -188,8 +189,8 @@ const SecurityInfo = {
 
     // HSTS and static pinning if available.
     if (uri && uri.host) {
-      info.hsts = sss.isSecureURI(uri, channel.loadInfo.originAttributes);
-      info.hpkp = pkps.hostHasPins(uri);
+      info.hsts = lazy.sss.isSecureURI(uri, channel.loadInfo.originAttributes);
+      info.hpkp = lazy.pkps.hostHasPins(uri);
     } else {
       info.hsts = false;
       info.hpkp = false;

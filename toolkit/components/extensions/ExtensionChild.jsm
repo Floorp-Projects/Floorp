@@ -24,14 +24,16 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "finalizationService",
   "@mozilla.org/toolkit/finalizationwitness;1",
   "nsIFinalizationWitnessService"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
@@ -42,7 +44,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // We're using the pref to avoid loading PerformanceCounters.jsm for nothing.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTimingEnabled",
   "extensions.webextensions.enablePerformanceCounters",
   false
@@ -139,7 +141,10 @@ const StrongPromise = {
 
   wrap(promise, location) {
     let id = String(getUniqueId());
-    let witness = finalizationService.make("extensions-onMessage-witness", id);
+    let witness = lazy.finalizationService.make(
+      "extensions-onMessage-witness",
+      id
+    );
 
     return new Promise((resolve, reject) => {
       this.stillAlive.set(id, { reject, location });
@@ -238,7 +243,7 @@ class MessageEvent extends SimpleEventAPI {
 
 function holdMessage(data, native = null) {
   if (native && AppConstants.platform !== "android") {
-    data = NativeApp.encodeMessage(native.context, data);
+    data = lazy.NativeApp.encodeMessage(native.context, data);
   }
   return new StructuredCloneHolder(data);
 }
@@ -470,11 +475,11 @@ class BrowserExtensionContent extends EventEmitter {
   }
 
   getAPIManager() {
-    let apiManagers = [ExtensionPageChild.apiManager];
+    let apiManagers = [lazy.ExtensionPageChild.apiManager];
 
     if (this.dependencies) {
       for (let id of this.dependencies) {
-        let extension = ExtensionProcessScript.getExtensionChild(id);
+        let extension = lazy.ExtensionProcessScript.getExtensionChild(id);
         if (extension) {
           apiManagers.push(extension.experimentAPIManager);
         }
@@ -500,13 +505,13 @@ class BrowserExtensionContent extends EventEmitter {
 
   shutdown() {
     ExtensionManager.extensions.delete(this.id);
-    ExtensionContent.shutdownExtension(this);
+    lazy.ExtensionContent.shutdownExtension(this);
     Services.cpmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
     this.emit("shutdown");
   }
 
   getContext(window) {
-    return ExtensionContent.getContext(this, window);
+    return lazy.ExtensionContent.getContext(this, window);
   }
 
   emit(event, ...args) {
@@ -683,9 +688,9 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
         { startTime: start },
         `${this.context.extension.id}, api_call: ${this.fullname}`
       );
-      if (gTimingEnabled) {
+      if (lazy.gTimingEnabled) {
         let end = Cu.now() * 1000;
-        PerformanceCounters.storeExecutionTime(
+        lazy.PerformanceCounters.storeExecutionTime(
           this.context.extension.id,
           this.name,
           end - start * 1000,
@@ -861,7 +866,7 @@ class ChildAPIManager {
    */
   callParentAsyncFunction(path, args, callback, options = {}) {
     let callId = getUniqueId();
-    let deferred = PromiseUtils.defer();
+    let deferred = lazy.PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
 
     let {

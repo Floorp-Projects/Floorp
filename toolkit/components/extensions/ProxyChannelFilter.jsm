@@ -16,23 +16,26 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ProxyService",
   "@mozilla.org/network/protocol-proxy-service;1",
   "nsIProtocolProxyService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "tabTracker", () => {
-  return ExtensionParent.apiManager.global.tabTracker;
+XPCOMUtils.defineLazyGetter(lazy, "tabTracker", () => {
+  return lazy.ExtensionParent.apiManager.global.tabTracker;
 });
-XPCOMUtils.defineLazyGetter(this, "getCookieStoreIdForOriginAttributes", () => {
-  return ExtensionParent.apiManager.global.getCookieStoreIdForOriginAttributes;
+XPCOMUtils.defineLazyGetter(lazy, "getCookieStoreIdForOriginAttributes", () => {
+  return lazy.ExtensionParent.apiManager.global
+    .getCookieStoreIdForOriginAttributes;
 });
 
 // DNS is resolved on the SOCKS proxy server.
@@ -232,7 +235,7 @@ const ProxyInfoData = {
 
     let proxyInfo;
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
-      proxyInfo = ProxyService.newProxyInfoWithAuth(
+      proxyInfo = lazy.ProxyService.newProxyInfoWithAuth(
         type,
         host,
         port,
@@ -245,7 +248,7 @@ const ProxyInfoData = {
         failoverProxy
       );
     } else {
-      proxyInfo = ProxyService.newProxyInfo(
+      proxyInfo = lazy.ProxyService.newProxyInfo(
         type,
         host,
         port,
@@ -283,7 +286,7 @@ class ProxyChannelFilter {
     this.listener = listener;
     this.extraInfoSpec = extraInfoSpec || [];
 
-    ProxyService.registerChannelFilter(
+    lazy.ProxyService.registerChannelFilter(
       this /* nsIProtocolProxyChannelFilter aFilter */,
       0 /* unsigned long aPosition */
     );
@@ -316,7 +319,7 @@ class ProxyChannelFilter {
       ...extraData,
     };
     if (originAttributes) {
-      data.cookieStoreId = getCookieStoreIdForOriginAttributes(
+      data.cookieStoreId = lazy.getCookieStoreIdForOriginAttributes(
         originAttributes
       );
     }
@@ -353,7 +356,7 @@ class ProxyChannelFilter {
 
       let browserData = { tabId: -1, windowId: -1 };
       if (wrapper.browserElement) {
-        browserData = tabTracker.getBrowserData(wrapper.browserElement);
+        browserData = lazy.tabTracker.getBrowserData(wrapper.browserElement);
       }
 
       let { filter, extension } = this;
@@ -426,6 +429,6 @@ class ProxyChannelFilter {
   }
 
   destroy() {
-    ProxyService.unregisterFilter(this);
+    lazy.ProxyService.unregisterFilter(this);
   }
 }

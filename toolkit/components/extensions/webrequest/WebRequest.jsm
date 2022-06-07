@@ -17,7 +17,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
@@ -26,11 +28,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // WebRequest.jsm's only consumer is ext-webRequest.js, so we can depend on
 // the apiManager.global being initialized.
-XPCOMUtils.defineLazyGetter(this, "tabTracker", () => {
-  return ExtensionParent.apiManager.global.tabTracker;
+XPCOMUtils.defineLazyGetter(lazy, "tabTracker", () => {
+  return lazy.ExtensionParent.apiManager.global.tabTracker;
 });
-XPCOMUtils.defineLazyGetter(this, "getCookieStoreIdForOriginAttributes", () => {
-  return ExtensionParent.apiManager.global.getCookieStoreIdForOriginAttributes;
+XPCOMUtils.defineLazyGetter(lazy, "getCookieStoreIdForOriginAttributes", () => {
+  return lazy.ExtensionParent.apiManager.global
+    .getCookieStoreIdForOriginAttributes;
 });
 
 // URI schemes that service workers are allowed to load scripts from (any other
@@ -69,7 +72,7 @@ function parseExtra(extra, allowed = [], optionsObj = {}) {
   if (extra) {
     for (let ex of extra) {
       if (!allowed.includes(ex)) {
-        throw new ExtensionUtils.ExtensionError(`Invalid option ${ex}`);
+        throw new lazy.ExtensionUtils.ExtensionError(`Invalid option ${ex}`);
       }
     }
   }
@@ -803,7 +806,7 @@ HttpObserverManager = {
     };
 
     if (originAttributes) {
-      data.cookieStoreId = getCookieStoreIdForOriginAttributes(
+      data.cookieStoreId = lazy.getCookieStoreIdForOriginAttributes(
         originAttributes
       );
     }
@@ -848,7 +851,7 @@ HttpObserverManager = {
     let browserData = wrapper._browserData;
     if (!browserData) {
       if (wrapper.browserElement) {
-        browserData = tabTracker.getBrowserData(wrapper.browserElement);
+        browserData = lazy.tabTracker.getBrowserData(wrapper.browserElement);
       } else {
         browserData = { tabId: -1, windowId: -1 };
       }
@@ -936,7 +939,8 @@ HttpObserverManager = {
 
         if (opts.requestBody && channel.canModify) {
           requestBody =
-            requestBody || WebRequestUpload.createRequestBody(channel.channel);
+            requestBody ||
+            lazy.WebRequestUpload.createRequestBody(channel.channel);
           data.requestBody = requestBody;
         }
 
@@ -1252,7 +1256,10 @@ var WebRequest = {
       details.remoteTab
     );
     if (channel) {
-      return SecurityInfo.getSecurityInfo(channel.channel, details.options);
+      return lazy.SecurityInfo.getSecurityInfo(
+        channel.channel,
+        details.options
+      );
     }
   },
 };

@@ -18,36 +18,38 @@ const { ExtensionUtils } = ChromeUtils.import(
 );
 var { DefaultMap, DefaultWeakMap } = ExtensionUtils;
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "contentPolicyService",
   "@mozilla.org/addons/content-policy;1",
   "nsIAddonContentPolicy"
 );
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "StartupCache",
-  () => ExtensionParent.StartupCache
+  () => lazy.ExtensionParent.StartupCache
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "treatWarningsAsErrors",
   "extensions.webextensions.warnings-as-errors",
   false
@@ -69,7 +71,7 @@ const isParentProcess =
 
 function readJSON(url) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(
+    lazy.NetUtil.asyncFetch(
       { uri: url, loadUsingSystemPrincipal: true },
       (inputStream, status) => {
         if (!Components.isSuccessCode(status)) {
@@ -79,7 +81,7 @@ function readJSON(url) {
           return;
         }
         try {
-          let text = NetUtil.readInputStreamToString(
+          let text = lazy.NetUtil.readInputStreamToString(
             inputStream,
             inputStream.available()
           );
@@ -1148,7 +1150,7 @@ const FORMATS = {
         ? Ci.nsIAddonContentPolicy.CSP_ALLOW_ANY
         : Ci.nsIAddonContentPolicy.CSP_ALLOW_LOCALHOST |
           Ci.nsIAddonContentPolicy.CSP_ALLOW_WASM;
-    let error = contentPolicyService.validateAddonCSP(string, flags);
+    let error = lazy.contentPolicyService.validateAddonCSP(string, flags);
     if (error != null) {
       // The CSP validation error is not reported as part of the "choices" error message,
       // we log the CSP validation error explicitly here to make it easier for the addon developers
@@ -1175,7 +1177,7 @@ const FORMATS = {
   },
 
   manifestShortcutKey(string, context) {
-    if (ShortcutUtils.validate(string) == ShortcutUtils.IS_VALID) {
+    if (lazy.ShortcutUtils.validate(string) == lazy.ShortcutUtils.IS_VALID) {
       return string;
     }
     let errorMessage =
@@ -1311,7 +1313,7 @@ class Entry {
     let error = context.makeError(warningMessage, { warning: true });
     context.logError(error);
 
-    if (treatWarningsAsErrors) {
+    if (lazy.treatWarningsAsErrors) {
       // This pref is false by default, and true by default in tests to
       // discourage the use of deprecated APIs in our unit tests.
       // If a warning is an expected part of a test, temporarily set the pref
@@ -3671,7 +3673,7 @@ Schemas = {
   _loadCachedSchemasPromise: null,
   loadCachedSchemas() {
     if (!this._loadCachedSchemasPromise) {
-      this._loadCachedSchemasPromise = StartupCache.schemas
+      this._loadCachedSchemasPromise = lazy.StartupCache.schemas
         .getAll()
         .then(results => {
           return results;
@@ -3721,7 +3723,7 @@ Schemas = {
 
     let blob =
       schemaCache.get(url) ||
-      (await StartupCache.schemas.get(url, readJSONAndBlobbify));
+      (await lazy.StartupCache.schemas.get(url, readJSONAndBlobbify));
 
     if (!this.schemaJSON.has(url)) {
       this.addSchema(url, blob, content);

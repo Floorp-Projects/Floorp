@@ -15,13 +15,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 0x80530016;
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "prefPermitsStorageSync",
   STORAGE_SYNC_ENABLED_PREF,
   true
@@ -30,7 +32,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // This xpcom service implements a "bridge" from the JS world to the Rust world.
 // It sets up the database and implements a callback-based version of the
 // browser.storage API.
-XPCOMUtils.defineLazyGetter(this, "storageSvc", () =>
+XPCOMUtils.defineLazyGetter(lazy, "storageSvc", () =>
   Cc["@mozilla.org/extensions/storage/sync;1"]
     .getService(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.mozIExtensionStorageArea)
@@ -38,7 +40,7 @@ XPCOMUtils.defineLazyGetter(this, "storageSvc", () =>
 
 // We might end up falling back to kinto...
 XPCOMUtils.defineLazyModuleGetter(
-  this,
+  lazy,
   "extensionStorageSyncKinto",
   "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
   "extensionStorageSync"
@@ -96,8 +98,8 @@ class ExtensionStorageSync {
   // * Turns the callback API into a promise API.
   async _promisify(fnName, extension, context, ...args) {
     let extId = extension.id;
-    if (prefPermitsStorageSync !== true) {
-      throw new ExtensionUtils.ExtensionError(
+    if (lazy.prefPermitsStorageSync !== true) {
+      throw new lazy.ExtensionUtils.ExtensionError(
         `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`
       );
     }
@@ -112,7 +114,7 @@ class ExtensionStorageSync {
             (extId, changes) => this.notifyListeners(extId, changes)
           );
           let sargs = args.map(JSON.stringify);
-          storageSvc[fnName](extId, ...sargs, callback);
+          lazy.storageSvc[fnName](extId, ...sargs, callback);
         });
       } catch (ex) {
         if (ex.code != Cr.NS_ERROR_CANNOT_CONVERT_DATA) {
@@ -125,7 +127,7 @@ class ExtensionStorageSync {
                 `QuotaExceededError: storage.sync API call exceeded its quota limitations.`
               : // The standard, generic extension error.
                 "An unexpected error occurred";
-          throw new ExtensionUtils.ExtensionError(sanitized);
+          throw new lazy.ExtensionUtils.ExtensionError(sanitized);
         }
         // This means "migrate failed" so we must fall back to kinto.
         Cu.reportError(
@@ -135,7 +137,7 @@ class ExtensionStorageSync {
       }
     }
     // We've detected failure to migrate, so we want to use kinto.
-    return extensionStorageSyncKinto[fnName](extension, ...args, context);
+    return lazy.extensionStorageSyncKinto[fnName](extension, ...args, context);
   }
 
   set(extension, items, context) {
@@ -176,7 +178,7 @@ class ExtensionStorageSync {
     let listeners = this.listeners.get(extId) || new Set();
     if (listeners) {
       for (let listener of listeners) {
-        ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
+        lazy.ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
       }
     }
   }

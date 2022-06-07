@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
 });
@@ -64,13 +66,13 @@ function StorageSyncService() {
     return StorageSyncService._singleton;
   }
 
-  let file = FileUtils.getFile("ProfD", ["storage-sync-v2.sqlite"]);
-  let kintoFile = FileUtils.getFile("ProfD", ["storage-sync.sqlite"]);
+  let file = lazy.FileUtils.getFile("ProfD", ["storage-sync-v2.sqlite"]);
+  let kintoFile = lazy.FileUtils.getFile("ProfD", ["storage-sync.sqlite"]);
   this._storageArea = new StorageSyncArea(file, kintoFile);
 
   // Register a blocker to close the storage connection on shutdown.
   this._shutdownBound = () => this._shutdown();
-  AsyncShutdown.profileChangeTeardown.addBlocker(
+  lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
     "StorageSyncService: shutdown",
     this._shutdownBound
   );
@@ -112,7 +114,9 @@ StorageSyncService.prototype = {
         });
       });
     } finally {
-      AsyncShutdown.profileChangeTeardown.removeBlocker(this._shutdownBound);
+      lazy.AsyncShutdown.profileChangeTeardown.removeBlocker(
+        this._shutdownBound
+      );
     }
   },
 };

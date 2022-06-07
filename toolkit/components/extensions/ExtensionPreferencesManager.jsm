@@ -33,18 +33,20 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionCommon",
   "resource://gre/modules/ExtensionCommon.jsm"
 );
@@ -55,8 +57,8 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const { ExtensionError } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
-  return new Preferences({ defaultBranch: true });
+XPCOMUtils.defineLazyGetter(lazy, "defaultPreferences", function() {
+  return new lazy.Preferences({ defaultBranch: true });
 });
 
 /* eslint-disable mozilla/balanced-listeners */
@@ -108,8 +110,8 @@ function initialValueCallback() {
   let initialValue = {};
   for (let pref of this.prefNames) {
     // If there is a prior user-set value, get it.
-    if (Preferences.isSet(pref)) {
-      initialValue[pref] = Preferences.get(pref);
+    if (lazy.Preferences.isSet(pref)) {
+      initialValue[pref] = lazy.Preferences.get(pref);
     }
   }
   return initialValue;
@@ -128,7 +130,7 @@ function settingsUpdate(initialValue) {
     try {
       if (
         initialValue[pref] !== undefined &&
-        initialValue[pref] === defaultPreferences.get(pref)
+        initialValue[pref] === lazy.defaultPreferences.get(pref)
       ) {
         initialValue[pref] = undefined;
       }
@@ -158,12 +160,12 @@ function setPrefs(name, setting, item) {
   let changed = false;
   for (let pref of setting.prefNames) {
     if (prefs[pref] === undefined) {
-      if (Preferences.isSet(pref)) {
+      if (lazy.Preferences.isSet(pref)) {
         changed = true;
-        Preferences.reset(pref);
+        lazy.Preferences.reset(pref);
       }
-    } else if (Preferences.get(pref) != prefs[pref]) {
-      Preferences.set(pref, prefs[pref]);
+    } else if (lazy.Preferences.get(pref) != prefs[pref]) {
+      lazy.Preferences.set(pref, prefs[pref]);
       changed = true;
     }
   }
@@ -198,9 +200,9 @@ function setPrefs(name, setting, item) {
  *          if preferences were not set.
 */
 async function processSetting(id, name, action) {
-  await ExtensionSettingsStore.initialize();
-  let expectedItem = ExtensionSettingsStore.getSetting(STORE_TYPE, name);
-  let item = ExtensionSettingsStore[action](id, STORE_TYPE, name);
+  await lazy.ExtensionSettingsStore.initialize();
+  let expectedItem = lazy.ExtensionSettingsStore.getSetting(STORE_TYPE, name);
+  let item = lazy.ExtensionSettingsStore[action](id, STORE_TYPE, name);
   if (item) {
     let setting = settingsMap.get(name);
     let expectedPrefs =
@@ -208,7 +210,8 @@ async function processSetting(id, name, action) {
     if (
       Object.keys(expectedPrefs).some(
         pref =>
-          expectedPrefs[pref] && Preferences.get(pref) != expectedPrefs[pref]
+          expectedPrefs[pref] &&
+          lazy.Preferences.get(pref) != expectedPrefs[pref]
       )
     ) {
       return false;
@@ -243,7 +246,7 @@ ExtensionPreferencesManager = {
    * @returns {string|number|boolean} The default value of the preference.
    */
   getDefaultValue(prefName) {
-    return defaultPreferences.get(prefName);
+    return lazy.defaultPreferences.get(prefName);
   },
 
   /**
@@ -287,8 +290,8 @@ ExtensionPreferencesManager = {
    */
   async setSetting(id, name, value) {
     let setting = settingsMap.get(name);
-    await ExtensionSettingsStore.initialize();
-    let item = await ExtensionSettingsStore.addSetting(
+    await lazy.ExtensionSettingsStore.initialize();
+    let item = await lazy.ExtensionSettingsStore.addSetting(
       id,
       STORE_TYPE,
       name,
@@ -379,8 +382,11 @@ ExtensionPreferencesManager = {
    *        The id of the extension for which all settings are being unset.
    */
   async disableAll(id) {
-    await ExtensionSettingsStore.initialize();
-    let settings = ExtensionSettingsStore.getAllForExtension(id, STORE_TYPE);
+    await lazy.ExtensionSettingsStore.initialize();
+    let settings = lazy.ExtensionSettingsStore.getAllForExtension(
+      id,
+      STORE_TYPE
+    );
     let disablePromises = [];
     for (let name of settings) {
       disablePromises.push(this.disableSetting(id, name));
@@ -396,8 +402,11 @@ ExtensionPreferencesManager = {
    *        The id of the extension for which all settings are being enabled.
    */
   async enableAll(id) {
-    await ExtensionSettingsStore.initialize();
-    let settings = ExtensionSettingsStore.getAllForExtension(id, STORE_TYPE);
+    await lazy.ExtensionSettingsStore.initialize();
+    let settings = lazy.ExtensionSettingsStore.getAllForExtension(
+      id,
+      STORE_TYPE
+    );
     let enablePromises = [];
     for (let name of settings) {
       enablePromises.push(this.enableSetting(id, name));
@@ -413,8 +422,11 @@ ExtensionPreferencesManager = {
    *        The id of the extension for which all settings are being unset.
    */
   async removeAll(id) {
-    await ExtensionSettingsStore.initialize();
-    let settings = ExtensionSettingsStore.getAllForExtension(id, STORE_TYPE);
+    await lazy.ExtensionSettingsStore.initialize();
+    let settings = lazy.ExtensionSettingsStore.getAllForExtension(
+      id,
+      STORE_TYPE
+    );
     let removePromises = [];
     for (let name of settings) {
       removePromises.push(this.removeSetting(id, name));
@@ -453,8 +465,8 @@ ExtensionPreferencesManager = {
    * @returns {Object} The current setting object.
    */
   async getSetting(name) {
-    await ExtensionSettingsStore.initialize();
-    return ExtensionSettingsStore.getSetting(STORE_TYPE, name);
+    await lazy.ExtensionSettingsStore.initialize();
+    return lazy.ExtensionSettingsStore.getSetting(STORE_TYPE, name);
   },
 
   /**
@@ -482,13 +494,13 @@ ExtensionPreferencesManager = {
         return "not_controllable";
       }
       for (let prefName of setting.prefNames) {
-        if (Preferences.locked(prefName)) {
+        if (lazy.Preferences.locked(prefName)) {
           return "not_controllable";
         }
       }
     }
-    await ExtensionSettingsStore.initialize();
-    return ExtensionSettingsStore.getLevelOfControl(id, storeType, name);
+    await lazy.ExtensionSettingsStore.initialize();
+    return lazy.ExtensionSettingsStore.getLevelOfControl(id, storeType, name);
   },
 
   /**
@@ -700,7 +712,7 @@ ExtensionPreferencesManager = {
       // Some settings that are read-only may not have called addSetting, in
       // which case we have no way to listen on the pref changes.
       if (setting) {
-        settingsAPI.onChange = new ExtensionCommon.EventManager({
+        settingsAPI.onChange = new lazy.ExtensionCommon.EventManager({
           context,
           module,
           event: name,

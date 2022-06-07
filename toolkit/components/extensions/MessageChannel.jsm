@@ -108,8 +108,10 @@ const { ExtensionUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "MessageManagerProxy",
   "resource://gre/modules/MessageManagerProxy.jsm"
 );
@@ -118,7 +120,7 @@ function getMessageManager(target) {
   if (typeof target.sendAsyncMessage === "function") {
     return target;
   }
-  return new MessageManagerProxy(target);
+  return new lazy.MessageManagerProxy(target);
 }
 
 function matches(target, messageManager) {
