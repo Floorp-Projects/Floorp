@@ -31,7 +31,9 @@ const PREF_APP_UPDATE_ALTUPDATEDIRPATH = "app.update.altUpdateDirPath";
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_FILE_LOGGING = "app.update.log.file";
 
-XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
   return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
 });
 
@@ -422,7 +424,7 @@ function cleanupDir(dir, recurse) {
  *          The string to write to the error console.
  */
 function LOG(string) {
-  if (gLogEnabled) {
+  if (lazy.gLogEnabled) {
     dump("*** AUS:SVC " + string + "\n");
     Services.console.logStringMessage("AUS:SVC " + string);
   }
