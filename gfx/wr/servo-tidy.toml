@@ -14,10 +14,11 @@ packages = [
     # glsl requires 5.1, and xcursor (required by winit) requires 7.1.
     # when a version of glsl depending on 7.1 is published we can update.
     "nom",
+    # Transitive dependency of Glean - see bug 1771743
+    # * v0.1.18 through rkv
+    # * v1.0.7 through UniFFI
+    "paste",
     "rand_core",
-    # Can be fixed by updating clap dependency - see bug 1765326
-    "strsim",
-    "yaml-rust",
     # Can be fixed by removing time dependency - see bug 1765324
     "wasi",
 ]
