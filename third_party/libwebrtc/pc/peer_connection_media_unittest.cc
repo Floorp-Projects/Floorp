@@ -13,6 +13,7 @@
 // the media-related aspects of SDP.
 
 #include <memory>
+#include <set>
 #include <tuple>
 
 #include "absl/algorithm/container.h"
@@ -841,6 +842,29 @@ bool HasAnyComfortNoiseCodecs(const cricket::SessionDescription* desc) {
   for (const auto& codec : audio_desc->codecs()) {
     if (codec.name == cricket::kCnCodecName) {
       return true;
+    }
+  }
+  return false;
+}
+
+bool HasPayloadTypeConflict(const cricket::SessionDescription* desc) {
+  std::set<int> payload_types;
+  const auto* audio_desc = cricket::GetFirstAudioContentDescription(desc);
+  if (audio_desc) {
+    for (const auto& codec : audio_desc->codecs()) {
+      if (payload_types.count(codec.id) > 0) {
+        return true;
+      }
+      payload_types.insert(codec.id);
+    }
+  }
+  const auto* video_desc = cricket::GetFirstVideoContentDescription(desc);
+  if (video_desc) {
+    for (const auto& codec : video_desc->codecs()) {
+      if (payload_types.count(codec.id) > 0) {
+        return true;
+      }
+      payload_types.insert(codec.id);
     }
   }
   return false;
@@ -1791,6 +1815,147 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
   options.voice_activity_detection = false;
   offer = caller->CreateOffer(options);
   EXPECT_FALSE(HasAnyComfortNoiseCodecs(offer->description()));
+}
+
+// If the "default" payload types of audio/video codecs are the same, and
+// audio/video are bundled (as is the default), payload types should be
+// remapped to avoid conflict, as normally happens without using
+// SetCodecPreferences.
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesAvoidsPayloadTypeConflictInOffer) {
+  auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
+
+  std::vector<cricket::AudioCodec> audio_codecs;
+  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
+  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
+  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetAudioCodecs(audio_codecs);
+
+  std::vector<cricket::VideoCodec> video_codecs;
+  video_codecs.emplace_back(100, "bar");
+  video_codecs.emplace_back(101, cricket::kRtxCodecName);
+  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetVideoCodecs(video_codecs);
+
+  auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
+  auto transceivers = caller->pc()->GetTransceivers();
+  ASSERT_EQ(2u, transceivers.size());
+
+  auto audio_transceiver = caller->pc()->GetTransceivers()[0];
+  auto capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+  EXPECT_TRUE(audio_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  auto video_transceiver = caller->pc()->GetTransceivers()[1];
+  capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_VIDEO);
+  EXPECT_TRUE(video_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  RTCOfferAnswerOptions options;
+  auto offer = caller->CreateOffer(options);
+  EXPECT_FALSE(HasPayloadTypeConflict(offer->description()));
+  // Sanity check that we got the primary codec and RTX.
+  EXPECT_EQ(2u, cricket::GetFirstAudioContentDescription(offer->description())
+                    ->codecs()
+                    .size());
+  EXPECT_EQ(2u, cricket::GetFirstVideoContentDescription(offer->description())
+                    ->codecs()
+                    .size());
+}
+
+// Same as above, but preferences set for the answer.
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesAvoidsPayloadTypeConflictInAnswer) {
+  auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
+
+  std::vector<cricket::AudioCodec> audio_codecs;
+  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
+  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
+  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetAudioCodecs(audio_codecs);
+
+  std::vector<cricket::VideoCodec> video_codecs;
+  video_codecs.emplace_back(100, "bar");
+  video_codecs.emplace_back(101, cricket::kRtxCodecName);
+  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetVideoCodecs(video_codecs);
+
+  auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
+
+  RTCOfferAnswerOptions options;
+  caller->SetRemoteDescription(caller->CreateOffer(options));
+
+  auto transceivers = caller->pc()->GetTransceivers();
+  ASSERT_EQ(2u, transceivers.size());
+
+  auto audio_transceiver = caller->pc()->GetTransceivers()[0];
+  auto capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+  EXPECT_TRUE(audio_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  auto video_transceiver = caller->pc()->GetTransceivers()[1];
+  capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_VIDEO);
+  EXPECT_TRUE(video_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  auto answer = caller->CreateAnswer(options);
+
+  EXPECT_FALSE(HasPayloadTypeConflict(answer->description()));
+  // Sanity check that we got the primary codec and RTX.
+  EXPECT_EQ(2u, cricket::GetFirstAudioContentDescription(answer->description())
+                    ->codecs()
+                    .size());
+  EXPECT_EQ(2u, cricket::GetFirstVideoContentDescription(answer->description())
+                    ->codecs()
+                    .size());
+}
+
+// Same as above, but preferences set for a subsequent offer.
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       SetCodecPreferencesAvoidsPayloadTypeConflictInSubsequentOffer) {
+  auto fake_engine = std::make_unique<cricket::FakeMediaEngine>();
+
+  std::vector<cricket::AudioCodec> audio_codecs;
+  audio_codecs.emplace_back(100, "foo", 0, 0, 1);
+  audio_codecs.emplace_back(101, cricket::kRtxCodecName, 0, 0, 1);
+  audio_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetAudioCodecs(audio_codecs);
+
+  std::vector<cricket::VideoCodec> video_codecs;
+  video_codecs.emplace_back(100, "bar");
+  video_codecs.emplace_back(101, cricket::kRtxCodecName);
+  video_codecs.back().params[cricket::kCodecParamAssociatedPayloadType] = "100";
+  fake_engine->SetVideoCodecs(video_codecs);
+
+  auto caller = CreatePeerConnectionWithAudioVideo(std::move(fake_engine));
+
+  RTCOfferAnswerOptions options;
+  caller->SetRemoteDescription(caller->CreateOffer(options));
+  caller->SetLocalDescription(caller->CreateAnswer(options));
+
+  auto transceivers = caller->pc()->GetTransceivers();
+  ASSERT_EQ(2u, transceivers.size());
+
+  auto audio_transceiver = caller->pc()->GetTransceivers()[0];
+  auto capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_AUDIO);
+  EXPECT_TRUE(audio_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  auto video_transceiver = caller->pc()->GetTransceivers()[1];
+  capabilities = caller->pc_factory()->GetRtpSenderCapabilities(
+      cricket::MediaType::MEDIA_TYPE_VIDEO);
+  EXPECT_TRUE(video_transceiver->SetCodecPreferences(capabilities.codecs).ok());
+
+  auto reoffer = caller->CreateOffer(options);
+
+  EXPECT_FALSE(HasPayloadTypeConflict(reoffer->description()));
+  // Sanity check that we got the primary codec and RTX.
+  EXPECT_EQ(2u, cricket::GetFirstAudioContentDescription(reoffer->description())
+                    ->codecs()
+                    .size());
+  EXPECT_EQ(2u, cricket::GetFirstVideoContentDescription(reoffer->description())
+                    ->codecs()
+                    .size());
 }
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionMediaTest,

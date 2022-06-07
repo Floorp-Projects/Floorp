@@ -944,17 +944,23 @@ static void MergeCodecs(const std::vector<C>& reference_codecs,
   }
 }
 
+// `codecs` is a full list of codecs with correct payload type mappings, which
+// don't conflict with mappings of the other media type; `supported_codecs` is
+// a list filtered for the media section`s direction but with default payload
+// types.
 template <typename Codecs>
 static Codecs MatchCodecPreference(
     const std::vector<webrtc::RtpCodecCapability>& codec_preferences,
-    const Codecs& codecs) {
+    const Codecs& codecs,
+    const Codecs& supported_codecs) {
   Codecs filtered_codecs;
   std::set<std::string> kept_codecs_ids;
   bool want_rtx = false;
 
   for (const auto& codec_preference : codec_preferences) {
     auto found_codec = absl::c_find_if(
-        codecs, [&codec_preference](const typename Codecs::value_type& codec) {
+        supported_codecs,
+        [&codec_preference](const typename Codecs::value_type& codec) {
           webrtc::RtpCodecParameters codec_parameters =
               codec.ToCodecParameters();
           return codec_parameters.name == codec_preference.name &&
@@ -965,9 +971,13 @@ static Codecs MatchCodecPreference(
                  codec_parameters.parameters == codec_preference.parameters;
         });
 
-    if (found_codec != codecs.end()) {
-      filtered_codecs.push_back(*found_codec);
-      kept_codecs_ids.insert(std::to_string(found_codec->id));
+    if (found_codec != supported_codecs.end()) {
+      typename Codecs::value_type found_codec_with_correct_pt;
+      if (FindMatchingCodec(supported_codecs, codecs, *found_codec,
+                            &found_codec_with_correct_pt)) {
+        filtered_codecs.push_back(found_codec_with_correct_pt);
+        kept_codecs_ids.insert(std::to_string(found_codec_with_correct_pt.id));
+      }
     } else if (IsRtxCodec(codec_preference)) {
       want_rtx = true;
     }
@@ -2144,8 +2154,9 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
   if (!media_description_options.codec_preferences.empty()) {
     // Add the codecs from the current transceiver's codec preferences.
     // They override any existing codecs from previous negotiations.
-    filtered_codecs = MatchCodecPreference(
-        media_description_options.codec_preferences, supported_audio_codecs);
+    filtered_codecs =
+        MatchCodecPreference(media_description_options.codec_preferences,
+                             audio_codecs, supported_audio_codecs);
   } else {
     // Add the codecs from current content if it exists and is not rejected nor
     // recycled.
@@ -2233,8 +2244,9 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
   if (!media_description_options.codec_preferences.empty()) {
     // Add the codecs from the current transceiver's codec preferences.
     // They override any existing codecs from previous negotiations.
-    filtered_codecs = MatchCodecPreference(
-        media_description_options.codec_preferences, supported_video_codecs);
+    filtered_codecs =
+        MatchCodecPreference(media_description_options.codec_preferences,
+                             video_codecs, supported_video_codecs);
   } else {
     // Add the codecs from current content if it exists and is not rejected nor
     // recycled.
@@ -2424,8 +2436,9 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
   AudioCodecs filtered_codecs;
 
   if (!media_description_options.codec_preferences.empty()) {
-    filtered_codecs = MatchCodecPreference(
-        media_description_options.codec_preferences, supported_audio_codecs);
+    filtered_codecs =
+        MatchCodecPreference(media_description_options.codec_preferences,
+                             audio_codecs, supported_audio_codecs);
   } else {
     // Add the codecs from current content if it exists and is not rejected nor
     // recycled.
@@ -2539,8 +2552,9 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
   VideoCodecs filtered_codecs;
 
   if (!media_description_options.codec_preferences.empty()) {
-    filtered_codecs = MatchCodecPreference(
-        media_description_options.codec_preferences, supported_video_codecs);
+    filtered_codecs =
+        MatchCodecPreference(media_description_options.codec_preferences,
+                             video_codecs, supported_video_codecs);
   } else {
     // Add the codecs from current content if it exists and is not rejected nor
     // recycled.
