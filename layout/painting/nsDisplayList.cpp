@@ -5547,7 +5547,8 @@ nsDisplayStickyPosition::nsDisplayStickyPosition(
     const ActiveScrolledRoot* aContainerASR, bool aClippedToDisplayPort)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot),
       mContainerASR(aContainerASR),
-      mClippedToDisplayPort(aClippedToDisplayPort) {
+      mClippedToDisplayPort(aClippedToDisplayPort),
+      mShouldFlatten(false) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
 
