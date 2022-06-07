@@ -145,7 +145,10 @@ void Vp9ReadQp(BitstreamReader& br, Vp9UncompressedHeader* frame_info) {
   frame_info->is_lossless = frame_info->base_qp == 0;
   for (int i = 0; i < 3; ++i) {
     if (br.Read<bool>()) {  // if delta_coded
-      if (br.ReadBits(4) != 0) {
+      // delta_q is a signed integer with leading 4 bits containing absolute
+      // value and last bit containing sign. There are are two ways to represent
+      // zero with such encoding.
+      if ((br.ReadBits(5) & 0b1111'0) != 0) {  // delta_q
         frame_info->is_lossless = false;
       }
     }
