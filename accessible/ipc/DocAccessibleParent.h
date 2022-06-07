@@ -172,10 +172,7 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual mozilla::ipc::IPCResult RecvShutdown() override;
   void Destroy();
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override {
-    MOZ_ASSERT(CheckDocTree());
-    if (!mShutdown) Destroy();
-  }
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   /*
    * Return the main processes representation of the parent document (if any)
