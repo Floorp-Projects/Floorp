@@ -90,6 +90,12 @@ extern JS_PUBLIC_API JSObject* GetRealmGlobalOrNull(Realm* realm);
 // for Number).
 extern JS_PUBLIC_API bool InitRealmStandardClasses(JSContext* cx);
 
+// If the current realm has the non-standard freezeBuiltins option set to true,
+// freeze the constructor object and seal the prototype.
+extern JS_PUBLIC_API bool MaybeFreezeCtorAndPrototype(JSContext* cx,
+                                                      HandleObject ctor,
+                                                      HandleObject maybeProto);
+
 /*
  * Ways to get various per-Realm objects. All the getters declared below operate
  * on the JSContext's current Realm.
