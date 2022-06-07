@@ -17,7 +17,9 @@ const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 function XULStore() {
   if (!Services.appinfo.inSafeMode) {
@@ -112,7 +114,7 @@ XULStore.prototype = {
       let encoder = new TextEncoder();
 
       data = encoder.encode(data);
-      await OS.File.writeAtomic(this._storeFile.path, data, {
+      await lazy.OS.File.writeAtomic(this._storeFile.path, data, {
         tmpPath: this._storeFile.path + ".tmp",
       });
     } catch (e) {
