@@ -22,6 +22,7 @@ import errno
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 import mozpack.path as mozpath
 
+from pathlib import Path
 from mach.decorators import (
     CommandArgument,
     CommandArgumentGroup,
@@ -176,6 +177,69 @@ def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
             return ret
 
     return 0
+
+
+@SubCommand(
+    "cargo",
+    "vet",
+    description="Run `cargo vet`.",
+)
+@CommandArgument("arguments", nargs=argparse.REMAINDER)
+def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
+    from mozbuild.bootstrap import bootstrap_toolchain
+
+    # Logging of commands enables logging from `bootstrap_toolchain` that we
+    # don't want to expose. Disable them temporarily.
+    logger = logging.getLogger("gecko_taskgraph.generator")
+    level = logger.getEffectiveLevel()
+    logger.setLevel(logging.ERROR)
+
+    env = env.copy()
+    cargo_vet = bootstrap_toolchain("cargo-vet")
+    if cargo_vet:
+        env["PATH"] = os.pathsep.join([cargo_vet, env["PATH"]])
+    logger.setLevel(level)
+    try:
+        cargo = command_context.substs["CARGO"]
+    except (BuildEnvironmentNotFoundException, KeyError):
+        # Default if this tree isn't configured.
+        from mozfile import which
+
+        cargo = which("cargo", path=env["PATH"])
+        if not cargo:
+            raise OSError(
+                errno.ENOENT,
+                (
+                    "Could not find 'cargo' on your $PATH. "
+                    "Hint: have you run `mach build` or `mach configure`?"
+                ),
+            )
+
+    locked = "--locked" in arguments
+    if locked:
+        # The use of --locked requires .cargo/config to exist, but other things,
+        # like cargo update, don't want it there, so remove it once we're done.
+        topsrcdir = Path(command_context.topsrcdir)
+        shutil.copyfile(
+            topsrcdir / ".cargo" / "config.in", topsrcdir / ".cargo" / "config"
+        )
+
+    try:
+        res = subprocess.run(
+            [cargo, "vet"] + arguments,
+            cwd=command_context.topsrcdir,
+            stdout=stdout,
+            env=env,
+        )
+    finally:
+        if locked:
+            (topsrcdir / ".cargo" / "config").unlink()
+
+    # When the function is invoked without stdout set (the default when running
+    # as a mach subcommand), exit with the returncode from cargo vet.
+    # When the function is invoked with stdout (direct function call), return
+    # the full result from subprocess.run.
+    return res if stdout else res.returncode
 
 
 @Command(
