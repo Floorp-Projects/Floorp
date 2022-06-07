@@ -22,9 +22,11 @@ const { ManifestIcons } = ChromeUtils.import(
   "resource://gre/modules/ManifestIcons.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
@@ -57,7 +59,10 @@ function stripQuery(url) {
 }
 
 // Folder in which we store the manifest files
-const MANIFESTS_DIR = OS.Path.join(OS.Constants.Path.profileDir, "manifests");
+const MANIFESTS_DIR = lazy.OS.Path.join(
+  lazy.OS.Constants.Path.profileDir,
+  "manifests"
+);
 
 // We maintain a list of scopes for installed webmanifests so we can determine
 // whether a given url is within the scope of a previously installed manifest
@@ -73,7 +78,7 @@ class Manifest {
     // The key for this is the manifests URL that is required to be unique.
     // However arbitrary urls are not safe file paths so lets hash it.
     const fileName = generateHash(manifestUrl) + ".json";
-    this._path = OS.Path.join(MANIFESTS_DIR, fileName);
+    this._path = lazy.OS.Path.join(MANIFESTS_DIR, fileName);
     this.browser = browser;
   }
 
@@ -86,7 +91,7 @@ class Manifest {
   }
 
   async initialize() {
-    this._store = new JSONFile({ path: this._path, saveDelayMs: 100 });
+    this._store = new lazy.JSONFile({ path: this._path, saveDelayMs: 100 });
     await this._store.load();
   }
 
@@ -175,11 +180,14 @@ var Manifests = {
     // Prevent multiple initializations
     this._readyPromise = (async () => {
       // Make sure the manifests have the folder needed to save into
-      await OS.File.makeDir(MANIFESTS_DIR, { ignoreExisting: true });
+      await lazy.OS.File.makeDir(MANIFESTS_DIR, { ignoreExisting: true });
 
       // Ensure any existing scope data we have about manifests is loaded
-      this._path = OS.Path.join(OS.Constants.Path.profileDir, MANIFESTS_FILE);
-      this._store = new JSONFile({ path: this._path });
+      this._path = lazy.OS.Path.join(
+        lazy.OS.Constants.Path.profileDir,
+        MANIFESTS_FILE
+      );
+      this._store = new lazy.JSONFile({ path: this._path });
       await this._store.load();
 
       // If we don't have any existing data, initialize empty
