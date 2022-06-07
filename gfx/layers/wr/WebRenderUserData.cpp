@@ -252,8 +252,7 @@ WebRenderImageProviderData::WebRenderImageProviderData(
 WebRenderImageProviderData::WebRenderImageProviderData(
     RenderRootStateManager* aManager, uint32_t aDisplayItemKey,
     nsIFrame* aFrame)
-    : WebRenderUserData(aManager, aDisplayItemKey, aFrame),
-      mDrawResult(ImgDrawResult::NOT_READY) {}
+    : WebRenderUserData(aManager, aDisplayItemKey, aFrame) {}
 
 WebRenderImageProviderData::~WebRenderImageProviderData() = default;
 
