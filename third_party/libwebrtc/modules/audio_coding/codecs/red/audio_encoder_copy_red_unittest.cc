@@ -196,6 +196,32 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes1) {
 }
 
 // Checks that the correct payload sizes are populated into the redundancy
+// information for a redundancy level of 0.
+TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes0) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-Red-For-Opus/Enabled-0/");
+  // Recreate the RED encoder to take the new field trial setting into account.
+  AudioEncoderCopyRed::Config config;
+  config.payload_type = red_payload_type_;
+  config.speech_encoder = std::move(red_->ReclaimContainedEncoders()[0]);
+  red_.reset(new AudioEncoderCopyRed(std::move(config)));
+
+  // Let the mock encoder return payload sizes 1, 2, 3, ..., 10 for the sequence
+  // of calls.
+  static const int kNumPackets = 10;
+  InSequence s;
+  for (int encode_size = 1; encode_size <= kNumPackets; ++encode_size) {
+    EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+        .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(encode_size)));
+  }
+
+  for (size_t i = 1; i <= kNumPackets; ++i) {
+    Encode();
+    ASSERT_EQ(0u, encoded_info_.redundant.size());
+    EXPECT_EQ(1 + i, encoded_info_.encoded_bytes);
+  }
+}
+// Checks that the correct payload sizes are populated into the redundancy
 // information for a redundancy level of 2.
 TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes2) {
   webrtc::test::ScopedFieldTrials field_trials(
@@ -435,6 +461,34 @@ TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header) {
                     encoded_info_.redundant[1].encoded_timestamp;
 }
 
+// Variant with a redundancy of 0.
+TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header0) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-Red-For-Opus/Enabled-0/");
+  // Recreate the RED encoder to take the new field trial setting into account.
+  AudioEncoderCopyRed::Config config;
+  config.payload_type = red_payload_type_;
+  config.speech_encoder = std::move(red_->ReclaimContainedEncoders()[0]);
+  red_.reset(new AudioEncoderCopyRed(std::move(config)));
+
+  const int primary_payload_type = red_payload_type_ + 1;
+  AudioEncoder::EncodedInfo info;
+  info.encoded_bytes = 10;
+  info.encoded_timestamp = timestamp_;
+  info.payload_type = primary_payload_type;
+
+  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
+  Encode();
+  info.encoded_timestamp = timestamp_;  // update timestamp.
+  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
+  Encode();  // Second call will not produce a redundant encoding.
+
+  EXPECT_EQ(encoded_.size(),
+            1u + 1 * 10u);  // header size + one encoded payloads.
+  EXPECT_EQ(encoded_[0], primary_payload_type);
+}
 // Variant with a redundancy of 2.
 TEST_F(AudioEncoderCopyRedTest, CheckRFC2198Header2) {
   webrtc::test::ScopedFieldTrials field_trials(
