@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
@@ -22,7 +23,8 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  */
 class MediaSessionFullscreenFeature(
     private val activity: Activity,
-    private val store: BrowserStore
+    private val store: BrowserStore,
+    private val tabId: String?,
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -48,7 +50,7 @@ class MediaSessionFullscreenFeature(
             return
         }
 
-        if (store.state.selectedTabId == activeState.id) {
+        if (store.state.findCustomTabOrSelectedTab(tabId)?.id == activeState.id) {
             when (activeState.mediaSessionState?.elementMetadata?.portrait) {
                 true ->
                     activity.requestedOrientation =

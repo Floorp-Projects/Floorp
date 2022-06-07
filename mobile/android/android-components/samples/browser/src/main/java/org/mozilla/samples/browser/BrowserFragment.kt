@@ -121,7 +121,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         mediaSessionFullscreenFeature.set(
             feature = MediaSessionFullscreenFeature(
                 requireActivity(),
-                components.store
+                components.store,
+                sessionId
             ),
             owner = this,
             view = binding.root
