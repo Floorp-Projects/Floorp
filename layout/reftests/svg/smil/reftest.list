@@ -122,7 +122,8 @@ fuzzy(0-1,0-600) == anim-feGaussianBlur-01.svg lime.svg
 
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
-== anim-marker-orient-02.svg lime.svg
+# The test fails intermittently if this pref is enabled, see bug 1768650.
+pref(gfx.webrender.svg-images,false) == anim-marker-orient-02.svg lime.svg
 
 #animate points list:
 == anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
