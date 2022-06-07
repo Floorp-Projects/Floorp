@@ -145,6 +145,7 @@ add_task(async function test_delete_snapshot() {
     url: TEST_URL1,
     documentType: Interactions.DOCUMENT_TYPE.MEDIA,
     removedAt,
+    removedReason: Snapshots.REMOVED_REASON.DISMISS,
   });
 
   info("Attempt to re-add non-user persisted snapshot");
@@ -155,6 +156,7 @@ add_task(async function test_delete_snapshot() {
     url: TEST_URL1,
     documentType: Interactions.DOCUMENT_TYPE.MEDIA,
     removedAt,
+    removedReason: Snapshots.REMOVED_REASON.DISMISS,
   });
 
   info("Re-add user persisted snapshot");
@@ -248,6 +250,8 @@ add_task(async function test_removed_reason() {
       Assert.equal(rows.length, 1);
       Assert.greater(rows[0].getResultByName("removed_at"), 0);
       Assert.equal(rows[0].getResultByName("removed_reason"), expectedReason);
+      let snapshot = await Snapshots.get(TEST_URL1, true);
+      Assert.equal(snapshot.removedReason, expectedReason);
     }
   }
 });
