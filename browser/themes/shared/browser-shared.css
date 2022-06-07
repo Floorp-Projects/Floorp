@@ -749,6 +749,8 @@ popupnotificationcontent {
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline-end: 8px;
+  /* Setting width explicitly so it's still visible if the device label is very long */
+  width: 16px;
 }
 
 #webRTC-selectCamera-icon {
