@@ -7459,7 +7459,7 @@ nsresult ClientUsageArray::Deserialize(const nsACString& aText) {
            NS_ERROR_FAILURE);
 
     nsresult rv;
-    const uint64_t usage = Substring(token, 1).ToInteger(&rv);
+    const uint64_t usage = Substring(token, 1).ToInteger64(&rv);
     QM_TRY(MOZ_TO_RESULT(rv));
 
     ElementAt(clientType) = Some(usage);
