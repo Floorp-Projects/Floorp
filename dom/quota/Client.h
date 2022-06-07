@@ -70,7 +70,7 @@ class Client {
   };
 
   static Type TypeMax() {
-    if (CachedNextGenLocalStorageEnabled()) {
+    if (NextGenLocalStorageEnabled()) {
       return TYPE_MAX;
     }
     return LS;
