@@ -49,8 +49,7 @@ const {
 // Add credit card enabled flag in telemetry environment for recording the number of
 // users who disable/enable the credit card autofill feature.
 
-this.log = null;
-FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

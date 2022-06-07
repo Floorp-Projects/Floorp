@@ -34,8 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
-this.log = null;
-FormAutofill.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
+FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";
@@ -423,7 +422,7 @@ class FieldScanner {
       } else if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
         creditCardFieldDetails.push(fieldDetail);
       } else {
-        log.debug(
+        lazy.log.debug(
           "Not collecting a field with a unknown fieldName",
           fieldDetail
         );
