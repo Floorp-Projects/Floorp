@@ -118,6 +118,7 @@ rtc_library("rtp_rtcp_format") {
     "../../api/video:video_layers_allocation",
     "../../api/video:video_rtp_headers",
     "../../common_video",
+    "../../rtc_base:bitstream_reader",
     "../../rtc_base:checks",
     "../../rtc_base:divide_round",
     "../../rtc_base:rtc_base_approved",
