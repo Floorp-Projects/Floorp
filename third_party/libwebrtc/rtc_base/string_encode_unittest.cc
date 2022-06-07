@@ -169,57 +169,6 @@ TEST(TokenizeTest, CompareSubstrings) {
   ASSERT_EQ(0ul, fields.size());
 }
 
-TEST(TokenizeTest, TokenizeAppend) {
-  ASSERT_EQ(0ul, tokenize_append("A B C", ' ', nullptr));
-
-  std::vector<std::string> fields;
-
-  tokenize_append("A B C", ' ', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("B", fields.at(1).c_str());
-
-  tokenize_append("D E", ' ', &fields);
-  ASSERT_EQ(5ul, fields.size());
-  ASSERT_STREQ("B", fields.at(1).c_str());
-  ASSERT_STREQ("E", fields.at(4).c_str());
-}
-
-TEST(TokenizeTest, TokenizeWithMarks) {
-  ASSERT_EQ(0ul, tokenize("D \"A B", ' ', '(', ')', nullptr));
-
-  std::vector<std::string> fields;
-  tokenize("A B C", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("C", fields.at(2).c_str());
-
-  tokenize("\"A B\" C", ' ', '"', '"', &fields);
-  ASSERT_EQ(2ul, fields.size());
-  ASSERT_STREQ("A B", fields.at(0).c_str());
-
-  tokenize("D \"A B\" C", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-
-  tokenize("D \"A B\" C \"E F\"", ' ', '"', '"', &fields);
-  ASSERT_EQ(4ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-  ASSERT_STREQ("E F", fields.at(3).c_str());
-
-  // No matching marks.
-  tokenize("D \"A B", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("\"A", fields.at(1).c_str());
-
-  tokenize("D (A B) C (E F) G", ' ', '(', ')', &fields);
-  ASSERT_EQ(5ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-  ASSERT_STREQ("E F", fields.at(3).c_str());
-}
-
 TEST(TokenizeTest, TokenizeWithEmptyTokens) {
   std::vector<std::string> fields;
   EXPECT_EQ(3ul, tokenize_with_empty_tokens("a.b.c", '.', &fields));
