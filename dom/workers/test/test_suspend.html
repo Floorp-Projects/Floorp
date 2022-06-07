@@ -44,45 +44,49 @@
   var oldMessageCount;
   var waitCount = 0;
 
-  var bcSuspendWindow = new BroadcastChannel("suspendWindow");
-  bcSuspendWindow.onmessage = (msgEvent) => {
-    var msg = msgEvent.data;
-    var command = msg.command;
-    var data = msg.data;
-    if (command == "loaded") {
-      if (finished) {
-        return;
-      }
-      bcSuspendWindow.postMessage({command: "startWorker"});
-    } else if (command == "messageCallback") {
-      messageCallback(data);
-    } else if (command == "errorCallback") {
-      errorCallback(data);
-    } else if (command == "finished") {
-      SimpleTest.finish();
-    }
-  }
+  var bcSuspendWindow, bcSuspendBlank;
 
-  var bcSuspendBlank = new BroadcastChannel("suspendBlank");
-  bcSuspendBlank.onmessage = (msgEvent) => {
-    var msg = msgEvent.data;
-    var command = msg.command;
-    if (command == "loaded") {
-      suspendBlankPageCurrentlyShowing = true;
-      if (suspended) {
-        badOnloadCallback();
-      } else {
-        suspendCallback();
+  function runTest() {
+    bcSuspendWindow = new BroadcastChannel("suspendWindow");
+    bcSuspendWindow.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      var command = msg.command;
+      var data = msg.data;
+      if (command == "loaded") {
+        if (finished) {
+          return;
+        }
+        bcSuspendWindow.postMessage({command: "startWorker"});
+      } else if (command == "messageCallback") {
+        messageCallback(data);
+      } else if (command == "errorCallback") {
+        errorCallback(data);
+      } else if (command == "finished") {
+        SimpleTest.finish();
       }
-    } else if (command == "pagehide") {
-      suspendBlankPageCurrentlyShowing = false;
     }
-  }
 
-  // If Fission is disabled, the pref is no-op.
-  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
-    window.open("suspend_window.html", "testWin", "noopener");
-  });
+    bcSuspendBlank = new BroadcastChannel("suspendBlank");
+    bcSuspendBlank.onmessage = (msgEvent) => {
+      var msg = msgEvent.data;
+      var command = msg.command;
+      if (command == "loaded") {
+        suspendBlankPageCurrentlyShowing = true;
+        if (suspended) {
+          badOnloadCallback();
+        } else {
+          suspendCallback();
+        }
+      } else if (command == "pagehide") {
+        suspendBlankPageCurrentlyShowing = false;
+      }
+    }
+
+    // If Fission is disabled, the pref is no-op.
+    SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+      window.open("suspend_window.html", "testWin", "noopener");
+    });
+  }
 
   function finishTest() {
     if (finished) {
@@ -154,6 +158,24 @@
     }
     ok(false, "testWin had an error: '" + data + "'");
     finishTest();
+  }
+
+  if (isXOrigin) {
+    // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+    // Acquire storage access permission here so that the BroadcastChannel used to
+    // communicate with the opened windows works in xorigin tests. Otherwise,
+    // the iframe containing this page is isolated from first-party storage access,
+    // which isolates BroadcastChannel communication.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    SpecialPowers.pushPermissions([{'type': 'storageAccessAPI', 'allow': 1, 'context': document}], () =>{
+      SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+        runTest();
+      }).then(() => {
+        SpecialPowers.removePermission("3rdPartyStorage^http://mochi.test:8888", "http://mochi.xorigin-test:8888");
+      });
+    });
+  } else {
+    runTest();
   }
 
 </script>
