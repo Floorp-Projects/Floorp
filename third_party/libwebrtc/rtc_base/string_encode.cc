@@ -186,52 +186,6 @@ size_t tokenize_with_empty_tokens(const std::string& source,
   return fields->size();
 }
 
-size_t tokenize_append(const std::string& source,
-                       char delimiter,
-                       std::vector<std::string>* fields) {
-  if (!fields)
-    return 0;
-
-  std::vector<std::string> new_fields;
-  tokenize(source, delimiter, &new_fields);
-  fields->insert(fields->end(), new_fields.begin(), new_fields.end());
-  return fields->size();
-}
-
-size_t tokenize(const std::string& source,
-                char delimiter,
-                char start_mark,
-                char end_mark,
-                std::vector<std::string>* fields) {
-  if (!fields)
-    return 0;
-  fields->clear();
-
-  std::string remain_source = source;
-  while (!remain_source.empty()) {
-    size_t start_pos = remain_source.find(start_mark);
-    if (std::string::npos == start_pos)
-      break;
-    std::string pre_mark;
-    if (start_pos > 0) {
-      pre_mark = remain_source.substr(0, start_pos - 1);
-    }
-
-    ++start_pos;
-    size_t end_pos = remain_source.find(end_mark, start_pos);
-    if (std::string::npos == end_pos)
-      break;
-
-    // We have found the matching marks. First tokenize the pre-mask. Then add
-    // the marked part as a single field. Finally, loop back for the post-mark.
-    tokenize_append(pre_mark, delimiter, fields);
-    fields->push_back(remain_source.substr(start_pos, end_pos - start_pos));
-    remain_source = remain_source.substr(end_pos + 1);
-  }
-
-  return tokenize_append(remain_source, delimiter, fields);
-}
-
 bool tokenize_first(const std::string& source,
                     const char delimiter,
                     std::string* token,
