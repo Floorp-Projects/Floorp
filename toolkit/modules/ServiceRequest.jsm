@@ -14,27 +14,29 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ProxyService",
   "@mozilla.org/network/protocol-proxy-service;1",
   "nsIProtocolProxyService"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "CaptivePortalService",
   "@mozilla.org/network/captive-portal-service;1",
   "nsICaptivePortalService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
@@ -79,7 +81,9 @@ async function getControllingExtension() {
     return undefined;
   }
   // Is this proxied by an extension that set proxy prefs?
-  let setting = await ExtensionPreferencesManager.getSetting("proxy.settings");
+  let setting = await lazy.ExtensionPreferencesManager.getSetting(
+    "proxy.settings"
+  );
   return setting?.id;
 }
 
@@ -91,7 +95,7 @@ async function getProxySource(proxyInfo) {
       type: "api",
     };
   }
-  let type = PROXY_CONFIG_TYPES[ProxyService.proxyConfigType] || "unknown";
+  let type = PROXY_CONFIG_TYPES[lazy.ProxyService.proxyConfigType] || "unknown";
 
   // If we have a policy it will have set the prefs.
   if (
@@ -171,8 +175,9 @@ class ServiceRequest extends XMLHttpRequest {
     try {
       return (
         Services.io.offline ||
-        CaptivePortalService.state == CaptivePortalService.LOCKED_PORTAL ||
-        !gNetworkLinkService.isLinkUp
+        lazy.CaptivePortalService.state ==
+          lazy.CaptivePortalService.LOCKED_PORTAL ||
+        !lazy.gNetworkLinkService.isLinkUp
       );
     } catch (ex) {
       // we cannot get state, assume the best.

@@ -14,14 +14,15 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Region",
   "resource://gre/modules/Region.jsm"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "INVALID_SHAREABLE_SCHEMES",
   "services.sync.engine.tabs.filteredSchemes",
   "",
@@ -160,7 +161,7 @@ var BrowserUtils = {
     }
     // Use the same preference as synced tabs to disable what kind
     // of tabs we can send to another device
-    return !INVALID_SHAREABLE_SCHEMES.has(url.scheme);
+    return !lazy.INVALID_SHAREABLE_SCHEMES.has(url.scheme);
   },
 
   /**
@@ -366,8 +367,8 @@ var BrowserUtils = {
     const info = PromoInfo[promoType];
     const promoEnabled = Services.prefs.getBoolPref(info.enabledPref, true);
 
-    const homeRegion = Region.home || "";
-    const currentRegion = Region.current || "";
+    const homeRegion = lazy.Region.home || "";
+    const currentRegion = lazy.Region.current || "";
 
     let inSupportedRegion = true;
     if ("supportedRegions" in info.lazyStringSetPrefs) {
@@ -397,8 +398,8 @@ var BrowserUtils = {
   },
 
   shouldShowRallyPromo() {
-    const homeRegion = Region.home || "";
-    const currentRegion = Region.current || "";
+    const homeRegion = lazy.Region.home || "";
+    const currentRegion = lazy.Region.current || "";
     const region = currentRegion || homeRegion;
     const language = Services.locale.appLocaleAsBCP47;
 

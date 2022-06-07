@@ -11,26 +11,28 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "useSeparateFileUriProcess",
   "browser.tabs.remote.separateFileUriProcess",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "useSeparatePrivilegedAboutContentProcess",
   "browser.tabs.remote.separatePrivilegedContentProcess",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "separatePrivilegedMozillaWebContentProcess",
   "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "separatedMozillaDomains",
   "browser.tabs.remote.separatedMozillaDomains",
   "",
@@ -39,19 +41,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "useCrossOriginOpenerPolicy",
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "serializationHelper",
   "@mozilla.org/network/serialization-helper;1",
   "nsISerializationHelper"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "extProtService",
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
@@ -141,10 +143,10 @@ function validatedWebRemoteType(
   // To load into the Privileged Mozilla Content Process you must be https,
   // and be an exact match or a subdomain of an allowlisted domain.
   if (
-    separatePrivilegedMozillaWebContentProcess &&
+    lazy.separatePrivilegedMozillaWebContentProcess &&
     aTargetUri.asciiHost &&
     aTargetUri.scheme == "https" &&
-    separatedMozillaDomains.some(function(val) {
+    lazy.separatedMozillaDomains.some(function(val) {
       return (
         aTargetUri.asciiHost == val || aTargetUri.asciiHost.endsWith("." + val)
       );
@@ -181,7 +183,9 @@ function validatedWebRemoteType(
     // ( https://bugzilla.mozilla.org/show_bug.cgi?id=1589085 ), and this code
     // can get called several times per page load so that seems like something
     // we'd want to avoid.
-    let handlerInfo = extProtService.getProtocolHandlerInfo(aTargetUri.scheme);
+    let handlerInfo = lazy.extProtService.getProtocolHandlerInfo(
+      aTargetUri.scheme
+    );
     try {
       if (!handlerInfo.alwaysAskBeforeHandling) {
         let app = handlerInfo.preferredApplicationHandler;
@@ -297,7 +301,7 @@ var E10SUtils = {
   },
 
   useCrossOriginOpenerPolicy() {
-    return useCrossOriginOpenerPolicy;
+    return lazy.useCrossOriginOpenerPolicy;
   },
 
   _log: null,
@@ -329,7 +333,7 @@ var E10SUtils = {
 
     try {
       if (csp) {
-        serializedCSP = serializationHelper.serializeToString(csp);
+        serializedCSP = lazy.serializationHelper.serializeToString(csp);
       }
     } catch (e) {
       this.log().error(`Failed to serialize csp '${csp}' ${e}`);
@@ -350,7 +354,7 @@ var E10SUtils = {
     }
 
     try {
-      let csp = serializationHelper.deserializeObject(csp_b64);
+      let csp = lazy.serializationHelper.deserializeObject(csp_b64);
       csp.QueryInterface(Ci.nsIContentSecurityPolicy);
       return csp;
     } catch (e) {
@@ -456,7 +460,7 @@ var E10SUtils = {
           : aPreferredRemoteType;
 
       case "file":
-        return useSeparateFileUriProcess
+        return lazy.useSeparateFileUriProcess
           ? FILE_REMOTE_TYPE
           : DEFAULT_REMOTE_TYPE;
 
@@ -478,7 +482,7 @@ var E10SUtils = {
         if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD) {
           if (
             flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS &&
-            (useSeparatePrivilegedAboutContentProcess ||
+            (lazy.useSeparatePrivilegedAboutContentProcess ||
               aURI.filePath == "logins" ||
               // Force about:welcome and about:home into the privileged content process to
               // workaround code coverage test failures which result from the
@@ -795,7 +799,7 @@ var E10SUtils = {
       if (tmpa.startsWith("{")) {
         principal = Services.scriptSecurityManager.JSONToPrincipal(tmpa);
       } else {
-        principal = serializationHelper.deserializeObject(principal_b64);
+        principal = lazy.serializationHelper.deserializeObject(principal_b64);
       }
       principal.QueryInterface(Ci.nsIPrincipal);
       return principal;
@@ -824,7 +828,9 @@ var E10SUtils = {
     let serialized = null;
     if (cookieJarSettings) {
       try {
-        serialized = serializationHelper.serializeToString(cookieJarSettings);
+        serialized = lazy.serializationHelper.serializeToString(
+          cookieJarSettings
+        );
       } catch (e) {
         this.log().error(
           `Failed to serialize cookieJarSettings '${cookieJarSettings}' ${e}`
@@ -844,7 +850,7 @@ var E10SUtils = {
     let deserialized = null;
     if (cookieJarSettings_b64) {
       try {
-        deserialized = serializationHelper.deserializeObject(
+        deserialized = lazy.serializationHelper.deserializeObject(
           cookieJarSettings_b64
         );
         deserialized.QueryInterface(Ci.nsICookieJarSettings);
@@ -877,7 +883,7 @@ var E10SUtils = {
     let serialized = null;
     if (referrerInfo) {
       try {
-        serialized = serializationHelper.serializeToString(referrerInfo);
+        serialized = lazy.serializationHelper.serializeToString(referrerInfo);
       } catch (e) {
         this.log().error(
           `Failed to serialize referrerInfo '${referrerInfo}' ${e}`
@@ -896,7 +902,9 @@ var E10SUtils = {
     let deserialized = null;
     if (referrerInfo_b64) {
       try {
-        deserialized = serializationHelper.deserializeObject(referrerInfo_b64);
+        deserialized = lazy.serializationHelper.deserializeObject(
+          referrerInfo_b64
+        );
         deserialized.QueryInterface(Ci.nsIReferrerInfo);
       } catch (e) {
         this.log().error(

@@ -20,8 +20,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "finalizationService",
   "@mozilla.org/toolkit/finalizationwitness;1",
   "nsIFinalizationWitnessService"
@@ -110,7 +112,10 @@ var ContentDOMReference = {
 
     finalizerRoots.set(
       element,
-      finalizationService.make(FINALIZATION_TOPIC, JSON.stringify(identifier))
+      lazy.finalizationService.make(
+        FINALIZATION_TOPIC,
+        JSON.stringify(identifier)
+      )
     );
 
     return identifier;

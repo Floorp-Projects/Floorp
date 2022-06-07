@@ -26,24 +26,26 @@ var EXPORTED_SYMBOLS = [
   "GMPAddon",
 ];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CertUtils",
   "resource://gre/modules/CertUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ServiceRequest",
   "resource://gre/modules/ServiceRequest.jsm"
 );
@@ -69,7 +71,7 @@ function downloadJSON(uri) {
   let log = getScopedLogger("GMPInstallManager.checkForAddons");
   log.info("fetching config from: " + uri);
   return new Promise((resolve, reject) => {
-    let xmlHttp = new ServiceRequest({ mozAnon: true });
+    let xmlHttp = new lazy.ServiceRequest({ mozAnon: true });
 
     xmlHttp.onload = function(aResponse) {
       resolve(JSON.parse(this.responseText));
@@ -95,7 +97,7 @@ function downloadLocalConfig() {
     LOCAL_GMP_SOURCES.map(conf => {
       return downloadJSON(conf.src).then(addons => {
         let platforms = addons.vendors[conf.id].platforms;
-        let target = Services.appinfo.OS + "_" + UpdateUtils.ABI;
+        let target = Services.appinfo.OS + "_" + lazy.UpdateUtils.ABI;
         let details = null;
 
         while (!details) {
@@ -160,7 +162,7 @@ GMPInstallManager.prototype = {
       log.info("Using url: " + url);
     }
 
-    url = await UpdateUtils.formatUpdateURL(url);
+    url = await lazy.UpdateUtils.formatUpdateURL(url);
 
     log.info("Using url (with replacement): " + url);
     return url;
@@ -334,7 +336,7 @@ GMPInstallManager.prototype = {
         true
       );
       if (GMPPrefs.getBool(GMPPrefs.KEY_CERT_CHECKATTRS, true)) {
-        certs = CertUtils.readCertPrefs(GMPPrefs.KEY_CERTS_BRANCH);
+        certs = lazy.CertUtils.readCertPrefs(GMPPrefs.KEY_CERTS_BRANCH);
       }
     }
 
@@ -687,7 +689,7 @@ GMPExtractor.prototype = {
     let deferredPromise = this._deferred;
     let { zipPath, relativeInstallPath } = this;
     // Escape the zip path since the worker will use it as a URI
-    let zipFile = new FileUtils.File(zipPath);
+    let zipFile = new lazy.FileUtils.File(zipPath);
     let zipURI = Services.io.newFileURI(zipFile).spec;
     let worker = new ChromeWorker(
       "resource://gre/modules/GMPExtractorWorker.js"

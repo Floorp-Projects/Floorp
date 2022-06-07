@@ -11,8 +11,9 @@ const { OSKeyStore } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
@@ -50,7 +51,7 @@ var OSKeyStoreTestUtils = {
    */
   canTestOSKeyStoreLogin() {
     return (
-      UpdateUtils.getUpdateChannel(false) == "default" &&
+      lazy.UpdateUtils.getUpdateChannel(false) == "default" &&
       !isCanaryBuildForOSKeyStore
     );
   },

@@ -7,7 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
@@ -19,7 +21,7 @@ const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";
 class IgnoreListsManager {
   async init() {
     if (!this._ignoreListSettings) {
-      this._ignoreListSettings = RemoteSettings(SETTINGS_IGNORELIST_KEY);
+      this._ignoreListSettings = lazy.RemoteSettings(SETTINGS_IGNORELIST_KEY);
     }
   }
 
@@ -77,7 +79,7 @@ class IgnoreListsManager {
       });
     } catch (ex) {
       if (
-        ex instanceof RemoteSettingsClient.InvalidSignatureError &&
+        ex instanceof lazy.RemoteSettingsClient.InvalidSignatureError &&
         firstTime
       ) {
         // The local database is invalid, try and reset it.

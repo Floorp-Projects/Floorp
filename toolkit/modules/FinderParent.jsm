@@ -15,14 +15,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "GetClipboardSearchString",
   "resource://gre/modules/Finder.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Rect",
   "resource://gre/modules/Geometry.jsm"
 );
@@ -30,21 +32,21 @@ ChromeUtils.defineModuleGetter(
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "isLetterboxingEnabled",
   kPrefLetterboxing,
   false
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "isSoundEnabled",
   kSoundEnabledPref,
   false
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "notFoundSoundURL",
   kNotFoundSoundPref,
   ""
@@ -214,7 +216,7 @@ FinderParent.prototype = {
     this._foundSearchString = aResponse.searchString;
     // The rect stops being a Geometry.jsm:Rect over IPC.
     if (aResponse.rect) {
-      aResponse.rect = Rect.fromRect(aResponse.rect);
+      aResponse.rect = lazy.Rect.fromRect(aResponse.rect);
     }
 
     this.callListeners("onFindResult", [aResponse]);
@@ -225,7 +227,7 @@ FinderParent.prototype = {
   },
 
   get clipboardSearchString() {
-    return GetClipboardSearchString(this._browser.loadContext);
+    return lazy.GetClipboardSearchString(this._browser.loadContext);
   },
 
   set caseSensitive(aSensitive) {
@@ -587,7 +589,7 @@ FinderParent.prototype = {
     this._lastFoundBrowsingContext = null;
     this.sendMessageToAllContexts("Finder:FindbarClose");
 
-    if (isLetterboxingEnabled) {
+    if (lazy.isLetterboxingEnabled) {
       let window = this._browser.ownerGlobal;
       if (window.RFPHelper) {
         window.RFPHelper.contentSizeUpdated(window);
@@ -598,7 +600,7 @@ FinderParent.prototype = {
   onFindbarOpen() {
     this.sendMessageToAllContexts("Finder:FindbarOpen");
 
-    if (isLetterboxingEnabled) {
+    if (lazy.isLetterboxingEnabled) {
       let window = this._browser.ownerGlobal;
       if (window.RFPHelper) {
         window.RFPHelper.contentSizeUpdated(window);
@@ -629,7 +631,7 @@ FinderParent.prototype = {
   },
 
   initNotFoundSound() {
-    if (!gSound && isSoundEnabled && notFoundSoundURL) {
+    if (!gSound && lazy.isSoundEnabled && lazy.notFoundSoundURL) {
       try {
         gSound = Cc["@mozilla.org/sound;1"].getService(Ci.nsISound);
         gSound.init();
@@ -638,7 +640,7 @@ FinderParent.prototype = {
   },
 
   playNotFoundSound() {
-    if (!isSoundEnabled || !notFoundSoundURL) {
+    if (!lazy.isSoundEnabled || !lazy.notFoundSoundURL) {
       return;
     }
 
@@ -647,7 +649,7 @@ FinderParent.prototype = {
       return;
     }
 
-    let soundUrl = notFoundSoundURL;
+    let soundUrl = lazy.notFoundSoundURL;
     if (soundUrl == "beep") {
       gSound.beep();
     } else {

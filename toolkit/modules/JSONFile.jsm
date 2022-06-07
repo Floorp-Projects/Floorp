@@ -36,23 +36,25 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gTextDecoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function() {
   return new TextDecoder();
 });
 
@@ -120,7 +122,7 @@ function JSONFile(config) {
   if (config.saveDelayMs === undefined) {
     config.saveDelayMs = kSaveDelayMs;
   }
-  this._saver = new DeferredTask(() => this._save(), config.saveDelayMs);
+  this._saver = new lazy.DeferredTask(() => this._save(), config.saveDelayMs);
 
   this._options = {};
   if (config.compression) {
@@ -311,17 +313,17 @@ JSONFile.prototype = {
     try {
       // This reads the file and automatically detects the UTF-8 encoding.
       let inputStream = new FileInputStream(
-        new FileUtils.File(this.path),
-        FileUtils.MODE_RDONLY,
-        FileUtils.PERMS_FILE,
+        new lazy.FileUtils.File(this.path),
+        lazy.FileUtils.MODE_RDONLY,
+        lazy.FileUtils.PERMS_FILE,
         0
       );
       try {
-        let bytes = NetUtil.readInputStream(
+        let bytes = lazy.NetUtil.readInputStream(
           inputStream,
           inputStream.available()
         );
-        data = JSON.parse(gTextDecoder.decode(bytes));
+        data = JSON.parse(lazy.gTextDecoder.decode(bytes));
       } finally {
         inputStream.close();
       }
@@ -345,12 +347,12 @@ JSONFile.prototype = {
         Cu.reportError(ex);
         // Move the original file to a backup location, ignoring errors.
         try {
-          let originalFile = new FileUtils.File(this.path);
+          let originalFile = new lazy.FileUtils.File(this.path);
           let backupFile = originalFile.clone();
           backupFile.leafName += ".corrupt";
           backupFile.createUnique(
             Ci.nsIFile.NORMAL_FILE_TYPE,
-            FileUtils.PERMS_FILE
+            lazy.FileUtils.PERMS_FILE
           );
           backupFile.remove(false);
           originalFile.moveTo(backupFile.parent, backupFile.leafName);
@@ -365,7 +367,7 @@ JSONFile.prototype = {
         // in the process.
         try {
           let basename = PathUtils.filename(this.path);
-          let backupFile = new FileUtils.File(this._options.backupFile);
+          let backupFile = new lazy.FileUtils.File(this._options.backupFile);
           backupFile.copyTo(null, basename);
         } catch (e) {
           if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
@@ -379,17 +381,17 @@ JSONFile.prototype = {
           // user's computer.
           // This reads the file and automatically detects the UTF-8 encoding.
           let inputStream = new FileInputStream(
-            new FileUtils.File(this._options.backupFile),
-            FileUtils.MODE_RDONLY,
-            FileUtils.PERMS_FILE,
+            new lazy.FileUtils.File(this._options.backupFile),
+            lazy.FileUtils.MODE_RDONLY,
+            lazy.FileUtils.PERMS_FILE,
             0
           );
           try {
-            let bytes = NetUtil.readInputStream(
+            let bytes = lazy.NetUtil.readInputStream(
               inputStream,
               inputStream.available()
             );
-            data = JSON.parse(gTextDecoder.decode(bytes));
+            data = JSON.parse(lazy.gTextDecoder.decode(bytes));
           } finally {
             inputStream.close();
           }

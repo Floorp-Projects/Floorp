@@ -7,8 +7,10 @@
 
 var EXPORTED_SYMBOLS = ["KeywordUtils"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
@@ -46,11 +48,14 @@ var KeywordUtils = {
       // Try to fetch a charset from History.
       try {
         // Will return an empty string if character-set is not found.
-        let pageInfo = await PlacesUtils.history.fetch(url, {
+        let pageInfo = await lazy.PlacesUtils.history.fetch(url, {
           includeAnnotations: true,
         });
-        if (pageInfo && pageInfo.annotations.has(PlacesUtils.CHARSET_ANNO)) {
-          charset = pageInfo.annotations.get(PlacesUtils.CHARSET_ANNO);
+        if (
+          pageInfo &&
+          pageInfo.annotations.has(lazy.PlacesUtils.CHARSET_ANNO)
+        ) {
+          charset = pageInfo.annotations.get(lazy.PlacesUtils.CHARSET_ANNO);
         }
       } catch (ex) {
         // makeURI() throws if url is invalid.
@@ -101,7 +106,7 @@ var KeywordUtils = {
    * @returns { entry, url, postData }
    */
   async getBindableKeyword(keyword, searchString) {
-    let entry = await PlacesUtils.keywords.fetch(keyword);
+    let entry = await lazy.PlacesUtils.keywords.fetch(keyword);
     if (!entry) {
       return {};
     }

@@ -7,8 +7,10 @@ var EXPORTED_SYMBOLS = ["FileUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Deprecated",
   "resource://gre/modules/Deprecated.jsm"
 );
@@ -63,7 +65,7 @@ var FileUtils = {
 
     if (shouldCreate) {
       if (Services.startup.startingUp || Services.startup.shuttingDown) {
-        Deprecated.warning(
+        lazy.Deprecated.warning(
           "Calling FileUtils.getDir(..., ..., true) causes main thread I/O and should be avoided especially during startup/shutdown",
           "https://bugzilla.mozilla.org/show_bug.cgi?id=921157"
         );

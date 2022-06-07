@@ -8,6 +8,8 @@
 
 var EXPORTED_SYMBOLS = ["DeferredTask"];
 
+const lazy = {};
+
 /**
  * Sets up a function or an asynchronous task whose execution can be triggered
  * after a defined delay.  Multiple attempts to run the task before the delay
@@ -83,7 +85,7 @@ var EXPORTED_SYMBOLS = ["DeferredTask"];
 // Globals
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -298,7 +300,7 @@ DeferredTask.prototype = {
    * Timer callback used to run the delayed task.
    */
   _timerCallback() {
-    let runningDeferred = PromiseUtils.defer();
+    let runningDeferred = lazy.PromiseUtils.defer();
 
     // All these state changes must occur at the same time directly inside the
     // timer callback, to prevent race conditions and to ensure that all the

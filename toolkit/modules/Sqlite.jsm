@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Log: "resource://gre/modules/Log.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -20,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "FinalizationWitnessService",
   "@mozilla.org/toolkit/finalizationwitness;1",
   "nsIFinalizationWitnessService"
@@ -151,7 +153,7 @@ function convertStorageErrorResult(result) {
  * Barriers used to ensure that Sqlite.jsm is shutdown after all
  * its clients.
  */
-XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
+XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
   let Barriers = {
     /**
      * Public barrier that clients may use to add blockers to the
@@ -159,7 +161,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
      * Once all blockers of this barrier are lifted, we close the
      * ability to open new connections.
      */
-    shutdown: new AsyncShutdown.Barrier(
+    shutdown: new lazy.AsyncShutdown.Barrier(
       "Sqlite.jsm: wait until all clients have completed their task"
     ),
 
@@ -168,7 +170,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
      * Triggered after Barriers.shutdown is lifted and `isClosed` is
      * set to `true`.
      */
-    connections: new AsyncShutdown.Barrier(
+    connections: new lazy.AsyncShutdown.Barrier(
       "Sqlite.jsm: wait until all connections are closed"
     ),
   };
@@ -208,7 +210,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
    * - lets clients open connections during shutdown, if necessary;
    * - waits for all connections to be closed before shutdown.
    */
-  AsyncShutdown.profileBeforeChange.addBlocker(
+  lazy.AsyncShutdown.profileBeforeChange.addBlocker(
     "Sqlite.jsm shutdown blocker",
     async function() {
       await Barriers.shutdown.wait();
@@ -271,7 +273,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
  * dispatch its method calls here.
  */
 function ConnectionData(connection, identifier, options = {}) {
-  this._log = Log.repository.getLoggerWithMessagePrefix(
+  this._log = lazy.Log.repository.getLoggerWithMessagePrefix(
     "Sqlite.jsm",
     `Connection ${identifier}: `
   );
@@ -324,16 +326,16 @@ function ConnectionData(connection, identifier, options = {}) {
 
   // Deferred whose promise is resolved when the connection closing procedure
   // is complete.
-  this._deferredClose = PromiseUtils.defer();
+  this._deferredClose = lazy.PromiseUtils.defer();
   this._closeRequested = false;
 
   // An AsyncShutdown barrier used to make sure that we wait until clients
   // are done before shutting down the connection.
-  this._barrier = new AsyncShutdown.Barrier(
+  this._barrier = new lazy.AsyncShutdown.Barrier(
     `${this._identifier}: waiting for clients`
   );
 
-  Barriers.connections.client.addBlocker(
+  lazy.Barriers.connections.client.addBlocker(
     this._identifier + ": waiting for shutdown",
     this._deferredClose.promise,
     () => ({
@@ -548,7 +550,9 @@ ConnectionData.prototype = Object.freeze({
       this._log.debug("Closed");
       // Now that the connection is closed, no need to keep
       // a blocker for Barriers.connections.
-      Barriers.connections.client.removeBlocker(this._deferredClose.promise);
+      lazy.Barriers.connections.client.removeBlocker(
+        this._deferredClose.promise
+      );
       this._deferredClose.resolve();
     };
     if (wrappedConnections.has(this._identifier)) {
@@ -892,7 +896,7 @@ ConnectionData.prototype = Object.freeze({
 
     let index = this._statementCounter++;
 
-    let deferred = PromiseUtils.defer();
+    let deferred = lazy.PromiseUtils.defer();
     let userCancelled = false;
     let errors = [];
     let rows = [];
@@ -900,7 +904,7 @@ ConnectionData.prototype = Object.freeze({
 
     // Don't incur overhead for serializing params unless the messages go
     // somewhere.
-    if (this._log.level <= Log.Level.Trace) {
+    if (this._log.level <= lazy.Log.Level.Trace) {
       let msg = "Stmt #" + index + " " + sql;
 
       if (params) {
@@ -1091,7 +1095,7 @@ ConnectionData.prototype = Object.freeze({
  * @return Promise<OpenedConnection>
  */
 function openConnection(options) {
-  let log = Log.repository.getLoggerWithMessagePrefix(
+  let log = lazy.Log.repository.getLoggerWithMessagePrefix(
     "Sqlite.jsm",
     `ConnectionOpener: `
   );
@@ -1111,7 +1115,7 @@ function openConnection(options) {
   let path = options.path;
   let file;
   try {
-    file = FileUtils.File(path);
+    file = lazy.FileUtils.File(path);
   } catch (ex) {
     // For relative paths, we will get an exception from trying to initialize
     // the file. We must then join this path to the profile directory.
@@ -1120,7 +1124,7 @@ function openConnection(options) {
         Services.dirsvc.get("ProfD", Ci.nsIFile).path,
         options.path
       );
-      file = FileUtils.File(path);
+      file = lazy.FileUtils.File(path);
     } else {
       throw ex;
     }
@@ -1237,7 +1241,7 @@ function openConnection(options) {
  * @return Promise<OpenedConnection>
  */
 function cloneStorageConnection(options) {
-  let log = Log.repository.getLoggerWithMessagePrefix(
+  let log = lazy.Log.repository.getLoggerWithMessagePrefix(
     "Sqlite.jsm",
     `ConnectionCloner: `
   );
@@ -1316,7 +1320,7 @@ function cloneStorageConnection(options) {
  * @return Promise<OpenedConnection>
  */
 function wrapStorageConnection(options) {
-  let log = Log.repository.getLoggerWithMessagePrefix(
+  let log = lazy.Log.repository.getLoggerWithMessagePrefix(
     "Sqlite.jsm",
     `ConnectionCloner: `
   );
@@ -1417,7 +1421,7 @@ function OpenedConnection(connection, identifier, options = {}) {
   // before its `forget` method has been called, an event with topic
   // "sqlite-finalization-witness" is broadcasted along with the
   // connection identifier string of the database.
-  this._witness = FinalizationWitnessService.make(
+  this._witness = lazy.FinalizationWitnessService.make(
     "sqlite-finalization-witness",
     this._connectionData._identifier
   );
@@ -1778,7 +1782,7 @@ var Sqlite = {
    * See the documentation of AsyncShutdown.Barrier.prototype.client.
    */
   get shutdown() {
-    return Barriers.shutdown.client;
+    return lazy.Barriers.shutdown.client;
   },
   failTestsOnAutoClose(enabled) {
     Debugging.failTestsOnAutoClose = enabled;
