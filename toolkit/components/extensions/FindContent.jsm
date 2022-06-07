@@ -7,16 +7,18 @@
 
 var EXPORTED_SYMBOLS = ["FindContent"];
 
+const lazy = {};
+
 /* exported FindContent */
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FinderIterator",
   "resource://gre/modules/FinderIterator.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FinderHighlighter",
   "resource://gre/modules/FinderHighlighter.jsm"
 );
@@ -29,14 +31,14 @@ class FindContent {
 
   get iterator() {
     if (!this._iterator) {
-      this._iterator = new FinderIterator();
+      this._iterator = new lazy.FinderIterator();
     }
     return this._iterator;
   }
 
   get highlighter() {
     if (!this._highlighter) {
-      this._highlighter = new FinderHighlighter(this.finder, true);
+      this._highlighter = new lazy.FinderHighlighter(this.finder, true);
     }
     return this._highlighter;
   }

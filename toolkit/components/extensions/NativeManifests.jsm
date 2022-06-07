@@ -15,7 +15,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
@@ -56,7 +58,7 @@ var NativeManifests = {
           `Native manifests are not supported on ${AppConstants.platform}`
         );
       }
-      this._initializePromise = Schemas.load(NATIVE_MANIFEST_SCHEMA);
+      this._initializePromise = lazy.Schemas.load(NATIVE_MANIFEST_SCHEMA);
     }
     return this._initializePromise;
   },
@@ -64,14 +66,14 @@ var NativeManifests = {
   async _winLookup(type, name, context) {
     const REGISTRY = Ci.nsIWindowsRegKey;
     let regPath = `${REGPATH}\\${TYPES[type]}\\${name}`;
-    let path = WindowsRegistry.readRegKey(
+    let path = lazy.WindowsRegistry.readRegKey(
       REGISTRY.ROOT_KEY_CURRENT_USER,
       regPath,
       "",
       REGISTRY.WOW64_64
     );
     if (!path) {
-      path = WindowsRegistry.readRegKey(
+      path = lazy.WindowsRegistry.readRegKey(
         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
         regPath,
         "",
@@ -79,7 +81,7 @@ var NativeManifests = {
       );
     }
     if (!path) {
-      path = WindowsRegistry.readRegKey(
+      path = lazy.WindowsRegistry.readRegKey(
         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
         regPath,
         "",
@@ -96,7 +98,7 @@ var NativeManifests = {
 
   _tryPath(type, path, name, context, logIfNotFound) {
     return Promise.resolve()
-      .then(() => OS.File.read(path, { encoding: "utf-8" }))
+      .then(() => lazy.OS.File.read(path, { encoding: "utf-8" }))
       .then(data => {
         let manifest;
         try {
@@ -108,7 +110,7 @@ var NativeManifests = {
           return null;
         }
 
-        let normalized = Schemas.normalize(
+        let normalized = lazy.Schemas.normalize(
           manifest,
           "manifest.NativeManifest",
           context
@@ -144,7 +146,7 @@ var NativeManifests = {
         return manifest;
       })
       .catch(ex => {
-        if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+        if (ex instanceof lazy.OS.File.Error && ex.becauseNoSuchFile) {
           if (logIfNotFound) {
             Cu.reportError(
               `Error reading native manifest file ${path}: file is referenced in the registry but does not exist`
@@ -158,7 +160,7 @@ var NativeManifests = {
 
   async _tryPaths(type, name, dirs, context) {
     for (let dir of dirs) {
-      let path = OS.Path.join(dir, TYPES[type], `${name}.json`);
+      let path = lazy.OS.Path.join(dir, TYPES[type], `${name}.json`);
       let manifest = await this._tryPath(type, path, name, context, false);
       if (manifest) {
         return { path, manifest };

@@ -46,7 +46,9 @@ const { ExtensionUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BulkKeyBundle: "resource://services-sync/keys.js",
   CollectionKeyManager: "resource://services-sync/record.js",
@@ -60,25 +62,25 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Utils: "resource://services-sync/util.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
+XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "prefPermitsStorageSync",
   STORAGE_SYNC_ENABLED_PREF,
   true
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "prefStorageSyncServerURL",
   STORAGE_SYNC_SERVER_URL_PREF,
   KINTO_DEFAULT_SERVER_URL
 );
-XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
+XPCOMUtils.defineLazyGetter(lazy, "WeaveCrypto", function() {
   let { WeaveCrypto } = ChromeUtils.import(
     "resource://services-crypto/WeaveCrypto.js"
   );
@@ -97,7 +99,7 @@ const log = Log.repository.getLogger("Sync.Engine.Extension-Storage");
 // isn't available.
 let _fxaService = null;
 if (AppConstants.platform != "android") {
-  _fxaService = fxAccounts;
+  _fxaService = lazy.fxAccounts;
 }
 
 class ServerKeyringDeleted extends Error {
@@ -139,11 +141,13 @@ var extensionStorageSync = null;
  * @returns {string} The computed HMAC
  */
 async function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
-  const hmacKey = CommonUtils.byteStringToArrayBuffer(keyBundle.hmacKey);
+  const hmacKey = lazy.CommonUtils.byteStringToArrayBuffer(keyBundle.hmacKey);
   const encoder = new TextEncoder();
   const data = encoder.encode(id + IV + ciphertext);
-  const hmac = await CryptoUtils.hmac("SHA-256", hmacKey, data);
-  return CommonUtils.bytesAsHex(CommonUtils.arrayBufferToByteString(hmac));
+  const hmac = await lazy.CryptoUtils.hmac("SHA-256", hmacKey, data);
+  return lazy.CommonUtils.bytesAsHex(
+    lazy.CommonUtils.arrayBufferToByteString(hmac)
+  );
 }
 
 /**
@@ -176,8 +180,8 @@ class EncryptionRemoteTransformer {
       throw new Error("Record ID is missing or invalid");
     }
 
-    let IV = WeaveCrypto.generateRandomIV();
-    let ciphertext = await WeaveCrypto.encrypt(
+    let IV = lazy.WeaveCrypto.generateRandomIV();
+    let ciphertext = await lazy.WeaveCrypto.encrypt(
       JSON.stringify(record),
       keyBundle.encryptionKeyB64,
       IV
@@ -216,11 +220,11 @@ class EncryptionRemoteTransformer {
     );
 
     if (computedHMAC != record.hmac) {
-      Utils.throwHMACMismatch(record.hmac, computedHMAC);
+      lazy.Utils.throwHMACMismatch(record.hmac, computedHMAC);
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = await WeaveCrypto.decrypt(
+    let cleartext = await lazy.WeaveCrypto.decrypt(
       record.ciphertext,
       keyBundle.encryptionKeyB64,
       record.IV
@@ -284,7 +288,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
     const self = this;
     return (async function() {
       let key = await self._fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
-      return BulkKeyBundle.fromJWK(key);
+      return lazy.BulkKeyBundle.fromJWK(key);
     })();
   }
   // Pass through the kbHash field from the unencrypted record. If
@@ -301,7 +305,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
     try {
       return await super.decode(record);
     } catch (e) {
-      if (Utils.isHMACMismatch(e)) {
+      if (lazy.Utils.isHMACMismatch(e)) {
         const currentKBHash = await getKBHash(this._fxaService);
         if (record.kbHash != currentKBHash) {
           // Some other client encoded this with a kB that we don't
@@ -351,12 +355,12 @@ async function storageSyncInit() {
   // Memoize the result to share the connection.
   if (storageSyncInit.promise === undefined) {
     const path = "storage-sync.sqlite";
-    storageSyncInit.promise = FirefoxAdapter.openConnection({ path })
+    storageSyncInit.promise = lazy.FirefoxAdapter.openConnection({ path })
       .then(connection => {
         return {
           connection,
-          kinto: new Kinto({
-            adapter: FirefoxAdapter,
+          kinto: new lazy.Kinto({
+            adapter: lazy.FirefoxAdapter,
             adapterOptions: { sqliteHandle: connection },
             timeout: KINTO_REQUEST_TIMEOUT,
             retry: 0,
@@ -471,7 +475,7 @@ class CryptoCollection {
    */
   getNewSalt() {
     return btoa(
-      CryptoUtils.generateRandomBytesLegacy(
+      lazy.CryptoUtils.generateRandomBytesLegacy(
         STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES
       )
     );
@@ -552,7 +556,7 @@ class CryptoCollection {
    */
   extensionIdToCollectionId(extensionId) {
     return this.hashWithExtensionSalt(
-      CommonUtils.encodeUTF8(extensionId),
+      lazy.CommonUtils.encodeUTF8(extensionId),
       extensionId
     ).then(hash => `ext-${hash}`);
   }
@@ -589,8 +593,8 @@ class CryptoCollection {
 
     const salt = atob(saltBase64);
     const message = `${salt}\x00${value}`;
-    const hash = CryptoUtils.digestBytes(message, hasher);
-    return CommonUtils.encodeBase64URL(hash, false);
+    const hash = lazy.CryptoUtils.digestBytes(message, hasher);
+    return lazy.CommonUtils.encodeBase64URL(hash, false);
   }
 
   /**
@@ -600,7 +604,7 @@ class CryptoCollection {
    */
   async getKeyRing() {
     const cryptoKeyRecord = await this.getKeyRingRecord();
-    const collectionKeys = new CollectionKeyManager();
+    const collectionKeys = new lazy.CollectionKeyManager();
     if (cryptoKeyRecord.keys) {
       collectionKeys.setContents(
         cryptoKeyRecord.keys,
@@ -687,7 +691,7 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
     // It isn't really clear whether kinto.js record IDs are
     // bytestrings or strings that happen to only contain ASCII
     // characters, so encode them to be sure.
-    const id = CommonUtils.encodeUTF8(record.id);
+    const id = lazy.CommonUtils.encodeUTF8(record.id);
     // Like extensionIdToCollectionId, the rules about Kinto record
     // IDs preclude equals signs or strings starting with a
     // non-alphanumeric, so prefix all IDs with a constant "id-".
@@ -758,7 +762,7 @@ class ExtensionStorageSync {
     // context that used the storage.sync APIs.
     const extensions = new Set(extensionContexts.keys());
 
-    const allEnabledExtensions = await AddonManager.getAddonsByTypes([
+    const allEnabledExtensions = await lazy.AddonManager.getAddonsByTypes([
       "extension",
     ]);
 
@@ -886,7 +890,7 @@ class ExtensionStorageSync {
       const allOptions = Object.assign(
         {},
         {
-          remote: prefStorageSyncServerURL,
+          remote: lazy.prefStorageSyncServerURL,
           headers: {
             Authorization: "Bearer " + token,
           },
@@ -936,10 +940,13 @@ class ExtensionStorageSync {
     log.error("Deleting default bucket and everything in it");
     return this._requestWithToken("Clearing server", function(token) {
       const headers = { Authorization: "Bearer " + token };
-      const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
-        headers: headers,
-        timeout: KINTO_REQUEST_TIMEOUT,
-      });
+      const kintoHttp = new lazy.KintoHttpClient(
+        lazy.prefStorageSyncServerURL,
+        {
+          headers: headers,
+          timeout: KINTO_REQUEST_TIMEOUT,
+        }
+      );
       return kintoHttp.deleteBucket("default");
     });
   }
@@ -1207,7 +1214,7 @@ class ExtensionStorageSync {
    * @returns {Promise<Collection>}
    */
   getCollection(extension, context) {
-    if (prefPermitsStorageSync !== true) {
+    if (lazy.prefPermitsStorageSync !== true) {
       return Promise.reject({
         message: `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`,
       });
@@ -1362,11 +1369,11 @@ class ExtensionStorageSync {
   }
 
   notifyListeners(extension, changes) {
-    Observers.notify("ext.storage.sync-changed");
+    lazy.Observers.notify("ext.storage.sync-changed");
     let listeners = this.listeners.get(extension) || new Set();
     if (listeners) {
       for (let listener of listeners) {
-        ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
+        lazy.ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
       }
     }
   }

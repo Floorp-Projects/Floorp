@@ -15,7 +15,9 @@ const { IndexedDB } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
@@ -83,7 +85,7 @@ var ErrorsTelemetry = {
       error instanceof DataMigrationAbortedError
     ) {
       if (error.name.length > 80) {
-        return getTrimmedString(error.name);
+        return lazy.getTrimmedString(error.name);
       }
 
       return error.name;
@@ -148,7 +150,7 @@ var ErrorsTelemetry = {
         "extensions.data",
         "migrateResult",
         "storageLocal",
-        getTrimmedString(extensionId),
+        lazy.getTrimmedString(extensionId),
         extra
       );
     } catch (err) {
@@ -177,7 +179,7 @@ var ErrorsTelemetry = {
       "extensions.data",
       "storageLocalError",
       storageMethod,
-      getTrimmedString(extensionId),
+      lazy.getTrimmedString(extensionId),
       { error_name: this.getErrorName(error) }
     );
   },
@@ -458,16 +460,18 @@ async function migrateJSONFileData(extension, storagePrincipal) {
   try {
     abortIfShuttingDown();
 
-    oldStoragePath = ExtensionStorage.getStorageFile(extension.id);
-    oldStorageExists = await OS.File.exists(oldStoragePath).catch(fileErr => {
-      // If we can't access the oldStoragePath here, then extension is also going to be unable to
-      // access it, and so we log the error but we don't stop the extension from switching to
-      // the IndexedDB backend.
-      extension.logWarning(
-        `Unable to access extension storage.local data file: ${fileErr.message}::${fileErr.stack}`
-      );
-      return false;
-    });
+    oldStoragePath = lazy.ExtensionStorage.getStorageFile(extension.id);
+    oldStorageExists = await lazy.OS.File.exists(oldStoragePath).catch(
+      fileErr => {
+        // If we can't access the oldStoragePath here, then extension is also going to be unable to
+        // access it, and so we log the error but we don't stop the extension from switching to
+        // the IndexedDB backend.
+        extension.logWarning(
+          `Unable to access extension storage.local data file: ${fileErr.message}::${fileErr.stack}`
+        );
+        return false;
+      }
+    );
 
     // Migrate any data stored in the JSONFile backend (if any), and remove the old data file
     // if the migration has been completed successfully.
@@ -479,7 +483,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
         `Migrating storage.local data for ${extension.policy.debugName}...`
       );
 
-      jsonFile = await ExtensionStorage.getFile(extension.id);
+      jsonFile = await lazy.ExtensionStorage.getFile(extension.id);
 
       abortIfShuttingDown();
 
@@ -530,7 +534,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     nonFatalError = err;
   } finally {
     // Clear the jsonFilePromise cached by the ExtensionStorage.
-    await ExtensionStorage.clearCachedFile(extension.id).catch(err => {
+    await lazy.ExtensionStorage.clearCachedFile(extension.id).catch(err => {
       extension.logWarning(err.message);
     });
   }
@@ -541,12 +545,15 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     try {
       // Only migrate the file when it actually exists (e.g. the file name is not going to exist
       // when it is corrupted, because JSONFile internally rename it to `.corrupt`.
-      if (await OS.File.exists(oldStoragePath)) {
-        let openInfo = await OS.File.openUnique(`${oldStoragePath}.migrated`, {
-          humanReadable: true,
-        });
+      if (await lazy.OS.File.exists(oldStoragePath)) {
+        let openInfo = await lazy.OS.File.openUnique(
+          `${oldStoragePath}.migrated`,
+          {
+            humanReadable: true,
+          }
+        );
         await openInfo.file.close();
-        await OS.File.move(oldStoragePath, openInfo.path);
+        await lazy.OS.File.move(oldStoragePath, openInfo.path);
       }
     } catch (err) {
       nonFatalError = err;
@@ -802,7 +809,7 @@ ExtensionStorageIDB = {
    *          Return an ExtensionError error instance.
    */
   normalizeStorageError({ error, extensionId, storageMethod }) {
-    const { ExtensionError } = ExtensionUtils;
+    const { ExtensionError } = lazy.ExtensionUtils;
 
     if (error instanceof ExtensionError) {
       return error;

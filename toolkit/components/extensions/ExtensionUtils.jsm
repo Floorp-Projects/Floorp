@@ -12,16 +12,18 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 // xpcshell doesn't handle idle callbacks well.
-XPCOMUtils.defineLazyGetter(this, "idleTimeout", () =>
+XPCOMUtils.defineLazyGetter(lazy, "idleTimeout", () =>
   Services.appinfo.name === "XPCShell" ? 500 : undefined
 );
 
@@ -46,7 +48,7 @@ function getUniqueId() {
 }
 
 function promiseTimeout(delay) {
-  return new Promise(resolve => setTimeout(resolve, delay));
+  return new Promise(resolve => lazy.setTimeout(resolve, delay));
 }
 
 /**
@@ -205,7 +207,7 @@ function promiseDocumentReady(doc) {
 function promiseDocumentIdle(window) {
   return window.document.documentReadyForIdle.then(() => {
     return new Promise(resolve =>
-      window.requestIdleCallback(resolve, { timeout: idleTimeout })
+      window.requestIdleCallback(resolve, { timeout: lazy.idleTimeout })
     );
   });
 }
@@ -322,7 +324,7 @@ function parseMatchPatterns(patterns, options) {
 async function makeDataURI(iconUrl) {
   let response;
   try {
-    response = await fetch(iconUrl);
+    response = await lazy.fetch(iconUrl);
   } catch (e) {
     // Failed to fetch, ignore engine's favicon.
     Cu.reportError(e);

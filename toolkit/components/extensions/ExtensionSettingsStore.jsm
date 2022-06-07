@@ -44,18 +44,20 @@ var EXPORTED_SYMBOLS = ["ExtensionSettingsStore"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
@@ -96,7 +98,7 @@ function dataPostProcessor(json) {
 // Loads the data from the JSON file into memory.
 function initialize() {
   if (!_initializePromise) {
-    _store = new JSONFile({
+    _store = new lazy.JSONFile({
       path: STORE_PATH,
       dataPostProcessor,
     });
@@ -324,7 +326,7 @@ function alterSetting(id, type, key, action) {
   }
 
   _store.saveSoon();
-  ExtensionParent.apiManager.emit("extension-setting-changed", {
+  lazy.ExtensionParent.apiManager.emit("extension-setting-changed", {
     action,
     id,
     type,
@@ -409,7 +411,7 @@ var ExtensionSettingsStore = {
     let newInstall = false;
     if (foundIndex === -1) {
       // No item for this extension, so add a new one.
-      let addon = await AddonManager.getAddonByID(id);
+      let addon = await lazy.AddonManager.getAddonByID(id);
       keyInfo.precedenceList.push({
         id,
         installDate: addon.installDate.valueOf(),
@@ -631,7 +633,7 @@ var ExtensionSettingsStore = {
       }
       // When user set, the setting is never "controllable" unless the installDate
       // is later than the user date.
-      let addon = await AddonManager.getAddonByID(id);
+      let addon = await lazy.AddonManager.getAddonByID(id);
       return !addon || keyInfo.selectedDate > addon.installDate.valueOf()
         ? "not_controllable"
         : "controllable_by_this_extension";
@@ -647,7 +649,7 @@ var ExtensionSettingsStore = {
       return "controlled_by_this_extension";
     }
 
-    let addon = await AddonManager.getAddonByID(id);
+    let addon = await lazy.AddonManager.getAddonByID(id);
     return !addon || topItem.installDate > addon.installDate.valueOf()
       ? "controlled_by_other_extensions"
       : "controllable_by_this_extension";
@@ -671,20 +673,23 @@ var ExtensionSettingsStore = {
 };
 
 // eslint-disable-next-line mozilla/balanced-listeners
-ExtensionParent.apiManager.on("uninstall-complete", async (type, { id }) => {
-  // Catch any settings that were not properly removed during "uninstall".
-  await ExtensionSettingsStore.initialize();
-  for (let type in _store.data) {
-    // prefs settings must be handled by ExtensionPreferencesManager.
-    if (type === "prefs") {
-      continue;
-    }
-    let items = ExtensionSettingsStore.getAllForExtension(id, type);
-    for (let key of items) {
-      ExtensionSettingsStore.removeSetting(id, type, key);
-      Services.console.logStringMessage(
-        `Post-Uninstall removal of addon settings for ${id}, type: ${type} key: ${key}`
-      );
+lazy.ExtensionParent.apiManager.on(
+  "uninstall-complete",
+  async (type, { id }) => {
+    // Catch any settings that were not properly removed during "uninstall".
+    await ExtensionSettingsStore.initialize();
+    for (let type in _store.data) {
+      // prefs settings must be handled by ExtensionPreferencesManager.
+      if (type === "prefs") {
+        continue;
+      }
+      let items = ExtensionSettingsStore.getAllForExtension(id, type);
+      for (let key of items) {
+        ExtensionSettingsStore.removeSetting(id, type, key);
+        Services.console.logStringMessage(
+          `Post-Uninstall removal of addon settings for ${id}, type: ${type} key: ${key}`
+        );
+      }
     }
   }
-});
+);

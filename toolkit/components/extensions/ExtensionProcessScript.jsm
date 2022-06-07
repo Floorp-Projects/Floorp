@@ -20,7 +20,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
@@ -33,8 +35,8 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "console", () =>
-  ExtensionCommon.getConsole()
+XPCOMUtils.defineLazyGetter(lazy, "console", () =>
+  lazy.ExtensionCommon.getConsole()
 );
 
 const { DefaultWeakMap } = ExtensionUtils;
@@ -48,13 +50,13 @@ function getData(extension, key = "") {
 // We need to avoid touching Services.appinfo here in order to prevent
 // the wrong version from being cached during xpcshell test startup.
 // eslint-disable-next-line mozilla/use-services
-XPCOMUtils.defineLazyGetter(this, "isContentProcess", () => {
+XPCOMUtils.defineLazyGetter(lazy, "isContentProcess", () => {
   return Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 });
 
-XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
+XPCOMUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
   return (
-    isContentProcess ||
+    lazy.isContentProcess ||
     !WebExtensionPolicy.useRemoteWebExtensions ||
     // Thunderbird still loads some content in the parent process.
     AppConstants.MOZ_APP_NAME == "thunderbird"
@@ -62,7 +64,7 @@ XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
 });
 
 var extensions = new DefaultWeakMap(policy => {
-  return new ExtensionChild.BrowserExtensionContent(policy);
+  return new lazy.ExtensionChild.BrowserExtensionContent(policy);
 });
 
 var pendingExtensions = new Map();
@@ -239,7 +241,7 @@ ExtensionManager = {
               extensions.get(policy).shutdown();
             }
 
-            if (isContentProcess) {
+            if (lazy.isContentProcess) {
               policy.active = false;
             }
           }
@@ -331,8 +333,8 @@ ExtensionManager = {
             break;
           }
           // In the parent process, Extension.jsm updates the policy.
-          if (isContentProcess) {
-            ExtensionCommon.updateAllowedOrigins(
+          if (lazy.isContentProcess) {
+            lazy.ExtensionCommon.updateAllowedOrigins(
               policy,
               data.origins,
               data.add
@@ -375,9 +377,9 @@ var ExtensionProcessScript = {
   initExtensionDocument(policy, doc, privileged) {
     let extension = extensions.get(policy);
     if (privileged) {
-      ExtensionPageChild.initExtensionContext(extension, doc.defaultView);
+      lazy.ExtensionPageChild.initExtensionContext(extension, doc.defaultView);
     } else {
-      ExtensionContent.initExtensionContext(extension, doc.defaultView);
+      lazy.ExtensionContent.initExtensionContext(extension, doc.defaultView);
     }
   },
 
@@ -389,13 +391,13 @@ var ExtensionProcessScript = {
   },
 
   preloadContentScript(contentScript) {
-    if (isContentScriptProcess) {
-      ExtensionContent.contentScripts.get(contentScript).preload();
+    if (lazy.isContentScriptProcess) {
+      lazy.ExtensionContent.contentScripts.get(contentScript).preload();
     }
   },
 
   loadContentScript(contentScript, window) {
-    return ExtensionContent.contentScripts
+    return lazy.ExtensionContent.contentScripts
       .get(contentScript)
       .injectInto(window);
   },
@@ -409,21 +411,21 @@ var ExtensionAPIRequestHandler = {
       throw new Error(`Extension instance not found for addon ${policy.id}`);
     }
 
-    ExtensionWorkerChild.initExtensionWorkerContext(
+    lazy.ExtensionWorkerChild.initExtensionWorkerContext(
       extension,
       serviceWorkerInfo
     );
   },
 
   onExtensionWorkerLoaded(policy, serviceWorkerDescriptorId) {
-    ExtensionWorkerChild.notifyExtensionWorkerContextLoaded(
+    lazy.ExtensionWorkerChild.notifyExtensionWorkerContextLoaded(
       serviceWorkerDescriptorId,
       policy
     );
   },
 
   onExtensionWorkerDestroyed(policy, serviceWorkerDescriptorId) {
-    ExtensionWorkerChild.destroyExtensionWorkerContext(
+    lazy.ExtensionWorkerChild.destroyExtensionWorkerContext(
       serviceWorkerDescriptorId
     );
   },
@@ -468,7 +470,7 @@ var ExtensionAPIRequestHandler = {
 
   getExtensionContextForAPIRequest({ extension, request }) {
     if (request.serviceWorkerInfo) {
-      return ExtensionWorkerChild.getExtensionWorkerContext(
+      return lazy.ExtensionWorkerChild.getExtensionWorkerContext(
         extension,
         request.serviceWorkerInfo
       );
@@ -478,7 +480,9 @@ var ExtensionAPIRequestHandler = {
   },
 
   validateAndNormalizeRequestArgs({ context, request }) {
-    if (!Schemas.checkPermissions(request.apiNamespace, context.extension)) {
+    if (
+      !lazy.Schemas.checkPermissions(request.apiNamespace, context.extension)
+    ) {
       throw new context.Error(
         `Not enough privileges to access ${request.apiNamespace}`
       );
@@ -501,7 +505,7 @@ var ExtensionAPIRequestHandler = {
     const { apiNamespace, apiName, args } = request;
     // Validate and normalize parameters, set the normalized args on the
     // mozIExtensionAPIRequest normalizedArgs property.
-    return Schemas.checkParameters(context, apiNamespace, apiName, args);
+    return lazy.Schemas.checkParameters(context, apiNamespace, apiName, args);
   },
 };
 

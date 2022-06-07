@@ -25,14 +25,16 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { DefaultMap } = ExtensionUtils;
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTimingEnabled",
   "extensions.webextensions.enablePerformanceCounters",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gTimingMaxAge",
   "extensions.webextensions.performanceCountersMaxAge",
   1000
@@ -94,7 +96,7 @@ class Counters {
    * @returns {boolean}
    */
   get enabled() {
-    return gTimingEnabled;
+    return lazy.gTimingEnabled;
   }
 
   /**
@@ -107,7 +109,7 @@ class Counters {
    * @returns {number}
    */
   get maxAge() {
-    return gTimingMaxAge;
+    return lazy.gTimingMaxAge;
   }
 
   /**

@@ -23,9 +23,11 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -33,7 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "styleSheetService",
   "@mozilla.org/content/style-sheet-service;1",
   "nsIStyleSheetService"
@@ -53,13 +55,13 @@ var {
 } = ExtensionUtils;
 
 function getConsole() {
-  return new ConsoleAPI({
+  return new lazy.ConsoleAPI({
     maxLogLevelPref: "extensions.webextensions.log.level",
     prefix: "WebExtensions",
   });
 }
 
-XPCOMUtils.defineLazyGetter(this, "console", getConsole);
+XPCOMUtils.defineLazyGetter(lazy, "console", getConsole);
 
 const BACKGROUND_SCRIPTS_VIEW_TYPES = ["background", "background_worker"];
 
@@ -533,7 +535,7 @@ class BaseContext {
     this.messageManager = contentWindow.docShell.messageManager;
 
     if (this.incognito == null) {
-      this.incognito = PrivateBrowsingUtils.isContentWindowPrivate(
+      this.incognito = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
         contentWindow
       );
     }
@@ -1028,8 +1030,8 @@ class LocalAPIImplementation extends SchemaAPIInterface {
   }
 
   revoke() {
-    if (this.pathObj[this.name][Schemas.REVOKE]) {
-      this.pathObj[this.name][Schemas.REVOKE]();
+    if (this.pathObj[this.name][lazy.Schemas.REVOKE]) {
+      this.pathObj[this.name][lazy.Schemas.REVOKE]();
     }
 
     this.pathObj = null;
@@ -1198,7 +1200,7 @@ class CanOfAPIs {
     }
 
     let { extension } = this.context;
-    if (!Schemas.checkPermissions(name, extension)) {
+    if (!lazy.Schemas.checkPermissions(name, extension)) {
       return;
     }
 
@@ -1392,7 +1394,7 @@ class SchemaAPIManager extends EventEmitter {
   }
 
   async loadModuleJSON(urls) {
-    let promises = urls.map(url => fetch(url).then(resp => resp.json()));
+    let promises = urls.map(url => lazy.fetch(url).then(resp => resp.json()));
 
     return this.initModuleJSON(await Promise.all(promises));
   }
@@ -1701,7 +1703,7 @@ class SchemaAPIManager extends EventEmitter {
       return false;
     }
 
-    if (!Schemas.checkPermissions(module.namespaceName, extension)) {
+    if (!lazy.Schemas.checkPermissions(module.namespaceName, extension)) {
       return false;
     }
 
@@ -1807,7 +1809,7 @@ class LazyAPIManager extends SchemaAPIManager {
 }
 
 defineLazyGetter(LazyAPIManager.prototype, "schema", function() {
-  let root = new SchemaRoot(Schemas.rootSchema, this.schemaURLs);
+  let root = new lazy.SchemaRoot(lazy.Schemas.rootSchema, this.schemaURLs);
   root.parseSchemas();
   return root;
 });
@@ -1872,14 +1874,14 @@ defineLazyGetter(MultiAPIManager.prototype, "schema", function() {
 
   // All API manager schema roots should derive from the global schema root,
   // so it doesn't need its own entry.
-  if (bases[bases.length - 1] === Schemas) {
+  if (bases[bases.length - 1] === lazy.Schemas) {
     bases.pop();
   }
 
   if (bases.length === 1) {
     bases = bases[0];
   }
-  return new SchemaRoot(bases, new Map());
+  return new lazy.SchemaRoot(bases, new Map());
 });
 
 function LocaleData(data) {
@@ -2650,7 +2652,7 @@ class EventManager {
       removeListener: (...args) => this.removeListener(...args),
       hasListener: (...args) => this.hasListener(...args),
       setUserInput: this.inputHandling,
-      [Schemas.REVOKE]: () => this.revoke(),
+      [lazy.Schemas.REVOKE]: () => this.revoke(),
     };
   }
 }
@@ -2683,7 +2685,10 @@ function ignoreEvent(context, name) {
 
 const stylesheetMap = new DefaultMap(url => {
   let uri = Services.io.newURI(url);
-  return styleSheetService.preloadSheet(uri, styleSheetService.AGENT_SHEET);
+  return lazy.styleSheetService.preloadSheet(
+    uri,
+    lazy.styleSheetService.AGENT_SHEET
+  );
 });
 
 /**

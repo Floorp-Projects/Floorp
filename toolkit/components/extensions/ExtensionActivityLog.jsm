@@ -12,13 +12,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "tabTracker", () => {
-  return ExtensionParent.apiManager.global.tabTracker;
+XPCOMUtils.defineLazyGetter(lazy, "tabTracker", () => {
+  return lazy.ExtensionParent.apiManager.global.tabTracker;
 });
 
 var { DefaultMap } = ExtensionUtils;
@@ -109,7 +110,7 @@ const ExtensionActivityLog = {
       if (browsingContextId && (!viewType || viewType == "tab")) {
         let browser = BrowsingContext.get(browsingContextId).top
           .embedderElement;
-        let browserData = tabTracker.getBrowserData(browser);
+        let browserData = lazy.tabTracker.getBrowserData(browser);
         if (browserData && browserData.tabId !== undefined) {
           data.data.tabId = browserData.tabId;
         }

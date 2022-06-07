@@ -6,8 +6,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "wdm",
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
   "nsIWorkerDebuggerManager"
@@ -49,13 +51,13 @@ class TestWorkerWatcherChild extends JSProcessActorChild {
         },
       };
 
-      wdm.addListener(this._workerDebuggerListener);
+      lazy.wdm.addListener(this._workerDebuggerListener);
     }
   }
 
   stopWatchingWorkers() {
     if (this._workerDebuggerListener) {
-      wdm.removeListener(this._workerDebuggerListener);
+      lazy.wdm.removeListener(this._workerDebuggerListener);
       this._workerDebuggerListener = null;
     }
   }

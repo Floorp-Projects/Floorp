@@ -19,8 +19,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -28,41 +30,41 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Assert",
   "resource://testing-common/Assert.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Extension",
   "resource://gre/modules/Extension.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionData",
   "resource://gre/modules/Extension.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionPermissions",
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "apiManager",
-  () => ExtensionParent.apiManager
+  () => lazy.ExtensionParent.apiManager
 );
 
 const { ExtensionCommon } = ChromeUtils.import(
@@ -76,7 +78,7 @@ const { flushJarCache } = ExtensionUtils;
 
 const { instanceOf } = ExtensionCommon;
 
-XPCOMUtils.defineLazyGetter(this, "console", () =>
+XPCOMUtils.defineLazyGetter(lazy, "console", () =>
   ExtensionCommon.getConsole()
 );
 
@@ -110,12 +112,12 @@ class MockExtension {
           }
 
           if (extension.id == this.id) {
-            apiManager.off(eventName, onstartup);
+            lazy.apiManager.off(eventName, onstartup);
             this._extension = extension;
             resolve(extension);
           }
         };
-        apiManager.on(eventName, onstartup);
+        lazy.apiManager.on(eventName, onstartup);
       });
 
     this._extension = null;
@@ -182,16 +184,18 @@ class MockExtension {
     await this._setIncognitoOverride();
 
     if (this.installType == "temporary") {
-      return AddonManager.installTemporaryAddon(this.file).then(async addon => {
-        this.addon = addon;
-        this.id = addon.id;
-        return this._readyPromise;
-      });
+      return lazy.AddonManager.installTemporaryAddon(this.file).then(
+        async addon => {
+          this.addon = addon;
+          this.id = addon.id;
+          return this._readyPromise;
+        }
+      );
     } else if (this.installType == "permanent") {
       this.addonPromise = new Promise(resolve => {
         this.resolveAddon = resolve;
       });
-      let install = await AddonManager.getInstallForFile(this.file);
+      let install = await lazy.AddonManager.getInstallForFile(this.file);
       return new Promise((resolve, reject) => {
         let listener = {
           onInstallFailed: reject,
@@ -223,7 +227,7 @@ class MockExtension {
         });
       })
       .then(() => {
-        return OS.File.remove(this.file.path);
+        return lazy.OS.File.remove(this.file.path);
       });
   }
 
@@ -260,7 +264,7 @@ const ExtensionTestAssertions = {
     let policy = WebExtensionPolicy.getByID(extWrapper.id);
     const extension = policy?.extension || extWrapper.extension;
 
-    if (!extension || !(extension instanceof Extension)) {
+    if (!extension || !(extension instanceof lazy.Extension)) {
       throw new Error(
         `Unable to retrieve the Extension class instance for ${extWrapper.id}`
       );
@@ -299,19 +303,19 @@ const ExtensionTestAssertions = {
       apiNs,
       apiEvent
     );
-    Assert.equal(
+    lazy.Assert.equal(
       persisted,
       !!listenersInfo?.length,
       `Got a persistent listener for ${apiNs}.${apiEvent}`
     );
     for (const info of listenersInfo) {
       if (primed) {
-        Assert.ok(
+        lazy.Assert.ok(
           info.primed,
           `${apiNs}.${apiEvent} listener expected to be primed`
         );
       } else {
-        Assert.equal(
+        lazy.Assert.equal(
           info.primed,
           undefined,
           `${apiNs}.${apiEvent} listener expected to not be primed`
@@ -328,7 +332,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
 
   // Called by AddonTestUtils.promiseShutdownManager to reset startup promises
   static resetStartupPromises() {
-    ExtensionParent._resetStartupPromises();
+    lazy.ExtensionParent._resetStartupPromises();
   }
 
   // Called to notify "browser-delayed-startup-finished", which resolves
@@ -336,7 +340,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
   // primed listeners to be able to wake the extension.
   static notifyEarlyStartup() {
     Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
-    return ExtensionParent.browserPaintedPromise;
+    return lazy.ExtensionParent.browserPaintedPromise;
   }
 
   // Called to notify "extensions-late-startup", which resolves
@@ -346,7 +350,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
   // in testing.
   static notifyLateStartup() {
     Services.obs.notifyObservers(null, "extensions-late-startup");
-    return ExtensionParent.browserStartupPromise;
+    return lazy.ExtensionParent.browserStartupPromise;
   }
 
   /**
@@ -487,8 +491,8 @@ ExtensionTestCommon = class ExtensionTestCommon {
     );
     let zipW = new ZipWriter();
 
-    let file = FileUtils.getFile("TmpD", [baseName]);
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    let file = lazy.FileUtils.getFile("TmpD", [baseName]);
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, lazy.FileUtils.PERMS_FILE);
 
     const MODE_WRONLY = 0x02;
     const MODE_TRUNCATE = 0x20;
@@ -568,12 +572,12 @@ ExtensionTestCommon = class ExtensionTestCommon {
       return;
     }
     if (addonData.incognitoOverride == "not_allowed") {
-      return ExtensionPermissions.remove(id, {
+      return lazy.ExtensionPermissions.remove(id, {
         permissions: ["internal:privateBrowsingAllowed"],
         origins: [],
       });
     }
-    return ExtensionPermissions.add(id, {
+    return lazy.ExtensionPermissions.add(id, {
       permissions: ["internal:privateBrowsingAllowed"],
       origins: [],
     });
@@ -657,21 +661,21 @@ ExtensionTestCommon = class ExtensionTestCommon {
       id = Services.uuid.generateUUID().number;
     }
 
-    let signedState = AddonManager.SIGNEDSTATE_SIGNED;
+    let signedState = lazy.AddonManager.SIGNEDSTATE_SIGNED;
     if (data.isPrivileged) {
-      signedState = AddonManager.SIGNEDSTATE_PRIVILEGED;
+      signedState = lazy.AddonManager.SIGNEDSTATE_PRIVILEGED;
     }
     if (data.isSystem) {
-      signedState = AddonManager.SIGNEDSTATE_SYSTEM;
+      signedState = lazy.AddonManager.SIGNEDSTATE_SYSTEM;
     }
 
-    let isPrivileged = ExtensionData.getIsPrivileged({
+    let isPrivileged = lazy.ExtensionData.getIsPrivileged({
       signedState,
       builtIn: false,
       temporarilyInstalled: !!data.temporarilyInstalled,
     });
 
-    return new Extension(
+    return new lazy.Extension(
       {
         id,
         resourceURI: jarURI,

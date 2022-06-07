@@ -12,17 +12,19 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionUtils",
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 function isStructuredCloneHolder(value) {
   return (
@@ -106,12 +108,14 @@ var ExtensionStorage = {
    * @returns {Promise<JSONFile>}
    */
   async _readFile(extensionId) {
-    OS.File.makeDir(this.getExtensionDir(extensionId), {
+    lazy.OS.File.makeDir(this.getExtensionDir(extensionId), {
       ignoreExisting: true,
-      from: OS.Constants.Path.profileDir,
+      from: lazy.OS.Constants.Path.profileDir,
     });
 
-    let jsonFile = new JSONFile({ path: this.getStorageFile(extensionId) });
+    let jsonFile = new lazy.JSONFile({
+      path: this.getStorageFile(extensionId),
+    });
     await jsonFile.load();
 
     jsonFile.data = this._serializableMap(jsonFile.data);
@@ -169,7 +173,7 @@ var ExtensionStorage = {
   sanitize(value, context) {
     let json = context.jsonStringify(value === undefined ? null : value);
     if (json == undefined) {
-      throw new ExtensionUtils.ExtensionError(
+      throw new lazy.ExtensionUtils.ExtensionError(
         "DataCloneError: The object could not be cloned."
       );
     }
@@ -185,7 +189,7 @@ var ExtensionStorage = {
    * @returns {string}
    */
   getExtensionDir(extensionId) {
-    return OS.Path.join(this.extensionDir, extensionId);
+    return lazy.OS.Path.join(this.extensionDir, extensionId);
   },
 
   /**
@@ -197,7 +201,7 @@ var ExtensionStorage = {
    * @returns {string}
    */
   getStorageFile(extensionId) {
-    return OS.Path.join(this.extensionDir, extensionId, "storage.js");
+    return lazy.OS.Path.join(this.extensionDir, extensionId, "storage.js");
   },
 
   /**
@@ -410,7 +414,7 @@ var ExtensionStorage = {
         try {
           result[key] = new StructuredCloneHolder(value, context.cloneScope);
         } catch (e) {
-          throw new ExtensionUtils.ExtensionError(String(e));
+          throw new lazy.ExtensionUtils.ExtensionError(String(e));
         }
       }
       return result;
@@ -449,7 +453,7 @@ var ExtensionStorage = {
 };
 
 XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
-  OS.Path.join(OS.Constants.Path.profileDir, "browser-extension-data")
+  lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, "browser-extension-data")
 );
 
 ExtensionStorage.init();
