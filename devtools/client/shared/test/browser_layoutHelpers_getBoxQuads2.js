@@ -60,11 +60,14 @@ add_task(async function() {
     fission: true,
   });
 
+  info("Load APZ test utils.");
   loadHelperScript(
     "../../../../gfx/layers/apz/test/mochitest/apz_test_utils.js"
   );
+  info("Load paint_listener.");
   loadHelperScript("../../../../../tests/SimpleTest/paint_listener.js");
 
+  info("Open a new tab.");
   const tab = await BrowserTestUtils.openNewForegroundTab(
     fissionWin.gBrowser,
     TEST_URI
