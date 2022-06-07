@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = ["ContentBlockingAllowList"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -55,13 +57,13 @@ const ContentBlockingAllowList = {
   },
 
   _permissionTypeFor(browser) {
-    return PrivateBrowsingUtils.isBrowserPrivate(browser)
+    return lazy.PrivateBrowsingUtils.isBrowserPrivate(browser)
       ? "trackingprotection-pb"
       : "trackingprotection";
   },
 
   _expiryFor(browser) {
-    return PrivateBrowsingUtils.isBrowserPrivate(browser)
+    return lazy.PrivateBrowsingUtils.isBrowserPrivate(browser)
       ? Ci.nsIPermissionManager.EXPIRE_SESSION
       : Ci.nsIPermissionManager.EXPIRE_NEVER;
   },

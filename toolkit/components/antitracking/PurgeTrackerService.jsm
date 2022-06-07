@@ -13,24 +13,26 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 1000;
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gClassifier",
   "@mozilla.org/url-classifier/dbservice;1",
   "nsIURIClassifier"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gStorageActivityService",
   "@mozilla.org/storage/activity-service;1",
   "nsIStorageActivityService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gClassifierFeature", () => {
-  return gClassifier.getFeatureByName("tracking-annotation");
+XPCOMUtils.defineLazyGetter(lazy, "gClassifierFeature", () => {
+  return lazy.gClassifier.getFeatureByName("tracking-annotation");
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => {
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
   return console.createInstance({
     prefix: "*** PurgeTrackerService:",
     maxLogLevelPref: "privacy.purge_trackers.logging.level",
@@ -38,7 +40,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gConsiderEntityList",
   "privacy.purge_trackers.consider_entity_list"
 );
@@ -88,9 +90,9 @@ PurgeTrackerService.prototype = {
 
       await new Promise(resolve => {
         try {
-          gClassifier.asyncClassifyLocalWithFeatures(
+          lazy.gClassifier.asyncClassifyLocalWithFeatures(
             principal.URI,
-            [gClassifierFeature],
+            [lazy.gClassifierFeature],
             Ci.nsIUrlClassifierFeature.blocklist,
             list => {
               if (list.length) {
@@ -114,16 +116,16 @@ PurgeTrackerService.prototype = {
     let uri = Services.io.newURI(
       `${firstPartyOriginNoSuffix}/?resource=${thirdPartyHost}`
     );
-    logger.debug(`Checking entity list state for`, uri.spec);
+    lazy.logger.debug(`Checking entity list state for`, uri.spec);
     return new Promise(resolve => {
       try {
-        gClassifier.asyncClassifyLocalWithFeatures(
+        lazy.gClassifier.asyncClassifyLocalWithFeatures(
           uri,
-          [gClassifierFeature],
+          [lazy.gClassifierFeature],
           Ci.nsIUrlClassifierFeature.entitylist,
           list => {
             let sameList = !!list.length;
-            logger.debug(`Is ${uri.spec} on the entity list?`, sameList);
+            lazy.logger.debug(`Is ${uri.spec} on the entity list?`, sameList);
             resolve(sameList);
           }
         );
@@ -135,7 +137,7 @@ PurgeTrackerService.prototype = {
 
   async maybePurgePrincipal(principal) {
     let origin = principal.origin;
-    logger.debug(`Maybe purging ${origin}.`);
+    lazy.logger.debug(`Maybe purging ${origin}.`);
 
     // First, check if any site with that base domain had received
     // user interaction in the last N days.
@@ -145,14 +147,14 @@ PurgeTrackerService.prototype = {
     // Exit early unless we want to see if we're dealing with a tracker,
     // for telemetry.
     if (hasInteraction && !Services.telemetry.canRecordPrereleaseData) {
-      logger.debug(`${origin} has user interaction, exiting.`);
+      lazy.logger.debug(`${origin} has user interaction, exiting.`);
       return;
     }
 
     // Second, confirm that we're looking at a tracker.
     let isTracker = await this.isTracker(principal);
     if (!isTracker) {
-      logger.debug(`${origin} is not a tracker, exiting.`);
+      lazy.logger.debug(`${origin} is not a tracker, exiting.`);
       return;
     }
 
@@ -172,12 +174,15 @@ PurgeTrackerService.prototype = {
 
       this._telemetryData.notPurged.add(principal.baseDomain);
 
-      logger.debug(`${origin} is a tracker with interaction, exiting.`);
+      lazy.logger.debug(`${origin} is a tracker with interaction, exiting.`);
       return;
     }
 
     let isAllowedThirdParty = false;
-    if (gConsiderEntityList || Services.telemetry.canRecordPrereleaseData) {
+    if (
+      lazy.gConsiderEntityList ||
+      Services.telemetry.canRecordPrereleaseData
+    ) {
       for (let firstPartyPrincipal of this._principalsWithInteraction) {
         if (
           await this.isAllowedThirdParty(
@@ -191,12 +196,14 @@ PurgeTrackerService.prototype = {
       }
     }
 
-    if (isAllowedThirdParty && gConsiderEntityList) {
-      logger.debug(`${origin} has interaction on the entity list, exiting.`);
+    if (isAllowedThirdParty && lazy.gConsiderEntityList) {
+      lazy.logger.debug(
+        `${origin} has interaction on the entity list, exiting.`
+      );
       return;
     }
 
-    logger.log("Deleting data from:", origin);
+    lazy.logger.log("Deleting data from:", origin);
 
     await new Promise(resolve => {
       Services.clearData.deleteDataFromPrincipal(
@@ -214,7 +221,7 @@ PurgeTrackerService.prototype = {
         resolve
       );
     });
-    logger.log(`Data deleted from:`, origin);
+    lazy.logger.log(`Data deleted from:`, origin);
 
     this._telemetryData.purged.add(principal.baseDomain);
   },
@@ -301,7 +308,7 @@ PurgeTrackerService.prototype = {
       sanitizeOnShutdownEnabled &&
       (clearHistoryOnShutdown || clearSiteSettingsOnShutdown)
     ) {
-      logger.log(
+      lazy.logger.log(
         `
         Purging canceled because interaction permissions are cleared on shutdown.
         sanitizeOnShutdownEnabled: ${sanitizeOnShutdownEnabled},
@@ -328,13 +335,13 @@ PurgeTrackerService.prototype = {
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 
     if (!activeWithCookieBehavior || !purgeEnabled) {
-      logger.log(
+      lazy.logger.log(
         `returning early, activeWithCookieBehavior: ${activeWithCookieBehavior}, purgeEnabled: ${purgeEnabled}`
       );
       this.resetPurgeList();
       return;
     }
-    logger.log("Purging trackers enabled, beginning batch.");
+    lazy.logger.log("Purging trackers enabled, beginning batch.");
     // How many cookies to loop through in each batch before we quit
     const MAX_PURGE_COUNT = Services.prefs.getIntPref(
       "privacy.purge_trackers.max_purge_count",
@@ -402,7 +409,7 @@ PurgeTrackerService.prototype = {
     // so only do this in the first iteration.
     if (this._firstIteration) {
       let startDate = Date.now() - THREE_DAYS_MS;
-      let storagePrincipals = gStorageActivityService.getActiveOrigins(
+      let storagePrincipals = lazy.gStorageActivityService.getActiveOrigins(
         startDate * 1000,
         Date.now() * 1000
       );
@@ -426,14 +433,16 @@ PurgeTrackerService.prototype = {
 
     // We've reached the end, no need to repeat again until next idle-daily.
     if (!cookies.length || cookies.length < 100) {
-      logger.log("All cookie purging finished, resetting list until tomorrow.");
+      lazy.logger.log(
+        "All cookie purging finished, resetting list until tomorrow."
+      );
       this.resetPurgeList();
       this.submitTelemetry();
       this._firstIteration = true;
       return;
     }
 
-    logger.log("Batch finished, queueing next batch.");
+    lazy.logger.log("Batch finished, queueing next batch.");
     this._firstIteration = false;
     Services.tm.idleDispatchToMainThread(() => {
       this.purgeTrackingCookieJars();
