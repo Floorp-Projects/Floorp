@@ -878,7 +878,8 @@ class GMut {
   }
 
   static void prefork() { sMutex.Lock(); }
-  static void postfork() { sMutex.Unlock(); }
+  static void postfork_parent() { sMutex.Unlock(); }
+  static void postfork_child() { sMutex.Init(); }
 
   void IncPageAllocHits(GMutLock) { mPageAllocHits++; }
   void IncPageAllocMisses(GMutLock) { mPageAllocMisses++; }
@@ -1587,7 +1588,7 @@ void replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
   // Note: This must run after attempting an allocation so as to give the
   // system malloc a chance to insert its own atfork handler.
   sMallocTable.malloc(-1);
-  pthread_atfork(GMut::prefork, GMut::postfork, GMut::postfork);
+  pthread_atfork(GMut::prefork, GMut::postfork_parent, GMut::postfork_child);
 #endif
 
   // gConst and gMut are never freed. They live for the life of the process.
