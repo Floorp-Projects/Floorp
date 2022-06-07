@@ -16,33 +16,35 @@ const TOOLKIT_ID = "toolkit@mozilla.org";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManagerPrivate",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Blocklist",
   "resource://gre/modules/Blocklist.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CertUtils",
   "resource://gre/modules/CertUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ServiceRequest",
   "resource://gre/modules/ServiceRequest.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonSettings",
   "resource://gre/modules/addons/AddonSettings.jsm"
 );
@@ -93,7 +95,7 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
     }
 
     if (
-      AddonManager.checkUpdateSecurity &&
+      lazy.AddonManager.checkUpdateSecurity &&
       !aUpdate.updateURL.startsWith("https:") &&
       !aHashPattern.test(aUpdate.updateHash)
     ) {
@@ -205,7 +207,7 @@ function parseJSONManifest(aId, aRequest, aManifestData) {
         app,
         "strict_min_version",
         "string",
-        AddonManagerPrivate.webExtensionsMinPlatformVersion
+        lazy.AddonManagerPrivate.webExtensionsMinPlatformVersion
       ),
       maxVersion: "*",
     };
@@ -273,10 +275,10 @@ function UpdateParser(aId, aUrl, aObserver) {
 
   logger.debug("Requesting " + aUrl);
   try {
-    this.request = new ServiceRequest({ mozAnon: true });
+    this.request = new lazy.ServiceRequest({ mozAnon: true });
     this.request.open("GET", this.url, true);
-    this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(
-      !AddonSettings.UPDATE_REQUIREBUILTINCERTS
+    this.request.channel.notificationCallbacks = new lazy.CertUtils.BadCertHandler(
+      !lazy.AddonSettings.UPDATE_REQUIREBUILTINCERTS
     );
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to cache.
@@ -307,19 +309,19 @@ UpdateParser.prototype = {
     this._doneAt = new Error("place holder");
 
     try {
-      CertUtils.checkCert(
+      lazy.CertUtils.checkCert(
         request.channel,
-        !AddonSettings.UPDATE_REQUIREBUILTINCERTS
+        !lazy.AddonSettings.UPDATE_REQUIREBUILTINCERTS
       );
     } catch (e) {
       logger.warn("Request failed: " + this.url + " - " + e);
-      this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
+      this.notifyError(lazy.AddonManager.ERROR_DOWNLOAD_ERROR);
       return;
     }
 
     if (!Components.isSuccessCode(request.status)) {
       logger.warn("Request failed: " + this.url + " - " + request.status);
-      this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
+      this.notifyError(lazy.AddonManager.ERROR_DOWNLOAD_ERROR);
       return;
     }
 
@@ -333,7 +335,7 @@ UpdateParser.prototype = {
           ": " +
           channel.responseStatusText
       );
-      this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
+      this.notifyError(lazy.AddonManager.ERROR_DOWNLOAD_ERROR);
       return;
     }
 
@@ -344,7 +346,7 @@ UpdateParser.prototype = {
       updateTypeHistogram.add("JSON");
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
-      this.notifyError(AddonManager.ERROR_PARSE_ERROR);
+      this.notifyError(lazy.AddonManager.ERROR_PARSE_ERROR);
       return;
     }
 
@@ -369,7 +371,7 @@ UpdateParser.prototype = {
     this.request = null;
     this._doneAt = new Error("Timed out");
     logger.warn("Request for " + this.url + " timed out");
-    this.notifyError(AddonManager.ERROR_TIMEOUT);
+    this.notifyError(lazy.AddonManager.ERROR_TIMEOUT);
   },
 
   /**
@@ -400,7 +402,7 @@ UpdateParser.prototype = {
     this.request = null;
     this._doneAt = new Error("UP_onError");
 
-    this.notifyError(AddonManager.ERROR_DOWNLOAD_ERROR);
+    this.notifyError(lazy.AddonManager.ERROR_DOWNLOAD_ERROR);
   },
 
   /**
@@ -427,7 +429,7 @@ UpdateParser.prototype = {
     this.request.abort();
     this.request = null;
     this._doneAt = new Error("UP_cancel");
-    this.notifyError(AddonManager.ERROR_CANCELLED);
+    this.notifyError(lazy.AddonManager.ERROR_CANCELLED);
   },
 };
 
@@ -594,7 +596,7 @@ var AddonUpdateChecker = {
       ) {
         continue;
       }
-      let state = await Blocklist.getAddonBlocklistState(
+      let state = await lazy.Blocklist.getAddonBlocklistState(
         update,
         aAppVersion,
         aPlatformVersion
@@ -620,7 +622,7 @@ var AddonUpdateChecker = {
       // not be considered for installation. But if |blocked| would otherwise
       // be eligible for installation, then report to telemetry that installation
       // has been blocked because of the blocklist.
-      Blocklist.recordAddonBlockChangeTelemetry(
+      lazy.Blocklist.recordAddonBlockChangeTelemetry(
         {
           id: aAddon.id,
           version: blocked.version,

@@ -32,7 +32,9 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   getAppInfo: "resource://testing-common/AppInfo.jsm",
@@ -44,7 +46,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   XPCShellContentUtils: "resource://testing-common/XPCShellContentUtils.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   aomStartup: [
     "@mozilla.org/addons/addon-manager-startup;1",
     "amIAddonManagerStartup",
@@ -137,7 +139,7 @@ class AddonsList {
       return;
     }
 
-    let data = aomStartup.readStartupData();
+    let data = lazy.aomStartup.readStartupData();
 
     for (let loc of Object.values(data)) {
       let dir = loc.path && new nsFile(loc.path);
@@ -319,7 +321,7 @@ var AddonTestUtils = {
         // FileTestUtils lazily creates a directory to hold the temporary files
         // it creates. If that directory exists, ignore it.
         let { value } = Object.getOwnPropertyDescriptor(
-          FileTestUtils,
+          lazy.FileTestUtils,
           "_globalTemporaryDirectory"
         );
         if (value) {
@@ -444,12 +446,12 @@ var AddonTestUtils = {
    *        The HTTP server instance.
    */
   createHttpServer(...args) {
-    XPCShellContentUtils.ensureInitialized(this.testScope);
-    return XPCShellContentUtils.createHttpServer(...args);
+    lazy.XPCShellContentUtils.ensureInitialized(this.testScope);
+    return lazy.XPCShellContentUtils.createHttpServer(...args);
   },
 
   registerJSON(...args) {
-    return XPCShellContentUtils.registerJSON(...args);
+    return lazy.XPCShellContentUtils.registerJSON(...args);
   },
 
   info(msg) {
@@ -488,14 +490,14 @@ var AddonTestUtils = {
   },
 
   createAppInfo(ID, name, version, platformVersion = "1.0") {
-    updateAppInfo({
+    lazy.updateAppInfo({
       ID,
       name,
       version,
       platformVersion,
       crashReporter: true,
     });
-    this.appInfo = getAppInfo();
+    this.appInfo = lazy.getAppInfo();
   },
 
   getManifestURI(file) {
@@ -634,7 +636,7 @@ var AddonTestUtils = {
 
     // Unregister the real database. This only works because the add-ons manager
     // hasn't started up and grabbed the certificate database yet.
-    MockRegistrar.register(CERTDB_CONTRACTID, FakeCertDB);
+    lazy.MockRegistrar.register(CERTDB_CONTRACTID, FakeCertDB);
 
     // Initialize the mock service.
     Cc[CERTDB_CONTRACTID].getService();
@@ -758,7 +760,7 @@ var AddonTestUtils = {
     // AddonListeners are removed when the addonManager is shutdown,
     // ensure the Extension observer is added.  We call uninit in
     // promiseShutdown to allow re-initialization.
-    ExtensionAddonObserver.init();
+    lazy.ExtensionAddonObserver.init();
 
     const { XPIInternal, XPIProvider } = ChromeUtils.import(
       "resource://gre/modules/addons/XPIProvider.jsm"
@@ -802,10 +804,10 @@ var AddonTestUtils = {
       )
     );
     if (earlyStartup) {
-      ExtensionTestCommon.notifyEarlyStartup();
+      lazy.ExtensionTestCommon.notifyEarlyStartup();
     }
     if (lateStartup) {
-      ExtensionTestCommon.notifyLateStartup();
+      lazy.ExtensionTestCommon.notifyLateStartup();
     }
   },
 
@@ -877,9 +879,9 @@ var AddonTestUtils = {
     Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
     Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
 
-    ExtensionAddonObserver.uninit();
+    lazy.ExtensionAddonObserver.uninit();
 
-    ExtensionTestCommon.resetStartupPromises();
+    lazy.ExtensionTestCommon.resetStartupPromises();
 
     if (shutdownError) {
       throw shutdownError;
@@ -909,7 +911,7 @@ var AddonTestUtils = {
    * @returns {Promise} resolves when notification is complete
    */
   notifyEarlyStartup() {
-    return ExtensionTestCommon.notifyEarlyStartup();
+    return lazy.ExtensionTestCommon.notifyEarlyStartup();
   },
 
   /**
@@ -920,7 +922,7 @@ var AddonTestUtils = {
    * @returns {Promise} resolves when notification is complete
    */
   notifyLateStartup() {
-    return ExtensionTestCommon.notifyLateStartup();
+    return lazy.ExtensionTestCommon.notifyLateStartup();
   },
 
   async loadAddonsList(flush = false) {
@@ -1095,7 +1097,7 @@ var AddonTestUtils = {
    * @return {nsIFile} A file pointing to the created XPI file
    */
   createTempWebExtensionFile(data) {
-    let file = ExtensionTestCommon.generateXPI(data);
+    let file = lazy.ExtensionTestCommon.generateXPI(data);
     this.tempXPIs.push(file);
     return file;
   },
@@ -1713,9 +1715,9 @@ var AddonTestUtils = {
    */
   promiseWebExtensionStartup(id) {
     return new Promise(resolve => {
-      Management.on("ready", function listener(event, extension) {
+      lazy.Management.on("ready", function listener(event, extension) {
         if (!id || extension.id == id) {
-          Management.off("ready", listener);
+          lazy.Management.off("ready", listener);
           resolve(extension);
         }
       });
@@ -1756,7 +1758,7 @@ var AddonTestUtils = {
     ok(extension.id, "Extension ID of search provider should be set");
 
     // The map of promises from browser/components/extensions/parent/ext-chrome-settings-overrides.js
-    let { pendingSearchSetupTasks } = Management.global;
+    let { pendingSearchSetupTasks } = lazy.Management.global;
     let searchStartupPromise = pendingSearchSetupTasks.get(extension.id);
     if (expectPending) {
       ok(
@@ -1774,7 +1776,7 @@ var AddonTestUtils = {
    */
   initializeURLPreloader() {
     Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-    aomStartup.initializeURLPreloader();
+    lazy.aomStartup.initializeURLPreloader();
   },
 
   /**
@@ -1798,7 +1800,7 @@ var AddonTestUtils = {
       file.path,
       new TextEncoder().encode(JSON.stringify(data))
     );
-    this.overrideEntry = aomStartup.registerChrome(manifest, [
+    this.overrideEntry = lazy.aomStartup.registerChrome(manifest, [
       [
         "override",
         "chrome://browser/content/built_in_addons.json",
@@ -1815,8 +1817,8 @@ var AddonTestUtils = {
    * ensure that there are no unexamined events after the test file is exiting.
    */
   hookAMTelemetryEvents() {
-    let originalRecordEvent = AMTelemetry.recordEvent;
-    AMTelemetry.recordEvent = event => {
+    let originalRecordEvent = lazy.AMTelemetry.recordEvent;
+    lazy.AMTelemetry.recordEvent = event => {
       this.collectedTelemetryEvents.push(event);
     };
     this.testScope.registerCleanupFunction(() => {
@@ -1825,7 +1827,7 @@ var AddonTestUtils = {
         this.collectedTelemetryEvents,
         "No unexamined telemetry events after test is finished"
       );
-      AMTelemetry.recordEvent = originalRecordEvent;
+      lazy.AMTelemetry.recordEvent = originalRecordEvent;
     });
   },
 

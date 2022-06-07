@@ -15,7 +15,9 @@ const { CertUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
 });
 
@@ -71,7 +73,7 @@ function getRequestStatus(request) {
  */
 async function conservativeFetch(input) {
   return new Promise(function(resolve, reject) {
-    const request = new ServiceRequest({ mozAnon: true });
+    const request = new lazy.ServiceRequest({ mozAnon: true });
     request.timeout = TIMEOUT_DELAY_MS;
 
     request.onerror = () => {
@@ -238,7 +240,7 @@ function downloadXMLWithRequest(
   allowedCerts = null
 ) {
   return new Promise((resolve, reject) => {
-    let request = new ServiceRequest();
+    let request = new lazy.ServiceRequest();
     // This is here to let unit test code override the ServiceRequest.
     if (request.wrappedJSObject) {
       request = request.wrappedJSObject;
@@ -414,7 +416,7 @@ function parseXML(document) {
  */
 function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
   return new Promise((resolve, reject) => {
-    let sr = new ServiceRequest();
+    let sr = new lazy.ServiceRequest();
 
     sr.onload = function(response) {
       logger.info("downloadFile File download. status=" + sr.status);
@@ -625,14 +627,14 @@ const ProductAddonCheckerTestUtils = {
    *        is undone after the callback returns.
    */
   async overrideServiceRequest(mockRequest, callback) {
-    let originalServiceRequest = ServiceRequest;
-    ServiceRequest = function() {
+    let originalServiceRequest = lazy.ServiceRequest;
+    lazy.ServiceRequest = function() {
       return mockRequest;
     };
     try {
       return await callback();
     } finally {
-      ServiceRequest = originalServiceRequest;
+      lazy.ServiceRequest = originalServiceRequest;
     }
   },
 };

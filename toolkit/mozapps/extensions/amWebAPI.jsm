@@ -9,8 +9,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "AMO_ABUSEREPORT",
   "extensions.abuseReport.amWebAPI.enabled",
   false
@@ -263,7 +265,7 @@ class WebAPI extends APIObject {
   }
 
   get abuseReportPanelEnabled() {
-    return AMO_ABUSEREPORT;
+    return lazy.AMO_ABUSEREPORT;
   }
 
   eventListenerAdded(type) {

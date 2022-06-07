@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
 });
 
@@ -228,7 +230,9 @@ InstallTrigger.prototype = {
       method: "installTrigger",
       sourceHost,
       sourceURL,
-      hasCrossOriginAncestor: ThirdPartyUtil.isThirdPartyWindow(this._window),
+      hasCrossOriginAncestor: lazy.ThirdPartyUtil.isThirdPartyWindow(
+        this._window
+      ),
     };
 
     return this._mediator.install(
