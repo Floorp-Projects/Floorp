@@ -47,6 +47,7 @@
         -->
         <activity-alias
             android:name="${applicationId}.App"
+            android:exported="true"
             android:targetActivity=".HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -71,6 +72,7 @@
         <!-- Activity alias from Fennec used by PWA launchers on the home screen -->
         <activity-alias
             android:name="org.mozilla.gecko.LauncherActivity"
+            android:exported="true"
             android:targetActivity=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.WEBAPP" />
@@ -79,6 +81,7 @@
 
         <activity
             android:name=".HomeActivity"
+            android:exported="true"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:launchMode="singleTask"
             android:resizeableActivity="true"
@@ -268,6 +271,7 @@
 
         <service
             android:name=".autofill.AutofillService"
+            android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_AUTOFILL_SERVICE">
             <intent-filter>
@@ -291,9 +295,13 @@
             </intent-filter>
         </service>
 
-        <service android:name=".downloads.DownloadService" />
+        <service
+            android:name=".downloads.DownloadService"
+            android:exported="false" />
+
         <receiver
-            android:name="org.mozilla.gecko.search.SearchWidgetProvider">
+            android:name="org.mozilla.gecko.search.SearchWidgetProvider"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
