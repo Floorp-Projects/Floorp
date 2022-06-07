@@ -203,9 +203,9 @@ ElementState HTMLElement::IntrinsicState() const {
   if (ElementInternals* internals = GetElementInternals()) {
     if (internals->IsCandidateForConstraintValidation()) {
       if (internals->IsValid()) {
-        state |= ElementState::VALID | ElementState::MOZ_UI_VALID;
+        state |= ElementState::VALID | ElementState::USER_VALID;
       } else {
-        state |= ElementState::INVALID | ElementState::MOZ_UI_INVALID;
+        state |= ElementState::INVALID | ElementState::USER_INVALID;
       }
     }
   }

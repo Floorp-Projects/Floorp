@@ -399,9 +399,9 @@ ElementState HTMLButtonElement::IntrinsicState() const {
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= ElementState::VALID | ElementState::MOZ_UI_VALID;
+      state |= ElementState::VALID | ElementState::USER_VALID;
     } else {
-      state |= ElementState::INVALID | ElementState::MOZ_UI_INVALID;
+      state |= ElementState::INVALID | ElementState::USER_INVALID;
     }
   }
 
