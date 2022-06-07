@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/packet_socket_factory.h"
 #include "api/test/network_emulation/cross_traffic.h"
 #include "api/test/network_emulation/network_emulation_interfaces.h"
 #include "api/test/simulated_network.h"
@@ -125,6 +126,10 @@ class EmulatedNetworkManagerInterface {
   // WebRTC to properly setup network emulation. Returned manager is owned by
   // EmulatedNetworkManagerInterface implementation.
   virtual rtc::NetworkManager* network_manager() = 0;
+  // Returns non-null pointer to packet socket factory that have to be injected
+  // into WebRTC to properly setup network emulation. Returned factory is owned
+  // by EmulatedNetworkManagerInterface implementation.
+  virtual rtc::PacketSocketFactory* packet_socket_factory() = 0;
   // Returns list of endpoints that are associated with this instance. Pointers
   // are guaranteed to be non-null and are owned by NetworkEmulationManager.
   virtual std::vector<EmulatedEndpoint*> endpoints() const = 0;
