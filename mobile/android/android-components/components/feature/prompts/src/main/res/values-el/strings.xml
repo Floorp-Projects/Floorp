@@ -113,4 +113,8 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Ενημέρωση ημερομηνίας λήξης κάρτας;</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Ο αριθμός της κάρτας θα κρυπτογραφηθεί. Ο κωδικός ασφαλείας δεν θα αποθηκευτεί.</string>
-</resources>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address">Επιλογή διευθύνσεων</string>
+    </resources>

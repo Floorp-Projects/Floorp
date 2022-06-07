@@ -122,4 +122,7 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Mettre à jour la date d’expiration de la carte ?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Le numéro de carte sera chiffré. Le code de sécurité ne sera pas enregistré.</string>
+
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Gérer les adresses</string>
 </resources>
