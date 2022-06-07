@@ -10,8 +10,9 @@ const { Preferences } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileTestUtils",
   "resource://testing-common/FileTestUtils.jsm"
 );
@@ -27,7 +28,7 @@ var EnterprisePolicyTesting = {
   ) {
     let filePath;
     if (typeof json == "object") {
-      filePath = FileTestUtils.getTempFile("policies.json").path;
+      filePath = lazy.FileTestUtils.getTempFile("policies.json").path;
 
       // This file gets automatically deleted by FileTestUtils
       // at the end of the test run.

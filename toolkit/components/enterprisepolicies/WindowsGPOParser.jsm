@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "GPOParser.jsm",
@@ -36,14 +38,14 @@ var WindowsGPOParser = {
     try {
       policies = registryToObject(childWrk, policies);
     } catch (e) {
-      log.error(e);
+      lazy.log.error(e);
     } finally {
       childWrk.close();
     }
     // Need an extra check here so we don't
     // JSON.stringify if we aren't in debug mode
-    if (log._maxLogLevel == "debug") {
-      log.debug(JSON.stringify(policies, null, 2));
+    if (lazy.log._maxLogLevel == "debug") {
+      lazy.log.debug(JSON.stringify(policies, null, 2));
     }
     return policies;
   },
@@ -103,7 +105,7 @@ function readRegistryValue(wrk, value) {
       try {
         return JSON.parse(wrk.readStringValue(value).replace(/\0/g, "\n"));
       } catch (e) {
-        log.error(`Unable to parse JSON for ${value}`);
+        lazy.log.error(`Unable to parse JSON for ${value}`);
         return undefined;
       }
     case 2: // REG_EXPAND_SZ
