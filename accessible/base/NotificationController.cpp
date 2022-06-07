@@ -635,10 +635,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   if (!mDocument) return;
 
   // Wait until an update, we have started, or an interruptible reflow is
-  // finished, and the PresShell has initialized.
+  // finished.
   if (mObservingState == eRefreshProcessing ||
       mObservingState == eRefreshProcessingForUpdate ||
-      mPresShell->IsReflowInterrupted() || !mPresShell->DidInitialize()) {
+      mPresShell->IsReflowInterrupted()) {
     return;
   }
 
@@ -657,9 +657,12 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   // Initial accessible tree construction.
   if (!mDocument->HasLoadState(DocAccessible::eTreeConstructed)) {
-    // If document is not bound to parent at this point then the document is not
-    // ready yet (process notifications later).
-    if (!mDocument->IsBoundToParent()) {
+    // (1) If document is not bound to parent at this point, or
+    // (2) the PresShell is not initialized (and it isn't about:blank),
+    // then the document is not ready yet (process notifications later).
+    if (!mDocument->IsBoundToParent() ||
+        (!mPresShell->DidInitialize() &&
+         !mDocument->DocumentNode()->IsInitialDocument())) {
       mObservingState = eRefreshObserving;
       return;
     }
