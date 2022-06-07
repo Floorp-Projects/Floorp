@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1773067",
+    title: "getStats on a closed peer connection should fail, not hang, " +
+           " until bug 1056433 is fixed"
+  });
+
+  // TODO: Bug 1056433 removes the need for this test
+  runNetworkTest(async function () {
+    let errorName;
+    try {
+      const pc = new RTCPeerConnection();
+      pc.close();
+      await pc.getStats();
+    } catch(e) {
+      errorName = e.name;
+    }
+    is(errorName,
+       "InvalidStateError",
+       "getStats on closed peer connection fails instead of hanging");
+  });
+</script>
+</pre>
+</body>
+</html>
