@@ -23,13 +23,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 // This conditional prevents errors if this file is imported from operating
 // systems other than Windows. This is purely for convenient importing, because
 // attempting to use anything in this file on platforms other than Windows will
 // result in an error.
 if (AppConstants.MOZ_BITS_DOWNLOAD) {
   XPCOMUtils.defineLazyServiceGetter(
-    this,
+    lazy,
     "gBits",
     "@mozilla.org/bits;1",
     "nsIBits"
@@ -65,20 +67,20 @@ class BitsError extends Error {
       `${BitsError.name} {type: ${type}, action: ${action}, ` +
       `stage: ${stage}`;
     switch (codeType) {
-      case gBits.ERROR_CODE_TYPE_NONE:
+      case lazy.gBits.ERROR_CODE_TYPE_NONE:
         code = null;
         message += ", codeType: none}";
         break;
-      case gBits.ERROR_CODE_TYPE_NSRESULT:
+      case lazy.gBits.ERROR_CODE_TYPE_NSRESULT:
         message += `, codeType: nsresult, code: ${code}}`;
         break;
-      case gBits.ERROR_CODE_TYPE_HRESULT:
+      case lazy.gBits.ERROR_CODE_TYPE_HRESULT:
         message += `, codeType: hresult, code: ${code}}`;
         break;
-      case gBits.ERROR_CODE_TYPE_STRING:
+      case lazy.gBits.ERROR_CODE_TYPE_STRING:
         message += `, codeType: string, code: ${JSON.stringify(code)}}`;
         break;
-      case gBits.ERROR_CODE_TYPE_EXCEPTION:
+      case lazy.gBits.ERROR_CODE_TYPE_EXCEPTION:
         message += `, codeType: exception, code: ${code}}`;
         break;
       default:
@@ -130,10 +132,10 @@ function makeTimeout(reject, errorAction) {
   timer.initWithCallback(
     () => {
       let error = new BitsError(
-        gBits.ERROR_TYPE_METHOD_TIMEOUT,
+        lazy.gBits.ERROR_TYPE_METHOD_TIMEOUT,
         errorAction,
-        gBits.ERROR_STAGE_UNKNOWN,
-        gBits.ERROR_CODE_TYPE_NONE
+        lazy.gBits.ERROR_STAGE_UNKNOWN,
+        lazy.gBits.ERROR_CODE_TYPE_NONE
       );
       reject(error);
     },
@@ -171,7 +173,7 @@ async function requestPromise(errorAction, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_NONE
+          lazy.gBits.ERROR_CODE_TYPE_NONE
         );
         reject(error);
       },
@@ -181,7 +183,7 @@ async function requestPromise(errorAction, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_NSRESULT,
+          lazy.gBits.ERROR_CODE_TYPE_NSRESULT,
           code
         );
         reject(error);
@@ -192,7 +194,7 @@ async function requestPromise(errorAction, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_HRESULT,
+          lazy.gBits.ERROR_CODE_TYPE_HRESULT,
           code
         );
         reject(error);
@@ -203,7 +205,7 @@ async function requestPromise(errorAction, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_STRING,
+          lazy.gBits.ERROR_CODE_TYPE_STRING,
           message
         );
         reject(error);
@@ -214,10 +216,10 @@ async function requestPromise(errorAction, actionFn) {
       actionFn(callback);
     } catch (e) {
       let error = new BitsError(
-        gBits.ERROR_TYPE_METHOD_THREW,
+        lazy.gBits.ERROR_TYPE_METHOD_THREW,
         errorAction,
-        gBits.ERROR_STAGE_PRETASK,
-        gBits.ERROR_CODE_TYPE_EXCEPTION,
+        lazy.gBits.ERROR_STAGE_PRETASK,
+        lazy.gBits.ERROR_CODE_TYPE_EXCEPTION,
         e
       );
       reject(error);
@@ -421,7 +423,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_CHANGE_MONITOR_INTERVAL;
+    let action = lazy.gBits.ERROR_ACTION_CHANGE_MONITOR_INTERVAL;
     return requestPromise(action, callback => {
       this._request.changeMonitorInterval(monitorIntervalMs, callback);
     });
@@ -447,7 +449,7 @@ class BitsRequest {
     if (status === undefined) {
       status = Cr.NS_ERROR_ABORT;
     }
-    let action = gBits.ERROR_ACTION_CANCEL;
+    let action = lazy.gBits.ERROR_ACTION_CANCEL;
     return requestPromise(action, callback => {
       this._request.cancelAsync(status, callback);
     }).then(() => this.shutdown());
@@ -468,7 +470,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_SET_PRIORITY;
+    let action = lazy.gBits.ERROR_ACTION_SET_PRIORITY;
     return requestPromise(action, callback => {
       this._request.setPriorityHigh(callback);
     });
@@ -489,7 +491,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_SET_PRIORITY;
+    let action = lazy.gBits.ERROR_ACTION_SET_PRIORITY;
     return requestPromise(action, callback => {
       this._request.setPriorityLow(callback);
     });
@@ -510,7 +512,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT;
+    let action = lazy.gBits.ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT;
     return requestPromise(action, callback => {
       this._request.setNoProgressTimeout(timeoutSecs, callback);
     });
@@ -531,7 +533,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_COMPLETE;
+    let action = lazy.gBits.ERROR_ACTION_COMPLETE;
     return requestPromise(action, callback => {
       this._request.complete(callback);
     }).then(() => this.shutdown());
@@ -552,7 +554,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_SUSPEND;
+    let action = lazy.gBits.ERROR_ACTION_SUSPEND;
     return requestPromise(action, callback => {
       this._request.suspendAsync(callback);
     });
@@ -573,7 +575,7 @@ class BitsRequest {
         Ci.nsIBits.ERROR_CODE_TYPE_NONE
       );
     }
-    let action = gBits.ERROR_ACTION_RESUME;
+    let action = lazy.gBits.ERROR_ACTION_RESUME;
     return requestPromise(action, callback => {
       this._request.resumeAsync(callback);
     });
@@ -601,10 +603,10 @@ async function servicePromise(errorAction, observer, actionFn) {
   return new Promise((resolve, reject) => {
     if (!observer) {
       let error = new BitsError(
-        gBits.ERROR_TYPE_NULL_ARGUMENT,
+        lazy.gBits.ERROR_TYPE_NULL_ARGUMENT,
         errorAction,
-        gBits.ERROR_STAGE_PRETASK,
-        gBits.ERROR_CODE_TYPE_NONE
+        lazy.gBits.ERROR_STAGE_PRETASK,
+        lazy.gBits.ERROR_CODE_TYPE_NONE
       );
       reject(error);
       return;
@@ -613,10 +615,10 @@ async function servicePromise(errorAction, observer, actionFn) {
       observer.QueryInterface(Ci.nsIRequestObserver);
     } catch (e) {
       let error = new BitsError(
-        gBits.ERROR_TYPE_INVALID_ARGUMENT,
+        lazy.gBits.ERROR_TYPE_INVALID_ARGUMENT,
         errorAction,
-        gBits.ERROR_STAGE_PRETASK,
-        gBits.ERROR_CODE_TYPE_EXCEPTION,
+        lazy.gBits.ERROR_STAGE_PRETASK,
+        lazy.gBits.ERROR_CODE_TYPE_EXCEPTION,
         e
       );
       reject(error);
@@ -688,7 +690,7 @@ async function servicePromise(errorAction, observer, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_NONE
+          lazy.gBits.ERROR_CODE_TYPE_NONE
         );
         reject(error);
       },
@@ -698,7 +700,7 @@ async function servicePromise(errorAction, observer, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_NSRESULT,
+          lazy.gBits.ERROR_CODE_TYPE_NSRESULT,
           code
         );
         reject(error);
@@ -709,7 +711,7 @@ async function servicePromise(errorAction, observer, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_HRESULT,
+          lazy.gBits.ERROR_CODE_TYPE_HRESULT,
           code
         );
         reject(error);
@@ -720,7 +722,7 @@ async function servicePromise(errorAction, observer, actionFn) {
           type,
           action,
           stage,
-          gBits.ERROR_CODE_TYPE_STRING,
+          lazy.gBits.ERROR_CODE_TYPE_STRING,
           message
         );
         reject(error);
@@ -731,10 +733,10 @@ async function servicePromise(errorAction, observer, actionFn) {
       actionFn(wrappedObserver, callback);
     } catch (e) {
       let error = new BitsError(
-        gBits.ERROR_TYPE_METHOD_THREW,
+        lazy.gBits.ERROR_TYPE_METHOD_THREW,
         errorAction,
-        gBits.ERROR_STAGE_PRETASK,
-        gBits.ERROR_CODE_TYPE_EXCEPTION,
+        lazy.gBits.ERROR_STAGE_PRETASK,
+        lazy.gBits.ERROR_CODE_TYPE_EXCEPTION,
         e
       );
       reject(error);
@@ -747,14 +749,14 @@ var Bits = {
    * This function wraps nsIBits::initialized.
    */
   get initialized() {
-    return gBits.initialized;
+    return lazy.gBits.initialized;
   },
 
   /**
    * This function wraps nsIBits::init.
    */
   init(jobName, savePathPrefix, monitorTimeoutMs) {
-    return gBits.init(jobName, savePathPrefix, monitorTimeoutMs);
+    return lazy.gBits.init(jobName, savePathPrefix, monitorTimeoutMs);
   },
 
   /**
@@ -773,9 +775,9 @@ var Bits = {
     observer,
     context
   ) {
-    let action = gBits.ERROR_ACTION_START_DOWNLOAD;
+    let action = lazy.gBits.ERROR_ACTION_START_DOWNLOAD;
     return servicePromise(action, observer, (wrappedObserver, callback) => {
-      gBits.startDownload(
+      lazy.gBits.startDownload(
         downloadURL,
         saveRelPath,
         proxy,
@@ -796,9 +798,9 @@ var Bits = {
    * nsIRequest), or rejects with a BitsError.
    */
   async monitorDownload(id, monitorIntervalMs, observer, context) {
-    let action = gBits.ERROR_ACTION_MONITOR_DOWNLOAD;
+    let action = lazy.gBits.ERROR_ACTION_MONITOR_DOWNLOAD;
     return servicePromise(action, observer, (wrappedObserver, callback) => {
-      gBits.monitorDownload(
+      lazy.gBits.monitorDownload(
         id,
         monitorIntervalMs,
         wrappedObserver,
