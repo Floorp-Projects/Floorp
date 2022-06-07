@@ -7,6 +7,7 @@
 #include "ActorsParent.h"
 
 // Local includes
+#include "ClientUsageArray.h"
 #include "Flatten.h"
 #include "FirstInitializationAttemptsImpl.h"
 #include "OriginScope.h"
@@ -763,23 +764,6 @@ namespace {
  ******************************************************************************/
 
 }  // namespace
-
-// XXX Change this not to derive from AutoTArray.
-class ClientUsageArray final
-    : public AutoTArray<Maybe<uint64_t>, Client::TYPE_MAX> {
- public:
-  ClientUsageArray() { SetLength(Client::TypeMax()); }
-
-  void Serialize(nsACString& aText) const;
-
-  nsresult Deserialize(const nsACString& aText);
-
-  ClientUsageArray Clone() const {
-    ClientUsageArray res;
-    res.Assign(*this);
-    return res;
-  }
-};
 
 class OriginInfo final {
   friend class GroupInfo;
@@ -7426,47 +7410,6 @@ auto QuotaManager::ExecuteOriginInitialization(
 /*******************************************************************************
  * Local class implementations
  ******************************************************************************/
-
-void ClientUsageArray::Serialize(nsACString& aText) const {
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  bool first = true;
-
-  for (Client::Type type : quotaManager->AllClientTypes()) {
-    const Maybe<uint64_t>& clientUsage = ElementAt(type);
-    if (clientUsage.isSome()) {
-      if (first) {
-        first = false;
-      } else {
-        aText.Append(" ");
-      }
-
-      aText.Append(Client::TypeToPrefix(type));
-      aText.AppendInt(clientUsage.value());
-    }
-  }
-}
-
-nsresult ClientUsageArray::Deserialize(const nsACString& aText) {
-  for (const auto& token :
-       nsCCharSeparatedTokenizerTemplate<NS_TokenizerIgnoreNothing>(aText, ' ')
-           .ToRange()) {
-    QM_TRY(OkIf(token.Length() >= 2), NS_ERROR_FAILURE);
-
-    Client::Type clientType;
-    QM_TRY(OkIf(Client::TypeFromPrefix(token.First(), clientType, fallible)),
-           NS_ERROR_FAILURE);
-
-    nsresult rv;
-    const uint64_t usage = Substring(token, 1).ToInteger(&rv);
-    QM_TRY(MOZ_TO_RESULT(rv));
-
-    ElementAt(clientType) = Some(usage);
-  }
-
-  return NS_OK;
-}
 
 OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
                        const ClientUsageArray& aClientUsages, uint64_t aUsage,
