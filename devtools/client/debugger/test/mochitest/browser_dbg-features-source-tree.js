@@ -432,6 +432,7 @@ add_task(async function testSourceTreeWithWebExtensionContentScript() {
 // browser toolbox.
 add_task(async function testSourceTreeNamesForWebExtensions() {
   await pushPref("devtools.chrome.enabled", true);
+  await pushPref("devtools.browsertoolbox.fission", true);
   const extension = await installAndStartContentScriptExtension();
 
   const dbg = await initDebugger("doc-content-script-sources.html");
