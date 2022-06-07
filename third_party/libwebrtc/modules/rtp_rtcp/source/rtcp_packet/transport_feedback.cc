@@ -549,7 +549,7 @@ bool TransportFeedback::IsConsistent() const {
                       << num_seq_no_;
     return false;
   }
-  int64_t timestamp_us = base_time_ticks_ * kBaseScaleFactor;
+  int64_t timestamp_us = GetBaseTimeUs();
   auto packet_it = received_packets_.begin();
   uint16_t seq_no = base_seq_no_;
   for (DeltaSize delta_size : delta_sizes) {
