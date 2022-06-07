@@ -17,21 +17,23 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AppMenuNotifications",
   "resource://gre/modules/AppMenuNotifications.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "AppUpdateService",
   "@mozilla.org/updates/update-service;1",
   "nsIApplicationUpdateService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "UpdateManager",
   "@mozilla.org/updates/update-manager;1",
   "nsIUpdateManager"
@@ -41,7 +43,7 @@ const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
 const PREF_APP_UPDATE_SUPPRESS_PROMPTS = "app.update.suppressPrompts";
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "SUPPRESS_PROMPTS",
   PREF_APP_UPDATE_SUPPRESS_PROMPTS,
   false
@@ -101,7 +103,7 @@ var UpdateListener = {
         buildId.slice(10, 12),
         buildId.slice(12, 14)
       ).getTime() ?? 0;
-    let updateTime = UpdateManager.getUpdateAt(0)?.installDate ?? 0;
+    let updateTime = lazy.UpdateManager.getUpdateAt(0)?.installDate ?? 0;
     // Check that update/build times are at most 24 hours after now.
     if (buildTime - now > this.promptMaxFutureVariation) {
       buildTime = 0;
@@ -145,7 +147,7 @@ var UpdateListener = {
   },
 
   clearPendingAndActiveNotifications() {
-    AppMenuNotifications.removeNotification(/^update-/);
+    lazy.AppMenuNotifications.removeNotification(/^update-/);
     this.clearCallbacks();
   },
 
@@ -225,7 +227,7 @@ var UpdateListener = {
       },
       dismiss: true,
     };
-    AppMenuNotifications.showNotification(
+    lazy.AppMenuNotifications.showNotification(
       "update-" + type,
       action,
       secondaryAction,
@@ -239,7 +241,7 @@ var UpdateListener = {
   },
 
   showRestartNotification(update, dismissed) {
-    let notification = AppUpdateService.isOtherInstanceHandlingUpdates
+    let notification = lazy.AppUpdateService.isOtherInstanceHandlingUpdates
       ? "other-instance"
       : "restart";
     if (!dismissed) {
@@ -252,7 +254,7 @@ var UpdateListener = {
 
   showUpdateAvailableNotification(update, dismissed) {
     this.showUpdateNotification("available", false, dismissed, () => {
-      AppUpdateService.downloadUpdate(update, true);
+      lazy.AppUpdateService.downloadUpdate(update, true);
     });
   },
 
@@ -307,7 +309,10 @@ var UpdateListener = {
       this.addTimeout(Math.max(0, this.suppressedPromptDelay), () => {
         // If we downloaded or installed an update via the badge or banner
         // while the timer was running, bail out of showing the doorhanger.
-        if (UpdateManager.downloadingUpdate || UpdateManager.readyUpdate) {
+        if (
+          lazy.UpdateManager.downloadingUpdate ||
+          lazy.UpdateManager.readyUpdate
+        ) {
           return;
         }
         this.showUpdateAvailableNotification(this.latestUpdate, false);
@@ -374,12 +379,12 @@ var UpdateListener = {
 
         // On Nightly only, permit disabling doorhangers for update restart
         // notifications by setting PREF_APP_UPDATE_SUPPRESS_PROMPTS
-        if (AppConstants.NIGHTLY_BUILD && SUPPRESS_PROMPTS) {
+        if (AppConstants.NIGHTLY_BUILD && lazy.SUPPRESS_PROMPTS) {
           this.showRestartNotification(update, true);
         } else if (badgeWaitTimeMs < doorhangerWaitTimeMs) {
           this.addTimeout(badgeWaitTimeMs, () => {
             // Skip the badge if we're waiting for another instance.
-            if (!AppUpdateService.isOtherInstanceHandlingUpdates) {
+            if (!lazy.AppUpdateService.isOtherInstanceHandlingUpdates) {
               this.showRestartNotification(update, true);
             }
 
@@ -407,7 +412,7 @@ var UpdateListener = {
       case "show-prompt":
         // If an update is available, show an update available doorhanger unless
         // PREF_APP_UPDATE_SUPPRESS_PROMPTS is true (only on Nightly).
-        if (AppConstants.NIGHTLY_BUILD && SUPPRESS_PROMPTS) {
+        if (AppConstants.NIGHTLY_BUILD && lazy.SUPPRESS_PROMPTS) {
           this.scheduleUpdateAvailableNotification(update);
         } else {
           this.showUpdateAvailableNotification(update, false);
