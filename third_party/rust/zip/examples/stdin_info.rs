@@ -1,5 +1,3 @@
-extern crate zip;
-
 use std::io::{self, Read};
 
 fn main() {
@@ -14,18 +12,24 @@ fn real_main() -> i32 {
     loop {
         match zip::read::read_zipfile_from_stream(&mut stdin_handle) {
             Ok(Some(mut file)) => {
-                println!("{}: {} bytes ({} bytes packed)", file.name(), file.size(), file.compressed_size());
+                println!(
+                    "{}: {} bytes ({} bytes packed)",
+                    file.name(),
+                    file.size(),
+                    file.compressed_size()
+                );
                 match file.read(&mut buf) {
                     Ok(n) => println!("The first {} bytes are: {:?}", n, &buf[0..n]),
                     Err(e) => println!("Could not read the file: {:?}", e),
                 };
-            },
+            }
             Ok(None) => break,
             Err(e) => {
                 println!("Error encountered while reading zip: {:?}", e);
                 return 1;
-            },
+            }
         }
     }
-    return 0;
+
+    0
 }
