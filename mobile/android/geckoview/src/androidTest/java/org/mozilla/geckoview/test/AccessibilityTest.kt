@@ -1389,10 +1389,14 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testRemoteAccessibilityFocusIframe() {
+        var cacheEnabled = (sessionRule.getPrefs("accessibility.cache.enabled")[0] as Boolean)
+        assumeThat("Cache is enabled", cacheEnabled, equalTo(true))
         testAccessibilityFocusIframe(REMOTE_IFRAME);
     }
 
     @Test fun testLocalAccessibilityFocusIframe() {
+        var cacheEnabled = (sessionRule.getPrefs("accessibility.cache.enabled")[0] as Boolean)
+        assumeThat("Cache is enabled", cacheEnabled, equalTo(true))
         testAccessibilityFocusIframe(LOCAL_IFRAME);
     }
 
