@@ -9,10 +9,8 @@
 
 #include "nsXULElement.h"
 #include "Units.h"
-class nsIBaseWindow;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsXULElement* NS_NewXULResizerElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -20,18 +18,18 @@ nsXULElement* NS_NewXULResizerElement(
 class XULResizerElement final : public nsXULElement {
  public:
   explicit XULResizerElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+      already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : nsXULElement(std::move(aNodeInfo)) {}
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult PostHandleEvent(mozilla::EventChainPostVisitor&) override;
+  nsresult PostHandleEvent(EventChainPostVisitor&) override;
 
  private:
   virtual ~XULResizerElement() = default;
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   MOZ_CAN_RUN_SCRIPT
-  void PostHandleEventInternal(mozilla::EventChainPostVisitor&);
+  void PostHandleEventInternal(EventChainPostVisitor&);
 
   struct Direction {
     int8_t mHorizontal;
@@ -39,7 +37,7 @@ class XULResizerElement final : public nsXULElement {
   };
   Direction GetDirection();
 
-  nsIContent* GetContentToResize(nsIBaseWindow** aWindow);
+  nsIContent* GetContentToResize() const;
 
   /**
    * Adjust the window position and size in a direction according to the mouse
@@ -48,14 +46,11 @@ class XULResizerElement final : public nsXULElement {
    *
    * @param aPos left or top position
    * @param aSize width or height
-   * @param aMinSize minimum width or height
-   * @param aMacSize maximum width or height
    * @param aMovement the amount the mouse was moved
    * @param aResizerDirection resizer direction returned by GetDirection
    */
-  static void AdjustDimensions(int32_t* aPos, int32_t* aSize, int32_t aMinSize,
-                               int32_t aMaxSize, int32_t aMovement,
-                               int8_t aResizerDirection);
+  static void AdjustDimensions(int32_t* aPos, int32_t* aSize,
+                               int32_t aMovement, int8_t aResizerDirection);
 
   struct SizeInfo {
     nsCString width, height;
@@ -74,7 +69,6 @@ class XULResizerElement final : public nsXULElement {
   bool mTrackingMouseMove = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // XULResizerElement_h

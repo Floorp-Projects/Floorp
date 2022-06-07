@@ -5639,8 +5639,6 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
         NS_WARNING("only resizable types should have resizers");
     }
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir, false);
-    mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
-                             u"_parent"_ns, false);
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
                              u"always"_ns, false);
     aElements.AppendElement(mResizerContent);

@@ -66,7 +66,7 @@ var tests = [
     width: 195, height: 180 },
   { testname: "constraint minwidth, minheight, maxwidth and maxheight set",
     src: "windowminmaxsize10.xhtml",
-    width: 150, height: 150, last: true }
+    width: 150, height: 150 }
 ];
 
 var popupTests = [
@@ -106,40 +106,6 @@ function windowOpened(otherWindow)
      otherWindow.innerWidth == tests[gTestId].width + 1,
     tests[gTestId].testname + " width of " + otherWindow.innerWidth + " matches " + tests[gTestId].width);
   is(otherWindow.innerHeight, tests[gTestId].height, tests[gTestId].testname + " height");
-
-  // On the last test, try moving the resizer to a size larger than the maximum
-  // and smaller than the minimum. This test is only done on Mac as the other
-  // platforms use native resizing.
-  if ('last' in tests[gTestId] && (navigator.platform.indexOf("Mac") == 0)) {
-    var resizer = otherWindow.document.documentElement.firstChild;
-    synthesizeMouse(resizer, 4, 4, { type:"mousedown" }, otherWindow);
-    synthesizeMouse(resizer, 800, 800, { type:"mousemove" }, otherWindow);
-    is(otherWindow.innerWidth, 480, "Width after maximum resize");
-    is(otherWindow.innerHeight, 470, "Height after maximum resize");
-
-    synthesizeMouse(resizer, -100, -100, { type:"mousemove" }, otherWindow);
-    is(otherWindow.innerWidth, 120, "Width after minimum resize");
-    is(otherWindow.innerHeight, 110, "Height after minimum resize");
-
-    synthesizeMouse(resizer, 4, 4, { type:"mouseup" }, otherWindow);
-
-    // Change the minimum and maximum size and try resizing the window again.
-    otherWindow.document.documentElement.minWidth = 140;
-    otherWindow.document.documentElement.minHeight = 130;
-    otherWindow.document.documentElement.maxWidth = 380;
-    otherWindow.document.documentElement.maxHeight = 360;
-
-    synthesizeMouse(resizer, 4, 4, { type:"mousedown" }, otherWindow);
-    synthesizeMouse(resizer, 800, 800, { type:"mousemove" }, otherWindow);
-    is(otherWindow.innerWidth, 380, "Width after changed maximum resize");
-    is(otherWindow.innerHeight, 360, "Height after changed maximum resize");
-
-    synthesizeMouse(resizer, -100, -100, { type:"mousemove" }, otherWindow);
-    is(otherWindow.innerWidth, 140, "Width after changed minimum resize");
-    is(otherWindow.innerHeight, 130, "Height after changed minimum resize");
-
-    synthesizeMouse(resizer, 4, 4, { type:"mouseup" }, otherWindow);
-  }
 
   otherWindow.close();
   nextTest();
