@@ -601,7 +601,9 @@ void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
   auto backstagePass = MakeRefPtr<BackstagePass>();
   RealmOptions options;
 
-  options.creationOptions().setNewCompartmentInSystemZone();
+  options.creationOptions()
+      .setFreezeBuiltins(true)
+      .setNewCompartmentInSystemZone();
   xpc::SetPrefableRealmOptions(options);
 
   // Defer firing OnNewGlobalObject until after the __URI__ property has
