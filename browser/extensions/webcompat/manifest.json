@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "102.5.0",
+  "version": "102.6.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -98,6 +98,7 @@
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
     "shims/bmauth.js",
+    "shims/branch.js",
     "shims/chartbeat.js",
     "shims/crave-ca.js",
     "shims/criteo.js",

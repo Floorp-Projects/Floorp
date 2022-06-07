@@ -168,6 +168,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Branch",
+    platform: "all",
+    name: "Branch Web SDK",
+    bug: "1716220",
+    file: "branch.js",
+    matches: ["*://cdn.branch.io/branch-latest.min.js*"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "DoubleVerify",
     platform: "all",
     name: "DoubleVerify",
