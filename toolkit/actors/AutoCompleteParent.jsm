@@ -12,19 +12,21 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "DELEGATE_AUTOCOMPLETE",
   "toolkit.autocomplete.delegate",
   false
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
@@ -399,7 +401,10 @@ class AutoCompleteParent extends JSWindowActorParent {
   receiveMessage(message) {
     let browser = this.browsingContext.top.embedderElement;
 
-    if (!browser || (!DELEGATE_AUTOCOMPLETE && !browser.autoCompletePopup)) {
+    if (
+      !browser ||
+      (!lazy.DELEGATE_AUTOCOMPLETE && !browser.autoCompletePopup)
+    ) {
       // If there is no browser or popup, just make sure that the popup has been closed.
       if (this.openedPopup) {
         this.openedPopup.closePopup();
@@ -427,8 +432,8 @@ class AutoCompleteParent extends JSWindowActorParent {
           inputElementIdentifier,
           formOrigin,
         } = message.data;
-        if (DELEGATE_AUTOCOMPLETE) {
-          GeckoViewAutocomplete.delegateSelection({
+        if (lazy.DELEGATE_AUTOCOMPLETE) {
+          lazy.GeckoViewAutocomplete.delegateSelection({
             browsingContext: this.browsingContext,
             options: results,
             inputElementIdentifier,
@@ -486,7 +491,7 @@ class AutoCompleteParent extends JSWindowActorParent {
     );
     items.forEach(item => (item.disabled = true));
 
-    setTimeout(
+    lazy.setTimeout(
       () => items.forEach(item => (item.disabled = false)),
       popupDelay
     );

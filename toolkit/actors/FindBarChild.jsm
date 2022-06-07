@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -88,8 +90,8 @@ class FindBarChild extends JSWindowActorChild {
       event.altKey ||
       event.metaKey ||
       event.defaultPrevented ||
-      !BrowserUtils.mimeTypeIsTextBased(this.document.contentType) ||
-      !BrowserUtils.canFindInPage(location)
+      !lazy.BrowserUtils.mimeTypeIsTextBased(this.document.contentType) ||
+      !lazy.BrowserUtils.canFindInPage(location)
     ) {
       return null;
     }

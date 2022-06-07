@@ -8,20 +8,22 @@ var EXPORTED_SYMBOLS = ["PrintingChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
@@ -59,7 +61,7 @@ class PrintingChild extends JSWindowActorChild {
 
       case "scroll":
         if (!this._scrollTask) {
-          this._scrollTask = new DeferredTask(
+          this._scrollTask = new lazy.DeferredTask(
             () => this.updateCurrentPage(),
             16,
             16
@@ -98,7 +100,7 @@ class PrintingChild extends JSWindowActorChild {
     // resulting JS object into the DOM of current browser.
     let article;
     try {
-      article = await ReaderMode.parseDocument(contentWindow.document);
+      article = await lazy.ReaderMode.parseDocument(contentWindow.document);
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -123,7 +125,7 @@ class PrintingChild extends JSWindowActorChild {
               };
               contentWindow.addEventListener("MozAfterPaint", onPaint);
               // This timer is needed for when display list invalidation doesn't invalidate.
-              setTimeout(() => {
+              lazy.setTimeout(() => {
                 contentWindow.removeEventListener("MozAfterPaint", onPaint);
                 actor.sendAsyncMessage("Printing:Preview:ReaderModeReady");
                 resolve();

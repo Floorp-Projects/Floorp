@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["ExtFindChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FindContent",
   "resource://gre/modules/FindContent.jsm"
 );
@@ -15,7 +17,7 @@ ChromeUtils.defineModuleGetter(
 class ExtFindChild extends JSWindowActorChild {
   receiveMessage(message) {
     if (!this._findContent) {
-      this._findContent = new FindContent(this.docShell);
+      this._findContent = new lazy.FindContent(this.docShell);
     }
 
     switch (message.name) {

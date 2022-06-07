@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["FinderChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Finder",
   "resource://gre/modules/Finder.jsm"
 );
@@ -15,7 +17,7 @@ ChromeUtils.defineModuleGetter(
 class FinderChild extends JSWindowActorChild {
   get finder() {
     if (!this._finder) {
-      this._finder = new Finder(this.docShell);
+      this._finder = new lazy.Finder(this.docShell);
     }
     return this._finder;
   }

@@ -7,8 +7,10 @@ var EXPORTED_SYMBOLS = ["AutoScrollChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -53,7 +55,7 @@ class AutoScrollChild extends JSWindowActorChild {
     }
 
     // Don't start if we're on a link.
-    let [href] = BrowserUtils.hrefAndLinkNodeForClickEvent(event);
+    let [href] = lazy.BrowserUtils.hrefAndLinkNodeForClickEvent(event);
     if (href) {
       return true;
     }
