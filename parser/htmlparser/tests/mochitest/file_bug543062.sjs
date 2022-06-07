@@ -24,11 +24,11 @@ function armTimer(response) {
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/javascript", false);
-  if (request.queryString.indexOf("first") != -1) {
+  if (request.queryString.includes("first")) {
     response.write("// first\n");
     response.processAsync();
     armTimer(response);
-  } else if (request.queryString.indexOf("second") != -1) {
+  } else if (request.queryString.includes("second")) {
     response.write("// second\n");
     setState("docwritepreloadssecond", "second");
   } else {
