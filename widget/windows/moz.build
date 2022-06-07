@@ -85,6 +85,7 @@ UNIFIED_SOURCES += [
     "nsWindow.cpp",
     "nsWindowDbg.cpp",
     "nsWindowGfx.cpp",
+    "nsWindowTaskbarConcealer.cpp",
     "nsWinGesture.cpp",
     "OSKTabTipManager.cpp",
     "OSKVRManager.cpp",
