@@ -2087,6 +2087,8 @@ dependencies = [
  "rust_minidump_writer_linux",
  "static_prefs",
  "storage",
+ "tokio-reactor",
+ "tokio-threadpool",
  "unic-langid",
  "unic-langid-ffi",
  "viaduct",
