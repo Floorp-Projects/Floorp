@@ -30,20 +30,22 @@ const { BasePromiseWorker } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1",
   "nsIUpdateTimerManager"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "PageThumbsStorageService",
   "@mozilla.org/thumbnails/pagethumbs-service;1",
   "nsIPageThumbsStorageService"
@@ -176,7 +178,7 @@ var PageThumbs = {
    * @return The path of the thumbnail file.
    */
   getThumbnailPath: function PageThumbs_getThumbnailPath(aUrl) {
-    return PageThumbsStorageService.getFilePathForURL(aUrl);
+    return lazy.PageThumbsStorageService.getFilePathForURL(aUrl);
   },
 
   /**
@@ -231,8 +233,9 @@ var PageThumbs = {
       fullScale: aArgs ? aArgs.fullScale : false,
       isImage: aArgs ? aArgs.isImage : false,
       backgroundColor:
-        aArgs?.backgroundColor ?? PageThumbUtils.THUMBNAIL_BG_COLOR,
-      targetWidth: aArgs?.targetWidth ?? PageThumbUtils.THUMBNAIL_DEFAULT_SIZE,
+        aArgs?.backgroundColor ?? lazy.PageThumbUtils.THUMBNAIL_BG_COLOR,
+      targetWidth:
+        aArgs?.targetWidth ?? lazy.PageThumbUtils.THUMBNAIL_DEFAULT_SIZE,
       isBackgroundThumb: aArgs ? aArgs.isBackgroundThumb : false,
       fullViewport: aArgs?.fullViewport ?? false,
     };
@@ -258,7 +261,7 @@ var PageThumbs = {
    */
   async shouldStoreThumbnail(aBrowser) {
     // Don't capture in private browsing mode.
-    if (PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
+    if (lazy.PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
       return false;
     }
     if (aBrowser.isRemoteBrowser) {
@@ -274,7 +277,7 @@ var PageThumbs = {
       }
       return false;
     }
-    return PageThumbUtils.shouldStoreContentThumbnail(
+    return lazy.PageThumbUtils.shouldStoreContentThumbnail(
       aBrowser.contentDocument,
       aBrowser.docShell
     );
@@ -304,7 +307,7 @@ var PageThumbs = {
       return aCanvas;
     }
     // The content is a local page, grab a thumbnail sync.
-    await PageThumbUtils.createSnapshotThumbnail(aBrowser, aCanvas, aArgs);
+    await lazy.PageThumbUtils.createSnapshotThumbnail(aBrowser, aCanvas, aArgs);
     return aCanvas;
   },
 
@@ -350,7 +353,7 @@ var PageThumbs = {
 
     let doc = aBrowser.parentElement.ownerDocument;
     let thumbnail = doc.createElementNS(
-      PageThumbUtils.HTML_NAMESPACE,
+      lazy.PageThumbUtils.HTML_NAMESPACE,
       "canvas"
     );
 
@@ -406,7 +409,7 @@ var PageThumbs = {
       let channel = aBrowser.docShell.currentDocumentChannel;
       originalURL = channel.originalURI.spec;
       // see if this was an error response.
-      channelError = PageThumbUtils.isChannelErrorResponse(channel);
+      channelError = lazy.PageThumbUtils.isChannelErrorResponse(channel);
     } else {
       let thumbnailsActor = aBrowser.browsingContext.currentWindowGlobal.getActor(
         "Thumbnails"
@@ -535,7 +538,7 @@ var PageThumbs = {
    * @return The newly created canvas.
    */
   createCanvas: function PageThumbs_createCanvas(aWindow) {
-    return PageThumbUtils.createCanvas(aWindow);
+    return lazy.PageThumbUtils.createCanvas(aWindow);
   },
 
   _prefEnabled: function PageThumbs_prefEnabled() {
@@ -557,7 +560,7 @@ var PageThumbsStorage = {
     // future operations can proceed without having to check whether
     // the directory exists.
     return PageThumbsWorker.post("makeDir", [
-      PageThumbsStorageService.path,
+      lazy.PageThumbsStorageService.path,
       { ignoreExisting: true },
     ]).catch(function onError(aReason) {
       Cu.reportError("Could not create thumbnails directory" + aReason);
@@ -616,7 +619,7 @@ var PageThumbsStorage = {
    * @return {Promise}
    */
   writeData: function Storage_writeData(aURL, aData, aNoOverwrite) {
-    let path = PageThumbsStorageService.getFilePathForURL(aURL);
+    let path = lazy.PageThumbsStorageService.getFilePathForURL(aURL);
     this.ensurePath();
     aData = new Uint8Array(aData);
     let msg = [
@@ -651,8 +654,12 @@ var PageThumbsStorage = {
    */
   copy: function Storage_copy(aSourceURL, aTargetURL, aNoOverwrite) {
     this.ensurePath();
-    let sourceFile = PageThumbsStorageService.getFilePathForURL(aSourceURL);
-    let targetFile = PageThumbsStorageService.getFilePathForURL(aTargetURL);
+    let sourceFile = lazy.PageThumbsStorageService.getFilePathForURL(
+      aSourceURL
+    );
+    let targetFile = lazy.PageThumbsStorageService.getFilePathForURL(
+      aTargetURL
+    );
     let options = { noOverwrite: aNoOverwrite };
     return PageThumbsWorker.post("copy", [
       sourceFile,
@@ -671,7 +678,7 @@ var PageThumbsStorage = {
    */
   remove: function Storage_remove(aURL) {
     return PageThumbsWorker.post("remove", [
-      PageThumbsStorageService.getFilePathForURL(aURL),
+      lazy.PageThumbsStorageService.getFilePathForURL(aURL),
     ]);
   },
 
@@ -706,7 +713,7 @@ var PageThumbsStorage = {
     // a chance to throw an error.
 
     let promise = PageThumbsWorker.post("wipe", [
-      PageThumbsStorageService.path,
+      lazy.PageThumbsStorageService.path,
     ]);
     try {
       await promise;
@@ -719,13 +726,13 @@ var PageThumbsStorage = {
 
   fileExistsForURL: function Storage_fileExistsForURL(aURL) {
     return PageThumbsWorker.post("exists", [
-      PageThumbsStorageService.getFilePathForURL(aURL),
+      lazy.PageThumbsStorageService.getFilePathForURL(aURL),
     ]);
   },
 
   isFileRecentForURL: function Storage_isFileRecentForURL(aURL) {
     return PageThumbsWorker.post("isFileRecent", [
-      PageThumbsStorageService.getFilePathForURL(aURL),
+      lazy.PageThumbsStorageService.getFilePathForURL(aURL),
       MAX_THUMBNAIL_AGE_SECS,
     ]);
   },
@@ -815,7 +822,7 @@ var PageThumbsExpiration = {
   _filters: [],
 
   init: function Expiration_init() {
-    gUpdateTimerManager.registerTimer(
+    lazy.gUpdateTimerManager.registerTimer(
       "browser-cleanup-thumbnails",
       this,
       EXPIRATION_INTERVAL_SECS
@@ -865,9 +872,13 @@ var PageThumbsExpiration = {
 
   expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
     let keep = aURLsToKeep.map(url =>
-      PageThumbsStorageService.getLeafNameForURL(url)
+      lazy.PageThumbsStorageService.getLeafNameForURL(url)
     );
-    let msg = [PageThumbsStorageService.path, keep, EXPIRATION_MIN_CHUNK_SIZE];
+    let msg = [
+      lazy.PageThumbsStorageService.path,
+      keep,
+      EXPIRATION_MIN_CHUNK_SIZE,
+    ];
 
     return PageThumbsWorker.post("expireFilesInDirectory", msg);
   },

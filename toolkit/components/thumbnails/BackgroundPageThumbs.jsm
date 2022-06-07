@@ -35,8 +35,10 @@ const TEL_CAPTURE_DONE_BAD_URI = 5;
 const TEL_CAPTURE_DONE_LOAD_FAILED = 6;
 const TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION = 7;
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ContextualIdentityService",
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
@@ -362,7 +364,7 @@ const BackgroundPageThumbs = {
 
     if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
       // Use the private container for thumbnails.
-      let privateIdentity = ContextualIdentityService.getPrivateIdentity(
+      let privateIdentity = lazy.ContextualIdentityService.getPrivateIdentity(
         "userContextIdInternal.thumbnail"
       );
       browser.setAttribute("usercontextid", privateIdentity.userContextId);
@@ -736,7 +738,7 @@ Capture.prototype = {
 
       if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
         // Clear the data in the private container for thumbnails.
-        let privateIdentity = ContextualIdentityService.getPrivateIdentity(
+        let privateIdentity = lazy.ContextualIdentityService.getPrivateIdentity(
           "userContextIdInternal.thumbnail"
         );
         if (privateIdentity) {
