@@ -168,7 +168,9 @@ class CommandAction(argparse.Action):
         # If there are sub-commands, parse the intent out immediately.
         if handler.subcommand_handlers and args:
             # mach <command> help <subcommand>
-            if set(args).intersection(("help", "--help")):
+            if set(args[: args.index("--")] if "--" in args else args).intersection(
+                ("help", "--help")
+            ):
                 self._handle_subcommand_help(parser, handler, args)
                 sys.exit(0)
             # mach <command> <subcommand> ...
