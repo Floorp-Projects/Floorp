@@ -4015,7 +4015,9 @@ Toolbox.prototype = {
         this.resourceCommand.TYPES.DOCUMENT_EVENT,
         this.resourceCommand.TYPES.THREAD_STATE,
       ],
-      { onAvailable: this._onResourceAvailable }
+      {
+        onAvailable: this._onResourceAvailable,
+      }
     );
 
     // Unregister buttons listeners
