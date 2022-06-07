@@ -539,12 +539,10 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   /**
    * Open a tooltip at a specific screen position specified by aXPos and aYPos,
-   * measured in CSS pixels.
-   *
-   * This fires the popupshowing event synchronously.
+   * measured in device pixels. This fires the popupshowing event synchronously.
    */
   void ShowTooltipAtScreen(nsIContent* aPopup, nsIContent* aTriggerContent,
-                           int32_t aXPos, int32_t aYPos);
+                           const mozilla::LayoutDeviceIntPoint&);
 
   /*
    * Hide a popup aPopup. If the popup is in a <menu>, then also inform the

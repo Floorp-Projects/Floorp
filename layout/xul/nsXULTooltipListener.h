@@ -78,9 +78,10 @@ class nsXULTooltipListener final : public nsIDOMEventListener {
   // can be opened at this location.
   //
   // TODO(emilio): This duplicates a lot of code with ChromeTooltipListener.
-  mozilla::CSSIntPoint mMouseScreenPoint;
+  mozilla::LayoutDeviceIntPoint mMouseScreenPoint;
+
   // Tolerance for mousemove event
-  static constexpr mozilla::CSSIntCoord kTooltipMouseMoveTolerance = 7;
+  static constexpr mozilla::LayoutDeviceIntCoord kTooltipMouseMoveTolerance = 7;
 
   // flag specifying if the tooltip has already been displayed by a MouseMove
   // event. The flag is reset on MouseOut so that the tooltip will display
