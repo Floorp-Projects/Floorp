@@ -45,12 +45,12 @@ UNIFIED_SOURCES += [
     "nsSprocketLayout.cpp",
     "nsStackLayout.cpp",
     "nsTextBoxFrame.cpp",
-    "nsTitleBarFrame.cpp",
     "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
 ]
 
 DIRS += ["tree"]
+
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]

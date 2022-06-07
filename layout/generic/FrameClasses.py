@@ -133,7 +133,6 @@ FRAME_CLASSES = [
     Frame("nsTextBoxFrame", "LeafBox", LEAF),
     Frame("nsTextControlFrame", "TextInput", LEAF),
     Frame("nsTextFrame", "Text", LEAF),
-    Frame("nsTitleBarFrame", "Box", NOT_LEAF),
     Frame("nsTreeBodyFrame", "LeafBox", LEAF),
     Frame("nsTreeColFrame", "Box", NOT_LEAF),
     Frame("nsVideoFrame", "HTMLVideo", NOT_LEAF),
