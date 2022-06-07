@@ -10,7 +10,6 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
       <script class="testbody" type="text/javascript">
         "use strict";
-
         const windowRelativeURL = "multi_sharedWorker_frame_bfcache.html";
         // This suffix will be used as a search query parameter when we are
         // navigating from navigate.html to the multi_sharedWorker_frame_bfcache
@@ -125,12 +124,14 @@
             // the iframe containing this page is isolated from first-party storage access,
             // which isolates BroadcastChannel communication.
             SpecialPowers.wrap(document).notifyUserGestureActivation();
-            SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() =>{
+            SpecialPowers.pushPermissions([{'type': 'storageAccessAPI', 'allow': 1, 'context': document}], () =>{
               SpecialPowers.wrap(document).requestStorageAccess().then(() => {
                 // If Fission is disabled, the pref is no-op.
                 SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
                   testGenerator.next();
                 });
+              }).then(() => {
+                SpecialPowers.removePermission("3rdPartyStorage^http://mochi.test:8888", "http://mochi.xorigin-test:8888");
               });
             });
           } else {
