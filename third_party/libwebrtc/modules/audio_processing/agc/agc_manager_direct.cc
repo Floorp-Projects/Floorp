@@ -134,36 +134,27 @@ float ComputeClippedRatio(const float* const* audio,
 }
 
 void LogClippingPredictorMetrics(const ClippingPredictorEvaluator& evaluator) {
-  RTC_LOG(LS_INFO) << "Clipping predictor metrics: TP "
-                   << evaluator.true_positives() << " TN "
-                   << evaluator.true_negatives() << " FP "
-                   << evaluator.false_positives() << " FN "
-                   << evaluator.false_negatives();
-  const float precision_denominator =
-      evaluator.true_positives() + evaluator.false_positives();
-  const float recall_denominator =
-      evaluator.true_positives() + evaluator.false_negatives();
-  if (precision_denominator > 0 && recall_denominator > 0) {
-    const float precision = evaluator.true_positives() / precision_denominator;
-    const float recall = evaluator.true_positives() / recall_denominator;
-    RTC_LOG(LS_INFO) << "Clipping predictor metrics: P " << precision << " R "
-                     << recall;
-    const float f1_score_denominator = precision + recall;
-    if (f1_score_denominator > 0.0f) {
-      const float f1_score = 2 * precision * recall / f1_score_denominator;
-      RTC_LOG(LS_INFO) << "Clipping predictor metrics: F1 " << f1_score;
-      RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc.ClippingPredictor.F1Score",
-                                  std::round(f1_score * 100.0f), /*min=*/0,
-                                  /*max=*/100,
-                                  /*bucket_count=*/50);
-    }
+  absl::optional<ClippingPredictionMetrics> metrics =
+      ComputeClippingPredictionMetrics(evaluator.counters());
+  if (metrics.has_value()) {
+    RTC_LOG(LS_INFO) << "Clipping predictor metrics: P " << metrics->precision
+                     << " R " << metrics->recall << " F1 score "
+                     << metrics->f1_score;
+    RTC_DCHECK_GE(metrics->f1_score, 0.0f);
+    RTC_DCHECK_LE(metrics->f1_score, 1.0f);
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.F1Score",
+        /*sample=*/std::round(metrics->f1_score * 100.0f),
+        /*min=*/0,
+        /*max=*/100,
+        /*bucket_count=*/50);
   }
 }
 
 void LogClippingMetrics(int clipping_rate) {
   RTC_LOG(LS_INFO) << "Input clipping rate: " << clipping_rate << "%";
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc.InputClippingRate",
-                              clipping_rate, /*min=*/0, /*max=*/100,
+  RTC_HISTOGRAM_COUNTS_LINEAR(/*name=*/"WebRTC.Audio.Agc.InputClippingRate",
+                              /*sample=*/clipping_rate, /*min=*/0, /*max=*/100,
                               /*bucket_count=*/50);
 }
 

@@ -17,13 +17,21 @@
 
 namespace webrtc {
 
+// Clipping prediction counters.
+struct ClippingPredictionCounters {
+  int true_positives;   // TP.
+  int true_negatives;   // TN.
+  int false_positives;  // FP.
+  int false_negatives;  // FN.
+};
+
 // Counts true/false positives/negatives while observing sequences of flag pairs
 // that indicate whether clipping has been detected and/or if clipping is
 // predicted. When a true positive is found measures the time interval between
 // prediction and detection events.
-// From the time a prediction is observed and for a period equal to
+// After a prediction is observed and for a period equal to
 // `history_size` calls to `Observe()`, one or more detections are expected. If
-// the expectation is met, a true positives is added and the time interval
+// the expectation is met, a true positive is added and the time interval
 // between the earliest prediction and the detection is recorded; otherwise,
 // when the deadline is reached, a false positive is added. Note that one
 // detection matches all the expected detections that have not expired - i.e.,
@@ -48,14 +56,10 @@ class ClippingPredictorEvaluator {
   absl::optional<int> Observe(bool clipping_detected, bool clipping_predicted);
 
   // Removes any expectation recently set after a call to `Observe()` having
-  // `clipping_predicted` set to true.
+  // `clipping_predicted` set to true. Counters won't be reset.
   void Reset();
 
-  // Metrics getters.
-  int true_positives() const { return true_positives_; }
-  int true_negatives() const { return true_negatives_; }
-  int false_positives() const { return false_positives_; }
-  int false_negatives() const { return false_negatives_; }
+  ClippingPredictionCounters counters() const { return counters_; }
 
  private:
   const int history_size_;
@@ -90,12 +94,25 @@ class ClippingPredictorEvaluator {
   // equal to 0 (expired) and `detected` equal to false (unmatched).
   bool HasExpiredUnmatchedExpectedDetection() const;
 
-  // Metrics.
-  int true_positives_;
-  int true_negatives_;
-  int false_positives_;
-  int false_negatives_;
+  // Counters.
+  ClippingPredictionCounters counters_;
 };
+
+// Clipping prediction metrics derived from the clipping prediction counters.
+struct ClippingPredictionMetrics {
+  // Precision (P) is defined as TP / (TP + FP).
+  float precision;
+  // Recall (R) is defined as TP / (TP + FN).
+  float recall;
+  // The F1 score is defined as 2 * P * R / (P + R).
+  float f1_score;
+};
+
+// Derives clipping prediction metrics from the true/false positives/negatives
+// `counters`. Returns an unspecified value if one or more metrics are not
+// defined.
+absl::optional<ClippingPredictionMetrics> ComputeClippingPredictionMetrics(
+    const ClippingPredictionCounters& counters);
 
 }  // namespace webrtc
 

@@ -30,13 +30,13 @@ int OldestExpectedDetectionIndex(int size, int tail, int capacity) {
 ClippingPredictorEvaluator::ClippingPredictorEvaluator(int history_size)
     : history_size_(history_size),
       ring_buffer_capacity_(history_size + 1),
-      ring_buffer_(ring_buffer_capacity_),
-      true_positives_(0),
-      true_negatives_(0),
-      false_positives_(0),
-      false_negatives_(0) {
+      ring_buffer_(ring_buffer_capacity_) {
   RTC_DCHECK_GT(history_size_, 0);
   Reset();
+  counters_.true_positives = 0;
+  counters_.true_negatives = 0;
+  counters_.false_positives = 0;
+  counters_.false_negatives = 0;
 }
 
 ClippingPredictorEvaluator::~ClippingPredictorEvaluator() = default;
@@ -64,7 +64,7 @@ absl::optional<int> ClippingPredictorEvaluator::Observe(
     prediction_interval = FindEarliestPredictionInterval();
     // Add a true positive for each unexpired expected detection.
     const int num_modified_items = MarkExpectedDetectionAsDetected();
-    true_positives_ += num_modified_items;
+    counters_.true_positives += num_modified_items;
     RTC_DCHECK(prediction_interval.has_value() || num_modified_items == 0);
     RTC_DCHECK(!prediction_interval.has_value() || num_modified_items > 0);
   } else if (clipping_expected && !clipping_detected) {
@@ -72,13 +72,13 @@ absl::optional<int> ClippingPredictorEvaluator::Observe(
     // and that has never been matched before. Note that there is at most one
     // unmatched expired detection.
     if (HasExpiredUnmatchedExpectedDetection()) {
-      false_positives_++;
+      counters_.false_positives++;
     }
   } else if (!clipping_expected && clipping_detected) {
-    false_negatives_++;
+    counters_.false_negatives++;
   } else {
     RTC_DCHECK(!clipping_expected && !clipping_detected);
-    true_negatives_++;
+    counters_.true_negatives++;
   }
   return prediction_interval;
 }
@@ -170,6 +170,35 @@ bool ClippingPredictorEvaluator::HasExpiredUnmatchedExpectedDetection() const {
   RTC_DCHECK_LT(oldest_index, ring_buffer_.size());
   return ring_buffer_[oldest_index].ttl == 0 &&
          !ring_buffer_[oldest_index].detected;
+}
+
+absl::optional<ClippingPredictionMetrics> ComputeClippingPredictionMetrics(
+    const ClippingPredictionCounters& counters) {
+  RTC_DCHECK_GE(counters.true_positives, 0);
+  RTC_DCHECK_GE(counters.true_negatives, 0);
+  RTC_DCHECK_GE(counters.false_positives, 0);
+  RTC_DCHECK_GE(counters.false_negatives, 0);
+  if (counters.true_positives == 0) {
+    // Both precision and recall are zero in this case and hence the F1 score
+    // is undefined.
+    return absl::nullopt;
+  }
+  int precision_denominator =
+      counters.true_positives + counters.false_positives;
+  int recall_denominator = counters.true_positives + counters.false_negatives;
+  if (precision_denominator == 0 || recall_denominator == 0) {
+    // Both precision and recall must be defined.
+    return absl::nullopt;
+  }
+  ClippingPredictionMetrics metrics;
+  float true_positives = counters.true_positives;
+  metrics.precision = true_positives / precision_denominator;
+  metrics.recall = true_positives / recall_denominator;
+  float f1_score_denominator = metrics.precision + metrics.recall;
+  RTC_DCHECK_GT(f1_score_denominator, 0.0f);
+  metrics.f1_score =
+      2 * metrics.precision * metrics.recall / f1_score_denominator;
+  return metrics;
 }
 
 }  // namespace webrtc
