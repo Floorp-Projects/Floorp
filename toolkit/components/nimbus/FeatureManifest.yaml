@@ -4,6 +4,10 @@
 
 # Features must be added here to be accessible through the NimbusFeature API.
 
+"no-feature-firefox-desktop":
+  description: A dummy feature for experiments that target no feature.
+  hasExposure: false
+  variables: {}
 testFeature:
   description: Test only feature
   hasExposure: false
