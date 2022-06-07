@@ -250,7 +250,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 #if defined(_WIN32)
   std::unique_ptr<rtc::PlatformUIThread> capturer_thread_;
 #else
-  rtc::PlatformThread capturer_thread_;
+  std::unique_ptr<rtc::PlatformThread> capturer_thread_;
 #endif
   std::atomic<bool> started_;
 };
