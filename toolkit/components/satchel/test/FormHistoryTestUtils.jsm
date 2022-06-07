@@ -9,7 +9,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
 });
 
@@ -54,7 +56,7 @@ var FormHistoryTestUtils = {
     additions = additions.map(v => (typeof v == "string" ? { value: v } : v));
     for (let { value, source } of additions) {
       await new Promise((resolve, reject) => {
-        FormHistory.update(
+        lazy.FormHistory.update(
           Object.assign({ fieldname }, { op: "bump", value, source }),
           this.makeListener(resolve, reject)
         );
@@ -71,7 +73,7 @@ var FormHistoryTestUtils = {
    */
   async count(fieldname, filters = {}) {
     let results = await new Promise((resolve, reject) => {
-      FormHistory.count(
+      lazy.FormHistory.count(
         Object.assign({ fieldname }, filters),
         this.makeListener(resolve, reject)
       );
@@ -97,7 +99,7 @@ var FormHistoryTestUtils = {
       return Object.assign({ fieldname, op: "remove" }, criteria);
     });
     return new Promise((resolve, reject) => {
-      FormHistory.update(changes, this.makeListener(resolve, reject));
+      lazy.FormHistory.update(changes, this.makeListener(resolve, reject));
     });
   },
 
@@ -112,7 +114,7 @@ var FormHistoryTestUtils = {
   clear(fieldname) {
     return new Promise((resolve, reject) => {
       let baseChange = fieldname ? { fieldname } : {};
-      FormHistory.update(
+      lazy.FormHistory.update(
         Object.assign(baseChange, { op: "remove" }),
         this.makeListener(resolve, reject)
       );
@@ -129,7 +131,7 @@ var FormHistoryTestUtils = {
    */
   search(fieldname, filters = {}) {
     return new Promise((resolve, reject) => {
-      FormHistory.search(
+      lazy.FormHistory.search(
         null,
         Object.assign({ fieldname }, filters),
         this.makeListener(resolve, reject)
@@ -148,7 +150,7 @@ var FormHistoryTestUtils = {
    */
   autocomplete(searchString, fieldname, filters = {}) {
     return new Promise((resolve, reject) => {
-      FormHistory.getAutoCompleteResults(
+      lazy.FormHistory.getAutoCompleteResults(
         searchString,
         Object.assign({ fieldname }, filters),
         this.makeListener(resolve, reject)

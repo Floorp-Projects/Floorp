@@ -11,26 +11,28 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CreditCard",
   "resource://gre/modules/CreditCard.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gDebug", "browser.formfill.debug");
+XPCOMUtils.defineLazyPreferenceGetter(lazy, "gDebug", "browser.formfill.debug");
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gEnabled",
   "browser.formfill.enable"
 );
 
 function log(message) {
-  if (!gDebug) {
+  if (!lazy.gDebug) {
     return;
   }
   dump("satchelFormListener: " + message + "\n");
@@ -53,8 +55,8 @@ class FormHistoryChild extends JSWindowActorChild {
   onDOMFormBeforeSubmit(event) {
     let form = event.target;
     if (
-      !gEnabled ||
-      PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
+      !lazy.gEnabled ||
+      lazy.PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
     ) {
       return;
     }
@@ -102,7 +104,7 @@ class FormHistoryChild extends JSWindowActorChild {
       }
 
       // Don't save credit card numbers.
-      if (CreditCard.isValidNumber(value)) {
+      if (lazy.CreditCard.isValidNumber(value)) {
         log("skipping saving a credit card number");
         continue;
       }

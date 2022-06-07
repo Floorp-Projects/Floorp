@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["FormHistoryParent"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
@@ -23,7 +25,7 @@ class FormHistoryParent extends JSWindowActorParent {
           value: entry.value,
         }));
 
-        FormHistory.update(changes);
+        lazy.FormHistory.update(changes);
         break;
       }
 
@@ -56,13 +58,17 @@ class FormHistoryParent extends JSWindowActorParent {
         },
       };
 
-      FormHistory.getAutoCompleteResults(searchString, params, processResults);
+      lazy.FormHistory.getAutoCompleteResults(
+        searchString,
+        params,
+        processResults
+      );
     });
   }
 
   removeEntry(message) {
     let { inputName, value, guid } = message.data;
-    FormHistory.update({
+    lazy.FormHistory.update({
       op: "remove",
       fieldname: inputName,
       value,
