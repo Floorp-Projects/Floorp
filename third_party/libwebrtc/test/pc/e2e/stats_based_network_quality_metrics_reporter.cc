@@ -67,6 +67,8 @@ std::map<rtc::IPAddress, std::string> PopulateIpToPeer(
   std::map<rtc::IPAddress, std::string> out;
   for (const auto& entry : peer_endpoints) {
     for (const EmulatedEndpoint* const endpoint : entry.second) {
+      RTC_CHECK(out.find(endpoint->GetPeerLocalAddress()) == out.end())
+          << "Two peers can't share the same endpoint";
       out.emplace(endpoint->GetPeerLocalAddress(), entry.first);
     }
   }
@@ -85,6 +87,7 @@ StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
 
 void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
     Start() {
+  MutexLock lock(&mutex_);
   // Check that network stats are clean before test execution.
   for (const auto& entry : peer_endpoints_) {
     std::unique_ptr<EmulatedNetworkStats> stats =
@@ -94,10 +97,26 @@ void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
   }
 }
 
+void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
+    AddPeer(absl::string_view peer_name,
+            std::vector<EmulatedEndpoint*> endpoints) {
+  MutexLock lock(&mutex_);
+  // When new peer is added not in the constructor, don't check if it has empty
+  // stats, because their endpoint could be used for traffic before.
+  peer_endpoints_.emplace(peer_name, std::move(endpoints));
+  for (const EmulatedEndpoint* const endpoint : endpoints) {
+    RTC_CHECK(ip_to_peer_.find(endpoint->GetPeerLocalAddress()) ==
+              ip_to_peer_.end())
+        << "Two peers can't share the same endpoint";
+    ip_to_peer_.emplace(endpoint->GetPeerLocalAddress(), peer_name);
+  }
+}
+
 std::map<std::string,
          StatsBasedNetworkQualityMetricsReporter::NetworkLayerStats>
 StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
     GetStats() {
+  MutexLock lock(&mutex_);
   std::map<std::string, NetworkLayerStats> peer_to_stats;
   std::map<std::string, std::vector<std::string>> sender_to_receivers;
   for (const auto& entry : peer_endpoints_) {
@@ -123,6 +142,12 @@ StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
         std::set<std::string>(receivers.begin(), receivers.end());
   }
   return peer_to_stats;
+}
+
+void StatsBasedNetworkQualityMetricsReporter::AddPeer(
+    absl::string_view peer_name,
+    std::vector<EmulatedEndpoint*> endpoints) {
+  collector_.AddPeer(peer_name, std::move(endpoints));
 }
 
 void StatsBasedNetworkQualityMetricsReporter::Start(

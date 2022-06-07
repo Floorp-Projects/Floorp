@@ -32,6 +32,7 @@
 namespace webrtc {
 namespace webrtc_pc_e2e {
 
+// TODO(titovartem): make this class testable and add tests.
 class StatsBasedNetworkQualityMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
@@ -43,6 +44,9 @@ class StatsBasedNetworkQualityMetricsReporter
       : collector_(std::move(peer_endpoints), network_emulation),
         clock_(network_emulation->time_controller()->GetClock()) {}
   ~StatsBasedNetworkQualityMetricsReporter() override = default;
+
+  void AddPeer(absl::string_view peer_name,
+               std::vector<EmulatedEndpoint*> endpoints);
 
   // Network stats must be empty when this method will be invoked.
   void Start(absl::string_view test_case_name,
@@ -79,11 +83,16 @@ class StatsBasedNetworkQualityMetricsReporter
 
     void Start();
 
+    void AddPeer(absl::string_view peer_name,
+                 std::vector<EmulatedEndpoint*> endpoints);
+
     std::map<std::string, NetworkLayerStats> GetStats();
 
    private:
-    const std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints_;
-    const std::map<rtc::IPAddress, std::string> ip_to_peer_;
+    Mutex mutex_;
+    std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints_
+        RTC_GUARDED_BY(mutex_);
+    std::map<rtc::IPAddress, std::string> ip_to_peer_ RTC_GUARDED_BY(mutex_);
     NetworkEmulationManager* const network_emulation_;
   };
 
