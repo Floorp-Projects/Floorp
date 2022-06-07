@@ -284,6 +284,8 @@ class Browsertime(Perftest):
             str(self.post_startup_delay),
             "--iterations",
             str(test.get("browser_cycles", 1)),
+            "--videoParams.androidVideoWaitTime",
+            "10000",
         ]
 
         if test.get("secondary_url"):
