@@ -14,8 +14,10 @@ const PREF_APP_UPDATE_LOG = "app.update.log";
 
 const CATEGORY_UPDATE_TIMER = "update-timer";
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gLogEnabled",
   PREF_APP_UPDATE_LOG,
   false
@@ -29,7 +31,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *           Whether to log even if logging is disabled.
  */
 function LOG(string, alwaysLog = false) {
-  if (alwaysLog || gLogEnabled) {
+  if (alwaysLog || lazy.gLogEnabled) {
     dump("*** UTM:SVC " + string + "\n");
     Services.console.logStringMessage("UTM:SVC " + string);
   }
