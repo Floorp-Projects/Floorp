@@ -431,7 +431,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     }
 }
 
-#[cfg(not(feature = "unstable"))]
+#[cfg(not(any(feature = "unstable", feature = "rust_1_57")))]
 fn vec_try_reserve<T>(v: &mut Vec<T>, additional: usize) -> Result<(), TryReserveError> {
     let available = v.capacity().checked_sub(v.len()).expect("capacity >= len");
     if additional > available {
@@ -449,7 +449,7 @@ fn vec_try_reserve<T>(v: &mut Vec<T>, additional: usize) -> Result<(), TryReserv
     Ok(())
 }
 
-#[cfg(not(feature = "unstable"))]
+#[cfg(not(any(feature = "unstable", feature = "rust_1_57")))]
 fn vec_try_extend<T>(v: &mut Vec<T>, new_cap: usize) -> Result<(), TryReserveError> {
     let old_len = v.len();
     let old_cap: usize = v.capacity();
@@ -496,17 +496,24 @@ fn vec_try_extend<T>(v: &mut Vec<T>, new_cap: usize) -> Result<(), TryReserveErr
 }
 
 impl<T> FallibleVec<T> for Vec<T> {
-
     #[inline(always)]
     fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        #[cfg(feature = "unstable")]
+        #[cfg(all(feature = "unstable", not(feature = "rust_1_57")))]
         {
             self.try_reserve(additional)
         }
 
-        #[cfg(not(feature = "unstable"))]
+        #[cfg(not(feature = "rust_1_57"))]
         {
             vec_try_reserve(self, additional)
+        }
+
+        #[cfg(feature = "rust_1_57")]
+        {
+            // TryReserveError is an opaque type in 1.57
+            self.try_reserve(additional).map_err(|_| {
+                crate::make_try_reserve_error(self.len(), additional, core::mem::size_of::<T>(), core::mem::align_of::<T>())
+            })
         }
     }
 
@@ -717,7 +724,7 @@ impl SpecFromElem for u8 {
     #[inline]
     fn try_from_elem(elem: u8, n: usize) -> Result<Vec<u8>, TryReserveError> {
         unsafe {
-            let mut v = FallibleVec::try_with_capacity(n)?;
+            let mut v: Vec<u8> = FallibleVec::try_with_capacity(n)?;
             core::ptr::write_bytes(v.as_mut_ptr(), elem, n);
             v.set_len(n);
             Ok(v)
@@ -905,7 +912,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(feature = "unstable"))]
+    #[cfg(not(any(feature = "unstable", feature = "rust_1_57")))]
     fn try_extend_zst() {
         let mut vec: Vec<()> = Vec::new();
         assert_eq!(vec.capacity(), core::usize::MAX);

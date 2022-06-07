@@ -6,7 +6,17 @@ use core::default::Default;
 use core::fmt::Debug;
 use core::hash::Hash;
 
+#[cfg(not(all(feature = "std", feature = "rust_1_57")))]
 type HashMap<K, V> = hashbrown::hash_map::HashMap<K, V>;
+
+#[cfg(all(feature = "std", feature = "rust_1_57"))]
+type HashMap<K, V> = std::collections::HashMap<K, V>;
+
+#[cfg(not(all(feature = "std", feature = "rust_1_57")))]
+use hashbrown::hash_map::{Iter, IntoIter};
+
+#[cfg(all(feature = "std", feature = "rust_1_57"))]
+use std::collections::hash_map::{Iter, IntoIter};
 
 pub struct TryHashMap<K, V> {
     inner: HashMap<K, V>,
@@ -57,7 +67,7 @@ where
     }
 
     #[inline(always)]
-    pub fn iter(&self) -> hashbrown::hash_map::Iter<'_, K, V> {
+    pub fn iter(&self) -> Iter<'_, K, V> {
         self.inner.iter()
     }
 
@@ -77,13 +87,26 @@ where
 
     #[inline(always)]
     fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
-        self.inner.try_reserve(additional)
+        #[cfg(not(all(feature = "std", feature = "rust_1_57")))]
+        {
+            self.inner.try_reserve(additional)
+        }
+
+        #[cfg(all(feature = "std", feature = "rust_1_57"))]
+        {
+            self.inner.try_reserve(additional).map_err(|_| {
+                crate::make_try_reserve_error(self.len(), additional,
+                    core::mem::size_of::<K>() + core::mem::size_of::<V>(),
+                    core::mem::align_of::<K>().max(core::mem::align_of::<V>()),
+                )
+            })
+        }
     }
 }
 
 impl<K, V> IntoIterator for TryHashMap<K, V> {
     type Item = (K, V);
-    type IntoIter = hashbrown::hash_map::IntoIter<K, V>;
+    type IntoIter = IntoIter<K, V>;
 
     #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {

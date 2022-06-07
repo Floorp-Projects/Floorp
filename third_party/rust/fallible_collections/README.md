@@ -17,10 +17,14 @@ It is recommended to look there for the newest released version, as well as link
 At the point of the last update of this README, the latest published version could be used like this:
 
 Add the following dependency to your Cargo manifest...
+Add feature std and rust_1_57 to use the stabilized try_reserve api and the std HashMap type.
 
 ```toml
 [dependencies]
-fallible_collections = "0.4.1"
+fallible_collections = "0.4"
+
+# or
+fallible_collections = { version = "0.4", features = ["std", "rust_1_57"] }
 ```
 
 ...and see the [docs](https://docs.rs/fallible_collections) for how to use it.
