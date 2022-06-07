@@ -43,7 +43,7 @@ size_t GetMaxRedundancyFromFieldTrial() {
       webrtc::field_trial::FindFullName("WebRTC-Audio-Red-For-Opus");
   size_t redundancy = 0;
   if (sscanf(red_trial.c_str(), "Enabled-%zu", &redundancy) != 1 ||
-      redundancy < 1 || redundancy > 9) {
+      redundancy > 9) {
     return kRedNumberOfRedundantEncodings;
   }
   return redundancy;
@@ -161,8 +161,10 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
     rit->second.SetData(next->second);
   }
   it = redundant_encodings_.begin();
-  it->first = info;
-  it->second.SetData(primary_encoded_);
+  if (it != redundant_encodings_.end()) {
+    it->first = info;
+    it->second.SetData(primary_encoded_);
+  }
 
   // Update main EncodedInfo.
   info.payload_type = red_payload_type_;
