@@ -1100,7 +1100,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   const auto devPxRect = ToSnappedRect(aRect, twipsPerPixel, aPaintData);
 
   const DocumentState docState = pc->Document()->GetDocumentState();
-  ElementState eventState = GetContentState(aFrame, aAppearance);
+  ElementState elementState = GetContentState(aFrame, aAppearance);
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
     nsIFrame* parentFrame = aFrame->GetParent();
@@ -1109,7 +1109,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     // parent.
     if (isHTML || isMenulist) {
       aFrame = parentFrame;
-      eventState = GetContentState(parentFrame, aAppearance);
+      elementState = GetContentState(parentFrame, aAppearance);
     }
   }
 
@@ -1117,9 +1117,9 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   // outline-style: auto.
   if (aDrawOverflow == DrawOverflow::Yes &&
       aFrame->StyleOutline()->mOutlineStyle.IsAuto()) {
-    eventState |= ElementState::FOCUSRING;
+    elementState |= ElementState::FOCUSRING;
   } else {
-    eventState &= ~ElementState::FOCUSRING;
+    elementState &= ~ElementState::FOCUSRING;
   }
 
   // Hack to avoid skia fuzziness: Add a dummy clip if the widget doesn't
@@ -1128,7 +1128,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   if constexpr (std::is_same_v<PaintBackendData, DrawTarget>) {
     if (aAppearance != StyleAppearance::FocusOutline &&
         aAppearance != StyleAppearance::Range &&
-        !eventState.HasState(ElementState::FOCUSRING)) {
+        !elementState.HasState(ElementState::FOCUSRING)) {
       maybeClipRect.emplace(aPaintData, devPxRect);
     }
   }
@@ -1139,7 +1139,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   switch (aAppearance) {
     case StyleAppearance::Radio: {
       auto rect = CheckBoxRadioRect(devPxRect);
-      PaintRadioControl(aPaintData, rect, eventState, colors, dpiRatio);
+      PaintRadioControl(aPaintData, rect, elementState, colors, dpiRatio);
       break;
     }
     case StyleAppearance::Checkbox: {
@@ -1148,28 +1148,28 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         return false;
       } else {
         auto rect = CheckBoxRadioRect(devPxRect);
-        PaintCheckboxControl(aPaintData, rect, eventState, colors, dpiRatio);
+        PaintCheckboxControl(aPaintData, rect, elementState, colors, dpiRatio);
       }
       break;
     }
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
-      PaintTextField(aPaintData, devPxRect, eventState, colors, dpiRatio);
+      PaintTextField(aPaintData, devPxRect, elementState, colors, dpiRatio);
       break;
     case StyleAppearance::Listbox:
-      PaintListbox(aPaintData, devPxRect, eventState, colors, dpiRatio);
+      PaintListbox(aPaintData, devPxRect, elementState, colors, dpiRatio);
       break;
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
-      PaintMenulist(aPaintData, devPxRect, eventState, colors, dpiRatio);
+      PaintMenulist(aPaintData, devPxRect, elementState, colors, dpiRatio);
       break;
     case StyleAppearance::MozMenulistArrowButton:
       if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
         // TODO: Need to figure out how to best draw this using WR.
         return false;
       } else {
-        PaintMenulistArrowButton(aFrame, aPaintData, devPxRect, eventState);
+        PaintMenulistArrowButton(aFrame, aPaintData, devPxRect, elementState);
       }
       break;
     case StyleAppearance::SpinnerUpbutton:
@@ -1178,26 +1178,28 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         // TODO: Need to figure out how to best draw this using WR.
         return false;
       } else {
-        PaintSpinnerButton(aFrame, aPaintData, devPxRect, eventState,
+        PaintSpinnerButton(aFrame, aPaintData, devPxRect, elementState,
                            aAppearance, colors, dpiRatio);
       }
       break;
     case StyleAppearance::Range:
-      PaintRange(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
+      PaintRange(aFrame, aPaintData, devPxRect, elementState, colors, dpiRatio,
                  IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
       // Painted as part of StyleAppearance::Range.
       break;
     case StyleAppearance::ProgressBar:
-      PaintProgress(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
+      PaintProgress(aFrame, aPaintData, devPxRect, elementState, colors,
+                    dpiRatio,
                     /* aIsMeter = */ false);
       break;
     case StyleAppearance::Progresschunk:
       /* Painted as part of the progress bar */
       break;
     case StyleAppearance::Meter:
-      PaintProgress(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
+      PaintProgress(aFrame, aPaintData, devPxRect, elementState, colors,
+                    dpiRatio,
                     /* aIsMeter = */ true);
       break;
     case StyleAppearance::Meterchunk:
@@ -1210,7 +1212,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
       auto kind = ComputeScrollbarKind(aFrame, isHorizontal);
       return GetScrollbarDrawing().PaintScrollbarThumb(
           aPaintData, devPxRect, kind, aFrame,
-          *nsLayoutUtils::StyleForScrollbar(aFrame), eventState, docState,
+          *nsLayoutUtils::StyleForScrollbar(aFrame), elementState, docState,
           colors, dpiRatio);
     }
     case StyleAppearance::ScrollbartrackHorizontal:
@@ -1229,7 +1231,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
       auto kind = ComputeScrollbarKind(aFrame, isHorizontal);
       return GetScrollbarDrawing().PaintScrollbar(
           aPaintData, devPxRect, kind, aFrame,
-          *nsLayoutUtils::StyleForScrollbar(aFrame), eventState, docState,
+          *nsLayoutUtils::StyleForScrollbar(aFrame), elementState, docState,
           colors, dpiRatio);
     }
     case StyleAppearance::Scrollcorner: {
@@ -1255,14 +1257,15 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           auto kind = ComputeScrollbarKind(aFrame, isHorizontal);
           GetScrollbarDrawing().PaintScrollbarButton(
               aPaintData, aAppearance, devPxRect, kind, aFrame,
-              *nsLayoutUtils::StyleForScrollbar(aFrame), eventState, docState,
+              *nsLayoutUtils::StyleForScrollbar(aFrame), elementState, docState,
               colors, dpiRatio);
         }
       }
       break;
     }
     case StyleAppearance::Button:
-      PaintButton(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio);
+      PaintButton(aFrame, aPaintData, devPxRect, elementState, colors,
+                  dpiRatio);
       break;
     case StyleAppearance::FocusOutline:
       PaintAutoStyleOutline(aFrame, aPaintData, devPxRect, colors, dpiRatio);

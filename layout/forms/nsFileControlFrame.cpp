@@ -531,8 +531,7 @@ nscoord nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
 }
 
 void nsFileControlFrame::SyncDisabledState() {
-  ElementState eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mContent->AsElement()->State().HasState(ElementState::DISABLED)) {
     mBrowseFilesOrDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, u""_ns,
                                 true);
   } else {

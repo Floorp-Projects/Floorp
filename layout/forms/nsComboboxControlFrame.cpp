@@ -631,8 +631,7 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  ElementState eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(ElementState::DISABLED)) {
+  if (mContent->AsElement()->State().HasState(dom::ElementState::DISABLED)) {
     return NS_OK;
   }
 
@@ -916,7 +915,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  if (mContent->AsElement()->State().HasState(ElementState::FOCUSRING)) {
+  if (mContent->AsElement()->State().HasState(dom::ElementState::FOCUSRING)) {
     nsPresContext* pc = PresContext();
     const nsStyleDisplay* disp = StyleDisplay();
     if (IsThemed(disp) &&
@@ -932,9 +931,9 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt) {
   /* Do we need to do anything? */
-  ElementState eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(ElementState::DISABLED) ||
-      !eventStates.HasState(ElementState::FOCUS)) {
+  dom::ElementState state = mContent->AsElement()->State();
+  if (state.HasState(dom::ElementState::DISABLED) ||
+      !state.HasState(dom::ElementState::FOCUS)) {
     return;
   }
 

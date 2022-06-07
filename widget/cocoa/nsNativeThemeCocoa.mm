@@ -2237,7 +2237,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     originalHeight *= 0.5f;
   }
 
-  ElementState eventState = GetContentState(aFrame, aAppearance);
+  ElementState elementState = GetContentState(aFrame, aAppearance);
 
   switch (aAppearance) {
     case StyleAppearance::Menupopup:
@@ -2245,22 +2245,22 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::Menuarrow:
       return Some(
-          WidgetInfo::MenuIcon(ComputeMenuIconParams(aFrame, eventState, MenuIcon::eMenuArrow)));
+          WidgetInfo::MenuIcon(ComputeMenuIconParams(aFrame, elementState, MenuIcon::eMenuArrow)));
 
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
       return Some(WidgetInfo::MenuItem(ComputeMenuItemParams(
-          aFrame, eventState, aAppearance == StyleAppearance::Checkmenuitem)));
+          aFrame, elementState, aAppearance == StyleAppearance::Checkmenuitem)));
 
     case StyleAppearance::Menuseparator:
-      return Some(WidgetInfo::MenuSeparator(ComputeMenuItemParams(aFrame, eventState, false)));
+      return Some(WidgetInfo::MenuSeparator(ComputeMenuItemParams(aFrame, elementState, false)));
 
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown: {
       MenuIcon icon = aAppearance == StyleAppearance::ButtonArrowUp
                           ? MenuIcon::eMenuUpScrollArrow
                           : MenuIcon::eMenuDownScrollArrow;
-      return Some(WidgetInfo::MenuIcon(ComputeMenuIconParams(aFrame, eventState, icon)));
+      return Some(WidgetInfo::MenuIcon(ComputeMenuIconParams(aFrame, elementState, icon)));
     }
 
     case StyleAppearance::Tooltip:
@@ -2272,12 +2272,12 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
       CheckboxOrRadioParams params;
       params.state = CheckboxOrRadioState::eOff;
-      if (eventState.HasState(ElementState::INDETERMINATE)) {
+      if (elementState.HasState(ElementState::INDETERMINATE)) {
         params.state = CheckboxOrRadioState::eIndeterminate;
-      } else if (eventState.HasState(ElementState::CHECKED)) {
+      } else if (elementState.HasState(ElementState::CHECKED)) {
         params.state = CheckboxOrRadioState::eOn;
       }
-      params.controlParams = ComputeControlParams(aFrame, eventState);
+      params.controlParams = ComputeControlParams(aFrame, elementState);
       params.verticalAlignFactor = VerticalAlignFactor(aFrame);
       if (isCheckbox) {
         return Some(WidgetInfo::Checkbox(params));
@@ -2297,12 +2297,12 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // text, and default buttons in inactive windows have white background
         // and black text.)
         DocumentState docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
-        ControlParams params = ComputeControlParams(aFrame, eventState);
+        ControlParams params = ComputeControlParams(aFrame, elementState);
         params.insideActiveWindow = !docState.HasState(DocumentState::WINDOW_INACTIVE);
         return Some(WidgetInfo::Button(ButtonParams{params, ButtonType::eDefaultPushButton}));
       }
       if (IsButtonTypeMenu(aFrame)) {
-        ControlParams controlParams = ComputeControlParams(aFrame, eventState);
+        ControlParams controlParams = ComputeControlParams(aFrame, elementState);
         controlParams.pressed = IsOpenButton(aFrame);
         DropdownParams params;
         params.controlParams = controlParams;
@@ -2317,18 +2317,18 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // This comparison is done based on the height that is calculated without
         // the top, because the snapped height can be affected by the top of the
         // rect and that may result in different height depending on the top value.
-        return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState),
+        return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState),
                                                     ButtonType::eSquareBezelPushButton}));
       }
-      return Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, eventState), ButtonType::eRegularPushButton}));
+      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState),
+                                                  ButtonType::eRegularPushButton}));
 
     case StyleAppearance::FocusOutline:
       return Some(WidgetInfo::FocusOutline());
 
     case StyleAppearance::MozMacHelpButton:
       return Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, eventState), ButtonType::eHelpButton}));
+          ButtonParams{ComputeControlParams(aFrame, elementState), ButtonType::eHelpButton}));
 
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed: {
@@ -2336,7 +2336,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
                                   ? ButtonType::eDisclosureButtonClosed
                                   : ButtonType::eDisclosureButtonOpen;
       return Some(
-          WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState), buttonType}));
+          WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState), buttonType}));
     }
 
     case StyleAppearance::Spinner: {
@@ -2358,7 +2358,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
           params.pressedButton = Some(SpinButton::eDown);
         }
       }
-      params.disabled = eventState.HasState(ElementState::DISABLED);
+      params.disabled = elementState.HasState(ElementState::DISABLED);
       params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
 
       return Some(WidgetInfo::SpinButtons(params));
@@ -2375,7 +2375,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         } else if (numberControlFrame->SpinnerDownButtonIsDepressed()) {
           params.pressedButton = Some(SpinButton::eDown);
         }
-        params.disabled = eventState.HasState(ElementState::DISABLED);
+        params.disabled = elementState.HasState(ElementState::DISABLED);
         params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
         if (aAppearance == StyleAppearance::SpinnerUpbutton) {
           return Some(WidgetInfo::SpinButtonUp(params));
@@ -2385,7 +2385,8 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     } break;
 
     case StyleAppearance::Toolbarbutton: {
-      SegmentParams params = ComputeSegmentParams(aFrame, eventState, SegmentType::eToolbarButton);
+      SegmentParams params =
+          ComputeSegmentParams(aFrame, elementState, SegmentType::eToolbarButton);
       params.insideActiveWindow = [NativeWindowForFrame(aFrame) isMainWindow];
       return Some(WidgetInfo::Segment(params));
     }
@@ -2414,7 +2415,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist: {
-      ControlParams controlParams = ComputeControlParams(aFrame, eventState);
+      ControlParams controlParams = ComputeControlParams(aFrame, elementState);
       controlParams.pressed = IsOpenButton(aFrame);
       DropdownParams params;
       params.controlParams = controlParams;
@@ -2425,26 +2426,26 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::MozMenulistArrowButton:
       return Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, eventState), ButtonType::eArrowButton}));
+          ButtonParams{ComputeControlParams(aFrame, elementState), ButtonType::eArrowButton}));
 
     case StyleAppearance::Groupbox:
       return Some(WidgetInfo::GroupBox());
 
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
-      return Some(WidgetInfo::TextField(ComputeTextFieldParams(aFrame, eventState)));
+      return Some(WidgetInfo::TextField(ComputeTextFieldParams(aFrame, elementState)));
 
     case StyleAppearance::Searchfield:
-      return Some(WidgetInfo::SearchField(ComputeTextFieldParams(aFrame, eventState)));
+      return Some(WidgetInfo::SearchField(ComputeTextFieldParams(aFrame, elementState)));
 
     case StyleAppearance::ProgressBar: {
-      if (eventState.HasState(ElementState::INDETERMINATE)) {
+      if (elementState.HasState(ElementState::INDETERMINATE)) {
         if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
           NS_WARNING("Unable to animate progressbar!");
         }
       }
       return Some(WidgetInfo::ProgressBar(
-          ComputeProgressParams(aFrame, eventState, !IsVerticalProgress(aFrame))));
+          ComputeProgressParams(aFrame, elementState, !IsVerticalProgress(aFrame))));
     }
 
     case StyleAppearance::Meter:
@@ -2456,15 +2457,15 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       break;
 
     case StyleAppearance::Treetwisty:
-      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState),
+      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState),
                                                   ButtonType::eTreeTwistyPointingRight}));
 
     case StyleAppearance::Treetwistyopen:
-      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState),
+      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState),
                                                   ButtonType::eTreeTwistyPointingDown}));
 
     case StyleAppearance::Treeheadercell:
-      return Some(WidgetInfo::TreeHeaderCell(ComputeTreeHeaderCellParams(aFrame, eventState)));
+      return Some(WidgetInfo::TreeHeaderCell(ComputeTreeHeaderCellParams(aFrame, elementState)));
 
     case StyleAppearance::Treeitem:
     case StyleAppearance::Treeview:
@@ -2479,7 +2480,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       break;
 
     case StyleAppearance::Range: {
-      Maybe<ScaleParams> params = ComputeHTMLScaleParams(aFrame, eventState);
+      Maybe<ScaleParams> params = ComputeHTMLScaleParams(aFrame, elementState);
       if (params) {
         return Some(WidgetInfo::Scale(*params));
       }
@@ -2487,7 +2488,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     }
 
     case StyleAppearance::Textarea:
-      return Some(WidgetInfo::MultilineTextField(eventState.HasState(ElementState::FOCUS)));
+      return Some(WidgetInfo::MultilineTextField(elementState.HasState(ElementState::FOCUS)));
 
     case StyleAppearance::Listbox:
       return Some(WidgetInfo::ListBox());
@@ -2511,7 +2512,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     }
 
     case StyleAppearance::Tab: {
-      SegmentParams params = ComputeSegmentParams(aFrame, eventState, SegmentType::eTab);
+      SegmentParams params = ComputeSegmentParams(aFrame, elementState, SegmentType::eTab);
       params.pressed = params.pressed && !params.selected;
       return Some(WidgetInfo::Segment(params));
     }
@@ -3460,8 +3461,8 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeMenu;
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem: {
-      ElementState eventState = GetContentState(aFrame, aAppearance);
-      bool isDisabled = eventState.HasState(ElementState::DISABLED);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      bool isDisabled = elementState.HasState(ElementState::DISABLED);
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
     }
