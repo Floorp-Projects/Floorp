@@ -4,18 +4,20 @@
 
 "use strict";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "IndexedDB",
   "resource://gre/modules/IndexedDB.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEvents",
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -59,7 +61,7 @@ const DB_OPTIONS = { version: 1 };
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_OPTIONS, db => {
+  return lazy.IndexedDB.open(DB_NAME, DB_OPTIONS, db => {
     db.createObjectStore(STORE_NAME, {
       keyPath: "slug",
     });
@@ -102,9 +104,13 @@ const AddonRollouts = {
 
   async init() {
     for (const rollout of await this.getAllActive()) {
-      TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
-        type: "normandy-addonrollout",
-      });
+      lazy.TelemetryEnvironment.setExperimentActive(
+        rollout.slug,
+        rollout.state,
+        {
+          type: "normandy-addonrollout",
+        }
+      );
     }
   },
 
@@ -112,7 +118,7 @@ const AddonRollouts = {
   async onTelemetryDisabled() {
     const rollouts = await this.getAll();
     for (const rollout of rollouts) {
-      rollout.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+      rollout.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
     }
     await this.updateMany(rollouts);
   },

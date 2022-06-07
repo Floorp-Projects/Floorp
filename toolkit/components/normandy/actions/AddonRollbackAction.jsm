@@ -11,7 +11,9 @@ const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
@@ -23,12 +25,12 @@ var EXPORTED_SYMBOLS = ["AddonRollbackAction"];
 
 class AddonRollbackAction extends BaseAction {
   get schema() {
-    return ActionSchemas["addon-rollback"];
+    return lazy.ActionSchemas["addon-rollback"];
   }
 
   async _run(recipe) {
     const { rolloutSlug } = recipe.arguments;
-    const rollout = await AddonRollouts.get(rolloutSlug);
+    const rollout = await lazy.AddonRollouts.get(rolloutSlug);
 
     if (!rollout) {
       this.log.debug(`Rollback ${rolloutSlug} not applicable, skipping`);
@@ -36,18 +38,18 @@ class AddonRollbackAction extends BaseAction {
     }
 
     switch (rollout.state) {
-      case AddonRollouts.STATE_ACTIVE: {
-        await AddonRollouts.update({
+      case lazy.AddonRollouts.STATE_ACTIVE: {
+        await lazy.AddonRollouts.update({
           ...rollout,
-          state: AddonRollouts.STATE_ROLLED_BACK,
+          state: lazy.AddonRollouts.STATE_ROLLED_BACK,
         });
 
-        const addon = await AddonManager.getAddonByID(rollout.addonId);
+        const addon = await lazy.AddonManager.getAddonByID(rollout.addonId);
         if (addon) {
           try {
             await addon.uninstall();
           } catch (err) {
-            TelemetryEvents.sendEvent(
+            lazy.TelemetryEvents.sendEvent(
               "unenrollFailed",
               "addon_rollback",
               rolloutSlug,
@@ -55,7 +57,7 @@ class AddonRollbackAction extends BaseAction {
                 reason: "uninstall-failed",
                 enrollmentId:
                   rollout.enrollmentId ||
-                  TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+                  lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
               }
             );
             throw err;
@@ -66,16 +68,22 @@ class AddonRollbackAction extends BaseAction {
           );
         }
 
-        TelemetryEvents.sendEvent("unenroll", "addon_rollback", rolloutSlug, {
-          reason: "rollback",
-          enrollmentId:
-            rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-        });
-        TelemetryEnvironment.setExperimentInactive(rolloutSlug);
+        lazy.TelemetryEvents.sendEvent(
+          "unenroll",
+          "addon_rollback",
+          rolloutSlug,
+          {
+            reason: "rollback",
+            enrollmentId:
+              rollout.enrollmentId ||
+              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          }
+        );
+        lazy.TelemetryEnvironment.setExperimentInactive(rolloutSlug);
         break;
       }
 
-      case AddonRollouts.STATE_ROLLED_BACK: {
+      case lazy.AddonRollouts.STATE_ROLLED_BACK: {
         return; // Do nothing
       }
 

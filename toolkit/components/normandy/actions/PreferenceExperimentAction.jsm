@@ -7,28 +7,29 @@
 const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Sampling",
   "resource://gre/modules/components-utils/Sampling.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ActionSchemas",
   "resource://normandy/actions/schemas/index.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BaseAction",
   "resource://normandy/actions/BaseAction.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientEnvironment",
   "resource://normandy/lib/ClientEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
@@ -42,7 +43,7 @@ var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
  */
 class PreferenceExperimentAction extends BaseStudyAction {
   get schema() {
-    return ActionSchemas["multi-preference-experiment"];
+    return lazy.ActionSchemas["multi-preference-experiment"];
   }
 
   constructor() {
@@ -67,25 +68,25 @@ class PreferenceExperimentAction extends BaseStudyAction {
       this.seenExperimentSlugs.add(slug);
 
       try {
-        experiment = await PreferenceExperiments.get(slug);
+        experiment = await lazy.PreferenceExperiments.get(slug);
       } catch (err) {
         // This is probably that the experiment doesn't exist. If that's not the
         // case, re-throw the error.
-        if (!(err instanceof PreferenceExperiments.NotFoundError)) {
+        if (!(err instanceof lazy.PreferenceExperiments.NotFoundError)) {
           throw err;
         }
       }
     }
 
     switch (suitability) {
-      case BaseAction.suitability.SIGNATURE_ERROR: {
+      case lazy.BaseAction.suitability.SIGNATURE_ERROR: {
         this._considerTemporaryError({ experiment, reason: "signature-error" });
         break;
       }
 
-      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
+      case lazy.BaseAction.suitability.CAPABILITIES_MISMATCH: {
         if (experiment && !experiment.expired) {
-          await PreferenceExperiments.stop(slug, {
+          await lazy.PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "capability-mismatch",
             caller:
@@ -95,12 +96,12 @@ class PreferenceExperimentAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.FILTER_MATCH: {
+      case lazy.BaseAction.suitability.FILTER_MATCH: {
         // If we're not in the experiment, try to enroll
         if (!experiment) {
           // Check all preferences that could be used by this experiment.
           // If there's already an active experiment that has set that preference, abort.
-          const activeExperiments = await PreferenceExperiments.getAllActive();
+          const activeExperiments = await lazy.PreferenceExperiments.getAllActive();
           for (const branch of branches) {
             const conflictingPrefs = Object.keys(branch.preferences).filter(
               preferenceName => {
@@ -126,7 +127,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
           // Otherwise, enroll!
           const branch = await this.chooseBranch(slug, branches);
           const experimentType = isHighPopulation ? "exp-highpop" : "exp";
-          await PreferenceExperiments.start({
+          await lazy.PreferenceExperiments.start({
             slug,
             actionName: this.name,
             branch: branch.slug,
@@ -139,15 +140,15 @@ class PreferenceExperimentAction extends BaseStudyAction {
           this.log.debug(`Experiment ${slug} has expired, aborting.`);
         } else {
           experiment.temporaryErrorDeadline = null;
-          await PreferenceExperiments.update(experiment);
-          await PreferenceExperiments.markLastSeen(slug);
+          await lazy.PreferenceExperiments.update(experiment);
+          await lazy.PreferenceExperiments.markLastSeen(slug);
         }
         break;
       }
 
-      case BaseAction.suitability.FILTER_MISMATCH: {
+      case lazy.BaseAction.suitability.FILTER_MISMATCH: {
         if (experiment && !experiment.expired) {
-          await PreferenceExperiments.stop(slug, {
+          await lazy.PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "filter-mismatch",
             caller:
@@ -157,14 +158,14 @@ class PreferenceExperimentAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.FILTER_ERROR: {
+      case lazy.BaseAction.suitability.FILTER_ERROR: {
         this._considerTemporaryError({ experiment, reason: "filter-error" });
         break;
       }
 
-      case BaseAction.suitability.ARGUMENTS_INVALID: {
+      case lazy.BaseAction.suitability.ARGUMENTS_INVALID: {
         if (experiment && !experiment.expired) {
-          await PreferenceExperiments.stop(slug, {
+          await lazy.PreferenceExperiments.stop(slug, {
             resetValue: true,
             reason: "arguments-invalid",
             caller:
@@ -186,7 +187,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
 
   async chooseBranch(slug, branches) {
     const ratios = branches.map(branch => branch.ratio);
-    const userId = ClientEnvironment.userId;
+    const userId = lazy.ClientEnvironment.userId;
 
     // It's important that the input be:
     // - Unique per-user (no one is bucketed alike)
@@ -196,7 +197,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
     //   receive users)
     const input = `${userId}-${slug}-branch`;
 
-    const index = await Sampling.ratioSample(input, ratios);
+    const index = await lazy.Sampling.ratioSample(input, ratios);
     return branches[index];
   }
 
@@ -207,7 +208,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
    * the user doesn't match the filter any more.
    */
   async _finalize({ noRecipes } = {}) {
-    const activeExperiments = await PreferenceExperiments.getAllActive();
+    const activeExperiments = await lazy.PreferenceExperiments.getAllActive();
 
     if (noRecipes && this.seenExperimentSlugs.size) {
       throw new PreferenceExperimentAction.BadNoRecipesArg();
@@ -232,7 +233,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
           return null;
         }
 
-        return PreferenceExperiments.stop(experiment.slug, {
+        return lazy.PreferenceExperiments.stop(experiment.slug, {
           resetValue: true,
           reason: "recipe-not-seen",
           caller: "PreferenceExperimentAction._finalize",
@@ -274,12 +275,12 @@ class PreferenceExperimentAction extends BaseStudyAction {
       // if deadline is an invalid date, set it to one week from now.
       if (isNaN(deadline)) {
         experiment.temporaryErrorDeadline = newDeadline;
-        await PreferenceExperiments.update(experiment);
+        await lazy.PreferenceExperiments.update(experiment);
         return;
       }
 
       if (now > deadline) {
-        await PreferenceExperiments.stop(experiment.slug, {
+        await lazy.PreferenceExperiments.stop(experiment.slug, {
           resetValue: true,
           reason,
           caller: "PreferenceExperimentAction._considerTemporaryFailure",
@@ -288,7 +289,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
     } else {
       // there is no deadline, so set one
       experiment.temporaryErrorDeadline = newDeadline;
-      await PreferenceExperiments.update(experiment);
+      await lazy.PreferenceExperiments.update(experiment);
     }
   }
 }

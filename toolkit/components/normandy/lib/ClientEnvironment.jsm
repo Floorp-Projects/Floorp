@@ -6,33 +6,35 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NormandyApi",
   "resource://normandy/lib/NormandyApi.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientEnvironmentBase",
   "resource://gre/modules/components-utils/ClientEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceRollouts",
   "resource://normandy/lib/PreferenceRollouts.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonStudies",
   "resource://normandy/lib/AddonStudies.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonRollouts",
   "resource://normandy/lib/AddonRollouts.jsm"
 );
@@ -43,7 +45,7 @@ var EXPORTED_SYMBOLS = ["ClientEnvironment"];
 // service.
 let _classifyRequest = null;
 
-class ClientEnvironment extends ClientEnvironmentBase {
+class ClientEnvironment extends lazy.ClientEnvironmentBase {
   /**
    * Fetches information about the client that is calculated on the server,
    * like geolocation and the current time.
@@ -53,7 +55,7 @@ class ClientEnvironment extends ClientEnvironmentBase {
    */
   static async getClientClassification() {
     if (!_classifyRequest) {
-      _classifyRequest = NormandyApi.classifyClient();
+      _classifyRequest = lazy.NormandyApi.classifyClient();
     }
     return _classifyRequest;
   }
@@ -100,7 +102,10 @@ class ClientEnvironment extends ClientEnvironmentBase {
     return (async () => {
       const names = { all: [], active: [], expired: [] };
 
-      for (const { slug, expired } of await PreferenceExperiments.getAll()) {
+      for (const {
+        slug,
+        expired,
+      } of await lazy.PreferenceExperiments.getAll()) {
         names.all.push(slug);
         if (expired) {
           names.expired.push(slug);
@@ -116,10 +121,10 @@ class ClientEnvironment extends ClientEnvironmentBase {
   static get studies() {
     return (async () => {
       const rv = { pref: {}, addon: {} };
-      for (const prefStudy of await PreferenceExperiments.getAll()) {
+      for (const prefStudy of await lazy.PreferenceExperiments.getAll()) {
         rv.pref[prefStudy.slug] = prefStudy;
       }
-      for (const addonStudy of await AddonStudies.getAll()) {
+      for (const addonStudy of await lazy.AddonStudies.getAll()) {
         rv.addon[addonStudy.slug] = addonStudy;
       }
       return rv;
@@ -129,10 +134,10 @@ class ClientEnvironment extends ClientEnvironmentBase {
   static get rollouts() {
     return (async () => {
       const rv = { pref: {}, addon: {} };
-      for (const prefRollout of await PreferenceRollouts.getAll()) {
+      for (const prefRollout of await lazy.PreferenceRollouts.getAll()) {
         rv.pref[prefRollout.slug] = prefRollout;
       }
-      for (const addonRollout of await AddonRollouts.getAll()) {
+      for (const addonRollout of await lazy.AddonRollouts.getAll()) {
         rv.addon[addonRollout.slug] = addonRollout;
       }
       return rv;

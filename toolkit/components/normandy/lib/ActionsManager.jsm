@@ -9,7 +9,9 @@ const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRollbackAction: "resource://normandy/actions/AddonRollbackAction.jsm",
   AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.jsm",
   BaseAction: "resource://normandy/actions/BaseAction.jsm",
@@ -48,15 +50,15 @@ class ActionsManager {
   }
 
   static actionConstructors = {
-    "addon-rollback": AddonRollbackAction,
-    "addon-rollout": AddonRolloutAction,
-    "branched-addon-study": BranchedAddonStudyAction,
-    "console-log": ConsoleLogAction,
-    "messaging-experiment": MessagingExperimentAction,
-    "multi-preference-experiment": PreferenceExperimentAction,
-    "preference-rollback": PreferenceRollbackAction,
-    "preference-rollout": PreferenceRolloutAction,
-    "show-heartbeat": ShowHeartbeatAction,
+    "addon-rollback": lazy.AddonRollbackAction,
+    "addon-rollout": lazy.AddonRolloutAction,
+    "branched-addon-study": lazy.BranchedAddonStudyAction,
+    "console-log": lazy.ConsoleLogAction,
+    "messaging-experiment": lazy.MessagingExperimentAction,
+    "multi-preference-experiment": lazy.PreferenceExperimentAction,
+    "preference-rollback": lazy.PreferenceRollbackAction,
+    "preference-rollout": lazy.PreferenceRolloutAction,
+    "show-heartbeat": lazy.ShowHeartbeatAction,
   };
 
   static getCapabilities() {
@@ -78,12 +80,14 @@ class ActionsManager {
 
       // If the recipe doesn't have matching capabilities, then a missing action
       // is expected. In this case, don't send an error
-    } else if (suitability !== BaseAction.suitability.CAPABILITIES_MISMATCH) {
+    } else if (
+      suitability !== lazy.BaseAction.suitability.CAPABILITIES_MISMATCH
+    ) {
       log.error(
         `Could not execute recipe ${recipe.name}:`,
         `Action ${recipe.action} is either missing or invalid.`
       );
-      await Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_ACTION);
+      await lazy.Uptake.reportRecipe(recipe, lazy.Uptake.RECIPE_INVALID_ACTION);
     }
   }
 

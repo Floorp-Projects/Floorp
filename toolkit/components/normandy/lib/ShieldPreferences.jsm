@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
@@ -29,7 +31,7 @@ var ShieldPreferences = {
     // Watch for changes to the Opt-out pref
     Services.prefs.addObserver(PREF_OPT_OUT_STUDIES_ENABLED, this);
 
-    CleanupManager.addCleanupHandler(() => {
+    lazy.CleanupManager.addCleanupHandler(() => {
       Services.prefs.removeObserver(PREF_OPT_OUT_STUDIES_ENABLED, this);
     });
   },
@@ -49,25 +51,27 @@ var ShieldPreferences = {
       case PREF_OPT_OUT_STUDIES_ENABLED: {
         prefValue = Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED);
         if (!prefValue) {
-          const action = new BranchedAddonStudyAction();
-          const studyPromises = (await AddonStudies.getAll()).map(study => {
-            if (!study.active) {
-              return null;
-            }
-            return action.unenroll(study.recipeId, "general-opt-out");
-          });
-
-          const experimentPromises = (await PreferenceExperiments.getAll()).map(
-            experiment => {
-              if (experiment.expired) {
+          const action = new lazy.BranchedAddonStudyAction();
+          const studyPromises = (await lazy.AddonStudies.getAll()).map(
+            study => {
+              if (!study.active) {
                 return null;
               }
-              return PreferenceExperiments.stop(experiment.slug, {
-                reason: "general-opt-out",
-                caller: "observePrefChange::general-opt-out",
-              });
+              return action.unenroll(study.recipeId, "general-opt-out");
             }
           );
+
+          const experimentPromises = (
+            await lazy.PreferenceExperiments.getAll()
+          ).map(experiment => {
+            if (experiment.expired) {
+              return null;
+            }
+            return lazy.PreferenceExperiments.stop(experiment.slug, {
+              reason: "general-opt-out",
+              caller: "observePrefChange::general-opt-out",
+            });
+          });
 
           const allPromises = studyPromises
             .concat(experimentPromises)

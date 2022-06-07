@@ -8,33 +8,35 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonStudies",
   "resource://normandy/lib/AddonStudies.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BranchedAddonStudyAction",
   "resource://normandy/actions/BranchedAddonStudyAction.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RecipeRunner",
   "resource://normandy/lib/RecipeRunner.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExperimentManager",
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemoteSettingsExperimentLoader",
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
@@ -43,7 +45,7 @@ var EXPORTED_SYMBOLS = ["AboutPages"];
 
 const SHIELD_LEARN_MORE_URL_PREF = "app.normandy.shieldLearnMoreUrl";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gOptOutStudiesEnabled",
   "app.shield.optoutstudies.enabled"
 );
@@ -115,20 +117,20 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
   // Extra methods for about:study-specific behavior.
   Object.assign(aboutStudies, {
     getAddonStudyList() {
-      return AddonStudies.getAll();
+      return lazy.AddonStudies.getAll();
     },
 
     getPreferenceStudyList() {
-      return PreferenceExperiments.getAll();
+      return lazy.PreferenceExperiments.getAll();
     },
 
     getMessagingSystemList() {
-      return ExperimentManager.store.getAll();
+      return lazy.ExperimentManager.store.getAll();
     },
 
     async optInToExperiment(data) {
       try {
-        await RemoteSettingsExperimentLoader.optInToExperiment(data);
+        await lazy.RemoteSettingsExperimentLoader.optInToExperiment(data);
         return {
           error: false,
           message: "Opt-in was successful.",
@@ -178,8 +180,8 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      * content processes safely.
      */
     async getStudiesEnabled() {
-      await RecipeRunner.initializedPromise.promise;
-      return RecipeRunner.enabled && gOptOutStudiesEnabled;
+      await lazy.RecipeRunner.initializedPromise.promise;
+      return lazy.RecipeRunner.enabled && lazy.gOptOutStudiesEnabled;
     },
 
     /**
@@ -189,7 +191,7 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      */
     async removeAddonStudy(recipeId, reason) {
       try {
-        const action = new BranchedAddonStudyAction();
+        const action = new lazy.BranchedAddonStudyAction();
         await action.unenroll(recipeId, reason);
       } catch (err) {
         // If the exception was that the study was already removed, that's ok.
@@ -213,7 +215,7 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      */
     async removePreferenceStudy(experimentName, reason) {
       try {
-        await PreferenceExperiments.stop(experimentName, {
+        await lazy.PreferenceExperiments.stop(experimentName, {
           reason,
           caller: "AboutPages.removePreferenceStudy",
         });
@@ -233,10 +235,10 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     },
 
     async removeMessagingSystemExperiment(slug, reason) {
-      ExperimentManager.unenroll(slug, reason);
+      lazy.ExperimentManager.unenroll(slug, reason);
       this._sendToAll(
         "Shield:UpdateMessagingSystemExperimentList",
-        ExperimentManager.store.getAll()
+        lazy.ExperimentManager.store.getAll()
       );
     },
 

@@ -8,14 +8,16 @@ const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExperimentManager",
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ActionSchemas",
   "resource://normandy/actions/schemas/index.js"
 );
@@ -26,10 +28,10 @@ const RECIPE_SOURCE = "normandy";
 class MessagingExperimentAction extends BaseStudyAction {
   constructor() {
     super();
-    this.manager = ExperimentManager;
+    this.manager = lazy.ExperimentManager;
   }
   get schema() {
-    return ActionSchemas["messaging-experiment"];
+    return lazy.ActionSchemas["messaging-experiment"];
   }
 
   async _run(recipe) {

@@ -12,14 +12,16 @@ const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "timerManager",
   "@mozilla.org/updates/timer-manager;1",
   "nsIUpdateTimerManager"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions:
@@ -59,8 +61,8 @@ const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 
 const PREFS_TO_WATCH = [RUN_INTERVAL_PREF, SHIELD_ENABLED_PREF, API_URL_PREF];
 
-XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
-  return RemoteSettings(REMOTE_SETTINGS_COLLECTION);
+XPCOMUtils.defineLazyGetter(lazy, "gRemoteSettingsClient", () => {
+  return lazy.RemoteSettings(REMOTE_SETTINGS_COLLECTION);
 });
 
 /**
@@ -86,7 +88,7 @@ function cacheProxy(target) {
 }
 
 var RecipeRunner = {
-  initializedPromise: PromiseUtils.defer(),
+  initializedPromise: lazy.PromiseUtils.defer(),
 
   async init() {
     this.running = false;
@@ -120,7 +122,7 @@ var RecipeRunner = {
       // This is not needed for the first run case, because remote settings
       // already handles empty collections well.
       if (devMode) {
-        await gRemoteSettingsClient.sync();
+        await lazy.gRemoteSettingsClient.sync();
       }
       let trigger;
       if (devMode) {
@@ -165,7 +167,7 @@ var RecipeRunner = {
       Services.prefs.addObserver(pref, this);
     }
 
-    CleanupManager.addCleanupHandler(this.unwatchPrefs.bind(this));
+    lazy.CleanupManager.addCleanupHandler(this.unwatchPrefs.bind(this));
   },
 
   unwatchPrefs() {
@@ -231,13 +233,13 @@ var RecipeRunner = {
 
   registerTimer() {
     this.updateRunInterval();
-    CleanupManager.addCleanupHandler(() =>
-      timerManager.unregisterTimer(TIMER_NAME)
+    lazy.CleanupManager.addCleanupHandler(() =>
+      lazy.timerManager.unregisterTimer(TIMER_NAME)
     );
   },
 
   unregisterTimer() {
-    timerManager.unregisterTimer(TIMER_NAME);
+    lazy.timerManager.unregisterTimer(TIMER_NAME);
   },
 
   setUpRemoteSettings() {
@@ -249,10 +251,10 @@ var RecipeRunner = {
     if (!this._onSync) {
       this._onSync = this.onSync.bind(this);
     }
-    gRemoteSettingsClient.on("sync", this._onSync);
+    lazy.gRemoteSettingsClient.on("sync", this._onSync);
 
-    CleanupManager.addCleanupHandler(() => {
-      gRemoteSettingsClient.off("sync", this._onSync);
+    lazy.CleanupManager.addCleanupHandler(() => {
+      lazy.gRemoteSettingsClient.off("sync", this._onSync);
       this._alreadySetUpRemoteSettings = false;
     });
   },
@@ -267,7 +269,7 @@ var RecipeRunner = {
     // This helps alleviate server load, since we don't have a thundering
     // herd of users trying to update all at once.
     if (this._syncSkewTimeout) {
-      clearTimeout(this._syncSkewTimeout);
+      lazy.clearTimeout(this._syncSkewTimeout);
     }
     let minSkewSec = 1; // this is primarily is to avoid race conditions in tests
     let maxSkewSec = Services.prefs.getIntPref(ONSYNC_SKEW_SEC_PREF, 0);
@@ -279,7 +281,7 @@ var RecipeRunner = {
           skewMillis / 1000
         )} seconds`
       );
-      this._syncSkewTimeout = setTimeout(
+      this._syncSkewTimeout = lazy.setTimeout(
         () => this.run({ trigger: "sync" }),
         skewMillis
       );
@@ -294,7 +296,7 @@ var RecipeRunner = {
     // timestamp, and running if it is more than `runInterval` seconds ago. Even with very short
     // intervals, the timer will only fire at most once every few minutes.
     const runInterval = Services.prefs.getIntPref(RUN_INTERVAL_PREF);
-    timerManager.registerTimer(TIMER_NAME, () => this.run(), runInterval);
+    lazy.timerManager.registerTimer(TIMER_NAME, () => this.run(), runInterval);
   },
 
   async run({ trigger = "timer" } = {}) {
@@ -304,14 +306,14 @@ var RecipeRunner = {
     }
     this.running = true;
 
-    await Normandy.defaultPrefsHaveBeenApplied.promise;
+    await lazy.Normandy.defaultPrefsHaveBeenApplied.promise;
 
     try {
       this.running = true;
       Services.obs.notifyObservers(null, "recipe-runner:start");
 
       if (this._syncSkewTimeout) {
-        clearTimeout(this._syncSkewTimeout);
+        lazy.clearTimeout(this._syncSkewTimeout);
         this._syncSkewTimeout = null;
       }
 
@@ -319,7 +321,7 @@ var RecipeRunner = {
       // Unless lazy classification is enabled, prep the classify cache.
       if (!Services.prefs.getBoolPref(LAZY_CLASSIFY_PREF, false)) {
         try {
-          await ClientEnvironment.getClientClassification();
+          await lazy.ClientEnvironment.getClientClassification();
         } catch (err) {
           // Try to go on without this data; the filter expressions will
           // gracefully fail without this info if they need it.
@@ -329,13 +331,13 @@ var RecipeRunner = {
       // Fetch recipes before execution in case we fail and exit early.
       let recipesAndSignatures;
       try {
-        recipesAndSignatures = await gRemoteSettingsClient.get();
+        recipesAndSignatures = await lazy.gRemoteSettingsClient.get();
       } catch (e) {
-        await Uptake.reportRunner(Uptake.RUNNER_SERVER_ERROR);
+        await lazy.Uptake.reportRunner(lazy.Uptake.RUNNER_SERVER_ERROR);
         return;
       }
 
-      const actionsManager = new ActionsManager();
+      const actionsManager = new lazy.ActionsManager();
 
       // Execute recipes, if we have any.
       if (recipesAndSignatures.length === 0) {
@@ -351,7 +353,7 @@ var RecipeRunner = {
         noRecipes: !recipesAndSignatures.length,
       });
 
-      await Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
+      await lazy.Uptake.reportRunner(lazy.Uptake.RUNNER_SUCCESS);
       Services.obs.notifyObservers(null, "recipe-runner:end");
     } finally {
       this.running = false;
@@ -365,7 +367,7 @@ var RecipeRunner = {
   },
 
   getFilterContext(recipe) {
-    const environment = cacheProxy(ClientEnvironment);
+    const environment = cacheProxy(lazy.ClientEnvironment);
     environment.recipe = {
       id: recipe.id,
       arguments: recipe.arguments,
@@ -390,12 +392,12 @@ var RecipeRunner = {
     ]);
 
     // Get capabilities from ActionsManager.
-    for (const actionCapability of ActionsManager.getCapabilities()) {
+    for (const actionCapability of lazy.ActionsManager.getCapabilities()) {
       capabilities.add(actionCapability);
     }
 
     // Add a capability for each transform available to JEXL.
-    for (const transform of FilterExpressions.getAvailableTransforms()) {
+    for (const transform of lazy.FilterExpressions.getAvailableTransforms()) {
       capabilities.add(`jexl.transform.${transform}`);
     }
 
@@ -403,7 +405,7 @@ var RecipeRunner = {
     // for the `normandy.` namespace, and another for the `env.` namespace.
     capabilities.add("jexl.context.env");
     capabilities.add("jexl.context.normandy");
-    let env = ClientEnvironment;
+    let env = lazy.ClientEnvironment;
     while (env && env.name) {
       // Walk up the class chain for ClientEnvironment, collecting applicable
       // properties as we go. Stop when we get to an unnamed object, which is
@@ -469,38 +471,47 @@ var RecipeRunner = {
     // which is good for the general case of running recipes.
     let { value: suitability } = await generator.next();
     switch (suitability) {
-      case BaseAction.suitability.SIGNATURE_ERROR: {
-        await Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_SIGNATURE);
-        break;
-      }
-
-      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
-        await Uptake.reportRecipe(
+      case lazy.BaseAction.suitability.SIGNATURE_ERROR: {
+        await lazy.Uptake.reportRecipe(
           recipe,
-          Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
+          lazy.Uptake.RECIPE_INVALID_SIGNATURE
         );
         break;
       }
 
-      case BaseAction.suitability.FILTER_MATCH: {
+      case lazy.BaseAction.suitability.CAPABILITIES_MISMATCH: {
+        await lazy.Uptake.reportRecipe(
+          recipe,
+          lazy.Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
+        );
+        break;
+      }
+
+      case lazy.BaseAction.suitability.FILTER_MATCH: {
         // No telemetry needs to be sent for this right now.
         break;
       }
 
-      case BaseAction.suitability.FILTER_MISMATCH: {
+      case lazy.BaseAction.suitability.FILTER_MISMATCH: {
         // This represents a terminal state for the given recipe, so
         // report its outcome. Others are reported when executed in
         // ActionsManager.
-        await Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
+        await lazy.Uptake.reportRecipe(
+          recipe,
+          lazy.Uptake.RECIPE_DIDNT_MATCH_FILTER
+        );
         break;
       }
 
-      case BaseAction.suitability.FILTER_ERROR: {
-        await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
+      case lazy.BaseAction.suitability.FILTER_ERROR: {
+        await lazy.Uptake.reportRecipe(
+          recipe,
+          lazy.Uptake.RECIPE_FILTER_BROKEN
+        );
         break;
       }
 
-      case BaseAction.suitability.ARGUMENTS_INVALID: {
+      case lazy.BaseAction.suitability.ARGUMENTS_INVALID: {
         // This shouldn't ever occur, since the arguments schema is checked by
         // BaseAction itself.
         throw new Error(`Shouldn't get ${suitability} in RecipeRunner`);
@@ -530,9 +541,9 @@ var RecipeRunner = {
    */
   async *getAllSuitabilities(recipe, signature) {
     try {
-      await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
+      await lazy.NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
     } catch (e) {
-      yield BaseAction.suitability.SIGNATURE_ERROR;
+      yield lazy.BaseAction.suitability.SIGNATURE_ERROR;
     }
 
     const runnerCapabilities = this.getCapabilities();
@@ -546,24 +557,24 @@ var RecipeRunner = {
                 Array.from(runnerCapabilities)
               )}`
           );
-          yield BaseAction.suitability.CAPABILITIES_MISMATCH;
+          yield lazy.BaseAction.suitability.CAPABILITIES_MISMATCH;
         }
       }
     }
 
     const context = this.getFilterContext(recipe);
-    const targetingContext = new TargetingContext();
+    const targetingContext = new lazy.TargetingContext();
     try {
       if (await targetingContext.eval(recipe.filter_expression, context)) {
-        yield BaseAction.suitability.FILTER_MATCH;
+        yield lazy.BaseAction.suitability.FILTER_MATCH;
       } else {
-        yield BaseAction.suitability.FILTER_MISMATCH;
+        yield lazy.BaseAction.suitability.FILTER_MISMATCH;
       }
     } catch (err) {
       log.error(
         `Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`
       );
-      yield BaseAction.suitability.FILTER_ERROR;
+      yield lazy.BaseAction.suitability.FILTER_ERROR;
     }
   },
 
@@ -572,8 +583,8 @@ var RecipeRunner = {
    * for a clean run.
    */
   clearCaches() {
-    ClientEnvironment.clearClassifyCache();
-    NormandyApi.clearIndexCache();
+    lazy.ClientEnvironment.clearClassifyCache();
+    lazy.NormandyApi.clearIndexCache();
   },
 
   /**
@@ -586,7 +597,7 @@ var RecipeRunner = {
     Services.prefs.setCharPref(API_URL_PREF, baseApiUrl);
 
     try {
-      Storage.clearAllStorage();
+      lazy.Storage.clearAllStorage();
       this.clearCaches();
       await this.run();
     } finally {
@@ -606,7 +617,7 @@ var RecipeRunner = {
    * collection.
    */
   get _remoteSettingsClientForTesting() {
-    return gRemoteSettingsClient;
+    return lazy.gRemoteSettingsClient;
   },
 
   migrations: {
@@ -620,7 +631,7 @@ var RecipeRunner = {
         "services.settings.main.normandy-recipes.last_check";
       if (Services.prefs.prefHasUserValue(lastCheckPref)) {
         // We instantiate a client, but it won't take part of sync.
-        const client = new RemoteSettingsClient("normandy-recipes");
+        const client = new lazy.RemoteSettingsClient("normandy-recipes");
         await client.db.clear();
         Services.prefs.clearUserPref(lastCheckPref);
       }

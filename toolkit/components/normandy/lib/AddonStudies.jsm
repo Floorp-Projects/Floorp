@@ -46,38 +46,40 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "IndexedDB",
   "resource://gre/modules/IndexedDB.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BranchedAddonStudyAction",
   "resource://normandy/actions/BranchedAddonStudyAction.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CleanupManager",
   "resource://normandy/lib/CleanupManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LogManager",
   "resource://normandy/lib/LogManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEvents",
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -89,13 +91,13 @@ const STORE_NAME = "addon-studies";
 const VERSION_STORE_NAME = "addon-studies-version";
 const DB_VERSION = 2;
 const STUDY_ENDED_TOPIC = "shield-study-ended";
-const log = LogManager.getLogger("addon-studies");
+const log = lazy.LogManager.getLogger("addon-studies");
 
 /**
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_VERSION, async (db, event) => {
+  return lazy.IndexedDB.open(DB_NAME, DB_VERSION, async (db, event) => {
     if (event.oldVersion < 1) {
       db.createObjectStore(STORE_NAME, {
         keyPath: "recipeId",
@@ -173,24 +175,24 @@ var AddonStudies = {
   async init() {
     for (const study of await this.getAllActive()) {
       // If an active study's add-on has been removed since we last ran, stop it.
-      const addon = await AddonManager.getAddonByID(study.addonId);
+      const addon = await lazy.AddonManager.getAddonByID(study.addonId);
       if (!addon) {
         await this.markAsEnded(study, "uninstalled-sideload");
         continue;
       }
 
       // Otherwise mark that study as active in Telemetry
-      TelemetryEnvironment.setExperimentActive(study.slug, study.branch, {
+      lazy.TelemetryEnvironment.setExperimentActive(study.slug, study.branch, {
         type: "normandy-addonstudy",
         enrollmentId:
-          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
     // Listen for add-on uninstalls so we can stop the corresponding studies.
-    AddonManager.addAddonListener(this);
-    CleanupManager.addCleanupHandler(() => {
-      AddonManager.removeAddonListener(this);
+    lazy.AddonManager.addAddonListener(this);
+    lazy.CleanupManager.addCleanupHandler(() => {
+      lazy.AddonManager.removeAddonListener(this);
     });
   },
 
@@ -198,7 +200,7 @@ var AddonStudies = {
   async onTelemetryDisabled() {
     const studies = await this.getAll();
     for (const study of studies) {
-      study.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+      study.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
     }
     await this.updateMany(studies);
   },
@@ -260,7 +262,7 @@ var AddonStudies = {
       if (!studies.length) {
         return;
       }
-      const action = new BranchedAddonStudyAction();
+      const action = new lazy.BranchedAddonStudyAction();
       for (const study of studies) {
         try {
           await action.unenroll(
@@ -433,15 +435,15 @@ var AddonStudies = {
     await getStore(db, "readwrite").put(study);
 
     Services.obs.notifyObservers(study, STUDY_ENDED_TOPIC, `${study.recipeId}`);
-    TelemetryEvents.sendEvent("unenroll", "addon_study", study.slug, {
+    lazy.TelemetryEvents.sendEvent("unenroll", "addon_study", study.slug, {
       addonId: study.addonId || AddonStudies.NO_ADDON_MARKER,
       addonVersion: study.addonVersion || AddonStudies.NO_ADDON_MARKER,
       reason,
       branch: study.branch,
       enrollmentId:
-        study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
-    TelemetryEnvironment.setExperimentInactive(study.slug);
+    lazy.TelemetryEnvironment.setExperimentInactive(study.slug);
 
     await this.callUnenrollListeners(study.addonId, reason);
   },
