@@ -718,6 +718,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvRoleChangedEvent(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvBindChildDoc(
     PDocAccessibleParent* aChildDoc, const uint64_t& aID) {
+  ACQUIRE_ANDROID_LOCK
   // One document should never directly be the child of another.
   // We should always have at least an outer doc accessible in between.
   MOZ_ASSERT(aID);
@@ -964,6 +965,14 @@ void DocAccessibleParent::Destroy() {
     parentDoc->RemoveChildDoc(thisDoc);
   } else if (IsTopLevel()) {
     GetAccService()->RemoteDocShutdown(this);
+  }
+}
+
+void DocAccessibleParent::ActorDestroy(ActorDestroyReason aWhy) {
+  MOZ_ASSERT(CheckDocTree());
+  if (!mShutdown) {
+    ACQUIRE_ANDROID_LOCK
+    Destroy();
   }
 }
 
