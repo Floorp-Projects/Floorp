@@ -15749,7 +15749,7 @@ FactoryOp::Run() {
       break;
 
     case State::DatabaseOpenPending:
-      QM_TRY(MOZ_TO_RESULT(DatabaseOpen()), NS_OK, handleError);
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DatabaseOpen()), handleError);
       break;
 
     case State::DatabaseWorkOpen:
