@@ -286,6 +286,10 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
         static_cast<float>(nearend_reverb_nearend_len.Get());
   }
 
+  if (field_trial::IsEnabled("WebRTC-Aec3ConservativeTailFreqResponse")) {
+    adjusted_cfg.ep_strength.use_conservative_tail_frequency_response = true;
+  }
+
   if (field_trial::IsEnabled("WebRTC-Aec3ShortHeadroomKillSwitch")) {
     // Two blocks headroom.
     adjusted_cfg.delay.delay_headroom_samples = kBlockSize * 2;
