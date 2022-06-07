@@ -2183,23 +2183,6 @@ preferences:
       - 'fennec'
     record_in_processes:
       - main
-  browser_home_page_change:
-    bug_numbers:
-      - 1392951
-    description: >-
-      The number of times the home page has been changed.
-      Recorded when a user changes his/her home page successfully.
-    expires: "62"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - chsiang@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
   browser_home_page_count:
     bug_numbers:
       - 1392951
