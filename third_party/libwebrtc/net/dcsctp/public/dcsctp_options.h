@@ -113,6 +113,14 @@ struct DcSctpOptions {
   // T2-shutdown timeout.
   DurationMs t2_shutdown_timeout = DurationMs(1000);
 
+  // For t1-init, t1-cookie, t2-shutdown, t3-rtx, this value - if set - will be
+  // the upper bound on how large the exponentially backed off timeout can
+  // become. The lower the duration, the faster the connection can recover on
+  // transient network issues. Setting this value may require changing
+  // `max_retransmissions` and `max_init_retransmits` to ensure that the
+  // connection is not closed too quickly.
+  absl::optional<DurationMs> max_timer_backoff_duration = absl::nullopt;
+
   // Hearbeat interval (on idle connections only). Set to zero to disable.
   DurationMs heartbeat_interval = DurationMs(30000);
 
