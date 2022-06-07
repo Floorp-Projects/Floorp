@@ -16,18 +16,20 @@ const { ShortcutUtils } = ChromeUtils.import(
   "resource://gre/modules/ShortcutUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -38,26 +40,25 @@ ChromeUtils.defineModuleGetter(
  * may not have been loaded.  In that case, the getter would
  * become undefined until next app restart.
  */
-/* globals windowTracker, browserActionFor, pageActionFor, sidebarActionFor */
-Object.defineProperties(this, {
+Object.defineProperties(lazy, {
   windowTracker: {
     get() {
-      return ExtensionParent.apiManager.global.windowTracker;
+      return lazy.ExtensionParent.apiManager.global.windowTracker;
     },
   },
   browserActionFor: {
     get() {
-      return ExtensionParent.apiManager.global.browserActionFor;
+      return lazy.ExtensionParent.apiManager.global.browserActionFor;
     },
   },
   pageActionFor: {
     get() {
-      return ExtensionParent.apiManager.global.pageActionFor;
+      return lazy.ExtensionParent.apiManager.global.pageActionFor;
     },
   },
   sidebarActionFor: {
     get() {
-      return ExtensionParent.apiManager.global.sidebarActionFor;
+      return lazy.ExtensionParent.apiManager.global.sidebarActionFor;
     },
   },
 });
@@ -132,7 +133,7 @@ class ExtensionShortcutKeyMap extends DefaultMap {
     // Overridden in some unit test to make it easier to cover some
     // platform specific behaviors (in particular the platform specific.
     // normalization of the shortcuts using the Ctrl modifier on macOS).
-    this._os = ExtensionParent.PlatformInfo.os;
+    this._os = lazy.ExtensionParent.PlatformInfo.os;
   }
 
   defaultConstructor() {
@@ -188,12 +189,13 @@ class ExtensionShortcuts {
     // and uninstalled so quickly that `this.commands` hasn't loaded yet. To
     // handle that we need to make sure ExtensionSettingsStore is initialized
     // before we clean it up.
-    await ExtensionSettingsStore.initialize();
-    ExtensionSettingsStore.getAllForExtension(extensionId, "commands").forEach(
-      key => {
-        ExtensionSettingsStore.removeSetting(extensionId, "commands", key);
-      }
-    );
+    await lazy.ExtensionSettingsStore.initialize();
+    lazy.ExtensionSettingsStore.getAllForExtension(
+      extensionId,
+      "commands"
+    ).forEach(key => {
+      lazy.ExtensionSettingsStore.removeSetting(extensionId, "commands", key);
+    });
   }
 
   constructor({ extension, onCommand }) {
@@ -226,7 +228,7 @@ class ExtensionShortcuts {
 
     // Only store the updates so manifest changes can take precedence
     // later.
-    let previousUpdates = await ExtensionSettingsStore.getSetting(
+    let previousUpdates = await lazy.ExtensionSettingsStore.getSetting(
       "commands",
       name,
       extension.id
@@ -244,7 +246,7 @@ class ExtensionShortcuts {
       command.shortcut = shortcut;
     }
 
-    await ExtensionSettingsStore.addSetting(
+    await lazy.ExtensionSettingsStore.addSetting(
       extension.id,
       "commands",
       name,
@@ -263,7 +265,7 @@ class ExtensionShortcuts {
       throw new ExtensionError(`Unknown command "${name}"`);
     }
 
-    let storedCommand = ExtensionSettingsStore.getSetting(
+    let storedCommand = lazy.ExtensionSettingsStore.getSetting(
       "commands",
       name,
       extension.id
@@ -271,7 +273,7 @@ class ExtensionShortcuts {
 
     if (storedCommand && storedCommand.value) {
       commands.set(name, { ...manifestCommands.get(name) });
-      ExtensionSettingsStore.removeSetting(extension.id, "commands", name);
+      lazy.ExtensionSettingsStore.removeSetting(extension.id, "commands", name);
       this.registerKeys(commands);
     }
   }
@@ -306,7 +308,7 @@ class ExtensionShortcuts {
   }
 
   registerKeys(commands) {
-    for (let window of windowTracker.browserWindows()) {
+    for (let window of lazy.windowTracker.browserWindows()) {
       this.registerKeysToDocument(window, commands);
     }
   }
@@ -325,7 +327,7 @@ class ExtensionShortcuts {
       }
     };
 
-    windowTracker.addOpenListener(this.windowOpenListener);
+    lazy.windowTracker.addOpenListener(this.windowOpenListener);
   }
 
   /**
@@ -333,13 +335,13 @@ class ExtensionShortcuts {
    * from being registered to windows which are later created.
    */
   unregister() {
-    for (let window of windowTracker.browserWindows()) {
+    for (let window of lazy.windowTracker.browserWindows()) {
       if (this.keysetsMap.has(window)) {
         this.keysetsMap.get(window).remove();
       }
     }
 
-    windowTracker.removeOpenListener(this.windowOpenListener);
+    lazy.windowTracker.removeOpenListener(this.windowOpenListener);
   }
 
   /**
@@ -352,7 +354,7 @@ class ExtensionShortcuts {
     let commands = new Map();
     // For Windows, chrome.runtime expects 'win' while chrome.commands
     // expects 'windows'.  We can special case this for now.
-    let { PlatformInfo } = ExtensionParent;
+    let { PlatformInfo } = lazy.ExtensionParent;
     let os = PlatformInfo.os == "win" ? "windows" : PlatformInfo.os;
     for (let [name, command] of Object.entries(manifest.commands)) {
       let suggested_key = command.suggested_key || {};
@@ -368,13 +370,13 @@ class ExtensionShortcuts {
   }
 
   async loadCommandsFromStorage(extensionId) {
-    await ExtensionSettingsStore.initialize();
-    let names = ExtensionSettingsStore.getAllForExtension(
+    await lazy.ExtensionSettingsStore.initialize();
+    let names = lazy.ExtensionSettingsStore.getAllForExtension(
       extensionId,
       "commands"
     );
     return names.reduce((map, name) => {
-      let command = ExtensionSettingsStore.getSetting(
+      let command = lazy.ExtensionSettingsStore.getSetting(
         "commands",
         name,
         extensionId
@@ -391,7 +393,7 @@ class ExtensionShortcuts {
   registerKeysToDocument(window, commands) {
     if (
       !this.extension.privateBrowsingAllowed &&
-      PrivateBrowsingUtils.isWindowPrivate(window)
+      lazy.PrivateBrowsingUtils.isWindowPrivate(window)
     ) {
       return;
     }
@@ -462,9 +464,9 @@ class ExtensionShortcuts {
           : "_execute_action";
 
       let actionFor = {
-        [_execute_action]: browserActionFor,
-        _execute_page_action: pageActionFor,
-        _execute_sidebar_action: sidebarActionFor,
+        [_execute_action]: lazy.browserActionFor,
+        _execute_page_action: lazy.pageActionFor,
+        _execute_sidebar_action: lazy.sidebarActionFor,
       }[name];
 
       if (actionFor) {
