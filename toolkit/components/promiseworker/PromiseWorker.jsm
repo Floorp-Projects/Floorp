@@ -19,8 +19,10 @@
 
 var EXPORTED_SYMBOLS = ["BasePromiseWorker"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -325,7 +327,7 @@ BasePromiseWorker.prototype = {
         throw ex;
       }
 
-      let deferred = PromiseUtils.defer();
+      let deferred = lazy.PromiseUtils.defer();
       this._queue.push({ deferred, closure, id });
       this.log("Message posted");
 
