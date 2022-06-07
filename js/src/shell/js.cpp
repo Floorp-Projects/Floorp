@@ -7028,6 +7028,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       creationOptions.setCoopAndCoepEnabled(v.toBoolean());
     }
 
+    if (!JS_GetProperty(cx, opts, "freezeBuiltins", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setFreezeBuiltins(v.toBoolean());
+    }
+
     // On the web, the SharedArrayBuffer constructor is not installed as a
     // global property in pages that aren't isolated in a separate process (and
     // thus can't allow the structured cloning of shared memory).  Specify false
@@ -9506,6 +9513,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         (default false).\n"
 "      useWindowProxy: the global will be created with a WindowProxy attached. In this\n"
 "          case, the WindowProxy will be returned.\n"
+"      freezeBuiltins: certain builtin constructors will be frozen when created and\n"
+"          their prototypes will be sealed. These constructors will be defined on the\n"
+"          global as non-configurable and non-writable.\n"
 "      immutablePrototype: whether the global's prototype is immutable.\n"
 "      principal: if present, its value converted to a number must be an\n"
 "         integer that fits in 32 bits; use that as the new realm's\n"

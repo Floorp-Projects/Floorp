@@ -700,6 +700,23 @@ JS_PUBLIC_API bool JS::InitRealmStandardClasses(JSContext* cx) {
   return GlobalObject::initStandardClasses(cx, cx->global());
 }
 
+JS_PUBLIC_API bool JS::MaybeFreezeCtorAndPrototype(JSContext* cx,
+                                                   HandleObject ctor,
+                                                   HandleObject maybeProto) {
+  if (MOZ_LIKELY(!cx->realm()->creationOptions().freezeBuiltins())) {
+    return true;
+  }
+  if (!SetIntegrityLevel(cx, ctor, IntegrityLevel::Frozen)) {
+    return false;
+  }
+  if (maybeProto) {
+    if (!SetIntegrityLevel(cx, maybeProto, IntegrityLevel::Sealed)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 JS_PUBLIC_API JSObject* JS::GetRealmObjectPrototype(JSContext* cx) {
   CHECK_THREAD(cx);
   return GlobalObject::getOrCreateObjectPrototype(cx, cx->global());
