@@ -116,8 +116,12 @@ class AecState {
   // Takes appropriate action at an echo path change.
   void HandleEchoPathChange(const EchoPathVariability& echo_path_variability);
 
-  // Returns the decay factor for the echo reverberation.
-  float ReverbDecay() const { return reverb_model_estimator_.ReverbDecay(); }
+  // Returns the decay factor for the echo reverberation. The parameter `mild`
+  // indicates which exponential decay to return. The default one or a milder
+  // one that can be used during nearend regions.
+  float ReverbDecay(bool mild) const {
+    return reverb_model_estimator_.ReverbDecay(mild);
+  }
 
   // Return the frequency response of the reverberant echo.
   rtc::ArrayView<const float> GetReverbFrequencyResponse() const {

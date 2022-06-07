@@ -56,7 +56,8 @@ class ResidualEchoEstimator {
   // Updates the reverb estimation.
   void UpdateReverb(ReverbType reverb_type,
                     const AecState& aec_state,
-                    const RenderBuffer& render_buffer);
+                    const RenderBuffer& render_buffer,
+                    bool dominant_nearend);
 
   // Adds the estimated unmodelled echo power to the residual echo power
   // estimate.

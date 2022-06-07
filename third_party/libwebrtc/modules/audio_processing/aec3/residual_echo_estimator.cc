@@ -203,7 +203,8 @@ void ResidualEchoEstimator::Estimate(
       LinearEstimate(S2_linear, aec_state.ErleUnbounded(), R2_unbounded);
     }
 
-    UpdateReverb(ReverbType::kLinear, aec_state, render_buffer);
+    UpdateReverb(ReverbType::kLinear, aec_state, render_buffer,
+                 dominant_nearend);
     AddReverb(R2);
     AddReverb(R2_unbounded);
   } else {
@@ -240,7 +241,8 @@ void ResidualEchoEstimator::Estimate(
 
     if (config_.echo_model.model_reverb_in_nonlinear_mode &&
         !aec_state.TransparentModeActive()) {
-      UpdateReverb(ReverbType::kNonLinear, aec_state, render_buffer);
+      UpdateReverb(ReverbType::kNonLinear, aec_state, render_buffer,
+                   dominant_nearend);
       AddReverb(R2);
       AddReverb(R2_unbounded);
     }
@@ -305,7 +307,8 @@ void ResidualEchoEstimator::UpdateRenderNoisePower(
 // Updates the reverb estimation.
 void ResidualEchoEstimator::UpdateReverb(ReverbType reverb_type,
                                          const AecState& aec_state,
-                                         const RenderBuffer& render_buffer) {
+                                         const RenderBuffer& render_buffer,
+                                         bool dominant_nearend) {
   // Choose reverb partition based on what type of echo power model is used.
   const size_t first_reverb_partition =
       reverb_type == ReverbType::kLinear
@@ -330,15 +333,15 @@ void ResidualEchoEstimator::UpdateReverb(ReverbType reverb_type,
   }
 
   // Update the reverb estimate.
+  float reverb_decay = aec_state.ReverbDecay(/*mild=*/dominant_nearend);
   if (reverb_type == ReverbType::kLinear) {
-    echo_reverb_.UpdateReverb(render_power,
-                              aec_state.GetReverbFrequencyResponse(),
-                              aec_state.ReverbDecay());
+    echo_reverb_.UpdateReverb(
+        render_power, aec_state.GetReverbFrequencyResponse(), reverb_decay);
   } else {
     const float echo_path_gain =
         GetEchoPathGain(aec_state, /*gain_for_early_reflections=*/false);
     echo_reverb_.UpdateReverbNoFreqShaping(render_power, echo_path_gain,
-                                           aec_state.ReverbDecay());
+                                           reverb_decay);
   }
 }
 // Adds the estimated power of the reverb to the residual echo power.

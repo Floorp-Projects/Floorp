@@ -108,6 +108,7 @@ struct RTC_EXPORT EchoCanceller3Config {
   struct EpStrength {
     float default_gain = 1.f;
     float default_len = 0.83f;
+    float nearend_len = 0.83f;
     bool echo_can_saturate = true;
     bool bounded_erl = false;
     bool erle_onset_compensation_in_dominant_nearend = false;
