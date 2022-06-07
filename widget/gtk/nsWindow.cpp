@@ -4449,7 +4449,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
       mDraggableRegion.Contains(pos)) {
     if (mSizeState == nsSizeMode_Maximized) {
       SetSizeMode(nsSizeMode_Normal);
-    } else {
+    } else if (mSizeState == nsSizeMode_Normal) {
       SetSizeMode(nsSizeMode_Maximized);
     }
   }
