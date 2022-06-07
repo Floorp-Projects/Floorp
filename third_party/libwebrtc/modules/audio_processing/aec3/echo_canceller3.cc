@@ -267,20 +267,23 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
     adjusted_cfg.ep_strength.echo_can_saturate = false;
   }
 
-  if (field_trial::IsEnabled("WebRTC-Aec3UseDot2ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.2f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot3ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.3f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot4ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.4f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot5ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.5f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot6ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.6f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot7ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.7f;
-  } else if (field_trial::IsEnabled("WebRTC-Aec3UseDot8ReverbDefaultLen")) {
-    adjusted_cfg.ep_strength.default_len = 0.8f;
+  const std::string use_nearend_reverb_len_tunings =
+      field_trial::FindFullName("WebRTC-Aec3UseNearendReverbLen");
+  FieldTrialParameter<double> nearend_reverb_default_len(
+      "default_len", adjusted_cfg.ep_strength.default_len);
+  FieldTrialParameter<double> nearend_reverb_nearend_len(
+      "nearend_len", adjusted_cfg.ep_strength.nearend_len);
+
+  ParseFieldTrial({&nearend_reverb_default_len, &nearend_reverb_nearend_len},
+                  use_nearend_reverb_len_tunings);
+  float default_len = static_cast<float>(nearend_reverb_default_len.Get());
+  float nearend_len = static_cast<float>(nearend_reverb_nearend_len.Get());
+  if (default_len > -1 && default_len < 1 && nearend_len > -1 &&
+      nearend_len < 1) {
+    adjusted_cfg.ep_strength.default_len =
+        static_cast<float>(nearend_reverb_default_len.Get());
+    adjusted_cfg.ep_strength.nearend_len =
+        static_cast<float>(nearend_reverb_nearend_len.Get());
   }
 
   if (field_trial::IsEnabled("WebRTC-Aec3ShortHeadroomKillSwitch")) {
@@ -459,8 +462,6 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
   FieldTrialParameter<int> dominant_nearend_detection_trigger_threshold(
       "dominant_nearend_detection_trigger_threshold",
       adjusted_cfg.suppressor.dominant_nearend_detection.trigger_threshold);
-  FieldTrialParameter<double> ep_strength_default_len(
-      "ep_strength_default_len", adjusted_cfg.ep_strength.default_len);
 
   ParseFieldTrial(
       {&nearend_tuning_mask_lf_enr_transparent,
@@ -477,7 +478,7 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
        &dominant_nearend_detection_enr_exit_threshold,
        &dominant_nearend_detection_snr_threshold,
        &dominant_nearend_detection_hold_duration,
-       &dominant_nearend_detection_trigger_threshold, &ep_strength_default_len},
+       &dominant_nearend_detection_trigger_threshold},
       suppressor_tuning_override_trial_name);
 
   adjusted_cfg.suppressor.nearend_tuning.mask_lf.enr_transparent =
@@ -514,8 +515,6 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
       dominant_nearend_detection_hold_duration.Get();
   adjusted_cfg.suppressor.dominant_nearend_detection.trigger_threshold =
       dominant_nearend_detection_trigger_threshold.Get();
-  adjusted_cfg.ep_strength.default_len =
-      static_cast<float>(ep_strength_default_len.Get());
 
   // Field trial-based overrides of individual suppressor parameters.
   RetrieveFieldTrialValue(
@@ -577,15 +576,13 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
       "WebRTC-Aec3SuppressorAntiHowlingGainOverride", 0.f, 10.f,
       &adjusted_cfg.suppressor.high_bands_suppression.anti_howling_gain);
 
-  RetrieveFieldTrialValue("WebRTC-Aec3SuppressorEpStrengthDefaultLenOverride",
-                          -1.f, 1.f, &adjusted_cfg.ep_strength.default_len);
-
   // Field trial-based overrides of individual delay estimator parameters.
   RetrieveFieldTrialValue("WebRTC-Aec3DelayEstimateSmoothingOverride", 0.f, 1.f,
                           &adjusted_cfg.delay.delay_estimate_smoothing);
   RetrieveFieldTrialValue(
       "WebRTC-Aec3DelayEstimateSmoothingDelayFoundOverride", 0.f, 1.f,
       &adjusted_cfg.delay.delay_estimate_smoothing_delay_found);
+
   return adjusted_cfg;
 }
 

@@ -166,6 +166,7 @@ bool EchoCanceller3Config::Validate(EchoCanceller3Config* config) {
 
   res = res & Limit(&c->ep_strength.default_gain, 0.f, 1000000.f);
   res = res & Limit(&c->ep_strength.default_len, -1.f, 1.f);
+  res = res & Limit(&c->ep_strength.nearend_len, -1.0f, 1.0f);
 
   res =
       res & Limit(&c->echo_audibility.low_render_limit, 0.f, 32768.f * 32768.f);
