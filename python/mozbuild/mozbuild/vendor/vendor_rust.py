@@ -709,31 +709,33 @@ license file's hash.
                     )
                     failed = True
 
-        # Only run cargo-vet on automation for now, and only emit warnings.
+        # Only emit warnings for cargo-vet for now.
+        env = os.environ.copy()
+        env["PATH"] = os.pathsep.join(
+            (
+                str(Path(cargo).parent),
+                os.environ["PATH"],
+            )
+        )
+        flags = ["--output-format=json"]
         if "MOZ_AUTOMATION" in os.environ:
-            env = os.environ.copy()
-            env["PATH"] = os.pathsep.join(
-                (
-                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "rustc", "bin"),
-                    os.environ["PATH"],
+            flags.append("--locked")
+        res = cargo_vet(
+            self,
+            flags,
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+        if res.returncode:
+            vet = json.loads(res.stdout)
+            for failure in vet.get("failures", []):
+                failure["crate"] = failure.pop("name")
+                self.log(
+                    logging.WARNING,
+                    "cargo_vet_failed",
+                    failure,
+                    "Vetting missing for {crate}:{version} {missing_criteria}",
                 )
-            )
-            res = cargo_vet(
-                self,
-                ["--output-format=json", "--locked"],
-                stdout=subprocess.PIPE,
-                env=env,
-            )
-            if res.returncode:
-                vet = json.loads(res.stdout)
-                for failure in vet.get("failures", []):
-                    failure["crate"] = failure.pop("name")
-                    self.log(
-                        logging.WARNING,
-                        "cargo_vet_failed",
-                        failure,
-                        "Vetting missing for {crate}:{version} {missing_criteria}",
-                    )
 
         if failed:
             return False
