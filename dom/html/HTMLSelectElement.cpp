@@ -1207,8 +1207,8 @@ nsresult HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     // UI while focused.
     mCanShowValidUI = ShouldShowValidityUI();
 
-    // We don't have to update ElementState::MOZ_UI_INVALID nor
-    // ElementState::MOZ_UI_VALID given that the states should not change.
+    // We don't have to update ElementState::USER_INVALID nor
+    // ElementState::USER_VALID given that the states should not change.
   } else if (aVisitor.mEvent->mMessage == eBlur) {
     mCanShowInvalidUI = true;
     mCanShowValidUI = true;
@@ -1231,7 +1231,7 @@ ElementState HTMLSelectElement::IntrinsicState() const {
 
       if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
           (mCanShowInvalidUI && ShouldShowValidityUI())) {
-        state |= ElementState::MOZ_UI_INVALID;
+        state |= ElementState::USER_INVALID;
       }
     }
 
@@ -1243,9 +1243,9 @@ ElementState HTMLSelectElement::IntrinsicState() const {
     // 3. The element has already been modified or the user tried to submit the
     //    form owner while invalid.
     if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() || (state.HasState(ElementState::MOZ_UI_INVALID) &&
-                       !mCanShowInvalidUI))) {
-      state |= ElementState::MOZ_UI_VALID;
+        (IsValid() ||
+         (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
+      state |= ElementState::USER_VALID;
     }
   }
 

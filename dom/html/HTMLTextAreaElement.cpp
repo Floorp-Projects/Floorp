@@ -761,7 +761,7 @@ ElementState HTMLTextAreaElement::IntrinsicState() const {
       // error.
       if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
           (mCanShowInvalidUI && ShouldShowValidityUI())) {
-        state |= ElementState::MOZ_UI_INVALID;
+        state |= ElementState::USER_INVALID;
       }
     }
 
@@ -773,9 +773,9 @@ ElementState HTMLTextAreaElement::IntrinsicState() const {
     // 3. The element has already been modified or the user tried to submit the
     //    form owner while invalid.
     if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() || (state.HasState(ElementState::MOZ_UI_INVALID) &&
-                       !mCanShowInvalidUI))) {
-      state |= ElementState::MOZ_UI_VALID;
+        (IsValid() ||
+         (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
+      state |= ElementState::USER_VALID;
     }
   }
 
