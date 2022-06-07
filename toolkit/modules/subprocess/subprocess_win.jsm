@@ -24,8 +24,10 @@ const { BaseProcess, PromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/subprocess/subprocess_common.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "env",
   "@mozilla.org/process/environment;1",
   "nsIEnvironment"
@@ -55,7 +57,7 @@ class WinPromiseWorker extends PromiseWorker {
           "win",
           "6.2"
         ),
-        comspec: env.get("COMSPEC"),
+        comspec: lazy.env.get("COMSPEC"),
         signalEvent: String(
           ctypes.cast(this.signalEvent, ctypes.uintptr_t).value
         ),
