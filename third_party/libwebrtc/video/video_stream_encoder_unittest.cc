@@ -7565,7 +7565,7 @@ TEST_F(VideoStreamEncoderTest, BandwidthAllocationLowerBound) {
       /*stable_target_bitrate=*/DataRate::KilobitsPerSec(300),
       /*link_allocation=*/DataRate::KilobitsPerSec(300),
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
 
   // Insert a first video frame so that encoder gets configured.
@@ -7584,7 +7584,7 @@ TEST_F(VideoStreamEncoderTest, BandwidthAllocationLowerBound) {
       /*stable_target_bitrate=*/target_rate,
       /*link_allocation=*/target_rate,
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
 
@@ -7698,7 +7698,7 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBitrateSwitch) {
       /*stable_target_bitrate=*/DataRate::KilobitsPerSec(kDontCare),
       /*link_allocation=*/DataRate::KilobitsPerSec(kDontCare),
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
   AdvanceTime(TimeDelta::Millis(0));
 
@@ -7730,7 +7730,7 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBrokenEncoderSwitch) {
       DataRate::KilobitsPerSec(kSufficientBitrateToNotDrop),
       /*link_allocation=*/DataRate::KilobitsPerSec(kSufficientBitrateToNotDrop),
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
 
   ON_CALL(video_encoder, Encode(_, _))
@@ -7772,7 +7772,7 @@ TEST_F(VideoStreamEncoderTest,
       /*stable_target_bitrate=*/rate,
       /*link_allocation=*/rate,
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
 
   // Insert a first video frame so that encoder gets configured.
@@ -7790,7 +7790,7 @@ TEST_F(VideoStreamEncoderTest,
       /*stable_target_bitrate=*/new_stable_rate,
       /*link_allocation=*/rate,
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(2, fake_encoder_.GetNumSetRates());
@@ -7809,7 +7809,7 @@ TEST_F(VideoStreamEncoderTest,
       /*stable_target_bitrate=*/rate,
       /*link_allocation=*/rate,
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
 
   // Insert a first video frame so that encoder gets configured.
@@ -7828,7 +7828,7 @@ TEST_F(VideoStreamEncoderTest,
       /*stable_target_bitrate=*/new_stable_rate,
       /*link_allocation=*/rate,
       /*fraction_lost=*/0,
-      /*rtt_ms=*/0,
+      /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(1, fake_encoder_.GetNumSetRates());
@@ -8640,5 +8640,145 @@ INSTANTIATE_TEST_SUITE_P(
                       kMultiplexDisallowConversion),
     TestParametersVideoCodecAndAllowI420ConversionToString);
 #endif
+
+class ReconfigureEncoderTest : public VideoStreamEncoderTest {
+ protected:
+  void RunTest(const std::vector<VideoStream>& configs,
+               const int expected_num_init_encode) {
+    ConfigureEncoder(configs[0]);
+    OnBitrateUpdated(DataRate::BitsPerSec(kTargetBitrateBps));
+    InsertFrameAndWaitForEncoded();
+    EXPECT_EQ(1, sink_.number_of_reconfigurations());
+    ExpectEqual(bitrate_allocator_factory_.codec_config(), configs[0]);
+    EXPECT_EQ(1, fake_encoder_.GetNumEncoderInitializations());
+    ExpectEqual(fake_encoder_.video_codec(), configs[0]);
+
+    // Reconfigure encoder, the encoder should only be reconfigured if needed.
+    ConfigureEncoder(configs[1]);
+    InsertFrameAndWaitForEncoded();
+    EXPECT_EQ(2, sink_.number_of_reconfigurations());
+    ExpectEqual(bitrate_allocator_factory_.codec_config(), configs[1]);
+    EXPECT_EQ(expected_num_init_encode,
+              fake_encoder_.GetNumEncoderInitializations());
+    if (expected_num_init_encode > 1)
+      ExpectEqual(fake_encoder_.video_codec(), configs[1]);
+
+    video_stream_encoder_->Stop();
+  }
+
+  void ConfigureEncoder(const VideoStream& stream) {
+    VideoEncoderConfig config;
+    test::FillEncoderConfiguration(kVideoCodecVP8, /*num_streams=*/1, &config);
+    config.max_bitrate_bps = stream.max_bitrate_bps;
+    config.simulcast_layers[0] = stream;
+    config.video_stream_factory =
+        rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+            /*codec_name=*/"VP8", /*max_qp=*/0, /*is_screenshare=*/false,
+            /*conference_mode=*/false);
+    video_stream_encoder_->ConfigureEncoder(std::move(config),
+                                            kMaxPayloadLength);
+  }
+
+  void OnBitrateUpdated(DataRate bitrate) {
+    video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+        bitrate, bitrate, bitrate, 0, 0, 0);
+  }
+
+  void InsertFrameAndWaitForEncoded() {
+    timestamp_ms_ += kFrameIntervalMs;
+    video_source_.IncomingCapturedFrame(
+        CreateFrame(timestamp_ms_, kWidth, kHeight));
+    sink_.WaitForEncodedFrame(timestamp_ms_);
+  }
+
+  void ExpectEqual(const VideoCodec& actual,
+                   const VideoStream& expected) const {
+    EXPECT_EQ(actual.numberOfSimulcastStreams, 1);
+    EXPECT_EQ(actual.simulcastStream[0].maxFramerate, expected.max_framerate);
+    EXPECT_EQ(actual.simulcastStream[0].minBitrate * 1000,
+              static_cast<unsigned int>(expected.min_bitrate_bps));
+    EXPECT_EQ(actual.simulcastStream[0].maxBitrate * 1000,
+              static_cast<unsigned int>(expected.max_bitrate_bps));
+    EXPECT_EQ(actual.simulcastStream[0].width,
+              kWidth / expected.scale_resolution_down_by);
+    EXPECT_EQ(actual.simulcastStream[0].height,
+              kHeight / expected.scale_resolution_down_by);
+    EXPECT_EQ(actual.simulcastStream[0].numberOfTemporalLayers,
+              expected.num_temporal_layers);
+    EXPECT_EQ(actual.ScalabilityMode(), expected.scalability_mode);
+  }
+
+  VideoStream DefaultConfig() const {
+    VideoStream stream;
+    stream.max_framerate = 25;
+    stream.min_bitrate_bps = 35000;
+    stream.max_bitrate_bps = 900000;
+    stream.scale_resolution_down_by = 1.0;
+    stream.num_temporal_layers = 1;
+    stream.bitrate_priority = 1.0;
+    stream.scalability_mode = "";
+    return stream;
+  }
+
+  const int kWidth = 640;
+  const int kHeight = 360;
+  int64_t timestamp_ms_ = 0;
+};
+
+TEST_F(ReconfigureEncoderTest, NotReconfiguredIfMaxFramerateChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.max_framerate++;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/1);
+}
+
+TEST_F(ReconfigureEncoderTest, NotReconfiguredIfMinBitrateChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.min_bitrate_bps += 10000;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/1);
+}
+
+TEST_F(ReconfigureEncoderTest, NotReconfiguredIfMaxBitrateChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.max_bitrate_bps += 100000;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/1);
+}
+
+TEST_F(ReconfigureEncoderTest, NotReconfiguredIfBitratePriorityChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.bitrate_priority = config1.bitrate_priority.value() * 2.0;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/1);
+}
+
+TEST_F(ReconfigureEncoderTest, ReconfiguredIfResolutionChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.scale_resolution_down_by *= 2;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/2);
+}
+
+TEST_F(ReconfigureEncoderTest, ReconfiguredIfNumTemporalLayerChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.num_temporal_layers = config1.num_temporal_layers.value() + 1;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/2);
+}
+
+TEST_F(ReconfigureEncoderTest, ReconfiguredIfScalabilityModeChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
+  config2.scalability_mode = "L1T2";
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/2);
+}
 
 }  // namespace webrtc
