@@ -17,7 +17,7 @@ env_logger = { version = "0.5", optional = true }
 gleam = "0.13"
 glutin = "0.28"
 clap = { version = "2", features = ["yaml"] }
-glsl = "4.0"
+glsl = "6.0"
 log = "0.4"
 yaml-rust = "0.4"
 serde_json = "1.0"

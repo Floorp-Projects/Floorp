@@ -8,4 +8,4 @@ license = "Apache-2.0/MIT"
 path = "lib.rs"
 
 [dependencies]
-cexpr = "0.4"
+cexpr = "0.5"

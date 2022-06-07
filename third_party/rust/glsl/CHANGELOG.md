@@ -1,3 +1,118 @@
+# Changelog
+
+<!-- vim-markdown-toc GFM -->
+
+* [6.0.1](#601)
+* [6.0](#60)
+* [5.0.2](#502)
+* [5.0.1](#501)
+* [5.0.0](#500)
+  * [Migration guide](#migration-guide)
+* [4.1.1](#411)
+* [4.1](#41)
+* [4.0.3](#403)
+* [4.0.2](#402)
+* [4.0.1](#401)
+* [4.0](#40)
+  * [Major changes](#major-changes)
+* [3.0](#30)
+  * [Major changes](#major-changes-1)
+  * [Patch changes](#patch-changes)
+* [2.0.1](#201)
+* [2.0](#20)
+  * [Major changes](#major-changes-2)
+  * [Patch changes](#patch-changes-1)
+* [1.2](#12)
+  * [Deprecations](#deprecations)
+  * [Minor changes](#minor-changes)
+* [1.1.1](#111)
+* [1.1](#11)
+* [1.0.2](#102)
+* [1.0.1](#101)
+* [1.0](#10)
+* [0.13.5](#0135)
+* [0.13.4](#0134)
+* [0.13.3](#0133)
+* [0.13.2](#0132)
+* [0.13.1](#0131)
+* [0.13](#013)
+* [0.12](#012)
+* [0.11](#011)
+* [0.10.1](#0101)
+* [0.10](#010)
+* [0.9.2](#092)
+* [0.9.1](#091)
+* [0.9](#09)
+* [0.8.1](#081)
+* [0.8](#08)
+* [0.7.2](#072)
+* [0.7.1](#071)
+* [0.7](#07)
+* [0.6.5](#065)
+* [0.6.4](#064)
+* [0.6.3](#063)
+* [0.6.2](#062)
+* [0.6.1](#061)
+* [0.6](#06)
+* [0.5](#05)
+* [0.4.2](#042)
+* [0.4.1](#041)
+* [0.4](#04)
+* [0.3.1](#031)
+* [0.3](#03)
+* [0.2.2](#022)
+* [0.2.1](#021)
+* [0.2](#02)
+* [0.1](#01)
+
+<!-- vim-markdown-toc -->
+
+# 6.0.1
+
+> Jul 11, 2021
+
+- Better scheme for parenthesis generation in the GLSL transpiler.
+- Fix matrices types in the GLSL transpiler.
+- Fix end-of-line parser, which now accepts CR LF too.
+
+# 6.0
+
+> Dec 7th, 2020
+
+- Change the meaning of `Visitor` and `Host`. They now take the AST nodes by simple references (`&`) and not via
+  mutable references (`&mut`) anymore. This will allow people to use visitors in much more contexts.
+- Add `VisitorMut` and `HostMut` to visit AST nodes mutably. These correspond to the previous (version `<6.0`) `Visitor`
+  and `Host` traits. If you were using them and require mutability, feel free to simply switch to `VisitorMut` and
+  `HostMut`.
+
+# 5.0.2
+
+> Nov 1st, 2020
+
+- Bump `nom-6.0`.
+
+# 5.0.1
+
+> Aug 12th, 2020
+
+- Fix float / double literal parsing priority. Floats are parsed first now in case of a polymorphic
+  constant.
+
+# 5.0.0
+
+> Jul 27th, 2020
+
+- Fix array specifiers by splitting the `ArraySpecifier` type into two types:
+  - `ArraySpecifier`, which holds a non-empty list of `ArraySpecifierDimension`.
+  - `ArraySpecifierDimension`, which is the “old” `ArraySpecifier`.
+  This change allows for multidimensional array specifiers.
+
+## Migration guide
+
+- If you were using array specifiers, you need to wrap them inside an `ArraySpecifierDimension`
+  and wrap it in a `ArraySpecifier { dimensions: NonEmpty(vec![here]) }` expression, where `here`
+  is your specifier.
+
 # 4.1.1
 
 > Wed Jul 1st 2020

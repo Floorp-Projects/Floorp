@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "nom"
-version = "5.1.2"
+version = "6.1.2"
 authors = ["contact@geoffroycouprie.com"]
-include = ["CHANGELOG.md", "LICENSE", "README.md", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "build.rs"]
+include = ["CHANGELOG.md", "LICENSE", "README.md", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "doc/nom_recipes.md", "build.rs"]
 autoexamples = false
 description = "A byte-oriented, zero-copy, parser combinators library"
 documentation = "https://docs.rs/nom"
@@ -26,7 +26,7 @@ license = "MIT"
 repository = "https://github.com/Geal/nom"
 [package.metadata.docs.rs]
 all-features = true
-features = ["alloc", "std", "regexp", "regexp_macros", "lexical"]
+features = ["alloc", "std", "regexp", "lexical", "docsrs"]
 [profile.bench]
 lto = true
 codegen-units = 1
@@ -82,7 +82,7 @@ required-features = ["alloc"]
 
 [[test]]
 name = "issues"
-required-features = ["alloc", "regexp_macros"]
+required-features = ["alloc"]
 
 [[test]]
 name = "json"
@@ -107,9 +107,18 @@ name = "reborrow_fold"
 [[test]]
 name = "test1"
 
+[[test]]
+name = "fnmut"
+required-features = ["alloc"]
+
 [[bench]]
 name = "arithmetic"
 path = "benches/arithmetic.rs"
+harness = false
+
+[[bench]]
+name = "number"
+path = "benches/number.rs"
 harness = false
 
 [[bench]]
@@ -136,6 +145,16 @@ harness = false
 name = "json"
 path = "benches/json.rs"
 harness = false
+[dependencies.bitvec]
+version = "0.19.3"
+optional = true
+default-features = false
+
+[dependencies.funty]
+version = ">1.0, <=1.1"
+optional = true
+default-features = false
+
 [dependencies.lazy_static]
 version = "^1.0"
 optional = true
@@ -152,23 +171,23 @@ default-features = false
 version = "^1.0"
 optional = true
 [dev-dependencies.criterion]
-version = "0.2"
+version = "0.3"
 
 [dev-dependencies.doc-comment]
 version = "0.3"
 
 [dev-dependencies.jemallocator]
-version = "^0.1"
+version = "^0.3"
 [build-dependencies.version_check]
 version = "0.9"
 
 [features]
-alloc = []
-default = ["std", "lexical"]
+alloc = ["bitvec/alloc", "funty"]
+default = ["std", "bitvec", "lexical"]
+docsrs = []
 lexical = ["lexical-core"]
 regexp = ["regex"]
-regexp_macros = ["regexp", "lazy_static"]
-std = ["alloc", "memchr/use_std"]
+std = ["alloc", "bitvec/std", "memchr/use_std"]
 [badges.coveralls]
 branch = "master"
 repository = "Geal/nom"

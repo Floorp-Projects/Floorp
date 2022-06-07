@@ -1219,14 +1219,16 @@ pub fn show_struct_field(state: &OutputState, field: &hir::StructField) {
 }
 
 pub fn show_array_spec(state: &OutputState, a: &syntax::ArraySpecifier) {
-    match *a {
-        syntax::ArraySpecifier::Unsized => {
-            state.write("[]");
-        }
-        syntax::ArraySpecifier::ExplicitlySized(ref e) => {
-            state.write("[");
-            show_expr(state, &e);
-            state.write("]");
+    for dimension in &a.dimensions {
+        match dimension {
+            syntax::ArraySpecifierDimension::Unsized => {
+                state.write("[]");
+            }
+            syntax::ArraySpecifierDimension::ExplicitlySized(ref e) => {
+                state.write("[");
+                show_expr(state, &e);
+                state.write("]");
+            }
         }
     }
 }
@@ -1494,7 +1496,10 @@ fn expr_run_class(state: &OutputState, expr: &hir::Expr) -> hir::RunClass {
             expr_run_class(state, v).merge(expr_run_class(state, e))
         }
         hir::ExprKind::Bracket(ref e, ref indx) => {
-            expr_run_class(state, e).merge(expr_run_class(state, indx))
+            indx.iter().fold(
+                expr_run_class(state, e),
+                |run_class, indx| run_class.merge(expr_run_class(state, indx)),
+            )
         }
         hir::ExprKind::FunCall(ref fun, ref args) => {
             let arg_mask: u32 = args.iter().enumerate().fold(0, |mask, (idx, e)| {
@@ -1804,7 +1809,9 @@ pub fn show_hir_expr_inner(state: &OutputState, expr: &hir::Expr, top_level: boo
         hir::ExprKind::Bracket(ref e, ref indx) => {
             show_hir_expr(state, &e);
             state.write("[");
-            show_hir_expr(state, indx);
+            for dimension in indx {
+                show_hir_expr(state, dimension);
+            }
             state.write("]");
         }
         hir::ExprKind::FunCall(ref fun, ref args) => {

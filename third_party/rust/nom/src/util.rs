@@ -4,19 +4,20 @@ use crate::internal::IResult;
 use std::fmt::Debug;
 
 #[cfg(feature = "std")]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "std")))]
 /// Helper trait to show a byte slice as a hex dump
 pub trait HexDisplay {
   /// Converts the value of `self` to a hex dump, returning the owned
-  /// string.
+  /// `String`.
   fn to_hex(&self, chunk_size: usize) -> String;
 
   /// Converts the value of `self` to a hex dump beginning at `from` address, returning the owned
-  /// string.
+  /// `String`.
   fn to_hex_from(&self, chunk_size: usize, from: usize) -> String;
 }
 
 #[cfg(feature = "std")]
-static CHARS: &'static [u8] = b"0123456789abcdef";
+static CHARS: &[u8] = b"0123456789abcdef";
 
 #[cfg(feature = "std")]
 impl HexDisplay for [u8] {
@@ -97,8 +98,7 @@ macro_rules! nom_stringify (
   ($($args:tt)*) => (stringify!($($args)*));
 );
 
-
-/// Prints a message if the parser fails
+/// Prints a message if the parser fails.
 ///
 /// The message prints the `Error` or `Incomplete`
 /// and the parser's calling code
@@ -106,7 +106,7 @@ macro_rules! nom_stringify (
 /// ```
 /// # #[macro_use] extern crate nom;
 /// # fn main() {
-///    named!(f, dbg!( tag!( "abcd" ) ) );
+///    named!(f, dbg_basic!( tag!( "abcd" ) ) );
 ///
 ///    let a = &b"efgh"[..];
 ///
@@ -116,7 +116,7 @@ macro_rules! nom_stringify (
 /// # }
 /// ```
 #[macro_export(local_inner_macros)]
-macro_rules! dbg (
+macro_rules! dbg_basic (
   ($i: expr, $submac:ident!( $($args:tt)* )) => (
     {
       use $crate::lib::std::result::Result::*;
@@ -132,11 +132,11 @@ macro_rules! dbg (
   );
 
   ($i:expr, $f:ident) => (
-      dbg!($i, call!($f));
+      dbg_basic!($i, call!($f));
   );
 );
 
-/// Prints a message and the input if the parser fails
+/// Prints a message and the input if the parser fails.
 ///
 /// The message prints the `Error` or `Incomplete`
 /// and the parser's calling code.
@@ -158,20 +158,24 @@ macro_rules! dbg (
 /// f(a);
 /// ```
 #[cfg(feature = "std")]
-pub fn dbg_dmp<'a, F, O, E: Debug>(f: F, context: &'static str) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], O, E>
-  where F: Fn(&'a [u8]) -> IResult<&'a [u8], O, E> {
-  move |i: &'a [u8]| {
-      match f(i) {
-        Err(e) => {
-          println!("{}: Error({:?}) at:\n{}", context, e, i.to_hex(8));
-          Err(e)
-        },
-        a => a,
-      }
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "std")))]
+pub fn dbg_dmp<'a, F, O, E: Debug>(
+  f: F,
+  context: &'static str,
+) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], O, E>
+where
+  F: Fn(&'a [u8]) -> IResult<&'a [u8], O, E>,
+{
+  move |i: &'a [u8]| match f(i) {
+    Err(e) => {
+      println!("{}: Error({:?}) at:\n{}", context, e, i.to_hex(8));
+      Err(e)
+    }
+    a => a,
   }
 }
 
-/// Prints a message and the input if the parser fails
+/// Prints a message and the input if the parser fails.
 ///
 /// The message prints the `Error` or `Incomplete`
 /// and the parser's calling code.
@@ -192,6 +196,7 @@ pub fn dbg_dmp<'a, F, O, E: Debug>(f: F, context: &'static str) -> impl Fn(&'a [
 /// # }
 #[macro_export(local_inner_macros)]
 #[cfg(feature = "std")]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "std")))]
 macro_rules! dbg_dmp (
   ($i: expr, $submac:ident!( $($args:tt)* )) => (
     {
@@ -211,4 +216,3 @@ macro_rules! dbg_dmp (
       dbg_dmp!($i, call!($f));
   );
 );
-

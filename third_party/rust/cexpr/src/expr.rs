@@ -31,7 +31,7 @@ use crate::token::{Kind as TokenKind, Token};
 use crate::ToCexprResult;
 use nom::branch::alt;
 use nom::combinator::{complete, map, map_opt};
-use nom::multi::{fold_many0, many0, separated_list};
+use nom::multi::{fold_many0, many0, separated_list0};
 use nom::sequence::{delimited, pair, preceded};
 use nom::*;
 
@@ -100,7 +100,7 @@ macro_rules! exact_token (
 	($k:ident, $c:expr) => ({
         move |input: &[Token]| {
 		if input.is_empty() {
-			let res: CResult<'_, &[u8]> = Err(crate::nom::Err::Incomplete(Needed::Size($c.len())));
+			let res: CResult<'_, &[u8]> = Err(crate::nom::Err::Incomplete(Needed::new($c.len())));
 			res
 		} else {
 			if input[0].kind==TokenKind::$k && &input[0].raw[..]==$c {
@@ -113,29 +113,16 @@ macro_rules! exact_token (
 	});
 );
 
-macro_rules! typed_token (
-	($k:ident) => ({
-        move |input: &[Token]| {
-		if input.is_empty() {
-			let res: CResult<'_, &[u8]> = Err(nom::Err::Incomplete(Needed::Size(1)));
-			res
-		} else {
-			if input[0].kind==TokenKind::$k {
-				Ok((&input[1..], &input[0].raw[..]))
-			} else {
-				Err(crate::nom::Err::Error((input, crate::ErrorKind::TypedToken(TokenKind::$k)).into()))
-			}
-		}
-        }
-	});
-);
-
-#[allow(dead_code)]
-fn any_token(input: &[Token]) -> CResult<'_, &Token> {
+fn identifier_token(input: &[Token]) -> CResult<'_, &[u8]> {
     if input.is_empty() {
-        Err(crate::nom::Err::Incomplete(Needed::Size(1)))
+        let res: CResult<'_, &[u8]> = Err(nom::Err::Incomplete(Needed::new(1)));
+        res
     } else {
-        Ok((&input[1..], &input[0]))
+        if input[0].kind == TokenKind::Identifier {
+            Ok((&input[1..], &input[0].raw[..]))
+        } else {
+            Err(crate::nom::Err::Error((input, crate::ErrorKind::TypedToken(TokenKind::Identifier)).into()))
+        }
     }
 }
 
@@ -151,7 +138,7 @@ fn one_of_punctuation(c: &'static [&'static str]) -> impl Fn(&[Token]) -> CResul
                 .map(|opt| opt.len())
                 .min()
                 .expect("at least one option");
-            Err(crate::nom::Err::Incomplete(Needed::Size(min)))
+            Err(crate::nom::Err::Incomplete(Needed::new(min)))
         } else if input[0].kind == TokenKind::Punctuation
             && c.iter().any(|opt| opt.as_bytes() == &input[0].raw[..])
         {
@@ -295,9 +282,9 @@ fn unary_op(input: (&[u8], EvalResult)) -> Option<EvalResult> {
 
 fn numeric<I: Clone, E: nom::error::ParseError<I>, F>(
     f: F,
-) -> impl Fn(I) -> nom::IResult<I, EvalResult, E>
+) -> impl FnMut(I) -> nom::IResult<I, EvalResult, E>
 where
-    F: Fn(I) -> nom::IResult<I, EvalResult, E>,
+    F: FnMut(I) -> nom::IResult<I, EvalResult, E>,
 {
     nom::combinator::map_opt(f, EvalResult::as_numeric)
 }
@@ -419,7 +406,7 @@ impl<'a> PRef<'a> {
 impl<'a> PRef<'a> {
     fn identifier(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
         match input.split_first() {
-            None => Err(Err::Incomplete(Needed::Size(1))),
+            None => Err(Err::Incomplete(Needed::new(1))),
             Some((
                 &Token {
                     kind: TokenKind::Identifier,
@@ -443,7 +430,7 @@ impl<'a> PRef<'a> {
 
     fn literal(self, input: &'_ [Token]) -> CResult<'_, EvalResult> {
         match input.split_first() {
-            None => Err(Err::Incomplete(Needed::Size(1))),
+            None => Err(Err::Incomplete(Needed::new(1))),
             Some((
                 &Token {
                     kind: TokenKind::Literal,
@@ -496,7 +483,7 @@ impl<'a> PRef<'a> {
     }
 
     fn macro_definition(self, input: &'_ [Token]) -> CResult<'_, (&'_ [u8], EvalResult)> {
-        pair(typed_token!(Identifier), |i| self.expr(i))(input)
+        pair(identifier_token, |i| self.expr(i))(input)
     }
 }
 
@@ -519,7 +506,7 @@ impl<'ident> IdentifierParser<'ident> {
         IdentifierParser { identifiers }
     }
 
-    /// Parse and evalute an expression of a list of tokens.
+    /// Parse and evaluate an expression of a list of tokens.
     ///
     /// Returns an error if the input is not a valid expression or if the token
     /// stream contains comments, keywords or unknown identifiers.
@@ -527,7 +514,7 @@ impl<'ident> IdentifierParser<'ident> {
         self.as_ref().expr(input)
     }
 
-    /// Parse and evaluate a macro definition from of a list of tokens.
+    /// Parse and evaluate a macro definition from a list of tokens.
     ///
     /// Returns the identifier for the macro and its replacement evaluated as an
     /// expression. The input should not include `#define`.
@@ -552,7 +539,7 @@ impl<'ident> IdentifierParser<'ident> {
     }
 }
 
-/// Parse and evalute an expression of a list of tokens.
+/// Parse and evaluate an expression of a list of tokens.
 ///
 /// Returns an error if the input is not a valid expression or if the token
 /// stream contains comments, keywords or identifiers.
@@ -560,7 +547,7 @@ pub fn expr(input: &[Token]) -> CResult<'_, EvalResult> {
     IdentifierParser::new(&HashMap::new()).expr(input)
 }
 
-/// Parse and evaluate a macro definition from of a list of tokens.
+/// Parse and evaluate a macro definition from a list of tokens.
 ///
 /// Returns the identifier for the macro and its replacement evaluated as an
 /// expression. The input should not include `#define`.
@@ -613,10 +600,10 @@ pub fn macro_definition(input: &[Token]) -> CResult<'_, (&'_ [u8], EvalResult)> 
 /// ```
 pub fn fn_macro_declaration(input: &[Token]) -> CResult<'_, (&[u8], Vec<&[u8]>)> {
     pair(
-        typed_token!(Identifier),
+        identifier_token,
         delimited(
             p("("),
-            separated_list(p(","), typed_token!(Identifier)),
+            separated_list0(p(","), identifier_token),
             p(")"),
         ),
     )(input)

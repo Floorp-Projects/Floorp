@@ -236,36 +236,91 @@ fn parse_unary_op_dec() {
 }
 
 #[test]
-fn parse_array_specifier_unsized() {
+fn parse_array_specifier_dimension_unsized() {
   assert_eq!(
-    array_specifier("[]"),
-    Ok(("", syntax::ArraySpecifier::Unsized))
+    array_specifier_dimension("[]"),
+    Ok(("", syntax::ArraySpecifierDimension::Unsized))
   );
   assert_eq!(
-    array_specifier("[ ]"),
-    Ok(("", syntax::ArraySpecifier::Unsized))
+    array_specifier_dimension("[ ]"),
+    Ok(("", syntax::ArraySpecifierDimension::Unsized))
   );
   assert_eq!(
-    array_specifier("[\n]"),
-    Ok(("", syntax::ArraySpecifier::Unsized))
+    array_specifier_dimension("[\n]"),
+    Ok(("", syntax::ArraySpecifierDimension::Unsized))
   );
 }
 
 #[test]
-fn parse_array_specifier_sized() {
+fn parse_array_specifier_dimension_sized() {
   let ix = syntax::Expr::IntConst(0);
 
   assert_eq!(
-    array_specifier("[0]"),
+    array_specifier_dimension("[0]"),
     Ok((
       "",
-      syntax::ArraySpecifier::ExplicitlySized(Box::new(ix.clone()))
+      syntax::ArraySpecifierDimension::ExplicitlySized(Box::new(ix.clone()))
     ))
   );
   assert_eq!(
-    array_specifier("[\n0   \t]"),
-    Ok(("", syntax::ArraySpecifier::ExplicitlySized(Box::new(ix))))
+    array_specifier_dimension("[\n0   \t]"),
+    Ok((
+      "",
+      syntax::ArraySpecifierDimension::ExplicitlySized(Box::new(ix))
+    ))
   );
+}
+
+#[test]
+fn parse_array_specifier_unsized() {
+  assert_eq!(
+    array_specifier("[]"),
+    Ok((
+      "",
+      syntax::ArraySpecifier {
+        dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::Unsized])
+      }
+    ))
+  )
+}
+
+#[test]
+fn parse_array_specifier_sized() {
+  let ix = syntax::Expr::IntConst(123);
+
+  assert_eq!(
+    array_specifier("[123]"),
+    Ok((
+      "",
+      syntax::ArraySpecifier {
+        dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::ExplicitlySized(
+          Box::new(ix)
+        )])
+      }
+    ))
+  )
+}
+
+#[test]
+fn parse_array_specifier_sized_multiple() {
+  let a = syntax::Expr::IntConst(2);
+  let b = syntax::Expr::IntConst(100);
+  let d = syntax::Expr::IntConst(5);
+
+  assert_eq!(
+    array_specifier("[2][100][][5]"),
+    Ok((
+      "",
+      syntax::ArraySpecifier {
+        dimensions: syntax::NonEmpty(vec![
+          syntax::ArraySpecifierDimension::ExplicitlySized(Box::new(a)),
+          syntax::ArraySpecifierDimension::ExplicitlySized(Box::new(b)),
+          syntax::ArraySpecifierDimension::Unsized,
+          syntax::ArraySpecifierDimension::ExplicitlySized(Box::new(d)),
+        ])
+      }
+    ))
+  )
 }
 
 #[test]
@@ -1139,9 +1194,11 @@ fn parse_type_specifier() {
       ";",
       syntax::TypeSpecifier {
         ty: syntax::TypeSpecifierNonArray::IImage2DMSArray,
-        array_specifier: Some(syntax::ArraySpecifier::ExplicitlySized(Box::new(
-          syntax::Expr::IntConst(35)
-        )))
+        array_specifier: Some(syntax::ArraySpecifier {
+          dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::ExplicitlySized(
+            Box::new(syntax::Expr::IntConst(35))
+          )])
+        })
       }
     ))
   );
@@ -1230,14 +1287,8 @@ fn parse_primary_expr_floatconst() {
 
 #[test]
 fn parse_primary_expr_doubleconst() {
-  assert_eq!(
-    primary_expr("0. "),
-    Ok((" ", syntax::Expr::DoubleConst(0.)))
-  );
-  assert_eq!(
-    primary_expr("1. "),
-    Ok((" ", syntax::Expr::DoubleConst(1.)))
-  );
+  assert_eq!(primary_expr("0. "), Ok((" ", syntax::Expr::FloatConst(0.))));
+  assert_eq!(primary_expr("1. "), Ok((" ", syntax::Expr::FloatConst(1.))));
   assert_eq!(
     primary_expr("0.lf "),
     Ok((" ", syntax::Expr::DoubleConst(0.)))
@@ -1274,11 +1325,11 @@ fn parse_primary_expr_parens() {
   assert_eq!(primary_expr("(  0 )"), Ok(("", syntax::Expr::IntConst(0))));
   assert_eq!(
     primary_expr("(  .0 )"),
-    Ok(("", syntax::Expr::DoubleConst(0.)))
+    Ok(("", syntax::Expr::FloatConst(0.)))
   );
   assert_eq!(
     primary_expr("(  (.0) )"),
-    Ok(("", syntax::Expr::DoubleConst(0.)))
+    Ok(("", syntax::Expr::FloatConst(0.)))
   );
   assert_eq!(
     primary_expr("(true) "),
@@ -1331,11 +1382,15 @@ fn parse_postfix_function_call_multi_arg() {
 #[test]
 fn parse_postfix_expr_bracket() {
   let id = syntax::Expr::Variable("foo".into());
-  let array_spec = syntax::ArraySpecifier::ExplicitlySized(Box::new(syntax::Expr::IntConst(7354)));
+  let array_spec = syntax::ArraySpecifier {
+    dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::ExplicitlySized(
+      Box::new(syntax::Expr::IntConst(7354)),
+    )]),
+  };
   let expected = syntax::Expr::Bracket(Box::new(id), array_spec);
 
   assert_eq!(postfix_expr("foo[7354];"), Ok((";", expected.clone())));
-  assert_eq!(postfix_expr("foo[\n  7354    ] ;"), Ok((" ;", expected)));
+  assert_eq!(postfix_expr("foo[\n  7354    ] ;"), Ok((";", expected)));
 }
 
 #[test]
@@ -1423,8 +1478,9 @@ fn parse_unary_dec() {
 
 #[test]
 fn parse_expr_float() {
-  assert_eq!(expr("314.;"), Ok((";", syntax::Expr::DoubleConst(314.))));
+  assert_eq!(expr("314.;"), Ok((";", syntax::Expr::FloatConst(314.))));
   assert_eq!(expr("314.f;"), Ok((";", syntax::Expr::FloatConst(314.))));
+  assert_eq!(expr("314.LF;"), Ok((";", syntax::Expr::DoubleConst(314.))));
 }
 
 #[test]
@@ -1501,7 +1557,7 @@ fn parse_expr_add_sub_mult_div() {
 #[test]
 fn parse_complex_expr() {
   let input = "normalize((inverse(view) * vec4(ray.dir, 0.)).xyz);";
-  let zero = syntax::Expr::DoubleConst(0.);
+  let zero = syntax::Expr::FloatConst(0.);
   let ray = syntax::Expr::Variable("ray".into());
   let raydir = syntax::Expr::Dot(Box::new(ray), "dir".into());
   let vec4 = syntax::Expr::FunCall(
@@ -1544,7 +1600,9 @@ fn parse_function_identifier_cast() {
 fn parse_function_identifier_cast_array_unsized() {
   let expected = syntax::FunIdentifier::Expr(Box::new(syntax::Expr::Bracket(
     Box::new(syntax::Expr::Variable("vec3".into())),
-    syntax::ArraySpecifier::Unsized,
+    syntax::ArraySpecifier {
+      dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::Unsized]),
+    },
   )));
 
   assert_eq!(function_identifier("vec3[]("), Ok(("(", expected.clone())));
@@ -1555,7 +1613,11 @@ fn parse_function_identifier_cast_array_unsized() {
 fn parse_function_identifier_cast_array_sized() {
   let expected = syntax::FunIdentifier::Expr(Box::new(syntax::Expr::Bracket(
     Box::new(syntax::Expr::Variable("vec3".into())),
-    syntax::ArraySpecifier::ExplicitlySized(Box::new(syntax::Expr::IntConst(12))),
+    syntax::ArraySpecifier {
+      dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::ExplicitlySized(
+        Box::new(syntax::Expr::IntConst(12)),
+      )]),
+    },
   )));
 
   assert_eq!(
@@ -1865,7 +1927,9 @@ fn parse_declaration_buffer_block() {
     },
     identifiers: syntax::NonEmpty(vec![syntax::ArrayedIdentifier::new(
       "b",
-      Some(syntax::ArraySpecifier::Unsized),
+      Some(syntax::ArraySpecifier {
+        dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::Unsized]),
+      }),
     )]),
   };
   let f2 = syntax::StructFieldSpecifier {
@@ -2291,7 +2355,9 @@ fn parse_buffer_block_0() {
         },
         identifiers: syntax::NonEmpty(vec![syntax::ArrayedIdentifier::new(
           "tiles",
-          Some(syntax::ArraySpecifier::Unsized),
+          Some(syntax::ArraySpecifier {
+            dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::Unsized]),
+          }),
         )]),
       }],
       identifier: Some("main_tiles".into()),
@@ -2706,7 +2772,11 @@ fn parse_dot_field_expr_array() {
   let expected = syntax::Expr::Dot(
     Box::new(syntax::Expr::Bracket(
       Box::new(syntax::Expr::Variable("a".into())),
-      syntax::ArraySpecifier::ExplicitlySized(Box::new(syntax::Expr::IntConst(0))),
+      syntax::ArraySpecifier {
+        dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::ExplicitlySized(
+          Box::new(syntax::Expr::IntConst(0)),
+        )]),
+      },
     )),
     "xyz".into(),
   );
@@ -2725,7 +2795,7 @@ fn parse_dot_field_expr_statement() {
     ),
     syntax::Expr::FunCall(
       syntax::FunIdentifier::Identifier("vec3".into()),
-      vec![syntax::Expr::DoubleConst(0.)],
+      vec![syntax::Expr::FloatConst(0.)],
     ),
     syntax::Expr::Variable("v_barycenter".into()),
   ];
@@ -2757,7 +2827,12 @@ fn parse_dot_field_expr_statement() {
 
 #[test]
 fn parse_arrayed_identifier() {
-  let expected = syntax::ArrayedIdentifier::new("foo", syntax::ArraySpecifier::Unsized);
+  let expected = syntax::ArrayedIdentifier::new(
+    "foo",
+    syntax::ArraySpecifier {
+      dimensions: syntax::NonEmpty(vec![syntax::ArraySpecifierDimension::Unsized]),
+    },
+  );
 
   assert_eq!(arrayed_identifier("foo[]"), Ok(("", expected.clone())));
   assert_eq!(arrayed_identifier("foo \t\n  [\n\t ]"), Ok(("", expected)));
