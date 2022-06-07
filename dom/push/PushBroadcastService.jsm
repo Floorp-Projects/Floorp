@@ -8,8 +8,9 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
@@ -20,7 +21,7 @@ const EXPORTED_SYMBOLS = ["pushBroadcastService", "BroadcastService"];
 // We are supposed to ignore any updates with this version.
 const DUMMY_VERSION_STRING = "____NOP____";
 
-XPCOMUtils.defineLazyGetter(this, "console", () => {
+XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
@@ -28,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
   });
 });
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PushService",
   "resource://gre/modules/PushService.jsm"
 );
@@ -51,7 +52,7 @@ var BroadcastService = class {
     };
 
     this.pushService = pushService;
-    this.jsonFile = new JSONFile({
+    this.jsonFile = new lazy.JSONFile({
       path,
       dataPostProcessor: this._initializeJSONFile,
     });
@@ -129,7 +130,7 @@ var BroadcastService = class {
    *   updates on this broadcastID
    */
   async addListener(broadcastId, version, sourceInfo) {
-    console.info(
+    lazy.console.info(
       "addListener: adding listener",
       broadcastId,
       version,
@@ -148,7 +149,7 @@ var BroadcastService = class {
     const oldVersion =
       !isNew && this.jsonFile.data.listeners[broadcastId].version;
     if (!isNew && oldVersion != version) {
-      console.warn(
+      lazy.console.warn(
         "Versions differ while adding listener for",
         broadcastId,
         ". Got",
@@ -188,17 +189,21 @@ var BroadcastService = class {
    * @param {String} context.phase One of `BroadcastService.PHASES`
    */
   async receivedBroadcastMessage(broadcasts, context) {
-    console.info("receivedBroadcastMessage:", broadcasts, context);
+    lazy.console.info("receivedBroadcastMessage:", broadcasts, context);
     await this.initializePromise;
     for (const broadcastId in broadcasts) {
       const version = broadcasts[broadcastId];
       if (version === DUMMY_VERSION_STRING) {
-        console.info("Ignoring", version, "because it's the dummy version");
+        lazy.console.info(
+          "Ignoring",
+          version,
+          "because it's the dummy version"
+        );
         continue;
       }
       // We don't know this broadcastID. This is probably a bug?
       if (!this.jsonFile.data.listeners.hasOwnProperty(broadcastId)) {
-        console.warn(
+        lazy.console.warn(
           "receivedBroadcastMessage: unknown broadcastId",
           broadcastId
         );
@@ -209,7 +214,7 @@ var BroadcastService = class {
       try {
         this._validateSourceInfo(sourceInfo);
       } catch (e) {
-        console.error(
+        lazy.console.error(
           "receivedBroadcastMessage: malformed sourceInfo",
           sourceInfo,
           e
@@ -223,7 +228,7 @@ var BroadcastService = class {
       try {
         module = ChromeUtils.import(moduleURI);
       } catch (e) {
-        console.error(
+        lazy.console.error(
           "receivedBroadcastMessage: couldn't invoke",
           broadcastId,
           "because import of module",
@@ -235,7 +240,7 @@ var BroadcastService = class {
       }
 
       if (!module[symbolName]) {
-        console.error(
+        lazy.console.error(
           "receivedBroadcastMessage: couldn't invoke",
           broadcastId,
           "because module",
@@ -249,7 +254,7 @@ var BroadcastService = class {
       const handler = module[symbolName];
 
       if (!handler.receivedBroadcastMessage) {
-        console.error(
+        lazy.console.error(
           "receivedBroadcastMessage: couldn't invoke",
           broadcastId,
           "because handler returned by",
@@ -262,7 +267,7 @@ var BroadcastService = class {
       try {
         await handler.receivedBroadcastMessage(version, broadcastId, context);
       } catch (e) {
-        console.error(
+        lazy.console.error(
           "receivedBroadcastMessage: handler for",
           broadcastId,
           "threw error:",
@@ -296,7 +301,7 @@ function initializeBroadcastService() {
     // Real path for use in a real profile.
     path = OS.Path.join(OS.Constants.Path.profileDir, path);
   }
-  return new BroadcastService(PushService, path);
+  return new BroadcastService(lazy.PushService, path);
 }
 
 var pushBroadcastService = initializeBroadcastService();

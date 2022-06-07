@@ -17,13 +17,15 @@ const { PushCrypto } = ChromeUtils.import(
   "resource://gre/modules/PushCrypto.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "pushBroadcastService",
   "resource://gre/modules/PushBroadcastService.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ObjectUtils",
   "resource://gre/modules/ObjectUtils.jsm"
 );
@@ -60,7 +62,7 @@ const prefs = Services.prefs.getBranch("dom.push.");
 
 const EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
-XPCOMUtils.defineLazyGetter(this, "console", () => {
+XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     maxLogLevelPref: "dom.push.loglevel",
@@ -162,7 +164,7 @@ var PushServiceWebSocket = {
    * dropped on reconnect.
    */
   _onUAIDChanged() {
-    console.debug("onUAIDChanged()");
+    lazy.console.debug("onUAIDChanged()");
 
     this._shutdownWS();
     this._startBackoffTimer();
@@ -170,7 +172,7 @@ var PushServiceWebSocket = {
 
   /** Handles a ping, backoff, or request timeout timer event. */
   _onTimerFired(timer) {
-    console.debug("onTimerFired()");
+    lazy.console.debug("onTimerFired()");
 
     if (timer == this._pingTimer) {
       this._sendPing();
@@ -178,7 +180,7 @@ var PushServiceWebSocket = {
     }
 
     if (timer == this._backoffTimer) {
-      console.debug("onTimerFired: Reconnecting after backoff");
+      lazy.console.debug("onTimerFired: Reconnecting after backoff");
       this._beginWSSetup();
       return;
     }
@@ -194,21 +196,21 @@ var PushServiceWebSocket = {
    * does not respond within the timeout, the client will reconnect.
    */
   _sendPing() {
-    console.debug("sendPing()");
+    lazy.console.debug("sendPing()");
 
     this._startRequestTimeoutTimer();
     try {
       this._wsSendMessage({});
       this._lastPingTime = Date.now();
     } catch (e) {
-      console.debug("sendPing: Error sending ping", e);
+      lazy.console.debug("sendPing: Error sending ping", e);
       this._reconnect();
     }
   },
 
   /** Times out any pending requests. */
   _timeOutRequests() {
-    console.debug("timeOutRequests()");
+    lazy.console.debug("timeOutRequests()");
 
     if (!this._hasPendingRequests()) {
       // Cancel the repeating timer and exit early if we aren't waiting for
@@ -227,7 +229,7 @@ var PushServiceWebSocket = {
       this._lastPingTime > 0 &&
       now - this._lastPingTime > this._requestTimeout
     ) {
-      console.debug("timeOutRequests: Did not receive pong in time");
+      lazy.console.debug("timeOutRequests: Did not receive pong in time");
       requestTimedOut = true;
     } else {
       for (let [key, request] of this._pendingRequests) {
@@ -256,14 +258,14 @@ var PushServiceWebSocket = {
 
   set _UAID(newID) {
     if (typeof newID !== "string") {
-      console.warn(
+      lazy.console.warn(
         "Got invalid, non-string UAID",
         newID,
         "Not updating userAgentID"
       );
       return;
     }
-    console.debug("New _UAID", newID);
+    lazy.console.debug("New _UAID", newID);
     prefs.setStringPref("userAgentID", newID);
   },
 
@@ -311,19 +313,19 @@ var PushServiceWebSocket = {
    */
   _wsSendMessage(msg) {
     if (!this._ws) {
-      console.warn(
+      lazy.console.warn(
         "wsSendMessage: No WebSocket initialized.",
         "Cannot send a message"
       );
       return;
     }
     msg = JSON.stringify(msg);
-    console.debug("wsSendMessage: Sending message", msg);
+    lazy.console.debug("wsSendMessage: Sending message", msg);
     this._ws.sendMsg(msg);
   },
 
   init(options, mainPushService, serverURI) {
-    console.debug("init()");
+    lazy.console.debug("init()");
 
     this._mainPushService = mainPushService;
     this._serverURI = serverURI;
@@ -343,13 +345,13 @@ var PushServiceWebSocket = {
   },
 
   _reconnect() {
-    console.debug("reconnect()");
+    lazy.console.debug("reconnect()");
     this._shutdownWS(false);
     this._startBackoffTimer();
   },
 
   _shutdownWS(shouldCancelPending = true) {
-    console.debug("shutdownWS()");
+    lazy.console.debug("shutdownWS()");
 
     if (this._currentState == STATE_READY) {
       prefs.removeObserver("userAgentID", this);
@@ -413,7 +415,7 @@ var PushServiceWebSocket = {
    * cancelled), so the connection won't be reset.
    */
   _startBackoffTimer() {
-    console.debug("startBackoffTimer()");
+    lazy.console.debug("startBackoffTimer()");
 
     // Calculate new timeout, but cap it to pingInterval.
     let retryTimeout =
@@ -422,7 +424,7 @@ var PushServiceWebSocket = {
 
     this._retryFailCount++;
 
-    console.debug(
+    lazy.console.debug(
       "startBackoffTimer: Retry in",
       retryTimeout,
       "Try number",
@@ -476,14 +478,14 @@ var PushServiceWebSocket = {
 
   _makeWebSocket(uri) {
     if (!prefs.getBoolPref("connection.enabled")) {
-      console.warn(
+      lazy.console.warn(
         "makeWebSocket: connection.enabled is not set to true.",
         "Aborting."
       );
       return null;
     }
     if (Services.io.offline) {
-      console.warn("makeWebSocket: Network is offline.");
+      lazy.console.warn("makeWebSocket: Network is offline.");
       return null;
     }
     let contractId =
@@ -506,9 +508,9 @@ var PushServiceWebSocket = {
   },
 
   _beginWSSetup() {
-    console.debug("beginWSSetup()");
+    lazy.console.debug("beginWSSetup()");
     if (this._currentState != STATE_SHUT_DOWN) {
-      console.error(
+      lazy.console.error(
         "_beginWSSetup: Not in shutdown state! Current state",
         this._currentState
       );
@@ -530,7 +532,7 @@ var PushServiceWebSocket = {
     }
     this._ws = socket.QueryInterface(Ci.nsIWebSocketChannel);
 
-    console.debug("beginWSSetup: Connecting to", uri.spec);
+    lazy.console.debug("beginWSSetup: Connecting to", uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
 
@@ -540,7 +542,7 @@ var PushServiceWebSocket = {
       this._ws.asyncOpen(uri, uri.spec, {}, 0, this._wsListener, null);
       this._currentState = STATE_WAITING_FOR_WS_START;
     } catch (e) {
-      console.error(
+      lazy.console.error(
         "beginWSSetup: Error opening websocket.",
         "asyncOpen failed",
         e
@@ -550,7 +552,7 @@ var PushServiceWebSocket = {
   },
 
   connect(broadcastListeners) {
-    console.debug("connect()", broadcastListeners);
+    lazy.console.debug("connect()", broadcastListeners);
     this._broadcastListeners = broadcastListeners;
     this._beginWSSetup();
   },
@@ -563,9 +565,9 @@ var PushServiceWebSocket = {
    * Protocol handler invoked by server message.
    */
   _handleHelloReply(reply) {
-    console.debug("handleHelloReply()");
+    lazy.console.debug("handleHelloReply()");
     if (this._currentState != STATE_WAITING_FOR_HELLO) {
-      console.error(
+      lazy.console.error(
         "handleHelloReply: Unexpected state",
         this._currentState,
         "(expected STATE_WAITING_FOR_HELLO)"
@@ -575,20 +577,20 @@ var PushServiceWebSocket = {
     }
 
     if (typeof reply.uaid !== "string") {
-      console.error("handleHelloReply: Received invalid UAID", reply.uaid);
+      lazy.console.error("handleHelloReply: Received invalid UAID", reply.uaid);
       this._shutdownWS();
       return;
     }
 
     if (reply.uaid === "") {
-      console.error("handleHelloReply: Received empty UAID");
+      lazy.console.error("handleHelloReply: Received empty UAID");
       this._shutdownWS();
       return;
     }
 
     // To avoid sticking extra large values sent by an evil server into prefs.
     if (reply.uaid.length > 128) {
-      console.error(
+      lazy.console.error(
         "handleHelloReply: UAID received from server was too long",
         reply.uaid
       );
@@ -610,10 +612,10 @@ var PushServiceWebSocket = {
       prefs.addObserver("userAgentID", this);
 
       // Handle broadcasts received in response to the "hello" message.
-      if (!ObjectUtils.isEmpty(reply.broadcasts)) {
+      if (!lazy.ObjectUtils.isEmpty(reply.broadcasts)) {
         // The reply isn't technically a broadcast message, but it has
         // the shape of a broadcast message (it has a broadcasts field).
-        const context = { phase: pushBroadcastService.PHASES.HELLO };
+        const context = { phase: lazy.pushBroadcastService.PHASES.HELLO };
         this._mainPushService.receivedBroadcastMessage(reply, context);
       }
 
@@ -625,7 +627,7 @@ var PushServiceWebSocket = {
             Promise.all(
               records.map(record =>
                 this._mainPushService.ensureCrypto(record).catch(error => {
-                  console.error(
+                  lazy.console.error(
                     "finishHandshake: Error updating record",
                     record.keyID,
                     error
@@ -647,7 +649,7 @@ var PushServiceWebSocket = {
     // workers if we receive a new UAID. This ensures we expunge all stale
     // registrations if the `userAgentID` pref is reset.
     if (this._UAID != reply.uaid) {
-      console.debug("handleHelloReply: Received new UAID");
+      lazy.console.debug("handleHelloReply: Received new UAID");
 
       this._mainPushService
         .dropUnexpiredRegistrations()
@@ -664,7 +666,7 @@ var PushServiceWebSocket = {
    * Protocol handler invoked by server message.
    */
   _handleRegisterReply(reply) {
-    console.debug("handleRegisterReply()");
+    lazy.console.debug("handleRegisterReply()");
 
     let tmp = this._takeRequestForReply(reply);
     if (!tmp) {
@@ -691,7 +693,10 @@ var PushServiceWebSocket = {
       });
       tmp.resolve(record);
     } else {
-      console.error("handleRegisterReply: Unexpected server response", reply);
+      lazy.console.error(
+        "handleRegisterReply: Unexpected server response",
+        reply
+      );
       tmp.reject(
         new Error("Wrong status code for register reply: " + reply.status)
       );
@@ -699,7 +704,7 @@ var PushServiceWebSocket = {
   },
 
   _handleUnregisterReply(reply) {
-    console.debug("handleUnregisterReply()");
+    lazy.console.debug("handleUnregisterReply()");
 
     let request = this._takeRequestForReply(reply);
     if (!request) {
@@ -713,7 +718,7 @@ var PushServiceWebSocket = {
   _handleDataUpdate(update) {
     let promise;
     if (typeof update.channelID != "string") {
-      console.warn(
+      lazy.console.warn(
         "handleDataUpdate: Discarding update without channel ID",
         update
       );
@@ -725,7 +730,7 @@ var PushServiceWebSocket = {
       // the message. In that case, the server will re-send the message on
       // reconnect.
       if (record.hasRecentMessageID(update.version)) {
-        console.warn(
+        lazy.console.warn(
           "handleDataUpdate: Ignoring duplicate message",
           update.version
         );
@@ -761,7 +766,7 @@ var PushServiceWebSocket = {
           this._sendAck(update.channelID, update.version, status);
         },
         err => {
-          console.error(
+          lazy.console.error(
             "handleDataUpdate: Error delivering message",
             update,
             err
@@ -774,7 +779,7 @@ var PushServiceWebSocket = {
         }
       )
       .catch(err => {
-        console.error(
+        lazy.console.error(
           "handleDataUpdate: Error acknowledging message",
           update,
           err
@@ -786,23 +791,26 @@ var PushServiceWebSocket = {
    * Protocol handler invoked by server message.
    */
   _handleNotificationReply(reply) {
-    console.debug("handleNotificationReply()");
+    lazy.console.debug("handleNotificationReply()");
     if (this._dataEnabled) {
       this._handleDataUpdate(reply);
       return;
     }
 
     if (typeof reply.updates !== "object") {
-      console.warn("handleNotificationReply: Missing updates", reply.updates);
+      lazy.console.warn(
+        "handleNotificationReply: Missing updates",
+        reply.updates
+      );
       return;
     }
 
-    console.debug("handleNotificationReply: Got updates", reply.updates);
+    lazy.console.debug("handleNotificationReply: Got updates", reply.updates);
     for (let i = 0; i < reply.updates.length; i++) {
       let update = reply.updates[i];
-      console.debug("handleNotificationReply: Handling update", update);
+      lazy.console.debug("handleNotificationReply: Handling update", update);
       if (typeof update.channelID !== "string") {
-        console.debug(
+        lazy.console.debug(
           "handleNotificationReply: Invalid update at index",
           i,
           update
@@ -811,7 +819,7 @@ var PushServiceWebSocket = {
       }
 
       if (update.version === undefined) {
-        console.debug("handleNotificationReply: Missing version", update);
+        lazy.console.debug("handleNotificationReply: Missing version", update);
         continue;
       }
 
@@ -830,7 +838,7 @@ var PushServiceWebSocket = {
   },
 
   _handleBroadcastReply(reply) {
-    let phase = pushBroadcastService.PHASES.BROADCAST;
+    let phase = lazy.pushBroadcastService.PHASES.BROADCAST;
     // Check if this reply is the result of registration.
     for (const id of Object.keys(reply.broadcasts)) {
       const wasRegistering = this._currentlyRegistering.delete(id);
@@ -839,7 +847,7 @@ var PushServiceWebSocket = {
         // then we consider the phase to be REGISTER for all of them.
         // It is acceptable since registrations do not happen so often,
         // and are all very likely to occur soon after browser startup.
-        phase = pushBroadcastService.PHASES.REGISTER;
+        phase = lazy.pushBroadcastService.PHASES.REGISTER;
       }
     }
     const context = { phase };
@@ -847,7 +855,7 @@ var PushServiceWebSocket = {
   },
 
   reportDeliveryError(messageID, reason) {
-    console.debug("reportDeliveryError()");
+    lazy.console.debug("reportDeliveryError()");
     let code = kDELIVERY_REASON_TO_CODE[reason];
     if (!code) {
       throw new Error("Invalid delivery error reason");
@@ -857,7 +865,7 @@ var PushServiceWebSocket = {
   },
 
   _sendAck(channelID, version, status) {
-    console.debug("sendAck()");
+    lazy.console.debug("sendAck()");
     let code = kACK_STATUS_TO_CODE[status];
     if (!code) {
       throw new Error("Invalid ack status");
@@ -875,7 +883,7 @@ var PushServiceWebSocket = {
   },
 
   register(record) {
-    console.debug("register() ", record);
+    lazy.console.debug("register() ", record);
 
     let data = { channelID: this._generateID(), messageType: "register" };
 
@@ -900,7 +908,7 @@ var PushServiceWebSocket = {
   },
 
   unregister(record, reason) {
-    console.debug("unregister() ", record, reason);
+    lazy.console.debug("unregister() ", record, reason);
 
     return Promise.resolve().then(_ => {
       let code = kUNREGISTER_REASON_TO_CODE[reason];
@@ -921,7 +929,7 @@ var PushServiceWebSocket = {
   _notifyRequestQueue: null,
   _queue: null,
   _enqueue(op) {
-    console.debug("enqueue()");
+    lazy.console.debug("enqueue()");
     if (!this._queue) {
       this._queue = this._queueStart;
     }
@@ -931,7 +939,7 @@ var PushServiceWebSocket = {
   /** Sends a request to the server. */
   _send(data) {
     if (this._currentState != STATE_READY) {
-      console.warn(
+      lazy.console.warn(
         "send: Unexpected state; ignoring message",
         this._currentState
       );
@@ -944,7 +952,7 @@ var PushServiceWebSocket = {
     // If we're expecting a reply, check that we haven't cancelled the request.
     let key = this._makePendingRequestKey(data);
     if (!this._pendingRequests.has(key)) {
-      console.log("send: Request cancelled; ignoring message", key);
+      lazy.console.log("send: Request cancelled; ignoring message", key);
       return;
     }
     this._wsSendMessage(data);
@@ -969,7 +977,7 @@ var PushServiceWebSocket = {
 
   /** Queues an outgoing request, establishing a connection if necessary. */
   _queueRequest(data) {
-    console.debug("queueRequest()", data);
+    lazy.console.debug("queueRequest()", data);
 
     if (this._currentState == STATE_READY) {
       // If we're ready, no need to queue; just send the request.
@@ -1007,12 +1015,17 @@ var PushServiceWebSocket = {
   },
 
   _receivedUpdate(aChannelID, aLatestVersion) {
-    console.debug("receivedUpdate: Updating", aChannelID, "->", aLatestVersion);
+    lazy.console.debug(
+      "receivedUpdate: Updating",
+      aChannelID,
+      "->",
+      aLatestVersion
+    );
 
     this._mainPushService
       .receivedPushMessage(aChannelID, "", null, null, record => {
         if (record.version === null || record.version < aLatestVersion) {
-          console.debug(
+          lazy.console.debug(
             "receivedUpdate: Version changed for",
             aChannelID,
             aLatestVersion
@@ -1020,7 +1033,7 @@ var PushServiceWebSocket = {
           record.version = aLatestVersion;
           return record;
         }
-        console.debug(
+        lazy.console.debug(
           "receivedUpdate: No significant version change for",
           aChannelID,
           aLatestVersion
@@ -1031,7 +1044,7 @@ var PushServiceWebSocket = {
         this._sendAck(aChannelID, aLatestVersion, status);
       })
       .catch(err => {
-        console.error(
+        lazy.console.error(
           "receivedUpdate: Error acknowledging message",
           aChannelID,
           aLatestVersion,
@@ -1042,10 +1055,10 @@ var PushServiceWebSocket = {
 
   // begin Push protocol handshake
   _wsOnStart(context) {
-    console.debug("wsOnStart()");
+    lazy.console.debug("wsOnStart()");
 
     if (this._currentState != STATE_WAITING_FOR_WS_START) {
-      console.error(
+      lazy.console.error(
         "wsOnStart: NOT in STATE_WAITING_FOR_WS_START. Current",
         "state",
         this._currentState,
@@ -1059,7 +1072,7 @@ var PushServiceWebSocket = {
       .then(
         records => this._sendHello(records),
         err => {
-          console.warn(
+          lazy.console.warn(
             "Error fetching existing records before handshake; assuming none",
             err
           );
@@ -1068,7 +1081,7 @@ var PushServiceWebSocket = {
       )
       .catch(err => {
         // If we failed to send the handshake, back off and reconnect.
-        console.warn("Failed to send handshake; reconnecting", err);
+        lazy.console.warn("Failed to send handshake; reconnecting", err);
         this._reconnect();
       });
   },
@@ -1109,10 +1122,13 @@ var PushServiceWebSocket = {
    * NS_BASE_STREAM_CLOSED, even on a successful close.
    */
   _wsOnStop(context, statusCode) {
-    console.debug("wsOnStop()");
+    lazy.console.debug("wsOnStop()");
 
     if (statusCode != Cr.NS_OK && !this._skipReconnect) {
-      console.debug("wsOnStop: Reconnecting after socket error", statusCode);
+      lazy.console.debug(
+        "wsOnStop: Reconnecting after socket error",
+        statusCode
+      );
       this._reconnect();
       return;
     }
@@ -1121,7 +1137,7 @@ var PushServiceWebSocket = {
   },
 
   _wsOnMessageAvailable(context, message) {
-    console.debug("wsOnMessageAvailable()", message);
+    lazy.console.debug("wsOnMessageAvailable()", message);
 
     // Clearing the last ping time indicates we're no longer waiting for a pong.
     this._lastPingTime = 0;
@@ -1130,7 +1146,7 @@ var PushServiceWebSocket = {
     try {
       reply = JSON.parse(message);
     } catch (e) {
-      console.warn("wsOnMessageAvailable: Invalid JSON", message, e);
+      lazy.console.warn("wsOnMessageAvailable: Invalid JSON", message, e);
       return;
     }
 
@@ -1145,7 +1161,7 @@ var PushServiceWebSocket = {
       reply.messageType === "ping" ||
       typeof reply.messageType != "string"
     ) {
-      console.debug("wsOnMessageAvailable: Pong received");
+      lazy.console.debug("wsOnMessageAvailable: Pong received");
       doNotHandle = true;
     }
 
@@ -1175,7 +1191,7 @@ var PushServiceWebSocket = {
       reply.messageType.slice(1).toLowerCase();
 
     if (!handlers.includes(handlerName)) {
-      console.warn(
+      lazy.console.warn(
         "wsOnMessageAvailable: No whitelisted handler",
         handlerName,
         "for message",
@@ -1187,7 +1203,7 @@ var PushServiceWebSocket = {
     let handler = "_handle" + handlerName + "Reply";
 
     if (typeof this[handler] !== "function") {
-      console.warn(
+      lazy.console.warn(
         "wsOnMessageAvailable: Handler",
         handler,
         "whitelisted but not implemented"
@@ -1209,10 +1225,10 @@ var PushServiceWebSocket = {
    * request.
    */
   _wsOnServerClose(context, aStatusCode, aReason) {
-    console.debug("wsOnServerClose()", aStatusCode, aReason);
+    lazy.console.debug("wsOnServerClose()", aStatusCode, aReason);
 
     if (aStatusCode == kBACKOFF_WS_STATUS_CODE) {
-      console.debug("wsOnServerClose: Skipping automatic reconnect");
+      lazy.console.debug("wsOnServerClose: Skipping automatic reconnect");
       this._skipReconnect = true;
     }
   },
