@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   return new ConsoleAPI({
     prefix: "macOSPoliciesParser.jsm",
@@ -35,8 +37,8 @@ var macOSPoliciesParser = {
 
     // Need an extra check here so we don't
     // JSON.stringify if we aren't in debug mode
-    if (log.maxLogLevel == "debug") {
-      log.debug(JSON.stringify(nativePolicies, null, 2));
+    if (lazy.log.maxLogLevel == "debug") {
+      lazy.log.debug(JSON.stringify(nativePolicies, null, 2));
     }
 
     return nativePolicies;
@@ -49,7 +51,7 @@ var macOSPoliciesParser = {
 
     for (let policyName of Object.keys(policies)) {
       if (!schema.properties.hasOwnProperty(policyName)) {
-        log.debug(`Removing unknown policy: ${policyName}`);
+        lazy.log.debug(`Removing unknown policy: ${policyName}`);
         delete policies[policyName];
       }
     }
@@ -68,7 +70,7 @@ var macOSPoliciesParser = {
         continue;
       }
 
-      log.debug(`Unflattening policy key "${key}".`);
+      lazy.log.debug(`Unflattening policy key "${key}".`);
 
       let subkeys = key.split(delimiter);
 
@@ -95,7 +97,9 @@ var macOSPoliciesParser = {
         let subkey = subkeys[i];
 
         if (!isValidSubkey(subkey)) {
-          log.error(`Error in key ${key}: can't use indexes bigger than 50.`);
+          lazy.log.error(
+            `Error in key ${key}: can't use indexes bigger than 50.`
+          );
           continue;
         }
 
@@ -129,7 +133,9 @@ var macOSPoliciesParser = {
 
       let lastSubkey = subkeys[subkeys.length - 1];
       if (!isValidSubkey(lastSubkey)) {
-        log.error(`Error in key ${key}: can't use indexes bigger than 50.`);
+        lazy.log.error(
+          `Error in key ${key}: can't use indexes bigger than 50.`
+        );
         continue;
       }
 
