@@ -147,18 +147,24 @@ class DevToolsFrameParent extends JSWindowActorParent {
     watcher.notifyTargetAvailable(actor);
   }
 
-  _onConnectionClosed(status, prefix) {
-    if (this._connections.has(prefix)) {
-      const { connection } = this._connections.get(prefix);
-      this._cleanupConnection(connection);
-      this._connections.delete(connection.prefix);
-    }
+  _onConnectionClosed(status, connectionPrefix) {
+    this._unregisterWatcher(connectionPrefix);
   }
 
-  async _cleanupConnection(connection) {
-    const { forwardingPrefix, transport } = this._connections.get(
-      connection.prefix
-    );
+  /**
+   * Given a watcher connection prefix, unregister everything related to the Watcher
+   * in this JSWindowActor.
+   *
+   * @param {String} connectionPrefix
+   *        The connection prefix of the watcher to unregister
+   */
+  async _unregisterWatcher(connectionPrefix) {
+    const connectionInfo = this._connections.get(connectionPrefix);
+    if (!connectionInfo) {
+      return;
+    }
+    const { forwardingPrefix, transport, connection } = connectionInfo;
+    this._connections.delete(connectionPrefix);
 
     connection.off("closed", this._onConnectionClosed);
     if (transport) {
@@ -187,10 +193,9 @@ class DevToolsFrameParent extends JSWindowActorParent {
    * So that we should be careful to keep the class fully function and only clear all its state.
    */
   _closeAllConnections() {
-    for (const { actor, connection, watcher } of this._connections.values()) {
+    for (const { actor, watcher } of this._connections.values()) {
       watcher.notifyTargetDestroyed(actor);
-
-      this._cleanupConnection(connection);
+      this._unregisterWatcher(watcher.conn.prefix);
     }
     this._connections.clear();
   }
@@ -221,9 +226,10 @@ class DevToolsFrameParent extends JSWindowActorParent {
           // the watcher has been removed from the registry.
           if (watcher) {
             watcher.notifyTargetDestroyed(form);
+            this._unregisterWatcher(watcher.conn.prefix);
           }
         }
-        return this._closeAllConnections();
+        return null;
       case "DevToolsFrameChild:bf-cache-navigation-pageshow":
         for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
           this.browsingContext.browserId
