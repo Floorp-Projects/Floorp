@@ -166,11 +166,11 @@ PeerConnectionE2EQualityTest::AddAndReturnPeer(
   return &peer_handles_.back();
 }
 
-void PeerConnectionE2EQualityTest::AddPeer(
+PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
     rtc::Thread* network_thread,
     rtc::NetworkManager* network_manager,
     rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-  AddAndReturnPeer(network_thread, network_manager, configurer);
+  return AddAndReturnPeer(network_thread, network_manager, configurer);
 }
 
 void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
