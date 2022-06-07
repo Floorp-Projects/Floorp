@@ -430,7 +430,7 @@ PROT_ListManager.prototype.checkForUpdates = function(
     return false;
   }
 
-  if (enableTestNotifications) {
+  if (lazy.enableTestNotifications) {
     Services.obs.notifyObservers(
       null,
       "safebrowsing-update-attempt",
@@ -824,8 +824,10 @@ function RegistrationData() {
   return new PROT_ListManager();
 }
 
+const lazy = {};
+
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "enableTestNotifications",
   PREF_TEST_NOTIFICATIONS,
   false

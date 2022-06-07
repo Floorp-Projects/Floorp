@@ -18,15 +18,17 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gDbService",
   "@mozilla.org/url-classifier/dbservice;1",
   "nsIUrlClassifierDBService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gUrlUtil",
   "@mozilla.org/url-classifier/utils;1",
   "nsIUrlClassifierUtils"
@@ -261,7 +263,7 @@ HashCompleter.prototype = {
       this._backoffs[aGethashUrl] = new jslib.RequestBackoffV4(
         10 /* keep track of max requests */,
         0 /* don't throttle on successful requests per time period */,
-        gUrlUtil.getProvider(aTableName) /* used by testcase */
+        lazy.gUrlUtil.getProvider(aTableName) /* used by testcase */
       );
     }
 
@@ -404,11 +406,11 @@ HashCompleterRequest.prototype = {
 
       // Assuming all tables with the same gethash URL have the same provider
       if (this.provider == "") {
-        this.provider = gUrlUtil.getProvider(aTableName);
+        this.provider = lazy.gUrlUtil.getProvider(aTableName);
       }
 
       if (this.telemetryProvider == "") {
-        this.telemetryProvider = gUrlUtil.getTelemetryProvider(aTableName);
+        this.telemetryProvider = lazy.gUrlUtil.getTelemetryProvider(aTableName);
       }
     }
   },
@@ -424,7 +426,7 @@ HashCompleterRequest.prototype = {
   },
 
   fillTableStatesBase64: function HCR_fillTableStatesBase64(aCallback) {
-    gDbService.getTables(aTableData => {
+    lazy.gDbService.getTables(aTableData => {
       aTableData.split("\n").forEach(line => {
         let p = line.indexOf(";");
         if (-1 === p) {
@@ -574,7 +576,7 @@ HashCompleterRequest.prototype = {
         JSON.stringify(prefixArray)
     );
 
-    return gUrlUtil.makeFindFullHashRequestV4(
+    return lazy.gUrlUtil.makeFindFullHashRequestV4(
       tableNameArray,
       stateArray,
       prefixArray
@@ -726,7 +728,7 @@ HashCompleterRequest.prototype = {
       },
     };
 
-    gUrlUtil.parseFindFullHashResponseV4(this._response, callback);
+    lazy.gUrlUtil.parseFindFullHashResponseV4(this._response, callback);
   },
 
   // This parses a table entry in the response body and calls |handleItem|
@@ -774,7 +776,7 @@ HashCompleterRequest.prototype = {
   // This adds a complete hash to any entry in |this._requests| that matches
   // the hash.
   handleItem: function HCR_handleItem(aData) {
-    let provider = gUrlUtil.getProvider(aData.tableName);
+    let provider = lazy.gUrlUtil.getProvider(aData.tableName);
     if (provider != this.provider) {
       log(
         "Ignoring table " +
