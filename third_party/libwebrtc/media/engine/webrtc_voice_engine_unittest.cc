@@ -148,7 +148,7 @@ TEST(WebRtcVoiceEngineTestStubLibrary, StartupShutdown) {
     AdmSetupExpectations(adm);
     rtc::scoped_refptr<StrictMock<webrtc::test::MockAudioProcessing>> apm =
         use_null_apm ? nullptr
-                     : new rtc::RefCountedObject<
+                     : rtc::make_ref_counted<
                            StrictMock<webrtc::test::MockAudioProcessing>>();
 
     webrtc::AudioProcessing::Config apm_config;
@@ -188,7 +188,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
         adm_(webrtc::test::MockAudioDeviceModule::CreateStrict()),
         apm_(use_null_apm_
                  ? nullptr
-                 : new rtc::RefCountedObject<
+                 : rtc::make_ref_counted<
                        StrictMock<webrtc::test::MockAudioProcessing>>()),
         call_(),
         override_field_trials_(field_trials) {
@@ -3656,10 +3656,8 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
   for (bool use_null_apm : {false, true}) {
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
         webrtc::CreateDefaultTaskQueueFactory();
-    rtc::scoped_refptr<rtc::RefCountedObject<
-        ::testing::NiceMock<webrtc::test::MockAudioDeviceModule>>>
-        adm(new rtc::RefCountedObject<
-            ::testing::NiceMock<webrtc::test::MockAudioDeviceModule>>());
+    auto adm = rtc::make_ref_counted<
+        ::testing::NiceMock<webrtc::test::MockAudioDeviceModule>>();
     {
       rtc::scoped_refptr<webrtc::AudioProcessing> apm =
           use_null_apm ? nullptr : webrtc::AudioProcessingBuilder().Create();
@@ -3682,7 +3680,8 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
       delete channel;
     }
     // The engine/channel should have dropped their references.
-    EXPECT_TRUE(adm->HasOneRef());
+    EXPECT_EQ(adm.release()->Release(),
+              rtc::RefCountReleaseStatus::kDroppedLastRef);
   }
 }
 
@@ -3844,7 +3843,7 @@ TEST(WebRtcVoiceEngineTest, CollectRecvCodecs) {
     rtc::scoped_refptr<webrtc::MockAudioEncoderFactory> unused_encoder_factory =
         webrtc::MockAudioEncoderFactory::CreateUnusedFactory();
     rtc::scoped_refptr<webrtc::MockAudioDecoderFactory> mock_decoder_factory =
-        new rtc::RefCountedObject<webrtc::MockAudioDecoderFactory>;
+        rtc::make_ref_counted<webrtc::MockAudioDecoderFactory>();
     EXPECT_CALL(*mock_decoder_factory.get(), GetSupportedDecoders())
         .WillOnce(Return(specs));
     rtc::scoped_refptr<webrtc::test::MockAudioDeviceModule> adm =
