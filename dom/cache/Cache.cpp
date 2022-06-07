@@ -19,7 +19,6 @@
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
-#include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
