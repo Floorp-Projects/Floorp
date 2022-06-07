@@ -501,15 +501,7 @@ class PeerConnectionE2EQualityTestFixture {
   virtual PeerHandle* AddPeer(
       rtc::Thread* network_thread,
       rtc::NetworkManager* network_manager,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    return nullptr;
-  }
-  virtual PeerHandle* AddAndReturnPeer(
-      rtc::Thread* network_thread,
-      rtc::NetworkManager* network_manager,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    return nullptr;
-  }
+      rtc::FunctionView<void(PeerConfigurer*)> configurer) = 0;
   // Runs the media quality test, which includes setting up the call with
   // configured participants, running it according to provided `run_params` and
   // terminating it properly at the end. During call duration media quality

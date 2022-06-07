@@ -154,8 +154,7 @@ void PeerConnectionE2EQualityTest::AddQualityMetricsReporter(
   quality_metrics_reporters_.push_back(std::move(quality_metrics_reporter));
 }
 
-PeerConnectionE2EQualityTest::PeerHandle*
-PeerConnectionE2EQualityTest::AddAndReturnPeer(
+PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
     rtc::Thread* network_thread,
     rtc::NetworkManager* network_manager,
     rtc::FunctionView<void(PeerConfigurer*)> configurer) {
@@ -164,13 +163,6 @@ PeerConnectionE2EQualityTest::AddAndReturnPeer(
   configurer(peer_configurations_.back().get());
   peer_handles_.push_back(PeerHandleImpl());
   return &peer_handles_.back();
-}
-
-PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
-    rtc::Thread* network_thread,
-    rtc::NetworkManager* network_manager,
-    rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-  return AddAndReturnPeer(network_thread, network_manager, configurer);
 }
 
 void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
