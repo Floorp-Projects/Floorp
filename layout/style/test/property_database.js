@@ -13390,6 +13390,35 @@ if (IsCSSPropertyPrefEnabled("layout.css.step-position-jump.enabled")) {
   );
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.linear-easing-function.enabled")) {
+  let linear_function_other_values = [
+    "linear()",
+    "linear(0.5)",
+    "linear(0, 1)",
+    "linear(0 0% 50%, 1 50% 100%)",
+  ];
+
+  let linear_function_invalid_values = ["linear(0% 0 100%)", "linear(0,)"];
+  gCSSProperties["animation-timing-function"].other_values.push(
+    ...linear_function_other_values
+  );
+  gCSSProperties["animation-timing-function"].invalid_values.push(
+    ...linear_function_invalid_values
+  );
+
+  gCSSProperties["transition-timing-function"].other_values.push(
+    ...linear_function_other_values
+  );
+  gCSSProperties["transition-timing-function"].invalid_values.push(
+    ...linear_function_invalid_values
+  );
+
+  gCSSProperties["animation"].other_values.push(
+    "1s 2s linear() bounce",
+    "4s linear(0, 0.5 25% 75%, 1 100% 100%)"
+  );
+}
+
 if (
   IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled") &&
   IsWebRenderEnabled()

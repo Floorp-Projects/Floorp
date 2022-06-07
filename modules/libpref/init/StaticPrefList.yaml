@@ -7552,6 +7552,12 @@
   mirror: always
   rust: true
 
+- name: layout.css.linear-easing-function.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for color-mix on content enabled?
 - name: layout.css.color-mix.enabled
   type: RelaxedAtomicBool
