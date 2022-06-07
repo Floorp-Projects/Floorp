@@ -1683,6 +1683,48 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   freePtr(pendingAddr);
 }
 
+bool BaseCompiler::startTryNote(size_t* tryNoteIndex) {
+  // Check the previous try note to ensure that we don't share an edge with
+  // it that could lead to ambiguity. Insert a nop, if required.
+  TryNoteVector& tryNotes = masm.tryNotes();
+  if (tryNotes.length() > 0) {
+    const TryNote& previous = tryNotes.back();
+    uint32_t currentOffset = masm.currentOffset();
+    if (previous.tryBodyBegin() == currentOffset ||
+        previous.tryBodyEnd() == currentOffset) {
+      masm.nop();
+    }
+  }
+
+  // Mark the beginning of the try note
+  wasm::TryNote tryNote = wasm::TryNote();
+  tryNote.setTryBodyBegin(masm.currentOffset());
+  return masm.append(tryNote, tryNoteIndex);
+}
+
+void BaseCompiler::finishTryNote(size_t tryNoteIndex) {
+  TryNoteVector& tryNotes = masm.tryNotes();
+  TryNote& tryNote = tryNotes[tryNoteIndex];
+
+  // Disallow zero-length try notes by inserting a no-op
+  if (tryNote.tryBodyBegin() == masm.currentOffset()) {
+    masm.nop();
+  }
+
+  // Check the previous try note to ensure that we don't share an edge with
+  // it that could lead to ambiguity. Insert a nop, if required.
+  if (tryNotes.length() > 0) {
+    const TryNote& previous = tryNotes.back();
+    uint32_t currentOffset = masm.currentOffset();
+    if (previous.tryBodyEnd() == currentOffset) {
+      masm.nop();
+    }
+  }
+
+  // Mark the end of the try note
+  tryNote.setTryBodyEnd(masm.currentOffset());
+}
+
 ////////////////////////////////////////////////////////////
 //
 // Platform-specific popping and register targeting.
@@ -3825,8 +3867,7 @@ bool BaseCompiler::emitTry() {
   if (!deadCode_) {
     // Be conservative for BCE due to complex control flow in try blocks.
     controlItem().bceSafeOnExit = 0;
-    // Mark the beginning of the try block, the rest is filled in by catch.
-    if (!masm.wasmStartTry(&controlItem().tryNoteIndex)) {
+    if (!startTryNote(&controlItem().tryNoteIndex)) {
       return false;
     }
   }
@@ -3875,9 +3916,7 @@ void BaseCompiler::emitCatchSetup(LabelKind kind, Control& tryCatch,
   // Note end of try block for finding the catch block target. This needs
   // to happen after the stack is reset to the correct height.
   if (kind == LabelKind::Try) {
-    WasmTryNoteVector& tryNotes = masm.tryNotes();
-    WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
-    tryNote.setTryBodyEnd(masm.currentOffset());
+    finishTryNote(controlItem().tryNoteIndex);
   }
 }
 
@@ -4091,9 +4130,12 @@ bool BaseCompiler::emitDelegate() {
   StackHeight savedHeight = fr.stackHeight();
   fr.setStackHeight(tryDelegate.stackHeight);
 
-  WasmTryNoteVector& tryNotes = masm.tryNotes();
-  WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
-  tryNote.setTryBodyEnd(masm.currentOffset());
+  // Mark the end of the try body. This may insert a nop.
+  finishTryNote(controlItem().tryNoteIndex);
+
+  // The landing pad begins at this point
+  TryNoteVector& tryNotes = masm.tryNotes();
+  TryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
   tryNote.setLandingPad(masm.currentOffset(), masm.framePushed());
 
   // Store the Instance that was left in InstanceReg by the exception
@@ -4173,15 +4215,17 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   StackHeight prePadHeight = fr.stackHeight();
   fr.setStackHeight(tryCatch.stackHeight);
 
-  WasmTryNoteVector& tryNotes = masm.tryNotes();
-  WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
-  tryNote.setLandingPad(masm.currentOffset(), masm.framePushed());
-
   // If we are in a catchless try block, then there were no catch blocks to
   // mark the end of the try note, so we need to end it here.
   if (tryKind == LabelKind::Try) {
-    tryNote.setTryBodyEnd(masm.currentOffset());
+    // Mark the end of the try body. This may insert a nop.
+    finishTryNote(controlItem().tryNoteIndex);
   }
+
+  // The landing pad begins at this point
+  TryNoteVector& tryNotes = masm.tryNotes();
+  TryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
+  tryNote.setLandingPad(masm.currentOffset(), masm.framePushed());
 
   // Store the Instance that was left in InstanceReg by the exception
   // handling mechanism, that is this frame's Instance but with the exception

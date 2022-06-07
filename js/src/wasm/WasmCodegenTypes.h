@@ -551,17 +551,17 @@ WASM_DECLARE_CACHEABLE_POD(CallSiteTarget);
 
 using CallSiteTargetVector = Vector<CallSiteTarget, 0, SystemAllocPolicy>;
 
-// WasmTryNotes are stored in a vector that acts as an exception table for
+// TryNotes are stored in a vector that acts as an exception table for
 // wasm try-catch blocks. These represent the information needed to take
 // exception handling actions after a throw is executed.
-struct WasmTryNote {
+struct TryNote {
  private:
   // Sentinel value to detect a try note that has not been given a try body.
   static const uint32_t BEGIN_NONE = UINT32_MAX;
 
   // Begin code offset of the try body.
   uint32_t begin_;
-  // End code offset of the try body.
+  // Exclusive end code offset of the try body.
   uint32_t end_;
   // The code offset of the landing pad.
   uint32_t entryPoint_;
@@ -571,7 +571,7 @@ struct WasmTryNote {
   WASM_CHECK_CACHEABLE_POD(begin_, end_, entryPoint_, framePushed_);
 
  public:
-  explicit WasmTryNote()
+  explicit TryNote()
       : begin_(BEGIN_NONE), end_(0), entryPoint_(0), framePushed_(0) {}
 
   // Returns whether a try note has been assigned a range for the try body.
@@ -580,7 +580,7 @@ struct WasmTryNote {
   // The code offset of the beginning of the try body.
   uint32_t tryBodyBegin() const { return begin_; }
 
-  // The code offset of the end of the try body.
+  // The code offset of the exclusive end of the try body.
   uint32_t tryBodyEnd() const { return end_; }
 
   // Returns whether an offset is within this try note's body.
@@ -596,12 +596,14 @@ struct WasmTryNote {
 
   // Set the beginning of the try body.
   void setTryBodyBegin(uint32_t begin) {
+    // There must not be a begin to the try body yet
     MOZ_ASSERT(begin_ == BEGIN_NONE);
     begin_ = begin;
   }
 
   // Set the end of the try body.
   void setTryBodyEnd(uint32_t end) {
+    // There must be a begin to the try body
     MOZ_ASSERT(begin_ != BEGIN_NONE);
     end_ = end;
     // We do not allow empty try bodies
@@ -621,16 +623,25 @@ struct WasmTryNote {
     entryPoint_ += offset;
   }
 
-  bool operator<(const WasmTryNote& other) const {
-    if (end_ == other.end_) {
-      return begin_ > other.begin_;
+  bool operator<(const TryNote& other) const {
+    // Special case comparison with self. This avoids triggering the assertion
+    // about non-intersection below. This case can arise in std::sort.
+    if (this == &other) {
+      return false;
     }
+    // Try notes must be properly nested without touching at begin and end
+    MOZ_ASSERT(end_ <= other.begin_ || begin_ >= other.end_ ||
+               (begin_ > other.begin_ && end_ < other.end_) ||
+               (other.begin_ > begin_ && other.end_ < end_));
+    // A total order is therefore given solely by comparing end points. This
+    // order will be such that the first try note to intersect a point is the
+    // innermost try note for that point.
     return end_ < other.end_;
   }
 };
 
-WASM_DECLARE_CACHEABLE_POD(WasmTryNote);
-WASM_DECLARE_POD_VECTOR(WasmTryNote, WasmTryNoteVector)
+WASM_DECLARE_CACHEABLE_POD(TryNote);
+WASM_DECLARE_POD_VECTOR(TryNote, TryNoteVector)
 
 // CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
 // This is hoisted into WasmCodegenTypes.h for sharing between Ion and Baseline.

@@ -877,9 +877,9 @@ const CodeRange* CodeTier::lookupRange(const void* pc) const {
   return LookupInSorted(metadata_->codeRanges, target);
 }
 
-const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
+const wasm::TryNote* CodeTier::lookupTryNote(const void* pc) const {
   size_t target = (uint8_t*)pc - segment_->base();
-  const WasmTryNoteVector& tryNotes = metadata_->tryNotes;
+  const TryNoteVector& tryNotes = metadata_->tryNotes;
 
   // We find the first hit (there may be multiple) to obtain the innermost
   // handler, which is why we cannot binary search here.
@@ -1091,9 +1091,9 @@ const StackMap* Code::lookupStackMap(uint8_t* nextPC) const {
   return nullptr;
 }
 
-const wasm::WasmTryNote* Code::lookupWasmTryNote(void* pc, Tier* tier) const {
+const wasm::TryNote* Code::lookupTryNote(void* pc, Tier* tier) const {
   for (Tier t : tiers()) {
-    const WasmTryNote* result = codeTier(t).lookupWasmTryNote(pc);
+    const TryNote* result = codeTier(t).lookupTryNote(pc);
     if (result) {
       *tier = t;
       return result;

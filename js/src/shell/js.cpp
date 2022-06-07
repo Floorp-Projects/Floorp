@@ -3281,7 +3281,7 @@ static const char* TryNoteName(TryNoteKind kind) {
     return false;
   }
 
-  for (const TryNote& tn : script->trynotes()) {
+  for (const js::TryNote& tn : script->trynotes()) {
     if (!sp->jsprintf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
                       tn.stackDepth, tn.start, tn.start + tn.length)) {
       return false;

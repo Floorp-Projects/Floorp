@@ -3520,7 +3520,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
 
   void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
-  [[nodiscard]] bool wasmStartTry(size_t* tryNoteIndex);
 
   // Load all pinned regs via InstanceReg.  If the trapOffset is something,
   // give the first load a trap descriptor with type IndirectCallToNull, so that

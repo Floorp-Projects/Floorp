@@ -497,7 +497,7 @@ struct MetadataTier {
   FuncImportVector funcImports;
   FuncExportVector funcExports;
   StackMaps stackMaps;
-  WasmTryNoteVector tryNotes;
+  TryNoteVector tryNotes;
 
   // Debug information, not serialized.
   uint32_t debugTrapOffset;
@@ -667,7 +667,7 @@ class CodeTier {
   }
 
   const CodeRange* lookupRange(const void* pc) const;
-  const WasmTryNote* lookupWasmTryNote(const void* pc) const;
+  const TryNote* lookupTryNote(const void* pc) const;
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
@@ -850,7 +850,7 @@ class Code : public ShareableBase<Code> {
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
   const StackMap* lookupStackMap(uint8_t* nextPC) const;
-  const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;
+  const TryNote* lookupTryNote(void* pc, Tier* tier) const;
   bool containsCodePC(const void* pc) const;
   bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 

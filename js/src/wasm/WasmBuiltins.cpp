@@ -537,8 +537,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
       const wasm::Code& code = iter.instance()->code();
       const uint8_t* pc = iter.resumePCinCurrentFrame();
       Tier tier;
-      const wasm::WasmTryNote* tryNote =
-          code.lookupWasmTryNote((void*)pc, &tier);
+      const wasm::TryNote* tryNote = code.lookupTryNote((void*)pc, &tier);
 
       if (tryNote) {
         cx->clearPendingException();

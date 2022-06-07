@@ -8071,13 +8071,13 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   const MWasmCallBase* callBase = lir->callBase();
 
-  // If this call is in Wasm try code block, initialise a WasmTryNote for this
+  // If this call is in Wasm try code block, initialise a wasm::TryNote for this
   // call.
   bool inTry = callBase->inTry();
   if (inTry) {
     size_t tryNoteIndex = callBase->tryNoteIndex();
-    wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
-    wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
+    wasm::TryNoteVector& tryNotes = masm.tryNotes();
+    wasm::TryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.setTryBodyBegin(masm.currentOffset());
   }
 
@@ -8200,8 +8200,8 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   if (inTry) {
     // Set the end of the try note range
     size_t tryNoteIndex = callBase->tryNoteIndex();
-    wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
-    wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
+    wasm::TryNoteVector& tryNotes = masm.tryNotes();
+    wasm::TryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.setTryBodyEnd(masm.currentOffset());
 
     // This instruction or the adjunct safepoint must be the last instruction
@@ -8233,8 +8233,8 @@ void CodeGenerator::visitWasmCallLandingPrePad(LWasmCallLandingPrePad* lir) {
   MOZ_RELEASE_ASSERT(*block->begin() == lir || (block->begin()->isMoveGroup() &&
                                                 *(++block->begin()) == lir));
 
-  wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
-  wasm::WasmTryNote& tryNote = tryNotes[mir->tryNoteIndex()];
+  wasm::TryNoteVector& tryNotes = masm.tryNotes();
+  wasm::TryNote& tryNote = tryNotes[mir->tryNoteIndex()];
   // Set the entry point for the call try note to be the beginning of this
   // block. The above assertions (and assertions in visitWasmCall) guarantee
   // that we are not skipping over instructions that should be executed.

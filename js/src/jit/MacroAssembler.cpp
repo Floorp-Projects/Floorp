@@ -3752,12 +3752,6 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
   append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
 }
 
-[[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
-  wasm::WasmTryNote tryNote = wasm::WasmTryNote();
-  tryNote.setTryBodyBegin(currentOffset());
-  return append(tryNote, tryNoteIndex);
-}
-
 std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
     uint32_t amount, wasm::BytecodeOffset trapOffset) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
