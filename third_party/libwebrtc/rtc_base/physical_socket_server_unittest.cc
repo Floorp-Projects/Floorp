@@ -116,15 +116,16 @@ class PhysicalSocketTest : public SocketTest {
 
  protected:
   PhysicalSocketTest()
-      : server_(new FakePhysicalSocketServer(this)),
-        thread_(server_.get()),
+      : SocketTest(&server_),
+        server_(this),
+        thread_(&server_),
         fail_accept_(false),
         max_send_size_(-1) {}
 
   void ConnectInternalAcceptError(const IPAddress& loopback);
   void WritableAfterPartialWrite(const IPAddress& loopback);
 
-  std::unique_ptr<FakePhysicalSocketServer> server_;
+  FakePhysicalSocketServer server_;
   rtc::AutoSocketServerThread thread_;
   bool fail_accept_;
   int max_send_size_;
@@ -200,20 +201,20 @@ void PhysicalSocketTest::ConnectInternalAcceptError(const IPAddress& loopback) {
 
   // Create two clients.
   std::unique_ptr<Socket> client1(
-      server_->CreateSocket(loopback.family(), SOCK_STREAM));
+      server_.CreateSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(client1.get());
   EXPECT_EQ(Socket::CS_CLOSED, client1->GetState());
   EXPECT_TRUE(IsUnspecOrEmptyIP(client1->GetLocalAddress().ipaddr()));
 
   std::unique_ptr<Socket> client2(
-      server_->CreateSocket(loopback.family(), SOCK_STREAM));
+      server_.CreateSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(client2.get());
   EXPECT_EQ(Socket::CS_CLOSED, client2->GetState());
   EXPECT_TRUE(IsUnspecOrEmptyIP(client2->GetLocalAddress().ipaddr()));
 
   // Create server and listen.
   std::unique_ptr<Socket> server(
-      server_->CreateSocket(loopback.family(), SOCK_STREAM));
+      server_.CreateSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(server.get());
   EXPECT_EQ(0, server->Bind(SocketAddress(loopback, 0)));
   EXPECT_EQ(0, server->Listen(5));
@@ -477,22 +478,22 @@ TEST_F(PhysicalSocketTest,
        BindFailsIfNetworkBinderFailsForNonLoopbackInterface) {
   MAYBE_SKIP_IPV4;
   FakeNetworkBinder fake_network_binder;
-  server_->set_network_binder(&fake_network_binder);
-  std::unique_ptr<Socket> socket(server_->CreateSocket(AF_INET, SOCK_DGRAM));
+  server_.set_network_binder(&fake_network_binder);
+  std::unique_ptr<Socket> socket(server_.CreateSocket(AF_INET, SOCK_DGRAM));
   fake_network_binder.set_result(NetworkBindingResult::FAILURE);
   EXPECT_EQ(-1, socket->Bind(SocketAddress("192.168.0.1", 0)));
-  server_->set_network_binder(nullptr);
+  server_.set_network_binder(nullptr);
 }
 
 // Network binder shouldn't be used if the socket is bound to the "any" IP.
 TEST_F(PhysicalSocketTest, NetworkBinderIsNotUsedForAnyIp) {
   MAYBE_SKIP_IPV4;
   FakeNetworkBinder fake_network_binder;
-  server_->set_network_binder(&fake_network_binder);
-  std::unique_ptr<Socket> socket(server_->CreateSocket(AF_INET, SOCK_DGRAM));
+  server_.set_network_binder(&fake_network_binder);
+  std::unique_ptr<Socket> socket(server_.CreateSocket(AF_INET, SOCK_DGRAM));
   EXPECT_EQ(0, socket->Bind(SocketAddress("0.0.0.0", 0)));
   EXPECT_EQ(0, fake_network_binder.num_binds());
-  server_->set_network_binder(nullptr);
+  server_.set_network_binder(nullptr);
 }
 
 // For a loopback interface, failures to bind to the interface should be
@@ -501,11 +502,11 @@ TEST_F(PhysicalSocketTest,
        BindSucceedsIfNetworkBinderFailsForLoopbackInterface) {
   MAYBE_SKIP_IPV4;
   FakeNetworkBinder fake_network_binder;
-  server_->set_network_binder(&fake_network_binder);
-  std::unique_ptr<Socket> socket(server_->CreateSocket(AF_INET, SOCK_DGRAM));
+  server_.set_network_binder(&fake_network_binder);
+  std::unique_ptr<Socket> socket(server_.CreateSocket(AF_INET, SOCK_DGRAM));
   fake_network_binder.set_result(NetworkBindingResult::FAILURE);
   EXPECT_EQ(0, socket->Bind(SocketAddress(kIPv4Loopback, 0)));
-  server_->set_network_binder(nullptr);
+  server_.set_network_binder(nullptr);
 }
 
 #endif
