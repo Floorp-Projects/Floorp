@@ -631,6 +631,7 @@ rtc_source_set("network_emulation_manager_api") {
   ]
   deps = [
     ":array_view",
+    ":packet_socket_factory",
     ":simulated_network_api",
     ":time_controller",
     "../call:simulated_network",

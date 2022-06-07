@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "p2p/base/basic_packet_socket_factory.h"
 #include "test/network/fake_network_socket_server.h"
 
 namespace webrtc {
@@ -25,11 +26,17 @@ EmulatedNetworkManager::EmulatedNetworkManager(
     EndpointsContainer* endpoints_container)
     : task_queue_(task_queue),
       endpoints_container_(endpoints_container),
-      network_thread_(time_controller->CreateThread(
-          "net_thread",
-          std::make_unique<FakeNetworkSocketServer>(endpoints_container))),
       sent_first_update_(false),
-      start_count_(0) {}
+      start_count_(0) {
+  auto socket_server =
+      std::make_unique<FakeNetworkSocketServer>(endpoints_container);
+  packet_socket_factory_ =
+      std::make_unique<rtc::BasicPacketSocketFactory>(socket_server.get());
+  // Since we pass ownership of the socket server to `network_thread_`, we must
+  // arrange that it outlives `packet_socket_factory_` which refers to it.
+  network_thread_ =
+      time_controller->CreateThread("net_thread", std::move(socket_server));
+}
 
 void EmulatedNetworkManager::EnableEndpoint(EmulatedEndpointImpl* endpoint) {
   RTC_CHECK(endpoints_container_->HasEndpoint(endpoint))
