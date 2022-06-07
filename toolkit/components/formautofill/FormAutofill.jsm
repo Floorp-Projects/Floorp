@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.jsm",
 });
 
@@ -44,7 +46,7 @@ const AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF =
   "extensions.formautofill.addresses.ignoreAutocompleteOff";
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "logLevel",
   "extensions.formautofill.loglevel",
   "Warn"
@@ -62,7 +64,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // This helper avoids both of those problems by never touching the
 // console object unless debug logging is enabled.
 function debug() {
-  if (logLevel.toLowerCase() == "debug") {
+  if (lazy.logLevel.toLowerCase() == "debug") {
     this.log.debug(...arguments);
   }
 }
@@ -78,7 +80,7 @@ var FormAutofill = {
   AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF,
 
   get DEFAULT_REGION() {
-    return Region.home || "US";
+    return lazy.Region.home || "US";
   },
   /**
    * Determines if an autofill feature should be enabled based on the "available"

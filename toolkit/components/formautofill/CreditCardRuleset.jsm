@@ -26,24 +26,32 @@ const EXPORTED_SYMBOLS = ["creditCardRulesets"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "fathom",
   "resource://gre/modules/third_party/fathom/fathom.jsm"
 );
-const { element: clickedElement, out, rule, ruleset, score, type } = fathom;
+const {
+  element: clickedElement,
+  out,
+  rule,
+  ruleset,
+  score,
+  type,
+} = lazy.fathom;
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormLikeFactory",
   "resource://gre/modules/FormLikeFactory.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormAutofillUtils",
   "resource://autofill/FormAutofillUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   NETWORK_NAMES: "resource://gre/modules/CreditCard.jsm",
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
@@ -333,8 +341,8 @@ const yearRegExp = /year/i;
 const MMYYRegExp = /mm\s*(\/|\\)\s*yy/i;
 const VisaCheckoutRegExp = /visa(-|\s)checkout/i;
 const CREDIT_CARD_NETWORK_REGEXP = new RegExp(
-  CreditCard.getSupportedNetworks()
-    .concat(Object.keys(NETWORK_NAMES))
+  lazy.CreditCard.getSupportedNetworks()
+    .concat(Object.keys(lazy.NETWORK_NAMES))
     .join("|"),
   "gui"
   );
@@ -354,9 +362,9 @@ function autocompleteStringMatches(element, ccString) {
 }
 
 function getFillableFormElements(element) {
-  const formLike = FormLikeFactory.createFromField(element);
+  const formLike = lazy.FormLikeFactory.createFromField(element);
   return Array.from(formLike.elements).filter(el =>
-    FormAutofillUtils.isCreditCardOrAddressFieldType(el)
+    lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(el)
   );
 }
 
@@ -408,9 +416,9 @@ function idOrNameMatchRegExp(element, regExp) {
 function getElementLabels(element) {
   return {
     *[Symbol.iterator]() {
-      const labels = LabelUtils.findLabelElements(element);
+      const labels = lazy.LabelUtils.findLabelElements(element);
       for (let label of labels) {
-        yield* LabelUtils.extractLabelStrings(label);
+        yield* lazy.LabelUtils.extractLabelStrings(label);
       }
     },
   };
@@ -529,8 +537,8 @@ function isSelectWithCreditCardOptions(fnode) {
   if (element.tagName === "SELECT") {
     for (let option of element.querySelectorAll("option")) {
       if (
-        CreditCard.getNetworkFromName(option.value) ||
-        CreditCard.getNetworkFromName(option.text)
+        lazy.CreditCard.getNetworkFromName(option.value) ||
+        lazy.CreditCard.getNetworkFromName(option.text)
       ) {
         return true;
       }

@@ -70,7 +70,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
@@ -278,11 +279,11 @@ FormAutofillUtils = {
   },
 
   isCCNumber(ccNumber) {
-    return CreditCard.isValidNumber(ccNumber);
+    return lazy.CreditCard.isValidNumber(ccNumber);
   },
 
   ensureLoggedIn(promptMessage) {
-    return OSKeyStore.ensureLoggedIn(
+    return lazy.OSKeyStore.ensureLoggedIn(
       this._reauthEnabledByUser && promptMessage ? promptMessage : false
     );
   },
@@ -293,7 +294,7 @@ FormAutofillUtils = {
    * @returns {Array}
    */
   getCreditCardNetworks() {
-    return CreditCard.getSupportedNetworks();
+    return lazy.CreditCard.getSupportedNetworks();
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -1004,7 +1005,7 @@ FormAutofillUtils = {
         for (let option of options) {
           if (
             [option.text, option.label, option.value].some(
-              s => CreditCard.getNetworkFromName(s) == network
+              s => lazy.CreditCard.getNetworkFromName(s) == network
             )
           ) {
             return option;

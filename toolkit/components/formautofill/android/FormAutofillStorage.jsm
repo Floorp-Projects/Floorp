@@ -22,29 +22,31 @@ const {
   AddressesBase,
 } = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   CreditCard: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   Address: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
 });
 
-class GeckoViewStorage extends JSONFile {
+class GeckoViewStorage extends lazy.JSONFile {
   constructor() {
     super({ path: null });
   }
 
   async updateCreditCards() {
-    const creditCards = await GeckoViewAutocomplete.fetchCreditCards().then(
-      results => results?.map(r => CreditCard.parse(r).toGecko()) ?? [],
+    const creditCards = await lazy.GeckoViewAutocomplete.fetchCreditCards().then(
+      results => results?.map(r => lazy.CreditCard.parse(r).toGecko()) ?? [],
       _ => []
     );
     super.data.creditCards = creditCards;
   }
 
   async updateAddresses() {
-    const addresses = await GeckoViewAutocomplete.fetchAddresses().then(
-      results => results?.map(r => Address.parse(r).toGecko()) ?? [],
+    const addresses = await lazy.GeckoViewAutocomplete.fetchAddresses().then(
+      results => results?.map(r => lazy.Address.parse(r).toGecko()) ?? [],
       _ => []
     );
     super.data.addresses = addresses;
@@ -76,7 +78,7 @@ class Addresses extends AddressesBase {
   }
 
   async _saveRecord(record, { sourceSync = false } = {}) {
-    GeckoViewAutocomplete.onAddressSave(Address.fromGecko(record));
+    lazy.GeckoViewAutocomplete.onAddressSave(lazy.Address.fromGecko(record));
   }
 
   /**
@@ -146,7 +148,9 @@ class CreditCards extends CreditCardsBase {
   }
 
   async _saveRecord(record, { sourceSync = false } = {}) {
-    GeckoViewAutocomplete.onCreditCardSave(CreditCard.fromGecko(record));
+    lazy.GeckoViewAutocomplete.onCreditCardSave(
+      lazy.CreditCard.fromGecko(record)
+    );
   }
 
   /**

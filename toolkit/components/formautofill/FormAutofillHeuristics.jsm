@@ -19,13 +19,15 @@ const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormAutofillUtils",
   "resource://autofill/FormAutofillUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   creditCardRulesets: "resource://autofill/CreditCardRuleset.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
@@ -416,9 +418,9 @@ class FieldScanner {
     let creditCardFieldDetails = [];
     for (let fieldDetail of fieldDetails) {
       let fieldName = fieldDetail.fieldName;
-      if (FormAutofillUtils.isAddressField(fieldName)) {
+      if (lazy.FormAutofillUtils.isAddressField(fieldName)) {
         addressFieldDetails.push(fieldDetail);
-      } else if (FormAutofillUtils.isCreditCardField(fieldName)) {
+      } else if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
         creditCardFieldDetails.push(fieldDetail);
       } else {
         log.debug(
@@ -430,11 +432,11 @@ class FieldScanner {
     this._transformCCNumberForMultipleFields(creditCardFieldDetails);
     return [
       {
-        type: FormAutofillUtils.SECTION_TYPES.ADDRESS,
+        type: lazy.FormAutofillUtils.SECTION_TYPES.ADDRESS,
         fieldDetails: addressFieldDetails,
       },
       {
-        type: FormAutofillUtils.SECTION_TYPES.CREDIT_CARD,
+        type: lazy.FormAutofillUtils.SECTION_TYPES.CREDIT_CARD,
         fieldDetails: creditCardFieldDetails,
       },
     ]
@@ -496,7 +498,7 @@ class FieldScanner {
     }
 
     let highestField = null;
-    let highestConfidence = FormAutofillUtils.ccHeuristicsThreshold; // Start with a threshold of 0.5
+    let highestConfidence = lazy.FormAutofillUtils.ccHeuristicsThreshold; // Start with a threshold of 0.5
     for (let [key, value] of Object.entries(elementConfidences)) {
       if (!fields.includes(key)) {
         // ignore field that we don't care
@@ -518,13 +520,14 @@ class FieldScanner {
    */
   static getFormAutofillConfidences(elements) {
     if (
-      FormAutofillUtils.ccHeuristicsMode == FormAutofillUtils.CC_FATHOM_NATIVE
+      lazy.FormAutofillUtils.ccHeuristicsMode ==
+      lazy.FormAutofillUtils.CC_FATHOM_NATIVE
     ) {
       let confidences = ChromeUtils.getFormAutofillConfidences(elements);
       return confidences.map(c => {
         let result = {};
         for (let [fieldName, confidence] of Object.entries(c)) {
-          let type = FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
+          let type = lazy.FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
             fieldName
           );
           result[type] = confidence;
@@ -544,7 +547,7 @@ class FieldScanner {
        * @returns {number} Confidence in range [0, 1]
        */
       function confidence(fieldName) {
-        const ruleset = creditCardRulesets[fieldName];
+        const ruleset = lazy.creditCardRulesets[fieldName];
         const fnodes = ruleset.against(element).get(fieldName);
 
         // fnodes is either 0 or 1 item long, since we ran the ruleset
@@ -554,7 +557,7 @@ class FieldScanner {
 
       // Bang the element against the ruleset for every type of field:
       let confidences = {};
-      creditCardRulesets.types.map(fieldName => {
+      lazy.creditCardRulesets.types.map(fieldName => {
         confidences[fieldName] = confidence(fieldName);
       });
 
@@ -750,7 +753,7 @@ FormAutofillHeuristics = {
       const previousField = fieldScanner.getFieldDetailByIndex(
         fieldScanner.parsingIndex - 1
       );
-      const previousFieldType = FormAutofillUtils.getCategoryFromFieldName(
+      const previousFieldType = lazy.FormAutofillUtils.getCategoryFromFieldName(
         previousField.fieldName
       );
       if (
@@ -883,8 +886,8 @@ FormAutofillHeuristics = {
     // The heuristic below should be covered by fathom rules, so we can skip doing
     // it.
     if (
-      FormAutofillUtils.isFathomCreditCardsEnabled() &&
-      creditCardRulesets.types.includes(detail.fieldName)
+      lazy.FormAutofillUtils.isFathomCreditCardsEnabled() &&
+      lazy.creditCardRulesets.types.includes(detail.fieldName)
     ) {
       fieldScanner.parsingIndex++;
       return true;
@@ -897,8 +900,8 @@ FormAutofillHeuristics = {
     if (HTMLSelectElement.isInstance(element)) {
       for (let option of element.querySelectorAll("option")) {
         if (
-          CreditCard.getNetworkFromName(option.value) ||
-          CreditCard.getNetworkFromName(option.text)
+          lazy.CreditCard.getNetworkFromName(option.value) ||
+          lazy.CreditCard.getNetworkFromName(option.text)
         ) {
           fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-type");
           fieldScanner.parsingIndex++;
@@ -1044,7 +1047,7 @@ FormAutofillHeuristics = {
    */
   getFormInfo(form, allowDuplicates = false) {
     const eligibleFields = Array.from(form.elements).filter(elem =>
-      FormAutofillUtils.isCreditCardOrAddressFieldType(elem)
+      lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(elem)
     );
 
     if (eligibleFields.length <= 0) {
@@ -1073,7 +1076,7 @@ FormAutofillHeuristics = {
       }
     }
 
-    LabelUtils.clearLabelMap();
+    lazy.LabelUtils.clearLabelMap();
 
     return fieldScanner.getSectionFieldDetails();
   },
@@ -1150,10 +1153,10 @@ FormAutofillHeuristics = {
       return infoRecordWithFieldName("email");
     }
 
-    if (FormAutofillUtils.isFathomCreditCardsEnabled()) {
+    if (lazy.FormAutofillUtils.isFathomCreditCardsEnabled()) {
       // We don't care fields that are not supported by fathom
       let fathomFields = fields.filter(r =>
-        creditCardRulesets.types.includes(r)
+        lazy.creditCardRulesets.types.includes(r)
       );
       let matchedFieldName = scanner.getFathomField(element, fathomFields);
       // At this point, use fathom's recommendation if it has one
@@ -1165,7 +1168,7 @@ FormAutofillHeuristics = {
       // Since Fathom isn't confident, try the old heuristics. I've removed all
       // the CC-specific ones, so this should be almost a mutually exclusive
       // set of fields.
-      fields = fields.filter(r => !creditCardRulesets.types.includes(r));
+      fields = fields.filter(r => !lazy.creditCardRulesets.types.includes(r));
     }
 
     if (fields.length) {
@@ -1199,9 +1202,9 @@ FormAutofillHeuristics = {
         yield element.name;
         yield element.placeholder?.trim();
 
-        const labels = LabelUtils.findLabelElements(element);
+        const labels = lazy.LabelUtils.findLabelElements(element);
         for (let label of labels) {
-          yield* LabelUtils.extractLabelStrings(label);
+          yield* lazy.LabelUtils.extractLabelStrings(label);
         }
       },
     };
@@ -1378,13 +1381,13 @@ XPCOMUtils.defineLazyGetter(
   "CREDIT_CARD_FIELDNAMES",
   () =>
     Object.keys(FormAutofillHeuristics.RULES).filter(name =>
-      FormAutofillUtils.isCreditCardField(name)
+      lazy.FormAutofillUtils.isCreditCardField(name)
     )
 );
 
 XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "ADDRESS_FIELDNAMES", () =>
   Object.keys(FormAutofillHeuristics.RULES).filter(name =>
-    FormAutofillUtils.isAddressField(name)
+    lazy.FormAutofillUtils.isAddressField(name)
   )
 );
 

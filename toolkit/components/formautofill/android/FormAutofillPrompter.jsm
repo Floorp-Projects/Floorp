@@ -15,7 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.jsm",
@@ -44,7 +46,7 @@ let FormAutofillPrompter = {
   },
 
   async promptToSaveCreditCard(browser, creditCard, storage) {
-    const prompt = new GeckoViewPrompter(browser.ownerGlobal);
+    const prompt = new lazy.GeckoViewPrompter(browser.ownerGlobal);
 
     let newCreditCard;
     if (creditCard.guid) {
@@ -55,7 +57,7 @@ let FormAutofillPrompter = {
     }
 
     prompt.asyncShowPrompt(
-      this._createMessage([CreditCard.fromGecko(newCreditCard)]),
+      this._createMessage([lazy.CreditCard.fromGecko(newCreditCard)]),
       result => {
         const selectedCreditCard = result?.selection?.value;
 
@@ -63,7 +65,7 @@ let FormAutofillPrompter = {
           return;
         }
 
-        GeckoViewAutocomplete.onCreditCardSave(selectedCreditCard);
+        lazy.GeckoViewAutocomplete.onCreditCardSave(selectedCreditCard);
       }
     );
   },

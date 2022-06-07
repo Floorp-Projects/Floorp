@@ -25,7 +25,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
 });
 
@@ -383,8 +385,8 @@ let FormAutofillPrompter = {
     let name = creditCard.record["cc-name"];
     let month = creditCard.record["cc-exp-month"];
     let year = creditCard.record["cc-exp-year"];
-    let type = CreditCard.getType(number);
-    let ccLabelInfo = CreditCard.getLabelInfo({
+    let type = lazy.CreditCard.getType(number);
+    let ccLabelInfo = lazy.CreditCard.getLabelInfo({
       number,
       name,
       month,
@@ -515,7 +517,7 @@ let FormAutofillPrompter = {
       } = CONTENT[type];
       // Follow up in Bug 1737329 to make doorhanger types more explicit
       if (type == "updateCreditCard" || type == "addCreditCard") {
-        descriptionIcon = CreditCard.getCreditCardLogo(network);
+        descriptionIcon = lazy.CreditCard.getCreditCardLogo(network);
       }
 
       const { ownerGlobal: chromeWin, ownerDocument: chromeDoc } = browser;

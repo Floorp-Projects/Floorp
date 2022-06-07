@@ -24,26 +24,28 @@ const {
   AddressesBase,
 } = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "OSKeyStore",
   "resource://gre/modules/OSKeyStore.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CreditCard",
   "resource://gre/modules/CreditCard.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FormAutofillUtils",
   "resource://autofill/FormAutofillUtils.jsm"
 );
@@ -80,7 +82,7 @@ class Addresses extends AddressesBase {
       addressFound.country ||
       addressToMerge.country ||
       FormAutofill.DEFAULT_REGION;
-    let collators = FormAutofillUtils.getSearchCollators(country);
+    let collators = lazy.FormAutofillUtils.getSearchCollators(country);
     for (let field of this.VALID_FIELDS) {
       let existingField = addressFound[field];
       let incomingField = addressToMerge[field];
@@ -90,7 +92,7 @@ class Addresses extends AddressesBase {
           // match each other.
           if (
             field == "street-address" &&
-            FormAutofillUtils.compareStreetAddress(
+            lazy.FormAutofillUtils.compareStreetAddress(
               existingField,
               incomingField,
               collators
@@ -108,7 +110,7 @@ class Addresses extends AddressesBase {
             }
           } else if (
             field != "street-address" &&
-            FormAutofillUtils.strCompare(
+            lazy.FormAutofillUtils.strCompare(
               existingField,
               incomingField,
               collators
@@ -163,15 +165,19 @@ class CreditCards extends CreditCardsBase {
     if (!("cc-number-encrypted" in creditCard)) {
       if ("cc-number" in creditCard) {
         let ccNumber = creditCard["cc-number"];
-        if (CreditCard.isValidNumber(ccNumber)) {
-          creditCard["cc-number"] = CreditCard.getLongMaskedNumber(ccNumber);
+        if (lazy.CreditCard.isValidNumber(ccNumber)) {
+          creditCard["cc-number"] = lazy.CreditCard.getLongMaskedNumber(
+            ccNumber
+          );
         } else {
           // Credit card numbers can be entered on versions of Firefox that don't validate
           // the number and then synced to this version of Firefox. Therefore, mask the
           // full number if the number is invalid on this version.
           creditCard["cc-number"] = "*".repeat(ccNumber.length);
         }
-        creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
+        creditCard["cc-number-encrypted"] = await lazy.OSKeyStore.encrypt(
+          ccNumber
+        );
       } else {
         creditCard["cc-number-encrypted"] = "";
       }
@@ -270,7 +276,7 @@ class FormAutofillStorage extends FormAutofillStorageBase {
    *          The JSONFile store.
    */
   _initializeStore() {
-    return new JSONFile({
+    return new lazy.JSONFile({
       path: this._path,
       dataPostProcessor: this._dataPostProcessor.bind(this),
     });
