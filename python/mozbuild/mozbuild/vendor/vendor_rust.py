@@ -11,12 +11,12 @@ import json
 import logging
 import os
 import re
-import shutil
 import subprocess
 from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
 from mozboot.util import MINIMUM_RUST_VERSION
+from mozbuild.mach_commands import cargo_vet
 from pathlib import Path
 
 import pytoml
@@ -714,36 +714,26 @@ license file's hash.
             env = os.environ.copy()
             env["PATH"] = os.pathsep.join(
                 (
-                    os.path.join(os.environ["MOZ_FETCHES_DIR"], "cargo-vet"),
                     os.path.join(os.environ["MOZ_FETCHES_DIR"], "rustc", "bin"),
                     os.environ["PATH"],
                 )
             )
-            # The use of --locked requires .cargo/config to exist, but other things,
-            # like cargo update, don't want it there, so remove it after cargo vet.
-            topsrcdir = Path(self.topsrcdir)
-            shutil.copyfile(
-                topsrcdir / ".cargo" / "config.in", topsrcdir / ".cargo" / "config"
+            res = cargo_vet(
+                self,
+                ["--output-format=json", "--locked"],
+                stdout=subprocess.PIPE,
+                env=env,
             )
-            try:
-                res = subprocess.run(
-                    [cargo, "vet", "--output-format=json", "--locked"],
-                    cwd=self.topsrcdir,
-                    stdout=subprocess.PIPE,
-                    env=env,
-                )
-                if res.returncode:
-                    vet = json.loads(res.stdout)
-                    for failure in vet.get("failures", []):
-                        failure["crate"] = failure.pop("name")
-                        self.log(
-                            logging.WARNING,
-                            "cargo_vet_failed",
-                            failure,
-                            "Vetting missing for {crate}:{version} {missing_criteria}",
-                        )
-            finally:
-                os.unlink(topsrcdir / ".cargo" / "config")
+            if res.returncode:
+                vet = json.loads(res.stdout)
+                for failure in vet.get("failures", []):
+                    failure["crate"] = failure.pop("name")
+                    self.log(
+                        logging.WARNING,
+                        "cargo_vet_failed",
+                        failure,
+                        "Vetting missing for {crate}:{version} {missing_criteria}",
+                    )
 
         if failed:
             return False

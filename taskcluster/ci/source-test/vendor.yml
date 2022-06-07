@@ -24,6 +24,9 @@ rust:
     description: Rust vendoring validation
     treeherder:
         symbol: rust(vendor)
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     run:
         cwd: '{checkout}'
         command: >-
