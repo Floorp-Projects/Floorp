@@ -56,7 +56,8 @@ struct TaskbarConcealerImpl {
       https://docs.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-itaskbarlist2-markfullscreenwindow
 
       The "NonRudeHWND" property described therein doesn't help with anything
-      in this comment, unfortunately.
+      in this comment, unfortunately. (See its use in MarkAsHidingTaskbar for
+      more details.)
 
   [1] This is an oversimplification; Windows' actual behavior here is...
       complicated. See bug 1732517 comment 6 for some examples.
@@ -258,6 +259,69 @@ void nsWindow::TaskbarConcealer::UpdateAllState(
 // Mark this window as requesting to occlude the taskbar. (The caller is
 // responsible for keeping any local state up-to-date.)
 void TaskbarConcealerImpl::MarkAsHidingTaskbar(HWND aWnd, bool aMark) {
+  // USE OF UNDOCUMENTED BEHAVIOR:
+  //
+  // `MarkFullscreenWindow` is documented not to be sufficient. It will indeed
+  // cause a window to be treated as fullscreen; but, in its absence, Windows
+  // will also use explicitly undocumented heuristics to determine whether or
+  // not to treat a given window as full-screen.
+  //
+  // In Windows 8.1 and later, these heuristics don't seem to apply to us.
+  // However, in Windows 7, they do -- they determine that our fullscreen
+  // windows are, indeed, fullscreen. (That this is technically correct is of
+  // little importance, given that Windows then goes on to do the wrong thing
+  // with that knowledge.)
+  //
+  // Fortunately, `MarkFullscreenWindow` does have a converse: the `NonRudeHWND`
+  // window property. A window with this property set will not be treated as
+  // fullscreen.
+  //
+  // ===
+  //
+  // DIFFERENCE FROM DOCUMENTED BEHAVIOR:
+  //
+  // The documentation, as it was at the time of writing, is archived at:
+  // https://web.archive.org/web/20211223073250/https://docs.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-itaskbarlist2-markfullscreenwindow
+  //
+  // The most relevant paragraph follows:
+  //
+  // > **Since Windows 7**, call `SetProp(hwnd, L”NonRudeHWND”,
+  // > reinterpret_cast<HANDLE>(TRUE))` before showing a window to indicate to
+  // > the Shell that the window should not be treated as full-screen.
+  //
+  // The key words in that paragraph are "before showing a window". On Windows 7
+  // this has no particular effect, but it completely changes the behavior on
+  // Windows 8.1 and Windows 10 -- if `NonRudeHWND` is set on a window before it
+  // is shown, that window will not be treated as fullscreen **even if the
+  // property is later removed!**
+  //
+  // `NonRudeHWND` isn't actually documented to do anything at all if it's set
+  // after the window has already been shown. That it seems to do exactly what
+  // we need on Windows 7 -- prevent a window from being detected as fullscreen
+  // while it's set, and only then -- is a stroke of fortune.
+
+  static const bool kUseWin7MarkingHack = [&] {
+    switch (StaticPrefs::widget_windows_fullscreen_marking_workaround()) {
+      case -1:
+        return false;
+      case 1:
+        return true;
+      default:
+        // The behavior on Windows 8 is not known. Hopefully there are no
+        // side effects there.
+        return !mozilla::IsWin8Point1OrLater();
+    }
+  }();
+
+  if (kUseWin7MarkingHack) {
+    constexpr static LPCWSTR kPropName = L"NonRudeHWND";
+    if (aMark) {
+      ::RemovePropW(aWnd, kPropName);
+    } else {
+      ::SetPropW(aWnd, kPropName, reinterpret_cast<HANDLE>(TRUE));
+    }
+  }
+
   const char* const sMark = aMark ? "true" : "false";
 
   if (!mTaskbarInfo) {

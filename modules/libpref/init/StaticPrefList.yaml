@@ -13684,6 +13684,19 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+
+# Whether to apply a workaround intended to prevent Windows from treating
+# non-foreground-marked fullscreen windows as fullscreen on Windows 7 and
+# earlier. (See bug 1732517.)
+#
+# Valid values:
+#  * -1: the workaround is never used.
+#  *  1: the workaround is always used.
+#  *  0: the workaround is used if we think it should be. (Default.)
+- name: widget.windows.fullscreen_marking_workaround
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
 #endif
 
 # Whether to disable SwipeTracker (e.g. swipe-to-nav).
