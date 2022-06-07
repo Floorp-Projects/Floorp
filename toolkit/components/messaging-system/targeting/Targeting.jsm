@@ -11,7 +11,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
@@ -35,19 +36,19 @@ const ERROR_TYPES = {
 
 const TargetingEnvironment = {
   get locale() {
-    return ASRouterTargeting.Environment.locale;
+    return lazy.ASRouterTargeting.Environment.locale;
   },
 
   get localeLanguageCode() {
-    return ASRouterTargeting.Environment.localeLanguageCode;
+    return lazy.ASRouterTargeting.Environment.localeLanguageCode;
   },
 
   get region() {
-    return ASRouterTargeting.Environment.region;
+    return lazy.ASRouterTargeting.Environment.region;
   },
 
   get userId() {
-    return ClientEnvironment.userId;
+    return lazy.ClientEnvironment.userId;
   },
 
   get version() {
@@ -55,7 +56,7 @@ const TargetingEnvironment = {
   },
 
   get channel() {
-    const { settings } = TelemetryEnvironment.currentEnvironment;
+    const { settings } = lazy.TelemetryEnvironment.currentEnvironment;
     return settings.update.channel;
   },
 
@@ -64,7 +65,7 @@ const TargetingEnvironment = {
   },
 
   get os() {
-    return ClientEnvironmentBase.os;
+    return lazy.ClientEnvironmentBase.os;
   },
 };
 
@@ -138,7 +139,7 @@ class TargetingContext {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
           // Create timeout cb to record attribute resolution taking too long.
-          let timeout = setTimeout(() => {
+          let timeout = lazy.setTimeout(() => {
             logUndesiredEvent(ERROR_TYPES.TIMEOUT, key, prop);
             reject(
               new Error(
@@ -155,7 +156,7 @@ class TargetingContext {
             reject(error);
             Cu.reportError(error);
           } finally {
-            clearTimeout(timeout);
+            lazy.clearTimeout(timeout);
           }
         });
       },
@@ -220,7 +221,7 @@ class TargetingContext {
    * @returns {promise} Evaluation result
    */
   eval(expression, ...contexts) {
-    return FilterExpressions.eval(
+    return lazy.FilterExpressions.eval(
       expression,
       this.mergeEvaluationContexts([{ ctx: this.ctx }, ...contexts])
     );
@@ -239,7 +240,7 @@ class TargetingContext {
    * @returns {promise} Evaluation result
    */
   evalWithDefault(expression) {
-    return FilterExpressions.eval(
+    return lazy.FilterExpressions.eval(
       expression,
       this.createContextWithTimeout(this.ctx)
     );

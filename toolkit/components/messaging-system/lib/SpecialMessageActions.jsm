@@ -12,7 +12,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const DOH_DOORHANGER_DECISION_PREF = "doh-rollout.doorhanger-decision";
 const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   UITour: "resource:///modules/UITour.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -66,10 +68,10 @@ const SpecialMessageActions = {
       // AddonManager installation source associated to the addons installed from activitystream's CFR
       // and RTAMO (source is going to be "amo" if not configured explicitly in the message provider).
       const telemetryInfo = { source: telemetrySource };
-      const install = await AddonManager.getInstallForURL(aUri.spec, {
+      const install = await lazy.AddonManager.getInstallForURL(aUri.spec, {
         telemetryInfo,
       });
-      await AddonManager.installAddonFromWebpage(
+      await lazy.AddonManager.installAddonFromWebpage(
         "application/x-xpinstall",
         browser,
         systemPrincipal,
@@ -181,8 +183,8 @@ const SpecialMessageActions = {
     const window = browser.ownerGlobal;
     switch (action.type) {
       case "SHOW_MIGRATION_WIZARD":
-        MigrationUtils.showMigrationWizard(window, [
-          MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
+        lazy.MigrationUtils.showMigrationWizard(window, [
+          lazy.MigrationUtils.MIGRATION_ENTRYPOINT_NEWTAB,
           action.data?.source,
         ]);
         break;
@@ -222,12 +224,12 @@ const SpecialMessageActions = {
         );
         break;
       case "OPEN_APPLICATIONS_MENU":
-        UITour.showMenu(window, action.data.args);
+        lazy.UITour.showMenu(window, action.data.args);
         break;
       case "HIGHLIGHT_FEATURE":
-        const highlight = await UITour.getTarget(window, action.data.args);
+        const highlight = await lazy.UITour.getTarget(window, action.data.args);
         if (highlight) {
-          await UITour.showHighlight(window, highlight, "none", {
+          await lazy.UITour.showHighlight(window, highlight, "none", {
             autohide: true,
           });
         }
@@ -258,7 +260,7 @@ const SpecialMessageActions = {
         break;
       case "SHOW_FIREFOX_ACCOUNTS":
         const data = action.data;
-        const url = await FxAccounts.config.promiseConnectAccountURI(
+        const url = await lazy.FxAccounts.config.promiseConnectAccountURI(
           (data && data.entrypoint) || "snippets",
           (data && data.extraParams) || {}
         );
@@ -326,7 +328,7 @@ const SpecialMessageActions = {
         );
         break;
       case "SHOW_SPOTLIGHT":
-        Spotlight.showSpotlightDialog(browser, action.data);
+        lazy.Spotlight.showSpotlightDialog(browser, action.data);
         break;
       default:
         throw new Error(
