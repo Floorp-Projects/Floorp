@@ -234,6 +234,15 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  // Non-standard option to freeze certain builtin constructors and seal their
+  // prototypes. Also defines these constructors on the global as non-writable
+  // and non-configurable.
+  bool freezeBuiltins() const { return freezeBuiltins_; }
+  RealmCreationOptions& setFreezeBuiltins(bool flag) {
+    freezeBuiltins_ = flag;
+    return *this;
+  }
+
   uint64_t profilerRealmID() const { return profilerRealmID_; }
   RealmCreationOptions& setProfilerRealmID(uint64_t id) {
     profilerRealmID_ = id;
@@ -265,6 +274,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool newSetMethods_ = false;
 #endif
   bool secureContext_ = false;
+  bool freezeBuiltins_ = false;
 };
 
 /**
