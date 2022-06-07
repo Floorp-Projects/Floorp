@@ -13,7 +13,7 @@ arrayvec = "0.7"
 [build-dependencies]
 mozbuild = "0.1"
 cc = "1"
-rustc_version = "0.2"
+rustc_version = "0.4"
 
 [features]
 moz_memory = []

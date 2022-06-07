@@ -1,103 +1,84 @@
 semver
 ======
 
-Semantic version parsing and comparison.
+[<img alt="github" src="https://img.shields.io/badge/github-dtolnay/semver-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/dtolnay/semver)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/semver.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/semver)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-semver-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K" height="20">](https://docs.rs/semver)
+[<img alt="build status" src="https://img.shields.io/github/workflow/status/dtolnay/semver/CI/master?style=for-the-badge" height="20">](https://github.com/dtolnay/semver/actions?query=branch%3Amaster)
 
-[![Build Status](https://api.travis-ci.org/steveklabnik/semver.svg?branch=master)](https://travis-ci.org/steveklabnik/semver)
+A parser and evaluator for Cargo's flavor of Semantic Versioning.
 
-[Documentation](https://steveklabnik.github.io/semver)
-
-Semantic versioning (see http://semver.org/) is a set of rules for
-assigning version numbers.
-
-## SemVer and the Rust ecosystem
-
-Rust itself follows the SemVer specification, as does its standard libraries. The two are
-not tied together.
-
-[Cargo](https://crates.io), Rust's package manager, uses SemVer to determine which versions of
-packages you need installed.
-
-## Installation
-
-To use `semver`, add this to your `[dependencies]` section:
+Semantic Versioning (see <https://semver.org>) is a guideline for how version
+numbers are assigned and incremented. It is widely followed within the
+Cargo/crates.io ecosystem for Rust.
 
 ```toml
-semver = "0.7.0"
+[dependencies]
+semver = "1.0"
 ```
 
-And this to your crate root:
+*Compiler support: requires rustc 1.31+*
+
+<br>
+
+## Example
 
 ```rust
-extern crate semver;
+use semver::{BuildMetadata, Prerelease, Version, VersionReq};
+
+fn main() {
+    let req = VersionReq::parse(">=1.2.3, <1.8.0").unwrap();
+
+    // Check whether this requirement matches version 1.2.3-alpha.1 (no)
+    let version = Version {
+        major: 1,
+        minor: 2,
+        patch: 3,
+        pre: Prerelease::new("alpha.1").unwrap(),
+        build: BuildMetadata::EMPTY,
+    };
+    assert!(!req.matches(&version));
+
+    // Check whether it matches 1.3.0 (yes it does)
+    let version = Version::parse("1.3.0").unwrap();
+    assert!(req.matches(&version));
+}
 ```
 
-## Versions
+<br>
 
-At its simplest, the `semver` crate allows you to construct `Version` objects using the `parse`
-method:
+## Scope of this crate
 
-```rust
-use semver::Version;
+Besides Cargo, several other package ecosystems and package managers for other
+languages also use SemVer:&ensp;RubyGems/Bundler for Ruby, npm for JavaScript,
+Composer for PHP, CocoaPods for Objective-C...
 
-assert!(Version::parse("1.2.3") == Ok(Version {
-   major: 1,
-   minor: 2,
-   patch: 3,
-   pre: vec!(),
-   build: vec!(),
-}));
-```
+The `semver` crate is specifically intended to implement Cargo's interpretation
+of Semantic Versioning.
 
-If you have multiple `Version`s, you can use the usual comparison operators to compare them:
+Where the various tools differ in their interpretation or implementation of the
+spec, this crate follows the implementation choices made by Cargo. If you are
+operating on version numbers from some other package ecosystem, you will want to
+use a different semver library which is appropriate to that ecosystem.
 
-```rust
-use semver::Version;
+The extent of Cargo's SemVer support is documented in the *[Specifying
+Dependencies]* chapter of the Cargo reference.
 
-assert!(Version::parse("1.2.3-alpha")  != Version::parse("1.2.3-beta"));
-assert!(Version::parse("1.2.3-alpha2") >  Version::parse("1.2.0"));
-```
+[Specifying Dependencies]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
 
-## Requirements
+<br>
 
-The `semver` crate also provides the ability to compare requirements, which are more complex
-comparisons.
+#### License
 
-For example, creating a requirement that only matches versions greater than or
-equal to 1.0.0:
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
-```rust
-use semver::Version;
-use semver::VersionReq;
+<br>
 
-let r = VersionReq::parse(">= 1.0.0").unwrap();
-let v = Version::parse("1.0.0").unwrap();
-
-assert!(r.to_string() == ">= 1.0.0".to_string());
-assert!(r.matches(&v))
-```
-
-It also allows parsing of `~x.y.z` and `^x.y.z` requirements as defined at
-https://www.npmjs.org/doc/misc/semver.html
-
-**Tilde requirements** specify a minimal version with some updates:
-
-```notrust
-~1.2.3 := >=1.2.3 <1.3.0
-~1.2   := >=1.2.0 <1.3.0
-~1     := >=1.0.0 <2.0.0
-```
-
-**Caret requirements** allow SemVer compatible updates to a specified version,
-`0.x` and `0.x+1` are not considered compatible, but `1.x` and `1.x+1` are.
-
-`0.0.x` is not considered compatible with any other version.
-Missing minor and patch versions are desugared to `0` but allow flexibility for that value.
-
-```notrust
-^1.2.3 := >=1.2.3 <2.0.0
-^0.2.3 := >=0.2.3 <0.3.0
-^0.0.3 := >=0.0.3 <0.0.4
-^0.0   := >=0.0.0 <0.1.0
-^0     := >=0.0.0 <1.0.0
-```
+<sub>
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
+</sub>
