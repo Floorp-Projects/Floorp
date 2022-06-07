@@ -296,12 +296,12 @@ if CONFIG["FUZZING"]:
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla.dom += [
-        "!rust_generated.h",
+        "!GeneratedElementDocumentState.h",
         "RustTypes.h",
     ]
 
     CbindgenHeader(
-        "rust_generated.h",
+        "GeneratedElementDocumentState.h",
         inputs=["rust"],
     )
 
