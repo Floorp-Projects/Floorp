@@ -65,7 +65,9 @@ constexpr int kMaxBaseMinimumDelayMs = 10000;
 
 constexpr int kMaxWaitForFrameMs = 3000;
 
-constexpr int kDefaultMaximumPreStreamDecoders = 100;
+// Create a decoder for the preferred codec before the stream starts and any
+// other decoder lazily on demand.
+constexpr int kDefaultMaximumPreStreamDecoders = 1;
 
 // Concrete instance of RecordableEncodedFrame wrapping needed content
 // from EncodedFrame.
