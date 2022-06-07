@@ -936,7 +936,10 @@ WEBRTC_RTCSTATS_IMPL(
     "remote-outbound-rtp",
     &local_id,
     &remote_timestamp,
-    &reports_sent)
+    &reports_sent,
+    &round_trip_time,
+    &round_trip_time_measurements,
+    &total_round_trip_time)
 // clang-format on
 
 RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
@@ -950,14 +953,20 @@ RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
     : RTCSentRtpStreamStats(std::move(id), timestamp_us),
       local_id("localId"),
       remote_timestamp("remoteTimestamp"),
-      reports_sent("reportsSent") {}
+      reports_sent("reportsSent"),
+      round_trip_time("roundTripTime"),
+      round_trip_time_measurements("roundTripTimeMeasurements"),
+      total_round_trip_time("totalRoundTripTime") {}
 
 RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
     const RTCRemoteOutboundRtpStreamStats& other)
     : RTCSentRtpStreamStats(other),
       local_id(other.local_id),
       remote_timestamp(other.remote_timestamp),
-      reports_sent(other.reports_sent) {}
+      reports_sent(other.reports_sent),
+      round_trip_time(other.round_trip_time),
+      round_trip_time_measurements(other.round_trip_time_measurements),
+      total_round_trip_time(other.total_round_trip_time) {}
 
 RTCRemoteOutboundRtpStreamStats::~RTCRemoteOutboundRtpStreamStats() {}
 

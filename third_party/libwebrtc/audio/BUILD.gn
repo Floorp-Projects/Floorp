@@ -142,6 +142,7 @@ if (rtc_include_tests) {
       "remix_resample_unittest.cc",
       "test/audio_stats_test.cc",
       "test/nack_test.cc",
+      "test/non_sender_rtt_test.cc",
     ]
     deps = [
       ":audio",
