@@ -26,7 +26,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   CertUtils: "resource://gre/modules/CertUtils.jsm",
@@ -38,13 +40,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "AUS",
   "@mozilla.org/updates/update-service;1",
   "nsIApplicationUpdateService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "UM",
   "@mozilla.org/updates/update-manager;1",
   "nsIUpdateManager"
@@ -52,21 +54,21 @@ XPCOMUtils.defineLazyServiceGetter(
 
 if (AppConstants.ENABLE_WEBDRIVER) {
   XPCOMUtils.defineLazyServiceGetter(
-    this,
+    lazy,
     "Marionette",
     "@mozilla.org/remote/marionette;1",
     "nsIMarionette"
   );
 
   XPCOMUtils.defineLazyServiceGetter(
-    this,
+    lazy,
     "RemoteAgent",
     "@mozilla.org/remote/agent;1",
     "nsIRemoteAgent"
   );
 } else {
-  this.Marionette = { running: false };
-  this.RemoteAgent = { running: false };
+  lazy.Marionette = { running: false };
+  lazy.RemoteAgent = { running: false };
 }
 
 const UPDATESERVICE_CID = Components.ID(
@@ -320,7 +322,7 @@ let gStagingInProgress = false;
 // could leave us in a bad state.
 let gOnlyDownloadUpdatesThisSession = false;
 
-XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
+XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
   return (
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
     Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
@@ -328,7 +330,7 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "gLogfileEnabled",
   function aus_gLogfileEnabled() {
     return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
@@ -336,7 +338,7 @@ XPCOMUtils.defineLazyGetter(
 );
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "gUpdateBundle",
   function aus_gUpdateBundle() {
     return Services.strings.createBundle(URI_UPDATES_PROPERTIES);
@@ -348,7 +350,7 @@ XPCOMUtils.defineLazyGetter(
  * background task. Otherwise it will be false.
  */
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "gIsBackgroundTaskMode",
   function aus_gCurrentlyRunningAsBackgroundTask() {
     if (!("@mozilla.org/backgroundtasks;1" in Cc)) {
@@ -488,9 +490,9 @@ function waitForOtherInstances() {
       } else if (iterations + 1 == maxIterations && timeout % interval != 0) {
         // In case timeout isn't a multiple of interval, set the next timeout
         // for the remainder of the time rather than for the usual interval.
-        setTimeout(poll, timeout % interval);
+        lazy.setTimeout(poll, timeout % interval);
       } else {
-        setTimeout(poll, interval);
+        lazy.setTimeout(poll, interval);
       }
     };
 
@@ -528,12 +530,12 @@ function testWriteAccess(updateTestFile, createDirectory) {
  */
 function closeHandle(handle) {
   if (handle) {
-    let lib = ctypes.open("kernel32.dll");
+    let lib = lazy.ctypes.open("kernel32.dll");
     let CloseHandle = lib.declare(
       "CloseHandle",
-      ctypes.winapi_abi,
-      ctypes.int32_t /* success */,
-      ctypes.void_t.ptr
+      lazy.ctypes.winapi_abi,
+      lazy.ctypes.int32_t /* success */,
+      lazy.ctypes.void_t.ptr
     ); /* handle */
     CloseHandle(handle);
     lib.close();
@@ -556,18 +558,18 @@ function createMutex(aName, aAllowExisting = true) {
 
   const INITIAL_OWN = 1;
   const ERROR_ALREADY_EXISTS = 0xb7;
-  let lib = ctypes.open("kernel32.dll");
+  let lib = lazy.ctypes.open("kernel32.dll");
   let CreateMutexW = lib.declare(
     "CreateMutexW",
-    ctypes.winapi_abi,
-    ctypes.void_t.ptr /* return handle */,
-    ctypes.void_t.ptr /* security attributes */,
-    ctypes.int32_t /* initial owner */,
-    ctypes.char16_t.ptr
+    lazy.ctypes.winapi_abi,
+    lazy.ctypes.void_t.ptr /* return handle */,
+    lazy.ctypes.void_t.ptr /* security attributes */,
+    lazy.ctypes.int32_t /* initial owner */,
+    lazy.ctypes.char16_t.ptr
   ); /* name */
 
   let handle = CreateMutexW(null, INITIAL_OWN, aName);
-  let alreadyExists = ctypes.winLastError == ERROR_ALREADY_EXISTS;
+  let alreadyExists = lazy.ctypes.winLastError == ERROR_ALREADY_EXISTS;
   if (handle && !handle.isNull() && !aAllowExisting && alreadyExists) {
     closeHandle(handle);
     handle = null;
@@ -764,7 +766,7 @@ function getCanApplyUpdates() {
       // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
       let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper)
         .userCanElevate;
-      if (gIsBackgroundTaskMode) {
+      if (lazy.gIsBackgroundTaskMode) {
         LOG(
           "getCanApplyUpdates - in background task mode, assuming user can't elevate"
         );
@@ -802,7 +804,7 @@ function getCanApplyUpdates() {
  * @return true if updates can be staged for this session.
  */
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "gCanStageUpdatesSession",
   function aus_gCSUS() {
     if (getElevationRequired()) {
@@ -885,7 +887,7 @@ function getCanStageUpdates(transient = true) {
     return false;
   }
 
-  return gCanStageUpdatesSession;
+  return lazy.gCanStageUpdatesSession;
 }
 
 /*
@@ -946,13 +948,13 @@ function getCanUseBits(transient = true) {
  *          The string to write to the error console.
  */
 function LOG(string) {
-  if (gLogEnabled) {
+  if (lazy.gLogEnabled) {
     dump("*** AUS:SVC " + string + "\n");
     if (!Cu.isInAutomation) {
       Services.console.logStringMessage("AUS:SVC " + string);
     }
 
-    if (gLogfileEnabled) {
+    if (lazy.gLogfileEnabled) {
       if (!gLogfileOutputStream) {
         let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
         logfile.append(FILE_UPDATE_MESSAGES);
@@ -1066,13 +1068,13 @@ function getUpdateFile(pathArray) {
 function getStatusTextFromCode(code, defaultCode) {
   let reason;
   try {
-    reason = gUpdateBundle.GetStringFromName("check_error-" + code);
+    reason = lazy.gUpdateBundle.GetStringFromName("check_error-" + code);
     LOG(
       "getStatusTextFromCode - transfer error: " + reason + ", code: " + code
     );
   } catch (e) {
     // Use the default reason
-    reason = gUpdateBundle.GetStringFromName("check_error-" + defaultCode);
+    reason = lazy.gUpdateBundle.GetStringFromName("check_error-" + defaultCode);
     LOG(
       "getStatusTextFromCode - transfer error: " +
         reason +
@@ -1359,15 +1361,16 @@ function cleanUpDownloadingUpdateDir() {
  */
 function cleanupReadyUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
-  if (UM.readyUpdate) {
-    UM.addUpdateToHistory(UM.readyUpdate);
-    UM.readyUpdate = null;
+  if (lazy.UM.readyUpdate) {
+    lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
+    lazy.UM.readyUpdate = null;
   }
-  UM.saveUpdates();
+  lazy.UM.saveUpdates();
 
   let readyUpdateDir = getReadyUpdateDir();
   let shouldSetDownloadingStatus =
-    UM.downloadingUpdate || readStatusFile(readyUpdateDir) == STATE_DOWNLOADING;
+    lazy.UM.downloadingUpdate ||
+    readStatusFile(readyUpdateDir) == STATE_DOWNLOADING;
 
   // Now trash the ready update directory, since we're done with it
   cleanUpReadyUpdateDir();
@@ -1395,11 +1398,11 @@ function cleanupReadyUpdate() {
  */
 function cleanupDownloadingUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
-  if (UM.downloadingUpdate) {
-    UM.addUpdateToHistory(UM.downloadingUpdate);
-    UM.downloadingUpdate = null;
+  if (lazy.UM.downloadingUpdate) {
+    lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+    lazy.UM.downloadingUpdate = null;
   }
-  UM.saveUpdates();
+  lazy.UM.saveUpdates();
 
   // Now trash the update download directory, since we're done with it
   cleanUpDownloadingUpdateDir();
@@ -1431,15 +1434,15 @@ function cleanupDownloadingUpdate() {
  */
 function cleanupActiveUpdates() {
   // Move the update from the Active Update list into the Past Updates list.
-  if (UM.readyUpdate) {
-    UM.addUpdateToHistory(UM.readyUpdate);
-    UM.readyUpdate = null;
+  if (lazy.UM.readyUpdate) {
+    lazy.UM.addUpdateToHistory(lazy.UM.readyUpdate);
+    lazy.UM.readyUpdate = null;
   }
-  if (UM.downloadingUpdate) {
-    UM.addUpdateToHistory(UM.downloadingUpdate);
-    UM.downloadingUpdate = null;
+  if (lazy.UM.downloadingUpdate) {
+    lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+    lazy.UM.downloadingUpdate = null;
   }
-  UM.saveUpdates();
+  lazy.UM.saveUpdates();
 
   // Now trash both active update directories, since we're done with them
   cleanUpReadyUpdateDir();
@@ -1588,7 +1591,9 @@ function handleUpdateFailure(update, errorCode) {
           (update.state = STATE_PENDING_ELEVATE)
         );
       }
-      update.statusText = gUpdateBundle.GetStringFromName("elevationFailure");
+      update.statusText = lazy.gUpdateBundle.GetStringFromName(
+        "elevationFailure"
+      );
     } else {
       writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
     }
@@ -1669,7 +1674,7 @@ async function handleFallbackToCompleteUpdate(postStaging) {
 
   // The downloading update will be newer than the ready update, so use that
   // update, if it exists.
-  let update = UM.downloadingUpdate || UM.readyUpdate;
+  let update = lazy.UM.downloadingUpdate || lazy.UM.readyUpdate;
   if (!update) {
     LOG(
       "handleFallbackToCompleteUpdate - Unable to find an update to fall " +
@@ -1678,7 +1683,7 @@ async function handleFallbackToCompleteUpdate(postStaging) {
     return;
   }
 
-  await AUS.stopDownload();
+  await lazy.AUS.stopDownload();
   cleanupActiveUpdates();
 
   if (!update.selectedPatch) {
@@ -1690,7 +1695,7 @@ async function handleFallbackToCompleteUpdate(postStaging) {
     }
   }
 
-  update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
+  update.statusText = lazy.gUpdateBundle.GetStringFromName("patchApplyFailure");
   var oldType = update.selectedPatch ? update.selectedPatch.type : "complete";
   if (update.selectedPatch && oldType == "partial" && update.patchCount == 2) {
     // Partial patch application failed, try downloading the complete
@@ -1699,7 +1704,7 @@ async function handleFallbackToCompleteUpdate(postStaging) {
       "handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch"
     );
-    var success = AUS.downloadUpdate(update, !postStaging);
+    var success = lazy.AUS.downloadUpdate(update, !postStaging);
     if (!success) {
       cleanupDownloadingUpdate();
     }
@@ -1826,16 +1831,16 @@ function updateIsAtLeastAsOldAsCurrentVersion(update) {
  */
 function updateIsAtLeastAsOldAsReadyUpdate(update) {
   if (
-    !UM.readyUpdate ||
-    !UM.readyUpdate.appVersion ||
-    !UM.readyUpdate.buildID
+    !lazy.UM.readyUpdate ||
+    !lazy.UM.readyUpdate.appVersion ||
+    !lazy.UM.readyUpdate.buildID
   ) {
     return false;
   }
   return updateIsAtLeastAsOldAs(
     update,
-    UM.readyUpdate.appVersion,
-    UM.readyUpdate.buildID
+    lazy.UM.readyUpdate.appVersion,
+    lazy.UM.readyUpdate.buildID
   );
 }
 
@@ -2196,7 +2201,7 @@ function Update(update) {
     // "<App Name> <Update App Version>"
     let brandBundle = Services.strings.createBundle(URI_BRAND_PROPERTIES);
     let appName = brandBundle.GetStringFromName("brandShortName");
-    this.name = gUpdateBundle.formatStringFromName("updateName", [
+    this.name = lazy.gUpdateBundle.formatStringFromName("updateName", [
       appName,
       this.displayVersion,
     ]);
@@ -2502,7 +2507,10 @@ UpdateService.prototype = {
         Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
 
         // Background tasks do not notify any delayed startup notifications.
-        if (!gIsBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
+        if (
+          !lazy.gIsBackgroundTaskMode &&
+          Services.appinfo.ID in APPID_TO_TOPIC
+        ) {
           // Delay post-update processing to ensure that possible update
           // dialogs are shown in front of the app window, if possible.
           // See bug 311614.
@@ -2513,7 +2521,10 @@ UpdateService.prototype = {
       case "sessionstore-windows-restored":
       case "mail-startup-done":
         // Background tasks do not notify any delayed startup notifications.
-        if (!gIsBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
+        if (
+          !lazy.gIsBackgroundTaskMode &&
+          Services.appinfo.ID in APPID_TO_TOPIC
+        ) {
           Services.obs.removeObserver(
             this,
             APPID_TO_TOPIC[Services.appinfo.ID]
@@ -2529,19 +2540,19 @@ UpdateService.prototype = {
         break;
       case "nsPref:changed":
         if (data == PREF_APP_UPDATE_LOG || data == PREF_APP_UPDATE_LOG_FILE) {
-          gLogEnabled; // Assigning this before it is lazy-loaded is an error.
-          gLogEnabled =
+          lazy.gLogEnabled; // Assigning this before it is lazy-loaded is an error.
+          lazy.gLogEnabled =
             Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
             Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
         }
         if (data == PREF_APP_UPDATE_LOG_FILE) {
-          gLogfileEnabled; // Assigning this before it is lazy-loaded is an
+          lazy.gLogfileEnabled; // Assigning this before it is lazy-loaded is an
           // error.
-          gLogfileEnabled = Services.prefs.getBoolPref(
+          lazy.gLogfileEnabled = Services.prefs.getBoolPref(
             PREF_APP_UPDATE_LOG_FILE,
             false
           );
-          if (gLogfileEnabled) {
+          if (lazy.gLogfileEnabled) {
             this._logStatus();
           }
         }
@@ -2647,11 +2658,11 @@ UpdateService.prototype = {
     }
 
     let updates = [];
-    if (UM.readyUpdate) {
-      updates.push(UM.readyUpdate);
+    if (lazy.UM.readyUpdate) {
+      updates.push(lazy.UM.readyUpdate);
     }
-    if (UM.downloadingUpdate) {
-      updates.push(UM.downloadingUpdate);
+    if (lazy.UM.downloadingUpdate) {
+      updates.push(lazy.UM.downloadingUpdate);
     }
 
     if (status == STATE_NONE) {
@@ -2665,7 +2676,9 @@ UpdateService.prototype = {
       for (let update of updates) {
         update.state = STATE_FAILED;
         update.errorCode = ERR_UPDATE_STATE_NONE;
-        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+        update.statusText = lazy.gUpdateBundle.GetStringFromName(
+          "statusFailed"
+        );
       }
       let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
       pingStateAndStatusCodes(updates[0], true, newStatus);
@@ -2675,7 +2688,7 @@ UpdateService.prototype = {
 
     let channelChanged = updates => {
       for (let update of updates) {
-        if (update.channel != UpdateUtils.UpdateChannel) {
+        if (update.channel != lazy.UpdateUtils.UpdateChannel) {
           return true;
         }
       }
@@ -2693,23 +2706,25 @@ UpdateService.prototype = {
       let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
       prefSvc.observe(null, "reload-default-prefs", null);
       if (channelChanged(updates)) {
-        let channel = UM.readyUpdate
-          ? UM.readyUpdate.channel
-          : UM.downloadingUpdate.channel;
+        let channel = lazy.UM.readyUpdate
+          ? lazy.UM.readyUpdate.channel
+          : lazy.UM.downloadingUpdate.channel;
         LOG(
           "UpdateService:_postUpdateProcessing - update channel is " +
             "different than application's channel, removing update. update " +
             "channel: " +
             channel +
             ", expected channel: " +
-            UpdateUtils.UpdateChannel
+            lazy.UpdateUtils.UpdateChannel
         );
         // User switched channels, clear out the old active updates and remove
         // partial downloads
         for (let update of updates) {
           update.state = STATE_FAILED;
           update.errorCode = ERR_CHANNEL_CHANGE;
-          update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+          update.statusText = lazy.gUpdateBundle.GetStringFromName(
+            "statusFailed"
+          );
         }
         let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
         pingStateAndStatusCodes(updates[0], true, newStatus);
@@ -2733,20 +2748,20 @@ UpdateService.prototype = {
       let tooOldUpdate;
       if (
         updateIsAtLeastAsOldAs(
-          UM.readyUpdate,
+          lazy.UM.readyUpdate,
           Services.appinfo.version,
           Services.appinfo.appBuildID
         )
       ) {
-        tooOldUpdate = UM.readyUpdate;
+        tooOldUpdate = lazy.UM.readyUpdate;
       } else if (
         updateIsAtLeastAsOldAs(
-          UM.downloadingUpdate,
+          lazy.UM.downloadingUpdate,
           Services.appinfo.version,
           Services.appinfo.appBuildID
         )
       ) {
-        tooOldUpdate = UM.downloadingUpdate;
+        tooOldUpdate = lazy.UM.downloadingUpdate;
       }
       if (tooOldUpdate) {
         LOG(
@@ -2764,7 +2779,7 @@ UpdateService.prototype = {
             Services.appinfo.appBuildID
         );
         tooOldUpdate.state = STATE_FAILED;
-        tooOldUpdate.statusText = gUpdateBundle.GetStringFromName(
+        tooOldUpdate.statusText = lazy.gUpdateBundle.GetStringFromName(
           "statusFailed"
         );
         tooOldUpdate.errorCode = ERR_OLDER_VERSION_OR_SAME_BUILD;
@@ -2781,11 +2796,13 @@ UpdateService.prototype = {
     }
 
     pingStateAndStatusCodes(
-      status == STATE_DOWNLOADING ? UM.downloadingUpdate : UM.readyUpdate,
+      status == STATE_DOWNLOADING
+        ? lazy.UM.downloadingUpdate
+        : lazy.UM.readyUpdate,
       true,
       status
     );
-    if (UM.downloadingUpdate || status == STATE_DOWNLOADING) {
+    if (lazy.UM.downloadingUpdate || status == STATE_DOWNLOADING) {
       if (status == STATE_SUCCEEDED) {
         // If we successfully installed an update while we were downloading
         // another update, the downloading update is now a partial MAR for
@@ -2800,12 +2817,12 @@ UpdateService.prototype = {
         cleanupDownloadingUpdate();
       } else {
         // Attempt to resume download
-        if (UM.downloadingUpdate) {
+        if (lazy.UM.downloadingUpdate) {
           LOG(
             "UpdateService:_postUpdateProcessing - resuming patch found in " +
               "downloading state"
           );
-          let success = this.downloadUpdate(UM.downloadingUpdate, true);
+          let success = this.downloadUpdate(lazy.UM.downloadingUpdate, true);
           if (!success) {
             cleanupDownloadingUpdate();
           }
@@ -2825,7 +2842,7 @@ UpdateService.prototype = {
       }
     }
 
-    let update = UM.readyUpdate;
+    let update = lazy.UM.readyUpdate;
 
     if (status == STATE_APPLYING) {
       // This indicates that the background updater service is in either of the
@@ -2850,7 +2867,7 @@ UpdateService.prototype = {
             "state for the first time"
         );
         update.state = STATE_APPLYING;
-        UM.saveUpdates();
+        lazy.UM.saveUpdates();
       } else {
         // We get here even if we don't have an update object
         LOG(
@@ -2890,12 +2907,14 @@ UpdateService.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS)) {
         Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS);
       }
-      update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
+      update.statusText = lazy.gUpdateBundle.GetStringFromName(
+        "installSuccess"
+      );
 
       // The only time that update is not a reference to readyUpdate is when
       // readyUpdate is null.
-      if (!UM.readyUpdate) {
-        UM.readyUpdate = update;
+      if (!lazy.UM.readyUpdate) {
+        lazy.UM.readyUpdate = update;
       }
 
       // Done with this update. Clean it up.
@@ -3016,7 +3035,7 @@ UpdateService.prototype = {
     // update check failures. As far as the user knows, the update status is
     // the status of the ready update. We don't want to confuse them by saying
     // that an update check failed.
-    if (UM.readyUpdate) {
+    if (lazy.UM.readyUpdate) {
       LOG(
         "UpdateService:onError - Ignoring error because another update is " +
           "ready."
@@ -3105,7 +3124,7 @@ UpdateService.prototype = {
 
   // The suffix used for background update check telemetry histogram ID's.
   get _pingSuffix() {
-    if (UM.readyUpdate) {
+    if (lazy.UM.readyUpdate) {
       // Once an update has been downloaded, all later updates will be reported
       // to telemetry as subsequent updates. We move the first update into
       // readyUpdate as soon as the download is complete, so any update checks
@@ -3190,7 +3209,7 @@ UpdateService.prototype = {
     // UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL
     // UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY
     // UPDATE_NOT_PREF_UPDATE_AUTO_SUBSEQUENT
-    UpdateUtils.getAppUpdateAutoEnabled().then(enabled => {
+    lazy.UpdateUtils.getAppUpdateAutoEnabled().then(enabled => {
       AUSTLMY.pingGeneric(
         "UPDATE_NOT_PREF_UPDATE_AUTO_" + this._pingSuffix,
         enabled,
@@ -3269,9 +3288,9 @@ UpdateService.prototype = {
     // do not currently download complete updates if there is already a
     // readyUpdate available.
     if (
-      UM.readyUpdate &&
-      UM.readyUpdate.selectedPatch &&
-      UM.readyUpdate.selectedPatch.type == "complete"
+      lazy.UM.readyUpdate &&
+      lazy.UM.readyUpdate.selectedPatch &&
+      lazy.UM.readyUpdate.selectedPatch.type == "complete"
     ) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
       return false;
@@ -3297,9 +3316,9 @@ UpdateService.prototype = {
       .then(() => {
         // The following checks are done here so they can be differentiated from
         // foreground checks.
-        if (!UpdateUtils.OSVersion) {
+        if (!lazy.UpdateUtils.OSVersion) {
           AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_OS_VERSION);
-        } else if (!UpdateUtils.ABI) {
+        } else if (!lazy.UpdateUtils.ABI) {
           AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_OS_ABI);
         } else if (!validUpdateURL) {
           AUSTLMY.pingCheckCode(
@@ -3367,7 +3386,7 @@ UpdateService.prototype = {
         return;
       }
 
-      if (UM.readyUpdate && !getPatchOfType(aUpdate, "partial")) {
+      if (lazy.UM.readyUpdate && !getPatchOfType(aUpdate, "partial")) {
         LOG(
           "UpdateService:selectUpdate - skipping update because no partial " +
             "patch is available and an update has already been downloaded."
@@ -3497,7 +3516,7 @@ UpdateService.prototype = {
   _selectAndInstallUpdate: async function AUS__selectAndInstallUpdate(updates) {
     // Return early if there's an active update. The user is already aware and
     // is downloading or performed some user action to prevent notification.
-    if (UM.downloadingUpdate) {
+    if (lazy.UM.downloadingUpdate) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_HAS_ACTIVEUPDATE);
       return;
     }
@@ -3553,7 +3572,7 @@ UpdateService.prototype = {
      * Major         Notify
      * Minor         Auto Install
      */
-    let updateAuto = await UpdateUtils.getAppUpdateAutoEnabled();
+    let updateAuto = await lazy.UpdateUtils.getAppUpdateAutoEnabled();
     if (!updateAuto) {
       LOG(
         "UpdateService:_selectAndInstallUpdate - prompting because silent " +
@@ -3590,7 +3609,9 @@ UpdateService.prototype = {
 
   get disabledForTesting() {
     return (
-      (Cu.isInAutomation || Marionette.running || RemoteAgent.running) &&
+      (Cu.isInAutomation ||
+        lazy.Marionette.running ||
+        lazy.RemoteAgent.running) &&
       Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false)
     );
   },
@@ -3637,7 +3658,7 @@ UpdateService.prototype = {
     }
 
     // If we don't know the binary platform we're updating, we can't update.
-    if (!UpdateUtils.ABI) {
+    if (!lazy.UpdateUtils.ABI) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
           "unknown ABI"
@@ -3646,7 +3667,7 @@ UpdateService.prototype = {
     }
 
     // If we don't know the OS version we're updating, we can't update.
-    if (!UpdateUtils.OSVersion) {
+    if (!lazy.UpdateUtils.OSVersion) {
       LOG(
         "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
           "unknown OS version"
@@ -3851,13 +3872,13 @@ UpdateService.prototype = {
           "update that's already been downloaded is the same version or " +
           "newer.\n" +
           "currently downloaded update application version: " +
-          UM.readyUpdate.appVersion +
+          lazy.UM.readyUpdate.appVersion +
           "\n" +
           "available update application version : " +
           update.appVersion +
           "\n" +
           "currently downloaded update build ID: " +
-          UM.readyUpdate.buildID +
+          lazy.UM.readyUpdate.buildID +
           "\n" +
           "available update build ID : " +
           update.buildID
@@ -3911,7 +3932,7 @@ UpdateService.prototype = {
   },
 
   _logStatus: function AUS__logStatus() {
-    if (!gLogEnabled) {
+    if (!lazy.gLogEnabled) {
       return;
     }
     if (this.disabledByPolicy) {
@@ -4007,7 +4028,7 @@ function UpdateManager() {
       // the active update to the update history.
       this._readyUpdate.state = STATE_FAILED;
       this._readyUpdate.errorCode = ERR_UPDATE_STATE_NONE;
-      this._readyUpdate.statusText = gUpdateBundle.GetStringFromName(
+      this._readyUpdate.statusText = lazy.gUpdateBundle.GetStringFromName(
         "statusFailed"
       );
       let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
@@ -4321,11 +4342,11 @@ UpdateManager.prototype = {
     if (!this._updatesXMLSaver) {
       this._updatesXMLSaverCallback = () => this._updatesXMLSaver.finalize();
 
-      this._updatesXMLSaver = new DeferredTask(
+      this._updatesXMLSaver = new lazy.DeferredTask(
         () => this._saveUpdatesXML(),
         XML_SAVER_INTERVAL_MS
       );
-      AsyncShutdown.profileBeforeChange.addBlocker(
+      lazy.AsyncShutdown.profileBeforeChange.addBlocker(
         "UpdateManager: writing update xml data",
         this._updatesXMLSaverCallback
       );
@@ -4512,7 +4533,7 @@ Checker.prototype = {
     // The first element of the array is whether the build target is 32 or 64
     // bit and the third element of the array is whether the client's Windows OS
     // system processor is 32 or 64 bit.
-    let aryABI = UpdateUtils.ABI.split("-");
+    let aryABI = lazy.UpdateUtils.ABI.split("-");
     if (aryABI[0] != "x86" || aryABI[2] != "x64") {
       return false;
     }
@@ -4523,13 +4544,13 @@ Checker.prototype = {
 
     let regPath =
       "SOFTWARE\\Mozilla\\" + Services.appinfo.name + "\\32to64DidMigrate";
-    let regValHKCU = WindowsRegistry.readRegKey(
+    let regValHKCU = lazy.WindowsRegistry.readRegKey(
       wrk.ROOT_KEY_CURRENT_USER,
       regPath,
       "Never",
       wrk.WOW64_32
     );
-    let regValHKLM = WindowsRegistry.readRegKey(
+    let regValHKLM = lazy.WindowsRegistry.readRegKey(
       wrk.ROOT_KEY_LOCAL_MACHINE,
       regPath,
       "Never",
@@ -4543,13 +4564,13 @@ Checker.prototype = {
     }
 
     let appBaseDirPath = getAppBaseDir().path;
-    regValHKCU = WindowsRegistry.readRegKey(
+    regValHKCU = lazy.WindowsRegistry.readRegKey(
       wrk.ROOT_KEY_CURRENT_USER,
       regPath,
       appBaseDirPath,
       wrk.WOW64_32
     );
-    regValHKLM = WindowsRegistry.readRegKey(
+    regValHKLM = lazy.WindowsRegistry.readRegKey(
       wrk.ROOT_KEY_LOCAL_MACHINE,
       regPath,
       appBaseDirPath,
@@ -4604,7 +4625,7 @@ Checker.prototype = {
       return null;
     }
 
-    url = await UpdateUtils.formatUpdateURL(url);
+    url = await lazy.UpdateUtils.formatUpdateURL(url);
 
     if (force) {
       url += (url.includes("?") ? "&" : "?") + "force=1";
@@ -4667,7 +4688,7 @@ Checker.prototype = {
 
         this._request = new XMLHttpRequest();
         this._request.open("GET", url, true);
-        this._request.channel.notificationCallbacks = new CertUtils.BadCertHandler(
+        this._request.channel.notificationCallbacks = new lazy.CertUtils.BadCertHandler(
           false
         );
         // Prevent the request from reading from the cache.
@@ -4740,7 +4761,7 @@ Checker.prototype = {
         continue;
       }
       update.serviceURL = this._request.responseURL;
-      update.channel = UpdateUtils.UpdateChannel;
+      update.channel = lazy.UpdateUtils.UpdateChannel;
       updates.push(update);
     }
 
@@ -5149,7 +5170,7 @@ Downloader.prototype = {
       selectedPatch = partialPatch;
     }
     if (!selectedPatch) {
-      if (UM.readyUpdate) {
+      if (lazy.UM.readyUpdate) {
         // If we already have a ready update, we download partials only.
         LOG(
           "Downloader:_selectPatch - not selecting a complete patch because " +
@@ -5172,7 +5193,7 @@ Downloader.prototype = {
       update.isCompleteUpdate = selectedPatch.type == "complete";
     }
 
-    UM.downloadingUpdate = update;
+    lazy.UM.downloadingUpdate = update;
 
     return selectedPatch;
   },
@@ -5252,7 +5273,7 @@ Downloader.prototype = {
 
     // Note that we don't care about success or failure here, either way we will
     // continue with the update process.
-    let langPackPromise = AddonManager.stageLangpacksForAppUpdate(
+    let langPackPromise = lazy.AddonManager.stageLangpacksForAppUpdate(
       update.appVersion,
       update.appVersion
     )
@@ -5307,7 +5328,7 @@ Downloader.prototype = {
 
     if (
       this._update.getProperty("disableBackgroundUpdates") != null &&
-      gIsBackgroundTaskMode
+      lazy.gIsBackgroundTaskMode
     ) {
       LOG(
         "Downloader:downloadUpdate - Background update disabled by update " +
@@ -5426,7 +5447,7 @@ Downloader.prototype = {
             this._maybeStopActiveNotifications();
           }
 
-          UM.saveUpdates();
+          lazy.UM.saveUpdates();
           this._pendingRequest = null;
         },
         error => {
@@ -5460,7 +5481,7 @@ Downloader.prototype = {
             gBITSInUseByAnotherUser = true;
           } else {
             this._patch.setProperty("bitsResult", Cr.NS_ERROR_FAILURE);
-            UM.saveUpdates();
+            lazy.UM.saveUpdates();
 
             LOG(
               "Downloader:downloadUpdate - Failed to start to BITS job. " +
@@ -5484,12 +5505,12 @@ Downloader.prototype = {
       );
     }
 
-    if (!UM.readyUpdate) {
+    if (!lazy.UM.readyUpdate) {
       writeStatusFile(getReadyUpdateDir(), STATE_DOWNLOADING);
     }
     if (this._patch.state != STATE_DOWNLOADING) {
       this._patch.state = STATE_DOWNLOADING;
-      UM.saveUpdates();
+      lazy.UM.saveUpdates();
     }
 
     this._startLangPackUpdates();
@@ -5615,7 +5636,7 @@ Downloader.prototype = {
       // Set finalURL in onStartRequest if it is different.
       if (this._patch.finalURL != request.finalURI.spec) {
         this._patch.finalURL = request.finalURI.spec;
-        UM.saveUpdates();
+        lazy.UM.saveUpdates();
       }
     }
 
@@ -5826,7 +5847,7 @@ Downloader.prototype = {
           writeStatusFile(getReadyUpdateDir(), state);
           writeVersionFile(getReadyUpdateDir(), this._update.appVersion);
           this._update.installDate = new Date().getTime();
-          this._update.statusText = gUpdateBundle.GetStringFromName(
+          this._update.statusText = lazy.gUpdateBundle.GetStringFromName(
             "installPending"
           );
           Services.prefs.setIntPref(PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS, 0);
@@ -5979,16 +6000,19 @@ Downloader.prototype = {
     }
     if (deleteActiveUpdate) {
       this._update.installDate = new Date().getTime();
-      UM.addUpdateToHistory(UM.downloadingUpdate);
-      UM.downloadingUpdate = null;
-    } else if (UM.downloadingUpdate && UM.downloadingUpdate.state != state) {
-      UM.downloadingUpdate.state = state;
+      lazy.UM.addUpdateToHistory(lazy.UM.downloadingUpdate);
+      lazy.UM.downloadingUpdate = null;
+    } else if (
+      lazy.UM.downloadingUpdate &&
+      lazy.UM.downloadingUpdate.state != state
+    ) {
+      lazy.UM.downloadingUpdate.state = state;
     }
     if (migratedToReadyUpdate) {
-      UM.readyUpdate = UM.downloadingUpdate;
-      UM.downloadingUpdate = null;
+      lazy.UM.readyUpdate = lazy.UM.downloadingUpdate;
+      lazy.UM.downloadingUpdate = null;
     }
-    UM.saveUpdates();
+    lazy.UM.saveUpdates();
 
     // Only notify listeners about the stopped state if we
     // aren't handling an internal retry.
@@ -6150,7 +6174,7 @@ Downloader.prototype = {
         { inSeconds: true }
       );
 
-      setTimeout(
+      lazy.setTimeout(
         this._langPackTimeout,
         Services.prefs.getIntPref(
           PREF_APP_UPDATE_LANGPACK_TIMEOUT,
