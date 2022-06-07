@@ -712,6 +712,13 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
 }
 
 void nsPACMan::OnLoadFailure() {
+  // We have to clear the loader to indicate that we are not loading PAC
+  // currently.
+  {
+    auto loader = mLoader.Lock();
+    loader.ref() = nullptr;
+  }
+
   int32_t minInterval = 5;    // 5 seconds
   int32_t maxInterval = 300;  // 5 minutes
 
