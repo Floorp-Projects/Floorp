@@ -11,27 +11,29 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyModuleGetter(
-  this,
+  lazy,
   "WinImpl",
   "resource://gre/modules/TaskSchedulerWinImpl.jsm",
   "_TaskSchedulerWinImpl"
 );
 
 XPCOMUtils.defineLazyModuleGetter(
-  this,
+  lazy,
   "MacOSImpl",
   "resource://gre/modules/TaskSchedulerMacOSImpl.jsm",
   "_TaskSchedulerMacOSImpl"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gImpl", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gImpl", () => {
   if (AppConstants.platform == "win") {
-    return WinImpl;
+    return lazy.WinImpl;
   }
 
   if (AppConstants.platform == "macosx") {
-    return MacOSImpl;
+    return lazy.MacOSImpl;
   }
 
   // Stubs for unsupported platforms
@@ -133,7 +135,7 @@ var TaskScheduler = {
       throw new Error("Interval is too short");
     }
 
-    return gImpl.registerTask(id, command, intervalSeconds, options);
+    return lazy.gImpl.registerTask(id, command, intervalSeconds, options);
   },
 
   /**
@@ -142,14 +144,14 @@ var TaskScheduler = {
    * @throws NS_ERROR_FILE_NOT_FOUND if the task does not exist.
    */
   async deleteTask(id) {
-    return gImpl.deleteTask(id);
+    return lazy.gImpl.deleteTask(id);
   },
 
   /**
    * Delete all tasks registered by this application.
    */
   async deleteAllTasks() {
-    return gImpl.deleteAllTasks();
+    return lazy.gImpl.deleteAllTasks();
   },
 
   /**
@@ -162,6 +164,6 @@ var TaskScheduler = {
    *        true if the task exists, otherwise false.
    */
   async taskExists(id) {
-    return gImpl.taskExists(id);
+    return lazy.gImpl.taskExists(id);
   },
 };

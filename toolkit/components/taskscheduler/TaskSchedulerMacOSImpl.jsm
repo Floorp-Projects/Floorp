@@ -15,18 +15,20 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Subprocess: "resource://gre/modules/Subprocess.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   XreDirProvider: [
     "@mozilla.org/xre/directory-provider;1",
     "nsIXREDirProvider",
   ],
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -47,14 +49,14 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
  */
 var _TaskSchedulerMacOSImpl = {
   async registerTask(id, command, intervalSeconds, options) {
-    log.info(
+    lazy.log.info(
       `registerTask(${id}, ${command}, ${intervalSeconds}, ${JSON.stringify(
         options
       )})`
     );
 
     let uid = await this._uid();
-    log.debug(`registerTask: uid=${uid}`);
+    lazy.log.debug(`registerTask: uid=${uid}`);
 
     let label = this._formatLabelForThisApp(id);
 
@@ -85,36 +87,36 @@ var _TaskSchedulerMacOSImpl = {
     let path = this._formatPlistPath(label);
 
     await IOUtils.write(path, new TextEncoder().encode(str));
-    log.debug(`registerTask: wrote ${path}`);
+    lazy.log.debug(`registerTask: wrote ${path}`);
 
     try {
-      let bootout = await Subprocess.call({
+      let bootout = await lazy.Subprocess.call({
         command: "/bin/launchctl",
         arguments: ["bootout", `gui/${uid}/${label}`],
         stderr: "stdout",
       });
 
-      log.debug(
+      lazy.log.debug(
         "registerTask: bootout stdout",
         await bootout.stdout.readString()
       );
 
       let { exitCode } = await bootout.wait();
-      log.debug(`registerTask: bootout returned ${exitCode}`);
+      lazy.log.debug(`registerTask: bootout returned ${exitCode}`);
 
-      let bootstrap = await Subprocess.call({
+      let bootstrap = await lazy.Subprocess.call({
         command: "/bin/launchctl",
         arguments: ["bootstrap", `gui/${uid}`, path],
         stderr: "stdout",
       });
 
-      log.debug(
+      lazy.log.debug(
         "registerTask: bootstrap stdout",
         await bootstrap.stdout.readString()
       );
 
       ({ exitCode } = await bootstrap.wait());
-      log.debug(`registerTask: bootstrap returned ${exitCode}`);
+      lazy.log.debug(`registerTask: bootstrap returned ${exitCode}`);
 
       if (exitCode != 0) {
         throw new Components.Exception(
@@ -132,7 +134,7 @@ var _TaskSchedulerMacOSImpl = {
   },
 
   async deleteTask(id) {
-    log.info(`deleteTask(${id})`);
+    lazy.log.info(`deleteTask(${id})`);
 
     let label = this._formatLabelForThisApp(id);
     return this._deleteTaskByLabel(label);
@@ -140,21 +142,21 @@ var _TaskSchedulerMacOSImpl = {
 
   async _deleteTaskByLabel(label) {
     let path = this._formatPlistPath(label);
-    log.debug(`_deleteTaskByLabel: removing ${path}`);
+    lazy.log.debug(`_deleteTaskByLabel: removing ${path}`);
     await IOUtils.remove(path, { ignoreAbsent: true });
 
     let uid = await this._uid();
-    log.debug(`_deleteTaskByLabel: uid=${uid}`);
+    lazy.log.debug(`_deleteTaskByLabel: uid=${uid}`);
 
-    let bootout = await Subprocess.call({
+    let bootout = await lazy.Subprocess.call({
       command: "/bin/launchctl",
       arguments: ["bootout", `gui/${uid}/${label}`],
       stderr: "stdout",
     });
 
     let { exitCode } = await bootout.wait();
-    log.debug(`_deleteTaskByLabel: bootout returned ${exitCode}`);
-    log.debug(
+    lazy.log.debug(`_deleteTaskByLabel: bootout returned ${exitCode}`);
+    lazy.log.debug(
       `_deleteTaskByLabel: bootout stdout`,
       await bootout.stdout.readString()
     );
@@ -164,7 +166,7 @@ var _TaskSchedulerMacOSImpl = {
 
   // For internal and testing use only.
   async _listAllLabelsForThisApp() {
-    let proc = await Subprocess.call({
+    let proc = await lazy.Subprocess.call({
       command: "/bin/launchctl",
       arguments: ["list"],
       stderr: "stdout",
@@ -185,12 +187,12 @@ var _TaskSchedulerMacOSImpl = {
       .map(line => line.split("\t").pop()) // Lines are like "-\t0\tlabel".
       .filter(this._labelMatchesThisApp);
 
-    log.debug(`_listAllLabelsForThisApp`, labels);
+    lazy.log.debug(`_listAllLabelsForThisApp`, labels);
     return labels;
   },
 
   async deleteAllTasks() {
-    log.info(`deleteAllTasks()`);
+    lazy.log.info(`deleteAllTasks()`);
 
     let labelsToDelete = await this._listAllLabelsForThisApp();
 
@@ -209,7 +211,7 @@ var _TaskSchedulerMacOSImpl = {
     }
 
     let result = { deleted, failed };
-    log.debug(`deleteAllTasks: returning ${JSON.stringify(result)}`);
+    lazy.log.debug(`deleteAllTasks: returning ${JSON.stringify(result)}`);
   },
 
   async taskExists(id) {
@@ -298,12 +300,12 @@ var _TaskSchedulerMacOSImpl = {
   },
 
   _formatLabelForThisApp(id) {
-    let installHash = XreDirProvider.getInstallHash();
+    let installHash = lazy.XreDirProvider.getInstallHash();
     return `${AppConstants.MOZ_MACBUNDLE_ID}.${installHash}.${id}`;
   },
 
   _labelMatchesThisApp(label) {
-    let installHash = XreDirProvider.getInstallHash();
+    let installHash = lazy.XreDirProvider.getInstallHash();
     return (
       label &&
       label.startsWith(`${AppConstants.MOZ_MACBUNDLE_ID}.${installHash}.`)
@@ -327,7 +329,7 @@ var _TaskSchedulerMacOSImpl = {
 
     // There are standard APIs for determining our current UID, but this
     // is easy and parallel to the general tactics used by this module.
-    let proc = await Subprocess.call({
+    let proc = await lazy.Subprocess.call({
       command: "/usr/bin/id",
       arguments: ["-u"],
       stderr: "stdout",
