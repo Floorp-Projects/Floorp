@@ -143,6 +143,8 @@ void DefaultVideoQualityAnalyzer::Start(
     peers_ = std::make_unique<NamesCollection>(peer_names);
     RTC_CHECK(start_time_.IsMinusInfinity());
 
+    RTC_CHECK_EQ(state_, State::kNew)
+        << "DefaultVideoQualityAnalyzer is already started";
     state_ = State::kActive;
     start_time_ = Now();
   }
@@ -161,6 +163,8 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
   size_t stream_index;
   {
     MutexLock lock(&mutex_);
+    RTC_CHECK_EQ(state_, State::kActive)
+        << "DefaultVideoQualityAnalyzer has to be started before use";
     // Create a local copy of `start_time_`, peer's index and total peers count
     // to access it without holding a `mutex_` during access to
     // `frames_comparator_`.
@@ -256,6 +260,9 @@ void DefaultVideoQualityAnalyzer::OnFramePreEncode(
     absl::string_view peer_name,
     const webrtc::VideoFrame& frame) {
   MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
   auto it = captured_frames_in_flight_.find(frame.id());
   RTC_DCHECK(it != captured_frames_in_flight_.end())
       << "Frame id=" << frame.id() << " not found";
@@ -276,6 +283,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     const webrtc::EncodedImage& encoded_image,
     const EncoderStats& stats) {
   MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
   auto it = captured_frames_in_flight_.find(frame_id);
   if (it == captured_frames_in_flight_.end()) {
     RTC_LOG(WARNING)
@@ -321,6 +331,9 @@ void DefaultVideoQualityAnalyzer::OnFramePreDecode(
     uint16_t frame_id,
     const webrtc::EncodedImage& input_image) {
   MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
   size_t peer_index = peers_->index(peer_name);
 
   auto it = captured_frames_in_flight_.find(frame_id);
@@ -357,6 +370,9 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
     const webrtc::VideoFrame& frame,
     const DecoderStats& stats) {
   MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
   size_t peer_index = peers_->index(peer_name);
 
   auto it = captured_frames_in_flight_.find(frame.id());
@@ -387,6 +403,9 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
     absl::string_view peer_name,
     const webrtc::VideoFrame& frame) {
   MutexLock lock(&mutex_);
+  RTC_CHECK_EQ(state_, State::kActive)
+      << "DefaultVideoQualityAnalyzer has to be started before use";
+
   size_t peer_index = peers_->index(peer_name);
 
   auto frame_it = captured_frames_in_flight_.find(frame.id());
@@ -559,6 +578,9 @@ void DefaultVideoQualityAnalyzer::Stop() {
     if (state_ == State::kStopped) {
       return;
     }
+    RTC_CHECK_EQ(state_, State::kActive)
+        << "DefaultVideoQualityAnalyzer has to be started before use";
+
     state_ = State::kStopped;
 
     // Add the amount of frames in flight to the analyzer stats before all left
