@@ -14,8 +14,9 @@ function debug(aStr) {
 var EXPORTED_SYMBOLS = ["DateTimePickerParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DateTimePickerPanel",
   "resource://gre/modules/DateTimePickerPanel.jsm"
 );
@@ -103,7 +104,7 @@ class DateTimePickerParent extends JSWindowActorParent {
       debug("aBrowser.dateTimePicker not found, exiting now.");
       return;
     }
-    this._picker = new DateTimePickerPanel(panel);
+    this._picker = new lazy.DateTimePickerPanel(panel);
     this._picker.openPicker(type, rect, detail);
 
     this.addPickerListeners();

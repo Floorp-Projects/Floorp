@@ -8,8 +8,10 @@
 
 var EXPORTED_SYMBOLS = ["InlineSpellCheckerChild"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "InlineSpellCheckerContent",
   "resource://gre/modules/InlineSpellCheckerContent.jsm"
 );
@@ -18,23 +20,23 @@ class InlineSpellCheckerChild extends JSWindowActorChild {
   receiveMessage(msg) {
     switch (msg.name) {
       case "InlineSpellChecker:selectDictionaries":
-        InlineSpellCheckerContent.selectDictionaries(msg.data.localeCodes);
+        lazy.InlineSpellCheckerContent.selectDictionaries(msg.data.localeCodes);
         break;
 
       case "InlineSpellChecker:replaceMisspelling":
-        InlineSpellCheckerContent.replaceMisspelling(msg.data.suggestion);
+        lazy.InlineSpellCheckerContent.replaceMisspelling(msg.data.suggestion);
         break;
 
       case "InlineSpellChecker:toggleEnabled":
-        InlineSpellCheckerContent.toggleEnabled();
+        lazy.InlineSpellCheckerContent.toggleEnabled();
         break;
 
       case "InlineSpellChecker:recheck":
-        InlineSpellCheckerContent.recheck();
+        lazy.InlineSpellCheckerContent.recheck();
         break;
 
       case "InlineSpellChecker:uninit":
-        InlineSpellCheckerContent.uninitContextMenu();
+        lazy.InlineSpellCheckerContent.uninitContextMenu();
         break;
     }
   }

@@ -7,8 +7,10 @@
 var EXPORTED_SYMBOLS = ["BackgroundThumbnailsChild"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PageThumbUtils",
   "resource://gre/modules/PageThumbUtils.jsm"
 );
@@ -30,7 +32,7 @@ class BackgroundThumbnailsChild extends JSWindowActorChild {
         ) {
           // To avoid sending additional messages between processes, we return
           // the image data directly with the size info.
-          return PageThumbUtils.createImageThumbnailCanvas(
+          return lazy.PageThumbUtils.createImageThumbnailCanvas(
             this.contentWindow,
             this.document.location,
             message.data.targetWidth,
@@ -38,7 +40,9 @@ class BackgroundThumbnailsChild extends JSWindowActorChild {
           );
         }
 
-        let [width, height] = PageThumbUtils.getContentSize(this.contentWindow);
+        let [width, height] = lazy.PageThumbUtils.getContentSize(
+          this.contentWindow
+        );
         return { width, height };
       }
 

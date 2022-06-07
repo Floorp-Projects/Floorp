@@ -15,18 +15,19 @@ var EXPORTED_SYMBOLS = ["RemotePageChild"];
  */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AsyncPrefs",
   "resource://gre/modules/AsyncPrefs.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RemotePageAccessManager",
   "resource://gre/modules/RemotePageAccessManager.jsm"
 );
@@ -77,7 +78,7 @@ class RemotePageChild extends JSWindowActorChild {
     let window = this.contentWindow;
 
     for (let fnname of functions) {
-      let allowAccess = RemotePageAccessManager.checkAllowAccessToFeature(
+      let allowAccess = lazy.RemotePageAccessManager.checkAllowAccessToFeature(
         principal,
         fnname,
         document
@@ -140,7 +141,7 @@ class RemotePageChild extends JSWindowActorChild {
    */
   checkAllowAccess(aFeature, aValue) {
     let doc = this.document;
-    if (!RemotePageAccessManager.checkAllowAccess(doc, aFeature, aValue)) {
+    if (!lazy.RemotePageAccessManager.checkAllowAccess(doc, aFeature, aValue)) {
       throw new Error(
         "RemotePageAccessManager does not allow access to " + aFeature
       );
@@ -215,7 +216,7 @@ class RemotePageChild extends JSWindowActorChild {
   }
 
   RPMSetBoolPref(aPref, aVal) {
-    return this.wrapPromise(AsyncPrefs.set(aPref, aVal));
+    return this.wrapPromise(lazy.AsyncPrefs.set(aPref, aVal));
   }
 
   RPMGetFormatURLPref(aFormatURL) {
@@ -223,6 +224,6 @@ class RemotePageChild extends JSWindowActorChild {
   }
 
   RPMIsWindowPrivate() {
-    return PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
+    return lazy.PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
   }
 }

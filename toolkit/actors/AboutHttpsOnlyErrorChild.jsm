@@ -15,8 +15,10 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "@mozilla.org/network/serialization-helper;1",
   "nsISerializationHelper"
 );

@@ -7,8 +7,10 @@ var EXPORTED_SYMBOLS = ["ViewSourceChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ViewSourcePageChild",
   "resource://gre/actors/ViewSourcePageChild.jsm"
 );
@@ -80,7 +82,7 @@ class ViewSourceChild extends JSWindowActorChild {
     // that indicates that a selection should be drawn. It will be read
     // when by the page's pageshow listener. This should work as the
     // view source page is always loaded in the same process.
-    ViewSourcePageChild.setNeedsDrawSelection(drawSelection);
+    lazy.ViewSourcePageChild.setNeedsDrawSelection(drawSelection);
 
     // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
     let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -114,7 +116,7 @@ class ViewSourceChild extends JSWindowActorChild {
       this.docShell.forceEncodingDetection();
     }
 
-    ViewSourcePageChild.setInitialLineNumber(lineNumber);
+    lazy.ViewSourcePageChild.setInitialLineNumber(lineNumber);
 
     if (!otherDocShell) {
       this.loadSourceFromURL(viewSrcURL);

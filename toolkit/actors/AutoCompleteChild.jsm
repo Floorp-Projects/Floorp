@@ -9,20 +9,22 @@ var EXPORTED_SYMBOLS = ["AutoCompleteChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LayoutUtils",
   "resource://gre/modules/LayoutUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ContentDOMReference",
   "resource://gre/modules/ContentDOMReference.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -136,14 +138,14 @@ class AutoCompleteChild extends JSWindowActorChild {
       return;
     }
 
-    let rect = LayoutUtils.getElementBoundingScreenRect(element);
+    let rect = lazy.LayoutUtils.getElementBoundingScreenRect(element);
     let window = element.ownerGlobal;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
-    let formOrigin = LoginHelper.getLoginOrigin(
+    let formOrigin = lazy.LoginHelper.getLoginOrigin(
       element.ownerDocument.documentURI
     );
-    let inputElementIdentifier = ContentDOMReference.get(element);
+    let inputElementIdentifier = lazy.ContentDOMReference.get(element);
 
     this.sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {
       results,

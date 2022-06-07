@@ -10,34 +10,36 @@ var EXPORTED_SYMBOLS = [
   "PictureInPictureLauncherChild",
 ];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "KEYBOARD_CONTROLS",
   "resource://gre/modules/PictureInPictureControls.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TOGGLE_POLICIES",
   "resource://gre/modules/PictureInPictureControls.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TOGGLE_POLICY_STRINGS",
   "resource://gre/modules/PictureInPictureControls.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Rect",
   "resource://gre/modules/Geometry.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ContentDOMReference",
   "resource://gre/modules/ContentDOMReference.jsm"
 );
@@ -50,12 +52,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "DISPLAY_TEXT_TRACKS_PREF",
   "media.videocontrols.picture-in-picture.display-text-tracks.enabled",
   false
@@ -90,11 +92,11 @@ var gWeakIntersectingVideosForTesting = new WeakSet();
 // content process, so we set this as a lazy process global.
 // See PictureInPictureToggleChild.getSiteOverrides for a
 // sense of what the return types are.
-XPCOMUtils.defineLazyGetter(this, "gSiteOverrides", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gSiteOverrides", () => {
   return PictureInPictureToggleChild.getSiteOverrides();
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "PictureInPictureChild",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -121,7 +123,7 @@ function applyWrapper(pipChild, originatingVideo) {
   let originatingDoc = originatingVideo.ownerDocument;
   let originatingDocumentURI = originatingDoc.documentURI;
 
-  let overrides = gSiteOverrides.find(([matcher]) => {
+  let overrides = lazy.gSiteOverrides.find(([matcher]) => {
     return matcher.matches(originatingDocumentURI);
   });
 
@@ -195,14 +197,14 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
 
     // All other requests to toggle PiP should open a new PiP
     // window
-    const videoRef = ContentDOMReference.get(video);
+    const videoRef = lazy.ContentDOMReference.get(video);
     this.sendAsyncMessage("PictureInPicture:Request", {
       isMuted: PictureInPictureChild.videoIsMuted(video),
       playing: PictureInPictureChild.videoIsPlaying(video),
       videoHeight: video.videoHeight,
       videoWidth: video.videoWidth,
       videoRef,
-      ccEnabled: DISPLAY_TEXT_TRACKS_PREF,
+      ccEnabled: lazy.DISPLAY_TEXT_TRACKS_PREF,
       webVTTSubtitles: !!video.textTracks?.length,
     });
   }
@@ -354,7 +356,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         // then this will be true. If there are no videos worth tracking, then
         // this is false.
         isTrackingVideos: false,
-        togglePolicy: TOGGLE_POLICIES.DEFAULT,
+        togglePolicy: lazy.TOGGLE_POLICIES.DEFAULT,
         toggleVisibilityThreshold: visibilityThresholdPref,
         // The documentURI that has been checked with toggle policies and
         // visibility thresholds for this document. Note that the documentURI
@@ -408,7 +410,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
           // For now we only update our cache if the site overrides change.
           // the user will need to refresh the page for changes to apply.
           try {
-            gSiteOverrides = PictureInPictureToggleChild.getSiteOverrides();
+            lazy.gSiteOverrides = PictureInPictureToggleChild.getSiteOverrides();
           } catch (e) {
             // Ignore resulting TypeError if gSiteOverrides is still unloaded
             if (!(e instanceof TypeError)) {
@@ -642,7 +644,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   beginTrackingMouseOverVideos() {
     let state = this.docState;
     if (!state.mousemoveDeferredTask) {
-      state.mousemoveDeferredTask = new DeferredTask(() => {
+      state.mousemoveDeferredTask = new lazy.DeferredTask(() => {
         this.checkLastMouseMove();
       }, MOUSEMOVE_PROCESSING_DELAY_MS);
     }
@@ -923,8 +925,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     let state = this.docState;
     let event = state.lastMouseMoveEvent;
     let { clientX, clientY } = event;
-    logConsole.debug("Visible videos count:", state.visibleVideosCount);
-    logConsole.debug("Tracking videos:", state.isTrackingVideos);
+    lazy.logConsole.debug("Visible videos count:", state.visibleVideosCount);
+    lazy.logConsole.debug("Tracking videos:", state.isTrackingVideos);
     let winUtils = this.contentWindow.windowUtils;
     // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
     // since document.elementsFromPoint always flushes layout. The 1's in that
@@ -942,22 +944,25 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     );
 
     for (let element of elements) {
-      logConsole.debug("Element id under cursor:", element.id);
-      logConsole.debug(
+      lazy.logConsole.debug("Element id under cursor:", element.id);
+      lazy.logConsole.debug(
         "Node name of an element under cursor:",
         element.nodeName
       );
-      logConsole.debug(
+      lazy.logConsole.debug(
         "Supported <video> element:",
         state.weakVisibleVideos.has(element)
       );
-      logConsole.debug("PiP window is open:", element.isCloningElementVisually);
+      lazy.logConsole.debug(
+        "PiP window is open:",
+        element.isCloningElementVisually
+      );
 
       // Check for hovering over the video controls or so too, not only
       // directly over the video.
       for (let el = element; el; el = el.containingShadowRoot?.host) {
         if (state.weakVisibleVideos.has(el) && !el.isCloningElementVisually) {
-          logConsole.debug("Found supported element");
+          lazy.logConsole.debug("Found supported element");
           this.onMouseOverVideo(el, event);
           return;
         }
@@ -1006,12 +1011,12 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
 
     if (state.checkedPolicyDocumentURI != this.document.documentURI) {
-      state.togglePolicy = TOGGLE_POLICIES.DEFAULT;
+      state.togglePolicy = lazy.TOGGLE_POLICIES.DEFAULT;
       // We cache the matchers process-wide. We'll skip this while running tests to make that
       // easier.
       let siteOverrides = this.toggleTesting
         ? PictureInPictureToggleChild.getSiteOverrides()
-        : gSiteOverrides;
+        : lazy.gSiteOverrides;
 
       let visibilityThresholdPref = Services.prefs.getFloatPref(
         TOGGLE_VISIBILITY_THRESHOLD_PREF,
@@ -1029,8 +1034,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
           override.matches(this.document.documentURI)
         ) {
           state.togglePolicy = this.videoWrapper?.shouldHideToggle(video)
-            ? TOGGLE_POLICIES.HIDDEN
-            : policy || TOGGLE_POLICIES.DEFAULT;
+            ? lazy.TOGGLE_POLICIES.HIDDEN
+            : policy || lazy.TOGGLE_POLICIES.DEFAULT;
           state.toggleVisibilityThreshold =
             visibilityThreshold || visibilityThresholdPref;
           break;
@@ -1044,15 +1049,18 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // toggle if the override is set to BOTTOM, so we ignore overrides that set
     // a policy of BOTTOM for <video> elements with controls.
     if (
-      state.togglePolicy != TOGGLE_POLICIES.DEFAULT &&
-      !(state.togglePolicy == TOGGLE_POLICIES.BOTTOM && video.controls)
+      state.togglePolicy != lazy.TOGGLE_POLICIES.DEFAULT &&
+      !(state.togglePolicy == lazy.TOGGLE_POLICIES.BOTTOM && video.controls)
     ) {
-      toggle.setAttribute("policy", TOGGLE_POLICY_STRINGS[state.togglePolicy]);
+      toggle.setAttribute(
+        "policy",
+        lazy.TOGGLE_POLICY_STRINGS[state.togglePolicy]
+      );
     } else {
       toggle.removeAttribute("policy");
     }
 
-    const nimbusExperimentVariables = NimbusFeatures.pictureinpicture.getAllVariables(
+    const nimbusExperimentVariables = lazy.NimbusFeatures.pictureinpicture.getAllVariables(
       { defaultValues: { title: null, message: false, showIconOnly: false } }
     );
     // nimbusExperimentVariables will be defaultValues when the experiment is disabled
@@ -1083,7 +1091,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // We disable the toggle hiding timeout during testing to reduce
     // non-determinism from timers when testing the toggle.
     if (!state.hideToggleDeferredTask && !this.toggleTesting) {
-      state.hideToggleDeferredTask = new DeferredTask(() => {
+      state.hideToggleDeferredTask = new lazy.DeferredTask(() => {
         controlsOverlay.setAttribute("hidetoggle", true);
       }, TOGGLE_HIDING_TIMEOUT_MS);
     }
@@ -1105,7 +1113,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     controlsOverlay.classList.add("hovering");
 
     if (
-      state.togglePolicy != TOGGLE_POLICIES.HIDDEN &&
+      state.togglePolicy != lazy.TOGGLE_POLICIES.HIDDEN &&
       !toggle.hasAttribute("hidden")
     ) {
       Services.telemetry.scalarAdd("pictureinpicture.saw_toggle", 1);
@@ -1124,7 +1132,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       );
       // only record if this is the first time seeing the toggle
       if (!hasUsedPiP) {
-        NimbusFeatures.pictureinpicture.recordExposureEvent();
+        lazy.NimbusFeatures.pictureinpicture.recordExposureEvent();
       }
     }
 
@@ -1193,10 +1201,10 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // elements of the toggle have a clicklable class, and then compute the
     // smallest rect that contains all of their bounding rects and use that
     // as the hitbox.
-    toggleRect = Rect.fromRect(toggleRect);
+    toggleRect = lazy.Rect.fromRect(toggleRect);
     let clickableChildren = toggle.querySelectorAll(".clickable");
     for (let child of clickableChildren) {
-      let childRect = Rect.fromRect(
+      let childRect = lazy.Rect.fromRect(
         child.ownerGlobal.windowUtils.getBoundsWithoutFlushing(child)
       );
       toggleRect.expandToContain(childRect);
@@ -1848,7 +1856,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.addEventListener("resize", this);
       originatingVideo.addEventListener("emptied", this);
 
-      if (DISPLAY_TEXT_TRACKS_PREF) {
+      if (lazy.DISPLAY_TEXT_TRACKS_PREF) {
         this.setupTextTracks(originatingVideo);
       }
 
@@ -1893,7 +1901,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.removeEventListener("resize", this);
       originatingVideo.removeEventListener("emptied", this);
 
-      if (DISPLAY_TEXT_TRACKS_PREF) {
+      if (lazy.DISPLAY_TEXT_TRACKS_PREF) {
         this.removeTextTracks(originatingVideo);
       }
 
@@ -1927,7 +1935,7 @@ class PictureInPictureChild extends JSWindowActorChild {
    * away due to an unexpected error.
    */
   async setupPlayer(videoRef) {
-    const video = await ContentDOMReference.resolve(videoRef);
+    const video = await lazy.ContentDOMReference.resolve(videoRef);
 
     this.weakVideo = Cu.getWeakReference(video);
     let originatingVideo = this.getWeakVideo();
@@ -2039,7 +2047,7 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   onCueChange(e) {
-    if (!DISPLAY_TEXT_TRACKS_PREF) {
+    if (!lazy.DISPLAY_TEXT_TRACKS_PREF) {
       this.updateWebVTTTextTracksDisplay(null);
     } else {
       const cues = this._currentWebVTTTrack.activeCues;
@@ -2060,9 +2068,9 @@ class PictureInPictureChild extends JSWindowActorChild {
     if (!documentURI) {
       return true;
     }
-    for (let [override, { keyboardControls }] of gSiteOverrides) {
+    for (let [override, { keyboardControls }] of lazy.gSiteOverrides) {
       if (keyboardControls !== undefined && override.matches(documentURI)) {
-        if (keyboardControls === KEYBOARD_CONTROLS.NONE) {
+        if (keyboardControls === lazy.KEYBOARD_CONTROLS.NONE) {
           return false;
         }
         return keyboardControls & key;
@@ -2139,7 +2147,7 @@ class PictureInPictureChild extends JSWindowActorChild {
     try {
       switch (keystroke) {
         case "space" /* Toggle Play / Pause */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.PLAY_PAUSE)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.PLAY_PAUSE)) {
             return;
           }
 
@@ -2154,14 +2162,14 @@ class PictureInPictureChild extends JSWindowActorChild {
 
           break;
         case "accel-w" /* Close video */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.CLOSE)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.CLOSE)) {
             return;
           }
           this.pause();
           this.closePictureInPicture({ reason: "close-player-shortcut" });
           break;
         case "downArrow" /* Volume decrease */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
           oldval = this.videoWrapper.getVolume(video);
@@ -2169,7 +2177,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setMuted(video, false);
           break;
         case "upArrow" /* Volume increase */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
           oldval = this.videoWrapper.getVolume(video);
@@ -2177,20 +2185,23 @@ class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setMuted(video, false);
           break;
         case "accel-downArrow" /* Mute */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
           this.videoWrapper.setMuted(video, true);
           break;
         case "accel-upArrow" /* Unmute */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
           this.videoWrapper.setMuted(video, false);
           break;
         case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
-          if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+          if (
+            isVideoStreaming ||
+            !this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)
+          ) {
             return;
           }
 
@@ -2204,7 +2215,10 @@ class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
-          if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+          if (
+            isVideoStreaming ||
+            !this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)
+          ) {
             return;
           }
 
@@ -2219,7 +2233,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setCurrentTime(video, selectedTime);
           break;
         case "home" /* Seek to beginning */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
           if (!isVideoStreaming) {
@@ -2227,7 +2241,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           }
           break;
         case "end" /* Seek to end */:
-          if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
+          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -2334,7 +2348,7 @@ class PictureInPictureChildVideoWrapper {
         let retVal = wrappedMethod.call(this.#siteWrapper, ...args);
 
         if (!validateRetVal) {
-          logConsole.debug(
+          lazy.logConsole.debug(
             `Invalid return value validator was found for method ${name}(). Replacing return value ${retVal} with null.`
           );
           Cu.reportError(
@@ -2344,7 +2358,7 @@ class PictureInPictureChildVideoWrapper {
         }
 
         if (!validateRetVal(retVal)) {
-          logConsole.debug("Invalid return value:", retVal);
+          lazy.logConsole.debug("Invalid return value:", retVal);
           Cu.reportError(
             `Calling method ${name}() returned an unexpected value: ${retVal}. Returning null.`
           );
@@ -2354,7 +2368,7 @@ class PictureInPictureChildVideoWrapper {
         return retVal;
       }
     } catch (e) {
-      logConsole.debug("Error:", e.message);
+      lazy.logConsole.debug("Error:", e.message);
       Cu.reportError(`There was an error while calling ${name}(): `, e.message);
     }
 
