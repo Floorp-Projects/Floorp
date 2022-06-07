@@ -3275,10 +3275,6 @@ JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx) {
 
 /* * */
 
-bool JSObject::canHaveFixedElements() const {
-  return (is<ArrayObject>() || IF_RECORD_TUPLE(is<TupleType>(), false));
-}
-
 js::gc::AllocKind JSObject::allocKindForTenure(
     const js::Nursery& nursery) const {
   using namespace js::gc;
