@@ -210,6 +210,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api/transport:network_control",
+    "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:ignore_wundef",
     "../rtc_base:rtc_base_approved",
