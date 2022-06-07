@@ -71,6 +71,7 @@ UNIFIED_SOURCES += [
     "ActorsParent.cpp",
     "CachingDatabaseConnection.cpp",
     "Client.cpp",
+    "ClientUsageArray.cpp",
     "DecryptingInputStream.cpp",
     "DirectoryLockImpl.cpp",
     "EncryptingOutputStream.cpp",
