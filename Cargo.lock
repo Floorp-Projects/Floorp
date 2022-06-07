@@ -1162,7 +1162,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -3404,7 +3404,7 @@ dependencies = [
 
 [[package]]
 name = "mozversion"
-version = "0.4.3"
+version = "0.5.0-alpha"
 dependencies = [
  "regex",
  "rust-ini",
@@ -4127,7 +4127,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -4136,7 +4136,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=df4dc0288b07b865440f4c7e41ca49ca9ccffc63#df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "libc",
 ]
@@ -4461,9 +4461,9 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustc_version"
-version = "0.2.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
+checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
  "semver",
 ]
@@ -4549,18 +4549,9 @@ checksum = "1ef965a420fe14fdac7dd018862966a4c14094f900e1650bbc71ddd7d580c8af"
 
 [[package]]
 name = "semver"
-version = "0.9.0"
+version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
-dependencies = [
- "semver-parser",
-]
-
-[[package]]
-name = "semver-parser"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+checksum = "8cb243bdfdb5936c8dc3c45762a19d12ab4550cdc753bc247637d4ec35a040fd"
 
 [[package]]
 name = "serde"
