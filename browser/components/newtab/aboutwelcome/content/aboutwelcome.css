@@ -621,48 +621,11 @@ body[lwt-newtab-brighttext] {
   background: none;
 }
 .onboardingContainer .mobile-downloads .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en/ios.svg");
+  background-image: url("chrome://app-marketplace-icons/locale/ios.svg");
 }
 .onboardingContainer .mobile-downloads .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en/android.png");
+  background-image: url("chrome://app-marketplace-icons/locale/android.png");
 }
-:root[lang|=de] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/ios.svg");
-}
-:root[lang|=de] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/android.png");
-}
-:root[lang|=es] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/es/ios.svg");
-}
-:root[lang|=es] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/es/android.png");
-}
-:root[lang|=fr] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/ios.svg");
-}
-:root[lang|=fr] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/android.png");
-}
-:root[lang|=pt] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/ios.svg");
-}
-:root[lang|=pt] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/android.png");
-}
-:root[lang|=ru] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/ios.svg");
-}
-:root[lang|=ru] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/android.png");
-}
-:root[lang|=zh] .ios button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/ios.svg");
-}
-:root[lang|=zh] .android button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/android.png");
-}
-
 .onboardingContainer .mobile-download-buttons {
   list-style: none;
   padding: 10px 0;
