@@ -22,7 +22,6 @@ if CONFIG["MOZ_GL_PROVIDER"]:
 
 EXPORTS += [
     "AndroidSurfaceTexture.h",
-    "DecomposeIntoNoRepeatTriangles.h",
     "ForceDiscreteGPUHelperCGL.h",
     "GfxTexturesReporter.h",
     "GLBlitHelper.h",
@@ -118,7 +117,6 @@ if CONFIG["MOZ_WAYLAND"]:
 
 UNIFIED_SOURCES += [
     "AndroidSurfaceTexture.cpp",
-    "DecomposeIntoNoRepeatTriangles.cpp",
     "GfxTexturesReporter.cpp",
     "GLBlitHelper.cpp",
     "GLContext.cpp",
