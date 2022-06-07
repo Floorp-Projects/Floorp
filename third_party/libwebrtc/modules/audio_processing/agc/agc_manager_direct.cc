@@ -588,7 +588,7 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
       const auto step = clipping_predictor_->EstimateClippedLevelStep(
           channel, stream_analog_level_, clipped_level_step_,
           channel_agcs_[channel]->min_mic_level(), kMaxMicLevel);
-      if (use_clipping_predictor_step_ && step.has_value()) {
+      if (step.has_value()) {
         predicted_step = std::max(predicted_step, step.value());
         clipping_predicted = true;
       }
@@ -609,16 +609,20 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
       clipping_predictor_log_counter_ = 0;
     }
   }
-  if (clipping_detected || clipping_predicted) {
-    int step = clipped_level_step_;
-    if (clipping_detected) {
-      RTC_DLOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
-                        << clipped_ratio;
+  if (clipping_detected) {
+    RTC_DLOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
+                      << clipped_ratio;
+  }
+  int step = clipped_level_step_;
+  if (clipping_predicted) {
+    predicted_step = std::max(predicted_step, clipped_level_step_);
+    RTC_DLOG(LS_INFO) << "[agc] Clipping predicted. step=" << predicted_step;
+    if (use_clipping_predictor_step_) {
+      step = predicted_step;
     }
-    if (clipping_predicted) {
-      step = std::max(predicted_step, clipped_level_step_);
-      RTC_DLOG(LS_INFO) << "[agc] Clipping predicted. step=" << step;
-    }
+  }
+  if (clipping_detected ||
+      (clipping_predicted && use_clipping_predictor_step_)) {
     for (auto& state_ch : channel_agcs_) {
       state_ch->HandleClipping(step);
     }
