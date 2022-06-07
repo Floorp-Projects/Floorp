@@ -2,27 +2,28 @@
 //!
 //! Functions recognizing specific characters.
 
-use crate::internal::{Err, IResult};
+use crate::error::ErrorKind;
 use crate::error::ParseError;
+use crate::internal::{Err, IResult};
 use crate::lib::std::ops::{Range, RangeFrom, RangeTo};
 use crate::traits::{AsChar, FindToken, InputIter, InputLength, InputTakeAtPosition, Slice};
 use crate::traits::{Compare, CompareResult};
-use crate::error::ErrorKind;
 
 /// Recognizes one character.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind};
+/// # use nom::{Err, error::{ErrorKind, Error}, IResult};
 /// # use nom::character::complete::char;
-/// # fn main() {
-/// assert_eq!(char::<_, (&str, ErrorKind)>('a')("abc"), Ok(("bc", 'a')));
-/// assert_eq!(char::<_, (&str, ErrorKind)>('a')("bc"), Err(Err::Error(("bc", ErrorKind::Char))));
-/// assert_eq!(char::<_, (&str, ErrorKind)>('a')(""), Err(Err::Error(("", ErrorKind::Char))));
-/// # }
+/// fn parser(i: &str) -> IResult<&str, char> {
+///     char('a')(i)
+/// }
+/// assert_eq!(parser("abc"), Ok(("bc", 'a')));
+/// assert_eq!(parser(" abc"), Err(Err::Error(Error::new(" abc", ErrorKind::Char))));
+/// assert_eq!(parser("bc"), Err(Err::Error(Error::new("bc", ErrorKind::Char))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Char))));
 /// ```
 pub fn char<I, Error: ParseError<I>>(c: char) -> impl Fn(I) -> IResult<I, char, Error>
 where
@@ -38,20 +39,48 @@ where
   }
 }
 
+/// Recognizes one character and checks that it satisfies a predicate
+///
+/// *Complete version*: Will return an error if there's not enough input data.
+/// # Example
+///
+/// ```
+/// # use nom::{Err, error::{ErrorKind, Error}, Needed, IResult};
+/// # use nom::character::complete::satisfy;
+/// fn parser(i: &str) -> IResult<&str, char> {
+///     satisfy(|c| c == 'a' || c == 'b')(i)
+/// }
+/// assert_eq!(parser("abc"), Ok(("bc", 'a')));
+/// assert_eq!(parser("cd"), Err(Err::Error(Error::new("cd", ErrorKind::Satisfy))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Satisfy))));
+/// ```
+pub fn satisfy<F, I, Error: ParseError<I>>(cond: F) -> impl Fn(I) -> IResult<I, char, Error>
+where
+  I: Slice<RangeFrom<usize>> + InputIter,
+  <I as InputIter>::Item: AsChar,
+  F: Fn(char) -> bool,
+{
+  move |i: I| match (i).iter_elements().next().map(|t| {
+    let c = t.as_char();
+    let b = cond(c);
+    (c, b)
+  }) {
+    Some((c, true)) => Ok((i.slice(c.len()..), c)),
+    _ => Err(Err::Error(Error::from_error_kind(i, ErrorKind::Satisfy))),
+  }
+}
+
 /// Recognizes one of the provided characters.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind};
 /// # use nom::character::complete::one_of;
-/// # fn main() {
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("abc")("b"), Ok(("", 'b')));
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("a")("bc"), Err(Err::Error(("bc", ErrorKind::OneOf))));
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("a")(""), Err(Err::Error(("", ErrorKind::OneOf))));
-/// # }
 /// ```
 pub fn one_of<I, T, Error: ParseError<I>>(list: T) -> impl Fn(I) -> IResult<I, char, Error>
 where
@@ -67,18 +96,15 @@ where
 
 /// Recognizes a character that is not in the provided characters.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind};
 /// # use nom::character::complete::none_of;
-/// # fn main() {
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("abc")("z"), Ok(("", 'z')));
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("ab")("a"), Err(Err::Error(("a", ErrorKind::NoneOf))));
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("a")(""), Err(Err::Error(("", ErrorKind::NoneOf))));
-/// # }
 /// ```
 pub fn none_of<I, T, Error: ParseError<I>>(list: T) -> impl Fn(I) -> IResult<I, char, Error>
 where
@@ -94,26 +120,23 @@ where
 
 /// Recognizes the string "\r\n".
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult};
 /// # use nom::character::complete::crlf;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     crlf(input)
 /// }
 ///
 /// assert_eq!(parser("\r\nc"), Ok(("c", "\r\n")));
-/// assert_eq!(parser("ab\r\nc"), Err(Err::Error(("ab\r\nc", ErrorKind::CrLf))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::CrLf))));
-/// # }
+/// assert_eq!(parser("ab\r\nc"), Err(Err::Error(Error::new("ab\r\nc", ErrorKind::CrLf))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::CrLf))));
 /// ```
 pub fn crlf<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
-  T: Slice<Range<usize>> + Slice<RangeFrom<usize>> + Slice<RangeTo<usize>>,
+  T: Slice<Range<usize>> + Slice<RangeFrom<usize>>,
   T: InputIter,
   T: Compare<&'static str>,
 {
@@ -130,14 +153,12 @@ where
 //FIXME: there's still an incomplete
 /// Recognizes a string of any char except '\r' or '\n'.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::not_line_ending;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     not_line_ending(input)
 /// }
@@ -145,7 +166,6 @@ where
 /// assert_eq!(parser("ab\r\nc"), Ok(("\r\nc", "ab")));
 /// assert_eq!(parser("abc"), Ok(("", "abc")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn not_line_ending<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -159,9 +179,7 @@ where
     let c = item.as_char();
     c == '\r' || c == '\n'
   }) {
-    None => {
-      Ok((input.slice(input.input_len()..), input))
-    }
+    None => Ok((input.slice(input.input_len()..), input)),
     Some(index) => {
       let mut it = input.slice(index..).iter_elements();
       let nth = it.next().unwrap().as_char();
@@ -185,22 +203,19 @@ where
 
 /// Recognizes an end of line (both '\n' and '\r\n').
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::line_ending;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     line_ending(input)
 /// }
 ///
 /// assert_eq!(parser("\r\nc"), Ok(("c", "\r\n")));
-/// assert_eq!(parser("ab\r\nc"), Err(Err::Error(("ab\r\nc", ErrorKind::CrLf))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::CrLf))));
-/// # }
+/// assert_eq!(parser("ab\r\nc"), Err(Err::Error(Error::new("ab\r\nc", ErrorKind::CrLf))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::CrLf))));
 /// ```
 pub fn line_ending<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -223,22 +238,19 @@ where
 
 /// Matches a newline character '\n'.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::newline;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, char> {
 ///     newline(input)
 /// }
 ///
 /// assert_eq!(parser("\nc"), Ok(("c", '\n')));
-/// assert_eq!(parser("\r\nc"), Err(Err::Error(("\r\nc", ErrorKind::Char))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Char))));
-/// # }
+/// assert_eq!(parser("\r\nc"), Err(Err::Error(Error::new("\r\nc", ErrorKind::Char))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Char))));
 /// ```
 pub fn newline<I, Error: ParseError<I>>(input: I) -> IResult<I, char, Error>
 where
@@ -250,22 +262,19 @@ where
 
 /// Matches a tab character '\t'.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::tab;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, char> {
 ///     tab(input)
 /// }
 ///
 /// assert_eq!(parser("\tc"), Ok(("c", '\t')));
-/// assert_eq!(parser("\r\nc"), Err(Err::Error(("\r\nc", ErrorKind::Char))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Char))));
-/// # }
+/// assert_eq!(parser("\r\nc"), Err(Err::Error(Error::new("\r\nc", ErrorKind::Char))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Char))));
 /// ```
 pub fn tab<I, Error: ParseError<I>>(input: I) -> IResult<I, char, Error>
 where
@@ -278,20 +287,17 @@ where
 /// Matches one byte as a character. Note that the input type will
 /// accept a `str`, but not a `&[u8]`, unlike many other nom parsers.
 ///
-/// *complete version*: Will return an error if there's not enough input data.
-///
+/// *Complete version*: Will return an error if there's not enough input data.
 /// # Example
 ///
 /// ```
-/// # use nom::{character::complete::anychar, Err, error::ErrorKind, IResult};
-/// # fn main() {
+/// # use nom::{character::complete::anychar, Err, error::{Error, ErrorKind}, IResult};
 /// fn parser(input: &str) -> IResult<&str, char> {
 ///     anychar(input)
 /// }
 ///
 /// assert_eq!(parser("abc"), Ok(("bc",'a')));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Eof))));
-/// # }
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Eof))));
 /// ```
 pub fn anychar<T, E: ParseError<T>>(input: T) -> IResult<T, char, E>
 where
@@ -310,15 +316,13 @@ where
 
 /// Recognizes zero or more lowercase and uppercase ASCII alphabetic characters: a-z, A-Z
 ///
-/// *complete version*: Will return the whole input if no terminating token is found (a non
+/// *Complete version*: Will return the whole input if no terminating token is found (a non
 /// alphabetic character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::alpha0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     alpha0(input)
 /// }
@@ -326,7 +330,6 @@ where
 /// assert_eq!(parser("ab1c"), Ok(("1c", "ab")));
 /// assert_eq!(parser("1c"), Ok(("1c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn alpha0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -338,23 +341,20 @@ where
 
 /// Recognizes one or more lowercase and uppercase ASCII alphabetic characters: a-z, A-Z
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found  (a non alphabetic character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::alpha1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     alpha1(input)
 /// }
 ///
 /// assert_eq!(parser("aB1c"), Ok(("1c", "aB")));
-/// assert_eq!(parser("1c"), Err(Err::Error(("1c", ErrorKind::Alpha))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Alpha))));
-/// # }
+/// assert_eq!(parser("1c"), Err(Err::Error(Error::new("1c", ErrorKind::Alpha))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Alpha))));
 /// ```
 pub fn alpha1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -366,15 +366,13 @@ where
 
 /// Recognizes zero or more ASCII numerical characters: 0-9
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non digit character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::digit0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     digit0(input)
 /// }
@@ -383,7 +381,6 @@ where
 /// assert_eq!(parser("21"), Ok(("", "21")));
 /// assert_eq!(parser("a21c"), Ok(("a21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn digit0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -395,23 +392,20 @@ where
 
 /// Recognizes one or more ASCII numerical characters: 0-9
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non digit character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::digit1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     digit1(input)
 /// }
 ///
 /// assert_eq!(parser("21c"), Ok(("c", "21")));
-/// assert_eq!(parser("c1"), Err(Err::Error(("c1", ErrorKind::Digit))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Digit))));
-/// # }
+/// assert_eq!(parser("c1"), Err(Err::Error(Error::new("c1", ErrorKind::Digit))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Digit))));
 /// ```
 pub fn digit1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -423,14 +417,12 @@ where
 
 /// Recognizes zero or more ASCII hexadecimal numerical characters: 0-9, A-F, a-f
 ///
-/// *complete version*: Will return the whole input if no terminating token is found (a non hexadecimal digit character).
-///
+/// *Complete version*: Will return the whole input if no terminating token is found (a non hexadecimal digit character).
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::hex_digit0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     hex_digit0(input)
 /// }
@@ -438,7 +430,6 @@ where
 /// assert_eq!(parser("21cZ"), Ok(("Z", "21c")));
 /// assert_eq!(parser("Z21c"), Ok(("Z21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn hex_digit0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -449,23 +440,20 @@ where
 }
 /// Recognizes one or more ASCII hexadecimal numerical characters: 0-9, A-F, a-f
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non hexadecimal digit character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::hex_digit1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     hex_digit1(input)
 /// }
 ///
 /// assert_eq!(parser("21cZ"), Ok(("Z", "21c")));
-/// assert_eq!(parser("H2"), Err(Err::Error(("H2", ErrorKind::HexDigit))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::HexDigit))));
-/// # }
+/// assert_eq!(parser("H2"), Err(Err::Error(Error::new("H2", ErrorKind::HexDigit))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::HexDigit))));
 /// ```
 pub fn hex_digit1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -477,15 +465,13 @@ where
 
 /// Recognizes zero or more octal characters: 0-7
 ///
-/// *complete version*: Will return the whole input if no terminating token is found (a non octal
+/// *Complete version*: Will return the whole input if no terminating token is found (a non octal
 /// digit character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::oct_digit0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     oct_digit0(input)
 /// }
@@ -493,7 +479,6 @@ where
 /// assert_eq!(parser("21cZ"), Ok(("cZ", "21")));
 /// assert_eq!(parser("Z21c"), Ok(("Z21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn oct_digit0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -505,23 +490,20 @@ where
 
 /// Recognizes one or more octal characters: 0-7
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non octal digit character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::oct_digit1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     oct_digit1(input)
 /// }
 ///
 /// assert_eq!(parser("21cZ"), Ok(("cZ", "21")));
-/// assert_eq!(parser("H2"), Err(Err::Error(("H2", ErrorKind::OctDigit))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::OctDigit))));
-/// # }
+/// assert_eq!(parser("H2"), Err(Err::Error(Error::new("H2", ErrorKind::OctDigit))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::OctDigit))));
 /// ```
 pub fn oct_digit1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -533,15 +515,13 @@ where
 
 /// Recognizes zero or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
 ///
-/// *complete version*: Will return the whole input if no terminating token is found (a non
+/// *Complete version*: Will return the whole input if no terminating token is found (a non
 /// alphanumerical character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::alphanumeric0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     alphanumeric0(input)
 /// }
@@ -549,7 +529,6 @@ where
 /// assert_eq!(parser("21cZ%1"), Ok(("%1", "21cZ")));
 /// assert_eq!(parser("&Z21c"), Ok(("&Z21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn alphanumeric0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -561,23 +540,20 @@ where
 
 /// Recognizes one or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non alphanumerical character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::alphanumeric1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     alphanumeric1(input)
 /// }
 ///
 /// assert_eq!(parser("21cZ%1"), Ok(("%1", "21cZ")));
-/// assert_eq!(parser("&H2"), Err(Err::Error(("&H2", ErrorKind::AlphaNumeric))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::AlphaNumeric))));
-/// # }
+/// assert_eq!(parser("&H2"), Err(Err::Error(Error::new("&H2", ErrorKind::AlphaNumeric))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::AlphaNumeric))));
 /// ```
 pub fn alphanumeric1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -589,15 +565,13 @@ where
 
 /// Recognizes zero or more spaces and tabs.
 ///
-/// *complete version*: Will return the whole input if no terminating token is found (a non space
+/// *Complete version*: Will return the whole input if no terminating token is found (a non space
 /// character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::space0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     space0(input)
 /// }
@@ -605,7 +579,6 @@ where
 /// assert_eq!(parser(" \t21c"), Ok(("21c", " \t")));
 /// assert_eq!(parser("Z21c"), Ok(("Z21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn space0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -613,30 +586,27 @@ where
   <T as InputTakeAtPosition>::Item: AsChar + Clone,
 {
   input.split_at_position_complete(|item| {
-    let c = item.clone().as_char();
+    let c = item.as_char();
     !(c == ' ' || c == '\t')
   })
 }
 
 /// Recognizes one or more spaces and tabs.
 ///
-/// *complete version*: Will return an error if there's not enough input data,
+/// *Complete version*: Will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non space character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::space1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     space1(input)
 /// }
 ///
 /// assert_eq!(parser(" \t21c"), Ok(("21c", " \t")));
-/// assert_eq!(parser("H2"), Err(Err::Error(("H2", ErrorKind::Space))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::Space))));
-/// # }
+/// assert_eq!(parser("H2"), Err(Err::Error(Error::new("H2", ErrorKind::Space))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::Space))));
 /// ```
 pub fn space1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -645,7 +615,7 @@ where
 {
   input.split_at_position1_complete(
     |item| {
-      let c = item.clone().as_char();
+      let c = item.as_char();
       !(c == ' ' || c == '\t')
     },
     ErrorKind::Space,
@@ -654,15 +624,13 @@ where
 
 /// Recognizes zero or more spaces, tabs, carriage returns and line feeds.
 ///
-/// *complete version*: will return the whole input if no terminating token is found (a non space
+/// *Complete version*: will return the whole input if no terminating token is found (a non space
 /// character).
-///
 /// # Example
 ///
 /// ```
 /// # use nom::{Err, error::ErrorKind, IResult, Needed};
 /// # use nom::character::complete::multispace0;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     multispace0(input)
 /// }
@@ -670,7 +638,6 @@ where
 /// assert_eq!(parser(" \t\n\r21c"), Ok(("21c", " \t\n\r")));
 /// assert_eq!(parser("Z21c"), Ok(("Z21c", "")));
 /// assert_eq!(parser(""), Ok(("", "")));
-/// # }
 /// ```
 pub fn multispace0<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -678,30 +645,27 @@ where
   <T as InputTakeAtPosition>::Item: AsChar + Clone,
 {
   input.split_at_position_complete(|item| {
-    let c = item.clone().as_char();
+    let c = item.as_char();
     !(c == ' ' || c == '\t' || c == '\r' || c == '\n')
   })
 }
 
 /// Recognizes one or more spaces, tabs, carriage returns and line feeds.
 ///
-/// *complete version*: will return an error if there's not enough input data,
+/// *Complete version*: will return an error if there's not enough input data,
 /// or the whole input if no terminating token is found (a non space character).
-///
 /// # Example
 ///
 /// ```
-/// # use nom::{Err, error::ErrorKind, IResult, Needed};
+/// # use nom::{Err, error::{Error, ErrorKind}, IResult, Needed};
 /// # use nom::character::complete::multispace1;
-/// # fn main() {
 /// fn parser(input: &str) -> IResult<&str, &str> {
 ///     multispace1(input)
 /// }
 ///
 /// assert_eq!(parser(" \t\n\r21c"), Ok(("21c", " \t\n\r")));
-/// assert_eq!(parser("H2"), Err(Err::Error(("H2", ErrorKind::MultiSpace))));
-/// assert_eq!(parser(""), Err(Err::Error(("", ErrorKind::MultiSpace))));
-/// # }
+/// assert_eq!(parser("H2"), Err(Err::Error(Error::new("H2", ErrorKind::MultiSpace))));
+/// assert_eq!(parser(""), Err(Err::Error(Error::new("", ErrorKind::MultiSpace))));
 /// ```
 pub fn multispace1<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
 where
@@ -710,7 +674,7 @@ where
 {
   input.split_at_position1_complete(
     |item| {
-      let c = item.clone().as_char();
+      let c = item.as_char();
       !(c == ' ' || c == '\t' || c == '\r' || c == '\n')
     },
     ErrorKind::MultiSpace,
@@ -729,7 +693,6 @@ mod tests {
     };
   );
 
-
   #[test]
   fn character() {
     let empty: &[u8] = b"";
@@ -741,50 +704,35 @@ mod tests {
     let f: &[u8] = b" ;";
     //assert_eq!(alpha1::<_, (_, ErrorKind)>(a), Err(Err::Incomplete(Needed::Size(1))));
     assert_parse!(alpha1(a), Ok((empty, a)));
-    assert_eq!(
-      alpha1(b),
-      Err(Err::Error((b, ErrorKind::Alpha)))
-    );
+    assert_eq!(alpha1(b), Err(Err::Error((b, ErrorKind::Alpha))));
     assert_eq!(alpha1::<_, (_, ErrorKind)>(c), Ok((&c[1..], &b"a"[..])));
-    assert_eq!(alpha1::<_, (_, ErrorKind)>(d), Ok(("é12".as_bytes(), &b"az"[..])));
     assert_eq!(
-      digit1(a),
-      Err(Err::Error((a, ErrorKind::Digit)))
+      alpha1::<_, (_, ErrorKind)>(d),
+      Ok(("é12".as_bytes(), &b"az"[..]))
     );
+    assert_eq!(digit1(a), Err(Err::Error((a, ErrorKind::Digit))));
     assert_eq!(digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
-    assert_eq!(
-      digit1(c),
-      Err(Err::Error((c, ErrorKind::Digit)))
-    );
-    assert_eq!(
-      digit1(d),
-      Err(Err::Error((d, ErrorKind::Digit)))
-    );
+    assert_eq!(digit1(c), Err(Err::Error((c, ErrorKind::Digit))));
+    assert_eq!(digit1(d), Err(Err::Error((d, ErrorKind::Digit))));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(a), Ok((empty, a)));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(c), Ok((empty, c)));
-    assert_eq!(hex_digit1::<_, (_, ErrorKind)>(d), Ok(("zé12".as_bytes(), &b"a"[..])));
     assert_eq!(
-      hex_digit1(e),
-      Err(Err::Error((e, ErrorKind::HexDigit)))
+      hex_digit1::<_, (_, ErrorKind)>(d),
+      Ok(("zé12".as_bytes(), &b"a"[..]))
     );
-    assert_eq!(
-      oct_digit1(a),
-      Err(Err::Error((a, ErrorKind::OctDigit)))
-    );
+    assert_eq!(hex_digit1(e), Err(Err::Error((e, ErrorKind::HexDigit))));
+    assert_eq!(oct_digit1(a), Err(Err::Error((a, ErrorKind::OctDigit))));
     assert_eq!(oct_digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
-    assert_eq!(
-      oct_digit1(c),
-      Err(Err::Error((c, ErrorKind::OctDigit)))
-    );
-    assert_eq!(
-      oct_digit1(d),
-      Err(Err::Error((d, ErrorKind::OctDigit)))
-    );
+    assert_eq!(oct_digit1(c), Err(Err::Error((c, ErrorKind::OctDigit))));
+    assert_eq!(oct_digit1(d), Err(Err::Error((d, ErrorKind::OctDigit))));
     assert_eq!(alphanumeric1::<_, (_, ErrorKind)>(a), Ok((empty, a)));
     //assert_eq!(fix_error!(b,(), alphanumeric), Ok((empty, b)));
     assert_eq!(alphanumeric1::<_, (_, ErrorKind)>(c), Ok((empty, c)));
-    assert_eq!(alphanumeric1::<_, (_, ErrorKind)>(d), Ok(("é12".as_bytes(), &b"az"[..])));
+    assert_eq!(
+      alphanumeric1::<_, (_, ErrorKind)>(d),
+      Ok(("é12".as_bytes(), &b"az"[..]))
+    );
     assert_eq!(space1::<_, (_, ErrorKind)>(e), Ok((empty, e)));
     assert_eq!(space1::<_, (_, ErrorKind)>(f), Ok((&b";"[..], &b" "[..])));
   }
@@ -799,46 +747,22 @@ mod tests {
     let d = "azé12";
     let e = " ";
     assert_eq!(alpha1::<_, (_, ErrorKind)>(a), Ok((empty, a)));
-    assert_eq!(
-      alpha1(b),
-      Err(Err::Error((b, ErrorKind::Alpha)))
-    );
+    assert_eq!(alpha1(b), Err(Err::Error((b, ErrorKind::Alpha))));
     assert_eq!(alpha1::<_, (_, ErrorKind)>(c), Ok((&c[1..], &"a"[..])));
     assert_eq!(alpha1::<_, (_, ErrorKind)>(d), Ok(("é12", &"az"[..])));
-    assert_eq!(
-      digit1(a),
-      Err(Err::Error((a, ErrorKind::Digit)))
-    );
+    assert_eq!(digit1(a), Err(Err::Error((a, ErrorKind::Digit))));
     assert_eq!(digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
-    assert_eq!(
-      digit1(c),
-      Err(Err::Error((c, ErrorKind::Digit)))
-    );
-    assert_eq!(
-      digit1(d),
-      Err(Err::Error((d, ErrorKind::Digit)))
-    );
+    assert_eq!(digit1(c), Err(Err::Error((c, ErrorKind::Digit))));
+    assert_eq!(digit1(d), Err(Err::Error((d, ErrorKind::Digit))));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(a), Ok((empty, a)));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(c), Ok((empty, c)));
     assert_eq!(hex_digit1::<_, (_, ErrorKind)>(d), Ok(("zé12", &"a"[..])));
-    assert_eq!(
-      hex_digit1(e),
-      Err(Err::Error((e, ErrorKind::HexDigit)))
-    );
-    assert_eq!(
-      oct_digit1(a),
-      Err(Err::Error((a, ErrorKind::OctDigit)))
-    );
+    assert_eq!(hex_digit1(e), Err(Err::Error((e, ErrorKind::HexDigit))));
+    assert_eq!(oct_digit1(a), Err(Err::Error((a, ErrorKind::OctDigit))));
     assert_eq!(oct_digit1::<_, (_, ErrorKind)>(b), Ok((empty, b)));
-    assert_eq!(
-      oct_digit1(c),
-      Err(Err::Error((c, ErrorKind::OctDigit)))
-    );
-    assert_eq!(
-      oct_digit1(d),
-      Err(Err::Error((d, ErrorKind::OctDigit)))
-    );
+    assert_eq!(oct_digit1(c), Err(Err::Error((c, ErrorKind::OctDigit))));
+    assert_eq!(oct_digit1(d), Err(Err::Error((d, ErrorKind::OctDigit))));
     assert_eq!(alphanumeric1::<_, (_, ErrorKind)>(a), Ok((empty, a)));
     //assert_eq!(fix_error!(b,(), alphanumeric), Ok((empty, b)));
     assert_eq!(alphanumeric1::<_, (_, ErrorKind)>(c), Ok((empty, c)));
@@ -903,7 +827,10 @@ mod tests {
   #[test]
   fn is_not_line_ending_bytes() {
     let a: &[u8] = b"ab12cd\nefgh";
-    assert_eq!(not_line_ending::<_, (_, ErrorKind)>(a), Ok((&b"\nefgh"[..], &b"ab12cd"[..])));
+    assert_eq!(
+      not_line_ending::<_, (_, ErrorKind)>(a),
+      Ok((&b"\nefgh"[..], &b"ab12cd"[..]))
+    );
 
     let b: &[u8] = b"ab12cd\nefgh\nijkl";
     assert_eq!(
@@ -918,12 +845,14 @@ mod tests {
     );
 
     let d: &[u8] = b"ab12cd";
-    assert_eq!(not_line_ending::<_, (_, ErrorKind)>(d), Ok((&[][..], &d[..])));
+    assert_eq!(
+      not_line_ending::<_, (_, ErrorKind)>(d),
+      Ok((&[][..], &d[..]))
+    );
   }
 
   #[test]
   fn is_not_line_ending_str() {
-
     /*
     let a: &str = "ab12cd\nefgh";
     assert_eq!(not_line_ending(a), Ok((&"\nefgh"[..], &"ab12cd"[..])));
@@ -942,10 +871,7 @@ mod tests {
     */
 
     let f = "βèƒôřè\rÂßÇáƒƭèř";
-    assert_eq!(
-      not_line_ending(f),
-      Err(Err::Error((f, ErrorKind::Tag)))
-    );
+    assert_eq!(not_line_ending(f), Err(Err::Error((f, ErrorKind::Tag))));
 
     let g2: &str = "ab12cd";
     assert_eq!(not_line_ending::<_, (_, ErrorKind)>(g2), Ok(("", g2)));
@@ -1047,14 +973,20 @@ mod tests {
   #[test]
   fn cr_lf() {
     assert_parse!(crlf(&b"\r\na"[..]), Ok((&b"a"[..], &b"\r\n"[..])));
-    assert_parse!(crlf(&b"\r"[..]), Err(Err::Error(error_position!(&b"\r"[..], ErrorKind::CrLf))));
+    assert_parse!(
+      crlf(&b"\r"[..]),
+      Err(Err::Error(error_position!(&b"\r"[..], ErrorKind::CrLf)))
+    );
     assert_parse!(
       crlf(&b"\ra"[..]),
       Err(Err::Error(error_position!(&b"\ra"[..], ErrorKind::CrLf)))
     );
 
     assert_parse!(crlf("\r\na"), Ok(("a", "\r\n")));
-    assert_parse!(crlf("\r"), Err(Err::Error(error_position!(&"\r"[..], ErrorKind::CrLf))));
+    assert_parse!(
+      crlf("\r"),
+      Err(Err::Error(error_position!(&"\r"[..], ErrorKind::CrLf)))
+    );
     assert_parse!(
       crlf("\ra"),
       Err(Err::Error(error_position!("\ra", ErrorKind::CrLf)))
@@ -1065,7 +997,10 @@ mod tests {
   fn end_of_line() {
     assert_parse!(line_ending(&b"\na"[..]), Ok((&b"a"[..], &b"\n"[..])));
     assert_parse!(line_ending(&b"\r\na"[..]), Ok((&b"a"[..], &b"\r\n"[..])));
-    assert_parse!(line_ending(&b"\r"[..]), Err(Err::Error(error_position!(&b"\r"[..], ErrorKind::CrLf))));
+    assert_parse!(
+      line_ending(&b"\r"[..]),
+      Err(Err::Error(error_position!(&b"\r"[..], ErrorKind::CrLf)))
+    );
     assert_parse!(
       line_ending(&b"\ra"[..]),
       Err(Err::Error(error_position!(&b"\ra"[..], ErrorKind::CrLf)))
@@ -1073,7 +1008,10 @@ mod tests {
 
     assert_parse!(line_ending("\na"), Ok(("a", "\n")));
     assert_parse!(line_ending("\r\na"), Ok(("a", "\r\n")));
-    assert_parse!(line_ending("\r"), Err(Err::Error(error_position!(&"\r"[..], ErrorKind::CrLf))));
+    assert_parse!(
+      line_ending("\r"),
+      Err(Err::Error(error_position!(&"\r"[..], ErrorKind::CrLf)))
+    );
     assert_parse!(
       line_ending("\ra"),
       Err(Err::Error(error_position!("\ra", ErrorKind::CrLf)))

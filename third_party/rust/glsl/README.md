@@ -1,4 +1,3 @@
-[![Talk on IRC!](https://img.shields.io/badge/chat-%23glsl--rs%40irc.freenode.net-blueviolet)](https://webchat.freenode.net)
 [![Build Status](https://travis-ci.org/phaazon/glsl.svg?branch=master)](https://travis-ci.org/phaazon/glsl)
 [![crates.io](https://img.shields.io/crates/v/glsl.svg)](https://crates.io/crates/glsl)
 [![docs.rs](https://docs.rs/glsl/badge.svg)](https://docs.rs/glsl)
@@ -52,7 +51,7 @@ true for a [`TranslationUnit`] as it’s exceptionnally more permissive).
 Let’s try to parse an expression.
 
 ```rust
-use glsl::parser::Parse;
+use glsl::parser::Parse as _;
 use glsl::syntax::Expr;
 
 let glsl = "(vec3(r, g, b) * cos(t * PI * .5)).xxz";
@@ -63,7 +62,7 @@ assert!(expr.is_ok());
 Here, `expr` is an AST which type is `Result<Expr, ParseError>` that represents the GLSL
 expression  `(vec3(r, g, b) * cos(t * PI * .5)).xxz`, which is an outer (scalar) multiplication
 of an RGB color by a cosine of a time, the whole thing being
-[swizzled](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) with XXZ. It is your
+[swizzled](https://en.wikipedia.org/wiki/Swizzling_\(computer_graphics\)) with XXZ. It is your
 responsibility to check if the parsing process has succeeded.
 
 In the previous example, the GLSL string is a constant and hardcoded. It could come from a file,
@@ -81,7 +80,7 @@ shaders can be parsed the same way by using one of the `TranslationUnit` or `Sha
 Here, a simple vertex shader being parsed.
 
 ```rust
-use glsl::parser::Parse;
+use glsl::parser::Parse as _;
 use glsl::syntax::ShaderStage;
 
 let glsl = "

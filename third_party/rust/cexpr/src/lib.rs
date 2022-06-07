@@ -19,7 +19,7 @@
 
 pub mod nom {
     //! nom's result types, re-exported.
-    pub use nom::{error::ErrorKind, Err, IResult, Needed};
+    pub use nom::{error::ErrorKind, error::Error, Err, IResult, Needed};
 }
 pub mod expr;
 pub mod literal;
@@ -82,6 +82,15 @@ impl<I> From<(I, ErrorKind)> for Error<I> {
         Self {
             input: e.0,
             error: e.1,
+        }
+    }
+}
+
+impl<I> From<::nom::error::Error<I>> for Error<I> {
+    fn from(e: ::nom::error::Error<I>) -> Self {
+        Self {
+            input: e.input,
+            error: e.code.into(),
         }
     }
 }

@@ -1,25 +1,25 @@
 //! Traits input types have to implement to work with nom combinators
-//!
+use crate::error::{ErrorKind, ParseError};
 use crate::internal::{Err, IResult, Needed};
-use crate::error::{ParseError, ErrorKind};
+use crate::lib::std::iter::{Copied, Enumerate};
 use crate::lib::std::ops::{Range, RangeFrom, RangeFull, RangeTo};
-use crate::lib::std::iter::Enumerate;
 use crate::lib::std::slice::Iter;
-use crate::lib::std::iter::Map;
-use crate::lib::std::str::Chars;
-use crate::lib::std::str::CharIndices;
-use crate::lib::std::str::FromStr;
 use crate::lib::std::str::from_utf8;
-use memchr;
+use crate::lib::std::str::CharIndices;
+use crate::lib::std::str::Chars;
+use crate::lib::std::str::FromStr;
 
 #[cfg(feature = "alloc")]
 use crate::lib::std::string::String;
 #[cfg(feature = "alloc")]
 use crate::lib::std::vec::Vec;
 
-/// abstract method to calculate the input length
+#[cfg(feature = "bitvec")]
+use bitvec::prelude::*;
+
+/// Abstract method to calculate the input length
 pub trait InputLength {
-  /// calculates the input length, as indicated by its name,
+  /// Calculates the input length, as indicated by its name,
   /// and the name of the trait itself
   fn input_len(&self) -> usize;
 }
@@ -47,9 +47,21 @@ impl<'a> InputLength for (&'a [u8], usize) {
   }
 }
 
-/// useful functions to calculate the offset between slices and show a hexdump of a slice
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> InputLength for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  #[inline]
+  fn input_len(&self) -> usize {
+    self.len()
+  }
+}
+
+/// Useful functions to calculate the offset between slices and show a hexdump of a slice
 pub trait Offset {
-  /// offset between the first byte of self and the first byte of the argument
+  /// Offset between the first byte of self and the first byte of the argument
   fn offset(&self, second: &Self) -> usize;
 }
 
@@ -89,16 +101,40 @@ impl<'a> Offset for &'a str {
   }
 }
 
+#[cfg(feature = "bitvec")]
+impl<O, T> Offset for BitSlice<O, T>
+where
+  O: BitOrder,
+  T: BitStore,
+{
+  #[inline(always)]
+  fn offset(&self, second: &Self) -> usize {
+    second.offset_from(self) as usize
+  }
+}
+
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> Offset for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  #[inline(always)]
+  fn offset(&self, second: &Self) -> usize {
+    second.offset_from(self) as usize
+  }
+}
+
 /// Helper trait for types that can be viewed as a byte slice
 pub trait AsBytes {
-  /// casts the input type to a byte slice
+  /// Casts the input type to a byte slice
   fn as_bytes(&self) -> &[u8];
 }
 
 impl<'a> AsBytes for &'a str {
   #[inline(always)]
   fn as_bytes(&self) -> &[u8] {
-    <str as AsBytes>::as_bytes(self)
+    (*self).as_bytes()
   }
 }
 
@@ -123,6 +159,28 @@ impl AsBytes for [u8] {
   }
 }
 
+#[cfg(feature = "bitvec")]
+impl<'a, O> AsBytes for &'a BitSlice<O, u8>
+where
+  O: BitOrder,
+{
+  #[inline(always)]
+  fn as_bytes(&self) -> &[u8] {
+    self.as_slice()
+  }
+}
+
+#[cfg(feature = "bitvec")]
+impl<O> AsBytes for BitSlice<O, u8>
+where
+  O: BitOrder,
+{
+  #[inline(always)]
+  fn as_bytes(&self) -> &[u8] {
+    self.as_slice()
+  }
+}
+
 macro_rules! as_bytes_array_impls {
   ($($N:expr)+) => {
     $(
@@ -139,6 +197,24 @@ macro_rules! as_bytes_array_impls {
           self
         }
       }
+
+      #[cfg(feature = "bitvec")]
+      impl<'a, O> AsBytes for &'a BitArray<O, [u8; $N]>
+      where O: BitOrder {
+        #[inline(always)]
+        fn as_bytes(&self) -> &[u8] {
+          self.as_slice()
+        }
+      }
+
+      #[cfg(feature = "bitvec")]
+      impl<O> AsBytes for BitArray<O, [u8; $N]>
+      where O: BitOrder {
+        #[inline(always)]
+        fn as_bytes(&self) -> &[u8] {
+          self.as_slice()
+        }
+      }
     )+
   };
 }
@@ -150,27 +226,27 @@ as_bytes_array_impls! {
     30 31 32
 }
 
-/// transforms common types to a char for basic token parsing
+/// Transforms common types to a char for basic token parsing
 pub trait AsChar {
   /// makes a char from self
   fn as_char(self) -> char;
 
-  /// tests that self is an alphabetic character
+  /// Tests that self is an alphabetic character
   ///
-  /// warning: for `&str` it recognizes alphabetic
+  /// Warning: for `&str` it recognizes alphabetic
   /// characters outside of the 52 ASCII letters
   fn is_alpha(self) -> bool;
 
-  /// tests that self is an alphabetic character
+  /// Tests that self is an alphabetic character
   /// or a decimal digit
   fn is_alphanum(self) -> bool;
-  /// tests that self is a decimal digit
+  /// Tests that self is a decimal digit
   fn is_dec_digit(self) -> bool;
-  /// tests that self is an hex digit
+  /// Tests that self is an hex digit
   fn is_hex_digit(self) -> bool;
-  /// tests that self is an octal digit
+  /// Tests that self is an octal digit
   fn is_oct_digit(self) -> bool;
-  /// gets the len in bytes for self
+  /// Gets the len in bytes for self
   fn len(self) -> usize;
 }
 
@@ -193,7 +269,9 @@ impl AsChar for u8 {
   }
   #[inline]
   fn is_hex_digit(self) -> bool {
-    (self >= 0x30 && self <= 0x39) || (self >= 0x41 && self <= 0x46) || (self >= 0x61 && self <= 0x66)
+    (self >= 0x30 && self <= 0x39)
+      || (self >= 0x41 && self <= 0x46)
+      || (self >= 0x61 && self <= 0x66)
   }
   #[inline]
   fn is_oct_digit(self) -> bool {
@@ -223,7 +301,9 @@ impl<'a> AsChar for &'a u8 {
   }
   #[inline]
   fn is_hex_digit(self) -> bool {
-    (*self >= 0x30 && *self <= 0x39) || (*self >= 0x41 && *self <= 0x46) || (*self >= 0x61 && *self <= 0x66)
+    (*self >= 0x30 && *self <= 0x39)
+      || (*self >= 0x41 && *self <= 0x46)
+      || (*self >= 0x61 && *self <= 0x66)
   }
   #[inline]
   fn is_oct_digit(self) -> bool {
@@ -297,48 +377,44 @@ impl<'a> AsChar for &'a char {
   }
 }
 
-/// abstracts common iteration operations on the input type
+/// Abstracts common iteration operations on the input type
 pub trait InputIter {
-  /// the current input type is a sequence of that `Item` type.
+  /// The current input type is a sequence of that `Item` type.
   ///
-  /// example: `u8` for `&[u8]` or `char` for &str`
+  /// Example: `u8` for `&[u8]` or `char` for `&str`
   type Item;
-  /// an iterator over the input type, producing the item and its position
+  /// An iterator over the input type, producing the item and its position
   /// for use with [Slice]. If we're iterating over `&str`, the position
   /// corresponds to the byte index of the character
   type Iter: Iterator<Item = (usize, Self::Item)>;
 
-  /// an iterator over the input type, producing the item
+  /// An iterator over the input type, producing the item
   type IterElem: Iterator<Item = Self::Item>;
 
-  /// returns an iterator over the elements and their byte offsets
+  /// Returns an iterator over the elements and their byte offsets
   fn iter_indices(&self) -> Self::Iter;
-  /// returns an iterator over the elements
+  /// Returns an iterator over the elements
   fn iter_elements(&self) -> Self::IterElem;
-  /// finds the byte position of the element
+  /// Finds the byte position of the element
   fn position<P>(&self, predicate: P) -> Option<usize>
   where
     P: Fn(Self::Item) -> bool;
-  /// get the byte offset from the element's position in the stream
-  fn slice_index(&self, count: usize) -> Option<usize>;
+  /// Get the byte offset from the element's position in the stream
+  fn slice_index(&self, count: usize) -> Result<usize, Needed>;
 }
 
-/// abstracts slicing operations
+/// Abstracts slicing operations
 pub trait InputTake: Sized {
-  /// returns a slice of `count` bytes. panics if count > length
+  /// Returns a slice of `count` bytes. panics if count > length
   fn take(&self, count: usize) -> Self;
-  /// split the stream at the `count` byte offset. panics if count > length
+  /// Split the stream at the `count` byte offset. panics if count > length
   fn take_split(&self, count: usize) -> (Self, Self);
-}
-
-fn star(r_u8: &u8) -> u8 {
-  *r_u8
 }
 
 impl<'a> InputIter for &'a [u8] {
   type Item = u8;
   type Iter = Enumerate<Self::IterElem>;
-  type IterElem = Map<Iter<'a, Self::Item>, fn(&u8) -> u8>;
+  type IterElem = Copied<Iter<'a, u8>>;
 
   #[inline]
   fn iter_indices(&self) -> Self::Iter {
@@ -346,7 +422,7 @@ impl<'a> InputIter for &'a [u8] {
   }
   #[inline]
   fn iter_elements(&self) -> Self::IterElem {
-    self.iter().map(star)
+    self.iter().copied()
   }
   #[inline]
   fn position<P>(&self, predicate: P) -> Option<usize>
@@ -356,11 +432,11 @@ impl<'a> InputIter for &'a [u8] {
     self.iter().position(|b| predicate(*b))
   }
   #[inline]
-  fn slice_index(&self, count: usize) -> Option<usize> {
+  fn slice_index(&self, count: usize) -> Result<usize, Needed> {
     if self.len() >= count {
-      Some(count)
+      Ok(count)
     } else {
-      None
+      Err(Needed::new(count - self.len()))
     }
   }
 }
@@ -401,18 +477,18 @@ impl<'a> InputIter for &'a str {
     None
   }
   #[inline]
-  fn slice_index(&self, count: usize) -> Option<usize> {
+  fn slice_index(&self, count: usize) -> Result<usize, Needed> {
     let mut cnt = 0;
     for (index, _) in self.char_indices() {
       if cnt == count {
-        return Some(index);
+        return Ok(index);
       }
       cnt += 1;
     }
     if cnt == count {
-      return Some(self.len());
+      return Ok(self.len());
     }
-    None
+    Err(Needed::Unknown)
   }
 }
 
@@ -429,64 +505,133 @@ impl<'a> InputTake for &'a str {
   }
 }
 
-/// Dummy trait used for default implementations (currently only used for `InputTakeAtPosition`).
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> InputIter for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  type Item = bool;
+  type Iter = Enumerate<Self::IterElem>;
+  type IterElem = Copied<bitvec::slice::Iter<'a, O, T>>;
+
+  #[inline]
+  fn iter_indices(&self) -> Self::Iter {
+    self.iter_elements().enumerate()
+  }
+
+  #[inline]
+  fn iter_elements(&self) -> Self::IterElem {
+    self.iter().copied()
+  }
+
+  #[inline]
+  fn position<P>(&self, predicate: P) -> Option<usize>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    self.iter_elements().position(predicate)
+  }
+
+  #[inline]
+  fn slice_index(&self, count: usize) -> Result<usize, Needed> {
+    if self.len() >= count {
+      Ok(count)
+    } else {
+      Err(Needed::new(count - self.len()))
+    }
+  }
+}
+
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> InputTake for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  #[inline]
+  fn take(&self, count: usize) -> Self {
+    &self[..count]
+  }
+
+  #[inline]
+  fn take_split(&self, count: usize) -> (Self, Self) {
+    let (a, b) = self.split_at(count);
+    (b, a)
+  }
+}
+
+/// Dummy trait used for default implementations (currently only used for `InputTakeAtPosition` and `Compare`).
 ///
 /// When implementing a custom input type, it is possible to use directly the
-/// default implementation: if the input type implements `InputLength`, `InputIter`,
+/// default implementation: If the input type implements `InputLength`, `InputIter`,
 /// `InputTake` and `Clone`, you can implement `UnspecializedInput` and get
-/// a default version of `InputTakeAtPosition`.
+/// a default version of `InputTakeAtPosition` and `Compare`.
 ///
 /// For performance reasons, you might want to write a custom implementation of
 /// `InputTakeAtPosition` (like the one for `&[u8]`).
 pub trait UnspecializedInput {}
 
-/// methods to take as much input as possible until the provided function returns true for the current element
+/// Methods to take as much input as possible until the provided function returns true for the current element.
 ///
-/// a large part of nom's basic parsers are built using this trait
+/// A large part of nom's basic parsers are built using this trait.
 pub trait InputTakeAtPosition: Sized {
-  /// the current input type is a sequence of that `Item` type.
+  /// The current input type is a sequence of that `Item` type.
   ///
-  /// example: `u8` for `&[u8]` or `char` for &str`
+  /// Example: `u8` for `&[u8]` or `char` for `&str`
   type Item;
 
-  /// looks for the first element of the input type for which the condition returns true,
-  /// and returns the input up to this position
+  /// Looks for the first element of the input type for which the condition returns true,
+  /// and returns the input up to this position.
   ///
-  /// *streaming version*: if no element is found matching the condition, this will return `Incomplete`
+  /// *streaming version*: If no element is found matching the condition, this will return `Incomplete`
   fn split_at_position<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool;
 
-  /// looks for the first element of the input type for which the condition returns true
-  /// and returns the input up to this position
+  /// Looks for the first element of the input type for which the condition returns true
+  /// and returns the input up to this position.
   ///
-  /// fails if the produced slice is empty
+  /// Fails if the produced slice is empty.
   ///
-  /// *streaming version*: if no element is found matching the condition, this will return `Incomplete`
-  fn split_at_position1<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
+  /// *streaming version*: If no element is found matching the condition, this will return `Incomplete`
+  fn split_at_position1<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool;
 
-  /// looks for the first element of the input type for which the condition returns true,
-  /// and returns the input up to this position
+  /// Looks for the first element of the input type for which the condition returns true,
+  /// and returns the input up to this position.
   ///
-  /// *complete version*: if no element is found matching the condition, this will return the whole input
-  fn split_at_position_complete<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
+  /// *complete version*: If no element is found matching the condition, this will return the whole input
+  fn split_at_position_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool;
 
-  /// looks for the first element of the input type for which the condition returns true
-  /// and returns the input up to this position
+  /// Looks for the first element of the input type for which the condition returns true
+  /// and returns the input up to this position.
   ///
-  /// fails if the produced slice is empty
+  /// Fails if the produced slice is empty.
   ///
-  /// *complete version*: if no element is found matching the condition, this will return the whole input
-  fn split_at_position1_complete<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
+  /// *complete version*: If no element is found matching the condition, this will return the whole input
+  fn split_at_position1_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool;
 }
 
-impl<T: InputLength + InputIter + InputTake + Clone + UnspecializedInput> InputTakeAtPosition for T {
+impl<T: InputLength + InputIter + InputTake + Clone + UnspecializedInput> InputTakeAtPosition
+  for T
+{
   type Item = <T as InputIter>::Item;
 
   fn split_at_position<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
@@ -495,36 +640,53 @@ impl<T: InputLength + InputIter + InputTake + Clone + UnspecializedInput> InputT
   {
     match self.position(predicate) {
       Some(n) => Ok(self.take_split(n)),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position1<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
+  fn split_at_position1<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool,
   {
     match self.position(predicate) {
       Some(0) => Err(Err::Error(E::from_error_kind(self.clone(), e))),
       Some(n) => Ok(self.take_split(n)),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position_complete<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match self.split_at_position(predicate) {
       Err(Err::Incomplete(_)) => Ok(self.take_split(self.input_len())),
       res => res,
     }
   }
 
-  fn split_at_position1_complete<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position1_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match self.split_at_position1(predicate, e) {
-      Err(Err::Incomplete(_)) => if self.input_len() == 0 {
-        Err(Err::Error(E::from_error_kind(self.clone(), e)))
-      } else {
-        Ok(self.take_split(self.input_len()))
+      Err(Err::Incomplete(_)) => {
+        if self.input_len() == 0 {
+          Err(Err::Error(E::from_error_kind(self.clone(), e)))
+        } else {
+          Ok(self.take_split(self.input_len()))
+        }
       }
       res => res,
     }
@@ -540,41 +702,56 @@ impl<'a> InputTakeAtPosition for &'a [u8] {
   {
     match (0..self.len()).find(|b| predicate(self[*b])) {
       Some(i) => Ok((&self[i..], &self[..i])),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position1<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
+  fn split_at_position1<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool,
   {
     match (0..self.len()).find(|b| predicate(self[*b])) {
       Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
       Some(i) => Ok((&self[i..], &self[..i])),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position_complete<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match (0..self.len()).find(|b| predicate(self[*b])) {
       Some(i) => Ok((&self[i..], &self[..i])),
       None => Ok(self.take_split(self.input_len())),
     }
   }
 
-  fn split_at_position1_complete<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position1_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match (0..self.len()).find(|b| predicate(self[*b])) {
       Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
       Some(i) => Ok((&self[i..], &self[..i])),
       None => {
-        if self.len() == 0 {
+        if self.is_empty() {
           Err(Err::Error(E::from_error_kind(self, e)))
         } else {
           Ok(self.take_split(self.input_len()))
         }
-      },
+      }
     }
   }
 }
@@ -588,69 +765,163 @@ impl<'a> InputTakeAtPosition for &'a str {
   {
     match self.find(predicate) {
       Some(i) => Ok((&self[i..], &self[..i])),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position1<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
+  fn split_at_position1<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
   where
     P: Fn(Self::Item) -> bool,
   {
     match self.find(predicate) {
       Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
       Some(i) => Ok((&self[i..], &self[..i])),
-      None => Err(Err::Incomplete(Needed::Size(1))),
+      None => Err(Err::Incomplete(Needed::new(1))),
     }
   }
 
-  fn split_at_position_complete<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match self.find(predicate) {
       Some(i) => Ok((&self[i..], &self[..i])),
-      None =>  Ok(self.take_split(self.input_len()))
+      None => Ok(self.take_split(self.input_len())),
     }
   }
 
-  fn split_at_position1_complete<P, E: ParseError<Self>>(&self, predicate: P, e: ErrorKind) -> IResult<Self, Self, E>
-    where P: Fn(Self::Item) -> bool {
+  fn split_at_position1_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
     match self.find(predicate) {
       Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
       Some(i) => Ok((&self[i..], &self[..i])),
       None => {
-        if self.len() == 0 {
+        if self.is_empty() {
           Err(Err::Error(E::from_error_kind(self, e)))
         } else {
           Ok(self.take_split(self.input_len()))
         }
-      },
+      }
     }
   }
 }
 
-/// indicates wether a comparison was successful, an error, or
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> InputTakeAtPosition for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  type Item = bool;
+
+  fn split_at_position<P, E: ParseError<Self>>(&self, predicate: P) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    self
+      .iter()
+      .copied()
+      .position(predicate)
+      .map(|i| self.split_at(i))
+      .ok_or_else(|| Err::Incomplete(Needed::new(1)))
+  }
+
+  fn split_at_position1<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    match self.iter().copied().position(predicate) {
+      Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
+      Some(i) => Ok(self.split_at(i)),
+      None => Err(Err::Incomplete(Needed::new(1))),
+    }
+  }
+
+  fn split_at_position_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    self
+      .iter()
+      .position(|b| predicate(*b))
+      .map(|i| self.split_at(i))
+      .or_else(|| Some((self, Self::default())))
+      .ok_or_else(|| unreachable!())
+  }
+
+  fn split_at_position1_complete<P, E: ParseError<Self>>(
+    &self,
+    predicate: P,
+    e: ErrorKind,
+  ) -> IResult<Self, Self, E>
+  where
+    P: Fn(Self::Item) -> bool,
+  {
+    match self.iter().copied().position(predicate) {
+      Some(0) => Err(Err::Error(E::from_error_kind(self, e))),
+      Some(i) => Ok(self.split_at(i)),
+      None => {
+        if self.is_empty() {
+          Err(Err::Error(E::from_error_kind(self, e)))
+        } else {
+          Ok((self, Self::default()))
+        }
+      }
+    }
+  }
+}
+
+/// Indicates wether a comparison was successful, an error, or
 /// if more data was needed
 #[derive(Debug, PartialEq)]
 pub enum CompareResult {
-  /// comparison was successful
+  /// Comparison was successful
   Ok,
-  /// we need more data to be sure
+  /// We need more data to be sure
   Incomplete,
-  /// comparison failed
+  /// Comparison failed
   Error,
 }
 
-/// abstracts comparison operations
+/// Abstracts comparison operations
 pub trait Compare<T> {
-  /// compares self to another value for equality
+  /// Compares self to another value for equality
   fn compare(&self, t: T) -> CompareResult;
-  /// compares self to another value for equality
+  /// Compares self to another value for equality
   /// independently of the case.
   ///
-  /// warning: for `&str`, the comparison is done
+  /// Warning: for `&str`, the comparison is done
   /// by lowercasing both strings and comparing
   /// the result. This is a temporary solution until
   /// a better one appears
   fn compare_no_case(&self, t: T) -> CompareResult;
+}
+
+fn lowercase_byte(c: u8) -> u8 {
+  match c {
+    b'A'..=b'Z' => c - b'A' + b'a',
+    _ => c,
+  }
 }
 
 impl<'a, 'b> Compare<&'b [u8]> for &'a [u8] {
@@ -688,19 +959,53 @@ impl<'a, 'b> Compare<&'b [u8]> for &'a [u8] {
 
   #[inline(always)]
   fn compare_no_case(&self, t: &'b [u8]) -> CompareResult {
-    let len = self.len();
-    let blen = t.len();
-    let m = if len < blen { len } else { blen };
-    let reduced = &self[..m];
-    let other = &t[..m];
-
-    if !reduced.iter().zip(other).all(|(a, b)| match (*a, *b) {
-      (0..=64, 0..=64) | (91..=96, 91..=96) | (123..=255, 123..=255) => a == b,
-      (65..=90, 65..=90) | (97..=122, 97..=122) | (65..=90, 97..=122) | (97..=122, 65..=90) => *a | 0b00_10_00_00 == *b | 0b00_10_00_00,
-      _ => false,
-    }) {
+    if self
+      .iter()
+      .zip(t)
+      .any(|(a, b)| lowercase_byte(*a) != lowercase_byte(*b))
+    {
       CompareResult::Error
-    } else if m < blen {
+    } else if self.len() < t.len() {
+      CompareResult::Incomplete
+    } else {
+      CompareResult::Ok
+    }
+  }
+}
+
+impl<
+    T: InputLength + InputIter<Item = u8> + InputTake + UnspecializedInput,
+    O: InputLength + InputIter<Item = u8> + InputTake,
+  > Compare<O> for T
+{
+  #[inline(always)]
+  fn compare(&self, t: O) -> CompareResult {
+    let pos = self
+      .iter_elements()
+      .zip(t.iter_elements())
+      .position(|(a, b)| a != b);
+
+    match pos {
+      Some(_) => CompareResult::Error,
+      None => {
+        if self.input_len() >= t.input_len() {
+          CompareResult::Ok
+        } else {
+          CompareResult::Incomplete
+        }
+      }
+    }
+  }
+
+  #[inline(always)]
+  fn compare_no_case(&self, t: O) -> CompareResult {
+    if self
+      .iter_elements()
+      .zip(t.iter_elements())
+      .any(|(a, b)| lowercase_byte(a) != lowercase_byte(b))
+    {
+      CompareResult::Error
+    } else if self.input_len() < t.input_len() {
       CompareResult::Incomplete
     } else {
       CompareResult::Ok
@@ -722,18 +1027,7 @@ impl<'a, 'b> Compare<&'b str> for &'a [u8] {
 impl<'a, 'b> Compare<&'b str> for &'a str {
   #[inline(always)]
   fn compare(&self, t: &'b str) -> CompareResult {
-    let pos = self.chars().zip(t.chars()).position(|(a, b)| a != b);
-
-    match pos {
-      Some(_) => CompareResult::Error,
-      None => {
-        if self.len() >= t.len() {
-          CompareResult::Ok
-        } else {
-          CompareResult::Incomplete
-        }
-      }
-    }
+    self.as_bytes().compare(t.as_bytes())
   }
 
   //FIXME: this version is too simple and does not use the current locale
@@ -742,7 +1036,7 @@ impl<'a, 'b> Compare<&'b str> for &'a str {
     let pos = self
       .chars()
       .zip(t.chars())
-      .position(|(a, b)| a.to_lowercase().zip(b.to_lowercase()).any(|(a, b)| a != b));
+      .position(|(a, b)| a.to_lowercase().ne(b.to_lowercase()));
 
     match pos {
       Some(_) => CompareResult::Error,
@@ -757,9 +1051,37 @@ impl<'a, 'b> Compare<&'b str> for &'a str {
   }
 }
 
-/// look for a token in self
+#[cfg(feature = "bitvec")]
+impl<'a, 'b, O1, O2, T1, T2> Compare<&'b BitSlice<O2, T2>> for &'a BitSlice<O1, T1>
+where
+  O1: BitOrder,
+  O2: BitOrder,
+  T1: 'a + BitStore,
+  T2: 'a + BitStore,
+{
+  #[inline]
+  fn compare(&self, other: &'b BitSlice<O2, T2>) -> CompareResult {
+    match self.iter().zip(other.iter()).position(|(a, b)| a != b) {
+      Some(_) => CompareResult::Error,
+      None => {
+        if self.len() >= other.len() {
+          CompareResult::Ok
+        } else {
+          CompareResult::Incomplete
+        }
+      }
+    }
+  }
+
+  #[inline(always)]
+  fn compare_no_case(&self, other: &'b BitSlice<O2, T2>) -> CompareResult {
+    self.compare(other)
+  }
+}
+
+/// Look for a token in self
 pub trait FindToken<T> {
-  /// returns true if self contains the token
+  /// Returns true if self contains the token
   fn find_token(&self, token: T) -> bool;
 }
 
@@ -777,7 +1099,7 @@ impl<'a> FindToken<u8> for &'a str {
 
 impl<'a, 'b> FindToken<&'a u8> for &'b [u8] {
   fn find_token(&self, token: &u8) -> bool {
-    memchr::memchr(*token, self).is_some()
+    self.find_token(*token)
   }
 }
 
@@ -789,66 +1111,75 @@ impl<'a, 'b> FindToken<&'a u8> for &'b str {
 
 impl<'a> FindToken<char> for &'a [u8] {
   fn find_token(&self, token: char) -> bool {
-    for i in self.iter() {
-      if token as u8 == *i {
-        return true;
-      }
-    }
-    false
+    self.iter().any(|i| *i == token as u8)
   }
 }
 
 impl<'a> FindToken<char> for &'a str {
   fn find_token(&self, token: char) -> bool {
-    for i in self.chars() {
-      if token == i {
-        return true;
-      }
-    }
-    false
+    self.chars().any(|i| i == token)
   }
 }
 
-/// look for a substring in self
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> FindToken<bool> for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  fn find_token(&self, token: bool) -> bool {
+    self.iter().copied().any(|i| i == token)
+  }
+}
+
+#[cfg(feature = "bitvec")]
+impl<'a, O, T> FindToken<(usize, bool)> for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  fn find_token(&self, token: (usize, bool)) -> bool {
+    self.iter().copied().enumerate().any(|i| i == token)
+  }
+}
+
+/// Look for a substring in self
 pub trait FindSubstring<T> {
-  /// returns the byte position of the substring if it is found
+  /// Returns the byte position of the substring if it is found
   fn find_substring(&self, substr: T) -> Option<usize>;
 }
 
 impl<'a, 'b> FindSubstring<&'b [u8]> for &'a [u8] {
   fn find_substring(&self, substr: &'b [u8]) -> Option<usize> {
-    let substr_len = substr.len();
+    if substr.len() > self.len() {
+      return None;
+    }
 
-    if substr_len == 0 {
+    let (&substr_first, substr_rest) = match substr.split_first() {
+      Some(split) => split,
       // an empty substring is found at position 0
       // This matches the behavior of str.find("").
-      Some(0)
-    } else if substr_len == 1 {
-      memchr::memchr(substr[0], self)
-    } else if substr_len > self.len() {
-      None
-    } else {
-      let max = self.len() - substr_len;
-      let mut offset = 0;
-      let mut haystack = &self[..];
+      None => return Some(0),
+    };
 
-      while let Some(position) = memchr::memchr(substr[0], haystack) {
-        offset += position;
+    if substr_rest.is_empty() {
+      return memchr::memchr(substr_first, self);
+    }
 
-        if offset > max {
-          return None;
-        }
+    let mut offset = 0;
+    let haystack = &self[..self.len() - substr_rest.len()];
 
-        if &haystack[position..position + substr_len] == substr {
-          return Some(offset);
-        }
-
-        haystack = &haystack[position + 1..];
-        offset += 1;
+    while let Some(position) = memchr::memchr(substr_first, &haystack[offset..]) {
+      offset += position;
+      let next_offset = offset + 1;
+      if &self[next_offset..][..substr_rest.len()] == substr_rest {
+        return Some(offset);
       }
 
-      None
+      offset = next_offset;
     }
+
+    None
   }
 }
 
@@ -865,10 +1196,33 @@ impl<'a, 'b> FindSubstring<&'b str> for &'a str {
   }
 }
 
-/// used to integrate str's parse() method
+#[cfg(feature = "bitvec")]
+impl<'a, 'b, O1, O2, T1, T2> FindSubstring<&'b BitSlice<O2, T2>> for &'a BitSlice<O1, T1>
+where
+  O1: BitOrder,
+  O2: BitOrder,
+  T1: 'a + BitStore,
+  T2: 'b + BitStore,
+{
+  fn find_substring(&self, substr: &'b BitSlice<O2, T2>) -> Option<usize> {
+    if substr.len() > self.len() {
+      return None;
+    }
+
+    if substr.is_empty() {
+      return Some(0);
+    }
+
+    self
+      .windows(substr.len())
+      .position(|window| window == substr)
+  }
+}
+
+/// Used to integrate `str`'s `parse()` method
 pub trait ParseTo<R> {
-  /// succeeds if `parse()` succeeded. The byte slice implementation
-  /// will first convert it to a &str, then apply the `parse()` function
+  /// Succeeds if `parse()` succeeded. The byte slice implementation
+  /// will first convert it to a `&str`, then apply the `parse()` function
   fn parse_to(&self) -> Option<R>;
 }
 
@@ -884,54 +1238,72 @@ impl<'a, R: FromStr> ParseTo<R> for &'a str {
   }
 }
 
-/// slicing operations using ranges
+/// Slicing operations using ranges.
 ///
-/// this trait is loosely based on
+/// This trait is loosely based on
 /// `Index`, but can actually return
 /// something else than a `&[T]` or `&str`
 pub trait Slice<R> {
-  /// slices self according to the range argument
+  /// Slices self according to the range argument
   fn slice(&self, range: R) -> Self;
 }
 
 macro_rules! impl_fn_slice {
-    ( $ty:ty ) => {
-        fn slice(&self, range:$ty) -> Self {
-            &self[range]
-        }
+  ( $ty:ty ) => {
+    fn slice(&self, range: $ty) -> Self {
+      &self[range]
     }
+  };
 }
 
 macro_rules! slice_range_impl {
-    ( [ $for_type:ident ], $ty:ty ) => {
-        impl<'a, $for_type> Slice<$ty> for &'a [$for_type] {
-            impl_fn_slice!( $ty );
-        }
-    };
-    ( $for_type:ty, $ty:ty ) => {
-        impl<'a> Slice<$ty> for &'a $for_type {
-            impl_fn_slice!( $ty );
-        }
+  ( BitSlice, $ty:ty ) => {
+    impl<'a, O, T> Slice<$ty> for &'a BitSlice<O, T>
+    where
+      O: BitOrder,
+      T: BitStore,
+    {
+      impl_fn_slice!($ty);
     }
+  };
+  ( [ $for_type:ident ], $ty:ty ) => {
+    impl<'a, $for_type> Slice<$ty> for &'a [$for_type] {
+      impl_fn_slice!($ty);
+    }
+  };
+  ( $for_type:ty, $ty:ty ) => {
+    impl<'a> Slice<$ty> for &'a $for_type {
+      impl_fn_slice!($ty);
+    }
+  };
 }
 
 macro_rules! slice_ranges_impl {
-    ( [ $for_type:ident ] ) => {
-        slice_range_impl! {[$for_type], Range<usize>}
-        slice_range_impl! {[$for_type], RangeTo<usize>}
-        slice_range_impl! {[$for_type], RangeFrom<usize>}
-        slice_range_impl! {[$for_type], RangeFull}
-    };
-    ( $for_type:ty ) => {
-        slice_range_impl! {$for_type, Range<usize>}
-        slice_range_impl! {$for_type, RangeTo<usize>}
-        slice_range_impl! {$for_type, RangeFrom<usize>}
-        slice_range_impl! {$for_type, RangeFull}
-    }
+  ( BitSlice ) => {
+    slice_range_impl! {BitSlice, Range<usize>}
+    slice_range_impl! {BitSlice, RangeTo<usize>}
+    slice_range_impl! {BitSlice, RangeFrom<usize>}
+    slice_range_impl! {BitSlice, RangeFull}
+  };
+  ( [ $for_type:ident ] ) => {
+    slice_range_impl! {[$for_type], Range<usize>}
+    slice_range_impl! {[$for_type], RangeTo<usize>}
+    slice_range_impl! {[$for_type], RangeFrom<usize>}
+    slice_range_impl! {[$for_type], RangeFull}
+  };
+  ( $for_type:ty ) => {
+    slice_range_impl! {$for_type, Range<usize>}
+    slice_range_impl! {$for_type, RangeTo<usize>}
+    slice_range_impl! {$for_type, RangeFrom<usize>}
+    slice_range_impl! {$for_type, RangeFull}
+  };
 }
 
 slice_ranges_impl! {str}
 slice_ranges_impl! {[T]}
+
+#[cfg(feature = "bitvec")]
+slice_ranges_impl! {BitSlice}
 
 macro_rules! array_impls {
   ($($N:expr)+) => {
@@ -947,6 +1319,29 @@ macro_rules! array_impls {
         #[inline]
         fn input_len(&self) -> usize {
           self.len()
+        }
+      }
+
+      impl<'a> InputIter for &'a [u8; $N] {
+        type Item = u8;
+        type Iter = Enumerate<Self::IterElem>;
+        type IterElem = Copied<Iter<'a, u8>>;
+
+        fn iter_indices(&self) -> Self::Iter {
+          (&self[..]).iter_indices()
+        }
+
+        fn iter_elements(&self) -> Self::IterElem {
+          (&self[..]).iter_elements()
+        }
+
+        fn position<P>(&self, predicate: P) -> Option<usize>
+          where P: Fn(Self::Item) -> bool {
+          (&self[..]).position(predicate)
+        }
+
+        fn slice_index(&self, count: usize) -> Result<usize, Needed> {
+          (&self[..]).slice_index(count)
         }
       }
 
@@ -982,7 +1377,7 @@ macro_rules! array_impls {
 
       impl<'a> FindToken<&'a u8> for [u8; $N] {
         fn find_token(&self, token: &u8) -> bool {
-          memchr::memchr(*token, &self[..]).is_some()
+          self.find_token(*token)
         }
       }
     )+
@@ -996,21 +1391,20 @@ array_impls! {
     30 31 32
 }
 
-/// abstracts something which can extend an `Extend`
-/// used to build modified input slices in `escaped_transform`
+/// Abstracts something which can extend an `Extend`.
+/// Used to build modified input slices in `escaped_transform`
 pub trait ExtendInto {
-
-  /// the current input type is a sequence of that `Item` type.
+  /// The current input type is a sequence of that `Item` type.
   ///
-  /// example: `u8` for `&[u8]` or `char` for &str`
+  /// Example: `u8` for `&[u8]` or `char` for `&str`
   type Item;
 
-  /// the type that will be produced
-  type Extender: Extend<Self::Item>;
+  /// The type that will be produced
+  type Extender;
 
-  /// create a new `Extend` of the correct type
+  /// Create a new `Extend` of the correct type
   fn new_builder(&self) -> Self::Extender;
-  /// accumulate the input into an accumulator
+  /// Accumulate the input into an accumulator
   fn extend_into(&self, acc: &mut Self::Extender);
 }
 
@@ -1040,10 +1434,9 @@ impl ExtendInto for &[u8] {
   }
   #[inline]
   fn extend_into(&self, acc: &mut Vec<u8>) {
-    acc.extend(self.iter().cloned());
+    acc.extend_from_slice(self);
   }
 }
-
 
 #[cfg(feature = "alloc")]
 impl ExtendInto for str {
@@ -1090,9 +1483,49 @@ impl ExtendInto for char {
   }
 }
 
-/// Helper trait to convert numbers to usize
+#[cfg(all(feature = "alloc", feature = "bitvec"))]
+impl<O, T> ExtendInto for BitSlice<O, T>
+where
+  O: BitOrder,
+  T: BitStore,
+{
+  type Item = bool;
+  type Extender = BitVec<O, T>;
+
+  #[inline]
+  fn new_builder(&self) -> BitVec<O, T> {
+    BitVec::new()
+  }
+
+  #[inline]
+  fn extend_into(&self, acc: &mut Self::Extender) {
+    acc.extend(self.iter());
+  }
+}
+
+#[cfg(all(feature = "alloc", feature = "bitvec"))]
+impl<'a, O, T> ExtendInto for &'a BitSlice<O, T>
+where
+  O: BitOrder,
+  T: 'a + BitStore,
+{
+  type Item = bool;
+  type Extender = BitVec<O, T>;
+
+  #[inline]
+  fn new_builder(&self) -> BitVec<O, T> {
+    BitVec::new()
+  }
+
+  #[inline]
+  fn extend_into(&self, acc: &mut Self::Extender) {
+    acc.extend(self.iter());
+  }
+}
+
+/// Helper trait to convert numbers to usize.
 ///
-/// by default, usize implements `From<u8>` and `From<u16>` but not
+/// By default, usize implements `From<u8>` and `From<u16>` but not
 /// `From<u32>` and `From<u64>` because that would be invalid on some
 /// platforms. This trait implements the conversion for platforms
 /// with 32 and 64 bits pointer platforms
@@ -1138,9 +1571,9 @@ impl ToUsize for u64 {
   }
 }
 
-/// equivalent From implementation to avoid orphan rules in bits parsers
+/// Equivalent From implementation to avoid orphan rules in bits parsers
 pub trait ErrorConvert<E> {
-  /// transform to another error type
+  /// Transform to another error type
   fn convert(self) -> E;
 }
 
@@ -1153,6 +1586,45 @@ impl<I> ErrorConvert<(I, ErrorKind)> for ((I, usize), ErrorKind) {
 impl<I> ErrorConvert<((I, usize), ErrorKind)> for (I, ErrorKind) {
   fn convert(self) -> ((I, usize), ErrorKind) {
     ((self.0, 0), self.1)
+  }
+}
+
+use crate::error;
+impl<I> ErrorConvert<error::Error<I>> for error::Error<(I, usize)> {
+  fn convert(self) -> error::Error<I> {
+    error::Error {
+      input: self.input.0,
+      code: self.code,
+    }
+  }
+}
+
+impl<I> ErrorConvert<error::Error<(I, usize)>> for error::Error<I> {
+  fn convert(self) -> error::Error<(I, usize)> {
+    error::Error {
+      input: (self.input, 0),
+      code: self.code,
+    }
+  }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "alloc")))]
+impl<I> ErrorConvert<error::VerboseError<I>> for error::VerboseError<(I, usize)> {
+  fn convert(self) -> error::VerboseError<I> {
+    error::VerboseError {
+      errors: self.errors.into_iter().map(|(i, e)| (i.0, e)).collect(),
+    }
+  }
+}
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "alloc")))]
+impl<I> ErrorConvert<error::VerboseError<(I, usize)>> for error::VerboseError<I> {
+  fn convert(self) -> error::VerboseError<(I, usize)> {
+    error::VerboseError {
+      errors: self.errors.into_iter().map(|(i, e)| ((i, 0), e)).collect(),
+    }
   }
 }
 

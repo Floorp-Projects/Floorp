@@ -13,10 +13,10 @@
 //! The types are commented so feel free to inspect each of theme. As a starter, you should read
 //! the documentation of [`Expr`], [`FunctionDefinition`], [`Statement`] and [`TranslationUnit`].
 //!
-//! [`Statement`]: syntax::Statement
-//! [`TranslationUnit`]: syntax::TranslationUnit
-//! [`Expr`]: syntax::Expr
-//! [`FunctionDefinition`]: syntax::FunctionDefinition
+//! [`Statement`]: crate::syntax::Statement
+//! [`TranslationUnit`]: crate::syntax::TranslationUnit
+//! [`Expr`]: crate::syntax::Expr
+//! [`FunctionDefinition`]: crate::syntax::FunctionDefinition
 
 use std::fmt;
 use std::iter::{once, FromIterator};
@@ -551,9 +551,16 @@ impl From<TypeSpecifierNonArray> for FullySpecifiedType {
   }
 }
 
-/// Dimensionality of an arary.
+/// Dimensionality of an array.
 #[derive(Clone, Debug, PartialEq)]
-pub enum ArraySpecifier {
+pub struct ArraySpecifier {
+  /// List of all the dimensions – possibly unsized or explicitly-sized.
+  pub dimensions: NonEmpty<ArraySpecifierDimension>,
+}
+
+/// One array specifier dimension.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ArraySpecifierDimension {
   Unsized,
   ExplicitlySized(Box<Expr>),
 }

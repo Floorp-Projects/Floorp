@@ -44,7 +44,7 @@
 //! Let’s try to parse an expression.
 //!
 //! ```rust
-//! use glsl::parser::Parse;
+//! use glsl::parser::Parse as _;
 //! use glsl::syntax::Expr;
 //!
 //! let glsl = "(vec3(r, g, b) * cos(t * PI * .5)).xxz";
@@ -73,7 +73,7 @@
 //! Here, a simple vertex shader being parsed.
 //!
 //! ```rust
-//! use glsl::parser::Parse;
+//! use glsl::parser::Parse as _;
 //! use glsl::syntax::ShaderStage;
 //!
 //! let glsl = "

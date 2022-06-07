@@ -16,7 +16,7 @@ fn test_no_flat_scalar_varyings(name: &str, shader: &mut ShaderStage) {
     }
 
     impl Visitor for FlatScalarVaryingsVisitor {
-        fn visit_single_declaration(&mut self, declaration: &mut SingleDeclaration) -> Visit {
+        fn visit_single_declaration(&mut self, declaration: &SingleDeclaration) -> Visit {
             let is_scalar = matches!(declaration.ty.ty.ty,
                 TypeSpecifierNonArray::Bool
                 | TypeSpecifierNonArray::Int

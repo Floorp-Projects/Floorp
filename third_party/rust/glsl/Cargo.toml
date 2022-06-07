@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glsl"
-version = "4.1.1"
+version = "6.0.1"
 authors = ["Dimitri Sabadie <dimitri.sabadie@gmail.com>"]
 description = "A GLSL450/GLSL460 parser."
 homepage = "https://github.com/phaazon/glsl"
@@ -24,7 +24,7 @@ categories = ["parsing", "rendering"]
 license = "BSD-3-Clause"
 repository = "https://github.com/phaazon/glsl"
 [dependencies.nom]
-version = "5"
+version = "6"
 features = ["std"]
 default-features = false
 
@@ -34,6 +34,3 @@ optional = true
 
 [features]
 spirv = ["shaderc"]
-[badges.travis-ci]
-branch = "master"
-repository = "phaazon/glsl"

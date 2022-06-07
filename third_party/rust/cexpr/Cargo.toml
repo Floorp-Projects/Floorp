@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "cexpr"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Jethro Beekman <jethro@jbeekman.nl>"]
 description = "A C expression parser and evaluator"
 documentation = "https://docs.rs/cexpr/"
@@ -21,7 +21,7 @@ keywords = ["C", "expression", "parser"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/jethrogb/rust-cexpr"
 [dependencies.nom]
-version = "5"
+version = "6"
 features = ["std"]
 default-features = false
 [dev-dependencies.clang-sys]

@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 use glsl::syntax;
-use glsl::syntax::{ArrayedIdentifier, ArraySpecifier, AssignmentOp, BinaryOp, Identifier};
+use glsl::syntax::{ArrayedIdentifier, ArraySpecifier, ArraySpecifierDimension, AssignmentOp, BinaryOp, Identifier};
 use glsl::syntax::{NonEmpty, PrecisionQualifier, StructFieldSpecifier, StructSpecifier};
 use glsl::syntax::{TypeSpecifier, TypeSpecifierNonArray, UnaryOp};
 use std::cell::{Cell, Ref, RefCell};
@@ -112,10 +112,10 @@ pub struct ArraySizes {
 impl LiftFrom<&ArraySpecifier> for ArraySizes {
     fn lift(state: &mut State, a: &ArraySpecifier) -> Self {
         ArraySizes {
-            sizes: vec![match a {
-                ArraySpecifier::Unsized => panic!(),
-                ArraySpecifier::ExplicitlySized(expr) => translate_expression(state, expr),
-            }],
+            sizes: a.dimensions.0.iter().map(|a| match a {
+                ArraySpecifierDimension::Unsized => panic!(),
+                ArraySpecifierDimension::ExplicitlySized(expr) => translate_expression(state, expr),
+            }).collect(),
         }
     }
 }
@@ -1385,7 +1385,7 @@ pub enum ExprKind {
     /// assignment operator and the value to associate with.
     Assignment(Box<Expr>, AssignmentOp, Box<Expr>),
     /// Add an array specifier to an expression.
-    Bracket(Box<Expr>, Box<Expr>),
+    Bracket(Box<Expr>, Vec<Expr>),
     /// A functional call. It has a function identifier and a list of expressions (arguments).
     FunCall(FunIdentifier, Vec<Expr>),
     /// An expression associated with a field selection (struct).
@@ -2239,13 +2239,15 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                 if global == state.clip_dist_sym {
                     if let ExprKind::Bracket(_, idx) = &lhs.kind {
                         // Get the constant array index used for gl_ClipDistance and add it to the used mask.
-                        let idx = match idx.kind {
-                            ExprKind::IntConst(idx) => idx,
-                            ExprKind::UIntConst(idx) => idx as i32,
-                            _ => panic!("bad index for gl_ClipDistance"),
-                        };
-                        assert!(idx >= 0 && idx < 4);
-                        state.used_clip_dist |= 1 << idx;
+                        for dimension in idx {
+                            let idx = match dimension.kind {
+                                ExprKind::IntConst(idx) => idx,
+                                ExprKind::UIntConst(idx) => idx as i32,
+                                _ => panic!("bad index for gl_ClipDistance"),
+                            };
+                            assert!(idx >= 0 && idx < 4);
+                            state.used_clip_dist |= 1 << idx;
+                        }
                     }
                 }
             }
@@ -2595,12 +2597,12 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                     array_sizes: a,
                 }
             };
-            let indx = match specifier {
-                ArraySpecifier::Unsized => panic!("need expression"),
-                ArraySpecifier::ExplicitlySized(e) => translate_expression(state, e),
-            };
+            let indx = specifier.dimensions.0.iter().map(|a| match a {
+                ArraySpecifierDimension::Unsized => panic!("need expression"),
+                ArraySpecifierDimension::ExplicitlySized(e) => translate_expression(state, e),
+            }).collect();
             Expr {
-                kind: ExprKind::Bracket(e, Box::new(indx)),
+                kind: ExprKind::Bracket(e, indx),
                 ty,
             }
         }
@@ -4255,7 +4257,10 @@ fn infer_expr_inner(state: &mut State, expr: &Expr, assign: &mut SymRef) -> RunC
             state.merge_run_class(sym, run_class)
         }
         ExprKind::Bracket(ref e, ref indx) => {
-            infer_expr_inner(state, e, assign).merge(infer_expr(state, indx))
+            indx.iter().fold(
+                infer_expr_inner(state, e, assign),
+                |run_class, indx| run_class.merge(infer_expr(state, indx)),
+            )
         }
         ExprKind::FunCall(ref fun, ref args) => {
             let arg_classes: Vec<(RunClass, SymRef)> = args

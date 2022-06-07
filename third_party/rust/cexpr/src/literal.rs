@@ -70,7 +70,7 @@ impl From<u8> for CChar {
 }
 
 // A non-allocating version of this would be nice...
-impl Into<Vec<u8>> for CChar {
+impl std::convert::Into<Vec<u8>> for CChar {
     fn into(self) -> Vec<u8> {
         match self {
             CChar::Char(c) => {
@@ -88,12 +88,12 @@ impl Into<Vec<u8>> for CChar {
 }
 
 /// ensures the child parser consumes the whole input
-pub fn full<I: Clone, O, E: From<nom::error::ErrorKind>, F>(
+pub fn full<I: Clone, O, F>(
     f: F,
-) -> impl Fn(I) -> nom::IResult<I, O, (I, E)>
+) -> impl Fn(I) -> nom::IResult<I, O>
 where
     I: nom::InputLength,
-    F: Fn(I) -> nom::IResult<I, O, (I, E)>,
+    F: Fn(I) -> nom::IResult<I, O>,
 {
     move |input| {
         let res = f(input);
@@ -102,7 +102,7 @@ where
                 if i.input_len() == 0 {
                     Ok((i, o))
                 } else {
-                    Err(nom::Err::Error((i, nom::error::ErrorKind::Complete.into())))
+                    Err(nom::Err::Error(nom::error::Error::new(i, nom::error::ErrorKind::Complete)))
                 }
             }
             r => r,
@@ -119,8 +119,8 @@ macro_rules! byte {
         fn parser(i: &[u8]) -> crate::nom::IResult<&[u8], u8> {
             match i.split_first() {
                 $(Some((&c @ $p,rest)))|* => Ok((rest,c)),
-                Some(_) => Err(nom::Err::Error((i, nom::error::ErrorKind::OneOf))),
-                None => Err(nom::Err::Incomplete(Needed::Size(1))),
+                Some(_) => Err(nom::Err::Error(nom::error::Error::new(i, nom::error::ErrorKind::OneOf))),
+                None => Err(nom::Err::Incomplete(Needed::new(1))),
             }
         }
 
@@ -272,7 +272,7 @@ fn c_int(i: &[u8]) -> nom::IResult<&[u8], i64> {
                     c_int_radix(v, 8)
                 }),
                 map_opt(many1(complete(decimal)), |v| c_int_radix(v, 10)),
-                |input| Err(crate::nom::Err::Error((input, crate::nom::ErrorKind::Fix))),
+                |input| Err(crate::nom::Err::Error(nom::error::Error::new(input, crate::nom::ErrorKind::Fix))),
             )),
             opt(take_ul),
         ),

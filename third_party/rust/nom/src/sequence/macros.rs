@@ -4,7 +4,7 @@
 /// The input type `I` must implement `nom::InputLength`.
 ///
 /// This combinator will count how much data is consumed by every child parser
-/// and take it into account if there is not enough data
+/// and take it into account if there is not enough data.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
@@ -38,7 +38,7 @@ macro_rules! tuple (
   );
 );
 
-/// Internal parser, do not use directly
+/// Internal parser, do not use directly.
 #[doc(hidden)]
 #[macro_export(local_inner_macros)]
 macro_rules! tuple_parser (
@@ -88,19 +88,19 @@ macro_rules! tuple_parser (
 );
 
 /// `pair!(I -> IResult<I,O>, I -> IResult<I,P>) => I -> IResult<I, (O,P)>`
-/// pair returns a tuple of the results of its two child parsers of both succeed
+/// `pair` returns a tuple of the results of its two child parsers of both succeed.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
 /// # use nom::Err;
-/// # use nom::error::ErrorKind;
+/// # use nom::error::{Error, ErrorKind};
 /// # use nom::character::complete::{alpha1, digit1};
 /// named!(parser<&str, (&str, &str)>, pair!(alpha1, digit1));
 ///
 /// # fn main() {
 /// assert_eq!(parser("abc123"), Ok(("", ("abc", "123"))));
-/// assert_eq!(parser("123abc"), Err(Err::Error(("123abc", ErrorKind::Alpha))));
-/// assert_eq!(parser("abc;123"), Err(Err::Error((";123", ErrorKind::Digit))));
+/// assert_eq!(parser("123abc"), Err(Err::Error(Error::new("123abc", ErrorKind::Alpha))));
+/// assert_eq!(parser("abc;123"), Err(Err::Error(Error::new(";123", ErrorKind::Digit))));
 /// # }
 /// ```
 #[macro_export(local_inner_macros)]
@@ -123,20 +123,20 @@ macro_rules! pair(
 );
 
 /// `separated_pair!(I -> IResult<I,O>, I -> IResult<I, T>, I -> IResult<I,P>) => I -> IResult<I, (O,P)>`
-/// separated_pair(X,sep,Y) returns a tuple of its first and third child parsers
-/// if all 3 succeed
+/// `separated_pair(X,sep,Y)` returns a tuple of its first and third child parsers
+/// if all 3 succeed.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
 /// # use nom::Err;
-/// # use nom::error::ErrorKind;
+/// # use nom::error::{Error, ErrorKind};
 /// # use nom::character::complete::{alpha1, digit1};
 /// named!(parser<&str, (&str, &str)>, separated_pair!(alpha1, char!(','), digit1));
 ///
 /// # fn main() {
 /// assert_eq!(parser("abc,123"), Ok(("", ("abc", "123"))));
-/// assert_eq!(parser("123,abc"), Err(Err::Error(("123,abc", ErrorKind::Alpha))));
-/// assert_eq!(parser("abc;123"), Err(Err::Error((";123", ErrorKind::Char))));
+/// assert_eq!(parser("123,abc"), Err(Err::Error(Error::new("123,abc", ErrorKind::Alpha))));
+/// assert_eq!(parser("abc;123"), Err(Err::Error(Error::new(";123", ErrorKind::Char))));
 /// # }
 /// ```
 #[macro_export(local_inner_macros)]
@@ -156,19 +156,19 @@ macro_rules! separated_pair(
 );
 
 /// `preceded!(I -> IResult<I,T>, I -> IResult<I,O>) => I -> IResult<I, O>`
-/// preceded returns the result of its second parser if both succeed
+/// `preceded` returns the result of its second parser if both succeed.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
 /// # use nom::Err;
-/// # use nom::error::ErrorKind;
+/// # use nom::error::{Error, ErrorKind};
 /// # use nom::character::complete::{alpha1};
 /// named!(parser<&str, &str>, preceded!(char!('-'), alpha1));
 ///
 /// # fn main() {
 /// assert_eq!(parser("-abc"), Ok(("", "abc")));
-/// assert_eq!(parser("abc"), Err(Err::Error(("abc", ErrorKind::Char))));
-/// assert_eq!(parser("-123"), Err(Err::Error(("123", ErrorKind::Alpha))));
+/// assert_eq!(parser("abc"), Err(Err::Error(Error::new("abc", ErrorKind::Char))));
+/// assert_eq!(parser("-123"), Err(Err::Error(Error::new("123", ErrorKind::Alpha))));
 /// # }
 /// ```
 #[macro_export(local_inner_macros)]
@@ -191,19 +191,19 @@ macro_rules! preceded(
 );
 
 /// `terminated!(I -> IResult<I,O>, I -> IResult<I,T>) => I -> IResult<I, O>`
-/// terminated returns the result of its first parser if both succeed
+/// `terminated` returns the result of its first parser if both succeed.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
 /// # use nom::Err;
-/// # use nom::error::ErrorKind;
+/// # use nom::error::{Error, ErrorKind};
 /// # use nom::character::complete::{alpha1};
 /// named!(parser<&str, &str>, terminated!(alpha1, char!(';')));
 ///
 /// # fn main() {
 /// assert_eq!(parser("abc;"), Ok(("", "abc")));
-/// assert_eq!(parser("abc,"), Err(Err::Error((",", ErrorKind::Char))));
-/// assert_eq!(parser("123;"), Err(Err::Error(("123;", ErrorKind::Alpha))));
+/// assert_eq!(parser("abc,"), Err(Err::Error(Error::new(",", ErrorKind::Char))));
+/// assert_eq!(parser("123;"), Err(Err::Error(Error::new("123;", ErrorKind::Alpha))));
 /// # }
 /// ```
 #[macro_export(local_inner_macros)]
@@ -226,7 +226,7 @@ macro_rules! terminated(
 );
 
 /// `delimited!(I -> IResult<I,T>, I -> IResult<I,O>, I -> IResult<I,U>) => I -> IResult<I, O>`
-/// delimited(opening, X, closing) returns X
+/// `delimited(opening, X, closing)` returns X.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
@@ -261,14 +261,14 @@ macro_rules! delimited(
 );
 
 /// `do_parse!(I->IResult<I,A> >> I->IResult<I,B> >> ... I->IResult<I,X> , ( O ) ) => I -> IResult<I, O>`
-/// do_parse applies sub parsers in a sequence.
-/// it can store intermediary results and make them available
-/// for later parsers
+/// `do_parse` applies sub parsers in a sequence.
+/// It can store intermediary results and make them available
+/// for later parsers.
 ///
 /// The input type `I` must implement `nom::InputLength`.
 ///
 /// This combinator will count how much data is consumed by every child parser
-/// and take it into account if there is not enough data
+/// and take it into account if there is not enough data.
 ///
 /// ```
 /// # #[macro_use] extern crate nom;
@@ -306,7 +306,7 @@ macro_rules! delimited(
 /// // so the parser will tell you that you need 7 bytes: one for the tag,
 /// // one for the length, then 5 bytes
 /// let b: Vec<u8>     = vec!(42, 5, 3, 4, 5);
-/// assert_eq!(tag_length_value(&b[..]), Err(Err::Incomplete(Needed::Size(5))));
+/// assert_eq!(tag_length_value(&b[..]), Err(Err::Incomplete(Needed::new(2))));
 /// # }
 /// ```
 ///
@@ -473,9 +473,9 @@ macro_rules! nom_compile_error (
 
 #[cfg(test)]
 mod tests {
+  use crate::error::ErrorKind;
   use crate::internal::{Err, IResult, Needed};
   use crate::number::streaming::be_u16;
-  use crate::error::ErrorKind;
 
   // reproduce the tag and take macros, because of module import order
   macro_rules! tag (
@@ -508,7 +508,7 @@ mod tests {
         let res: IResult<_,_,_> = if reduced != b {
           Err($crate::Err::Error(error_position!($i, $crate::error::ErrorKind::Tag)))
         } else if m < blen {
-          Err($crate::Err::Incomplete(Needed::Size(blen)))
+          Err($crate::Err::Incomplete(Needed::new(blen)))
         } else {
           Ok((&$i[blen..], reduced))
         };
@@ -522,7 +522,7 @@ mod tests {
       {
         let cnt = $count as usize;
         let res:IResult<&[u8],&[u8],_> = if $i.len() < cnt {
-          Err($crate::Err::Incomplete(Needed::Size(cnt)))
+          Err($crate::Err::Incomplete(Needed::new(cnt)))
         } else {
           Ok((&$i[cnt..],&$i[0..cnt]))
         };
@@ -547,7 +547,7 @@ mod tests {
   use util::{add_error_pattern, error_to_list, print_error};
 
   #[cfg(feature = "std")]
-  #[cfg_attr(rustfmt, rustfmt_skip)]
+  #[rustfmt::skip]
   fn error_to_string<P: Clone + PartialEq>(e: &Context<P, u32>) -> &'static str {
     let v: Vec<(P, ErrorKind<u32>)> = error_to_list(e);
     // do it this way if you can use slice patterns
@@ -582,7 +582,7 @@ mod tests {
   //}
   */
 
-  #[cfg_attr(rustfmt, rustfmt_skip)]
+  #[rustfmt::skip]
   #[allow(unused_variables)]
   #[test]
   fn add_err() {
@@ -622,7 +622,7 @@ mod tests {
     assert_eq!(res_c, Ok((&b""[..], &b"mnop"[..])));
   }
 
-  #[cfg_attr(rustfmt, rustfmt_skip)]
+  #[rustfmt::skip]
   #[test]
   fn complete() {
     named!(err_test,
@@ -645,9 +645,18 @@ mod tests {
     named!(tag_def, tag!("def"));
     named!( pair_abc_def<&[u8],(&[u8], &[u8])>, pair!(tag_abc, tag_def) );
 
-    assert_eq!(pair_abc_def(&b"abcdefghijkl"[..]), Ok((&b"ghijkl"[..], (&b"abc"[..], &b"def"[..]))));
-    assert_eq!(pair_abc_def(&b"ab"[..]), Err(Err::Incomplete(Needed::Size(3))));
-    assert_eq!(pair_abc_def(&b"abcd"[..]), Err(Err::Incomplete(Needed::Size(3))));
+    assert_eq!(
+      pair_abc_def(&b"abcdefghijkl"[..]),
+      Ok((&b"ghijkl"[..], (&b"abc"[..], &b"def"[..])))
+    );
+    assert_eq!(
+      pair_abc_def(&b"ab"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
+    assert_eq!(
+      pair_abc_def(&b"abcd"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
     assert_eq!(
       pair_abc_def(&b"xxx"[..]),
       Err(Err::Error(error_position!(&b"xxx"[..], ErrorKind::Tag)))
@@ -673,8 +682,14 @@ mod tests {
       sep_pair_abc_def(&b"abc,defghijkl"[..]),
       Ok((&b"ghijkl"[..], (&b"abc"[..], &b"def"[..])))
     );
-    assert_eq!(sep_pair_abc_def(&b"ab"[..]), Err(Err::Incomplete(Needed::Size(3))));
-    assert_eq!(sep_pair_abc_def(&b"abc,d"[..]), Err(Err::Incomplete(Needed::Size(3))));
+    assert_eq!(
+      sep_pair_abc_def(&b"ab"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
+    assert_eq!(
+      sep_pair_abc_def(&b"abc,d"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
     assert_eq!(
       sep_pair_abc_def(&b"xxx"[..]),
       Err(Err::Error(error_position!(&b"xxx"[..], ErrorKind::Tag)))
@@ -695,9 +710,18 @@ mod tests {
     named!(tag_efgh, tag!("efgh"));
     named!( preceded_abcd_efgh<&[u8], &[u8]>, preceded!(tag_abcd, tag_efgh) );
 
-    assert_eq!(preceded_abcd_efgh(&b"abcdefghijkl"[..]), Ok((&b"ijkl"[..], &b"efgh"[..])));
-    assert_eq!(preceded_abcd_efgh(&b"ab"[..]), Err(Err::Incomplete(Needed::Size(4))));
-    assert_eq!(preceded_abcd_efgh(&b"abcde"[..]), Err(Err::Incomplete(Needed::Size(4))));
+    assert_eq!(
+      preceded_abcd_efgh(&b"abcdefghijkl"[..]),
+      Ok((&b"ijkl"[..], &b"efgh"[..]))
+    );
+    assert_eq!(
+      preceded_abcd_efgh(&b"ab"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
+    assert_eq!(
+      preceded_abcd_efgh(&b"abcde"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
     assert_eq!(
       preceded_abcd_efgh(&b"xxx"[..]),
       Err(Err::Error(error_position!(&b"xxx"[..], ErrorKind::Tag)))
@@ -718,9 +742,18 @@ mod tests {
     named!(tag_efgh, tag!("efgh"));
     named!( terminated_abcd_efgh<&[u8], &[u8]>, terminated!(tag_abcd, tag_efgh) );
 
-    assert_eq!(terminated_abcd_efgh(&b"abcdefghijkl"[..]), Ok((&b"ijkl"[..], &b"abcd"[..])));
-    assert_eq!(terminated_abcd_efgh(&b"ab"[..]), Err(Err::Incomplete(Needed::Size(4))));
-    assert_eq!(terminated_abcd_efgh(&b"abcde"[..]), Err(Err::Incomplete(Needed::Size(4))));
+    assert_eq!(
+      terminated_abcd_efgh(&b"abcdefghijkl"[..]),
+      Ok((&b"ijkl"[..], &b"abcd"[..]))
+    );
+    assert_eq!(
+      terminated_abcd_efgh(&b"ab"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
+    assert_eq!(
+      terminated_abcd_efgh(&b"abcde"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
     assert_eq!(
       terminated_abcd_efgh(&b"xxx"[..]),
       Err(Err::Error(error_position!(&b"xxx"[..], ErrorKind::Tag)))
@@ -742,17 +775,32 @@ mod tests {
     named!(tag_ghi, tag!("ghi"));
     named!( delimited_abc_def_ghi<&[u8], &[u8]>, delimited!(tag_abc, tag_def, tag_ghi) );
 
-    assert_eq!(delimited_abc_def_ghi(&b"abcdefghijkl"[..]), Ok((&b"jkl"[..], &b"def"[..])));
-    assert_eq!(delimited_abc_def_ghi(&b"ab"[..]), Err(Err::Incomplete(Needed::Size(3))));
-    assert_eq!(delimited_abc_def_ghi(&b"abcde"[..]), Err(Err::Incomplete(Needed::Size(3))));
-    assert_eq!(delimited_abc_def_ghi(&b"abcdefgh"[..]), Err(Err::Incomplete(Needed::Size(3))));
+    assert_eq!(
+      delimited_abc_def_ghi(&b"abcdefghijkl"[..]),
+      Ok((&b"jkl"[..], &b"def"[..]))
+    );
+    assert_eq!(
+      delimited_abc_def_ghi(&b"ab"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
+    assert_eq!(
+      delimited_abc_def_ghi(&b"abcde"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
+    assert_eq!(
+      delimited_abc_def_ghi(&b"abcdefgh"[..]),
+      Err(Err::Incomplete(Needed::new(3)))
+    );
     assert_eq!(
       delimited_abc_def_ghi(&b"xxx"[..]),
       Err(Err::Error(error_position!(&b"xxx"[..], ErrorKind::Tag)))
     );
     assert_eq!(
       delimited_abc_def_ghi(&b"xxxdefghi"[..]),
-      Err(Err::Error(error_position!(&b"xxxdefghi"[..], ErrorKind::Tag),))
+      Err(Err::Error(error_position!(
+        &b"xxxdefghi"[..],
+        ErrorKind::Tag
+      ),))
     );
     assert_eq!(
       delimited_abc_def_ghi(&b"abcxxxghi"[..]),
@@ -769,9 +817,12 @@ mod tests {
     named!(tuple_3<&[u8], (u16, &[u8], &[u8]) >,
     tuple!( be_u16 , take!(3), tag!("fg") ) );
 
-    assert_eq!(tuple_3(&b"abcdefgh"[..]), Ok((&b"h"[..], (0x6162u16, &b"cde"[..], &b"fg"[..]))));
-    assert_eq!(tuple_3(&b"abcd"[..]), Err(Err::Incomplete(Needed::Size(3))));
-    assert_eq!(tuple_3(&b"abcde"[..]), Err(Err::Incomplete(Needed::Size(2))));
+    assert_eq!(
+      tuple_3(&b"abcdefgh"[..]),
+      Ok((&b"h"[..], (0x6162u16, &b"cde"[..], &b"fg"[..])))
+    );
+    assert_eq!(tuple_3(&b"abcd"[..]), Err(Err::Incomplete(Needed::new(3))));
+    assert_eq!(tuple_3(&b"abcde"[..]), Err(Err::Incomplete(Needed::new(2))));
     assert_eq!(
       tuple_3(&b"abcdejk"[..]),
       Err(Err::Error(error_position!(&b"jk"[..], ErrorKind::Tag)))
@@ -782,10 +833,10 @@ mod tests {
   fn do_parse() {
     fn ret_int1(i: &[u8]) -> IResult<&[u8], u8> {
       Ok((i, 1))
-    };
+    }
     fn ret_int2(i: &[u8]) -> IResult<&[u8], u8> {
       Ok((i, 2))
-    };
+    }
 
     //trace_macros!(true);
     named!(do_parser<&[u8], (u8, u8)>,
@@ -807,13 +858,22 @@ mod tests {
 
     //trace_macros!(false);
 
-    assert_eq!(do_parser(&b"abcdabcdefghefghX"[..]), Ok((&b"X"[..], (1, 2))));
+    assert_eq!(
+      do_parser(&b"abcdabcdefghefghX"[..]),
+      Ok((&b"X"[..], (1, 2)))
+    );
     assert_eq!(do_parser(&b"abcdefghefghX"[..]), Ok((&b"X"[..], (1, 2))));
-    assert_eq!(do_parser(&b"abcdab"[..]), Err(Err::Incomplete(Needed::Size(4))));
-    assert_eq!(do_parser(&b"abcdefghef"[..]), Err(Err::Incomplete(Needed::Size(4))));
+    assert_eq!(
+      do_parser(&b"abcdab"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
+    assert_eq!(
+      do_parser(&b"abcdefghef"[..]),
+      Err(Err::Incomplete(Needed::new(4)))
+    );
   }
 
-  #[cfg_attr(rustfmt, rustfmt_skip)]
+  #[rustfmt::skip]
   #[test]
   fn do_parse_dependency() {
     use crate::number::streaming::be_u8;
@@ -830,7 +890,7 @@ mod tests {
     let res_a = [3u8, 4];
     assert_eq!(length_value(&a[..]), Ok((&a[3..], &res_a[..])));
     let b = [5u8, 3, 4, 5];
-    assert_eq!(length_value(&b[..]), Err(Err::Incomplete(Needed::Size(5))));
+    assert_eq!(length_value(&b[..]), Err(Err::Incomplete(Needed::new(5))));
   }
 
   /*
