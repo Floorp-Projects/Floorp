@@ -287,6 +287,7 @@ rtc_library("rtp_rtcp") {
     "../../logging:rtc_event_audio",
     "../../logging:rtc_event_rtp_rtcp",
     "../../modules/audio_coding:audio_coding_module_typedefs",
+    "../../rtc_base:bitstream_reader",
     "../../rtc_base:checks",
     "../../rtc_base:divide_round",
     "../../rtc_base:gtest_prod",
