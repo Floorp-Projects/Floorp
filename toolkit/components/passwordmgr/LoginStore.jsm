@@ -43,9 +43,10 @@ const EXPORTED_SYMBOLS = ["LoginStore"];
 // Globals
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
@@ -53,7 +54,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
 });
@@ -86,18 +87,18 @@ const MAX_DATE_MS = 8640000000000000;
  *        String containing the file path where data should be saved.
  */
 function LoginStore(aPath, aBackupPath = "") {
-  JSONFile.call(this, {
+  lazy.JSONFile.call(this, {
     path: aPath,
     dataPostProcessor: this._dataPostProcessor.bind(this),
     backupTo: aBackupPath,
   });
 }
 
-LoginStore.prototype = Object.create(JSONFile.prototype);
+LoginStore.prototype = Object.create(lazy.JSONFile.prototype);
 LoginStore.prototype.constructor = LoginStore;
 
 LoginStore.prototype._save = async function() {
-  await JSONFile.prototype._save.call(this);
+  await lazy.JSONFile.prototype._save.call(this);
   // Notify tests that writes to the login store is complete.
   Services.obs.notifyObservers(null, "password-storage-updated");
 
@@ -124,11 +125,11 @@ LoginStore.prototype._backupHandler = async function() {
   // key only.
   if (
     logins.length &&
-    logins[0].hostname == FXA_PWDMGR_HOST &&
-    logins[0].httpRealm == FXA_PWDMGR_REALM
+    logins[0].hostname == lazy.FXA_PWDMGR_HOST &&
+    logins[0].httpRealm == lazy.FXA_PWDMGR_REALM
   ) {
     try {
-      await OS.File.copy(this.path, this._options.backupTo);
+      await lazy.OS.File.copy(this.path, this._options.backupTo);
 
       // This notification is specifically sent out for a test.
       Services.obs.notifyObservers(null, "logins-backup-updated");
@@ -137,7 +138,7 @@ LoginStore.prototype._backupHandler = async function() {
     }
   } else if (!logins.length) {
     // If no logins are stored anymore, delete backup.
-    await OS.File.remove(this._options.backupTo, {
+    await lazy.OS.File.remove(this._options.backupTo, {
       ignoreAbsent: true,
     });
   }

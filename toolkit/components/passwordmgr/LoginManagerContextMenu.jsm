@@ -11,18 +11,20 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LoginManagerParent",
   "resource://gre/modules/LoginManagerParent.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("LoginManagerContextMenu");
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  return lazy.LoginHelper.createLogger("LoginManagerContextMenu");
 });
 
 /**
@@ -127,11 +129,11 @@ const LoginManagerContextMenu = {
   _findLogins(formOrigin) {
     let searchParams = {
       origin: formOrigin,
-      schemeUpgrades: LoginHelper.schemeUpgrades,
+      schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
     };
-    let logins = LoginHelper.searchLoginsWithObject(searchParams);
+    let logins = lazy.LoginHelper.searchLoginsWithObject(searchParams);
     let resolveBy = ["scheme", "timePasswordChanged"];
-    logins = LoginHelper.dedupeLogins(
+    logins = lazy.LoginHelper.dedupeLogins(
       logins,
       ["username", "password"],
       resolveBy,

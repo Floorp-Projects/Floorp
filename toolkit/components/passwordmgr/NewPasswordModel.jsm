@@ -9,8 +9,10 @@
 
 const EXPORTED_SYMBOLS = ["NewPasswordModel"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "fathom",
   "resource://gre/modules/third_party/fathom/fathom.jsm"
 );
@@ -25,7 +27,7 @@ const {
   type,
   utils: { identity, isVisible, min, setDefault },
   clusters: { euclidean },
-} = fathom;
+} = lazy.fathom;
 
 /**
  * ----- Start of model -----
