@@ -498,7 +498,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
-  (data $d passive "01234")
+  (data $d "01234")
   (func (param i32 i32)
     (memory.init $d (local.get 0) (local.get 1))))`)),
                    WebAssembly.CompileError,

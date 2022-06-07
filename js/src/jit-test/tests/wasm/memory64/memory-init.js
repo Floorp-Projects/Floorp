@@ -12,7 +12,7 @@ for (let shared of ['', 'shared']) {
         var ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
 (module
   (memory (export "mem") i64 65537 65537 ${shared})
-  (data $d passive "${S}")
+  (data $d "${S}")
   (func (export "f") (param $p i64) (param $o i32) (param $n i32)
     (memory.init $d (local.get $p) (local.get $o) (local.get $n))))`)));
     } catch (e) {

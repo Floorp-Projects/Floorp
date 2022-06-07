@@ -16,7 +16,7 @@ for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
   (memory (export "mem") ${pages} ${maxpages})
 
   (data (i32.const ${(pages-5)*pagesz}) "yabbadabbado")
-  (data $flintstone passive "yabbadabbado")
+  (data $flintstone "yabbadabbado")
 
   (func (export "get_constaddr") (result i32)
     (i32.load (i32.const ${pages*pagesz-4})))
