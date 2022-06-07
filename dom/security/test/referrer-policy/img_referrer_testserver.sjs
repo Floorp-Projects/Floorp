@@ -212,7 +212,7 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/html; charset=utf-8", false);
 
   if (action === "resetState") {
-    var state = getSharedState(sharedKey);
+    let state = getSharedState(sharedKey);
     state = {};
     setSharedState(sharedKey, JSON.stringify(state));
     response.write("");
@@ -220,10 +220,10 @@ function handleRequest(request, response) {
   }
   if (action === "test") {
     // ?action=test&policy=origin&name=name&content=content
-    var policy = params[1].split("=")[1];
-    var name = params[2].split("=")[1];
-    var content = params[3].split("=")[1];
-    var result = getSharedState(sharedKey);
+    let policy = params[1].split("=")[1];
+    let name = params[2].split("=")[1];
+    let content = params[3].split("=")[1];
+    let result = getSharedState(sharedKey);
 
     if (result === "") {
       result = {};
@@ -268,9 +268,9 @@ function handleRequest(request, response) {
   }
   if (action === "generate-img-policy-test") {
     // ?action=generate-img-policy-test&imgPolicy=b64-encoded-string&name=name&policy=b64-encoded-string
-    var imgPolicy = unescape(params[1].split("=")[1]);
-    var name = unescape(params[2].split("=")[1]);
-    var metaPolicy = "";
+    let imgPolicy = unescape(params[1].split("=")[1]);
+    let name = unescape(params[2].split("=")[1]);
+    let metaPolicy = "";
     if (params[3]) {
       metaPolicy = params[3].split("=")[1];
     }
@@ -280,34 +280,34 @@ function handleRequest(request, response) {
   }
   if (action === "generate-img-policy-test2") {
     // ?action=generate-img-policy-test2&imgPolicy=b64-encoded-string&name=name
-    var imgPolicy = unescape(params[1].split("=")[1]);
-    var name = unescape(params[2].split("=")[1]);
+    let imgPolicy = unescape(params[1].split("=")[1]);
+    let name = unescape(params[2].split("=")[1]);
 
     response.write(createTest2(imgPolicy, name));
     return;
   }
   if (action === "generate-img-policy-test3") {
     // ?action=generate-img-policy-test3&imgPolicy1=b64-encoded-string&imgPolicy2=b64-encoded-string&imgPolicy3=b64-encoded-string&name=name
-    var imgPolicy1 = unescape(params[1].split("=")[1]);
-    var imgPolicy2 = unescape(params[2].split("=")[1]);
-    var imgPolicy3 = unescape(params[3].split("=")[1]);
-    var name = unescape(params[4].split("=")[1]);
+    let imgPolicy1 = unescape(params[1].split("=")[1]);
+    let imgPolicy2 = unescape(params[2].split("=")[1]);
+    let imgPolicy3 = unescape(params[3].split("=")[1]);
+    let name = unescape(params[4].split("=")[1]);
 
     response.write(createTest3(imgPolicy1, imgPolicy2, imgPolicy3, name));
     return;
   }
   if (action === "generate-img-policy-test4") {
     // ?action=generate-img-policy-test4&imgPolicy=b64-encoded-string&name=name
-    var policy = unescape(params[1].split("=")[1]);
-    var name = unescape(params[2].split("=")[1]);
+    let policy = unescape(params[1].split("=")[1]);
+    let name = unescape(params[2].split("=")[1]);
 
     response.write(createTest4(policy, name));
     return;
   }
   if (action === "generate-img-policy-test5") {
     // ?action=generate-img-policy-test5&policy=b64-encoded-string&name=name
-    var policy = unescape(params[1].split("=")[1]);
-    var name = unescape(params[2].split("=")[1]);
+    let policy = unescape(params[1].split("=")[1]);
+    let name = unescape(params[2].split("=")[1]);
 
     response.write(createTest5(policy, name));
     return;
@@ -315,9 +315,9 @@ function handleRequest(request, response) {
 
   if (action === "generate-setAttribute-test1") {
     // ?action=generate-setAttribute-test1&policy=b64-encoded-string&name=name
-    var imgPolicy = unescape(params[1].split("=")[1]);
-    var policy = unescape(params[2].split("=")[1]);
-    var name = unescape(params[3].split("=")[1]);
+    let imgPolicy = unescape(params[1].split("=")[1]);
+    let policy = unescape(params[2].split("=")[1]);
+    let name = unescape(params[3].split("=")[1]);
 
     response.write(createSetAttributeTest1(policy, imgPolicy, name));
     return;
@@ -325,9 +325,9 @@ function handleRequest(request, response) {
 
   if (action === "generate-setAttribute-test2") {
     // ?action=generate-setAttribute-test2&policy=b64-encoded-string&name=name
-    var imgPolicy = unescape(params[1].split("=")[1]);
-    var policy = unescape(params[2].split("=")[1]);
-    var name = unescape(params[3].split("=")[1]);
+    let imgPolicy = unescape(params[1].split("=")[1]);
+    let policy = unescape(params[2].split("=")[1]);
+    let name = unescape(params[3].split("=")[1]);
 
     response.write(createSetAttributeTest2(policy, imgPolicy, name));
     return;

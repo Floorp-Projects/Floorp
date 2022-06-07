@@ -95,15 +95,12 @@ module.exports = {
     {
       files: "*.sjs",
       rules: {
-        complexity: "warn",
         "no-empty": "warn",
         "no-shadow": "warn",
-        "no-redeclare": "warn",
         "no-fallthrough": "warn",
         "no-control-regex": "warn",
         "no-throw-literal": "warn",
         "no-useless-concat": "warn",
-        "consistent-return": "warn",
         "mozilla/use-services": "warn",
         "mozilla/use-includes-instead-of-indexOf": "warn",
         "mozilla/no-compare-against-boolean-literals": "warn",

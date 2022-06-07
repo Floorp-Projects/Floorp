@@ -7,6 +7,7 @@ function parseQuery(query, key) {
       return p.substring(key.length + 1);
     }
   }
+  return false;
 }
 
 // Return the first few bytes in a short byte range response. When Firefox

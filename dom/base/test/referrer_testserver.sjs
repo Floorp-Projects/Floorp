@@ -436,6 +436,7 @@ function buildLinkString(
   return `<link ${relString} ${href} ${policy} ${asString} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
 }
 
+// eslint-disable-next-line complexity
 function handleRequest(request, response) {
   var params = new URLSearchParams(request.queryString);
   var action = params.get("ACTION");

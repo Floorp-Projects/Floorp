@@ -45,8 +45,8 @@ function handleRequest(request, response) {
     if (request.hasHeader("Range")) {
       var range = request.getHeader("Range");
       var parts = range.replace(/bytes=/, "").split("-");
-      var partialstart = parts[0];
-      var partialend = parts[1];
+      partialstart = parts[0];
+      partialend = parts[1];
       if (!partialend.length) {
         partialend = file.fileSize - 1;
       }
