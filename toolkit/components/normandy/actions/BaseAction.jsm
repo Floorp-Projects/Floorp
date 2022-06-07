@@ -1,19 +1,20 @@
+const lazy = {};
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LogManager",
   "resource://normandy/lib/LogManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Uptake",
   "resource://normandy/lib/Uptake.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JsonSchemaValidator",
   "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
 );
@@ -33,7 +34,7 @@ var EXPORTED_SYMBOLS = ["BaseAction"];
 class BaseAction {
   constructor() {
     this.state = BaseAction.STATE_PREPARING;
-    this.log = LogManager.getLogger(`action.${this.name}`);
+    this.log = lazy.LogManager.getLogger(`action.${this.name}`);
     this.lastError = null;
   }
 
@@ -86,7 +87,10 @@ class BaseAction {
   fail(err) {
     switch (this.state) {
       case BaseAction.STATE_PREPARING: {
-        Uptake.reportAction(this.name, Uptake.ACTION_PRE_EXECUTION_ERROR);
+        lazy.Uptake.reportAction(
+          this.name,
+          lazy.Uptake.ACTION_PRE_EXECUTION_ERROR
+        );
         break;
       }
       default: {
@@ -115,7 +119,7 @@ class BaseAction {
   }
 
   validateArguments(args, schema = this.schema) {
-    let { valid, parsedValue: validated } = JsonSchemaValidator.validate(
+    let { valid, parsedValue: validated } = lazy.JsonSchemaValidator.validate(
       args,
       schema,
       {
@@ -151,7 +155,7 @@ class BaseAction {
     }
 
     if (this.state !== BaseAction.STATE_READY) {
-      Uptake.reportRecipe(recipe, Uptake.RECIPE_ACTION_DISABLED);
+      lazy.Uptake.reportRecipe(recipe, lazy.Uptake.RECIPE_ACTION_DISABLED);
       this.log.warn(
         `Skipping recipe ${recipe.name} because ${this.name} was disabled during preExecution.`
       );
@@ -172,7 +176,7 @@ class BaseAction {
         recipe.arguments = this.validateArguments(recipe.arguments);
       } catch (error) {
         Cu.reportError(error);
-        uptakeResult = Uptake.RECIPE_EXECUTION_ERROR;
+        uptakeResult = lazy.Uptake.RECIPE_EXECUTION_ERROR;
         suitability = BaseAction.suitability.ARGUMENTS_INVALID;
       }
     }
@@ -181,9 +185,9 @@ class BaseAction {
       await this._processRecipe(recipe, suitability);
     } catch (err) {
       Cu.reportError(err);
-      uptakeResult = Uptake.RECIPE_EXECUTION_ERROR;
+      uptakeResult = lazy.Uptake.RECIPE_EXECUTION_ERROR;
     }
-    Uptake.reportRecipe(recipe, uptakeResult);
+    lazy.Uptake.reportRecipe(recipe, uptakeResult);
   }
 
   /**
@@ -238,9 +242,9 @@ class BaseAction {
       case BaseAction.STATE_READY: {
         try {
           await this._finalize(options);
-          status = Uptake.ACTION_SUCCESS;
+          status = lazy.Uptake.ACTION_SUCCESS;
         } catch (err) {
-          status = Uptake.ACTION_POST_EXECUTION_ERROR;
+          status = lazy.Uptake.ACTION_POST_EXECUTION_ERROR;
           // Sometimes Error.message can be updated in place. This gives better messages when debugging errors.
           try {
             err.message = `Could not run postExecution hook for ${this.name}: ${err.message}`;
@@ -258,7 +262,7 @@ class BaseAction {
         this.log.debug(
           `Skipping post-execution hook for ${this.name} because it is disabled.`
         );
-        status = Uptake.ACTION_SUCCESS;
+        status = lazy.Uptake.ACTION_SUCCESS;
         break;
       }
       case BaseAction.STATE_FAILED: {
@@ -275,7 +279,7 @@ class BaseAction {
 
     this.state = BaseAction.STATE_FINALIZED;
     if (status) {
-      Uptake.reportAction(this.name, status);
+      lazy.Uptake.reportAction(this.name, status);
     }
   }
 
@@ -338,11 +342,14 @@ BaseAction.suitability = {
 BaseAction.suitabilitySet = new Set(Object.values(BaseAction.suitability));
 
 BaseAction.suitabilityToUptakeStatus = {
-  [BaseAction.suitability.SIGNATURE_ERROR]: Uptake.RECIPE_INVALID_SIGNATURE,
+  [BaseAction.suitability.SIGNATURE_ERROR]:
+    lazy.Uptake.RECIPE_INVALID_SIGNATURE,
   [BaseAction.suitability.CAPABILITIES_MISMATCH]:
-    Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES,
-  [BaseAction.suitability.FILTER_MATCH]: Uptake.RECIPE_SUCCESS,
-  [BaseAction.suitability.FILTER_MISMATCH]: Uptake.RECIPE_DIDNT_MATCH_FILTER,
-  [BaseAction.suitability.FILTER_ERROR]: Uptake.RECIPE_FILTER_BROKEN,
-  [BaseAction.suitability.ARGUMENTS_INVALID]: Uptake.RECIPE_ARGUMENTS_INVALID,
+    lazy.Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES,
+  [BaseAction.suitability.FILTER_MATCH]: lazy.Uptake.RECIPE_SUCCESS,
+  [BaseAction.suitability.FILTER_MISMATCH]:
+    lazy.Uptake.RECIPE_DIDNT_MATCH_FILTER,
+  [BaseAction.suitability.FILTER_ERROR]: lazy.Uptake.RECIPE_FILTER_BROKEN,
+  [BaseAction.suitability.ARGUMENTS_INVALID]:
+    lazy.Uptake.RECIPE_ARGUMENTS_INVALID,
 };

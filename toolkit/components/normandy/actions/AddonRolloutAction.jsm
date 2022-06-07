@@ -12,7 +12,9 @@ const { BaseAction } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.jsm",
@@ -70,15 +72,15 @@ class AddonRolloutError extends Error {
 
 class AddonRolloutAction extends BaseAction {
   get schema() {
-    return ActionSchemas["addon-rollout"];
+    return lazy.ActionSchemas["addon-rollout"];
   }
 
   async _run(recipe) {
     const { extensionApiId, slug } = recipe.arguments;
 
-    const existingRollout = await AddonRollouts.get(slug);
+    const existingRollout = await lazy.AddonRollouts.get(slug);
     const eventName = existingRollout ? "update" : "enroll";
-    const extensionDetails = await NormandyApi.fetchExtensionDetails(
+    const extensionDetails = await lazy.NormandyApi.fetchExtensionDetails(
       extensionApiId
     );
     let enrollmentId = existingRollout
@@ -108,7 +110,7 @@ class AddonRolloutAction extends BaseAction {
     };
 
     // Check for a conflict (addon already installed by another rollout)
-    const activeRollouts = await AddonRollouts.getAllActive();
+    const activeRollouts = await lazy.AddonRollouts.getAllActive();
     const conflictingRollout = activeRollouts.find(
       rollout =>
         rollout.slug !== slug &&
@@ -120,7 +122,7 @@ class AddonRolloutAction extends BaseAction {
         conflictingSlug: conflictingRollout.slug,
         enrollmentId:
           conflictingRollout.enrollmentId ||
-          TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
       this.reportError(conflictError, "enrollFailed");
       throw conflictError;
@@ -133,7 +135,7 @@ class AddonRolloutAction extends BaseAction {
         installDeferred.reject(
           createError("addon-id-changed", {
             enrollmentId:
-              enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the upgrade, the add-on ID has changed
@@ -146,7 +148,7 @@ class AddonRolloutAction extends BaseAction {
         installDeferred.reject(
           createError("upgrade-required", {
             enrollmentId:
-              enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the installation, must be an upgrade
@@ -166,17 +168,18 @@ class AddonRolloutAction extends BaseAction {
       };
 
       if (existingRollout) {
-        await AddonRollouts.update({
+        await lazy.AddonRollouts.update({
           ...existingRollout,
           ...details,
         });
       } else {
-        enrollmentId = NormandyUtils.generateUuid();
-        await AddonRollouts.add({
+        enrollmentId = lazy.NormandyUtils.generateUuid();
+        await lazy.AddonRollouts.add({
           recipeId: recipe.id,
-          state: AddonRollouts.STATE_ACTIVE,
+          state: lazy.AddonRollouts.STATE_ACTIVE,
           slug,
-          enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          enrollmentId:
+            enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           ...details,
         });
       }
@@ -184,16 +187,16 @@ class AddonRolloutAction extends BaseAction {
 
     const undoNormandyChanges = async () => {
       if (existingRollout) {
-        await AddonRollouts.update(existingRollout);
+        await lazy.AddonRollouts.update(existingRollout);
       } else {
-        await AddonRollouts.delete(recipe.id);
+        await lazy.AddonRollouts.delete(recipe.id);
       }
     };
 
     const [
       installedId,
       installedVersion,
-    ] = await NormandyAddonManager.downloadAndInstall({
+    ] = await lazy.NormandyAddonManager.downloadAndInstall({
       createError,
       extensionDetails,
       applyNormandyChanges,
@@ -206,9 +209,9 @@ class AddonRolloutAction extends BaseAction {
       this.log.debug(`Updated addon rollout ${slug}`);
     } else {
       this.log.debug(`Enrolled in addon rollout ${slug}`);
-      TelemetryEnvironment.setExperimentActive(
+      lazy.TelemetryEnvironment.setExperimentActive(
         slug,
-        AddonRollouts.STATE_ACTIVE,
+        lazy.AddonRollouts.STATE_ACTIVE,
         {
           type: "normandy-addonrollout",
         }
@@ -216,17 +219,18 @@ class AddonRolloutAction extends BaseAction {
     }
 
     // All done, report success to Telemetry
-    TelemetryEvents.sendEvent(eventName, "addon_rollout", slug, {
+    lazy.TelemetryEvents.sendEvent(eventName, "addon_rollout", slug, {
       addonId: installedId,
       addonVersion: installedVersion,
-      enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      enrollmentId:
+        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 
   reportError(error, eventName) {
     if (error instanceof AddonRolloutError) {
       // One of our known errors. Report it nicely to telemetry
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         eventName,
         "addon_rollout",
         error.slug,
@@ -241,7 +245,7 @@ class AddonRolloutAction extends BaseAction {
        * unsafe.
        */
       const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
-      TelemetryEvents.sendEvent(eventName, "addon_rollout", error.slug, {
+      lazy.TelemetryEvents.sendEvent(eventName, "addon_rollout", error.slug, {
         reason: safeErrorMessage.slice(0, 80), // max length is 80 chars
       });
     }

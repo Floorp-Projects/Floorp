@@ -7,8 +7,9 @@
 const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ActionSchemas",
   "resource://normandy/actions/schemas/index.js"
 );
@@ -17,7 +18,7 @@ var EXPORTED_SYMBOLS = ["ConsoleLogAction"];
 
 class ConsoleLogAction extends BaseAction {
   get schema() {
-    return ActionSchemas["console-log"];
+    return lazy.ActionSchemas["console-log"];
   }
 
   async _run(recipe) {

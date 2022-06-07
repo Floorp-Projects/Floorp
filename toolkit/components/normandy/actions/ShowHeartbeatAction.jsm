@@ -11,69 +11,70 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ActionSchemas",
   "resource://normandy/actions/schemas/index.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ClientEnvironment",
   "resource://normandy/lib/ClientEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Heartbeat",
   "resource://normandy/lib/Heartbeat.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ShellService",
   "resource:///modules/ShellService.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Storage",
   "resource://normandy/lib/Storage.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "NormandyUtils",
   "resource://normandy/lib/NormandyUtils.jsm"
 );
 
 var EXPORTED_SYMBOLS = ["ShowHeartbeatAction"];
 
-XPCOMUtils.defineLazyGetter(this, "gAllRecipeStorage", function() {
-  return new Storage("normandy-heartbeat");
+XPCOMUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function() {
+  return new lazy.Storage("normandy-heartbeat");
 });
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const HEARTBEAT_THROTTLE = 1 * DAY_IN_MS;
 
 class ShowHeartbeatAction extends BaseAction {
-  static Heartbeat = Heartbeat;
+  static Heartbeat = lazy.Heartbeat;
 
   static overrideHeartbeatForTests(newHeartbeat) {
     if (newHeartbeat) {
       this.Heartbeat = newHeartbeat;
     } else {
-      this.Heartbeat = Heartbeat;
+      this.Heartbeat = lazy.Heartbeat;
     }
   }
 
   get schema() {
-    return ActionSchemas["show-heartbeat"];
+    return lazy.ActionSchemas["show-heartbeat"];
   }
 
   async _run(recipe) {
@@ -85,7 +86,7 @@ class ShowHeartbeatAction extends BaseAction {
       learnMoreUrl,
     } = recipe.arguments;
 
-    const recipeStorage = new Storage(recipe.id);
+    const recipeStorage = new lazy.Storage(recipe.id);
 
     if (!(await this.shouldShow(recipeStorage, recipe))) {
       return;
@@ -94,7 +95,7 @@ class ShowHeartbeatAction extends BaseAction {
     this.log.debug(
       `Heartbeat for recipe ${recipe.id} showing prompt "${message}"`
     );
-    const targetWindow = BrowserWindowTracker.getTopWindow();
+    const targetWindow = lazy.BrowserWindowTracker.getTopWindow();
 
     if (!targetWindow) {
       throw new Error("No window to show heartbeat in");
@@ -108,7 +109,7 @@ class ShowHeartbeatAction extends BaseAction {
       learnMoreMessage,
       learnMoreUrl,
       postAnswerUrl: await this.generatePostAnswerURL(recipe),
-      flowId: NormandyUtils.generateUuid(),
+      flowId: lazy.NormandyUtils.generateUuid(),
       surveyVersion: recipe.revision_id,
     });
 
@@ -123,7 +124,7 @@ class ShowHeartbeatAction extends BaseAction {
 
     let now = Date.now();
     await Promise.all([
-      gAllRecipeStorage.setItem("lastShown", now),
+      lazy.gAllRecipeStorage.setItem("lastShown", now),
       recipeStorage.setItem("lastShown", now),
     ]);
   }
@@ -131,7 +132,7 @@ class ShowHeartbeatAction extends BaseAction {
   async shouldShow(recipeStorage, recipe) {
     const { repeatOption, repeatEvery } = recipe.arguments;
     // Don't show any heartbeats to a user more than once per throttle period
-    let lastShown = await gAllRecipeStorage.getItem("lastShown");
+    let lastShown = await lazy.gAllRecipeStorage.getItem("lastShown");
     if (lastShown) {
       const duration = new Date() - lastShown;
       if (duration < HEARTBEAT_THROTTLE) {
@@ -169,7 +170,7 @@ class ShowHeartbeatAction extends BaseAction {
 
       case "xdays": {
         // Show this heartbeat again if it  has been at least `repeatEvery` days since the last time it was shown.
-        let lastShown = await gAllRecipeStorage.getItem("lastShown");
+        let lastShown = await lazy.gAllRecipeStorage.getItem("lastShown");
         if (lastShown) {
           lastShown = new Date(lastShown);
           const duration = new Date() - lastShown;
@@ -198,7 +199,7 @@ class ShowHeartbeatAction extends BaseAction {
   generateSurveyId(recipe) {
     const { includeTelemetryUUID, surveyId } = recipe.arguments;
     if (includeTelemetryUUID) {
-      return `${surveyId}::${ClientEnvironment.userId}`;
+      return `${surveyId}::${lazy.ClientEnvironment.userId}`;
     }
     return surveyId;
   }
@@ -216,11 +217,11 @@ class ShowHeartbeatAction extends BaseAction {
       return postAnswerUrl;
     }
 
-    const userId = ClientEnvironment.userId;
+    const userId = lazy.ClientEnvironment.userId;
     const searchEngine = (await Services.search.getDefault()).identifier;
     const args = {
       fxVersion: Services.appinfo.version,
-      isDefaultBrowser: ShellService.isDefaultBrowser() ? 1 : 0,
+      isDefaultBrowser: lazy.ShellService.isDefaultBrowser() ? 1 : 0,
       searchEngine,
       source: "heartbeat",
       // `surveyversion` used to be the version of the heartbeat action when it
@@ -229,7 +230,7 @@ class ShowHeartbeatAction extends BaseAction {
       syncSetup: Services.prefs.prefHasUserValue("services.sync.username")
         ? 1
         : 0,
-      updateChannel: UpdateUtils.getUpdateChannel(false),
+      updateChannel: lazy.UpdateUtils.getUpdateChannel(false),
       utm_campaign: encodeURIComponent(message.replace(/\s+/g, "")),
       utm_medium: recipe.action,
       utm_source: "firefox",

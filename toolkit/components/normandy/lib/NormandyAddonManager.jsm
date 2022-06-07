@@ -8,7 +8,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
@@ -32,10 +34,10 @@ const NormandyAddonManager = {
       xpi,
     } = extensionDetails;
 
-    const downloadDeferred = PromiseUtils.defer();
-    const installDeferred = PromiseUtils.defer();
+    const downloadDeferred = lazy.PromiseUtils.defer();
+    const installDeferred = lazy.PromiseUtils.defer();
 
-    const install = await AddonManager.getInstallForURL(xpi, {
+    const install = await lazy.AddonManager.getInstallForURL(xpi, {
       hash: `${hash_algorithm}:${hash}`,
       telemetryInfo: { source: "internal" },
     });
@@ -60,7 +62,7 @@ const NormandyAddonManager = {
       onDownloadFailed() {
         downloadDeferred.reject(
           createError("download-failure", {
-            detail: AddonManager.errorToString(install.error),
+            detail: lazy.AddonManager.errorToString(install.error),
           })
         );
       },
@@ -73,7 +75,7 @@ const NormandyAddonManager = {
       onInstallFailed() {
         installDeferred.reject(
           createError("install-failure", {
-            detail: AddonManager.errorToString(install.error),
+            detail: lazy.AddonManager.errorToString(install.error),
           })
         );
       },

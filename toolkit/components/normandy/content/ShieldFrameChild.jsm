@@ -24,13 +24,15 @@ ChromeUtils.defineModuleGetter(
   "resource://normandy-content/AboutPages.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function() {
   return Services.strings.createBundle(
     "chrome://global/locale/aboutStudies.properties"
   );
@@ -120,11 +122,11 @@ class ShieldFrameChild extends JSWindowActorChild {
         break;
       case "GetRemoteValue:ShieldTranslations":
         const strings = {};
-        for (let str of gStringBundle.getSimpleEnumeration()) {
+        for (let str of lazy.gStringBundle.getSimpleEnumeration()) {
           strings[str.key] = str.value;
         }
-        const brandName = gBrandBundle.GetStringFromName("brandShortName");
-        strings.enabledList = gStringBundle.formatStringFromName(
+        const brandName = lazy.gBrandBundle.GetStringFromName("brandShortName");
+        strings.enabledList = lazy.gStringBundle.formatStringFromName(
           "enabledList",
           [brandName]
         );

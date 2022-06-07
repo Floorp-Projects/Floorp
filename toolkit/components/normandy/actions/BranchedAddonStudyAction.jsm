@@ -19,7 +19,9 @@ const { BaseStudyAction } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
@@ -117,7 +119,7 @@ class AddonStudyUpdateError extends Error {
 
 class BranchedAddonStudyAction extends BaseStudyAction {
   get schema() {
-    return ActionSchemas["branched-addon-study"];
+    return lazy.ActionSchemas["branched-addon-study"];
   }
 
   constructor() {
@@ -144,10 +146,10 @@ class BranchedAddonStudyAction extends BaseStudyAction {
    */
   async _processRecipe(recipe, suitability) {
     this.seenRecipeIds.add(recipe.id);
-    const study = await AddonStudies.get(recipe.id);
+    const study = await lazy.AddonStudies.get(recipe.id);
 
     switch (suitability) {
-      case BaseAction.suitability.FILTER_MATCH: {
+      case lazy.BaseAction.suitability.FILTER_MATCH: {
         if (!study) {
           await this.enroll(recipe);
         } else if (study.active) {
@@ -156,7 +158,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.SIGNATURE_ERROR: {
+      case lazy.BaseAction.suitability.SIGNATURE_ERROR: {
         await this._considerTemporaryError({
           study,
           reason: "signature-error",
@@ -164,7 +166,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.FILTER_ERROR: {
+      case lazy.BaseAction.suitability.FILTER_ERROR: {
         await this._considerTemporaryError({
           study,
           reason: "filter-error",
@@ -172,21 +174,21 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
+      case lazy.BaseAction.suitability.CAPABILITIES_MISMATCH: {
         if (study?.active) {
           await this.unenroll(recipe.id, "capability-mismatch");
         }
         break;
       }
 
-      case BaseAction.suitability.FILTER_MISMATCH: {
+      case lazy.BaseAction.suitability.FILTER_MISMATCH: {
         if (study?.active) {
           await this.unenroll(recipe.id, "filter-mismatch");
         }
         break;
       }
 
-      case BaseAction.suitability.ARGUMENTS_INVALID: {
+      case lazy.BaseAction.suitability.ARGUMENTS_INVALID: {
         if (study?.active) {
           await this.unenroll(recipe.id, "arguments-invalid");
         }
@@ -205,8 +207,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
    * studies that no longer apply, based on this.seenRecipeIds.
    */
   async _finalize({ noRecipes } = {}) {
-    const activeStudies = await AddonStudies.getAllActive({
-      branched: AddonStudies.FILTER_BRANCHED_ONLY,
+    const activeStudies = await lazy.AddonStudies.getAllActive({
+      branched: lazy.AddonStudies.FILTER_BRANCHED_ONLY,
     });
 
     if (noRecipes) {
@@ -259,13 +261,16 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     const { slug } = recipe.arguments;
     const { hash, hash_algorithm } = extensionDetails;
 
-    const downloadDeferred = PromiseUtils.defer();
-    const installDeferred = PromiseUtils.defer();
+    const downloadDeferred = lazy.PromiseUtils.defer();
+    const installDeferred = lazy.PromiseUtils.defer();
 
-    const install = await AddonManager.getInstallForURL(extensionDetails.xpi, {
-      hash: `${hash_algorithm}:${hash}`,
-      telemetryInfo: { source: "internal" },
-    });
+    const install = await lazy.AddonManager.getInstallForURL(
+      extensionDetails.xpi,
+      {
+        hash: `${hash_algorithm}:${hash}`,
+        telemetryInfo: { source: "internal" },
+      }
+    );
 
     const listener = {
       onDownloadFailed() {
@@ -273,7 +278,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           new errorClass(slug, {
             reason: "download-failure",
             branch: branchSlug,
-            detail: AddonManager.errorToString(install.error),
+            detail: lazy.AddonManager.errorToString(install.error),
             ...errorExtra,
           })
         );
@@ -289,7 +294,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           new errorClass(slug, {
             reason: "install-failure",
             branch: branchSlug,
-            detail: AddonManager.errorToString(install.error),
+            detail: lazy.AddonManager.errorToString(install.error),
           })
         );
       },
@@ -333,7 +338,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
 
   async chooseBranch({ slug, branches }) {
     const ratios = branches.map(branch => branch.ratio);
-    const userId = ClientEnvironment.userId;
+    const userId = lazy.ClientEnvironment.userId;
 
     // It's important that the input be:
     // - Unique per-user (no one is bucketed alike)
@@ -343,7 +348,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     //   receive users)
     const input = `${userId}-${slug}-addon-branch`;
 
-    const index = await Sampling.ratioSample(input, ratios);
+    const index = await lazy.Sampling.ratioSample(input, ratios);
     return branches[index];
   }
 
@@ -384,7 +389,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     });
     this.log.debug(`Enrolling in branch ${branch.slug}`);
 
-    const enrollmentId = NormandyUtils.generateUuid();
+    const enrollmentId = lazy.NormandyUtils.generateUuid();
 
     if (branch.extensionApiId === null) {
       const study = {
@@ -407,21 +412,22 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       };
 
       try {
-        await AddonStudies.add(study);
+        await lazy.AddonStudies.add(study);
       } catch (err) {
         this.reportEnrollError(err);
         throw err;
       }
 
       // All done, report success to Telemetry
-      TelemetryEvents.sendEvent("enroll", "addon_study", slug, {
-        addonId: AddonStudies.NO_ADDON_MARKER,
-        addonVersion: AddonStudies.NO_ADDON_MARKER,
+      lazy.TelemetryEvents.sendEvent("enroll", "addon_study", slug, {
+        addonId: lazy.AddonStudies.NO_ADDON_MARKER,
+        addonVersion: lazy.AddonStudies.NO_ADDON_MARKER,
         branch: branch.slug,
-        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        enrollmentId:
+          enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     } else {
-      const extensionDetails = await NormandyApi.fetchExtensionDetails(
+      const extensionDetails = await lazy.NormandyApi.fetchExtensionDetails(
         branch.extensionApiId
       );
 
@@ -472,7 +478,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         };
 
         try {
-          await AddonStudies.add(study);
+          await lazy.AddonStudies.add(study);
         } catch (err) {
           this.reportEnrollError(err);
           install.removeListener(listener);
@@ -482,7 +488,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       };
 
       const onFailedInstall = async () => {
-        await AddonStudies.delete(recipe.id);
+        await lazy.AddonStudies.delete(recipe.id);
       };
 
       const [installedId, installedVersion] = await this.downloadAndInstall({
@@ -497,17 +503,19 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       });
 
       // All done, report success to Telemetry
-      TelemetryEvents.sendEvent("enroll", "addon_study", slug, {
+      lazy.TelemetryEvents.sendEvent("enroll", "addon_study", slug, {
         addonId: installedId,
         addonVersion: installedVersion,
         branch: branch.slug,
-        enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        enrollmentId:
+          enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
-    TelemetryEnvironment.setExperimentActive(slug, branch.slug, {
+    lazy.TelemetryEnvironment.setExperimentActive(slug, branch.slug, {
       type: "normandy-addonstudy",
-      enrollmentId: enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      enrollmentId:
+        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 
@@ -532,9 +540,9 @@ class BranchedAddonStudyAction extends BaseStudyAction {
 
     // Since we saw a non-error suitability, clear the temporary error deadline.
     study.temporaryErrorDeadline = null;
-    await AddonStudies.update(study);
+    await lazy.AddonStudies.update(study);
 
-    const extensionDetails = await NormandyApi.fetchExtensionDetails(
+    const extensionDetails = await lazy.NormandyApi.fetchExtensionDetails(
       branch.extensionApiId
     );
 
@@ -545,7 +553,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         branch: branch.slug,
         reason: "addon-id-mismatch",
         enrollmentId:
-          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
@@ -558,7 +566,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         branch: branch.slug,
         reason: "no-downgrade",
         enrollmentId:
-          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     } else if (versionCompare === 0) {
       return; // Unchanged, do nothing
@@ -580,7 +588,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
             branch: branch.slug,
             reason: "addon-does-not-exist",
             enrollmentId:
-              study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              study.enrollmentId ||
+              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the installation, must upgrade an existing add-on
@@ -590,7 +599,8 @@ class BranchedAddonStudyAction extends BaseStudyAction {
             branch: branch.slug,
             reason: "metadata-mismatch",
             enrollmentId:
-              study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              study.enrollmentId ||
+              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           })
         );
         return false; // cancel the installation, server metadata do not match downloaded add-on
@@ -601,7 +611,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
 
     const onComplete = async (install, listener) => {
       try {
-        await AddonStudies.update({
+        await lazy.AddonStudies.update({
           ...study,
           addonVersion: install.addon.version,
           addonUrl: extensionDetails.xpi,
@@ -618,7 +628,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     };
 
     const onFailedInstall = () => {
-      AddonStudies.update(study);
+      lazy.AddonStudies.update(study);
     };
 
     const [installedId, installedVersion] = await this.downloadAndInstall({
@@ -632,24 +642,24 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       reportError: this.reportUpdateError,
       errorExtra: {
         enrollmentId:
-          study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       },
     });
 
     // All done, report success to Telemetry
-    TelemetryEvents.sendEvent("update", "addon_study", slug, {
+    lazy.TelemetryEvents.sendEvent("update", "addon_study", slug, {
       addonId: installedId,
       addonVersion: installedVersion,
       branch: branch.slug,
       enrollmentId:
-        study.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 
   reportEnrollError(error) {
     if (error instanceof AddonStudyEnrollError) {
       // One of our known errors. Report it nicely to telemetry
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         "enrollFailed",
         "addon_study",
         error.studyName,
@@ -664,7 +674,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
        * unsafe.
        */
       const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         "enrollFailed",
         "addon_study",
         error.studyName,
@@ -678,7 +688,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
   reportUpdateError(error) {
     if (error instanceof AddonStudyUpdateError) {
       // One of our known errors. Report it nicely to telemetry
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         "updateFailed",
         "addon_study",
         error.studyName,
@@ -693,7 +703,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
        * unsafe.
        */
       const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         "updateFailed",
         "addon_study",
         error.studyName,
@@ -711,7 +721,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
    * @throws If the specified study does not exist, or if it is already inactive.
    */
   async unenroll(recipeId, reason = "unknown") {
-    const study = await AddonStudies.get(recipeId);
+    const study = await lazy.AddonStudies.get(recipeId);
     if (!study) {
       throw new Error(`No study found for recipe ${recipeId}.`);
     }
@@ -721,14 +731,14 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       );
     }
 
-    await AddonStudies.markAsEnded(study, reason);
+    await lazy.AddonStudies.markAsEnded(study, reason);
 
     // Study branches may indicate that no add-on should be installed, as a
     // form of control branch. In that case, `study.addonId` will be null (as
     // will the other add-on related fields). Only try to uninstall the add-on
     // if we expect one should be installed.
     if (study.addonId) {
-      const addon = await AddonManager.getAddonByID(study.addonId);
+      const addon = await lazy.AddonManager.getAddonByID(study.addonId);
       if (addon) {
         await addon.uninstall();
       } else {
@@ -769,7 +779,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       // if deadline is an invalid date, set it to one week from now.
       if (isNaN(study.temporaryErrorDeadline)) {
         study.temporaryErrorDeadline = newDeadline;
-        await AddonStudies.update(study);
+        await lazy.AddonStudies.update(study);
         return;
       }
 
@@ -779,7 +789,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     } else {
       // there is no deadline, so set one
       study.temporaryErrorDeadline = newDeadline;
-      await AddonStudies.update(study);
+      await lazy.AddonStudies.update(study);
     }
   }
 }

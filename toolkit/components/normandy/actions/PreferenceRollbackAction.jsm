@@ -7,28 +7,29 @@
 const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceRollouts",
   "resource://normandy/lib/PreferenceRollouts.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrefUtils",
   "resource://normandy/lib/PrefUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ActionSchemas",
   "resource://normandy/actions/schemas/index.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEvents",
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -37,23 +38,24 @@ var EXPORTED_SYMBOLS = ["PreferenceRollbackAction"];
 
 class PreferenceRollbackAction extends BaseAction {
   get schema() {
-    return ActionSchemas["preference-rollback"];
+    return lazy.ActionSchemas["preference-rollback"];
   }
 
   async _run(recipe) {
     const { rolloutSlug } = recipe.arguments;
-    const rollout = await PreferenceRollouts.get(rolloutSlug);
+    const rollout = await lazy.PreferenceRollouts.get(rolloutSlug);
 
-    if (PreferenceRollouts.GRADUATION_SET.has(rolloutSlug)) {
+    if (lazy.PreferenceRollouts.GRADUATION_SET.has(rolloutSlug)) {
       // graduated rollouts can't be rolled back
-      TelemetryEvents.sendEvent(
+      lazy.TelemetryEvents.sendEvent(
         "unenrollFailed",
         "preference_rollback",
         rolloutSlug,
         {
           reason: "in-graduation-set",
           enrollmentId:
-            rollout?.enrollmentId ?? TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+            rollout?.enrollmentId ??
+            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         }
       );
       throw new Error(
@@ -67,42 +69,44 @@ class PreferenceRollbackAction extends BaseAction {
     }
 
     switch (rollout.state) {
-      case PreferenceRollouts.STATE_ACTIVE: {
+      case lazy.PreferenceRollouts.STATE_ACTIVE: {
         this.log.info(`Rolling back ${rolloutSlug}`);
-        rollout.state = PreferenceRollouts.STATE_ROLLED_BACK;
+        rollout.state = lazy.PreferenceRollouts.STATE_ROLLED_BACK;
         for (const { preferenceName, previousValue } of rollout.preferences) {
-          PrefUtils.setPref(preferenceName, previousValue, {
+          lazy.PrefUtils.setPref(preferenceName, previousValue, {
             branch: "default",
           });
         }
-        await PreferenceRollouts.update(rollout);
-        TelemetryEvents.sendEvent(
+        await lazy.PreferenceRollouts.update(rollout);
+        lazy.TelemetryEvents.sendEvent(
           "unenroll",
           "preference_rollback",
           rolloutSlug,
           {
             reason: "rollback",
             enrollmentId:
-              rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              rollout.enrollmentId ||
+              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
-        TelemetryEnvironment.setExperimentInactive(rolloutSlug);
+        lazy.TelemetryEnvironment.setExperimentInactive(rolloutSlug);
         break;
       }
-      case PreferenceRollouts.STATE_ROLLED_BACK: {
+      case lazy.PreferenceRollouts.STATE_ROLLED_BACK: {
         // The rollout has already been rolled back, so nothing to do here.
         break;
       }
-      case PreferenceRollouts.STATE_GRADUATED: {
+      case lazy.PreferenceRollouts.STATE_GRADUATED: {
         // graduated rollouts can't be rolled back
-        TelemetryEvents.sendEvent(
+        lazy.TelemetryEvents.sendEvent(
           "unenrollFailed",
           "preference_rollback",
           rolloutSlug,
           {
             reason: "graduated",
             enrollmentId:
-              rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+              rollout.enrollmentId ||
+              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
         throw new Error(
@@ -118,6 +122,6 @@ class PreferenceRollbackAction extends BaseAction {
   }
 
   async _finalize() {
-    await PreferenceRollouts.saveStartupPrefs();
+    await lazy.PreferenceRollouts.saveStartupPrefs();
   }
 }

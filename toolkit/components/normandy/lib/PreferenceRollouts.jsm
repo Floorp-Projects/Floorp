@@ -8,28 +8,29 @@ const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "IndexedDB",
   "resource://gre/modules/IndexedDB.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CleanupManager",
   "resource://normandy/lib/CleanupManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrefUtils",
   "resource://normandy/lib/PrefUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEvents",
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -79,7 +80,7 @@ const DB_VERSION = 1;
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_VERSION, db => {
+  return lazy.IndexedDB.open(DB_NAME, DB_VERSION, db => {
     db.createObjectStore(STORE_NAME, {
       keyPath: "slug",
     });
@@ -181,18 +182,23 @@ var PreferenceRollouts = {
   },
 
   async init() {
-    CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
+    lazy.CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
 
     for (const rollout of await this.getAllActive()) {
       if (this.GRADUATION_SET.has(rollout.slug)) {
         await this.graduate(rollout, "in-graduation-set");
         continue;
       }
-      TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
-        type: "normandy-prefrollout",
-        enrollmentId:
-          rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-      });
+      lazy.TelemetryEnvironment.setExperimentActive(
+        rollout.slug,
+        rollout.state,
+        {
+          type: "normandy-prefrollout",
+          enrollmentId:
+            rollout.enrollmentId ||
+            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        }
+      );
     }
   },
 
@@ -200,7 +206,7 @@ var PreferenceRollouts = {
   async onTelemetryDisabled() {
     const rollouts = await this.getAll();
     for (const rollout of rollouts) {
-      rollout.enrollmentId = TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
+      rollout.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
     }
     await this.updateMany(rollouts);
   },
@@ -340,7 +346,7 @@ var PreferenceRollouts = {
 
     for (const rollout of await this.getAllActive()) {
       for (const prefSpec of rollout.preferences) {
-        PrefUtils.setPref(
+        lazy.PrefUtils.setPref(
           STARTUP_PREFS_BRANCH + prefSpec.preferenceName,
           prefSpec.value
         );
@@ -353,10 +359,15 @@ var PreferenceRollouts = {
     rollout.state = this.STATE_GRADUATED;
     const db = await getDatabase();
     await getStore(db, "readwrite").put(rollout);
-    TelemetryEvents.sendEvent("graduate", "preference_rollout", rollout.slug, {
-      reason,
-      enrollmentId:
-        rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-    });
+    lazy.TelemetryEvents.sendEvent(
+      "graduate",
+      "preference_rollout",
+      rollout.slug,
+      {
+        reason,
+        enrollmentId:
+          rollout.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      }
+    );
   },
 };

@@ -6,18 +6,20 @@
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonStudies",
   "resource://normandy/lib/AddonStudies.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "RecipeRunner",
   "resource://normandy/lib/RecipeRunner.jsm"
 );
@@ -60,17 +62,17 @@ const NormandyMigrations = {
   migrations: [
     migrateShieldPrefs,
     migrateStudiesEnabledWithoutHealthReporting,
-    AddonStudies.migrations
+    lazy.AddonStudies.migrations
       .migration01AddonStudyFieldsToSlugAndUserFacingFields,
-    PreferenceExperiments.migrations.migration01MoveExperiments,
-    PreferenceExperiments.migrations.migration02MultiPreference,
-    PreferenceExperiments.migrations.migration03AddActionName,
-    PreferenceExperiments.migrations.migration04RenameNameToSlug,
-    RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
-    AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
+    lazy.PreferenceExperiments.migrations.migration01MoveExperiments,
+    lazy.PreferenceExperiments.migrations.migration02MultiPreference,
+    lazy.PreferenceExperiments.migrations.migration03AddActionName,
+    lazy.PreferenceExperiments.migrations.migration04RenameNameToSlug,
+    lazy.RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
+    lazy.AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
     migrateRemoveLastBuildIdPref,
-    PreferenceExperiments.migrations.migration05RemoveOldAction,
-    PreferenceExperiments.migrations.migration06TrackOverriddenPrefs,
+    lazy.PreferenceExperiments.migrations.migration05RemoveOldAction,
+    lazy.PreferenceExperiments.migrations.migration06TrackOverriddenPrefs,
   ],
 };
 
