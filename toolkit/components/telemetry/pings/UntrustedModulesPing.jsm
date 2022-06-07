@@ -18,13 +18,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   UpdateTimerManager: [
     "@mozilla.org/updates/timer-manager;1",
     "nsIUpdateTimerManager",
@@ -39,14 +41,17 @@ const TIMER_NAME = "telemetry_untrustedmodules_ping";
 const PING_SUBMISSION_NAME = "third-party-modules";
 
 var TelemetryUntrustedModulesPing = Object.freeze({
-  _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
+  _log: lazy.Log.repository.getLoggerWithMessagePrefix(
+    LOGGER_NAME,
+    LOGGER_PREFIX
+  ),
 
   start() {
-    UpdateTimerManager.registerTimer(
+    lazy.UpdateTimerManager.registerTimer(
       TIMER_NAME,
       this,
       Services.prefs.getIntPref(
-        TelemetryUtils.Preferences.UntrustedModulesPingFrequency,
+        lazy.TelemetryUtils.Preferences.UntrustedModulesPingFrequency,
         DEFAULT_INTERVAL_SECONDS
       )
     );
@@ -57,7 +62,7 @@ var TelemetryUntrustedModulesPing = Object.freeze({
       Services.telemetry.getUntrustedModuleLoadEvents().then(payload => {
         try {
           if (payload) {
-            TelemetryController.submitExternalPing(
+            lazy.TelemetryController.submitExternalPing(
               PING_SUBMISSION_NAME,
               payload,
               {

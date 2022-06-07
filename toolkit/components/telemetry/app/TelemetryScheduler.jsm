@@ -25,7 +25,9 @@ const { TelemetryPrioPing } = ChromeUtils.import(
   "resource://gre/modules/PrioPing.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
 });
 
@@ -120,7 +122,7 @@ var TelemetryScheduler = {
     this._lastSessionCheckpointTime = now.getTime();
     this._rescheduleTimeout();
 
-    idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    lazy.idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
     Services.obs.addObserver(this, "wake_notification");
   },
 
@@ -143,7 +145,7 @@ var TelemetryScheduler = {
       this._schedulerTimer = null;
     }
 
-    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    lazy.idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
     Services.obs.removeObserver(this, "wake_notification");
 
     this._shuttingDown = true;

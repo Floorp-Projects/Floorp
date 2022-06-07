@@ -5,13 +5,15 @@
 
 "use strict";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
@@ -28,15 +30,15 @@ TelemetryStartup.prototype.QueryInterface = ChromeUtils.generateQI([
 TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
   if (aTopic == "profile-after-change") {
     // In the content process, this is done in ContentProcessSingleton.js.
-    TelemetryController.observe(null, aTopic, null);
+    lazy.TelemetryController.observe(null, aTopic, null);
   }
   if (aTopic == "profile-after-change") {
     annotateEnvironment();
-    TelemetryEnvironment.registerChangeListener(
+    lazy.TelemetryEnvironment.registerChangeListener(
       "CrashAnnotator",
       annotateEnvironment
     );
-    TelemetryEnvironment.onInitialized().then(() => annotateEnvironment());
+    lazy.TelemetryEnvironment.onInitialized().then(() => annotateEnvironment());
   }
 };
 
@@ -44,7 +46,7 @@ function annotateEnvironment() {
   try {
     let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
     if (cr) {
-      let env = JSON.stringify(TelemetryEnvironment.currentEnvironment);
+      let env = JSON.stringify(lazy.TelemetryEnvironment.currentEnvironment);
       cr.getService(Ci.nsICrashReporter).annotateCrashReport(
         "TelemetryEnvironment",
         env

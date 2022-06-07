@@ -5,24 +5,26 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ServiceRequest",
   "resource://gre/modules/ServiceRequest.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
@@ -41,9 +43,9 @@ const REPORTING_ENDPOINT_BASE_PREF = `toolkit.coverage.endpoint.base`;
 const REPORTING_ENDPOINT = "submit/coverage/coverage";
 const PING_SUBMISSION_TIMEOUT = 30 * 1000; // 30 seconds
 
-const log = Log.repository.getLogger("Telemetry::CoveragePing");
-log.level = Services.prefs.getIntPref(LOG_LEVEL_PREF, Log.Level.Error);
-log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+const log = lazy.Log.repository.getLogger("Telemetry::CoveragePing");
+log.level = Services.prefs.getIntPref(LOG_LEVEL_PREF, lazy.Log.Level.Error);
+log.addAppender(new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter()));
 
 var CoveragePing = Object.freeze({
   async startup() {
@@ -82,7 +84,7 @@ var CoveragePing = Object.freeze({
 
     const payload = {
       appVersion: Services.appinfo.version,
-      appUpdateChannel: UpdateUtils.getUpdateChannel(false),
+      appUpdateChannel: lazy.UpdateUtils.getUpdateChannel(false),
       osName: Services.sysinfo.getProperty("name"),
       osVersion: Services.sysinfo.getProperty("version"),
       telemetryEnabled: enabled,
@@ -91,7 +93,7 @@ var CoveragePing = Object.freeze({
     let cachedUuid = Services.prefs.getCharPref(COVERAGE_UUID_PREF, null);
     if (!cachedUuid) {
       // Totally random UUID, just for detecting duplicates.
-      cachedUuid = CommonUtils.generateUUID();
+      cachedUuid = lazy.CommonUtils.generateUUID();
       Services.prefs.setCharPref(COVERAGE_UUID_PREF, cachedUuid);
     }
 
@@ -104,9 +106,9 @@ var CoveragePing = Object.freeze({
 
     log.debug(`putting to endpoint ${endpoint} with payload:`, payload);
 
-    let deferred = PromiseUtils.defer();
+    let deferred = lazy.PromiseUtils.defer();
 
-    let request = new ServiceRequest({ mozAnon: true });
+    let request = new lazy.ServiceRequest({ mozAnon: true });
     request.mozBackgroundRequest = true;
     request.timeout = PING_SUBMISSION_TIMEOUT;
 

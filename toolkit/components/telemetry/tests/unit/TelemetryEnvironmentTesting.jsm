@@ -9,7 +9,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   Assert: "resource://testing-common/Assert.jsm",
   // AttributionCode is only needed for Firefox
@@ -128,13 +130,13 @@ var TelemetryEnvironmentTesting = {
   },
 
   spoofProfileReset() {
-    return CommonUtils.writeJSON(
+    return lazy.CommonUtils.writeJSON(
       {
         created: PROFILE_CREATION_DATE_MS,
         reset: PROFILE_RESET_DATE_MS,
         firstUse: PROFILE_FIRST_USE_MS,
       },
-      OS.Path.join(OS.Constants.Path.profileDir, "times.json")
+      lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, "times.json")
     );
   },
 
@@ -157,20 +159,20 @@ var TelemetryEnvironmentTesting = {
 
   async spoofAttributionData() {
     if (gIsWindows || gIsMac) {
-      AttributionCode._clearCache();
-      await AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
+      lazy.AttributionCode._clearCache();
+      await lazy.AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
     }
   },
 
   cleanupAttributionData() {
     if (gIsWindows || gIsMac) {
-      AttributionCode.attributionFile.remove(false);
-      AttributionCode._clearCache();
+      lazy.AttributionCode.attributionFile.remove(false);
+      lazy.AttributionCode._clearCache();
     }
   },
 
   registerFakeSysInfo() {
-    MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
+    lazy.MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
   },
 
   /**
@@ -222,14 +224,17 @@ var TelemetryEnvironmentTesting = {
       xpcomAbi: "noarch-spidermonkey",
     };
 
-    Assert.ok("build" in data, "There must be a build section in Environment.");
+    lazy.Assert.ok(
+      "build" in data,
+      "There must be a build section in Environment."
+    );
 
     for (let f in expectedInfo) {
-      Assert.ok(
+      lazy.Assert.ok(
         this.checkString(data.build[f]),
         f + " must be a valid string."
       );
-      Assert.equal(
+      lazy.Assert.equal(
         data.build[f],
         expectedInfo[f],
         f + " must have the correct value."
@@ -237,9 +242,9 @@ var TelemetryEnvironmentTesting = {
     }
 
     // Make sure architecture is in the environment.
-    Assert.ok(this.checkString(data.build.architecture));
+    lazy.Assert.ok(this.checkString(data.build.architecture));
 
-    Assert.equal(
+    lazy.Assert.equal(
       data.build.updaterAvailable,
       AppConstants.MOZ_UPDATER,
       "build.updaterAvailable must equal AppConstants.MOZ_UPDATER"
@@ -259,13 +264,13 @@ var TelemetryEnvironmentTesting = {
       userPrefs: "object",
     };
 
-    Assert.ok(
+    lazy.Assert.ok(
       "settings" in data,
       "There must be a settings section in Environment."
     );
 
     for (let f in EXPECTED_FIELDS_TYPES) {
-      Assert.equal(
+      lazy.Assert.equal(
         typeof data.settings[f],
         EXPECTED_FIELDS_TYPES[f],
         f + " must have the correct type."
@@ -274,38 +279,38 @@ var TelemetryEnvironmentTesting = {
 
     // This property is not always present, but when it is, it must be a number.
     if ("launcherProcessState" in data.settings) {
-      Assert.equal(typeof data.settings.launcherProcessState, "number");
+      lazy.Assert.equal(typeof data.settings.launcherProcessState, "number");
     }
 
     // Check "addonCompatibilityCheckEnabled" separately.
-    Assert.equal(
+    lazy.Assert.equal(
       data.settings.addonCompatibilityCheckEnabled,
-      AddonManager.checkCompatibility
+      lazy.AddonManager.checkCompatibility
     );
 
     // Check "isDefaultBrowser" separately, as it is not available on Android an can either be
     // null or boolean on other platforms.
     if (gIsAndroid) {
-      Assert.ok(
+      lazy.Assert.ok(
         !("isDefaultBrowser" in data.settings),
         "Must not be available on Android."
       );
     } else if ("isDefaultBrowser" in data.settings) {
       // isDefaultBrowser might not be available in the payload, since it's
       // gathered after the session was restored.
-      Assert.ok(this.checkNullOrBool(data.settings.isDefaultBrowser));
+      lazy.Assert.ok(this.checkNullOrBool(data.settings.isDefaultBrowser));
     }
 
     // Check "channel" separately, as it can either be null or string.
     let update = data.settings.update;
-    Assert.ok(this.checkNullOrString(update.channel));
-    Assert.equal(typeof update.enabled, "boolean");
-    Assert.equal(typeof update.autoDownload, "boolean");
-    Assert.equal(typeof update.background, "boolean");
+    lazy.Assert.ok(this.checkNullOrString(update.channel));
+    lazy.Assert.equal(typeof update.enabled, "boolean");
+    lazy.Assert.equal(typeof update.autoDownload, "boolean");
+    lazy.Assert.equal(typeof update.background, "boolean");
 
     // Check sandbox settings exist and make sense
     if (data.settings.sandbox.effectiveContentProcessLevel !== null) {
-      Assert.equal(
+      lazy.Assert.equal(
         typeof data.settings.sandbox.effectiveContentProcessLevel,
         "number",
         "sandbox.effectiveContentProcessLevel must have the correct type"
@@ -313,7 +318,7 @@ var TelemetryEnvironmentTesting = {
     }
 
     if (data.settings.sandbox.contentWin32kLockdownState !== null) {
-      Assert.equal(
+      lazy.Assert.equal(
         typeof data.settings.sandbox.contentWin32kLockdownState,
         "number",
         "sandbox.contentWin32kLockdownState must have the correct type"
@@ -321,25 +326,25 @@ var TelemetryEnvironmentTesting = {
 
       let win32kLockdownState =
         data.settings.sandbox.contentWin32kLockdownState;
-      Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 15);
+      lazy.Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 15);
     }
 
     // Check "defaultSearchEngine" separately, as it can either be undefined or string.
     if ("defaultSearchEngine" in data.settings) {
       this.checkString(data.settings.defaultSearchEngine);
-      Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
+      lazy.Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
     }
 
     if ("defaultPrivateSearchEngineData" in data.settings) {
-      Assert.equal(
+      lazy.Assert.equal(
         typeof data.settings.defaultPrivateSearchEngineData,
         "object"
       );
     }
 
     if ((gIsWindows || gIsMac) && AppConstants.MOZ_BUILD_APP == "browser") {
-      Assert.equal(typeof data.settings.attribution, "object");
-      Assert.equal(data.settings.attribution.source, "google.com");
+      lazy.Assert.equal(typeof data.settings.attribution, "object");
+      lazy.Assert.equal(data.settings.attribution.source, "google.com");
     }
 
     this.checkIntlSettings(data.settings);
@@ -354,7 +359,7 @@ var TelemetryEnvironmentTesting = {
     ];
 
     for (let field of fields) {
-      Assert.ok(Array.isArray(intl[field]), `${field} is an array`);
+      lazy.Assert.ok(Array.isArray(intl[field]), `${field} is an array`);
     }
 
     // These fields may be null if they aren't ready yet. This is mostly to deal
@@ -364,21 +369,24 @@ var TelemetryEnvironmentTesting = {
     for (let field of optionalFields) {
       let isArray = Array.isArray(intl[field]);
       let isNull = intl[field] === null;
-      Assert.ok(isArray || isNull, `${field} is an array or null`);
+      lazy.Assert.ok(isArray || isNull, `${field} is an array or null`);
     }
   },
 
   checkProfileSection(data) {
-    Assert.ok(
+    lazy.Assert.ok(
       "profile" in data,
       "There must be a profile section in Environment."
     );
-    Assert.equal(
+    lazy.Assert.equal(
       data.profile.creationDate,
       truncateToDays(PROFILE_CREATION_DATE_MS)
     );
-    Assert.equal(data.profile.resetDate, truncateToDays(PROFILE_RESET_DATE_MS));
-    Assert.equal(
+    lazy.Assert.equal(
+      data.profile.resetDate,
+      truncateToDays(PROFILE_RESET_DATE_MS)
+    );
+    lazy.Assert.equal(
       data.profile.firstUseDate,
       truncateToDays(PROFILE_FIRST_USE_MS)
     );
@@ -393,14 +401,14 @@ var TelemetryEnvironmentTesting = {
       distributorChannel: DISTRIBUTOR_CHANNEL,
     };
 
-    Assert.ok(
+    lazy.Assert.ok(
       "partner" in data,
       "There must be a partner section in Environment."
     );
 
     for (let f in EXPECTED_FIELDS) {
       let expected = isInitial ? null : EXPECTED_FIELDS[f];
-      Assert.strictEqual(
+      lazy.Assert.strictEqual(
         data.partner[f],
         expected,
         f + " must have the correct value."
@@ -408,11 +416,11 @@ var TelemetryEnvironmentTesting = {
     }
 
     // Check that "partnerNames" exists and contains the correct element.
-    Assert.ok(Array.isArray(data.partner.partnerNames));
+    lazy.Assert.ok(Array.isArray(data.partner.partnerNames));
     if (isInitial) {
-      Assert.equal(data.partner.partnerNames.length, 0);
+      lazy.Assert.equal(data.partner.partnerNames.length, 0);
     } else {
-      Assert.ok(data.partner.partnerNames.includes(PARTNER_NAME));
+      lazy.Assert.ok(data.partner.partnerNames.includes(PARTNER_NAME));
     }
   },
 
@@ -431,11 +439,11 @@ var TelemetryEnvironmentTesting = {
     };
 
     for (let f in EXPECTED_ADAPTER_FIELDS_TYPES) {
-      Assert.ok(f in data, f + " must be available.");
+      lazy.Assert.ok(f in data, f + " must be available.");
 
       if (data[f]) {
         // Since we have a non-null value, check if it has the correct type.
-        Assert.equal(
+        lazy.Assert.equal(
           typeof data[f],
           EXPECTED_ADAPTER_FIELDS_TYPES[f],
           f + " must have the correct type."
@@ -454,17 +462,17 @@ var TelemetryEnvironmentTesting = {
       "appleModelId",
     ];
 
-    Assert.ok(
+    lazy.Assert.ok(
       "system" in data,
       "There must be a system section in Environment."
     );
 
     // Make sure we have all the top level sections and fields.
     for (let f of EXPECTED_FIELDS) {
-      Assert.ok(f in data.system, f + " must be available.");
+      lazy.Assert.ok(f in data.system, f + " must be available.");
     }
 
-    Assert.ok(
+    lazy.Assert.ok(
       Number.isFinite(data.system.memoryMB),
       "MemoryMB must be a number."
     );
@@ -485,37 +493,40 @@ var TelemetryEnvironmentTesting = {
         for (let f of EXTRA_CPU_FIELDS) {
           // Note this is testing TelemetryEnvironment.js only, not that the
           // values are valid - null is the fallback.
-          Assert.ok(f in data.system.cpu, f + " must be available under cpu.");
+          lazy.Assert.ok(
+            f in data.system.cpu,
+            f + " must be available under cpu."
+          );
         }
 
         if (gIsWindows) {
-          Assert.equal(
+          lazy.Assert.equal(
             typeof data.system.isWow64,
             "boolean",
             "isWow64 must be available on Windows and have the correct type."
           );
-          Assert.equal(
+          lazy.Assert.equal(
             typeof data.system.isWowARM64,
             "boolean",
             "isWowARM64 must be available on Windows and have the correct type."
           );
-          Assert.equal(
+          lazy.Assert.equal(
             typeof data.system.hasWinPackageId,
             "boolean",
             "hasWinPackageId must be available on Windows and have the correct type."
           );
           // This is only sent for Mozilla produced MSIX packages
-          Assert.ok(
+          lazy.Assert.ok(
             !("winPackageFamilyName" in data.system) ||
               data.system.winPackageFamilyName === null ||
               typeof data.system.winPackageFamilyName === "string",
             "winPackageFamilyName must be a string if non null"
           );
-          Assert.ok(
+          lazy.Assert.ok(
             "virtualMaxMB" in data.system,
             "virtualMaxMB must be available."
           );
-          Assert.ok(
+          lazy.Assert.ok(
             Number.isFinite(data.system.virtualMaxMB),
             "virtualMaxMB must be a number."
           );
@@ -529,7 +540,7 @@ var TelemetryEnvironmentTesting = {
             "l3cacheKB",
             "speedMHz",
           ]) {
-            Assert.ok(
+            lazy.Assert.ok(
               Number.isFinite(data.system.cpu[f]),
               f + " must be a number if non null."
             );
@@ -546,7 +557,7 @@ var TelemetryEnvironmentTesting = {
           "l3cacheKB",
           "speedMHz",
         ]) {
-          Assert.ok(
+          lazy.Assert.ok(
             !(f in data.system.cpu) ||
               data.system.cpu[f] === null ||
               Number.isFinite(data.system.cpu[f]),
@@ -556,7 +567,7 @@ var TelemetryEnvironmentTesting = {
 
         // We insist these are available
         for (let f of ["cores"]) {
-          Assert.ok(
+          lazy.Assert.ok(
             !(f in data.system.cpu) || Number.isFinite(data.system.cpu[f]),
             f + " must be a number if non null."
           );
@@ -566,99 +577,102 @@ var TelemetryEnvironmentTesting = {
 
     let cpuData = data.system.cpu;
 
-    Assert.ok(
+    lazy.Assert.ok(
       Array.isArray(cpuData.extensions),
       "CPU extensions must be available."
     );
 
     let osData = data.system.os;
-    Assert.ok(this.checkNullOrString(osData.name));
-    Assert.ok(this.checkNullOrString(osData.version));
-    Assert.ok(this.checkNullOrString(osData.locale));
+    lazy.Assert.ok(this.checkNullOrString(osData.name));
+    lazy.Assert.ok(this.checkNullOrString(osData.version));
+    lazy.Assert.ok(this.checkNullOrString(osData.locale));
 
     // Service pack is only available on Windows.
     if (gIsWindows) {
-      Assert.ok(
+      lazy.Assert.ok(
         Number.isFinite(osData.servicePackMajor),
         "ServicePackMajor must be a number."
       );
-      Assert.ok(
+      lazy.Assert.ok(
         Number.isFinite(osData.servicePackMinor),
         "ServicePackMinor must be a number."
       );
       if ("windowsBuildNumber" in osData) {
         // This might not be available on all Windows platforms.
-        Assert.ok(
+        lazy.Assert.ok(
           Number.isFinite(osData.windowsBuildNumber),
           "windowsBuildNumber must be a number."
         );
       }
       if ("windowsUBR" in osData) {
         // This might not be available on all Windows platforms.
-        Assert.ok(
+        lazy.Assert.ok(
           osData.windowsUBR === null || Number.isFinite(osData.windowsUBR),
           "windowsUBR must be null or a number."
         );
       }
     } else if (gIsAndroid) {
-      Assert.ok(this.checkNullOrString(osData.kernelVersion));
+      lazy.Assert.ok(this.checkNullOrString(osData.kernelVersion));
     }
 
     for (let disk of EXPECTED_HDD_FIELDS) {
-      Assert.ok(this.checkNullOrString(data.system.hdd[disk].model));
-      Assert.ok(this.checkNullOrString(data.system.hdd[disk].revision));
-      Assert.ok(this.checkNullOrString(data.system.hdd[disk].type));
+      lazy.Assert.ok(this.checkNullOrString(data.system.hdd[disk].model));
+      lazy.Assert.ok(this.checkNullOrString(data.system.hdd[disk].revision));
+      lazy.Assert.ok(this.checkNullOrString(data.system.hdd[disk].type));
     }
 
     let gfxData = data.system.gfx;
-    Assert.ok("D2DEnabled" in gfxData);
-    Assert.ok("DWriteEnabled" in gfxData);
-    Assert.ok("Headless" in gfxData);
-    Assert.ok("EmbeddedInFirefoxReality" in gfxData);
+    lazy.Assert.ok("D2DEnabled" in gfxData);
+    lazy.Assert.ok("DWriteEnabled" in gfxData);
+    lazy.Assert.ok("Headless" in gfxData);
+    lazy.Assert.ok("EmbeddedInFirefoxReality" in gfxData);
     // DWriteVersion is disabled due to main thread jank and will be enabled
     // again as part of bug 1154500.
     // Assert.ok("DWriteVersion" in gfxData);
     if (gIsWindows) {
-      Assert.equal(typeof gfxData.D2DEnabled, "boolean");
-      Assert.equal(typeof gfxData.DWriteEnabled, "boolean");
-      Assert.equal(typeof gfxData.EmbeddedInFirefoxReality, "boolean");
+      lazy.Assert.equal(typeof gfxData.D2DEnabled, "boolean");
+      lazy.Assert.equal(typeof gfxData.DWriteEnabled, "boolean");
+      lazy.Assert.equal(typeof gfxData.EmbeddedInFirefoxReality, "boolean");
       // As above, will be enabled again as part of bug 1154500.
       // Assert.ok(this.checkString(gfxData.DWriteVersion));
     }
 
-    Assert.ok("adapters" in gfxData);
-    Assert.ok(
+    lazy.Assert.ok("adapters" in gfxData);
+    lazy.Assert.ok(
       !!gfxData.adapters.length,
       "There must be at least one GFX adapter."
     );
     for (let adapter of gfxData.adapters) {
       this.checkGfxAdapter(adapter);
     }
-    Assert.equal(typeof gfxData.adapters[0].GPUActive, "boolean");
-    Assert.ok(
+    lazy.Assert.equal(typeof gfxData.adapters[0].GPUActive, "boolean");
+    lazy.Assert.ok(
       gfxData.adapters[0].GPUActive,
       "The first GFX adapter must be active."
     );
 
-    Assert.ok(Array.isArray(gfxData.monitors));
+    lazy.Assert.ok(Array.isArray(gfxData.monitors));
     if (gIsWindows || gIsMac || gIsLinux) {
-      Assert.ok(gfxData.monitors.length >= 1, "There is at least one monitor.");
-      Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
-      Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
+      lazy.Assert.ok(
+        gfxData.monitors.length >= 1,
+        "There is at least one monitor."
+      );
+      lazy.Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
+      lazy.Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
       if (gIsWindows) {
-        Assert.equal(typeof gfxData.monitors[0].refreshRate, "number");
-        Assert.equal(typeof gfxData.monitors[0].pseudoDisplay, "boolean");
+        lazy.Assert.equal(typeof gfxData.monitors[0].refreshRate, "number");
+        lazy.Assert.equal(typeof gfxData.monitors[0].pseudoDisplay, "boolean");
       }
       if (gIsMac) {
-        Assert.equal(typeof gfxData.monitors[0].scale, "number");
+        lazy.Assert.equal(typeof gfxData.monitors[0].scale, "number");
       }
     }
 
-    Assert.equal(typeof gfxData.features, "object");
-    Assert.equal(typeof gfxData.features.compositor, "string");
+    lazy.Assert.equal(typeof gfxData.features, "object");
+    lazy.Assert.equal(typeof gfxData.features.compositor, "string");
 
-    Assert.equal(typeof gfxData.features.gpuProcess, "object");
-    Assert.equal(typeof gfxData.features.gpuProcess.status, "string");
+    lazy.Assert.equal(typeof gfxData.features.gpuProcess, "object");
+    lazy.Assert.equal(typeof gfxData.features.gpuProcess.status, "string");
 
     try {
       // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
@@ -668,49 +682,49 @@ var TelemetryEnvironmentTesting = {
       );
 
       if (gIsWindows || gIsMac) {
-        Assert.equal(GFX_VENDOR_ID, gfxData.adapters[0].vendorID);
-        Assert.equal(GFX_DEVICE_ID, gfxData.adapters[0].deviceID);
+        lazy.Assert.equal(GFX_VENDOR_ID, gfxData.adapters[0].vendorID);
+        lazy.Assert.equal(GFX_DEVICE_ID, gfxData.adapters[0].deviceID);
       }
 
       let features = gfxInfo.getFeatures();
-      Assert.equal(features.compositor, gfxData.features.compositor);
-      Assert.equal(
+      lazy.Assert.equal(features.compositor, gfxData.features.compositor);
+      lazy.Assert.equal(
         features.gpuProcess.status,
         gfxData.features.gpuProcess.status
       );
-      Assert.equal(features.opengl, gfxData.features.opengl);
-      Assert.equal(features.webgl, gfxData.features.webgl);
+      lazy.Assert.equal(features.opengl, gfxData.features.opengl);
+      lazy.Assert.equal(features.webgl, gfxData.features.webgl);
     } catch (e) {}
 
     if (gIsMac) {
-      Assert.ok(this.checkString(data.system.appleModelId));
+      lazy.Assert.ok(this.checkString(data.system.appleModelId));
     } else {
-      Assert.ok(this.checkNullOrString(data.system.appleModelId));
+      lazy.Assert.ok(this.checkNullOrString(data.system.appleModelId));
     }
 
     // This feature is only available on Windows 8+
     if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-      Assert.ok(
+      lazy.Assert.ok(
         "sec" in data.system,
         "sec must be available under data.system"
       );
 
       let SEC_FIELDS = ["antivirus", "antispyware", "firewall"];
       for (let f of SEC_FIELDS) {
-        Assert.ok(
+        lazy.Assert.ok(
           f in data.system.sec,
           f + " must be available under data.system.sec"
         );
 
         let value = data.system.sec[f];
         // value is null on Windows Server
-        Assert.ok(
+        lazy.Assert.ok(
           value === null || Array.isArray(value),
           f + " must be either null or an array"
         );
         if (Array.isArray(value)) {
           for (let product of value) {
-            Assert.equal(
+            lazy.Assert.equal(
               typeof product,
               "string",
               "Each element of " + f + " must be a string"
@@ -755,8 +769,8 @@ var TelemetryEnvironmentTesting = {
     }
 
     for (let [name, type] of Object.entries(fields)) {
-      Assert.ok(name in data, name + " must be available.");
-      Assert.equal(
+      lazy.Assert.ok(name in data, name + " must be available.");
+      lazy.Assert.equal(
         typeof data[name],
         type,
         name + " must have the correct type."
@@ -765,7 +779,7 @@ var TelemetryEnvironmentTesting = {
 
     if (!partialRecord) {
       // We check "description" separately, as it can be null.
-      Assert.ok(this.checkNullOrString(data.description));
+      lazy.Assert.ok(this.checkNullOrString(data.description));
     }
   },
 
@@ -784,8 +798,8 @@ var TelemetryEnvironmentTesting = {
     };
 
     for (let f in EXPECTED_THEME_FIELDS_TYPES) {
-      Assert.ok(f in data, f + " must be available.");
-      Assert.equal(
+      lazy.Assert.ok(f in data, f + " must be available.");
+      lazy.Assert.equal(
         typeof data[f],
         EXPECTED_THEME_FIELDS_TYPES[f],
         f + " must have the correct type."
@@ -793,27 +807,27 @@ var TelemetryEnvironmentTesting = {
     }
 
     // We check "description" separately, as it can be null.
-    Assert.ok(this.checkNullOrString(data.description));
+    lazy.Assert.ok(this.checkNullOrString(data.description));
   },
 
   checkActiveGMPlugin(data) {
     // GMP plugin version defaults to null until GMPDownloader runs to update it.
     if (data.version) {
-      Assert.equal(typeof data.version, "string");
+      lazy.Assert.equal(typeof data.version, "string");
     }
-    Assert.equal(typeof data.userDisabled, "boolean");
-    Assert.equal(typeof data.applyBackgroundUpdates, "number");
+    lazy.Assert.equal(typeof data.userDisabled, "boolean");
+    lazy.Assert.equal(typeof data.applyBackgroundUpdates, "number");
   },
 
   checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
     const EXPECTED_FIELDS = ["activeAddons", "theme", "activeGMPlugins"];
 
-    Assert.ok(
+    lazy.Assert.ok(
       "addons" in data,
       "There must be an addons section in Environment."
     );
     for (let f of EXPECTED_FIELDS) {
-      Assert.ok(f in data.addons, f + " must be available.");
+      lazy.Assert.ok(f in data.addons, f + " must be available.");
     }
 
     // Check the active addons, if available.

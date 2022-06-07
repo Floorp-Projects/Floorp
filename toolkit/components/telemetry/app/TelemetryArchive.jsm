@@ -17,8 +17,10 @@ const { TelemetryUtils } = ChromeUtils.import(
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryArchive::";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryStorage",
   "resource://gre/modules/TelemetryStorage.jsm"
 );
@@ -96,7 +98,7 @@ var TelemetryArchiveImpl = {
       }
     }
 
-    return TelemetryStorage.saveArchivedPing(ping);
+    return lazy.TelemetryStorage.saveArchivedPing(ping);
   },
 
   _buildArchivedPingList(archivedPingsMap) {
@@ -114,13 +116,13 @@ var TelemetryArchiveImpl = {
   promiseArchivedPingList() {
     this._log.trace("promiseArchivedPingList");
 
-    return TelemetryStorage.loadArchivedPingList().then(loadedInfo => {
+    return lazy.TelemetryStorage.loadArchivedPingList().then(loadedInfo => {
       return this._buildArchivedPingList(loadedInfo);
     });
   },
 
   promiseArchivedPingById(id) {
     this._log.trace("promiseArchivedPingById - id: " + id);
-    return TelemetryStorage.loadArchivedPing(id);
+    return lazy.TelemetryStorage.loadArchivedPing(id);
   },
 };

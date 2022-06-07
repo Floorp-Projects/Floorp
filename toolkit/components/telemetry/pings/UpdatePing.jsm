@@ -11,8 +11,10 @@ const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
@@ -105,7 +107,7 @@ var UpdatePing = {
       usePingSender: false,
     };
 
-    TelemetryController.submitExternalPing(
+    lazy.TelemetryController.submitExternalPing(
       PING_TYPE,
       payload,
       options
@@ -158,7 +160,7 @@ var UpdatePing = {
       usePingSender: true,
     };
 
-    TelemetryController.submitExternalPing(
+    lazy.TelemetryController.submitExternalPing(
       PING_TYPE,
       payload,
       options
