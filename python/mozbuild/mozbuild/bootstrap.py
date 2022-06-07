@@ -5,6 +5,8 @@
 from mozbuild.configure import ConfigureSandbox
 from pathlib import Path
 import functools
+import io
+import logging
 import os
 
 
@@ -13,9 +15,15 @@ def _bootstrap_sandbox():
     # Here, we don't want an existing mozconfig to interfere with what we
     # do, neither do we want the default for --enable-bootstrap (which is not
     # always on) to prevent this from doing something.
+    out = io.StringIO()
+    logger = logging.getLogger("moz.configure")
+    handler = logging.StreamHandler(out)
+    logger.addHandler(handler)
+    logger.propagate = False
     sandbox = ConfigureSandbox(
         {},
         argv=["configure", "--enable-bootstrap", f"MOZCONFIG={os.devnull}"],
+        logger=logger,
     )
     moz_configure = (
         Path(__file__).parent.parent.parent.parent / "build" / "moz.configure"
