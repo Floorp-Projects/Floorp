@@ -11,7 +11,7 @@ the trait in scope.
 
 ```toml
 [dependencies]
-inherent = "0.1"
+inherent = "1.0"
 ```
 
 ## Example
@@ -26,9 +26,9 @@ mod types {
 
     pub struct Struct;
 
-    #[inherent(pub)]
+    #[inherent]
     impl Trait for Struct {
-        fn f(self) {}
+        pub fn f(self) {}
     }
 }
 
@@ -66,24 +66,6 @@ impl Struct {
         <Self as Trait>::f(self)
     }
 }
-```
-
-## Visibility
-
-Ordinary trait methods have the same visibility as the trait or the `Self` type,
-whichever's is smaller. Neither of these visibilities is knowable to the
-`inherent` macro, so we simply emit all inherent methods as private by default.
-A different visibility may be specified explicitly in the `inherent` macro
-invocation.
-
-```rust
-#[inherent]  // private inherent methods are the default
-
-#[inherent(pub)]  // all methods pub
-
-#[inherent(crate)]  // all methods pub(crate)
-
-#[inherent(in path::to)]  // all methods pub(in path::to)
 ```
 
 <br>

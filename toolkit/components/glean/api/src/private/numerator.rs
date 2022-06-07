@@ -7,6 +7,7 @@ use inherent::inherent;
 use super::CommonMetricData;
 
 use glean::traits::Numerator;
+use glean::Rate;
 
 use crate::ipc::{need_ipc, with_ipc_payload};
 use crate::private::MetricId;
@@ -58,12 +59,12 @@ impl NumeratorMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Numerator for NumeratorMetric {
-    fn add_to_numerator(&self, amount: i32) {
+    pub fn add_to_numerator(&self, amount: i32) {
         match self {
             NumeratorMetric::Parent { inner, .. } => {
-                Numerator::add_to_numerator(&*inner, amount);
+                inner.add_to_numerator(amount);
             }
             NumeratorMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -77,7 +78,8 @@ impl Numerator for NumeratorMetric {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<(i32, i32)> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<Rate> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             NumeratorMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             NumeratorMetric::Child(c) => {
@@ -86,11 +88,12 @@ impl Numerator for NumeratorMetric {
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             NumeratorMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)
@@ -116,7 +119,7 @@ mod test {
         let metric = &metrics::test_only_ipc::rate_with_external_denominator;
         metric.add_to_numerator(1);
 
-        assert_eq!(1, metric.test_get_value("store1").unwrap().0);
+        assert_eq!(1, metric.test_get_value("store1").unwrap().numerator);
     }
 
     #[test]
@@ -149,7 +152,7 @@ mod test {
         assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
 
         assert!(
-            45 == parent_metric.test_get_value("store1").unwrap().0,
+            45 == parent_metric.test_get_value("store1").unwrap().numerator,
             "Values from the 'processes' should be summed"
         );
     }

@@ -61,7 +61,7 @@ impl Ping {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl glean::traits::Ping for Ping {
     /// Submits the ping for eventual uploading
     ///
@@ -69,10 +69,10 @@ impl glean::traits::Ping for Ping {
     ///
     /// * `reason` - the reason the ping was triggered. Included in the
     ///   `ping_info.reason` part of the payload.
-    fn submit(&self, reason: Option<&str>) {
+    pub fn submit(&self, reason: Option<&str>) {
         match self {
             Ping::Parent(p) => {
-                glean::traits::Ping::submit(p, reason);
+                p.submit(reason);
             }
             Ping::Child => {
                 log::error!("Unable to submit ping in non-main process. Ignoring.");

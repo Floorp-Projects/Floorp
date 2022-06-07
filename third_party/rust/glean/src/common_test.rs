@@ -46,7 +46,6 @@ pub(crate) fn new_glean(
             upload_enabled: true,
             max_events: None,
             delay_ping_lifetime_io: false,
-            channel: Some("testing".into()),
             server_endpoint: Some("invalid-test-host".into()),
             uploader: None,
             use_core_mps: false,

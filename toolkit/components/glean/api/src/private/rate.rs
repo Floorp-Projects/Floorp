@@ -58,12 +58,12 @@ impl RateMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Rate for RateMetric {
-    fn add_to_numerator(&self, amount: i32) {
+    pub fn add_to_numerator(&self, amount: i32) {
         match self {
             RateMetric::Parent { inner, .. } => {
-                Rate::add_to_numerator(&*inner, amount);
+                inner.add_to_numerator(amount);
             }
             RateMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -77,10 +77,10 @@ impl Rate for RateMetric {
         }
     }
 
-    fn add_to_denominator(&self, amount: i32) {
+    pub fn add_to_denominator(&self, amount: i32) {
         match self {
             RateMetric::Parent { inner, .. } => {
-                Rate::add_to_denominator(&*inner, amount);
+                inner.add_to_denominator(amount);
             }
             RateMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -94,7 +94,11 @@ impl Rate for RateMetric {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<(i32, i32)> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        ping_name: S,
+    ) -> Option<glean::Rate> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             RateMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             RateMetric::Child(c) => {
@@ -103,11 +107,12 @@ impl Rate for RateMetric {
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             RateMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)
@@ -125,6 +130,7 @@ impl Rate for RateMetric {
 #[cfg(test)]
 mod test {
     use crate::{common_test::*, ipc, metrics};
+    use glean::Rate;
 
     #[test]
     fn sets_rate_value_parent() {
@@ -134,7 +140,13 @@ mod test {
         metric.add_to_numerator(1);
         metric.add_to_denominator(100);
 
-        assert_eq!((1, 100), metric.test_get_value("store1").unwrap());
+        assert_eq!(
+            Rate {
+                numerator: 1,
+                denominator: 100
+            },
+            metric.test_get_value("store1").unwrap()
+        );
     }
 
     #[test]
@@ -170,7 +182,10 @@ mod test {
         assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
 
         assert_eq!(
-            (45, 33),
+            Rate {
+                numerator: 45,
+                denominator: 33
+            },
             parent_metric.test_get_value("store1").unwrap(),
             "Values from the 'processes' should be summed"
         );

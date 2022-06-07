@@ -83,7 +83,7 @@ impl DatetimeMetric {
                     .ymd_opt(year, month, day)
                     .and_hms_nano_opt(hour, minute, second, nano);
                 match value.single() {
-                    Some(d) => p.set(Some(d)),
+                    Some(d) => p.set(Some(d.into())),
                     _ => {
                         log::error!("Unable to construct datetime")
                         // TODO: Record an error
@@ -98,7 +98,7 @@ impl DatetimeMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl Datetime for DatetimeMetric {
     /// Sets the metric to a date/time which including the timezone offset.
     ///
@@ -106,10 +106,10 @@ impl Datetime for DatetimeMetric {
     ///
     /// - `value` - The date and time and timezone value to set.
     ///             If None we use the current local time.
-    fn set(&self, value: Option<glean::Datetime>) {
+    pub fn set(&self, value: Option<glean::Datetime>) {
         match self {
             DatetimeMetric::Parent(p) => {
-                Datetime::set(&*p, value);
+                p.set(value);
             }
             DatetimeMetric::Child(_) => {
                 log::error!(
@@ -132,10 +132,11 @@ impl Datetime for DatetimeMetric {
     ///
     /// * `ping_name` - represents the optional name of the ping to retrieve the
     ///   metric for. Defaults to the first value in `send_in_pings`.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
     ) -> Option<glean::Datetime> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             DatetimeMetric::Parent(p) => p.test_get_value(ping_name),
             DatetimeMetric::Child(_) => {
@@ -157,11 +158,12 @@ impl Datetime for DatetimeMetric {
     /// # Returns
     ///
     /// The number of errors reported.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             DatetimeMetric::Parent(p) => p.test_get_num_recorded_errors(error, ping_name),
             DatetimeMetric::Child(_) => panic!("Cannot get the number of recorded errors for DatetimeMetric in non-parent process!"),
@@ -184,12 +186,12 @@ mod test {
         let a_datetime = FixedOffset::east(5 * 3600)
             .ymd(2020, 05, 07)
             .and_hms(11, 58, 00);
-        metric.set(Some(a_datetime));
+        metric.set(Some(a_datetime.into()));
 
-        assert_eq!(
-            DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00").unwrap(),
-            metric.test_get_value("store1").unwrap()
-        );
+        let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00")
+            .unwrap()
+            .into();
+        assert_eq!(expected, metric.test_get_value("store1").unwrap());
     }
 
     #[test]
@@ -200,10 +202,10 @@ mod test {
 
         metric.set_with_details(2020, 05, 07, 11, 58, 0, 0, 5 * 3600);
 
-        assert_eq!(
-            DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00").unwrap(),
-            metric.test_get_value("store1").unwrap()
-        );
+        let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-05-07T11:58:00+05:00")
+            .unwrap()
+            .into();
+        assert_eq!(expected, metric.test_get_value("store1").unwrap());
     }
 
     #[test]
@@ -217,7 +219,7 @@ mod test {
         let a_datetime = FixedOffset::east(5 * 3600)
             .ymd(2020, 10, 13)
             .and_hms(16, 41, 00);
-        parent_metric.set(Some(a_datetime));
+        parent_metric.set(Some(a_datetime.into()));
 
         {
             let child_metric = parent_metric.child_metric();
@@ -225,7 +227,7 @@ mod test {
             let _raii = ipc::test_set_need_ipc(true);
 
             let a_datetime = FixedOffset::east(0).ymd(2018, 4, 7).and_hms(12, 01, 00);
-            child_metric.set(Some(a_datetime));
+            child_metric.set(Some(a_datetime.into()));
 
             // (They also shouldn't do anything,
             // but that's not something we can inspect in this test)
@@ -233,9 +235,9 @@ mod test {
 
         assert!(ipc::replay_from_buf(&ipc::take_buf().unwrap()).is_ok());
 
-        assert_eq!(
-            DateTime::parse_from_rfc3339("2020-10-13T16:41:00+05:00").unwrap(),
-            parent_metric.test_get_value("store1").unwrap()
-        );
+        let expected: glean::Datetime = DateTime::parse_from_rfc3339("2020-10-13T16:41:00+05:00")
+            .unwrap()
+            .into();
+        assert_eq!(expected, parent_metric.test_get_value("store1").unwrap());
     }
 }

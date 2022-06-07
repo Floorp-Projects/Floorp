@@ -33,7 +33,9 @@ class CAPABILITY Monitor {
   void Unlock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
 
   void Wait() REQUIRES(this) { mCondVar.Wait(); }
-  CVStatus Wait(TimeDuration aDuration) REQUIRES(this) { return mCondVar.Wait(aDuration); }
+  CVStatus Wait(TimeDuration aDuration) REQUIRES(this) {
+    return mCondVar.Wait(aDuration);
+  }
 
   void Notify() { mCondVar.Notify(); }
   void NotifyAll() { mCondVar.NotifyAll(); }
@@ -254,7 +256,7 @@ class SCOPED_CAPABILITY MOZ_STACK_CLASS ReleasableMonitorAutoLock {
 
   // See BaseMonitorAutoLock::Wait
   void Wait() {
-    mMonitor->AssertCurrentThreadOwns(); // someone could have called Unlock()
+    mMonitor->AssertCurrentThreadOwns();  // someone could have called Unlock()
     mMonitor->Wait();
   }
   CVStatus Wait(TimeDuration aDuration) {

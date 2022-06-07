@@ -36,7 +36,7 @@ fn counter_serializer_should_correctly_serialize_counters() {
             ..Default::default()
         });
 
-        metric.add(&glean, 1);
+        metric.add_sync(&glean, 1);
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -75,7 +75,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
         ..Default::default()
     });
 
-    metric.add(&glean, 1);
+    metric.add_sync(&glean, 1);
 
     for store_name in store_names {
         let snapshot = StorageManager
@@ -106,19 +106,19 @@ fn counters_must_not_increment_when_passed_zero_or_negative() {
     });
 
     // Attempt to increment the counter with zero
-    metric.add(&glean, 0);
+    metric.add_sync(&glean, 0);
     // Check that nothing was recorded
-    assert!(metric.test_get_value(&glean, "store1").is_none());
+    assert!(metric.get_value(&glean, Some("store1")).is_none());
 
     // Attempt to increment the counter with negative
-    metric.add(&glean, -1);
+    metric.add_sync(&glean, -1);
     // Check that nothing was recorded
-    assert!(metric.test_get_value(&glean, "store1").is_none());
+    assert!(metric.get_value(&glean, Some("store1")).is_none());
 
     // Attempt increment counter properly
-    metric.add(&glean, 1);
+    metric.add_sync(&glean, 1);
     // Check that nothing was recorded
-    assert_eq!(1, metric.test_get_value(&glean, "store1").unwrap());
+    assert_eq!(1, metric.get_value(&glean, Some("store1")).unwrap());
 
     // Make sure that the errors have been recorded
     assert_eq!(
@@ -140,20 +140,20 @@ fn transformation_works() {
         ..Default::default()
     });
 
-    counter.add(&glean, 2);
+    counter.add_sync(&glean, 2);
 
-    assert_eq!(2, counter.test_get_value(&glean, "store1").unwrap());
-    assert_eq!(2, counter.test_get_value(&glean, "store2").unwrap());
+    assert_eq!(2, counter.get_value(&glean, Some("store1")).unwrap());
+    assert_eq!(2, counter.get_value(&glean, Some("store2")).unwrap());
 
     // Clearing just one store
     let _ = StorageManager
         .snapshot_as_json(glean.storage(), "store1", true)
         .unwrap();
 
-    counter.add(&glean, 2);
+    counter.add_sync(&glean, 2);
 
-    assert_eq!(2, counter.test_get_value(&glean, "store1").unwrap());
-    assert_eq!(4, counter.test_get_value(&glean, "store2").unwrap());
+    assert_eq!(2, counter.get_value(&glean, Some("store1")).unwrap());
+    assert_eq!(4, counter.get_value(&glean, Some("store2")).unwrap());
 }
 
 #[test]
@@ -167,11 +167,11 @@ fn saturates_at_boundary() {
         ..Default::default()
     });
 
-    counter.add(&glean, 2);
-    counter.add(&glean, i32::max_value());
+    counter.add_sync(&glean, 2);
+    counter.add_sync(&glean, i32::max_value());
 
     assert_eq!(
         i32::max_value(),
-        counter.test_get_value(&glean, "store1").unwrap()
+        counter.get_value(&glean, Some("store1")).unwrap()
     );
 }

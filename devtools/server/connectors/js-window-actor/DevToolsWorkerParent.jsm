@@ -199,18 +199,17 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   }
 
   _onConnectionClosed(status, prefix) {
-    if (this._connections.has(prefix)) {
-      const { watcher } = this._connections.get(prefix);
-      this._cleanupConnection(watcher.conn);
-    }
+    this._unregisterWatcher(prefix);
   }
 
-  async _cleanupConnection(connection) {
-    if (!this._connections || !this._connections.has(connection.prefix)) {
+  async _unregisterWatcher(connectionPrefix) {
+    const connectionInfo = this._connections.get(connectionPrefix);
+    if (!connectionInfo) {
       return;
     }
 
-    const { transport } = this._connections.get(connection.prefix);
+    const { watcher, transport } = connectionInfo;
+    const connection = watcher.conn;
 
     connection.off("closed", this._onConnectionClosed);
     if (transport) {
@@ -220,7 +219,8 @@ class DevToolsWorkerParent extends JSWindowActorParent {
       transport.close();
     }
 
-    this._connections.delete(connection.prefix);
+    this._connections.delete(connectionPrefix);
+
     if (!this._connections.size) {
       this._destroy();
     }
@@ -237,7 +237,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
         watcher.notifyTargetDestroyed(actor);
       }
 
-      this._cleanupConnection(watcher.conn);
+      this._unregisterWatcher(watcher.conn.prefix);
     }
   }
 

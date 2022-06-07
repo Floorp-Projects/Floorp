@@ -49,7 +49,7 @@ impl StringListMetric {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl StringList for StringListMetric {
     /// Add a new string to the list.
     ///
@@ -61,10 +61,10 @@ impl StringList for StringListMetric {
     ///
     /// Truncates the value if it is longer than `MAX_STRING_LENGTH` bytes and logs an error.
     /// See [String list metric limits](https://mozilla.github.io/glean/book/user/metrics/string_list.html#limits).
-    fn add<S: Into<String>>(&self, value: S) {
+    pub fn add<S: Into<String>>(&self, value: S) {
         match self {
             StringListMetric::Parent { inner, .. } => {
-                StringList::add(&*inner, value);
+                inner.add(value.into());
             }
             StringListMetric::Child(c) => {
                 with_ipc_payload(move |payload| {
@@ -90,10 +90,10 @@ impl StringList for StringListMetric {
     /// If passed an empty list, records an error and returns.
     /// Truncates the list if it is longer than `MAX_LIST_LENGTH` and logs an error.
     /// Truncates any value in the list if it is longer than `MAX_STRING_LENGTH` and logs an error.
-    fn set(&self, value: Vec<String>) {
+    pub fn set(&self, value: Vec<String>) {
         match self {
             StringListMetric::Parent { inner, .. } => {
-                StringList::set(&*inner, value);
+                inner.set(value);
             }
             StringListMetric::Child(c) => {
                 log::error!(
@@ -117,7 +117,11 @@ impl StringList for StringListMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<Vec<String>> {
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        ping_name: S,
+    ) -> Option<Vec<String>> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             StringListMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
             StringListMetric::Child(c) => {
@@ -139,11 +143,12 @@ impl StringList for StringListMetric {
     /// # Returns
     ///
     /// The number of errors recorded.
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,
     ) -> i32 {
+        let ping_name = ping_name.into().map(|s| s.to_string());
         match self {
             StringListMetric::Parent { inner, .. } => {
                 inner.test_get_num_recorded_errors(error, ping_name)

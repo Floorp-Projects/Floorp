@@ -28,8 +28,8 @@ class SystemPrincipal;
 }  // namespace mozilla
 
 namespace JS {
-  enum class RuntimeCode;
-} // namespace JS
+enum class RuntimeCode;
+}  // namespace JS
 
 /////////////////////////////
 // nsScriptSecurityManager //

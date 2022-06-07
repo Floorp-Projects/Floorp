@@ -146,7 +146,8 @@ class MOZ_RAII BaseAutoTryWriteLock {
 template <typename T>
 class SCOPED_CAPABILITY MOZ_RAII BaseAutoWriteLock final {
  public:
-  explicit BaseAutoWriteLock(T& aLock) CAPABILITY_ACQUIRE(aLock) : mLock(&aLock) {
+  explicit BaseAutoWriteLock(T& aLock) CAPABILITY_ACQUIRE(aLock)
+      : mLock(&aLock) {
     MOZ_ASSERT(mLock, "null lock");
     mLock->WriteLock();
   }

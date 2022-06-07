@@ -29,8 +29,8 @@ class RLBoxWOFF2SandboxPool : public mozilla::RLBoxSandboxPool {
   static void Initalize(size_t aDelaySeconds = 10);
 
  protected:
-  mozilla::UniquePtr<mozilla::RLBoxSandboxDataBase> CreateSandboxData(uint64_t aSize)
-      override;
+  mozilla::UniquePtr<mozilla::RLBoxSandboxDataBase> CreateSandboxData(
+      uint64_t aSize) override;
   ~RLBoxWOFF2SandboxPool() = default;
 };
 

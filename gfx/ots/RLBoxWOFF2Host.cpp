@@ -10,7 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RLBoxUtils.h"
 #include "mozilla/ScopeExit.h"
-#include "opentype-sanitiser.h" // For ots_ntohl
+#include "opentype-sanitiser.h"  // For ots_ntohl
 
 using namespace rlbox;
 using namespace mozilla;
@@ -49,7 +49,8 @@ tainted_woff2<BrotliDecoderResult> RLBoxBrotliDecoderDecompressCallback(
   return res;
 }
 
-UniquePtr<RLBoxSandboxDataBase> RLBoxWOFF2SandboxPool::CreateSandboxData(uint64_t aSize) {
+UniquePtr<RLBoxSandboxDataBase> RLBoxWOFF2SandboxPool::CreateSandboxData(
+    uint64_t aSize) {
   // Create woff2 sandbox
   auto sandbox = MakeUnique<rlbox_sandbox_woff2>();
 
@@ -80,10 +81,9 @@ void RLBoxWOFF2SandboxPool::Initalize(size_t aDelaySeconds) {
   ClearOnShutdown(&RLBoxWOFF2SandboxPool::sSingleton);
 }
 
-RLBoxWOFF2SandboxData::RLBoxWOFF2SandboxData(uint64_t aSize,
-    mozilla::UniquePtr<rlbox_sandbox_woff2> aSandbox)
-    : mozilla::RLBoxSandboxDataBase(aSize),
-      mSandbox(std::move(aSandbox)) {
+RLBoxWOFF2SandboxData::RLBoxWOFF2SandboxData(
+    uint64_t aSize, mozilla::UniquePtr<rlbox_sandbox_woff2> aSandbox)
+    : mozilla::RLBoxSandboxDataBase(aSize), mSandbox(std::move(aSandbox)) {
   MOZ_COUNT_CTOR(RLBoxWOFF2SandboxData);
 }
 
@@ -125,13 +125,12 @@ static uint32_t ComputeWOFF2FinalSize(const uint8_t* aData, size_t aLength) {
   std::memcpy(&decompressedSize, location, sizeof(decompressedSize));
   decompressedSize = ots_ntohl(decompressedSize);
 
-  if(!Woff2SizeValidator(aLength, decompressedSize)) {
+  if (!Woff2SizeValidator(aLength, decompressedSize)) {
     return 0;
   }
 
   return decompressedSize;
 }
-
 
 template <typename T>
 using TransferBufferToWOFF2 =
@@ -159,8 +158,10 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
   // To account for misc allocations, we'll set the sandbox size to:
   // twice the size of (input + output)
 
-  const uint64_t expectedSandboxSize = static_cast<uint64_t>(2 * (aLength + expectedSize));
-  auto sandboxPoolData = RLBoxWOFF2SandboxPool::sSingleton->PopOrCreate(expectedSandboxSize);
+  const uint64_t expectedSandboxSize =
+      static_cast<uint64_t>(2 * (aLength + expectedSize));
+  auto sandboxPoolData =
+      RLBoxWOFF2SandboxPool::sSingleton->PopOrCreate(expectedSandboxSize);
   NS_ENSURE_TRUE(sandboxPoolData, false);
 
   const auto* sandboxData =
@@ -202,17 +203,19 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
   // the computed size (with ComputeWOFF2FinalSize) is wrong, so we can't
   // trust the expectedSize to be the same as size sizep.
   bool validateOK = false;
-  unsigned long actualSize = (*sizep.get()).copy_and_verify([&](unsigned long val){
-    validateOK = Woff2SizeValidator(aLength, val);
-    return val;
-  });
+  unsigned long actualSize =
+      (*sizep.get()).copy_and_verify([&](unsigned long val) {
+        validateOK = Woff2SizeValidator(aLength, val);
+        return val;
+      });
 
   NS_ENSURE_TRUE(validateOK, false);
 
   const uint8_t* decompressed = reinterpret_cast<const uint8_t*>(
       (*bufp.get())
           .unverified_safe_pointer_because(
-              actualSize, "Only care that the buffer is within sandbox boundary."));
+              actualSize,
+              "Only care that the buffer is within sandbox boundary."));
 
   // Since ProcessTT* memcpy from the buffer, make sure it's not null.
   NS_ENSURE_TRUE(decompressed, false);

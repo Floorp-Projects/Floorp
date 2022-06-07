@@ -168,13 +168,16 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
       GetMainThreadSerialEventTarget(), __func__,
       [self, p, aSandbox](bool) {
         if (self->IsShutdown()) {
-          NS_WARNING("Reject LaunchProcess() after LaunchPromise() for Shutdown");
+          NS_WARNING(
+              "Reject LaunchProcess() after LaunchPromise() for Shutdown");
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
 
         if (self->IsProcessDestroyed(aSandbox)) {
-          NS_WARNING("Reject LaunchProcess() after LaunchPromise() for destroyed process");
+          NS_WARNING(
+              "Reject LaunchProcess() after LaunchPromise() for destroyed "
+              "process");
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
@@ -303,7 +306,8 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
               MOZ_ASSERT_UNREACHABLE(
                   "PUtilityAudioDecoder: failure when starting actor");
             }
-            NS_WARNING("Reject StartAudioDecoding() for StartUtility() rejection");
+            NS_WARNING(
+                "Reject StartAudioDecoding() for StartUtility() rejection");
             return AudioDecodingPromise::CreateAndReject(aError, __func__);
           });
 }

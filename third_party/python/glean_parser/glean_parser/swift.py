@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+from . import __version__
 from . import metrics
 from . import pings
 from . import tags
@@ -31,6 +32,8 @@ def swift_datatypes_filter(value: util.JSONType) -> str:
       - dicts to use `[key: value]`
       - sets to use `[...]`
       - enums to use the like-named Swift enum
+      - Rate objects to a CommonMetricData initializer
+        (for external Denominators' Numerators lists)
     """
 
     class SwiftEncoder(json.JSONEncoder):
@@ -48,6 +51,15 @@ def swift_datatypes_filter(value: util.JSONType) -> str:
                 yield "]"
             elif isinstance(value, enum.Enum):
                 yield ("." + util.camelize(value.name))
+            elif isinstance(value, list):
+                yield "["
+                first = True
+                for subvalue in value:
+                    if not first:
+                        yield ", "
+                    yield from self.iterencode(subvalue)
+                    first = False
+                yield "]"
             elif isinstance(value, set):
                 yield "["
                 first = True
@@ -59,6 +71,17 @@ def swift_datatypes_filter(value: util.JSONType) -> str:
                 yield "]"
             elif value is None:
                 yield "nil"
+            elif isinstance(value, metrics.Rate):
+                yield "CommonMetricData("
+                first = True
+                for arg_name in util.common_metric_args:
+                    if hasattr(value, arg_name):
+                        if not first:
+                            yield ", "
+                        yield f"{util.camelize(arg_name)}: "
+                        yield from self.iterencode(getattr(value, arg_name))
+                        first = False
+                yield ")"
             else:
                 yield from super().iterencode(value)
 
@@ -235,8 +258,10 @@ def output_swift(
     with filepath.open("w", encoding="utf-8") as fd:
         fd.write(
             template.render(
+                parser_version=__version__,
                 categories=categories,
-                extra_args=util.metric_args,
+                common_metric_args=util.common_metric_args,
+                extra_metric_args=util.extra_metric_args,
                 namespace=namespace,
                 glean_namespace=glean_namespace,
                 allow_reserved=options.get("allow_reserved", False),

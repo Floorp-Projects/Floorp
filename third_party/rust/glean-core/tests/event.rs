@@ -29,10 +29,10 @@ fn record_properly_records_without_optional_arguments() {
         vec![],
     );
 
-    metric.record(&glean, 1000, None);
+    metric.record_sync(&glean, 1000, HashMap::new());
 
     for store_name in store_names {
-        let events = metric.test_get_value(&glean, &store_name).unwrap();
+        let events = metric.get_value(&glean, &*store_name).unwrap();
         assert_eq!(1, events.len());
         assert_eq!("telemetry", events[0].category);
         assert_eq!("test_event_no_optional", events[0].name);
@@ -58,15 +58,18 @@ fn record_properly_records_with_optional_arguments() {
         vec!["key1".into(), "key2".into()],
     );
 
-    let extra: HashMap<i32, String> = [(0, "value1".into()), (1, "value2".into())]
-        .iter()
-        .cloned()
-        .collect();
+    let extra = [
+        ("key1".into(), "value1".into()),
+        ("key2".into(), "value2".into()),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
-    metric.record(&glean, 1000, extra);
+    metric.record_sync(&glean, 1000, extra);
 
     for store_name in store_names {
-        let events = metric.test_get_value(&glean, &store_name).unwrap();
+        let events = metric.get_value(&glean, &*store_name).unwrap();
         let event = events[0].clone();
         assert_eq!(1, events.len());
         assert_eq!("telemetry", event.category);
@@ -109,7 +112,7 @@ fn snapshot_correctly_clears_the_stores() {
         vec![],
     );
 
-    metric.record(&glean, 1000, None);
+    metric.record_sync(&glean, 1000, HashMap::new());
 
     let snapshot = glean.event_storage().snapshot_as_json("store1", true);
     assert!(snapshot.is_some());
@@ -152,7 +155,12 @@ fn test_sending_of_event_ping_when_it_fills_up() {
     let store_names: Vec<String> = vec!["events".into()];
 
     for store_name in &store_names {
-        glean.register_ping_type(&PingType::new(store_name.clone(), true, false, vec![]));
+        glean.register_ping_type(&PingType::new(
+            store_name.clone(),
+            true,
+            false,
+            vec!["max_capacity".to_string()],
+        ));
     }
 
     let click = EventMetric::new(
@@ -170,12 +178,12 @@ fn test_sending_of_event_ping_when_it_fills_up() {
     // We send 510 events. We expect to get the first 500 in the ping and 10
     // remaining afterward
     for i in 0..510 {
-        let mut extra: HashMap<i32, String> = HashMap::new();
-        extra.insert(0, i.to_string());
-        click.record(&glean, i, extra);
+        let mut extra = HashMap::new();
+        extra.insert("test_event_number".to_string(), i.to_string());
+        click.record_sync(&glean, i, extra);
     }
 
-    assert_eq!(10, click.test_get_value(&glean, "events").unwrap().len());
+    assert_eq!(10, click.get_value(&glean, "events").unwrap().len());
 
     let (url, json, _) = &get_queued_pings(glean.get_data_path()).unwrap()[0];
     assert!(url.starts_with(format!("/submit/{}/events/", glean.get_application_id()).as_str()));
@@ -222,11 +230,11 @@ fn extra_keys_must_be_recorded_and_truncated_if_needed() {
     );
 
     let test_value = "LeanGleanByFrank";
-    let mut extra: HashMap<i32, String> = HashMap::new();
-    extra.insert(0, test_value.to_string());
-    extra.insert(1, test_value.to_string().repeat(10));
+    let mut extra = HashMap::new();
+    extra.insert("extra1".into(), test_value.to_string());
+    extra.insert("truncatedExtra".into(), test_value.to_string().repeat(10));
 
-    test_event.record(&glean, 0, extra);
+    test_event.record_sync(&glean, 0, extra);
 
     let snapshot = glean
         .event_storage()
@@ -260,9 +268,9 @@ fn snapshot_sorts_the_timestamps() {
         vec![],
     );
 
-    metric.record(&glean, 1000, None);
-    metric.record(&glean, 100, None);
-    metric.record(&glean, 10000, None);
+    metric.record_sync(&glean, 1000, HashMap::new());
+    metric.record_sync(&glean, 100, HashMap::new());
+    metric.record_sync(&glean, 10000, HashMap::new());
 
     let snapshot = glean
         .event_storage()

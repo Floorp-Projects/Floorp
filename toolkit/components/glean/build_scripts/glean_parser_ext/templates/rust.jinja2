@@ -33,10 +33,10 @@ pub struct {{ obj.name|Camelize }}{{ suffix }} {
 impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
     const ALLOWED_KEYS: &'static [&'static str] = {{ obj.allowed_extra_keys|extra_keys }};
 
-    fn into_ffi_extra(self) -> ::std::collections::HashMap<i32, String> {
+    fn into_ffi_extra(self) -> ::std::collections::HashMap<String, String> {
       let mut map = ::std::collections::HashMap::new();
       {% for key, _ in obj|attr(name) %}
-      self.{{key|snake_case}}.and_then(|val| map.insert({{loop.index-1}}, val.to_string()));
+      self.{{key|snake_case}}.and_then(|val| map.insert("{{key|snake_case}}".into(), val.to_string()));
       {% endfor %}
       map
     }
@@ -88,7 +88,7 @@ pub mod {{ category_name|snake_case }} {
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
 
-    use super::{id_for_extra_key, extra_keys_len};
+    use crate::metrics::extra_keys_len;
     use crate::private::*;
     use once_cell::sync::Lazy;
 
@@ -115,7 +115,7 @@ pub(crate) mod __glean_metric_maps {
     /// Returns `Ok(())` if the event was found and `record` was called with the given `extra`,
     /// or an `EventRecordingError::InvalidId` if no event by that ID exists
     /// or an `EventRecordingError::InvalidExtraKey` if the `extra` map could not be deserialized.
-    pub(crate) fn record_event_by_id(metric_id: u32, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+    pub(crate) fn record_event_by_id(metric_id: u32, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
         match metric_id {
 {% for metric_id, event in events_by_id.items() %}
           {{metric_id}} => {
@@ -146,7 +146,7 @@ pub(crate) mod __glean_metric_maps {
     /// or an `EventRecordingError::InvalidId` if no event by that ID exists
     /// or an `EventRecordingError::InvalidExtraKey` if the event doesn't take extra pairs,
     /// but some are passed in.
-    pub(crate) fn record_event_by_id_with_time(metric_id: MetricId, timestamp: u64, extra: HashMap<i32, String>) -> Result<(), EventRecordingError> {
+    pub(crate) fn record_event_by_id_with_time(metric_id: MetricId, timestamp: u64, extra: HashMap<String, String>) -> Result<(), EventRecordingError> {
         match metric_id {
 {% for metric_id, event in events_by_id.items() %}
           MetricId({{metric_id}}) => {
@@ -183,10 +183,6 @@ pub(crate) mod __glean_metric_maps {
                   "No extra keys allowed, but some were passed"
               );
 
-              let extra = extra
-                  .into_iter()
-                  .map(|(k, v)| id_for_extra_key(&*k, &super::{{event}}).map(|k| (k, v)))
-                  .collect::<Result<HashMap<_, _>, _>>()?;
               super::{{event}}.record_raw(extra);
               Ok(())
           }

@@ -104,7 +104,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCOMPtr<nsITransportProvider> mServerTransportProvider;
 
   // Used to ensure atomicity of mTargetThread.
-  // Set before AsyncOpen via RetargetDeliveryTo or in AsyncOpen, never changed after AsyncOpen
+  // Set before AsyncOpen via RetargetDeliveryTo or in AsyncOpen, never changed
+  // after AsyncOpen
   DataMutex<nsCOMPtr<nsIEventTarget>> mTargetThread{
       "BaseWebSocketChannel::EventTargetMutex"};
 

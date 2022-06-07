@@ -36,7 +36,7 @@ fn quantity_serializer_should_correctly_serialize_quantities() {
             ..Default::default()
         });
 
-        metric.set(&glean, 1);
+        metric.set_sync(&glean, 1);
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -75,7 +75,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
         ..Default::default()
     });
 
-    metric.set(&glean, 1);
+    metric.set_sync(&glean, 1);
 
     for store_name in store_names {
         let snapshot = StorageManager
@@ -106,9 +106,9 @@ fn quantities_must_not_set_when_passed_negative() {
     });
 
     // Attempt to set the quantity with negative
-    metric.set(&glean, -1);
+    metric.set_sync(&glean, -1);
     // Check that nothing was recorded
-    assert!(metric.test_get_value(&glean, "store1").is_none());
+    assert!(metric.get_value(&glean, "store1").is_none());
 
     // Make sure that the errors have been recorded
     assert_eq!(

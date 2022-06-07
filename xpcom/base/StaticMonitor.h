@@ -88,7 +88,8 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS CAPABILITY StaticMonitor {
 
 class MOZ_STACK_CLASS SCOPED_CAPABILITY StaticMonitorAutoLock {
  public:
-  explicit StaticMonitorAutoLock(StaticMonitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
+  explicit StaticMonitorAutoLock(StaticMonitor& aMonitor)
+      CAPABILITY_ACQUIRE(aMonitor)
       : mMonitor(&aMonitor) {
     mMonitor->Lock();
   }

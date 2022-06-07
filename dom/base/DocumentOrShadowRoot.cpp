@@ -470,8 +470,7 @@ Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
 void DocumentOrShadowRoot::ElementsFromPoint(
     float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      ViewportType::Layout, PerformRetargeting::Yes,
-                      aElements);
+                      ViewportType::Layout, PerformRetargeting::Yes, aElements);
 }
 
 void DocumentOrShadowRoot::NodesFromPoint(float aX, float aY,

@@ -28,7 +28,7 @@ pub trait ParseError<I>: Sized {
   }
 
   /// Combines two existing errors. This function is used to compare errors
-  /// generated in various branches of [alt]
+  /// generated in various branches of `alt`.
   fn or(self, other: Self) -> Self {
     other
   }
@@ -45,7 +45,7 @@ pub trait ContextError<I>: Sized {
   }
 }
 
-/// This trait is required by the [map_res] combinator to integrate
+/// This trait is required by the `map_res` combinator to integrate
 /// error types from external functions, like [std::str::FromStr]
 pub trait FromExternalError<I, E> {
   /// Creates a new error from an input position, an [ErrorKind] indicating the
@@ -411,12 +411,12 @@ pub enum ErrorKind {
   Verify,
   TakeTill1,
   TakeWhileMN,
-  ParseTo,
   TooLarge,
   Many0Count,
   Many1Count,
   Float,
   Satisfy,
+  Fail,
 }
 
 #[rustfmt::skip]
@@ -471,12 +471,12 @@ pub fn error_to_u32(e: &ErrorKind) -> u32 {
     ErrorKind::Verify                    => 66,
     ErrorKind::TakeTill1                 => 67,
     ErrorKind::TakeWhileMN               => 69,
-    ErrorKind::ParseTo                   => 70,
-    ErrorKind::TooLarge                  => 71,
-    ErrorKind::Many0Count                => 72,
-    ErrorKind::Many1Count                => 73,
-    ErrorKind::Float                     => 74,
-    ErrorKind::Satisfy                   => 75,
+    ErrorKind::TooLarge                  => 70,
+    ErrorKind::Many0Count                => 71,
+    ErrorKind::Many1Count                => 72,
+    ErrorKind::Float                     => 73,
+    ErrorKind::Satisfy                   => 74,
+    ErrorKind::Fail                      => 75,
   }
 }
 
@@ -533,12 +533,12 @@ impl ErrorKind {
       ErrorKind::Verify                    => "predicate verification",
       ErrorKind::TakeTill1                 => "TakeTill1",
       ErrorKind::TakeWhileMN               => "TakeWhileMN",
-      ErrorKind::ParseTo                   => "Parse string to the specified type",
       ErrorKind::TooLarge                  => "Needed data size is too large",
       ErrorKind::Many0Count                => "Count occurrence of >=0 patterns",
       ErrorKind::Many1Count                => "Count occurrence of >=1 patterns",
       ErrorKind::Float                     => "Float",
       ErrorKind::Satisfy                   => "Satisfy",
+      ErrorKind::Fail                      => "Fail",
     }
   }
 }
@@ -564,103 +564,45 @@ macro_rules! error_node_position(
   });
 );
 
-//FIXME: error rewrite
-/// translate parser result from IResult<I,O,u32> to IResult<I,O,E> with a custom type
+/// Prints a message and the input if the parser fails.
 ///
-/// ```
-/// # //FIXME
-/// # #[macro_use] extern crate nom;
-/// # use nom::IResult;
-/// # use std::convert::From;
-/// # use nom::Err;
-/// # use nom::error::ErrorKind;
-/// # fn main() {
-/// #    /*
-/// #    // will add a Custom(42) error to the error chain
-/// #    named!(err_test, add_return_error!(ErrorKind::Custom(42u32), tag!("abcd")));
-/// #
-/// #    #[derive(Debug,Clone,PartialEq)]
-/// #    pub struct ErrorStr(String);
-/// #
-/// #    // Convert to IResult<&[u8], &[u8], ErrorStr>
-/// #    impl From<u32> for ErrorStr {
-/// #      fn from(i: u32) -> Self {
-/// #        ErrorStr(format!("custom error code: {}", i))
-/// #      }
-/// #    }
-/// #
-/// #    named!(parser<&[u8], &[u8], ErrorStr>,
-/// #        fix_error!(ErrorStr, err_test)
-/// #      );
-/// #
-/// #    let a = &b"efghblah"[..];
-/// #    assert_eq!(parser(a), Err(Err::Error(Context::Code(a, ErrorKind::Custom(ErrorStr("custom error code: 42".to_string()))))));
-/// # */
-/// # }
-/// ```
-#[macro_export(local_inner_macros)]
-macro_rules! fix_error (
-  ($i:expr, $t:ty, $submac:ident!( $($args:tt)* )) => (
-    {
-      use $crate::lib::std::result::Result::*;
-      use $crate::Err;
-
-      match $submac!($i, $($args)*) {
-        Ok((i,o)) => Ok((i,o)),
-        Err(e) => {
-          let e2 = match e {
-            Err::Error(err) => {
-              Err::Error(err.into())
-            },
-            Err::Failure(err) => {
-              Err::Failure(err.into())
-            },
-            Err::Incomplete(e) => Err::Incomplete(e),
-          };
-          Err(e2)
-        }
-      }
-    }
-  );
-  ($i:expr, $t:ty, $f:expr) => (
-    fix_error!($i, $t, call!($f));
-  );
-);
-
-/// `flat_map!(R -> IResult<R,S>, S -> IResult<S,T>) => R -> IResult<R, T>`
+/// The message prints the `Error` or `Incomplete`
+/// and the parser's calling code.
 ///
-/// Combines a parser `R -> IResult<R,S>` and
-/// a parser `S -> IResult<S,T>` to return another
-/// parser `R -> IResult<R,T>`
+/// It also displays the input in hexdump format
 ///
 /// ```rust
-/// # #[macro_use] extern crate nom;
-/// # use nom::{Err, error::{Error, ErrorKind}};
-/// use nom::number::complete::recognize_float;
+/// use nom::{IResult, error::dbg_dmp, bytes::complete::tag};
 ///
-/// named!(parser<&str, f64>, flat_map!(recognize_float, parse_to!(f64)));
+/// fn f(i: &[u8]) -> IResult<&[u8], &[u8]> {
+///   dbg_dmp(tag("abcd"), "tag")(i)
+/// }
 ///
-/// assert_eq!(parser("123.45;"), Ok((";", 123.45)));
-/// assert_eq!(parser("abc"), Err(Err::Error(Error::new("abc", ErrorKind::Char))));
+///   let a = &b"efghijkl"[..];
+///
+/// // Will print the following message:
+/// // Error(Position(0, [101, 102, 103, 104, 105, 106, 107, 108])) at l.5 by ' tag ! ( "abcd" ) '
+/// // 00000000        65 66 67 68 69 6a 6b 6c         efghijkl
+/// f(a);
 /// ```
-#[macro_export(local_inner_macros)]
-macro_rules! flat_map(
-  ($i:expr, $submac:ident!( $($args:tt)* ), $submac2:ident!( $($args2:tt)* )) => (
-    flat_map!(__impl $i, $submac!($($args)*), $submac2!($($args2)*));
-  );
-  ($i:expr, $submac:ident!( $($args:tt)* ), $g:expr) => (
-    flat_map!(__impl $i, $submac!($($args)*), call!($g));
-  );
-  ($i:expr, $f:expr, $submac:ident!( $($args:tt)* )) => (
-    flat_map!(__impl $i, call!($f), $submac!($($args)*));
-  );
-  ($i:expr, $f:expr, $g:expr) => (
-    flat_map!(__impl $i, call!($f), call!($g));
-  );
-  (__impl $i:expr, $submac:ident!( $($args:tt)* ), $submac2:ident!( $($args2:tt)* )) => (
-    $crate::combinator::map_parserc($i, move |i| {$submac!(i, $($args)*)}, move |i| {$submac2!(i, $($args2)*)})
-  );
-);
+#[cfg(feature = "std")]
+#[cfg_attr(feature = "docsrs", doc(cfg(feature = "std")))]
+pub fn dbg_dmp<'a, F, O, E: std::fmt::Debug>(
+  f: F,
+  context: &'static str,
+) -> impl Fn(&'a [u8]) -> IResult<&'a [u8], O, E>
+where
+  F: Fn(&'a [u8]) -> IResult<&'a [u8], O, E>,
+{
+  use crate::HexDisplay;
+  move |i: &'a [u8]| match f(i) {
+    Err(e) => {
+      println!("{}: Error({:?}) at:\n{}", context, e, i.to_hex(8));
+      Err(e)
+    }
+    a => a,
+  }
+}
 
 #[cfg(test)]
 #[cfg(feature = "alloc")]

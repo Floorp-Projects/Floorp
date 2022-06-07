@@ -14,13 +14,13 @@ pub struct Telemetry;
 impl Telemetry {
     pub fn record_rasterize_blobs_time(_duration: Duration) { }
     // Start rasterize glyph time collection
-    pub fn start_rasterize_glyphs_time() -> TimerId { return 0; }
+    pub fn start_rasterize_glyphs_time() -> TimerId { return TimerId { id: 0 }; }
     // End rasterize glyph time collection
     pub fn stop_and_accumulate_rasterize_glyphs_time(_id: TimerId) { }
-    pub fn start_framebuild_time() -> TimerId { 0 }
+    pub fn start_framebuild_time() -> TimerId { TimerId { id: 0 } }
     pub fn stop_and_accumulate_framebuild_time(_id: TimerId) { }
     pub fn record_scenebuild_time(_duration: Duration) { }
-    pub fn start_sceneswap_time() -> TimerId { 0 }
+    pub fn start_sceneswap_time() -> TimerId { TimerId { id: 0 } }
     pub fn stop_and_accumulate_sceneswap_time(_id: TimerId) { }
     pub fn cancel_sceneswap_time(_id: TimerId) { }
 }

@@ -292,12 +292,16 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
 }
 
 DrawTargetSkia::DrawTargetSkia()
-    : mCanvas(nullptr), mSnapshot(nullptr), mSnapshotLock {
-  "DrawTargetSkia::mSnapshotLock"
-}
+    : mCanvas(nullptr),
+      mSnapshot(nullptr),
+      mSnapshotLock{"DrawTargetSkia::mSnapshotLock"}
 #ifdef MOZ_WIDGET_COCOA
-, mCG(nullptr), mColorSpace(nullptr), mCanvasData(nullptr), mCGSize(0, 0),
-    mNeedLayer(false)
+      ,
+      mCG(nullptr),
+      mColorSpace(nullptr),
+      mCanvasData(nullptr),
+      mCGSize(0, 0),
+      mNeedLayer(false)
 #endif
 {
 }

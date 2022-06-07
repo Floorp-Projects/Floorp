@@ -32,7 +32,7 @@ static bool GetGnomeSearchTitle(const char* aSearchedTerm,
   CopyUTF8toUTF16(nsCString(aSearchedTerm), *formatStrings.AppendElement());
 
   nsAutoString gnomeSearchTitle;
-  bundle->FormatStringFromName("gnomeSearchProviderSearch", formatStrings,
+  bundle->FormatStringFromName("gnomeSearchProviderSearchWeb", formatStrings,
                                gnomeSearchTitle);
   AppendUTF16toUTF8(gnomeSearchTitle, aGnomeSearchTitle);
   return true;
@@ -99,6 +99,15 @@ int DBusGetIndexFromIDKey(const char* aIDKey) {
   return atoi(tmp);
 }
 
+static void ConcatArray(nsACString& aOutputStr, const char** aStringArray) {
+  for (const char** term = aStringArray; *term; term++) {
+    aOutputStr.Append(*term);
+    if (*(term + 1)) {
+      aOutputStr.Append(" ");
+    }
+  }
+}
+
 DBusHandlerResult DBusHandleInitialResultSet(
     RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg) {
   DBusMessage* reply;
@@ -113,7 +122,9 @@ DBusHandlerResult DBusHandleInitialResultSet(
     dbus_message_unref(reply);
   } else {
     aSearchResult->SetReply(dbus_message_new_method_return(aMsg));
-    aSearchResult->SetSearchTerm(stringArray[0]);
+    nsAutoCString searchTerm;
+    ConcatArray(searchTerm, const_cast<const char**>(stringArray));
+    aSearchResult->SetSearchTerm(searchTerm.get());
     GetGNOMEShellHistoryService()->QueryHistory(aSearchResult);
     // DBus reply will be send asynchronously by
     // nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply()
@@ -144,7 +155,9 @@ DBusHandlerResult DBusHandleSubsearchResultSet(
     dbus_message_unref(reply);
   } else {
     aSearchResult->SetReply(dbus_message_new_method_return(aMsg));
-    aSearchResult->SetSearchTerm(stringArray[0]);
+    nsAutoCString searchTerm;
+    ConcatArray(searchTerm, const_cast<const char**>(stringArray));
+    aSearchResult->SetSearchTerm(searchTerm.get());
     GetGNOMEShellHistoryService()->QueryHistory(aSearchResult);
     // DBus reply will be send asynchronously by
     // nsGNOMEShellHistorySearchResult::SendDBusSearchResultReply()

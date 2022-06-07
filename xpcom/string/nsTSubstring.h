@@ -676,7 +676,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   void CompressWhitespace(bool aEliminateLeading = true,
                           bool aEliminateTrailing = true);
 
-
   void Append(char_type aChar);
 
   [[nodiscard]] bool Append(char_type aChar, const fallible_t& aFallible);

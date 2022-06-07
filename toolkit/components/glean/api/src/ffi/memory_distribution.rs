@@ -31,10 +31,10 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
         metric,
         test_get!(metric, ping_name)
     );
-    *sum = val.sum;
+    *sum = val.sum as _;
     for (&bucket, &count) in val.values.iter() {
-        buckets.push(bucket);
-        counts.push(count);
+        buckets.push(bucket as _);
+        counts.push(count as _);
     }
 }
 

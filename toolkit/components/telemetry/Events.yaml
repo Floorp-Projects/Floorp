@@ -2903,22 +2903,6 @@ page_load:
       load_type: One of normal,reload,stop,link,history,error or other.
 
 webrtc.ui:
-  show_indicator:
-    objects: ["show_indicator"]
-    description: >
-      Recorded when the user shares a microphone, camera or display, which causes
-      a WebRTC sharing indicator to appear.
-    notification_emails:
-      - mconley@mozilla.com
-      - vchin@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1656274
-    expiry_version: "87"
-    release_channel_collection: opt-out
   share_display:
     objects:
       - screen

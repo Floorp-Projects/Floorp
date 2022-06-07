@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::error_recording::{record_error, ErrorType};
+use std::sync::Arc;
+
+use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
 use crate::storage::StorageManager;
@@ -15,7 +17,7 @@ use crate::Glean;
 /// The value can only be incremented, not decremented.
 #[derive(Clone, Debug)]
 pub struct CounterMetric {
-    meta: CommonMetricData,
+    meta: Arc<CommonMetricData>,
 }
 
 impl MetricType for CounterMetric {
@@ -23,8 +25,20 @@ impl MetricType for CounterMetric {
         &self.meta
     }
 
-    fn meta_mut(&mut self) -> &mut CommonMetricData {
-        &mut self.meta
+    fn with_name(&self, name: String) -> Self {
+        let mut meta = (*self.meta).clone();
+        meta.name = name;
+        Self {
+            meta: Arc::new(meta),
+        }
+    }
+
+    fn with_dynamic_label(&self, label: String) -> Self {
+        let mut meta = (*self.meta).clone();
+        meta.dynamic_label = Some(label);
+        Self {
+            meta: Arc::new(meta),
+        }
     }
 }
 
@@ -35,20 +49,14 @@ impl MetricType for CounterMetric {
 impl CounterMetric {
     /// Creates a new counter metric.
     pub fn new(meta: CommonMetricData) -> Self {
-        Self { meta }
+        Self {
+            meta: Arc::new(meta),
+        }
     }
 
-    /// Increases the counter by `amount`.
-    ///
-    /// # Arguments
-    ///
-    /// * `glean` - The Glean instance this metric belongs to.
-    /// * `amount` - The amount to increase by. Should be positive.
-    ///
-    /// ## Notes
-    ///
-    /// Logs an error if the `amount` is 0 or negative.
-    pub fn add(&self, glean: &Glean, amount: i32) {
+    /// Increases the counter by `amount` synchronously.
+    #[doc(hidden)]
+    pub fn add_sync(&self, glean: &Glean, amount: i32) {
         if !self.should_record(glean) {
             return;
         }
@@ -64,14 +72,61 @@ impl CounterMetric {
             return;
         }
 
-        glean
-            .storage()
-            .record_with(glean, &self.meta, |old_value| match old_value {
+        // Let's be defensive here:
+        // The uploader tries to store a counter metric,
+        // but in tests that storage might be gone already.
+        // Let's just ignore those.
+        // This should never happen in real app usage.
+        if let Some(storage) = glean.storage_opt() {
+            storage.record_with(glean, &self.meta, |old_value| match old_value {
                 Some(Metric::Counter(old_value)) => {
                     Metric::Counter(old_value.saturating_add(amount))
                 }
                 _ => Metric::Counter(amount),
             })
+        } else {
+            log::warn!(
+                "Couldn't get storage. Can't record counter '{}'.",
+                self.meta.base_identifier()
+            );
+        }
+    }
+
+    /// Increases the counter by `amount`.
+    ///
+    /// # Arguments
+    ///
+    /// * `glean` - The Glean instance this metric belongs to.
+    /// * `amount` - The amount to increase by. Should be positive.
+    ///
+    /// ## Notes
+    ///
+    /// Logs an error if the `amount` is 0 or negative.
+    pub fn add(&self, amount: i32) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| metric.add_sync(glean, amount))
+    }
+
+    /// Get current value
+    #[doc(hidden)]
+    pub fn get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        glean: &Glean,
+        ping_name: S,
+    ) -> Option<i32> {
+        let queried_ping_name = ping_name
+            .into()
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+
+        match StorageManager.snapshot_metric_for_test(
+            glean.storage(),
+            queried_ping_name,
+            &self.meta.identifier(glean),
+            self.meta.lifetime,
+        ) {
+            Some(Metric::Counter(i)) => Some(i),
+            _ => None,
+        }
     }
 
     /// **Test-only API (exported for FFI purposes).**
@@ -79,15 +134,30 @@ impl CounterMetric {
     /// Gets the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<i32> {
-        match StorageManager.snapshot_metric_for_test(
-            glean.storage(),
-            storage_name,
-            &self.meta.identifier(glean),
-            self.meta.lifetime,
-        ) {
-            Some(Metric::Counter(i)) => Some(i),
-            _ => None,
-        }
+    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<i32> {
+        crate::block_on_dispatcher();
+        crate::core::with_glean(|glean| self.get_value(glean, ping_name.as_deref()))
+    }
+
+    /// **Exported for test purposes.**
+    ///
+    /// Gets the number of recorded errors for the given metric and error type.
+    ///
+    /// # Arguments
+    ///
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The number of errors reported.
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType, ping_name: Option<String>) -> i32 {
+        crate::block_on_dispatcher();
+
+        crate::core::with_glean(|glean| {
+            test_get_num_recorded_errors(glean, self.meta(), error, ping_name.as_deref())
+                .unwrap_or(0)
+        })
     }
 }

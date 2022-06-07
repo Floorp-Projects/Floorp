@@ -17,7 +17,7 @@ use {std::convert::TryInto, std::sync::atomic::AtomicU32, xpcom::interfaces::nsI
 
 use super::metrics::__glean_metric_maps;
 
-type EventRecord = (u64, HashMap<i32, String>);
+type EventRecord = (u64, HashMap<String, String>);
 
 /// Contains all the information necessary to update the metrics on the main
 /// process.

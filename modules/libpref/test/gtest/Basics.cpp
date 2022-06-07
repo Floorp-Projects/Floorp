@@ -50,6 +50,9 @@ TEST(PrefsBasics, Serialize)
   ASSERT_NE(nullptr, strstr(str.Data(), "I--:"));
   ASSERT_NE(nullptr, strstr(str.Data(), "S--:"));
   // Assert that something was sanitized
-  ASSERT_NE(nullptr,
-            strstr(str.Data(), "I-S:56/datareporting.policy.dataSubmissionPolicyAcceptedVersion"));
+  ASSERT_NE(
+      nullptr,
+      strstr(
+          str.Data(),
+          "I-S:56/datareporting.policy.dataSubmissionPolicyAcceptedVersion"));
 }

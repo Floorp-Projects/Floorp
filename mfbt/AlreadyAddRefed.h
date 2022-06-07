@@ -95,13 +95,13 @@ struct
 
   already_AddRefed(already_AddRefed<T>&& aOther)
 #ifdef DEBUG
-      : mRawPtr(aOther.take()) {
-  }
+      : mRawPtr(aOther.take()){}
 #else
       = default;
 #endif
 
-  already_AddRefed<T>& operator=(already_AddRefed<T>&& aOther) {
+        already_AddRefed<T> &
+        operator=(already_AddRefed<T>&& aOther) {
     mRawPtr = aOther.take();
     return *this;
   }

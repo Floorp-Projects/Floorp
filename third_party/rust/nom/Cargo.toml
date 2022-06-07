@@ -3,19 +3,19 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
+rust-version = "1.48"
 name = "nom"
-version = "6.1.2"
+version = "7.1.1"
 authors = ["contact@geoffroycouprie.com"]
-include = ["CHANGELOG.md", "LICENSE", "README.md", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "doc/nom_recipes.md", "build.rs"]
+include = ["CHANGELOG.md", "LICENSE", "README.md", ".gitignore", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "doc/nom_recipes.md"]
 autoexamples = false
 description = "A byte-oriented, zero-copy, parser combinators library"
 documentation = "https://docs.rs/nom"
@@ -26,19 +26,20 @@ license = "MIT"
 repository = "https://github.com/Geal/nom"
 [package.metadata.docs.rs]
 all-features = true
-features = ["alloc", "std", "regexp", "lexical", "docsrs"]
+features = ["alloc", "std", "docsrs"]
 [profile.bench]
 lto = true
 codegen-units = 1
 debug = true
 
-[lib]
-bench = false
-
 [[example]]
 name = "json"
 path = "examples/json.rs"
 required-features = ["alloc"]
+
+[[example]]
+name = "iterator"
+path = "examples/iterator.rs"
 
 [[example]]
 name = "s_expression"
@@ -58,9 +59,6 @@ name = "arithmetic_ast"
 required-features = ["alloc"]
 
 [[test]]
-name = "blockbuf-arithmetic"
-
-[[test]]
 name = "css"
 
 [[test]]
@@ -68,9 +66,6 @@ name = "custom_errors"
 
 [[test]]
 name = "float"
-
-[[test]]
-name = "inference"
 
 [[test]]
 name = "ini"
@@ -96,100 +91,34 @@ name = "multiline"
 required-features = ["alloc"]
 
 [[test]]
-name = "named_args"
-
-[[test]]
 name = "overflow"
 
 [[test]]
 name = "reborrow_fold"
 
 [[test]]
-name = "test1"
-
-[[test]]
 name = "fnmut"
 required-features = ["alloc"]
-
-[[bench]]
-name = "arithmetic"
-path = "benches/arithmetic.rs"
-harness = false
-
-[[bench]]
-name = "number"
-path = "benches/number.rs"
-harness = false
-
-[[bench]]
-name = "http"
-path = "benches/http.rs"
-harness = false
-
-[[bench]]
-name = "ini"
-path = "benches/ini.rs"
-harness = false
-
-[[bench]]
-name = "ini_complete"
-path = "benches/ini_complete.rs"
-harness = false
-
-[[bench]]
-name = "ini_str"
-path = "benches/ini_str.rs"
-harness = false
-
-[[bench]]
-name = "json"
-path = "benches/json.rs"
-harness = false
-[dependencies.bitvec]
-version = "0.19.3"
-optional = true
-default-features = false
-
-[dependencies.funty]
-version = ">1.0, <=1.1"
-optional = true
-default-features = false
-
-[dependencies.lazy_static]
-version = "^1.0"
-optional = true
-
-[dependencies.lexical-core]
-version = ">= 0.6, < 0.8"
-optional = true
-
 [dependencies.memchr]
-version = "^2.0"
+version = "2.3"
 default-features = false
 
-[dependencies.regex]
-version = "^1.0"
-optional = true
-[dev-dependencies.criterion]
-version = "0.3"
-
+[dependencies.minimal-lexical]
+version = "0.2.0"
+default-features = false
 [dev-dependencies.doc-comment]
 version = "0.3"
 
-[dev-dependencies.jemallocator]
-version = "^0.3"
-[build-dependencies.version_check]
-version = "0.9"
+[dev-dependencies.proptest]
+version = "1.0.0"
 
 [features]
-alloc = ["bitvec/alloc", "funty"]
-default = ["std", "bitvec", "lexical"]
+alloc = []
+default = ["std"]
 docsrs = []
-lexical = ["lexical-core"]
-regexp = ["regex"]
-std = ["alloc", "bitvec/std", "memchr/use_std"]
+std = ["alloc", "memchr/std", "minimal-lexical/std"]
 [badges.coveralls]
-branch = "master"
+branch = "main"
 repository = "Geal/nom"
 service = "github"
 

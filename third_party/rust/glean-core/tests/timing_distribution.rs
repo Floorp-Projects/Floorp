@@ -27,7 +27,7 @@ fn serializer_should_correctly_serialize_timing_distribution() {
         let (glean, dir) = new_glean(Some(tempdir));
         tempdir = dir;
 
-        let mut metric = TimingDistributionMetric::new(
+        let metric = TimingDistributionMetric::new(
             CommonMetricData {
                 name: "distribution".into(),
                 category: "telemetry".into(),
@@ -39,14 +39,15 @@ fn serializer_should_correctly_serialize_timing_distribution() {
             time_unit,
         );
 
-        let id = metric.set_start(0);
+        let id = 4u64.into();
+        metric.set_start(id, 0);
         metric.set_stop_and_accumulate(&glean, id, duration);
 
         let snapshot = metric
-            .test_get_value(&glean, "store1")
+            .get_value(&glean, "store1")
             .expect("Value should be stored");
 
-        assert_eq!(snapshot.sum, duration);
+        assert_eq!(snapshot.sum, duration as i64);
     }
 
     // Make a new Glean instance here, which should force reloading of the data from disk
@@ -71,7 +72,7 @@ fn set_value_properly_sets_the_value_in_all_stores() {
 
     let duration = 1;
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -83,7 +84,8 @@ fn set_value_properly_sets_the_value_in_all_stores() {
         TimeUnit::Nanosecond,
     );
 
-    let id = metric.set_start(0);
+    let id = 4u64.into();
+    metric.set_start(id, 0);
     metric.set_stop_and_accumulate(&glean, id, duration);
 
     for store_name in store_names {
@@ -109,7 +111,7 @@ fn timing_distributions_must_not_accumulate_negative_values() {
     let duration = 60;
     let time_unit = TimeUnit::Nanosecond;
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -123,10 +125,11 @@ fn timing_distributions_must_not_accumulate_negative_values() {
 
     // Flip around the timestamps, this should result in a negative value which should be
     // discarded.
-    let id = metric.set_start(duration);
+    let id = 4u64.into();
+    metric.set_start(id, duration);
     metric.set_stop_and_accumulate(&glean, id, 0);
 
-    assert!(metric.test_get_value(&glean, "store1").is_none());
+    assert!(metric.get_value(&glean, "store1").is_none());
 
     // Make sure that the errors have been recorded
     assert_eq!(
@@ -144,7 +147,7 @@ fn timing_distributions_must_not_accumulate_negative_values() {
 fn the_accumulate_samples_api_correctly_stores_timing_values() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -158,10 +161,10 @@ fn the_accumulate_samples_api_correctly_stores_timing_values() {
 
     // Accumulate the samples. We intentionally do not report
     // negative values to not trigger error reporting.
-    metric.accumulate_samples_signed(&glean, [1, 2, 3].to_vec());
+    metric.accumulate_samples_sync(&glean, [1, 2, 3].to_vec());
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     let seconds_to_nanos = 1000 * 1000 * 1000;
@@ -172,9 +175,9 @@ fn the_accumulate_samples_api_correctly_stores_timing_values() {
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
     // `hist.sample_to_bucket_minimum(i * seconds_to_nanos)` for `i = 1..=3`.
-    assert_eq!(1, snapshot.values[&984_625_593]);
-    assert_eq!(1, snapshot.values[&1_969_251_187]);
-    assert_eq!(1, snapshot.values[&2_784_941_737]);
+    assert_eq!(1, snapshot.values[&984625593]);
+    assert_eq!(1, snapshot.values[&1969251187]);
+    assert_eq!(1, snapshot.values[&2784941737]);
 
     // No errors should be reported.
     assert!(test_get_num_recorded_errors(
@@ -190,7 +193,7 @@ fn the_accumulate_samples_api_correctly_stores_timing_values() {
 fn the_accumulate_samples_api_correctly_handles_negative_values() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -203,10 +206,10 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
     );
 
     // Accumulate the samples.
-    metric.accumulate_samples_signed(&glean, [-1, 1, 2, 3].to_vec());
+    metric.accumulate_samples_sync(&glean, [-1, 1, 2, 3].to_vec());
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     // Check that we got the right sum and number of samples.
@@ -233,7 +236,7 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
 fn the_accumulate_samples_api_correctly_handles_overflowing_values() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -249,14 +252,14 @@ fn the_accumulate_samples_api_correctly_handles_overflowing_values() {
     const MAX_SAMPLE_TIME: u64 = 1000 * 1000 * 1000 * 60 * 10;
     let overflowing_val = MAX_SAMPLE_TIME as i64 + 1;
     // Accumulate the samples.
-    metric.accumulate_samples_signed(&glean, [overflowing_val, 1, 2, 3].to_vec());
+    metric.accumulate_samples_sync(&glean, [overflowing_val, 1, 2, 3].to_vec());
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     // Overflowing values are truncated to MAX_SAMPLE_TIME and recorded.
-    assert_eq!(snapshot.sum, MAX_SAMPLE_TIME + 6);
+    assert_eq!(snapshot.sum as u64, MAX_SAMPLE_TIME + 6);
 
     // We should get a sample in each of the first 3 buckets.
     assert_eq!(1, snapshot.values[&1]);
@@ -279,7 +282,7 @@ fn the_accumulate_samples_api_correctly_handles_overflowing_values() {
 fn large_nanoseconds_values() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -294,22 +297,23 @@ fn large_nanoseconds_values() {
     let time = Duration::from_secs(10).as_nanos() as u64;
     assert!(time > u64::from(u32::max_value()));
 
-    let id = metric.set_start(0);
+    let id = 4u64.into();
+    metric.set_start(id, 0);
     metric.set_stop_and_accumulate(&glean, id, time);
 
     let val = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     // Check that we got the right sum and number of samples.
-    assert_eq!(val.sum, time);
+    assert_eq!(val.sum, time as i64);
 }
 
 #[test]
 fn stopping_non_existing_id_records_an_error() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "non_existing_id".into(),
             category: "test".into(),
@@ -321,7 +325,8 @@ fn stopping_non_existing_id_records_an_error() {
         TimeUnit::Nanosecond,
     );
 
-    metric.set_stop_and_accumulate(&glean, 3785, 60);
+    let id = 3785u64.into();
+    metric.set_stop_and_accumulate(&glean, id, 60);
 
     // 1 error should be reported.
     assert_eq!(
@@ -339,7 +344,7 @@ fn stopping_non_existing_id_records_an_error() {
 fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -352,30 +357,30 @@ fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
     );
 
     let seconds_to_nanos = 1000 * 1000 * 1000;
-    metric.accumulate_raw_samples_nanos(
+    metric.accumulate_raw_samples_nanos_sync(
         &glean,
         [seconds_to_nanos, 2 * seconds_to_nanos, 3 * seconds_to_nanos].as_ref(),
     );
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     // Check that we got the right sum and number of samples.
-    assert_eq!(snapshot.sum, 6 * seconds_to_nanos);
+    assert_eq!(snapshot.sum, 6 * seconds_to_nanos as i64);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
     // `hist.sample_to_bucket_minimum(i * seconds_to_nanos)` for `i = 1..=3`.
-    assert_eq!(1, snapshot.values[&984_625_593]);
-    assert_eq!(1, snapshot.values[&1_969_251_187]);
-    assert_eq!(1, snapshot.values[&2_784_941_737]);
+    assert_eq!(1, snapshot.values[&984625593]);
+    assert_eq!(1, snapshot.values[&1969251187]);
+    assert_eq!(1, snapshot.values[&2784941737]);
 
     // No errors should be reported.
     assert!(test_get_num_recorded_errors(
         &glean,
         metric.meta(),
-        ErrorType::InvalidValue,
+        ErrorType::InvalidState,
         Some("store1")
     )
     .is_err());
@@ -385,7 +390,7 @@ fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
 fn raw_samples_api_error_cases() {
     let (glean, _t) = new_glean(None);
 
-    let mut metric = TimingDistributionMetric::new(
+    let metric = TimingDistributionMetric::new(
         CommonMetricData {
             name: "distribution".into(),
             category: "telemetry".into(),
@@ -400,7 +405,7 @@ fn raw_samples_api_error_cases() {
     // 10minutes in nanoseconds
     let max_sample_time = 1000 * 1000 * 1000 * 60 * 10;
 
-    metric.accumulate_raw_samples_nanos(
+    metric.accumulate_raw_samples_nanos_sync(
         &glean,
         &[
             0,                   /* rounded up to 1 */
@@ -410,27 +415,26 @@ fn raw_samples_api_error_cases() {
     );
 
     let snapshot = metric
-        .test_get_value(&glean, "store1")
+        .get_value(&glean, "store1")
         .expect("Value should be stored");
 
     // Check that we got the right sum and number of samples.
-    assert_eq!(snapshot.sum, 2 + max_sample_time);
+    assert_eq!(snapshot.sum, 2 + max_sample_time as i64);
 
     // We should get a sample in 3 buckets.
     // These numbers are a bit magic, but they correspond to
     // `hist.sample_to_bucket_minimum(i * seconds_to_nanos)` for `i = {1, max_sample_time}`.
     assert_eq!(2, snapshot.values[&1]);
-    assert_eq!(1, snapshot.values[&599_512_966_122]);
+    assert_eq!(1, snapshot.values[&599512966122]);
 
     // No errors should be reported.
     assert_eq!(
-        1,
+        Ok(1),
         test_get_num_recorded_errors(
             &glean,
             metric.meta(),
             ErrorType::InvalidOverflow,
             Some("store1")
         )
-        .unwrap()
     );
 }
