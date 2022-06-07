@@ -20,7 +20,6 @@
 namespace mozilla::dom::cache {
 
 using mozilla::Unused;
-using mozilla::ipc::IPCStream;
 
 // ----------------------------------------------------------------------------
 
