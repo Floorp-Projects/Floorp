@@ -1968,17 +1968,9 @@
 # This used to be necessary long ago to prevent terrible UX when using stuff
 # like TypeAheadFind (bug 258917), but it also causes compat issues on mobile
 # (bug 1570566).
-#
-# So for now disable it on Android and Desktop Nightly, to see if we have any
-# desktop regression before removing it completely. Note that this means that
-# non-nightly RDM behaves different than Android in this case.
 - name: dom.block_reload_from_resize_event_handler
   type: bool
-#if defined(MOZ_WIDGET_ANDROID) || defined(NIGHTLY_BUILD)
   value: false
-#else
-  value: true
-#endif
   mirror: always
 
 # SW Cache API
