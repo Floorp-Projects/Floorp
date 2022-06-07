@@ -92,6 +92,7 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   void SetDecoderMap(std::map<int, SdpAudioFormat> decoder_map) override;
   void SetUseTransportCcAndNackHistory(bool use_transport_cc,
                                        int history_ms) override;
+  void SetNonSenderRttMeasurement(bool enabled) override;
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override;
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;

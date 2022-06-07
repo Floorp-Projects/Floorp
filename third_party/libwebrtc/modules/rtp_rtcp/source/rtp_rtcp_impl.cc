@@ -610,6 +610,12 @@ ModuleRtpRtcpImpl::GetSenderReportStats() const {
   return absl::nullopt;
 }
 
+absl::optional<RtpRtcpInterface::NonSenderRttStats>
+ModuleRtpRtcpImpl::GetNonSenderRttStats() const {
+  // This is not implemented for this legacy class.
+  return absl::nullopt;
+}
+
 // (REMB) Receiver Estimated Max Bitrate.
 void ModuleRtpRtcpImpl::SetRemb(int64_t bitrate_bps,
                                 std::vector<uint32_t> ssrcs) {

@@ -28,6 +28,7 @@
 #include "api/rtp_parameters.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/transport/rtp/rtp_source.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
@@ -531,6 +532,9 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   uint32_t sender_reports_packets_sent = 0;
   uint64_t sender_reports_bytes_sent = 0;
   uint64_t sender_reports_reports_count = 0;
+  absl::optional<webrtc::TimeDelta> round_trip_time;
+  webrtc::TimeDelta total_round_trip_time = webrtc::TimeDelta::Zero();
+  int round_trip_time_measurements = 0;
 };
 
 struct VideoSenderInfo : public MediaSenderInfo {
