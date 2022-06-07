@@ -1,15 +1,11 @@
 use std::io::prelude::*;
 use zip::write::FileOptions;
 
-extern crate zip;
-
-fn main()
-{
+fn main() {
     std::process::exit(real_main());
 }
 
-fn real_main() -> i32
-{
+fn real_main() -> i32 {
     let args: Vec<_> = std::env::args().collect();
     if args.len() < 2 {
         println!("Usage: {} <filename>", args[0]);
@@ -17,36 +13,36 @@ fn real_main() -> i32
     }
 
     let filename = &*args[1];
-    match doit(filename)
-    {
+    match doit(filename) {
         Ok(_) => println!("File written to {}", filename),
         Err(e) => println!("Error: {:?}", e),
     }
 
-    return 0;
+    0
 }
 
-fn doit(filename: &str) -> zip::result::ZipResult<()>
-{
+fn doit(filename: &str) -> zip::result::ZipResult<()> {
     let path = std::path::Path::new(filename);
     let file = std::fs::File::create(&path).unwrap();
 
     let mut zip = zip::ZipWriter::new(file);
 
-    try!(zip.add_directory("test/", FileOptions::default()));
+    zip.add_directory("test/", Default::default())?;
 
-    let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored).unix_permissions(0o755);
-    try!(zip.start_file("test/☃.txt", options));
-    try!(zip.write_all(b"Hello, World!\n"));
+    let options = FileOptions::default()
+        .compression_method(zip::CompressionMethod::Stored)
+        .unix_permissions(0o755);
+    zip.start_file("test/☃.txt", options)?;
+    zip.write_all(b"Hello, World!\n")?;
 
-    try!(zip.start_file("test/lorem_ipsum.txt", FileOptions::default()));
-    try!(zip.write_all(LOREM_IPSUM));
+    zip.start_file("test/lorem_ipsum.txt", Default::default())?;
+    zip.write_all(LOREM_IPSUM)?;
 
-    try!(zip.finish());
+    zip.finish()?;
     Ok(())
 }
 
-const LOREM_IPSUM : &'static [u8] = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tellus elit, tristique vitae mattis egestas, ultricies vitae risus. Quisque sit amet quam ut urna aliquet
+const LOREM_IPSUM : &[u8] = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tellus elit, tristique vitae mattis egestas, ultricies vitae risus. Quisque sit amet quam ut urna aliquet
 molestie. Proin blandit ornare dui, a tempor nisl accumsan in. Praesent a consequat felis. Morbi metus diam, auctor in auctor vel, feugiat id odio. Curabitur ex ex,
 dictum quis auctor quis, suscipit id lorem. Aliquam vestibulum dolor nec enim vehicula, porta tristique augue tincidunt. Vivamus ut gravida est. Sed pellentesque, dolor
 vitae tristique consectetur, neque lectus pulvinar dui, sed feugiat purus diam id lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per

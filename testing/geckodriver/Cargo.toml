@@ -30,7 +30,7 @@ tempfile = "3"
 url = "2.0"
 uuid = { version = "0.8", features = ["v4"] }
 webdriver = { path = "../webdriver", version="0.45.0" }
-zip = { version = "0.4", default-features = false, features = ["deflate"] }
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 tempfile = "3"
