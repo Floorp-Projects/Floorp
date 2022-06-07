@@ -6,8 +6,10 @@
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/DocAccessibleParent.h"
+#  include "nsAccessibilityService.h"
 #endif
 
+#include "mozilla/Monitor.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -268,6 +270,9 @@ a11y::DocAccessibleParent* BrowserBridgeParent::GetDocAccessibleParent() {
 
 IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
     PDocAccessibleParent* aDoc, uint64_t aID) {
+#  if defined(ANDROID)
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+#  endif
   MOZ_ASSERT(aDoc || mEmbedderAccessibleDoc,
              "Embedder doc shouldn't be cleared if it wasn't set");
   MOZ_ASSERT(!mEmbedderAccessibleDoc || !aDoc || mEmbedderAccessibleDoc == aDoc,
