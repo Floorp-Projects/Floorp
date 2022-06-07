@@ -195,11 +195,12 @@ int NetEqImpl::InsertPacket(const RTPHeader& rtp_header,
   return kOK;
 }
 
-void NetEqImpl::InsertEmptyPacket(const RTPHeader& /*rtp_header*/) {
-  // TODO(henrik.lundin) Handle NACK as well. This will make use of the
-  // rtp_header parameter.
-  // https://bugs.chromium.org/p/webrtc/issues/detail?id=7611
+void NetEqImpl::InsertEmptyPacket(const RTPHeader& rtp_header) {
   MutexLock lock(&mutex_);
+  if (nack_enabled_) {
+    nack_->UpdateLastReceivedPacket(rtp_header.sequenceNumber,
+                                    rtp_header.timestamp);
+  }
   controller_->RegisterEmptyPacket();
 }
 
