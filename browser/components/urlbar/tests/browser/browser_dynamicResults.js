@@ -212,7 +212,7 @@ add_task(async function viewCreated() {
 });
 
 // Tests that the view is updated correctly.
-add_task(async function viewUpdated() {
+async function checkViewUpdated(provider) {
   await withDynamicTypeProvider(async () => {
     // Test a few different search strings.  The dynamic result view will be
     // updated to reflect the current string.
@@ -268,7 +268,40 @@ add_task(async function viewUpdated() {
 
       await UrlbarTestUtils.promisePopupClose(window);
     }
-  });
+  }, provider);
+}
+
+add_task(async function checkViewUpdatedPlain() {
+  await checkViewUpdated(new TestProvider());
+});
+
+add_task(async function checkViewUpdatedWDynamicViewTemplate() {
+  /**
+   * A dummy provider that provides the viewTemplate dynamically.
+   */
+  class TestShouldCallGetViewTemplateProvider extends TestProvider {
+    getViewTemplateWasCalled = false;
+
+    getViewTemplate() {
+      this.getViewTemplateWasCalled = true;
+      return DYNAMIC_TYPE_VIEW_TEMPLATE;
+    }
+  }
+
+  let provider = new TestShouldCallGetViewTemplateProvider();
+  Assert.ok(
+    !provider.getViewTemplateWasCalled,
+    "getViewTemplate has not yet been called for the provider"
+  );
+  Assert.ok(
+    !UrlbarView.dynamicViewTemplatesByName.get(DYNAMIC_TYPE_NAME),
+    "No template has been registered"
+  );
+  await checkViewUpdated(provider);
+  Assert.ok(
+    provider.getViewTemplateWasCalled,
+    "getViewTemplate was called for the provider"
+  );
 });
 
 // Tests that selection correctly moves through buttons and selectables in a
@@ -699,10 +732,12 @@ async function withDynamicTypeProvider(
 ) {
   // Add a dynamic result type.
   UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
-  UrlbarView.addDynamicViewTemplate(
-    DYNAMIC_TYPE_NAME,
-    DYNAMIC_TYPE_VIEW_TEMPLATE
-  );
+  if (!provider.getViewTemplate) {
+    UrlbarView.addDynamicViewTemplate(
+      DYNAMIC_TYPE_NAME,
+      DYNAMIC_TYPE_VIEW_TEMPLATE
+    );
+  }
 
   // Add a provider of the dynamic type.
   UrlbarProvidersManager.registerProvider(provider);
@@ -711,7 +746,9 @@ async function withDynamicTypeProvider(
 
   // Clean up.
   UrlbarProvidersManager.unregisterProvider(provider);
-  UrlbarView.removeDynamicViewTemplate(DYNAMIC_TYPE_NAME);
+  if (!provider.getViewTemplate) {
+    UrlbarView.removeDynamicViewTemplate(DYNAMIC_TYPE_NAME);
+  }
   UrlbarResult.removeDynamicResultType(DYNAMIC_TYPE_NAME);
 }
 

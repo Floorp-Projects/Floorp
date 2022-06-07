@@ -1209,7 +1209,13 @@ class UrlbarView {
 
   _createRowContentForDynamicType(item, result) {
     let { dynamicType } = result.payload;
-    let viewTemplate = UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
+    let provider = UrlbarProvidersManager.getProvider(result.providerName);
+    let viewTemplate =
+      provider.getViewTemplate?.(result) ||
+      UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
+    if (!viewTemplate) {
+      Cu.reportError(`No viewTemplate found for ${result.providerName}`);
+    }
     this._buildViewForDynamicType(
       dynamicType,
       item._content,
@@ -1328,6 +1334,7 @@ class UrlbarView {
   _updateRow(item, result) {
     let oldResult = item.result;
     let oldResultType = item.result && item.result.type;
+    let provider = UrlbarProvidersManager.getProvider(result.providerName);
     item.result = result;
     item.removeAttribute("stale");
     item.id = getUniqueId("urlbarView-row-");
@@ -1341,6 +1348,9 @@ class UrlbarView {
       (oldResultType == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         oldResult.dynamicType != result.dynamicType) ||
+      // Dynamic results that implement getViewTemplate will
+      // always need updating.
+      provider.getViewTemplate ||
       oldResult.isBestMatch != result.isBestMatch ||
       !!result.payload.helpUrl != item._buttons.has("help") ||
       (result.isBestMatch &&
