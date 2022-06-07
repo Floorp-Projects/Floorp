@@ -55,15 +55,15 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
     ///
     /// Should only be used when taking in data over FFI, where extra keys only exists as IDs.
     #[cfg(not(feature = "cargo-clippy"))]
-    pub(crate) fn record_raw(&self, extra: HashMap<i32, String>) {
+    pub(crate) fn record_raw(&self, extra: HashMap<String, String>) {
         let now = glean::get_timestamp_ms();
-        self.record_with_time(now, extra)
+        self.record_with_time(now, extra);
     }
 
     /// Record a new event with the given timestamp and the raw `extra key ID -> String` map.
     ///
     /// Should only be used when applying previously recorded events, e.g. from IPC.
-    pub(crate) fn record_with_time(&self, timestamp: u64, extra: HashMap<i32, String>) {
+    pub(crate) fn record_with_time(&self, timestamp: u64, extra: HashMap<String, String>) {
         match self {
             EventMetric::Parent { inner, .. } => {
                 inner.record_with_time(timestamp, extra);
@@ -82,11 +82,11 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
     }
 }
 
-#[inherent(pub)]
+#[inherent]
 impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
     type Extra = K;
 
-    fn record<M: Into<Option<K>>>(&self, extra: M) {
+    pub fn record<M: Into<Option<K>>>(&self, extra: M) {
         match self {
             EventMetric::Parent { inner, .. } => {
                 inner.record(extra);
@@ -100,7 +100,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
         }
     }
 
-    fn test_get_value<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
     ) -> Option<Vec<RecordedEvent>> {
@@ -112,7 +112,7 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
         }
     }
 
-    fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
+    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
         &self,
         error: glean::ErrorType,
         ping_name: S,

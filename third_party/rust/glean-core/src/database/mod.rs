@@ -12,6 +12,21 @@ use std::sync::RwLock;
 
 use rkv::StoreOptions;
 
+/// Unwrap a `Result`s `Ok` value or do the specified action.
+///
+/// This is an alternative to the question-mark operator (`?`),
+/// when the other action should not be to return the error.
+macro_rules! unwrap_or {
+    ($expr:expr, $or:expr) => {
+        match $expr {
+            Ok(x) => x,
+            Err(_) => {
+                $or;
+            }
+        }
+    };
+}
+
 // Select the LMDB-powered storage backend when the feature is not activated.
 #[cfg(not(feature = "rkv-safe-mode"))]
 mod backend {

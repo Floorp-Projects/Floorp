@@ -42,7 +42,7 @@ fn datetime_serializer_should_correctly_serialize_datetime() {
         let dt = FixedOffset::east(0)
             .ymd(1983, 4, 13)
             .and_hms_milli(12, 9, 14, 274);
-        metric.set(&glean, Some(dt));
+        metric.set_sync(&glean, Some(dt.into()));
 
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
@@ -88,13 +88,13 @@ fn set_value_properly_sets_the_value_in_all_stores() {
     let dt = FixedOffset::east(0)
         .ymd(1983, 4, 13)
         .and_hms_nano(12, 9, 14, 1_560_274);
-    metric.set(&glean, Some(dt));
+    metric.set_sync(&glean, Some(dt.into()));
 
     for store_name in store_names {
         assert_eq!(
             "1983-04-13T12:09:14.001560274+00:00",
             metric
-                .test_get_value_as_string(&glean, &store_name)
+                .get_value_as_string(&glean, Some(store_name))
                 .unwrap()
         );
     }
@@ -175,11 +175,13 @@ fn test_that_truncation_works() {
             },
             t.desired_resolution,
         );
-        metric.set(&glean, Some(high_res_datetime));
+        metric.set_sync(&glean, Some(high_res_datetime.into()));
 
         assert_eq!(
             t.expected_result,
-            metric.test_get_value_as_string(&glean, store_name).unwrap()
+            metric
+                .get_value_as_string(&glean, Some(store_name.into()))
+                .unwrap()
         );
     }
 }

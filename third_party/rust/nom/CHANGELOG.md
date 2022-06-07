@@ -6,6 +6,158 @@
 
 ### Changed
 
+## 7.1.0 - 2021-11-04
+
+### Thanks
+
+- @nickelc
+- @Stargateur
+- @NilsIrl
+- @clonejo
+- @Strytyp
+- @schubart
+- @jihchi
+- @nipunn1313
+- @Gungy2
+- @Drumato
+- @Alexhuszagh
+- @Aehmlo
+- @homersimpsons
+- @dne
+- @epage
+- @saiintbrisson
+- @pymongo
+
+### Changed
+
+- documentation fixes
+- Ci fixes
+- the move to minimal-lexical for float parsing introduced bugs that cannot be resolved right now, so this version moves back to using the standard lib' parser. *This is a performance regression**. If you have specific requirements around float parsing, you are strongly encouraged to use [recognize_float](https://docs.rs/nom/latest/nom/number/complete/fn.recognize_float.html) and another library to convert to a f32 or f64
+
+### Added
+
+- alt now works with 1 elment tuples
+
+## 7.0.0 - 2021-08-21
+
+This release fixes dependency compilation issues and strengthen the minimum supported Rust version (MSRV) policy. This is also the first release without the macros that were used since nom's beginning.
+
+### Thanks
+
+- @djc
+- @homersimpsons
+- @lo48576
+- @myrrlyn
+- @RalXYZ
+- @nickelc
+- @cenodis
+
+### Added
+
+- `take_until1` combinator
+- more `to_owned` implementations
+- `fail`: a parser that always fail, useful as default condition in other combinators
+- text to number parsers: in the `character::streaming` and `character::complete` modules, there are parsers named `i8, u16, u32, u64, u128` and `u8 ,u16, u32, u64, u128` that recognize decimal digits and directly convert to a number in the target size (checking for max int size)
+
+### Removed
+
+- now that function combinators are the main way to write parsers, the old macro combinators are confusing newcomers. THey have been removed
+- the `BitSlice` input type from bitvec has been moved into the [nom-bitvec](https://crates.io/crates/nom-bitvec) crate. nom does not depend on bitvec now
+- regex parsers have been moved into the [nom-regex](https://crates.io/crates/nom-regex) crate. nom does not depend on regex now
+- `ErrorKind::PArseTo` was not needed anymore
+
+### Changed
+
+- relax trait bounds
+- some performance fixes
+- `split_at_position*` functions should now be guaranteed panic free
+- the `lexical-core` crate used for float parsing has now been replaced with `minimal-lexical`: the new crate is faster to compile, faster to parse, and has no dependencies
+
+### Fixed
+
+- infinite loop in `escaped` combinator
+- `many_m_n` now fails if min > max
+
+
+## 6.2.1 - 2021-06-23
+
+### Thanks
+
+This release was done thanks to the hard work of (by order of appearance in the commit list):
+
+- @homersimpsons
+
+### Fixed
+
+- fix documentation building
+
+## 6.2.0 - 2021-02-15
+
+### Thanks
+
+This release was done thanks to the hard work of (by order of appearance in the commit list):
+
+- @DavidKorczynski
+- @homersimpsons
+- @kornelski
+- @lf-
+- @lewisbelcher
+- @ronan-d
+- @weirane
+- @heymind
+- @marcianx
+- @Nukesor
+
+### Added
+
+- nom is now regularly fuzzed through the OSSFuzz project
+
+### Changed
+
+- lots of documentation fixes
+- relax trait bounds
+- workarounds for dependency issues with bitvec and memchr
+
+## 6.1.2 - 2021-02-15
+
+### Changed
+
+- Fix cargo feature usage in previous release
+
+## 6.1.1 - 2021-02-15
+
+### Thanks
+
+This release was done thanks to the hard work of (by order of appearance in the commit list):
+
+- @nickelc
+
+### Changed
+
+- Fix dependenciy incompatibilities: Restrict the bitvec->funty dependency to <=1.1
+
+## 6.1.0 - 2021-01-23
+
+### Thanks
+
+This release was done thanks to the hard work of (by order of appearance in the commit list):
+
+- @sachaarbonel
+- @vallentin
+- @Lucretiel
+- @meiomorphism
+- @jufajardini
+- @neithernut
+- @drwilco
+
+### Changed
+
+- readme and documentation fixes
+- rewrite of fold_many_m_n
+- relax trait bounds on some parsers
+- implement `std::error::Error` on `VerboseError`
+
+
 ## 6.0.1 - 2020-11-24
 
 ### Thanks
@@ -125,7 +277,7 @@ containing example patterns.
 - removed the deprecated `whitespace` module
 - the default error type is now a struct (`nom::error::Error`) instead of a tuple
 - the `FromExternalError` allows wrapping the error returned by the function in the `map_res` combinator
-- renamed the `dbg!` macro to avoid conficts with `std::dbg!`
+- renamed the `dbg!` macro to avoid conflicts with `std::dbg!`
 - `separated_list` now allows empty elements
 
 
@@ -136,7 +288,7 @@ containing example patterns.
 - `success`: returns a value without consuming the input
 - `satisfy`: checks a predicate over the next character
 - `eof` function combinator
-- `consumed`: returnes the produced value and the consumed input
+- `consumed`: returns the produced value and the consumed input
 - `length_count` function combinator
 - `into`: converts a parser's output and error values if `From` implementations are available
 - `IResult::finish()`: converts a parser's result to `Result<(I, O), E>` by removing the distinction between `Error` and `Failure` and panicking on `Incomplete`
@@ -699,7 +851,7 @@ Bugfix release
 
 The 2.0 release is one of the biggest yet. It was a good opportunity to clean up some badly named combinators and fix invalid behaviours.
 
-Since this version introduces a few breaking changes, an [upgrade documentation](https://github.com/Geal/nom/blob/master/doc/upgrading_to_nom_2.md) is available, detailing the steps to fix the most common migration issues. After testing on a set of 30 crates, most of them will build directly, a large part will just need to activate the "verbose-errors" compilation feature. The remaining fixes are documented.
+Since this version introduces a few breaking changes, an [upgrade documentation](https://github.com/Geal/nom/blob/main/doc/upgrading_to_nom_2.md) is available, detailing the steps to fix the most common migration issues. After testing on a set of 30 crates, most of them will build directly, a large part will just need to activate the "verbose-errors" compilation feature. The remaining fixes are documented.
 
 This version also adds a lot of interesting features, like the permutation combinator or whitespace separated formats support.
 
@@ -1004,7 +1156,7 @@ Considering the number of changes since the last release, this version can conta
 ## 0.3.11 - 2015-08-04
 
 ### Thanks
-- @bluss for remarking that the crate included random junk lying non commited in my local repository
+- @bluss for remarking that the crate included random junk lying non committed in my local repository
 
 ### Fixed
 - cleanup of my local repository will ship less files in the crates, resulting in a smaller download
@@ -1067,7 +1219,7 @@ Considering the number of changes since the last release, this version can conta
 ### Added
 - documentation for a few functions
 - the consumer trait now requires the `failed(&self, error_code)` method in case of parsing error
-- `named!` now handles thge alternative `named!(pub fun_name<OutputType>, ...)`
+- `named!` now handles the alternative `named!(pub fun_name<OutputType>, ...)`
 
 ### Fixed
 - `filter!` now returns the whole input if the filter function never returned false
@@ -1268,8 +1420,14 @@ Considering the number of changes since the last release, this version can conta
 
 ## Compare code
 
-* [unreleased](https://github.com/Geal/nom/compare/6.0.1...HEAD)
-* [6.0.0](https://github.com/Geal/nom/compare/6.0.0...6.0.1)
+* [unreleased](https://github.com/Geal/nom/compare/7.0.0...HEAD)
+* [7.0.0](https://github.com/Geal/nom/compare/6.2.1...7.0.0)
+* [6.2.1](https://github.com/Geal/nom/compare/6.2.0...6.2.1)
+* [6.2.0](https://github.com/Geal/nom/compare/6.1.2...6.2.0)
+* [6.1.2](https://github.com/Geal/nom/compare/6.1.1...6.1.2)
+* [6.1.1](https://github.com/Geal/nom/compare/6.1.0...6.1.1)
+* [6.1.0](https://github.com/Geal/nom/compare/6.0.1...6.1.0)
+* [6.0.1](https://github.com/Geal/nom/compare/6.0.0...6.0.1)
 * [6.0.0](https://github.com/Geal/nom/compare/5.1.1...6.0.0)
 * [5.1.1](https://github.com/Geal/nom/compare/5.1.0...5.1.1)
 * [5.1.0](https://github.com/Geal/nom/compare/5.0.1...5.1.0)

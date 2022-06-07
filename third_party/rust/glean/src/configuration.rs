@@ -24,8 +24,6 @@ pub struct Configuration {
     pub max_events: Option<usize>,
     /// Whether Glean should delay persistence of data from metrics with ping lifetime.
     pub delay_ping_lifetime_io: bool,
-    /// The release channel the application is on, if known.
-    pub channel: Option<String>,
     /// The server pings are sent to.
     pub server_endpoint: Option<String>,
     /// The instance of the uploader used to send pings.

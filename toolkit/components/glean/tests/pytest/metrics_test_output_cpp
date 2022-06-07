@@ -181,15 +181,15 @@ namespace test_nested {
       mozilla::Maybe<nsCString> anExtraKey;
       mozilla::Maybe<nsCString> anotherExtraKey;
 
-      Tuple<nsTArray<uint32_t>, nsTArray<nsCString>> ToFfiExtra() const {
-        nsTArray<uint32_t> extraKeys;
+      Tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+        nsTArray<nsCString> extraKeys;
         nsTArray<nsCString> extraValues;
         if (anExtraKey) {
-          extraKeys.AppendElement(0);
+          extraKeys.AppendElement()->AssignASCII("an_extra_key");
           extraValues.EmplaceBack(anExtraKey.value());
         }
         if (anotherExtraKey) {
-          extraKeys.AppendElement(1);
+          extraKeys.AppendElement()->AssignASCII("another_extra_key");
           extraValues.EmplaceBack(anotherExtraKey.value());
         }
         return MakeTuple(std::move(extraKeys), std::move(extraValues));

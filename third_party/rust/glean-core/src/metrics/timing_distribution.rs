@@ -3,8 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
-use crate::error_recording::{record_error, ErrorType};
+use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::histogram::{Functional, Histogram};
 use crate::metrics::time_unit::TimeUnit;
 use crate::metrics::{DistributionData, Metric, MetricType};
@@ -28,77 +30,36 @@ const BUCKETS_PER_MAGNITUDE: f64 = 8.0;
 const MAX_SAMPLE_TIME: u64 = 1000 * 1000 * 1000 * 60 * 10;
 
 /// Identifier for a running timer.
-pub type TimerId = u64;
-
-#[derive(Debug, Clone)]
-struct Timings {
-    next_id: TimerId,
-    start_times: HashMap<TimerId, u64>,
+///
+/// Its internals are considered private,
+/// but due to UniFFI's behavior we expose its field for now.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct TimerId {
+    /// This timer's id.
+    pub id: u64,
 }
 
-/// Track different running timers, identified by a `TimerId`.
-impl Timings {
-    /// Create a new timing manager.
-    fn new() -> Self {
-        Self {
-            next_id: 0,
-            start_times: HashMap::new(),
-        }
+impl From<u64> for TimerId {
+    fn from(val: u64) -> TimerId {
+        TimerId { id: val }
     }
+}
 
-    /// Start a new timer and set it to the `start_time`.
-    /// Multiple timers can run simultaneously.
-    ///
-    /// Returns a new [`TimerId`] identifying the timer.
-    fn set_start(&mut self, start_time: u64) -> TimerId {
-        let id = self.next_id;
-        self.next_id += 1;
-        self.start_times.insert(id, start_time);
-        id
-    }
-
-    /// Stop the timer and return the elapsed time.
-    ///
-    /// Returns an error if the `id` does not correspond to a running timer.
-    /// Returns an error if the stop time is before the start time.
-    ///
-    /// ## Note
-    ///
-    /// This API exists to satisfy the FFI requirements, where the clock is handled on the
-    /// application side and passed in as a timestamp.
-    fn set_stop(&mut self, id: TimerId, stop_time: u64) -> Result<u64, (ErrorType, &str)> {
-        let start_time = match self.start_times.remove(&id) {
-            Some(start_time) => start_time,
-            None => return Err((ErrorType::InvalidState, "Timing not running")),
-        };
-
-        let duration = match stop_time.checked_sub(start_time) {
-            Some(duration) => duration,
-            None => {
-                return Err((
-                    ErrorType::InvalidValue,
-                    "Timer stopped with negative duration",
-                ))
-            }
-        };
-
-        Ok(duration)
-    }
-
-    /// Cancel and remove the timer.
-    fn cancel(&mut self, id: TimerId) {
-        self.start_times.remove(&id);
+impl From<usize> for TimerId {
+    fn from(val: usize) -> TimerId {
+        TimerId { id: val as u64 }
     }
 }
 
 /// A timing distribution metric.
 ///
 /// Timing distributions are used to accumulate and store time measurement, for analyzing distributions of the timing data.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TimingDistributionMetric {
-    meta: CommonMetricData,
+    meta: Arc<CommonMetricData>,
     time_unit: TimeUnit,
-    timings: Timings,
+    next_id: Arc<AtomicUsize>,
+    start_times: Arc<Mutex<HashMap<TimerId, u64>>>,
 }
 
 /// Create a snapshot of the histogram with a time unit.
@@ -108,18 +69,18 @@ pub(crate) fn snapshot(hist: &Histogram<Functional>) -> DistributionData {
     DistributionData {
         // **Caution**: This cannot use `Histogram::snapshot_values` and needs to use the more
         // specialized snapshot function.
-        values: hist.snapshot(),
-        sum: hist.sum(),
+        values: hist
+            .snapshot()
+            .into_iter()
+            .map(|(k, v)| (k as i64, v as i64))
+            .collect(),
+        sum: hist.sum() as i64,
     }
 }
 
 impl MetricType for TimingDistributionMetric {
     fn meta(&self) -> &CommonMetricData {
         &self.meta
-    }
-
-    fn meta_mut(&mut self) -> &mut CommonMetricData {
-        &mut self.meta
     }
 }
 
@@ -131,9 +92,10 @@ impl TimingDistributionMetric {
     /// Creates a new timing distribution metric.
     pub fn new(meta: CommonMetricData, time_unit: TimeUnit) -> Self {
         Self {
-            meta,
+            meta: Arc::new(meta),
             time_unit,
-            timings: Timings::new(),
+            next_id: Arc::new(AtomicUsize::new(0)),
+            start_times: Arc::new(Mutex::new(Default::default())),
         }
     }
 
@@ -151,8 +113,23 @@ impl TimingDistributionMetric {
     /// # Returns
     ///
     /// A unique [`TimerId`] for the new timer.
-    pub fn set_start(&mut self, start_time: u64) -> TimerId {
-        self.timings.set_start(start_time)
+    pub fn start(&self) -> TimerId {
+        let start_time = time::precise_time_ns();
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst).into();
+        let metric = self.clone();
+        crate::launch_with_glean(move |_glean| metric.set_start(id, start_time));
+        id
+    }
+
+    /// **Test-only API (exported for testing purposes).**
+    ///
+    /// Set start time for this metric synchronously.
+    ///
+    /// Use [`start`](Self::start) instead.
+    #[doc(hidden)]
+    pub fn set_start(&self, id: TimerId, start_time: u64) {
+        let mut map = self.start_times.lock().expect("can't lock timings map");
+        map.insert(id, start_time);
     }
 
     /// Stops tracking time for the provided metric and associated timer id.
@@ -167,9 +144,47 @@ impl TimingDistributionMetric {
     ///   for concurrent timing of events associated with different ids to the
     ///   same timespan metric.
     /// * `stop_time` - Timestamp in nanoseconds.
-    pub fn set_stop_and_accumulate(&mut self, glean: &Glean, id: TimerId, stop_time: u64) {
+    pub fn stop_and_accumulate(&self, id: TimerId) {
+        let stop_time = time::precise_time_ns();
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| metric.set_stop_and_accumulate(glean, id, stop_time));
+    }
+
+    fn set_stop(&self, id: TimerId, stop_time: u64) -> Result<u64, (ErrorType, &str)> {
+        let mut start_times = self.start_times.lock().expect("can't lock timings map");
+        let start_time = match start_times.remove(&id) {
+            Some(start_time) => start_time,
+            None => return Err((ErrorType::InvalidState, "Timing not running")),
+        };
+
+        let duration = match stop_time.checked_sub(start_time) {
+            Some(duration) => duration,
+            None => {
+                return Err((
+                    ErrorType::InvalidValue,
+                    "Timer stopped with negative duration",
+                ))
+            }
+        };
+
+        Ok(duration)
+    }
+
+    /// **Test-only API (exported for testing purposes).**
+    ///
+    /// Set stop time for this metric synchronously.
+    ///
+    /// Use [`stop_and_accumulate`](Self::stop_and_accumulate) instead.
+    #[doc(hidden)]
+    pub fn set_stop_and_accumulate(&self, glean: &Glean, id: TimerId, stop_time: u64) {
+        if !self.should_record(glean) {
+            let mut start_times = self.start_times.lock().expect("can't lock timings map");
+            start_times.remove(&id);
+            return;
+        }
+
         // Duration is in nanoseconds.
-        let mut duration = match self.timings.set_stop(id, stop_time) {
+        let mut duration = match self.set_stop(id, stop_time) {
             Err((err_type, err_msg)) => {
                 record_error(glean, &self.meta, err_type, err_msg, None);
                 return;
@@ -214,17 +229,24 @@ impl TimingDistributionMetric {
             });
     }
 
-    /// Aborts a previous [`set_start`](TimingDistributionMetric::set_start)
-    /// call. No error is recorded if no
-    /// [`set_start`](TimingDistributionMetric.set_start) was called.
+    /// Aborts a previous [`start`](Self::start) call.
+    ///
+    /// No error is recorded if no [`start`](Self::start) was called.
     ///
     /// # Arguments
     ///
     /// * `id` - The [`TimerId`] to associate with this timing. This allows
     ///   for concurrent timing of events associated with different ids to the
     ///   same timing distribution metric.
-    pub fn cancel(&mut self, id: TimerId) {
-        self.timings.cancel(id);
+    pub fn cancel(&self, id: TimerId) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |_glean| metric.cancel_sync(id));
+    }
+
+    /// Aborts a previous [`start`](Self::start) call synchronously.
+    fn cancel_sync(&self, id: TimerId) {
+        let mut map = self.start_times.lock().expect("can't lock timings map");
+        map.remove(&id);
     }
 
     /// Accumulates the provided signed samples in the metric.
@@ -248,7 +270,17 @@ impl TimingDistributionMetric {
     /// Discards any negative value in `samples` and report an [`ErrorType::InvalidValue`]
     /// for each of them. Reports an [`ErrorType::InvalidOverflow`] error for samples that
     /// are longer than `MAX_SAMPLE_TIME`.
-    pub fn accumulate_samples_signed(&mut self, glean: &Glean, samples: Vec<i64>) {
+    pub fn accumulate_samples(&self, samples: Vec<i64>) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, samples))
+    }
+
+    /// **Test-only API (exported for testing purposes).**
+    /// Accumulates the provided signed samples in the metric.
+    ///
+    /// Use [`accumulate_samples`](Self::accumulate_samples)
+    #[doc(hidden)]
+    pub fn accumulate_samples_sync(&self, glean: &Glean, samples: Vec<i64>) {
         if !self.should_record(glean) {
             return;
         }
@@ -324,7 +356,20 @@ impl TimingDistributionMetric {
     ///
     /// Reports an [`ErrorType::InvalidOverflow`] error for samples that
     /// are longer than `MAX_SAMPLE_TIME`.
-    pub fn accumulate_raw_samples_nanos(&mut self, glean: &Glean, samples: &[u64]) {
+    pub fn accumulate_raw_samples_nanos(&self, samples: Vec<u64>) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| {
+            metric.accumulate_raw_samples_nanos_sync(glean, &samples)
+        })
+    }
+
+    /// **Test-only API (exported for testing purposes).**
+    ///
+    /// Accumulates the provided samples in the metric.
+    ///
+    /// Use [`accumulate_raw_samples_nanos`](Self::accumulate_raw_samples_nanos) instead.
+    #[doc(hidden)]
+    pub fn accumulate_raw_samples_nanos_sync(&self, glean: &Glean, samples: &[u64]) {
         if !self.should_record(glean) {
             return;
         }
@@ -371,15 +416,20 @@ impl TimingDistributionMetric {
         }
     }
 
-    /// **Test-only API (exported for FFI purposes).**
-    ///
     /// Gets the currently stored value as an integer.
-    ///
-    /// This doesn't clear the stored value.
-    pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
+    #[doc(hidden)]
+    pub fn get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        glean: &Glean,
+        ping_name: S,
+    ) -> Option<DistributionData> {
+        let queried_ping_name = ping_name
+            .into()
+            .unwrap_or_else(|| &self.meta().send_in_pings[0]);
+
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),
-            storage_name,
+            queried_ping_name,
             &self.meta.identifier(glean),
             self.meta.lifetime,
         ) {
@@ -390,16 +440,34 @@ impl TimingDistributionMetric {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Gets the currently-stored histogram as a JSON String of the serialized value.
+    /// Gets the currently stored value as an integer.
     ///
     /// This doesn't clear the stored value.
-    pub fn test_get_value_as_json_string(
-        &self,
-        glean: &Glean,
-        storage_name: &str,
-    ) -> Option<String> {
-        self.test_get_value(glean, storage_name)
-            .map(|snapshot| serde_json::to_string(&snapshot).unwrap())
+    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<DistributionData> {
+        crate::block_on_dispatcher();
+        crate::core::with_glean(|glean| self.get_value(glean, ping_name.as_deref()))
+    }
+
+    /// **Exported for test purposes.**
+    ///
+    /// Gets the number of recorded errors for the given metric and error type.
+    ///
+    /// # Arguments
+    ///
+    /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The number of errors reported.
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType, ping_name: Option<String>) -> i32 {
+        crate::block_on_dispatcher();
+
+        crate::core::with_glean(|glean| {
+            test_get_num_recorded_errors(glean, self.meta(), error, ping_name.as_deref())
+                .unwrap_or(0)
+        })
     }
 }
 

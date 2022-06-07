@@ -22,21 +22,21 @@ fn list_can_store_multiple_items() {
         ..Default::default()
     });
 
-    list.add(&glean, "first");
-    assert_eq!(list.test_get_value(&glean, "core").unwrap(), vec!["first"]);
+    list.add_sync(&glean, "first");
+    assert_eq!(list.get_value(&glean, "core").unwrap(), vec!["first"]);
 
-    list.add(&glean, "second");
+    list.add_sync(&glean, "second");
     assert_eq!(
-        list.test_get_value(&glean, "core").unwrap(),
+        list.get_value(&glean, "core").unwrap(),
         vec!["first", "second"]
     );
 
-    list.set(&glean, vec!["third".into()]);
-    assert_eq!(list.test_get_value(&glean, "core").unwrap(), vec!["third"]);
+    list.set_sync(&glean, vec!["third".into()]);
+    assert_eq!(list.get_value(&glean, "core").unwrap(), vec!["third"]);
 
-    list.add(&glean, "fourth");
+    list.add_sync(&glean, "fourth");
     assert_eq!(
-        list.test_get_value(&glean, "core").unwrap(),
+        list.get_value(&glean, "core").unwrap(),
         vec!["third", "fourth"]
     );
 }
@@ -59,7 +59,7 @@ fn stringlist_serializer_should_correctly_serialize_stringlists() {
             lifetime: Lifetime::User,
             ..Default::default()
         });
-        metric.set(&glean, vec!["test_string_1".into(), "test_string_2".into()]);
+        metric.set_sync(&glean, vec!["test_string_1".into(), "test_string_2".into()]);
     }
 
     {
@@ -89,7 +89,7 @@ fn set_properly_sets_the_value_in_all_stores() {
         ..Default::default()
     });
 
-    metric.set(&glean, vec!["test_string_1".into(), "test_string_2".into()]);
+    metric.set_sync(&glean, vec!["test_string_1".into(), "test_string_2".into()]);
 
     for store_name in store_names {
         let snapshot = StorageManager
@@ -117,12 +117,12 @@ fn long_string_values_are_truncated() {
     });
 
     let test_string = "0123456789".repeat(20);
-    metric.add(&glean, test_string.clone());
+    metric.add_sync(&glean, test_string.clone());
 
     // Ensure the string was truncated to the proper length.
     assert_eq!(
         vec![test_string[..50].to_string()],
-        metric.test_get_value(&glean, "store1").unwrap()
+        metric.get_value(&glean, "store1").unwrap()
     );
 
     // Ensure the error has been recorded.
@@ -131,12 +131,12 @@ fn long_string_values_are_truncated() {
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
     );
 
-    metric.set(&glean, vec![test_string.clone()]);
+    metric.set_sync(&glean, vec![test_string.clone()]);
 
     // Ensure the string was truncated to the proper length.
     assert_eq!(
         vec![test_string[..50].to_string()],
-        metric.test_get_value(&glean, "store1").unwrap()
+        metric.get_value(&glean, "store1").unwrap()
     );
 
     // Ensure the error has been recorded.
@@ -159,15 +159,15 @@ fn disabled_string_lists_dont_record() {
         ..Default::default()
     });
 
-    metric.add(&glean, "test_string".repeat(20));
+    metric.add_sync(&glean, "test_string".repeat(20));
 
     // Ensure the string was not added.
-    assert_eq!(None, metric.test_get_value(&glean, "store1"));
+    assert_eq!(None, metric.get_value(&glean, "store1"));
 
-    metric.set(&glean, vec!["test_string_2".repeat(20)]);
+    metric.set_sync(&glean, vec!["test_string_2".repeat(20)]);
 
     // Ensure the stringlist was not set.
-    assert_eq!(None, metric.test_get_value(&glean, "store1"));
+    assert_eq!(None, metric.get_value(&glean, "store1"));
 
     // Ensure no error was recorded.
     assert!(
@@ -189,7 +189,7 @@ fn string_lists_dont_exceed_max_items() {
     });
 
     for _n in 1..21 {
-        metric.add(&glean, "test_string");
+        metric.add_sync(&glean, "test_string");
     }
 
     let expected: Vec<String> = "test_string "
@@ -197,11 +197,11 @@ fn string_lists_dont_exceed_max_items() {
         .split_whitespace()
         .map(|s| s.to_string())
         .collect();
-    assert_eq!(expected, metric.test_get_value(&glean, "store1").unwrap());
+    assert_eq!(expected, metric.get_value(&glean, "store1").unwrap());
 
     // Ensure the 21st string wasn't added.
-    metric.add(&glean, "test_string");
-    assert_eq!(expected, metric.test_get_value(&glean, "store1").unwrap());
+    metric.add_sync(&glean, "test_string");
+    assert_eq!(expected, metric.get_value(&glean, "store1").unwrap());
 
     // Ensure we recorded the error.
     assert_eq!(
@@ -215,8 +215,8 @@ fn string_lists_dont_exceed_max_items() {
         .split_whitespace()
         .map(|s| s.to_string())
         .collect();
-    metric.set(&glean, too_many);
-    assert_eq!(expected, metric.test_get_value(&glean, "store1").unwrap());
+    metric.set_sync(&glean, too_many);
+    assert_eq!(expected, metric.get_value(&glean, "store1").unwrap());
 
     assert_eq!(
         Ok(2),
@@ -237,10 +237,10 @@ fn set_does_not_record_error_when_receiving_empty_list() {
         ..Default::default()
     });
 
-    metric.set(&glean, vec![]);
+    metric.set_sync(&glean, vec![]);
 
     // Ensure the empty list was added
-    assert_eq!(Some(vec![]), metric.test_get_value(&glean, "store1"));
+    assert_eq!(Some(vec![]), metric.get_value(&glean, "store1"));
 
     // Ensure we didn't record an error.
     assert!(
