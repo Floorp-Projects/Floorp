@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["MessagePort", "MessageListener"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -135,7 +137,7 @@ class MessagePort {
       );
     }
 
-    let deferred = PromiseUtils.defer();
+    let deferred = lazy.PromiseUtils.defer();
     this.requests.push(deferred);
 
     this.messageManager.sendAsyncMessage("RemotePage:Request", {
