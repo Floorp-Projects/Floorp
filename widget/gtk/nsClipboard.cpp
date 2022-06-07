@@ -35,12 +35,15 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/TimeStamp.h"
+#include "GRefPtr.h"
 #include "WidgetUtilsGtk.h"
 
 #include "imgIContainer.h"
 
 #include <gtk/gtk.h>
-#include <gtk/gtkx.h>
+#if defined(MOZ_X11)
+#  include <gtk/gtkx.h>
+#endif
 
 #include "mozilla/Encoding.h"
 
