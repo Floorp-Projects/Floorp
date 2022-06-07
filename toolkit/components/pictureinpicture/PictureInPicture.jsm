@@ -19,7 +19,8 @@ const { AppConstants } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
@@ -475,7 +476,7 @@ var PictureInPicture = {
     pipWindow.windowUtils.setResizeMargin(RESIZE_MARGIN_PX);
 
     if (Services.appinfo.OS == "WINNT") {
-      WindowsUIUtils.setWindowIconNoData(pipWindow);
+      lazy.WindowsUIUtils.setWindowIconNoData(pipWindow);
     }
 
     return new Promise(resolve => {
