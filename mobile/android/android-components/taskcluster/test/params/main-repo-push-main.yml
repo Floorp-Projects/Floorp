@@ -1,0 +1,24 @@
+base_repository: https://github.com/mozilla-mobile/android-components
+base_rev: 77293b6bb9624749aa421e627f812613aa982557
+build_date: 1570437923
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: refs/heads/main
+head_repository: https://github.com/mozilla-mobile/android-components
+head_rev: f8c343141bab0467aa8faf41d515b2c9d3273c2e
+head_tag: ''
+level: '3'
+moz_build_date: '20191007084523'
+optimize_target_tasks: true
+owner: skaspari+mozlando@mozilla.com
+project: android-components
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+repository_type: git
+target_tasks_method: default
+tasks_for: github-push
+version: '90.0.0'
+next_version: '90.0.1'

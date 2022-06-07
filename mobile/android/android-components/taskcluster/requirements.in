@@ -2,4 +2,5 @@
 # https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/bootstrap-taskgraph.html
 
 mozilla-version
+redo
 taskcluster-taskgraph
