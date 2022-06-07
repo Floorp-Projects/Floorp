@@ -35,6 +35,6 @@
                                                                \
   InternalType GetInternalValue() const { return bits; }
 
-#include "mozilla/dom/rust_generated.h"
+#include "mozilla/dom/GeneratedElementDocumentState.h"
 
 #endif

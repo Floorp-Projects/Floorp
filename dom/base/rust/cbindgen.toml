@@ -6,7 +6,7 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
 #error "Don't include this file directly, include mozilla/dom/RustTypes.h instead"
 #endif
 """
-include_guard = "mozilla_dom_rust_generated_h"
+include_guard = "mozilla_dom_GeneratedElementDocumentState_h"
 include_version = true
 language = "C++"
 namespaces = ["mozilla", "dom"]
