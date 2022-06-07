@@ -951,48 +951,177 @@ TEST(AgcManagerDirectStandaloneTest,
 }
 
 TEST(AgcManagerDirectStandaloneTest,
-     EnableClippingPredictorWithUnusedPredictedStepDoesNotLowerVolume) {
-  // TODO(bugs.webrtc.org/12874): Use designated initializers one fixed.
-  ClippingPredictorConfig config;
-  config.enabled = true;
-  config.use_predicted_step = false;
-  AgcManagerDirect manager(new ::testing::NiceMock<MockAgc>(), kInitialVolume,
-                           kClippedMin, kSampleRateHz, kClippedLevelStep,
-                           kClippedRatioThreshold, kClippedWaitFrames, config);
-  manager.Initialize();
-  manager.set_stream_analog_level(/*level=*/255);
-  EXPECT_TRUE(manager.clipping_predictor_enabled());
-  EXPECT_FALSE(manager.use_clipping_predictor_step());
-  EXPECT_EQ(manager.stream_analog_level(), 255);
-  manager.Process(nullptr);
-  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
-  CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
-  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 255);
+     UsedClippingPredictionsProduceLowerAnalogLevels) {
+  // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
+  ClippingPredictorConfig config_with_prediction;
+  config_with_prediction.enabled = true;
+  config_with_prediction.use_predicted_step = true;
+  AgcManagerDirect manager_with_prediction(
+      new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
+      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, config_with_prediction);
+  ClippingPredictorConfig config_without_prediction;
+  config_without_prediction.enabled = false;
+  AgcManagerDirect manager_without_prediction(
+      new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
+      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, config_without_prediction);
+  manager_with_prediction.Initialize();
+  manager_without_prediction.Initialize();
+  constexpr int kInitialLevel = 255;
+  constexpr float kClippingPeakRatio = 1.0f;
+  constexpr float kCloseToClippingPeakRatio = 0.99f;
+  constexpr float kZeroPeakRatio = 0.0f;
+  manager_with_prediction.set_stream_analog_level(kInitialLevel);
+  manager_without_prediction.set_stream_analog_level(kInitialLevel);
+  manager_with_prediction.Process(nullptr);
+  manager_without_prediction.Process(nullptr);
+  EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
+  EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
+  EXPECT_TRUE(manager_with_prediction.use_clipping_predictor_step());
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect a change in the analog level when the prediction step is used.
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect no change during waiting.
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect a change when the prediction step is used.
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - 2 * kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect no change when clipping is not detected or predicted.
+  CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - 2 * kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect a change for clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - 3 * kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+            kInitialLevel - kClippedLevelStep);
+  // Expect no change during waiting.
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - 3 * kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+            kInitialLevel - kClippedLevelStep);
+  // Expect a change for clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            kInitialLevel - 4 * kClippedLevelStep);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(),
+            kInitialLevel - 2 * kClippedLevelStep);
 }
 
-TEST(AgcManagerDirectStandaloneTest, EnableClippingPredictorLowersVolume) {
-  // TODO(bugs.webrtc.org/12874): Use designated initializers one fixed.
-  ClippingPredictorConfig config;
-  config.enabled = true;
-  config.use_predicted_step = true;
-  AgcManagerDirect manager(new ::testing::NiceMock<MockAgc>(), kInitialVolume,
-                           kClippedMin, kSampleRateHz, kClippedLevelStep,
-                           kClippedRatioThreshold, kClippedWaitFrames, config);
-  manager.Initialize();
-  manager.set_stream_analog_level(/*level=*/255);
-  EXPECT_TRUE(manager.clipping_predictor_enabled());
-  EXPECT_TRUE(manager.use_clipping_predictor_step());
-  EXPECT_EQ(manager.stream_analog_level(), 255);
-  manager.Process(nullptr);
-  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 240);
-  CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 240);
-  CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
-  EXPECT_EQ(manager.stream_analog_level(), 225);
+TEST(AgcManagerDirectStandaloneTest,
+     UnusedClippingPredictionsProduceEqualAnalogLevels) {
+  // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
+  ClippingPredictorConfig config_with_prediction;
+  config_with_prediction.enabled = true;
+  config_with_prediction.use_predicted_step = false;
+  AgcManagerDirect manager_with_prediction(
+      new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
+      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, config_with_prediction);
+  ClippingPredictorConfig config_without_prediction;
+  config_without_prediction.enabled = false;
+  AgcManagerDirect manager_without_prediction(
+      new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
+      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
+      kClippedWaitFrames, config_without_prediction);
+  constexpr int kInitialLevel = 255;
+  constexpr float kClippingPeakRatio = 1.0f;
+  constexpr float kCloseToClippingPeakRatio = 0.99f;
+  constexpr float kZeroPeakRatio = 0.0f;
+  manager_with_prediction.Initialize();
+  manager_without_prediction.Initialize();
+  manager_with_prediction.set_stream_analog_level(kInitialLevel);
+  manager_without_prediction.set_stream_analog_level(kInitialLevel);
+  manager_with_prediction.Process(nullptr);
+  manager_without_prediction.Process(nullptr);
+  EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
+  EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
+  EXPECT_FALSE(manager_with_prediction.use_clipping_predictor_step());
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(), kInitialLevel);
+  EXPECT_EQ(manager_without_prediction.stream_analog_level(), kInitialLevel);
+  // Expect no change in the analog level for non-clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect no change for non-clipping frames.
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect no change for non-clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/10, kCloseToClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect no change when clipping is not detected or predicted.
+  CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(2 * kClippedWaitFrames, kZeroPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect a change for clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect no change during waiting.
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(kClippedWaitFrames, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
+  // Expect a change for clipping frames.
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_with_prediction);
+  CallPreProcessAudioBuffer(/*num_calls=*/1, kClippingPeakRatio,
+                            manager_without_prediction);
+  EXPECT_EQ(manager_with_prediction.stream_analog_level(),
+            manager_without_prediction.stream_analog_level());
 }
 
 }  // namespace webrtc
