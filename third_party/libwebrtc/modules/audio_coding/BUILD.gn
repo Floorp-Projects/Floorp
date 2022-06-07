@@ -974,6 +974,8 @@ rtc_library("neteq") {
     "neteq/random_vector.h",
     "neteq/red_payload_splitter.cc",
     "neteq/red_payload_splitter.h",
+    "neteq/relative_arrival_delay_tracker.cc",
+    "neteq/relative_arrival_delay_tracker.h",
     "neteq/statistics_calculator.cc",
     "neteq/statistics_calculator.h",
     "neteq/sync_buffer.cc",
@@ -982,6 +984,8 @@ rtc_library("neteq") {
     "neteq/time_stretch.h",
     "neteq/timestamp_scaler.cc",
     "neteq/timestamp_scaler.h",
+    "neteq/underrun_optimizer.cc",
+    "neteq/underrun_optimizer.h",
   ]
 
   deps = [
@@ -2013,12 +2017,14 @@ if (rtc_include_tests) {
         "neteq/post_decode_vad_unittest.cc",
         "neteq/random_vector_unittest.cc",
         "neteq/red_payload_splitter_unittest.cc",
+        "neteq/relative_arrival_delay_tracker_unittest.cc",
         "neteq/statistics_calculator_unittest.cc",
         "neteq/sync_buffer_unittest.cc",
         "neteq/time_stretch_unittest.cc",
         "neteq/timestamp_scaler_unittest.cc",
         "neteq/tools/input_audio_file_unittest.cc",
         "neteq/tools/packet_unittest.cc",
+        "neteq/underrun_optimizer_unittest.cc",
       ]
 
       deps = [
