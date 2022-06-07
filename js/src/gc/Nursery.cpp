@@ -1103,6 +1103,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   previousGC.nurseryUsedBytes = usedSpace();
   previousGC.nurseryCapacity = capacity();
   previousGC.nurseryCommitted = committed();
+  previousGC.nurseryUsedChunkCount = currentChunk_ + 1;
   previousGC.tenuredBytes = 0;
   previousGC.tenuredCells = 0;
 
@@ -1112,10 +1113,16 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   bool wasEmpty = isEmpty();
   if (!wasEmpty) {
     CollectionResult result = doCollection(reason);
-    MOZ_ASSERT(result.tenuredBytes <= previousGC.nurseryUsedBytes);
+    // Don't include chunk headers when calculating nursery space, since this
+    // space does not represent data that can be tenured
+    MOZ_ASSERT(result.tenuredBytes <=
+               (previousGC.nurseryUsedBytes -
+                (sizeof(ChunkBase) * previousGC.nurseryUsedChunkCount)));
+
     previousGC.reason = reason;
     previousGC.tenuredBytes = result.tenuredBytes;
     previousGC.tenuredCells = result.tenuredCells;
+    previousGC.nurseryUsedChunkCount = currentChunk_ + 1;
   }
 
   // Resize the nursery.
