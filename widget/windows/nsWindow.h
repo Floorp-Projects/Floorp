@@ -829,13 +829,15 @@ class nsWindow final : public nsBaseWidget {
 
   // Weak ref to the nsITaskbarWindowPreview associated with this window
   nsWeakPtr mTaskbarPreview = nullptr;
+
+  // The input region that determines whether mouse events should be ignored
+  // and pass through to the window below. This is currently only used for
+  // popups.
+  InputRegion mInputRegion;
+
   // True if the taskbar (possibly through the tab preview) tells us that the
   // icon has been created on the taskbar.
   bool mHasTaskbarIconBeenCreated = false;
-
-  // Indicates that mouse events should be ignored and pass through to the
-  // window below. This is currently only used for popups.
-  bool mMouseTransparent = false;
 
   // Whether we're in the process of sending a WM_SETTEXT ourselves
   bool mSendingSetText = false;
