@@ -82,7 +82,7 @@ struct CompiledCode {
   jit::CodeLabelVector codeLabels;
   StackMaps stackMaps;
   CraneliftReusableData craneliftReusableData;
-  WasmTryNoteVector tryNotes;
+  TryNoteVector tryNotes;
 
   [[nodiscard]] bool swap(jit::MacroAssembler& masm);
   [[nodiscard]] bool swapCranelift(jit::MacroAssembler& masm,

@@ -240,12 +240,12 @@ class FunctionCompiler {
   MWasmParameter* stackResultPointer_;
 
   // Reference to masm.tryNotes_
-  WasmTryNoteVector& tryNotes_;
+  wasm::TryNoteVector& tryNotes_;
 
  public:
   FunctionCompiler(const ModuleEnvironment& moduleEnv, Decoder& decoder,
                    const FuncCompileInput& func, const ValTypeVector& locals,
-                   MIRGenerator& mirGen, WasmTryNoteVector& tryNotes)
+                   MIRGenerator& mirGen, TryNoteVector& tryNotes)
       : moduleEnv_(moduleEnv),
         iter_(moduleEnv, decoder),
         func_(func),
@@ -2735,7 +2735,7 @@ class FunctionCompiler {
       return true;
     }
     // Allocate a try note
-    if (!tryNotes_.append(WasmTryNote())) {
+    if (!tryNotes_.append(wasm::TryNote())) {
       return false;
     }
     call->tryNoteIndex = tryNotes_.length() - 1;

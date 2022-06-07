@@ -606,7 +606,6 @@ static bool AppendForEach(Vec* dstVec, const Vec& srcVec, FilterOp filterOp,
   size_t newSize = dst - dstBegin;
   if (newSize != dstVec->length()) {
     dstVec->shrinkTo(newSize);
-    dstVec->shrinkStorageToFit();
   }
 
   return true;
@@ -708,14 +707,12 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
-  auto tryNoteFilter = [](const WasmTryNote* tn) {
+  auto tryNoteFilter = [](const TryNote* tn) {
     // Filter out all try notes that were never given a try body. This may
     // happen due to dead code elimination.
     return tn->hasTryBody();
   };
-  auto tryNoteOp = [=](uint32_t, WasmTryNote* tn) {
-    tn->offsetBy(offsetInModule);
-  };
+  auto tryNoteOp = [=](uint32_t, TryNote* tn) { tn->offsetBy(offsetInModule); };
   if (!AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteFilter,
                      tryNoteOp)) {
     return false;
@@ -1020,7 +1017,7 @@ bool ModuleGenerator::finishMetadataTier() {
   // Try notes should be sorted so that the end of ranges are in rising order
   // so that the innermost catch handler is chosen.
   last = 0;
-  for (const WasmTryNote& tryNote : metadataTier_->tryNotes) {
+  for (const TryNote& tryNote : metadataTier_->tryNotes) {
     MOZ_ASSERT(tryNote.tryBodyEnd() >= last);
     MOZ_ASSERT(tryNote.tryBodyEnd() > tryNote.tryBodyBegin());
     last = tryNote.tryBodyBegin();

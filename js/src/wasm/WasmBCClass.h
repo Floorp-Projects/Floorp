@@ -1255,6 +1255,9 @@ struct BaseCompiler final {
   // Load the pending exception state from the Instance and then reset it.
   void consumePendingException(RegRef* exnDst, RegRef* tagDst);
 
+  [[nodiscard]] bool startTryNote(size_t* tryNoteIndex);
+  void finishTryNote(size_t tryNoteIndex);
+
   ////////////////////////////////////////////////////////////
   //
   // Barriers support.
