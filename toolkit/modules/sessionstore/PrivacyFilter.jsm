@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["PrivacyFilter"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm"
 );
@@ -29,7 +31,7 @@ var PrivacyFilter = Object.freeze({
     let retval = {};
 
     for (let host of Object.keys(data)) {
-      if (PrivacyLevel.check(host)) {
+      if (lazy.PrivacyLevel.check(host)) {
         retval[host] = data[host];
       }
     }
@@ -49,7 +51,7 @@ var PrivacyFilter = Object.freeze({
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
-    if (!data || (data.url && !PrivacyLevel.check(data.url))) {
+    if (!data || (data.url && !lazy.PrivacyLevel.check(data.url))) {
       return null;
     }
 

@@ -8,8 +8,10 @@ var EXPORTED_SYMBOLS = ["SessionHistory"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -146,7 +148,7 @@ var SessionHistoryInternal = {
       if (uri != "about:blank" || documentHasChildNodes) {
         data.entries.push({
           url: uri,
-          triggeringPrincipal_base64: E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
+          triggeringPrincipal_base64: lazy.E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
         });
         data.index = 1;
       }
@@ -178,7 +180,7 @@ var SessionHistoryInternal = {
     // We will include the property only if it's truthy to save a couple of
     // bytes when the resulting object is stringified and saved to disk.
     if (shEntry.referrerInfo) {
-      entry.referrerInfo = E10SUtils.serializeReferrerInfo(
+      entry.referrerInfo = lazy.E10SUtils.serializeReferrerInfo(
         shEntry.referrerInfo
       );
     }
@@ -254,13 +256,13 @@ var SessionHistoryInternal = {
 
     // Collect triggeringPrincipal data for the current history entry.
     if (shEntry.principalToInherit) {
-      entry.principalToInherit_base64 = E10SUtils.serializePrincipal(
+      entry.principalToInherit_base64 = lazy.E10SUtils.serializePrincipal(
         shEntry.principalToInherit
       );
     }
 
     if (shEntry.partitionedPrincipalToInherit) {
-      entry.partitionedPrincipalToInherit_base64 = E10SUtils.serializePrincipal(
+      entry.partitionedPrincipalToInherit_base64 = lazy.E10SUtils.serializePrincipal(
         shEntry.partitionedPrincipalToInherit
       );
     }
@@ -268,13 +270,13 @@ var SessionHistoryInternal = {
     entry.hasUserInteraction = shEntry.hasUserInteraction;
 
     if (shEntry.triggeringPrincipal) {
-      entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(
+      entry.triggeringPrincipal_base64 = lazy.E10SUtils.serializePrincipal(
         shEntry.triggeringPrincipal
       );
     }
 
     if (shEntry.csp) {
-      entry.csp = E10SUtils.serializeCSP(shEntry.csp);
+      entry.csp = lazy.E10SUtils.serializeCSP(shEntry.csp);
     }
 
     entry.docIdentifier = shEntry.bfcacheID;
@@ -414,7 +416,7 @@ var SessionHistoryInternal = {
     // also cope with the old format of passing `referrer` and `referrerPolicy`
     // separately.
     if (entry.referrerInfo) {
-      shEntry.referrerInfo = E10SUtils.deserializeReferrerInfo(
+      shEntry.referrerInfo = lazy.E10SUtils.deserializeReferrerInfo(
         entry.referrerInfo
       );
     } else if (entry.referrer) {
@@ -536,7 +538,7 @@ var SessionHistoryInternal = {
 
     // Every load must have a triggeringPrincipal to load otherwise we prevent it,
     // this code *must* always return a valid principal:
-    shEntry.triggeringPrincipal = E10SUtils.deserializePrincipal(
+    shEntry.triggeringPrincipal = lazy.E10SUtils.deserializePrincipal(
       entry.triggeringPrincipal_base64,
       () => {
         // This callback fires when we failed to deserialize the principal (or we don't have one)
@@ -552,17 +554,17 @@ var SessionHistoryInternal = {
     // As both partitionedPrincipal and principalToInherit are both not required to load
     // it's ok to keep these undefined when we don't have a previously defined principal.
     if (entry.partitionedPrincipalToInherit_base64) {
-      shEntry.partitionedPrincipalToInherit = E10SUtils.deserializePrincipal(
+      shEntry.partitionedPrincipalToInherit = lazy.E10SUtils.deserializePrincipal(
         entry.partitionedPrincipalToInherit_base64
       );
     }
     if (entry.principalToInherit_base64) {
-      shEntry.principalToInherit = E10SUtils.deserializePrincipal(
+      shEntry.principalToInherit = lazy.E10SUtils.deserializePrincipal(
         entry.principalToInherit_base64
       );
     }
     if (entry.csp) {
-      shEntry.csp = E10SUtils.deserializeCSP(entry.csp);
+      shEntry.csp = lazy.E10SUtils.deserializeCSP(entry.csp);
     }
     if (entry.wireframe) {
       shEntry.wireframe = entry.wireframe;
