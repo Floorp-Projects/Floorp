@@ -4,16 +4,16 @@ use std::env;
 use std::path::PathBuf;
 
 pub fn home_dir()       -> Option<PathBuf> { dirs_sys::home_dir() }
+
 pub fn cache_dir()      -> Option<PathBuf> { env::var_os("XDG_CACHE_HOME") .and_then(dirs_sys::is_absolute_path).or_else(|| home_dir().map(|h| h.join(".cache"))) }
 pub fn config_dir()     -> Option<PathBuf> { env::var_os("XDG_CONFIG_HOME").and_then(dirs_sys::is_absolute_path).or_else(|| home_dir().map(|h| h.join(".config"))) }
 pub fn data_dir()       -> Option<PathBuf> { env::var_os("XDG_DATA_HOME")  .and_then(dirs_sys::is_absolute_path).or_else(|| home_dir().map(|h| h.join(".local/share"))) }
-pub fn data_local_dir() -> Option<PathBuf> { data_dir().clone() }
+pub fn data_local_dir() -> Option<PathBuf> { data_dir() }
+pub fn preference_dir() -> Option<PathBuf> { config_dir() }
 pub fn runtime_dir()    -> Option<PathBuf> { env::var_os("XDG_RUNTIME_DIR").and_then(dirs_sys::is_absolute_path) }
-pub fn executable_dir() -> Option<PathBuf> {
-    env::var_os("XDG_BIN_HOME").and_then(dirs_sys::is_absolute_path).or_else(|| {
-        data_dir().map(|mut e| { e.pop(); e.push("bin"); e })
-    })
-}
+pub fn state_dir()      -> Option<PathBuf> { env::var_os("XDG_STATE_HOME") .and_then(dirs_sys::is_absolute_path).or_else(|| home_dir().map(|h| h.join(".local/state"))) }
+pub fn executable_dir() -> Option<PathBuf> { env::var_os("XDG_BIN_HOME")   .and_then(dirs_sys::is_absolute_path).or_else(|| home_dir().map(|h| h.join(".local/bin"))) }
+
 pub fn audio_dir()      -> Option<PathBuf> { dirs_sys::user_dir("MUSIC") }
 pub fn desktop_dir()    -> Option<PathBuf> { dirs_sys::user_dir("DESKTOP") }
 pub fn document_dir()   -> Option<PathBuf> { dirs_sys::user_dir("DOCUMENTS") }
