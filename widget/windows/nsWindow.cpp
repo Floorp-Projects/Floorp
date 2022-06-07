@@ -215,8 +215,15 @@
 #  define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
+// Win 8.1+ (_WIN32_WINNT_WINBLUE)
 #if !defined(WM_DPICHANGED)
 #  define WM_DPICHANGED 0x02E0
+#endif
+
+// Win 8+ (_WIN32_WINNT_WIN8)
+#if !defined(EVENT_OBJECT_CLOAKED)
+#  define EVENT_OBJECT_CLOAKED 0x8017
+#  define EVENT_OBJECT_UNCLOAKED 0x8018
 #endif
 
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -302,6 +309,13 @@ static SystemTimeConverter<DWORD>& TimeConverter() {
   static SystemTimeConverter<DWORD> timeConverterSingleton;
   return timeConverterSingleton;
 }
+
+// Global event hook for window cloaking. Never deregistered.
+//  - `Nothing` if not yet set.
+//  - `Some(nullptr)` if no attempt should be made to set it.
+static mozilla::Maybe<HWINEVENTHOOK> sWinCloakEventHook =
+    IsWin8OrLater() ? Nothing() : Some(HWINEVENTHOOK(nullptr));
+static mozilla::LazyLogModule sCloakingLog("DWMCloaking");
 
 namespace mozilla {
 
@@ -695,6 +709,21 @@ static void MaybeHideCursor(bool aShouldHide) {
   }
 }
 
+// Ground-truth query: does Windows claim the window is cloaked right now?
+static bool IsCloaked(HWND hwnd) {
+  DWORD cloakedState;
+  HRESULT hr = ::DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloakedState,
+                                       sizeof(cloakedState));
+
+  if (FAILED(hr)) {
+    MOZ_LOG(sCloakingLog, LogLevel::Warning,
+            ("failed (%08lX) to query cloaking state for HWND %p", hr, hwnd));
+    return false;
+  }
+
+  return cloakedState != 0;
+}
+
 }  // namespace mozilla
 
 /**************************************************************
@@ -1023,6 +1052,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // If we successfully consumed the pre-XUL skeleton UI, just update
       // our internal state to match what is currently being displayed.
       mIsVisible = true;
+      mIsCloaked = mozilla::IsCloaked(mWnd);
       mFrameState->ConsumePreXULSkeletonState(WasPreXULSkeletonUIMaximized());
 
       // These match the margins set in browser-tabsintitlebar.js with
@@ -1052,6 +1082,35 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (!mWnd) {
     NS_WARNING("nsWindow CreateWindowEx failed.");
     return NS_ERROR_FAILURE;
+  }
+
+  if (!sWinCloakEventHook) {
+    MOZ_LOG(sCloakingLog, LogLevel::Info, ("Registering cloaking event hook"));
+
+    // C++03 lambda approximation until P2173R1 is available (-std=c++2b)
+    struct StdcallLambda {
+      static void CALLBACK OnCloakUncloakHook(HWINEVENTHOOK hWinEventHook,
+                                              DWORD event, HWND hwnd,
+                                              LONG idObject, LONG idChild,
+                                              DWORD idEventThread,
+                                              DWORD dwmsEventTime) {
+        const bool isCloaked = event == EVENT_OBJECT_CLOAKED ? true : false;
+        nsWindow::OnCloakEvent(hwnd, isCloaked);
+      }
+    };
+
+    const HWINEVENTHOOK hook = ::SetWinEventHook(
+        EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, HMODULE(nullptr),
+        &StdcallLambda::OnCloakUncloakHook, ::GetCurrentProcessId(),
+        ::GetCurrentThreadId(), WINEVENT_OUTOFCONTEXT);
+    sWinCloakEventHook = Some(hook);
+
+    if (!hook) {
+      const DWORD err = ::GetLastError();
+      MOZ_LOG(sCloakingLog, LogLevel::Error,
+              ("Failed to register cloaking event hook! GLE = %lu (0x%lX)", err,
+               err));
+    }
   }
 
   if (aInitData->mIsPrivate) {
@@ -1799,7 +1858,9 @@ void nsWindow::Show(bool bState) {
  *
  **************************************************************/
 
-// Return true if the whether the component is visible, false otherwise
+// Return true if the component is visible, false otherwise.
+//
+// This does not take cloaking into account.
 bool nsWindow::IsVisible() const { return mIsVisible; }
 
 /**************************************************************
@@ -7514,6 +7575,67 @@ void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
   UpdateNonClientMargins();
   ChangedDPI();
   ResetLayout();
+}
+
+// Callback to generate OnCloakChanged pseudo-events.
+/* static */
+void nsWindow::OnCloakEvent(HWND aWnd, bool aCloaked) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsWin8OrLater());
+
+  const char* const kEventName = aCloaked ? "CLOAKED" : "UNCLOAKED";
+  nsWindow* pWin = WinUtils::GetNSWindowPtr(aWnd);
+  if (!pWin) {
+    MOZ_LOG(
+        sCloakingLog, LogLevel::Debug,
+        ("Received %s event for HWND %p (not an nsWindow)", kEventName, aWnd));
+    return;
+  }
+
+  const char* const kWasCloakedStr = pWin->mIsCloaked ? "cloaked" : "uncloaked";
+  if (mozilla::IsCloaked(aWnd) == pWin->mIsCloaked) {
+    MOZ_LOG(sCloakingLog, LogLevel::Debug,
+            ("Received redundant %s event for %s HWND %p; discarding",
+             kEventName, kWasCloakedStr, aWnd));
+    return;
+  }
+
+  MOZ_LOG(
+      sCloakingLog, LogLevel::Info,
+      ("Received %s event for %s HWND %p", kEventName, kWasCloakedStr, aWnd));
+
+  // Cloaking events like the one we've just received are sent asynchronously.
+  // Rather than process them one-by-one, we jump the gun a bit and perform
+  // updates on all newly cloaked/uncloaked nsWindows at once. This also lets us
+  // batch operations that consider more than one window's state.
+  struct Item {
+    nsWindow* win;
+    bool nowCloaked;
+  };
+  nsTArray<Item> changedWindows;
+
+  mozilla::EnumerateThreadWindows([&](HWND hwnd) {
+    nsWindow* pWin = WinUtils::GetNSWindowPtr(hwnd);
+    if (!pWin) {
+      return;
+    }
+
+    const bool isCloaked = mozilla::IsCloaked(hwnd);
+    if (isCloaked != pWin->mIsCloaked) {
+      changedWindows.AppendElement(Item{pWin, isCloaked});
+    }
+  });
+
+  for (const Item& item : changedWindows) {
+    item.win->OnCloakChanged(item.nowCloaked);
+  }
+}
+
+void nsWindow::OnCloakChanged(bool aCloaked) {
+  MOZ_LOG(sCloakingLog, LogLevel::Info,
+          ("Calling OnCloakChanged(): HWND %p, aCloaked %s", mWnd,
+           aCloaked ? "true" : "false"));
+  mIsCloaked = aCloaked;
 }
 
 /**************************************************************

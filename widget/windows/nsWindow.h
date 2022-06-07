@@ -545,6 +545,7 @@ class nsWindow final : public nsBaseWidget {
     return owner && owner == ::GetForegroundWindow();
   }
   bool IsPopup() const { return mWindowType == eWindowType_popup; }
+  bool IsCloaked() const { return mIsCloaked; }
 
   /**
    * Event processing helpers
@@ -690,6 +691,9 @@ class nsWindow final : public nsBaseWidget {
   void OnFullscreenWillChange(bool aFullScreen);
   void OnFullscreenChanged(bool aFullScreen);
 
+  static void OnCloakEvent(HWND aWnd, bool aCloaked);
+  void OnCloakChanged(bool aCloaked);
+
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static bool sDropShadowEnabled;
@@ -751,6 +755,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsTopWidgetWindow = false;
   bool mInDtor = false;
   bool mIsVisible = false;
+  bool mIsCloaked = false;
   bool mPainting = false;
   bool mTouchWindow = false;
   bool mDisplayPanFeedback = false;

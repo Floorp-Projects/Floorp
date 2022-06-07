@@ -12,6 +12,7 @@
 #include <uxtheme.h>
 #include <dwmapi.h>
 #include <unordered_map>
+#include <utility>
 
 // Undo the windows.h damage
 #undef GetMessage
@@ -89,6 +90,36 @@ namespace a11y {
 class LocalAccessible;
 }  // namespace a11y
 #endif  // defined(ACCESSIBILITY)
+
+// Helper function: enumerate all the toplevel HWNDs attached to the current
+// thread via ::EnumThreadWindows().
+//
+// Note that this use of ::EnumThreadWindows() is, unfortunately, not an
+// abstract implementation detail.
+template <typename F>
+void EnumerateThreadWindows(F&& f)
+// requires requires(F f, HWND h) { f(h); }
+{
+  class Impl {
+   public:
+    F f;
+    explicit Impl(F&& f) : f(std::forward<F>(f)) {}
+
+    void invoke() {
+      WNDENUMPROC proc = &Impl::Callback;
+      ::EnumThreadWindows(::GetCurrentThreadId(), proc,
+                          reinterpret_cast<LPARAM>(&f));
+    }
+
+   private:
+    static BOOL CALLBACK Callback(HWND hwnd, LPARAM lp) {
+      (*reinterpret_cast<F*>(lp))(hwnd);
+      return TRUE;
+    }
+  };
+
+  Impl(std::forward<F>(f)).invoke();
+}
 
 namespace widget {
 
