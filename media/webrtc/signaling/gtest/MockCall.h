@@ -177,6 +177,9 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStream {
 
   void GenerateKeyFrame() override {}
 
+  void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions)
+      override {}
+
   virtual ~MockVideoReceiveStream() {}
 
   const RefPtr<MockCallWrapper> mCallWrapper;
