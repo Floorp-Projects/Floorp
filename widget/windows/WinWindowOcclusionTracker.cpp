@@ -28,10 +28,11 @@
 #include "transport/runnable_utils.h"
 #include "WinUtils.h"
 
-#if (_WIN32_WINNT < 0x0602)
+// Win 8+ (_WIN32_WINNT_WIN8)
+#ifndef EVENT_OBJECT_CLOAKED
 #  define EVENT_OBJECT_CLOAKED 0x8017
 #  define EVENT_OBJECT_UNCLOAKED 0x8018
-#endif  // (_WIN32_WINNT < 0x0602)
+#endif
 
 namespace mozilla::widget {
 
