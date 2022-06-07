@@ -6,7 +6,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
 });
 
@@ -32,12 +34,16 @@ const Corroborate = {
     let expectedOrganizationalUnit = "Mozilla Components";
 
     return new Promise(resolve => {
-      gCertDB.openSignedAppFileAsync(root, file, (rv, _zipReader, cert) => {
-        resolve(
-          Components.isSuccessCode(rv) &&
-            cert.organizationalUnit === expectedOrganizationalUnit
-        );
-      });
+      lazy.gCertDB.openSignedAppFileAsync(
+        root,
+        file,
+        (rv, _zipReader, cert) => {
+          resolve(
+            Components.isSuccessCode(rv) &&
+              cert.organizationalUnit === expectedOrganizationalUnit
+          );
+        }
+      );
     });
   },
 };
