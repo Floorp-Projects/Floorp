@@ -88,6 +88,30 @@ bool EqualFlags(const std::vector<bool>& a, const std::vector<bool>& b) {
   return std::equal(a.begin(), a.end(), b.begin());
 }
 
+absl::optional<DataRate> GetSingleActiveLayerMaxBitrate(
+    const VideoCodec& codec) {
+  int num_active = 0;
+  absl::optional<DataRate> max_bitrate;
+  if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
+    for (int i = 0; i < codec.VP9().numberOfSpatialLayers; ++i) {
+      if (codec.spatialLayers[i].active) {
+        ++num_active;
+        max_bitrate =
+            DataRate::KilobitsPerSec(codec.spatialLayers[i].maxBitrate);
+      }
+    }
+  } else {
+    for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+      if (codec.simulcastStream[i].active) {
+        ++num_active;
+        max_bitrate =
+            DataRate::KilobitsPerSec(codec.simulcastStream[i].maxBitrate);
+      }
+    }
+  }
+  return (num_active > 1) ? absl::nullopt : max_bitrate;
+}
+
 }  // namespace
 
 class VideoStreamEncoderResourceManager::InitialFrameDropper {
@@ -103,7 +127,8 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
         use_bandwidth_allocation_(false),
         bandwidth_allocation_(DataRate::Zero()),
         last_input_width_(0),
-        last_input_height_(0) {
+        last_input_height_(0),
+        last_stream_configuration_changed_(false) {
     RTC_DCHECK(quality_scaler_resource_);
   }
 
@@ -121,6 +146,10 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
             bandwidth_allocation_ > DataRate::Zero())
                ? absl::optional<uint32_t>(bandwidth_allocation_.bps())
                : absl::nullopt;
+  }
+
+  bool last_stream_configuration_changed() const {
+    return last_stream_configuration_changed_;
   }
 
   // Input signals.
@@ -156,6 +185,7 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
   void OnEncoderSettingsUpdated(
       const VideoCodec& codec,
       const VideoAdaptationCounters& adaptation_counters) {
+    last_stream_configuration_changed_ = false;
     std::vector<bool> active_flags = GetActiveLayersFlags(codec);
     // Check if the source resolution has changed for the external reasons,
     // i.e. without any adaptation from WebRTC.
@@ -167,6 +197,7 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
     if (!EqualFlags(active_flags, last_active_flags_) ||
         source_resolution_changed) {
       // Streams configuration has changed.
+      last_stream_configuration_changed_ = true;
       // Initial frame drop must be enabled because BWE might be way too low
       // for the selected resolution.
       if (quality_scaler_resource_->is_started()) {
@@ -226,6 +257,7 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
   VideoAdaptationCounters last_adaptation_counters_;
   int last_input_width_;
   int last_input_height_;
+  bool last_stream_configuration_changed_;
 };
 
 VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
@@ -394,6 +426,12 @@ void VideoStreamEncoderResourceManager::SetEncoderSettings(
   initial_frame_dropper_->OnEncoderSettingsUpdated(
       encoder_settings_->video_codec(), current_adaptation_counters_);
   MaybeUpdateTargetFrameRate();
+  if (quality_rampup_experiment_) {
+    quality_rampup_experiment_->ConfigureQualityRampupExperiment(
+        initial_frame_dropper_->last_stream_configuration_changed(),
+        initial_frame_dropper_->single_active_stream_pixels(),
+        GetSingleActiveLayerMaxBitrate(encoder_settings_->video_codec()));
+  }
 }
 
 void VideoStreamEncoderResourceManager::SetStartBitrate(
@@ -497,8 +535,7 @@ void VideoStreamEncoderResourceManager::OnMaybeEncodeFrame() {
     quality_rampup_experiment_->PerformQualityRampupExperiment(
         quality_scaler_resource_, bandwidth,
         DataRate::BitsPerSec(encoder_target_bitrate_bps_.value_or(0)),
-        DataRate::KilobitsPerSec(encoder_settings_->video_codec().maxBitrate),
-        LastFrameSizeOrDefault());
+        GetSingleActiveLayerMaxBitrate(encoder_settings_->video_codec()));
   }
 }
 
