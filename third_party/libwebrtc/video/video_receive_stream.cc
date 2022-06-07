@@ -468,6 +468,12 @@ void VideoReceiveStream::RemoveSecondarySink(
   rtp_video_stream_receiver_.RemoveSecondarySink(sink);
 }
 
+void VideoReceiveStream::SetRtpExtensions(
+    std::vector<RtpExtension> extensions) {
+  // VideoReceiveStream is deprecated and this function not supported.
+  RTC_NOTREACHED();
+}
+
 bool VideoReceiveStream::SetBaseMinimumPlayoutDelayMs(int delay_ms) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   if (delay_ms < kMinBaseMinimumDelayMs || delay_ms > kMaxBaseMinimumDelayMs) {

@@ -47,6 +47,12 @@ FecPacketCounter UlpfecReceiverImpl::GetPacketCounter() const {
   return packet_counter_;
 }
 
+void UlpfecReceiverImpl::SetRtpExtensions(
+    rtc::ArrayView<const RtpExtension> extensions) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  extensions_.Reset(extensions);
+}
+
 //     0                   1                    2                   3
 //     0 1 2 3 4 5 6 7 8 9 0 1 2 3  4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

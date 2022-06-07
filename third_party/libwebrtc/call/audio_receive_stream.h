@@ -169,10 +169,6 @@ class AudioReceiveStream : public MediaReceiveStream {
                                                int history_ms) = 0;
   virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
 
-  // Set/change the rtp header extensions. Must be called on the packet
-  // delivery thread.
-  virtual void SetRtpExtensions(std::vector<RtpExtension> extensions) = 0;
-
   // Returns true if the stream has been started.
   virtual bool IsRunning() const = 0;
 

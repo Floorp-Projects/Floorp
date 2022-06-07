@@ -31,6 +31,8 @@ class RtpHeaderExtensionMap {
   explicit RtpHeaderExtensionMap(bool extmap_allow_mixed);
   explicit RtpHeaderExtensionMap(rtc::ArrayView<const RtpExtension> extensions);
 
+  void Reset(rtc::ArrayView<const RtpExtension> extensions);
+
   template <typename Extension>
   bool Register(int id) {
     return Register(id, Extension::kId, Extension::kUri);

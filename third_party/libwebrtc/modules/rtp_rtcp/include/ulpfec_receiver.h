@@ -53,6 +53,9 @@ class UlpfecReceiver {
 
   // Returns a counter describing the added and recovered packets.
   virtual FecPacketCounter GetPacketCounter() const = 0;
+
+  virtual void SetRtpExtensions(
+      rtc::ArrayView<const RtpExtension> extensions) = 0;
 };
 }  // namespace webrtc
 #endif  // MODULES_RTP_RTCP_INCLUDE_ULPFEC_RECEIVER_H_

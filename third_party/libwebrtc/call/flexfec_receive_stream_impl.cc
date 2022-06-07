@@ -14,7 +14,7 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "api/array_view.h"
 #include "api/call/transport.h"
@@ -184,6 +184,7 @@ void FlexfecReceiveStreamImpl::UnregisterFromTransport() {
 }
 
 void FlexfecReceiveStreamImpl::OnRtpPacket(const RtpPacketReceived& packet) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   if (!receiver_)
     return;
 
@@ -199,6 +200,12 @@ void FlexfecReceiveStreamImpl::OnRtpPacket(const RtpPacketReceived& packet) {
 // stats for FlexFEC.
 FlexfecReceiveStreamImpl::Stats FlexfecReceiveStreamImpl::GetStats() const {
   return FlexfecReceiveStream::Stats();
+}
+
+void FlexfecReceiveStreamImpl::SetRtpExtensions(
+    std::vector<RtpExtension> extensions) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  config_.rtp.extensions = std::move(extensions);
 }
 
 }  // namespace webrtc

@@ -3071,11 +3071,11 @@ TEST_F(WebRtcVideoChannelTest, IdenticalRecvExtensionsDoesntRecreateStream) {
 
   EXPECT_EQ(1, fake_call_->GetNumCreatedReceiveStreams());
 
-  // Setting different extensions should recreate the stream.
+  // Setting different extensions should not require the stream to be recreated.
   recv_parameters_.extensions.resize(1);
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
 
-  EXPECT_EQ(2, fake_call_->GetNumCreatedReceiveStreams());
+  EXPECT_EQ(1, fake_call_->GetNumCreatedReceiveStreams());
 }
 
 TEST_F(WebRtcVideoChannelTest,

@@ -80,6 +80,14 @@ RtpHeaderExtensionMap::RtpHeaderExtensionMap(
     RegisterByUri(extension.id, extension.uri);
 }
 
+void RtpHeaderExtensionMap::Reset(
+    rtc::ArrayView<const RtpExtension> extensions) {
+  for (auto& id : ids_)
+    id = kInvalidId;
+  for (const RtpExtension& extension : extensions)
+    RegisterByUri(extension.id, extension.uri);
+}
+
 bool RtpHeaderExtensionMap::RegisterByType(int id, RTPExtensionType type) {
   for (const ExtensionInfo& extension : kExtensions)
     if (type == extension.type)
