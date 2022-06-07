@@ -34,6 +34,8 @@ namespace {
 using test::FuzzDataHelper;
 using ::testing::NiceMock;
 
+constexpr int kBitrateEnabledBps = 100'000;
+
 class FrameValidator : public EncodedImageCallback {
  public:
   ~FrameValidator() override = default;
@@ -75,8 +77,8 @@ class FrameValidator : public EncodedImageCallback {
   }
 
  private:
-  // With 4 spatial layers and patterns up to 8 pictures, it should be enought
-  // to keep 32 last frames to validate dependencies.
+  // With 4 spatial layers and patterns up to 8 pictures, it should be enough to
+  // keep the last 32 frames to validate dependencies.
   static constexpr size_t kMaxFrameHistorySize = 32;
   struct LayerFrame {
     int64_t frame_id;
@@ -220,6 +222,9 @@ VideoCodec CodecSettings(FuzzDataHelper& rng) {
       SpatialLayer& spatial_layer = codec_settings.spatialLayers[sid];
       codec_settings.width = 320 << sid;
       codec_settings.height = 180 << sid;
+      spatial_layer.width = codec_settings.width;
+      spatial_layer.height = codec_settings.height;
+      spatial_layer.targetBitrate = kBitrateEnabledBps * num_temporal_layers;
       spatial_layer.maxFramerate = codec_settings.maxFramerate;
       spatial_layer.numberOfTemporalLayers = num_temporal_layers;
     }
@@ -424,7 +429,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     parameters.framerate_fps = 30.0;
     for (int sid = 0; sid < codec.VP9()->numberOfSpatialLayers; ++sid) {
       for (int tid = 0; tid < codec.VP9()->numberOfTemporalLayers; ++tid) {
-        parameters.bitrate.SetBitrate(sid, tid, 100'000);
+        parameters.bitrate.SetBitrate(sid, tid, kBitrateEnabledBps);
       }
     }
     encoder.SetRates(parameters);
@@ -449,6 +454,10 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         encoder.Encode(fake_image, &frame_types);
         uint8_t encode_spatial_layers = (action >> 4);
         for (size_t sid = 0; sid < state.config.ss_number_layers; ++sid) {
+          if (state.config.ss_target_bitrate[sid] == 0) {
+            // Don't encode disabled spatial layers.
+            continue;
+          }
           bool drop = true;
           switch (state.frame_drop.framedrop_mode) {
             case FULL_SUPERFRAME_DROP:
@@ -472,7 +481,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         }
       } break;
       case kSetRates: {
-        // bitmask of the action: (S3)(S1)(S0)01,
+        // bitmask of the action: (S2)(S1)(S0)01,
         // where Sx is number of temporal layers to enable for spatial layer x
         // In pariculat Sx = 0 indicates spatial layer x should be disabled.
         LibvpxVp9Encoder::RateControlParameters parameters;
@@ -480,7 +489,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
         for (int sid = 0; sid < codec.VP9()->numberOfSpatialLayers; ++sid) {
           int temporal_layers = (action >> ((1 + sid) * 2)) & 0b11;
           for (int tid = 0; tid < temporal_layers; ++tid) {
-            parameters.bitrate.SetBitrate(sid, tid, 100'000);
+            parameters.bitrate.SetBitrate(sid, tid, kBitrateEnabledBps);
           }
         }
         // Ignore allocation that turns off all the layers. in such case
