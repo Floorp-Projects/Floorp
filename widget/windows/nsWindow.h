@@ -848,8 +848,8 @@ class nsWindow final : public nsBaseWidget {
   // The location of the window buttons in the window.
   mozilla::Maybe<LayoutDeviceIntRect> mWindowButtonsRect;
 
-  // Caching for hit test results
-  POINT mCachedHitTestPoint = {0, 0};
+  // Caching for hit test results (in client coordinates)
+  LayoutDeviceIntPoint mCachedHitTestPoint;
   TimeStamp mCachedHitTestTime;
 
   RefPtr<mozilla::widget::InProcessWinCompositorWidget> mBasicLayersSurface;

@@ -5289,7 +5289,9 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
        * composited desktop.
        */
 
-      if (!mCustomNonClient) break;
+      if (!mCustomNonClient) {
+        break;
+      }
 
       *aRetValue =
           ClientMarginHitTestPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -6339,15 +6341,15 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg) {
  *
  **************************************************************/
 
-int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
-  if (mFrameState->GetSizeMode() == nsSizeMode_Minimized ||
-      mFrameState->GetSizeMode() == nsSizeMode_Fullscreen) {
+int32_t nsWindow::ClientMarginHitTestPoint(int32_t aX, int32_t aY) {
+  const nsSizeMode sizeMode = mFrameState->GetSizeMode();
+  if (sizeMode == nsSizeMode_Minimized || sizeMode == nsSizeMode_Fullscreen) {
     return HTCLIENT;
   }
 
   // Calculations are done in screen coords
-  RECT winRect;
-  GetWindowRect(mWnd, &winRect);
+  const LayoutDeviceIntRect winRect = GetScreenBounds();
+  const LayoutDeviceIntPoint point(aX, aY);
 
   // hit return constants:
   // HTBORDER                     - non-resizable border
@@ -6361,16 +6363,14 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
   // HTMINBUTTON                  - minimize button
 
   int32_t testResult = HTCLIENT;
-
-  bool isResizable = (mBorderStyle & (eBorderStyle_all | eBorderStyle_resizeh |
-                                      eBorderStyle_default)) > 0
-                         ? true
-                         : false;
-  if (mFrameState->GetSizeMode() == nsSizeMode_Maximized) isResizable = false;
+  const bool isResizable =
+      sizeMode != nsSizeMode_Maximized &&
+      (mBorderStyle &
+       (eBorderStyle_all | eBorderStyle_resizeh | eBorderStyle_default));
 
   // Ensure being accessible to borders of window.  Even if contents are in
   // this area, the area must behave as border.
-  nsIntMargin nonClientSize(
+  const LayoutDeviceIntMargin nonClientSizeMargin(
       std::max(mCaptionHeight - mNonClientOffset.top, kResizableBorderMinSize),
       std::max(mHorResizeMargin - mNonClientOffset.right,
                kResizableBorderMinSize),
@@ -6379,41 +6379,41 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
       std::max(mHorResizeMargin - mNonClientOffset.left,
                kResizableBorderMinSize));
 
-  bool allowContentOverride =
-      mFrameState->GetSizeMode() == nsSizeMode_Maximized ||
-      (mx >= winRect.left + nonClientSize.left &&
-       mx <= winRect.right - nonClientSize.right &&
-       my >= winRect.top + nonClientSize.top &&
-       my <= winRect.bottom - nonClientSize.bottom);
+  LayoutDeviceIntRect clientRect = winRect;
+  clientRect.Deflate(nonClientSizeMargin);
+
+  const bool allowContentOverride =
+      sizeMode == nsSizeMode_Maximized || clientRect.Contains(point);
 
   // The border size.  If there is no content under mouse cursor, the border
   // size should be larger than the values in system settings.  Otherwise,
   // contents under the mouse cursor should be able to override the behavior.
   // E.g., user must expect that Firefox button always opens the popup menu
   // even when the user clicks on the above edge of it.
-  nsIntMargin borderSize(std::max(nonClientSize.top, mVertResizeMargin),
-                         std::max(nonClientSize.right, mHorResizeMargin),
-                         std::max(nonClientSize.bottom, mVertResizeMargin),
-                         std::max(nonClientSize.left, mHorResizeMargin));
+  LayoutDeviceIntMargin borderSize = nonClientSizeMargin;
+  borderSize.EnsureAtLeast(
+      LayoutDeviceIntMargin(mVertResizeMargin, mHorResizeMargin,
+                            mVertResizeMargin, mHorResizeMargin));
 
   bool top = false;
   bool bottom = false;
   bool left = false;
   bool right = false;
 
-  if (my >= winRect.top && my < winRect.top + borderSize.top) {
+  if (point.y >= winRect.y && point.y < winRect.y + borderSize.top) {
     top = true;
-  } else if (my <= winRect.bottom && my > winRect.bottom - borderSize.bottom) {
+  } else if (point.y <= winRect.YMost() &&
+             point.y > winRect.YMost() - borderSize.bottom) {
     bottom = true;
   }
 
   // (the 2x case here doubles the resize area for corners)
   int multiplier = (top || bottom) ? 2 : 1;
-  if (mx >= winRect.left &&
-      mx < winRect.left + (multiplier * borderSize.left)) {
+  if (point.x >= winRect.x &&
+      point.x < winRect.x + (multiplier * borderSize.left)) {
     left = true;
-  } else if (mx <= winRect.right &&
-             mx > winRect.right - (multiplier * borderSize.right)) {
+  } else if (point.x <= winRect.XMost() &&
+             point.x > winRect.XMost() - (multiplier * borderSize.right)) {
     right = true;
   }
 
@@ -6421,53 +6421,63 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
   if (isResizable) {
     if (top) {
       testResult = HTTOP;
-      if (left)
+      if (left) {
         testResult = HTTOPLEFT;
-      else if (right)
+      } else if (right) {
         testResult = HTTOPRIGHT;
+      }
     } else if (bottom) {
       testResult = HTBOTTOM;
-      if (left)
+      if (left) {
         testResult = HTBOTTOMLEFT;
-      else if (right)
+      } else if (right) {
         testResult = HTBOTTOMRIGHT;
+      }
     } else {
-      if (left) testResult = HTLEFT;
-      if (right) testResult = HTRIGHT;
+      if (left) {
+        testResult = HTLEFT;
+      }
+      if (right) {
+        testResult = HTRIGHT;
+      }
     }
     inResizeRegion = (testResult != HTCLIENT);
   } else {
-    if (top)
+    if (top) {
       testResult = HTCAPTION;
-    else if (bottom || left || right)
+    } else if (bottom || left || right) {
       testResult = HTBORDER;
+    }
   }
 
   if (!sIsInMouseCapture && allowContentOverride) {
-    POINT pt = {mx, my};
-    ::ScreenToClient(mWnd, &pt);
+    {
+      POINT pt = {aX, aY};
+      ::ScreenToClient(mWnd, &pt);
 
-    if (pt.x == mCachedHitTestPoint.x && pt.y == mCachedHitTestPoint.y &&
-        TimeStamp::Now() - mCachedHitTestTime <
-            TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
-      return mCachedHitTestResult;
+      if (pt.x == mCachedHitTestPoint.x && pt.y == mCachedHitTestPoint.y &&
+          TimeStamp::Now() - mCachedHitTestTime <
+              TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
+        return mCachedHitTestResult;
+      }
+
+      mCachedHitTestPoint = {pt.x, pt.y};
+      mCachedHitTestTime = TimeStamp::Now();
     }
 
-    mCachedHitTestPoint = {pt.x, pt.y};
-    mCachedHitTestTime = TimeStamp::Now();
+    auto pt = mCachedHitTestPoint;
 
-    if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x, pt.y)) {
+    if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt)) {
       testResult = HTMINBUTTON;
-    } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt.x,
-                                                                   pt.y)) {
+    } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt)) {
       testResult = HTMAXBUTTON;
-    } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt.x, pt.y)) {
+    } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt)) {
       testResult = HTCLOSE;
     } else if (!inResizeRegion) {
       // If we're in the resize region, avoid overriding that with either a
       // drag or a client result; resize takes priority over either (but not
       // over the window controls, which is why we check this after those).
-      if (mDraggableRegion.Contains(pt.x, pt.y)) {
+      if (mDraggableRegion.Contains(pt)) {
         testResult = HTCAPTION;
       } else {
         testResult = HTCLIENT;
