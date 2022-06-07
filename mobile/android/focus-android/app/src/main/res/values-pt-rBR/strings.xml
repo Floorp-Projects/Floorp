@@ -862,7 +862,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="open_new_tab_snackbar">Alternar</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
-    <string name="preference_open_new_tab">Alternar imediatamente para link em nova aba</string>
+    <string name="preference_open_new_tab">Mudar imediatamente para link em nova aba</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string moz:removedIn="97" name="preference_category_safe_browsing">Navegação segura</string>
