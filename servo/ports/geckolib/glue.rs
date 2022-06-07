@@ -104,6 +104,7 @@ use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
+use style::piecewise_linear::PiecewiseLinearFunction;
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
@@ -135,6 +136,7 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
+use style::values::computed::easing::ComputedLinearStop;
 use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
@@ -7475,4 +7477,24 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
         // to tell the Gecko restyle root machinery about it.
         bindings::Gecko_NoteDirtySubtreeForInvalidation(root);
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CreatePiecewiseLinearFunction(
+    entries: &style::OwnedSlice<ComputedLinearStop>,
+    result: &mut PiecewiseLinearFunction,
+) {
+    *result = PiecewiseLinearFunction::from_iter(
+        entries
+            .iter()
+            .map(ComputedLinearStop::to_piecewise_linear_build_parameters),
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_PiecewiseLinearFunctionAt(
+    function: &PiecewiseLinearFunction,
+    progress: f32,
+) -> f32 {
+    function.at(progress)
 }
