@@ -40,19 +40,21 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryStorage",
   "resource://gre/modules/TelemetryStorage.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryReportingPolicy",
   "resource://gre/modules/TelemetryReportingPolicy.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryHealthPing",
   "resource://gre/modules/HealthPing.jsm"
 );
@@ -156,7 +158,7 @@ function isDeletionRequestPing(aPing) {
  * @return {Promise} A promise resolved when the ping is saved.
  */
 function savePing(aPing) {
-  return TelemetryStorage.savePendingPing(aPing);
+  return lazy.TelemetryStorage.savePendingPing(aPing);
 }
 
 /**
@@ -544,7 +546,7 @@ var SendScheduler = {
       // Get a list of pending pings, sorted by last modified, descending.
       // Filter out all the pings we can't send now. This addresses scenarios like "deletion-request" pings
       // which can be sent even when upload is disabled.
-      let pending = TelemetryStorage.getPendingPingList();
+      let pending = lazy.TelemetryStorage.getPendingPingList();
       let current = TelemetrySendImpl.getUnpersistedPings();
       this._log.trace(
         "_doSendTask - pending: " +
@@ -772,7 +774,8 @@ var TelemetrySendImpl = {
 
   get pendingPingCount() {
     return (
-      TelemetryStorage.getPendingPingList().length + this._currentPings.size
+      lazy.TelemetryStorage.getPendingPingList().length +
+      this._currentPings.size
     );
   },
 
@@ -821,7 +824,7 @@ var TelemetrySendImpl = {
 
     // Enforce the pending pings storage quota. It could take a while so don't
     // block on it.
-    TelemetryStorage.runEnforcePendingPingsQuotaTask();
+    lazy.TelemetryStorage.runEnforcePendingPingsQuotaTask();
 
     // Start sending pings, but don't block on this.
     SendScheduler.triggerSendingPings(true);
@@ -847,7 +850,10 @@ var TelemetrySendImpl = {
             undefined
           );
 
-        if (!this.sendingEnabled() || !TelemetryReportingPolicy.canUpload()) {
+        if (
+          !this.sendingEnabled() ||
+          !lazy.TelemetryReportingPolicy.canUpload()
+        ) {
           // If we cannot send pings then clear the crash annotations
           crs.removeCrashReportAnnotation("TelemetryClientId");
           crs.removeCrashReportAnnotation("TelemetryServerURL");
@@ -867,7 +873,7 @@ var TelemetrySendImpl = {
    */
   async _checkPendingPings() {
     // Scan the pending pings - that gives us a list sorted by last modified, descending.
-    let infos = await TelemetryStorage.loadPendingPingList();
+    let infos = await lazy.TelemetryStorage.loadPendingPingList();
     this._log.info("_checkPendingPings - pending ping count: " + infos.length);
     if (!infos.length) {
       this._log.trace("_checkPendingPings - no pending pings");
@@ -1025,7 +1031,10 @@ var TelemetrySendImpl = {
       "_sendWithPingSender - sending " + pingId + " to " + submissionURL
     );
     try {
-      const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, pingId);
+      const pingPath = lazy.OS.Path.join(
+        lazy.TelemetryStorage.pingDirectoryPath,
+        pingId
+      );
       if (this._tooLateToSend) {
         // We're in shutdown. Batch pings destined for pingsender.
         this._log.trace("_sendWithPingSender - too late to send. Batching.");
@@ -1063,7 +1072,7 @@ var TelemetrySendImpl = {
     if (
       options.usePingSender &&
       !this._isOSShutdown &&
-      TelemetryReportingPolicy.canUpload() &&
+      lazy.TelemetryReportingPolicy.canUpload() &&
       AppConstants.platform != "android"
     ) {
       const url = this._buildSubmissionURL(ping);
@@ -1218,7 +1227,7 @@ var TelemetrySendImpl = {
     for (let pingId of pingIds) {
       const id = pingId;
       pingSendPromises.push(
-        TelemetryStorage.loadPendingPing(id)
+        lazy.TelemetryStorage.loadPendingPing(id)
           .then(data => this._doPing(data, id, true))
           .catch(e =>
             this._log.error("sendPersistedPings - failed to send ping " + id, e)
@@ -1252,7 +1261,7 @@ var TelemetrySendImpl = {
     }
 
     if (success && isPersisted) {
-      return TelemetryStorage.removePendingPing(id);
+      return lazy.TelemetryStorage.removePendingPing(id);
     }
     return Promise.resolve();
   },
@@ -1349,7 +1358,7 @@ var TelemetrySendImpl = {
 
     // Check the size and drop pings which are too big.
     const compressedPingSizeBytes = payloadStream.data.length;
-    if (compressedPingSizeBytes > TelemetryStorage.MAXIMUM_PING_SIZE) {
+    if (compressedPingSizeBytes > lazy.TelemetryStorage.MAXIMUM_PING_SIZE) {
       this._log.error(
         "_doPing - submitted ping exceeds the size limit, size: " +
           compressedPingSizeBytes
@@ -1363,8 +1372,8 @@ var TelemetrySendImpl = {
       // We don't need to call |request.abort()| as it was not sent yet.
       this._pendingPingRequests.delete(id);
 
-      TelemetryHealthPing.recordDiscardedPing(ping.type);
-      return { promise: TelemetryStorage.removePendingPing(id) };
+      lazy.TelemetryHealthPing.recordDiscardedPing(ping.type);
+      return { promise: lazy.TelemetryStorage.removePendingPing(id) };
     }
 
     Services.telemetry
@@ -1472,7 +1481,7 @@ var TelemetrySendImpl = {
         failure = XHR_ERROR_TYPE[request.errorCode];
       }
 
-      TelemetryHealthPing.recordSendFailure(failure);
+      lazy.TelemetryHealthPing.recordSendFailure(failure);
 
       Services.telemetry
         .getHistogramById("TELEMETRY_SEND_FAILURE_TYPE")
@@ -1562,7 +1571,7 @@ var TelemetrySendImpl = {
    */
   get canSendNow() {
     // If the reporting policy was not accepted yet, don't send pings.
-    if (!TelemetryReportingPolicy.canUpload()) {
+    if (!lazy.TelemetryReportingPolicy.canUpload()) {
       return false;
     }
 
@@ -1662,7 +1671,7 @@ var TelemetrySendImpl = {
       pendingPingRequestCount: this._pendingPingRequests.size,
       pendingPingActivityCount: this._pendingPingActivity.size,
       unpersistedPingCount: this._currentPings.size,
-      persistedPingCount: TelemetryStorage.getPendingPingList().length,
+      persistedPingCount: lazy.TelemetryStorage.getPendingPingList().length,
       schedulerState: SendScheduler.getShutdownState(),
     };
   },

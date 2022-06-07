@@ -18,8 +18,10 @@ const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetrySend",
   "resource://gre/modules/TelemetrySend.jsm"
 );
@@ -471,7 +473,7 @@ var TelemetryReportingPolicyImpl = {
   _userNotified() {
     this._log.trace("_userNotified");
     this._recordNotificationData();
-    TelemetrySend.notifyCanUpload();
+    lazy.TelemetrySend.notifyCanUpload();
   },
 
   /**

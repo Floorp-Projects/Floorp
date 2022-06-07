@@ -20,13 +20,15 @@ const LOGGER_PREFIX = "ClientID::";
 // Must match ID in TelemetryUtils
 const CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
 
-XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
+XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(
     "@mozilla.org/security/hash;1",
     "nsICryptoHash",
@@ -34,15 +36,15 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gDatareportingPath", () => {
   return PathUtils.join(
     Services.dirsvc.get("ProfD", Ci.nsIFile).path,
     "datareporting"
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gStateFilePath", () => {
-  return PathUtils.join(gDatareportingPath, "state.json");
+XPCOMUtils.defineLazyGetter(lazy, "gStateFilePath", () => {
+  return PathUtils.join(lazy.gDatareportingPath, "state.json");
 });
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
@@ -151,7 +153,7 @@ var ClientIDImpl = {
     // Try to load the client id from the DRS state file.
     let hasCurrentClientID = false;
     try {
-      let state = await IOUtils.readJSON(gStateFilePath);
+      let state = await IOUtils.readJSON(lazy.gStateFilePath);
       if (state) {
         hasCurrentClientID = this.updateClientID(state.clientID);
         if (hasCurrentClientID) {
@@ -177,7 +179,7 @@ var ClientIDImpl = {
     // We're missing the ID from the DRS state file and prefs.
     // Generate a new one.
     if (!hasCurrentClientID) {
-      this.updateClientID(CommonUtils.generateUUID());
+      this.updateClientID(lazy.CommonUtils.generateUUID());
     }
     this._saveClientIdTask = this._saveClientID();
 
@@ -204,9 +206,9 @@ var ClientIDImpl = {
       let obj = {
         clientID: this._clientID,
       };
-      await IOUtils.makeDirectory(gDatareportingPath);
-      await IOUtils.writeJSON(gStateFilePath, obj, {
-        tmpPath: `${gStateFilePath}.tmp`,
+      await IOUtils.makeDirectory(lazy.gDatareportingPath);
+      await IOUtils.writeJSON(lazy.gStateFilePath, obj, {
+        tmpPath: `${lazy.gStateFilePath}.tmp`,
       });
       this._saveClientIdTask = null;
     } catch (ex) {
@@ -281,9 +283,9 @@ var ClientIDImpl = {
   async getClientIdHash() {
     if (!this._clientIDHash) {
       let byteArr = new TextEncoder().encode(await this.getClientID());
-      let hash = new CryptoHash("sha256");
+      let hash = new lazy.CryptoHash("sha256");
       hash.update(byteArr, byteArr.length);
-      this._clientIDHash = CommonUtils.bytesAsHex(hash.finish(false));
+      this._clientIDHash = lazy.CommonUtils.bytesAsHex(hash.finish(false));
     }
     return this._clientIDHash;
   },
@@ -321,7 +323,7 @@ var ClientIDImpl = {
     await this._saveClientIdTask;
 
     // Remove the client-id-containing state file from disk
-    await IOUtils.remove(gStateFilePath);
+    await IOUtils.remove(lazy.gStateFilePath);
   },
 
   async removeClientID() {

@@ -8,14 +8,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
@@ -25,7 +27,7 @@ const { AppConstants } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gUpdateTimerManager",
   "@mozilla.org/updates/timer-manager;1",
   "nsIUpdateTimerManager"
@@ -46,7 +48,10 @@ const MAX_NAME_LENGTH = 64;
 const TRUNCATION_DELIMITER = "\u2026";
 
 var TelemetryModules = Object.freeze({
-  _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
+  _log: lazy.Log.repository.getLoggerWithMessagePrefix(
+    LOGGER_NAME,
+    LOGGER_PREFIX
+  ),
 
   start() {
     // The list of loaded modules is obtainable only when the profiler is enabled.
@@ -56,11 +61,11 @@ var TelemetryModules = Object.freeze({
     }
 
     // Use nsIUpdateTimerManager for a long-duration timer that survives across sessions.
-    let interval = Preferences.get(
+    let interval = lazy.Preferences.get(
       MODULES_PING_INTERVAL_PREFERENCE,
       MODULES_PING_INTERVAL_SECONDS
     );
-    gUpdateTimerManager.registerTimer(
+    lazy.gUpdateTimerManager.registerTimer(
       "telemetry_modules_ping",
       this,
       interval,
@@ -109,7 +114,7 @@ var TelemetryModules = Object.freeze({
             }
           }
 
-          TelemetryController.submitExternalPing(
+          lazy.TelemetryController.submitExternalPing(
             "modules",
             {
               version: 1,

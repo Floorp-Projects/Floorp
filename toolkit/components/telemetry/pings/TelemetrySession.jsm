@@ -17,7 +17,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
@@ -408,7 +410,7 @@ var Impl = {
     // Only submit this if the extended set is enabled.
     if (!Utils.isContentProcess && Services.telemetry.canRecordExtended) {
       try {
-        ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
+        ret.addonManager = lazy.AddonManagerPrivate.getSimpleMeasures();
       } catch (ex) {}
     }
 
@@ -698,7 +700,7 @@ var Impl = {
       payloadObj.lateWrites = protect(() => Services.telemetry.lateWrites);
 
       payloadObj.addonDetails = protect(() =>
-        AddonManagerPrivate.getTelemetryDetails()
+        lazy.AddonManagerPrivate.getTelemetryDetails()
       );
 
       if (
@@ -781,7 +783,7 @@ var Impl = {
         this.startNewSubsession();
         // Persist session data to disk (don't wait until it completes).
         let sessionData = this._getSessionDataObject();
-        TelemetryStorage.saveSessionData(sessionData);
+        lazy.TelemetryStorage.saveSessionData(sessionData);
 
         // Notify that there was a subsession split in the parent process. This is an
         // internal topic and is only meant for internal Telemetry usage.
@@ -809,7 +811,7 @@ var Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryController.submitExternalPing(
+    return lazy.TelemetryController.submitExternalPing(
       getPingType(payload),
       payload,
       options
@@ -897,7 +899,9 @@ var Impl = {
         await this._loadSessionData();
         // Update the session data to keep track of new subsessions created before
         // the initialization.
-        await TelemetryStorage.saveSessionData(this._getSessionDataObject());
+        await lazy.TelemetryStorage.saveSessionData(
+          this._getSessionDataObject()
+        );
 
         this.addObserver("idle-daily");
         await Services.telemetry.gatherMemory();
@@ -906,7 +910,7 @@ var Impl = {
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.
-          await TelemetryController.checkAbortedSessionPing();
+          await lazy.TelemetryController.checkAbortedSessionPing();
 
           // Write the first aborted-session ping as early as possible. Just do that
           // if we are not testing, since calling Telemetry.reset() will make a previous
@@ -917,7 +921,7 @@ var Impl = {
 
           // The last change date for the environment, used to throttle environment changes.
           this._lastEnvironmentChangeDate = Policy.monotonicNow();
-          TelemetryEnvironment.registerChangeListener(
+          lazy.TelemetryEnvironment.registerChangeListener(
             ENVIRONMENT_CHANGE_LISTENER,
             (reason, data) => this._onEnvironmentChange(reason, data)
           );
@@ -925,7 +929,7 @@ var Impl = {
           // Start the scheduler.
           // We skip this if unified telemetry is off, so we don't
           // trigger the new unified ping types.
-          TelemetryScheduler.init();
+          lazy.TelemetryScheduler.init();
         }
 
         this._delayedInitTask = null;
@@ -960,7 +964,7 @@ var Impl = {
         Services.prefs.getBoolPref(
           Utils.Preferences.ShutdownPingSenderFirstSession,
           false
-        ) || !TelemetryReportingPolicy.isFirstRun();
+        ) || !lazy.TelemetryReportingPolicy.isFirstRun();
       let sendWithPingsender =
         Services.prefs.getBoolPref(
           TelemetryUtils.Preferences.ShutdownPingSender,
@@ -973,7 +977,7 @@ var Impl = {
         usePingSender: sendWithPingsender,
       };
       p.push(
-        TelemetryController.submitExternalPing(
+        lazy.TelemetryController.submitExternalPing(
           getPingType(shutdownPayload),
           shutdownPayload,
           options
@@ -996,7 +1000,7 @@ var Impl = {
           Utils.Preferences.FirstShutdownPingEnabled,
           false
         ) &&
-        TelemetryReportingPolicy.isFirstRun();
+        lazy.TelemetryReportingPolicy.isFirstRun();
 
       if (sendFirstShutdownPing) {
         let options = {
@@ -1005,7 +1009,7 @@ var Impl = {
           usePingSender: true,
         };
         p.push(
-          TelemetryController.submitExternalPing(
+          lazy.TelemetryController.submitExternalPing(
             "first-shutdown",
             shutdownPayload,
             options
@@ -1030,7 +1034,7 @@ var Impl = {
         addEnvironment: true,
       };
       p.push(
-        TelemetryController.submitExternalPing(
+        lazy.TelemetryController.submitExternalPing(
           getPingType(payload),
           payload,
           options
@@ -1054,7 +1058,7 @@ var Impl = {
       addEnvironment: true,
       overwrite: true,
     };
-    return TelemetryController.addPendingPing(
+    return lazy.TelemetryController.addPendingPing(
       getPingType(payload),
       payload,
       options
@@ -1186,7 +1190,7 @@ var Impl = {
           addEnvironment: true,
           overwrite: true,
         };
-        TelemetryController.addPendingPing(
+        lazy.TelemetryController.addPendingPing(
           getPingType(payload),
           payload,
           options
@@ -1210,10 +1214,10 @@ var Impl = {
 
     let cleanup = () => {
       if (IS_UNIFIED_TELEMETRY) {
-        TelemetryEnvironment.unregisterChangeListener(
+        lazy.TelemetryEnvironment.unregisterChangeListener(
           ENVIRONMENT_CHANGE_LISTENER
         );
-        TelemetryScheduler.shutdown();
+        lazy.TelemetryScheduler.shutdown();
       }
       this.uninstall();
 
@@ -1226,7 +1230,7 @@ var Impl = {
         await this.saveShutdownPings();
 
         if (IS_UNIFIED_TELEMETRY) {
-          await TelemetryController.removeAbortedSessionPing();
+          await lazy.TelemetryController.removeAbortedSessionPing();
         }
 
         reset();
@@ -1267,7 +1271,7 @@ var Impl = {
       addEnvironment: true,
     };
 
-    let promise = TelemetryController.submitExternalPing(
+    let promise = lazy.TelemetryController.submitExternalPing(
       getPingType(payload),
       payload,
       options
@@ -1292,7 +1296,7 @@ var Impl = {
    *                            loading has completed, with null otherwise.
    */
   async _loadSessionData() {
-    let data = await TelemetryStorage.loadSessionData();
+    let data = await lazy.TelemetryStorage.loadSessionData();
 
     if (!data) {
       return null;
@@ -1353,14 +1357,14 @@ var Impl = {
 
     this._lastEnvironmentChangeDate = now;
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
-    TelemetryScheduler.rescheduleDailyPing(payload);
+    lazy.TelemetryScheduler.rescheduleDailyPing(payload);
 
     let options = {
       addClientId: true,
       addEnvironment: true,
       overrideEnvironment: oldEnvironment,
     };
-    TelemetryController.submitExternalPing(
+    lazy.TelemetryController.submitExternalPing(
       getPingType(payload),
       payload,
       options
@@ -1405,12 +1409,12 @@ var Impl = {
       payload = this.getSessionPayload(REASON_ABORTED_SESSION, false);
     }
 
-    return TelemetryController.saveAbortedSessionPing(payload);
+    return lazy.TelemetryController.saveAbortedSessionPing(payload);
   },
 
   async markNewProfilePingSent() {
     this._log.trace("markNewProfilePingSent");
     this._newProfilePingSent = true;
-    return TelemetryStorage.saveSessionData(this._getSessionDataObject());
+    return lazy.TelemetryStorage.saveSessionData(this._getSessionDataObject());
   },
 };

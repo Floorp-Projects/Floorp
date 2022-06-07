@@ -10,33 +10,35 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryHealthPing", "Policy"];
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "setTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "clearTimeout",
   "resource://gre/modules/Timer.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryUtils",
   "resource://gre/modules/TelemetryUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const Utils = TelemetryUtils;
+const Utils = lazy.TelemetryUtils;
 
 const MS_IN_A_MINUTE = 60 * 1000;
 // Send health ping every hour
@@ -49,8 +51,9 @@ const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryHealthPing::";
 
 var Policy = {
-  setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
-  clearSchedulerTickTimeout: id => clearTimeout(id),
+  setSchedulerTickTimeout: (callback, delayMs) =>
+    lazy.setTimeout(callback, delayMs),
+  clearSchedulerTickTimeout: id => lazy.clearTimeout(id),
 };
 
 var TelemetryHealthPing = {
@@ -179,7 +182,7 @@ var TelemetryHealthPing = {
       // To work around this, we send the ping on the next tick.
       Services.tm.dispatchToMainThread(() =>
         r(
-          TelemetryController.submitExternalPing(
+          lazy.TelemetryController.submitExternalPing(
             this.HEALTH_PING_TYPE,
             payload,
             options
@@ -269,7 +272,7 @@ var TelemetryHealthPing = {
 
   get _log() {
     if (!this._logger) {
-      this._logger = Log.repository.getLoggerWithMessagePrefix(
+      this._logger = lazy.Log.repository.getLoggerWithMessagePrefix(
         LOGGER_NAME,
         LOGGER_PREFIX + "::"
       );
@@ -282,6 +285,6 @@ var TelemetryHealthPing = {
 XPCOMUtils.defineLazyPreferenceGetter(
   TelemetryHealthPing,
   "enabled",
-  TelemetryUtils.Preferences.HealthPingEnabled,
+  lazy.TelemetryUtils.Preferences.HealthPingEnabled,
   true
 );

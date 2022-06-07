@@ -35,22 +35,24 @@ const PINGS_ARCHIVE_DIR = "archived";
 const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
 const SESSION_STATE_FILE_NAME = "session-state.json";
 
-XPCOMUtils.defineLazyGetter(this, "gDataReportingDir", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gDataReportingDir", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
 });
-XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
-  return OS.Path.join(gDataReportingDir, PINGS_ARCHIVE_DIR);
+XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function() {
+  return OS.Path.join(lazy.gDataReportingDir, PINGS_ARCHIVE_DIR);
 });
-XPCOMUtils.defineLazyGetter(this, "gAbortedSessionFilePath", function() {
-  return OS.Path.join(gDataReportingDir, ABORTED_SESSION_FILE_NAME);
+XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function() {
+  return OS.Path.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TelemetryHealthPing",
   "resource://gre/modules/HealthPing.jsm"
 );
@@ -820,9 +822,12 @@ var TelemetryStorageImpl = {
     let dataDir = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
     await OS.File.makeDir(dataDir);
 
-    let filePath = OS.Path.join(gDataReportingDir, SESSION_STATE_FILE_NAME);
+    let filePath = OS.Path.join(
+      lazy.gDataReportingDir,
+      SESSION_STATE_FILE_NAME
+    );
     try {
-      await CommonUtils.writeJSON(sessionData, filePath);
+      await lazy.CommonUtils.writeJSON(sessionData, filePath);
     } catch (e) {
       this._log.error(
         "_saveSessionData - Failed to write session data to " + filePath,
@@ -922,7 +927,7 @@ var TelemetryStorageImpl = {
 
     const nowDate = Policy.now();
     const startTimeStamp = nowDate.getTime();
-    let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
+    let dirIterator = new OS.File.DirectoryIterator(lazy.gPingsArchivePath);
     let subdirs = (await dirIterator.nextBatch()).filter(e => e.isDir);
     dirIterator.close();
 
@@ -1157,7 +1162,7 @@ var TelemetryStorageImpl = {
   async _cleanArchive() {
     this._log.trace("cleanArchiveTask");
 
-    if (!(await OS.File.exists(gPingsArchivePath))) {
+    if (!(await OS.File.exists(lazy.gPingsArchivePath))) {
       return;
     }
 
@@ -1367,12 +1372,12 @@ var TelemetryStorageImpl = {
       );
     };
 
-    if (!(await OS.File.exists(gPingsArchivePath))) {
+    if (!(await OS.File.exists(lazy.gPingsArchivePath))) {
       submitProbes(0, 0);
       return new Map();
     }
 
-    let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
+    let dirIterator = new OS.File.DirectoryIterator(lazy.gPingsArchivePath);
     let subdirs = (await dirIterator.nextBatch())
       .filter(e => e.isDir)
       .filter(e => isValidArchiveDir(e.name));
@@ -1538,7 +1543,7 @@ var TelemetryStorageImpl = {
 
       // Currently we don't have the ping type available without loading the ping from disk.
       // Bug 1384903 will fix that.
-      TelemetryHealthPing.recordDiscardedPing("<unknown>");
+      lazy.TelemetryHealthPing.recordDiscardedPing("<unknown>");
       throw new Error(
         "loadPendingPing - exceeded the maximum ping size: " + fileSize
       );
@@ -1851,7 +1856,7 @@ var TelemetryStorageImpl = {
 
             // Currently we don't have the ping type available without loading the ping from disk.
             // Bug 1384903 will fix that.
-            TelemetryHealthPing.recordDiscardedPing("<unknown>");
+            lazy.TelemetryHealthPing.recordDiscardedPing("<unknown>");
           }
           continue;
         }
@@ -1990,19 +1995,19 @@ var TelemetryStorageImpl = {
 
   async saveAbortedSessionPing(ping) {
     this._log.trace(
-      "saveAbortedSessionPing - ping path: " + gAbortedSessionFilePath
+      "saveAbortedSessionPing - ping path: " + lazy.gAbortedSessionFilePath
     );
-    await OS.File.makeDir(gDataReportingDir, { ignoreExisting: true });
+    await OS.File.makeDir(lazy.gDataReportingDir, { ignoreExisting: true });
 
     return this._abortedSessionSerializer.enqueueTask(() =>
-      this.savePingToFile(ping, gAbortedSessionFilePath, true)
+      this.savePingToFile(ping, lazy.gAbortedSessionFilePath, true)
     );
   },
 
   async loadAbortedSessionPing() {
     let ping = null;
     try {
-      ping = await this.loadPingFile(gAbortedSessionFilePath);
+      ping = await this.loadPingFile(lazy.gAbortedSessionFilePath);
     } catch (ex) {
       if (ex.becauseNoSuchFile) {
         this._log.trace("loadAbortedSessionPing - no such file");
@@ -2016,7 +2021,9 @@ var TelemetryStorageImpl = {
   removeAbortedSessionPing() {
     return this._abortedSessionSerializer.enqueueTask(async () => {
       try {
-        await OS.File.remove(gAbortedSessionFilePath, { ignoreAbsent: false });
+        await OS.File.remove(lazy.gAbortedSessionFilePath, {
+          ignoreAbsent: false,
+        });
         this._log.trace("removeAbortedSessionPing - success");
       } catch (ex) {
         if (ex.becauseNoSuchFile) {
@@ -2156,7 +2163,7 @@ function getArchivedPingPath(aPingId, aDate, aType) {
   // that getMonth returns a 0-based month, so we need to add an offset.
   let month = String(aDate.getMonth() + 1);
   let archivedPingDir = OS.Path.join(
-    gPingsArchivePath,
+    lazy.gPingsArchivePath,
     aDate.getFullYear() + "-" + month.padStart(2, "0")
   );
   // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json

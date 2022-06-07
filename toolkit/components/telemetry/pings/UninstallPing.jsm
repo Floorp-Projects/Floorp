@@ -10,7 +10,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   WindowsInstallsInfo:
     "resource://gre/modules/components-utils/WindowsInstallsInfo.jsm",
 });
@@ -33,7 +35,7 @@ var UninstallPing = {
    *
    */
   getOtherInstallsCount() {
-    return WindowsInstallsInfo.getInstallPaths(
+    return lazy.WindowsInstallsInfo.getInstallPaths(
       this.MAX_OTHER_INSTALLS,
       new Set([Services.dirsvc.get("GreBinD", Ci.nsIFile).path])
     ).size;
