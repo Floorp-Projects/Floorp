@@ -11,7 +11,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 );
 
 add_task(async function() {
-  await pushPref("devtools.netmonitor.features.webSockets", true);
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
     requestCount: 1,
   });

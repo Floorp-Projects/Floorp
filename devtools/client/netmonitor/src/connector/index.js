@@ -170,28 +170,19 @@ class Connector {
   resume(ignoreExistingResources = true) {
     const { resourceCommand } = this.toolbox;
 
-    const targetResources = [
-      resourceCommand.TYPES.NETWORK_EVENT,
-      resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-    ];
-
-    if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
-      targetResources.push(resourceCommand.TYPES.WEBSOCKET);
-    }
-
-    if (
-      Services.prefs.getBoolPref(
-        "devtools.netmonitor.features.serverSentEvents"
-      )
-    ) {
-      targetResources.push(resourceCommand.TYPES.SERVER_SENT_EVENT);
-    }
-
-    return resourceCommand.watchResources(targetResources, {
-      onAvailable: this.onResourceAvailable,
-      onUpdated: this.onResourceUpdated,
-      ignoreExistingResources,
-    });
+    return resourceCommand.watchResources(
+      [
+        resourceCommand.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceCommand.TYPES.WEBSOCKET,
+        resourceCommand.TYPES.SERVER_SENT_EVENT,
+      ],
+      {
+        onAvailable: this.onResourceAvailable,
+        onUpdated: this.onResourceUpdated,
+        ignoreExistingResources,
+      }
+    );
   }
 
   async onTargetAvailable({ targetFront, isTargetSwitching }) {
