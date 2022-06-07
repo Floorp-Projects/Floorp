@@ -311,8 +311,6 @@ class nsWindow final : public nsBaseWidget {
   WNDPROC GetPrevWindowProc() { return mPrevWndProc; }
   WindowHook& GetWindowHook() { return mWindowHook; }
   nsWindow* GetParentWindow(bool aIncludeOwner);
-  // Get an array of all nsWindow*s on the main thread.
-  static nsTArray<nsWindow*> EnumAllWindows();
 
   /**
    * Misc.
@@ -517,8 +515,6 @@ class nsWindow final : public nsBaseWidget {
                                               LPARAM lParam);
   static VOID CALLBACK HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent,
                                           DWORD dwTime);
-  static BOOL CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
-  static BOOL CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
 
   /**
    * Window utilities

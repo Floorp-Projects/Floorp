@@ -1646,31 +1646,6 @@ nsWindow* nsWindow::GetParentWindowBase(bool aIncludeOwner) {
   return widget;
 }
 
-BOOL CALLBACK nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam) {
-  nsWindow* wnd = WinUtils::GetNSWindowPtr(aWnd);
-  if (wnd) {
-    reinterpret_cast<nsTArray<nsWindow*>*>(aParam)->AppendElement(wnd);
-  }
-  return TRUE;
-}
-
-BOOL CALLBACK nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam) {
-  nsWindow* wnd = WinUtils::GetNSWindowPtr(aWnd);
-  if (wnd) {
-    reinterpret_cast<nsTArray<nsWindow*>*>(aParam)->AppendElement(wnd);
-  }
-  EnumChildWindows(aWnd, EnumAllChildWindProc, aParam);
-  return TRUE;
-}
-
-/* static*/
-nsTArray<nsWindow*> nsWindow::EnumAllWindows() {
-  nsTArray<nsWindow*> windows;
-  EnumThreadWindows(GetCurrentThreadId(), EnumAllThreadWindowProc,
-                    reinterpret_cast<LPARAM>(&windows));
-  return windows;
-}
-
 /**************************************************************
  *
  * SECTION: nsIWidget::Show
