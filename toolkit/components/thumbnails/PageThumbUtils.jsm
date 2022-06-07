@@ -11,8 +11,10 @@ var EXPORTED_SYMBOLS = ["PageThumbUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
@@ -344,7 +346,7 @@ var PageThumbUtils = {
   },
 
   shouldStoreContentThumbnail(aDocument, aDocShell) {
-    if (BrowserUtils.isFindbarVisible(aDocShell)) {
+    if (lazy.BrowserUtils.isFindbarVisible(aDocShell)) {
       return false;
     }
 

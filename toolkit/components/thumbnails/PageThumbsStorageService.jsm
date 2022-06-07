@@ -9,11 +9,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function() {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -50,8 +52,8 @@ PageThumbsStorageService.prototype = {
   },
 
   _calculateMD5Hash(aValue) {
-    let hash = gCryptoHash;
-    let value = gUnicodeConverter.convertToByteArray(aValue);
+    let hash = lazy.gCryptoHash;
+    let value = lazy.gUnicodeConverter.convertToByteArray(aValue);
 
     hash.init(hash.MD5);
     hash.update(value, value.length);
