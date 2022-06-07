@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom.quota += [
 UNIFIED_SOURCES = [
     "Common.cpp",
     "TestCheckedUnsafePtr.cpp",
+    "TestClientUsageArray.cpp",
     "TestEncryptedStream.cpp",
     "TestFlatten.cpp",
     "TestForwardDecls.cpp",
