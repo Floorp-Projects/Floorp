@@ -10,8 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "serviceWorkerManager",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
@@ -109,7 +111,7 @@ class PrincipalsCollector {
     });
 
     progress.step = "principals-service-workers";
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    let serviceWorkers = lazy.serviceWorkerManager.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
       let sw = serviceWorkers.queryElementAt(
         i,

@@ -9,8 +9,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "serviceWorkerManager",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
@@ -33,7 +35,7 @@ function unregisterServiceWorker(aSW) {
         "nsIServiceWorkerUnregisterCallback",
       ]),
     };
-    serviceWorkerManager.propagateUnregister(
+    lazy.serviceWorkerManager.propagateUnregister(
       aSW.principal,
       unregisterCallback,
       aSW.scope
@@ -43,7 +45,7 @@ function unregisterServiceWorker(aSW) {
 
 function unregisterServiceWorkersMatching(filterFn) {
   let promises = [];
-  let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+  let serviceWorkers = lazy.serviceWorkerManager.getAllRegistrations();
   for (let i = 0; i < serviceWorkers.length; i++) {
     let sw = serviceWorkers.queryElementAt(
       i,
@@ -80,7 +82,7 @@ const ServiceWorkerCleanUp = {
   },
 
   removeFromOriginAttributes(aOriginAttributesString) {
-    serviceWorkerManager.removeRegistrationsByOriginAttributes(
+    lazy.serviceWorkerManager.removeRegistrationsByOriginAttributes(
       aOriginAttributesString
     );
     return Promise.resolve();
