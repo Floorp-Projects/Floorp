@@ -1,2 +1,2 @@
 HTTP 103 Too Early
-Link: <http://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs?1ac2a5e1-90c7-4171-b0f0-676f7d899af3>; rel=preload; as=image
+Link: <https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs?1ac2a5e1-90c7-4171-b0f0-676f7d899af3>; rel=preload; as=image
