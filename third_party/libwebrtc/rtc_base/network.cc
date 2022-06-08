@@ -40,6 +40,14 @@
 namespace rtc {
 namespace {
 
+// List of MAC addresses of known VPN (for windows).
+constexpr uint8_t kVpns[2][6] = {
+    // Cisco AnyConnect.
+    {0x0, 0x5, 0x9A, 0x3C, 0x7A, 0x0},
+    // GlobalProtect Virtual Ethernet.
+    {0x2, 0x50, 0x41, 0x0, 0x0, 0x1},
+};
+
 const uint32_t kUpdateNetworksMessage = 1;
 const uint32_t kSignalNetworksMessage = 2;
 
@@ -486,6 +494,20 @@ Network* NetworkManagerBase::GetNetworkFromAddress(
   return nullptr;
 }
 
+bool NetworkManagerBase::IsVpnMacAddress(
+    rtc::ArrayView<const uint8_t> address) {
+  if (address.data() == nullptr && address.size() == 0) {
+    return false;
+  }
+  for (const auto& vpn : kVpns) {
+    if (sizeof(vpn) == address.size() &&
+        memcmp(vpn, address.data(), address.size()) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 BasicNetworkManager::BasicNetworkManager() : BasicNetworkManager(nullptr) {}
 
 BasicNetworkManager::BasicNetworkManager(
@@ -781,6 +803,15 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
             vpn_underlying_adapter_type = adapter_type;
             adapter_type = ADAPTER_TYPE_VPN;
           }
+          if (adapter_type != ADAPTER_TYPE_VPN &&
+              IsVpnMacAddress(rtc::ArrayView<const uint8_t>(
+                  reinterpret_cast<const uint8_t*>(
+                      adapter_addrs->PhysicalAddress),
+                  adapter_addrs->PhysicalAddressLength))) {
+            vpn_underlying_adapter_type = adapter_type;
+            adapter_type = ADAPTER_TYPE_VPN;
+          }
+
           std::unique_ptr<Network> network(new Network(
               name, description, prefix, prefix_length, adapter_type));
           network->set_underlying_type_for_vpn(vpn_underlying_adapter_type);

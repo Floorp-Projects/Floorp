@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/mdns_responder_interface.h"
@@ -193,6 +194,10 @@ class RTC_EXPORT NetworkManagerBase : public NetworkManager {
   EnumerationPermission enumeration_permission() const override;
 
   bool GetDefaultLocalAddress(int family, IPAddress* ipaddr) const override;
+
+  // Check if MAC address in |bytes| is one of the pre-defined
+  // MAC addresses for know VPNs.
+  static bool IsVpnMacAddress(rtc::ArrayView<const uint8_t> address);
 
  protected:
   typedef std::map<std::string, Network*> NetworkMap;
