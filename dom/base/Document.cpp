@@ -49,7 +49,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CSSEnabledState.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
@@ -17701,8 +17700,7 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   // We use the lower-level ContentBlocking API here to ensure this
   // check doesn't send notifications.
   uint32_t rejectedReason = 0;
-  if (ContentBlocking::ShouldAllowAccessFor(inner, GetDocumentURI(),
-                                            &rejectedReason)) {
+  if (ShouldAllowAccessFor(inner, GetDocumentURI(), &rejectedReason)) {
     return mActiveStoragePrincipal = NodePrincipal();
   }
 

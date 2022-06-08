@@ -7,11 +7,11 @@
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "CookieService.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -386,8 +386,7 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
   if (aDocument->CookieJarSettings()->GetLimitForeignContexts() &&
       !aHasExistingCookiesLambda(baseDomain,
                                  storagePrincipal->OriginAttributesRef()) &&
-      !ContentBlocking::ShouldAllowAccessFor(innerWindow, principalURI,
-                                             &dummyRejectedReason)) {
+      !ShouldAllowAccessFor(innerWindow, principalURI, &dummyRejectedReason)) {
     return nullptr;
   }
 
