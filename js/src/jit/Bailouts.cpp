@@ -133,8 +133,9 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   MOZ_ASSERT(IsBaselineJitEnabled(cx));
 
   *bailoutInfo = nullptr;
-  bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frame,
-                                      bailoutInfo, /*exceptionInfo=*/nullptr);
+  bool success =
+      BailoutIonToBaseline(cx, bailoutData.activation(), frame, bailoutInfo,
+                           /*exceptionInfo=*/nullptr, BailoutReason::Normal);
   MOZ_ASSERT_IF(success, *bailoutInfo != nullptr);
 
   if (!success) {
@@ -209,14 +210,11 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
 
   *bailoutInfo = nullptr;
   bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frame,
-                                      bailoutInfo, /*exceptionInfo=*/nullptr);
+                                      bailoutInfo, /*exceptionInfo=*/nullptr,
+                                      BailoutReason::Invalidate);
   MOZ_ASSERT_IF(success, *bailoutInfo != nullptr);
 
-  if (success) {
-    // Update the bailout kind.
-    (*bailoutInfo)->bailoutKind =
-        mozilla::Some(BailoutKind::OnStackInvalidation);
-  } else {
+  if (!success) {
     MOZ_ASSERT(cx->isExceptionPending());
 
     // If the bailout failed, then bailout trampoline will pop the
@@ -286,7 +284,8 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
 
   BaselineBailoutInfo* bailoutInfo = nullptr;
   bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frameView,
-                                      &bailoutInfo, &excInfo);
+                                      &bailoutInfo, &excInfo,
+                                      BailoutReason::ExceptionHandler);
   if (success) {
     MOZ_ASSERT(bailoutInfo);
 
