@@ -64,19 +64,6 @@ static constexpr int kAgcStartupMinVolume = 0;
 #endif  // defined(WEBRTC_CHROMIUM_BUILD)
 static constexpr int kClippedLevelMin = 70;
 
-// To be deprecated: Please instead use the flag in the
-// AudioProcessing::Config::TransientSuppression.
-//
-// Use to enable experimental noise suppression. It can be set in the
-// constructor.
-// TODO(webrtc:5298): Remove.
-struct ExperimentalNs {
-  ExperimentalNs() : enabled(false) {}
-  explicit ExperimentalNs(bool enabled) : enabled(enabled) {}
-  static const ConfigOptionID identifier = ConfigOptionID::kExperimentalNs;
-  bool enabled;
-};
-
 // The Audio Processing Module (APM) provides a collection of voice processing
 // components designed for real-time communications software.
 //
@@ -800,7 +787,6 @@ class RTC_EXPORT AudioProcessingBuilder {
   // This creates an APM instance using the previously set components. Calling
   // the Create function resets the AudioProcessingBuilder to its initial state.
   rtc::scoped_refptr<AudioProcessing> Create();
-  rtc::scoped_refptr<AudioProcessing> Create(const webrtc::Config& config);
 
  private:
   std::unique_ptr<EchoControlFactory> echo_control_factory_;

@@ -55,10 +55,9 @@ class AudioProcessingImpl : public AudioProcessing {
  public:
   // Methods forcing APM to run in a single-threaded manner.
   // Acquires both the render and capture locks.
-  explicit AudioProcessingImpl(const webrtc::Config& config);
+  AudioProcessingImpl();
   // AudioProcessingImpl takes ownership of capture post processor.
-  AudioProcessingImpl(const webrtc::Config& config,
-                      std::unique_ptr<CustomProcessing> capture_post_processor,
+  AudioProcessingImpl(std::unique_ptr<CustomProcessing> capture_post_processor,
                       std::unique_ptr<CustomProcessing> render_pre_processor,
                       std::unique_ptr<EchoControlFactory> echo_control_factory,
                       rtc::scoped_refptr<EchoDetector> echo_detector,

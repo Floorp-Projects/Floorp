@@ -2673,14 +2673,13 @@ class MyEchoControlFactory : public EchoControlFactory {
 
 TEST(ApmConfiguration, EchoControlInjection) {
   // Verify that apm uses an injected echo controller if one is provided.
-  webrtc::Config webrtc_config;
   std::unique_ptr<EchoControlFactory> echo_control_factory(
       new MyEchoControlFactory());
 
   rtc::scoped_refptr<AudioProcessing> apm =
       AudioProcessingBuilderForTesting()
           .SetEchoControlFactory(std::move(echo_control_factory))
-          .Create(webrtc_config);
+          .Create();
 
   Int16FrameData audio;
   audio.num_channels = 1;
@@ -2700,9 +2699,8 @@ TEST(ApmConfiguration, EchoControlInjection) {
 }
 
 rtc::scoped_refptr<AudioProcessing> CreateApm(bool mobile_aec) {
-  Config old_config;
   rtc::scoped_refptr<AudioProcessing> apm =
-      AudioProcessingBuilderForTesting().Create(old_config);
+      AudioProcessingBuilderForTesting().Create();
   if (!apm) {
     return apm;
   }

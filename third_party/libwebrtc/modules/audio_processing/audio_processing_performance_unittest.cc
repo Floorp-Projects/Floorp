@@ -482,8 +482,7 @@ class CallSimulator : public ::testing::TestWithParam<SimulationConfig> {
         break;
       }
       case SettingsType::kDefaultApmDesktop: {
-        Config config;
-        apm_ = AudioProcessingBuilderForTesting().Create(config);
+        apm_ = AudioProcessingBuilderForTesting().Create();
         ASSERT_TRUE(!!apm_);
         set_default_desktop_apm_runtime_settings(apm_.get());
         break;
@@ -495,15 +494,13 @@ class CallSimulator : public ::testing::TestWithParam<SimulationConfig> {
         break;
       }
       case SettingsType::kDefaultApmDesktopWithoutDelayAgnostic: {
-        Config config;
-        apm_ = AudioProcessingBuilderForTesting().Create(config);
+        apm_ = AudioProcessingBuilderForTesting().Create();
         ASSERT_TRUE(!!apm_);
         set_default_desktop_apm_runtime_settings(apm_.get());
         break;
       }
       case SettingsType::kDefaultApmDesktopWithoutExtendedFilter: {
-        Config config;
-        apm_ = AudioProcessingBuilderForTesting().Create(config);
+        apm_ = AudioProcessingBuilderForTesting().Create();
         ASSERT_TRUE(!!apm_);
         set_default_desktop_apm_runtime_settings(apm_.get());
         break;

@@ -234,9 +234,8 @@ bool AudioProcessingImpl::SubmoduleStates::HighPassFilteringRequired() const {
          noise_suppressor_enabled_;
 }
 
-AudioProcessingImpl::AudioProcessingImpl(const webrtc::Config& config)
-    : AudioProcessingImpl(config,
-                          /*capture_post_processor=*/nullptr,
+AudioProcessingImpl::AudioProcessingImpl()
+    : AudioProcessingImpl(/*capture_post_processor=*/nullptr,
                           /*render_pre_processor=*/nullptr,
                           /*echo_control_factory=*/nullptr,
                           /*echo_detector=*/nullptr,
@@ -245,7 +244,6 @@ AudioProcessingImpl::AudioProcessingImpl(const webrtc::Config& config)
 int AudioProcessingImpl::instance_count_ = 0;
 
 AudioProcessingImpl::AudioProcessingImpl(
-    const webrtc::Config& config,
     std::unique_ptr<CustomProcessing> capture_post_processor,
     std::unique_ptr<CustomProcessing> render_pre_processor,
     std::unique_ptr<EchoControlFactory> echo_control_factory,
@@ -299,12 +297,6 @@ AudioProcessingImpl::AudioProcessingImpl(
   if (!submodules_.echo_detector) {
     submodules_.echo_detector = rtc::make_ref_counted<ResidualEchoDetector>();
   }
-
-#if !(defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS))
-  // TODO(webrtc:5298): Remove once the use of ExperimentalNs has been
-  // deprecated.
-  config_.transient_suppression.enabled = config.Get<ExperimentalNs>().enabled;
-#endif
 
   Initialize();
 }
