@@ -10,7 +10,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
@@ -249,7 +250,7 @@ SearchSuggestionController.prototype = {
       this.suggestionsEnabled &&
       (!privateMode || this.suggestionsInPrivateBrowsingEnabled) &&
       this.maxRemoteResults &&
-      engine.supportsResponseType(SearchUtils.URL_TYPE.SUGGEST_JSON)
+      engine.supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON)
     ) {
       this._deferredRemoteResult = this._fetchRemote(
         searchTerm,
@@ -442,11 +443,11 @@ SearchSuggestionController.prototype = {
    *   rejected if there is an error.
    */
   _fetchRemote(searchTerm, engine, privateMode, userContextId) {
-    let deferredResponse = PromiseUtils.defer();
+    let deferredResponse = lazy.PromiseUtils.defer();
     this._request = new XMLHttpRequest();
     let submission = engine.getSubmission(
       searchTerm,
-      SearchUtils.URL_TYPE.SUGGEST_JSON
+      lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
     );
     let method = submission.postData ? "POST" : "GET";
     this._request.open(method, submission.uri.spec, true);
@@ -776,7 +777,7 @@ SearchSuggestionController.prototype = {
  * @returns {boolean} True if the engine offers suggestions and false otherwise.
  */
 SearchSuggestionController.engineOffersSuggestions = function(engine) {
-  return engine.supportsResponseType(SearchUtils.URL_TYPE.SUGGEST_JSON);
+  return engine.supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON);
 };
 
 /**

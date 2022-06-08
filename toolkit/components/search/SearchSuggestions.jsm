@@ -6,8 +6,9 @@ const { FormAutoCompleteResult } = ChromeUtils.import(
   "resource://gre/modules/nsFormAutoCompleteResult.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SearchSuggestionController",
   "resource://gre/modules/SearchSuggestionController.jsm"
 );
@@ -25,7 +26,7 @@ function SuggestAutoComplete() {
 }
 SuggestAutoComplete.prototype = {
   _init() {
-    this._suggestionController = new SearchSuggestionController(obj =>
+    this._suggestionController = new lazy.SearchSuggestionController(obj =>
       this.onResultsReturned(obj)
     );
     this._suggestionController.maxLocalResults = this._historyLimit;
