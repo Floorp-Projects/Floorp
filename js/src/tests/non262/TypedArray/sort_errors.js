@@ -8,18 +8,18 @@ if (typeof detachArrayBuffer === "function") {
     }, TypeError);
 }
 
-// Ensure detachment check works when buffer is detached in comparator.
+// Ensure detaching buffer in comparator doesn't throw an error.
 if (typeof detachArrayBuffer === "function") {
     let detached = false;
     let ta = new Int32Array(3);
-    assertThrowsInstanceOf(() => {
-        ta.sort(function(a, b) {
-            assertEq(detached, false);
+    ta.sort(function(a, b) {
+        if (!detached) {
             detached = true;
             detachArrayBuffer(ta.buffer);
-            return a - b;
-        });
-    }, TypeError);
+        }
+        return a - b;
+    });
+    assertEq(detached, true);
 }
 
 // Ensure detachment check doesn't choke on wrapped typed array.
@@ -31,19 +31,19 @@ if (typeof newGlobal === "function") {
     });
 }
 
-// Ensure detachment check works for wrapped typed arrays.
+// Ensure detaching buffer in comparator doesn't throw an error when the typed array is wrapped.
 if (typeof newGlobal === "function" && typeof detachArrayBuffer === "function") {
     let detached = false;
     let ta = new Int32Array(3);
     let otherGlobal = newGlobal();
-    assertThrowsInstanceOf(() => {
-        otherGlobal.Int32Array.prototype.sort.call(ta, function(a,b) {
-            assertEq(detached, false);
+    otherGlobal.Int32Array.prototype.sort.call(ta, function(a,b) {
+        if (!detached) {
             detached = true;
             detachArrayBuffer(ta.buffer);
-            return a - b;
-        });
-    }, otherGlobal.TypeError);
+        }
+        return a - b;
+    });
+    assertEq(detached, true);
 }
 
 // Ensure that TypedArray.prototype.sort will not sort non-TypedArrays
