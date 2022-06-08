@@ -127,6 +127,11 @@ struct SimdShuffle {
     SimdShuffle s{opd, control, mozilla::Nothing(), mozilla::Some(op)};
     return s;
   }
+
+  bool equals(const SimdShuffle* other) const {
+    return permuteOp == other->permuteOp && shuffleOp == other->shuffleOp &&
+           opd == other->opd && control.bitwiseEqual(other->control);
+  }
 };
 
 #ifdef ENABLE_WASM_SIMD
