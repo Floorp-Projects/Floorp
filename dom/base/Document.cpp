@@ -49,6 +49,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CSSEnabledState.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
@@ -95,7 +96,6 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/RefCountType.h"
-#include "mozilla/RejectForeignAllowList.h"
 #include "mozilla/RelativeTo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ReverseIterator.h"
@@ -16425,7 +16425,7 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
   }
 
   // We don't care when the asynchronous work finishes here.
-  Unused << StorageAccessAPIHelper::AllowAccessFor(
+  Unused << ContentBlocking::AllowAccessFor(
       NodePrincipal(), openerBC,
       ContentBlockingNotifier::eOpenerAfterUserInteraction);
 }
@@ -16834,7 +16834,7 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
     return NS_OK;
   }
   Maybe<bool> resultBecauseCookiesApproved =
-      StorageAccessAPIHelper::CheckCookiesPermittedDecidesStorageAccessAPI(
+      ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(
           CookieJarSettings(), NodePrincipal());
   if (resultBecauseCookiesApproved.isSome()) {
     if (resultBecauseCookiesApproved.value()) {
@@ -16849,19 +16849,9 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 2: Check if the browser settings determine whether or not this
   // document has access to its unpartitioned cookies.
   bool isThirdPartyDocument = AntiTrackingUtils::IsThirdPartyDocument(this);
-  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(this);
-  bool isOnThirdPartySkipList = false;
-  if (mChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-    isOnThirdPartySkipList = loadInfo->GetStoragePermission() ==
-                             nsILoadInfo::StoragePermissionAllowListed;
-  }
-  bool isThirdPartyTracker =
-      nsContentUtils::IsThirdPartyTrackingResourceWindow(inner);
   Maybe<bool> resultBecauseBrowserSettings =
-      StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
-          isOnThirdPartySkipList, isThirdPartyTracker);
+      ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
+          CookieJarSettings(), isThirdPartyDocument);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       aHasStorageAccess = true;
@@ -16875,8 +16865,7 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 3: Check if the location of this call (embedded, top level, same-site)
   // determines if cookies are permitted or not.
   Maybe<bool> resultBecauseCallContext =
-      StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(this,
-                                                                         false);
+      ContentBlocking::CheckCallingContextDecidesStorageAccessAPI(this, false);
   if (resultBecauseCallContext.isSome()) {
     if (resultBecauseCallContext.value()) {
       aHasStorageAccess = true;
@@ -16890,8 +16879,7 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 4: Check if the permissions for this document determine if if has
   // access or is denied cookies.
   Maybe<bool> resultBecausePreviousPermission =
-      StorageAccessAPIHelper::CheckExistingPermissionDecidesStorageAccessAPI(
-          this);
+      ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(this);
   if (resultBecausePreviousPermission.isSome()) {
     if (resultBecausePreviousPermission.value()) {
       aHasStorageAccess = true;
@@ -16901,6 +16889,7 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
       return NS_OK;
     }
   }
+
   // If you get here, we default to not giving you permission.
   aHasStorageAccess = false;
   return NS_OK;
@@ -16969,9 +16958,8 @@ RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
   // called later in CompleteAllowAccessFor inside of AllowAccessFor.
   auto performFinalChecks = [inner, self, principal, aHasUserInteraction]() {
     // Create the user prompt
-    RefPtr<StorageAccessAPIHelper::StorageAccessFinalCheckPromise::Private> p =
-        new StorageAccessAPIHelper::StorageAccessFinalCheckPromise::Private(
-            __func__);
+    RefPtr<ContentBlocking::StorageAccessFinalCheckPromise::Private> p =
+        new ContentBlocking::StorageAccessFinalCheckPromise::Private(__func__);
     RefPtr<StorageAccessPermissionRequest> sapr =
         StorageAccessPermissionRequest::Create(
             inner, principal,
@@ -16979,7 +16967,7 @@ RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
             [p] {
               Telemetry::AccumulateCategorical(
                   Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
-              p->Resolve(StorageAccessAPIHelper::eAllow, __func__);
+              p->Resolve(ContentBlocking::eAllow, __func__);
             },
             // Block
             [p] {
@@ -17029,10 +17017,10 @@ RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
                 MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
                               pr2 == PromptResult::Denied);
                 if (pr2 == PromptResult::Granted) {
-                  StorageAccessAPIHelper::StorageAccessPromptChoices choice =
-                      StorageAccessAPIHelper::eAllow;
+                  ContentBlocking::StorageAccessPromptChoices choice =
+                      ContentBlocking::eAllow;
                   if (autoGrant) {
-                    choice = StorageAccessAPIHelper::eAllowAutoGrant;
+                    choice = ContentBlocking::eAllowAutoGrant;
                   }
                   if (!autoGrant) {
                     p->Resolve(choice, __func__);
@@ -17059,8 +17047,8 @@ RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
   };
 
   // Try to allow access for the given principal.
-  return StorageAccessAPIHelper::AllowAccessFor(principal, aBrowsingContext,
-                                                aNotifier, performFinalChecks);
+  return ContentBlocking::AllowAccessFor(principal, aBrowsingContext, aNotifier,
+                                         performFinalChecks);
 }
 
 already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
@@ -17076,20 +17064,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     return nullptr;
   }
 
-  // Get a pointer to the inner window- We need this for convenience sake
-  RefPtr<nsPIDOMWindowInner> inner = this->GetInnerWindow();
-  if (!inner) {
-    this->ConsumeTransientUserGestureActivation();
-    promise->MaybeRejectWithUndefined();
-    return promise.forget();
-  }
-
   // Step 1: Check if the principal calling this has a permission that lets
   // them use cookies or forbids them from using cookies.
   // This is outside of the spec of the StorageAccess API, but makes the return
   // values to have proper semantics.
   Maybe<bool> resultBecauseCookiesApproved =
-      StorageAccessAPIHelper::CheckCookiesPermittedDecidesStorageAccessAPI(
+      ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(
           CookieJarSettings(), NodePrincipal());
   if (resultBecauseCookiesApproved.isSome()) {
     if (resultBecauseCookiesApproved.value()) {
@@ -17107,19 +17087,9 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // This is outside of the spec of the StorageAccess API, but makes the return
   // values to have proper semantics.
   bool isThirdPartyDocument = AntiTrackingUtils::IsThirdPartyDocument(this);
-  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(this);
-  bool isOnThirdPartySkipList = false;
-  if (mChannel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-    isOnThirdPartySkipList = loadInfo->GetStoragePermission() ==
-                             nsILoadInfo::StoragePermissionAllowListed;
-  }
-  bool isThirdPartyTracker =
-      nsContentUtils::IsThirdPartyTrackingResourceWindow(inner);
   Maybe<bool> resultBecauseBrowserSettings =
-      StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
-          isOnThirdPartySkipList, isThirdPartyTracker);
+      ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
+          CookieJarSettings(), isThirdPartyDocument);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17134,8 +17104,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // Step 3: Check if the Document calling requestStorageAccess has anything to
   // gain from storage access. It should be embedded, non-null, etc.
   Maybe<bool> resultBecauseCallContext =
-      StorageAccessAPIHelper::CheckCallingContextDecidesStorageAccessAPI(this,
-                                                                         true);
+      ContentBlocking::CheckCallingContextDecidesStorageAccessAPI(this, true);
   if (resultBecauseCallContext.isSome()) {
     if (resultBecauseCallContext.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17150,8 +17119,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // Step 4: Check if we already allowed or denied storage access for this
   // document's storage key.
   Maybe<bool> resultBecausePreviousPermission =
-      StorageAccessAPIHelper::CheckExistingPermissionDecidesStorageAccessAPI(
-          this);
+      ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(this);
   if (resultBecausePreviousPermission.isSome()) {
     if (resultBecausePreviousPermission.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17165,6 +17133,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
   // Get pointers to some objects that will be used in the async portion
   RefPtr<BrowsingContext> bc = this->GetBrowsingContext();
+  nsPIDOMWindowInner* inner = this->GetInnerWindow();
+  if (!inner) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
   RefPtr<nsGlobalWindowOuter> outer =
       nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
   if (!outer) {
@@ -17186,12 +17160,19 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                                   ContentBlockingNotifier::eStorageAccessAPI)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, inner, promise] {
-            inner->SaveStorageAccessPermissionGranted();
+          [self, outer, promise] {
+            // Step 10. Grant the document access to cookies and store
+            // that fact for
+            //          the purposes of future calls to
+            //          hasStorageAccess() and requestStorageAccess().
+            outer->SetStorageAccessPermissionGranted(true);
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
-          [promise] { promise->MaybeRejectWithUndefined(); });
+          [outer, promise] {
+            outer->SetStorageAccessPermissionGranted(false);
+            promise->MaybeRejectWithUndefined();
+          });
 
   return promise.forget();
 }
@@ -17222,12 +17203,9 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
     aRv.Throw(rv);
     return nullptr;
   }
-  bool isOnRejectForeignAllowList =
-      RejectForeignAllowList::Check(thirdPartyURI);
   Maybe<bool> resultBecauseBrowserSettings =
-      StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
-          false, true);
+      ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
+          CookieJarSettings(), isThirdPartyDocument);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17240,8 +17218,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
 
   // Step 2: Check that this Document is same-site to the top, and check that
   // we have user activation if we require it.
-  Maybe<bool> resultBecauseCallContext = StorageAccessAPIHelper::
-      CheckSameSiteCallingContextDecidesStorageAccessAPI(
+  Maybe<bool> resultBecauseCallContext =
+      ContentBlocking::CheckSameSiteCallingContextDecidesStorageAccessAPI(
           this, aRequireUserActivation);
   if (resultBecauseCallContext.isSome()) {
     if (resultBecauseCallContext.value()) {
@@ -17288,7 +17266,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
   // permission, but this can't be done in this process. We needs the cookie
   // permission of the URL as if it were embedded on this page, so we need to
   // make this check in the ContentParent.
-  StorageAccessAPIHelper::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
+  ContentBlocking::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
       GetBrowsingContext(), principal)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
@@ -17337,8 +17315,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
           GetCurrentSerialEventTarget(), __func__,
           // If the previous handlers resolved, we should reinstate user
           // activation and resolve the promise we returned in Step 5.
-          [self, inner, promise] {
-            inner->SaveStorageAccessPermissionGranted();
+          [self, promise] {
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
@@ -17679,7 +17656,8 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   // We use the lower-level ContentBlocking API here to ensure this
   // check doesn't send notifications.
   uint32_t rejectedReason = 0;
-  if (ShouldAllowAccessFor(inner, GetDocumentURI(), &rejectedReason)) {
+  if (ContentBlocking::ShouldAllowAccessFor(inner, GetDocumentURI(),
+                                            &rejectedReason)) {
     return mActiveStoragePrincipal = NodePrincipal();
   }
 

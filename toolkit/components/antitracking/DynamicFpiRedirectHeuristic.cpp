@@ -6,9 +6,9 @@
 
 #include "AntiTrackingLog.h"
 #include "DynamicFpiRedirectHeuristic.h"
+#include "ContentBlocking.h"
 #include "ContentBlockingAllowList.h"
 #include "ContentBlockingUserInteraction.h"
-#include "StorageAccessAPIHelper.h"
 
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/Telemetry.h"
@@ -329,10 +329,10 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
       Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::Redirect);
 
   // We don't care about this promise because the operation is actually sync.
-  RefPtr<StorageAccessAPIHelper::ParentAccessGrantPromise> promise =
-      StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
+  RefPtr<ContentBlocking::ParentAccessGrantPromise> promise =
+      ContentBlocking::SaveAccessForOriginOnParentProcess(
           newPrincipal, oldPrincipal,
-          StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow,
+          ContentBlocking::StorageAccessPromptChoices::eAllow,
           StaticPrefs::privacy_restrict3rdpartystorage_expiration_visited());
   Unused << promise;
 }
