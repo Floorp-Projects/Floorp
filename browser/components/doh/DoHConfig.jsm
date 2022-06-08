@@ -17,7 +17,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -38,16 +40,16 @@ const kConfigPrefs = {
 
 const kPrefChangedTopic = "nsPref:changed";
 
-const gProvidersCollection = RemoteSettings("doh-providers");
-const gConfigCollection = RemoteSettings("doh-config");
+const gProvidersCollection = lazy.RemoteSettings("doh-providers");
+const gConfigCollection = lazy.RemoteSettings("doh-config");
 
 function getPrefValueRegionFirst(prefName) {
   let regionalPrefName = `${kRegionPrefBranch}.${prefName}`;
-  let regionalPrefValue = Preferences.get(regionalPrefName);
+  let regionalPrefValue = lazy.Preferences.get(regionalPrefName);
   if (regionalPrefValue !== undefined) {
     return regionalPrefValue;
   }
-  return Preferences.get(`${kGlobalPrefBranch}.${prefName}`);
+  return lazy.Preferences.get(`${kGlobalPrefBranch}.${prefName}`);
 }
 
 function getProviderListFromPref(prefName) {
@@ -171,7 +173,7 @@ const DoHConfigController = {
   // until the region is available.
   async loadRegion() {
     await new Promise(resolve => {
-      let homeRegion = Preferences.get(`${kGlobalPrefBranch}.home-region`);
+      let homeRegion = lazy.Preferences.get(`${kGlobalPrefBranch}.home-region`);
       if (homeRegion) {
         kRegionPrefBranch = `${kGlobalPrefBranch}.${homeRegion.toLowerCase()}`;
         resolve();
@@ -179,20 +181,23 @@ const DoHConfigController = {
       }
 
       let updateRegionAndResolve = () => {
-        kRegionPrefBranch = `${kGlobalPrefBranch}.${Region.home.toLowerCase()}`;
-        Preferences.set(`${kGlobalPrefBranch}.home-region`, Region.home);
+        kRegionPrefBranch = `${kGlobalPrefBranch}.${lazy.Region.home.toLowerCase()}`;
+        lazy.Preferences.set(
+          `${kGlobalPrefBranch}.home-region`,
+          lazy.Region.home
+        );
         resolve();
       };
 
-      if (Region.home) {
+      if (lazy.Region.home) {
         updateRegionAndResolve();
         return;
       }
 
       Services.obs.addObserver(function obs(sub, top, data) {
-        Services.obs.removeObserver(obs, Region.REGION_TOPIC);
+        Services.obs.removeObserver(obs, lazy.Region.REGION_TOPIC);
         updateRegionAndResolve();
-      }, Region.REGION_TOPIC);
+      }, lazy.Region.REGION_TOPIC);
     });
 
     // Finally, reload config.
@@ -265,7 +270,7 @@ const DoHConfigController = {
       configByRegion.set(c.id, c);
     });
 
-    let homeRegion = Preferences.get(`${kGlobalPrefBranch}.home-region`);
+    let homeRegion = lazy.Preferences.get(`${kGlobalPrefBranch}.home-region`);
     let localConfig =
       configByRegion.get(homeRegion?.toLowerCase()) ||
       configByRegion.get("global");
