@@ -159,8 +159,8 @@ SimulcastEncoderAdapter::EncoderContext::EncoderContext(
 
 void SimulcastEncoderAdapter::EncoderContext::Release() {
   if (encoder_) {
-    encoder_->RegisterEncodeCompleteCallback(nullptr);
     encoder_->Release();
+    encoder_->RegisterEncodeCompleteCallback(nullptr);
   }
 }
 
