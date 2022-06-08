@@ -34,11 +34,10 @@ function findOrCreateNode(
   path,
   part,
   index,
-  url,
-  mainThreadHost,
-  source
+  source,
+  mainThreadHost
 ) {
-  const addedPartIsFile = partIsFile(index, parts, url);
+  const addedPartIsFile = partIsFile(index, parts, source.displayURL);
 
   const { found: childFound, index: childIndex } = findNodeInContents(
     subTree,
@@ -79,8 +78,8 @@ function findOrCreateNode(
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(url, tree, mainThreadHost, source, thread) {
-  const parts = getPathParts(url, thread, mainThreadHost);
+function traverseTree(source, tree, mainThreadHost, thread) {
+  const parts = getPathParts(source.displayURL, thread, mainThreadHost);
   return parts.reduce(
     (subTree, { part, path, mainThreadHostIfRoot }, index) =>
       findOrCreateNode(
@@ -89,9 +88,8 @@ function traverseTree(url, tree, mainThreadHost, source, thread) {
         path,
         part,
         index,
-        url,
+        source,
         mainThreadHostIfRoot,
-        source
       ),
     tree
   );
@@ -100,7 +98,8 @@ function traverseTree(url, tree, mainThreadHost, source, thread) {
 /*
  * Add a source file to a directory node in the tree
  */
-function addSourceToNode(node, url, source) {
+function addSourceToNode(node, source) {
+  const url = source.displayURL;
   const isFile = !isPathDirectory(url.path);
 
   if (node.type == "source" && !isFile) {
@@ -150,9 +149,7 @@ function addSourceToNode(node, url, source) {
  * @static
  */
 export function addToTree(tree, source, mainThreadHost, thread) {
-  const url = source.displayURL;
+  const finalNode = traverseTree(source, tree, mainThreadHost, thread);
 
-  const finalNode = traverseTree(url, tree, mainThreadHost, source, thread);
-
-  finalNode.contents = addSourceToNode(finalNode, url, source);
+  finalNode.contents = addSourceToNode(finalNode, source);
 }
