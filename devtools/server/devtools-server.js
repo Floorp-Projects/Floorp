@@ -101,6 +101,12 @@ var DevToolsServer = {
   keepAlive: false,
 
   /**
+   * Set by DevToolsFrame JSWindowActor in order to automatically destroy
+   * the server once the last connection is removed. This is ignored if keepAlive is set to true.
+   */
+  autoDestroy: false,
+
+  /**
    * We run a special server in child process whose main actor is an instance
    * of WindowGlobalTargetActor, but that isn't a root actor. Instead there is no root
    * actor registered on DevToolsServer.
@@ -419,13 +425,9 @@ var DevToolsServer = {
     delete this._connections[connection.prefix];
     this.emit("connectionchange", "closed", connection);
 
-    // If keepAlive isn't explicitely set to true, destroy the server once its
-    // last connection closes. Multiple JSWindowActor may use the same DevToolsServer
-    // and in this case, let the server destroy itself once the last connection closes.
-    // Otherwise we set keepAlive to true when starting a listening server, receiving
-    // client connections. Typically when running server on phones, or on desktop
-    // via `--start-debugger-server`.
-    if (this.hasConnection() || this.keepAlive) {
+    // Destroy the server once its last connection closes. Note that multiple
+    // JSWindowActor may be running in parallel and reuse the same server.
+    if (!this.autoDestroy || this.hasConnection() || this.keepAlive) {
       return;
     }
 

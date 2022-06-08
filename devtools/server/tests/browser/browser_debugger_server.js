@@ -52,10 +52,12 @@ async function testDevToolsServerInitialized() {
 
   await commands.destroy();
 
-  // Disconnecting the client will remove all connections from both server, in parent and content process.
+  // Disconnecting the client will remove all connections from both server,
+  // in parent and content process. But only the one in the content process will be
+  // destroyed.
   ok(
-    !DevToolsServer.initialized,
-    "Destroying the commands destroys the DevToolsServer in the parent process"
+    DevToolsServer.initialized,
+    "Destroying the commands doesn't destroy the DevToolsServer in the parent process"
   );
   await assertServerInitialized(
     browser,
@@ -87,7 +89,6 @@ async function testDevToolsServerKeepAlive() {
   );
 
   info("Set DevToolsServer.keepAlive to true in the content process");
-  DevToolsServer.keepAlive = true;
   await setContentServerKeepAlive(browser, true);
 
   info("Destroy the commands, the content server should be kept alive");
@@ -99,13 +100,7 @@ async function testDevToolsServerKeepAlive() {
     "Server still running in content process"
   );
 
-  ok(
-    DevToolsServer.initialized,
-    "Destroying the commands never destroys the DevToolsServer in the parent process when keepAlive is true"
-  );
-
   info("Set DevToolsServer.keepAlive back to false");
-  DevToolsServer.keepAlive = false;
   await setContentServerKeepAlive(browser, false);
 
   info("Create and destroy a commands again");
@@ -118,11 +113,6 @@ async function testDevToolsServerKeepAlive() {
     browser,
     false,
     "Server stopped in content process"
-  );
-
-  ok(
-    !DevToolsServer.initialized,
-    "When turning keepAlive to false, the server in the parent process is destroyed"
   );
 
   gBrowser.removeCurrentTab();
