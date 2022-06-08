@@ -4,11 +4,6 @@
 
 "use strict";
 
-Services.prefs.setCharPref(
-  "dom.securecontext.allowlist",
-  "example.com,example.net"
-);
-
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
 const {
@@ -23,8 +18,8 @@ const {
 add_task(async function test_103_error_400() {
   await test_hint_preload(
     "test_103_error_400",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?400",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?400",
     { hinted: 1, normal: 1 }
   );
 });
@@ -33,8 +28,8 @@ add_task(async function test_103_error_400() {
 add_task(async function test_103_error_401() {
   await test_hint_preload(
     "test_103_error_401",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?401",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?401",
     { hinted: 1, normal: 1 }
   );
 });
@@ -43,8 +38,8 @@ add_task(async function test_103_error_401() {
 add_task(async function test_103_error_403() {
   await test_hint_preload(
     "test_103_error_403",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?403",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?403",
     { hinted: 1, normal: 1 }
   );
 });
@@ -53,8 +48,8 @@ add_task(async function test_103_error_403() {
 add_task(async function test_103_error_404() {
   await test_hint_preload(
     "test_103_error_404",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?404",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?404",
     { hinted: 1, normal: 1 }
   );
 });
@@ -63,8 +58,8 @@ add_task(async function test_103_error_404() {
 add_task(async function test_103_error_408() {
   await test_hint_preload(
     "test_103_error_408",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?408",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?408",
     { hinted: 1, normal: 1 }
   );
 });
@@ -73,8 +68,8 @@ add_task(async function test_103_error_408() {
 add_task(async function test_103_error_410() {
   await test_hint_preload(
     "test_103_error_410",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?410",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?410",
     { hinted: 1, normal: 0 }
   );
 });
@@ -83,8 +78,8 @@ add_task(async function test_103_error_410() {
 add_task(async function test_103_error_429() {
   await test_hint_preload(
     "test_103_error_429",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?429",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?429",
     { hinted: 1, normal: 1 }
   );
 });
@@ -93,8 +88,8 @@ add_task(async function test_103_error_429() {
 add_task(async function test_103_error_500() {
   await test_hint_preload(
     "test_103_error_500",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?500",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?500",
     { hinted: 1, normal: 1 }
   );
 });
@@ -103,8 +98,8 @@ add_task(async function test_103_error_500() {
 add_task(async function test_103_error_502() {
   await test_hint_preload(
     "test_103_error_502",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?502",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?502",
     { hinted: 1, normal: 1 }
   );
 });
@@ -113,8 +108,8 @@ add_task(async function test_103_error_502() {
 add_task(async function test_103_error_503() {
   await test_hint_preload(
     "test_103_error_503",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?503",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?503",
     { hinted: 1, normal: 1 }
   );
 });
@@ -123,8 +118,8 @@ add_task(async function test_103_error_503() {
 add_task(async function test_103_error_504() {
   await test_hint_preload(
     "test_103_error_504",
-    "http://example.com",
-    "http://example.com/browser/netwerk/test/browser/early_hint_error.sjs?504",
+    "https://example.com",
+    "https://example.com/browser/netwerk/test/browser/early_hint_error.sjs?504",
     { hinted: 1, normal: 1 }
   );
 });

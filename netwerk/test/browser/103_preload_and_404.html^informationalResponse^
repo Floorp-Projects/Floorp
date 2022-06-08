@@ -1,2 +1,2 @@
 HTTP 103 Early Hints
-Link: <http://example.com/browser/netwerk/test/browser/square.png>; rel=preload; as=image
+Link: <https://example.com/browser/netwerk/test/browser/square.png>; rel=preload; as=image
