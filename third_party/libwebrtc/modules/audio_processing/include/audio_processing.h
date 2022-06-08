@@ -65,22 +65,6 @@ static constexpr int kAgcStartupMinVolume = 0;
 static constexpr int kClippedLevelMin = 70;
 
 // To be deprecated: Please instead use the flag in the
-// AudioProcessing::Config::AnalogGainController.
-// TODO(webrtc:5298): Remove.
-struct ExperimentalAgc {
-  ExperimentalAgc() = default;
-  explicit ExperimentalAgc(bool enabled) : enabled(enabled) {}
-  ExperimentalAgc(bool enabled, int startup_min_volume)
-      : enabled(enabled), startup_min_volume(startup_min_volume) {}
-  static const ConfigOptionID identifier = ConfigOptionID::kExperimentalAgc;
-  bool enabled = true;
-  int startup_min_volume = kAgcStartupMinVolume;
-  // Lowest microphone level that will be applied in response to clipping.
-  int clipped_level_min = kClippedLevelMin;
-  bool digital_adaptive_disabled = false;
-};
-
-// To be deprecated: Please instead use the flag in the
 // AudioProcessing::Config::TransientSuppression.
 //
 // Use to enable experimental noise suppression. It can be set in the

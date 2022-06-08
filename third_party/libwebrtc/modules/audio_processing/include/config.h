@@ -28,7 +28,7 @@ enum class ConfigOptionID {
   kVoicePacing,            // Deprecated
   kExtendedFilter,         // Deprecated
   kDelayAgnostic,          // Deprecated
-  kExperimentalAgc,
+  kExperimentalAgc,        // Deprecated
   kExperimentalNs,
   kBeamforming,               // Deprecated
   kIntelligibility,           // Deprecated
