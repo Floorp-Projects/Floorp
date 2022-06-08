@@ -24,6 +24,8 @@ namespace webrtc {
 static constexpr const int kRedMaxPacketSize =
     1 << 10;  // RED packets must be less than 1024 bytes to fit the 10 bit
               // block length.
+static constexpr const size_t kRedMaxTimestampDelta =
+    1 << 14;  // RED packets can encode a timestamp delta of 14 bits.
 static constexpr const size_t kAudioMaxRtpPacketLen =
     1200;  // The typical MTU is 1200 bytes.
 
@@ -100,7 +102,7 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
   RTC_CHECK(info.redundant.empty()) << "Cannot use nested redundant encoders.";
   RTC_DCHECK_EQ(primary_encoded_.size(), info.encoded_bytes);
 
-  if (info.encoded_bytes == 0 || info.encoded_bytes > kRedMaxPacketSize) {
+  if (info.encoded_bytes == 0 || info.encoded_bytes >= kRedMaxPacketSize) {
     return info;
   }
   RTC_DCHECK_GT(max_packet_length_, info.encoded_bytes);
@@ -110,12 +112,17 @@ AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
   auto it = redundant_encodings_.begin();
 
   // Determine how much redundancy we can fit into our packet by
-  // iterating forward.
+  // iterating forward. This is determined both by the length as well
+  // as the timestamp difference. The latter can occur with opus DTX which
+  // has timestamp gaps of 400ms which exceeds REDs timestamp delta field size.
   for (; it != redundant_encodings_.end(); it++) {
     if (bytes_available < kRedHeaderLength + it->first.encoded_bytes) {
       break;
     }
     if (it->first.encoded_bytes == 0) {
+      break;
+    }
+    if (rtp_timestamp - it->first.encoded_timestamp >= kRedMaxTimestampDelta) {
       break;
     }
     bytes_available -= kRedHeaderLength + it->first.encoded_bytes;
