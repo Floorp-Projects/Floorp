@@ -11863,6 +11863,56 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
+CloseIterIRGenerator::CloseIterIRGenerator(JSContext* cx, HandleScript script,
+                                           jsbytecode* pc, ICState state,
+                                           HandleObject iter)
+    : IRGenerator(cx, script, pc, CacheKind::CloseIter, state), iter_(iter) {}
+
+void CloseIterIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("iter", ObjectValue(*iter_));
+  }
+#endif
+}
+
+AttachDecision CloseIterIRGenerator::tryAttachNoReturnMethod() {
+  Maybe<PropertyInfo> prop;
+  NativeObject* holder = nullptr;
+
+  // If we can guard that the iterator does not have a |return| method,
+  // then this CloseIter is a no-op.
+  NativeGetPropCacheability type = CanAttachNativeGetProp(
+      cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
+  if (type != CanAttachReadSlot) {
+    return AttachDecision::NoAction;
+  }
+  if (holder) {
+    return AttachDecision::NoAction;
+  }
+
+  ObjOperandId objId(writer.setInputOperandId(0));
+
+  Maybe<ObjOperandId> holderId;
+  EmitReadSlotGuard(writer, &iter_->as<NativeObject>(), /*holder=*/nullptr,
+                    objId, &holderId);
+
+  // There is no return method, so we don't have to do anything.
+  writer.returnFromIC();
+
+  trackAttached("CloseIter.NoReturn");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CloseIterIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  TRY_ATTACH(tryAttachNoReturnMethod());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
+}
+
 #ifdef JS_SIMULATOR
 bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);

@@ -842,6 +842,19 @@ inline bool BytecodeOpCanHaveAllocSite(JSOp op) {
   return op == JSOp::NewArray || op == JSOp::NewObject || op == JSOp::NewInit;
 }
 
+class MOZ_RAII CloseIterIRGenerator : public IRGenerator {
+  HandleObject iter_;
+
+  void trackAttached(const char* name);
+
+ public:
+  CloseIterIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
+                       ICState state, HandleObject iter);
+
+  AttachDecision tryAttachStub();
+  AttachDecision tryAttachNoReturnMethod();
+};
+
 // Retrieve Xray JIT info set by the embedder.
 extern JS::XrayJitInfo* GetXrayJitInfo();
 

@@ -2426,6 +2426,8 @@ bool DoCloseIterFallback(JSContext* cx, BaselineFrame* frame,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "CloseIter");
 
+  TryAttachStub<CloseIterIRGenerator>("CloseIter", cx, frame, stub, iter);
+
   return CloseIterOperation(cx, iter);
 }
 
