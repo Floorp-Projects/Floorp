@@ -31,12 +31,9 @@
 // Every time 10ms audio is pulled from NetEq LastDecodedPacket() should be
 // called, and time-to-play is updated at that moment.
 //
-// If packet N is received, any packet prior to |N - NackThreshold| which is not
-// arrived is considered lost, and should be labeled as "missing" (the size of
-// the list might be limited and older packet eliminated from the list). Packets
-// |N - NackThreshold|, |N - NackThreshold + 1|, ..., |N - 1| are considered
-// "late." A "late" packet with sequence number K is changed to "missing" any
-// time a packet with sequence number newer than |K + NackList| is arrived.
+// If packet N is received, any packet prior to N which has not arrived is
+// considered lost, and should be labeled as "missing" (the size of
+// the list might be limited and older packet eliminated from the list).
 //
 // The NackTracker class has to know about the sample rate of the packets to
 // compute time-to-play. So sample rate should be set as soon as the first
@@ -57,9 +54,7 @@ class NackTracker {
   // A limit for the size of the NACK list.
   static const size_t kNackListSizeLimit = 500;  // 10 seconds for 20 ms frame
                                                  // packets.
-  // Factory method.
-  static NackTracker* Create(int nack_threshold_packets);
-
+  NackTracker();
   ~NackTracker();
 
   // Set a maximum for the size of the NACK list. If the last received packet
@@ -93,7 +88,7 @@ class NackTracker {
   std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms);
 
   // Reset to default values. The NACK list is cleared.
-  // `nack_threshold_packets_` & `max_nack_list_size_` preserve their values.
+  // `max_nack_list_size_` preserves its value.
   void Reset();
 
   // Returns the estimated packet loss rate in Q30, for testing only.
@@ -117,12 +112,9 @@ class NackTracker {
   };
 
   struct NackElement {
-    NackElement(int64_t initial_time_to_play_ms,
-                uint32_t initial_timestamp,
-                bool missing)
+    NackElement(int64_t initial_time_to_play_ms, uint32_t initial_timestamp)
         : time_to_play_ms(initial_time_to_play_ms),
-          estimated_timestamp(initial_timestamp),
-          is_missing(missing) {}
+          estimated_timestamp(initial_timestamp) {}
 
     // Estimated time (ms) left for this packet to be decoded. This estimate is
     // updated every time jitter buffer decodes a packet.
@@ -135,10 +127,6 @@ class NackTracker {
     // errors, there will be a minor misestimation in time-to-play of missing
     // packets. This will have a very minor effect on NACK performance.
     uint32_t estimated_timestamp;
-
-    // True if the packet is considered missing. Otherwise indicates packet is
-    // late.
-    bool is_missing;
   };
 
   class NackListCompare {
@@ -151,17 +139,9 @@ class NackTracker {
 
   typedef std::map<uint16_t, NackElement, NackListCompare> NackList;
 
-  // Constructor.
-  explicit NackTracker(int nack_threshold_packets);
-
   // This API is used only for testing to assess whether time-to-play is
   // computed correctly.
   NackList GetNackList() const;
-
-  // Given the `sequence_number_current_received_rtp` of currently received RTP,
-  // recognize packets which are not arrive and add to the list.
-  void AddToList(uint16_t sequence_number_current_received_rtp,
-                 uint32_t timestamp_current_received_rtp);
 
   // This function subtracts 10 ms of time-to-play for all packets in NACK list.
   // This is called when 10 ms elapsed with no new RTP packet decoded.
@@ -174,14 +154,10 @@ class NackTracker {
       uint32_t timestamp_current_received_rtp) const;
 
   // Given the `sequence_number_current_received_rtp` of currently received RTP
-  // update the list. That is; some packets will change from late to missing,
-  // some packets are inserted as missing and some inserted as late.
+  // update the list. Packets that are older than the received packet are added
+  // to the nack list.
   void UpdateList(uint16_t sequence_number_current_received_rtp,
                   uint32_t timestamp_current_received_rtp);
-
-  // Packets which are considered late for too long (according to
-  // `nack_threshold_packets_`) are flagged as missing.
-  void ChangeFromLateToMissing(uint16_t sequence_number_current_received_rtp);
 
   // Packets which have sequence number older that
   // `sequence_num_last_received_rtp_` - `max_nack_list_size_` are removed
@@ -198,13 +174,6 @@ class NackTracker {
   void UpdatePacketLossRate(int packets_lost);
 
   const Config config_;
-
-  // If packet N is arrived, any packet prior to N - `nack_threshold_packets_`
-  // which is not arrived is considered missing, and should be in NACK list.
-  // Also any packet in the range of N-1 and N - `nack_threshold_packets_`,
-  // exclusive, which is not arrived is considered late, and should should be
-  // in the list of late packets.
-  const int nack_threshold_packets_;
 
   // Valid if a packet is received.
   uint16_t sequence_num_last_received_rtp_;

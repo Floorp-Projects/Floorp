@@ -10,12 +10,12 @@
 
 #include "modules/audio_coding/neteq/neteq_impl.h"
 
-
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <list>
 #include <map>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -514,8 +514,7 @@ void NetEqImpl::FlushBuffers() {
 void NetEqImpl::EnableNack(size_t max_nack_list_size) {
   MutexLock lock(&mutex_);
   if (!nack_enabled_) {
-    const int kNackThresholdPackets = 0;
-    nack_.reset(NackTracker::Create(kNackThresholdPackets));
+    nack_ = std::make_unique<NackTracker>();
     nack_enabled_ = true;
     nack_->UpdateSampleRate(fs_hz_);
   }
