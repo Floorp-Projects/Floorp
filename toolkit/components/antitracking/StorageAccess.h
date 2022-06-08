@@ -120,42 +120,6 @@ bool StoragePartitioningEnabled(StorageAccess aAccess,
 bool StoragePartitioningEnabled(uint32_t aRejectedReason,
                                 nsICookieJarSettings* aCookieJarSettings);
 
-// This method returns true if the URI has first party storage access when
-// loaded inside the passed 3rd party context tracking resource window.
-// If the window is first party context, please use
-// ApproximateAllowAccessForWithoutChannel();
-//
-// aRejectedReason could be set to one of these values if passed and if the
-// storage permission is not granted:
-//  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
-//  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
-//  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
-//  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
-//  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
-bool ShouldAllowAccessFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
-                          nsIURI* aURI, uint32_t* aRejectedReason);
-
-// Note: you should use ShouldAllowAccessFor() passing the nsIChannel! Use
-// this method _only_ if the channel is not available.  For first party
-// window, it's impossible to know if the aURI is a tracking resource
-// synchronously, so here we return the best guest: if we are sure that the
-// permission is granted for the origin of aURI, this method returns true,
-// otherwise false.
-bool ApproximateAllowAccessForWithoutChannel(
-    nsPIDOMWindowInner* aFirstPartyWindow, nsIURI* aURI);
-
-// It returns true if the URI has access to the first party storage.
-// aChannel can be a 3rd party channel, or not.
-// See ShouldAllowAccessFor(window) to see the possible values of
-// aRejectedReason.
-bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
-                          uint32_t* aRejectedReason);
-
-// This method checks if the principal has the permission to access to the
-// first party storage.
-bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
-                          nsICookieJarSettings* aCookieJarSettings);
-
 }  // namespace mozilla
 
 #endif  // mozilla_StorageAccess_h

@@ -59,6 +59,7 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"

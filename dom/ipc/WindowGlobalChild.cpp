@@ -479,6 +479,12 @@ WindowGlobalChild::RecvSaveStorageAccessPermissionGranted() {
     inner->SaveStorageAccessPermissionGranted();
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> outer =
+      nsPIDOMWindowOuter::GetFromCurrentInner(inner);
+  if (outer) {
+    nsGlobalWindowOuter::Cast(outer)->SetStorageAccessPermissionGranted(true);
+  }
+
   return IPC_OK();
 }
 

@@ -7,6 +7,7 @@
 #include "StoragePrincipalHelper.h"
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -30,7 +31,7 @@ bool ShouldPartitionChannel(nsIChannel* aChannel,
   }
 
   uint32_t rejectedReason = 0;
-  if (ShouldAllowAccessFor(aChannel, uri, &rejectedReason)) {
+  if (ContentBlocking::ShouldAllowAccessFor(aChannel, uri, &rejectedReason)) {
     return false;
   }
 
