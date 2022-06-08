@@ -338,6 +338,8 @@ if (is_ios || is_mac) {
           "../rtc_base:rtc_base_approved",
           "../rtc_base/synchronization:mutex",
         ]
+
+        absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
       }
 
       rtc_source_set("network_monitor_observer") {
@@ -1198,6 +1200,7 @@ if (is_ios || is_mac) {
           "../modules/audio_processing:api",
           "../modules/video_coding:video_codec_interface",
           "../rtc_base:gunit_helpers",
+          "../rtc_base:rtc_event",
           "../rtc_base/system:unused",
           "../test:test_support",
           "//third_party/ocmock",

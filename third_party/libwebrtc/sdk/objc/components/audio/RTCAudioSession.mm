@@ -14,6 +14,7 @@
 
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -21,10 +22,20 @@
 #import "RTCAudioSessionConfiguration.h"
 #import "base/RTCLogging.h"
 
+#if !defined(ABSL_HAVE_THREAD_LOCAL)
+#error ABSL_HAVE_THREAD_LOCAL should be defined for MacOS / iOS Targets.
+#endif
+
 NSString *const kRTCAudioSessionErrorDomain = @"org.webrtc.RTC_OBJC_TYPE(RTCAudioSession)";
 NSInteger const kRTCAudioSessionErrorLockRequired = -1;
 NSInteger const kRTCAudioSessionErrorConfiguration = -2;
 NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
+
+namespace {
+// Since webrtc::Mutex is not a reentrant lock and cannot check if the mutex is locked,
+// we need a separate variable to check that the mutex is locked in the RTCAudioSession.
+ABSL_CONST_INIT thread_local bool mutex_locked = false;
+}  // namespace
 
 @interface RTC_OBJC_TYPE (RTCAudioSession)
 () @property(nonatomic,
@@ -229,10 +240,13 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 - (void)lockForConfiguration {
+  RTC_CHECK(!mutex_locked);
   _mutex.Lock();
+  mutex_locked = true;
 }
 
 - (void)unlockForConfiguration {
+  mutex_locked = false;
   _mutex.Unlock();
 }
 
@@ -334,6 +348,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 
 - (BOOL)setActive:(BOOL)active
             error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   int activationCount = _activationCount;
   if (!active && activationCount == 0) {
     RTCLogWarning(@"Attempting to deactivate without prior activation.");
@@ -393,52 +410,85 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 - (BOOL)setCategory:(NSString *)category
         withOptions:(AVAudioSessionCategoryOptions)options
               error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setCategory:category withOptions:options error:outError];
 }
 
 - (BOOL)setMode:(NSString *)mode error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setMode:mode error:outError];
 }
 
 - (BOOL)setInputGain:(float)gain error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setInputGain:gain error:outError];
 }
 
 - (BOOL)setPreferredSampleRate:(double)sampleRate error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setPreferredSampleRate:sampleRate error:outError];
 }
 
 - (BOOL)setPreferredIOBufferDuration:(NSTimeInterval)duration
                                error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setPreferredIOBufferDuration:duration error:outError];
 }
 
 - (BOOL)setPreferredInputNumberOfChannels:(NSInteger)count
                                     error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setPreferredInputNumberOfChannels:count error:outError];
 }
 - (BOOL)setPreferredOutputNumberOfChannels:(NSInteger)count
                                      error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setPreferredOutputNumberOfChannels:count error:outError];
 }
 
 - (BOOL)overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride
                           error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session overrideOutputAudioPort:portOverride error:outError];
 }
 
 - (BOOL)setPreferredInput:(AVAudioSessionPortDescription *)inPort
                     error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setPreferredInput:inPort error:outError];
 }
 
 - (BOOL)setInputDataSource:(AVAudioSessionDataSourceDescription *)dataSource
                      error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setInputDataSource:dataSource error:outError];
 }
 
 - (BOOL)setOutputDataSource:(AVAudioSessionDataSourceDescription *)dataSource
                       error:(NSError **)outError {
+  if (![self checkLock:outError]) {
+    return NO;
+  }
   return [self.session setOutputDataSource:dataSource error:outError];
 }
 
@@ -559,6 +609,15 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 
 #pragma mark - Private
 
++ (NSError *)lockError {
+  NSDictionary *userInfo =
+      @{NSLocalizedDescriptionKey : @"Must call lockForConfiguration before calling this method."};
+  NSError *error = [[NSError alloc] initWithDomain:kRTCAudioSessionErrorDomain
+                                              code:kRTCAudioSessionErrorLockRequired
+                                          userInfo:userInfo];
+  return error;
+}
+
 - (std::vector<__weak id<RTC_OBJC_TYPE(RTCAudioSessionDelegate)> >)delegates {
   @synchronized(self) {
     // Note: this returns a copy.
@@ -618,6 +677,16 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
    }
    _isInterrupted = isInterrupted;
   }
+}
+
+- (BOOL)checkLock:(NSError **)outError {
+  if (!mutex_locked) {
+    if (outError) {
+      *outError = [RTC_OBJC_TYPE(RTCAudioSession) lockError];
+    }
+    return NO;
+  }
+  return YES;
 }
 
 - (BOOL)beginWebRTCSession:(NSError **)outError {
