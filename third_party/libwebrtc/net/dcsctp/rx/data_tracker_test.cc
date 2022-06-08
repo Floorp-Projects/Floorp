@@ -15,6 +15,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/packet/chunk/sack_chunk.h"
 #include "net/dcsctp/timer/fake_timeout.h"
 #include "net/dcsctp/timer/timer.h"
@@ -54,6 +55,7 @@ class DataTrackerTest : public testing::Test {
     EXPECT_TRUE(tracker_->GetHandoverReadiness().IsReady());
     DcSctpSocketHandoverState state;
     tracker_->AddHandoverState(state);
+    g_handover_state_transformer_for_test(&state);
     tracker_ = std::make_unique<DataTracker>("log: ", timer_.get(), kInitialTSN,
                                              &state);
   }

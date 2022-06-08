@@ -18,6 +18,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
@@ -93,6 +94,7 @@ class RetransmissionQueueTest : public testing::Test {
     EXPECT_EQ(queue.GetHandoverReadiness(), HandoverReadinessStatus());
     DcSctpSocketHandoverState state;
     queue.AddHandoverState(state);
+    g_handover_state_transformer_for_test(&state);
     return RetransmissionQueue(
         "", TSN(10), kArwnd, producer_, on_rtt_.AsStdFunction(),
         on_clear_retransmission_counter_.AsStdFunction(), *timer_, options_,
