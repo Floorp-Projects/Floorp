@@ -1381,6 +1381,23 @@
      */ \
     MACRO(EndIter, end_iter, NULL, 1, 2, 0, JOF_BYTE) \
     /*
+     * If the iterator object on top of the stack has a `return` method,
+     * call that method. Throw a TypeError if the method exists, but
+     * the call does not return an object.
+     *
+     * `iter` must be an object conforming to the [Iterator][1] interface.
+     *
+     * Implements: [IteratorClose][2]
+     *
+     * [1]: https://tc39.es/ecma262/#sec-iterator-interface
+     * [2]: https://tc39.es/ecma262/#sec-iteratorclose
+     *   Category: Objects
+     *   Type: Iteration
+     *   Operands:
+     *   Stack: iter =>
+     */ \
+    MACRO(CloseIter, close_iter, NULL, 1, 1, 0, JOF_BYTE) \
+    /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
      * message.
@@ -3499,14 +3516,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(223))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(224))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(225))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(226))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
-  MACRO(230)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   MACRO(231)                                   \
   MACRO(232)                                   \
   MACRO(233)                                   \
