@@ -28,11 +28,11 @@ both.
 WebRTC is written in C++14, but with some restrictions:
 
 * We only allow the subset of C++14 (language and library) that is not banned by
-  Chromium; see the [list of banned C++ features in Chromium][chromium-cpp].
+  Chromium; see the [list of banned C++ features in Chromium][chr-style-cpp].
 * We only allow the subset of C++14 that is also valid C++17; otherwise, users
   would not be able to compile WebRTC in C++17 mode.
 
-[chromium-cpp]: https://chromium-cpp.appspot.com/
+[chr-style-cpp]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md
 
 Unlike the Chromium and Google C++ style guides, we do not allow C++20-style
 designated initializers, because we want to stay compatible with compilers that
