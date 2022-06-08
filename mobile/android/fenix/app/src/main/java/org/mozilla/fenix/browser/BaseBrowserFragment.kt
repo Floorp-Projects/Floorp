@@ -449,7 +449,8 @@ abstract class BaseBrowserFragment :
         fullScreenMediaSessionFeature.set(
             feature = MediaSessionFullscreenFeature(
                 requireActivity(),
-                context.components.core.store
+                context.components.core.store,
+                customTabSessionId
             ),
             owner = this,
             view = view
