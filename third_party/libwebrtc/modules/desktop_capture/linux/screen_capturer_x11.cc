@@ -355,6 +355,7 @@ bool ScreenCapturerX11::HandleXEvent(const XEvent& event) {
 std::unique_ptr<DesktopFrame> ScreenCapturerX11::CaptureScreen() {
   std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
   RTC_DCHECK(selected_monitor_rect_.size().equals(frame->size()));
+  RTC_DCHECK(selected_monitor_rect_.top_left().equals(frame->top_left()));
 
   // Pass the screen size to the helper, so it can clip the invalid region if it
   // expands that region to a grid.
@@ -378,19 +379,30 @@ std::unique_ptr<DesktopFrame> ScreenCapturerX11::CaptureScreen() {
     XRectangle* rects = XFixesFetchRegionAndBounds(display(), damage_region_,
                                                    &rects_num, &bounds);
     for (int i = 0; i < rects_num; ++i) {
-      updated_region->AddRect(DesktopRect::MakeXYWH(
-          rects[i].x, rects[i].y, rects[i].width, rects[i].height));
+      auto damage_rect = DesktopRect::MakeXYWH(rects[i].x, rects[i].y,
+                                               rects[i].width, rects[i].height);
+
+      // Damage regions are in the same coordinate-system as
+      // ```selected_monitor_rect_```, but may fall outside of it.
+      damage_rect.IntersectWith(selected_monitor_rect_);
+      if (!damage_rect.is_empty()) {
+        // Convert to DesktopFrame coordinates where the top-left is
+        // always (0, 0), before adding to the frame's update_region.
+        damage_rect.Translate(-frame->top_left());
+        updated_region->AddRect(damage_rect);
+      }
     }
     XFree(rects);
     helper_.InvalidateRegion(*updated_region);
 
     // Capture the damaged portions of the desktop.
     helper_.TakeInvalidRegion(updated_region);
-    updated_region->IntersectWith(selected_monitor_rect_);
 
     for (DesktopRegion::Iterator it(*updated_region); !it.IsAtEnd();
          it.Advance()) {
-      if (!x_server_pixel_buffer_.CaptureRect(it.rect(), frame.get()))
+      auto rect = it.rect();
+      rect.Translate(frame->top_left());
+      if (!x_server_pixel_buffer_.CaptureRect(rect, frame.get()))
         return nullptr;
     }
   } else {
@@ -400,7 +412,7 @@ std::unique_ptr<DesktopFrame> ScreenCapturerX11::CaptureScreen() {
                                             frame.get())) {
       return nullptr;
     }
-    updated_region->SetRect(selected_monitor_rect_);
+    updated_region->SetRect(DesktopRect::MakeSize(frame->size()));
   }
 
   return std::move(frame);
@@ -445,11 +457,8 @@ void ScreenCapturerX11::SynchronizeFrame() {
   RTC_DCHECK(current != last);
   for (DesktopRegion::Iterator it(last_invalid_region_); !it.IsAtEnd();
        it.Advance()) {
-    if (selected_monitor_rect_.ContainsRect(it.rect())) {
-      DesktopRect r = it.rect();
-      r.Translate(-selected_monitor_rect_.top_left());
-      current->CopyPixelsFrom(*last, r.top_left(), r);
-    }
+    const DesktopRect& r = it.rect();
+    current->CopyPixelsFrom(*last, r.top_left(), r);
   }
 }
 
