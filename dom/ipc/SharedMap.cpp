@@ -344,8 +344,7 @@ void WritableSharedMap::SendTo(ContentParent* aParent) const {
   nsTArray<IPCBlob> blobs(mBlobImpls.Length());
 
   for (auto& blobImpl : mBlobImpls) {
-    nsresult rv =
-        IPCBlobUtils::Serialize(blobImpl, aParent, *blobs.AppendElement());
+    nsresult rv = IPCBlobUtils::Serialize(blobImpl, *blobs.AppendElement());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }

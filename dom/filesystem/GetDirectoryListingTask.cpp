@@ -235,8 +235,7 @@ FileSystemResponseValue GetDirectoryListingTaskParent::GetSuccessRequestResult(
       blobImpl->SetDOMPath(filePath);
 
       IPCBlob ipcBlob;
-      rv =
-          IPCBlobUtils::Serialize(blobImpl, mRequestParent->Manager(), ipcBlob);
+      rv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         continue;
       }

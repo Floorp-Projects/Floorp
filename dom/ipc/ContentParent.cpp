@@ -3194,7 +3194,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           }
 
           IPCBlob ipcBlob;
-          nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, this, ipcBlob);
+          nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, ipcBlob);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return false;
           }
@@ -5776,7 +5776,7 @@ void ContentParent::BroadcastBlobURLRegistration(
       }
 
       IPCBlob ipcBlob;
-      rv = IPCBlobUtils::Serialize(aBlobImpl, cp, ipcBlob);
+      rv = IPCBlobUtils::Serialize(aBlobImpl, ipcBlob);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         break;
       }
@@ -6091,7 +6091,7 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
           }
 
           IPCBlob ipcBlob;
-          nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, this, ipcBlob);
+          nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, ipcBlob);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return false;
           }
@@ -7250,7 +7250,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
   }
 
   IPCBlob ipcBlob;
-  nsresult rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
+  nsresult rv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aResolver(rv);

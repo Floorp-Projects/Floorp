@@ -148,14 +148,13 @@ void BroadcastBlobURLRegistration(const nsACString& aURI,
     return;
   }
 
-  dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-
   IPCBlob ipcBlob;
-  nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, cc, ipcBlob);
+  nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, ipcBlob);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
+  dom::ContentChild* cc = dom::ContentChild::GetSingleton();
   Unused << NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(
       nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal), aAgentClusterId));
 }

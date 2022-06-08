@@ -610,12 +610,8 @@ RefPtr<IDBFileRequest> IDBFileHandle::WriteOrAppend(Blob& aValue, bool aAppend,
     return nullptr;
   }
 
-  PBackgroundChild* backgroundActor = BackgroundChild::GetForCurrentThread();
-  MOZ_ASSERT(backgroundActor);
-
   IPCBlob ipcBlob;
-  nsresult rv =
-      IPCBlobUtils::Serialize(aValue.Impl(), backgroundActor, ipcBlob);
+  nsresult rv = IPCBlobUtils::Serialize(aValue.Impl(), ipcBlob);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;

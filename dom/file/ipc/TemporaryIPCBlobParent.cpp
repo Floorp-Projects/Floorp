@@ -77,7 +77,7 @@ mozilla::ipc::IPCResult TemporaryIPCBlobParent::RecvOperationDone(
   PR_Close(prfile);
 
   IPCBlob ipcBlob;
-  nsresult rv = IPCBlobUtils::Serialize(blobImpl, Manager(), ipcBlob);
+  nsresult rv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Unused << Send__delete__(this, NS_ERROR_FAILURE);
     return IPC_OK();

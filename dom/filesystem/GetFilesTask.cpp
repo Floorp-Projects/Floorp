@@ -188,8 +188,7 @@ FileSystemResponseValue GetFilesTaskParent::GetSuccessRequestResult(
 
   for (unsigned i = 0; i < mTargetBlobImplArray.Length(); i++) {
     IPCBlob ipcBlob;
-    aRv = IPCBlobUtils::Serialize(mTargetBlobImplArray[i],
-                                  mRequestParent->Manager(), ipcBlob);
+    aRv = IPCBlobUtils::Serialize(mTargetBlobImplArray[i], ipcBlob);
     if (NS_WARN_IF(aRv.Failed())) {
       FileSystemFilesResponse response;
       return response;
