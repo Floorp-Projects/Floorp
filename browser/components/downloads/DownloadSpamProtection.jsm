@@ -18,7 +18,9 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
@@ -36,9 +38,9 @@ class DownloadSpamProtection {
      * @type {Map<string, DownloadSpam>}
      */
     this._blockedURLToDownloadSpam = new Map();
-    this._browserWin = BrowserWindowTracker.getTopWindow();
-    this._indicator = DownloadsCommon.getIndicatorData(this._browserWin);
-    this.list = new DownloadList();
+    this._browserWin = lazy.BrowserWindowTracker.getTopWindow();
+    this._indicator = lazy.DownloadsCommon.getIndicatorData(this._browserWin);
+    this.list = new lazy.DownloadList();
   }
 
   get spamList() {
@@ -58,7 +60,7 @@ class DownloadSpamProtection {
     let downloadSpam = new DownloadSpam(url);
     this.spamList.add(downloadSpam);
     this._blockedURLToDownloadSpam.set(url, downloadSpam);
-    let hasActiveDownloads = DownloadsCommon.summarizeDownloads(
+    let hasActiveDownloads = lazy.DownloadsCommon.summarizeDownloads(
       this._indicator._activeDownloads()
     ).numDownloading;
     if (!hasActiveDownloads) {
@@ -91,7 +93,7 @@ class DownloadSpam extends Download {
     this.stopped = true;
     this.error = new DownloadError({
       becauseBlockedByReputationCheck: true,
-      reputationCheckVerdict: Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM,
+      reputationCheckVerdict: lazy.Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM,
     });
     this.target = { path: "" };
     this.source = { url };

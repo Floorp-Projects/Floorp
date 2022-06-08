@@ -23,21 +23,23 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "HandlerService",
   "@mozilla.org/uriloader/handler-service;1",
   "nsIHandlerService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "MIMEService",
   "@mozilla.org/mime;1",
   "nsIMIMEService"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Integration",
   "resource://gre/modules/Integration.jsm"
 );
@@ -78,7 +80,7 @@ let DownloadsViewableInternally = {
     this._updateAllHandlers();
 
     // Register the check for use in DownloadIntegration
-    Integration.downloads.register(base => ({
+    lazy.Integration.downloads.register(base => ({
       shouldViewDownloadInternally: this._shouldViewDownloadInternally.bind(
         this
       ),
@@ -250,10 +252,10 @@ let DownloadsViewableInternally = {
         PREF_BRANCH_PREVIOUS_ASK + handlerType.extension
       );
       handlerInfo.preferredAction = Services.prefs.getIntPref(prevActionPref);
-      HandlerService.store(handlerInfo);
+      lazy.HandlerService.store(handlerInfo);
     } else {
       // Nothing to restore, just remove the handler.
-      HandlerService.remove(handlerInfo);
+      lazy.HandlerService.remove(handlerInfo);
     }
   },
 
@@ -295,10 +297,10 @@ let DownloadsViewableInternally = {
       handlerType.mimeTypes[0],
       handlerType.extension
     );
-    if (!HandlerService.exists(fakeHandlerInfo)) {
-      HandlerService.store(fakeHandlerInfo);
+    if (!lazy.HandlerService.exists(fakeHandlerInfo)) {
+      lazy.HandlerService.store(fakeHandlerInfo);
     } else {
-      const handlerInfo = MIMEService.getFromTypeAndExtension(
+      const handlerInfo = lazy.MIMEService.getFromTypeAndExtension(
         handlerType.mimeTypes[0],
         handlerType.extension
       );
@@ -326,7 +328,7 @@ let DownloadsViewableInternally = {
         handlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
         handlerInfo.alwaysAskBeforeHandling = false;
 
-        HandlerService.store(handlerInfo);
+        lazy.HandlerService.store(handlerInfo);
       }
     }
 
@@ -341,7 +343,7 @@ let DownloadsViewableInternally = {
   _unbecomeHandler(handlerType) {
     let handlerInfo;
     try {
-      handlerInfo = MIMEService.getFromTypeAndExtension(
+      handlerInfo = lazy.MIMEService.getFromTypeAndExtension(
         handlerType.mimeTypes[0],
         handlerType.extension
       );
