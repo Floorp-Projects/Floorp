@@ -43,9 +43,8 @@ NackTracker::Config::Config() {
                    << never_nack_multiple_times;
 }
 
-NackTracker::NackTracker(int nack_threshold_packets)
-    : nack_threshold_packets_(nack_threshold_packets),
-      sequence_num_last_received_rtp_(0),
+NackTracker::NackTracker()
+    : sequence_num_last_received_rtp_(0),
       timestamp_last_received_rtp_(0),
       any_rtp_received_(false),
       sequence_num_last_decoded_rtp_(0),
@@ -55,10 +54,6 @@ NackTracker::NackTracker(int nack_threshold_packets)
       max_nack_list_size_(kNackListSizeLimit) {}
 
 NackTracker::~NackTracker() = default;
-
-NackTracker* NackTracker::Create(int nack_threshold_packets) {
-  return new NackTracker(nack_threshold_packets);
-}
 
 void NackTracker::UpdateSampleRate(int sample_rate_hz) {
   RTC_DCHECK_GT(sample_rate_hz, 0);
@@ -120,33 +115,10 @@ absl::optional<int> NackTracker::GetSamplesPerPacket(
 
 void NackTracker::UpdateList(uint16_t sequence_number_current_received_rtp,
                              uint32_t timestamp_current_received_rtp) {
-  // Some of the packets which were considered late, now are considered missing.
-  ChangeFromLateToMissing(sequence_number_current_received_rtp);
-
-  if (IsNewerSequenceNumber(sequence_number_current_received_rtp,
-                            sequence_num_last_received_rtp_ + 1))
-    AddToList(sequence_number_current_received_rtp,
-              timestamp_current_received_rtp);
-}
-
-void NackTracker::ChangeFromLateToMissing(
-    uint16_t sequence_number_current_received_rtp) {
-  NackList::const_iterator lower_bound =
-      nack_list_.lower_bound(static_cast<uint16_t>(
-          sequence_number_current_received_rtp - nack_threshold_packets_));
-
-  for (NackList::iterator it = nack_list_.begin(); it != lower_bound; ++it)
-    it->second.is_missing = true;
-}
-
-uint32_t NackTracker::EstimateTimestamp(uint16_t sequence_num,
-                                        int samples_per_packet) {
-  uint16_t sequence_num_diff = sequence_num - sequence_num_last_received_rtp_;
-  return sequence_num_diff * samples_per_packet + timestamp_last_received_rtp_;
-}
-
-void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp,
-                            uint32_t timestamp_current_received_rtp) {
+  if (!IsNewerSequenceNumber(sequence_number_current_received_rtp,
+                             sequence_num_last_received_rtp_ + 1)) {
+    return;
+  }
   RTC_DCHECK(!any_rtp_decoded_ ||
              IsNewerSequenceNumber(sequence_number_current_received_rtp,
                                    sequence_num_last_decoded_rtp_));
@@ -157,18 +129,18 @@ void NackTracker::AddToList(uint16_t sequence_number_current_received_rtp,
     return;
   }
 
-  // Packets with sequence numbers older than `upper_bound_missing` are
-  // considered missing, and the rest are considered late.
-  uint16_t upper_bound_missing =
-      sequence_number_current_received_rtp - nack_threshold_packets_;
-
   for (uint16_t n = sequence_num_last_received_rtp_ + 1;
        IsNewerSequenceNumber(sequence_number_current_received_rtp, n); ++n) {
-    bool is_missing = IsNewerSequenceNumber(upper_bound_missing, n);
     uint32_t timestamp = EstimateTimestamp(n, *samples_per_packet);
-    NackElement nack_element(TimeToPlay(timestamp), timestamp, is_missing);
+    NackElement nack_element(TimeToPlay(timestamp), timestamp);
     nack_list_.insert(nack_list_.end(), std::make_pair(n, nack_element));
   }
+}
+
+uint32_t NackTracker::EstimateTimestamp(uint16_t sequence_num,
+                                        int samples_per_packet) {
+  uint16_t sequence_num_diff = sequence_num - sequence_num_last_received_rtp_;
+  return sequence_num_diff * samples_per_packet + timestamp_last_received_rtp_;
 }
 
 void NackTracker::UpdateEstimatedPlayoutTimeBy10ms() {
@@ -260,9 +232,8 @@ std::vector<uint16_t> NackTracker::GetNackList(int64_t round_trip_time_ms) {
     int64_t time_since_packet_ms =
         (timestamp_last_received_rtp_ - it->second.estimated_timestamp) /
         sample_rate_khz_;
-    if (it->second.is_missing &&
-        (it->second.time_to_play_ms > round_trip_time_ms ||
-         time_since_packet_ms + round_trip_time_ms < max_wait_ms))
+    if (it->second.time_to_play_ms > round_trip_time_ms ||
+        time_since_packet_ms + round_trip_time_ms < max_wait_ms)
       sequence_numbers.push_back(it->first);
   }
   if (config_.never_nack_multiple_times) {
