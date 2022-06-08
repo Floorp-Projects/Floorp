@@ -63,6 +63,22 @@ Cargo.lock to the HEAD version, run `git checkout -- Cargo.lock` or
 """
 
 
+WINDOWS_UNDESIRABLE_REASON = """\
+The windows and windows-sys crates and their dependencies are too big to \
+vendor, and is a risk of version duplication due to its current update \
+cadence. Until this is worked out with upstream, we prefer to avoid them.\
+"""
+
+PACKAGES_WE_DONT_WANT = {
+    "windows-sys": WINDOWS_UNDESIRABLE_REASON,
+    "windows": WINDOWS_UNDESIRABLE_REASON,
+    "windows_aarch64_msvc": WINDOWS_UNDESIRABLE_REASON,
+    "windows_i686_gnu": WINDOWS_UNDESIRABLE_REASON,
+    "windows_i686_msvc": WINDOWS_UNDESIRABLE_REASON,
+    "windows_x86_64_gnu": WINDOWS_UNDESIRABLE_REASON,
+    "windows_x86_64_msvc": WINDOWS_UNDESIRABLE_REASON,
+}
+
 PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
     "autocfg",
     "cmake",
@@ -628,6 +644,18 @@ license file's hash.
                             "and comes from {source}.",
                         )
                         failed = True
+                elif package["name"] in PACKAGES_WE_DONT_WANT:
+                    self.log(
+                        logging.ERROR,
+                        "undesirable",
+                        {
+                            "crate": package["name"],
+                            "version": package["version"],
+                            "reason": PACKAGES_WE_DONT_WANT[package["name"]],
+                        },
+                        "Crate {crate} is not desirable: {reason}",
+                    )
+                    failed = True
                 grouped[package["name"]].append(package)
 
             for name, packages in grouped.items():
