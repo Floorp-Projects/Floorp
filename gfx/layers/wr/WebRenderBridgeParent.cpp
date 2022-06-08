@@ -2492,7 +2492,8 @@ void WebRenderBridgeParent::FlushTransactionIdsForEpoch(
 
       RecordPaintPhaseTelemetry(aStats);
 
-      if (contentFrameTime > 200) {
+      if (StaticPrefs::gfx_logging_slow_frames_enabled_AtStartup() &&
+          contentFrameTime > 200) {
         aOutputStats.AppendElement(FrameStats(
             transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
             contentFrameTime,

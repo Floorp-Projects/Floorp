@@ -4,26 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += ["api"]
+
 TEST_DIRS += ["test"]
-
-EXPORTS.mozilla.dom += [
-    "FileSystemDirectoryHandle.h",
-    "FileSystemDirectoryIterator.h",
-    "FileSystemFileHandle.h",
-    "FileSystemHandle.h",
-    "FileSystemSyncAccessHandle.h",
-    "FileSystemWritableFileStream.h",
-]
-
-UNIFIED_SOURCES += [
-    "FileSystemDirectoryHandle.cpp",
-    "FileSystemDirectoryIterator.cpp",
-    "FileSystemFileHandle.cpp",
-    "FileSystemHandle.cpp",
-    "FileSystemSyncAccessHandle.cpp",
-    "FileSystemWritableFileStream.cpp",
-]
-
-include("/ipc/chromium/chromium-config.mozbuild")
-
-FINAL_LIBRARY = "xul"

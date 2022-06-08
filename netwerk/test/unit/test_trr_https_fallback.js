@@ -959,3 +959,85 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
 
   await trrServer.stop();
 });
+
+let WebSocketListener = function() {};
+
+WebSocketListener.prototype = {
+  onAcknowledge(aContext, aSize) {},
+  onBinaryMessageAvailable(aContext, aMsg) {},
+  onMessageAvailable(aContext, aMsg) {},
+  onServerClose(aContext, aCode, aReason) {},
+  onStart(aContext) {
+    this.finish();
+  },
+  onStop(aContext, aStatusCode) {},
+};
+
+add_task(async function testUpgradeNotUsingHTTPSRR() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+
+  await trrServer.registerDoHAnswers("test.ws.com", "HTTPS", {
+    answers: [
+      {
+        name: "test.ws.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.ws1.com",
+          values: [{ key: "port", value: ["8888"] }],
+        },
+      },
+    ],
+  });
+
+  await new TRRDNSListener("test.ws.com", {
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+  });
+
+  await trrServer.registerDoHAnswers("test.ws.com", "A", {
+    answers: [
+      {
+        name: "test.ws.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  let wssUri = "wss://test.ws.com:" + h2Port + "/websocket";
+  let chan = Cc["@mozilla.org/network/protocol;1?name=wss"].createInstance(
+    Ci.nsIWebSocketChannel
+  );
+  chan.initLoadInfo(
+    null, // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null, // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    Ci.nsIContentPolicy.TYPE_DOCUMENT
+  );
+
+  var uri = Services.io.newURI(wssUri);
+  var wsListener = new WebSocketListener();
+  certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+    false
+  );
+  await new Promise(resolve => {
+    wsListener.finish = resolve;
+    chan.asyncOpen(uri, wssUri, {}, 0, wsListener, null);
+    certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
+      true
+    );
+  });
+
+  await trrServer.stop();
+});

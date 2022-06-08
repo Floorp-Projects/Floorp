@@ -61,6 +61,34 @@ static RefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
 static Atomic<int> gNewSurfaceUID(1);
 
+RefPtr<GLContext> ClaimSnapshotGLContext() {
+  if (!sSnapshotContext) {
+    nsCString discardFailureId;
+    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
+    if (!sSnapshotContext) {
+      LOGDMABUF(("GetAsSourceSurface: Failed to create snapshot GLContext."));
+      return nullptr;
+    }
+  }
+  if (!sSnapshotContext->MakeCurrent()) {
+    LOGDMABUF(("GetAsSourceSurface: Failed to make GLContext current."));
+    return nullptr;
+  }
+  return sSnapshotContext;
+}
+
+void ReturnSnapshotGLContext(RefPtr<GLContext> aGLContext) {
+  // direct eglMakeCurrent() call breaks current context caching so make sure
+  // it's not used.
+  MOZ_ASSERT(!aGLContext->mUseTLSIsCurrent);
+  if (!aGLContext->IsCurrent()) {
+    return;
+  }
+  const auto& gle = gl::GLContextEGL::Cast(aGLContext);
+  const auto& egl = gle->mEgl;
+  egl->fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
     return false;
@@ -1290,19 +1318,14 @@ bool DMABufSurfaceYUV::VerifyTextureCreation() {
   LOGDMABUF(("DMABufSurfaceYUV::VerifyTextureCreation() UID %d", mUID));
 
   StaticMutexAutoLock lock(sSnapshotContextMutex);
-  if (!sSnapshotContext) {
-    nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
-    if (!sSnapshotContext) {
-      LOGDMABUF(("  failed to create snapshot GLContext"));
-      return false;
-    }
-  }
-
-  auto release = MakeScopeExit([&] { ReleaseEGLImages(sSnapshotContext); });
+  RefPtr<GLContext> context = ClaimSnapshotGLContext();
+  auto release = MakeScopeExit([&] {
+    ReleaseEGLImages(context);
+    ReturnSnapshotGLContext(context);
+  });
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (!CreateEGLImage(sSnapshotContext, i)) {
+    if (!CreateEGLImage(context, i)) {
       LOGDMABUF(("  failed to create EGL image!"));
       return false;
     }
@@ -1350,38 +1373,28 @@ DMABufSurfaceYUV::GetAsSourceSurface() {
   LOGDMABUF(("DMABufSurfaceYUV::GetAsSourceSurface UID %d", mUID));
 
   StaticMutexAutoLock lock(sSnapshotContextMutex);
-  if (!sSnapshotContext) {
-    nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
-    if (!sSnapshotContext) {
-      LOGDMABUF(("GetAsSourceSurface: Failed to create snapshot GLContext."));
-      return nullptr;
-    }
-  }
-  if (!sSnapshotContext->MakeCurrent()) {
-    LOGDMABUF(("GetAsSourceSurface: Failed to make GLContext current."));
-    return nullptr;
-  }
-
-  auto releaseTextures = mozilla::MakeScopeExit([&] { ReleaseTextures(); });
+  RefPtr<GLContext> context = ClaimSnapshotGLContext();
+  auto releaseTextures = mozilla::MakeScopeExit([&] {
+    ReleaseTextures();
+    ReturnSnapshotGLContext(context);
+  });
 
   for (int i = 0; i < GetTextureCount(); i++) {
-    if (!GetTexture(i) && !CreateTexture(sSnapshotContext, i)) {
+    if (!GetTexture(i) && !CreateTexture(context, i)) {
       LOGDMABUF(("GetAsSourceSurface: Failed to create DMABuf textures."));
       return nullptr;
     }
   }
 
-  ScopedTexture scopedTex(sSnapshotContext);
-  ScopedBindTexture boundTex(sSnapshotContext, scopedTex.Texture());
+  ScopedTexture scopedTex(context);
+  ScopedBindTexture boundTex(context, scopedTex.Texture());
 
   gfx::IntSize size(GetWidth(), GetHeight());
-  sSnapshotContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA,
-                                size.width, size.height, 0, LOCAL_GL_RGBA,
-                                LOCAL_GL_UNSIGNED_BYTE, nullptr);
+  context->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, size.width,
+                       size.height, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
+                       nullptr);
 
-  ScopedFramebufferForTexture autoFBForTex(sSnapshotContext,
-                                           scopedTex.Texture());
+  ScopedFramebufferForTexture autoFBForTex(context, scopedTex.Texture());
   if (!autoFBForTex.IsComplete()) {
     LOGDMABUF(("GetAsSourceSurface: ScopedFramebufferForTexture failed."));
     return nullptr;
@@ -1389,8 +1402,8 @@ DMABufSurfaceYUV::GetAsSourceSurface() {
 
   const gl::OriginPos destOrigin = gl::OriginPos::BottomLeft;
   {
-    const ScopedBindFramebuffer bindFB(sSnapshotContext, autoFBForTex.FB());
-    if (!sSnapshotContext->BlitHelper()->Blit(this, size, destOrigin)) {
+    const ScopedBindFramebuffer bindFB(context, autoFBForTex.FB());
+    if (!context->BlitHelper()->Blit(this, size, destOrigin)) {
       LOGDMABUF(("GetAsSourceSurface: Blit failed."));
       return nullptr;
     }
@@ -1403,8 +1416,8 @@ DMABufSurfaceYUV::GetAsSourceSurface() {
     return nullptr;
   }
 
-  ScopedBindFramebuffer bind(sSnapshotContext, autoFBForTex.FB());
-  ReadPixelsIntoDataSurface(sSnapshotContext, source);
+  ScopedBindFramebuffer bind(context, autoFBForTex.FB());
+  ReadPixelsIntoDataSurface(context, source);
 
   return source.forget();
 }

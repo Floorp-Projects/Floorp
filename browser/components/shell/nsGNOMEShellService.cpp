@@ -18,15 +18,12 @@
 #include "nsIGSettingsService.h"
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "mozilla/Components.h"
 #include "mozilla/GRefPtr.h"
 #include "mozilla/GUniquePtr.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/WidgetUtils.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/dom/Element.h"
 #include "nsImageToPixbuf.h"
@@ -34,11 +31,8 @@
 #include "gfxPlatform.h"
 
 #include <glib.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include <limits.h>
 #include <stdlib.h>
 
 using namespace mozilla;

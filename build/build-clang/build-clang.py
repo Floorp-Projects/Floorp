@@ -228,6 +228,7 @@ def build_one_stage(
             "-DCMAKE_BUILD_TYPE=%s" % build_type,
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
             "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
+            "-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF",
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
             "-DLLVM_ENABLE_CURL=OFF",
