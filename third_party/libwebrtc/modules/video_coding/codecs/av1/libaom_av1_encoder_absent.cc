@@ -21,9 +21,4 @@ std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder() {
   return nullptr;
 }
 
-bool LibaomAv1EncoderSupportsScalabilityMode(
-    absl::string_view scalability_mode) {
-  return false;
-}
-
 }  // namespace webrtc

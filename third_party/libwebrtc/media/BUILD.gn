@@ -217,10 +217,7 @@ rtc_library("rtc_internal_video_codecs") {
     "../rtc_base/system:rtc_export",
     #"../test:fake_video_codecs",
   ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   sources = [
     #"engine/fake_video_codec_factory.cc",
     #"engine/fake_video_codec_factory.h",
@@ -619,7 +616,6 @@ if (rtc_include_tests) {
         "../modules/video_coding:webrtc_h264",
         "../modules/video_coding:webrtc_vp8",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-        "../modules/video_coding/codecs/av1:libaom_av1_encoder",
         "../p2p:p2p_test_utils",
         "../rtc_base",
         "../rtc_base:checks",
@@ -659,7 +655,6 @@ if (rtc_include_tests) {
         "base/video_common_unittest.cc",
         "engine/encoder_simulcast_proxy_unittest.cc",
         "engine/internal_decoder_factory_unittest.cc",
-        "engine/internal_encoder_factory_unittest.cc",
         "engine/multiplex_codec_factory_unittest.cc",
         "engine/null_webrtc_video_engine_unittest.cc",
         "engine/payload_type_mapper_unittest.cc",
