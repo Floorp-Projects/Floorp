@@ -3161,9 +3161,9 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
-                                                          ObjOperandId calleeId,
-                                                          CompletionKind kind) {
+bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
+    ObjOperandId iterId, ObjOperandId calleeId, CompletionKind kind,
+    uint32_t calleeNargs) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register iter = allocator.useRegister(masm, iterId);
   Register callee = allocator.useRegister(masm, calleeId);
@@ -3179,7 +3179,10 @@ bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   stubFrame.enter(masm, scratch);
 
   // Call the return method.
-  masm.alignJitStackBasedOnNArgs(0);
+  masm.alignJitStackBasedOnNArgs(calleeNargs);
+  for (uint32_t i = 0; i < calleeNargs; i++) {
+    masm.pushValue(UndefinedValue());
+  }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
   EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc is 0

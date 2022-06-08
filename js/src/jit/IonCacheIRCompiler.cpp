@@ -1910,7 +1910,8 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult(ValOperandId lhsId,
 
 bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
                                                      ObjOperandId calleeId,
-                                                     CompletionKind kind) {
+                                                     CompletionKind kind,
+                                                     uint32_t calleeNargs) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
@@ -1927,18 +1928,22 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   uint32_t stubFramePushed = masm.framePushed();
 
   // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
-  // so we just have to make sure the stack is aligned after we push |this|.
-  uint32_t thisSize = sizeof(Value);
+  // so we just have to make sure the stack is aligned after we push |this|
+  // and |calleeNargs| undefined arguments.
+  uint32_t argSize = (calleeNargs + 1) * sizeof(Value);
   uint32_t padding =
-      ComputeByteAlignment(masm.framePushed() + thisSize, JitStackAlignment);
+      ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
   MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
   MOZ_ASSERT(padding < JitStackAlignment);
   masm.reserveStack(padding);
 
+  for (uint32_t i = 0; i < calleeNargs; i++) {
+    masm.Push(UndefinedValue());
+  }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
 
   uint32_t descriptor = MakeFrameDescriptor(
-      padding + thisSize, FrameType::IonICCall, JitFrameLayout::Size());
+      padding + argSize, FrameType::IonICCall, JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc
   masm.Push(callee);
   masm.Push(Imm32(descriptor));

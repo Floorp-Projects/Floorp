@@ -5289,13 +5289,14 @@ bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
 
 bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
                                                         ObjOperandId calleeId,
-                                                        CompletionKind kind) {
+                                                        CompletionKind kind,
+                                                        uint32_t calleeNargs) {
   MDefinition* iter = getOperand(iterId);
   MDefinition* callee = getOperand(calleeId);
 
   WrappedFunction* wrappedTarget = maybeCallTarget(callee, CallKind::Scripted);
   MOZ_ASSERT(wrappedTarget);
-  MOZ_ASSERT(wrappedTarget->nargs() == 0);
+  MOZ_ASSERT(wrappedTarget->nargs() == calleeNargs);
   MOZ_ASSERT(wrappedTarget->hasJitEntry());
 
   bool constructing = false;

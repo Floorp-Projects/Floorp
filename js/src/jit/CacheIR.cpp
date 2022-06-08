@@ -11936,10 +11936,6 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
     return AttachDecision::NoAction;
   }
 
-  // We don't support rectifier frames for the |return| method.
-  if (callee->nargs() != 0) {
-    return AttachDecision::NoAction;
-  }
   // We don't support cross-realm |return|.
   if (cx_->realm() != callee->realm()) {
     return AttachDecision::NoAction;
@@ -11963,7 +11959,7 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
   ObjOperandId calleeId = writer.guardToObject(calleeValId);
   emitCalleeGuard(calleeId, callee);
 
-  writer.closeIterScriptedResult(objId, calleeId, kind_);
+  writer.closeIterScriptedResult(objId, calleeId, kind_, callee->nargs());
 
   writer.returnFromIC();
   trackAttached("CloseIter.ScriptedReturn");
