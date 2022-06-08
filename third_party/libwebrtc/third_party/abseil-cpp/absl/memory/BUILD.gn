@@ -12,6 +12,7 @@ absl_source_set("memory") {
   ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("memory_test") {
   testonly = true
 
@@ -26,4 +27,5 @@ absl_source_set("memory_test") {
       "//third_party/googletest:gtest",
     ]
   }
+}
 }

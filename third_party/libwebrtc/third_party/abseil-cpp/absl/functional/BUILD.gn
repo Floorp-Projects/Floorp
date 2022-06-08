@@ -15,6 +15,7 @@ absl_source_set("bind_front") {
   ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("function_ref") {
   sources = [ "internal/function_ref.h" ]
   public = [ "function_ref.h" ]
@@ -22,4 +23,5 @@ absl_source_set("function_ref") {
     "//third_party/abseil-cpp/absl/base:base_internal",
     "//third_party/abseil-cpp/absl/meta:type_traits",
   ]
+}
 }

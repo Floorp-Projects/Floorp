@@ -4,6 +4,7 @@
 
 import("//third_party/abseil-cpp/absl.gni")
 
+if (!moz_webrtc_build) {
 absl_source_set("graphcycles_internal") {
   sources = [ "internal/graphcycles.cc" ]
   public = [ "internal/graphcycles.h" ]
@@ -86,4 +87,5 @@ absl_source_set("per_thread_sem_test_common") {
     "//third_party/abseil-cpp/absl/time",
     "//third_party/googletest:gtest",
   ]
+}
 }

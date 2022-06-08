@@ -19,6 +19,10 @@
 
 import("//build_overrides/build.gni")
 
+declare_args() {
+  moz_webrtc_build = true
+}
+
 template("absl_source_set") {
   source_set(target_name) {
     forward_variables_from(invoker, "*")

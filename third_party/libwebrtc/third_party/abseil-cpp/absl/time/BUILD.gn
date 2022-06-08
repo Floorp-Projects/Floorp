@@ -4,6 +4,7 @@
 
 import("//third_party/abseil-cpp/absl.gni")
 
+if (!moz_webrtc_build) {
 absl_source_set("time") {
   sources = [
     "civil_time.cc",
@@ -46,4 +47,5 @@ absl_source_set("test_util") {
     "//third_party/googletest:gmock",
   ]
   visibility = [ "//third_party/abseil-cpp/absl/time:*" ]
+}
 }

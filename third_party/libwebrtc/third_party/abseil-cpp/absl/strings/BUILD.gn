@@ -42,6 +42,7 @@ absl_source_set("strings") {
     "strip.h",
     "substitute.h",
   ]
+  if (!moz_webrtc_build) {
   deps = [
     ":internal",
     "//third_party/abseil-cpp/absl/base",
@@ -55,6 +56,18 @@ absl_source_set("strings") {
     "//third_party/abseil-cpp/absl/numeric:bits",
     "//third_party/abseil-cpp/absl/numeric:int128",
   ]
+  } else {
+  deps = [
+    ":internal",
+    "//third_party/abseil-cpp/absl/base:config",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:raw_logging_internal",
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/meta:type_traits",
+    "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/numeric:int128",
+  ]
+  }
 }
 
 absl_source_set("internal") {
@@ -70,6 +83,7 @@ absl_source_set("internal") {
     "internal/resize_uninitialized.h",
     "internal/utf8.h",
   ]
+  if (!moz_webrtc_build) {
   deps = [
     "//third_party/abseil-cpp/absl/base:config",
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -77,8 +91,14 @@ absl_source_set("internal") {
     "//third_party/abseil-cpp/absl/base:raw_logging_internal",
     "//third_party/abseil-cpp/absl/meta:type_traits",
   ]
+  } else {
+  deps = [
+    "//third_party/abseil-cpp/absl/base:raw_logging_internal",
+  ]
+  }
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("str_format") {
   public = [ "str_format.h" ]
   deps = [ ":str_format_internal" ]
@@ -545,4 +565,5 @@ absl_source_set("cord_rep_btree_navigator_test") {
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest",
   ]
+}
 }
