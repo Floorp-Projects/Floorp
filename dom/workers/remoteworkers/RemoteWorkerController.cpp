@@ -464,42 +464,20 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
     return false;
   }
 
-  const auto send = [this, &aOwner](const ServiceWorkerOpArgs& args) {
-    MaybeReportServiceWorkerShutdownProgress(args);
+  MaybeReportServiceWorkerShutdownProgress(mArgs);
 
-    aOwner->mActor->SendExecServiceWorkerOp(args)->Then(
-        GetCurrentSerialEventTarget(), __func__,
-        [promise = std::move(mPromise)](
-            PRemoteWorkerParent::ExecServiceWorkerOpPromise::
-                ResolveOrRejectValue&& aResult) {
-          if (NS_WARN_IF(aResult.IsReject())) {
-            promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
-            return;
-          }
+  aOwner->mActor->SendExecServiceWorkerOp(mArgs)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise = std::move(mPromise)](
+          PRemoteWorkerParent::ExecServiceWorkerOpPromise::
+              ResolveOrRejectValue&& aResult) {
+        if (NS_WARN_IF(aResult.IsReject())) {
+          promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+          return;
+        }
 
-          promise->Resolve(std::move(aResult.ResolveValue()), __func__);
-        });
-  };
-
-  if (mArgs.type() == ServiceWorkerOpArgs::TServiceWorkerMessageEventOpArgs) {
-    auto& args = mArgs.get_ServiceWorkerMessageEventOpArgs();
-
-    ServiceWorkerMessageEventOpArgs copyArgs;
-    copyArgs.clientInfoAndState() = std::move(args.clientInfoAndState());
-
-    RefPtr<ServiceWorkerCloneData> copyData = new ServiceWorkerCloneData();
-    if (!copyData->StealFromAndBuildClonedMessageData(args.clonedData(),
-                                                      copyArgs.clonedData())) {
-      mPromise->Reject(NS_ERROR_DOM_DATA_CLONE_ERR, __func__);
-      mPromise = nullptr;
-      return true;
-    }
-
-    // copyArgs depends on mArgs due to BuildClonedMessageData.
-    send(std::move(copyArgs));
-  } else {
-    send(mArgs);
-  }
+        promise->Resolve(std::move(aResult.ResolveValue()), __func__);
+      });
 
   return true;
 }
