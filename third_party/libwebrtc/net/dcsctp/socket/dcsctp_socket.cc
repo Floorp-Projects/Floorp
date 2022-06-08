@@ -184,6 +184,9 @@ std::string DcSctpSocket::log_prefix() const {
 }
 
 bool DcSctpSocket::IsConsistent() const {
+  if (tcb_ != nullptr && tcb_->reassembly_queue().HasMessages()) {
+    return false;
+  }
   switch (state_) {
     case State::kClosed:
       return (tcb_ == nullptr && !t1_init_->is_running() &&
