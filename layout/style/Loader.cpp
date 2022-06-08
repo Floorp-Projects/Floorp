@@ -25,6 +25,7 @@
 #include "nsITimedChannel.h"
 #include "nsICachingChannel.h"
 #include "nsSyncLoadService.h"
+#include "nsContentSecurityManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIContent.h"
@@ -1230,9 +1231,14 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
                           mDocument);
     }
 
+    // Synchronous loads should only be used internally. Therefore no CORS
+    // policy is needed.
     nsSecurityFlags securityFlags =
-        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
-        nsILoadInfo::SEC_ALLOW_CHROME;
+        nsContentSecurityManager::ComputeSecurityFlags(
+            CORSMode::CORS_NONE, nsContentSecurityManager::CORSSecurityMapping::
+                                     CORS_NONE_MAPS_TO_INHERITED_CONTEXT);
+
+    securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
     nsContentPolicyType contentPolicyType =
         aLoadData.mPreloadKind == StylePreloadKind::None
@@ -1376,16 +1382,12 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
   mSyncCallback = true;
 #endif
 
-  CORSMode ourCORSMode = aLoadData.mSheet->GetCORSMode();
   nsSecurityFlags securityFlags =
-      ourCORSMode == CORS_NONE
-          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT
-          : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
-  if (ourCORSMode == CORS_ANONYMOUS) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-  } else if (ourCORSMode == CORS_USE_CREDENTIALS) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-  }
+      nsContentSecurityManager::ComputeSecurityFlags(
+          aLoadData.mSheet->GetCORSMode(),
+          nsContentSecurityManager::CORSSecurityMapping::
+              CORS_NONE_MAPS_TO_INHERITED_CONTEXT);
+
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsContentPolicyType contentPolicyType =

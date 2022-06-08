@@ -23,6 +23,7 @@
 #include "js/loader/ModuleLoadRequest.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
+#include "nsContentSecurityManager.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/AutoEntryScript.h"
@@ -88,24 +89,20 @@ bool ModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) {
 }
 
 nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  nsSecurityFlags securityFlags;
-
   // According to the spec, module scripts have different behaviour to classic
   // scripts and always use CORS. Only exception: Non linkable about: pages
   // which load local module scripts.
-  if (GetScriptLoader()->IsAboutPageLoadingChromeURI(
-          aRequest, GetScriptLoader()->GetDocument())) {
-    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
-  } else {
-    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
-    if (aRequest->CORSMode() == CORS_NONE ||
-        aRequest->CORSMode() == CORS_ANONYMOUS) {
-      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-    } else {
-      MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
-      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-    }
-  }
+  bool isAboutPageLoadingChromeURI = ScriptLoader::IsAboutPageLoadingChromeURI(
+      aRequest, GetScriptLoader()->GetDocument());
+
+  nsContentSecurityManager::CORSSecurityMapping corsMapping =
+      isAboutPageLoadingChromeURI
+          ? nsContentSecurityManager::CORSSecurityMapping::DISABLE_CORS_CHECKS
+          : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
+
+  nsSecurityFlags securityFlags =
+      nsContentSecurityManager::ComputeSecurityFlags(aRequest->CORSMode(),
+                                                     corsMapping);
 
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 

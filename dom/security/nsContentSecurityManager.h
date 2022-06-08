@@ -7,9 +7,11 @@
 #ifndef nsContentSecurityManager_h___
 #define nsContentSecurityManager_h___
 
+#include "mozilla/CORSMode.h"
 #include "nsIContentSecurityManager.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
+#include "nsILoadInfo.h"
 
 class nsILoadInfo;
 class nsIStreamListener;
@@ -41,6 +43,33 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static void MeasureUnexpectedPrivilegedLoads(nsILoadInfo* aLoadInfo,
                                                nsIURI* aFinalURI,
                                                const nsACString& aRemoteType);
+
+  enum CORSSecurityMapping {
+    // Disables all CORS checking overriding the value of aCORSMode. All checks
+    // are disabled even when CORSMode::CORS_ANONYMOUS or
+    // CORSMode::CORS_USE_CREDENTIALS is passed. This is mostly used for chrome
+    // code, where we don't need security checks. See
+    // SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL for the detailed explanation
+    // of the security mode.
+    DISABLE_CORS_CHECKS,
+    // Disables all CORS checking on CORSMode::CORS_NONE. The other two CORS
+    // modes CORSMode::CORS_ANONYMOUS and CORSMode::CORS_USE_CREDENTIALS are
+    // respected.
+    CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS,
+    // Allow load from any origin, but cross-origin requests require CORS. See
+    // SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT. Like above the other two
+    // CORS modes are unaffected and get parsed.
+    CORS_NONE_MAPS_TO_INHERITED_CONTEXT,
+    // Always require the server to acknowledge the request via CORS.
+    // CORSMode::CORS_NONE is parsed as if CORSMode::CORS_ANONYMOUS is passed.
+    REQUIRE_CORS_CHECKS,
+  };
+
+  // computes the security flags for the requested CORS mode
+  // @param aCORSSecurityMapping: See CORSSecurityMapping for variant
+  // descriptions
+  static nsSecurityFlags ComputeSecurityFlags(
+      mozilla::CORSMode aCORSMode, CORSSecurityMapping aCORSSecurityMapping);
 
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
