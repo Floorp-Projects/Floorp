@@ -17,6 +17,7 @@ rtc_library("data_tracker") {
     "../common:sequence_numbers",
     "../packet:chunk",
     "../packet:data",
+    "../public:socket",
     "../timer",
   ]
   sources = [

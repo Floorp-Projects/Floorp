@@ -32,6 +32,8 @@ struct DcSctpSocketHandoverState {
     uint32_t id = 0;
   };
   struct Receive {
+    bool seen_packet = false;
+    uint32_t last_cumulative_acked_tsn = 0;
     std::vector<OrderedStream> ordered_streams;
     std::vector<UnorderedStream> unordered_streams;
   };
@@ -42,7 +44,7 @@ struct DcSctpSocketHandoverState {
 enum class HandoverUnreadinessReason : uint32_t {
   kWrongConnectionState = 1,
   kSendQueueNotEmpty = 2,
-  kDataTrackerNotIdle = 4,
+  kPendingStreamResetRequest = 4,
   kDataTrackerTsnBlocksPending = 8,
   kReassemblyQueueNotEmpty = 16,
   kReassemblyQueueDeliveredTSNsGap = 32,
@@ -53,8 +55,7 @@ enum class HandoverUnreadinessReason : uint32_t {
   kRetransmissionQueueFastRecovery = 1024,
   kRetransmissionQueueNotEmpty = 2048,
   kPendingStreamReset = 4096,
-  kPendingStreamResetRequest = 8192,
-  kMax = kPendingStreamResetRequest,
+  kMax = kPendingStreamReset,
 };
 
 // Return value of `DcSctpSocketInterface::GetHandoverReadiness`. Set of
