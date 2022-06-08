@@ -1,6 +1,14 @@
 
 # cargo-vet config file
 
+[policy.audioipc-client]
+criteria = []
+notes = "Going away very soon in bug 1697845"
+
+[policy.audioipc-server]
+criteria = []
+notes = "Going away very soon in bug 1697845"
+
 [policy.geckodriver]
 criteria = "safe-to-run"
 notes = "Used for automation."
