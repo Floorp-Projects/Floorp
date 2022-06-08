@@ -93,7 +93,7 @@ add_task(async function testMonochromaticList() {
 
   // Check that the test theme is in the enabled section.
   let addon = await AddonManager.getAddonByID("test-colorway@mozilla.org");
-  let enabledSection = getSection(doc, "enabled");
+  let enabledSection = getSection(doc, "theme-enabled-section");
   let mutationPromise = BrowserTestUtils.waitForMutationCondition(
     enabledSection,
     { childList: true },
@@ -198,7 +198,7 @@ add_task(async function testExpiredThemes() {
     );
   }
 
-  let disabledSection = getSection(doc, "disabled");
+  let disabledSection = getSection(doc, "theme-disabled-section");
   let card = disabledSection.querySelector(
     `addon-card[addon-id='${kTestThemeId}']`
   );

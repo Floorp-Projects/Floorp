@@ -1581,13 +1581,8 @@ async function loadInitialView(type, opts) {
   return win;
 }
 
-function getSection(doc, type) {
-  const SECTION_INDEXES = {
-    enabled: 0,
-    disabled: 1,
-    colorway: 2,
-  };
-  return doc.querySelector(`section[section="${SECTION_INDEXES[type]}"]`);
+function getSection(doc, className) {
+  return doc.querySelector(`section.${className}`);
 }
 
 function waitForViewLoad(win) {

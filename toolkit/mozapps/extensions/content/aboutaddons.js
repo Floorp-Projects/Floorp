@@ -62,6 +62,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "COLORWAY_CLOSET_ENABLED",
+  "browser.theme.colorway-closet",
+  false
+);
+
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -103,6 +110,14 @@ const PRIVATE_BROWSING_PERMS = {
   permissions: [PRIVATE_BROWSING_PERM_NAME],
   origins: [],
 };
+
+const L10N_ID_MAPPING = {
+  "theme-disabled-heading": "theme-disabled-heading2",
+};
+
+function getL10nIdMapping(id) {
+  return L10N_ID_MAPPING[id] || id;
+}
 
 function shouldSkipAnimations() {
   return (
@@ -4354,11 +4369,21 @@ class AddonList extends HTMLElement {
   }
 
   renderSection(addons, index) {
+    const { sectionClass, sectionPreambleCustomElement } = this.sections[index];
+
     let section = document.createElement("section");
     section.setAttribute("section", index);
+    if (sectionClass) {
+      section.setAttribute("class", sectionClass);
+    }
 
     // Render the heading and add-ons if there are any.
     if (addons.length) {
+      if (sectionPreambleCustomElement) {
+        section.appendChild(
+          document.createElement(sectionPreambleCustomElement)
+        );
+      }
       section.appendChild(this.createSectionHeading(index));
 
       for (let addon of addons) {
@@ -4782,6 +4807,12 @@ gViewController.defineView("list", async type => {
 
   // If monochromatic themes are enabled and any are builtin to Firefox, we
   // display those themes together in a separate subsection.
+  const areColorwayThemesInstalled = async () =>
+    (await AddonManager.getAllAddons()).some(
+      addon =>
+        BuiltInThemes.isMonochromaticTheme(addon.id) &&
+        !BuiltInThemes.themeIsExpired(addon.id)
+    );
 
   let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
@@ -4790,11 +4821,13 @@ gViewController.defineView("list", async type => {
   let sections = [
     {
       headingId: type + "-enabled-heading",
+      sectionClass: `${type}-enabled-section`,
       filterFn: addon =>
         !addon.hidden && addon.isActive && !isPending(addon, "uninstall"),
     },
     {
-      headingId: type + "-disabled-heading",
+      headingId: getL10nIdMapping(`${type}-disabled-heading`),
+      sectionClass: `${type}-disabled-section`,
       filterFn: addon =>
         !addon.hidden &&
         !addon.isActive &&
@@ -4805,16 +4838,21 @@ gViewController.defineView("list", async type => {
           BuiltInThemes.isRetainedExpiredTheme(addon.id)),
     },
   ];
+
+  let colorwaysThemeInstalled;
+  if (type == "theme") {
+    colorwaysThemeInstalled = await areColorwayThemesInstalled();
+    if (colorwaysThemeInstalled && COLORWAY_CLOSET_ENABLED) {
+      // Insert colorway closet card as the first element so that
+      // it is positioned between the enabled and disabled sections.
+      sections[1].sectionPreambleCustomElement = "colorways-list";
+    }
+  }
+
   list.setSections(sections);
   frag.appendChild(list);
 
-  const areColorwayThemesInstalled = async () =>
-    (await AddonManager.getAllAddons()).some(
-      addon =>
-        BuiltInThemes.isMonochromaticTheme(addon.id) &&
-        !BuiltInThemes.themeIsExpired(addon.id)
-    );
-  if (type == "theme" && (await areColorwayThemesInstalled())) {
+  if (type == "theme" && colorwaysThemeInstalled) {
     let monochromaticList = document.createElement("addon-list");
     monochromaticList.classList.add("monochromatic-addon-list");
     monochromaticList.type = type;
@@ -4835,14 +4873,6 @@ gViewController.defineView("list", async type => {
       },
     ]);
     frag.appendChild(monochromaticList);
-
-    const colorwayClosetPrefEnabled = Services.prefs.getBoolPref(
-      "browser.theme.colorway-closet"
-    );
-    if (colorwayClosetPrefEnabled) {
-      let colorwayClosetList = document.createElement("colorways-list");
-      frag.appendChild(colorwayClosetList);
-    }
   }
 
   // Show recommendations for themes and extensions.
