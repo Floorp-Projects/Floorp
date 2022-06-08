@@ -267,6 +267,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                   "UnaryMathFunction must fit in a byte");
     buffer_.writeByte(uint8_t(fun));
   }
+  void writeCompletionKindImm(CompletionKind kind) {
+    static_assert(sizeof(CompletionKind) == sizeof(uint8_t),
+                  "CompletionKind must fit in a byte");
+    buffer_.writeByte(uint8_t(kind));
+  }
   void writeBoolImm(bool b) { buffer_.writeByte(uint32_t(b)); }
 
   void writeByteImm(uint32_t b) {

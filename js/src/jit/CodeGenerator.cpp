@@ -12166,8 +12166,9 @@ void CodeGenerator::visitCloseIterCache(LCloseIterCache* lir) {
   LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
   Register iter = ToRegister(lir->iter());
   Register temp = ToRegister(lir->temp0());
+  CompletionKind kind = CompletionKind(lir->mir()->completionKind());
 
-  IonCloseIterIC ic(liveRegs, iter, temp);
+  IonCloseIterIC ic(liveRegs, iter, temp, kind);
   addIC(lir, allocateIC(ic));
 }
 

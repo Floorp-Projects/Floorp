@@ -3161,8 +3161,9 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
-    ObjOperandId iterId, ObjOperandId calleeId) {
+bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
+                                                          ObjOperandId calleeId,
+                                                          CompletionKind kind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register iter = allocator.useRegister(masm, iterId);
   Register callee = allocator.useRegister(masm, calleeId);
@@ -3187,15 +3188,17 @@ bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
 
   masm.callJit(code);
 
-  // Verify that the return value is an object.
-  Label success;
-  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
+  if (kind != CompletionKind::Throw) {
+    // Verify that the return value is an object.
+    Label success;
+    masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
 
-  masm.Push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
-  using Fn = bool (*)(JSContext*, CheckIsObjectKind);
-  callVM<Fn, ThrowCheckIsObject>(masm);
+    masm.Push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
+    using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+    callVM<Fn, ThrowCheckIsObject>(masm);
 
-  masm.bind(&success);
+    masm.bind(&success);
+  }
 
   stubFrame.leave(masm, true);
   return true;

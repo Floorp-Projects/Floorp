@@ -26,7 +26,7 @@ class AsyncGeneratorObject;
 class PromiseObject;
 class SavedFrame;
 
-enum class CompletionKind;
+enum class CompletionKind : uint8_t;
 
 enum class PromiseHandler : uint32_t {
   Identity = 0,

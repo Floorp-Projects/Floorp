@@ -1382,8 +1382,9 @@
     MACRO(EndIter, end_iter, NULL, 1, 2, 0, JOF_BYTE) \
     /*
      * If the iterator object on top of the stack has a `return` method,
-     * call that method. Throw a TypeError if the method exists, but
-     * the call does not return an object.
+     * call that method. If the method exists but does not return an object,
+     * and `kind` is not `CompletionKind::Throw`, throw a TypeError. (If
+     * `kind` is `Throw`, the error we are already throwing takes precedence.)
      *
      * `iter` must be an object conforming to the [Iterator][1] interface.
      *
@@ -1393,10 +1394,10 @@
      * [2]: https://tc39.es/ecma262/#sec-iteratorclose
      *   Category: Objects
      *   Type: Iteration
-     *   Operands:
+     *   Operands: CompletionKind kind
      *   Stack: iter =>
      */ \
-    MACRO(CloseIter, close_iter, NULL, 1, 1, 0, JOF_BYTE|JOF_IC) \
+    MACRO(CloseIter, close_iter, NULL, 2, 1, 0, JOF_UINT8|JOF_IC) \
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error

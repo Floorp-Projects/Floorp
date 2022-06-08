@@ -845,12 +845,13 @@ inline bool BytecodeOpCanHaveAllocSite(JSOp op) {
 
 class MOZ_RAII CloseIterIRGenerator : public IRGenerator {
   HandleObject iter_;
+  CompletionKind kind_;
 
   void trackAttached(const char* name);
 
  public:
   CloseIterIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
-                       ICState state, HandleObject iter);
+                       ICState state, HandleObject iter, CompletionKind kind);
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachNoReturnMethod();

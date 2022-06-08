@@ -473,10 +473,11 @@ bool IonToPropertyKeyIC::update(JSContext* cx, HandleScript outerScript,
 bool IonCloseIterIC::update(JSContext* cx, HandleScript outerScript,
                             IonCloseIterIC* ic, HandleObject iter) {
   IonScript* ionScript = outerScript->ionScript();
+  CompletionKind kind = ic->completionKind();
 
-  TryAttachIonStub<CloseIterIRGenerator>(cx, ic, ionScript, iter);
+  TryAttachIonStub<CloseIterIRGenerator>(cx, ic, ionScript, iter, kind);
 
-  return CloseIterOperation(cx, iter);
+  return CloseIterOperation(cx, iter, kind);
 }
 
 /*  static */

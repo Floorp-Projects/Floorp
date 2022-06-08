@@ -11864,8 +11864,11 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
 
 CloseIterIRGenerator::CloseIterIRGenerator(JSContext* cx, HandleScript script,
                                            jsbytecode* pc, ICState state,
-                                           HandleObject iter)
-    : IRGenerator(cx, script, pc, CacheKind::CloseIter, state), iter_(iter) {}
+                                           HandleObject iter,
+                                           CompletionKind kind)
+    : IRGenerator(cx, script, pc, CacheKind::CloseIter, state),
+      iter_(iter),
+      kind_(kind) {}
 
 void CloseIterIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
@@ -11960,7 +11963,7 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
   ObjOperandId calleeId = writer.guardToObject(calleeValId);
   emitCalleeGuard(calleeId, callee);
 
-  writer.closeIterScriptedResult(objId, calleeId);
+  writer.closeIterScriptedResult(objId, calleeId, kind_);
 
   writer.returnFromIC();
   trackAttached("CloseIter.ScriptedReturn");
