@@ -96,6 +96,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/RefCountType.h"
+#include "mozilla/RejectForeignAllowList.h"
 #include "mozilla/RelativeTo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ReverseIterator.h"
@@ -16849,9 +16850,19 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 2: Check if the browser settings determine whether or not this
   // document has access to its unpartitioned cookies.
   bool isThirdPartyDocument = AntiTrackingUtils::IsThirdPartyDocument(this);
+  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(this);
+  bool isOnThirdPartySkipList = false;
+  if (mChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    isOnThirdPartySkipList = loadInfo->GetStoragePermission() ==
+                             nsILoadInfo::StoragePermissionAllowListed;
+  }
+  bool isThirdPartyTracker =
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(inner);
   Maybe<bool> resultBecauseBrowserSettings =
       ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument);
+          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
+          isOnThirdPartySkipList, isThirdPartyTracker);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       aHasStorageAccess = true;
@@ -16889,7 +16900,6 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
       return NS_OK;
     }
   }
-
   // If you get here, we default to not giving you permission.
   aHasStorageAccess = false;
   return NS_OK;
@@ -17064,6 +17074,27 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     return nullptr;
   }
 
+  // Step 0: Check that we have user activation before proceeding to prevent
+  // rapid calls to the API to leak information.
+  if (!HasValidTransientUserGestureActivation()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    this, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessUserGesture");
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Get a pointer to the inner window- We need this for convenience sake
+  nsPIDOMWindowInner* inner = this->GetInnerWindow();
+  if (!inner) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   // Step 1: Check if the principal calling this has a permission that lets
   // them use cookies or forbids them from using cookies.
   // This is outside of the spec of the StorageAccess API, but makes the return
@@ -17087,9 +17118,19 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // This is outside of the spec of the StorageAccess API, but makes the return
   // values to have proper semantics.
   bool isThirdPartyDocument = AntiTrackingUtils::IsThirdPartyDocument(this);
+  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(this);
+  bool isOnThirdPartySkipList = false;
+  if (mChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    isOnThirdPartySkipList = loadInfo->GetStoragePermission() ==
+                             nsILoadInfo::StoragePermissionAllowListed;
+  }
+  bool isThirdPartyTracker =
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(inner);
   Maybe<bool> resultBecauseBrowserSettings =
       ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument);
+          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
+          isOnThirdPartySkipList, isThirdPartyTracker);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17133,12 +17174,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
   // Get pointers to some objects that will be used in the async portion
   RefPtr<BrowsingContext> bc = this->GetBrowsingContext();
-  nsPIDOMWindowInner* inner = this->GetInnerWindow();
-  if (!inner) {
-    this->ConsumeTransientUserGestureActivation();
-    promise->MaybeRejectWithUndefined();
-    return promise.forget();
-  }
   RefPtr<nsGlobalWindowOuter> outer =
       nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
   if (!outer) {
@@ -17161,10 +17196,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, outer, promise] {
-            // Step 10. Grant the document access to cookies and store
-            // that fact for
-            //          the purposes of future calls to
-            //          hasStorageAccess() and requestStorageAccess().
             outer->SetStorageAccessPermissionGranted(true);
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
@@ -17190,6 +17221,19 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
     return nullptr;
   }
 
+  // Step 0: Check that we have user activation before proceeding to prevent
+  // rapid calls to the API to leak information.
+  if (!HasValidTransientUserGestureActivation()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    this, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessUserGesture");
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   // Step 1: Check if the provided URI is different-site to this Document
   nsCOMPtr<nsIURI> thirdPartyURI;
   nsresult rv = NS_NewURI(getter_AddRefs(thirdPartyURI), aThirdPartyOrigin);
@@ -17203,9 +17247,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
     aRv.Throw(rv);
     return nullptr;
   }
+  bool isOnRejectForeignAllowList =
+      RejectForeignAllowList::Check(thirdPartyURI);
   Maybe<bool> resultBecauseBrowserSettings =
       ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
-          CookieJarSettings(), isThirdPartyDocument);
+          CookieJarSettings(), isThirdPartyDocument, isOnRejectForeignAllowList,
+          false, true);
   if (resultBecauseBrowserSettings.isSome()) {
     if (resultBecauseBrowserSettings.value()) {
       promise->MaybeResolveWithUndefined();
@@ -17315,7 +17362,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
           GetCurrentSerialEventTarget(), __func__,
           // If the previous handlers resolved, we should reinstate user
           // activation and resolve the promise we returned in Step 5.
-          [self, promise] {
+          [self, outer, promise] {
+            outer->SetStorageAccessPermissionGranted(true);
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
