@@ -27,6 +27,7 @@ rtc_source_set("types") {
 
 rtc_source_set("socket") {
   deps = [
+    ":strong_alias",
     ":types",
     "../../../api:array_view",
     "../../../rtc_base",
@@ -34,6 +35,7 @@ rtc_source_set("socket") {
     "../../../rtc_base:rtc_base_approved",
   ]
   sources = [
+    "dcsctp_handover_state.h",
     "dcsctp_socket.h",
     "packet_observer.h",
     "timeout.h",
