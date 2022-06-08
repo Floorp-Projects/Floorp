@@ -5,18 +5,21 @@
 "use strict";
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
-
+const stacktraces = new Set();
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   function onNetworkEventStackTrace(packet) {
     const actor = packet.eventActor;
-    onAvailable([
-      {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
-        resourceId: actor.channelId,
-        stacktraceAvailable: actor.cause.stacktraceAvailable,
-        lastFrame: actor.cause.lastFrame,
-      },
-    ]);
+    if (!stacktraces.has(actor.channelId)) {
+      stacktraces.add(actor.channelId);
+      onAvailable([
+        {
+          resourceType: ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+          resourceId: actor.channelId,
+          stacktraceAvailable: actor.cause.stacktraceAvailable,
+          lastFrame: actor.cause.lastFrame,
+        },
+      ]);
+    }
   }
   const webConsoleFront = await targetFront.getFront("console");
   webConsoleFront.on("serverNetworkStackTrace", onNetworkEventStackTrace);
