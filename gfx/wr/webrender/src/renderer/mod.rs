@@ -94,6 +94,7 @@ use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob};
+use crate::telemetry::Telemetry;
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
 use crate::picture_textures::PictureTextures;
 use crate::tile_cache::PictureCacheDebugInfo;
@@ -2058,8 +2059,9 @@ impl Renderer {
             })
         });
 
-        self.profile.end_time(profiler::RENDERER_TIME);
+        let t = self.profile.end_time(profiler::RENDERER_TIME);
         self.profile.end_time_if_started(profiler::TOTAL_FRAME_CPU_TIME);
+        Telemetry::record_renderer_time(Duration::from_micros((t * 1000.00) as u64));
 
         let current_time = precise_time_ns();
         if device_size.is_some() {
@@ -2440,6 +2442,7 @@ impl Renderer {
 
         let t = self.profile.end_time(profiler::TEXTURE_CACHE_UPDATE_TIME);
         self.resource_upload_time += t;
+        Telemetry::record_texture_cache_update_time(Duration::from_micros((t * 1000.00) as u64));
 
         drain_filter(
             &mut self.notifications,
