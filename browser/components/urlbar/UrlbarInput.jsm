@@ -381,10 +381,7 @@ class UrlbarInput {
     this.valueIsTyped = !valid;
     this.removeAttribute("usertyping");
 
-    if (!this.focused) {
-      // When setURI is called while the input is not focused, reset the caret.
-      this.selectionStart = this.selectionEnd = 0;
-    } else if (value != previousUntrimmedValue) {
+    if (this.focused && value != previousUntrimmedValue) {
       if (
         previousSelectionStart != previousSelectionEnd &&
         value.substring(previousSelectionStart, previousSelectionEnd) ===
@@ -395,8 +392,10 @@ class UrlbarInput {
       ) {
         // If the same text is in the same place as the previously selected text,
         // the selection is kept.
-        this.selectionStart = previousSelectionStart;
-        this.selectionEnd = previousSelectionEnd;
+        this.inputField.setSelectionRange(
+          previousSelectionStart,
+          previousSelectionEnd
+        );
       } else if (
         previousSelectionEnd &&
         (previousUntrimmedValue.length === previousSelectionEnd ||
@@ -405,11 +404,14 @@ class UrlbarInput {
         // If the previous end caret is not 0 and the caret is at the end of the
         // input or its position is beyond the end of the new value, keep the
         // position at the end.
-        this.selectionStart = this.selectionEnd = value.length;
+        this.inputField.setSelectionRange(value.length, value.length);
       } else {
         // Otherwise clear selection and set the caret position to the previous
         // caret end position.
-        this.selectionStart = this.selectionEnd = previousSelectionEnd;
+        this.inputField.setSelectionRange(
+          previousSelectionEnd,
+          previousSelectionEnd
+        );
       }
     }
 

@@ -3,6 +3,9 @@
 
 "use strict";
 
+const LARGE_DATA_URL =
+  "data:text/plain," + [...Array(1000)].map(() => "0123456789").join("");
+
 // Tests for the caret position after gURLBar.setURI().
 add_task(async function setURI() {
   const testData = [
@@ -182,32 +185,72 @@ add_task(async function setURI() {
       expectedSelectionStart: 0,
       expectedSelectionEnd: 0,
     },
+    {
+      firstURL: "about:blank",
+      secondURL: LARGE_DATA_URL,
+      initialSelectionStart: 0,
+      initialSelectionEnd: 0,
+      expectedSelectionStart: 0,
+      expectedSelectionEnd: 0,
+    },
+    {
+      firstURL: "about:telemetry",
+      secondURL: LARGE_DATA_URL,
+      initialSelectionStart: "about:telemetry".length,
+      initialSelectionEnd: "about:telemetry".length,
+      expectedSelectionStart: LARGE_DATA_URL.length,
+      expectedSelectionEnd: LARGE_DATA_URL.length,
+    },
   ];
 
   for (const data of testData) {
     info(
       `Test for ${data.firstURL} -> ${data.secondURL} with initial selection: ${data.initialSelectionStart}, ${data.initialSelectionEnd}`
     );
-
     info("Check the caret position after setting second URL");
     gURLBar.setURI(makeURI(data.firstURL));
     gURLBar.selectionStart = data.initialSelectionStart;
     gURLBar.selectionEnd = data.initialSelectionEnd;
 
+    // The change of the scroll amount dependent on the selection change will be
+    // ignored if the previous processing is unfinished yet. Therefore, make the
+    // processing finalize explicitly here.
+    await flushScrollStyle();
+
     gURLBar.focus();
     gURLBar.setURI(makeURI(data.secondURL));
+    await flushScrollStyle();
+
     Assert.equal(gURLBar.selectionStart, data.expectedSelectionStart);
     Assert.equal(gURLBar.selectionEnd, data.expectedSelectionEnd);
+    if (data.secondURL.length === data.expectedSelectionStart) {
+      // If the caret is at the end of url, the input field shows the end of
+      // text.
+      Assert.equal(
+        gURLBar.inputField.scrollLeft,
+        gURLBar.inputField.scrollLeftMax
+      );
+    }
 
     info("Check the caret position while the input is not focused");
     gURLBar.setURI(makeURI(data.firstURL));
     gURLBar.selectionStart = data.initialSelectionStart;
     gURLBar.selectionEnd = data.initialSelectionEnd;
 
+    await flushScrollStyle();
+
     gURLBar.blur();
     gURLBar.setURI(makeURI(data.secondURL));
-    Assert.equal(gURLBar.selectionStart, 0);
-    Assert.equal(gURLBar.selectionEnd, 0);
+    await flushScrollStyle();
+
+    if (data.firstURL === data.secondURL) {
+      Assert.equal(gURLBar.selectionStart, data.initialSelectionStart);
+      Assert.equal(gURLBar.selectionEnd, data.initialSelectionEnd);
+    } else {
+      Assert.equal(gURLBar.selectionStart, gURLBar.value.length);
+      Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
+    }
+    Assert.equal(gURLBar.inputField.scrollLeft, 0);
   }
 });
 
@@ -302,5 +345,15 @@ function checkIfKeyStartsQuery(key, shouldStartQuery, win) {
     queryStarted,
     shouldStartQuery,
     `${key}: Should${shouldStartQuery ? "" : "n't"} have started a query`
+  );
+}
+
+async function flushScrollStyle() {
+  // Flush pending notifications for the style.
+  /* eslint-disable no-unused-expressions */
+  gURLBar.inputField.scrollLeft;
+  // Ensure to apply the style.
+  await new Promise(resolve =>
+    gURLBar.inputField.ownerGlobal.requestAnimationFrame(resolve)
   );
 }
