@@ -60,6 +60,12 @@ jobs:
                             '1': true
                             default: false
                     default: false
+            pin-channels:
+                by-release-type:
+                    beta: ["beta"]
+                    release: ["release"]
+                    esr.*: ["esr", "esr-next"]
+                    default: []
         treeherder:
             platform: firefox-release/opt
             symbol: Rel(BSFx)
@@ -80,6 +86,7 @@ jobs:
                 by-release-type:
                     beta: true
                     default: false
+            pin-channels: ["aurora"]
         treeherder:
             platform: devedition-release/opt
             symbol: Rel(BSDev)
