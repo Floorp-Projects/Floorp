@@ -85,6 +85,7 @@ class DcSctpSocket : public DcSctpSocketInterface {
   void ReceivePacket(rtc::ArrayView<const uint8_t> data) override;
   void HandleTimeout(TimeoutID timeout_id) override;
   void Connect() override;
+  void RestoreFromState(const DcSctpSocketHandoverState& state) override;
   void Shutdown() override;
   void Close() override;
   SendStatus Send(DcSctpMessage message,
@@ -98,6 +99,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   size_t buffered_amount_low_threshold(StreamID stream_id) const override;
   void SetBufferedAmountLowThreshold(StreamID stream_id, size_t bytes) override;
   Metrics GetMetrics() const override;
+  HandoverReadinessStatus GetHandoverReadiness() const override;
+  absl::optional<DcSctpSocketHandoverState> GetHandoverStateAndClose() override;
 
   // Returns this socket's verification tag, or zero if not yet connected.
   VerificationTag verification_tag() const {

@@ -150,6 +150,12 @@ class MockDcSctpSocketCallbacks : public DcSctpSocketCallbacks {
     return timeout_manager_.GetNextExpiredTimeout();
   }
 
+  void Reset() {
+    sent_packets_.clear();
+    received_messages_.clear();
+    timeout_manager_.Reset();
+  }
+
  private:
   const std::string log_prefix_;
   TimeMs now_ = TimeMs(0);

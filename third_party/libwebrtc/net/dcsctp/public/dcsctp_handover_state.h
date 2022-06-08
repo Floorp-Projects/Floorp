@@ -24,6 +24,25 @@ namespace dcsctp {
 // for serialization. Serialization is not provided by dcSCTP. If needed it has
 // to be implemented in the calling client.
 struct DcSctpSocketHandoverState {
+  enum class SocketState {
+    kClosed,
+    kConnected,
+  };
+  SocketState socket_state = SocketState::kClosed;
+
+  uint32_t my_verification_tag = 0;
+  uint32_t my_initial_tsn = 0;
+  uint32_t peer_verification_tag = 0;
+  uint32_t peer_initial_tsn = 0;
+  uint64_t tie_tag = 0;
+
+  struct Capabilities {
+    bool partial_reliability = false;
+    bool message_interleaving = false;
+    bool reconfig = false;
+  };
+  Capabilities capabilities;
+
   struct Transmission {
     uint32_t next_tsn = 0;
     uint32_t next_reset_req_sn = 0;
@@ -98,6 +117,7 @@ class HandoverReadinessStatus
     value() |= status.value();
     return *this;
   }
+  std::string ToString() const;
 };
 
 }  // namespace dcsctp
