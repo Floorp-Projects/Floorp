@@ -1891,13 +1891,13 @@ class Document : public nsINode,
   // This is called asynchronously by Document::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
   void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
-                         bool applyFullScreenDirectly = false);
+                         bool aApplyFullscreenDirectly = false);
 
  private:
   void RequestFullscreenInContentProcess(UniquePtr<FullscreenRequest> aRequest,
-                                         bool applyFullScreenDirectly);
+                                         bool aApplyFullscreenDirectly);
   void RequestFullscreenInParentProcess(UniquePtr<FullscreenRequest> aRequest,
-                                        bool applyFullScreenDirectly);
+                                        bool aApplyFullscreenDirectly);
 
   // Pushes aElement onto the top layer
   void TopLayerPush(Element&);
