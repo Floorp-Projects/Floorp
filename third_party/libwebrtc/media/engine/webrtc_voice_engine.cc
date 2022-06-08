@@ -587,13 +587,14 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   if (options.experimental_ns) {
     experimental_ns_ = options.experimental_ns;
   }
-  if (experimental_ns_) {
-    RTC_LOG(LS_INFO) << "Experimental ns is enabled? " << *experimental_ns_;
-    config.Set<webrtc::ExperimentalNs>(
-        new webrtc::ExperimentalNs(*experimental_ns_));
-  }
 
   webrtc::AudioProcessing::Config apm_config = ap->GetConfig();
+
+#if !(defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS))
+  if (experimental_ns_.has_value()) {
+    apm_config.transient_suppression.enabled = experimental_ns_.value();
+  }
+#endif
 
   if (options.echo_cancellation) {
     apm_config.echo_canceller.enabled = *options.echo_cancellation;

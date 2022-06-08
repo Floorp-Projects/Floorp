@@ -40,7 +40,7 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   // Parse boolean values for optionally enabling different
   // configurable public components of APM.
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
-  bool exp_ns = fuzz_data->ReadOrDefaultValue(true);
+  bool use_ts = fuzz_data->ReadOrDefaultValue(true);
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
@@ -96,21 +96,15 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
     return nullptr;
   }
 
-  // Components can be enabled through webrtc::Config and
-  // webrtc::AudioProcessingConfig.
-  Config config;
-
   std::unique_ptr<EchoControlFactory> echo_control_factory;
   if (aec3) {
     echo_control_factory.reset(new EchoCanceller3Factory());
   }
 
-  config.Set<ExperimentalNs>(new ExperimentalNs(exp_ns));
-
   rtc::scoped_refptr<AudioProcessing> apm =
       AudioProcessingBuilderForTesting()
           .SetEchoControlFactory(std::move(echo_control_factory))
-          .Create(config);
+          .Create();
 
 #ifdef WEBRTC_LINUX
   apm->AttachAecDump(AecDumpFactory::Create("/dev/null", -1, worker_queue));
@@ -138,6 +132,7 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   apm_config.gain_controller2.adaptive_digital.use_saturation_protector =
       use_agc2_adaptive_digital_saturation_protector;
   apm_config.noise_suppression.enabled = use_ns;
+  apm_config.transient_suppression.enabled = use_ts;
   apm_config.voice_detection.enabled = use_vad;
   apm_config.level_estimation.enabled = use_le;
   apm->ApplyConfig(apm_config);

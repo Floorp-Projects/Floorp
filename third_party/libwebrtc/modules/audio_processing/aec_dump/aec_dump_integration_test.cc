@@ -24,9 +24,8 @@ using ::testing::StrictMock;
 
 namespace {
 rtc::scoped_refptr<webrtc::AudioProcessing> CreateAudioProcessing() {
-  webrtc::Config config;
   rtc::scoped_refptr<webrtc::AudioProcessing> apm(
-      webrtc::AudioProcessingBuilderForTesting().Create(config));
+      webrtc::AudioProcessingBuilderForTesting().Create());
   RTC_DCHECK(apm);
   return apm;
 }
