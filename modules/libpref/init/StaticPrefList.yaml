@@ -7515,7 +7515,7 @@
 # Is support for CSS backdrop-filter enabled?
 - name: layout.css.backdrop-filter.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Should stray control characters be rendered visibly?
