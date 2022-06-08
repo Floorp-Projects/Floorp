@@ -911,9 +911,8 @@ class MetaBuildWrapper(object):
         cmdline.append('../../tools_webrtc/ensure_webcam_is_running.py')
         extra_files.append('../../tools_webrtc/ensure_webcam_is_running.py')
 
-      # This needs to mirror the settings in //build/config/ui.gni:
-      # use_x11 = is_linux && !use_ozone.
-      use_x11 = is_linux and not 'use_ozone=true' in vals['gn_args']
+      # is_linux uses use_ozone and x11 by default.
+      use_x11 = is_linux
 
       xvfb = use_x11 and test_type == 'windowed_test_launcher'
       if xvfb:
