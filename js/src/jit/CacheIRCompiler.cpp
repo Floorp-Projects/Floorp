@@ -8733,8 +8733,8 @@ void CacheIRCompiler::callVM(MacroAssembler& masm) {
 }
 
 void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
+  MOZ_ASSERT(enteredStubFrame_);
   if (mode_ == Mode::Ion) {
-    MOZ_ASSERT(preparedForVMCall_);
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
     const VMFunctionData& fun = GetVMFunction(id);
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
@@ -8754,8 +8754,6 @@ void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   }
 
   MOZ_ASSERT(mode_ == Mode::Baseline);
-
-  MOZ_ASSERT(preparedForVMCall_);
 
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
   MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
@@ -8791,7 +8789,7 @@ void CacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
 AutoCallVM::AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
                        CacheRegisterAllocator& allocator)
     : masm_(masm), compiler_(compiler), allocator_(allocator) {
-  // Ion needs to `prepareVMCall` before it can callVM and it also needs to
+  // Ion needs to `enterStubFrame` before it can callVM and it also needs to
   // initialize AutoSaveLiveRegisters.
   if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
     // Will need to use a downcast here as well, in order to pass the
@@ -8817,7 +8815,7 @@ void AutoCallVM::prepare() {
   allocator_.discardStack(masm_);
   MOZ_ASSERT(compiler_ != nullptr);
   if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
-    compiler_->asIon()->prepareVMCall(masm_, *save_.ptr());
+    compiler_->asIon()->enterStubFrame(masm_, *save_.ptr());
     return;
   }
   MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
