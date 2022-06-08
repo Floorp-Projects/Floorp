@@ -1,62 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ManagedTree expands list items 1`] = `
-<div
-  className="managed-tree"
->
-  <Tree
-    autoExpandAll={true}
-    autoExpandDepth={1}
-    getChildren={[Function]}
-    getKey={[Function]}
-    getParent={[Function]}
-    getPath={[Function]}
-    getRoots={[Function]}
-    isExpanded={[Function]}
-    itemHeight={24}
-    listItems={
-      Array [
-        Object {
-          "value": "A",
-        },
-        Object {
-          "value": "B",
-        },
-        Object {
-          "value": "C",
-        },
-        Object {
-          "value": "D",
-        },
-        Object {
-          "value": "E",
-        },
-      ]
-    }
-    onCollapse={[Function]}
-    onExpand={[Function]}
-    onFocus={
-      [MockFunction] {
-        "calls": Array [
-          Array [
-            Object {
-              "value": "A",
-            },
-          ],
-        ],
-        "results": Array [
-          Object {
-            "type": "return",
-            "value": undefined,
-          },
-        ],
-      }
-    }
-    renderItem={[Function]}
-  />
-</div>
-`;
-
 exports[`ManagedTree highlights list items 1`] = `
 <div
   className="managed-tree"
@@ -72,19 +15,19 @@ exports[`ManagedTree highlights list items 1`] = `
     highlightItems={
       Array [
         Object {
-          "value": 5,
-        },
-        Object {
-          "value": 4,
-        },
-        Object {
-          "value": 3,
+          "value": 1,
         },
         Object {
           "value": 2,
         },
         Object {
-          "value": 1,
+          "value": 3,
+        },
+        Object {
+          "value": 4,
+        },
+        Object {
+          "value": 5,
         },
       ]
     }
@@ -97,7 +40,7 @@ exports[`ManagedTree highlights list items 1`] = `
         "calls": Array [
           Array [
             Object {
-              "value": 5,
+              "value": 1,
             },
           ],
         ],

@@ -10,7 +10,6 @@ import { connect } from "../../utils/connect";
 
 // Selectors
 import {
-  getShownSource,
   getSelectedSource,
   getDebuggeeUrl,
   getExpandedState,
@@ -75,7 +74,6 @@ class SourcesTree extends Component {
       selectSource: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
       setExpandedState: PropTypes.func.isRequired,
-      shownSource: PropTypes.object,
       sourceCount: PropTypes.number,
       sources: PropTypes.object.isRequired,
       threads: PropTypes.array.isRequired,
@@ -87,7 +85,6 @@ class SourcesTree extends Component {
       projectRoot,
       debuggeeUrl,
       sources,
-      shownSource,
       selectedSource,
       threads,
     } = this.props;
@@ -108,11 +105,6 @@ class SourcesTree extends Component {
           threads: nextProps.threads,
         })
       );
-    }
-
-    if (nextProps.shownSource && nextProps.shownSource != shownSource) {
-      const listItems = getDirectories(nextProps.shownSource, sourceTree);
-      return this.setState({ listItems });
     }
 
     if (
@@ -307,13 +299,11 @@ function getSourceForTree(state, displayedSources, source) {
 
 const mapStateToProps = (state, props) => {
   const selectedSource = getSelectedSource(state);
-  const shownSource = getShownSource(state);
   const displayedSources = getDisplayedSources(state);
 
   return {
     threads: props.threads,
     cx: getContext(state),
-    shownSource: getSourceForTree(state, displayedSources, shownSource),
     selectedSource: getSourceForTree(state, displayedSources, selectedSource),
     debuggeeUrl: getDebuggeeUrl(state),
     expanded: getExpandedState(state),
