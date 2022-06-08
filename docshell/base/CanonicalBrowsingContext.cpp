@@ -1116,7 +1116,7 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
     AutoTArray<nsID, 16> ids({GetHistoryID()});
     shistory->RemoveEntries(ids, shistory->GetIndexOfEntry(root), &didRemove);
     if (didRemove) {
-      BrowsingContext* rootBC = shistory->GetBrowsingContext();
+      RefPtr<BrowsingContext> rootBC = shistory->GetBrowsingContext();
       if (rootBC) {
         if (!rootBC->IsInProcess()) {
           if (ContentParent* cp = rootBC->Canonical()->GetContentParent()) {
