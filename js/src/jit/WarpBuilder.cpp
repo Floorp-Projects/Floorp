@@ -3205,7 +3205,9 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     }
     case CacheKind::CloseIter: {
       MOZ_ASSERT(numInputs == 1);
-      auto* ins = MCloseIterCache::New(alloc(), getInput(0));
+      static_assert(sizeof(CompletionKind) == sizeof(uint8_t));
+      CompletionKind kind = loc.getCompletionKind();
+      auto* ins = MCloseIterCache::New(alloc(), getInput(0), uint8_t(kind));
       current->add(ins);
       return resumeAfter(ins, loc);
     }

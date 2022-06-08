@@ -2426,9 +2426,12 @@ bool DoCloseIterFallback(JSContext* cx, BaselineFrame* frame,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "CloseIter");
 
-  TryAttachStub<CloseIterIRGenerator>("CloseIter", cx, frame, stub, iter);
+  jsbytecode* pc = StubOffsetToPc(stub, frame->script());
+  CompletionKind kind = CompletionKind(GET_UINT8(pc));
 
-  return CloseIterOperation(cx, iter);
+  TryAttachStub<CloseIterIRGenerator>("CloseIter", cx, frame, stub, iter, kind);
+
+  return CloseIterOperation(cx, iter, kind);
 }
 
 bool FallbackICCodeCompiler::emit_CloseIter() {

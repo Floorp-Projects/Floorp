@@ -2856,6 +2856,7 @@
   args:
     iter: ObjId
     callee: ObjId
+    kind: CompletionKindImm
 
 - name: CallPrintString
   shared: true

@@ -682,7 +682,7 @@ bool SetElementSuper(JSContext* cx, HandleValue lval, HandleValue receiver,
 bool LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
                          MutableHandleValue result);
 
-bool CloseIterOperation(JSContext* cx, HandleObject iter);
+bool CloseIterOperation(JSContext* cx, HandleObject iter, CompletionKind kind);
 } /* namespace js */
 
 #endif /* vm_Interpreter_h */

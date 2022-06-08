@@ -638,17 +638,21 @@ class IonCloseIterIC : public IonIC {
 
   Register iter_;
   Register temp_;
+  CompletionKind completionKind_;
 
  public:
-  IonCloseIterIC(LiveRegisterSet liveRegs, Register iter, Register temp)
+  IonCloseIterIC(LiveRegisterSet liveRegs, Register iter, Register temp,
+                 CompletionKind completionKind)
       : IonIC(CacheKind::CloseIter),
         liveRegs_(liveRegs),
         iter_(iter),
-        temp_(temp) {}
+        temp_(temp),
+        completionKind_(completionKind) {}
 
   LiveRegisterSet liveRegs() const { return liveRegs_; }
   Register temp() const { return temp_; }
   Register iter() const { return iter_; }
+  CompletionKind completionKind() const { return completionKind_; }
 
   [[nodiscard]] static bool update(JSContext* cx, HandleScript outerScript,
                                    IonCloseIterIC* ic, HandleObject iter);

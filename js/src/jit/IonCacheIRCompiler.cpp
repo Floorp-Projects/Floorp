@@ -1909,7 +1909,8 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult(ValOperandId lhsId,
 }
 
 bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
-                                                     ObjOperandId calleeId) {
+                                                     ObjOperandId calleeId,
+                                                     CompletionKind kind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
 
@@ -1945,21 +1946,23 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   masm.loadJitCodeRaw(callee, callee);
   masm.callJit(callee);
 
-  // Verify that the return value is an object.
-  Label success;
-  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
+  if (kind != CompletionKind::Throw) {
+    // Verify that the return value is an object.
+    Label success;
+    masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
 
-  // We can reuse the same stub frame, but we first have to pop the arguments
-  // from the previous call.
-  uint32_t framePushedAfterCall = masm.framePushed();
-  masm.freeStack(masm.framePushed() - stubFramePushed);
+    // We can reuse the same stub frame, but we first have to pop the arguments
+    // from the previous call.
+    uint32_t framePushedAfterCall = masm.framePushed();
+    masm.freeStack(masm.framePushed() - stubFramePushed);
 
-  masm.push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
-  using Fn = bool (*)(JSContext*, CheckIsObjectKind);
-  callVM<Fn, ThrowCheckIsObject>(masm);
+    masm.push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
+    using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+    callVM<Fn, ThrowCheckIsObject>(masm);
 
-  masm.bind(&success);
-  masm.setFramePushed(framePushedAfterCall);
+    masm.bind(&success);
+    masm.setFramePushed(framePushedAfterCall);
+  }
 
   masm.freeStack(masm.framePushed() - framePushedBefore);
   return true;

@@ -5288,7 +5288,8 @@ bool WarpCacheIRTranspiler::emitNewArrayObjectResult(uint32_t length,
 }
 
 bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
-                                                        ObjOperandId calleeId) {
+                                                        ObjOperandId calleeId,
+                                                        CompletionKind kind) {
   MDefinition* iter = getOperand(iterId);
   MDefinition* callee = getOperand(calleeId);
 
@@ -5312,9 +5313,11 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
     return false;
   }
 
-  MCheckIsObj* check = MCheckIsObj::New(
-      alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
-  add(check);
+  if (kind != CompletionKind::Throw) {
+    MCheckIsObj* check = MCheckIsObj::New(
+        alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
+    add(check);
+  }
 
   return true;
 }

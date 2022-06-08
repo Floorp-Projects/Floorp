@@ -2159,6 +2159,7 @@
   operands:
     iter: WordSized
   num_temps: 1
+  mir_op: true
 
 # Read the number of actual arguments.
 - name: ArgumentsLength

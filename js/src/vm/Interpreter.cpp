@@ -2507,7 +2507,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(CloseIter) {
       ReservedRooted<JSObject*> iter(&rootObject0, &REGS.sp[-1].toObject());
-      if (!CloseIterOperation(cx, iter)) {
+      CompletionKind kind = CompletionKind(GET_UINT8(REGS.pc));
+      if (!CloseIterOperation(cx, iter, kind)) {
         goto error;
       }
       REGS.sp--;
@@ -5441,27 +5442,52 @@ bool js::LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
 }
 
 // https://tc39.es/ecma262/#sec-iteratorclose
-// TODO: support throw completions
-bool js::CloseIterOperation(JSContext* cx, HandleObject iter) {
+bool js::CloseIterOperation(JSContext* cx, HandleObject iter,
+                            CompletionKind kind) {
+  // Steps 1-2 are implicit.
+
+  // Step 3
   RootedValue returnMethod(cx);
-  if (!GetProperty(cx, iter, iter, cx->names().return_, &returnMethod)) {
-    return false;
+  bool innerResult =
+      GetProperty(cx, iter, iter, cx->names().return_, &returnMethod);
+
+  // Step 4
+  RootedValue result(cx);
+  if (innerResult) {
+    // Step 4b
+    if (returnMethod.isNullOrUndefined()) {
+      return true;
+    }
+    // Step 4c
+    if (IsCallable(returnMethod)) {
+      RootedValue thisVal(cx, ObjectValue(*iter));
+      innerResult = Call(cx, returnMethod, thisVal, &result);
+    } else {
+      innerResult = ReportIsNotFunction(cx, returnMethod);
+    }
   }
 
-  if (returnMethod.isNullOrUndefined()) {
+  // Step 5
+  if (kind == CompletionKind::Throw) {
+    // If we close an iterator while unwinding for an exception,
+    // the initial exception takes priority over any exception thrown
+    // while closing the iterator.
+    if (cx->isExceptionPending()) {
+      cx->clearPendingException();
+    }
     return true;
   }
-  if (!IsCallable(returnMethod)) {
-    return ReportIsNotFunction(cx, returnMethod);
-  }
 
-  RootedValue thisVal(cx, ObjectValue(*iter));
-  RootedValue res(cx);
-  if (!Call(cx, returnMethod, thisVal, &res)) {
+  // Step 6
+  if (!innerResult) {
     return false;
   }
-  if (!res.isObject()) {
+
+  // Step 7
+  if (!result.isObject()) {
     return ThrowCheckIsObject(cx, CheckIsObjectKind::IteratorReturn);
   }
+
+  // Step 8
   return true;
 }
