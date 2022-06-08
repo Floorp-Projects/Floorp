@@ -1911,7 +1911,22 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult(ValOperandId lhsId,
 bool IonCacheIRCompiler::emitGuardFunctionScript(ObjOperandId funId,
                                                  uint32_t expectedOffset,
                                                  uint32_t nargsAndFlagsOffset) {
-  MOZ_CRASH("Call ICs not used in ion");
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register fun = allocator.useRegister(masm, funId);
+  AutoScratchRegister scratch(allocator, masm);
+  BaseScript* expected = baseScriptStubField(expectedOffset);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadPrivate(Address(fun, JSFunction::offsetOfJitInfoOrScript()),
+                   scratch);
+  masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(expected),
+                 failure->label());
+  return true;
 }
 
 bool IonCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
