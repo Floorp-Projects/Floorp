@@ -16,7 +16,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
@@ -30,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // When this is set we suppress automatic TRR selection beyond dry-run as well
 // as sending observer notifications during heuristics throttling.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "kIsInAutomation",
   "doh-rollout._testing",
   false
@@ -39,7 +41,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // We wait until the network has been stably up for this many milliseconds
 // before triggering a heuristics run.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "kNetworkDebounceTimeout",
   "doh-rollout.network-debounce-timeout",
   1000
@@ -52,7 +54,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // This throttling is necessary due to evidence of clients that experience
 // network volatility leading to thousands of runs per hour. See bug 1626083.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "kHeuristicsThrottleTimeout",
   "doh-rollout.heuristics-throttle-timeout",
   15000
@@ -63,28 +65,28 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // heuristics. Thus, heuristics are suppressed completely as long as the rate
 // exceeds this limit.
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "kHeuristicsRateLimit",
   "doh-rollout.heuristics-throttle-rate-limit",
   2
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gCaptivePortalService",
   "@mozilla.org/network/captive-portal-service;1",
   "nsICaptivePortalService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gDNSService",
   "@mozilla.org/network/dns-service;1",
   "nsIDNSService"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gNetworkLinkService",
   "@mozilla.org/network/network-link-service;1",
   "nsINetworkLinkService"
@@ -130,7 +132,7 @@ const kPrefChangedTopic = "nsPref:changed";
 // Helper function to hash the network ID concatenated with telemetry client ID.
 // This prevents us from being able to tell if 2 clients are on the same network.
 function getHashedNetworkID() {
-  let currentNetworkID = gNetworkLinkService.networkID;
+  let currentNetworkID = lazy.gNetworkLinkService.networkID;
   if (!currentNetworkID) {
     return "";
   }
@@ -141,7 +143,7 @@ function getHashedNetworkID() {
 
   hasher.init(Ci.nsICryptoHash.SHA256);
   // Concat the client ID with the network ID before hashing.
-  let clientNetworkID = ClientID.getClientID() + currentNetworkID;
+  let clientNetworkID = lazy.ClientID.getClientID() + currentNetworkID;
   hasher.update(
     clientNetworkID.split("").map(c => c.charCodeAt(0)),
     clientNetworkID.length
@@ -166,15 +168,15 @@ const DoHController = {
       true
     );
 
-    await DoHConfigController.initComplete;
+    await lazy.DoHConfigController.initComplete;
 
-    Services.obs.addObserver(this, DoHConfigController.kConfigUpdateTopic);
-    Preferences.observe(NETWORK_TRR_MODE_PREF, this);
-    Preferences.observe(NETWORK_TRR_URI_PREF, this);
+    Services.obs.addObserver(this, lazy.DoHConfigController.kConfigUpdateTopic);
+    lazy.Preferences.observe(NETWORK_TRR_MODE_PREF, this);
+    lazy.Preferences.observe(NETWORK_TRR_URI_PREF, this);
 
-    if (DoHConfigController.currentConfig.enabled) {
+    if (lazy.DoHConfigController.currentConfig.enabled) {
       await this.maybeEnableHeuristics();
-    } else if (Preferences.get(FIRST_RUN_PREF, false)) {
+    } else if (lazy.Preferences.get(FIRST_RUN_PREF, false)) {
       await this.rollback();
     }
 
@@ -182,21 +184,26 @@ const DoHController = {
       await this.disableHeuristics("shutdown");
     };
 
-    AsyncShutdown.profileBeforeChange.addBlocker(
+    lazy.AsyncShutdown.profileBeforeChange.addBlocker(
       "DoHController: clear state and remove observers",
       this._asyncShutdownBlocker
     );
 
-    Preferences.set(FIRST_RUN_PREF, true);
+    lazy.Preferences.set(FIRST_RUN_PREF, true);
   },
 
   // Also used by tests to reset DoHController state (prefs are not cleared
   // here - tests do that when needed between _uninit and init).
   async _uninit() {
-    Services.obs.removeObserver(this, DoHConfigController.kConfigUpdateTopic);
-    Preferences.ignore(NETWORK_TRR_MODE_PREF, this);
-    Preferences.ignore(NETWORK_TRR_URI_PREF, this);
-    AsyncShutdown.profileBeforeChange.removeBlocker(this._asyncShutdownBlocker);
+    Services.obs.removeObserver(
+      this,
+      lazy.DoHConfigController.kConfigUpdateTopic
+    );
+    lazy.Preferences.ignore(NETWORK_TRR_MODE_PREF, this);
+    lazy.Preferences.ignore(NETWORK_TRR_URI_PREF, this);
+    lazy.AsyncShutdown.profileBeforeChange.removeBlocker(
+      this._asyncShutdownBlocker
+    );
     await this.disableHeuristics("shutdown");
   },
 
@@ -217,7 +224,10 @@ const DoHController = {
     const ADDON_ID = "doh-rollout@mozilla.org";
 
     // Migrate updated local storage item names. If this has already been done once, skip the migration
-    const isMigrated = Preferences.get(BALROG_MIGRATION_COMPLETED_PREF, false);
+    const isMigrated = lazy.Preferences.get(
+      BALROG_MIGRATION_COMPLETED_PREF,
+      false
+    );
 
     if (isMigrated) {
       return;
@@ -228,10 +238,10 @@ const DoHController = {
       return;
     }
 
-    const storagePrincipal = ExtensionStorageIDB.getStoragePrincipal(
+    const storagePrincipal = lazy.ExtensionStorageIDB.getStoragePrincipal(
       policy.extension
     );
-    const idbConn = await ExtensionStorageIDB.open(storagePrincipal);
+    const idbConn = await lazy.ExtensionStorageIDB.open(storagePrincipal);
 
     // Previously, the DoH heuristics were bundled as an add-on. Early versions
     // of this add-on used local storage instead of prefs to persist state. This
@@ -254,7 +264,7 @@ const DoHController = {
           migratedName = "doh-rollout." + item;
         }
 
-        Preferences.set(migratedName, value);
+        lazy.Preferences.set(migratedName, value);
       }
     }
 
@@ -262,7 +272,7 @@ const DoHController = {
     await idbConn.close();
 
     // Set pref to skip this function in the future.
-    Preferences.set(BALROG_MIGRATION_COMPLETED_PREF, true);
+    lazy.Preferences.set(BALROG_MIGRATION_COMPLETED_PREF, true);
   },
 
   // Previous versions of the DoH frontend worked by setting network.trr.mode
@@ -271,14 +281,14 @@ const DoHController = {
   async migrateOldTrrMode() {
     const PREVIOUS_TRR_MODE_PREF = "doh-rollout.previous.trr.mode";
 
-    if (Preferences.get(PREVIOUS_TRR_MODE_PREF) === undefined) {
+    if (lazy.Preferences.get(PREVIOUS_TRR_MODE_PREF) === undefined) {
       return;
     }
 
-    if (Preferences.get(NETWORK_TRR_MODE_PREF) !== 5) {
-      Preferences.reset(NETWORK_TRR_MODE_PREF);
+    if (lazy.Preferences.get(NETWORK_TRR_MODE_PREF) !== 5) {
+      lazy.Preferences.reset(NETWORK_TRR_MODE_PREF);
     }
-    Preferences.reset(PREVIOUS_TRR_MODE_PREF);
+    lazy.Preferences.reset(PREVIOUS_TRR_MODE_PREF);
   },
 
   async migrateNextDNSEndpoint() {
@@ -298,10 +308,13 @@ const DoHController = {
     ];
 
     for (let pref of prefsToMigrate) {
-      if (!Preferences.isSet(pref)) {
+      if (!lazy.Preferences.isSet(pref)) {
         continue;
       }
-      Preferences.set(pref, Preferences.get(pref).replaceAll(oldURL, newURL));
+      lazy.Preferences.set(
+        pref,
+        lazy.Preferences.get(pref).replaceAll(oldURL, newURL)
+      );
     }
   },
 
@@ -310,36 +323,36 @@ const DoHController = {
   //    detected this (i.e. DISABLED_PREF is true)
   // 2. If there are any non-DoH enterprise policies active
   async maybeEnableHeuristics() {
-    if (Preferences.get(DISABLED_PREF)) {
+    if (lazy.Preferences.get(DISABLED_PREF)) {
       return;
     }
 
-    let policyResult = await Heuristics.checkEnterprisePolicy();
+    let policyResult = await lazy.Heuristics.checkEnterprisePolicy();
 
     if (["policy_without_doh", "disable_doh"].includes(policyResult)) {
       await this.setState("policyDisabled");
-      Preferences.set(SKIP_HEURISTICS_PREF, true);
+      lazy.Preferences.set(SKIP_HEURISTICS_PREF, true);
       return;
     }
 
-    Preferences.reset(SKIP_HEURISTICS_PREF);
+    lazy.Preferences.reset(SKIP_HEURISTICS_PREF);
 
     if (
-      Preferences.isSet(NETWORK_TRR_MODE_PREF) ||
-      Preferences.isSet(NETWORK_TRR_URI_PREF)
+      lazy.Preferences.isSet(NETWORK_TRR_MODE_PREF) ||
+      lazy.Preferences.isSet(NETWORK_TRR_URI_PREF)
     ) {
       await this.setState("manuallyDisabled");
-      Preferences.set(DISABLED_PREF, true);
+      lazy.Preferences.set(DISABLED_PREF, true);
       return;
     }
 
     await this.runTRRSelection();
     // If we enter this branch it means that no automatic selection was possible.
     // In this case, we try to set a fallback (as defined by DoHConfigController).
-    if (!Preferences.isSet(ROLLOUT_URI_PREF)) {
-      Preferences.set(
+    if (!lazy.Preferences.isSet(ROLLOUT_URI_PREF)) {
+      lazy.Preferences.set(
         ROLLOUT_URI_PREF,
-        DoHConfigController.currentConfig.fallbackProviderURI
+        lazy.DoHConfigController.currentConfig.fallbackProviderURI
       );
     }
     this.runHeuristicsThrottled("startup");
@@ -352,7 +365,7 @@ const DoHController = {
   _runsWhileThrottling: 0,
   _wasThrottleExtended: false,
   _throttleHeuristics() {
-    if (kHeuristicsThrottleTimeout < 0) {
+    if (lazy.kHeuristicsThrottleTimeout < 0) {
       // Skip throttling in tests that set timeout to a negative value.
       return false;
     }
@@ -365,9 +378,9 @@ const DoHController = {
 
     this._runsWhileThrottling = 0;
 
-    this._throttleTimer = setTimeout(
+    this._throttleTimer = lazy.setTimeout(
       this._handleThrottleTimeout.bind(this),
-      kHeuristicsThrottleTimeout
+      lazy.kHeuristicsThrottleTimeout
     );
 
     return false;
@@ -375,13 +388,13 @@ const DoHController = {
 
   _handleThrottleTimeout() {
     delete this._throttleTimer;
-    if (this._runsWhileThrottling > kHeuristicsRateLimit) {
+    if (this._runsWhileThrottling > lazy.kHeuristicsRateLimit) {
       // During the throttle period, we saw that the rate limit was exceeded.
       // We extend the throttle period, and don't bother running heuristics yet.
       this._wasThrottleExtended = true;
       // Restart the throttle timer.
       this._throttleHeuristics();
-      if (kIsInAutomation) {
+      if (lazy.kIsInAutomation) {
         Services.obs.notifyObservers(null, "doh:heuristics-throttle-extend");
       }
       return;
@@ -396,7 +409,7 @@ const DoHController = {
 
     this._wasThrottleExtended = false;
 
-    if (kIsInAutomation) {
+    if (lazy.kIsInAutomation) {
       Services.obs.notifyObservers(null, "doh:heuristics-throttle-done");
     }
   },
@@ -416,12 +429,13 @@ const DoHController = {
   async runHeuristics(evaluateReason) {
     let start = Date.now();
 
-    let results = await Heuristics.run();
+    let results = await lazy.Heuristics.run();
 
     if (
-      !gNetworkLinkService.isLinkUp ||
+      !lazy.gNetworkLinkService.isLinkUp ||
       this._lastDebounceTimestamp > start ||
-      gCaptivePortalService.state == gCaptivePortalService.LOCKED_PORTAL
+      lazy.gCaptivePortalService.state ==
+        lazy.gCaptivePortalService.LOCKED_PORTAL
     ) {
       // If the network is currently down or there was a debounce triggered
       // while we were running heuristics, it means the network fluctuated
@@ -431,17 +445,17 @@ const DoHController = {
       return;
     }
 
-    let decision = Object.values(results).includes(Heuristics.DISABLE_DOH)
-      ? Heuristics.DISABLE_DOH
-      : Heuristics.ENABLE_DOH;
+    let decision = Object.values(results).includes(lazy.Heuristics.DISABLE_DOH)
+      ? lazy.Heuristics.DISABLE_DOH
+      : lazy.Heuristics.ENABLE_DOH;
 
     let getCaptiveStateString = () => {
-      switch (gCaptivePortalService.state) {
-        case gCaptivePortalService.NOT_CAPTIVE:
+      switch (lazy.gCaptivePortalService.state) {
+        case lazy.gCaptivePortalService.NOT_CAPTIVE:
           return "not_captive";
-        case gCaptivePortalService.UNLOCKED_PORTAL:
+        case lazy.gCaptivePortalService.UNLOCKED_PORTAL:
           return "unlocked";
-        case gCaptivePortalService.LOCKED_PORTAL:
+        case lazy.gCaptivePortalService.LOCKED_PORTAL:
           return "locked";
         default:
           return "unknown";
@@ -460,11 +474,11 @@ const DoHController = {
     };
 
     if (results.steeredProvider) {
-      gDNSService.setDetectedTrrURI(results.steeredProvider.uri);
+      lazy.gDNSService.setDetectedTrrURI(results.steeredProvider.uri);
       resultsForTelemetry.steeredProvider = results.steeredProvider.id;
     }
 
-    if (decision === Heuristics.DISABLE_DOH) {
+    if (decision === lazy.Heuristics.DISABLE_DOH) {
       await this.setState("disabled");
     } else {
       await this.setState("enabled");
@@ -479,7 +493,7 @@ const DoHController = {
     let platform = [];
 
     for (let [heuristicName, result] of Object.entries(results)) {
-      if (result !== Heuristics.DISABLE_DOH) {
+      if (result !== lazy.Heuristics.DISABLE_DOH) {
         continue;
       }
 
@@ -515,26 +529,26 @@ const DoHController = {
   async setState(state) {
     switch (state) {
       case "disabled":
-        Preferences.set(ROLLOUT_MODE_PREF, 0);
+        lazy.Preferences.set(ROLLOUT_MODE_PREF, 0);
         break;
       case "UIOk":
-        Preferences.set(BREADCRUMB_PREF, true);
+        lazy.Preferences.set(BREADCRUMB_PREF, true);
         break;
       case "enabled":
-        Preferences.set(ROLLOUT_MODE_PREF, 2);
-        Preferences.set(BREADCRUMB_PREF, true);
+        lazy.Preferences.set(ROLLOUT_MODE_PREF, 2);
+        lazy.Preferences.set(BREADCRUMB_PREF, true);
         break;
       case "policyDisabled":
       case "manuallyDisabled":
       case "UIDisabled":
-        Preferences.reset(BREADCRUMB_PREF);
+        lazy.Preferences.reset(BREADCRUMB_PREF);
       // Fall through.
       case "rollback":
-        Preferences.reset(ROLLOUT_MODE_PREF);
+        lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         break;
       case "shutdown":
-        if (Preferences.get(CLEAR_ON_SHUTDOWN_PREF, true)) {
-          Preferences.reset(ROLLOUT_MODE_PREF);
+        if (lazy.Preferences.get(CLEAR_ON_SHUTDOWN_PREF, true)) {
+          lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         }
         break;
     }
@@ -557,11 +571,11 @@ const DoHController = {
     Services.obs.removeObserver(this, kLinkStatusChangedTopic);
     Services.obs.removeObserver(this, kConnectivityTopic);
     if (this._debounceTimer) {
-      clearTimeout(this._debounceTimer);
+      lazy.clearTimeout(this._debounceTimer);
       delete this._debounceTimer;
     }
     if (this._throttleTimer) {
-      clearTimeout(this._throttleTimer);
+      lazy.clearTimeout(this._throttleTimer);
       delete this._throttleTimer;
     }
     this._heuristicsAreEnabled = false;
@@ -574,18 +588,18 @@ const DoHController = {
   async runTRRSelection() {
     // If persisting the selection is disabled, clear the existing
     // selection.
-    if (!DoHConfigController.currentConfig.trrSelection.commitResult) {
-      Preferences.reset(ROLLOUT_URI_PREF);
+    if (!lazy.DoHConfigController.currentConfig.trrSelection.commitResult) {
+      lazy.Preferences.reset(ROLLOUT_URI_PREF);
     }
 
-    if (!DoHConfigController.currentConfig.trrSelection.enabled) {
+    if (!lazy.DoHConfigController.currentConfig.trrSelection.enabled) {
       return;
     }
 
     if (
-      Preferences.isSet(ROLLOUT_URI_PREF) &&
-      Preferences.get(ROLLOUT_URI_PREF) ==
-        Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
+      lazy.Preferences.isSet(ROLLOUT_URI_PREF) &&
+      lazy.Preferences.get(ROLLOUT_URI_PREF) ==
+        lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
     ) {
       return;
     }
@@ -593,22 +607,22 @@ const DoHController = {
     await this.runTRRSelectionDryRun();
 
     // If persisting the selection is disabled, don't commit the value.
-    if (!DoHConfigController.currentConfig.trrSelection.commitResult) {
+    if (!lazy.DoHConfigController.currentConfig.trrSelection.commitResult) {
       return;
     }
 
-    Preferences.set(
+    lazy.Preferences.set(
       ROLLOUT_URI_PREF,
-      Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
+      lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF)
     );
   },
 
   async runTRRSelectionDryRun() {
-    if (Preferences.isSet(TRR_SELECT_DRY_RUN_RESULT_PREF)) {
+    if (lazy.Preferences.isSet(TRR_SELECT_DRY_RUN_RESULT_PREF)) {
       // Check whether the existing dry-run-result is in the default
       // list of TRRs. If it is, all good. Else, run the dry run again.
-      let dryRunResult = Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF);
-      let dryRunResultIsValid = DoHConfigController.currentConfig.providerList.some(
+      let dryRunResult = lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF);
+      let dryRunResultIsValid = lazy.DoHConfigController.currentConfig.providerList.some(
         trr => trr.uri == dryRunResult
       );
       if (dryRunResultIsValid) {
@@ -617,7 +631,7 @@ const DoHController = {
     }
 
     let setDryRunResultAndRecordTelemetry = trrUri => {
-      Preferences.set(TRR_SELECT_DRY_RUN_RESULT_PREF, trrUri);
+      lazy.Preferences.set(TRR_SELECT_DRY_RUN_RESULT_PREF, trrUri);
       Services.telemetry.recordEvent(
         TRRSELECT_TELEMETRY_CATEGORY,
         "trrselect",
@@ -626,7 +640,7 @@ const DoHController = {
       );
     };
 
-    if (kIsInAutomation) {
+    if (lazy.kIsInAutomation) {
       // For mochitests, just record telemetry with a dummy result.
       // TRRPerformance.jsm is tested in xpcshell.
       setDryRunResultAndRecordTelemetry("https://example.com/dns-query");
@@ -639,7 +653,7 @@ const DoHController = {
       "resource:///modules/TRRPerformance.jsm"
     );
     await new Promise(resolve => {
-      let trrList = DoHConfigController.currentConfig.trrSelection.providerList.map(
+      let trrList = lazy.DoHConfigController.currentConfig.trrSelection.providerList.map(
         trr => trr.uri
       );
       let racer = new TRRRacer(() => {
@@ -661,7 +675,7 @@ const DoHController = {
       case kPrefChangedTopic:
         this.onPrefChanged(data);
         break;
-      case DoHConfigController.kConfigUpdateTopic:
+      case lazy.DoHConfigController.kConfigUpdateTopic:
         this.reset();
         break;
     }
@@ -671,7 +685,7 @@ const DoHController = {
     switch (pref) {
       case NETWORK_TRR_URI_PREF:
       case NETWORK_TRR_MODE_PREF:
-        Preferences.set(DISABLED_PREF, true);
+        lazy.Preferences.set(DISABLED_PREF, true);
         await this.disableHeuristics("manuallyDisabled");
         break;
     }
@@ -687,13 +701,13 @@ const DoHController = {
       return;
     }
 
-    clearTimeout(this._debounceTimer);
+    lazy.clearTimeout(this._debounceTimer);
     this._debounceTimer = null;
   },
 
   _lastDebounceTimestamp: 0,
   onConnectionChanged() {
-    if (!gNetworkLinkService.isLinkUp) {
+    if (!lazy.gNetworkLinkService.isLinkUp) {
       // Network is down - reset debounce timer.
       this._cancelDebounce();
       return;
@@ -704,25 +718,28 @@ const DoHController = {
       return;
     }
 
-    if (kNetworkDebounceTimeout < 0) {
+    if (lazy.kNetworkDebounceTimeout < 0) {
       // Skip debouncing in tests that set timeout to a negative value.
       this.onConnectionChangedDebounced();
       return;
     }
 
     this._lastDebounceTimestamp = Date.now();
-    this._debounceTimer = setTimeout(() => {
+    this._debounceTimer = lazy.setTimeout(() => {
       this._cancelDebounce();
       this.onConnectionChangedDebounced();
-    }, kNetworkDebounceTimeout);
+    }, lazy.kNetworkDebounceTimeout);
   },
 
   onConnectionChangedDebounced() {
-    if (!gNetworkLinkService.isLinkUp) {
+    if (!lazy.gNetworkLinkService.isLinkUp) {
       return;
     }
 
-    if (gCaptivePortalService.state == gCaptivePortalService.LOCKED_PORTAL) {
+    if (
+      lazy.gCaptivePortalService.state ==
+      lazy.gCaptivePortalService.LOCKED_PORTAL
+    ) {
       return;
     }
 
