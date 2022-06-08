@@ -14,7 +14,7 @@ from mozboot.linux_common import LinuxBootstrapper
 
 class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
-    PACKAGES = ["clang", "make", "mercurial", "unzip", "zip"]
+    PACKAGES = ["clang", "make", "mercurial", "watchman", "unzip", "zip"]
 
     BROWSER_PACKAGES = [
         "dbus-devel",

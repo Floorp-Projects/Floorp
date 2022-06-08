@@ -12,10 +12,11 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """openSUSE experimental bootstrapper."""
 
     SYSTEM_PACKAGES = [
-        "which",
-        "rpmconf",
         "libcurl-devel",
         "libpulse-devel",
+        "rpmconf",
+        "watchman",
+        "which",
     ]
 
     BROWSER_PACKAGES = [

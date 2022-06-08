@@ -56,7 +56,10 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         elif self.distro == "fedora":
             self.group_packages += ["C Development Tools and Libraries"]
 
-            self.packages += ["redhat-rpm-config"]
+            self.packages += [
+                "redhat-rpm-config",
+                "watchman",
+            ]
             if self.version >= 33:
                 self.packages.append("perl-FindBin")
 
