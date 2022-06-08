@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from copy import deepcopy
 import glob
 import json
@@ -141,10 +141,14 @@ class MozbuildWriter(object):
 
 
 def find_deps(all_targets, target):
-    all_deps = set([target])
-    for dep in all_targets[target]["deps"]:
-        if dep not in all_deps:
-            all_deps |= find_deps(all_targets, dep)
+    all_deps = set()
+    queue = deque([target])
+    while queue:
+        item = queue.popleft()
+        all_deps.add(item)
+        for dep in all_targets[item]["deps"]:
+            if dep not in all_deps:
+                queue.append(dep)
     return all_deps
 
 
