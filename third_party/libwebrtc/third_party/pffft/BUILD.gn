@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 
 import("//build/config/arm.gni")
-#import("//testing/libfuzzer/fuzzer_test.gni")
-#import("//testing/test.gni")
+import("//testing/libfuzzer/fuzzer_test.gni")
+import("//testing/test.gni")
 
 config("common_config") {
   if (is_win) {
@@ -15,9 +15,9 @@ config("common_config") {
   }
 
   # PFFFT doesn't support SIMD on some cpus, so build a scalar version.
-  if ((target_cpu == "arm" && !arm_use_neon) || target_cpu == "mipsel" ||
-      target_cpu == "mips64el" || target_cpu == "ppc64" ||
-      target_cpu == "s390x") {
+  if ((current_cpu == "arm" && !arm_use_neon) || current_cpu == "mipsel" ||
+      current_cpu == "mips64el" || current_cpu == "ppc64" ||
+      current_cpu == "s390x") {
     defines = [ "PFFFT_SIMD_DISABLE" ]
   }
 }
@@ -31,81 +31,80 @@ static_library("pffft") {
 }
 
 # Fuzzing.
-if (false) {
-  group("fuzzers") {
-    testonly = true
-    deps = [
-      ":pffft_complex_fuzzer",
-      ":pffft_real_fuzzer",
-    ]
-  }
 
-  fuzzer_testdata_dir = "$target_gen_dir/testdata"
+group("fuzzers") {
+  testonly = true
+  deps = [
+    ":pffft_complex_fuzzer",
+    ":pffft_real_fuzzer",
+  ]
+}
 
-  action("generate_pffft_fuzzer_corpus") {
-    script = "generate_seed_corpus.py"
-    sources = [ "generate_seed_corpus.py" ]
-    args = [ rebase_path(fuzzer_testdata_dir, root_build_dir) ]
-    outputs = [ fuzzer_testdata_dir ]
-  }
+fuzzer_testdata_dir = "$target_gen_dir/testdata"
 
-  fuzzer_test("pffft_complex_fuzzer") {
-    sources = [ "pffft_fuzzer.cc" ]
-    cflags = [ "-DTRANSFORM_COMPLEX" ]
-    deps = [ ":pffft" ]
-    seed_corpus = fuzzer_testdata_dir
-    seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
-  }
+action("generate_pffft_fuzzer_corpus") {
+  script = "generate_seed_corpus.py"
+  sources = [ "generate_seed_corpus.py" ]
+  args = [ rebase_path(fuzzer_testdata_dir, root_build_dir) ]
+  outputs = [ fuzzer_testdata_dir ]
+}
 
-  fuzzer_test("pffft_real_fuzzer") {
-    sources = [ "pffft_fuzzer.cc" ]
-    cflags = [ "-DTRANSFORM_REAL" ]
-    deps = [ ":pffft" ]
-    seed_corpus = fuzzer_testdata_dir
-    seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
-  }
+fuzzer_test("pffft_complex_fuzzer") {
+  sources = [ "pffft_fuzzer.cc" ]
+  cflags = [ "-DTRANSFORM_COMPLEX" ]
+  deps = [ ":pffft" ]
+  seed_corpus = fuzzer_testdata_dir
+  seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
+}
 
-  # Unit tests and benchmark.
+fuzzer_test("pffft_real_fuzzer") {
+  sources = [ "pffft_fuzzer.cc" ]
+  cflags = [ "-DTRANSFORM_REAL" ]
+  deps = [ ":pffft" ]
+  seed_corpus = fuzzer_testdata_dir
+  seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
+}
 
-  # This target must be used only for testing and benchmark purposes.
-  static_library("fftpack") {
-    testonly = true
-    configs += [ ":common_config" ]
-    sources = [
-      "src/fftpack.c",
-      "src/fftpack.h",
-    ]
-    visibility = [ ":*" ]
-  }
+# Unit tests and benchmark.
 
-  config("pffft_benchmark_internal_config") {
-    cflags = [
-      # test_pffft.c contains an `exit(1)` following a `break` statement.
-      "-Wno-unreachable-code",
-    ]
-  }
+# This target must be used only for testing and benchmark purposes.
+static_library("fftpack") {
+  testonly = true
+  configs += [ ":common_config" ]
+  sources = [
+    "src/fftpack.c",
+    "src/fftpack.h",
+  ]
+  visibility = [ ":*" ]
+}
 
-  executable("pffft_benchmark") {
-    testonly = true
-    configs += [
-      ":common_config",
-      ":pffft_benchmark_internal_config",
-    ]
-    sources = [ "src/test_pffft.c" ]
-    deps = [
-      ":fftpack",
-      ":pffft",
-    ]
-  }
+config("pffft_benchmark_internal_config") {
+  cflags = [
+    # test_pffft.c contains an `exit(1)` following a `break` statement.
+    "-Wno-unreachable-code",
+  ]
+}
 
-  test("pffft_unittest") {
-    testonly = true
-    sources = [ "pffft_unittest.cc" ]
-    deps = [
-      ":fftpack",
-      ":pffft",
-      "//testing/gtest",
-      "//testing/gtest:gtest_main",
-    ]
-  }
+executable("pffft_benchmark") {
+  testonly = true
+  configs += [
+    ":common_config",
+    ":pffft_benchmark_internal_config",
+  ]
+  sources = [ "src/test_pffft.c" ]
+  deps = [
+    ":fftpack",
+    ":pffft",
+  ]
+}
+
+test("pffft_unittest") {
+  testonly = true
+  sources = [ "pffft_unittest.cc" ]
+  deps = [
+    ":fftpack",
+    ":pffft",
+    "//testing/gtest",
+    "//testing/gtest:gtest_main",
+  ]
 }
