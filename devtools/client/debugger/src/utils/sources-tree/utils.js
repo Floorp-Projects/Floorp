@@ -46,18 +46,6 @@ export function nodeHasChildren(item) {
   return item.type == "directory" && Array.isArray(item.contents);
 }
 
-export function isExactUrlMatch(pathPart, debuggeeUrl) {
-  // compare to hostname with an optional 'www.' prefix
-  const { host } = parse(debuggeeUrl);
-  if (!host) {
-    return false;
-  }
-  return (
-    host === pathPart ||
-    host.replace(/^www\./, "") === pathPart.replace(/^www\./, "")
-  );
-}
-
 export function isPathDirectory(path) {
   // Assume that all urls point to files except when they end with '/'
   // Or directory node has children

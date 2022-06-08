@@ -12,7 +12,6 @@ export { collapseTree } from "./collapseTree";
 export { formatTree } from "./formatTree";
 export { getDirectories, findSourceTreeNodes } from "./getDirectories";
 export { getFilenameFromPath, getURL } from "./getURL";
-export { sortTree } from "./sortTree";
 export { createTree, updateTree } from "./updateTree";
 
 export * from "./utils";
