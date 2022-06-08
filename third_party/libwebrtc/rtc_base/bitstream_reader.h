@@ -61,14 +61,17 @@ class BitstreamReader {
   // Reads unsigned integer of fixed width.
   template <typename T,
             typename std::enable_if<std::is_unsigned<T>::value &&
+                                    !std::is_same<T, bool>::value &&
                                     sizeof(T) <= 8>::type* = nullptr>
   ABSL_MUST_USE_RESULT T Read() {
     return rtc::dchecked_cast<T>(ReadBits(sizeof(T) * 8));
   }
 
   // Reads single bit as boolean.
-  template <>
-  ABSL_MUST_USE_RESULT bool Read<bool>() {
+  template <
+      typename T,
+      typename std::enable_if<std::is_same<T, bool>::value>::type* = nullptr>
+  ABSL_MUST_USE_RESULT bool Read() {
     return ReadBit() != 0;
   }
 
