@@ -17,8 +17,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.SetDefaultBrowser
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.tryAsActivity
 import org.mozilla.focus.utils.SupportUtils.openDefaultBrowserSumoPage
-import org.mozilla.focus.utils.asActivity
 
 class DefaultBrowserPreference @JvmOverloads constructor(
     context: Context,
@@ -56,7 +56,7 @@ class DefaultBrowserPreference @JvmOverloads constructor(
                             RoleManager.ROLE_BROWSER
                         )
                     ) {
-                        context.asActivity()?.startActivityForResult(
+                        context.tryAsActivity()?.startActivityForResult(
                             it.createRequestRoleIntent(RoleManager.ROLE_BROWSER),
                             REQUEST_CODE_BROWSER_ROLE
                         )

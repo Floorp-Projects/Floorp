@@ -9,8 +9,7 @@ import android.util.AttributeSet
 import android.widget.CompoundButton
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.asActivity
-import java.util.HashSet
+import org.mozilla.focus.ext.tryAsActivity
 
 class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSet) :
     SearchEngineListPreference(context, attrs) {
@@ -50,7 +49,7 @@ class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSe
             val engineButton = searchEngineGroup!!.getChildAt(i) as CompoundButton
             engineButton.setOnCheckedChangeListener { _, _ ->
                 val context = context
-                context?.asActivity()?.invalidateOptionsMenu()
+                context?.tryAsActivity()?.invalidateOptionsMenu()
             }
         }
     }

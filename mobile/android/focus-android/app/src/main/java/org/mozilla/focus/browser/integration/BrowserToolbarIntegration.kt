@@ -34,12 +34,12 @@ import org.mozilla.focus.R
 import org.mozilla.focus.compose.CFRPopup
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isCustomTab
+import org.mozilla.focus.ext.isTablet
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.HardwareUtils
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
@@ -171,7 +171,7 @@ class BrowserToolbarIntegration(
 
         val isCustomTab = store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab()
 
-        if (HardwareUtils.isTablet(context) && isCustomTab == false) {
+        if (context.isTablet() && isCustomTab == false) {
             navigationButtonsIntegration = NavigationButtonsIntegration(
                 context,
                 store,
