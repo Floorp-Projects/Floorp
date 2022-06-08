@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
@@ -57,7 +59,7 @@ class BrowserSearchTelemetryHandler {
    */
   shouldRecordSearchCount(browser) {
     return (
-      !PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(browser.ownerGlobal) ||
       !Services.prefs.getBoolPref("browser.engagement.search_counts.pbm", false)
     );
   }
@@ -141,7 +143,7 @@ class BrowserSearchTelemetryHandler {
       return;
     }
 
-    let scalarKey = UrlbarSearchUtils.getSearchModeScalarKey(searchMode);
+    let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey(searchMode);
     Services.telemetry.keyedScalarAdd(
       "urlbar.searchmode." + searchMode.entry,
       scalarKey,
@@ -254,14 +256,14 @@ class BrowserSearchTelemetryHandler {
 
   _recordSearch(browser, engine, url, source, action = null) {
     if (url) {
-      PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
+      lazy.PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
         Cu.reportError
       );
     }
 
     let scalarSource = KNOWN_SEARCH_SOURCES.get(source);
 
-    SearchSERPTelemetry.recordBrowserSource(browser, scalarSource);
+    lazy.SearchSERPTelemetry.recordBrowserSource(browser, scalarSource);
 
     let scalarKey = action ? "search_" + action : "search";
     Services.telemetry.keyedScalarAdd(
