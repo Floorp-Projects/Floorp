@@ -9394,6 +9394,11 @@
 #endif
   mirror: always
 
+- name: media.av1.new-thread-count-strategy
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: media.flac.enabled
   type: RelaxedAtomicBool
   value: true
