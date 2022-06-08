@@ -118,10 +118,7 @@ tokio-util = { path = "build/rust/tokio-util" }
 # Patch env_logger 0.8 to 0.9
 env_logger = { path = "build/rust/env_logger" }
 
-# Patch paste 0.1 to 1.0
-paste = { path = "build/rust/paste" }
-
-# Patch paste 0.1 to 1.0
+# Patch toml 0.4 to 0.5
 toml = { path = "build/rust/toml" }
 
 # Patch cargo_metadata 0.13 to 0.14.2
