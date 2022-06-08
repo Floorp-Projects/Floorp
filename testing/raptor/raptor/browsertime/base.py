@@ -284,7 +284,7 @@ class Browsertime(Perftest):
             str(self.post_startup_delay),
             "--iterations",
             str(test.get("browser_cycles", 1)),
-             "--videoParams.androidVideoWaitTime",
+            "--videoParams.androidVideoWaitTime",
             "10000",
             # running browsertime test in chimera mode
             "--browsertime.chimera",
