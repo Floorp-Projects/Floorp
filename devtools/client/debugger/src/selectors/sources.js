@@ -4,6 +4,7 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
+import { getDisplayURL } from "../utils/sources-tree/getURL";
 
 import {
   getPrettySourceURL,
@@ -29,7 +30,7 @@ import {
   getBreakableLinesForSourceActors,
 } from "./source-actors";
 import { getSourceTextContent } from "./sources-content";
-import { getAllThreads } from "./threads";
+import { getAllThreads, getMainThreadHost } from "./threads";
 
 export function hasSource(state, id) {
   return state.sources.sources.has(id);
@@ -255,7 +256,8 @@ const getDisplayedSourceIDs = createSelector(
 export const getDisplayedSources = createSelector(
   getSourcesMap,
   getDisplayedSourceIDs,
-  (sourcesMap, idsByThread) => {
+  getMainThreadHost,
+  (sourcesMap, idsByThread, mainThreadHost) => {
     const result = {};
 
     for (const thread of Object.keys(idsByThread)) {
@@ -269,11 +271,11 @@ export const getDisplayedSources = createSelector(
 
         const entry = {
           ...source,
-          displayURL: source.url,
+          displayURL: getDisplayURL(source.url, mainThreadHost),
         };
         result[thread][id] = entry;
 
-        const noQueryURL = stripQuery(entry.displayURL);
+        const noQueryURL = stripQuery(entry.url);
         if (!entriesByNoQueryURL[noQueryURL]) {
           entriesByNoQueryURL[noQueryURL] = [];
         }
@@ -286,7 +288,7 @@ export const getDisplayedSources = createSelector(
       for (const noQueryURL in entriesByNoQueryURL) {
         const entries = entriesByNoQueryURL[noQueryURL];
         if (entries.length === 1) {
-          entries[0].displayURL = noQueryURL;
+          entries[0].displayURL = getDisplayURL(noQueryURL, mainThreadHost);
         }
       }
     }

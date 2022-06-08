@@ -13,6 +13,8 @@ import * as asyncValue from "./async-value";
 
 import { initialState } from "../reducers/index";
 
+import { getDisplayURL } from "./sources-tree/getURL";
+
 function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   return {
     id,
@@ -31,7 +33,7 @@ function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
 function makeMockDisplaySource(url = "url", id = "source") {
   return {
     ...makeMockSource(url, id),
-    displayURL: url,
+    displayURL: getDisplayURL(url),
   };
 }
 

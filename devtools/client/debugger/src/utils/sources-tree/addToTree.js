@@ -12,7 +12,6 @@ import {
   getPathParts,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
-import { getDisplayURL } from "./getURL";
 
 function createNodeInTree(part, path, tree, index) {
   const node = createDirectoryNode(part, path, []);
@@ -152,7 +151,7 @@ function addSourceToNode(node, url, source) {
  * @static
  */
 export function addToTree(tree, source, mainThreadHost, thread) {
-  const url = getDisplayURL(source, mainThreadHost);
+  const url = source.displayURL;
 
   if (isInvalidUrl(url, source)) {
     return;

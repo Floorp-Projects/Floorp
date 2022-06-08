@@ -16,7 +16,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -52,7 +57,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -72,7 +82,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -124,7 +139,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -146,7 +166,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -188,7 +213,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -222,7 +252,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -242,7 +277,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -280,7 +320,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -322,7 +367,12 @@ Object {
       "hasMatchingGeneratedSource": true,
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -343,7 +393,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -396,7 +451,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -419,7 +479,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -461,7 +526,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -501,7 +571,12 @@ Object {
     "hasMatchingGeneratedSource": true,
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -522,7 +597,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -560,7 +640,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -597,7 +682,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -618,7 +708,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -671,7 +766,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -694,7 +794,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -736,7 +841,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -771,7 +881,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -792,7 +907,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -861,7 +981,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -925,7 +1050,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -996,7 +1126,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1066,7 +1201,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1131,7 +1271,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1203,7 +1348,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1440,7 +1590,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1503,7 +1658,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1573,7 +1733,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1642,7 +1807,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1707,7 +1877,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1779,7 +1954,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2181,7 +2361,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2245,7 +2430,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2316,7 +2506,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2385,7 +2580,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2450,7 +2650,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2522,7 +2727,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2591,7 +2801,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2654,7 +2869,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2724,7 +2944,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2783,7 +3008,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": true,
@@ -2804,7 +3034,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": true,
@@ -2856,7 +3091,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": true,
@@ -2879,7 +3119,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": true,
@@ -2940,7 +3185,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": true,
@@ -2961,7 +3211,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": true,
@@ -3021,7 +3276,12 @@ Object {
       "hasPrettyTab": true,
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3042,7 +3302,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3095,7 +3360,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3118,7 +3388,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3180,7 +3455,12 @@ Object {
     "hasPrettyTab": true,
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3201,7 +3481,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3239,7 +3524,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3275,7 +3565,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3296,7 +3591,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3348,7 +3648,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3371,7 +3676,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3413,7 +3723,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3447,7 +3762,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3468,7 +3788,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3506,7 +3831,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3544,7 +3874,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3564,7 +3899,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3618,7 +3958,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3640,7 +3985,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3682,7 +4032,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3718,7 +4073,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3738,7 +4098,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3776,7 +4141,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3812,7 +4182,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3833,7 +4208,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3885,7 +4265,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3908,7 +4293,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3950,7 +4340,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3984,7 +4379,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -4005,7 +4405,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,

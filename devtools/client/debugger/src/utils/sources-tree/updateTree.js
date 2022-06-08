@@ -12,8 +12,6 @@ import {
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 
-import { getDisplayURL } from "./getURL";
-
 function getSourcesDiff(newSources, prevSources) {
   const toAdd = [];
   const toUpdate = [];
@@ -116,8 +114,8 @@ export function updateInTree(
   mainThreadHost,
   thread
 ) {
-  const newUrl = getDisplayURL(newSource, mainThreadHost);
-  const prevUrl = getDisplayURL(prevSource, mainThreadHost);
+  const newUrl = newSource.displayURL;
+  const prevUrl = prevSource.displayURL;
 
   const prevEntries = findEntries(
     tree,
