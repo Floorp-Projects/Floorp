@@ -296,6 +296,9 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(int32_t aIndex, int32_t aMsec) {
     if (!mSuppressed) {
       if (mSelectTimer) mSelectTimer->Cancel();
 
+      if (!mTree) {
+        return NS_ERROR_UNEXPECTED;
+      }
       nsIEventTarget* target =
           mTree->OwnerDoc()->EventTargetFor(TaskCategory::Other);
       NS_NewTimerWithFuncCallback(getter_AddRefs(mSelectTimer), SelectCallback,
