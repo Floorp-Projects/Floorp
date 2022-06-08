@@ -2410,6 +2410,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_TypedArrayInitFromPackedArray, 2, 0),
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
+    JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
     JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot",
                     intrinsic_UnsafeGetBooleanFromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
