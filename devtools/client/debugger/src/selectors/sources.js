@@ -4,6 +4,8 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
+import { getPathParts, getFileExtension } from "../utils/sources-tree/utils";
+import { getDisplayURL } from "../utils/sources-tree/getURL";
 
 import {
   getPrettySourceURL,
@@ -29,7 +31,10 @@ import {
   getBreakableLinesForSourceActors,
 } from "./source-actors";
 import { getSourceTextContent } from "./sources-content";
-import { getAllThreads } from "./threads";
+import { getAllThreads, getMainThreadHost } from "./threads";
+
+const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
+const IGNORED_EXTENSIONS = ["css", "svg", "png"];
 
 export function hasSource(state, id) {
   return state.sources.sources.has(id);
@@ -237,7 +242,8 @@ const getDisplayedSourceIDs = createSelector(
         isDescendantOfRoot(source, rootWithoutThreadActor) &&
         (!source.isExtension ||
           chromeAndExtensionsEnabled ||
-          debuggeeIsWebExtension);
+          debuggeeIsWebExtension) &&
+        !isSourceHiddenInSourceTree(source);
       if (!displayed) {
         continue;
       }
@@ -255,25 +261,35 @@ const getDisplayedSourceIDs = createSelector(
 export const getDisplayedSources = createSelector(
   getSourcesMap,
   getDisplayedSourceIDs,
-  (sourcesMap, idsByThread) => {
+  getMainThreadHost,
+  (sourcesMap, idsByThread, mainThreadHost) => {
     const result = {};
 
     for (const thread of Object.keys(idsByThread)) {
       const entriesByNoQueryURL = Object.create(null);
 
       for (const id of idsByThread[thread]) {
-        if (!result[thread]) {
-          result[thread] = {};
-        }
         const source = sourcesMap.get(id);
+        const displayURL = getDisplayURL(source.url, mainThreadHost);
+
+        // Ignore source which have not been able to be sorted in a group by getDisplayURL
+        // It should be only javascript: URLs and weird URLs without protocols.
+        if (!displayURL.group) {
+          continue;
+        }
 
         const entry = {
           ...source,
-          displayURL: source.url,
+          displayURL,
+          parts: getPathParts(displayURL, thread, mainThreadHost),
         };
+
+        if (!result[thread]) {
+          result[thread] = {};
+        }
         result[thread][id] = entry;
 
-        const noQueryURL = stripQuery(entry.displayURL);
+        const noQueryURL = stripQuery(entry.url);
         if (!entriesByNoQueryURL[noQueryURL]) {
           entriesByNoQueryURL[noQueryURL] = [];
         }
@@ -286,7 +302,7 @@ export const getDisplayedSources = createSelector(
       for (const noQueryURL in entriesByNoQueryURL) {
         const entries = entriesByNoQueryURL[noQueryURL];
         if (entries.length === 1) {
-          entries[0].displayURL = noQueryURL;
+          entries[0].displayURL = getDisplayURL(noQueryURL, mainThreadHost);
         }
       }
     }
@@ -294,6 +310,14 @@ export const getDisplayedSources = createSelector(
     return result;
   }
 );
+
+function isSourceHiddenInSourceTree(source) {
+  return (
+    IGNORED_EXTENSIONS.includes(getFileExtension(source)) ||
+    IGNORED_URLS.includes(source.url) ||
+    isPretty(source)
+  );
+}
 
 export function getSourceActorsForSource(state, id) {
   const actors = state.sources.actors[id];

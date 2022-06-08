@@ -790,12 +790,8 @@ PBackgroundIDBDatabaseFileChild* IDBDatabase::GetOrCreateFileActorForBlob(
     BlobImpl* blobImpl = aBlob.Impl();
     MOZ_ASSERT(blobImpl);
 
-    PBackgroundChild* backgroundManager =
-        mBackgroundActor->Manager()->Manager();
-    MOZ_ASSERT(backgroundManager);
-
     IPCBlob ipcBlob;
-    nsresult rv = IPCBlobUtils::Serialize(blobImpl, backgroundManager, ipcBlob);
+    nsresult rv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

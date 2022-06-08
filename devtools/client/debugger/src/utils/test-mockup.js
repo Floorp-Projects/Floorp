@@ -13,6 +13,9 @@ import * as asyncValue from "./async-value";
 
 import { initialState } from "../reducers/index";
 
+import { getPathParts } from "./sources-tree/utils";
+import { getDisplayURL } from "./sources-tree/getURL";
+
 function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   return {
     id,
@@ -28,10 +31,16 @@ function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   };
 }
 
-function makeMockDisplaySource(url = "url", id = "source") {
+function makeMockDisplaySource(
+  url = "url",
+  id = "source",
+  thread = "FakeThread"
+) {
+  const displayURL = getDisplayURL(url);
   return {
-    ...makeMockSource(url, id),
-    displayURL: url,
+    ...makeMockSource(url, id, thread),
+    displayURL,
+    parts: getPathParts(displayURL, thread, "http://www.example.com"),
   };
 }
 
@@ -223,6 +232,21 @@ function makeMockState(state) {
   };
 }
 
+function formatTree(tree, depth = 0, str = "") {
+  const whitespace = new Array(depth * 2).join(" ");
+
+  if (tree.type === "directory") {
+    str += `${whitespace} - ${tree.name} path=${tree.path} \n`;
+    tree.contents.forEach(t => {
+      str = formatTree(t, depth + 1, str);
+    });
+  } else {
+    str += `${whitespace} - ${tree.name} path=${tree.path} source_id=${tree.contents.id} \n`;
+  }
+
+  return str;
+}
+
 export {
   makeMockDisplaySource,
   makeMockSource,
@@ -243,4 +267,5 @@ export {
   makeMockState,
   makeMockThread,
   makeFullfilledMockSourceContent,
+  formatTree,
 };

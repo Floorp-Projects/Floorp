@@ -1891,13 +1891,13 @@ class Document : public nsINode,
   // This is called asynchronously by Document::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
   void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
-                         bool applyFullScreenDirectly = false);
+                         bool aApplyFullscreenDirectly = false);
 
  private:
   void RequestFullscreenInContentProcess(UniquePtr<FullscreenRequest> aRequest,
-                                         bool applyFullScreenDirectly);
+                                         bool aApplyFullscreenDirectly);
   void RequestFullscreenInParentProcess(UniquePtr<FullscreenRequest> aRequest,
-                                        bool applyFullScreenDirectly);
+                                        bool aApplyFullscreenDirectly);
 
   // Pushes aElement onto the top layer
   void TopLayerPush(Element&);
@@ -1913,7 +1913,8 @@ class Document : public nsINode,
 
   // Pops the fullscreen element from the top layer and clears its
   // fullscreen flag. Returns whether there was any fullscreen element.
-  bool PopFullscreenElement();
+  enum class UpdateViewport : bool { No, Yes };
+  bool PopFullscreenElement(UpdateViewport = UpdateViewport::Yes);
 
   // Pushes the given element into the top of top layer and set fullscreen
   // flag.
@@ -3394,8 +3395,8 @@ class Document : public nsINode,
 
   Element* GetTopLayerTop();
   // Return the fullscreen element in the top layer
-  Element* GetUnretargetedFullScreenElement() const;
-  bool Fullscreen() const { return !!GetUnretargetedFullScreenElement(); }
+  Element* GetUnretargetedFullscreenElement() const;
+  bool Fullscreen() const { return !!GetUnretargetedFullscreenElement(); }
   already_AddRefed<Promise> ExitFullscreen(ErrorResult&);
   void ExitPointerLock() { PointerLockManager::Unlock(this); }
   void GetFgColor(nsAString& aFgColor);

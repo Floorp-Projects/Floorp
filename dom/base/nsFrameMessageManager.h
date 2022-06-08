@@ -75,11 +75,8 @@ enum class MessageManagerFlags {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MessageManagerFlags);
 
-void UnpackClonedMessageDataForParent(const ClonedMessageData& aClonedData,
-                                      StructuredCloneData& aData);
-
-void UnpackClonedMessageDataForChild(const ClonedMessageData& aClonedData,
-                                     StructuredCloneData& aData);
+void UnpackClonedMessageData(const ClonedMessageData& aClonedData,
+                             StructuredCloneData& aData);
 
 }  // namespace ipc
 }  // namespace dom

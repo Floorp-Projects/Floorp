@@ -504,10 +504,127 @@ And finally, the Java implementation calls the session delegate.
     });
   }
 
+Permissions
+-----------
+
+There are two separate but related permission concepts in GeckoView: `Content`
+permissions and `Android` permissions. See also the related `consumer doc
+<../consumer/permissions.html>`_ on permissions.
+
+Content permissions
+~~~~~~~~~~~~~~~~~~~
+
+Content permissions are granted to individual web sites (more precisely,
+principals) and are managed internally using ``nsIPermissionManager``. Content
+permissions are used by Gecko to keep track which website is allowed to access
+a group of Web APIs or functionality. The Web has the concept of permissions,
+but not all Gecko permissions map to Web-exposed permissions.
+
+For instance, the ``Notification`` permission, which allows websites to fire
+notifications to the user, is exposed to the Web through
+`Notification.requestPermission
+<https://developer.mozilla.org/en-US/docs/Web/API/Notification/requestPermission>`_,
+while the `autoplay` permission, which allows websites to play video and audio
+without user interaction, is not exposed to the Web and websites have no way to
+set or request this permission.
+
+GeckoView retains content permission data, which is an explicit violation of
+the design principle of not storing data. This is done because storing
+permissions is very complex, making a mistake when dealing with permissions
+often ends up being a security vulnerability, and because permissions depend on
+concepts that are not exposed to the GeckoView API like principals.
+
+Android permissions
+~~~~~~~~~~~~~~~~~~~
+
+Consumers of GeckoView are Android apps and therefore they have to receive
+permission to use certain features on behalf of websites.
+
+For instance, when a website requests Geolocation permission for the first
+time, the app needs to request the corresponding Geolocation Android permission
+in order to receive position data.
+
+You can read more about Android permissions on `this doc
+<https://developer.android.com/guide/topics/permissions/overview>`_.
+
+
+Implementation
+~~~~~~~~~~~~~~
+
+The main entry point from Gecko is ``nsIContentPermissionPrompt.prompt``, which
+is handled in the `Permission module
+<https://searchfox.org/mozilla-central/rev/256f84391cf5d4e3a4d66afbbcd744a5bec48956/mobile/android/components/geckoview/GeckoViewPermission.jsm#21>`_
+in the same process where the request is originated.
+
+The permission module calls the child actor `GeckoViewPermission
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionChild.jsm#47>`_
+which issues a `GeckoView:ContentPermission
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionChild.jsm#75>`_
+request to the Java front-end as needed.
+
+Media permissions are requested using a global observer, and therefore are
+handled in a `Process actor
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionProcessChild.jsm#41>`_,
+media permissions requests have enough information to redirect the request to
+the corresponding window child actor, with the exception of requests that are
+not associated with a window, which are redirected to the `current active
+window
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionProcessParent.jsm#28-35>`_.
+
+Autofill Support
+----------------
+
+GeckoView supports third-party autofill providers through Android's `autofill framework <https://developer.android.com/guide/topics/text/autofill>`_. Internally, this support is referred to as `autofill`.
+
+Document tree
+~~~~~~~~~~~~~
+
+The autofill Java front-end is located in the `Autofill class
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#37>`_.
+GeckoView maintains a virtual tree structure of the current document for each
+``GeckoSession``.
+
+The virtual tree structure is composed of `Node
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#593>`_
+objects which are immutable. Data associated to a node, including mutable data
+like the current value, is stored in a separate `NodeData
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#171>`_
+class. Only HTML nodes that are relevant to autofilling are referenced in the
+virtual structure and each node is associated to a root node, e.g. the root
+``<form>`` element. All root nodes are children of the autofill `mRoot
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/Autofill.java#210>`_
+node, hence making the overall structure a tree rather than a collection of
+trees. Note that the root node is the only node in the virtual structure that
+does not correspond to an actual element on the page.
+
+Internally, nodes are assigned a unique ``UUID`` string, which is used to match
+nodes between the Java front-end and the data stored in GeckoView's chrome
+Javascript. The autofill framework itself requires integer IDs for nodes, so we
+store a mapping between UUIDs and integer IDs in the associated ``NodeData``
+object. The integer IDs are used only externally, while internally only the
+UUIDs are used. The reason why we use a separate ID structure from the autofill
+framework is that this allows us to `generate UUIDs
+<https://searchfox.org/mozilla-central/rev/7e34cb7a0094a2f325a0c9db720cec0a2f2aca4f/mobile/android/actors/GeckoViewAutoFillChild.jsm#217-220>`_
+directly in the isolated content processes avoiding an IPC roundtrip to the
+main process.
+
+Each ``Node`` object is associated to an ``EventCallback`` object which is
+invoked whenever the node is autofilled by the autofill framework.
+
+Detecting autofillable nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GeckoView scans every web page for password ``<input>`` elements whenever the
+``pageshow`` event `fires
+<https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewAutoFillChild.jsm#74-78>`_.
+
+It also uses ``DOMFormHasPassword`` and ``DOMInputPasswordAdded`` to detect
+whenever a password element is added to the DOM after the ``pageshow`` event.
+
 Prefs
 -----
 
-`Preferences </modules/libpref/index.html>` (or prefs) are used throughtout
+`Preferences </modules/libpref/index.html>`_ (or prefs) are used throughtout
 Gecko to configure the browser, enable custom features, etc.
 
 GeckoView does not directly expose prefs to Apps. A limited set configuration

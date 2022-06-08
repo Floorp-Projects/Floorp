@@ -14,7 +14,7 @@ if sys.version_info < (3, 5):
 	print ('check-static-inits.py: needs python 3.5 for recursive support in glob')
 	sys.exit (77)
 
-OBJS = glob.glob (os.path.join (builddir, libs, '**', 'hb*.o'), recursive=True)
+OBJS = glob.glob (os.path.join (builddir, libs, '**', '*hb*.o'), recursive=True)
 if not OBJS:
 	print ('check-static-inits.py: object files not found; skipping test')
 	sys.exit (77)

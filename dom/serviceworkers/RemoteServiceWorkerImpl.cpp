@@ -67,8 +67,7 @@ void RemoteServiceWorkerImpl::PostMessage(
   }
 
   ClonedOrErrorMessageData data;
-  if (!aData->BuildClonedMessageDataForBackgroundChild(mActor->Manager(),
-                                                       data)) {
+  if (!aData->BuildClonedMessageData(data)) {
     return;
   }
 

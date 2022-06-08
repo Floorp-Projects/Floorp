@@ -152,7 +152,11 @@ JitCode* BaselineCacheIRCompiler::compile() {
 
   CacheIRReader reader(writer_);
   do {
-    switch (reader.readOp()) {
+    CacheOp op = reader.readOp();
+#ifdef JS_ION_PERF
+    perfSpewer_.recordInstruction(masm, op);
+#endif
+    switch (op) {
 #define DEFINE_OP(op, ...)                 \
   case CacheOp::op:                        \
     if (!emit##op(reader)) return nullptr; \
@@ -2103,7 +2107,8 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
 
 ICAttachResult js::jit::AttachBaselineCacheIRStub(
     JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub) {
+    JSScript* outerScript, ICScript* icScript, ICFallbackStub* stub,
+    const char* name) {
   // We shouldn't GC or report OOM (or any other exception) here.
   AutoAssertNoPendingException aanpe(cx);
   JS::AutoCheckCannotGC nogc;
@@ -2147,6 +2152,9 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
       return ICAttachResult::OOM;
     }
 
+#ifdef JS_ION_PERF
+    comp.perfSpewer().writeProfile(code, name);
+#endif
     // Allocate the shared CacheIRStubInfo. Note that the
     // putBaselineCacheIRStubCode call below will transfer ownership
     // to the stub code HashMap, so we don't have to worry about freeing

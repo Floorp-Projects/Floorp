@@ -413,9 +413,10 @@ set_define("JS_OOM_BREAKPOINT", depends_if("--enable-oom-breakpoint")(lambda _: 
 option("--enable-perf", env="JS_ION_PERF", help="Enable Linux perf integration")
 
 
-@depends("--enable-perf")
-def ion_perf(value):
-    if value:
+@depends("--enable-perf", target)
+def ion_perf(value, target):
+    ok_kernel = target.kernel == "Linux" and target.os == "GNU"
+    if value and ok_kernel:
         return True
 
 

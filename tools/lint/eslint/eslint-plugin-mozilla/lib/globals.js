@@ -60,8 +60,8 @@ const globalCache = new Map();
 
 /**
  * Global discovery can occasionally meet circular dependencies due to the way
- * js files are included via xul files etc. This set is used to avoid getting
- * into loops whilst the discovery is in progress.
+ * js files are included via html/xhtml files etc. This set is used to avoid
+ * getting into loops whilst the discovery is in progress.
  */
 var globalDiscoveryInProgressForFiles = new Set();
 

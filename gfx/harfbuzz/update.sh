@@ -5,7 +5,7 @@
 
 MY_TEMP_DIR=`mktemp -d -t harfbuzz_update.XXXXXX` || exit 1
 
-VERSION=4.1.0
+VERSION=4.3.0
 
 git clone https://github.com/harfbuzz/harfbuzz ${MY_TEMP_DIR}/harfbuzz
 git -C ${MY_TEMP_DIR}/harfbuzz checkout ${VERSION}
@@ -14,7 +14,7 @@ COMMIT=$(git -C ${MY_TEMP_DIR}/harfbuzz rev-parse HEAD)
 perl -p -i -e "s/(\d+\.)(\d+\.)(\d+)/${VERSION}/" README-mozilla;
 perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README-mozilla;
 
-FILES="AUTHORS autogen.sh configure.ac COPYING git.mk harfbuzz.doap Makefile.am NEWS README.md src THANKS TODO"
+FILES="AUTHORS autogen.sh configure.ac COPYING git.mk harfbuzz.doap Makefile.am NEWS README.md src THANKS"
 
 for f in $FILES; do
 	rm -rf $f

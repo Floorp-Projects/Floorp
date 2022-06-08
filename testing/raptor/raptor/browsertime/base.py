@@ -286,6 +286,9 @@ class Browsertime(Perftest):
             str(test.get("browser_cycles", 1)),
             "--videoParams.androidVideoWaitTime",
             "10000",
+            # running browsertime test in chimera mode
+            "--browsertime.chimera",
+            "true" if self.config["chimera"] else "false",
         ]
 
         if test.get("secondary_url"):

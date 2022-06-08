@@ -200,7 +200,7 @@ FileSystemResponseValue GetFileOrDirectoryTaskParent::GetSuccessRequestResult(
   RefPtr<BlobImpl> blobImpl = new FileBlobImpl(mTargetPath);
 
   IPCBlob ipcBlob;
-  aRv = IPCBlobUtils::Serialize(blobImpl, mRequestParent->Manager(), ipcBlob);
+  aRv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
   if (NS_WARN_IF(aRv.Failed())) {
     return FileSystemDirectoryResponse();
   }

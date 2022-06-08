@@ -547,7 +547,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
         }
 
         ClonedMessageData cloned;
-        if (!data.BuildClonedMessageDataForChild(mChild, cloned)) {
+        if (!data.BuildClonedMessageData(cloned)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -2342,7 +2342,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
       nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
     StructuredCloneData data;
-    ipc::UnpackClonedMessageDataForChild(aData, data);
+    ipc::UnpackClonedMessageData(aData, data);
     cpm->ReceiveMessage(cpm, nullptr, aMsg, false, &data, nullptr,
                         IgnoreErrors());
   }
@@ -4595,12 +4595,12 @@ IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
   Maybe<StructuredCloneData> data;
   if (aData) {
     data.emplace();
-    data->BorrowFromClonedMessageDataForChild(*aData);
+    data->BorrowFromClonedMessageData(*aData);
   }
   Maybe<StructuredCloneData> stack;
   if (aStack) {
     stack.emplace();
-    stack->BorrowFromClonedMessageDataForChild(*aStack);
+    stack->BorrowFromClonedMessageData(*aStack);
   }
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();

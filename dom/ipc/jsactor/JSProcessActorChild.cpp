@@ -65,8 +65,7 @@ void JSProcessActorChild::SendRawMessage(
   Maybe<ClonedMessageData> msgData;
   if (aData) {
     msgData.emplace();
-    if (NS_WARN_IF(
-            !aData->BuildClonedMessageDataForChild(contentChild, *msgData))) {
+    if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("JSProcessActorChild serialization error: cannot "
                           "clone, in actor '%s'",
@@ -78,7 +77,7 @@ void JSProcessActorChild::SendRawMessage(
   Maybe<ClonedMessageData> stackData;
   if (aStack) {
     stackData.emplace();
-    if (!aStack->BuildClonedMessageDataForChild(contentChild, *stackData)) {
+    if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }
   }

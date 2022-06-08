@@ -192,44 +192,18 @@ class StructuredCloneData : public StructuredCloneHolder {
              const JS::CloneDataPolicy& aCloneDataPolicy,
              ErrorResult& aRv) override;
 
-  // Actor-varying methods to convert the structured clone stored in this holder
-  // by a previous call to Write() into ClonedMessageData IPC representation.
-  // (Blobs are represented in IPC by IPCBlob actors, so we need the parent to
-  // be able to create them.)
-  bool BuildClonedMessageDataForParent(ContentParent* aParent,
-                                       ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForChild(ContentChild* aChild,
-                                      ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForBackgroundParent(
-      mozilla::ipc::PBackgroundParent* aParent, ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForBackgroundChild(
-      mozilla::ipc::PBackgroundChild* aChild, ClonedMessageData& aClonedData);
+  // Method to convert the structured clone stored in this holder by a previous
+  // call to Write() into ClonedMessageData IPC representation.
+  bool BuildClonedMessageData(ClonedMessageData& aClonedData);
 
-  // Actor-varying and memory-management-strategy-varying methods to initialize
-  // this holder from a ClonedMessageData representation.
-  void BorrowFromClonedMessageDataForParent(
-      const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForChild(
-      const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForBackgroundParent(
-      const ClonedMessageData& aClonedData);
-  void BorrowFromClonedMessageDataForBackgroundChild(
-      const ClonedMessageData& aClonedData);
+  // Memory-management-strategy-varying methods to initialize this holder from a
+  // ClonedMessageData representation.
+  void BorrowFromClonedMessageData(const ClonedMessageData& aClonedData);
 
-  void CopyFromClonedMessageDataForParent(const ClonedMessageData& aClonedData);
-  void CopyFromClonedMessageDataForChild(const ClonedMessageData& aClonedData);
-  void CopyFromClonedMessageDataForBackgroundParent(
-      const ClonedMessageData& aClonedData);
-  void CopyFromClonedMessageDataForBackgroundChild(
-      const ClonedMessageData& aClonedData);
+  void CopyFromClonedMessageData(const ClonedMessageData& aClonedData);
 
-  // The steal variants of course take a non-const ClonedMessageData.
-  void StealFromClonedMessageDataForParent(ClonedMessageData& aClonedData);
-  void StealFromClonedMessageDataForChild(ClonedMessageData& aClonedData);
-  void StealFromClonedMessageDataForBackgroundParent(
-      ClonedMessageData& aClonedData);
-  void StealFromClonedMessageDataForBackgroundChild(
-      ClonedMessageData& aClonedData);
+  // The steal variant of course takes a non-const ClonedMessageData.
+  void StealFromClonedMessageData(ClonedMessageData& aClonedData);
 
   // Initialize this instance, borrowing the contents of the given
   // JSStructuredCloneData.  You are responsible for ensuring that this

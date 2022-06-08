@@ -134,8 +134,7 @@ void SharedMessageBody::FromSharedToMessageChild(
 
   if (aData->mCloneData) {
     ClonedMessageData clonedData;
-    aData->mCloneData->BuildClonedMessageDataForBackgroundChild(aManager,
-                                                                clonedData);
+    aData->mCloneData->BuildClonedMessageData(clonedData);
     aMessage.data() = std::move(clonedData);
     return;
   }
@@ -169,7 +168,7 @@ already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
   if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
-    data->mCloneData->StealFromClonedMessageDataForBackgroundChild(
+    data->mCloneData->StealFromClonedMessageData(
         aMessage.data().get_ClonedMessageData());
   } else {
     MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);
@@ -189,7 +188,7 @@ already_AddRefed<SharedMessageBody> SharedMessageBody::FromMessageToSharedChild(
   if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
-    data->mCloneData->BorrowFromClonedMessageDataForBackgroundChild(
+    data->mCloneData->BorrowFromClonedMessageData(
         aMessage.data().get_ClonedMessageData());
   } else {
     MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);
@@ -239,8 +238,7 @@ bool SharedMessageBody::FromSharedToMessagesParent(
 
     if (data->mCloneData) {
       ClonedMessageData clonedData;
-      data->mCloneData->BuildClonedMessageDataForBackgroundParent(aManager,
-                                                                  clonedData);
+      data->mCloneData->BuildClonedMessageData(clonedData);
       message->data() = std::move(clonedData);
       continue;
     }
@@ -266,7 +264,7 @@ SharedMessageBody::FromMessageToSharedParent(
   if (aMessage.data().type() == MessageDataType::TClonedMessageData) {
     data->mCloneData = MakeUnique<ipc::StructuredCloneData>(
         JS::StructuredCloneScope::UnknownDestination, aSupportsTransferring);
-    data->mCloneData->StealFromClonedMessageDataForBackgroundParent(
+    data->mCloneData->StealFromClonedMessageData(
         aMessage.data().get_ClonedMessageData());
   } else {
     MOZ_ASSERT(aMessage.data().type() == MessageDataType::TRefMessageData);

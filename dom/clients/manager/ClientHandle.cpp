@@ -151,8 +151,7 @@ RefPtr<GenericErrorResultPromise> ClientHandle::PostMessage(
   ClientPostMessageArgs args;
   args.serviceWorker() = aSource.ToIPC();
 
-  if (!aData.BuildClonedMessageDataForBackgroundChild(
-          GetActor()->Manager()->Manager(), args.clonedData())) {
+  if (!aData.BuildClonedMessageData(args.clonedData())) {
     CopyableErrorResult rv;
     rv.ThrowInvalidStateError("Failed to clone data");
     return GenericErrorResultPromise::CreateAndReject(rv, __func__);

@@ -513,12 +513,12 @@ IPCResult WindowGlobalParent::RecvRawMessage(
   Maybe<StructuredCloneData> data;
   if (aData) {
     data.emplace();
-    data->BorrowFromClonedMessageDataForParent(*aData);
+    data->BorrowFromClonedMessageData(*aData);
   }
   Maybe<StructuredCloneData> stack;
   if (aStack) {
     stack.emplace();
-    stack->BorrowFromClonedMessageDataForParent(*aStack);
+    stack->BorrowFromClonedMessageData(*aStack);
   }
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();

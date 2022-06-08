@@ -52,14 +52,6 @@ exports[`sources-tree addToTree does not mangle encoded URLs 1`] = `
 "
 `;
 
-exports[`sources-tree addToTree excludes javascript: URLs from the tree 1`] = `
-" - root path= 
-  - FakeThread path=FakeThread 
-    - example.com path=FakeThread/example.com 
-      - source1.js path=FakeThread/example.com/source1.js source_id=actor2 
-"
-`;
-
 exports[`sources-tree addToTree name does include query params 1`] = `
 " - root path= 
   - FakeThread path=FakeThread 

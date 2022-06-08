@@ -16,60 +16,53 @@
 
 namespace mozilla::dom {
 
-ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
-                                             bool aStartAtBeginning)
-    : mParent(aParent),
-      mChild(nullptr),
-      mDefaultChild(nullptr),
-      mIsFirst(aStartAtBeginning),
-      mIndexInInserted(0) {
-  mParentAsSlot = HTMLSlotElement::FromNode(mParent);
+FlattenedChildIterator::FlattenedChildIterator(const nsIContent* aParent,
+                                               bool aStartAtBeginning)
+    : mParent(aParent), mOriginalParent(aParent), mIsFirst(aStartAtBeginning) {
+  if (!mParent->IsElement()) {
+    // TODO(emilio): I think it probably makes sense to only allow constructing
+    // FlattenedChildIterators with Element.
+    return;
+  }
+
+  if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
+    mParent = shadow;
+    mShadowDOMInvolved = true;
+    return;
+  }
+
+  if (const auto* slot = HTMLSlotElement::FromNode(mParent)) {
+    if (!slot->AssignedNodes().IsEmpty()) {
+      mParentAsSlot = slot;
+      if (!aStartAtBeginning) {
+        mIndexInInserted = slot->AssignedNodes().Length();
+      }
+      mShadowDOMInvolved = true;
+    }
+  }
 }
 
-nsIContent* ExplicitChildIterator::GetNextChild() {
+nsIContent* FlattenedChildIterator::GetNextChild() {
   // If we're already in the inserted-children array, look there first
-  if (mIndexInInserted) {
-    MOZ_ASSERT(mChild);
-    MOZ_ASSERT(!mDefaultChild);
-
-    if (mParentAsSlot) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes =
-          mParentAsSlot->AssignedNodes();
-
-      mChild = (mIndexInInserted < assignedNodes.Length())
-                   ? assignedNodes[mIndexInInserted++]->AsContent()
-                   : nullptr;
-      if (!mChild) {
-        mIndexInInserted = 0;
-      }
+  if (mParentAsSlot) {
+    const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+    if (mIsFirst) {
+      mIsFirst = false;
+      MOZ_ASSERT(mIndexInInserted == 0);
+      mChild = assignedNodes[0]->AsContent();
       return mChild;
     }
-
-    MOZ_ASSERT_UNREACHABLE("This needs to be revisited");
-  } else if (mDefaultChild) {
-    // If we're already in default content, check if there are more nodes there
-    MOZ_ASSERT(mChild);
-
-    mDefaultChild = mDefaultChild->GetNextSibling();
-    if (mDefaultChild) {
-      return mDefaultChild;
+    MOZ_ASSERT(mIndexInInserted <= assignedNodes.Length());
+    if (mIndexInInserted + 1 >= assignedNodes.Length()) {
+      mIndexInInserted = assignedNodes.Length();
+      return nullptr;
     }
+    mChild = assignedNodes[++mIndexInInserted]->AsContent();
+    return mChild;
+  }
 
-    mChild = mChild->GetNextSibling();
-  } else if (mIsFirst) {  // at the beginning of the child list
-    // For slot parent, iterate over assigned nodes if not empty, otherwise
-    // fall through and iterate over direct children (fallback content).
-    if (mParentAsSlot) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes =
-          mParentAsSlot->AssignedNodes();
-      if (!assignedNodes.IsEmpty()) {
-        mIndexInInserted = 1;
-        mChild = assignedNodes[0]->AsContent();
-        mIsFirst = false;
-        return mChild;
-      }
-    }
-
+  if (mIsFirst) {  // at the beginning of the child list
     mChild = mParent->GetFirstChild();
     mIsFirst = false;
   } else if (mChild) {  // in the middle of the child list
@@ -79,103 +72,54 @@ nsIContent* ExplicitChildIterator::GetNextChild() {
   return mChild;
 }
 
-void FlattenedChildIterator::Init() {
-  if (!mParent->IsElement()) {
-    // TODO(emilio): I think it probably makes sense to only allow constructing
-    // FlattenedChildIterators with Element.
-    return;
-  }
-  if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
-    mParent = shadow;
-    mShadowDOMInvolved = true;
-    return;
-  }
-  if (mParentAsSlot) {
-    mShadowDOMInvolved = true;
-  }
-}
-
-bool ExplicitChildIterator::Seek(const nsIContent* aChildToFind) {
-  if (aChildToFind->GetParent() == mParent &&
+bool FlattenedChildIterator::Seek(const nsIContent* aChildToFind) {
+  if (!mParentAsSlot && aChildToFind->GetParent() == mParent &&
       !aChildToFind->IsRootOfNativeAnonymousSubtree()) {
     // Fast path: just point ourselves to aChildToFind, which is a
     // normal DOM child of ours.
     mChild = const_cast<nsIContent*>(aChildToFind);
     mIndexInInserted = 0;
-    mDefaultChild = nullptr;
     mIsFirst = false;
     return true;
   }
 
   // Can we add more fast paths here based on whether the parent of aChildToFind
-  // is a shadow insertion point or content insertion point?
+  // is a This version can take shortcuts that the two-argument version
+  // can't, so can be faster (and in fact cshadow insertion point or content
+  // insertion point?
 
-  // Slow path: just walk all our kids.
-  return Seek(aChildToFind, nullptr);
+  // It would be nice to assert that we find aChildToFind, but bz thinks that
+  // we might not find aChildToFind when called from ContentInserted
+  // if first-letter frames are about.
+  while (nsIContent* child = GetNextChild()) {
+    if (child == aChildToFind) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-nsIContent* ExplicitChildIterator::Get() const {
-  MOZ_ASSERT(!mIsFirst);
-
-  // When mParentAsSlot is set, mChild is always set to the current child. It
-  // does not matter whether mChild is an assigned node or a fallback content.
+nsIContent* FlattenedChildIterator::GetPreviousChild() {
+  if (mIsFirst) {  // at the beginning of the child list
+    return nullptr;
+  }
   if (mParentAsSlot) {
+    const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
+    MOZ_ASSERT(mIndexInInserted <= assignedNodes.Length());
+    if (mIndexInInserted == 0) {
+      mIsFirst = true;
+      return nullptr;
+    }
+    mChild = assignedNodes[--mIndexInInserted]->AsContent();
     return mChild;
   }
-
-  if (mIndexInInserted) {
-    MOZ_ASSERT_UNREACHABLE("This needs to be revisited");
-  }
-
-  return mDefaultChild ? mDefaultChild : mChild;
-}
-
-nsIContent* ExplicitChildIterator::GetPreviousChild() {
-  // If we're already in the inserted-children array, look there first
-  if (mIndexInInserted) {
-    if (mParentAsSlot) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes =
-          mParentAsSlot->AssignedNodes();
-
-      mChild = (--mIndexInInserted)
-                   ? assignedNodes[mIndexInInserted - 1]->AsContent()
-                   : nullptr;
-
-      if (!mChild) {
-        mIsFirst = true;
-      }
-      return mChild;
-    }
-
-    MOZ_ASSERT_UNREACHABLE("This needs to be revisited");
-  } else if (mDefaultChild) {
-    // If we're already in default content, check if there are more nodes there
-    mDefaultChild = mDefaultChild->GetPreviousSibling();
-    if (mDefaultChild) {
-      return mDefaultChild;
-    }
-
-    mChild = mChild->GetPreviousSibling();
-  } else if (mIsFirst) {  // at the beginning of the child list
-    return nullptr;
-  } else if (mChild) {  // in the middle of the child list
+  if (mChild) {  // in the middle of the child list
     mChild = mChild->GetPreviousSibling();
   } else {  // at the end of the child list
-    // For slot parent, iterate over assigned nodes if not empty, otherwise
-    // fall through and iterate over direct children (fallback content).
-    if (mParentAsSlot) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes =
-          mParentAsSlot->AssignedNodes();
-      if (!assignedNodes.IsEmpty()) {
-        mIndexInInserted = assignedNodes.Length();
-        mChild = assignedNodes[mIndexInInserted - 1]->AsContent();
-        return mChild;
-      }
-    }
-
     mChild = mParent->GetLastChild();
   }
-
   if (!mChild) {
     mIsFirst = true;
   }
@@ -186,25 +130,25 @@ nsIContent* ExplicitChildIterator::GetPreviousChild() {
 nsIContent* AllChildrenIterator::Get() const {
   switch (mPhase) {
     case eAtMarkerKid: {
-      Element* marker = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+      Element* marker = nsLayoutUtils::GetMarkerPseudo(Parent());
       MOZ_ASSERT(marker, "No content marker frame at eAtMarkerKid phase");
       return marker;
     }
 
     case eAtBeforeKid: {
-      Element* before = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+      Element* before = nsLayoutUtils::GetBeforePseudo(Parent());
       MOZ_ASSERT(before, "No content before frame at eAtBeforeKid phase");
       return before;
     }
 
-    case eAtExplicitKids:
-      return ExplicitChildIterator::Get();
+    case eAtFlatTreeKids:
+      return FlattenedChildIterator::Get();
 
     case eAtAnonKids:
       return mAnonKids[mAnonKidsIdx];
 
     case eAtAfterKid: {
-      Element* after = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
+      Element* after = nsLayoutUtils::GetAfterPseudo(Parent());
       MOZ_ASSERT(after, "No content after frame at eAtAfterKid phase");
       return after;
     }
@@ -216,24 +160,23 @@ nsIContent* AllChildrenIterator::Get() const {
 
 bool AllChildrenIterator::Seek(const nsIContent* aChildToFind) {
   if (mPhase == eAtBegin || mPhase == eAtMarkerKid) {
-    mPhase = eAtBeforeKid;
-    Element* markerPseudo = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+    Element* markerPseudo = nsLayoutUtils::GetMarkerPseudo(Parent());
     if (markerPseudo && markerPseudo == aChildToFind) {
       mPhase = eAtMarkerKid;
       return true;
     }
+    mPhase = eAtBeforeKid;
   }
   if (mPhase == eAtBeforeKid) {
-    mPhase = eAtExplicitKids;
-    Element* beforePseudo = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+    Element* beforePseudo = nsLayoutUtils::GetBeforePseudo(Parent());
     if (beforePseudo && beforePseudo == aChildToFind) {
-      mPhase = eAtBeforeKid;
       return true;
     }
+    mPhase = eAtFlatTreeKids;
   }
 
-  if (mPhase == eAtExplicitKids) {
-    if (ExplicitChildIterator::Seek(aChildToFind)) {
+  if (mPhase == eAtFlatTreeKids) {
+    if (FlattenedChildIterator::Seek(aChildToFind)) {
       return true;
     }
     mPhase = eAtAnonKids;
@@ -248,36 +191,31 @@ bool AllChildrenIterator::Seek(const nsIContent* aChildToFind) {
 }
 
 void AllChildrenIterator::AppendNativeAnonymousChildren() {
-  nsContentUtils::AppendNativeAnonymousChildren(mOriginalContent, mAnonKids,
-                                                mFlags);
+  nsContentUtils::AppendNativeAnonymousChildren(Parent(), mAnonKids, mFlags);
 }
 
 nsIContent* AllChildrenIterator::GetNextChild() {
   if (mPhase == eAtBegin) {
-    Element* markerContent = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
-    if (markerContent) {
-      mPhase = eAtMarkerKid;
+    mPhase = eAtMarkerKid;
+    if (Element* markerContent = nsLayoutUtils::GetMarkerPseudo(Parent())) {
       return markerContent;
     }
   }
 
-  if (mPhase == eAtBegin || mPhase == eAtMarkerKid) {
-    mPhase = eAtExplicitKids;
-    Element* beforeContent = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
-    if (beforeContent) {
-      mPhase = eAtBeforeKid;
+  if (mPhase == eAtMarkerKid) {
+    mPhase = eAtBeforeKid;
+    if (Element* beforeContent = nsLayoutUtils::GetBeforePseudo(Parent())) {
       return beforeContent;
     }
   }
 
   if (mPhase == eAtBeforeKid) {
     // Advance into our explicit kids.
-    mPhase = eAtExplicitKids;
+    mPhase = eAtFlatTreeKids;
   }
 
-  if (mPhase == eAtExplicitKids) {
-    nsIContent* kid = ExplicitChildIterator::GetNextChild();
-    if (kid) {
+  if (mPhase == eAtFlatTreeKids) {
+    if (nsIContent* kid = FlattenedChildIterator::GetNextChild()) {
       return kid;
     }
     mPhase = eAtAnonKids;
@@ -300,9 +238,8 @@ nsIContent* AllChildrenIterator::GetNextChild() {
       return mAnonKids[mAnonKidsIdx];
     }
 
-    Element* afterContent = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
-    if (afterContent) {
-      mPhase = eAtAfterKid;
+    mPhase = eAtAfterKid;
+    if (Element* afterContent = nsLayoutUtils::GetAfterPseudo(Parent())) {
       return afterContent;
     }
   }
@@ -315,7 +252,7 @@ nsIContent* AllChildrenIterator::GetPreviousChild() {
   if (mPhase == eAtEnd) {
     MOZ_ASSERT(mAnonKidsIdx == mAnonKids.Length());
     mPhase = eAtAnonKids;
-    Element* afterContent = nsLayoutUtils::GetAfterPseudo(mOriginalContent);
+    Element* afterContent = nsLayoutUtils::GetAfterPseudo(Parent());
     if (afterContent) {
       mPhase = eAtAfterKid;
       return afterContent;
@@ -338,24 +275,23 @@ nsIContent* AllChildrenIterator::GetPreviousChild() {
     if (mAnonKidsIdx < mAnonKids.Length()) {
       return mAnonKids[mAnonKidsIdx];
     }
-    mPhase = eAtExplicitKids;
+    mPhase = eAtFlatTreeKids;
   }
 
-  if (mPhase == eAtExplicitKids) {
-    nsIContent* kid = ExplicitChildIterator::GetPreviousChild();
-    if (kid) {
+  if (mPhase == eAtFlatTreeKids) {
+    if (nsIContent* kid = FlattenedChildIterator::GetPreviousChild()) {
       return kid;
     }
 
-    Element* beforeContent = nsLayoutUtils::GetBeforePseudo(mOriginalContent);
+    Element* beforeContent = nsLayoutUtils::GetBeforePseudo(Parent());
     if (beforeContent) {
       mPhase = eAtBeforeKid;
       return beforeContent;
     }
   }
 
-  if (mPhase == eAtExplicitKids || mPhase == eAtBeforeKid) {
-    Element* markerContent = nsLayoutUtils::GetMarkerPseudo(mOriginalContent);
+  if (mPhase == eAtFlatTreeKids || mPhase == eAtBeforeKid) {
+    Element* markerContent = nsLayoutUtils::GetMarkerPseudo(Parent());
     if (markerContent) {
       mPhase = eAtMarkerKid;
       return markerContent;

@@ -2471,7 +2471,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
     if (message.CloneScope() ==
         StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
       ClonedMessageData clonedMessageData;
-      if (!message.BuildClonedMessageDataForChild(cc, clonedMessageData)) {
+      if (!message.BuildClonedMessageData(clonedMessageData)) {
         aError.Throw(NS_ERROR_FAILURE);
         return;
       }
@@ -2495,7 +2495,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
     if (message.CloneScope() ==
         StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
       ClonedMessageData clonedMessageData;
-      if (!message.BuildClonedMessageDataForParent(cp, clonedMessageData)) {
+      if (!message.BuildClonedMessageData(clonedMessageData)) {
         aError.Throw(NS_ERROR_FAILURE);
         return;
       }

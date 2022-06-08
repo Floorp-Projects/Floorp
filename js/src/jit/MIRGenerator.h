@@ -158,10 +158,10 @@ class MIRGenerator final {
   uint64_t minWasmHeapLength_;
 
 #if defined(JS_ION_PERF)
-  WasmPerfSpewer wasmPerfSpewer_;
+  IonPerfSpewer wasmPerfSpewer_;
 
  public:
-  WasmPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
+  IonPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
 #endif
 
  public:

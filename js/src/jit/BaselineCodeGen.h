@@ -11,6 +11,7 @@
 #include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
+#include "jit/PerfSpewer.h"
 
 namespace js {
 
@@ -380,6 +381,10 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
   CodeOffset profilerPushToggleOffset_;
 
   CodeOffset traceLoggerScriptTextIdOffset_;
+
+#if defined(JS_ION_PERF)
+  BaselinePerfSpewer perfSpewer_;
+#endif
 
  public:
   BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);

@@ -957,7 +957,7 @@ class MessageEventOp final : public ExtendableEventOp {
                  std::function<void(const ServiceWorkerOpResult&)>&& aCallback)
       : ExtendableEventOp(std::move(aArgs), std::move(aCallback)),
         mData(new ServiceWorkerCloneData()) {
-    mData->CopyFromClonedMessageDataForBackgroundChild(
+    mData->CopyFromClonedMessageData(
         mArgs.get_ServiceWorkerMessageEventOpArgs().clonedData());
   }
 

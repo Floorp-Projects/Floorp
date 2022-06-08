@@ -9,14 +9,15 @@ const { AppConstants } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "EnableDelayHelper",
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gReputationService",
   "@mozilla.org/reputationservice/application-reputation-service;1",
   Ci.nsIApplicationReputationService
@@ -25,9 +26,8 @@ XPCOMUtils.defineLazyServiceGetter(
 const { Integration } = ChromeUtils.import(
   "resource://gre/modules/Integration.jsm"
 );
-/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(
-  this,
+  lazy,
   "DownloadIntegration",
   "resource://gre/modules/DownloadIntegration.jsm"
 );
@@ -563,7 +563,7 @@ nsUnknownContentTypeDialog.prototype = {
       this.mLauncher.targetFileIsExecutable ||
       // Do not offer to remember text/plain mimetype choices if the file
       // isn't actually a 'plain' text file.
-      (isPlain && gReputationService.isBinary(suggestedFileName));
+      (isPlain && lazy.gReputationService.isBinary(suggestedFileName));
     if (
       (shouldntRememberChoice && !this.openWithDefaultOK()) ||
       Services.prefs.getBoolPref("browser.download.forbid_open_with")
@@ -624,7 +624,7 @@ nsUnknownContentTypeDialog.prototype = {
       this.dialog.postShowCallback();
     }, 0);
 
-    this.delayHelper = new EnableDelayHelper({
+    this.delayHelper = new lazy.EnableDelayHelper({
       disableDialog: () => {
         dialog.getButton("accept").disabled = true;
       },
@@ -1343,7 +1343,7 @@ nsUnknownContentTypeDialog.prototype = {
         "browser.helperApps.showOpenOptionForViewableInternally",
         false
       ) &&
-      DownloadIntegration.shouldViewDownloadInternally(
+      lazy.DownloadIntegration.shouldViewDownloadInternally(
         this.mLauncher.MIMEInfo.MIMEType,
         primaryExtension
       )

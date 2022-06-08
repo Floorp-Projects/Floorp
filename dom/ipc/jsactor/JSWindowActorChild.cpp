@@ -70,11 +70,10 @@ void JSWindowActorChild::SendRawMessage(
   }
 
   // Cross-process case - send data over WindowGlobalChild to other side.
-  ContentChild* cc = ContentChild::GetSingleton();
   Maybe<ClonedMessageData> msgData;
   if (aData) {
     msgData.emplace();
-    if (NS_WARN_IF(!aData->BuildClonedMessageDataForChild(cc, *msgData))) {
+    if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("JSWindowActorChild serialization error: cannot "
                           "clone, in actor '%s'",
@@ -86,7 +85,7 @@ void JSWindowActorChild::SendRawMessage(
   Maybe<ClonedMessageData> stackData;
   if (aStack) {
     stackData.emplace();
-    if (!aStack->BuildClonedMessageDataForChild(cc, *stackData)) {
+    if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }
   }

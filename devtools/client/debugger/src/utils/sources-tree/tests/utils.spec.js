@@ -7,10 +7,8 @@ import { makeMockDisplaySource } from "../../test-mockup";
 
 import {
   createDirectoryNode,
-  isExactUrlMatch,
   isDirectory,
   addToTree,
-  isNotJavaScript,
   getPathWithoutThread,
   createTree,
   getSourcesInsideGroup,
@@ -19,7 +17,11 @@ import {
 
 function createSourcesMap(sources) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockDisplaySource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(
+      source.url,
+      source.id,
+      source.thread
+    );
     return map;
   }, {});
 
@@ -27,27 +29,6 @@ function createSourcesMap(sources) {
 }
 
 describe("sources tree", () => {
-  describe("isExactUrlMatch", () => {
-    it("recognizes root url match", () => {
-      const rootA = "http://example.com/path/to/file.html";
-      const rootB = "https://www.demo.com/index.html";
-
-      expect(isExactUrlMatch("example.com", rootA)).toBe(true);
-      expect(isExactUrlMatch("www.example.com", rootA)).toBe(true);
-      expect(isExactUrlMatch("api.example.com", rootA)).toBe(false);
-      expect(isExactUrlMatch("example.example.com", rootA)).toBe(false);
-      expect(isExactUrlMatch("www.example.example.com", rootA)).toBe(false);
-      expect(isExactUrlMatch("demo.com", rootA)).toBe(false);
-
-      expect(isExactUrlMatch("demo.com", rootB)).toBe(true);
-      expect(isExactUrlMatch("www.demo.com", rootB)).toBe(true);
-      expect(isExactUrlMatch("maps.demo.com", rootB)).toBe(false);
-      expect(isExactUrlMatch("demo.demo.com", rootB)).toBe(false);
-      expect(isExactUrlMatch("www.demo.demo.com", rootB)).toBe(false);
-      expect(isExactUrlMatch("example.com", rootB)).toBe(false);
-    });
-  });
-
   describe("isDirectory", () => {
     it("identifies directories correctly", () => {
       const sources = [
@@ -56,9 +37,7 @@ describe("sources tree", () => {
       ];
 
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source =>
-        addToTree(tree, source, "http://example.com/", "Main Thread")
-      );
+      sources.forEach(source => addToTree(tree, source));
       const [bFolderNode, aFileNode] = tree.contents[0].contents[0].contents;
       const [cFolderNode] = bFolderNode.contents;
       const [dFileNode] = cFolderNode.contents;
@@ -67,28 +46,6 @@ describe("sources tree", () => {
       expect(isDirectory(aFileNode)).toBe(false);
       expect(isDirectory(cFolderNode)).toBe(true);
       expect(isDirectory(dFileNode)).toBe(false);
-    });
-  });
-
-  describe("isNotJavaScript", () => {
-    it("js file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.js");
-      expect(isNotJavaScript(source)).toBe(false);
-    });
-
-    it("css file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.css");
-      expect(isNotJavaScript(source)).toBe(true);
-    });
-
-    it("svg file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.svg");
-      expect(isNotJavaScript(source)).toBe(true);
-    });
-
-    it("png file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.png");
-      expect(isNotJavaScript(source)).toBe(true);
     });
   });
 
@@ -153,10 +110,12 @@ describe("sources tree", () => {
       {
         id: "server1.conn13.child1/33",
         url: "https://example.com/d.js",
+        thread: "OtherThread",
       },
       {
         id: "server1.conn13.child1/31",
         url: "https://example.com/e.js",
+        thread: "OtherThread",
       },
     ];
     const sources = {
@@ -182,7 +141,7 @@ describe("sources tree", () => {
 
     const tree = createTree({
       sources,
-      debuggeeUrl: "https://example.com/",
+      mainThreadHost: "example.com",
       threads,
     }).sourceTree;
 

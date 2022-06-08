@@ -377,6 +377,9 @@ def map_to_use(data):
 		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
 		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
 
+		# TODO: https://github.com/harfbuzz/harfbuzz/issues/3550
+		if U == 0x10A38: UIPC = Bottom
+
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/982
 		# also  https://github.com/harfbuzz/harfbuzz/issues/1012
 		if 0x1112A <= U <= 0x1112B: UIPC = Top

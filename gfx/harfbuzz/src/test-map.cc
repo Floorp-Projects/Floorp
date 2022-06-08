@@ -25,9 +25,13 @@
 
 #include "hb.hh"
 #include "hb-map.hh"
+#include "hb-set.hh"
 #include <string>
 
 static const std::string invalid{"invalid"};
+static const hb_map_t invalid_map{};
+static const hb_set_t invalid_set{};
+static const hb_vector_t<unsigned> invalid_vector{};
 
 int
 main (int argc, char **argv)
@@ -57,13 +61,21 @@ main (int argc, char **argv)
 
   /* Test move constructor. */
   {
-    hb_map_t v {hb_map_t {}};
+    hb_map_t s {};
+    s.set (1, 2);
+    hb_map_t v (std::move (s));
+    assert (s.get_population () == 0);
+    assert (v.get_population () == 1);
   }
 
   /* Test move assignment. */
   {
+    hb_map_t s {};
+    s.set (1, 2);
     hb_map_t v;
-    v = hb_map_t {};
+    v = std::move (s);
+    assert (s.get_population () == 0);
+    assert (v.get_population () == 1);
   }
 
   /* Test initializing from iterable. */
@@ -73,9 +85,15 @@ main (int argc, char **argv)
     s.set (1, 2);
     s.set (3, 4);
 
-    hb_map_t v (s);
+    hb_vector_t<hb_pair_t<hb_codepoint_t, hb_codepoint_t>> v (s);
+    hb_map_t v0 (v);
+    hb_map_t v1 (s);
+    hb_map_t v2 (std::move (s));
 
-    assert (v.get_population () == 2);
+    assert (s.get_population () == 0);
+    assert (v0.get_population () == 2);
+    assert (v1.get_population () == 2);
+    assert (v2.get_population () == 2);
   }
 
   /* Test call fini() twice. */
@@ -133,6 +151,76 @@ main (int argc, char **argv)
       m2.set (i, s);
       m3.set (s, s);
     }
+  }
+
+  /* Test hashing maps. */
+  {
+    using pair = hb_pair_t<hb_codepoint_t, hb_codepoint_t>;
+
+    hb_hashmap_t<hb_map_t, hb_map_t, const hb_map_t *, const hb_map_t *, &invalid_map, &invalid_map> m1;
+    hb_hashmap_t<hb_map_t, hb_map_t, std::nullptr_t, std::nullptr_t, nullptr, nullptr> m2;
+
+    m1.set (hb_map_t (), hb_map_t {});
+    m2.set (hb_map_t (), hb_map_t {});
+
+    m1.set (hb_map_t (), hb_map_t {pair (1u, 2u)});
+    m2.set (hb_map_t (), hb_map_t {pair (1u, 2u)});
+
+    m1.set (hb_map_t {pair (1u, 2u)}, hb_map_t {pair (2u, 3u)});
+    m2.set (hb_map_t {pair (1u, 2u)}, hb_map_t {pair (2u, 3u)});
+
+    /* Cannot override empty map. */
+    assert (m1.get (hb_map_t ()) == hb_map_t ());
+    assert (m2.get (hb_map_t ()) == hb_map_t ());
+
+   assert (m1.get (hb_map_t {pair (1u, 2u)}) == hb_map_t {pair (2u, 3u)});
+   assert (m2.get (hb_map_t {pair (1u, 2u)}) == hb_map_t {pair (2u, 3u)});
+  }
+
+  /* Test hashing sets. */
+  {
+    hb_hashmap_t<hb_set_t, hb_set_t, const hb_set_t *, const hb_set_t *, &invalid_set, &invalid_set> m1;
+    hb_hashmap_t<hb_set_t, hb_set_t, std::nullptr_t, std::nullptr_t, nullptr, nullptr> m2;
+
+    m1.set (hb_set_t (), hb_set_t ());
+    m2.set (hb_set_t (), hb_set_t ());
+
+    m1.set (hb_set_t (), hb_set_t {1});
+    m2.set (hb_set_t (), hb_set_t {1});
+
+    m1.set (hb_set_t {1, 1000}, hb_set_t {2});
+    m2.set (hb_set_t {1, 1000}, hb_set_t {2});
+
+    /* Cannot override empty set. */
+    assert (m1.get (hb_set_t ()) == hb_set_t ());
+    assert (m2.get (hb_set_t ()) == hb_set_t ());
+
+    assert (m1.get (hb_set_t {1000, 1}) == hb_set_t {2});
+    assert (m2.get (hb_set_t {1000, 1}) == hb_set_t {2});
+  }
+
+  /* Test hashing vectors. */
+  {
+    using vector_t = hb_vector_t<unsigned>;
+
+    hb_hashmap_t<vector_t, vector_t, const vector_t *, const vector_t *, &invalid_vector, &invalid_vector> m1;
+    hb_hashmap_t<vector_t, vector_t, std::nullptr_t, std::nullptr_t, nullptr, nullptr> m2;
+
+    m1.set (vector_t (), vector_t ());
+    m2.set (vector_t (), vector_t ());
+
+    m1.set (vector_t (), vector_t {1});
+    m2.set (vector_t (), vector_t {1});
+
+    m1.set (vector_t {1}, vector_t {2});
+    m2.set (vector_t {1}, vector_t {2});
+
+    /* Cannot override empty vector. */
+    assert (m1.get (vector_t ()) == vector_t ());
+    assert (m2.get (vector_t ()) == vector_t ());
+
+    assert (m1.get (vector_t {1}) == vector_t {2});
+    assert (m2.get (vector_t {1}) == vector_t {2});
   }
 
   return 0;

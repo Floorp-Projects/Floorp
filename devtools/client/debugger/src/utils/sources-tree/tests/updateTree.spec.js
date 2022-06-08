@@ -46,19 +46,19 @@ const threads = [
   },
 ];
 
-const debuggeeUrl = "blah";
+const mainThreadHost = "blah";
 
 describe("calls updateTree.js", () => {
   it("adds one source", () => {
     const prevSources = createSourcesMap([sources[0]]);
     const { sourceTree, uncollapsedTree } = createTree({
-      debuggeeUrl,
+      mainThreadHost,
       sources: prevSources,
       threads,
     });
 
     const newTree = updateTree({
-      debuggeeUrl,
+      mainThreadHost,
       prevSources,
       newSources: createSourcesMap([sources[0], sources[1]]),
       uncollapsedTree,
@@ -73,13 +73,13 @@ describe("calls updateTree.js", () => {
     const prevSources = createSourcesMap([sources[0]]);
 
     const { sourceTree, uncollapsedTree } = createTree({
-      debuggeeUrl,
+      mainThreadHost,
       sources: prevSources,
       threads,
     });
 
     const newTree = updateTree({
-      debuggeeUrl,
+      mainThreadHost,
       prevSources,
       newSources: createSourcesMap([sources[0], sources[1], sources[2]]),
       uncollapsedTree,
@@ -95,13 +95,13 @@ describe("calls updateTree.js", () => {
     const prevSources = createSourcesMap([sources[0]]);
 
     const { sourceTree, uncollapsedTree } = createTree({
-      debuggeeUrl,
+      mainThreadHost,
       sources: prevSources,
       threads,
     });
 
     const newTree = updateTree({
-      debuggeeUrl,
+      mainThreadHost,
       prevSources,
       newSources: createSourcesMap([
         {
@@ -124,13 +124,13 @@ describe("calls updateTree.js", () => {
     const prevSources = createSourcesMap([sources[0]]);
 
     const { sourceTree, uncollapsedTree } = createTree({
-      debuggeeUrl,
+      mainThreadHost,
       sources: prevSources,
       threads,
     });
 
     const newTree = updateTree({
-      debuggeeUrl,
+      mainThreadHost,
       prevSources,
       newSources: createSourcesMap([sources[0], sources[1]]),
       uncollapsedTree,

@@ -9,14 +9,20 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
 
+#include <algorithm>
+#include <iterator>
+#include <limits>
+#include <numeric>
 #include <string>
 #include <string.h>
 #if !defined(XP_WIN) && !defined(__wasi__)
 #  include <sys/mman.h>
 #endif
+#include <type_traits>
 
 #include "jsnum.h"
 #include "jstypes.h"
@@ -53,6 +59,7 @@
 #include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
@@ -1564,8 +1571,7 @@ static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-/*static*/
-bool js::TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
+static bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<TypedArrayObject::is, BufferGetterImpl>(cx, args);
 }
@@ -2662,6 +2668,319 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
 
   // Step vii.
   return result.succeed();
+}
+
+template <typename T, typename U>
+static constexpr typename std::enable_if_t<std::is_unsigned_v<T>, U>
+UnsignedSortValue(U val) {
+  return val;
+}
+
+template <typename T, typename U>
+static constexpr
+    typename std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>, U>
+    UnsignedSortValue(U val) {
+  // Flip sign bit.
+  return val ^ static_cast<U>(std::numeric_limits<T>::min());
+}
+
+template <typename T, typename UnsignedT>
+static constexpr
+    typename std::enable_if_t<std::is_floating_point_v<T>, UnsignedT>
+    UnsignedSortValue(UnsignedT val) {
+  // Flip sign bit for positive numbers; flip all bits for negative numbers,
+  // except negative NaNs.
+  using FloatingPoint = mozilla::FloatingPoint<T>;
+  static_assert(std::is_same_v<typename FloatingPoint::Bits, UnsignedT>,
+                "FloatingPoint::Bits matches the unsigned int representation");
+
+  // FF80'0000 is negative infinity, (FF80'0000, FFFF'FFFF] are all NaNs with
+  // the sign-bit set (and the equivalent holds for double values). So any value
+  // larger than negative infinity is a negative NaN.
+  constexpr UnsignedT NegativeInfinity =
+      FloatingPoint::kSignBit | FloatingPoint::kExponentBits;
+  if (val > NegativeInfinity) {
+    return val;
+  }
+  if (val & FloatingPoint::kSignBit) {
+    return ~val;
+  }
+  return val ^ FloatingPoint::kSignBit;
+}
+
+template <typename T>
+static typename std::enable_if_t<std::is_integral_v<T> ||
+                                 std::is_same_v<T, uint8_clamped>>
+TypedArrayStdSort(SharedMem<void*> data, size_t length) {
+  T* unwrapped = data.cast<T*>().unwrapUnshared();
+  std::sort(unwrapped, unwrapped + length);
+}
+
+template <typename T>
+static typename std::enable_if_t<std::is_floating_point_v<T>> TypedArrayStdSort(
+    SharedMem<void*> data, size_t length) {
+  // Sort on the unsigned representation for performance reasons.
+  using UnsignedT =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
+  UnsignedT* unwrapped = data.cast<UnsignedT*>().unwrapUnshared();
+  std::sort(unwrapped, unwrapped + length, [](UnsignedT x, UnsignedT y) {
+    constexpr auto SortValue = UnsignedSortValue<T, UnsignedT>;
+    return SortValue(x) < SortValue(y);
+  });
+}
+
+template <typename T, typename Ops>
+static typename std::enable_if_t<std::is_same_v<Ops, UnsharedOps>, bool>
+TypedArrayStdSort(JSContext* cx, TypedArrayObject* typedArray) {
+  TypedArrayStdSort<T>(typedArray->dataPointerEither(), typedArray->length());
+  return true;
+}
+
+template <typename T, typename Ops>
+static typename std::enable_if_t<std::is_same_v<Ops, SharedOps>, bool>
+TypedArrayStdSort(JSContext* cx, TypedArrayObject* typedArray) {
+  // Always create a copy when sorting shared memory backed typed arrays to
+  // ensure concurrent write accesses doesn't lead to UB when calling std::sort.
+  size_t length = typedArray->length();
+  auto ptr = cx->make_pod_array<T>(length);
+  if (!ptr) {
+    return false;
+  }
+  SharedMem<T*> unshared = SharedMem<T*>::unshared(ptr.get());
+  SharedMem<T*> data = typedArray->dataPointerShared().cast<T*>();
+
+  Ops::podCopy(unshared, data, length);
+
+  TypedArrayStdSort<T>(unshared.template cast<void*>(), length);
+
+  Ops::podCopy(data, unshared, length);
+
+  return true;
+}
+
+template <typename T, typename Ops>
+static bool TypedArrayCountingSort(JSContext* cx,
+                                   TypedArrayObject* typedArray) {
+  static_assert(std::is_integral_v<T> || std::is_same_v<T, uint8_clamped>,
+                "Counting sort expects integral array elements");
+
+  size_t length = typedArray->length();
+
+  // Determined by performance testing.
+  if (length <= 64) {
+    return TypedArrayStdSort<T, Ops>(cx, typedArray);
+  }
+
+  // Map signed values onto the unsigned range when storing in buffer.
+  using UnsignedT =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
+  constexpr T min = std::numeric_limits<T>::min();
+
+  constexpr size_t InlineStorage = sizeof(T) == 1 ? 256 : 0;
+  Vector<size_t, InlineStorage> buffer(cx);
+  if (!buffer.resize(size_t(std::numeric_limits<UnsignedT>::max()) + 1)) {
+    return false;
+  }
+
+  SharedMem<T*> data = typedArray->dataPointerEither().cast<T*>();
+
+  // Populate the buffer.
+  for (size_t i = 0; i < length; i++) {
+    T val = Ops::load(data + i);
+    buffer[UnsignedT(val - min)]++;
+  }
+
+  // Traverse the buffer in order and write back elements to array.
+  UnsignedT val = UnsignedT(-1);  // intentional overflow on first increment
+  for (size_t i = 0; i < length;) {
+    // Invariant: sum(buffer[val:]) == length-i
+    size_t j;
+    do {
+      j = buffer[++val];
+    } while (j == 0);
+
+    for (; j > 0; j--) {
+      Ops::store(data + i++, T(val + min));
+    }
+  }
+
+  return true;
+}
+
+template <typename T, typename U, typename Ops>
+static void SortByColumn(SharedMem<U*> data, size_t length, SharedMem<U*> aux,
+                         uint8_t col) {
+  static_assert(std::is_unsigned_v<U>, "SortByColumn sorts on unsigned values");
+  static_assert(std::is_same_v<Ops, UnsharedOps>,
+                "SortByColumn only works on unshared data");
+
+  // |counts| is used to compute the starting index position for each key.
+  // Letting counts[0] always be 0, simplifies the transform step below.
+  // Example:
+  //
+  // Computing frequency counts for the input [1 2 1] gives:
+  //      0 1 2 3 ... (keys)
+  //      0 0 2 1     (frequencies)
+  //
+  // Transforming frequencies to indexes gives:
+  //      0 1 2 3 ... (keys)
+  //      0 0 2 3     (indexes)
+
+  constexpr size_t R = 256;
+
+  // Initialize all entries to zero.
+  size_t counts[R + 1] = {};
+
+  const auto ByteAtCol = [col](U x) {
+    U y = UnsignedSortValue<T, U>(x);
+    return static_cast<uint8_t>(y >> (col * 8));
+  };
+
+  // Compute frequency counts.
+  for (size_t i = 0; i < length; i++) {
+    U val = Ops::load(data + i);
+    uint8_t b = ByteAtCol(val);
+    counts[b + 1]++;
+  }
+
+  // Transform counts to indices.
+  std::partial_sum(std::begin(counts), std::end(counts), std::begin(counts));
+
+  // Distribute
+  for (size_t i = 0; i < length; i++) {
+    U val = Ops::load(data + i);
+    uint8_t b = ByteAtCol(val);
+    size_t j = counts[b]++;
+    MOZ_ASSERT(j < length,
+               "index is in bounds when |data| can't be modified concurrently");
+    UnsharedOps::store(aux + j, val);
+  }
+
+  // Copy back
+  Ops::podCopy(data, aux, length);
+}
+
+template <typename T, typename Ops>
+static bool TypedArrayRadixSort(JSContext* cx, TypedArrayObject* typedArray) {
+  size_t length = typedArray->length();
+
+  // Determined by performance testing.
+  constexpr size_t StdSortMinCutoff = sizeof(T) == 2 ? 64 : 256;
+
+  // Radix sort uses O(n) additional space, limit this space to 64 MB.
+  constexpr size_t StdSortMaxCutoff = (64 * 1024 * 1024) / sizeof(T);
+
+  if (length <= StdSortMinCutoff || length >= StdSortMaxCutoff) {
+    return TypedArrayStdSort<T, Ops>(cx, typedArray);
+  }
+
+  if constexpr (sizeof(T) == 2) {
+    // Radix sort uses O(n) additional space, so when |n| reaches 2^16, switch
+    // over to counting sort to limit the additional space needed to 2^16.
+    constexpr size_t CountingSortMaxCutoff = 65536;
+
+    if (length >= CountingSortMaxCutoff) {
+      return TypedArrayCountingSort<T, Ops>(cx, typedArray);
+    }
+  }
+
+  using UnsignedT =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
+
+  auto ptr = cx->make_zeroed_pod_array<UnsignedT>(length);
+  if (!ptr) {
+    return false;
+  }
+  SharedMem<UnsignedT*> aux = SharedMem<UnsignedT*>::unshared(ptr.get());
+
+  SharedMem<UnsignedT*> data =
+      typedArray->dataPointerEither().cast<UnsignedT*>();
+
+  // Always create a copy when sorting shared memory backed typed arrays to
+  // ensure concurrent write accesses don't lead to computing bad indices.
+  SharedMem<UnsignedT*> unshared;
+  SharedMem<UnsignedT*> shared;
+  UniquePtr<UnsignedT[], JS::FreePolicy> ptrUnshared;
+  if constexpr (std::is_same_v<Ops, SharedOps>) {
+    ptrUnshared = cx->make_pod_array<UnsignedT>(length);
+    if (!ptrUnshared) {
+      return false;
+    }
+    unshared = SharedMem<UnsignedT*>::unshared(ptrUnshared.get());
+    shared = data;
+
+    Ops::podCopy(unshared, shared, length);
+
+    data = unshared;
+  }
+
+  for (uint8_t col = 0; col < sizeof(UnsignedT); col++) {
+    SortByColumn<T, UnsignedT, UnsharedOps>(data, length, aux, col);
+  }
+
+  if constexpr (std::is_same_v<Ops, SharedOps>) {
+    Ops::podCopy(shared, unshared, length);
+  }
+
+  return true;
+}
+
+using TypedArraySortFn = bool (*)(JSContext*, TypedArrayObject*);
+
+template <typename T, typename Ops>
+static constexpr typename std::enable_if_t<sizeof(T) == 1, TypedArraySortFn>
+TypedArraySort() {
+  return TypedArrayCountingSort<T, Ops>;
+}
+
+template <typename T, typename Ops>
+static constexpr typename std::enable_if_t<sizeof(T) == 2 || sizeof(T) == 4,
+                                           TypedArraySortFn>
+TypedArraySort() {
+  return TypedArrayRadixSort<T, Ops>;
+}
+
+template <typename T, typename Ops>
+static constexpr typename std::enable_if_t<sizeof(T) == 8, TypedArraySortFn>
+TypedArraySort() {
+  return TypedArrayStdSort<T, Ops>;
+}
+
+bool js::intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  TypedArrayObject* typedArray =
+      UnwrapAndDowncastValue<TypedArrayObject>(cx, args[0]);
+  if (!typedArray) {
+    return false;
+  }
+
+  MOZ_RELEASE_ASSERT(!typedArray->hasDetachedBuffer());
+
+  bool isShared = typedArray->isSharedMemory();
+  switch (typedArray->type()) {
+#define SORT(_, T, N)                                          \
+  case Scalar::N:                                              \
+    if (isShared) {                                            \
+      if (!TypedArraySort<T, SharedOps>()(cx, typedArray)) {   \
+        return false;                                          \
+      }                                                        \
+    } else {                                                   \
+      if (!TypedArraySort<T, UnsharedOps>()(cx, typedArray)) { \
+        return false;                                          \
+      }                                                        \
+    }                                                          \
+    break;
+    JS_FOR_EACH_TYPED_ARRAY(SORT)
+#undef SORT
+    default:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
+  args.rval().set(args[0]);
+  return true;
 }
 
 /* JS Public API */

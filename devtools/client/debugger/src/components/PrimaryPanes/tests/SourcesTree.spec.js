@@ -139,7 +139,7 @@ describe("SourcesTree", () => {
         ).toHaveLength(1);
       });
 
-      it("recreates tree if debuggeeUrl is changed", async () => {
+      it("recreates tree if mainThreadHost is changed", async () => {
         const { component, props, defaultState } = render();
         const sources = {
           FakeThread: {
@@ -157,7 +157,7 @@ describe("SourcesTree", () => {
 
         await component.setProps({
           ...props,
-          debuggeeUrl: "mozilla",
+          mainThreadHost: "mozilla",
           sources,
         });
 
@@ -173,7 +173,8 @@ describe("SourcesTree", () => {
         const newSource = createMockDisplaySource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
-          true
+          true,
+          "FakeThread1"
         );
 
         const newThreadSources = {
@@ -387,7 +388,7 @@ function generateDefaults(overrides) {
     selectSource: jest.fn(),
     setExpandedState: jest.fn(),
     sources: defaultSources,
-    debuggeeUrl: "http://mdn.com",
+    mainThreadHost: "mdn.com",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
     focusItem: jest.fn(),
@@ -417,9 +418,9 @@ function render(overrides = {}) {
   return { component, props, defaultState, instance };
 }
 
-function createMockDisplaySource(id, url, isBlackBoxed = false) {
+function createMockDisplaySource(id, url, isBlackBoxed = false, thread) {
   return {
-    ...makeMockDisplaySource(url, id),
+    ...makeMockDisplaySource(url, id, thread),
     isBlackBoxed,
   };
 }
