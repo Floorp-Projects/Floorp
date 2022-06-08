@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptGroupElementBinding.h"
@@ -27,7 +26,7 @@ HTMLOptGroupElement::HTMLOptGroupElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
   // We start off enabled
-  AddStatesSilently(NS_EVENT_STATE_ENABLED);
+  AddStatesSilently(ElementState::ENABLED);
 }
 
 HTMLOptGroupElement::~HTMLOptGroupElement() = default;
@@ -80,15 +79,15 @@ nsresult HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                            nsIPrincipal* aSubjectPrincipal,
                                            bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
-    EventStates disabledStates;
+    ElementState disabledStates;
     if (aValue) {
-      disabledStates |= NS_EVENT_STATE_DISABLED;
+      disabledStates |= ElementState::DISABLED;
     } else {
-      disabledStates |= NS_EVENT_STATE_ENABLED;
+      disabledStates |= ElementState::ENABLED;
     }
 
-    EventStates oldDisabledStates = State() & DISABLED_STATES;
-    EventStates changedStates = disabledStates ^ oldDisabledStates;
+    ElementState oldDisabledStates = State() & ElementState::DISABLED_STATES;
+    ElementState changedStates = disabledStates ^ oldDisabledStates;
 
     if (!changedStates.IsEmpty()) {
       ToggleStates(changedStates, aNotify);

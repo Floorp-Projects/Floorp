@@ -732,11 +732,13 @@ license file's hash.
             for failure in vet.get("failures", []):
                 failure["crate"] = failure.pop("name")
                 self.log(
-                    logging.WARNING,
+                    logging.ERROR,
                     "cargo_vet_failed",
                     failure,
-                    "Vetting missing for {crate}:{version} {missing_criteria}",
+                    "Vetting missing for {crate}:{version} {missing_criteria}."
+                    " Run `./mach cargo vet` for more information",
                 )
+                failed = True
 
         if failed:
             return False

@@ -36,7 +36,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FullscreenChange.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -343,39 +342,38 @@ Element::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
   return NS_NOINTERFACE;
 }
 
-EventStates Element::IntrinsicState() const {
-  return IsEditable() ? NS_EVENT_STATE_READWRITE : NS_EVENT_STATE_READONLY;
+ElementState Element::IntrinsicState() const {
+  return IsEditable() ? ElementState::READWRITE : ElementState::READONLY;
 }
 
-void Element::NotifyStateChange(EventStates aStates) {
+void Element::NotifyStateChange(ElementState aStates) {
   if (aStates.IsEmpty()) {
     return;
   }
 
   if (Document* doc = GetComposedDoc()) {
     nsAutoScriptBlocker scriptBlocker;
-    doc->ContentStateChanged(this, aStates);
+    doc->ElementStateChanged(this, aStates);
   }
 }
 
-void Element::UpdateLinkState(EventStates aState) {
-  MOZ_ASSERT(!aState.HasAtLeastOneOfStates(
-                 ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)),
+void Element::UpdateLinkState(ElementState aState) {
+  MOZ_ASSERT(!aState.HasAtLeastOneOfStates(~ElementState::VISITED_OR_UNVISITED),
              "Unexpected link state bits");
-  mState =
-      (mState & ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) | aState;
+  mState = (mState & ~ElementState::VISITED_OR_UNVISITED) | aState;
 }
 
 void Element::UpdateState(bool aNotify) {
-  EventStates oldState = mState;
-  mState = IntrinsicState() | (oldState & EXTERNALLY_MANAGED_STATES);
+  ElementState oldState = mState;
+  mState =
+      IntrinsicState() | (oldState & ElementState::EXTERNALLY_MANAGED_STATES);
   if (aNotify) {
-    EventStates changedStates = oldState ^ mState;
+    ElementState changedStates = oldState ^ mState;
     if (!changedStates.IsEmpty()) {
       Document* doc = GetComposedDoc();
       if (doc) {
         nsAutoScriptBlocker scriptBlocker;
-        doc->ContentStateChanged(this, changedStates);
+        doc->ElementStateChanged(this, changedStates);
       }
     }
   }
@@ -418,11 +416,11 @@ void Element::UpdateEditableState(bool aNotify) {
     // insertion into the document and UpdateState can be slow for
     // some kinds of elements even when not notifying.
     if (IsEditable()) {
-      RemoveStatesSilently(NS_EVENT_STATE_READONLY);
-      AddStatesSilently(NS_EVENT_STATE_READWRITE);
+      RemoveStatesSilently(ElementState::READONLY);
+      AddStatesSilently(ElementState::READWRITE);
     } else {
-      RemoveStatesSilently(NS_EVENT_STATE_READWRITE);
-      AddStatesSilently(NS_EVENT_STATE_READONLY);
+      RemoveStatesSilently(ElementState::READWRITE);
+      AddStatesSilently(ElementState::READONLY);
     }
   }
 }
@@ -501,17 +499,17 @@ void Element::Blur(mozilla::ErrorResult& aError) {
   }
 }
 
-EventStates Element::StyleStateFromLocks() const {
+ElementState Element::StyleStateFromLocks() const {
   StyleStateLocks locksAndValues = LockedStyleStates();
-  EventStates locks = locksAndValues.mLocks;
-  EventStates values = locksAndValues.mValues;
-  EventStates state = (mState & ~locks) | (locks & values);
+  ElementState locks = locksAndValues.mLocks;
+  ElementState values = locksAndValues.mValues;
+  ElementState state = (mState & ~locks) | (locks & values);
 
-  if (state.HasState(NS_EVENT_STATE_VISITED)) {
-    return state & ~NS_EVENT_STATE_UNVISITED;
+  if (state.HasState(ElementState::VISITED)) {
+    return state & ~ElementState::UNVISITED;
   }
-  if (state.HasState(NS_EVENT_STATE_UNVISITED)) {
-    return state & ~NS_EVENT_STATE_VISITED;
+  if (state.HasState(ElementState::UNVISITED)) {
+    return state & ~ElementState::VISITED;
   }
 
   return state;
@@ -526,18 +524,16 @@ Element::StyleStateLocks Element::LockedStyleStates() const {
   return StyleStateLocks();
 }
 
-void Element::NotifyStyleStateChange(EventStates aStates) {
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    RefPtr<PresShell> presShell = doc->GetPresShell();
-    if (presShell) {
+void Element::NotifyStyleStateChange(ElementState aStates) {
+  if (RefPtr<Document> doc = GetComposedDoc()) {
+    if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
       nsAutoScriptBlocker scriptBlocker;
-      presShell->ContentStateChanged(doc, this, aStates);
+      presShell->ElementStateChanged(doc, this, aStates);
     }
   }
 }
 
-void Element::LockStyleStates(EventStates aStates, bool aEnabled) {
+void Element::LockStyleStates(ElementState aStates, bool aEnabled) {
   StyleStateLocks* locks = new StyleStateLocks(LockedStyleStates());
 
   locks->mLocks |= aStates;
@@ -547,11 +543,11 @@ void Element::LockStyleStates(EventStates aStates, bool aEnabled) {
     locks->mValues &= ~aStates;
   }
 
-  if (aStates.HasState(NS_EVENT_STATE_VISITED)) {
-    locks->mLocks &= ~NS_EVENT_STATE_UNVISITED;
+  if (aStates.HasState(ElementState::VISITED)) {
+    locks->mLocks &= ~ElementState::UNVISITED;
   }
-  if (aStates.HasState(NS_EVENT_STATE_UNVISITED)) {
-    locks->mLocks &= ~NS_EVENT_STATE_VISITED;
+  if (aStates.HasState(ElementState::UNVISITED)) {
+    locks->mLocks &= ~ElementState::VISITED;
   }
 
   SetProperty(nsGkAtoms::lockedStyleStates, locks,
@@ -561,7 +557,7 @@ void Element::LockStyleStates(EventStates aStates, bool aEnabled) {
   NotifyStyleStateChange(aStates);
 }
 
-void Element::UnlockStyleStates(EventStates aStates) {
+void Element::UnlockStyleStates(ElementState aStates) {
   StyleStateLocks* locks = new StyleStateLocks(LockedStyleStates());
 
   locks->mLocks &= ~aStates;
@@ -756,9 +752,8 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
       MOZ_ASSERT_UNREACHABLE("Unexpected ScrollLogicalPosition value");
   }
 
-  ScrollFlags scrollFlags = ScrollFlags::ScrollOverflowHidden |
-                            ScrollFlags::ScrollSnap |
-                            ScrollFlags::TriggeredByScript;
+  ScrollFlags scrollFlags =
+      ScrollFlags::ScrollOverflowHidden | ScrollFlags::TriggeredByScript;
   if (aOptions.mBehavior == ScrollBehavior::Smooth) {
     scrollFlags |= ScrollFlags::ScrollSmooth;
   } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
@@ -1900,7 +1895,7 @@ void Element::UnbindFromTree(bool aNullParent) {
   if (HasPointerLock()) {
     PointerLockManager::Unlock();
   }
-  if (mState.HasState(NS_EVENT_STATE_FULLSCREEN)) {
+  if (mState.HasState(ElementState::FULLSCREEN)) {
     // The element being removed is an ancestor of the fullscreen element,
     // exit fullscreen state.
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
@@ -3339,7 +3334,7 @@ nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
 
   if (dstNodeInfo->GetDocument()->IsStaticDocument()) {
     // Propagate :defined state to the static clone.
-    if (State().HasState(NS_EVENT_STATE_DEFINED)) {
+    if (State().HasState(ElementState::DEFINED)) {
       aDst->SetDefined(true);
     }
   }

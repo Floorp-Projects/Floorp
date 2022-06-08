@@ -13,6 +13,7 @@
 
 #include "nsITheme.h"
 #include "ThemeCocoa.h"
+#include "mozilla/dom/RustTypes.h"
 
 @class MOZCellDrawWindow;
 @class MOZCellDrawView;
@@ -22,7 +23,6 @@ class nsDeviceContext;
 struct SegmentedControlRenderSettings;
 
 namespace mozilla {
-class EventStates;
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
@@ -341,21 +341,21 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   LayoutDeviceIntMargin DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                              nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
-  ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
-  MenuIconParams ComputeMenuIconParams(nsIFrame* aParams, mozilla::EventStates aEventState,
+  ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::dom::ElementState aEventState);
+  MenuIconParams ComputeMenuIconParams(nsIFrame* aParams, mozilla::dom::ElementState aEventState,
                                        MenuIcon aIcon);
-  MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
+  MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame, mozilla::dom::ElementState aEventState,
                                        bool aIsChecked);
-  SegmentParams ComputeSegmentParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
+  SegmentParams ComputeSegmentParams(nsIFrame* aFrame, mozilla::dom::ElementState aEventState,
                                      SegmentType aSegmentType);
-  TextFieldParams ComputeTextFieldParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
-  ProgressParams ComputeProgressParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
+  TextFieldParams ComputeTextFieldParams(nsIFrame* aFrame, mozilla::dom::ElementState aEventState);
+  ProgressParams ComputeProgressParams(nsIFrame* aFrame, mozilla::dom::ElementState aEventState,
                                        bool aIsHorizontal);
   MeterParams ComputeMeterParams(nsIFrame* aFrame);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
-                                                   mozilla::EventStates aEventState);
+                                                   mozilla::dom::ElementState aEventState);
   mozilla::Maybe<ScaleParams> ComputeHTMLScaleParams(nsIFrame* aFrame,
-                                                     mozilla::EventStates aEventState);
+                                                     mozilla::dom::ElementState aEventState);
 
   // HITheme drawing routines
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect, const MeterParams& aParams);

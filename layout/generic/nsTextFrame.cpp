@@ -118,7 +118,7 @@ static bool NeedsToMaskPassword(nsTextFrame* aFrame) {
       nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::TextInput);
   MOZ_ASSERT(frame, "How do we have a masked text node without a text input?");
   return !frame || !frame->GetContent()->AsElement()->State().HasState(
-                       NS_EVENT_STATE_REVEALED);
+                       ElementState::REVEALED);
 }
 
 struct TabWidth {

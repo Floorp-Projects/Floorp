@@ -701,7 +701,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return true if the accessible state change is processed by handling proper
    * DOM UI event, if otherwise then false. For example, CheckboxAccessible
    * created for HTML:input@type="checkbox" will process
-   * nsIDocumentObserver::ContentStateChanged instead of 'CheckboxStateChange'
+   * nsIDocumentObserver::ElementStateChanged instead of 'CheckboxStateChange'
    * event.
    */
   bool NeedsDOMUIEvent() const { return !(mStateFlags & eIgnoreDOMUIEvent); }

@@ -9,7 +9,7 @@
 
 namespace js {
 
-enum class CompletionKind { Normal, Return, Throw };
+enum class CompletionKind : uint8_t { Normal, Return, Throw };
 
 }  // namespace js
 

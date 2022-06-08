@@ -44,7 +44,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorBase.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -864,16 +863,16 @@ void DocAccessible::ContentAppended(nsIContent* aFirstNewContent) {
   MaybeHandleChangeToHiddenNameOrDescription(aFirstNewContent);
 }
 
-void DocAccessible::ContentStateChanged(dom::Document* aDocument,
-                                        nsIContent* aContent,
-                                        EventStates aStateMask) {
-  if (aStateMask.HasState(NS_EVENT_STATE_READWRITE) &&
-      aContent == mDocumentNode->GetRootElement()) {
+void DocAccessible::ElementStateChanged(dom::Document* aDocument,
+                                        dom::Element* aElement,
+                                        dom::ElementState aStateMask) {
+  if (aStateMask.HasState(dom::ElementState::READWRITE) &&
+      aElement == mDocumentNode->GetRootElement()) {
     // This handles changes to designMode. contentEditable is handled by
     // LocalAccessible::AttributeChangesState and
     // LocalAccessible::DOMAttributeChanged.
     const bool isEditable =
-        aContent->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE);
+        aElement->State().HasState(dom::ElementState::READWRITE);
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(this, states::EDITABLE, isEditable);
     FireDelayedEvent(event);
@@ -881,14 +880,14 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
     FireDelayedEvent(event);
   }
 
-  LocalAccessible* accessible = GetAccessible(aContent);
+  LocalAccessible* accessible = GetAccessible(aElement);
   if (!accessible) return;
 
-  if (aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
+  if (aStateMask.HasState(dom::ElementState::CHECKED)) {
     LocalAccessible* widget = accessible->ContainerWidget();
     if (widget && widget->IsSelect()) {
       AccSelChangeEvent::SelChangeType selChangeType =
-          aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED)
+          aElement->State().HasState(dom::ElementState::CHECKED)
               ? AccSelChangeEvent::eSelectionAdd
               : AccSelChangeEvent::eSelectionRemove;
       RefPtr<AccEvent> event =
@@ -899,31 +898,32 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
 
     RefPtr<AccEvent> event = new AccStateChangeEvent(
         accessible, states::CHECKED,
-        aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED));
+        aElement->State().HasState(dom::ElementState::CHECKED));
     FireDelayedEvent(event);
   }
 
-  if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
+  if (aStateMask.HasState(dom::ElementState::INVALID)) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::INVALID, true);
     FireDelayedEvent(event);
   }
 
-  if (aStateMask.HasState(NS_EVENT_STATE_REQUIRED)) {
+  if (aStateMask.HasState(dom::ElementState::REQUIRED)) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::REQUIRED);
     FireDelayedEvent(event);
   }
 
-  if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
+  if (aStateMask.HasState(dom::ElementState::VISITED)) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::TRAVERSED, true);
     FireDelayedEvent(event);
   }
 
-  // We only expose NS_EVENT_STATE_DEFAULT on buttons, but we can get
+  // We only expose dom::ElementState::DEFAULT on buttons, but we can get
   // notifications for other controls like checkboxes.
-  if (aStateMask.HasState(NS_EVENT_STATE_DEFAULT) && accessible->IsButton()) {
+  if (aStateMask.HasState(dom::ElementState::DEFAULT) &&
+      accessible->IsButton()) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::DEFAULT);
     FireDelayedEvent(event);

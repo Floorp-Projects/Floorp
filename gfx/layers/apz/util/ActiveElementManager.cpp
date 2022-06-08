@@ -6,7 +6,6 @@
 
 #include "ActiveElementManager.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/Element.h"
@@ -132,7 +131,8 @@ void ActiveElementManager::SetActive(dom::Element* aTarget) {
   AEM_LOG("Setting active %p\n", aTarget);
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
-    pc->EventStateManager()->SetContentState(aTarget, NS_EVENT_STATE_ACTIVE);
+    pc->EventStateManager()->SetContentState(aTarget,
+                                             dom::ElementState::ACTIVE);
   }
 }
 

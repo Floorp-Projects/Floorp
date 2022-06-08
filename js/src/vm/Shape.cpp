@@ -954,7 +954,9 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
 
 BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
     : TenuredCellWithNonGCPointer(clasp), realm_(realm), proto_(proto) {
-  MOZ_ASSERT(JS::StringIsASCII(clasp->name));
+#ifdef DEBUG
+  AssertJSClassInvariants(clasp);
+#endif
 
   MOZ_ASSERT_IF(proto.isObject(),
                 compartment() == proto.toObject()->compartment());

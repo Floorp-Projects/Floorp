@@ -43,7 +43,7 @@ const EVENTS_TO_HANDLE = [
   "mouseleave",
 ];
 
-const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
+const kStateHover = 0x00000004; // ElementState::HOVER
 
 /**
  * Simulate touch events for platforms where they aren't generally available.

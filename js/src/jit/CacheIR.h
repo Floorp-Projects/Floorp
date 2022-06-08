@@ -185,6 +185,7 @@ class TypedOperandId : public OperandId {
   _(ToPropertyKey)        \
   _(InstanceOf)           \
   _(GetIterator)          \
+  _(CloseIter)            \
   _(OptimizeSpreadCall)   \
   _(Compare)              \
   _(ToBool)               \

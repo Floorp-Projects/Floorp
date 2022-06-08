@@ -16,7 +16,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/gfx/2D.h"
@@ -820,8 +819,8 @@ nsRect nsImageFrame::SourceRectToDest(const nsIntRect& aRect) {
   return r;
 }
 
-static bool ImageOk(EventStates aState) {
-  return !aState.HasState(NS_EVENT_STATE_BROKEN);
+static bool ImageOk(ElementState aState) {
+  return !aState.HasState(ElementState::BROKEN);
 }
 
 static bool HasAltText(const Element& aElement) {

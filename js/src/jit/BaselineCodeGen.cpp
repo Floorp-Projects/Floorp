@@ -5293,6 +5293,16 @@ bool BaselineCodeGen<Handler>::emit_EndIter() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CloseIter() {
+  frame.popRegsAndSync(1);
+
+  Register iter = R0.scratchReg();
+  masm.unboxObject(R0, iter);
+
+  return emitNextIC();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_IsGenClosing() {
   return emitIsMagicValue();
 }

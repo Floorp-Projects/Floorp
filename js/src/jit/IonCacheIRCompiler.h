@@ -68,7 +68,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   template <typename T>
   T rawInt64StubField(uint32_t offset);
 
-  void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
+  void enterStubFrame(MacroAssembler& masm, const AutoSaveLiveRegisters&);
 
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);

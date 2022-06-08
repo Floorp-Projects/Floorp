@@ -75,7 +75,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Components.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -393,11 +392,13 @@ uint64_t LocalAccessible::NativeState() const {
   if (!IsInDocument()) state |= states::STALE;
 
   if (HasOwnContent() && mContent->IsElement()) {
-    EventStates elementState = mContent->AsElement()->State();
+    dom::ElementState elementState = mContent->AsElement()->State();
 
-    if (elementState.HasState(NS_EVENT_STATE_INVALID)) state |= states::INVALID;
+    if (elementState.HasState(dom::ElementState::INVALID)) {
+      state |= states::INVALID;
+    }
 
-    if (elementState.HasState(NS_EVENT_STATE_REQUIRED)) {
+    if (elementState.HasState(dom::ElementState::REQUIRED)) {
       state |= states::REQUIRED;
     }
 

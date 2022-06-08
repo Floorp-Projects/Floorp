@@ -85,7 +85,7 @@ bool nsIConstraintValidation::ReportValidity() {
   element->DispatchEvent(*event);
 
   auto* inputElement = HTMLInputElement::FromNode(element);
-  if (inputElement && inputElement->State().HasState(NS_EVENT_STATE_FOCUS)) {
+  if (inputElement && inputElement->State().HasState(ElementState::FOCUS)) {
     inputElement->UpdateValidityUIBits(true);
   }
 

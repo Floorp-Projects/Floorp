@@ -66,6 +66,8 @@ Register IonIC::scratchRegisterForEntryJump() {
       return asBinaryArithIC()->output().scratchReg();
     case CacheKind::Compare:
       return asCompareIC()->output();
+    case CacheKind::CloseIter:
+      return asCloseIterIC()->temp();
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
@@ -465,6 +467,17 @@ bool IonToPropertyKeyIC::update(JSContext* cx, HandleScript outerScript,
   TryAttachIonStub<ToPropertyKeyIRGenerator>(cx, ic, ionScript, val);
 
   return ToPropertyKeyOperation(cx, val, res);
+}
+
+/* static */
+bool IonCloseIterIC::update(JSContext* cx, HandleScript outerScript,
+                            IonCloseIterIC* ic, HandleObject iter) {
+  IonScript* ionScript = outerScript->ionScript();
+  CompletionKind kind = ic->completionKind();
+
+  TryAttachIonStub<CloseIterIRGenerator>(cx, ic, ionScript, iter, kind);
+
+  return CloseIterOperation(cx, iter, kind);
 }
 
 /*  static */

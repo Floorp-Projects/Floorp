@@ -13,8 +13,6 @@
 
 #include "nsStubDocumentObserver.h"
 
-#include "mozilla/EventStates.h"
-
 NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsStubDocumentObserver)
 NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsStubDocumentObserver)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsStubDocumentObserver)

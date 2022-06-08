@@ -79,6 +79,7 @@ class IonUnaryArithIC;
 class IonBinaryArithIC;
 class IonToPropertyKeyIC;
 class IonOptimizeSpreadCallIC;
+class IonCloseIterIC;
 
 class IonIC {
   // This either points at the OOL path for the fallback path, or the code for
@@ -214,6 +215,10 @@ class IonIC {
   IonToPropertyKeyIC* asToPropertyKeyIC() {
     MOZ_ASSERT(kind_ == CacheKind::ToPropertyKey);
     return (IonToPropertyKeyIC*)this;
+  }
+  IonCloseIterIC* asCloseIterIC() {
+    MOZ_ASSERT(kind_ == CacheKind::CloseIter);
+    return (IonCloseIterIC*)this;
   }
 
   // Returns the Register to use as scratch when entering IC stubs. This
@@ -626,6 +631,31 @@ class IonBinaryArithIC : public IonIC {
   [[nodiscard]] static bool update(JSContext* cx, HandleScript outerScript,
                                    IonBinaryArithIC* stub, HandleValue lhs,
                                    HandleValue rhs, MutableHandleValue res);
+};
+
+class IonCloseIterIC : public IonIC {
+  LiveRegisterSet liveRegs_;
+
+  Register iter_;
+  Register temp_;
+  CompletionKind completionKind_;
+
+ public:
+  IonCloseIterIC(LiveRegisterSet liveRegs, Register iter, Register temp,
+                 CompletionKind completionKind)
+      : IonIC(CacheKind::CloseIter),
+        liveRegs_(liveRegs),
+        iter_(iter),
+        temp_(temp),
+        completionKind_(completionKind) {}
+
+  LiveRegisterSet liveRegs() const { return liveRegs_; }
+  Register temp() const { return temp_; }
+  Register iter() const { return iter_; }
+  CompletionKind completionKind() const { return completionKind_; }
+
+  [[nodiscard]] static bool update(JSContext* cx, HandleScript outerScript,
+                                   IonCloseIterIC* ic, HandleObject iter);
 };
 
 }  // namespace jit

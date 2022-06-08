@@ -36,11 +36,6 @@ var gExceptionPaths = [
   "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
   "chrome://browser/content/assets/klar-qr-code.svg",
 
-  // These app marketplace icons are referenced based on the user's locale
-  // in browser/components/newtab/content-src/aboutwelcome/components/MobileDownloads.jsx
-  "chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en-US/ios.svg",
-  "chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en-US/android.png",
-
   // toolkit/components/pdfjs/content/build/pdf.js
   "resource://pdf.js/web/images/",
 

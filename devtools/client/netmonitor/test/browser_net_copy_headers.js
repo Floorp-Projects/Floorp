@@ -39,7 +39,7 @@ add_task(async function() {
   is(selectedRequest, requestItem, "Proper request is selected");
 
   const EXPECTED_REQUEST_HEADERS = [
-    `${method} ${SIMPLE_URL} ${httpVersion}`,
+    `${method} ${SIMPLE_URL.split("example.com")[1]} ${httpVersion}`,
     "Host: example.com",
     "User-Agent: " + navigator.userAgent + "",
     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",

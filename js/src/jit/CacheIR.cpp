@@ -107,6 +107,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::BindName:
     case CacheKind::Call:
     case CacheKind::OptimizeSpreadCall:
+    case CacheKind::CloseIter:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
@@ -5355,8 +5356,7 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
   }
 }
 
-void CallIRGenerator::emitCalleeGuard(ObjOperandId calleeId,
-                                      JSFunction* callee) {
+void IRGenerator::emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee) {
   // Guarding on the callee JSFunction* is most efficient, but doesn't work well
   // for lambda clones (multiple functions with the same BaseScript). We guard
   // on the function's BaseScript if the callee is scripted and this isn't the
@@ -11857,6 +11857,121 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   TRY_ATTACH(tryAttachPlainObject());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
+}
+
+CloseIterIRGenerator::CloseIterIRGenerator(JSContext* cx, HandleScript script,
+                                           jsbytecode* pc, ICState state,
+                                           HandleObject iter,
+                                           CompletionKind kind)
+    : IRGenerator(cx, script, pc, CacheKind::CloseIter, state),
+      iter_(iter),
+      kind_(kind) {}
+
+void CloseIterIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("iter", ObjectValue(*iter_));
+  }
+#endif
+}
+
+AttachDecision CloseIterIRGenerator::tryAttachNoReturnMethod() {
+  Maybe<PropertyInfo> prop;
+  NativeObject* holder = nullptr;
+
+  // If we can guard that the iterator does not have a |return| method,
+  // then this CloseIter is a no-op.
+  NativeGetPropCacheability type = CanAttachNativeGetProp(
+      cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
+  if (type != CanAttachReadSlot) {
+    return AttachDecision::NoAction;
+  }
+  if (holder) {
+    return AttachDecision::NoAction;
+  }
+
+  ObjOperandId objId(writer.setInputOperandId(0));
+
+  Maybe<ObjOperandId> holderId;
+  EmitReadSlotGuard(writer, &iter_->as<NativeObject>(), /*holder=*/nullptr,
+                    objId, &holderId);
+
+  // There is no return method, so we don't have to do anything.
+  writer.returnFromIC();
+
+  trackAttached("CloseIter.NoReturn");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
+  Maybe<PropertyInfo> prop;
+  NativeObject* holder = nullptr;
+
+  NativeGetPropCacheability type = CanAttachNativeGetProp(
+      cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
+  if (!holder) {
+    return AttachDecision::NoAction;
+  }
+  if (type != CanAttachReadSlot) {
+    return AttachDecision::NoAction;
+  }
+  if (!prop->isDataProperty()) {
+    return AttachDecision::NoAction;
+  }
+
+  size_t slot = prop->slot();
+  Value calleeVal = holder->getSlot(slot);
+  if (!calleeVal.isObject() || !calleeVal.toObject().is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+
+  JSFunction* callee = &calleeVal.toObject().as<JSFunction>();
+  if (!callee->hasJitEntry()) {
+    return AttachDecision::NoAction;
+  }
+  if (callee->isClassConstructor()) {
+    return AttachDecision::NoAction;
+  }
+
+  // We don't support cross-realm |return|.
+  if (cx_->realm() != callee->realm()) {
+    return AttachDecision::NoAction;
+  }
+
+  ObjOperandId objId(writer.setInputOperandId(0));
+
+  Maybe<ObjOperandId> holderId;
+  EmitReadSlotGuard(writer, &iter_->as<NativeObject>(), holder, objId,
+                    &holderId);
+  MOZ_ASSERT(holderId.isSome());
+
+  ValOperandId calleeValId;
+  if (holder->isFixedSlot(slot)) {
+    size_t offset = NativeObject::getFixedSlotOffset(slot);
+    calleeValId = writer.loadFixedSlot(*holderId, offset);
+  } else {
+    size_t index = holder->dynamicSlotIndex(slot);
+    calleeValId = writer.loadDynamicSlot(*holderId, index);
+  }
+  ObjOperandId calleeId = writer.guardToObject(calleeValId);
+  emitCalleeGuard(calleeId, callee);
+
+  writer.closeIterScriptedResult(objId, calleeId, kind_, callee->nargs());
+
+  writer.returnFromIC();
+  trackAttached("CloseIter.ScriptedReturn");
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CloseIterIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  TRY_ATTACH(tryAttachNoReturnMethod());
+  TRY_ATTACH(tryAttachScriptedReturn());
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;

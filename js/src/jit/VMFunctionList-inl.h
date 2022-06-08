@@ -105,6 +105,7 @@ namespace jit {
   _(ClassBodyLexicalEnvironmentObjectCreate,                                   \
     js::ClassBodyLexicalEnvironmentObject::create)                             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
+  _(CloseIterOperation, js::CloseIterOperation)                                \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
   _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
@@ -163,6 +164,7 @@ namespace jit {
   _(IonBinaryArithICUpdate, js::jit::IonBinaryArithIC::update)                 \
   _(IonBindNameICUpdate, js::jit::IonBindNameIC::update)                       \
   _(IonCheckPrivateFieldICUpdate, js::jit::IonCheckPrivateFieldIC::update)     \
+  _(IonCloseIterICUpdate, js::jit::IonCloseIterIC::update)                     \
   _(IonCompareICUpdate, js::jit::IonCompareIC::update)                         \
   _(IonCompileScriptForBaselineAtEntry,                                        \
     js::jit::IonCompileScriptForBaselineAtEntry)                               \
@@ -281,6 +283,7 @@ namespace jit {
   _(DoBinaryArithFallback, js::jit::DoBinaryArithFallback, 2)               \
   _(DoBindNameFallback, js::jit::DoBindNameFallback, 0)                     \
   _(DoCheckPrivateFieldFallback, js::jit::DoCheckPrivateFieldFallback, 2)   \
+  _(DoCloseIterFallback, js::jit::DoCloseIterFallback, 0)                   \
   _(DoCompareFallback, js::jit::DoCompareFallback, 2)                       \
   _(DoConcatStringObject, js::jit::DoConcatStringObject, 2)                 \
   _(DoGetElemFallback, js::jit::DoGetElemFallback, 2)                       \

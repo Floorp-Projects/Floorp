@@ -173,6 +173,11 @@ enum class BailoutKind : uint8_t {
   // We returned to a stack frame after invalidating its IonScript.
   OnStackInvalidation,
 
+  // We returned to a stack frame while calling the |return| method of an
+  // iterator, and  we have to throw an exception because the return value
+  // was not an object.
+  ThrowCheckIsObject,
+
   // We have executed code that should be unreachable, and need to assert.
   Unreachable,
 
@@ -217,6 +222,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Finally";
     case BailoutKind::OnStackInvalidation:
       return "OnStackInvalidation";
+    case BailoutKind::ThrowCheckIsObject:
+      return "ThrowCheckIsObject";
     case BailoutKind::Unreachable:
       return "Unreachable";
 
@@ -1000,6 +1007,13 @@ enum class ResumeMode : uint8_t {
   // Innermost frame. Resume at the next bytecode op when bailing out.
   ResumeAfter,
 
+  // Innermost frame. This resume point captures an additional value
+  // that is not on the expression stack. Resume at the next bytecode
+  // op when bailing out, but first check that the intermediate value
+  // is an object. This is used if calling the |return| method for a
+  // CloseIter causes an invalidation bailout.
+  ResumeAfterCheckIsObject,
+
   // Innermost frame. Resume at the current bytecode op when bailing out.
   ResumeAt,
 
@@ -1027,8 +1041,31 @@ inline const char* ResumeModeToString(ResumeMode mode) {
       return "InlinedFunCall";
     case ResumeMode::InlinedAccessor:
       return "InlinedAccessor";
+    case ResumeMode::ResumeAfterCheckIsObject:
+      return "ResumeAfterCheckIsObject";
   }
   MOZ_CRASH("Invalid mode");
+}
+
+inline bool IsResumeAfter(ResumeMode mode) {
+  switch (mode) {
+    case ResumeMode::ResumeAfter:
+    case ResumeMode::ResumeAfterCheckIsObject:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// The number of intermediate values captured by this resume point
+// that aren't on the expression stack, but are needed during bailouts.
+inline uint32_t NumIntermediateValues(ResumeMode mode) {
+  switch (mode) {
+    case ResumeMode::ResumeAfterCheckIsObject:
+      return 1;
+    default:
+      return 0;
+  }
 }
 
 }  // namespace jit

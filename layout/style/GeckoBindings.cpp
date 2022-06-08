@@ -46,7 +46,6 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
@@ -253,8 +252,8 @@ bool Gecko_VisitedStylesEnabled(const Document* aDoc) {
   return true;
 }
 
-EventStates::ServoType Gecko_ElementState(const Element* aElement) {
-  return aElement->StyleState().ServoValue();
+ElementState::InternalType Gecko_ElementState(const Element* aElement) {
+  return aElement->StyleState().GetInternalValue();
 }
 
 bool Gecko_IsRootElement(const Element* aElement) {

@@ -39,7 +39,6 @@ EXPORTS.mozilla += [
     "EventListenerManager.h",
     "EventNameList.h",
     "EventStateManager.h",
-    "EventStates.h",
     "GlobalKeyListener.h",
     "IMEContentObserver.h",
     "IMEStateManager.h",

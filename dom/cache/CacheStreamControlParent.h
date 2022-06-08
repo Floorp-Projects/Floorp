@@ -14,7 +14,6 @@
 
 namespace mozilla::dom::cache {
 
-class ReadStream;
 class StreamList;
 
 class CacheStreamControlParent final : public PCacheStreamControlParent,

@@ -14,7 +14,6 @@
 #include "gfxWindowsPlatform.h"
 #include "gfxWindowsSurface.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/gfx/Types.h"  // for Color::FromABGR
 #include "mozilla/Logging.h"
 #include "mozilla/RelativeLuminanceUtils.h"
@@ -45,6 +44,8 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
+
+using ElementState = dom::ElementState;
 
 extern mozilla::LazyLogModule gWindowsLog;
 
@@ -107,25 +108,25 @@ static int32_t GetTopLevelWindowActiveState(nsIFrame* aFrame) {
 }
 
 static int32_t GetWindowFrameButtonState(nsIFrame* aFrame,
-                                         EventStates eventState) {
+                                         ElementState elementState) {
   if (GetTopLevelWindowActiveState(aFrame) ==
       mozilla::widget::themeconst::FS_INACTIVE) {
-    if (eventState.HasState(NS_EVENT_STATE_HOVER))
+    if (elementState.HasState(ElementState::HOVER))
       return mozilla::widget::themeconst::BS_HOT;
     return mozilla::widget::themeconst::BS_INACTIVE;
   }
 
-  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
-    if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+  if (elementState.HasState(ElementState::HOVER)) {
+    if (elementState.HasState(ElementState::ACTIVE))
       return mozilla::widget::themeconst::BS_PUSHED;
     return mozilla::widget::themeconst::BS_HOT;
   }
   return mozilla::widget::themeconst::BS_NORMAL;
 }
 
-static int32_t GetClassicWindowFrameButtonState(EventStates eventState) {
-  if (eventState.HasState(NS_EVENT_STATE_ACTIVE) &&
-      eventState.HasState(NS_EVENT_STATE_HOVER))
+static int32_t GetClassicWindowFrameButtonState(ElementState elementState) {
+  if (elementState.HasState(ElementState::ACTIVE) &&
+      elementState.HasState(ElementState::HOVER))
     return DFCS_BUTTONPUSH | DFCS_PUSHED;
   return DFCS_BUTTONPUSH;
 }
@@ -559,9 +560,9 @@ void nsNativeThemeWin::DrawThemedProgressMeter(
     return;
   }
 
-  EventStates eventStates = GetContentState(parentFrame, aAppearance);
+  ElementState elementState = GetContentState(parentFrame, aAppearance);
   bool vertical = IsVerticalProgress(parentFrame);
-  bool indeterminate = eventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
+  bool indeterminate = elementState.HasState(ElementState::INDETERMINATE);
   bool animate = indeterminate;
 
   // Vista and up progress meter is fill style, rendered here. We render
@@ -787,22 +788,22 @@ nsNativeThemeWin::GetTheme(StyleAppearance aAppearance) {
 int32_t nsNativeThemeWin::StandardGetState(nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
                                            bool wantFocused) {
-  EventStates eventState = GetContentState(aFrame, aAppearance);
-  if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
+  ElementState elementState = GetContentState(aFrame, aAppearance);
+  if (elementState.HasAllStates(ElementState::HOVER | ElementState::ACTIVE)) {
     return TS_ACTIVE;
   }
-  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+  if (elementState.HasState(ElementState::HOVER)) {
     return TS_HOVER;
   }
   if (wantFocused) {
-    if (eventState.HasState(NS_EVENT_STATE_FOCUSRING)) {
+    if (elementState.HasState(ElementState::FOCUSRING)) {
       return TS_FOCUSED;
     }
     // On Windows, focused buttons are always drawn as such by the native
-    // theme, that's why we check NS_EVENT_STATE_FOCUS instead of
-    // NS_EVENT_STATE_FOCUSRING.
+    // theme, that's why we check ElementState::FOCUS instead of
+    // ElementState::FOCUSRING.
     if (aAppearance == StyleAppearance::Button &&
-        eventState.HasState(NS_EVENT_STATE_FOCUS)) {
+        elementState.HasState(ElementState::FOCUS)) {
       return TS_FOCUSED;
     }
   }
@@ -839,8 +840,8 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         return NS_OK;
       }
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -867,15 +868,15 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       if (!aFrame) {
         aState = TS_NORMAL;
       } else {
-        EventStates eventState = GetContentState(aFrame, aAppearance);
-        if (eventState.HasState(NS_EVENT_STATE_CHECKED)) {
+        ElementState elementState = GetContentState(aFrame, aAppearance);
+        if (elementState.HasState(ElementState::CHECKED)) {
           inputState = CHECKED;
         }
-        if (isCheckbox && eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+        if (isCheckbox && elementState.HasState(ElementState::INDETERMINATE)) {
           inputState = INDETERMINATE;
         }
 
-        if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+        if (elementState.HasState(ElementState::DISABLED)) {
           aState = TS_DISABLED;
         } else {
           aState = StandardGetState(aFrame, aAppearance, false);
@@ -896,7 +897,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea: {
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       /* Note: the NOSCROLL type has a rounded corner in each corner.  The more
        * specific HSCROLL, VSCROLL, HVSCROLL types have side and/or top/bottom
@@ -908,15 +909,15 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
 
       if (!aFrame) {
         aState = TFS_EDITBORDER_NORMAL;
-      } else if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      } else if (elementState.HasState(ElementState::DISABLED)) {
         aState = TFS_EDITBORDER_DISABLED;
       } else if (IsReadOnly(aFrame)) {
         /* no special read-only state */
         aState = TFS_EDITBORDER_NORMAL;
-      } else if (eventState.HasAtLeastOneOfStates(NS_EVENT_STATE_ACTIVE |
-                                                  NS_EVENT_STATE_FOCUSRING)) {
+      } else if (elementState.HasAtLeastOneOfStates(ElementState::ACTIVE |
+                                                    ElementState::FOCUSRING)) {
         aState = TFS_EDITBORDER_FOCUSED;
-      } else if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+      } else if (elementState.HasState(ElementState::HOVER)) {
         aState = TFS_EDITBORDER_HOVER;
       } else {
         aState = TFS_EDITBORDER_NORMAL;
@@ -954,8 +955,8 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         return NS_OK;
       }
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -964,9 +965,9 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         return NS_OK;
       }
 
-      if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
+      if (elementState.HasAllStates(ElementState::HOVER | ElementState::ACTIVE))
         aState = TS_ACTIVE;
-      else if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+      else if (elementState.HasState(ElementState::HOVER)) {
         if (IsCheckedButton(aFrame))
           aState = TB_HOVER_CHECKED;
         else
@@ -1001,21 +1002,21 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       } else {
         aPart = IsFrameRTL(aFrame) ? TKP_THUMBLEFT : TKP_THUMBRIGHT;
       }
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
       if (!aFrame) {
         aState = TS_NORMAL;
-      } else if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      } else if (elementState.HasState(ElementState::DISABLED)) {
         aState = TKP_DISABLED;
       } else {
-        if (eventState.HasState(
-                NS_EVENT_STATE_ACTIVE))  // Hover is not also a requirement for
-                                         // the thumb, since the drag is not
-                                         // canceled when you move outside the
-                                         // thumb.
+        if (elementState.HasState(
+                ElementState::ACTIVE))  // Hover is not also a requirement for
+                                        // the thumb, since the drag is not
+                                        // canceled when you move outside the
+                                        // thumb.
           aState = TS_ACTIVE;
-        else if (eventState.HasState(NS_EVENT_STATE_FOCUSRING))
+        else if (elementState.HasState(ElementState::FOCUSRING))
           aState = TKP_FOCUSED;
-        else if (eventState.HasState(NS_EVENT_STATE_HOVER))
+        else if (elementState.HasState(ElementState::HOVER))
           aState = TS_HOVER;
         else
           aState = TS_NORMAL;
@@ -1026,10 +1027,10 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::SpinnerDownbutton: {
       aPart = (aAppearance == StyleAppearance::SpinnerUpbutton) ? SPNP_UP
                                                                 : SPNP_DOWN;
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
       if (!aFrame) {
         aState = TS_NORMAL;
-      } else if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      } else if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
       } else {
         aState = StandardGetState(aFrame, aAppearance, false);
@@ -1104,8 +1105,8 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
         return NS_OK;
       }
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -1139,7 +1140,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::Menulist: {
       nsIContent* content = aFrame->GetContent();
       bool useDropBorder = content && content->IsHTMLElement();
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       /* On Vista/Win7, we use CBP_DROPBORDER instead of DROPFRAME for HTML
        * content or for editable menulists; this gives us the thin outline,
@@ -1149,19 +1150,19 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       else
         aPart = CBP_DROPFRAME;
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
       } else if (IsReadOnly(aFrame)) {
         aState = TS_NORMAL;
       } else if (IsOpenButton(aFrame)) {
         aState = TS_ACTIVE;
       } else if (useDropBorder &&
-                 eventState.HasState(NS_EVENT_STATE_FOCUSRING)) {
+                 elementState.HasState(ElementState::FOCUSRING)) {
         aState = TS_ACTIVE;
-      } else if (eventState.HasAllStates(NS_EVENT_STATE_HOVER |
-                                         NS_EVENT_STATE_ACTIVE)) {
+      } else if (elementState.HasAllStates(ElementState::HOVER |
+                                           ElementState::ACTIVE)) {
         aState = TS_ACTIVE;
-      } else if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+      } else if (elementState.HasState(ElementState::HOVER)) {
         aState = TS_HOVER;
       } else {
         aState = TS_NORMAL;
@@ -1179,7 +1180,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       // parent.
       if (isHTML || isMenulist) aFrame = parentFrame;
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
       aPart = CBP_DROPMARKER_VISTA;
 
       // For HTML controls with author styling, we should fall
@@ -1189,7 +1190,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
                                    StyleAppearance::Menulist))
         aPart = CBP_DROPMARKER;
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState = TS_DISABLED;
         return NS_OK;
       }
@@ -1224,14 +1225,14 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       aState = TS_NORMAL;
 
       // Dropdown button active state doesn't need :hover.
-      if (eventState.HasState(NS_EVENT_STATE_ACTIVE)) {
+      if (elementState.HasState(ElementState::ACTIVE)) {
         if (isOpen && (isHTML || isMenulist)) {
           // XXX Button should look active until the mouse is released, but
           //     without making it look active when the popup is clicked.
           return NS_OK;
         }
         aState = TS_ACTIVE;
-      } else if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+      } else if (elementState.HasState(ElementState::HOVER)) {
         // No hover effect for XUL menulists and autocomplete dropdown buttons
         // while the dropdown menu is open.
         if (isOpen) {
@@ -1255,7 +1256,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       bool isOpen = false;
       bool isHover = false;
       nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       isTopLevel = IsTopLevelMenu(aFrame);
 
@@ -1274,7 +1275,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           aState = MBI_NORMAL;
 
         // the disabled states are offset by 3
-        if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+        if (elementState.HasState(ElementState::DISABLED)) {
           aState += 3;
         }
       } else {
@@ -1286,7 +1287,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           aState = MPI_NORMAL;
 
         // the disabled states are offset by 2
-        if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+        if (elementState.HasState(ElementState::DISABLED)) {
           aState += 2;
         }
       }
@@ -1299,14 +1300,14 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       return NS_OK;
     case StyleAppearance::Menuarrow: {
       aPart = MENU_POPUPSUBMENU;
-      EventStates eventState = GetContentState(aFrame, aAppearance);
-      aState = eventState.HasState(NS_EVENT_STATE_DISABLED) ? MSM_DISABLED
-                                                            : MSM_NORMAL;
+      ElementState elementState = GetContentState(aFrame, aAppearance);
+      aState = elementState.HasState(ElementState::DISABLED) ? MSM_DISABLED
+                                                             : MSM_NORMAL;
       return NS_OK;
     }
     case StyleAppearance::Menucheckbox:
     case StyleAppearance::Menuradio: {
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       aPart = MENU_POPUPCHECK;
       aState = MC_CHECKMARKNORMAL;
@@ -1315,7 +1316,7 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       if (aAppearance == StyleAppearance::Menuradio) aState += 2;
 
       // the disabled states are offset by 1
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState += 1;
       }
 
@@ -1586,10 +1587,10 @@ RENDER_AGAIN:
 
     if (isChecked) {
       int bgState = MCB_NORMAL;
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       // the disabled states are offset by 1
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         bgState += 1;
       }
 
@@ -1745,9 +1746,9 @@ RENDER_AGAIN:
   // Draw focus rectangles for range elements
   // XXX it'd be nice to draw these outside of the frame
   if (aAppearance == StyleAppearance::Range) {
-    EventStates contentState = GetContentState(aFrame, aAppearance);
+    ElementState contentState = GetContentState(aFrame, aAppearance);
 
-    if (contentState.HasState(NS_EVENT_STATE_FOCUSRING)) {
+    if (contentState.HasState(ElementState::FOCUSRING)) {
       POINT vpOrg;
       HPEN hPen = nullptr;
 
@@ -2801,16 +2802,16 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       aState = DFCS_BUTTONPUSH;
       aFocused = false;
 
-      EventStates contentState = GetContentState(aFrame, aAppearance);
-      if (contentState.HasState(NS_EVENT_STATE_DISABLED)) {
+      ElementState contentState = GetContentState(aFrame, aAppearance);
+      if (contentState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
       } else if (IsOpenButton(aFrame)) {
         aState |= DFCS_PUSHED;
       } else if (IsCheckedButton(aFrame)) {
         aState |= DFCS_CHECKED;
       } else {
-        if (contentState.HasAllStates(NS_EVENT_STATE_ACTIVE |
-                                      NS_EVENT_STATE_HOVER)) {
+        if (contentState.HasAllStates(ElementState::ACTIVE |
+                                      ElementState::HOVER)) {
           aState |= DFCS_PUSHED;
           // The down state is flat if the button is focusable
           if (aFrame->StyleUI()->UserFocus() == StyleUserFocus::Normal) {
@@ -2820,9 +2821,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
           }
         }
         // On Windows, focused buttons are always drawn as such by the native
-        // theme, that's why we check NS_EVENT_STATE_FOCUS instead of
-        // NS_EVENT_STATE_FOCUSRING.
-        if (contentState.HasState(NS_EVENT_STATE_FOCUS) ||
+        // theme, that's why we check ElementState::FOCUS instead of
+        // ElementState::FOCUSRING.
+        if (contentState.HasState(ElementState::FOCUS) ||
             (aState == DFCS_BUTTONPUSH && IsDefaultButton(aFrame))) {
           aFocused = true;
         }
@@ -2832,16 +2833,15 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     }
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
-      EventStates contentState = GetContentState(aFrame, aAppearance);
+      ElementState contentState = GetContentState(aFrame, aAppearance);
       aFocused = false;
 
       aPart = DFC_BUTTON;
       aState = 0;
       nsIContent* content = aFrame->GetContent();
       bool isCheckbox = (aAppearance == StyleAppearance::Checkbox);
-      bool isChecked = contentState.HasState(NS_EVENT_STATE_CHECKED);
-      bool isIndeterminate =
-          contentState.HasState(NS_EVENT_STATE_INDETERMINATE);
+      bool isChecked = contentState.HasState(ElementState::CHECKED);
+      bool isIndeterminate = contentState.HasState(ElementState::INDETERMINATE);
 
       if (isCheckbox) {
         // indeterminate state takes precedence over checkedness.
@@ -2858,14 +2858,14 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       }
 
       if (!content->IsXULElement() &&
-          contentState.HasState(NS_EVENT_STATE_FOCUSRING)) {
+          contentState.HasState(ElementState::FOCUSRING)) {
         aFocused = true;
       }
 
-      if (contentState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (contentState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
-      } else if (contentState.HasAllStates(NS_EVENT_STATE_ACTIVE |
-                                           NS_EVENT_STATE_HOVER)) {
+      } else if (contentState.HasAllStates(ElementState::ACTIVE |
+                                           ElementState::HOVER)) {
         aState |= DFCS_PUSHED;
       }
 
@@ -2877,7 +2877,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       bool isTopLevel = false;
       bool isOpen = false;
       nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       // We indicate top-level-ness using aPart. 0 is a normal menu item,
       // 1 is a top-level menu item. The state of the item is composed of
@@ -2893,7 +2893,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
         isOpen = menuFrame->IsOpen();
       }
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
       }
 
@@ -2910,9 +2910,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
     case StyleAppearance::Menuradio:
     case StyleAppearance::Menuarrow: {
       aState = 0;
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
       }
       if (IsMenuActive(aFrame, aAppearance)) aState |= DFCS_HOT;
@@ -2961,9 +2961,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       // parent.
       if (isHTML || isMenulist) aFrame = parentFrame;
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
         return NS_OK;
       }
@@ -2979,14 +2979,14 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       if (isOpen && (isHTML || isMenulist)) return NS_OK;
 
       // Dropdown button active state doesn't need :hover.
-      if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+      if (elementState.HasState(ElementState::ACTIVE))
         aState |= DFCS_PUSHED | DFCS_FLAT;
 
       return NS_OK;
     }
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton: {
-      EventStates contentState = GetContentState(aFrame, aAppearance);
+      ElementState contentState = GetContentState(aFrame, aAppearance);
 
       aPart = DFC_SCROLL;
       switch (aAppearance) {
@@ -3000,11 +3000,11 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
           break;
       }
 
-      if (contentState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (contentState.HasState(ElementState::DISABLED)) {
         aState |= DFCS_INACTIVE;
       } else {
-        if (contentState.HasAllStates(NS_EVENT_STATE_HOVER |
-                                      NS_EVENT_STATE_ACTIVE))
+        if (contentState.HasAllStates(ElementState::HOVER |
+                                      ElementState::ACTIVE))
           aState |= DFCS_PUSHED;
       }
 
@@ -3302,11 +3302,11 @@ RENDER_AGAIN:
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       // Fill in background
 
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED) ||
+      if (elementState.HasState(ElementState::DISABLED) ||
           (aFrame->GetContent()->IsXULElement() && IsReadOnly(aFrame)))
         ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_BTNFACE + 1));
       else
@@ -3350,11 +3350,11 @@ RENDER_AGAIN:
       break;
     }
     case StyleAppearance::RangeThumb: {
-      EventStates eventState = GetContentState(aFrame, aAppearance);
+      ElementState elementState = GetContentState(aFrame, aAppearance);
 
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED,
                  BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
-      if (eventState.HasState(NS_EVENT_STATE_DISABLED)) {
+      if (elementState.HasState(ElementState::DISABLED)) {
         DrawCheckedRect(hdc, widgetRect, COLOR_3DFACE, COLOR_3DHILIGHT,
                         (HBRUSH)COLOR_3DHILIGHT);
       }
@@ -3388,10 +3388,10 @@ RENDER_AGAIN:
     }
     case StyleAppearance::Progresschunk: {
       nsIFrame* stateFrame = aFrame->GetParent();
-      EventStates eventStates = GetContentState(stateFrame, aAppearance);
+      ElementState elementState = GetContentState(stateFrame, aAppearance);
 
       const bool indeterminate =
-          eventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
+          elementState.HasState(ElementState::INDETERMINATE);
       bool vertical = IsVerticalProgress(stateFrame);
 
       nsIContent* content = aFrame->GetContent();

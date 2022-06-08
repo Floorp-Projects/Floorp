@@ -175,7 +175,7 @@ void ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
 }
 
 void ServoStyleSet::InvalidateStyleForDocumentStateChanges(
-    EventStates aStatesChanged) {
+    DocumentState aStatesChanged) {
   MOZ_ASSERT(mDocument);
   MOZ_ASSERT(!aStatesChanged.IsEmpty());
 
@@ -200,8 +200,9 @@ void ServoStyleSet::InvalidateStyleForDocumentStateChanges(
     }
   });
 
-  Servo_InvalidateStyleForDocStateChanges(
-      root, mRawSet.get(), &nonDocumentStyles, aStatesChanged.ServoValue());
+  Servo_InvalidateStyleForDocStateChanges(root, mRawSet.get(),
+                                          &nonDocumentStyles,
+                                          aStatesChanged.GetInternalValue());
 }
 
 static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
@@ -1326,14 +1327,15 @@ bool ServoStyleSet::MightHaveAttributeDependency(const Element& aElement,
 }
 
 bool ServoStyleSet::HasStateDependency(const Element& aElement,
-                                       EventStates aState) const {
+                                       dom::ElementState aState) const {
   return Servo_StyleSet_HasStateDependency(mRawSet.get(), &aElement,
-                                           aState.ServoValue());
+                                           aState.GetInternalValue());
 }
 
-bool ServoStyleSet::HasDocumentStateDependency(EventStates aState) const {
+bool ServoStyleSet::HasDocumentStateDependency(
+    dom::DocumentState aState) const {
   return Servo_StyleSet_HasDocumentStateDependency(mRawSet.get(),
-                                                   aState.ServoValue());
+                                                   aState.GetInternalValue());
 }
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ReparentComputedStyle(

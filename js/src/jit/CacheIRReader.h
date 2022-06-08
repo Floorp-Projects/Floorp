@@ -100,6 +100,7 @@ class MOZ_RAII CacheIRReader {
     return wasm::ValType::Kind(buffer_.readByte());
   }
   gc::AllocKind allocKind() { return gc::AllocKind(buffer_.readByte()); }
+  CompletionKind completionKind() { return CompletionKind(buffer_.readByte()); }
 
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   uint32_t rttValueKey() { return buffer_.readByte(); }

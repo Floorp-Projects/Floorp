@@ -164,6 +164,12 @@ class MOZ_STACK_CLASS CallInfo {
     return args_.reserve(numActuals);
   }
 
+  void initForCloseIter(MDefinition* iter, MDefinition* callee) {
+    MOZ_ASSERT(args_.empty());
+    setCallee(callee);
+    setThis(iter);
+  }
+
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
   [[nodiscard]] bool pushCallStack(MBasicBlock* current) {

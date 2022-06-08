@@ -2993,7 +2993,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
   // for all in-process documents.
   PreOrderWalk([isActivateEvent](BrowsingContext* aContext) {
     if (RefPtr<Document> doc = aContext->GetExtantDocument()) {
-      doc->UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
+      doc->UpdateDocumentStates(DocumentState::WINDOW_INACTIVE, true);
 
       RefPtr<nsPIDOMWindowInner> win = doc->GetInnerWindow();
       RefPtr<MediaDevices> devices;

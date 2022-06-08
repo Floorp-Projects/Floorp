@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+# Note: `Makefile.in` is not allowed to modify `DEFINES`, so we modify
+# `MAKE_JAR_FLAGS` directly.
+
+# Note: we use 'es-ES' badge for all Spanish locales like in Bedrock.
+# See https://github.com/mozilla/bedrock/blob/67fd925b4d621dde0e48e27738c4b9c397ac5169/bedrock/mozorg/templatetags/misc.py#L58.
+
+# Note: it's probably possible to format these lists so they're easier to
+# modify.
+
+ifneq (,$(filter es%,$(AB_CD)))
+MAKE_JARS_FLAGS += -DANDROID_MARKETPLACE_AB_CD=es-ES
+MAKE_JARS_FLAGS += -DIOS_MARKETPLACE_AB_CD=es-ES
+else
+ifneq (,$(filter $(AB_CD),af ar az be bg bn-BD bn-IN ca cs da de el es-ES et eu fa fi fr gl gu-IN he hi-IN hr hu hy-AM id is it ja ka kk km kn ko lo lt lv mk ml mr ms my nb-NO ne-NP nl nn-NO pa-IN pl pt-BR pt-PT ro ru si sk sl sq sr sv-SE sw ta te th tr uk ur uz vi zh-CN zh-TW zu))
+MAKE_JARS_FLAGS += -DANDROID_MARKETPLACE_AB_CD=$(AB_CD)
+endif # Android, does not start with es.
+ifneq (,$(filter $(AB_CD),ar az bg cs da de el es-ES et fi fr he hu id it ja ko lt lv ms mt nb-NO nl nn-NO pl pt-BR pt-PT ro ru sk sl sv-SE th tr vi zh-CN zh-TW))
+MAKE_JARS_FLAGS += -DIOS_MARKETPLACE_AB_CD=$(AB_CD)
+endif # iOS, does not start with es.
+endif # starts with es.

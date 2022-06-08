@@ -6,7 +6,6 @@
 
 #include "nsRangeFrame.h"
 
-#include "mozilla/EventStates.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 
