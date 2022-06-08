@@ -30,7 +30,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -41,21 +43,20 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gExternalAppLauncher",
   "@mozilla.org/uriloader/external-helper-app-service;1",
   Ci.nsPIExternalAppLauncher
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gExternalHelperAppService",
   "@mozilla.org/uriloader/external-helper-app-service;1",
   Ci.nsIExternalHelperAppService
 );
 
-/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(
-  this,
+  lazy,
   "DownloadIntegration",
   "resource://gre/modules/DownloadIntegration.jsm"
 );
@@ -135,7 +136,7 @@ const kProgressUpdateIntervalMs = 400;
  * managed by the user interface and persisted across sessions.
  */
 var Download = function() {
-  this._deferSucceeded = PromiseUtils.defer();
+  this._deferSucceeded = lazy.PromiseUtils.defer();
 };
 
 Download.prototype = {
@@ -402,7 +403,7 @@ Download.prototype = {
 
     // Create a new deferred object and an associated promise before starting
     // the actual download.  We store it on the download as the current attempt.
-    let deferAttempt = PromiseUtils.defer();
+    let deferAttempt = lazy.PromiseUtils.defer();
     let currentAttempt = deferAttempt.promise;
     this._currentAttempt = currentAttempt;
 
@@ -480,13 +481,17 @@ Download.prototype = {
           }
 
           // Disallow download if parental controls service restricts it.
-          if (await DownloadIntegration.shouldBlockForParentalControls(this)) {
+          if (
+            await lazy.DownloadIntegration.shouldBlockForParentalControls(this)
+          ) {
             throw new DownloadError({ becauseBlockedByParentalControls: true });
           }
 
           // Disallow download if needed runtime permissions have not been granted
           // by user.
-          if (await DownloadIntegration.shouldBlockForRuntimePermissions()) {
+          if (
+            await lazy.DownloadIntegration.shouldBlockForRuntimePermissions()
+          ) {
             throw new DownloadError({
               becauseBlockedByRuntimePermissions: true,
             });
@@ -610,7 +615,7 @@ Download.prototype = {
    * @rejects  JavaScript exception if any of the operations failed.
    */
   async _succeed() {
-    await DownloadIntegration.downloadDone(this);
+    await lazy.DownloadIntegration.downloadDone(this);
 
     this._deferSucceeded.resolve();
 
@@ -620,8 +625,8 @@ Download.prototype = {
       // Always schedule files to be deleted at the end of the private browsing
       // mode, regardless of the value of the pref.
       if (this.source.isPrivate) {
-        gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
-          new FileUtils.File(this.target.path)
+        lazy.gExternalAppLauncher.deleteTemporaryPrivateFileWhenPossible(
+          new lazy.FileUtils.File(this.target.path)
         );
       } else if (
         Services.prefs.getBoolPref("browser.helperApps.deleteTempFileOnExit") &&
@@ -630,8 +635,8 @@ Download.prototype = {
           false
         )
       ) {
-        gExternalAppLauncher.deleteTemporaryFileOnExit(
-          new FileUtils.File(this.target.path)
+        lazy.gExternalAppLauncher.deleteTemporaryFileOnExit(
+          new lazy.FileUtils.File(this.target.path)
         );
       }
     }
@@ -695,8 +700,8 @@ Download.prototype = {
           if (err.becauseTargetFailed) {
             // In case we cannot write to the target file
             // retry with a new unique name
-            let uniquePath = DownloadPaths.createNiceUniqueFile(
-              new FileUtils.File(this.target.path)
+            let uniquePath = lazy.DownloadPaths.createNiceUniqueFile(
+              new lazy.FileUtils.File(this.target.path)
             ).path;
             this.target.path = uniquePath;
             return this.start();
@@ -708,7 +713,7 @@ Download.prototype = {
           this._notifyChange();
         });
       this._notifyChange();
-      this._promiseUnblock = DownloadIntegration.downloadDone(this);
+      this._promiseUnblock = lazy.DownloadIntegration.downloadDone(this);
       return this._promiseUnblock;
     }
 
@@ -819,7 +824,7 @@ Download.prototype = {
       Services.telemetry.scalarAdd("downloads.file_opened", 1);
     }
 
-    return DownloadIntegration.launchDownload(this, options);
+    return lazy.DownloadIntegration.launchDownload(this, options);
   },
 
   /*
@@ -836,7 +841,7 @@ Download.prototype = {
    *           the containing folder.
    */
   showContainingDirectory: function D_showContainingDirectory() {
-    return DownloadIntegration.showContainingDirectory(this.target.path);
+    return lazy.DownloadIntegration.showContainingDirectory(this.target.path);
   },
 
   /**
@@ -983,8 +988,10 @@ Download.prototype = {
     }
 
     try {
-      let sourceUri = NetUtil.newURI(this.source.url);
-      let targetUri = NetUtil.newURI(new FileUtils.File(this.target.path));
+      let sourceUri = lazy.NetUtil.newURI(this.source.url);
+      let targetUri = lazy.NetUtil.newURI(
+        new lazy.FileUtils.File(this.target.path)
+      );
       return sourceUri.equals(targetUri);
     } catch (ex) {
       return false;
@@ -1532,7 +1539,7 @@ DownloadSource.prototype = {
     if (this.referrerInfo && isString(this.referrerInfo)) {
       serializable.referrerInfo = this.referrerInfo;
     } else if (this.referrerInfo) {
-      serializable.referrerInfo = E10SUtils.serializeReferrerInfo(
+      serializable.referrerInfo = lazy.E10SUtils.serializeReferrerInfo(
         this.referrerInfo
       );
     }
@@ -1540,13 +1547,13 @@ DownloadSource.prototype = {
     if (this.loadingPrincipal) {
       serializable.loadingPrincipal = isString(this.loadingPrincipal)
         ? this.loadingPrincipal
-        : E10SUtils.serializePrincipal(this.loadingPrincipal);
+        : lazy.E10SUtils.serializePrincipal(this.loadingPrincipal);
     }
 
     if (this.cookieJarSettings) {
       serializable.cookieJarSettings = isString(this.cookieJarSettings)
         ? this.cookieJarSettings
-        : E10SUtils.serializeCookieJarSettings(this.cookieJarSettings);
+        : lazy.E10SUtils.serializeCookieJarSettings(this.cookieJarSettings);
     }
 
     serializeUnknownProperties(this, serializable);
@@ -1614,7 +1621,7 @@ DownloadSource.fromSerializable = function(aSerializable) {
       if (aSerializable.referrerInfo instanceof Ci.nsIReferrerInfo) {
         source.referrerInfo = aSerializable.referrerInfo;
       } else {
-        source.referrerInfo = E10SUtils.deserializeReferrerInfo(
+        source.referrerInfo = lazy.E10SUtils.deserializeReferrerInfo(
           aSerializable.referrerInfo
         );
       }
@@ -1625,7 +1632,7 @@ DownloadSource.fromSerializable = function(aSerializable) {
       if (aSerializable.loadingPrincipal instanceof Ci.nsIPrincipal) {
         source.loadingPrincipal = aSerializable.loadingPrincipal;
       } else {
-        source.loadingPrincipal = E10SUtils.deserializePrincipal(
+        source.loadingPrincipal = lazy.E10SUtils.deserializePrincipal(
           aSerializable.loadingPrincipal
         );
       }
@@ -1642,7 +1649,7 @@ DownloadSource.fromSerializable = function(aSerializable) {
       if (aSerializable.cookieJarSettings instanceof Ci.nsICookieJarSettings) {
         source.cookieJarSettings = aSerializable.cookieJarSettings;
       } else {
-        source.cookieJarSettings = E10SUtils.deserializeCookieJarSettings(
+        source.cookieJarSettings = lazy.E10SUtils.deserializeCookieJarSettings(
           aSerializable.cookieJarSettings
         );
       }
@@ -2086,7 +2093,9 @@ DownloadSaver.prototype = {
    */
   addToHistory() {
     if (AppConstants.MOZ_PLACES) {
-      DownloadHistory.addDownloadToHistory(this.download).catch(Cu.reportError);
+      lazy.DownloadHistory.addDownloadToHistory(this.download).catch(
+        Cu.reportError
+      );
     }
   },
 
@@ -2217,10 +2226,10 @@ DownloadCopySaver.prototype = {
     // download is in progress.
     try {
       // If the file already exists, don't delete its contents yet.
-      let file = await OS.File.open(targetPath, { write: true });
+      let file = await lazy.OS.File.open(targetPath, { write: true });
       await file.close();
     } catch (ex) {
-      if (!(ex instanceof OS.File.Error)) {
+      if (!(ex instanceof lazy.OS.File.Error)) {
         throw ex;
       }
       // Throw a DownloadError indicating that the operation failed because of
@@ -2231,7 +2240,7 @@ DownloadCopySaver.prototype = {
       throw error;
     }
 
-    let deferSaveComplete = PromiseUtils.defer();
+    let deferSaveComplete = lazy.PromiseUtils.defer();
 
     if (this._canceled) {
       // Don't create the BackgroundFileSaver object if we have been
@@ -2348,7 +2357,7 @@ DownloadCopySaver.prototype = {
               // Only the first, outermost encoding is considered.
               let encoding = aRequest.contentEncodings.getNext();
               if (encoding) {
-                aRequest.applyConversion = gExternalHelperAppService.applyDecodingForExtension(
+                aRequest.applyConversion = lazy.gExternalHelperAppService.applyDecodingForExtension(
                   uri.fileExtension,
                   encoding
                 );
@@ -2390,13 +2399,13 @@ DownloadCopySaver.prototype = {
 
             // Use a part file, determining if we should keep it on failure.
             backgroundFileSaver.setTarget(
-              new FileUtils.File(partFilePath),
+              new lazy.FileUtils.File(partFilePath),
               keepPartialData
             );
           } else {
             // Set the final target file, and delete it on failure.
             backgroundFileSaver.setTarget(
-              new FileUtils.File(targetPath),
+              new lazy.FileUtils.File(targetPath),
               false
             );
           }
@@ -2446,7 +2455,7 @@ DownloadCopySaver.prototype = {
         // notifications.
         let channel;
         if (download.source.loadingPrincipal) {
-          channel = NetUtil.newChannel({
+          channel = lazy.NetUtil.newChannel({
             uri: download.source.url,
             contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
             loadingPrincipal: download.source.loadingPrincipal,
@@ -2457,7 +2466,7 @@ DownloadCopySaver.prototype = {
               Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
           });
         } else {
-          channel = NetUtil.newChannel({
+          channel = lazy.NetUtil.newChannel({
             uri: download.source.url,
             contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
             loadUsingSystemPrincipal: true,
@@ -2589,7 +2598,7 @@ DownloadCopySaver.prototype = {
     let {
       shouldBlock,
       verdict,
-    } = await DownloadIntegration.shouldBlockForReputationCheck(download);
+    } = await lazy.DownloadIntegration.shouldBlockForReputationCheck(download);
     if (shouldBlock) {
       Services.telemetry
         .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")
@@ -2601,7 +2610,7 @@ DownloadCopySaver.prototype = {
       // DownloadIntegration. We will always remove the file when the
       // download did not use a partial file path, meaning it
       // currently has its final filename.
-      if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
+      if (!lazy.DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
         await this.removeData(!partFilePath);
       } else {
         newProperties.hasBlockedData = true;
@@ -2622,8 +2631,8 @@ DownloadCopySaver.prototype = {
         if (e.name === "NotAllowedError") {
           // In case we cannot write to the target file
           // retry with a new unique name
-          let uniquePath = DownloadPaths.createNiceUniqueFile(
-            new FileUtils.File(targetPath)
+          let uniquePath = lazy.DownloadPaths.createNiceUniqueFile(
+            new lazy.FileUtils.File(targetPath)
           ).path;
           await IOUtils.move(partFilePath, uniquePath);
           this.download.target.path = uniquePath;
@@ -2746,8 +2755,8 @@ DownloadCopySaver.fromSerializable = function(aSerializable) {
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
 var DownloadLegacySaver = function() {
-  this.deferExecuted = PromiseUtils.defer();
-  this.deferCanceled = PromiseUtils.defer();
+  this.deferExecuted = lazy.PromiseUtils.defer();
+  this.deferCanceled = lazy.PromiseUtils.defer();
 };
 
 DownloadLegacySaver.prototype = {
@@ -2967,12 +2976,12 @@ DownloadLegacySaver.prototype = {
       if (!this.download.target.partFilePath) {
         try {
           // This atomic operation is more efficient than an existence check.
-          let file = await OS.File.open(this.download.target.path, {
+          let file = await lazy.OS.File.open(this.download.target.path, {
             create: true,
           });
           await file.close();
         } catch (ex) {
-          if (!(ex instanceof OS.File.Error) || !ex.becauseExists) {
+          if (!(ex instanceof lazy.OS.File.Error) || !ex.becauseExists) {
             throw ex;
           }
         }
