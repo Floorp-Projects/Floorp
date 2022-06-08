@@ -12,7 +12,6 @@ CompiledModules(
     "getDirectories.js",
     "getURL.js",
     "index.js",
-    "sortTree.js",
     "treeOrder.js",
     "updateTree.js",
     "utils.js",
