@@ -36,7 +36,7 @@
 #include "prnetdb.h"
 #include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
-#include "mozilla/StorageAccess.h"
+#include "mozilla/ContentBlocking.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURIMutator.h"
 #include "mozilla/PermissionManager.h"
@@ -785,7 +785,8 @@ BasePrincipal::HasFirstpartyStorageAccess(mozIDOMWindow* aCheckWindow,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  *aOutAllowed = ShouldAllowAccessFor(win, uri, aRejectedReason);
+  *aOutAllowed =
+      ContentBlocking::ShouldAllowAccessFor(win, uri, aRejectedReason);
   return NS_OK;
 }
 

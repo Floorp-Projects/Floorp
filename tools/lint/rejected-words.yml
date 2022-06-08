@@ -323,7 +323,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/actors/RemotePageChild.jsm
         - toolkit/actors/WebChannelChild.jsm
         - toolkit/components/aboutperformance/content/aboutPerformance.js
-        - toolkit/components/antitracking/StorageAccessAPIHelper.cpp
+        - toolkit/components/antitracking/ContentBlocking.cpp
         - toolkit/components/antitracking/PurgeTrackerService.jsm
         - toolkit/components/antitracking/StorageAccess.cpp
         - toolkit/components/antitracking/test/browser/antitracking_head.js
