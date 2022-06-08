@@ -361,7 +361,7 @@ class BrowserFragment :
 
         // Feature that handles MediaSession state changes
         fullScreenMediaSessionFeature.set(
-            feature = MediaSessionFullscreenFeature(requireActivity(), requireComponents.store),
+            feature = MediaSessionFullscreenFeature(requireActivity(), requireComponents.store, tryGetCustomTabId()),
             owner = this,
             view = view
         )
