@@ -128,6 +128,10 @@ cargo_metadata = { path = "build/rust/cargo_metadata" }
 # Patch nom 5 to nom 6
 nom = { path = "build/rust/nom" }
 
+# Patch parking_lot 0.12 down to 0.11, which is compatible for most crates that use it, to avoid
+# dependencies on windows-sys.
+parking_lot = { path = "build/rust/parking_lot" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
