@@ -12,8 +12,9 @@ const {
 const { ContentPrefStore } = ChromeUtils.import(
   "resource://gre/modules/ContentPrefStore.jsm"
 );
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Sqlite",
   "resource://gre/modules/Sqlite.jsm"
 );
@@ -1185,8 +1186,8 @@ ContentPrefService2.prototype = {
       return this._getConnection(++aAttemptNum);
     };
     try {
-      conn = await Sqlite.openConnection({ path });
-      Sqlite.shutdown.addBlocker(
+      conn = await lazy.Sqlite.openConnection({ path });
+      lazy.Sqlite.shutdown.addBlocker(
         "Closing ContentPrefService2 connection.",
         () => conn.close()
       );
