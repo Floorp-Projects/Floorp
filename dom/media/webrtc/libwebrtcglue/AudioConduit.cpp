@@ -744,7 +744,7 @@ RtpExtList WebrtcAudioConduit::FilterExtensions(LocalDirection aDirection,
     }
 
     // csrc-audio-level RTP header extension
-    if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelUri) {
+    if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelsUri) {
       if (isSend) {
         continue;
       }
