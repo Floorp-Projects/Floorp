@@ -2811,6 +2811,8 @@ template <typename T, typename U, typename Ops>
 static void SortByColumn(SharedMem<U*> data, size_t length, SharedMem<U*> aux,
                          uint8_t col) {
   static_assert(std::is_unsigned_v<U>, "SortByColumn sorts on unsigned values");
+  static_assert(std::is_same_v<Ops, UnsharedOps>,
+                "SortByColumn only works on unshared data");
 
   // |counts| is used to compute the starting index position for each key.
   // Letting counts[0] always be 0, simplifies the transform step below.
@@ -2849,14 +2851,8 @@ static void SortByColumn(SharedMem<U*> data, size_t length, SharedMem<U*> aux,
     U val = Ops::load(data + i);
     uint8_t b = ByteAtCol(val);
     size_t j = counts[b]++;
-    if constexpr (std::is_same_v<Ops, SharedOps>) {
-      // Watch out for concurrent writes on shared memory. Invoke the "sort
-      // order is implementation-defined" rule from the spec and leave the rest
-      // unsorted.
-      if (j >= length) {
-        return;
-      }
-    }
+    MOZ_ASSERT(j < length,
+               "index is in bounds when |data| can't be modified concurrently");
     UnsharedOps::store(aux + j, val);
   }
 
@@ -2900,8 +2896,30 @@ static bool TypedArrayRadixSort(JSContext* cx, TypedArrayObject* typedArray) {
   SharedMem<UnsignedT*> data =
       typedArray->dataPointerEither().cast<UnsignedT*>();
 
+  // Always create a copy when sorting shared memory backed typed arrays to
+  // ensure concurrent write accesses don't lead to computing bad indices.
+  SharedMem<UnsignedT*> unshared;
+  SharedMem<UnsignedT*> shared;
+  UniquePtr<UnsignedT[], JS::FreePolicy> ptrUnshared;
+  if constexpr (std::is_same_v<Ops, SharedOps>) {
+    ptrUnshared = cx->make_pod_array<UnsignedT>(length);
+    if (!ptrUnshared) {
+      return false;
+    }
+    unshared = SharedMem<UnsignedT*>::unshared(ptrUnshared.get());
+    shared = data;
+
+    Ops::podCopy(unshared, shared, length);
+
+    data = unshared;
+  }
+
   for (uint8_t col = 0; col < sizeof(UnsignedT); col++) {
-    SortByColumn<T, UnsignedT, Ops>(data, length, aux, col);
+    SortByColumn<T, UnsignedT, UnsharedOps>(data, length, aux, col);
+  }
+
+  if constexpr (std::is_same_v<Ops, SharedOps>) {
+    Ops::podCopy(shared, unshared, length);
   }
 
   return true;
