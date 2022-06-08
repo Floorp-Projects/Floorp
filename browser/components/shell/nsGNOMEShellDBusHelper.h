@@ -9,7 +9,6 @@
 #define __nsGNOMEShellDBusHelper_h__
 
 #include "mozilla/DBusHelpers.h"
-#include "nsIStringBundle.h"
 #include "nsINavHistoryService.h"
 
 #define MAX_SEARCH_RESULTS_NUM 9

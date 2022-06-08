@@ -208,5 +208,19 @@ void DrawTargetOffset::PopLayer() {
   SetPermitSubpixelAA(mDrawTarget->GetPermitSubpixelAA());
 }
 
+RefPtr<DrawTarget> DrawTargetOffset::CreateClippedDrawTarget(
+    const Rect& aBounds, SurfaceFormat aFormat) {
+  RefPtr<DrawTarget> result;
+  RefPtr<DrawTarget> dt =
+      mDrawTarget->CreateClippedDrawTarget(aBounds, aFormat);
+  if (dt) {
+    result = gfx::Factory::CreateOffsetDrawTarget(dt, mOrigin);
+    if (result) {
+      result->SetTransform(mTransform);
+    }
+  }
+  return result;
+}
+
 }  // namespace gfx
 }  // namespace mozilla

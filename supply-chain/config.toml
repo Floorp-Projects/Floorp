@@ -1022,7 +1022,7 @@ version = "1.10.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.ordered-float]]
-version = "1.1.1"
+version = "3.0.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.origin-trial-token]]
@@ -1230,7 +1230,7 @@ version = "0.2.8"
 criteria = "safe-to-deploy"
 
 [[unaudited.rkv]]
-version = "0.17.0"
+version = "0.17.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.ron]]

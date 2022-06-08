@@ -3,27 +3,36 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "rkv"
-version = "0.17.0"
-authors = ["Richard Newman <rnewman@twinql.com>", "Nan Jiang <najiang@mozilla.com>", "Myk Melez <myk@mykzilla.org>", "Victor Porof <vporof@mozilla.com>"]
+version = "0.17.1"
+authors = [
+    "Richard Newman <rnewman@twinql.com>",
+    "Nan Jiang <najiang@mozilla.com>",
+    "Myk Melez <myk@mykzilla.org>",
+    "Victor Porof <vporof@mozilla.com>",
+]
 exclude = ["/tests/envs/*"]
 description = "A simple, humane, typed key-value storage solution"
 homepage = "https://github.com/mozilla/rkv"
 documentation = "https://docs.rs/rkv"
 readme = "README.md"
-keywords = ["lmdb", "database", "storage"]
+keywords = [
+    "lmdb",
+    "database",
+    "storage",
+]
 categories = ["database"]
 license = "Apache-2.0"
 repository = "https://github.com/mozilla/rkv"
+
 [dependencies.arrayref]
 version = "0.3"
 
@@ -49,14 +58,17 @@ version = "0.14"
 version = "0.4.4"
 
 [dependencies.ordered-float]
-version = "1.0.1"
+version = "3.0.0"
 
 [dependencies.paste]
-version = "0.1.11"
+version = "1.0.6"
 
 [dependencies.serde]
 version = "1.0"
-features = ["derive", "rc"]
+features = [
+    "derive",
+    "rc",
+]
 
 [dependencies.serde_derive]
 version = "1.0"
@@ -69,6 +81,7 @@ version = "2.0"
 
 [dependencies.uuid]
 version = "0.8"
+
 [dev-dependencies.byteorder]
 version = "1"
 
@@ -78,7 +91,10 @@ version = "3"
 [features]
 db-dup-sort = []
 db-int-key = []
-default = ["db-dup-sort", "db-int-key"]
+default = [
+    "db-dup-sort",
+    "db-int-key",
+]
 no-canonicalize-path = []
 with-asan = ["lmdb-rkv/with-asan"]
 with-fuzzer = ["lmdb-rkv/with-fuzzer"]

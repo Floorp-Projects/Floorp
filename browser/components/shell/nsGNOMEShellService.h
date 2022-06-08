@@ -9,7 +9,6 @@
 #include "nsIGNOMEShellService.h"
 #include "nsToolkitShellService.h"
 #include "nsString.h"
-#include "mozilla/Attributes.h"
 #ifdef MOZ_ENABLE_DBUS
 #  include "nsGNOMEShellSearchProvider.h"
 #endif
