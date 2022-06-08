@@ -108,6 +108,11 @@ bool RetransmissionQueue::IsConsistent() const {
     }
   }
 
+  if (outstanding_data_.empty() &&
+      next_tsn_ != last_cumulative_tsn_ack_.next_value()) {
+    return false;
+  }
+
   return actual_outstanding_bytes == outstanding_bytes_ &&
          actual_outstanding_items == outstanding_items_ &&
          actual_to_be_retransmitted == to_be_retransmitted_;
