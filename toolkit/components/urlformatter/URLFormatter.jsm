@@ -24,14 +24,16 @@ const { AppConstants } = ChromeUtils.import(
 const PREF_APP_DISTRIBUTION = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION = "distribution.version";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Region",
   "resource://gre/modules/Region.jsm"
 );
@@ -84,7 +86,7 @@ nsURLFormatterService.prototype = {
       try {
         // When the geoip lookup failed to identify the region, we fallback to
         // the 'ZZ' region code to mean 'unknown'.
-        return Region.home || "ZZ";
+        return lazy.Region.home || "ZZ";
       } catch (e) {
         return "ZZ";
       }
@@ -131,7 +133,7 @@ nsURLFormatterService.prototype = {
     OS_VERSION() {
       return this.OSVersion;
     },
-    CHANNEL: () => UpdateUtils.UpdateChannel,
+    CHANNEL: () => lazy.UpdateUtils.UpdateChannel,
     MOZILLA_API_KEY: () => AppConstants.MOZ_MOZILLA_API_KEY,
     GOOGLE_LOCATION_SERVICE_API_KEY: () =>
       AppConstants.MOZ_GOOGLE_LOCATION_SERVICE_API_KEY,
