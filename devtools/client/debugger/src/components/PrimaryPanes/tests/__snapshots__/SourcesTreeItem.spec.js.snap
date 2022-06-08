@@ -47,7 +47,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -119,7 +118,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -219,7 +217,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -319,7 +316,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -393,7 +389,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -500,7 +495,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -597,7 +591,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -671,7 +664,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -773,7 +765,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -855,7 +846,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -917,7 +907,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -992,7 +981,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1062,7 +1050,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -1125,7 +1112,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -1201,7 +1187,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1272,7 +1257,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": true,
       "focusItem": [MockFunction],
@@ -1323,7 +1307,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={true}
           focusItem={[MockFunction]}
@@ -1385,7 +1368,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": true,
     "focusItem": [MockFunction],
@@ -1444,7 +1426,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -1505,7 +1486,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -1579,7 +1559,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -1648,7 +1627,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -1711,7 +1689,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -1787,7 +1764,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1858,7 +1834,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -1907,7 +1882,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -1967,7 +1941,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -2024,7 +1997,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": true,
       "focusItem": [MockFunction],
@@ -2075,7 +2047,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={true}
           focusItem={[MockFunction]}
@@ -2137,7 +2108,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": true,
     "focusItem": [MockFunction],
@@ -2196,7 +2166,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -2258,7 +2227,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={false}
           focusItem={[MockFunction]}
@@ -2333,7 +2301,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -2403,7 +2370,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -2466,7 +2432,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -2542,7 +2507,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -2613,7 +2577,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -2674,7 +2637,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -2748,7 +2710,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -2817,7 +2778,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -2890,7 +2850,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -2976,7 +2935,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -3057,7 +3015,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -3131,7 +3088,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -3218,7 +3174,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -3315,7 +3270,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -3388,7 +3342,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -3489,7 +3442,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -3585,7 +3537,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -3659,7 +3610,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={false}
           focusItem={[MockFunction]}
@@ -3761,7 +3711,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -3858,7 +3807,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -3931,7 +3879,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -4032,7 +3979,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
