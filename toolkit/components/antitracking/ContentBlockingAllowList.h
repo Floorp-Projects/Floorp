@@ -30,6 +30,7 @@ class ContentBlockingAllowList final {
                         bool aIsPrivateBrowsing, bool& aIsAllowListed);
 
   static bool Check(nsIHttpChannel* aChannel);
+  static bool Check(nsPIDOMWindowInner* aWindow);
 
   // Computes the principal used to check the content blocking allow list for a
   // top-level document based on the document principal.  This function is used
@@ -44,7 +45,6 @@ class ContentBlockingAllowList final {
  private:
   // Utility APIs for ContentBlocking.
   static bool Check(nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing);
-  static bool Check(nsPIDOMWindowInner* aWindow);
   static bool Check(nsICookieJarSettings* aCookieJarSettings);
 
   friend class ContentBlocking;
