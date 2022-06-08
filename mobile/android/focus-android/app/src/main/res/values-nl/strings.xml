@@ -298,8 +298,11 @@
     <string name="preference_security_biometric">Vingerafdruk voor ontgrendelen van app gebruiken</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Uw vingerafdruk kan %1$s ontgrendelen als er al een URL in de app is geopend. Stealth wordt ingeschakeld.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Uw vingerafdruk kan %1$s ontgrendelen als er al een URL in de app is geopend. Stealth wordt ingeschakeld.</string>
+
+    <string name="preference_security_biometric_summary2">Ontgrendel met vingerafdruk als u snelkoppelingen hebt toegevoegd of als een website al in %s is geopend.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
