@@ -88,7 +88,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    * Object state. This is a bitmask of NS_EVENT_STATEs epresenting the
    * current state of the object.
    */
-  mozilla::EventStates ObjectState() const;
+  mozilla::dom::ElementState ObjectState() const;
 
   ObjectType Type() const { return mType; }
 
@@ -447,8 +447,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    *
    * @param aNotify if false, only need to update the state of our element.
    */
-  void NotifyStateChanged(ObjectType aOldType, mozilla::EventStates aOldState,
-                          bool aNotify);
+  void NotifyStateChanged(ObjectType aOldType,
+                          mozilla::dom::ElementState aOldState, bool aNotify);
 
   /**
    * Returns a ObjectType value corresponding to the type of content we would

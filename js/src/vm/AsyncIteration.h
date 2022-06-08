@@ -283,7 +283,7 @@
 namespace js {
 
 class AsyncGeneratorObject;
-enum class CompletionKind;
+enum class CompletionKind : uint8_t;
 
 extern const JSClass AsyncGeneratorFunctionClass;
 

@@ -48,7 +48,7 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
       const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
   virtual void DestroyContent() override;
 
   // nsObjectLoadingContent

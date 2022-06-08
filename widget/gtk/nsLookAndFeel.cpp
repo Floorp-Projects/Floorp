@@ -1731,10 +1731,10 @@ void nsLookAndFeel::PerThemeData::Init() {
     }
 
     mThemedScrollbarThumbHover = ThemeColors::AdjustUnthemedScrollbarThumbColor(
-        mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
+        mThemedScrollbarThumb, dom::ElementState::HOVER);
     mThemedScrollbarThumbActive =
-        ThemeColors::AdjustUnthemedScrollbarThumbColor(mThemedScrollbarThumb,
-                                                       NS_EVENT_STATE_ACTIVE);
+        ThemeColors::AdjustUnthemedScrollbarThumbColor(
+            mThemedScrollbarThumb, dom::ElementState::ACTIVE);
   }
 
   // The label is not added to a parent widget, but shared for constructing

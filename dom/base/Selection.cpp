@@ -22,7 +22,6 @@
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
@@ -433,7 +432,7 @@ static bool IsEditorNode(const nsINode* aNode) {
   }
 
   auto* element = Element::FromNode(aNode);
-  return element && element->State().HasState(NS_EVENT_STATE_READWRITE);
+  return element && element->State().HasState(ElementState::READWRITE);
 }
 
 bool Selection::IsEditorSelection() const {

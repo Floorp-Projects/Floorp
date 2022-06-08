@@ -22,8 +22,7 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Encoding.h"  // for Encoding
-#include "mozilla/EventStates.h"
+#include "mozilla/Encoding.h"      // for Encoding
 #include "mozilla/IntegerRange.h"  // for IntegerRange
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
@@ -712,7 +711,7 @@ Element* HTMLEditor::FindSelectionRoot(const nsINode& aNode) const {
     // If the content is in read-write state but is not editable itself,
     // return it as the selection root.
     if (content->IsElement() &&
-        content->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
+        content->AsElement()->State().HasState(ElementState::READWRITE)) {
       return content->AsElement();
     }
     return nullptr;

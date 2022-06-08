@@ -32,10 +32,10 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
                "Someone messed up our nodeinfo");
   }
 
-  EventStates IntrinsicState() const override {
-    EventStates state = nsGenericHTMLElement::IntrinsicState();
+  ElementState IntrinsicState() const override {
+    ElementState state = nsGenericHTMLElement::IntrinsicState();
     if (mBroken) {
-      state |= NS_EVENT_STATE_BROKEN;
+      state |= ElementState::BROKEN;
     }
     return state;
   }

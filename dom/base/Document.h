@@ -28,7 +28,6 @@
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CallState.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/FunctionRef.h"
 #include "mozilla/HashTable.h"
@@ -349,22 +348,6 @@ enum class DeprecatedOperations : uint16_t {
   eDeprecatedOperationCount
 };
 #undef DEPRECATED_OPERATION
-
-// Document states
-
-// Window activation status
-#define NS_DOCUMENT_STATE_WINDOW_INACTIVE NS_DEFINE_EVENT_STATE_MACRO(0)
-// RTL locale: specific to the XUL localedir attribute.
-#define NS_DOCUMENT_STATE_RTL_LOCALE NS_DEFINE_EVENT_STATE_MACRO(1)
-// LTR locale: specific to the XUL localedir attribute. This is mutually
-// exclusive with the RTL bit, but the style system invalidation code is simpler
-// if we differentiate between the two states.
-#define NS_DOCUMENT_STATE_LTR_LOCALE NS_DEFINE_EVENT_STATE_MACRO(2)
-// Lightweight-theme status.
-#define NS_DOCUMENT_STATE_LWTHEME NS_DEFINE_EVENT_STATE_MACRO(3)
-
-#define NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS \
-  (NS_DOCUMENT_STATE_RTL_LOCALE | NS_DOCUMENT_STATE_LTR_LOCALE)
 
 class ExternalResourceMap {
   using SubDocEnumFunc = FunctionRef<CallState(Document&)>;
@@ -2076,16 +2059,16 @@ class Document : public nsINode,
 
   void NotifyAbortedLoad();
 
-  // notify that a content node changed state.  This must happen under
-  // a scriptblocker but NOT within a begin/end update.
-  void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
+  // Notify that an element changed state. This must happen under a
+  // scriptblocker but NOT within a begin/end update.
+  void ElementStateChanged(Element*, ElementState);
 
   // Update a set of document states that may have changed.
   // This should only be called by callers whose state is also reflected in the
   // implementation of Document::GetDocumentState.
   //
   // aNotify controls whether we notify our DocumentStatesChanged observers.
-  void UpdateDocumentStates(EventStates aMaybeChangedStates, bool aNotify);
+  void UpdateDocumentStates(DocumentState aMaybeChangedStates, bool aNotify);
 
   void ResetDocumentDirection();
 
@@ -3054,7 +3037,7 @@ class Document : public nsINode,
    */
   bool ComputeDocumentLWTheme() const;
   void ResetDocumentLWTheme() {
-    UpdateDocumentStates(NS_DOCUMENT_STATE_LWTHEME, true);
+    UpdateDocumentStates(DocumentState::LWTHEME, true);
   }
 
   // Whether we're a media document or not.
@@ -3069,12 +3052,7 @@ class Document : public nsINode,
     return MediaDocumentKind::NotMedia;
   }
 
-  /**
-   * Returns the document state.
-   * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
-   * Document.h.
-   */
-  EventStates GetDocumentState() const { return mDocumentState; }
+  DocumentState GetDocumentState() const { return mDocumentState; }
 
   nsISupports* GetCurrentContentSink();
 
@@ -4515,7 +4493,7 @@ class Document : public nsINode,
   // Last time we found any scroll linked effect in this document.
   TimeStamp mLastScrollLinkedEffectDetectionTime;
 
-  EventStates mDocumentState{NS_DOCUMENT_STATE_LTR_LOCALE};
+  DocumentState mDocumentState{DocumentState::LTR_LOCALE};
 
   RefPtr<Promise> mReadyForIdle;
 

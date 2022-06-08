@@ -2884,6 +2884,10 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
       ".close() on iterators is prohibited in self-hosted code because it "
       "can run user-modifiable iteration code");
 
+  if (iterKind == IteratorKind::Sync) {
+    return emit2(JSOp::CloseIter, uint8_t(completionKind));
+  }
+
   // Generate inline logic corresponding to IteratorClose (ES2021 7.4.6) and
   // AsyncIteratorClose (ES2021 7.4.7). Steps numbers apply to both operations.
   //

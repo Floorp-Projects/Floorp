@@ -2505,6 +2505,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(EndIter)
 
+    CASE(CloseIter) {
+      ReservedRooted<JSObject*> iter(&rootObject0, &REGS.sp[-1].toObject());
+      CompletionKind kind = CompletionKind(GET_UINT8(REGS.pc));
+      if (!CloseIterOperation(cx, iter, kind)) {
+        goto error;
+      }
+      REGS.sp--;
+    }
+    END_CASE(CloseIter)
+
     CASE(IsGenClosing) {
       bool b = REGS.sp[-1].isMagic(JS_GENERATOR_CLOSING);
       PUSH_BOOLEAN(b);
@@ -5428,5 +5438,56 @@ bool js::LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
           : env->as<DebugEnvironmentProxy>().environment();
 
   result.set(finalEnv.aliasedBinding(ec));
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-iteratorclose
+bool js::CloseIterOperation(JSContext* cx, HandleObject iter,
+                            CompletionKind kind) {
+  // Steps 1-2 are implicit.
+
+  // Step 3
+  RootedValue returnMethod(cx);
+  bool innerResult =
+      GetProperty(cx, iter, iter, cx->names().return_, &returnMethod);
+
+  // Step 4
+  RootedValue result(cx);
+  if (innerResult) {
+    // Step 4b
+    if (returnMethod.isNullOrUndefined()) {
+      return true;
+    }
+    // Step 4c
+    if (IsCallable(returnMethod)) {
+      RootedValue thisVal(cx, ObjectValue(*iter));
+      innerResult = Call(cx, returnMethod, thisVal, &result);
+    } else {
+      innerResult = ReportIsNotFunction(cx, returnMethod);
+    }
+  }
+
+  // Step 5
+  if (kind == CompletionKind::Throw) {
+    // If we close an iterator while unwinding for an exception,
+    // the initial exception takes priority over any exception thrown
+    // while closing the iterator.
+    if (cx->isExceptionPending()) {
+      cx->clearPendingException();
+    }
+    return true;
+  }
+
+  // Step 6
+  if (!innerResult) {
+    return false;
+  }
+
+  // Step 7
+  if (!result.isObject()) {
+    return ThrowCheckIsObject(cx, CheckIsObjectKind::IteratorReturn);
+  }
+
+  // Step 8
   return true;
 }

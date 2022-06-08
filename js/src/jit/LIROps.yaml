@@ -4,15 +4,15 @@
 
 # [SMDOC] LIR Opcodes
 # =======================
-# This file defines all LIR opcodes as well as LIR opcode class 
-# definitions. It is parsed by GenerateLIRFiles.py at build time to 
-# create LIROpsGenerated.h. Each opcode consists of a 
+# This file defines all LIR opcodes as well as LIR opcode class
+# definitions. It is parsed by GenerateLIRFiles.py at build time to
+# create LIROpsGenerated.h. Each opcode consists of a
 # name and a set of attributes that are described below. Unless
 # marked as required, attributes are optional.
 #
 # name [required]
 # ====
-# Opcode name. 
+# Opcode name.
 # Possible values:
 #   - opcode string: used as the name for LIR opcode.
 #
@@ -34,10 +34,10 @@
 # operands
 # ========
 # A list of operands to the LIR node. Each operand will be
-# passed into and set in the instruction's constructor. A simple getter 
-# will also be auto generated for the operand. Each operand in the 
+# passed into and set in the instruction's constructor. A simple getter
+# will also be auto generated for the operand. Each operand in the
 # following list is defined by its name and an type.
-# The type can be WordSized, BoxedValue, or Int64. 
+# The type can be WordSized, BoxedValue, or Int64.
 #
 #   For example:
 #     operands:
@@ -53,7 +53,7 @@
 #     const LAllocation* rhs() { return getOperand(0); }
 #
 #     static const size_t lhsIndex = 0;
-#     static const size_t rhsIndex = BOX_PIECES; 
+#     static const size_t rhsIndex = BOX_PIECES;
 #
 #   - attribute not specified (default): no code generated
 #   - list of operand names with their types: operand getters and setters
@@ -62,10 +62,10 @@
 # arguments
 # =========
 # A list of non-LIR node arguments to the LIR op class constructor
-# that are passed along with the operands. The arguments require 
+# that are passed along with the operands. The arguments require
 # both a name and a full type signature for each item in the list.
-# 
-# For example: 
+#
+# For example:
 #   offset: size_t
 #   type: MIRType
 #
@@ -73,7 +73,7 @@
 # in the LIR op class, as well as simple accessor for that variable. The
 # above arguments list will result in the following declarations and
 # accessors:
-#   
+#
 #   size_t offset_;
 #   MIRType type_;
 #
@@ -85,21 +85,21 @@
 #
 # num_temps
 # ========
-# Specifies the number of temporary virtual registers, LDefinitions, used by 
+# Specifies the number of temporary virtual registers, LDefinitions, used by
 # this LIR op.
 #   - attribute not specified (default): number of temps is set to 0
 #   - number of LDefinition temps: sets number of temps max 15
 #
 # call_instruction
 # ================
-# Used to define call instructions. 
+# Used to define call instructions.
 #   - attribute not specified (default): no code generated
 #   - true: generates a call to setIsCall in the op's constructor
 #
 # mir_op
 # ======
-# If a LIR instruction corresponds one-to-one with a particular MIR 
-# instruction, this will generate a method that returns that MIR 
+# If a LIR instruction corresponds one-to-one with a particular MIR
+# instruction, this will generate a method that returns that MIR
 # instruction.
 #   - attribute not specified (default): no code generated
 #   - true: generates a method to return MIR instruction
@@ -723,7 +723,7 @@
   operands:
     lhs: BoxedValue
     rhs: BoxedValue
- 
+
 # Not operation on an integer.
 - name: NotI
   result_type: WordSized
@@ -2155,6 +2155,12 @@
   num_temps: 3
   mir_op: true
 
+- name: CloseIterCache
+  operands:
+    iter: WordSized
+  num_temps: 1
+  mir_op: true
+
 # Read the number of actual arguments.
 - name: ArgumentsLength
   result_type: WordSized
@@ -3033,7 +3039,7 @@
 
 - name: GetPrototypeOf
   result_type: BoxedValue
-  operands: 
+  operands:
     target: WordSized
 
 - name: ObjectWithProto
@@ -3572,7 +3578,7 @@
 
 - name: Int64ToFloatingPoint
   gen_boilerplate: false
-#endif  
+#endif
 
 #ifdef JS_CODEGEN_MIPS32
 - name: BoxFloatingPoint

@@ -1539,6 +1539,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::MoreIter:
     case JSOp::IsNoIter:
     case JSOp::EndIter:
+    case JSOp::CloseIter:
     case JSOp::IsNullOrUndefined:
     case JSOp::In:
     case JSOp::HasOwn:

@@ -56,7 +56,7 @@ template <typename PaintBackendData>
 bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
       aFrame, aStyle, aElementState, aDocumentState, aColors);
@@ -99,7 +99,7 @@ bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
 bool ScrollbarDrawingGTK::PaintScrollbarThumb(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   return DoPaintScrollbarThumb(aDrawTarget, aRect, aScrollbarKind, aFrame,
                                aStyle, aElementState, aDocumentState, aColors,
@@ -109,7 +109,7 @@ bool ScrollbarDrawingGTK::PaintScrollbarThumb(
 bool ScrollbarDrawingGTK::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aElementState, const EventStates& aDocumentState,
+    const ElementState& aElementState, const DocumentState& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,

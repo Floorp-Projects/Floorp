@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLUnknownElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/EventStates.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {

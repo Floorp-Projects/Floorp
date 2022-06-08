@@ -21,7 +21,6 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
@@ -60,7 +59,7 @@ HTMLButtonElement::HTMLButtonElement(
       mInInternalActivate(false),
       mInhibitStateRestoration(aFromParser & FROM_PARSER_FRAGMENT) {
   // Set up our default state: enabled
-  AddStatesSilently(NS_EVENT_STATE_ENABLED);
+  AddStatesSilently(ElementState::ENABLED);
 }
 
 HTMLButtonElement::~HTMLButtonElement() = default;
@@ -394,15 +393,15 @@ bool HTMLButtonElement::RestoreState(PresState* aState) {
   return false;
 }
 
-EventStates HTMLButtonElement::IntrinsicState() const {
-  EventStates state =
+ElementState HTMLButtonElement::IntrinsicState() const {
+  ElementState state =
       nsGenericHTMLFormControlElementWithState::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
+      state |= ElementState::VALID | ElementState::USER_VALID;
     } else {
-      state |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+      state |= ElementState::INVALID | ElementState::USER_INVALID;
     }
   }
 

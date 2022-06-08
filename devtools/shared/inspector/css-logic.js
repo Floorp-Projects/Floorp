@@ -532,10 +532,10 @@ function hasVisitedState(node) {
     return false;
   }
 
-  const NS_EVENT_STATE_VISITED = 1 << 19;
+  const ELEMENT_STATE_VISITED = 1 << 19;
 
   return (
-    !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED) ||
+    !!(InspectorUtils.getContentState(node) & ELEMENT_STATE_VISITED) ||
     InspectorUtils.hasPseudoClassLock(node, ":visited")
   );
 }

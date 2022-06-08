@@ -38,7 +38,6 @@ namespace mozilla {
 
 class EditorBase;
 class EnterLeaveDispatcher;
-class EventStates;
 class IMEContentObserver;
 class ScrollbarsForWheel;
 class TextControlElement;
@@ -80,6 +79,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   friend class mozilla::EnterLeaveDispatcher;
   friend class mozilla::ScrollbarsForWheel;
   friend class mozilla::WheelTransaction;
+
+  using ElementState = dom::ElementState;
 
   virtual ~EventStateManager();
 
@@ -139,16 +140,16 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   already_AddRefed<nsIContent> GetEventTargetContent(WidgetEvent* aEvent);
 
   // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
-  static bool ManagesState(EventStates aState) {
-    return aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER ||
-           aState == NS_EVENT_STATE_DRAGOVER ||
-           aState == NS_EVENT_STATE_URLTARGET;
+  static bool ManagesState(ElementState aState) {
+    return aState == ElementState::ACTIVE || aState == ElementState::HOVER ||
+           aState == ElementState::DRAGOVER ||
+           aState == ElementState::URLTARGET;
   }
 
   /**
-   * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
+   * Notify that the given ElementState::* bit has changed for this content.
    * @param aContent Content which has changed states
-   * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS
+   * @param aState   Corresponding state flags such as ElementState::FOCUS
    * @return  Whether the content was able to change all states. Returns false
    *                  if a resulting DOM event causes the content node passed in
    *                  to not change states. Note, the frame for the content may
@@ -156,7 +157,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                  frame reconstructions that may occur, but this does not
    *                  affect the return value.
    */
-  bool SetContentState(nsIContent* aContent, EventStates aState);
+  bool SetContentState(nsIContent* aContent, ElementState aState);
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void ContentRemoved(dom::Document* aDocument,
@@ -1102,17 +1103,17 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   //
   // Only meant to be called from ContentRemoved and
   // NativeAnonymousContentRemoved.
-  void RemoveNodeFromChainIfNeeded(EventStates aState,
+  void RemoveNodeFromChainIfNeeded(ElementState aState,
                                    nsIContent* aContentRemoved, bool aNotify);
 
   bool IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const;
 
-  static inline void DoStateChange(dom::Element* aElement, EventStates aState,
+  static inline void DoStateChange(dom::Element* aElement, ElementState aState,
                                    bool aAddState);
-  static inline void DoStateChange(nsIContent* aContent, EventStates aState,
+  static inline void DoStateChange(nsIContent* aContent, ElementState aState,
                                    bool aAddState);
   static void UpdateAncestorState(nsIContent* aStartNode,
-                                  nsIContent* aStopBefore, EventStates aState,
+                                  nsIContent* aStopBefore, ElementState aState,
                                   bool aAddState);
   static void ResetLastOverForContent(
       const uint32_t& aIdx, const RefPtr<OverOutElementsWrapper>& aChunk,

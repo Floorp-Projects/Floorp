@@ -463,8 +463,8 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
 
 static bool StateChangeMayAffectFrame(const Element& aElement,
                                       const nsIFrame& aFrame,
-                                      EventStates aStates) {
-  const bool brokenChanged = aStates.HasState(NS_EVENT_STATE_BROKEN);
+                                      ElementState aStates) {
+  const bool brokenChanged = aStates.HasState(ElementState::BROKEN);
   if (aFrame.IsGeneratedContentFrame()) {
     if (aElement.IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage)) {
       return brokenChanged;
@@ -473,7 +473,7 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
     return false;
   }
 
-  const bool loadingChanged = aStates.HasState(NS_EVENT_STATE_LOADING);
+  const bool loadingChanged = aStates.HasState(ElementState::LOADING);
   if (!brokenChanged && !loadingChanged) {
     return false;
   }
@@ -497,7 +497,7 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
  * change.
  */
 static nsChangeHint ChangeForContentStateChange(const Element& aElement,
-                                                EventStates aStateMask) {
+                                                ElementState aStateMask) {
   auto changeHint = nsChangeHint(0);
 
   // Any change to a content state that affects which frames we construct
@@ -525,10 +525,10 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
         }
       }
     }
-    primaryFrame->ContentStatesChanged(aStateMask);
+    primaryFrame->ElementStateChanged(aStateMask);
   }
 
-  if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
+  if (aStateMask.HasState(ElementState::VISITED)) {
     // Exposing information to the page about whether the link is
     // visited or not isn't really something we can worry about here.
     // FIXME: We could probably do this a bit better.
@@ -536,7 +536,7 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
   }
 
   // This changes the applicable text-transform in the editor root.
-  if (aStateMask.HasState(NS_EVENT_STATE_REVEALED)) {
+  if (aStateMask.HasState(ElementState::REVEALED)) {
     // This is the same change hint as tweaking text-transform.
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
@@ -3220,18 +3220,12 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
   DoProcessPendingRestyles(ServoTraversalFlags::FlushThrottledAnimations);
 }
 
-void RestyleManager::ContentStateChanged(nsIContent* aContent,
-                                         EventStates aChangedBits) {
+void RestyleManager::ElementStateChanged(Element* aElement,
+                                         ElementState aChangedBits) {
   MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
-  if (!aContent->IsElement()) {
-    return;
-  }
-
-  Element& element = *aContent->AsElement();
-
-  const EventStates kVisitedAndUnvisited =
-      NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED;
+  const ElementState kVisitedAndUnvisited =
+      ElementState::VISITED | ElementState::UNVISITED;
 
   // When visited links are disabled, they cannot influence style for obvious
   // reasons.
@@ -3245,7 +3239,7 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // changes to unvisited or vice-versa, but not when we start or stop being a
   // link itself.
   if (aChangedBits.HasAllStates(kVisitedAndUnvisited)) {
-    if (!Gecko_VisitedStylesEnabled(element.OwnerDoc()) ||
+    if (!Gecko_VisitedStylesEnabled(aElement->OwnerDoc()) ||
         StaticPrefs::layout_css_always_repaint_on_unvisited()) {
       aChangedBits &= ~kVisitedAndUnvisited;
       if (aChangedBits.IsEmpty()) {
@@ -3254,8 +3248,8 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
     }
   }
 
-  if (auto changeHint = ChangeForContentStateChange(element, aChangedBits)) {
-    Servo_NoteExplicitHints(&element, RestyleHint{0}, changeHint);
+  if (auto changeHint = ChangeForContentStateChange(*aElement, aChangedBits)) {
+    Servo_NoteExplicitHints(aElement, RestyleHint{0}, changeHint);
   }
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
@@ -3263,8 +3257,8 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // We always take a snapshot for the LTR/RTL event states, since Servo doesn't
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
-  if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
-      !StyleSet()->HasStateDependency(element, aChangedBits)) {
+  if (!aChangedBits.HasAtLeastOneOfStates(ElementState::DIR_STATES) &&
+      !StyleSet()->HasStateDependency(*aElement, aChangedBits)) {
     return;
   }
 
@@ -3272,12 +3266,12 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   // undisplayed elements, since we don't know if it is needed.
   IncrementUndisplayedRestyleGeneration();
 
-  if (!element.HasServoData()) {
+  if (!aElement->HasServoData()) {
     return;
   }
 
-  ServoElementSnapshot& snapshot = SnapshotFor(element);
-  EventStates previousState = element.StyleState() ^ aChangedBits;
+  ServoElementSnapshot& snapshot = SnapshotFor(*aElement);
+  ElementState previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 }
 

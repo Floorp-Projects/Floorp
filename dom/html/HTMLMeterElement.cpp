@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLMeterElement.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLMeterElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meter)
@@ -24,8 +23,8 @@ HTMLMeterElement::~HTMLMeterElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
 
-EventStates HTMLMeterElement::IntrinsicState() const {
-  EventStates state = nsGenericHTMLElement::IntrinsicState();
+ElementState HTMLMeterElement::IntrinsicState() const {
+  ElementState state = nsGenericHTMLElement::IntrinsicState();
 
   state |= GetOptimumState();
 
@@ -202,7 +201,7 @@ double HTMLMeterElement::Optimum() const {
   return std::min(optimum, max);
 }
 
-EventStates HTMLMeterElement::GetOptimumState() const {
+ElementState HTMLMeterElement::GetOptimumState() const {
   /*
    * If the optimum value is in [minimum, low[,
    *     return if the value is in optimal, suboptimal or sub-suboptimal region
@@ -220,27 +219,27 @@ EventStates HTMLMeterElement::GetOptimumState() const {
 
   if (optimum < low) {
     if (value < low) {
-      return NS_EVENT_STATE_OPTIMUM;
+      return ElementState::OPTIMUM;
     }
     if (value <= high) {
-      return NS_EVENT_STATE_SUB_OPTIMUM;
+      return ElementState::SUB_OPTIMUM;
     }
-    return NS_EVENT_STATE_SUB_SUB_OPTIMUM;
+    return ElementState::SUB_SUB_OPTIMUM;
   }
   if (optimum > high) {
     if (value > high) {
-      return NS_EVENT_STATE_OPTIMUM;
+      return ElementState::OPTIMUM;
     }
     if (value >= low) {
-      return NS_EVENT_STATE_SUB_OPTIMUM;
+      return ElementState::SUB_OPTIMUM;
     }
-    return NS_EVENT_STATE_SUB_SUB_OPTIMUM;
+    return ElementState::SUB_SUB_OPTIMUM;
   }
   // optimum in [low, high]
   if (value >= low && value <= high) {
-    return NS_EVENT_STATE_OPTIMUM;
+    return ElementState::OPTIMUM;
   }
-  return NS_EVENT_STATE_SUB_OPTIMUM;
+  return ElementState::SUB_OPTIMUM;
 }
 
 JSObject* HTMLMeterElement::WrapNode(JSContext* aCx,

@@ -750,80 +750,11 @@ body {
     }
 
     .ios button {
-      background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en/ios.svg');
+      background-image: url('chrome://app-marketplace-icons/locale/ios.svg');
     }
 
     .android button {
-      background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/en/android.png');
-    }
-
-    @at-root:root {
-
-      &[lang|='de'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/de/android.png');
-        }
-      }
-
-      &[lang|='es'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/es/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/es/android.png');
-        }
-      }
-
-      &[lang|='fr'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/fr/android.png');
-        }
-      }
-
-      &[lang|='pt'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/pt/android.png');
-        }
-      }
-
-      &[lang|='ru'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/ru/android.png');
-        }
-      }
-
-      &[lang|='zh'] {
-
-        .ios button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/ios.svg');
-        }
-
-        .android button {
-          background-image: url('chrome://activity-stream/content/data/content/assets/app-marketplace-icons/zh/android.png');
-        }
-      }
+      background-image: url('chrome://app-marketplace-icons/locale/android.png');
     }
   }
 

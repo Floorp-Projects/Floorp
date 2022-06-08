@@ -66,7 +66,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormControlElementWithState,
 
   void UpdateBarredFromConstraintValidation();
   // Element
-  EventStates IntrinsicState() const override;
+  ElementState IntrinsicState() const override;
   /**
    * Called when an attribute is about to be changed
    */

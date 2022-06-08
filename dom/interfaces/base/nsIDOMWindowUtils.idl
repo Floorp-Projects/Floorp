@@ -2078,10 +2078,10 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute int32_t gpuProcessPid;
 
   /**
-   * Adds an EventStates bit to the element.
+   * Adds an ElementState bit to the element.
    *
    * The state string must be one of the following:
-   *   * (none yet; but for example "higlighted" for NS_EVENT_STATE_HIGHLIGHTED)
+   *   * (none yet; but for example "higlighted" for ElementState::HIGHLIGHTED)
    *
    * The supported state strings are defined in kManuallyManagedStates
    * in nsDOMWindowUtils.cpp.
@@ -2090,7 +2090,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                in AString state);
 
   /**
-   * Removes the specified EventStates bits from the element.
+   * Removes the specified ElementState bits from the element.
    *
    * See above for the strings that can be passed for |state|.
    */

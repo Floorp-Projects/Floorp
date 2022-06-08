@@ -123,6 +123,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   size_t frameNo_ = 0;
   JSFunction* nextCallee_ = nullptr;
 
+  BailoutKind bailoutKind_;
+
   // The baseline frames we will reconstruct on the heap are not
   // rooted, so GC must be suppressed.
   gc::AutoSuppressGC suppress_;
@@ -130,7 +132,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
  public:
   BaselineStackBuilder(JSContext* cx, const JSJitFrameIter& frameIter,
                        SnapshotIterator& iter,
-                       const ExceptionBailoutInfo* excInfo);
+                       const ExceptionBailoutInfo* excInfo,
+                       BailoutReason reason);
 
   [[nodiscard]] bool init() {
     MOZ_ASSERT(!header_);
@@ -159,6 +162,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   MutableHandleValueVector outermostFrameFormals() {
     return &outermostFrameFormals_;
   }
+  BailoutKind bailoutKind() const { return bailoutKind_; }
 
   inline JitFrameLayout* startFrame() { return frame_; }
 
@@ -467,7 +471,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
 BaselineStackBuilder::BaselineStackBuilder(JSContext* cx,
                                            const JSJitFrameIter& frameIter,
                                            SnapshotIterator& iter,
-                                           const ExceptionBailoutInfo* excInfo)
+                                           const ExceptionBailoutInfo* excInfo,
+                                           BailoutReason reason)
     : cx_(cx),
       frame_(static_cast<JitFrameLayout*>(frameIter.current())),
       iter_(iter),
@@ -476,11 +481,26 @@ BaselineStackBuilder::BaselineStackBuilder(JSContext* cx,
       fun_(frameIter.maybeCallee()),
       excInfo_(excInfo),
       icScript_(script_->jitScript()->icScript()),
+      bailoutKind_(iter.bailoutKind()),
       suppress_(cx) {
   MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
+  if (reason == BailoutReason::Invalidate) {
+    bailoutKind_ = BailoutKind::OnStackInvalidation;
+  }
 }
 
 bool BaselineStackBuilder::initFrame() {
+  // Get the pc and ResumeMode. If we are handling an exception, resume at the
+  // pc of the catch or finally block.
+  if (catchingException()) {
+    pc_ = excInfo_->resumePC();
+    resumeMode_ = mozilla::Some(ResumeMode::ResumeAt);
+  } else {
+    pc_ = script_->offsetToPC(iter_.pcOffset());
+    resumeMode_ = mozilla::Some(iter_.resumeMode());
+  }
+  op_ = JSOp(*pc_);
+
   // If we are catching an exception, we are bailing out to a catch or
   // finally block and this is the frame where we will resume. Usually the
   // expression stack should be empty in this case but there can be
@@ -491,7 +511,11 @@ bool BaselineStackBuilder::initFrame() {
     uint32_t totalFrameSlots = iter_.numAllocations();
     uint32_t fixedSlots = script_->nfixed();
     uint32_t argSlots = CountArgSlots(script_, fun_);
-    exprStackSlots_ = totalFrameSlots - fixedSlots - argSlots;
+    uint32_t intermediates = NumIntermediateValues(resumeMode());
+    exprStackSlots_ = totalFrameSlots - fixedSlots - argSlots - intermediates;
+
+    // Verify that there was no underflow.
+    MOZ_ASSERT(exprStackSlots_ <= totalFrameSlots);
   }
 
   resetFramePushed();
@@ -509,17 +533,6 @@ bool BaselineStackBuilder::initFrame() {
     return false;
   }
   prevFramePtr_ = virtualPointerAtStackOffset(0);
-
-  // Get the pc and ResumeMode. If we are handling an exception, resume at the
-  // pc of the catch or finally block.
-  if (catchingException()) {
-    pc_ = excInfo_->resumePC();
-    resumeMode_ = mozilla::Some(ResumeMode::ResumeAt);
-  } else {
-    pc_ = script_->offsetToPC(iter_.pcOffset());
-    resumeMode_ = mozilla::Some(iter_.resumeMode());
-  }
-  op_ = JSOp(*pc_);
 
   return true;
 }
@@ -845,6 +858,18 @@ bool BaselineStackBuilder::buildExpressionStack() {
     }
     if (!writeValue(v, "StackValue")) {
       return false;
+    }
+  }
+
+  if (resumeMode() == ResumeMode::ResumeAfterCheckIsObject) {
+    JitSpew(JitSpew_BaselineBailouts,
+            "      Checking that intermediate value is an object");
+    Value returnVal;
+    if (iter_.tryRead(&returnVal) && !returnVal.isObject()) {
+      MOZ_ASSERT(!returnVal.isMagic());
+      JitSpew(JitSpew_BaselineBailouts,
+              "      Not an object! Overwriting bailout kind");
+      bailoutKind_ = BailoutKind::ThrowCheckIsObject;
     }
   }
 
@@ -1235,9 +1260,9 @@ bool BaselineStackBuilder::finishLastFrame() {
       return false;
     }
     snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
-             BailoutKindString(iter_.bailoutKind()),
-             resumeAfter() ? "after" : "at", CodeName(op_),
-             PCToLineNumber(script_, pc_), filename, script_->lineno());
+             BailoutKindString(bailoutKind()), resumeAfter() ? "after" : "at",
+             CodeName(op_), PCToLineNumber(script_, pc_), filename,
+             script_->lineno());
     cx_->runtime()->geckoProfiler().markEvent("Bailout", buf.get());
   }
 
@@ -1265,7 +1290,7 @@ bool BaselineStackBuilder::envChainSlotCanBeOptimized() {
 bool jit::AssertBailoutStackDepth(JSContext* cx, JSScript* script,
                                   jsbytecode* pc, ResumeMode mode,
                                   uint32_t exprStackSlots) {
-  if (mode == ResumeMode::ResumeAfter) {
+  if (IsResumeAfter(mode)) {
     pc = GetNextPc(pc);
   }
 
@@ -1490,7 +1515,7 @@ bool BaselineStackBuilder::buildOneFrame() {
           PCToLineNumber(script_, pc()), script_->filename(), script_->lineno(),
           script_->column());
   JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
-          BailoutKindString(iter_.bailoutKind()));
+          BailoutKindString(bailoutKind()));
 #endif
 
   // If this was the last inline frame, or we are bailing out to a catch or
@@ -1508,7 +1533,8 @@ bool BaselineStackBuilder::buildOneFrame() {
 bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
                                const JSJitFrameIter& iter,
                                BaselineBailoutInfo** bailoutInfo,
-                               const ExceptionBailoutInfo* excInfo) {
+                               const ExceptionBailoutInfo* excInfo,
+                               BailoutReason reason) {
   MOZ_ASSERT(bailoutInfo != nullptr);
   MOZ_ASSERT(*bailoutInfo == nullptr);
   MOZ_ASSERT(iter.isBailoutJS());
@@ -1611,7 +1637,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   snapIter.spewBailingFrom();
 #endif
 
-  BaselineStackBuilder builder(cx, iter, snapIter, excInfo);
+  BaselineStackBuilder builder(cx, iter, snapIter, excInfo, reason);
   if (!builder.init()) {
     return false;
   }
@@ -1663,7 +1689,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   }
   JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");
 
-  BailoutKind bailoutKind = snapIter.bailoutKind();
+  BailoutKind bailoutKind = builder.bailoutKind();
 
   if (!builder.outermostFrameFormals().empty()) {
     // Set the first frame's formals, see the comment in InitFromBailout.
@@ -2070,6 +2096,10 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case BailoutKind::UninitializedLexical:
       HandleLexicalCheckFailure(cx, outerScript, innerScript);
       break;
+
+    case BailoutKind::ThrowCheckIsObject:
+      MOZ_ASSERT(!cx->isExceptionPending());
+      return ThrowCheckIsObject(cx, CheckIsObjectKind::IteratorReturn);
 
     case BailoutKind::IonExceptionDebugMode:
       // Return false to resume in HandleException with reconstructed

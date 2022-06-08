@@ -1893,18 +1893,17 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
  *
  **************************************************************/
 void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
+  mInputRegion = aInputRegion;
+
   if (!mWnd) {
     return;
   }
 
-  // TODO: Implement the input margin on windows (probably handling
-  // WM_NCHITTEST)?
   const bool transparent = aInputRegion.mFullyTransparent;
   LONG_PTR oldStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
   LONG_PTR newStyle = transparent ? (oldStyle | WS_EX_TRANSPARENT)
                                   : (oldStyle & ~WS_EX_TRANSPARENT);
   ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, newStyle);
-  mMouseTransparent = transparent;
 }
 
 /**************************************************************
@@ -2726,7 +2725,9 @@ void nsWindow::ResetLayout() {
                    SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
 
   // If hidden, just send the frame changed event for now.
-  if (!mIsVisible) return;
+  if (!mIsVisible) {
+    return;
+  }
 
   // Send a gecko size event to trigger reflow.
   RECT clientRc = {0};
@@ -2818,7 +2819,9 @@ void nsWindow::UpdateDarkModeToolbar() {
  * or removed entirely.
  */
 bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
-  if (!mCustomNonClient) return false;
+  if (!mCustomNonClient) {
+    return false;
+  }
 
   if (aSizeMode == -1) {
     aSizeMode = mFrameState->GetSizeMode();
@@ -5305,11 +5308,23 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
     }
 
     case WM_NCHITTEST: {
-      if (mMouseTransparent) {
+      if (mInputRegion.mFullyTransparent) {
         // Treat this window as transparent.
         *aRetValue = HTTRANSPARENT;
         result = true;
         break;
+      }
+
+      if (mInputRegion.mMargin) {
+        const LayoutDeviceIntPoint screenPoint(GET_X_LPARAM(lParam),
+                                               GET_Y_LPARAM(lParam));
+        LayoutDeviceIntRect screenRect = GetScreenBounds();
+        screenRect.Deflate(mInputRegion.mMargin);
+        if (!screenRect.Contains(screenPoint)) {
+          *aRetValue = HTTRANSPARENT;
+          result = true;
+          break;
+        }
       }
 
       /*
@@ -5372,7 +5387,9 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
        */
       UpdateGetWindowInfoCaptionStatus(FALSE != wParam);
 
-      if (!mCustomNonClient) break;
+      if (!mCustomNonClient) {
+        break;
+      }
 
       // There is a case that rendered result is not kept. Bug 1237617
       if (wParam == TRUE && !gfxEnv::DisableForcePresent() &&
@@ -8026,6 +8043,14 @@ bool nsWindow::EventIsInsideWindow(nsWindow* aWindow,
     DWORD pos = ::GetMessagePos();
     mp.x = GET_X_LPARAM(pos);
     mp.y = GET_Y_LPARAM(pos);
+  }
+
+  auto margin = aWindow->mInputRegion.mMargin;
+  if (margin > 0) {
+    r.top += margin;
+    r.bottom -= margin;
+    r.left += margin;
+    r.right -= margin;
   }
 
   // was the event inside this window?

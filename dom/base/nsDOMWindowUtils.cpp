@@ -4322,15 +4322,15 @@ nsDOMWindowUtils::GetGpuProcessPid(int32_t* aPid) {
 
 struct StateTableEntry {
   const char* mStateString;
-  EventStates mState;
+  ElementState mState;
 };
 
 static constexpr StateTableEntry kManuallyManagedStates[] = {
-    {"autofill", NS_EVENT_STATE_AUTOFILL},
+    {"autofill", ElementState::AUTOFILL},
     // :-moz-autofill-preview implies :autofill.
     {"-moz-autofill-preview",
-     NS_EVENT_STATE_AUTOFILL_PREVIEW | NS_EVENT_STATE_AUTOFILL},
-    {nullptr, EventStates()},
+     ElementState::AUTOFILL_PREVIEW | ElementState::AUTOFILL},
+    {nullptr, ElementState()},
 };
 
 static_assert(!kManuallyManagedStates[ArrayLength(kManuallyManagedStates) - 1]
@@ -4338,14 +4338,14 @@ static_assert(!kManuallyManagedStates[ArrayLength(kManuallyManagedStates) - 1]
               "last kManuallyManagedStates entry must be a sentinel with "
               "mStateString == nullptr");
 
-static EventStates GetEventStateForString(const nsAString& aStateString) {
+static ElementState GetEventStateForString(const nsAString& aStateString) {
   for (const StateTableEntry* entry = kManuallyManagedStates;
        entry->mStateString; ++entry) {
     if (aStateString.EqualsASCII(entry->mStateString)) {
       return entry->mState;
     }
   }
-  return EventStates();
+  return ElementState();
 }
 
 NS_IMETHODIMP
@@ -4355,7 +4355,7 @@ nsDOMWindowUtils::AddManuallyManagedState(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  EventStates state = GetEventStateForString(aStateString);
+  ElementState state = GetEventStateForString(aStateString);
   if (state.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -4371,7 +4371,7 @@ nsDOMWindowUtils::RemoveManuallyManagedState(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  EventStates state = GetEventStateForString(aStateString);
+  ElementState state = GetEventStateForString(aStateString);
   if (state.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }

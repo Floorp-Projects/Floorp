@@ -60,7 +60,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
+const kStateHover = 0x00000004; // ElementState::HOVER
 
 const {
   EVENT_TEXT_CHANGED,

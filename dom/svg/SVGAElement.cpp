@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAElementBinding.h"
@@ -266,7 +265,7 @@ void SVGAElement::GetLinkTarget(nsAString& aTarget) {
   }
 }
 
-EventStates SVGAElement::IntrinsicState() const {
+ElementState SVGAElement::IntrinsicState() const {
   return Link::LinkState() | SVGAElementBase::IntrinsicState();
 }
 

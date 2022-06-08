@@ -12,7 +12,6 @@ use crate::context::SharedStyleContext;
 #[cfg(feature = "gecko")]
 use crate::context::{PostAnimationTasks, UpdateAnimationsTasks};
 use crate::data::ElementData;
-use crate::element_state::ElementState;
 use crate::font_metrics::FontMetricsProvider;
 use crate::media_queries::Device;
 use crate::properties::{AnimationDeclarations, ComputedValues, PropertyDeclarationBlock};
@@ -23,6 +22,7 @@ use crate::traversal_flags::TraversalFlags;
 use crate::values::AtomIdent;
 use crate::{LocalName, Namespace, WeakAtom};
 use atomic_refcell::{AtomicRef, AtomicRefMut};
+use dom::ElementState;
 use selectors::matching::{QuirksMode, VisitedHandlingMode};
 use selectors::sink::Push;
 use selectors::Element as SelectorsElement;

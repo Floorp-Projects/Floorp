@@ -111,6 +111,9 @@ class MOZ_RAII CacheIROpsJitSpewer {
   void spewAllocKindImm(const char* name, gc::AllocKind kind) {
     out_.printf("%s AllocKind(%u)", name, unsigned(kind));
   }
+  void spewCompletionKindImm(const char* name, CompletionKind kind) {
+    out_.printf("%s CompletionKind(%u)", name, unsigned(kind));
+  }
 
  public:
   CacheIROpsJitSpewer(GenericPrinter& out, const char* prefix)
@@ -247,6 +250,9 @@ class MOZ_RAII CacheIROpsJSONSpewer {
     spewArgImpl(name, "Imm", unsigned(kind));
   }
   void spewAllocKindImm(const char* name, gc::AllocKind kind) {
+    spewArgImpl(name, "Imm", unsigned(kind));
+  }
+  void spewCompletionKindImm(const char* name, CompletionKind kind) {
     spewArgImpl(name, "Imm", unsigned(kind));
   }
 

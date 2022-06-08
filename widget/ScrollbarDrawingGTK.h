@@ -27,19 +27,19 @@ class ScrollbarDrawingGTK final : public ScrollbarDrawing {
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
                              ScrollbarKind, nsIFrame*, const ComputedStyle&,
-                             const EventStates& aElementState,
-                             const EventStates& aDocumentState, const Colors&,
+                             const ElementState& aElementState,
+                             const DocumentState& aDocumentState, const Colors&,
                              const DPIRatio&);
   bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
                            nsIFrame*, const ComputedStyle& aStyle,
-                           const EventStates& aElementState,
-                           const EventStates& aDocumentState, const Colors&,
+                           const ElementState& aElementState,
+                           const DocumentState& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect&,
                            ScrollbarKind, nsIFrame*,
                            const ComputedStyle& aStyle,
-                           const EventStates& aElementState,
-                           const EventStates& aDocumentState, const Colors&,
+                           const ElementState& aElementState,
+                           const DocumentState& aDocumentState, const Colors&,
                            const DPIRatio&) override;
 
   void RecomputeScrollbarParams() override;

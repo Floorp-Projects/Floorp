@@ -38,7 +38,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EditorBase.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MathAlgorithms.h"
@@ -188,7 +187,7 @@ role HyperTextAccessible::NativeRole() const {
 uint64_t HyperTextAccessible::NativeState() const {
   uint64_t states = AccessibleWrap::NativeState();
 
-  if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE)) {
+  if (mContent->AsElement()->State().HasState(dom::ElementState::READWRITE)) {
     states |= states::EDITABLE;
 
   } else if (mContent->IsHTMLElement(nsGkAtoms::article)) {

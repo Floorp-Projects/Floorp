@@ -39,7 +39,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_image.h"
@@ -1194,9 +1193,9 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
 }
 
 void nsImageLoadingContent::ForceImageState(bool aForce,
-                                            EventStates::InternalType aState) {
+                                            ElementState::InternalType aState) {
   mIsImageStateForced = aForce;
-  mForcedImageState = EventStates(aState);
+  mForcedImageState = ElementState(aState);
 }
 
 already_AddRefed<Promise> nsImageLoadingContent::RecognizeCurrentImageText(
@@ -1301,18 +1300,18 @@ CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
   return size;
 }
 
-EventStates nsImageLoadingContent::ImageState() const {
+ElementState nsImageLoadingContent::ImageState() const {
   if (mIsImageStateForced) {
     return mForcedImageState;
   }
 
-  EventStates states;
+  ElementState states;
 
   if (mBroken) {
-    states |= NS_EVENT_STATE_BROKEN;
+    states |= ElementState::BROKEN;
   }
   if (mLoading) {
-    states |= NS_EVENT_STATE_LOADING;
+    states |= ElementState::LOADING;
   }
 
   return states;

@@ -77,15 +77,15 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
   framePushedAtEnterStubFrame_ = masm.framePushed();
 #endif
 
-  MOZ_ASSERT(!compiler.preparedForVMCall_);
-  compiler.preparedForVMCall_ = true;
+  MOZ_ASSERT(!compiler.enteredStubFrame_);
+  compiler.enteredStubFrame_ = true;
   if (canGC == CallCanGC::CanGC) {
     compiler.makesGCCalls_ = true;
   }
 }
 void AutoStubFrame::leave(MacroAssembler& masm, bool calledIntoIon) {
-  MOZ_ASSERT(compiler.preparedForVMCall_);
-  compiler.preparedForVMCall_ = false;
+  MOZ_ASSERT(compiler.enteredStubFrame_);
+  compiler.enteredStubFrame_ = false;
 
 #ifdef DEBUG
   masm.setFramePushed(framePushedAtEnterStubFrame_);
@@ -98,7 +98,7 @@ void AutoStubFrame::leave(MacroAssembler& masm, bool calledIntoIon) {
 }
 
 #ifdef DEBUG
-AutoStubFrame::~AutoStubFrame() { MOZ_ASSERT(!compiler.preparedForVMCall_); }
+AutoStubFrame::~AutoStubFrame() { MOZ_ASSERT(!compiler.enteredStubFrame_); }
 #endif
 
 }  // namespace jit
@@ -124,7 +124,7 @@ void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm) {
 
 void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
                                                  TailCallVMFunctionId id) {
-  MOZ_ASSERT(!preparedForVMCall_);
+  MOZ_ASSERT(!enteredStubFrame_);
 
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
@@ -166,7 +166,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
     allocator.nextOp();
   } while (reader.more());
 
-  MOZ_ASSERT(!preparedForVMCall_);
+  MOZ_ASSERT(!enteredStubFrame_);
   masm.assumeUnreachable("Should have returned from IC");
 
   // Done emitting the main IC code. Now emit the failure paths.
@@ -2069,6 +2069,10 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
 #endif
       outputUnchecked_.emplace(R0);
       break;
+    case CacheKind::CloseIter:
+      MOZ_ASSERT(numInputs == 1);
+      allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
+      break;
   }
 
   // Baseline doesn't allocate float registers so none of them are live.
@@ -3154,5 +3158,51 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
 
   masm.bind(&done);
   masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
+    ObjOperandId iterId, ObjOperandId calleeId, CompletionKind kind,
+    uint32_t calleeNargs) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register iter = allocator.useRegister(masm, iterId);
+  Register callee = allocator.useRegister(masm, calleeId);
+
+  AutoScratchRegister code(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+
+  masm.loadJitCodeRaw(callee, code);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Call the return method.
+  masm.alignJitStackBasedOnNArgs(calleeNargs);
+  for (uint32_t i = 0; i < calleeNargs; i++) {
+    masm.pushValue(UndefinedValue());
+  }
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
+  EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
+  masm.Push(Imm32(0));  // argc is 0
+  masm.Push(callee);
+  masm.Push(scratch);
+
+  masm.callJit(code);
+
+  if (kind != CompletionKind::Throw) {
+    // Verify that the return value is an object.
+    Label success;
+    masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
+
+    masm.Push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
+    using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+    callVM<Fn, ThrowCheckIsObject>(masm);
+
+    masm.bind(&success);
+  }
+
+  stubFrame.leave(masm, true);
   return true;
 }

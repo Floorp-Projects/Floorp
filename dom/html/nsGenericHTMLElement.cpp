@@ -10,7 +10,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEContentObserver.h"
 #include "mozilla/IMEStateManager.h"
@@ -422,17 +421,17 @@ void nsGenericHTMLElement::UpdateEditableState(bool aNotify) {
   nsStyledElement::UpdateEditableState(aNotify);
 }
 
-EventStates nsGenericHTMLElement::IntrinsicState() const {
-  EventStates state = nsGenericHTMLElementBase::IntrinsicState();
+ElementState nsGenericHTMLElement::IntrinsicState() const {
+  ElementState state = nsGenericHTMLElementBase::IntrinsicState();
 
   if (GetDirectionality() == eDir_RTL) {
-    state |= NS_EVENT_STATE_RTL;
-    state &= ~NS_EVENT_STATE_LTR;
+    state |= ElementState::RTL;
+    state &= ~ElementState::LTR;
   } else {  // at least for HTML, directionality is exclusively LTR or RTL
     NS_ASSERTION(GetDirectionality() == eDir_LTR,
                  "HTML element's directionality must be either RTL or LTR");
-    state |= NS_EVENT_STATE_LTR;
-    state &= ~NS_EVENT_STATE_RTL;
+    state |= ElementState::LTR;
+    state &= ~ElementState::RTL;
   }
 
   return state;
@@ -661,38 +660,38 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
       // We don't want to have to keep getting the "dir" attribute in
       // IntrinsicState, so we manually recompute our dir-related event states
       // here and send the relevant update notifications.
-      EventStates dirStates;
+      ElementState dirStates;
       if (aValue && aValue->Type() == nsAttrValue::eEnum) {
         SetHasValidDir();
-        dirStates |= NS_EVENT_STATE_HAS_DIR_ATTR;
+        dirStates |= ElementState::HAS_DIR_ATTR;
         Directionality dirValue = (Directionality)aValue->GetEnumValue();
         if (dirValue == eDir_Auto) {
-          dirStates |= NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO;
+          dirStates |= ElementState::HAS_DIR_ATTR_LIKE_AUTO;
         } else {
           dir = dirValue;
           SetDirectionality(dir, aNotify);
           if (dirValue == eDir_LTR) {
-            dirStates |= NS_EVENT_STATE_DIR_ATTR_LTR;
+            dirStates |= ElementState::HAS_DIR_ATTR_LTR;
           } else {
             MOZ_ASSERT(dirValue == eDir_RTL);
-            dirStates |= NS_EVENT_STATE_DIR_ATTR_RTL;
+            dirStates |= ElementState::HAS_DIR_ATTR_RTL;
           }
         }
       } else {
         if (aValue) {
           // We have a value, just not a valid one.
-          dirStates |= NS_EVENT_STATE_HAS_DIR_ATTR;
+          dirStates |= ElementState::HAS_DIR_ATTR;
         }
         ClearHasValidDir();
         if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
-          dirStates |= NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO;
+          dirStates |= ElementState::HAS_DIR_ATTR_LIKE_AUTO;
         } else {
           recomputeDirectionality = true;
         }
       }
       // Now figure out what's changed about our dir states.
-      EventStates oldDirStates = State() & DIR_ATTR_STATES;
-      EventStates changedStates = dirStates ^ oldDirStates;
+      ElementState oldDirStates = State() & ElementState::DIR_ATTR_STATES;
+      ElementState changedStates = dirStates ^ oldDirStates;
       ToggleStates(changedStates, aNotify);
       if (recomputeDirectionality) {
         dir = RecomputeDirectionality(this, aNotify);
@@ -717,9 +716,9 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
     } else if (aName == nsGkAtoms::inert &&
                StaticPrefs::html5_inert_enabled()) {
       if (aValue) {
-        AddStates(NS_EVENT_STATE_MOZINERT);
+        AddStates(ElementState::INERT);
       } else {
-        RemoveStates(NS_EVENT_STATE_MOZINERT);
+        RemoveStates(ElementState::INERT);
       }
     } else if (aName == nsGkAtoms::name) {
       if (aValue && !aValue->Equals(u""_ns, eIgnoreCase)) {
@@ -1658,7 +1657,7 @@ bool nsGenericHTMLElement::IsFormControlDefaultFocusable(
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
-  // We should add the NS_EVENT_STATE_ENABLED bit here as needed, but
+  // We should add the ElementState::ENABLED bit here as needed, but
   // that depends on our type, which is not initialized yet.  So we
   // have to do this in subclasses.
 }
@@ -2087,11 +2086,11 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
   const bool isDisabled =
       HasAttr(nsGkAtoms::disabled) || (fieldset && fieldset->IsDisabled());
 
-  const EventStates disabledStates =
-      isDisabled ? NS_EVENT_STATE_DISABLED : NS_EVENT_STATE_ENABLED;
+  const ElementState disabledStates =
+      isDisabled ? ElementState::DISABLED : ElementState::ENABLED;
 
-  EventStates oldDisabledStates = State() & DISABLED_STATES;
-  EventStates changedStates = disabledStates ^ oldDisabledStates;
+  ElementState oldDisabledStates = State() & ElementState::DISABLED_STATES;
+  ElementState changedStates = disabledStates ^ oldDisabledStates;
 
   if (!changedStates.IsEmpty()) {
     ToggleStates(changedStates, aNotify);
@@ -2332,7 +2331,7 @@ bool nsGenericHTMLElement::IsEditableRoot() const {
 static void MakeContentDescendantsEditable(nsIContent* aContent) {
   // If aContent is not an element, we just need to update its
   // internal editable state and don't need to notify anyone about
-  // that.  For elements, we need to send a ContentStateChanged
+  // that.  For elements, we need to send a ElementStateChanged
   // notification.
   if (!aContent->IsElement()) {
     aContent->UpdateEditableState(false);
@@ -2365,7 +2364,7 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
     previousEditingState = document->GetEditingState();
   }
 
-  // MakeContentDescendantsEditable is going to call ContentStateChanged for
+  // MakeContentDescendantsEditable is going to call ElementStateChanged for
   // this element and all descendants if editable state has changed.
   // We might as well wrap it all in one script blocker.
   nsAutoScriptBlocker scriptBlocker;
@@ -2538,24 +2537,24 @@ void nsGenericHTMLFormControlElement::ClearForm(bool aRemoveFromForm,
   nsGenericHTMLFormElement::ClearForm(aRemoveFromForm, aUnbindOrDelete);
 }
 
-EventStates nsGenericHTMLFormControlElement::IntrinsicState() const {
+ElementState nsGenericHTMLFormControlElement::IntrinsicState() const {
   // If you add attribute-dependent states here, you need to add them them to
   // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
   // implement IntrinsicState() and are affected by that attribute.
-  EventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  ElementState state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (mForm && mForm->IsDefaultSubmitElement(this)) {
     NS_ASSERTION(IsSubmitControl(),
                  "Default submit element that isn't a submit control.");
     // We are the default submit element (:default)
-    state |= NS_EVENT_STATE_DEFAULT;
+    state |= ElementState::DEFAULT;
   }
 
   // Make the text controls read-write
-  if (!state.HasState(NS_EVENT_STATE_READWRITE) && DoesReadOnlyApply()) {
+  if (!state.HasState(ElementState::READWRITE) && DoesReadOnlyApply()) {
     if (!GetBoolAttr(nsGkAtoms::readonly) && !IsDisabled()) {
-      state |= NS_EVENT_STATE_READWRITE;
-      state &= ~NS_EVENT_STATE_READONLY;
+      state |= ElementState::READWRITE;
+      state &= ~ElementState::READONLY;
     }
   }
 
@@ -2659,15 +2658,15 @@ void nsGenericHTMLFormControlElement::UpdateRequiredState(bool aIsRequired,
   }
 #endif
 
-  EventStates requiredStates;
+  ElementState requiredStates;
   if (aIsRequired) {
-    requiredStates |= NS_EVENT_STATE_REQUIRED;
+    requiredStates |= ElementState::REQUIRED;
   } else {
-    requiredStates |= NS_EVENT_STATE_OPTIONAL;
+    requiredStates |= ElementState::OPTIONAL_;
   }
 
-  EventStates oldRequiredStates = State() & REQUIRED_STATES;
-  EventStates changedStates = requiredStates ^ oldRequiredStates;
+  ElementState oldRequiredStates = State() & ElementState::REQUIRED_STATES;
+  ElementState changedStates = requiredStates ^ oldRequiredStates;
 
   if (!changedStates.IsEmpty()) {
     ToggleStates(changedStates, aNotify);

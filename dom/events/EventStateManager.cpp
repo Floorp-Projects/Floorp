@@ -11,7 +11,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
@@ -3922,7 +3921,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         nsCOMPtr<nsIContent> targetContent;
         mCurrentTarget->GetContentForEvent(aEvent,
                                            getter_AddRefs(targetContent));
-        SetContentState(targetContent, NS_EVENT_STATE_HOVER);
+        SetContentState(targetContent, ElementState::HOVER);
       }
       break;
 
@@ -3978,7 +3977,7 @@ void EventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext) {
     // Reset the hover state so that if we're recreating the presentation,
     // we won't have the old hover state still set in the new presentation,
     // as if the new presentation is resized, a new element may be hovered.
-    SetContentState(nullptr, NS_EVENT_STATE_HOVER);
+    SetContentState(nullptr, ElementState::HOVER);
   }
   mPointersEnterLeaveHelper.Clear();
   PointerEventHandler::NotifyDestroyPresContext(presContext);
@@ -4598,7 +4597,7 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
   bool isPointer = aMouseEvent->mClass == ePointerEventClass;
   if (!aMovingInto && !isPointer) {
     // Unset :hover
-    SetContentState(nullptr, NS_EVENT_STATE_HOVER);
+    SetContentState(nullptr, ElementState::HOVER);
   }
 
   EnterLeaveDispatcher leaveDispatcher(this, wrapper->mLastOverElement,
@@ -4670,7 +4669,7 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
                                        isPointer ? ePointerEnter : eMouseEnter);
 
   if (!isPointer) {
-    SetContentState(aContent, NS_EVENT_STATE_HOVER);
+    SetContentState(aContent, ElementState::HOVER);
   }
 
   NotifyMouseOut(aMouseEvent, aContent);
@@ -5079,7 +5078,7 @@ void EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
     // drag exit
     if (status == nsEventStatus_eConsumeNoDefault || aMessage == eDragExit) {
       SetContentState((aMessage == eDragEnter) ? aTargetContent : nullptr,
-                      NS_EVENT_STATE_DRAGOVER);
+                      ElementState::DRAGOVER);
     }
 
     // collect any changes to moz cursor settings stored in the event's
@@ -5555,7 +5554,7 @@ static Element* GetLabelTarget(nsIContent* aPossibleLabel) {
 
 /* static */
 inline void EventStateManager::DoStateChange(Element* aElement,
-                                             EventStates aState,
+                                             ElementState aState,
                                              bool aAddState) {
   if (aAddState) {
     aElement->AddStates(aState);
@@ -5566,7 +5565,7 @@ inline void EventStateManager::DoStateChange(Element* aElement,
 
 /* static */
 inline void EventStateManager::DoStateChange(nsIContent* aContent,
-                                             EventStates aState,
+                                             ElementState aState,
                                              bool aStateAdded) {
   if (aContent->IsElement()) {
     DoStateChange(aContent->AsElement(), aState, aStateAdded);
@@ -5576,7 +5575,7 @@ inline void EventStateManager::DoStateChange(nsIContent* aContent,
 /* static */
 void EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
                                             nsIContent* aStopBefore,
-                                            EventStates aState,
+                                            ElementState aState,
                                             bool aAddState) {
   for (; aStartNode && aStartNode != aStopBefore;
        aStartNode = aStartNode->GetFlattenedTreeParent()) {
@@ -5629,14 +5628,14 @@ bool CanContentHaveActiveState(nsIContent& aContent) {
 }
 
 bool EventStateManager::SetContentState(nsIContent* aContent,
-                                        EventStates aState) {
+                                        ElementState aState) {
   MOZ_ASSERT(ManagesState(aState), "Unexpected state");
 
   nsCOMPtr<nsIContent> notifyContent1;
   nsCOMPtr<nsIContent> notifyContent2;
   bool updateAncestors;
 
-  if (aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE) {
+  if (aState == ElementState::HOVER || aState == ElementState::ACTIVE) {
     // Hover and active are hierarchical
     updateAncestors = true;
 
@@ -5647,7 +5646,7 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
       return false;
     }
 
-    if (aState == NS_EVENT_STATE_ACTIVE) {
+    if (aState == ElementState::ACTIVE) {
       if (aContent && !CanContentHaveActiveState(*aContent)) {
         aContent = nullptr;
       }
@@ -5657,7 +5656,7 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
         mActiveContent = aContent;
       }
     } else {
-      NS_ASSERTION(aState == NS_EVENT_STATE_HOVER, "How did that happen?");
+      NS_ASSERTION(aState == ElementState::HOVER, "How did that happen?");
       nsIContent* newHover;
 
       if (mPresContext->IsDynamic()) {
@@ -5685,13 +5684,13 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
     }
   } else {
     updateAncestors = false;
-    if (aState == NS_EVENT_STATE_DRAGOVER) {
+    if (aState == ElementState::DRAGOVER) {
       if (aContent != sDragOverContent) {
         notifyContent1 = aContent;
         notifyContent2 = sDragOverContent;
         sDragOverContent = aContent;
       }
-    } else if (aState == NS_EVENT_STATE_URLTARGET) {
+    } else if (aState == ElementState::URLTARGET) {
       if (aContent != mURLTargetContent) {
         notifyContent1 = aContent;
         notifyContent2 = mURLTargetContent;
@@ -5754,17 +5753,17 @@ void EventStateManager::ResetLastOverForContent(
   }
 }
 
-void EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
+void EventStateManager::RemoveNodeFromChainIfNeeded(ElementState aState,
                                                     nsIContent* aContentRemoved,
                                                     bool aNotify) {
-  MOZ_ASSERT(aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE);
+  MOZ_ASSERT(aState == ElementState::HOVER || aState == ElementState::ACTIVE);
   if (!aContentRemoved->IsElement() ||
       !aContentRemoved->AsElement()->State().HasState(aState)) {
     return;
   }
 
   nsCOMPtr<nsIContent>& leaf =
-      aState == NS_EVENT_STATE_HOVER ? mHoverContent : mActiveContent;
+      aState == ElementState::HOVER ? mHoverContent : mActiveContent;
 
   MOZ_ASSERT(leaf);
   // These two NS_ASSERTIONS below can fail for Shadow DOM sometimes, and it's
@@ -5788,14 +5787,14 @@ void EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
     // Also, NAC is not observable and NAC being removed will go away soon.
     leaf = newLeaf;
   }
-  MOZ_ASSERT(leaf == newLeaf || (aState == NS_EVENT_STATE_ACTIVE && !leaf &&
+  MOZ_ASSERT(leaf == newLeaf || (aState == ElementState::ACTIVE && !leaf &&
                                  !CanContentHaveActiveState(*newLeaf)));
 }
 
 void EventStateManager::NativeAnonymousContentRemoved(nsIContent* aContent) {
   MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree());
-  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, false);
-  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, false);
+  RemoveNodeFromChainIfNeeded(ElementState::HOVER, aContent, false);
+  RemoveNodeFromChainIfNeeded(ElementState::ACTIVE, aContent, false);
 
   if (mLastLeftMouseDownContent &&
       nsContentUtils::ContentIsFlattenedTreeDescendantOf(
@@ -5825,7 +5824,7 @@ void EventStateManager::ContentRemoved(Document* aDocument,
    */
   if (aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area) &&
       (aContent->AsElement()->State().HasAtLeastOneOfStates(
-          NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_HOVER))) {
+          ElementState::FOCUS | ElementState::HOVER))) {
     Element* element = aContent->AsElement();
     element->LeaveLink(element->GetPresContext(Element::eForComposedDoc));
   }
@@ -5843,8 +5842,8 @@ void EventStateManager::ContentRemoved(Document* aDocument,
     fm->ContentRemoved(aDocument, aContent);
   }
 
-  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, true);
-  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, true);
+  RemoveNodeFromChainIfNeeded(ElementState::HOVER, aContent, true);
+  RemoveNodeFromChainIfNeeded(ElementState::ACTIVE, aContent, true);
 
   if (sDragOverContent &&
       sDragOverContent->OwnerDoc() == aContent->OwnerDoc() &&
@@ -6178,23 +6177,23 @@ nsresult EventStateManager::DoContentCommandScrollEvent(
 void EventStateManager::SetActiveManager(EventStateManager* aNewESM,
                                          nsIContent* aContent) {
   if (sActiveESM && aNewESM != sActiveESM) {
-    sActiveESM->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
+    sActiveESM->SetContentState(nullptr, ElementState::ACTIVE);
   }
   sActiveESM = aNewESM;
   if (sActiveESM && aContent) {
-    sActiveESM->SetContentState(aContent, NS_EVENT_STATE_ACTIVE);
+    sActiveESM->SetContentState(aContent, ElementState::ACTIVE);
   }
 }
 
 void EventStateManager::ClearGlobalActiveContent(EventStateManager* aClearer) {
   if (aClearer) {
-    aClearer->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
+    aClearer->SetContentState(nullptr, ElementState::ACTIVE);
     if (sDragOverContent) {
-      aClearer->SetContentState(nullptr, NS_EVENT_STATE_DRAGOVER);
+      aClearer->SetContentState(nullptr, ElementState::DRAGOVER);
     }
   }
   if (sActiveESM && aClearer != sActiveESM) {
-    sActiveESM->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
+    sActiveESM->SetContentState(nullptr, ElementState::ACTIVE);
   }
   sActiveESM = nullptr;
 }

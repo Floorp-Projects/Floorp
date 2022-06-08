@@ -23,8 +23,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DeferredTask.jsm"
 );
 
-const kStateActive = 0x00000001; // NS_EVENT_STATE_ACTIVE
-const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
+const kStateActive = 0x00000001; // ElementState::ACTIVE
+const kStateHover = 0x00000004; // ElementState::HOVER
 
 // Duplicated in SelectParent.jsm
 // Please keep these lists in sync.

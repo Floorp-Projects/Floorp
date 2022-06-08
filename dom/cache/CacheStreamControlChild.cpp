@@ -10,7 +10,6 @@
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
-#include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsISupportsImpl.h"

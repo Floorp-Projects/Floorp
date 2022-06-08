@@ -65,7 +65,7 @@ class SVGImageElement : public SVGImageElementBase,
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent) override;
 
-  virtual EventStates IntrinsicState() const override;
+  virtual ElementState IntrinsicState() const override;
 
   virtual void DestroyContent() override;
 

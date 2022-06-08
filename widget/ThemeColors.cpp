@@ -238,7 +238,7 @@ nscolor ThemeColors::ComputeCustomAccentForeground(nscolor aColor) {
 }
 
 nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
-                                                       EventStates aStates) {
+                                                       ElementState aStates) {
   // In Windows 10, scrollbar thumb has the following colors:
   //
   // State  | Color    | Luminance
@@ -248,8 +248,8 @@ nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
   // Active | Gray 96  |     11.7%
   //
   // This function is written based on the ratios between the values.
-  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
-  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
+  bool isActive = aStates.HasState(ElementState::ACTIVE);
+  bool isHover = aStates.HasState(ElementState::HOVER);
   if (!isActive && !isHover) {
     return aFaceColor;
   }

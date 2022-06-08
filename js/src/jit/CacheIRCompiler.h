@@ -742,7 +742,7 @@ class MOZ_RAII CacheIRCompiler {
 
   enum class Mode { Baseline, Ion };
 
-  bool preparedForVMCall_;
+  bool enteredStubFrame_;
 
   bool isBaseline();
   bool isIon();
@@ -775,7 +775,7 @@ class MOZ_RAII CacheIRCompiler {
 
   CacheIRCompiler(JSContext* cx, const CacheIRWriter& writer,
                   uint32_t stubDataOffset, Mode mode, StubFieldPolicy policy)
-      : preparedForVMCall_(false),
+      : enteredStubFrame_(false),
         cx_(cx),
         writer_(writer),
         allocator(writer_),
@@ -921,6 +921,10 @@ class MOZ_RAII CacheIRCompiler {
   JS::Compartment* compartmentStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return (JS::Compartment*)readStubWord(offset, StubField::Type::RawPointer);
+  }
+  BaseScript* baseScriptStubField(uint32_t offset) {
+    MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
+    return (BaseScript*)readStubWord(offset, StubField::Type::BaseScript);
   }
   const JSClass* classStubField(uintptr_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

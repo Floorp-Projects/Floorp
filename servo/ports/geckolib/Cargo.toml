@@ -17,6 +17,7 @@ atomic_refcell = "0.1"
 bincode = "1.0"
 cssparser = "0.29"
 cstr = "0.2"
+dom = { path = "../../../dom/base/rust" }
 gecko-profiler = { path = "../../../tools/profiler/rust-api" }
 libc = "0.2"
 log = {version = "0.4", features = ["release_max_level_info"]}

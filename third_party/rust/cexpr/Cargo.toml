@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "cexpr"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Jethro Beekman <jethro@jbeekman.nl>"]
 description = "A C expression parser and evaluator"
 documentation = "https://docs.rs/cexpr/"
@@ -21,7 +20,7 @@ keywords = ["C", "expression", "parser"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/jethrogb/rust-cexpr"
 [dependencies.nom]
-version = "6"
+version = "7"
 features = ["std"]
 default-features = false
 [dev-dependencies.clang-sys]

@@ -13,7 +13,6 @@
 #include "nsMappedAttributes.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "mozilla/EventStates.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
