@@ -139,7 +139,7 @@ describe("SourcesTree", () => {
         ).toHaveLength(1);
       });
 
-      it("recreates tree if debuggeeUrl is changed", async () => {
+      it("recreates tree if mainThreadHost is changed", async () => {
         const { component, props, defaultState } = render();
         const sources = {
           FakeThread: {
@@ -157,7 +157,7 @@ describe("SourcesTree", () => {
 
         await component.setProps({
           ...props,
-          debuggeeUrl: "mozilla",
+          mainThreadHost: "mozilla",
           sources,
         });
 
@@ -387,7 +387,7 @@ function generateDefaults(overrides) {
     selectSource: jest.fn(),
     setExpandedState: jest.fn(),
     sources: defaultSources,
-    debuggeeUrl: "http://mdn.com",
+    mainThreadHost: "mdn.com",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
     focusItem: jest.fn(),

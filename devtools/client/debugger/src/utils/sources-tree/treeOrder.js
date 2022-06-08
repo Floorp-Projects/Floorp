@@ -2,31 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { parse } from "../url";
-
 import { nodeHasChildren } from "./utils";
-
-/*
- * Gets domain from url (without www prefix)
- */
-export function getDomain(url) {
-  if (!url) {
-    return null;
-  }
-  const { host } = parse(url);
-  if (!host) {
-    return null;
-  }
-  return host.startsWith("www.") ? host.substr("www.".length) : host;
-}
 
 /*
  * Checks if node name matches debugger host/domain.
  */
-function isExactDomainMatch(part, debuggeeHost) {
+function isExactDomainMatch(part, mainThreadHost) {
   return part.startsWith("www.")
-    ? part.substr("www.".length) === debuggeeHost
-    : part === debuggeeHost;
+    ? part.substr("www.".length) === mainThreadHost
+    : part === mainThreadHost;
 }
 
 /*
@@ -92,28 +76,28 @@ const matcherFunctions = [isIndexName, isExactDomainMatch];
 export function createTreeNodeMatcher(
   part,
   isDir,
-  debuggeeHost,
+  mainThreadHost,
   source,
   sortByUrl
 ) {
   return node => {
     for (let i = 0; i < matcherFunctions.length; i++) {
       // Check part against exceptions
-      if (matcherFunctions[i](part, debuggeeHost)) {
+      if (matcherFunctions[i](part, mainThreadHost)) {
         for (let j = 0; j < i; j++) {
           // Check node.name against exceptions
-          if (matcherFunctions[j](node.name, debuggeeHost)) {
+          if (matcherFunctions[j](node.name, mainThreadHost)) {
             return -1;
           }
         }
         // If part and node.name share the same exception, return 0
-        if (matcherFunctions[i](node.name, debuggeeHost)) {
+        if (matcherFunctions[i](node.name, mainThreadHost)) {
           return 0;
         }
         return 1;
       }
       // Check node.name against exceptions if part is not exception
-      if (matcherFunctions[i](node.name, debuggeeHost)) {
+      if (matcherFunctions[i](node.name, mainThreadHost)) {
         return -1;
       }
     }

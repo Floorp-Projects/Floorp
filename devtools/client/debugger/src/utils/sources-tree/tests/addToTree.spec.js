@@ -186,7 +186,7 @@ describe("sources-tree", () => {
       const sourceMap = { FakeThread: createSourcesMap(sources) };
       const tree = createTree({
         sources: sourceMap,
-        debuggeeUrl: "",
+        mainThreadHost: "",
         threads: [
           {
             actor: "FakeThread",
@@ -215,7 +215,7 @@ describe("sources-tree", () => {
       const sourceMap = { FakeThread: createSourcesMap(sources) };
       const tree = createTree({
         sources: sourceMap,
-        debuggeeUrl: "",
+        mainThreadHost: "",
         threads: [
           {
             actor: "FakeThread",
@@ -248,7 +248,7 @@ describe("sources-tree", () => {
 
       const tree = createTree({
         sources: sourceMap,
-        debuggeeUrl: "https://davidwalsh.name",
+        mainThreadHost: "davidwalsh.name",
         threads: [
           {
             actor: "FakeThread",

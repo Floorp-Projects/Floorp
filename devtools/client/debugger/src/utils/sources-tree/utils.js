@@ -8,7 +8,7 @@ import { isPretty } from "../source";
 import { getURL } from "./getURL";
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 
-export function getPathParts(url, thread, debuggeeHost) {
+export function getPathParts(url, thread, mainThreadHost) {
   const parts = url.path.split("/");
   if (parts.length > 1 && parts[parts.length - 1] === "") {
     parts.pop();
@@ -32,12 +32,12 @@ export function getPathParts(url, thread, debuggeeHost) {
       path = `${path}/${part}`;
     }
 
-    const debuggeeHostIfRoot = index === 1 ? debuggeeHost : null;
+    const mainThreadHostIfRoot = index === 1 ? mainThreadHost : null;
 
     return {
       part,
       path,
-      debuggeeHostIfRoot,
+      mainThreadHostIfRoot,
     };
   });
 }
