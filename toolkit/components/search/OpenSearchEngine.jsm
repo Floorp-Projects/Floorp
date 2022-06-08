@@ -9,16 +9,18 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   EngineURL: "resource://gre/modules/SearchEngine.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "OpenSearchEngine",
-    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+    maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",
   });
 });
 
@@ -61,7 +63,7 @@ function ENSURE_WARN(assertion, message, resultCode) {
 /**
  * OpenSearchEngine represents an OpenSearch base search engine.
  */
-class OpenSearchEngine extends SearchEngine {
+class OpenSearchEngine extends lazy.SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
 
@@ -83,7 +85,8 @@ class OpenSearchEngine extends SearchEngine {
    *   A callback to receive any details of errors.
    */
   _install(uri, callback) {
-    let loadURI = uri instanceof Ci.nsIURI ? uri : SearchUtils.makeURI(uri);
+    let loadURI =
+      uri instanceof Ci.nsIURI ? uri : lazy.SearchUtils.makeURI(uri);
     if (!loadURI) {
       throw Components.Exception(
         loadURI,
@@ -98,9 +101,9 @@ class OpenSearchEngine extends SearchEngine {
       );
     }
 
-    logConsole.debug("_install: Downloading engine from:", loadURI.spec);
+    lazy.logConsole.debug("_install: Downloading engine from:", loadURI.spec);
 
-    var chan = SearchUtils.makeChannel(loadURI);
+    var chan = lazy.SearchUtils.makeChannel(loadURI);
 
     if (this._engineToUpdate && chan instanceof Ci.nsIHttpChannel) {
       var lastModified = this._engineToUpdate.getAttr("updatelastmodified");
@@ -110,7 +113,7 @@ class OpenSearchEngine extends SearchEngine {
     }
     this._uri = loadURI;
 
-    var listener = new SearchUtils.LoadListener(
+    var listener = new lazy.SearchUtils.LoadListener(
       chan,
       /(^text\/|xml$)/,
       this._onLoad.bind(this, callback)
@@ -132,7 +135,7 @@ class OpenSearchEngine extends SearchEngine {
   _onLoad(callback, bytes) {
     let onError = errorCode => {
       if (this._engineToUpdate) {
-        logConsole.warn("Failed to update", this._engineToUpdate.name);
+        lazy.logConsole.warn("Failed to update", this._engineToUpdate.name);
       }
       callback?.(errorCode);
     };
@@ -149,7 +152,7 @@ class OpenSearchEngine extends SearchEngine {
     try {
       this._initFromData();
     } catch (ex) {
-      logConsole.error("_onLoad: Failed to init engine!", ex);
+      lazy.logConsole.error("_onLoad: Failed to init engine!", ex);
 
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
         onError(Ci.nsISearchService.ERROR_ENGINE_CORRUPTED);
@@ -181,12 +184,12 @@ class OpenSearchEngine extends SearchEngine {
       // existing one), a duplicate engine does not already exist.
       if (Services.search.getEngineByName(this.name)) {
         onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
-        logConsole.debug("_onLoad: duplicate engine found, bailing");
+        lazy.logConsole.debug("_onLoad: duplicate engine found, bailing");
         return;
       }
 
       this._loadPath = OpenSearchEngine.getAnonymizedLoadPath(
-        SearchUtils.sanitizeName(this.name),
+        lazy.SearchUtils.sanitizeName(this.name),
         this._uri
       );
       if (this._extensionID) {
@@ -194,13 +197,13 @@ class OpenSearchEngine extends SearchEngine {
       }
       this.setAttr(
         "loadPathHash",
-        SearchUtils.getVerificationHash(this._loadPath)
+        lazy.SearchUtils.getVerificationHash(this._loadPath)
       );
     }
 
     // Notify the search service of the successful load. It will deal with
     // updates by checking this._engineToUpdate.
-    SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.LOADED);
+    lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.LOADED);
 
     callback?.();
   }
@@ -223,7 +226,7 @@ class OpenSearchEngine extends SearchEngine {
       (element.localName == OPENSEARCH_LOCALNAME &&
         OPENSEARCH_NAMESPACES.includes(element.namespaceURI))
     ) {
-      logConsole.debug("Initing search plugin from", this._location);
+      lazy.logConsole.debug("Initing search plugin from", this._location);
 
       this._parse();
     } else {
@@ -266,11 +269,11 @@ class OpenSearchEngine extends SearchEngine {
 
     // Support an alternate suggestion type, see bug 1425827 for details.
     if (type == "application/json" && rels.includes("suggestions")) {
-      type = SearchUtils.URL_TYPE.SUGGEST_JSON;
+      type = lazy.SearchUtils.URL_TYPE.SUGGEST_JSON;
     }
 
     try {
-      var url = new EngineURL(type, method, template);
+      var url = new lazy.EngineURL(type, method, template);
     } catch (ex) {
       throw Components.Exception(
         "_parseURL: failed to add " + template + " as a URL",
@@ -289,7 +292,7 @@ class OpenSearchEngine extends SearchEngine {
           url.addParam(param.getAttribute("name"), param.getAttribute("value"));
         } catch (ex) {
           // Ignore failure
-          logConsole.error("_parseURL: Url element has an invalid param");
+          lazy.logConsole.error("_parseURL: Url element has an invalid param");
         }
       }
       // Note: MozParams are not supported for OpenSearch engines as they
@@ -312,7 +315,7 @@ class OpenSearchEngine extends SearchEngine {
     let isPrefered = width == 16 && height == 16;
 
     if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-      logConsole.warn(
+      lazy.logConsole.warn(
         "OpenSearch image element must have positive width and height."
       );
       return;
@@ -342,7 +345,7 @@ class OpenSearchEngine extends SearchEngine {
             this._parseURL(child);
           } catch (ex) {
             // Parsing of the element failed, just skip it.
-            logConsole.error("Failed to parse URL child:", ex);
+            lazy.logConsole.error("Failed to parse URL child:", ex);
           }
           break;
         case "Image":
@@ -379,7 +382,7 @@ class OpenSearchEngine extends SearchEngine {
         Cr.NS_ERROR_FAILURE
       );
     }
-    if (!this.supportsResponseType(SearchUtils.URL_TYPE.SEARCH)) {
+    if (!this.supportsResponseType(lazy.SearchUtils.URL_TYPE.SEARCH)) {
       throw Components.Exception(
         "_parse: No text/html result type!",
         Cr.NS_ERROR_FAILURE
@@ -389,7 +392,10 @@ class OpenSearchEngine extends SearchEngine {
 
   get _hasUpdates() {
     // Whether or not the engine has an update URL
-    let selfURL = this._getURLOfType(SearchUtils.URL_TYPE.OPENSEARCH, "self");
+    let selfURL = this._getURLOfType(
+      lazy.SearchUtils.URL_TYPE.OPENSEARCH,
+      "self"
+    );
     return !!(this._updateURL || this._iconUpdateURL || selfURL);
   }
 
