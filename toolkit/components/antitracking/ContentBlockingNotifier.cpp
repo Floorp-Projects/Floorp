@@ -12,6 +12,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIRunnable.h"

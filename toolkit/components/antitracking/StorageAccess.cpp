@@ -22,6 +22,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::net::CookieJarSettings;
 
 /**
  * Gets the cookie lifetime policy for a given cookieJarSettings and a given
@@ -54,6 +55,28 @@ static void GetCookieLifetimePolicyFromCookieJarSettings(
         break;
     }
   }
+}
+
+// This internal method returns ACCESS_DENY if the access is denied,
+// ACCESS_DEFAULT if unknown, some other access code if granted.
+uint32_t CheckCookiePermissionForPrincipal(
+    nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aCookieJarSettings);
+  MOZ_ASSERT(aPrincipal);
+
+  uint32_t cookiePermission = nsICookiePermission::ACCESS_DEFAULT;
+  if (!aPrincipal->GetIsContentPrincipal()) {
+    return cookiePermission;
+  }
+
+  nsresult rv =
+      aCookieJarSettings->CookiePermission(aPrincipal, &cookiePermission);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsICookiePermission::ACCESS_DEFAULT;
+  }
+
+  // If we have a custom cookie permission, let's use it.
+  return cookiePermission;
 }
 
 /*
@@ -413,6 +436,52 @@ bool StoragePartitioningEnabled(uint32_t aRejectedReason,
                  nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) &&
          aCookieJarSettings->GetCookieBehavior() ==
              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+}
+
+int32_t CookiesBehavior(Document* a3rdPartyDocument) {
+  MOZ_ASSERT(a3rdPartyDocument);
+
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // (See Bug 1406675 and Bug 1525917 for rationale).
+  if (BasePrincipal::Cast(a3rdPartyDocument->NodePrincipal())->AddonPolicy()) {
+    return nsICookieService::BEHAVIOR_ACCEPT;
+  }
+
+  return a3rdPartyDocument->CookieJarSettings()->GetCookieBehavior();
+}
+
+int32_t CookiesBehavior(nsILoadInfo* aLoadInfo, nsIURI* a3rdPartyURI) {
+  MOZ_ASSERT(aLoadInfo);
+  MOZ_ASSERT(a3rdPartyURI);
+
+  // WebExtensions 3rd party URI always get BEHAVIOR_ACCEPT as cookieBehavior,
+  // this is semantically equivalent to the principal having a AddonPolicy().
+  if (a3rdPartyURI->SchemeIs("moz-extension")) {
+    return nsICookieService::BEHAVIOR_ACCEPT;
+  }
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsICookieService::BEHAVIOR_REJECT;
+  }
+
+  return cookieJarSettings->GetCookieBehavior();
+}
+
+int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
+                        nsICookieJarSettings* aCookieJarSettings) {
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCookieJarSettings);
+
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // (See Bug 1406675 for rationale).
+  if (BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
+    return nsICookieService::BEHAVIOR_ACCEPT;
+  }
+
+  return aCookieJarSettings->GetCookieBehavior();
 }
 
 bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
@@ -863,5 +932,4 @@ bool ApproximateAllowAccessForWithoutChannel(
       parentPrincipal, type,
       nsContentUtils::IsInPrivateBrowsing(parentDocument), nullptr, 0);
 }
-
 }  // namespace mozilla
