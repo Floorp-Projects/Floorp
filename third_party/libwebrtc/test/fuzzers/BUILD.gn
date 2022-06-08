@@ -78,6 +78,7 @@ template("webrtc_fuzzer_test") {
 webrtc_fuzzer_test("h264_depacketizer_fuzzer") {
   sources = [ "h264_depacketizer_fuzzer.cc" ]
   deps = [ "../../modules/rtp_rtcp" ]
+  seed_corpus = "corpora/h264-depacketizer-fuzzer-corpus"
 }
 
 webrtc_fuzzer_test("vp8_depacketizer_fuzzer") {
