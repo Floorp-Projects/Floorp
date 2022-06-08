@@ -62,6 +62,7 @@ const XUL_HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
   width: 100%;
   height: 100%;
   z-index: 2;
+  color-scheme: light;
 }`;
 
 const STYLESHEET_URI =
@@ -295,6 +296,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
       if (!this._iframe) {
         this._iframe = window.document.createElement("iframe");
+        // We need the color-scheme shenanigans to ensure that the iframe is
+        // transparent, see bug 1773155, bug 1738380, and
+        // https://github.com/mozilla/wg-decisions/issues/774.
+        this._iframe.srcdoc =
+          "<!doctype html><meta name=color-scheme content=light>";
         this._iframe.classList.add("devtools-highlighter-renderer");
         // If iframe is used for the first time, add ref count of one to its
         // numberOfHighlighters data attribute.
