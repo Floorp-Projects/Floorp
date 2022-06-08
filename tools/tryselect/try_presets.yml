@@ -46,7 +46,7 @@ devtools:
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'macosx"
         # Linux is being named "linux1804" and may change over time, so use a more flexible search
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
-        - "'xpcshell-e10s 'linux '64-qr/"
+        - "'xpcshell-fis-e10s 'linux '64-qr/"
 
 devtools-linux:
     selector: fuzzy
@@ -56,7 +56,7 @@ devtools-linux:
         - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
-        - "'xpcshell-e10s 'linux '64-qr/"
+        - "'xpcshell-fis-e10s 'linux '64-qr/"
 
 fpush-linux-android:
     selector: fuzzy
