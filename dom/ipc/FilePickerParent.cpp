@@ -156,7 +156,7 @@ void FilePickerParent::SendFilesOrDirectories(
     IPCBlob ipcBlob;
 
     MOZ_ASSERT(aData[i].mType == BlobImplOrString::eBlobImpl);
-    nsresult rv = IPCBlobUtils::Serialize(aData[i].mBlobImpl, parent, ipcBlob);
+    nsresult rv = IPCBlobUtils::Serialize(aData[i].mBlobImpl, ipcBlob);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }

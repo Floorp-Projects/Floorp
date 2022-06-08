@@ -24,20 +24,29 @@ export function getFilenameFromPath(pathname) {
 const NoDomain = "(no domain)";
 const def = { path: "", search: "", group: "", filename: "" };
 
-export function getURL(source, defaultDomain = "") {
+export function getURL(source) {
   const { url } = source;
   if (!url) {
     return def;
   }
-  return getURLInternal(url, defaultDomain);
+  return getURLInternal(url);
 }
 
-export function getDisplayURL(source, defaultDomain = "") {
-  const { displayURL } = source;
-  if (!displayURL) {
+/**
+ * Compute the URL which may be displayed in the Source Tree.
+ *
+ * @param {String} url
+ *        The source absolute URL as a string
+ * @param {String} defaultDomain
+ *        The host of the currently debugged web page.
+ * @return URL Object
+ *        A URL object to represent this source.
+ */
+export function getDisplayURL(url, defaultDomain = "") {
+  if (!url) {
     return def;
   }
-  return getURLInternal(displayURL, defaultDomain);
+  return getURLInternal(url, defaultDomain);
 }
 
 function getURLInternal(url, defaultDomain) {

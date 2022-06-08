@@ -11,3 +11,4 @@ The `Accessibility page on the Mozilla Wiki <https://wiki.mozilla.org/Accessibil
 
    DocumentAccessibilityLifecycle
    GeckoViewThreadTopography
+   ColorsAndHighContrastMode

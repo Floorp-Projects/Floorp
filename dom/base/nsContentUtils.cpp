@@ -5552,8 +5552,7 @@ bool nsContentUtils::SchemeIs(nsIURI* aURI, const char* aScheme) {
 }
 
 bool nsContentUtils::IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
-  return !!ep;
+  return aPrincipal && aPrincipal->GetIsExpandedPrincipal();
 }
 
 bool nsContentUtils::IsSystemOrExpandedPrincipal(nsIPrincipal* aPrincipal) {
@@ -8122,31 +8121,18 @@ void nsContentUtils::TransferableToIPCTransferable(
       }
 
       if (blobImpl) {
-        IPCDataTransferData data;
-        IPCBlob ipcBlob;
-
         // If we failed to create the blob actor, then this blob probably
         // can't get the file size for the underlying file, ignore it for
         // now. TODO pass this through anyway.
-        if (aChild) {
-          nsresult rv = IPCBlobUtils::Serialize(blobImpl, aChild, ipcBlob);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          data = ipcBlob;
-        } else if (aParent) {
-          nsresult rv = IPCBlobUtils::Serialize(blobImpl, aParent, ipcBlob);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          data = ipcBlob;
+        IPCBlob ipcBlob;
+        nsresult rv = IPCBlobUtils::Serialize(blobImpl, ipcBlob);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          continue;
         }
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = data;
+        item->data() = ipcBlob;
         item->dataType() = TransferableDataType::Blob;
       }
     }

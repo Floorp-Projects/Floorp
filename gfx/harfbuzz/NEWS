@@ -1,3 +1,51 @@
+Overview of changes leading to 4.3.0
+Friday, May 20, 2022
+====================================
+- Major speed up in loading and subsetting fonts, especially in
+  handling CFF table. Subsetting some fonts is now 3 times faster.
+  (Behdad Esfahbod, Garret Rieger)
+- Speed up blending CFF2 table. (Behdad Esfahbod)
+- Speed up hb_ot_tags_from_language(). (Behdad Esfahbod, David Corbett)
+- Fix USE classification of U+10A38 to fix multiple marks on single Kharoshthi
+  base. (David Corbett)
+- Fix parsing of empty CFF Index. (Behdad Esfahbod)
+- Fix subsetting CPAL table with partial palette overlaps. (Garret Rieger)
+
+- New API
++hb_map_is_equal() (Behdad Esfahbod)
+
+
+Overview of changes leading to 4.2.1
+Sunday, April 24, 2022
+====================================
+- Make sure hb_blob_create_from_file_or_fail() always returns nullptr in case
+  of failure and not empty blob sometimes. (Khaled Hosny)
+- Add --passthrough-tables option to hb-subset. (Cosimo Lupo)
+- Reinstate a pause after basic features in Khmer shaper, fixing a regression
+  introduced in previous release. (Behdad Esfahbod)
+- Better handling of Regional_Indicator when shaped with RTL-native scripts,
+  reverting earlier fix that caused regressions in AAT shaping. (Behdad Esfahbod)
+
+
+Overview of changes leading to 4.2.0
+Wednesday, March 30, 2022
+====================================
+- Source code reorganization, splitting large hb-ot-layout files into smaller,
+  per-subtable ones under OT/Layout/*. Code for more tables will follow suit in
+  later releases. (Garret Rieger, Behdad Esfahbod)
+- Revert Indic shaper change in previous release that broke some fonts and
+  instead make per-syllable restriction of “GSUB” application limited to
+  script-specific Indic features, while applying them and discretionary
+  features in one go. (Behdad Esfahbod)
+- Fix decoding of private in gvar table. (Behdad Esfahbod)
+- Fix handling of contextual lookups that delete too many glyphs. (Behdad Esfahbod)
+- Make “morx” deleted glyphs don’t block “GPOS” application. (Behdad Esfahbod)
+- Various build fixes. (Chun-wei Fan, Khaled Hosny)
+
+- New API
++hb_set_next_many() (Andrew John)
+
+
 Overview of changes leading to 4.1.0
 Wednesday, March 23, 2022
 ====================================
@@ -10,7 +58,8 @@ Wednesday, March 23, 2022
 - Various bug fixes.
 
 - New API
-+hb_set_add_sorted_array()
++hb_set_add_sorted_array() (Andrew John)
+
 
 Overview of changes leading to 4.0.1
 Friday, March 11, 2022

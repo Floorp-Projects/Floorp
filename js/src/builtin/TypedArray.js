@@ -39,10 +39,6 @@ function TypedArrayLengthMethod() {
     return TypedArrayLength(this);
 }
 
-function TypedArrayByteOffsetMethod() {
-    return TypedArrayByteOffset(this);
-}
-
 function GetAttachedArrayBuffer(tarray) {
     var buffer = ViewedArrayBufferIfReified(tarray);
     if (IsDetachedBuffer(buffer))
@@ -983,81 +979,6 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
     return false;
 }
 
-// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
-// 22.2.3.26 TypedArray SortCompare abstract operation
-// Cases are ordered according to likelihood of occurrence
-// as opposed to the ordering in the spec.
-function TypedArrayCompare(x, y) {
-    // Step 1.
-    assert(typeof x === "number" && typeof y === "number",
-           "x and y are not numbers.");
-
-    // Step 2 (Implemented in TypedArraySort).
-
-    // Step 6.
-    if (x < y)
-        return -1;
-
-    // Step 7.
-    if (x > y)
-        return 1;
-
-    // Steps 8-9.
-    if (x === 0 && y === 0)
-        return ((1 / x) > 0 ? 1 : 0) - ((1 / y) > 0 ? 1 : 0);
-
-    // Steps 3-4.
-    if (Number_isNaN(x))
-        return Number_isNaN(y) ? 0 : 1;
-
-    // Steps 5, 10.
-    return Number_isNaN(y) ? -1 : 0;
-}
-
-// TypedArray SortCompare specialization for integer values.
-function TypedArrayCompareInt(x, y) {
-    // Step 1.
-    assert(typeof x === "number" && typeof y === "number",
-           "x and y are not numbers.");
-    assert((x === (x | 0) || x === (x >>> 0)) && (y === (y | 0) || y === (y >>> 0)),
-           "x and y are not int32/uint32 numbers.");
-
-    // Step 2 (Implemented in TypedArraySort).
-
-    // Steps 6-7.
-    var diff = x - y;
-    if (diff)
-        return diff;
-
-    // Steps 3-5, 8-9 (Not applicable when sorting integer values).
-
-    // Step 10.
-    return 0;
-}
-
-// https://tc39.github.io/proposal-bigint/#sec-%typedarray%.prototype.sort
-// TypedArray SortCompare specialization for BigInt values.
-function TypedArrayCompareBigInt(x, y) {
-    // Step 1.
-    assert(typeof x === "bigint" && typeof y === "bigint",
-           "x and y are not BigInts.");
-
-    // Step 2 (Implemented in TypedArraySort).
-
-    // Step 6.
-    if (x < y)
-        return -1;
-
-    // Step 7.
-    if (x > y)
-        return 1;
-
-    // Steps 3-5, 8-9 (Not applicable when sorting BigInt values).
-
-    // Step 10.
-    return 0;
-}
-
 // ES2019 draft rev 8a16cb8d18660a1106faae693f0f39b9f1a30748
 // 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
 function TypedArraySort(comparefn) {
@@ -1073,14 +994,7 @@ function TypedArraySort(comparefn) {
     var obj = this;
 
     // Step 3.
-    var isTypedArray = IsObject(obj) && IsTypedArray(obj);
-
-    var buffer;
-    if (isTypedArray) {
-        buffer = GetAttachedArrayBuffer(obj);
-    } else {
-        buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, "GetAttachedArrayBufferMethod");
-    }
+    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(obj);
 
     // Step 4.
     var len;
@@ -1094,45 +1008,8 @@ function TypedArraySort(comparefn) {
     if (len <= 1)
         return obj;
 
-    if (comparefn === undefined) {
-        var kind = GetTypedArrayKind(obj);
-        switch (kind) {
-          case TYPEDARRAY_KIND_UINT8:
-          case TYPEDARRAY_KIND_UINT8CLAMPED:
-            return CountingSort(obj, len, false /* signed */, TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_INT8:
-            return CountingSort(obj, len, true /* signed */, TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_UINT16:
-            return RadixSort(obj, len, buffer,
-                             2 /* nbytes */, false /* signed */, false /* floating */,
-                             TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_INT16:
-            return RadixSort(obj, len, buffer,
-                             2 /* nbytes */, true /* signed */, false /* floating */,
-                             TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_UINT32:
-            return RadixSort(obj, len, buffer,
-                             4 /* nbytes */, false /* signed */, false /* floating */,
-                             TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_INT32:
-            return RadixSort(obj, len, buffer,
-                             4 /* nbytes */, true /* signed */, false /* floating */,
-                             TypedArrayCompareInt);
-          case TYPEDARRAY_KIND_BIGINT64:
-          case TYPEDARRAY_KIND_BIGUINT64:
-            return QuickSort(obj, len, TypedArrayCompareBigInt);
-          case TYPEDARRAY_KIND_FLOAT32:
-            return RadixSort(obj, len, buffer,
-                             4 /* nbytes */, true /* signed */, true /* floating */,
-                             TypedArrayCompare);
-          case TYPEDARRAY_KIND_FLOAT64:
-          default:
-            // Include |default| to ensure Ion marks this call as the
-            // last instruction in the if-statement.
-            assert(kind === TYPEDARRAY_KIND_FLOAT64, "unexpected typed array kind");
-            return QuickSort(obj, len, TypedArrayCompare);
-        }
-    }
+    if (comparefn === undefined)
+        return TypedArrayNativeSort(obj);
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
     // the user supplied comparefn is wrapped.
@@ -1141,26 +1018,10 @@ function TypedArraySort(comparefn) {
         var v = +comparefn(x, y);
 
         // Step b.
-        var length;
-        if (isTypedArray) {
-            length = TypedArrayLength(obj);
-        } else {
-            length = callFunction(CallTypedArrayMethodIfWrapped, obj, "TypedArrayLengthMethod");
-        }
-
-        // It's faster for us to check the typed array's length than to check
-        // for detached buffers.
-        if (length === 0) {
-            assert(PossiblyWrappedTypedArrayHasDetachedBuffer(obj),
-                   "Length can only change from non-zero to zero when the buffer was detached");
-            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-        }
-
-        // Step c.
         if (v !== v)
             return 0;
 
-        // Step d.
+        // Step c.
         return v;
     };
 

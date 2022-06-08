@@ -111,8 +111,8 @@ bool TrialInliner::replaceICStub(ICEntry& entry, ICFallbackStub* fallback,
   fallback->discardStubs(cx(), &entry);
 
   // Note: AttachBaselineCacheIRStub never throws an exception.
-  ICAttachResult result = AttachBaselineCacheIRStub(cx(), writer, kind, script_,
-                                                    icScript_, fallback);
+  ICAttachResult result = AttachBaselineCacheIRStub(
+      cx(), writer, kind, script_, icScript_, fallback, "TrialInline");
   if (result == ICAttachResult::Attached) {
     MOZ_ASSERT(fallback->trialInliningState() == TrialInliningState::Inlined);
     return true;

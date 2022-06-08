@@ -5,14 +5,11 @@
 import {
   nodeHasChildren,
   isPathDirectory,
-  isInvalidUrl,
   partIsFile,
   createSourceNode,
   createDirectoryNode,
-  getPathParts,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
-import { getDisplayURL } from "./getURL";
 
 function createNodeInTree(part, path, tree, index) {
   const node = createDirectoryNode(part, path, []);
@@ -30,21 +27,12 @@ function createNodeInTree(part, path, tree, index) {
  * 1. if it exists return it
  * 2. if it does not exist create it
  */
-function findOrCreateNode(
-  parts,
-  subTree,
-  path,
-  part,
-  index,
-  url,
-  debuggeeHost,
-  source
-) {
-  const addedPartIsFile = partIsFile(index, parts, url);
+function findOrCreateNode(source, subTree, path, part, index, mainThreadHost) {
+  const addedPartIsFile = partIsFile(index, source.parts, source.displayURL);
 
   const { found: childFound, index: childIndex } = findNodeInContents(
     subTree,
-    createTreeNodeMatcher(part, !addedPartIsFile, debuggeeHost)
+    createTreeNodeMatcher(part, !addedPartIsFile, mainThreadHost)
   );
 
   // we create and enter the new node
@@ -62,7 +50,13 @@ function findOrCreateNode(
     // pass true to findNodeInContents to sort node by url
     const { index: insertIndex } = findNodeInContents(
       subTree,
-      createTreeNodeMatcher(part, !addedPartIsFile, debuggeeHost, source, true)
+      createTreeNodeMatcher(
+        part,
+        !addedPartIsFile,
+        mainThreadHost,
+        source,
+        true
+      )
     );
     return createNodeInTree(part, path, subTree, insertIndex);
   }
@@ -75,19 +69,16 @@ function findOrCreateNode(
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(url, tree, debuggeeHost, source, thread) {
-  const parts = getPathParts(url, thread, debuggeeHost);
-  return parts.reduce(
-    (subTree, { part, path, debuggeeHostIfRoot }, index) =>
+function traverseTree(source, tree) {
+  return source.parts.reduce(
+    (subTree, { part, path, mainThreadHostIfRoot }, index) =>
       findOrCreateNode(
-        parts,
+        source,
         subTree,
         path,
         part,
         index,
-        url,
-        debuggeeHostIfRoot,
-        source
+        mainThreadHostIfRoot
       ),
     tree
   );
@@ -96,7 +87,8 @@ function traverseTree(url, tree, debuggeeHost, source, thread) {
 /*
  * Add a source file to a directory node in the tree
  */
-function addSourceToNode(node, url, source) {
+function addSourceToNode(node, source) {
+  const url = source.displayURL;
   const isFile = !isPathDirectory(url.path);
 
   if (node.type == "source" && !isFile) {
@@ -145,14 +137,8 @@ function addSourceToNode(node, url, source) {
  * @memberof utils/sources-tree
  * @static
  */
-export function addToTree(tree, source, debuggeeHost, thread) {
-  const url = getDisplayURL(source, debuggeeHost);
+export function addToTree(tree, source) {
+  const finalNode = traverseTree(source, tree);
 
-  if (isInvalidUrl(url, source)) {
-    return;
-  }
-
-  const finalNode = traverseTree(url, tree, debuggeeHost, source, thread);
-
-  finalNode.contents = addSourceToNode(finalNode, url, source);
+  finalNode.contents = addSourceToNode(finalNode, source);
 }

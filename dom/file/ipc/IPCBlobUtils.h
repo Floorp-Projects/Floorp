@@ -236,60 +236,33 @@
  *   we can keep the actors on the main-thread because no Workers are involved.
  */
 
-namespace mozilla {
-
-namespace ipc {
-class IProtocol;
-class PBackgroundChild;
-class PBackgroundParent;
-}  // namespace ipc
-
-namespace dom {
+namespace mozilla::dom {
 
 class IPCBlob;
-class ContentChild;
-class ContentParent;
 
 namespace IPCBlobUtils {
 
 already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob);
 
-// These 4 methods serialize aBlobImpl into aIPCBlob using the right manager.
-
-nsresult Serialize(BlobImpl* aBlobImpl, ContentChild* aManager,
-                   IPCBlob& aIPCBlob);
-
-nsresult Serialize(BlobImpl* aBlobImpl,
-                   mozilla::ipc::PBackgroundChild* aManager, IPCBlob& aIPCBlob);
-
-nsresult Serialize(BlobImpl* aBlobImpl, ContentParent* aManager,
-                   IPCBlob& aIPCBlob);
-
-nsresult Serialize(BlobImpl* aBlobImpl,
-                   mozilla::ipc::PBackgroundParent* aManager,
-                   IPCBlob& aIPCBlob);
-
-// WARNING: If you pass any actor which does not have P{Content,Background} as
-// its toplevel protocol, this method will MOZ_CRASH.
-nsresult SerializeUntyped(BlobImpl* aBlobImpl, mozilla::ipc::IProtocol* aActor,
-                          IPCBlob& aIPCBlob);
+nsresult Serialize(BlobImpl* aBlobImpl, IPCBlob& aIPCBlob);
 
 }  // namespace IPCBlobUtils
-}  // namespace dom
+}  // namespace mozilla::dom
 
-namespace ipc {
+namespace IPC {
+
 // ParamTraits implementation for BlobImpl. N.B: If the original BlobImpl cannot
 // be successfully serialized, a warning will be produced and a nullptr will be
 // sent over the wire. When Read()-ing a BlobImpl,
 // __always make sure to handle null!__
 template <>
-struct IPDLParamTraits<mozilla::dom::BlobImpl*> {
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
+struct ParamTraits<mozilla::dom::BlobImpl*> {
+  static void Write(IPC::MessageWriter* aWriter,
                     mozilla::dom::BlobImpl* aParam);
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+  static bool Read(IPC::MessageReader* aReader,
                    RefPtr<mozilla::dom::BlobImpl>* aResult);
 };
-}  // namespace ipc
-}  // namespace mozilla
+
+}  // namespace IPC
 
 #endif  // mozilla_dom_IPCBlobUtils_h

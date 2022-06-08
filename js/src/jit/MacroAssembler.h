@@ -427,6 +427,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //   FloatRegister::getRegisterDumpOffsetInBytes
   //   (no class) PushRegisterDump
   //   (union) RegisterContent
+  //   JitRuntime::generateInvalidator
+  //   JitRuntime::generateBailoutHandler
+  //   JSJitFrameIter::machineState
   //
   // To be more exact, the invariants are:
   //
@@ -475,18 +478,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //   FloatRegister::getRegisterDumpOffsetInBytes must be a correct index
   //   into the abovementioned array.  Given the constraints, the only correct
   //   value is `reg.encoding() * sizeof(RegisterContent)`.
-
-  // Regarding JitRuntime::generateInvalidator and the first two fields of of
-  // class InvalidationBailoutStack (`fpregs_` and `regs_`).  These form their
-  // own layout-equivalence class.  That is, they must be format-consistent.
-  // But they are not part of the equivalence class that PushRegsInMask et al
-  // belong to. JitRuntime::generateInvalidator may use PushRegsInMask to
-  // generate part of the layout, but that's only a happy coincidence; some
-  // targets roll their own save-code instead.
   //
-  // Nevertheless, because some targets *do* call PushRegsInMask from
-  // JitRuntime::generateInvalidator, you should check carefully all of the
-  // ::generateInvalidator methods if you change the PushRegsInMask format.
+  // Note that some of the routines listed above are JS-only, and do not support
+  // SIMD registers. They are otherwise part of the same equivalence class.
+  // Register spilling for e.g. OOL VM calls is implemented using
+  // PushRegsInMask, and recovered on bailout using machineState. This requires
+  // the same layout to be used in machineState, and therefore in all other code
+  // that can spill registers that are recovered on bailout. Implementations of
+  // JitRuntime::generate{Invalidator,BailoutHandler} should either call
+  // PushRegsInMask, or check carefully to be sure that they generate the same
+  // layout.
 
   // The size of the area used by PushRegsInMask.
   size_t PushRegsInMaskSizeInBytes(LiveRegisterSet set)

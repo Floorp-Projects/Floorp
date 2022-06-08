@@ -47,8 +47,7 @@ mozilla::ipc::IPCResult FileCreatorParent::CreateAndShareFile(
             "FileCreatorParent::CreateAndShareFile return", [self, blobImpl]() {
               if (self->mIPCActive) {
                 IPCBlob ipcBlob;
-                nsresult rv = dom::IPCBlobUtils::Serialize(
-                    blobImpl, self->Manager(), ipcBlob);
+                nsresult rv = dom::IPCBlobUtils::Serialize(blobImpl, ipcBlob);
                 if (NS_WARN_IF(NS_FAILED(rv))) {
                   Unused << Send__delete__(self, FileCreationErrorResult(rv));
                   return;

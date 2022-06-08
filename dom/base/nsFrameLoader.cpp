@@ -3013,8 +3013,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(const nsAString& aMessage,
   auto* browserParent = GetBrowserParent();
   if (browserParent) {
     ClonedMessageData data;
-    ContentParent* cp = browserParent->Manager();
-    if (!BuildClonedMessageDataForParent(cp, aData, data)) {
+    if (!BuildClonedMessageData(aData, data)) {
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }

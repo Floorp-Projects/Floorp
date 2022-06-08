@@ -95,13 +95,7 @@ void omta_sample(mozilla::wr::WrWindowId aWindowId,
 void omta_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 }  // extern "C"
 
-// Work-around wingdi.h define which conflcits with WR color constant
-#pragma push_macro("TRANSPARENT")
-#undef TRANSPARENT
-
 #include "webrender_ffi_generated.h"
-
-#pragma pop_macro("TRANSPARENT")
 
 template struct mozilla::wr::Point2D<int32_t, mozilla::wr::DevicePixel>;
 template struct mozilla::wr::Point2D<int, mozilla::wr::WorldPixel>;

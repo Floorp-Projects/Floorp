@@ -1213,11 +1213,10 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   nsIContent* shadowHost =
       aRoot->GetShadowRoot() ? aRoot : aRoot->GetContainingShadowHost();
   if (shadowHost) {
-    dom::ExplicitChildIterator iter(shadowHost);
-
     // Check all explicit children in the host, if they are not slotted
     // then remove their accessibles and subtrees.
-    while (nsIContent* childNode = iter.GetNextChild()) {
+    for (nsIContent* childNode = shadowHost->GetFirstChild(); childNode;
+         childNode = childNode->GetNextSibling()) {
       if (!childNode->GetPrimaryFrame() &&
           !nsCoreUtils::CanCreateAccessibleWithoutFrame(childNode)) {
         ContentRemoved(childNode);
@@ -2104,8 +2103,8 @@ void DocAccessible::ContentRemoved(nsIContent* aContentNode) {
   // ExplicitChildIterator in order to get its accessible children in the light
   // DOM, since they are not accessible anymore via AllChildrenIterator.
   if (aContentNode->GetShadowRoot()) {
-    dom::ExplicitChildIterator iter = dom::ExplicitChildIterator(aContentNode);
-    while (nsIContent* childNode = iter.GetNextChild()) {
+    for (nsIContent* childNode = aContentNode->GetFirstChild(); childNode;
+         childNode = childNode->GetNextSibling()) {
       ContentRemoved(childNode);
     }
   }

@@ -14,7 +14,6 @@ import { prefs, features } from "../utils/prefs";
 export const initialUIState = () => ({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
-  shownSource: null,
   startPanelCollapsed: prefs.startPanelCollapsed,
   endPanelCollapsed: prefs.endPanelCollapsed,
   frameworkGroupingOn: prefs.frameworkGroupingOn,
@@ -62,10 +61,6 @@ function update(state = initialUIState(), action) {
 
     case "SET_ORIENTATION": {
       return { ...state, orientation: action.orientation };
-    }
-
-    case "SHOW_SOURCE": {
-      return { ...state, shownSource: action.source };
     }
 
     case "TOGGLE_PANE": {

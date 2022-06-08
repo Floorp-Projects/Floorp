@@ -33,7 +33,7 @@ IPCResult ServiceWorkerParent::RecvPostMessage(
     const ClonedOrErrorMessageData& aClonedData,
     const ClientInfoAndState& aSource) {
   RefPtr<ServiceWorkerCloneData> data = new ServiceWorkerCloneData();
-  data->CopyFromClonedMessageDataForBackgroundParent(aClonedData);
+  data->CopyFromClonedMessageData(aClonedData);
 
   mProxy->PostMessage(std::move(data), ClientInfo(aSource.info()),
                       ClientState::FromIPC(aSource.state()));

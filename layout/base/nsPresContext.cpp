@@ -1360,14 +1360,14 @@ Element* nsPresContext::UpdateViewportScrollStylesOverride() {
   }
 
   dom::Document* document = Document();
-  if (Element* fullscreenElement = document->GetFullscreenElement()) {
+  if (Element* fsElement = document->GetUnretargetedFullscreenElement()) {
     // If the document is in fullscreen, but the fullscreen element is
     // not the root element, we should explicitly suppress the scrollbar
     // here. Note that, we still need to return the original element
     // the styles are from, so that the state of those elements is not
     // affected across fullscreen change.
-    if (fullscreenElement != document->GetRootElement() &&
-        fullscreenElement != mViewportScrollOverrideElement) {
+    if (fsElement != document->GetRootElement() &&
+        fsElement != mViewportScrollOverrideElement) {
       mViewportScrollStyles =
           ScrollStyles(StyleOverflow::Hidden, StyleOverflow::Hidden);
     }

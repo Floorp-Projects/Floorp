@@ -55,19 +55,12 @@ class MessageManagerCallback {
                                ErrorResult& aError) const;
 
  protected:
-  bool BuildClonedMessageDataForParent(ContentParent* aParent,
-                                       StructuredCloneData& aData,
-                                       ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForChild(ContentChild* aChild,
-                                      StructuredCloneData& aData,
-                                      ClonedMessageData& aClonedData);
+  bool BuildClonedMessageData(StructuredCloneData& aData,
+                              ClonedMessageData& aClonedData);
 };
 
-void UnpackClonedMessageDataForParent(const ClonedMessageData& aClonedData,
-                                      StructuredCloneData& aData);
-
-void UnpackClonedMessageDataForChild(const ClonedMessageData& aClonedData,
-                                     StructuredCloneData& aData);
+void UnpackClonedMessageData(const ClonedMessageData& aClonedData,
+                             StructuredCloneData& aData);
 
 }  // namespace ipc
 }  // namespace dom

@@ -16,7 +16,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -24,6 +29,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -47,13 +69,17 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -61,6 +87,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -73,7 +116,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -81,6 +129,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -119,14 +184,18 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -134,6 +203,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -148,7 +234,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -156,6 +247,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -190,7 +298,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -198,6 +311,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -219,13 +349,17 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -233,6 +367,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -245,7 +396,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -253,6 +409,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -283,7 +456,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -291,6 +469,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -319,14 +514,18 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "hasMatchingGeneratedSource": true,
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -334,6 +533,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -347,7 +558,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -355,6 +571,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -393,7 +626,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -401,7 +633,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -409,6 +646,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -424,7 +673,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -432,6 +686,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -466,7 +737,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -474,6 +750,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -500,14 +793,18 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "hasMatchingGeneratedSource": true,
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -515,6 +812,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -528,7 +837,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -536,6 +850,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -566,7 +897,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -574,6 +910,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -597,14 +950,18 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -612,6 +969,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -625,7 +994,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -633,6 +1007,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -671,7 +1062,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -679,7 +1069,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -687,6 +1082,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -702,7 +1109,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -710,6 +1122,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -744,7 +1173,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -752,6 +1186,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -773,14 +1224,18 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -788,6 +1243,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -801,7 +1268,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -809,6 +1281,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -855,7 +1344,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -871,7 +1359,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -879,6 +1372,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -917,7 +1427,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -936,7 +1445,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -944,6 +1458,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -992,7 +1523,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1008,7 +1538,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1016,6 +1551,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1062,7 +1614,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -1079,7 +1630,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1087,6 +1643,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1125,7 +1698,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -1145,7 +1717,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1153,6 +1730,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1201,7 +1795,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1218,7 +1811,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1226,6 +1824,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1272,7 +1887,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": true,
       "focusItem": [MockFunction],
@@ -1323,7 +1937,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={true}
           focusItem={[MockFunction]}
@@ -1385,7 +1998,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": true,
     "focusItem": [MockFunction],
@@ -1444,7 +2056,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -1459,7 +2070,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1467,6 +2083,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1505,7 +2138,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -1523,7 +2155,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1531,6 +2168,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1579,7 +2233,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -1594,7 +2247,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1602,6 +2260,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1648,7 +2323,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -1664,7 +2338,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -1672,6 +2351,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1711,7 +2407,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -1730,7 +2425,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -1738,6 +2438,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1787,7 +2504,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -1803,7 +2519,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -1811,6 +2532,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1858,7 +2596,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -1907,7 +2644,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -1967,7 +2703,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -2024,7 +2759,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": true,
       "focusItem": [MockFunction],
@@ -2075,7 +2809,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={true}
           focusItem={[MockFunction]}
@@ -2137,7 +2870,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": true,
     "focusItem": [MockFunction],
@@ -2196,7 +2928,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -2212,7 +2943,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2220,6 +2956,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2258,7 +3011,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={false}
           focusItem={[MockFunction]}
@@ -2277,7 +3029,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2285,6 +3042,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2333,7 +3107,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -2349,7 +3122,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2357,6 +3135,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2403,7 +3198,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 0,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -2419,7 +3213,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2427,6 +3226,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2466,7 +3282,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={0}
           expanded={false}
           focusItem={[MockFunction]}
@@ -2485,7 +3300,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2493,6 +3313,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2542,7 +3379,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 0,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -2558,7 +3394,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2566,6 +3407,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2613,7 +3471,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
@@ -2628,7 +3485,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -2636,6 +3498,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2674,7 +3553,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -2692,7 +3570,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -2700,6 +3583,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2748,7 +3648,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
@@ -2763,7 +3662,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -2771,6 +3675,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2817,13 +3738,17 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": true,
@@ -2831,6 +3756,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -2844,7 +3786,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": true,
@@ -2852,6 +3799,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2890,14 +3854,18 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": true,
@@ -2905,6 +3873,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -2920,7 +3905,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": true,
@@ -2928,6 +3918,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2976,13 +3983,17 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": true,
@@ -2990,6 +4001,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3003,7 +4031,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": true,
@@ -3011,6 +4044,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3057,14 +4107,18 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "hasPrettyTab": true,
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3072,6 +4126,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -3085,7 +4151,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3093,6 +4164,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3131,7 +4219,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
@@ -3139,7 +4226,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3147,6 +4239,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -3162,7 +4266,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3170,6 +4279,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3218,14 +4344,18 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "hasPrettyTab": true,
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3233,6 +4363,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -3246,7 +4388,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3254,6 +4401,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3284,7 +4448,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3292,6 +4461,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3315,13 +4501,17 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3329,6 +4519,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -3342,7 +4544,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3350,6 +4557,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3388,14 +4612,18 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3403,6 +4631,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -3418,7 +4658,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3426,6 +4671,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3460,7 +4722,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3468,6 +4735,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3489,13 +4773,17 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3503,6 +4791,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -3516,7 +4816,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3524,6 +4829,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3554,7 +4876,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3562,6 +4889,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3585,7 +4929,6 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "depth": 1,
       "expanded": false,
       "focusItem": [MockFunction],
@@ -3593,7 +4936,12 @@ Object {
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3601,6 +4949,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3613,7 +4978,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3621,6 +4991,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3659,7 +5046,6 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           depth={1}
           expanded={false}
           focusItem={[MockFunction]}
@@ -3668,7 +5054,12 @@ Object {
           item={
             Object {
               "contents": Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3676,6 +5067,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3690,7 +5098,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3698,6 +5111,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3732,7 +5162,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3740,6 +5175,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3761,7 +5213,6 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "depth": 1,
     "expanded": false,
     "focusItem": [MockFunction],
@@ -3769,7 +5220,12 @@ Object {
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3777,6 +5233,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3789,7 +5262,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -3797,6 +5275,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3827,7 +5322,12 @@ Object {
       modifier={[Function]}
       source={
         Object {
-          "displayURL": "http://mdn.com/one.js",
+          "displayURL": Object {
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3835,6 +5335,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3858,13 +5375,17 @@ Object {
     "props": Object {
       "blackBoxSources": [MockFunction],
       "clearProjectDirectoryRoot": [MockFunction],
-      "debuggeeUrl": "http://mdn.com",
       "expanded": false,
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
         "contents": Object {
-          "displayURL": "url",
+          "displayURL": Object {
+            "filename": "url",
+            "group": "",
+            "path": "url",
+            "search": "",
+          },
           "extensionName": null,
           "id": "server1.conn13.child1/39",
           "isBlackBoxed": false,
@@ -3872,6 +5393,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -3885,7 +5418,12 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
-        "displayURL": "http://mdn.com/one.js",
+        "displayURL": Object {
+          "filename": "one.js",
+          "group": "mdn.com",
+          "path": "/one.js",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -3893,6 +5431,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3931,14 +5486,18 @@ Object {
         "_element": <SourceTreeItem
           blackBoxSources={[MockFunction]}
           clearProjectDirectoryRoot={[MockFunction]}
-          debuggeeUrl="http://mdn.com"
           expanded={false}
           focusItem={[MockFunction]}
           getSourcesGroups={[Function]}
           item={
             Object {
               "contents": Object {
-                "displayURL": "url",
+                "displayURL": Object {
+                  "filename": "url",
+                  "group": "",
+                  "path": "url",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -3946,6 +5505,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -3961,7 +5532,12 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
-              "displayURL": "http://mdn.com/one.js",
+              "displayURL": Object {
+                "filename": "one.js",
+                "group": "mdn.com",
+                "path": "/one.js",
+                "search": "",
+              },
               "extensionName": null,
               "id": "server1.conn13.child1/39",
               "isBlackBoxed": false,
@@ -3969,6 +5545,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -4003,7 +5596,12 @@ Object {
             modifier={[Function]}
             source={
               Object {
-                "displayURL": "http://mdn.com/one.js",
+                "displayURL": Object {
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
                 "extensionName": null,
                 "id": "server1.conn13.child1/39",
                 "isBlackBoxed": false,
@@ -4011,6 +5609,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -4032,13 +5647,17 @@ Object {
   "props": Object {
     "blackBoxSources": [MockFunction],
     "clearProjectDirectoryRoot": [MockFunction],
-    "debuggeeUrl": "http://mdn.com",
     "expanded": false,
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
       "contents": Object {
-        "displayURL": "url",
+        "displayURL": Object {
+          "filename": "url",
+          "group": "",
+          "path": "url",
+          "search": "",
+        },
         "extensionName": null,
         "id": "server1.conn13.child1/39",
         "isBlackBoxed": false,
@@ -4046,6 +5665,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -4059,7 +5690,12 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
-      "displayURL": "http://mdn.com/one.js",
+      "displayURL": Object {
+        "filename": "one.js",
+        "group": "mdn.com",
+        "path": "/one.js",
+        "search": "",
+      },
       "extensionName": null,
       "id": "server1.conn13.child1/39",
       "isBlackBoxed": false,
@@ -4067,6 +5703,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",

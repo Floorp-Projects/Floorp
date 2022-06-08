@@ -13,9 +13,6 @@ class ColorwaySelector extends HTMLFieldSetElement {
       AddonManager: "resource://gre/modules/AddonManager.jsm",
       BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
     });
-    this.colorways;
-    this.activeTheme;
-    this.selectedTheme;
     window.addEventListener("unload", () => {
       this.AddonManager.removeAddonListener(this);
     });
@@ -54,6 +51,7 @@ class ColorwaySelector extends HTMLFieldSetElement {
     }
   }
   render() {
+    let isFirst = true;
     for (const theme of this.colorways) {
       let input = document.createElement("input");
       input.type = "radio";
@@ -70,6 +68,11 @@ class ColorwaySelector extends HTMLFieldSetElement {
       if (theme.isActive) {
         input.classList.add("active");
       }
+      if (isFirst) {
+        input.checked = true;
+        input.onclick();
+        isFirst = false;
+      }
     }
   }
 
@@ -84,7 +87,7 @@ class ColorwaySelector extends HTMLFieldSetElement {
   }
 
   connectedCallback() {
-    this.getColorways().then(value => {
+    this.getColorways().then(() => {
       this.render();
     });
   }

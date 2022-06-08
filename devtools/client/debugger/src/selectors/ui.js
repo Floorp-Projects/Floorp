@@ -14,10 +14,6 @@ export function getFrameworkGroupingState(state) {
   return state.ui.frameworkGroupingOn;
 }
 
-export function getShownSource(state) {
-  return state.ui.shownSource;
-}
-
 export function getPaneCollapse(state, position) {
   if (position == "start") {
     return state.ui.startPanelCollapsed;

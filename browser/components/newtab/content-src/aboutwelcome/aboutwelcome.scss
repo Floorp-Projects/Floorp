@@ -276,6 +276,11 @@ body {
         }
         @media (prefers-color-scheme: dark) {
           background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
+
+          &::selection {
+            color: #FFF;
+            background-color: #696977;
+          }
         }
       }
     }
