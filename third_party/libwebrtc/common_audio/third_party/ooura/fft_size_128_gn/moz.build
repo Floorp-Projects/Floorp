@@ -245,10 +245,6 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["CR_SYSROOT_HASH"] = "ef67b6ca8fd6e2e51515a243d043d1ea4caf45e6"
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
@@ -256,15 +252,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "-msse2"
     ]
 
-    DEFINES["CR_SYSROOT_HASH"] = "d967bcef40477dbc39acef141ff22bf73f3e7cdb"
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
     ]
-
-    DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"

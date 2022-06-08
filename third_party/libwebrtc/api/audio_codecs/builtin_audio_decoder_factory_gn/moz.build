@@ -228,20 +228,10 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["CR_SYSROOT_HASH"] = "ef67b6ca8fd6e2e51515a243d043d1ea4caf45e6"
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
     ]
-
-    DEFINES["CR_SYSROOT_HASH"] = "d967bcef40477dbc39acef141ff22bf73f3e7cdb"
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
 
 Library("builtin_audio_decoder_factory_gn")
