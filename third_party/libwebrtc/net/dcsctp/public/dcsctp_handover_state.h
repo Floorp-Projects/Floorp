@@ -24,6 +24,16 @@ namespace dcsctp {
 // for serialization. Serialization is not provided by dcSCTP. If needed it has
 // to be implemented in the calling client.
 struct DcSctpSocketHandoverState {
+  struct Transmission {
+    uint32_t next_tsn = 0;
+    uint32_t next_reset_req_sn = 0;
+    uint32_t cwnd = 0;
+    uint32_t rwnd = 0;
+    uint32_t ssthresh = 0;
+    uint32_t partial_bytes_acked = 0;
+  };
+  Transmission tx;
+
   struct OrderedStream {
     uint32_t id = 0;
     uint32_t next_ssn = 0;

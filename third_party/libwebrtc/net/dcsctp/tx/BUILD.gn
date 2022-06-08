@@ -79,6 +79,7 @@ rtc_library("retransmission_queue") {
     "../common:str_join",
     "../packet:chunk",
     "../packet:data",
+    "../public:socket",
     "../public:types",
     "../timer",
   ]

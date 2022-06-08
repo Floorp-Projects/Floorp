@@ -89,6 +89,17 @@ class RetransmissionQueueTest : public testing::Test {
         supports_partial_reliability, use_message_interleaving);
   }
 
+  RetransmissionQueue CreateQueueByHandover(RetransmissionQueue& queue) {
+    EXPECT_EQ(queue.GetHandoverReadiness(), HandoverReadinessStatus());
+    DcSctpSocketHandoverState state;
+    queue.AddHandoverState(state);
+    return RetransmissionQueue(
+        "", TSN(10), kArwnd, producer_, on_rtt_.AsStdFunction(),
+        on_clear_retransmission_counter_.AsStdFunction(), *timer_, options_,
+        /*supports_partial_reliability=*/true,
+        /*use_message_interleaving=*/false, &state);
+  }
+
   DcSctpOptions options_;
   DataGenerator gen_;
   TimeMs now_ = TimeMs(0);
@@ -1273,6 +1284,126 @@ TEST_F(RetransmissionQueueTest, AllowsSmallFragmentsOnSmallCongestionWindow) {
 
   // With congestion window under limit, allow small packets to be created.
   EXPECT_TRUE(queue.can_send_data());
+}
+
+TEST_F(RetransmissionQueueTest, ReadyForHandoverWhenHasNoOutstandingData) {
+  RetransmissionQueue queue = CreateQueue();
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(1));
+  EXPECT_EQ(
+      queue.GetHandoverReadiness(),
+      HandoverReadinessStatus(
+          HandoverUnreadinessReason::kRetransmissionQueueOutstandingData));
+
+  queue.HandleSack(now_, SackChunk(TSN(10), kArwnd, {}, {}));
+  EXPECT_EQ(queue.GetHandoverReadiness(), HandoverReadinessStatus());
+}
+
+TEST_F(RetransmissionQueueTest, ReadyForHandoverWhenNothingToRetransmit) {
+  RetransmissionQueue queue = CreateQueue();
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(8));
+  EXPECT_EQ(
+      queue.GetHandoverReadiness(),
+      HandoverReadinessStatus(
+          HandoverUnreadinessReason::kRetransmissionQueueOutstandingData));
+
+  // Send more chunks, but leave some chunks unacked to force retransmission
+  // after three NACKs.
+
+  // Send 18
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(1));
+
+  // Ack 12, 14-15, 17-18
+  queue.HandleSack(now_, SackChunk(TSN(12), kArwnd,
+                                   {SackChunk::GapAckBlock(2, 3),
+                                    SackChunk::GapAckBlock(5, 6)},
+                                   {}));
+
+  // Send 19
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(1));
+
+  // Ack 12, 14-15, 17-19
+  queue.HandleSack(now_, SackChunk(TSN(12), kArwnd,
+                                   {SackChunk::GapAckBlock(2, 3),
+                                    SackChunk::GapAckBlock(5, 7)},
+                                   {}));
+
+  // Send 20
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(1));
+
+  // Ack 12, 14-15, 17-20
+  // This will trigger "fast retransmit" mode and only chunks 13 and 16 will be
+  // resent right now. The send queue will not even be queried.
+  queue.HandleSack(now_, SackChunk(TSN(12), kArwnd,
+                                   {SackChunk::GapAckBlock(2, 3),
+                                    SackChunk::GapAckBlock(5, 8)},
+                                   {}));
+  EXPECT_EQ(
+      queue.GetHandoverReadiness(),
+      HandoverReadinessStatus()
+          .Add(HandoverUnreadinessReason::kRetransmissionQueueOutstandingData)
+          .Add(HandoverUnreadinessReason::kRetransmissionQueueFastRecovery)
+          .Add(HandoverUnreadinessReason::kRetransmissionQueueNotEmpty));
+
+  // Send "fast retransmit" mode chunks
+  EXPECT_CALL(producer_, Produce).Times(0);
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(2));
+  EXPECT_EQ(
+      queue.GetHandoverReadiness(),
+      HandoverReadinessStatus()
+          .Add(HandoverUnreadinessReason::kRetransmissionQueueOutstandingData)
+          .Add(HandoverUnreadinessReason::kRetransmissionQueueFastRecovery));
+
+  // Ack 20 to confirm the retransmission
+  queue.HandleSack(now_, SackChunk(TSN(20), kArwnd, {}, {}));
+  EXPECT_EQ(queue.GetHandoverReadiness(), HandoverReadinessStatus());
+}
+
+TEST_F(RetransmissionQueueTest, HandoverTest) {
+  RetransmissionQueue queue = CreateQueue();
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(queue), SizeIs(2));
+  queue.HandleSack(now_, SackChunk(TSN(11), kArwnd, {}, {}));
+
+  RetransmissionQueue handedover_queue = CreateQueueByHandover(queue);
+
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillOnce(CreateChunk())
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+  EXPECT_THAT(GetSentPacketTSNs(handedover_queue),
+              testing::ElementsAre(TSN(12), TSN(13), TSN(14)));
+
+  handedover_queue.HandleSack(now_, SackChunk(TSN(13), kArwnd, {}, {}));
+  EXPECT_THAT(handedover_queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(13), State::kAcked),  //
+                          Pair(TSN(14), State::kInFlight)));
 }
 
 }  // namespace
