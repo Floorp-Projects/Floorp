@@ -14,6 +14,7 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <string>
@@ -1570,8 +1571,7 @@ static bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   return true;
 }
 
-/*static*/
-bool js::TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
+static bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<TypedArrayObject::is, BufferGetterImpl>(cx, args);
 }
@@ -2670,6 +2670,20 @@ bool js::DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
   return result.succeed();
 }
 
+template <typename T, typename U>
+static constexpr typename std::enable_if_t<std::is_unsigned_v<T>, U>
+UnsignedSortValue(U val) {
+  return val;
+}
+
+template <typename T, typename U>
+static constexpr
+    typename std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>, U>
+    UnsignedSortValue(U val) {
+  // Flip sign bit.
+  return val ^ static_cast<U>(std::numeric_limits<T>::min());
+}
+
 template <typename T, typename UnsignedT>
 static constexpr
     typename std::enable_if_t<std::is_floating_point_v<T>, UnsignedT>
@@ -2762,7 +2776,7 @@ static bool TypedArrayCountingSort(JSContext* cx,
       typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
   constexpr T min = std::numeric_limits<T>::min();
 
-  constexpr size_t InlineStorage = 256;
+  constexpr size_t InlineStorage = sizeof(T) == 1 ? 256 : 0;
   Vector<size_t, InlineStorage> buffer(cx);
   if (!buffer.resize(size_t(std::numeric_limits<UnsignedT>::max()) + 1)) {
     return false;
@@ -2793,6 +2807,106 @@ static bool TypedArrayCountingSort(JSContext* cx,
   return true;
 }
 
+template <typename T, typename U, typename Ops>
+static void SortByColumn(SharedMem<U*> data, size_t length, SharedMem<U*> aux,
+                         uint8_t col) {
+  static_assert(std::is_unsigned_v<U>, "SortByColumn sorts on unsigned values");
+
+  // |counts| is used to compute the starting index position for each key.
+  // Letting counts[0] always be 0, simplifies the transform step below.
+  // Example:
+  //
+  // Computing frequency counts for the input [1 2 1] gives:
+  //      0 1 2 3 ... (keys)
+  //      0 0 2 1     (frequencies)
+  //
+  // Transforming frequencies to indexes gives:
+  //      0 1 2 3 ... (keys)
+  //      0 0 2 3     (indexes)
+
+  constexpr size_t R = 256;
+
+  // Initialize all entries to zero.
+  size_t counts[R + 1] = {};
+
+  const auto ByteAtCol = [col](U x) {
+    U y = UnsignedSortValue<T, U>(x);
+    return static_cast<uint8_t>(y >> (col * 8));
+  };
+
+  // Compute frequency counts.
+  for (size_t i = 0; i < length; i++) {
+    U val = Ops::load(data + i);
+    uint8_t b = ByteAtCol(val);
+    counts[b + 1]++;
+  }
+
+  // Transform counts to indices.
+  std::partial_sum(std::begin(counts), std::end(counts), std::begin(counts));
+
+  // Distribute
+  for (size_t i = 0; i < length; i++) {
+    U val = Ops::load(data + i);
+    uint8_t b = ByteAtCol(val);
+    size_t j = counts[b]++;
+    if constexpr (std::is_same_v<Ops, SharedOps>) {
+      // Watch out for concurrent writes on shared memory. Invoke the "sort
+      // order is implementation-defined" rule from the spec and leave the rest
+      // unsorted.
+      if (j >= length) {
+        return;
+      }
+    }
+    UnsharedOps::store(aux + j, val);
+  }
+
+  // Copy back
+  Ops::podCopy(data, aux, length);
+}
+
+template <typename T, typename Ops>
+static bool TypedArrayRadixSort(JSContext* cx, TypedArrayObject* typedArray) {
+  size_t length = typedArray->length();
+
+  // Determined by performance testing.
+  constexpr size_t StdSortMinCutoff = sizeof(T) == 2 ? 64 : 256;
+
+  // Radix sort uses O(n) additional space, limit this space to 64 MB.
+  constexpr size_t StdSortMaxCutoff = (64 * 1024 * 1024) / sizeof(T);
+
+  if (length <= StdSortMinCutoff || length >= StdSortMaxCutoff) {
+    return TypedArrayStdSort<T, Ops>(cx, typedArray);
+  }
+
+  if constexpr (sizeof(T) == 2) {
+    // Radix sort uses O(n) additional space, so when |n| reaches 2^16, switch
+    // over to counting sort to limit the additional space needed to 2^16.
+    constexpr size_t CountingSortMaxCutoff = 65536;
+
+    if (length >= CountingSortMaxCutoff) {
+      return TypedArrayCountingSort<T, Ops>(cx, typedArray);
+    }
+  }
+
+  using UnsignedT =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
+
+  auto ptr = cx->make_zeroed_pod_array<UnsignedT>(length);
+  if (!ptr) {
+    return false;
+  }
+  SharedMem<UnsignedT*> aux = SharedMem<UnsignedT*>::unshared(ptr.get());
+
+  SharedMem<UnsignedT*> data =
+      typedArray->dataPointerEither().cast<UnsignedT*>();
+
+  for (uint8_t col = 0; col < sizeof(UnsignedT); col++) {
+    SortByColumn<T, UnsignedT, Ops>(data, length, aux, col);
+  }
+
+  return true;
+}
+
 using TypedArraySortFn = bool (*)(JSContext*, TypedArrayObject*);
 
 template <typename T, typename Ops>
@@ -2802,7 +2916,14 @@ TypedArraySort() {
 }
 
 template <typename T, typename Ops>
-static constexpr typename std::enable_if_t<sizeof(T) != 1, TypedArraySortFn>
+static constexpr typename std::enable_if_t<sizeof(T) == 2 || sizeof(T) == 4,
+                                           TypedArraySortFn>
+TypedArraySort() {
+  return TypedArrayRadixSort<T, Ops>;
+}
+
+template <typename T, typename Ops>
+static constexpr typename std::enable_if_t<sizeof(T) == 8, TypedArraySortFn>
 TypedArraySort() {
   return TypedArrayStdSort<T, Ops>;
 }

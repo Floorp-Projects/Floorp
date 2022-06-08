@@ -2562,7 +2562,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #ifdef ENABLE_RECORD_TUPLE
     JS_FN("std_Tuple_unchecked", tuple_construct, 1, 0),
 #endif
-    JS_FN("std_TypedArray_buffer", js::TypedArray_bufferGetter, 1, 0),
 
     JS_FS_END};
 
