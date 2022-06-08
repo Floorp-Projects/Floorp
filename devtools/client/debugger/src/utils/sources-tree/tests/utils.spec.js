@@ -160,7 +160,7 @@ describe("sources tree", () => {
 
     const tree = createTree({
       sources,
-      debuggeeUrl: "https://example.com/",
+      mainThreadHost: "example.com",
       threads,
     }).sourceTree;
 

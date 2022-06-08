@@ -39,10 +39,10 @@ describe("getDirectories", () => {
       },
     ];
 
-    const debuggeeUrl = "http://a/";
+    const mainThreadHost = "a";
     const { sourceTree } = createTree({
       sources,
-      debuggeeUrl,
+      mainThreadHost,
       threads,
     });
 
@@ -83,10 +83,10 @@ describe("findSourceTreeNodes", () => {
       },
     ];
 
-    const debuggeeUrl = "http://a/";
+    const mainThreadHost = "a";
     const { sourceTree } = createTree({
       sources,
-      debuggeeUrl,
+      mainThreadHost,
       threads,
     });
 

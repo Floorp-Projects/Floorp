@@ -37,14 +37,14 @@ function findOrCreateNode(
   part,
   index,
   url,
-  debuggeeHost,
+  mainThreadHost,
   source
 ) {
   const addedPartIsFile = partIsFile(index, parts, url);
 
   const { found: childFound, index: childIndex } = findNodeInContents(
     subTree,
-    createTreeNodeMatcher(part, !addedPartIsFile, debuggeeHost)
+    createTreeNodeMatcher(part, !addedPartIsFile, mainThreadHost)
   );
 
   // we create and enter the new node
@@ -62,7 +62,13 @@ function findOrCreateNode(
     // pass true to findNodeInContents to sort node by url
     const { index: insertIndex } = findNodeInContents(
       subTree,
-      createTreeNodeMatcher(part, !addedPartIsFile, debuggeeHost, source, true)
+      createTreeNodeMatcher(
+        part,
+        !addedPartIsFile,
+        mainThreadHost,
+        source,
+        true
+      )
     );
     return createNodeInTree(part, path, subTree, insertIndex);
   }
@@ -75,10 +81,10 @@ function findOrCreateNode(
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(url, tree, debuggeeHost, source, thread) {
-  const parts = getPathParts(url, thread, debuggeeHost);
+function traverseTree(url, tree, mainThreadHost, source, thread) {
+  const parts = getPathParts(url, thread, mainThreadHost);
   return parts.reduce(
-    (subTree, { part, path, debuggeeHostIfRoot }, index) =>
+    (subTree, { part, path, mainThreadHostIfRoot }, index) =>
       findOrCreateNode(
         parts,
         subTree,
@@ -86,7 +92,7 @@ function traverseTree(url, tree, debuggeeHost, source, thread) {
         part,
         index,
         url,
-        debuggeeHostIfRoot,
+        mainThreadHostIfRoot,
         source
       ),
     tree
@@ -145,14 +151,14 @@ function addSourceToNode(node, url, source) {
  * @memberof utils/sources-tree
  * @static
  */
-export function addToTree(tree, source, debuggeeHost, thread) {
-  const url = getDisplayURL(source, debuggeeHost);
+export function addToTree(tree, source, mainThreadHost, thread) {
+  const url = getDisplayURL(source, mainThreadHost);
 
   if (isInvalidUrl(url, source)) {
     return;
   }
 
-  const finalNode = traverseTree(url, tree, debuggeeHost, source, thread);
+  const finalNode = traverseTree(url, tree, mainThreadHost, source, thread);
 
   finalNode.contents = addSourceToNode(finalNode, url, source);
 }

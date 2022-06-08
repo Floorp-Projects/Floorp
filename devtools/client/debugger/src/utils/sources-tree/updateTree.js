@@ -10,11 +10,7 @@ import {
   getPathParts,
   isInvalidUrl,
 } from "./utils";
-import {
-  getDomain,
-  createTreeNodeMatcher,
-  findNodeInContents,
-} from "./treeOrder";
+import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 
 import { getDisplayURL } from "./getURL";
 
@@ -35,10 +31,10 @@ function getSourcesDiff(newSources, prevSources) {
   return { toAdd, toUpdate };
 }
 
-export function createTree({ debuggeeUrl, sources, threads }) {
+export function createTree({ mainThreadHost, sources, threads }) {
   const uncollapsedTree = createDirectoryNode("root", "", []);
   const result = updateTree({
-    debuggeeUrl,
+    mainThreadHost,
     newSources: sources,
     prevSources: {},
     threads,
@@ -55,13 +51,12 @@ export function createTree({ debuggeeUrl, sources, threads }) {
 export function updateTree({
   newSources,
   prevSources,
-  debuggeeUrl,
+  mainThreadHost,
   uncollapsedTree,
   threads,
   create,
   sourceTree,
 }) {
-  const debuggeeHost = getDomain(debuggeeUrl);
   const contexts = Object.keys(newSources);
 
   let shouldUpdate = !sourceTree;
@@ -78,7 +73,7 @@ export function updateTree({
 
     for (const source of toAdd) {
       shouldUpdate = true;
-      addToTree(uncollapsedTree, source, debuggeeHost, thread.actor);
+      addToTree(uncollapsedTree, source, mainThreadHost, thread.actor);
     }
 
     for (const [prevSource, newSource] of toUpdate) {
@@ -87,7 +82,7 @@ export function updateTree({
         uncollapsedTree,
         prevSource,
         newSource,
-        debuggeeHost,
+        mainThreadHost,
         thread.actor
       );
     }
@@ -118,25 +113,25 @@ export function updateInTree(
   tree,
   prevSource,
   newSource,
-  debuggeeHost,
+  mainThreadHost,
   thread
 ) {
-  const newUrl = getDisplayURL(newSource, debuggeeHost);
-  const prevUrl = getDisplayURL(prevSource, debuggeeHost);
+  const newUrl = getDisplayURL(newSource, mainThreadHost);
+  const prevUrl = getDisplayURL(prevSource, mainThreadHost);
 
   const prevEntries = findEntries(
     tree,
     prevUrl,
     prevSource,
     thread,
-    debuggeeHost
+    mainThreadHost
   );
   if (!prevEntries) {
     return;
   }
 
   if (!isInvalidUrl(newUrl, newSource)) {
-    const parts = getPathParts(newUrl, thread, debuggeeHost);
+    const parts = getPathParts(newUrl, thread, mainThreadHost);
 
     if (parts.length === prevEntries.length) {
       let match = true;
@@ -172,11 +167,11 @@ export function updateInTree(
       break;
     }
   }
-  addToTree(tree, newSource, debuggeeHost, thread);
+  addToTree(tree, newSource, mainThreadHost, thread);
 }
 
-function findEntries(tree, url, source, thread, debuggeeHost) {
-  const parts = getPathParts(url, thread, debuggeeHost);
+function findEntries(tree, url, source, thread, mainThreadHost) {
+  const parts = getPathParts(url, thread, mainThreadHost);
 
   // We're searching for the directory containing the file so we pop off the
   // potential filename. This is because the tree has some logic to inject
@@ -190,7 +185,7 @@ function findEntries(tree, url, source, thread, debuggeeHost) {
   for (const { part } of parts) {
     const { found: childFound, index: childIndex } = findNodeInContents(
       currentNode,
-      createTreeNodeMatcher(part, true, debuggeeHost)
+      createTreeNodeMatcher(part, true, mainThreadHost)
     );
 
     if (!childFound || currentNode.type !== "directory") {

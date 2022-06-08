@@ -11,7 +11,7 @@ import { connect } from "../../utils/connect";
 // Selectors
 import {
   getSelectedSource,
-  getDebuggeeUrl,
+  getMainThreadHost,
   getExpandedState,
   getProjectDirectoryRoot,
   getDisplayedSources,
@@ -39,25 +39,23 @@ import {
   getAllSources,
   getSourcesInsideGroup,
 } from "../../utils/sources-tree";
-import { parse } from "../../utils/url";
 import { getRawSourceURL } from "../../utils/source";
 
-function shouldAutoExpand(depth, item, debuggeeUrl, projectRoot) {
+function shouldAutoExpand(depth, item, mainThreadHost, projectRoot) {
   if (projectRoot != "" || depth !== 1) {
     return false;
   }
 
-  const { host } = parse(debuggeeUrl);
-  return item.name === host;
+  return item.name === mainThreadHost;
 }
 
 class SourcesTree extends Component {
   constructor(props) {
     super(props);
-    const { debuggeeUrl, sources, threads } = this.props;
+    const { mainThreadHost, sources, threads } = this.props;
 
     this.state = createTree({
-      debuggeeUrl,
+      mainThreadHost,
       sources,
       threads,
     });
@@ -66,7 +64,7 @@ class SourcesTree extends Component {
   static get propTypes() {
     return {
       cx: PropTypes.object.isRequired,
-      debuggeeUrl: PropTypes.string.isRequired,
+      mainThreadHost: PropTypes.string.isRequired,
       expanded: PropTypes.object.isRequired,
       focusItem: PropTypes.func.isRequired,
       focused: PropTypes.object,
@@ -83,7 +81,7 @@ class SourcesTree extends Component {
   componentWillReceiveProps(nextProps) {
     const {
       projectRoot,
-      debuggeeUrl,
+      mainThreadHost,
       sources,
       selectedSource,
       threads,
@@ -92,7 +90,7 @@ class SourcesTree extends Component {
 
     if (
       projectRoot != nextProps.projectRoot ||
-      debuggeeUrl != nextProps.debuggeeUrl ||
+      mainThreadHost != nextProps.mainThreadHost ||
       threads != nextProps.threads ||
       nextProps.sourceCount === 0
     ) {
@@ -101,7 +99,7 @@ class SourcesTree extends Component {
       return this.setState(
         createTree({
           sources: nextProps.sources,
-          debuggeeUrl: nextProps.debuggeeUrl,
+          mainThreadHost: nextProps.mainThreadHost,
           threads: nextProps.threads,
         })
       );
@@ -125,7 +123,7 @@ class SourcesTree extends Component {
         newSources: nextProps.sources,
         threads: nextProps.threads,
         prevSources: sources,
-        debuggeeUrl,
+        mainThreadHost,
         uncollapsedTree,
         sourceTree,
       });
@@ -207,7 +205,7 @@ class SourcesTree extends Component {
   };
 
   renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
-    const { debuggeeUrl, projectRoot, threads } = this.props;
+    const { mainThreadHost, projectRoot, threads } = this.props;
 
     return (
       <SourcesTreeItem
@@ -215,7 +213,7 @@ class SourcesTree extends Component {
         threads={threads}
         depth={depth}
         focused={focused}
-        autoExpand={shouldAutoExpand(depth, item, debuggeeUrl, projectRoot)}
+        autoExpand={shouldAutoExpand(depth, item, mainThreadHost, projectRoot)}
         expanded={expanded}
         focusItem={this.onFocus}
         selectItem={this.selectItem}
@@ -304,7 +302,7 @@ const mapStateToProps = (state, props) => {
     threads: props.threads,
     cx: getContext(state),
     selectedSource: getSourceForTree(state, displayedSources, selectedSource),
-    debuggeeUrl: getDebuggeeUrl(state),
+    mainThreadHost: getMainThreadHost(state),
     expanded: getExpandedState(state),
     focused: getFocusedSourceItem(state),
     projectRoot: getProjectDirectoryRoot(state),
