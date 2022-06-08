@@ -677,11 +677,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual bool IsInSyncOperation() override;
 
-  void ParentWindowChanged() {
-    // Reset our storage access permission flag when we get reparented.
-    mStorageAccessPermissionGranted = false;
-  }
-
  public:
   double GetInnerWidthOuter(mozilla::ErrorResult& aError);
 
@@ -875,13 +870,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsIWidget* GetNearestWidget() const;
 
   bool IsInModalState();
-
-  bool IsStorageAccessPermissionGranted() const {
-    return mStorageAccessPermissionGranted;
-  }
-  void SetStorageAccessPermissionGranted(bool aStorageAccessPermissionGranted) {
-    mStorageAccessPermissionGranted = aStorageAccessPermissionGranted;
-  }
 
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels.  This computes it with cached scale in
@@ -1098,9 +1086,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool mAllowScriptsToClose : 1;
 
   bool mTopLevelOuterContentWindow : 1;
-
-  // whether storage access has been granted to this frame.
-  bool mStorageAccessPermissionGranted : 1;
 
   // Whether we've delayed a print until after load.
   bool mDelayedPrintUntilAfterLoad : 1;
