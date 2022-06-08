@@ -950,7 +950,7 @@ class nsLayoutUtils {
    * frame if this transform can be drawn 2D, or the identity scale factors
    * otherwise.
    */
-  static MatrixScalesDouble GetTransformToAncestorScale(const nsIFrame* aFrame);
+  static MatrixScales GetTransformToAncestorScale(const nsIFrame* aFrame);
 
   /**
    * Gets the scale factors of the transform for aFrame relative to the root
@@ -958,7 +958,7 @@ class nsLayoutUtils {
    * If some frame on the path from aFrame to the display root frame may have an
    * animated scale, returns the identity scale factors.
    */
-  static MatrixScalesDouble GetTransformToAncestorScaleExcludingAnimated(
+  static MatrixScales GetTransformToAncestorScaleExcludingAnimated(
       nsIFrame* aFrame);
 
   /**
