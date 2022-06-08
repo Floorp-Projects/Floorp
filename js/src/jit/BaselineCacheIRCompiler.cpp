@@ -3160,3 +3160,43 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
   return true;
 }
+
+bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
+    ObjOperandId iterId, ObjOperandId calleeId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register iter = allocator.useRegister(masm, iterId);
+  Register callee = allocator.useRegister(masm, calleeId);
+
+  AutoScratchRegister code(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+
+  masm.loadJitCodeRaw(callee, code);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Call the return method.
+  masm.alignJitStackBasedOnNArgs(0);
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
+  EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
+  masm.Push(Imm32(0));  // argc is 0
+  masm.Push(callee);
+  masm.Push(scratch);
+
+  masm.callJit(code);
+
+  // Verify that the return value is an object.
+  Label success;
+  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
+
+  masm.Push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
+  using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+  callVM<Fn, ThrowCheckIsObject>(masm);
+
+  masm.bind(&success);
+
+  stubFrame.leave(masm, true);
+  return true;
+}

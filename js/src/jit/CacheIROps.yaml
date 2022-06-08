@@ -2849,6 +2849,14 @@
     obj: ObjId
     shape: ShapeField
 
+- name: CloseIterScriptedResult
+  shared: false
+  transpile: false
+  cost_estimate: 5
+  args:
+    iter: ObjId
+    callee: ObjId
+
 - name: CallPrintString
   shared: true
   transpile: false
