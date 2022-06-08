@@ -2507,8 +2507,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   PreloadLocalStorage();
 
-  mStorageAccessPermissionGranted = ContentBlocking::ShouldAllowAccessFor(
-      newInnerWindow, aDocument->GetDocumentURI(), nullptr);
+  mStorageAccessPermissionGranted = false;
 
   // Do this here rather than in say the Document constructor, since
   // we need a WindowContext available.

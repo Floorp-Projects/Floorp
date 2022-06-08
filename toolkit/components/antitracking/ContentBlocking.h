@@ -147,7 +147,9 @@ class ContentBlocking final {
   //   Some(false) if unpartitioned cookies will be blocked
   //   None if it is not clear from settings alone what to do
   static Maybe<bool> CheckBrowserSettingsDecidesStorageAccessAPI(
-      nsICookieJarSettings* aCookieJarSettings, bool aThirdParty);
+      nsICookieJarSettings* aCookieJarSettings, bool aThirdParty,
+      bool aOnRejectForeignAllowlist, bool aIsOnThirdPartySkipList,
+      bool aIsThirdPartyTracker);
 
   // This function checks if the document's context (like if it is third-party
   // or an iframe) gives an answer of how a the StorageAccessAPI call, that is
