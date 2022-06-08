@@ -13,6 +13,7 @@ import * as asyncValue from "./async-value";
 
 import { initialState } from "../reducers/index";
 
+import { getPathParts } from "./sources-tree/utils";
 import { getDisplayURL } from "./sources-tree/getURL";
 
 function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
@@ -30,10 +31,16 @@ function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   };
 }
 
-function makeMockDisplaySource(url = "url", id = "source") {
+function makeMockDisplaySource(
+  url = "url",
+  id = "source",
+  thread = "FakeThread"
+) {
+  const displayURL = getDisplayURL(url);
   return {
-    ...makeMockSource(url, id),
-    displayURL: getDisplayURL(url),
+    ...makeMockSource(url, id, thread),
+    displayURL,
+    parts: getPathParts(displayURL, thread, "http://www.example.com"),
   };
 }
 

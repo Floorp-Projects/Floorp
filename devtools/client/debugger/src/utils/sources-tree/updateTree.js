@@ -4,7 +4,7 @@
 
 import { addToTree } from "./addToTree";
 import { collapseTree } from "./collapseTree";
-import { createDirectoryNode, createParentMap, getPathParts } from "./utils";
+import { createDirectoryNode, createParentMap } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 
 function getSourcesDiff(newSources, prevSources) {
@@ -66,7 +66,7 @@ export function updateTree({
 
     for (const source of toAdd) {
       shouldUpdate = true;
-      addToTree(uncollapsedTree, source, mainThreadHost, thread.actor);
+      addToTree(uncollapsedTree, source);
     }
 
     for (const [prevSource, newSource] of toUpdate) {
@@ -109,17 +109,12 @@ export function updateInTree(
   mainThreadHost,
   thread
 ) {
-  const prevEntries = findEntries(
-    tree,
-    prevSource,
-    thread,
-    mainThreadHost
-  );
+  const prevEntries = findEntries(tree, prevSource, mainThreadHost);
   if (!prevEntries) {
     return;
   }
 
-  const parts = getPathParts(newSource.displayURL, thread, mainThreadHost);
+  const { parts } = newSource;
 
   if (parts.length === prevEntries.length) {
     let match = true;
@@ -154,11 +149,12 @@ export function updateInTree(
       break;
     }
   }
-  addToTree(tree, newSource, mainThreadHost, thread);
+  addToTree(tree, newSource);
 }
 
-function findEntries(tree, source, thread, mainThreadHost) {
-  const parts = getPathParts(source.displayURL, thread, mainThreadHost);
+function findEntries(tree, source, mainThreadHost) {
+  // Copy the array to avoid mutating it on the next instruction.
+  const parts = Array.from(source.parts);
 
   // We're searching for the directory containing the file so we pop off the
   // potential filename. This is because the tree has some logic to inject

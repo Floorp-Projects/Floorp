@@ -4,7 +4,7 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
-import { getFileExtension } from "../utils/sources-tree/utils";
+import { getPathParts, getFileExtension } from "../utils/sources-tree/utils";
 import { getDisplayURL } from "../utils/sources-tree/getURL";
 
 import {
@@ -281,6 +281,7 @@ export const getDisplayedSources = createSelector(
         const entry = {
           ...source,
           displayURL,
+          parts: getPathParts(displayURL, thread, mainThreadHost),
         };
 
         if (!result[thread]) {

@@ -17,7 +17,11 @@ import {
 
 function createSourcesMap(sources) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockDisplaySource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(
+      source.url,
+      source.id,
+      source.thread
+    );
     return map;
   }, {});
 
@@ -33,9 +37,7 @@ describe("sources tree", () => {
       ];
 
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source =>
-        addToTree(tree, source, "http://example.com/", "Main Thread")
-      );
+      sources.forEach(source => addToTree(tree, source));
       const [bFolderNode, aFileNode] = tree.contents[0].contents[0].contents;
       const [cFolderNode] = bFolderNode.contents;
       const [dFileNode] = cFolderNode.contents;
@@ -108,10 +110,12 @@ describe("sources tree", () => {
       {
         id: "server1.conn13.child1/33",
         url: "https://example.com/d.js",
+        thread: "OtherThread",
       },
       {
         id: "server1.conn13.child1/31",
         url: "https://example.com/e.js",
+        thread: "OtherThread",
       },
     ];
     const sources = {
