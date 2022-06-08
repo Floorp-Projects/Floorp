@@ -7,6 +7,12 @@ const { BuiltInThemes } = ChromeUtils.import(
 );
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
+const colorwaySelector = document.getElementById("colorway-selector");
+
+document.getElementById("set-colorway").onclick = () => {
+  colorwaySelector.selectedTheme.enable();
+};
+
 function showUseFXHomeControls(fluentStrings) {
   let homeState;
   const useFXHomeControls = document.getElementById("use-fx-home-controls");

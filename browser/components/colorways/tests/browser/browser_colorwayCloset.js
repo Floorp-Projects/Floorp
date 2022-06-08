@@ -32,6 +32,8 @@ add_task(async function about_colorwaycloset_smoke_test() {
         "colorway description exists"
       );
 
+      ok(document.getElementById("set-colorway"), "Found Set Colorway button");
+
       const useFXHomeControls = document.getElementById("use-fx-home-controls");
       ok(useFXHomeControls, "firefox home controls exists");
       useFXHomeControls.toggleAttribute("hidden", false);
