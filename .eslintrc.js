@@ -96,7 +96,6 @@ module.exports = {
       files: [
         "*.html",
         "*.xhtml",
-        "*.xul",
         "*.xml",
         "js/src/builtin/**/*.js",
         "js/src/shell/**/*.js",
