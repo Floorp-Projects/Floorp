@@ -128,6 +128,7 @@ class ReassemblyQueue {
   bool IsConsistent() const;
   void AddReassembledMessage(rtc::ArrayView<const UnwrappedTSN> tsns,
                              DcSctpMessage message);
+  void MaybeMoveLastAssembledWatermarkFurther();
 
   struct DeferredResetStreams {
     explicit DeferredResetStreams(OutgoingSSNResetRequestParameter req)
