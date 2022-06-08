@@ -304,17 +304,6 @@ AudioProcessingImpl::AudioProcessingImpl(
   // TODO(webrtc:5298): Remove once the use of ExperimentalNs has been
   // deprecated.
   config_.transient_suppression.enabled = config.Get<ExperimentalNs>().enabled;
-
-  // TODO(webrtc:5298): Remove once the use of ExperimentalAgc has been
-  // deprecated.
-  config_.gain_controller1.analog_gain_controller.enabled =
-      config.Get<ExperimentalAgc>().enabled;
-  config_.gain_controller1.analog_gain_controller.startup_min_volume =
-      config.Get<ExperimentalAgc>().startup_min_volume;
-  config_.gain_controller1.analog_gain_controller.clipped_level_min =
-      config.Get<ExperimentalAgc>().clipped_level_min;
-  config_.gain_controller1.analog_gain_controller.enable_digital_adaptive =
-      !config.Get<ExperimentalAgc>().digital_adaptive_disabled;
 #endif
 
   Initialize();

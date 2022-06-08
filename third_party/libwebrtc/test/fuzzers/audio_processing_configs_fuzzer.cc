@@ -39,7 +39,7 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
                                               rtc::TaskQueue* worker_queue) {
   // Parse boolean values for optionally enabling different
   // configurable public components of APM.
-  bool exp_agc = fuzz_data->ReadOrDefaultValue(true);
+  static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
   bool exp_ns = fuzz_data->ReadOrDefaultValue(true);
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
@@ -105,7 +105,6 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
     echo_control_factory.reset(new EchoCanceller3Factory());
   }
 
-  config.Set<ExperimentalAgc>(new ExperimentalAgc(exp_agc));
   config.Set<ExperimentalNs>(new ExperimentalNs(exp_ns));
 
   rtc::scoped_refptr<AudioProcessing> apm =
