@@ -164,14 +164,7 @@ class DrawTargetOffset : public DrawTarget {
     return mDrawTarget->CanCreateSimilarDrawTarget(aSize, aFormat);
   }
   virtual RefPtr<DrawTarget> CreateClippedDrawTarget(
-      const Rect& aBounds, SurfaceFormat aFormat) override {
-    RefPtr<DrawTarget> dt =
-        mDrawTarget->CreateClippedDrawTarget(aBounds, aFormat);
-    RefPtr<DrawTarget> result =
-        gfx::Factory::CreateOffsetDrawTarget(dt, mOrigin);
-    result->SetTransform(mTransform);
-    return result;
-  }
+      const Rect& aBounds, SurfaceFormat aFormat) override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
       FillRule aFillRule = FillRule::FILL_WINDING) const override {
