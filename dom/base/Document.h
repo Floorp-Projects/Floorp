@@ -1913,7 +1913,8 @@ class Document : public nsINode,
 
   // Pops the fullscreen element from the top layer and clears its
   // fullscreen flag. Returns whether there was any fullscreen element.
-  bool PopFullscreenElement();
+  enum class UpdateViewport : bool { No, Yes };
+  bool PopFullscreenElement(UpdateViewport = UpdateViewport::Yes);
 
   // Pushes the given element into the top of top layer and set fullscreen
   // flag.
