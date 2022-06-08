@@ -38,6 +38,7 @@ jobs:
             product: firefox
             channel-names: ["beta", "beta-localtest", "beta-cdntest"]
             rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+            pin-channels: ["beta-localtest", "beta-cdntest"]
         treeherder:
             platform: firefox-release/opt
             symbol: Rel(BPFxRC)
