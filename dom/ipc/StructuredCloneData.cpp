@@ -169,8 +169,8 @@ bool BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
     }
 
     for (uint32_t i = 0; i < blobImpls.Length(); ++i) {
-      nsresult rv = IPCBlobUtils::Serialize(blobImpls[i], aManager,
-                                            aClonedData.blobs()[i]);
+      nsresult rv =
+          IPCBlobUtils::Serialize(blobImpls[i], aClonedData.blobs()[i]);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
       }

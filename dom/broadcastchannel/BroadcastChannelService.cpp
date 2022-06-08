@@ -157,8 +157,7 @@ void BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
 
       // Serialize Blob objects for this message.
       for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
-        nsresult rv = IPCBlobUtils::Serialize(blobImpls[i], parent->Manager(),
-                                              newBlobImpls[i]);
+        nsresult rv = IPCBlobUtils::Serialize(blobImpls[i], newBlobImpls[i]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }

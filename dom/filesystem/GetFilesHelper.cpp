@@ -512,8 +512,7 @@ class GetFilesHelperParentCallback final : public GetFilesCallback {
     ipcBlobs.SetLength(aBlobImpls.Length());
 
     for (uint32_t i = 0; i < aBlobImpls.Length(); ++i) {
-      nsresult rv = IPCBlobUtils::Serialize(
-          aBlobImpls[i], mParent->mContentParent, ipcBlobs[i]);
+      nsresult rv = IPCBlobUtils::Serialize(aBlobImpls[i], ipcBlobs[i]);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         mParent->mContentParent->SendGetFilesResponseAndForget(
             mParent->mUUID, GetFilesResponseFailure(NS_ERROR_OUT_OF_MEMORY));
