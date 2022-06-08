@@ -1025,7 +1025,7 @@ TEST_P(PeerConnectionSignalingTest, ReceiveFlexFecReoffer) {
   ASSERT_EQ(flexfec_it->id, 35);
   auto av1_it = std::find_if(
       offer_codecs.begin(), offer_codecs.end(),
-      [](const cricket::Codec& codec) { return codec.name == "AV1X"; });
+      [](const cricket::Codec& codec) { return codec.name == "AV1"; });
   if (av1_it != offer_codecs.end()) {
     ASSERT_NE(av1_it->id, 35);
   }

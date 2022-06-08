@@ -21,14 +21,14 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   public VideoDecoder createDecoder(VideoCodecInfo codecInfo) {
     String codecName = codecInfo.getName();
 
-    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP8.toSdpCodecName())) {
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP8.name())) {
       return new LibvpxVp8Decoder();
     }
-    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP9.toSdpCodecName())
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.VP9.name())
         && LibvpxVp9Decoder.nativeIsSupported()) {
       return new LibvpxVp9Decoder();
     }
-    if (codecName.equalsIgnoreCase(VideoCodecMimeType.AV1.toSdpCodecName())
+    if (codecName.equalsIgnoreCase(VideoCodecMimeType.AV1.name())
         && LibaomAv1Decoder.nativeIsSupported()) {
       return new LibaomAv1Decoder();
     }
@@ -44,12 +44,12 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   static VideoCodecInfo[] supportedCodecs() {
     List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
 
-    codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP8.toSdpCodecName(), new HashMap<>()));
+    codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP8.name(), new HashMap<>()));
     if (LibvpxVp9Decoder.nativeIsSupported()) {
-      codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP9.toSdpCodecName(), new HashMap<>()));
+      codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP9.name(), new HashMap<>()));
     }
     if (LibaomAv1Decoder.nativeIsSupported()) {
-      codecs.add(new VideoCodecInfo(VideoCodecMimeType.AV1.toSdpCodecName(), new HashMap<>()));
+      codecs.add(new VideoCodecInfo(VideoCodecMimeType.AV1.name(), new HashMap<>()));
     }
 
     return codecs.toArray(new VideoCodecInfo[codecs.size()]);
