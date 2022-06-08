@@ -270,6 +270,10 @@ bool DefineTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                              uint64_t index, Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result);
 
+// Sort a typed array in ascending order. The typed array may be wrapped, but
+// must not be detached.
+bool intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc, Value* vp);
+
 static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {
     case Scalar::Int8:
