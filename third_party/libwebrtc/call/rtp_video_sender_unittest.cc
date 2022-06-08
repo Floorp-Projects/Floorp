@@ -103,7 +103,7 @@ VideoSendStream::Config CreateVideoSendStreamConfig(
   config.rtp.nack.rtp_history_ms = 1000;
   config.rtp.extensions.emplace_back(RtpExtension::kTransportSequenceNumberUri,
                                      kTransportsSequenceExtensionId);
-  config.rtp.extensions.emplace_back(RtpDependencyDescriptorExtension::kUri,
+  config.rtp.extensions.emplace_back(RtpDependencyDescriptorExtension::Uri(),
                                      kDependencyDescriptorExtensionId);
   config.rtp.extmap_allow_mixed = true;
   return config;

@@ -957,7 +957,7 @@ TEST_P(RtpRtcpImpl2Test, PaddingTimestampMatchesMedia) {
 }
 
 TEST_P(RtpRtcpImpl2Test, AssignsTransportSequenceNumber) {
-  sender_.RegisterHeaderExtension(TransportSequenceNumber::kUri,
+  sender_.RegisterHeaderExtension(TransportSequenceNumber::Uri(),
                                   kTransportSequenceNumberExtensionId);
 
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
@@ -974,7 +974,7 @@ TEST_P(RtpRtcpImpl2Test, AssignsTransportSequenceNumber) {
 }
 
 TEST_P(RtpRtcpImpl2Test, AssignsAbsoluteSendTime) {
-  sender_.RegisterHeaderExtension(AbsoluteSendTime::kUri,
+  sender_.RegisterHeaderExtension(AbsoluteSendTime::Uri(),
                                   kAbsoluteSendTimeExtensionId);
 
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
@@ -982,7 +982,7 @@ TEST_P(RtpRtcpImpl2Test, AssignsAbsoluteSendTime) {
 }
 
 TEST_P(RtpRtcpImpl2Test, AssignsTransmissionTimeOffset) {
-  sender_.RegisterHeaderExtension(TransmissionOffset::kUri,
+  sender_.RegisterHeaderExtension(TransmissionOffset::Uri(),
                                   kTransmissionOffsetExtensionId);
 
   constexpr TimeDelta kOffset = TimeDelta::Millis(100);
@@ -998,7 +998,7 @@ TEST_P(RtpRtcpImpl2Test, AssignsTransmissionTimeOffset) {
 }
 
 TEST_P(RtpRtcpImpl2Test, PropagatesSentPacketInfo) {
-  sender_.RegisterHeaderExtension(TransportSequenceNumber::kUri,
+  sender_.RegisterHeaderExtension(TransportSequenceNumber::Uri(),
                                   kTransportSequenceNumberExtensionId);
   int64_t now_ms = time_controller_.GetClock()->TimeInMilliseconds();
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));

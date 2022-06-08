@@ -106,7 +106,7 @@ TEST_F(RtpSenderAudioTest, SendAudio) {
 
 TEST_F(RtpSenderAudioTest, SendAudioWithAudioLevelExtension) {
   EXPECT_EQ(0, rtp_sender_audio_->SetAudioLevel(kAudioLevel));
-  rtp_module_->RegisterRtpHeaderExtension(AudioLevel::kUri,
+  rtp_module_->RegisterRtpHeaderExtension(AudioLevel::Uri(),
                                           kAudioLevelExtensionId);
 
   const char payload_name[] = "PAYLOAD_NAME";
@@ -149,7 +149,7 @@ TEST_F(RtpSenderAudioTest, SendAudioWithoutAbsoluteCaptureTime) {
 }
 
 TEST_F(RtpSenderAudioTest, SendAudioWithAbsoluteCaptureTime) {
-  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::kUri,
+  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::Uri(),
                                           kAbsoluteCaptureTimeExtensionId);
   constexpr uint32_t kAbsoluteCaptureTimestampMs = 521;
   const char payload_name[] = "audio";
@@ -185,7 +185,7 @@ TEST_F(RtpSenderAudioTest,
   rtp_sender_audio_ =
       std::make_unique<RTPSenderAudio>(&fake_clock_, rtp_module_->RtpSender());
 
-  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::kUri,
+  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::Uri(),
                                           kAbsoluteCaptureTimeExtensionId);
   constexpr uint32_t kAbsoluteCaptureTimestampMs = 521;
   const char payload_name[] = "audio";
