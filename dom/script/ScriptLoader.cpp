@@ -32,7 +32,6 @@
 #include "js/Utility.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
-#include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
@@ -557,9 +556,14 @@ nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
   }
 
   nsSecurityFlags securityFlags =
-      nsContentSecurityManager::ComputeSecurityFlags(
-          aRequest->CORSMode(), nsContentSecurityManager::CORSSecurityMapping::
-                                    CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS);
+      aRequest->CORSMode() == CORS_NONE
+          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL
+          : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+  if (aRequest->CORSMode() == CORS_ANONYMOUS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  } else if (aRequest->CORSMode() == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
 
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
