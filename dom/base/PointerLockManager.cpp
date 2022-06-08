@@ -366,8 +366,7 @@ PointerLockManager::PointerLockRequest::Run() {
   }
   // If it is neither user input initiated, nor requested in fullscreen,
   // it should be rejected.
-  if (!error && !mUserInputOrChromeCaller &&
-      !document->GetUnretargetedFullScreenElement()) {
+  if (!error && !mUserInputOrChromeCaller && !document->Fullscreen()) {
     error = "PointerLockDeniedNotInputDriven";
   }
 

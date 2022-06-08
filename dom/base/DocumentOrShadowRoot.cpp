@@ -313,7 +313,7 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() const {
     return nullptr;
   }
 
-  Element* element = AsNode().OwnerDoc()->GetUnretargetedFullScreenElement();
+  Element* element = AsNode().OwnerDoc()->GetUnretargetedFullscreenElement();
   NS_ASSERTION(!element || element->State().HasState(ElementState::FULLSCREEN),
                "Fullscreen element should have fullscreen styles applied");
 
