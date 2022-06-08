@@ -81,6 +81,7 @@ rtc_library("reassembly_queue") {
     "../packet:chunk",
     "../packet:data",
     "../packet:parameter",
+    "../public:socket",
     "../public:types",
   ]
   sources = [
