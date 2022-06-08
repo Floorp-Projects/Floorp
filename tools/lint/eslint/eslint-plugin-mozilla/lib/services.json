@@ -36,6 +36,7 @@
     "nsIQuotaManagerService": "qms",
     "nsIScriptSecurityManager": "scriptSecurityManager",
     "nsISearchService": "search",
+    "nsISessionStorageService": "sessionStorage",
     "nsISpeculativeConnect": "io",
     "nsIStringBundleService": "strings",
     "nsISystemInfo": "sysinfo",
