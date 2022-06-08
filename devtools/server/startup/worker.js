@@ -52,7 +52,6 @@ const { WorkerTargetActor } = worker.require(
 );
 const { DevToolsServer } = worker.require("devtools/server/devtools-server");
 
-DevToolsServer.init();
 DevToolsServer.createRootActor = function() {
   throw new Error("Should never get here!");
 };
@@ -67,6 +66,11 @@ this.addEventListener("message", async function(event) {
   switch (packet.type) {
     case "connect":
       const { forwardingPrefix } = packet;
+
+      // Force initializing the server each time on connect
+      // as it may have been destroyed by a previous, now closed toolbox.
+      // Once the last connection drops, the server auto destroy itself.
+      DevToolsServer.init();
 
       // Step 3: Create a connection to the parent.
       const connection = DevToolsServer.connectToParent(forwardingPrefix, this);
