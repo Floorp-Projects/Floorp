@@ -598,7 +598,7 @@ TEST_F(AudioDecoderIsacFixTest, EncodeDecode) {
 #elif defined(WEBRTC_IOS) && defined(WEBRTC_ARCH_X86_64)
   static const int kEncodedBytes = 671;
 #else
-  static const int kEncodedBytes = 687;
+  static const int kEncodedBytes = 671;
 #endif
   EncodeDecodeTest(kEncodedBytes, tolerance, mse, delay);
   ReInitTest();
