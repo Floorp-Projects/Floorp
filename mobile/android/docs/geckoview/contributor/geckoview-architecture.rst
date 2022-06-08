@@ -619,7 +619,7 @@ GeckoView scans every web page for password ``<input>`` elements whenever the
 <https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewAutoFillChild.jsm#74-78>`_.
 
 It also uses ``DOMFormHasPassword`` and ``DOMInputPasswordAdded`` to detect
-whenver a password element is added to the DOM after the ``pageshow`` event.
+whenever a password element is added to the DOM after the ``pageshow`` event.
 
 Prefs
 -----
