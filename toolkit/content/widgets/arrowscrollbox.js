@@ -588,34 +588,35 @@
             scrolledToStart = true;
             scrolledToEnd = true;
           } else {
-            let [leftOrTop, rightOrBottom] = this.startEndProps;
-            let leftOrTopEdge = ele =>
-              Math.round(this._boundsWithoutFlushing(ele)[leftOrTop]);
-            let rightOrBottomEdge = ele =>
-              Math.round(this._boundsWithoutFlushing(ele)[rightOrBottom]);
+            let isAtEdge = (element, start) => {
+              let edge = start ? this.startEndProps[0] : this.startEndProps[1];
+              let scrollEdge = this._boundsWithoutFlushing(this.scrollbox)[
+                edge
+              ];
+              let elementEdge = this._boundsWithoutFlushing(element)[edge];
+              // This is enough slop (>2/3) so that no subpixel value should
+              // get us confused about whether we reached the end.
+              const EPSILON = 0.7;
+              if (start) {
+                return scrollEdge <= elementEdge + EPSILON;
+              }
+              return elementEdge <= scrollEdge + EPSILON;
+            };
 
             let elements = this._getScrollableElements();
-            let [leftOrTopElement, rightOrBottomElement] = [
+            let [startElement, endElement] = [
               elements[0],
               elements[elements.length - 1],
             ];
             if (this.isRTLScrollbox) {
-              [leftOrTopElement, rightOrBottomElement] = [
-                rightOrBottomElement,
-                leftOrTopElement,
-              ];
+              [startElement, endElement] = [endElement, startElement];
             }
-
-            if (
-              leftOrTopElement &&
-              leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this.scrollbox)
-            ) {
+            if (startElement && isAtEdge(startElement, /* start = */ true)) {
               scrolledToStart = !this.isRTLScrollbox;
               scrolledToEnd = this.isRTLScrollbox;
             } else if (
-              rightOrBottomElement &&
-              rightOrBottomEdge(rightOrBottomElement) <=
-                rightOrBottomEdge(this.scrollbox)
+              endElement &&
+              isAtEdge(endElement, /* start = */ false)
             ) {
               scrolledToStart = this.isRTLScrollbox;
               scrolledToEnd = !this.isRTLScrollbox;
