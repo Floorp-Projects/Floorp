@@ -78,12 +78,14 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "asyncHistory",
   "@mozilla.org/browser/history;1",
   "mozIAsyncHistory"
@@ -162,7 +164,7 @@ var History = Object.freeze({
    */
   fetch(guidOrURI, options = {}) {
     // First, normalize to guid or string, and throw if not possible
-    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
+    guidOrURI = lazy.PlacesUtils.normalizeToURLOrGUID(guidOrURI);
 
     // See if options exists and make sense
     if (!options || typeof options !== "object") {
@@ -187,7 +189,7 @@ var History = Object.freeze({
       throw new TypeError("includeAnnotations should be a boolean if exists");
     }
 
-    return PlacesUtils.promiseDBConnection().then(db =>
+    return lazy.PlacesUtils.promiseDBConnection().then(db =>
       fetch(db, guidOrURI, options)
     );
   },
@@ -214,7 +216,7 @@ var History = Object.freeze({
       throw new TypeError("all annotation values should be strings");
     }
 
-    return PlacesUtils.promiseDBConnection().then(db =>
+    return lazy.PlacesUtils.promiseDBConnection().then(db =>
       fetchAnnotatedPages(db, annotations)
     );
   },
@@ -237,8 +239,8 @@ var History = Object.freeze({
       throw new TypeError("Input is not an array");
     }
     // First, normalize to guid or URL, throw if not possible
-    guidOrURIs = guidOrURIs.map(v => PlacesUtils.normalizeToURLOrGUID(v));
-    return PlacesUtils.promiseDBConnection().then(db =>
+    guidOrURIs = guidOrURIs.map(v => lazy.PlacesUtils.normalizeToURLOrGUID(v));
+    return lazy.PlacesUtils.promiseDBConnection().then(db =>
       fetchMany(db, guidOrURIs)
     );
   },
@@ -283,9 +285,9 @@ var History = Object.freeze({
    *      If an element of `visits` has an invalid `transition`.
    */
   insert(pageInfo) {
-    let info = PlacesUtils.validatePageInfo(pageInfo);
+    let info = lazy.PlacesUtils.validatePageInfo(pageInfo);
 
-    return PlacesUtils.withConnectionWrapper("History.jsm: insert", db =>
+    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: insert", db =>
       insert(db, info)
     );
   },
@@ -351,12 +353,13 @@ var History = Object.freeze({
     }
 
     for (let pageInfo of pageInfos) {
-      let info = PlacesUtils.validatePageInfo(pageInfo);
+      let info = lazy.PlacesUtils.validatePageInfo(pageInfo);
       infos.push(info);
     }
 
-    return PlacesUtils.withConnectionWrapper("History.jsm: insertMany", db =>
-      insertMany(db, infos, onResult, onError)
+    return lazy.PlacesUtils.withConnectionWrapper(
+      "History.jsm: insertMany",
+      db => insertMany(db, infos, onResult, onError)
     );
   },
 
@@ -399,7 +402,7 @@ var History = Object.freeze({
     for (let page of pages) {
       // Normalize to URL or GUID, or throw if `page` cannot
       // be normalized.
-      let normalized = PlacesUtils.normalizeToURLOrGUID(page);
+      let normalized = lazy.PlacesUtils.normalizeToURLOrGUID(page);
       if (typeof normalized === "string") {
         guids.push(normalized);
       } else {
@@ -432,7 +435,7 @@ var History = Object.freeze({
 
         let pages = { guids: guidsSlice, urls: urlsSlice };
 
-        let result = await PlacesUtils.withConnectionWrapper(
+        let result = await lazy.PlacesUtils.withConnectionWrapper(
           "History.jsm: remove",
           db => remove(db, pages, onResult)
         );
@@ -531,7 +534,7 @@ var History = Object.freeze({
       throw new TypeError("Invalid function: " + onResult);
     }
 
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "History.jsm: removeVisitsByFilter",
       db => removeVisitsByFilter(db, filter, onResult)
     );
@@ -624,7 +627,7 @@ var History = Object.freeze({
       throw new TypeError("Invalid function: " + onResult);
     }
 
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "History.jsm: removeByFilter",
       db => removeByFilter(db, filter, onResult)
     );
@@ -647,19 +650,19 @@ var History = Object.freeze({
     // Quick fallback to the cpp version.
     if (guidOrURI instanceof Ci.nsIURI) {
       return new Promise(resolve => {
-        asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
+        lazy.asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
           resolve(aIsVisited);
         });
       });
     }
 
-    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
+    guidOrURI = lazy.PlacesUtils.normalizeToURLOrGUID(guidOrURI);
     let isGuid = typeof guidOrURI == "string";
     let sqlFragment = isGuid
       ? "guid = :val"
       : "url_hash = hash(:val) AND url = :val ";
 
-    return PlacesUtils.promiseDBConnection().then(async db => {
+    return lazy.PlacesUtils.promiseDBConnection().then(async db => {
       let rows = await db.executeCached(
         `SELECT 1 FROM moz_places
                                          WHERE ${sqlFragment}
@@ -677,7 +680,7 @@ var History = Object.freeze({
    *      A promise resolved once the operation is complete.
    */
   clear() {
-    return PlacesUtils.withConnectionWrapper("History.jsm: clear", clear);
+    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: clear", clear);
   },
 
   /**
@@ -759,7 +762,7 @@ var History = Object.freeze({
    *      DB_URL_LENGTH_MAX defined in PlacesUtils.jsm.
    */
   update(pageInfo) {
-    let info = PlacesUtils.validatePageInfo(pageInfo, false);
+    let info = lazy.PlacesUtils.validatePageInfo(pageInfo, false);
 
     if (
       info.description === undefined &&
@@ -772,7 +775,7 @@ var History = Object.freeze({
       );
     }
 
-    return PlacesUtils.withConnectionWrapper("History.jsm: update", db =>
+    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: update", db =>
       update(db, info)
     );
   },
@@ -848,17 +851,17 @@ var History = Object.freeze({
 function convertForUpdatePlaces(pageInfo) {
   let info = {
     guid: pageInfo.guid,
-    uri: PlacesUtils.toURI(pageInfo.url),
+    uri: lazy.PlacesUtils.toURI(pageInfo.url),
     title: pageInfo.title,
     visits: [],
   };
 
   for (let inVisit of pageInfo.visits) {
     let visit = {
-      visitDate: PlacesUtils.toPRTime(inVisit.date),
+      visitDate: lazy.PlacesUtils.toPRTime(inVisit.date),
       transitionType: inVisit.transition,
       referrerURI: inVisit.referrer
-        ? PlacesUtils.toURI(inVisit.referrer)
+        ? lazy.PlacesUtils.toURI(inVisit.referrer)
         : undefined,
     };
     info.visits.push(visit);
@@ -878,17 +881,17 @@ var invalidateFrecencies = async function(db, idList) {
   if (!idList.length) {
     return;
   }
-  for (let chunk of PlacesUtils.chunkArray(idList, db.variableLimit)) {
+  for (let chunk of lazy.PlacesUtils.chunkArray(idList, db.variableLimit)) {
     await db.execute(
       `UPDATE moz_places
        SET frecency = CALCULATE_FRECENCY(id)
-       WHERE id in (${PlacesUtils.sqlBindPlaceholders(chunk)})`,
+       WHERE id in (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
       chunk
     );
     await db.execute(
       `UPDATE moz_places
        SET hidden = 0
-       WHERE id in (${PlacesUtils.sqlBindPlaceholders(chunk)})
+       WHERE id in (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})
        AND frecency <> 0`,
       chunk
     );
@@ -982,11 +985,14 @@ var cleanupPages = async function(db, pages) {
   // Note, we are already in a transaction, since callers create it.
   // Check relations regardless, to avoid creating orphans in case of
   // async race conditions.
-  for (let chunk of PlacesUtils.chunkArray(pagesToRemove, db.variableLimit)) {
+  for (let chunk of lazy.PlacesUtils.chunkArray(
+    pagesToRemove,
+    db.variableLimit
+  )) {
     let idsToRemove = chunk.map(p => p.id);
     await db.execute(
       `DELETE FROM moz_places
-       WHERE id IN ( ${PlacesUtils.sqlBindPlaceholders(idsToRemove)} )
+       WHERE id IN ( ${lazy.PlacesUtils.sqlBindPlaceholders(idsToRemove)} )
          AND foreign_count = 0 AND last_visit_date ISNULL`,
       idsToRemove
     );
@@ -995,7 +1001,7 @@ var cleanupPages = async function(db, pages) {
     let hashesToRemove = chunk.map(p => p.hash);
     await db.executeCached(
       `DELETE FROM moz_pages_w_icons
-       WHERE page_url_hash IN (${PlacesUtils.sqlBindPlaceholders(
+       WHERE page_url_hash IN (${lazy.PlacesUtils.sqlBindPlaceholders(
          hashesToRemove
        )})`,
       hashesToRemove
@@ -1003,12 +1009,16 @@ var cleanupPages = async function(db, pages) {
 
     await db.execute(
       `DELETE FROM moz_annos
-       WHERE place_id IN ( ${PlacesUtils.sqlBindPlaceholders(idsToRemove)} )`,
+       WHERE place_id IN ( ${lazy.PlacesUtils.sqlBindPlaceholders(
+         idsToRemove
+       )} )`,
       idsToRemove
     );
     await db.execute(
       `DELETE FROM moz_inputhistory
-       WHERE place_id IN ( ${PlacesUtils.sqlBindPlaceholders(idsToRemove)} )`,
+       WHERE place_id IN ( ${lazy.PlacesUtils.sqlBindPlaceholders(
+         idsToRemove
+       )} )`,
       idsToRemove
     );
   }
@@ -1061,7 +1071,7 @@ function removeOrphanIcons(db) {
 var notifyCleanup = async function(db, pages, transitionType = 0) {
   const notifications = [];
   let notifiedCount = 0;
-  let bookmarkObservers = PlacesUtils.bookmarks.getObservers();
+  let bookmarkObservers = lazy.PlacesUtils.bookmarks.getObservers();
 
   for (let page of pages) {
     const isRemovedFromStore = !page.hasVisits && !page.hasForeign;
@@ -1077,10 +1087,12 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
     );
 
     if (page.hasForeign && !page.hasVisits) {
-      PlacesUtils.bookmarks
+      lazy.PlacesUtils.bookmarks
         .fetch({ url: page.url }, async bookmark => {
-          let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
-          let parentId = await PlacesUtils.promiseItemId(bookmark.parentGuid);
+          let itemId = await lazy.PlacesUtils.promiseItemId(bookmark.guid);
+          let parentId = await lazy.PlacesUtils.promiseItemId(
+            bookmark.parentGuid
+          );
           notify(
             bookmarkObservers,
             "onItemChanged",
@@ -1090,12 +1102,12 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
               false,
               "",
               0,
-              PlacesUtils.bookmarks.TYPE_BOOKMARK,
+              lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
               parentId,
               bookmark.guid,
               bookmark.parentGuid,
               "",
-              PlacesUtils.bookmarks.SOURCES.DEFAULT,
+              lazy.PlacesUtils.bookmarks.SOURCES.DEFAULT,
             ],
             { concurrent: true }
           );
@@ -1200,7 +1212,7 @@ var fetch = async function(db, guidOrURL, options) {
       if (!("visits" in pageInfo)) {
         pageInfo.visits = [];
       }
-      let date = PlacesUtils.toDate(row.getResultByName("visit_date"));
+      let date = lazy.PlacesUtils.toDate(row.getResultByName("visit_date"));
       let transition = row.getResultByName("visit_type");
 
       // TODO: Bug #1365913 add referrer URL to the `VisitInfo` data as well.
@@ -1270,7 +1282,7 @@ var fetchAnnotatedPages = async function(db, annotations) {
 // Inner implementation of History.fetchMany.
 var fetchMany = async function(db, guidOrURLs) {
   let resultsMap = new Map();
-  for (let chunk of PlacesUtils.chunkArray(guidOrURLs, db.variableLimit)) {
+  for (let chunk of lazy.PlacesUtils.chunkArray(guidOrURLs, db.variableLimit)) {
     let urls = [];
     let guids = [];
     for (let v of chunk) {
@@ -1285,18 +1297,18 @@ var fetchMany = async function(db, guidOrURLs) {
     if (urls.length) {
       wheres.push(`
         (
-          url_hash IN(${PlacesUtils.sqlBindPlaceholders(
+          url_hash IN(${lazy.PlacesUtils.sqlBindPlaceholders(
             urls,
             "hash(",
             ")"
           )}) AND
-          url IN(${PlacesUtils.sqlBindPlaceholders(urls)})
+          url IN(${lazy.PlacesUtils.sqlBindPlaceholders(urls)})
         )`);
       let hrefs = urls.map(u => u.href);
       params = [...params, ...hrefs, ...hrefs];
     }
     if (guids.length) {
-      wheres.push(`guid IN(${PlacesUtils.sqlBindPlaceholders(guids)})`);
+      wheres.push(`guid IN(${lazy.PlacesUtils.sqlBindPlaceholders(guids)})`);
       params = [...params, ...guids];
     }
 
@@ -1397,19 +1409,19 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
   let pages = [];
   await db.executeTransaction(async function() {
     // 2. Remove all offending visits.
-    for (let chunk of PlacesUtils.chunkArray(
+    for (let chunk of lazy.PlacesUtils.chunkArray(
       visitsToRemove,
       db.variableLimit
     )) {
       await db.execute(
         `DELETE FROM moz_historyvisits
-         WHERE id IN (${PlacesUtils.sqlBindPlaceholders(chunk)})`,
+         WHERE id IN (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
         chunk
       );
     }
 
     // 3. Find out which pages have been orphaned
-    for (let chunk of PlacesUtils.chunkArray(
+    for (let chunk of lazy.PlacesUtils.chunkArray(
       [...pagesToInspect],
       db.variableLimit
     )) {
@@ -1418,7 +1430,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
           (foreign_count != 0) AS has_foreign,
           (last_visit_date NOTNULL) as has_visits
          FROM moz_places
-         WHERE id IN (${PlacesUtils.sqlBindPlaceholders(chunk)})`,
+         WHERE id IN (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
         chunk,
         row => {
           let page = {
@@ -1452,11 +1464,11 @@ var removeByFilter = async function(db, filter, onResult = null) {
   let params = {};
   if ("beginDate" in filter) {
     conditions.push("v.visit_date >= :begin");
-    params.begin = PlacesUtils.toPRTime(filter.beginDate);
+    params.begin = lazy.PlacesUtils.toPRTime(filter.beginDate);
   }
   if ("endDate" in filter) {
     conditions.push("v.visit_date <= :end");
-    params.end = PlacesUtils.toPRTime(filter.endDate);
+    params.end = lazy.PlacesUtils.toPRTime(filter.endDate);
   }
 
   if (conditions.length !== 0) {
@@ -1533,10 +1545,10 @@ var removeByFilter = async function(db, filter, onResult = null) {
   await db.executeTransaction(async function() {
     // 4. Actually remove visits
     let pageIds = pages.map(p => p.id);
-    for (let chunk of PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
+    for (let chunk of lazy.PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
       await db.execute(
         `DELETE FROM moz_historyvisits
-         WHERE place_id IN(${PlacesUtils.sqlBindPlaceholders(chunk)})`,
+         WHERE place_id IN(${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
         chunk
       );
     }
@@ -1582,14 +1594,14 @@ var remove = async function(db, { guids, urls }, onResult = null) {
       });
     }
   }
-  for (let chunk of PlacesUtils.chunkArray(guids, db.variableLimit)) {
+  for (let chunk of lazy.PlacesUtils.chunkArray(guids, db.variableLimit)) {
     let query = `SELECT id, url, url_hash, guid, foreign_count, title, frecency
        FROM moz_places
-       WHERE guid IN (${PlacesUtils.sqlBindPlaceholders(guids)})
+       WHERE guid IN (${lazy.PlacesUtils.sqlBindPlaceholders(guids)})
       `;
     await db.execute(query, chunk, onRow);
   }
-  for (let chunk of PlacesUtils.chunkArray(urls, db.variableLimit)) {
+  for (let chunk of lazy.PlacesUtils.chunkArray(urls, db.variableLimit)) {
     // Make an array of variables like `["?1", "?2", ...]`, up to the length of
     // the chunk. This lets us bind each URL once, reusing the binding for the
     // `url_hash IN (...)` and `url IN (...)` clauses. We add 1 because indexed
@@ -1614,10 +1626,10 @@ var remove = async function(db, { guids, urls }, onResult = null) {
   await db.executeTransaction(async function() {
     // 2. Remove all visits to these pages.
     let pageIds = pages.map(p => p.id);
-    for (let chunk of PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
+    for (let chunk of lazy.PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
       await db.execute(
         `DELETE FROM moz_historyvisits
-         WHERE place_id IN (${PlacesUtils.sqlBindPlaceholders(chunk)})`,
+         WHERE place_id IN (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})`,
         chunk
       );
     }
@@ -1655,7 +1667,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
     pageInfo.title = updateInfo.title;
     pageInfo.visits = updateInfo.visits.map(visit => {
       return {
-        date: PlacesUtils.toDate(visit.visitDate),
+        date: lazy.PlacesUtils.toDate(visit.visitDate),
         transition: visit.transitionType,
         referrer: visit.referrerURI ? new URL(visit.referrerURI.spec) : null,
       };
@@ -1669,7 +1681,7 @@ var insert = function(db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
-    asyncHistory.updatePlaces(info, {
+    lazy.asyncHistory.updatePlaces(info, {
       handleError: error => {
         reject(error);
       },
@@ -1695,7 +1707,7 @@ var insertMany = function(db, pageInfos, onResult, onError) {
   }
 
   return new Promise((resolve, reject) => {
-    asyncHistory.updatePlaces(infos, {
+    lazy.asyncHistory.updatePlaces(infos, {
       handleError: (resultCode, result) => {
         let pageInfo = mergeUpdateInfoIntoPageInfo(result);
         onErrorData.push(pageInfo);
@@ -1802,7 +1814,7 @@ var update = async function(db, pageInfo) {
             typeof content == "string"
               ? History.ANNOTATION_TYPE_STRING
               : History.ANNOTATION_TYPE_INT64;
-          let date = PlacesUtils.toPRTime(new Date());
+          let date = lazy.PlacesUtils.toPRTime(new Date());
 
           // This will replace the id every time an annotation is updated. This is
           // not currently an issue as we're not joining on the id field.

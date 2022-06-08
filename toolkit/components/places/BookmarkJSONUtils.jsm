@@ -11,8 +11,10 @@ const { PlacesUtils } = ChromeUtils.import(
 
 Cu.importGlobalProperties(["fetch"]);
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm"
 );
@@ -153,7 +155,7 @@ var BookmarkJSONUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   async exportToFile(aFilePath, aOptions = {}) {
-    let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
+    let [bookmarks, count] = await lazy.PlacesBackups.getBookmarksTree();
     let startTime = Date.now();
     let jsonString = JSON.stringify(bookmarks);
     // Report the time taken to convert the tree to JSON.
