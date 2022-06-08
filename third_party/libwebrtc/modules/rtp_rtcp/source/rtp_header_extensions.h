@@ -319,6 +319,9 @@ class ColorSpaceExtension {
 class CsrcAudioLevel {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+  static constexpr absl::string_view Uri() {
+    return RtpExtension::kCsrcAudioLevelsUri;
+  }
   static constexpr const char* kUri =
       "urn:ietf:params:rtp-hdrext:csrc-audio-level";
 
