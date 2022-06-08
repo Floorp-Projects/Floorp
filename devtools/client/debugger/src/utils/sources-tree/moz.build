@@ -8,7 +8,6 @@ DIRS += []
 CompiledModules(
     "addToTree.js",
     "collapseTree.js",
-    "formatTree.js",
     "getDirectories.js",
     "getURL.js",
     "index.js",

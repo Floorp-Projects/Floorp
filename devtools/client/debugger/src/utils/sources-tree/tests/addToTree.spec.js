@@ -4,14 +4,13 @@
 
 /* eslint max-nested-callbacks: ["error", 4]*/
 
-import { makeMockDisplaySource } from "../../../utils/test-mockup";
+import { makeMockDisplaySource, formatTree } from "../../../utils/test-mockup";
 
 import {
   addToTree,
   createDirectoryNode,
   createSourceNode,
   createTree,
-  formatTree,
   nodeHasChildren,
 } from "../index";
 

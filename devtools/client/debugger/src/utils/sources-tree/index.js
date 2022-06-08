@@ -9,7 +9,6 @@
 
 export { addToTree } from "./addToTree";
 export { collapseTree } from "./collapseTree";
-export { formatTree } from "./formatTree";
 export { getDirectories, findSourceTreeNodes } from "./getDirectories";
 export { getFilenameFromPath, getURL } from "./getURL";
 export { createTree, updateTree } from "./updateTree";
