@@ -47,39 +47,9 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
     //              [stack] ITER ... EXCEPTION ITER
     return false;
   }
-
-  // If ITER is undefined, it means the exception is thrown by
-  // IteratorClose for non-local jump, and we should't perform
-  // IteratorClose again here.
-  if (!bce->emit1(JSOp::Undefined)) {
-    //              [stack] ITER ... EXCEPTION ITER UNDEF
-    return false;
-  }
-  if (!bce->emit1(JSOp::StrictNe)) {
-    //              [stack] ITER ... EXCEPTION NE
-    return false;
-  }
-
-  InternalIfEmitter ifIteratorIsNotClosed(bce);
-  if (!ifIteratorIsNotClosed.emitThen()) {
-    //              [stack] ITER ... EXCEPTION
-    return false;
-  }
-
-  MOZ_ASSERT(slotFromTop ==
-             unsigned(bce->bytecodeSection().stackDepth() - iterDepth_));
-  if (!bce->emitDupAt(slotFromTop)) {
-    //              [stack] ITER ... EXCEPTION ITER
-    return false;
-  }
   if (!emitIteratorCloseInInnermostScopeWithTryNote(bce,
                                                     CompletionKind::Throw)) {
     return false;  // ITER ... EXCEPTION
-  }
-
-  if (!ifIteratorIsNotClosed.emitEnd()) {
-    //              [stack] ITER ... EXCEPTION
-    return false;
   }
 
   if (!bce->emit1(JSOp::Throw)) {
@@ -191,20 +161,14 @@ bool ForOfLoopControl::emitPrepareForNonLocalJumpFromScope(
     return false;
   }
 
-  // Clear ITER slot on the stack to tell catch block to avoid performing
-  // IteratorClose again.
-  if (!bce->emit1(JSOp::Undefined)) {
-    //              [stack] ITER UNDEF
-    return false;
-  }
-  if (!bce->emit1(JSOp::Swap)) {
-    //              [stack] UNDEF ITER
+  if (!bce->emit1(JSOp::Dup)) {
+    //              [stack] ITER ITER
     return false;
   }
 
   *tryNoteStart = bce->bytecodeSection().offset();
   if (!emitIteratorCloseInScope(bce, currentScope, CompletionKind::Normal)) {
-    //              [stack] UNDEF
+    //              [stack] ITER
     return false;
   }
 
@@ -213,11 +177,11 @@ bool ForOfLoopControl::emitPrepareForNonLocalJumpFromScope(
     // loop that will pop the next method, the iterator, and the
     // value, so push two undefineds to balance the stack.
     if (!bce->emit1(JSOp::Undefined)) {
-      //            [stack] UNDEF UNDEF
+      //            [stack] ITER UNDEF
       return false;
     }
     if (!bce->emit1(JSOp::Undefined)) {
-      //            [stack] UNDEF UNDEF UNDEF
+      //            [stack] ITER UNDEF UNDEF
       return false;
     }
   } else {
