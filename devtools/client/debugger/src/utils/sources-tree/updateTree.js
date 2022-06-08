@@ -4,12 +4,7 @@
 
 import { addToTree } from "./addToTree";
 import { collapseTree } from "./collapseTree";
-import {
-  createDirectoryNode,
-  createParentMap,
-  getPathParts,
-  isInvalidUrl,
-} from "./utils";
+import { createDirectoryNode, createParentMap, getPathParts } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 
 function getSourcesDiff(newSources, prevSources) {
@@ -128,28 +123,26 @@ export function updateInTree(
     return;
   }
 
-  if (!isInvalidUrl(newUrl, newSource)) {
-    const parts = getPathParts(newUrl, thread, mainThreadHost);
+  const parts = getPathParts(newUrl, thread, mainThreadHost);
 
-    if (parts.length === prevEntries.length) {
-      let match = true;
-      for (let i = 0; i < parts.length - 2; i++) {
-        if (parts[i].path !== prevEntries[i + 1].node.path) {
-          match = false;
-          break;
-        }
+  if (parts.length === prevEntries.length) {
+    let match = true;
+    for (let i = 0; i < parts.length - 2; i++) {
+      if (parts[i].path !== prevEntries[i + 1].node.path) {
+        match = false;
+        break;
       }
+    }
 
-      if (match) {
-        const { node, index } = prevEntries.pop();
-        // This is guaranteed to be a TreeSource or else findEntries would
-        // not have returned anything.
-        const fileNode = node.contents[index];
-        fileNode.name = parts[parts.length - 1].part;
-        fileNode.path = parts[parts.length - 1].path;
-        fileNode.contents = newSource;
-        return;
-      }
+    if (match) {
+      const { node, index } = prevEntries.pop();
+      // This is guaranteed to be a TreeSource or else findEntries would
+      // not have returned anything.
+      const fileNode = node.contents[index];
+      fileNode.name = parts[parts.length - 1].part;
+      fileNode.path = parts[parts.length - 1].path;
+      fileNode.contents = newSource;
+      return;
     }
   }
 
