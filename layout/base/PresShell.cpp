@@ -3569,9 +3569,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
   AutoWeakFrame weakFrame(frame);
   aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
-                               aScrollFlags & ScrollFlags::ScrollSnap
-                                   ? ScrollSnapFlags::IntendedEndPosition
-                                   : ScrollSnapFlags::Disabled,
+                               ScrollSnapFlags::IntendedEndPosition,
                                aScrollFlags & ScrollFlags::TriggeredByScript
                                    ? ScrollTriggeredByScript::Yes
                                    : ScrollTriggeredByScript::No);
