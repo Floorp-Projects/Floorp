@@ -582,8 +582,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
     return true;
   }
 
-  webrtc::Config config;
-
   if (options.experimental_ns) {
     experimental_ns_ = options.experimental_ns;
   }

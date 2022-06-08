@@ -28,7 +28,6 @@
 #include "api/audio/echo_control.h"
 #include "api/scoped_refptr.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
-#include "modules/audio_processing/include/config.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ref_count.h"
