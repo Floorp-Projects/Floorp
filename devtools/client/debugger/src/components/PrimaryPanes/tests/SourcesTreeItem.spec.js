@@ -554,7 +554,6 @@ function generateDefaults(overrides) {
     expanded: false,
     item,
     source,
-    debuggeeUrl: "http://mdn.com",
     projectRoot: "",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),

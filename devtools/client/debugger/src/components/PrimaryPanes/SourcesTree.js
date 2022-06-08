@@ -220,7 +220,6 @@ class SourcesTree extends Component {
         focusItem={this.onFocus}
         selectItem={this.selectItem}
         source={getSource(item, this.props)}
-        debuggeeUrl={debuggeeUrl}
         projectRoot={projectRoot}
         setExpanded={setExpanded}
         getSourcesGroups={this.getSourcesGroups}
