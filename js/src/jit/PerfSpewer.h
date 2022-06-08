@@ -11,10 +11,11 @@
 #  include <stdio.h>
 #endif
 
+#include "jit/JitCode.h"
 #include "jit/Label.h"
 
 namespace {
-struct AutoLockPerfMap;
+struct AutoFileLock;
 }
 
 namespace js {
@@ -25,79 +26,48 @@ class MacroAssembler;
 
 #ifdef JS_ION_PERF
 void CheckPerf();
-bool PerfBlockEnabled();
 bool PerfFuncEnabled();
-static inline bool PerfEnabled() {
-  return PerfBlockEnabled() || PerfFuncEnabled();
-}
+static inline bool PerfEnabled() { return PerfFuncEnabled(); }
 #else
 static inline void CheckPerf() {}
-static inline bool PerfBlockEnabled() { return false; }
 static inline bool PerfFuncEnabled() { return false; }
 static inline bool PerfEnabled() { return false; }
 #endif
 
 #ifdef JS_ION_PERF
 
-struct Record {
-  const char* filename;
-  unsigned lineNumber;
-  unsigned columnNumber;
-  uint32_t id;
-  Label start, end;
-  size_t startOffset, endOffset;
-
-  Record(const char* filename, unsigned lineNumber, unsigned columnNumber,
-         uint32_t id)
-      : filename(filename),
-        lineNumber(lineNumber),
-        columnNumber(columnNumber),
-        id(id),
-        startOffset(0u),
-        endOffset(0u) {}
-};
-
-typedef Vector<Record, 1, SystemAllocPolicy> BasicBlocksVector;
-
 class PerfSpewer {
- protected:
-  static uint32_t nextFunctionIndex;
-
  public:
-  Label endInlineCode;
-
- protected:
-  BasicBlocksVector basicBlocks_;
-
- public:
-  [[nodiscard]] virtual bool startBasicBlock(MBasicBlock* blk,
-                                             MacroAssembler& masm);
-  virtual void endBasicBlock(MacroAssembler& masm);
-  void noteEndInlineCode(MacroAssembler& masm);
-
-  void writeProfile(JSScript* script, JitCode* code, MacroAssembler& masm);
-
-  static void WriteEntry(const AutoLockPerfMap&, uintptr_t address, size_t size,
-                         const char* fmt, ...) MOZ_FORMAT_PRINTF(4, 5);
+  static void WriteJitDumpEntry(const char* desc, JSScript* script,
+                                JitCode* code, AutoFileLock& lock);
+  static void WriteJitDumpLoadRecord(char* function_name, JitCode* code,
+                                     AutoFileLock& lock);
+  static void WriteJitDumpLoadRecord(char* function_name, void* code_addr,
+                                     uint64_t code_size, AutoFileLock& lock);
 };
 
-void writePerfSpewerBaselineProfile(JSScript* script, JitCode* code);
 void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
-
-// wasm doesn't support block annotations.
-class WasmPerfSpewer : public PerfSpewer {
- public:
-  [[nodiscard]] bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm) {
-    return true;
-  }
-  void endBasicBlock(MacroAssembler& masm) {}
-};
 
 void writePerfSpewerWasmMap(uintptr_t base, uintptr_t size,
                             const char* filename, const char* annotation);
 void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
                                     const char* filename, unsigned lineno,
                                     const char* funcName);
+
+class IonPerfSpewer : public PerfSpewer {
+ public:
+  void writeProfile(JSScript* script, JitCode* code);
+};
+
+class BaselinePerfSpewer : public PerfSpewer {
+ public:
+  void writeProfile(JSScript* script, JitCode* code);
+};
+
+class InlineCachePerfSpewer : public PerfSpewer {
+ public:
+  void writeProfile(JitCode* code, const char* name);
+};
 
 #endif  // JS_ION_PERF
 
