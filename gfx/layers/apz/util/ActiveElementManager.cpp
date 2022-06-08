@@ -131,7 +131,8 @@ void ActiveElementManager::SetActive(dom::Element* aTarget) {
   AEM_LOG("Setting active %p\n", aTarget);
 
   if (nsPresContext* pc = GetPresContextFor(aTarget)) {
-    pc->EventStateManager()->SetContentState(aTarget, dom::ElementState::ACTIVE);
+    pc->EventStateManager()->SetContentState(aTarget,
+                                             dom::ElementState::ACTIVE);
   }
 }
 
