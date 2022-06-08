@@ -6,9 +6,9 @@
 
 #include "AntiTrackingLog.h"
 #include "AntiTrackingRedirectHeuristic.h"
-#include "ContentBlocking.h"
 #include "ContentBlockingAllowList.h"
 #include "ContentBlockingUserInteraction.h"
+#include "StorageAccessAPIHelper.h"
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
@@ -422,10 +422,10 @@ void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
       Telemetry::LABELS_STORAGE_ACCESS_GRANTED_COUNT::Redirect);
 
   // We don't care about this promise because the operation is actually sync.
-  RefPtr<ContentBlocking::ParentAccessGrantPromise> promise =
-      ContentBlocking::SaveAccessForOriginOnParentProcess(
+  RefPtr<StorageAccessAPIHelper::ParentAccessGrantPromise> promise =
+      StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
           newPrincipal, oldPrincipal,
-          ContentBlocking::StorageAccessPromptChoices::eAllow,
+          StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow,
           StaticPrefs::privacy_restrict3rdpartystorage_expiration_redirect());
   Unused << promise;
 }
