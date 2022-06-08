@@ -2069,6 +2069,10 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
 #endif
       outputUnchecked_.emplace(R0);
       break;
+    case CacheKind::CloseIter:
+      MOZ_ASSERT(numInputs == 1);
+      allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
+      break;
   }
 
   // Baseline doesn't allocate float registers so none of them are live.

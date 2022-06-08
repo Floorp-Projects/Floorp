@@ -926,6 +926,8 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       masm.jump(ool->rejoin());
       return;
     }
+    case CacheKind::CloseIter:
+      MOZ_CRASH("TODO");
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:

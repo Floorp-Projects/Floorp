@@ -107,6 +107,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::BindName:
     case CacheKind::Call:
     case CacheKind::OptimizeSpreadCall:
+    case CacheKind::CloseIter:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
