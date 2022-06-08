@@ -54,13 +54,6 @@ class ServiceWorkerCloneData final : public ipc::StructuredCloneData {
  public:
   ServiceWorkerCloneData();
 
-  // FIXME: Now that there's nothing in ClonedOrErrorMessageData tied to a
-  // specific actor, it should be possible to just pass on the same cloned data,
-  // which means this method is effectively an expensive no-op.
-  bool StealFromAndBuildClonedMessageData(
-      ClonedOrErrorMessageData& aFromClonedData,
-      ClonedOrErrorMessageData& aToClonedData);
-
   bool BuildClonedMessageData(ClonedOrErrorMessageData& aClonedData);
 
   void CopyFromClonedMessageData(const ClonedOrErrorMessageData& aClonedData);

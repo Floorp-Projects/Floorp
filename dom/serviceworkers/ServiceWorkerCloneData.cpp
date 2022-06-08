@@ -32,30 +32,6 @@ ServiceWorkerCloneData::ServiceWorkerCloneData()
   MOZ_DIAGNOSTIC_ASSERT(mEventTarget);
 }
 
-bool ServiceWorkerCloneData::StealFromAndBuildClonedMessageData(
-    ClonedOrErrorMessageData& aFromClonedData,
-    ClonedOrErrorMessageData& aToClonedData) {
-  if (aFromClonedData.type() == ClonedOrErrorMessageData::TErrorMessageData) {
-    mIsErrorMessageData = true;
-    aToClonedData = ErrorMessageData();
-    return true;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(aFromClonedData.type() ==
-                        ClonedOrErrorMessageData::TClonedMessageData);
-
-  StructuredCloneData::StealFromClonedMessageData(aFromClonedData);
-
-  ClonedMessageData messageData;
-  if (!StructuredCloneData::BuildClonedMessageData(messageData)) {
-    return false;
-  }
-
-  aToClonedData = std::move(messageData);
-
-  return true;
-}
-
 bool ServiceWorkerCloneData::BuildClonedMessageData(
     ClonedOrErrorMessageData& aClonedData) {
   if (IsErrorMessageData()) {
