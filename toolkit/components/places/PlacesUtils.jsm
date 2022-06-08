@@ -13,7 +13,9 @@ const { AppConstants } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   Bookmarks: "resource://gre/modules/Bookmarks.jsm",
@@ -22,11 +24,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "MOZ_ACTION_REGEX", () => {
+XPCOMUtils.defineLazyGetter(lazy, "MOZ_ACTION_REGEX", () => {
   return /^moz-action:([^,]+),(.*)$/;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCryptoHash", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", () => {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
@@ -263,7 +265,7 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   recordId: simpleValidateFunc(
     v =>
       typeof v == "string" &&
-      (PlacesSyncUtils.bookmarks.ROOTS.includes(v) ||
+      (lazy.PlacesSyncUtils.bookmarks.ROOTS.includes(v) ||
         PlacesUtils.isValidGuid(v))
   ),
   parentRecordId: v => SYNC_BOOKMARK_VALIDATORS.recordId(v),
@@ -271,7 +273,7 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   kind: simpleValidateFunc(
     v =>
       typeof v == "string" &&
-      Object.values(PlacesSyncUtils.bookmarks.KINDS).includes(v)
+      Object.values(lazy.PlacesSyncUtils.bookmarks.KINDS).includes(v)
   ),
   query: simpleValidateFunc(v => v === null || (typeof v == "string" && v)),
   folder: simpleValidateFunc(
@@ -302,7 +304,7 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   dateAdded: simpleValidateFunc(
     v =>
       typeof v === "number" &&
-      v > PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP
+      v > lazy.PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP
   ),
   feed: v => (v === null ? v : BOOKMARK_VALIDATORS.url(v)),
   site: v => (v === null ? v : BOOKMARK_VALIDATORS.url(v)),
@@ -397,7 +399,7 @@ const PAGEINFO_VALIDATORS = Object.freeze({
     for (let inVisit of v) {
       let visit = {
         date: new Date(),
-        transition: inVisit.transition || History.TRANSITIONS.LINK,
+        transition: inVisit.transition || lazy.History.TRANSITIONS.LINK,
       };
 
       if (!PlacesUtils.history.isValidTransition(visit.transition)) {
@@ -533,7 +535,7 @@ var PlacesUtils = {
   toURI(url) {
     url = URL.isInstance(url) ? url.href : url;
 
-    return NetUtil.newURI(url);
+    return lazy.NetUtil.newURI(url);
   },
 
   /**
@@ -579,11 +581,11 @@ var PlacesUtils = {
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
-    return bundle.formatStringFromName(key, params);
+    return lazy.bundle.formatStringFromName(key, params);
   },
 
   getString: function PU_getString(key) {
-    return bundle.GetStringFromName(key);
+    return lazy.bundle.GetStringFromName(key);
   },
 
   /**
@@ -604,7 +606,7 @@ var PlacesUtils = {
     }
 
     try {
-      let [, type, params] = url.match(MOZ_ACTION_REGEX);
+      let [, type, params] = url.match(lazy.MOZ_ACTION_REGEX);
       let action = {
         type,
         params: JSON.parse(params),
@@ -1468,14 +1470,14 @@ var PlacesUtils = {
    * let db = await PlacesUtils.promiseDBConnection();
    * let rows = await db.executeCached(sql, params);
    */
-  promiseDBConnection: () => gAsyncDBConnPromised,
+  promiseDBConnection: () => lazy.gAsyncDBConnPromised,
 
   /**
    * This is pretty much the same as promiseDBConnection, but with a larger
    * page cache, useful for consumers doing large table scans, like the urlbar.
    * @see promiseDBConnection
    */
-  promiseLargeCacheDBConnection: () => gAsyncDBLargeCacheConnPromised,
+  promiseLargeCacheDBConnection: () => lazy.gAsyncDBLargeCacheConnPromised,
   get largeCacheDBConnDeferred() {
     return gAsyncDBLargeCacheConnDeferred;
   },
@@ -1485,7 +1487,7 @@ var PlacesUtils = {
    * should prefer `withConnectionWrapper`, which ensures that all database
    * operations finish before the connection is closed.
    */
-  promiseUnsafeWritableDBConnection: () => gAsyncDBWrapperPromised,
+  promiseUnsafeWritableDBConnection: () => lazy.gAsyncDBWrapperPromised,
 
   /**
    * Performs a read/write operation on the Places database through a Sqlite.jsm
@@ -1518,7 +1520,7 @@ var PlacesUtils = {
     if (!name) {
       throw new TypeError("Expecting a user-readable name");
     }
-    let db = await gAsyncDBWrapperPromised;
+    let db = await lazy.gAsyncDBWrapperPromised;
     return db.executeBeforeShutdown(name, task);
   },
 
@@ -1736,7 +1738,7 @@ var PlacesUtils = {
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
           // If this throws due to an invalid url, the item will be skipped.
           try {
-            item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
+            item.uri = lazy.NetUtil.newURI(aRow.getResultByName("url")).spec;
           } catch (ex) {
             let error = new Error("Invalid bookmark URL");
             error.becauseInvalidURL = true;
@@ -1944,16 +1946,16 @@ var PlacesUtils = {
    * @returns {string} md5 hash of the input string in the required format.
    */
   md5(data, { format = "ascii" } = {}) {
-    gCryptoHash.init(gCryptoHash.MD5);
+    lazy.gCryptoHash.init(lazy.gCryptoHash.MD5);
 
     // Convert the data to a byte array for hashing
-    gCryptoHash.update(
+    lazy.gCryptoHash.update(
       data.split("").map(c => c.charCodeAt(0)),
       data.length
     );
     switch (format) {
       case "hex":
-        let hash = gCryptoHash.finish(false);
+        let hash = lazy.gCryptoHash.finish(false);
         return Array.from(hash, (c, i) =>
           hash
             .charCodeAt(i)
@@ -1962,7 +1964,7 @@ var PlacesUtils = {
         ).join("");
       case "ascii":
       default:
-        return gCryptoHash.finish(true);
+        return lazy.gCryptoHash.finish(true);
     }
   },
 };
@@ -1979,8 +1981,8 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
           property = target[name];
           object = target;
         } else {
-          property = History[name];
-          object = History;
+          property = lazy.History[name];
+          object = lazy.History;
         }
         if (typeof property == "function") {
           return property.bind(object);
@@ -1999,16 +2001,18 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "bmsvc",
   "@mozilla.org/browser/nav-bookmarks-service;1",
   "nsINavBookmarksService"
 );
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bookmarks", () => {
   return Object.freeze(
-    new Proxy(Bookmarks, {
+    new Proxy(lazy.Bookmarks, {
       get: (target, name) =>
-        Bookmarks.hasOwnProperty(name) ? Bookmarks[name] : bmsvc[name],
+        lazy.Bookmarks.hasOwnProperty(name)
+          ? lazy.Bookmarks[name]
+          : lazy.bmsvc[name],
     })
   );
 });
@@ -2020,7 +2024,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsITaggingService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
   const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
   return Services.strings.createBundle(PLACES_STRING_BUNDLE_URI);
 });
@@ -2075,7 +2079,7 @@ function setupDbForShutdown(conn, name) {
 
     // Make sure that Sqlite.jsm doesn't close until we are done
     // with the high-level connection.
-    Sqlite.shutdown.addBlocker(
+    lazy.Sqlite.shutdown.addBlocker(
       `${name} must be closed before Sqlite.jsm`,
       () => promiseClosed,
       () => state
@@ -2087,8 +2091,8 @@ function setupDbForShutdown(conn, name) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised", () =>
-  Sqlite.cloneStorageConnection({
+XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBConnPromised", () =>
+  lazy.Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,
     readOnly: true,
   })
@@ -2099,8 +2103,8 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised", () =>
     .catch(Cu.reportError)
 );
 
-XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised", () =>
-  Sqlite.wrapStorageConnection({
+XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBWrapperPromised", () =>
+  lazy.Sqlite.wrapStorageConnection({
     connection: PlacesUtils.history.DBConnection,
   })
     .then(conn => {
@@ -2110,9 +2114,9 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised", () =>
     .catch(Cu.reportError)
 );
 
-var gAsyncDBLargeCacheConnDeferred = PromiseUtils.defer();
-XPCOMUtils.defineLazyGetter(this, "gAsyncDBLargeCacheConnPromised", () =>
-  Sqlite.cloneStorageConnection({
+var gAsyncDBLargeCacheConnDeferred = lazy.PromiseUtils.defer();
+XPCOMUtils.defineLazyGetter(lazy, "gAsyncDBLargeCacheConnPromised", () =>
+  lazy.Sqlite.cloneStorageConnection({
     connection: PlacesUtils.history.DBConnection,
     readOnly: true,
   })
@@ -2539,10 +2543,10 @@ PlacesUtils.keywords = {
               { url: url.href, keyword, post_data: postData }
             );
 
-            await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+            await lazy.PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
               db,
               url,
-              PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source)
+              lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source)
             );
           });
         }
@@ -2601,10 +2605,10 @@ PlacesUtils.keywords = {
             { keyword }
           );
 
-          await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+          await lazy.PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
             db,
             url,
-            PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source)
+            lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source)
           );
         });
 

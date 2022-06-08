@@ -23,8 +23,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
@@ -465,7 +467,7 @@ function nsPlacesExpiration() {
     v => (v > 0 ? v : 3 * 60) // Accept only positive values.
   );
 
-  this._dbInitializedPromise = PlacesUtils.withConnectionWrapper(
+  this._dbInitializedPromise = lazy.PlacesUtils.withConnectionWrapper(
     "PlacesExpiration.jsm: setup",
     async db => {
       await db.execute(
@@ -491,7 +493,8 @@ function nsPlacesExpiration() {
     .catch(Cu.reportError);
 
   // Block shutdown.
-  let shutdownClient = PlacesUtils.history.connectionShutdownClient.jsclient;
+  let shutdownClient =
+    lazy.PlacesUtils.history.connectionShutdownClient.jsclient;
   shutdownClient.addBlocker("Places Expiration: shutdown", () => {
     if (this._shuttingDown) {
       return;
@@ -557,7 +560,7 @@ nsPlacesExpiration.prototype = {
       this._expire(ACTION.IDLE_DAILY, LIMIT.LARGE).catch(Cu.reportError);
     } else if (aTopic == TOPIC_TESTING_MODE) {
       this._testingMode = true;
-    } else if (aTopic == PlacesUtils.TOPIC_INIT_COMPLETE) {
+    } else if (aTopic == lazy.PlacesUtils.TOPIC_INIT_COMPLETE) {
       const placesObserver = new PlacesWeakCallbackWrapper(
         // History status is clean after a clear history.
         () => {
@@ -573,7 +576,7 @@ nsPlacesExpiration.prototype = {
   notify() {
     // Run at the first idle, or after 5 minutes, whatever comes first.
     Services.tm.idleDispatchToMainThread(async () => {
-      let db = await PlacesUtils.promiseDBConnection();
+      let db = await lazy.PlacesUtils.promiseDBConnection();
       let pagesCount = (
         await db.executeCached("SELECT count(*) AS count FROM moz_places")
       )[0].getResultByName("count");
@@ -681,7 +684,7 @@ nsPlacesExpiration.prototype = {
     let diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;
     try {
       // Protect against a full disk or tiny quota.
-      diskAvailableBytes = PlacesUtils.history.DBConnection.databaseFile.QueryInterface(
+      diskAvailableBytes = lazy.PlacesUtils.history.DBConnection.databaseFile.QueryInterface(
         Ci.nsIFile
       ).diskSpaceAvailable;
     } catch (ex) {}
@@ -704,7 +707,7 @@ nsPlacesExpiration.prototype = {
     // Calculate avg size of a URI in the database.
     let db;
     try {
-      db = await PlacesUtils.promiseDBConnection();
+      db = await lazy.PlacesUtils.promiseDBConnection();
       if (db) {
         let row = (
           await db.execute(`SELECT * FROM pragma_page_size(),
@@ -781,7 +784,7 @@ nsPlacesExpiration.prototype = {
     await this._dbInitializedPromise;
 
     try {
-      await PlacesUtils.withConnectionWrapper(
+      await lazy.PlacesUtils.withConnectionWrapper(
         "PlacesExpiration.jsm: expire",
         async db => {
           await db.executeTransaction(async () => {
@@ -850,7 +853,10 @@ nsPlacesExpiration.prototype = {
     }
 
     // Dispatch a notification that expiration has finished.
-    Services.obs.notifyObservers(null, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+    Services.obs.notifyObservers(
+      null,
+      lazy.PlacesUtils.TOPIC_EXPIRATION_FINISHED
+    );
   },
 
   /**

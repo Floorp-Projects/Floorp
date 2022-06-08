@@ -67,8 +67,10 @@ const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm"
 );
@@ -233,7 +235,7 @@ var BookmarkHTMLUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   async exportToFile(aFilePath) {
-    let [bookmarks, count] = await PlacesBackups.getBookmarksTree();
+    let [bookmarks, count] = await lazy.PlacesBackups.getBookmarksTree();
     let startTime = Date.now();
 
     // Report the time taken to convert the tree to HTML.
