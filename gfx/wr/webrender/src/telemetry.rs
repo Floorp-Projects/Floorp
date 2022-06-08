@@ -19,12 +19,12 @@ impl Telemetry {
     pub fn stop_and_accumulate_rasterize_glyphs_time(_id: TimerId) { }
     pub fn start_framebuild_time() -> TimerId { TimerId { id: 0 } }
     pub fn stop_and_accumulate_framebuild_time(_id: TimerId) { }
-    pub fn record_renderer_time(duration: Duration) { }
+    pub fn record_renderer_time(_duration: Duration) { }
     pub fn record_scenebuild_time(_duration: Duration) { }
     pub fn start_sceneswap_time() -> TimerId { TimerId { id: 0 } }
     pub fn stop_and_accumulate_sceneswap_time(_id: TimerId) { }
     pub fn cancel_sceneswap_time(_id: TimerId) { }
-    pub fn record_texture_cache_update_time(duration: Duration) { }
+    pub fn record_texture_cache_update_time(_duration: Duration) { }
 }
 
 #[cfg(feature = "gecko")]
