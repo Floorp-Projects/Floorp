@@ -674,6 +674,9 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     }
     // Upgrades cannot use HTTP/3.
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
+    // Because NS_HTTP_STICKY_CONNECTION breaks HTTPS RR fallabck mecnahism, we
+    // can not use HTTPS RR for upgrade requests.
+    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
   }
 
   if (LoadIsTRRServiceChannel()) {
