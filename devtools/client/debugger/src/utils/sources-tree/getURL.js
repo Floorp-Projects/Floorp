@@ -24,12 +24,12 @@ export function getFilenameFromPath(pathname) {
 const NoDomain = "(no domain)";
 const def = { path: "", search: "", group: "", filename: "" };
 
-export function getURL(source, defaultDomain = "") {
+export function getURL(source) {
   const { url } = source;
   if (!url) {
     return def;
   }
-  return getURLInternal(url, defaultDomain);
+  return getURLInternal(url);
 }
 
 export function getDisplayURL(source, defaultDomain = "") {
