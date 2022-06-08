@@ -735,8 +735,8 @@ license file's hash.
                     logging.ERROR,
                     "cargo_vet_failed",
                     failure,
-                    "Vetting missing for {crate}:{version} {missing_criteria}."
-                    " Run `./mach cargo vet` for more information",
+                    "Missing audit for {crate}:{version} (requires {missing_criteria})."
+                    " Run `./mach cargo vet` for more information.",
                 )
                 failed = True
 
