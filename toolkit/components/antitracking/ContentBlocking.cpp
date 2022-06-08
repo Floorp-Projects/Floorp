@@ -1016,19 +1016,6 @@ Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
                                     "RequestStorageAccessSandboxed");
     return Some(false);
   }
-  nsPIDOMWindowInner* inner = aDocument->GetInnerWindow();
-  if (!inner) {
-    return Some(false);
-  }
-  nsGlobalWindowOuter* outer =
-      nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
-  if (!outer) {
-    return Some(false);
-  }
-  bool explicitPermissionGranted = outer->IsStorageAccessPermissionGranted();
-  if (explicitPermissionGranted) {
-    return Some(true);
-  }
   if (aDocument->HasStorageAccessPermissionGranted()) {
     return Some(true);
   }
@@ -1082,13 +1069,6 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
             AntiTrackingUtils::GetInnerWindow(aContext);
         if (inner) {
           inner->SaveStorageAccessPermissionGranted();
-        }
-
-        nsCOMPtr<nsPIDOMWindowOuter> outer =
-            nsPIDOMWindowOuter::GetFromCurrentInner(inner);
-        if (outer) {
-          nsGlobalWindowOuter::Cast(outer)->SetStorageAccessPermissionGranted(
-              true);
         }
       }
     }
