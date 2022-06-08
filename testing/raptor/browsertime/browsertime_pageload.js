@@ -11,12 +11,14 @@ module.exports = async function(context, commands) {
   let page_cycles = context.options.browsertime.page_cycles;
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;
   let post_startup_delay = context.options.browsertime.post_startup_delay;
+  let chimera_mode = context.options.browsertime.chimera;
 
   context.log.info(
     "Waiting for %d ms (post_startup_delay)",
     post_startup_delay
   );
   await commands.wait.byTime(post_startup_delay);
+  let cached = false;
 
   for (let count = 0; count < page_cycles; count++) {
     if (count !== 0 && secondary_url !== undefined) {
@@ -49,6 +51,12 @@ module.exports = async function(context, commands) {
 
     context.log.info("Cycle %d, starting the measure", count);
     await commands.measure.start(test_url);
+
+    // Wait 20 seconds to populate bytecode cache
+    if (chimera_mode && !cached) {
+      await commands.wait.byTime(20000);
+      cached = true;
+    }
   }
 
   context.log.info("Browsertime pageload ended.");

@@ -491,6 +491,9 @@ def verify_options(parser, args):
         # Force cold pageloads with 2 page cycles
         args.cold = True
         args.page_cycles = 2
+        # Create bytecode cache at the first cold load, so that the next warm load uses it.
+        # This is applicable for chimera mode only
+        args.extra_prefs.append("dom.script_loader.bytecode_cache.strategy=-1")
 
     # if running on a desktop browser make sure the binary exists
     if args.app in DESKTOP_APPS:
