@@ -50,9 +50,10 @@ std::string Config(bool enabled, bool valid) {
          "InherentLossLowerBound:0.001,InherentLossUpperBoundBwBalance:14kbps,"
          "InherentLossUpperBoundOffset:0.9,InitialInherentLossEstimate:0.01,"
          "NewtonIterations:2,NewtonStepSize:0.4,ObservationWindowSize:15,"
-         "SendingRateSmoothingFactor:0.01,TcpFairnessTemporalWeightFactor:0.97,"
-         "TcpFairnessUpperBoundBwBalance:90kbps,"
-         "TcpFairnessUpperBoundLossOffset:0.1,TemporalWeightFactor:0.98";
+         "SendingRateSmoothingFactor:0.01,"
+         "InstantUpperBoundTemporalWeightFactor:0.97,"
+         "InstantUpperBoundBwBalance:90kbps,"
+         "InstantUpperBoundLossOffset:0.1,TemporalWeightFactor:0.98";
 
   config_string.AppendFormat(
       ",ObservationDurationLowerBound:%dms",

@@ -124,7 +124,8 @@ LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
   current_estimate_.inherent_loss = config_->initial_inherent_loss_estimate;
   observations_.resize(config_->observation_window_size);
   temporal_weights_.resize(config_->observation_window_size);
-  tcp_fairness_temporal_weights_.resize(config_->observation_window_size);
+  instant_upper_bound_temporal_weights_.resize(
+      config_->observation_window_size);
   CalculateTemporalWeights();
 }
 
@@ -156,7 +157,7 @@ DataRate LossBasedBweV2::GetBandwidthEstimate() const {
   }
 
   return std::min(current_estimate_.loss_limited_bandwidth,
-                  GetTcpFairnessBandwidthUpperBound());
+                  GetInstantUpperBound());
 }
 
 void LossBasedBweV2::SetAcknowledgedBitrate(DataRate acknowledged_bitrate) {
@@ -248,12 +249,12 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 20);
   FieldTrialParameter<double> sending_rate_smoothing_factor(
       "SendingRateSmoothingFactor", 0.0);
-  FieldTrialParameter<double> tcp_fairness_temporal_weight_factor(
-      "TcpFairnessTemporalWeightFactor", 0.99);
-  FieldTrialParameter<DataRate> tcp_fairness_upper_bound_bandwidth_balance(
-      "TcpFairnessUpperBoundBwBalance", DataRate::KilobitsPerSec(15.0));
-  FieldTrialParameter<double> tcp_fairness_upper_bound_loss_offset(
-      "TcpFairnessUpperBoundLossOffset", 0.05);
+  FieldTrialParameter<double> instant_upper_bound_temporal_weight_factor(
+      "InstantUpperBoundTemporalWeightFactor", 0.99);
+  FieldTrialParameter<DataRate> instant_upper_bound_bandwidth_balance(
+      "InstantUpperBoundBwBalance", DataRate::KilobitsPerSec(15.0));
+  FieldTrialParameter<double> instant_upper_bound_loss_offset(
+      "InstantUpperBoundLossOffset", 0.05);
   FieldTrialParameter<double> temporal_weight_factor("TemporalWeightFactor",
                                                      0.99);
 
@@ -274,9 +275,9 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &observation_duration_lower_bound,
                      &observation_window_size,
                      &sending_rate_smoothing_factor,
-                     &tcp_fairness_temporal_weight_factor,
-                     &tcp_fairness_upper_bound_bandwidth_balance,
-                     &tcp_fairness_upper_bound_loss_offset,
+                     &instant_upper_bound_temporal_weight_factor,
+                     &instant_upper_bound_bandwidth_balance,
+                     &instant_upper_bound_loss_offset,
                      &temporal_weight_factor},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
@@ -308,12 +309,12 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       observation_duration_lower_bound.Get();
   config->observation_window_size = observation_window_size.Get();
   config->sending_rate_smoothing_factor = sending_rate_smoothing_factor.Get();
-  config->tcp_fairness_temporal_weight_factor =
-      tcp_fairness_temporal_weight_factor.Get();
-  config->tcp_fairness_upper_bound_bandwidth_balance =
-      tcp_fairness_upper_bound_bandwidth_balance.Get();
-  config->tcp_fairness_upper_bound_loss_offset =
-      tcp_fairness_upper_bound_loss_offset.Get();
+  config->instant_upper_bound_temporal_weight_factor =
+      instant_upper_bound_temporal_weight_factor.Get();
+  config->instant_upper_bound_bandwidth_balance =
+      instant_upper_bound_bandwidth_balance.Get();
+  config->instant_upper_bound_loss_offset =
+      instant_upper_bound_loss_offset.Get();
   config->temporal_weight_factor = temporal_weight_factor.Get();
   return config;
 }
@@ -397,24 +398,24 @@ bool LossBasedBweV2::IsConfigValid() const {
         << config_->sending_rate_smoothing_factor;
     valid = false;
   }
-  if (config_->tcp_fairness_temporal_weight_factor <= 0.0 ||
-      config_->tcp_fairness_temporal_weight_factor > 1.0) {
+  if (config_->instant_upper_bound_temporal_weight_factor <= 0.0 ||
+      config_->instant_upper_bound_temporal_weight_factor > 1.0) {
     RTC_LOG(LS_WARNING)
-        << "The TCP fairness temporal weight factor must be in (0, 1]"
-        << config_->tcp_fairness_temporal_weight_factor;
+        << "The instant upper bound temporal weight factor must be in (0, 1]"
+        << config_->instant_upper_bound_temporal_weight_factor;
     valid = false;
   }
-  if (config_->tcp_fairness_upper_bound_bandwidth_balance <= DataRate::Zero()) {
+  if (config_->instant_upper_bound_bandwidth_balance <= DataRate::Zero()) {
     RTC_LOG(LS_WARNING)
-        << "The TCP fairness upper bound bandwidth balance must be positive: "
-        << ToString(config_->tcp_fairness_upper_bound_bandwidth_balance);
+        << "The instant upper bound bandwidth balance must be positive: "
+        << ToString(config_->instant_upper_bound_bandwidth_balance);
     valid = false;
   }
-  if (config_->tcp_fairness_upper_bound_loss_offset < 0.0 ||
-      config_->tcp_fairness_upper_bound_loss_offset >= 1.0) {
+  if (config_->instant_upper_bound_loss_offset < 0.0 ||
+      config_->instant_upper_bound_loss_offset >= 1.0) {
     RTC_LOG(LS_WARNING)
-        << "The TCP fairness upper bound loss offset must be in [0, 1): "
-        << config_->tcp_fairness_upper_bound_loss_offset;
+        << "The instant upper bound loss offset must be in [0, 1): "
+        << config_->instant_upper_bound_loss_offset;
     valid = false;
   }
   if (config_->temporal_weight_factor <= 0.0 ||
@@ -439,12 +440,11 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
       continue;
     }
 
-    double tcp_fairness_temporal_weight =
-        tcp_fairness_temporal_weights_[(num_observations_ - 1) -
-                                       observation.id];
-    num_packets += tcp_fairness_temporal_weight * observation.num_packets;
-    num_lost_packets +=
-        tcp_fairness_temporal_weight * observation.num_lost_packets;
+    double instant_temporal_weight =
+        instant_upper_bound_temporal_weights_[(num_observations_ - 1) -
+                                              observation.id];
+    num_packets += instant_temporal_weight * observation.num_packets;
+    num_lost_packets += instant_temporal_weight * observation.num_lost_packets;
   }
 
   return static_cast<double>(num_lost_packets) / num_packets;
@@ -601,27 +601,26 @@ DataRate LossBasedBweV2::GetSendingRate(
              instantaneous_sending_rate;
 }
 
-DataRate LossBasedBweV2::GetTcpFairnessBandwidthUpperBound() const {
-  return cached_tcp_fairness_limit_.value_or(DataRate::PlusInfinity());
+DataRate LossBasedBweV2::GetInstantUpperBound() const {
+  return cached_instant_upper_bound_.value_or(DataRate::PlusInfinity());
 }
 
-void LossBasedBweV2::CalculateTcpFairnessBandwidthUpperBound() {
-  DataRate tcp_fairness_limit = DataRate::PlusInfinity();
+void LossBasedBweV2::CalculateInstantUpperBound() {
+  DataRate instant_limit = DataRate::PlusInfinity();
   const double average_reported_loss_ratio = GetAverageReportedLossRatio();
-  if (average_reported_loss_ratio >
-      config_->tcp_fairness_upper_bound_loss_offset) {
-    tcp_fairness_limit = config_->tcp_fairness_upper_bound_bandwidth_balance /
-                         (average_reported_loss_ratio -
-                          config_->tcp_fairness_upper_bound_loss_offset);
+  if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
+    instant_limit = config_->instant_upper_bound_bandwidth_balance /
+                    (average_reported_loss_ratio -
+                     config_->instant_upper_bound_loss_offset);
   }
-  cached_tcp_fairness_limit_ = tcp_fairness_limit;
+  cached_instant_upper_bound_ = instant_limit;
 }
 
 void LossBasedBweV2::CalculateTemporalWeights() {
   for (int i = 0; i < config_->observation_window_size; ++i) {
     temporal_weights_[i] = std::pow(config_->temporal_weight_factor, i);
-    tcp_fairness_temporal_weights_[i] =
-        std::pow(config_->tcp_fairness_temporal_weight_factor, i);
+    instant_upper_bound_temporal_weights_[i] =
+        std::pow(config_->instant_upper_bound_temporal_weight_factor, i);
   }
 }
 
@@ -684,7 +683,7 @@ bool LossBasedBweV2::PushBackObservation(
 
   partial_observation_ = PartialObservation();
 
-  CalculateTcpFairnessBandwidthUpperBound();
+  CalculateInstantUpperBound();
   return true;
 }
 
