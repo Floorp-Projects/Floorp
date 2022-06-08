@@ -576,6 +576,7 @@ rtc_library("webrtc_vp8") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings:strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
   if (rtc_build_libvpx) {

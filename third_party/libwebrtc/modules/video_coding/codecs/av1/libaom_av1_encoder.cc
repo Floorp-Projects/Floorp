@@ -806,4 +806,11 @@ std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder() {
   return std::make_unique<LibaomAv1Encoder>();
 }
 
+bool LibaomAv1EncoderSupportsScalabilityMode(
+    absl::string_view scalability_mode) {
+  // For AV1, the scalability mode is supported if we can create the scalability
+  // structure.
+  return ScalabilityStructureConfig(scalability_mode) != absl::nullopt;
+}
+
 }  // namespace webrtc
