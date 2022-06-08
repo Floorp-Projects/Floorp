@@ -921,13 +921,7 @@ class AcmReceiverBitExactnessOldApi : public ::testing::Test {
 TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "e0c966d7b8c36ff60167988fa35d33e0"
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG)
-                             : "5af28619e3a3c606b2242c9a12f4f64e";
-#else
                              : "7d8f6b84abd1e57ec010a53bc2130652";
-#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "405a50f0bcb8827e20aa944299fc59f6"
                              : "0ed5830930f5527a01bbec0ba11f8541";
@@ -942,14 +936,7 @@ TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "a63c578e1195c8420f453962c6d8519c"
-
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG)
-                             : "f788cc9200ac4a7d498d9081987808a3";
-#else
                              : "6bac83762c1306b932cd25a560155681";
-#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "58fd62a5c49ee513f9fa6fe7dbf62c97"
                              : "0509cf0672f543efb4b050e8cffefb1d";
@@ -964,13 +951,7 @@ TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "8775ce387f44dc5ff4a26da295d5ee7c"
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG)
-                             : "5b84b2a179cb8533a8f9bcd19612e7f0";
-#else
                              : "e319222ca47733709f90fdf33c8574db";
-#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "04ce6a1dac5ffdd8438d804623d0132f"
                              : "39a4a7a1c455b35baeffb9fd193d7858";
@@ -985,13 +966,7 @@ TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "7a55700b7ca9aa60237db58b33e55606"
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG)
-                             : "a2459749062f96297283cce4a8c7e6db";
-#else
                              : "57d1d316c88279f4f3da3511665069a9";
-#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
@@ -1080,13 +1055,7 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
       new rtc::RefCountedObject<ADFactory>);
   std::string others_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "7a55700b7ca9aa60237db58b33e55606"
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(NDEBUG)
-                             : "a2459749062f96297283cce4a8c7e6db";
-#else
                              : "57d1d316c88279f4f3da3511665069a9";
-#endif
   std::string win64_checksum_reference =
       GetCPUInfo(kAVX2) != 0 ? "f59833d9b0924f4b0704707dd3589f80"
                              : "74cbe7345e2b6b45c1e455a5d1e921ca";
@@ -1315,24 +1284,14 @@ class AcmSenderBitExactnessNewApi : public AcmSenderBitExactnessOldApi {};
 TEST_F(AcmSenderBitExactnessOldApi, IsacWb30ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 16000, 1, 103, 480, 480));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"2c9cb15d4ed55b5a0cadd04883bc73b0",
-#else
-          /*others=*/"6f7f227f4e2ace7027257eecb7b17e08",
-#endif
           /*win64=*/"9336a9b993cbd8a751f0e8958e66c89c",
           /*android_arm32=*/"5c2eb46199994506236f68b2c8e51b0d",
           /*android_arm64=*/"343f1f42be0607c61e6516aece424609",
           /*android_arm64_clang=*/"2c9cb15d4ed55b5a0cadd04883bc73b0",
           /*mac_arm64=*/"6f7f227f4e2ace7027257eecb7b17e08"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
-#else
-          /*others=*/"3fbb620556a08bcb88d9134e846bbb8e",
-#endif
           /*win64=*/"d42cb5195463da26c8129bbfe73a22e6",
           /*android_arm32=*/"83de248aea9c3c2bd680b6952401b4ca",
           /*android_arm64=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
@@ -1344,24 +1303,14 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb30ms) {
 TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 16000, 1, 103, 960, 960));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"1ad29139a04782a33daad8c2b9b35875",
-#else
-          /*others=*/"8b4377f3048d946d69b771c1e5fa8839",
-#endif
           /*win64=*/"14d63c5f08127d280e722e3191b73bdd",
           /*android_arm32=*/"9a81e467eb1485f84aca796f8ea65011",
           /*android_arm64=*/"ef75e900e6f375e3061163c53fd09a63",
           /*android_arm64_clang=*/"1ad29139a04782a33daad8c2b9b35875",
           /*mac_arm64=*/"8b4377f3048d946d69b771c1e5fa8839"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"9e0a0ab743ad987b55b8e14802769c56",
-#else
-          /*others=*/"080f341c0d498e7a60522084bf8264ae",
-#endif
           /*win64=*/"ebe04a819d3a9d83a83a17f271e1139a",
           /*android_arm32=*/"97aeef98553b5a4b5a68f8b716e8eaf0",
           /*android_arm64=*/"9e0a0ab743ad987b55b8e14802769c56",
@@ -1381,26 +1330,12 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
 TEST_F(AcmSenderBitExactnessOldApi, MAYBE_IsacSwb30ms) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("ISAC", 32000, 1, 104, 960, 960));
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(
-// TODO(bugs.webrtc.org/12941): Linux x86 optimized builds have a different
-// checksum.
-#if defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86)
-          /*others=*/"521a04159bb991fa2f32f550d5184f60",
-#elif defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"5683b58da0fbf2063c7adc2e6bfb3fb8",
-#else
-          /*others=*/"c1858ba5d734df6fe52e715eb1b25f31",
-#endif
           /*win64=*/"2b3c387d06f00b7b7aad4c9be56fb83d", "android_arm32_audio",
           "android_arm64_audio", "android_arm64_clang_audio",
           /*mac_arm64=*/"c1858ba5d734df6fe52e715eb1b25f31"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
-#if defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__) && \
-    defined(WEBRTC_ARCH_X86)
           /*others=*/"ce86106a93419aefb063097108ec94ab",
-#else
-          /*others=*/"127e24a1005ac80394b1f88d0cbc72a8",
-#endif
           /*win64=*/"bcc2041e7744c7ebd9f701866856849c", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
           /*mac_arm64=*/"127e24a1005ac80394b1f88d0cbc72a8"),
