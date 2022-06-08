@@ -127,6 +127,14 @@ function setPrefDefaults() {
 
   // We force enabling the performance panel in the browser toolbox.
   Services.prefs.setBoolPref("devtools.performance.enabled", true);
+
+  // Bug 1773226: Try to avoid session restore to reopen a transient browser window
+  // if we ever opened a URL from the browser toolbox. (but it doesn't seem to be enough)
+  Services.prefs.setBoolPref("browser.sessionstore.resume_from_crash", false);
+
+  // Disable Safe mode as the browser toolbox is often closed brutaly by subprocess
+  // and the safe mode kicks in when reopening it
+  Services.prefs.setIntPref("toolkit.startup.max_resumed_crashes", -1);
 }
 
 window.addEventListener(
