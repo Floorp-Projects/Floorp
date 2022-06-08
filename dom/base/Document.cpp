@@ -17075,7 +17075,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Get a pointer to the inner window- We need this for convenience sake
-  nsPIDOMWindowInner* inner = this->GetInnerWindow();
+  RefPtr<nsPIDOMWindowInner> inner = this->GetInnerWindow();
   if (!inner) {
     this->ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
@@ -17182,15 +17182,12 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                                   ContentBlockingNotifier::eStorageAccessAPI)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, outer, promise] {
-            outer->SetStorageAccessPermissionGranted(true);
+          [self, inner, promise] {
+            inner->SaveStorageAccessPermissionGranted();
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
-          [outer, promise] {
-            outer->SetStorageAccessPermissionGranted(false);
-            promise->MaybeRejectWithUndefined();
-          });
+          [promise] { promise->MaybeRejectWithUndefined(); });
 
   return promise.forget();
 }
@@ -17336,8 +17333,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
           GetCurrentSerialEventTarget(), __func__,
           // If the previous handlers resolved, we should reinstate user
           // activation and resolve the promise we returned in Step 5.
-          [self, outer, promise] {
-            outer->SetStorageAccessPermissionGranted(true);
+          [self, inner, promise] {
+            inner->SaveStorageAccessPermissionGranted();
             self->NotifyUserGestureActivation();
             promise->MaybeResolveWithUndefined();
           },
