@@ -1030,6 +1030,9 @@ def build_beetmover_maven_payload(config, task, task_def):
         Optional("force-fallback-mapping-update"): optionally_keyed_by(
             "release-type", "beta-number", bool
         ),
+        Optional("pin-channels"): optionally_keyed_by(
+            "release-type", "release-level", [str]
+        ),
         # list of artifact URLs for the artifacts that should be beetmoved
         Optional("upstream-artifacts"): [
             {
@@ -1073,6 +1076,7 @@ def build_balrog_payload(config, task, task_def):
             "rules-to-update",
             "background-rate",
             "force-fallback-mapping-update",
+            "pin-channels",
         ):
             if prop in worker:
                 resolve_keyed_by(
@@ -1096,6 +1100,7 @@ def build_balrog_payload(config, task, task_def):
             "blob-suffix",
             "complete-mar-filename-pattern",
             "complete-mar-bouncer-product-pattern",
+            "pin-channels",
         ):
             if prop in worker:
                 task_def["payload"][prop.replace("-", "_")] = worker[prop]
