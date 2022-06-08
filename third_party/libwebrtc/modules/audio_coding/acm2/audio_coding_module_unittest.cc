@@ -1296,7 +1296,7 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb30ms) {
           /*android_arm32=*/"83de248aea9c3c2bd680b6952401b4ca",
           /*android_arm64=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
           /*android_arm64_clang=*/"3c79f16f34218271f3dca4e2b1dfe1bb",
-          /*mac_arm64=*/"3fbb620556a08bcb88d9134e846bbb8e"),
+          /*mac_arm64=*/"3c79f16f34218271f3dca4e2b1dfe1bb"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 
@@ -1315,7 +1315,7 @@ TEST_F(AcmSenderBitExactnessOldApi, IsacWb60ms) {
           /*android_arm32=*/"97aeef98553b5a4b5a68f8b716e8eaf0",
           /*android_arm64=*/"9e0a0ab743ad987b55b8e14802769c56",
           /*android_arm64_clang=*/"9e0a0ab743ad987b55b8e14802769c56",
-          /*mac_arm64=*/"080f341c0d498e7a60522084bf8264ae"),
+          /*mac_arm64=*/"9e0a0ab743ad987b55b8e14802769c56"),
       16, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
@@ -1338,7 +1338,7 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_IsacSwb30ms) {
           /*others=*/"ce86106a93419aefb063097108ec94ab",
           /*win64=*/"bcc2041e7744c7ebd9f701866856849c", "android_arm32_payload",
           "android_arm64_payload", "android_arm64_clang_payload",
-          /*mac_arm64=*/"127e24a1005ac80394b1f88d0cbc72a8"),
+          /*mac_arm64=*/"ce86106a93419aefb063097108ec94ab"),
       33, test::AcmReceiveTestOldApi::kMonoOutput);
 }
 #endif
