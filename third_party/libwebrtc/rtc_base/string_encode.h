@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/string_to_number.h"
@@ -62,20 +63,20 @@ std::string join(const std::vector<std::string>& source, char delimiter);
 
 // Splits the source string into multiple fields separated by delimiter,
 // with duplicates of delimiter creating empty fields.
-size_t split(const std::string& source,
+size_t split(absl::string_view source,
              char delimiter,
              std::vector<std::string>* fields);
 
 // Splits the source string into multiple fields separated by delimiter,
 // with duplicates of delimiter ignored.  Trailing delimiter ignored.
-size_t tokenize(const std::string& source,
+size_t tokenize(absl::string_view source,
                 char delimiter,
                 std::vector<std::string>* fields);
 
 // Extract the first token from source as separated by delimiter, with
 // duplicates of delimiter ignored. Return false if the delimiter could not be
 // found, otherwise return true.
-bool tokenize_first(const std::string& source,
+bool tokenize_first(absl::string_view source,
                     const char delimiter,
                     std::string* token,
                     std::string* rest);
