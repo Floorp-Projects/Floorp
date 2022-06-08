@@ -162,8 +162,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   nsCOMPtr<nsIURI> uri;
   // use the base uri
-  NS_ENSURE_SUCCESS_VOID(
-      NS_NewURI(getter_AddRefs(uri), aHeader.mHref, nullptr, aBaseURI));
+  NS_ENSURE_SUCCESS_VOID(aHeader.NewResolveHref(getter_AddRefs(uri), aBaseURI));
 
   // Only make same origin preloads, the fromPrivateWindow is only read when
   // reportError is enabled, so setting both to false is safe.

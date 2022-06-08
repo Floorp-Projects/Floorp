@@ -3403,6 +3403,21 @@ void LinkHeader::Reset() {
   mCrossOrigin.SetIsVoid(true);
 }
 
+nsresult LinkHeader::NewResolveHref(nsIURI** aOutURI, nsIURI* aBaseURI) const {
+  if (mAnchor.IsEmpty()) {
+    // use the base uri
+    return NS_NewURI(aOutURI, mHref, nullptr, aBaseURI);
+  }
+
+  // compute the anchored URI
+  nsCOMPtr<nsIURI> anchoredURI;
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(anchoredURI), mAnchor, nullptr, aBaseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_NewURI(aOutURI, mHref, nullptr, anchoredURI);
+}
+
 bool LinkHeader::operator==(const LinkHeader& rhs) const {
   return mHref == rhs.mHref && mRel == rhs.mRel && mTitle == rhs.mTitle &&
          mIntegrity == rhs.mIntegrity && mSrcset == rhs.mSrcset &&

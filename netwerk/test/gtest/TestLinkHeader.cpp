@@ -243,3 +243,64 @@ const SimpleParseTestData simple_parse_tests[] = {
 
 INSTANTIATE_TEST_SUITE_P(TestLinkHeader, SimpleParseTest,
                          testing::ValuesIn(simple_parse_tests));
+
+// Test anchor
+
+struct AnchorTestData {
+  nsString baseURI;
+  // building the new anchor in combination with the baseURI
+  nsString anchor;
+  nsString href;
+  const char* resolved;
+};
+
+class AnchorTest : public ::testing::TestWithParam<AnchorTestData> {};
+
+const AnchorTestData anchor_tests[] = {
+    {u"http://example.com/path/to/index.html"_ns, u""_ns, u"page.html"_ns,
+     "http://example.com/path/to/page.html"},
+    {u"http://example.com/path/to/index.html"_ns,
+     u"http://example.com/path/"_ns, u"page.html"_ns,
+     "http://example.com/path/page.html"},
+    {u"http://example.com/path/to/index.html"_ns,
+     u"http://example.com/path/"_ns, u"/page.html"_ns,
+     "http://example.com/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u".."_ns, u"page.html"_ns,
+     "http://example.com/path/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u".."_ns,
+     u"from/page.html"_ns, "http://example.com/path/from/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u"/hello/"_ns,
+     u"page.html"_ns, "http://example.com/hello/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u"/hello"_ns, u"page.html"_ns,
+     "http://example.com/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u"#necko"_ns, u"page.html"_ns,
+     "http://example.com/path/to/page.html"},
+    {u"http://example.com/path/to/index.html"_ns, u"https://example.net/"_ns,
+     u"to/page.html"_ns, "https://example.net/to/page.html"},
+};
+
+LinkHeader LinkHeaderFromHrefAndAnchor(nsAString const& aHref,
+                                       nsAString const& aAnchor) {
+  LinkHeader l;
+  l.mHref = aHref;
+  l.mAnchor = aAnchor;
+  return l;
+}
+
+TEST_P(AnchorTest, Anchor) {
+  const AnchorTestData test = GetParam();
+
+  LinkHeader linkHeader = LinkHeaderFromHrefAndAnchor(test.href, test.anchor);
+
+  nsCOMPtr<nsIURI> baseURI;
+  ASSERT_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(baseURI), test.baseURI)));
+
+  nsCOMPtr<nsIURI> resolved;
+  ASSERT_TRUE(NS_SUCCEEDED(
+      linkHeader.NewResolveHref(getter_AddRefs(resolved), baseURI)));
+
+  ASSERT_STREQ(resolved->GetSpecOrDefault().get(), test.resolved);
+}
+
+INSTANTIATE_TEST_SUITE_P(TestLinkHeader, AnchorTest,
+                         testing::ValuesIn(anchor_tests));
