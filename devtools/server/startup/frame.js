@@ -26,12 +26,10 @@ try {
     let loader,
       customLoader = false;
     if (content.document.nodePrincipal.isSystemPrincipal) {
-      const { DevToolsLoader } = ChromeUtils.import(
+      const { useDistinctSystemPrincipalLoader } = ChromeUtils.import(
         "resource://devtools/shared/loader/Loader.jsm"
       );
-      loader = new DevToolsLoader({
-        invisibleToDebugger: true,
-      });
+      loader = useDistinctSystemPrincipalLoader(chromeGlobal);
       customLoader = true;
     } else {
       // Otherwise, use the shared loader.
@@ -169,21 +167,23 @@ try {
 
     // Destroy the server once its last connection closes. Note that multiple frame
     // scripts may be running in parallel and reuse the same server.
-    function destroyServer() {
+    function destroyLoader() {
       // Only destroy the server if there is no more connections to it. It may be used
       // to debug another tab running in the same process.
       if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
         return;
       }
-      DevToolsServer.off("connectionchange", destroyServer);
-      DevToolsServer.destroy();
+      DevToolsServer.off("connectionchange", destroyLoader);
 
       // When debugging chrome pages, we initialized a dedicated loader, also destroy it
       if (customLoader) {
-        loader.destroy();
+        const { releaseDistinctSystemPrincipalLoader } = ChromeUtils.import(
+          "resource://devtools/shared/loader/Loader.jsm"
+        );
+        releaseDistinctSystemPrincipalLoader(chromeGlobal);
       }
     }
-    DevToolsServer.on("connectionchange", destroyServer);
+    DevToolsServer.on("connectionchange", destroyLoader);
   })();
 } catch (e) {
   dump(`Exception in DevTools frame startup: ${e}\n`);
