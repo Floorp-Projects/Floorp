@@ -2172,7 +2172,7 @@ void JsepSessionImpl::SetupDefaultCodecs() {
 void JsepSessionImpl::SetupDefaultRtpExtensions() {
   AddAudioRtpExtension(webrtc::RtpExtension::kAudioLevelUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
-  AddAudioRtpExtension(webrtc::RtpExtension::kCsrcAudioLevelUri,
+  AddAudioRtpExtension(webrtc::RtpExtension::kCsrcAudioLevelsUri,
                        SdpDirectionAttribute::Direction::kRecvonly);
   AddAudioVideoRtpExtension(webrtc::RtpExtension::kMidUri,
                             SdpDirectionAttribute::Direction::kSendrecv);
