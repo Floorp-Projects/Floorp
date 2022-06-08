@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -16,7 +17,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsHashKeys.h"
 #include "nsLayoutUtils.h"
@@ -153,8 +153,8 @@ nsCString ImageCacheKey::GetIsolationKey(Document* aDocument, nsIURI* aURI) {
   // this point.  The best approach here is to be conservative: if we are sure
   // that the permission is granted, let's return 0. Otherwise, let's make a
   // unique image cache per the top-level document eTLD+1.
-  if (!ApproximateAllowAccessForWithoutChannel(aDocument->GetInnerWindow(),
-                                               aURI)) {
+  if (!ContentBlocking::ApproximateAllowAccessForWithoutChannel(
+          aDocument->GetInnerWindow(), aURI)) {
     // If we are here, the image is a 3rd-party resource loaded by a first-party
     // context. We can just use the document's base domain as the key because it
     // should be the same as the top-level document's base domain.

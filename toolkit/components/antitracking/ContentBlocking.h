@@ -33,8 +33,44 @@ class ContentParent;
 class Document;
 }  // namespace dom
 
-class StorageAccessAPIHelper final {
+class ContentBlocking final {
  public:
+  // This method returns true if the URI has first party storage access when
+  // loaded inside the passed 3rd party context tracking resource window.
+  // If the window is first party context, please use
+  // ApproximateAllowAccessForWithoutChannel();
+  //
+  // aRejectedReason could be set to one of these values if passed and if the
+  // storage permission is not granted:
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
+  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
+  static bool ShouldAllowAccessFor(nsPIDOMWindowInner* a3rdPartyTrackingWindow,
+                                   nsIURI* aURI, uint32_t* aRejectedReason);
+
+  // Note: you should use ShouldAllowAccessFor() passing the nsIChannel! Use
+  // this method _only_ if the channel is not available.  For first party
+  // window, it's impossible to know if the aURI is a tracking resource
+  // synchronously, so here we return the best guest: if we are sure that the
+  // permission is granted for the origin of aURI, this method returns true,
+  // otherwise false.
+  static bool ApproximateAllowAccessForWithoutChannel(
+      nsPIDOMWindowInner* aFirstPartyWindow, nsIURI* aURI);
+
+  // It returns true if the URI has access to the first party storage.
+  // aChannel can be a 3rd party channel, or not.
+  // See ShouldAllowAccessFor(window) to see the possible values of
+  // aRejectedReason.
+  static bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
+                                   uint32_t* aRejectedReason);
+
+  // This method checks if the principal has the permission to access to the
+  // first party storage.
+  static bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
+                                   nsICookieJarSettings* aCookieJarSettings);
+
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
   // Grant the permission for aOrigin to have access to the first party storage.
@@ -111,9 +147,7 @@ class StorageAccessAPIHelper final {
   //   Some(false) if unpartitioned cookies will be blocked
   //   None if it is not clear from settings alone what to do
   static Maybe<bool> CheckBrowserSettingsDecidesStorageAccessAPI(
-      nsICookieJarSettings* aCookieJarSettings, bool aThirdParty,
-      bool aOnRejectForeignAllowlist, bool aIsOnThirdPartySkipList,
-      bool aIsThirdPartyTracker);
+      nsICookieJarSettings* aCookieJarSettings, bool aThirdParty);
 
   // This function checks if the document's context (like if it is third-party
   // or an iframe) gives an answer of how a the StorageAccessAPI call, that is
@@ -175,6 +209,32 @@ class StorageAccessAPIHelper final {
 
   static void UpdateAllowAccessOnParentProcess(
       dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin);
+
+  typedef MozPromise<uint32_t, nsresult, true> CheckTrackerForPrincipalPromise;
+  class TrackerClassifierFeatureCallback final
+      : public nsIUrlClassifierFeatureCallback {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIURLCLASSIFIERFEATURECALLBACK
+
+    RefPtr<CheckTrackerForPrincipalPromise> Promise() {
+      return mHolder.Ensure(__func__);
+    }
+
+    void Reject(nsresult rv) { mHolder.Reject(rv, __func__); }
+
+    TrackerClassifierFeatureCallback() = default;
+
+   private:
+    ~TrackerClassifierFeatureCallback() = default;
+
+    MozPromiseHolder<CheckTrackerForPrincipalPromise> mHolder;
+  };
+
+  // This method checks if the given princpal belongs to a tracker or a social
+  // tracker.
+  [[nodiscard]] static RefPtr<CheckTrackerForPrincipalPromise>
+  CheckTrackerForPrincipal(nsIPrincipal* aPrincipal);
 };
 
 }  // namespace mozilla
