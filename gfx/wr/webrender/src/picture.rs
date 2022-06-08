@@ -1874,8 +1874,6 @@ pub struct TileCacheInstance {
     pub local_rect: PictureRect,
     /// The local clip rect, from the shared clips of this picture.
     pub local_clip_rect: PictureRect,
-    /// The screen rect, transformed to local picture space.
-    pub screen_rect_in_pic_space: PictureRect,
     /// The surface index that this tile cache will be drawn into.
     surface_index: SurfaceIndex,
     /// The background color from the renderer. If this is set opaque, we know it's
@@ -1969,7 +1967,6 @@ impl TileCacheInstance {
             tile_bounds_p1: TileOffset::zero(),
             local_rect: PictureRect::zero(),
             local_clip_rect: PictureRect::zero(),
-            screen_rect_in_pic_space: PictureRect::zero(),
             surface_index: SurfaceIndex(0),
             background_color: params.background_color,
             backdrop: BackdropInfo::empty(),
@@ -2131,17 +2128,12 @@ impl TileCacheInstance {
         // during the prim dependency checks.
         self.backdrop = BackdropInfo::empty();
 
-        // Calculate the screen rect in picture space, for later comparison against
-        // backdrops, and prims potentially covering backdrops.
         let pic_to_world_mapper = SpaceMapper::new_with_target(
             frame_context.root_spatial_node_index,
             self.spatial_node_index,
             frame_context.global_screen_world_rect,
             frame_context.spatial_tree,
         );
-        self.screen_rect_in_pic_space = pic_to_world_mapper
-            .unmap(&frame_context.global_screen_world_rect)
-            .expect("unable to unmap screen rect");
 
         // If there is a valid set of shared clips, build a clip chain instance for this,
         // which will provide a local clip rect. This is useful for establishing things
@@ -2343,11 +2335,15 @@ impl TileCacheInstance {
             world_tile_size.height / self.local_to_surface.scale.y,
         );
 
+        let screen_rect_in_pic_space = pic_to_world_mapper
+            .unmap(&frame_context.global_screen_world_rect)
+            .expect("unable to unmap screen rect");
+
         // Inflate the needed rect a bit, so that we retain tiles that we have drawn
         // but have just recently gone off-screen. This means that we avoid re-drawing
         // tiles if the user is scrolling up and down small amounts, at the cost of
         // a bit of extra texture memory.
-        let desired_rect_in_pic_space = self.screen_rect_in_pic_space
+        let desired_rect_in_pic_space = screen_rect_in_pic_space
             .inflate(0.0, 1.0 * self.tile_size.height);
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space
@@ -3044,17 +3040,6 @@ impl TileCacheInstance {
             return;
         }
 
-        // Calculate the screen rect in local space. We could ignore all prims outside
-        // of this boundary, but we choose not to, since prims on out-of-bounds tiles
-        // might get scrolled in. So we trust our tile boundaries to determine which
-        // prims matter. However, when we calculate backdrops, we care only that they
-        // cover the visible rect, and don't have any overlapping prims in the visible
-        // rect. The visible_local_rect is used to clip the backdrop rect, to clip the
-        // primitives appearing after the backdrop *only* for the purpose of determining
-        // whether the backdrop is topmost visible, and to check that the backdrop
-        // covers the entire visible area.
-        let visible_local_rect = self.local_rect.intersection(&self.screen_rect_in_pic_space).unwrap_or_default();
-
         // Build the list of resources that this primitive has dependencies on.
         let mut prim_info = PrimitiveDependencyInfo::new(
             prim_instance.uid(),
@@ -3390,17 +3375,22 @@ impl TileCacheInstance {
                 // These don't contribute dependencies
             }
         };
+        
+        // Bug 1773109: We'd like to use native color layers for backdrops whenever possible.
+        // A native color layer can only be used when there are no primitives on top of the
+        // backdrop in the same slice. This primitive is potentially on top of a backdrop,
+        // but there's no guarantee that the primitive is in the visible area. Even so,
+        // we have to mark it as obscuring the backdrop because we rely on off-screen tiles
+        // having correct contents when they are scrolled into view through APZ. An ideal
+        // solution would use native color layers for backdrops as long as nothing is
+        // covering them in the visible area *and* have correctly-painted tiles ready to
+        // be scrolled in.
+        self.found_prims_after_backdrop = true;
 
         // If this primitive considers itself a backdrop candidate, apply further
         // checks to see if it matches all conditions to be a backdrop.
         let mut vis_flags = PrimitiveVisibilityFlags::empty();
-        if pic_coverage_rect.intersects(&visible_local_rect) {
-            // This prim is visible, so any backdrop we were tracking in this slice
-            // is covered by it.
-            self.found_prims_after_backdrop = true;
-        }
         let sub_slice = &mut self.sub_slices[sub_slice_index];
-
         if let Some(mut backdrop_candidate) = backdrop_candidate {
             // Update whether the surface that this primitive exists on
             // can be considered opaque. Any backdrop kind other than
@@ -3475,17 +3465,12 @@ impl TileCacheInstance {
                         .unwrap_or(PictureRect::zero());
                 }
 
-                // Clip the backdrop_candidate opaque rect to the visible rect.
-                backdrop_candidate.opaque_rect = backdrop_candidate.opaque_rect.intersection(&visible_local_rect).unwrap_or(PictureRect::zero());
-
                 if backdrop_candidate.opaque_rect.contains_box(&self.backdrop.opaque_rect) {
                     self.backdrop.opaque_rect = backdrop_candidate.opaque_rect;
                 }
 
                 if let Some(kind) = backdrop_candidate.kind {
-                    // Check if the backdrop completely covers the portion of the TileCache
-                    // that is visible.
-                    if backdrop_candidate.opaque_rect.contains_box(&visible_local_rect) {
+                    if backdrop_candidate.opaque_rect.contains_box(&self.local_rect) {
                         // If we have a color backdrop, mark the visibility flags
                         // of the primitive so it is skipped during batching (and
                         // also clears any previous primitives).
@@ -3578,11 +3563,10 @@ impl TileCacheInstance {
             return SubpixelMode::Deny;
         }
 
-        // If the opaque backdrop rect covers the entire visible tile cache surface,
+        // If the opaque backdrop rect covers the entire tile cache surface,
         // we can allow subpixel AA anywhere, skipping the per-text-run tests
         // later on during primitive preparation.
-        let visible_local_rect = self.local_rect.intersection(&self.screen_rect_in_pic_space).unwrap_or_default();
-        if self.backdrop.opaque_rect.contains_box(&visible_local_rect) {
+        if self.backdrop.opaque_rect.contains_box(&self.local_rect) {
             return SubpixelMode::Allow;
         }
 
