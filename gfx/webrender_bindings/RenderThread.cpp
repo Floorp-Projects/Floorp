@@ -17,7 +17,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -565,9 +564,7 @@ void RenderThread::UpdateAndRender(
     // The wait is necessary for Textures recycling of AsyncImagePipelineManager
     // and for avoiding GPU queue is filled with too much tasks.
     // WaitForGPU's implementation is different for each platform.
-    auto timerId = glean::wr::gpu_wait_time.Start();
     renderer->WaitForGPU();
-    glean::wr::gpu_wait_time.StopAndAccumulate(std::move(timerId));
   } else {
     // Update frame id for NotifyPipelinesUpdated() when rendering does not
     // happen, either because rendering was not requested or the frame was

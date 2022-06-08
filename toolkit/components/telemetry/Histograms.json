@@ -16090,28 +16090,6 @@
     "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
     "description": "How common are different types of out-of-reach viewport overflow?"
   },
-  "WR_GPU_WAIT_TIME": {
-    "record_in_processes": [ "main", "gpu" ],
-    "products": [ "firefox", "fennec", "geckoview_streaming" ],
-    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
-    "bug_numbers": [ 1772216 ],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "The time spent waiting for the GPU to complete previously issued drawing commands in milliseconds"
-  },
-    "WR_RENDERER_TIME": {
-    "record_in_processes": [ "main", "gpu" ],
-    "products": [ "firefox" ],
-    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
-    "bug_numbers": [ 1772223 ],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "The time spent by WebRender in the Renderer in milliseconds."
-  },
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
@@ -16166,17 +16144,6 @@
     "high": 500,
     "n_buckets": 50,
     "description": "Time taken by WebRender to rasterize blobs"
-  },
-  "WR_TEXTURE_CACHE_UPDATE_TIME": {
-    "record_in_processes": [ "main", "gpu" ],
-    "products": [ "firefox" ],
-    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
-    "bug_numbers": [ 1772223 ],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "Time taken by WebRender to update the texture cache in milliseconds."
   },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],
