@@ -90,6 +90,9 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], defau
 # Force url to stay at 2.1.0. See bug 1734538.
 url = "=2.1.0"
 
+# Force mio to stay at 0.8.0 to avoid windows-sys dependencies.
+mio = "=0.8.0"
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
