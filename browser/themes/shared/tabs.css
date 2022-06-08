@@ -91,6 +91,7 @@
 .tabbrowser-tab {
   appearance: none;
   background-color: transparent;
+  color-scheme: unset;
   border-radius: 0;
   border-width: 0;
   margin: 0;
