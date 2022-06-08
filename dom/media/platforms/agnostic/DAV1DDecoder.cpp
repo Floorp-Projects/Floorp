@@ -8,6 +8,7 @@
 
 #include "gfxUtils.h"
 #include "ImageContainer.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsThreadUtils.h"
@@ -19,6 +20,43 @@
             ##__VA_ARGS__)
 
 namespace mozilla {
+
+static int GetDecodingThreadCount(uint32_t aCodedHeight) {
+  /**
+   * Based on the result we print out from the dav1decoder [1], the
+   * following information shows the number of tiles for AV1 videos served on
+   * Youtube. Each Tile can be decoded in parallel, so we would like to make
+   * sure we at least use enough threads to match the number of tiles.
+   *
+   * ----------------------------
+   * | resolution row col total |
+   * |    480p      2  1     2  |
+   * |    720p      2  2     4  |
+   * |   1080p      4  2     8  |
+   * |   1440p      4  2     8  |
+   * |   2160p      8  4    32  |
+   * ----------------------------
+   *
+   * Besides the tile thread count, the frame thread count also needs to be
+   * considered. As we didn't find anything about what the best number is for
+   * the count of frame thread, just simply use 2 for parallel jobs, which
+   * is similar with Chromium's implementation. They uses 3 frame threads for
+   * 720p+ but less tile threads, so we will still use more total threads. In
+   * addition, their data is measured on 2019, our data should be closer to the
+   * current real world situation.
+   * [1]
+   * https://searchfox.org/mozilla-central/rev/2f5ed7b7244172d46f538051250b14fb4d8f1a5f/third_party/dav1d/src/decode.c#2940
+   */
+  int tileThreads = 2, frameThreads = 2;
+  if (aCodedHeight >= 2160) {
+    tileThreads = 32;
+  } else if (aCodedHeight >= 1080) {
+    tileThreads = 8;
+  } else if (aCodedHeight >= 720) {
+    tileThreads = 4;
+  }
+  return tileThreads * frameThreads;
+}
 
 DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
     : mInfo(aParams.VideoConfig()),
@@ -37,6 +75,11 @@ RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   } else if (mInfo.mDisplay.width >= 1024) {
     decoder_threads = 4;
   }
+  if (StaticPrefs::media_av1_new_thread_count_strategy()) {
+    decoder_threads = GetDecodingThreadCount(mInfo.mImage.Height());
+  }
+  // Still need to consider the amount of physical cores in order to achieve
+  // best performance.
   settings.n_threads =
       static_cast<int>(std::min(decoder_threads, GetNumberOfProcessors()));
 
