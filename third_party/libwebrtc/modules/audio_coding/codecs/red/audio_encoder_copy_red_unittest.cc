@@ -583,6 +583,29 @@ TEST_F(AudioEncoderCopyRedTest, RespectsPayloadMTU) {
   EXPECT_EQ(encoded_.size(), 5u + 500u + 400u);
 }
 
+TEST_F(AudioEncoderCopyRedTest, LargeTimestampGap) {
+  const int primary_payload_type = red_payload_type_ + 1;
+  AudioEncoder::EncodedInfo info;
+  info.encoded_bytes = 100;
+  info.encoded_timestamp = timestamp_;
+  info.payload_type = primary_payload_type;
+
+  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
+  Encode();
+  // Update timestamp to simulate a 400ms gap like the one
+  // opus DTX causes.
+  timestamp_ += 19200;
+  info.encoded_timestamp = timestamp_;  // update timestamp.
+  info.encoded_bytes = 200;
+  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
+  Encode();
+
+  // The old packet will be dropped.
+  EXPECT_EQ(encoded_.size(), 1u + 200u);
+}
+
 #if GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
 
 // This test fixture tests various error conditions that makes the
