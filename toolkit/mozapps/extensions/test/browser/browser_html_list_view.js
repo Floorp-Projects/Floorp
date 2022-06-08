@@ -84,12 +84,15 @@ add_task(async function testExtensionList() {
   let list = doc.querySelector("addon-list");
 
   // There shouldn't be any disabled extensions.
-  let disabledSection = getSection(doc, "disabled");
+  let disabledSection = getSection(doc, "extension-disabled-section");
   ok(isEmpty(disabledSection), "The disabled section is empty");
 
   // The loaded extension should be in the enabled list.
-  let enabledSection = getSection(doc, "enabled");
-  ok(!isEmpty(enabledSection), "The enabled section isn't empty");
+  let enabledSection = getSection(doc, "extension-enabled-section");
+  ok(
+    enabledSection && !isEmpty(enabledSection),
+    "The enabled section isn't empty"
+  );
   let card = getCardByAddonId(enabledSection, id);
   ok(card, "The card is in the enabled section");
 
@@ -389,8 +392,8 @@ add_task(async function testKeyboardSupport() {
 
   // Find the addon-list to listen for events.
   let list = doc.querySelector("addon-list");
-  let enabledSection = getSection(doc, "enabled");
-  let disabledSection = getSection(doc, "disabled");
+  let enabledSection = getSection(doc, "extension-enabled-section");
+  let disabledSection = getSection(doc, "extension-disabled-section");
 
   // Find the card.
   let [card] = getTestCards(list);
@@ -517,7 +520,7 @@ add_task(async function testExtensionReordering() {
   let list = doc.querySelector("addon-list");
 
   // Find the related cards, they should all have @mochi.test ids.
-  let enabledSection = getSection(doc, "enabled");
+  let enabledSection = getSection(doc, "extension-enabled-section");
   let cards = getTestCards(enabledSection);
 
   is(cards.length, 3, "Each extension has an addon-card");
@@ -530,7 +533,7 @@ add_task(async function testExtensionReordering() {
   );
 
   // Disable the second extension.
-  let disabledSection = getSection(doc, "disabled");
+  let disabledSection = getSection(doc, "extension-disabled-section");
   ok(isEmpty(disabledSection), "The disabled section is initially empty");
 
   // Disable the add-ons in a different order.
@@ -620,8 +623,8 @@ add_task(async function testThemeList() {
   let [card] = cards;
   is(card.addon.name, "My theme", "The card is for the test theme");
 
-  let enabledSection = getSection(doc, "enabled");
-  let disabledSection = getSection(doc, "disabled");
+  let enabledSection = getSection(doc, "theme-enabled-section");
+  let disabledSection = getSection(doc, "theme-disabled-section");
 
   await TestUtils.waitForCondition(
     () => enabledSection.querySelectorAll("addon-card").length == 1
@@ -696,8 +699,8 @@ add_task(async function testBuiltInThemeButtons() {
 
   // Find the addon-list to listen for events.
   let list = doc.querySelector("addon-list");
-  let enabledSection = getSection(doc, "enabled");
-  let disabledSection = getSection(doc, "disabled");
+  let enabledSection = getSection(doc, "theme-enabled-section");
+  let disabledSection = getSection(doc, "theme-disabled-section");
 
   let defaultTheme = getCardByAddonId(doc, "default-theme@mozilla.org");
   let darkTheme = getCardByAddonId(doc, "firefox-compact-dark@mozilla.org");
@@ -940,16 +943,17 @@ add_task(async function testSectionHeadingKeys() {
     "dictionary",
     "sitepermission",
   ]) {
+    info(`loading view for addon type ${type}`);
     let win = await loadInitialView(type);
     let doc = win.document;
 
     for (let status of ["enabled", "disabled"]) {
-      let section = getSection(doc, status);
-      let el = section.querySelector(".list-section-heading");
-      isnot(el, null, "Should have heading present");
+      let section = getSection(doc, `${type}-${status}-section`);
+      let el = section?.querySelector(".list-section-heading");
+      isnot(el, null, `Should have ${status} heading for ${type} section`);
       is(
-        doc.l10n.getAttributes(el).id,
-        `${type}-${status}-heading`,
+        el && doc.l10n.getAttributes(el).id,
+        win.getL10nIdMapping(`${type}-${status}-heading`),
         `Should have correct ${status} heading for ${type} section`
       );
     }
@@ -999,7 +1003,7 @@ add_task(async function testDisabledDimming() {
   await addon.disable();
   await moved;
 
-  let disabledSection = getSection(doc, "disabled");
+  let disabledSection = getSection(doc, "extension-disabled-section");
   is(card.parentNode, disabledSection, "The card is in the disabled section");
   checkOpacity(card, "0.6", "The opacity is dimmed when disabled");
 
@@ -1047,8 +1051,8 @@ add_task(async function testEmptyMessage() {
   for (let test of tests) {
     let win = await loadInitialView(test.type);
     let doc = win.document;
-    let enabledSection = getSection(doc, "enabled");
-    let disabledSection = getSection(doc, "disabled");
+    let enabledSection = getSection(doc, `${test.type}-enabled-section`);
+    let disabledSection = getSection(doc, `${test.type}-disabled-section`);
     const message = doc.querySelector("#empty-addons-message");
 
     // Test if the correct locale has been applied.
