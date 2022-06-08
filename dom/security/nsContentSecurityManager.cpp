@@ -993,6 +993,44 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
 }
 
 /* static */
+nsSecurityFlags nsContentSecurityManager::ComputeSecurityFlags(
+    mozilla::CORSMode aCORSMode, CORSSecurityMapping aCORSSecurityMapping) {
+  if (aCORSSecurityMapping == CORSSecurityMapping::DISABLE_CORS_CHECKS) {
+    return nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  }
+
+  switch (aCORSMode) {
+    case CORS_NONE:
+      if (aCORSSecurityMapping == CORSSecurityMapping::REQUIRE_CORS_CHECKS) {
+        // CORS_NONE gets treated like CORS_ANONYMOUS in this mode
+        return nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
+               nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+      } else if (aCORSSecurityMapping ==
+                 CORSSecurityMapping::CORS_NONE_MAPS_TO_INHERITED_CONTEXT) {
+        // CORS_NONE inherits
+        return nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
+      } else {
+        // CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS, the only remaining enum
+        // variant. CORSSecurityMapping::DISABLE_CORS_CHECKS returned early.
+        MOZ_ASSERT(aCORSSecurityMapping ==
+                   CORSSecurityMapping::CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS);
+        return nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+      }
+    case CORS_ANONYMOUS:
+      return nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
+             nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    case CORS_USE_CREDENTIALS:
+      return nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
+             nsILoadInfo::SEC_COOKIES_INCLUDE;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid aCORSMode enum value");
+      return nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT |
+             nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  }
+}
+
+/* static */
 nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
