@@ -26,6 +26,7 @@
 #include "net/dcsctp/packet/chunk/iforward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/sack_chunk.h"
 #include "net/dcsctp/packet/data.h"
+#include "net/dcsctp/public/dcsctp_handover_state.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/timer/timer.h"
 #include "net/dcsctp/tx/retransmission_timeout.h"
@@ -61,23 +62,25 @@ class RetransmissionQueue {
     kAbandoned,
   };
 
-  // Creates a RetransmissionQueue which will send data using `initial_tsn` as
-  // the first TSN to use for sent fragments. It will poll data from
-  // `send_queue` and call `on_send_queue_empty` when it is empty. When
-  // SACKs are received, it will estimate the RTT, and call `on_new_rtt`. When
-  // an outstanding chunk has been ACKed, it will call
+  // Creates a RetransmissionQueue which will send data using `my_initial_tsn`
+  // (or a value from `DcSctpSocketHandoverState` if given) as the first TSN
+  // to use for sent fragments. It will poll data from `send_queue`. When SACKs
+  // are received, it will estimate the RTT, and call `on_new_rtt`. When an
+  // outstanding chunk has been ACKed, it will call
   // `on_clear_retransmission_counter` and will also use `t3_rtx`, which is the
   // SCTP retransmission timer to manage retransmissions.
-  RetransmissionQueue(absl::string_view log_prefix,
-                      TSN initial_tsn,
-                      size_t a_rwnd,
-                      SendQueue& send_queue,
-                      std::function<void(DurationMs rtt)> on_new_rtt,
-                      std::function<void()> on_clear_retransmission_counter,
-                      Timer& t3_rtx,
-                      const DcSctpOptions& options,
-                      bool supports_partial_reliability = true,
-                      bool use_message_interleaving = false);
+  RetransmissionQueue(
+      absl::string_view log_prefix,
+      TSN my_initial_tsn,
+      size_t a_rwnd,
+      SendQueue& send_queue,
+      std::function<void(DurationMs rtt)> on_new_rtt,
+      std::function<void()> on_clear_retransmission_counter,
+      Timer& t3_rtx,
+      const DcSctpOptions& options,
+      bool supports_partial_reliability = true,
+      bool use_message_interleaving = false,
+      const DcSctpSocketHandoverState* handover_state = nullptr);
 
   // Handles a received SACK. Returns true if the `sack` was processed and
   // false if it was discarded due to received out-of-order and not relevant.
@@ -138,6 +141,10 @@ class RetransmissionQueue {
   bool CanResetStreams() const;
   void CommitResetStreams();
   void RollbackResetStreams();
+
+  HandoverReadinessStatus GetHandoverReadiness() const;
+
+  void AddHandoverState(DcSctpSocketHandoverState& state);
 
  private:
   enum class CongestionAlgorithmPhase {
@@ -279,9 +286,7 @@ class RetransmissionQueue {
   // action indicated when nacking an item (e.g. retransmitting or abandoning).
   // The return value indicate if an action was performed, meaning that packet
   // loss was detected and acted upon.
-  bool NackItem(UnwrappedTSN cumulative_tsn_ack,
-                TxData& item,
-                bool retransmit_now);
+  bool NackItem(UnwrappedTSN tsn, TxData& item, bool retransmit_now);
 
   // Will mark the chunks covered by the `gap_ack_blocks` from an incoming SACK
   // as "acked" and update `ack_info` by adding new TSNs to `added_tsns`.
@@ -375,7 +380,7 @@ class RetransmissionQueue {
   // Slow Start Threshold. See RFC4960.
   size_t ssthresh_;
   // Partial Bytes Acked. See RFC4960.
-  size_t partial_bytes_acked_ = 0;
+  size_t partial_bytes_acked_;
   // If set, fast recovery is enabled until this TSN has been cumulative
   // acked.
   absl::optional<UnwrappedTSN> fast_recovery_exit_tsn_ = absl::nullopt;
