@@ -1053,6 +1053,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtp_sender_receiver_unittest.cc",
       "rtp_transceiver_unittest.cc",
       "sctp_utils_unittest.cc",
+      "sdp_offer_answer_unittest.cc",
       "sdp_serializer_unittest.cc",
       "stats_collector_unittest.cc",
       "test/fake_audio_capture_module_unittest.cc",

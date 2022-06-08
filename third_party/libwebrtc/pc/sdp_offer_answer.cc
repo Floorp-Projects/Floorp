@@ -1725,7 +1725,9 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
           RTC_LOG(LS_INFO)
               << "Processing the addition of a remote track for MID="
               << content->name << ".";
-          now_receiving_transceivers.push_back(transceiver);
+          // Since the transceiver is passed to the user in an
+          // OnTrack event, we must use the proxied transceiver.
+          now_receiving_transceivers.push_back(transceiver_ext);
         }
       }
       // 2.2.8.1.9: If direction is "sendonly" or "inactive", and transceiver's
