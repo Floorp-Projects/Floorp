@@ -57,6 +57,21 @@ struct JitDumpLoadRecord {
   uint64_t code_index;
 };
 
+// Debug record
+struct JitDumpDebugRecord {
+  JitDumpRecordHeader header;
+
+  // Debug header
+  uint64_t code_addr;
+  uint64_t nr_entry;
+};
+
+struct JitDumpDebugEntry {
+  uint64_t code_addr;
+  uint32_t line;
+  uint32_t discrim;
+};
+
 }  // namespace jit
 }  // namespace js
 

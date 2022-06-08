@@ -6508,6 +6508,10 @@ MethodStatus BaselineCompiler::emitBody() {
       return Method_Error;
     }
 
+#ifdef JS_ION_PERF
+    perfSpewer_.recordInstruction(masm, op);
+#endif
+
 #define EMIT_OP(OP, ...)                                       \
   case JSOp::OP: {                                             \
     AutoCreatedBy acb(masm, "op=" #OP);                        \
