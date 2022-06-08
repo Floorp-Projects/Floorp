@@ -7,15 +7,16 @@
 
 "use strict";
 
+const lazy = {};
 const { Services } = ChromeUtils.import(
   "resource://gre/modules/Services.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
-this.EXPORTED_SYMBOLS = ["AppConstants"];
+var EXPORTED_SYMBOLS = ["AppConstants"];
 
 // Immutable for export.
-this.AppConstants = Object.freeze({
+var AppConstants = Object.freeze({
   // See this wiki page for more details about channel specific build
   // defines: https://wiki.mozilla.org/Platform/Channel-specific_build_defines
   NIGHTLY_BUILD:
@@ -294,10 +295,10 @@ this.AppConstants = Object.freeze({
   get MOZ_UNSIGNED_SCOPES() {
     let result = 0;
 #ifdef MOZ_UNSIGNED_APP_SCOPE
-    result |= AddonManager.SCOPE_APPLICATION;
+    result |= lazy.AddonManager.SCOPE_APPLICATION;
 #endif
 #ifdef MOZ_UNSIGNED_SYSTEM_SCOPE
-    result |= AddonManager.SCOPE_SYSTEM;
+    result |= lazy.AddonManager.SCOPE_SYSTEM;
 #endif
     return result;
   },
