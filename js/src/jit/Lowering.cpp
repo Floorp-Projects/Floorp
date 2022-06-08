@@ -4780,6 +4780,13 @@ void LIRGenerator::visitIteratorEnd(MIteratorEnd* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitCloseIterCache(MCloseIterCache* ins) {
+  LCloseIterCache* lir =
+      new (alloc()) LCloseIterCache(useRegister(ins->iter()), temp());
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStringLength(MStringLength* ins) {
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
   define(new (alloc()) LStringLength(useRegisterAtStart(ins->string())), ins);

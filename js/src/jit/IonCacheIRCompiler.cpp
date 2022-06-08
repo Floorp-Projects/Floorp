@@ -515,8 +515,15 @@ bool IonCacheIRCompiler::init() {
       allocator.initInputLocation(1, ic->rhs());
       break;
     }
-    case CacheKind::CloseIter:
-      MOZ_CRASH("TODO");
+    case CacheKind::CloseIter: {
+      IonCloseIterIC* ic = ic_->asCloseIterIC();
+
+      available.add(ic->temp());
+
+      liveRegs_.emplace(ic->liveRegs());
+      allocator.initInputLocation(0, ic->iter(), JSVAL_TYPE_OBJECT);
+      break;
+    }
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
