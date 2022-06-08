@@ -259,25 +259,38 @@ class MockCreateSessionDescriptionObserver
         error_("MockCreateSessionDescriptionObserver not called") {}
   virtual ~MockCreateSessionDescriptionObserver() {}
   void OnSuccess(SessionDescriptionInterface* desc) override {
+    MutexLock lock(&mutex_);
     called_ = true;
     error_ = "";
     desc_.reset(desc);
   }
   void OnFailure(webrtc::RTCError error) override {
+    MutexLock lock(&mutex_);
     called_ = true;
     error_ = error.message();
   }
-  bool called() const { return called_; }
-  bool result() const { return error_.empty(); }
-  const std::string& error() const { return error_; }
+  bool called() const {
+    MutexLock lock(&mutex_);
+    return called_;
+  }
+  bool result() const {
+    MutexLock lock(&mutex_);
+    return error_.empty();
+  }
+  const std::string& error() const {
+    MutexLock lock(&mutex_);
+    return error_;
+  }
   std::unique_ptr<SessionDescriptionInterface> MoveDescription() {
+    MutexLock lock(&mutex_);
     return std::move(desc_);
   }
 
  private:
-  bool called_;
-  std::string error_;
-  std::unique_ptr<SessionDescriptionInterface> desc_;
+  mutable Mutex mutex_;
+  bool called_ RTC_GUARDED_BY(mutex_);
+  std::string error_ RTC_GUARDED_BY(mutex_);
+  std::unique_ptr<SessionDescriptionInterface> desc_ RTC_GUARDED_BY(mutex_);
 };
 
 class MockSetSessionDescriptionObserver
@@ -292,19 +305,32 @@ class MockSetSessionDescriptionObserver
         error_("MockSetSessionDescriptionObserver not called") {}
   ~MockSetSessionDescriptionObserver() override {}
   void OnSuccess() override {
+    MutexLock lock(&mutex_);
+
     called_ = true;
     error_ = "";
   }
   void OnFailure(webrtc::RTCError error) override {
+    MutexLock lock(&mutex_);
     called_ = true;
     error_ = error.message();
   }
 
-  bool called() const { return called_; }
-  bool result() const { return error_.empty(); }
-  const std::string& error() const { return error_; }
+  bool called() const {
+    MutexLock lock(&mutex_);
+    return called_;
+  }
+  bool result() const {
+    MutexLock lock(&mutex_);
+    return error_.empty();
+  }
+  const std::string& error() const {
+    MutexLock lock(&mutex_);
+    return error_;
+  }
 
  private:
+  mutable Mutex mutex_;
   bool called_;
   std::string error_;
 };
