@@ -154,7 +154,7 @@ using mozilla::dom::ipc::StructuredCloneData;
 struct MOZ_HEAP_CLASS ServiceWorkerContainer::ReceivedMessage {
   explicit ReceivedMessage(const ClientPostMessageArgs& aArgs)
       : mServiceWorker(aArgs.serviceWorker()) {
-    mClonedData.CopyFromClonedMessageDataForBackgroundChild(aArgs.clonedData());
+    mClonedData.CopyFromClonedMessageData(aArgs.clonedData());
   }
 
   ServiceWorkerDescriptor mServiceWorker;

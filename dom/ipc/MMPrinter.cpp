@@ -67,7 +67,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   JSContext* cx = jsapi.cx();
 
   ipc::StructuredCloneData data;
-  ipc::UnpackClonedMessageDataForChild(aData, data);
+  ipc::UnpackClonedMessageData(aData, data);
 
   /* Read original StructuredCloneData. */
   JS::Rooted<JS::Value> scdContent(cx);

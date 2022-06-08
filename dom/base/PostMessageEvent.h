@@ -78,7 +78,7 @@ class PostMessageEvent final : public Runnable {
     mHolder.construct<ipc::StructuredCloneData>();
     // FIXME Want to steal!
     //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516349.
-    mHolder.ref<ipc::StructuredCloneData>().CopyFromClonedMessageDataForChild(
+    mHolder.ref<ipc::StructuredCloneData>().CopyFromClonedMessageData(
         aMessageData);
   }
 

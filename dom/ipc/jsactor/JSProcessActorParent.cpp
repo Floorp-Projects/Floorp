@@ -78,8 +78,7 @@ void JSProcessActorParent::SendRawMessage(
   Maybe<ClonedMessageData> msgData;
   if (aData) {
     msgData.emplace();
-    if (NS_WARN_IF(
-            !aData->BuildClonedMessageDataForParent(contentParent, *msgData))) {
+    if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
       aRv.ThrowDataCloneError(
           nsPrintfCString("Actor '%s' cannot send message '%s': cannot clone.",
                           PromiseFlatCString(aMeta.actorName()).get(),
@@ -91,7 +90,7 @@ void JSProcessActorParent::SendRawMessage(
   Maybe<ClonedMessageData> stackData;
   if (aStack) {
     stackData.emplace();
-    if (!aStack->BuildClonedMessageDataForParent(contentParent, *stackData)) {
+    if (!aStack->BuildClonedMessageData(*stackData)) {
       stackData.reset();
     }
   }

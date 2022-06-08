@@ -4606,7 +4606,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSyncMessage(
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
-    ipc::UnpackClonedMessageDataForParent(aData, data);
+    ipc::UnpackClonedMessageData(aData, data);
 
     ppm->ReceiveMessage(ppm, nullptr, aMsg, true, &data, aRetvals,
                         IgnoreErrors());
@@ -4623,7 +4623,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
-    ipc::UnpackClonedMessageDataForParent(aData, data);
+    ipc::UnpackClonedMessageData(aData, data);
 
     ppm->ReceiveMessage(ppm, nullptr, aMsg, false, &data, nullptr,
                         IgnoreErrors());
@@ -4760,7 +4760,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
 
   if (aStack) {
     StructuredCloneData data;
-    UnpackClonedMessageDataForParent(*aStack, data);
+    UnpackClonedMessageData(*aStack, data);
 
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
@@ -4806,7 +4806,7 @@ bool ContentParent::DoLoadMessageManagerScript(const nsAString& aURL,
 nsresult ContentParent::DoSendAsyncMessage(const nsAString& aMessage,
                                            StructuredCloneData& aHelper) {
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForParent(this, aHelper, data)) {
+  if (!BuildClonedMessageData(aHelper, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
   if (!SendAsyncMessage(nsString(aMessage), data)) {
@@ -7176,11 +7176,10 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
   ClonedOrErrorMessageData message;
   StructuredCloneData messageFromChild;
   if (aMessage.type() == ClonedOrErrorMessageData::TClonedMessageData) {
-    UnpackClonedMessageDataForParent(aMessage, messageFromChild);
+    UnpackClonedMessageData(aMessage, messageFromChild);
 
     ClonedMessageData clonedMessageData;
-    if (BuildClonedMessageDataForParent(cp, messageFromChild,
-                                        clonedMessageData)) {
+    if (BuildClonedMessageData(messageFromChild, clonedMessageData)) {
       message = std::move(clonedMessageData);
     } else {
       // FIXME Logging?
@@ -7575,12 +7574,12 @@ IPCResult ContentParent::RecvRawMessage(
   Maybe<StructuredCloneData> data;
   if (aData) {
     data.emplace();
-    data->BorrowFromClonedMessageDataForParent(*aData);
+    data->BorrowFromClonedMessageData(*aData);
   }
   Maybe<StructuredCloneData> stack;
   if (aStack) {
     stack.emplace();
-    stack->BorrowFromClonedMessageDataForParent(*aStack);
+    stack->BorrowFromClonedMessageData(*aStack);
   }
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
