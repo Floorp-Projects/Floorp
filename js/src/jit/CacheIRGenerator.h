@@ -85,6 +85,8 @@ class MOZ_RAII IRGenerator {
 
   StringOperandId emitToStringGuard(ValOperandId id, const Value& v);
 
+  void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
+
   friend class CacheIRSpewer;
 
  public:
@@ -478,7 +480,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   ScriptedThisResult getThisShapeForScripted(HandleFunction calleeFunc,
                                              MutableHandleShape result);
 
-  void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
@@ -853,6 +854,7 @@ class MOZ_RAII CloseIterIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachNoReturnMethod();
+  AttachDecision tryAttachScriptedReturn();
 };
 
 // Retrieve Xray JIT info set by the embedder.

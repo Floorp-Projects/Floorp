@@ -1908,6 +1908,63 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult(ValOperandId lhsId,
   return true;
 }
 
+bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
+                                                     ObjOperandId calleeId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+
+  Register iter = allocator.useRegister(masm, iterId);
+  Register callee = allocator.useRegister(masm, calleeId);
+
+  allocator.discardStack(masm);
+
+  uint32_t framePushedBefore = masm.framePushed();
+
+  // Construct IonICCallFrameLayout.
+  enterStubFrame(masm, save);
+
+  uint32_t stubFramePushed = masm.framePushed();
+
+  // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
+  // so we just have to make sure the stack is aligned after we push |this|.
+  uint32_t thisSize = sizeof(Value);
+  uint32_t padding =
+      ComputeByteAlignment(masm.framePushed() + thisSize, JitStackAlignment);
+  MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
+  MOZ_ASSERT(padding < JitStackAlignment);
+  masm.reserveStack(padding);
+
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
+
+  uint32_t descriptor = MakeFrameDescriptor(
+      padding + thisSize, FrameType::IonICCall, JitFrameLayout::Size());
+  masm.Push(Imm32(0));  // argc
+  masm.Push(callee);
+  masm.Push(Imm32(descriptor));
+
+  masm.loadJitCodeRaw(callee, callee);
+  masm.callJit(callee);
+
+  // Verify that the return value is an object.
+  Label success;
+  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &success);
+
+  // We can reuse the same stub frame, but we first have to pop the arguments
+  // from the previous call.
+  uint32_t framePushedAfterCall = masm.framePushed();
+  masm.freeStack(masm.framePushed() - stubFramePushed);
+
+  masm.push(Imm32(int32_t(CheckIsObjectKind::IteratorReturn)));
+  using Fn = bool (*)(JSContext*, CheckIsObjectKind);
+  callVM<Fn, ThrowCheckIsObject>(masm);
+
+  masm.bind(&success);
+  masm.setFramePushed(framePushedAfterCall);
+
+  masm.freeStack(masm.framePushed() - framePushedBefore);
+  return true;
+}
+
 bool IonCacheIRCompiler::emitGuardFunctionScript(ObjOperandId funId,
                                                  uint32_t expectedOffset,
                                                  uint32_t nargsAndFlagsOffset) {
