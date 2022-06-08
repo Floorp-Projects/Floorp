@@ -44,7 +44,6 @@ namespace jit {
   /* Misc */                             \
   _(DelName)                             \
   _(SetIntrinsic)                        \
-  _(CloseIter) /* TODO TODO */           \
   /* Private Fields */                   \
   _(GetAliasedDebugVar)                  \
   /* Non-syntactic scope */              \

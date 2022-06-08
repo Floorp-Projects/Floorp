@@ -67,7 +67,7 @@ Register IonIC::scratchRegisterForEntryJump() {
     case CacheKind::Compare:
       return asCompareIC()->output();
     case CacheKind::CloseIter:
-      MOZ_CRASH("TODO");
+      return asCloseIterIC()->temp();
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
@@ -467,6 +467,16 @@ bool IonToPropertyKeyIC::update(JSContext* cx, HandleScript outerScript,
   TryAttachIonStub<ToPropertyKeyIRGenerator>(cx, ic, ionScript, val);
 
   return ToPropertyKeyOperation(cx, val, res);
+}
+
+/* static */
+bool IonCloseIterIC::update(JSContext* cx, HandleScript outerScript,
+                            IonCloseIterIC* ic, HandleObject iter) {
+  IonScript* ionScript = outerScript->ionScript();
+
+  TryAttachIonStub<CloseIterIRGenerator>(cx, ic, ionScript, iter);
+
+  return CloseIterOperation(cx, iter);
 }
 
 /*  static */

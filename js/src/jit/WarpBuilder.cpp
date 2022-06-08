@@ -1682,6 +1682,11 @@ bool WarpBuilder::build_EndIter(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
+bool WarpBuilder::build_CloseIter(BytecodeLocation loc) {
+  MDefinition* iter = current->pop();
+  return buildIC(loc, CacheKind::CloseIter, {iter});
+}
+
 bool WarpBuilder::build_IsNoIter(BytecodeLocation) {
   MDefinition* def = current->peek(-1);
   MOZ_ASSERT(def->isIteratorMore());
@@ -3198,8 +3203,12 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       current->push(ins);
       return true;
     }
-    case CacheKind::CloseIter:
-      MOZ_CRASH("TODO");
+    case CacheKind::CloseIter: {
+      MOZ_ASSERT(numInputs == 1);
+      auto* ins = MCloseIterCache::New(alloc(), getInput(0));
+      current->add(ins);
+      return resumeAfter(ins, loc);
+    }
     case CacheKind::GetIntrinsic:
     case CacheKind::ToBool:
     case CacheKind::Call:

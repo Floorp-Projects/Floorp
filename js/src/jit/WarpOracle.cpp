@@ -524,6 +524,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::And:
       case JSOp::Or:
       case JSOp::Not:
+      case JSOp::CloseIter:
         MOZ_TRY(maybeInlineIC(opSnapshots, loc));
         break;
 
