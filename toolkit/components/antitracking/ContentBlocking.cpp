@@ -851,15 +851,49 @@ ContentBlocking::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
 
 // static
 Maybe<bool> ContentBlocking::CheckBrowserSettingsDecidesStorageAccessAPI(
-    nsICookieJarSettings* aCookieJarSettings, bool aThirdParty) {
+    nsICookieJarSettings* aCookieJarSettings, bool aThirdParty,
+    bool aOnRejectForeignAllowlist, bool aIsOnThirdPartySkipList,
+    bool aIsThirdPartyTracker) {
   MOZ_ASSERT(aCookieJarSettings);
-  if (aCookieJarSettings->GetBlockingAllContexts() ||
-      (aCookieJarSettings->GetBlockingAllThirdPartyContexts() && aThirdParty)) {
-    return Some(false);
+  uint32_t behavior = aCookieJarSettings->GetCookieBehavior();
+  switch (behavior) {
+    case nsICookieService::BEHAVIOR_ACCEPT:
+      return Some(true);
+    case nsICookieService::BEHAVIOR_REJECT_FOREIGN:
+      if (!aThirdParty) {
+        return Some(true);
+      }
+      if (!StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled()) {
+        return Some(false);
+      }
+      return Some(aOnRejectForeignAllowlist);
+    case nsICookieService::BEHAVIOR_REJECT:
+      return Some(false);
+    case nsICookieService::BEHAVIOR_LIMIT_FOREIGN:
+      if (!aThirdParty) {
+        return Some(true);
+      }
+      return Some(false);
+    case nsICookieService::BEHAVIOR_REJECT_TRACKER:
+      if (!aIsThirdPartyTracker) {
+        return Some(true);
+      }
+      if (aIsOnThirdPartySkipList) {
+        return Some(true);
+      }
+      return Nothing();
+    case nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+      if (!aThirdParty) {
+        return Some(true);
+      }
+      if (aIsOnThirdPartySkipList) {
+        return Some(true);
+      }
+      return Nothing();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Must not have undefined cookie behavior");
   }
-  if (!aCookieJarSettings->GetRejectThirdPartyContexts()) {
-    return Some(true);
-  }
+  MOZ_ASSERT_UNREACHABLE("Must not have undefined cookie behavior");
   return Nothing();
 }
 
@@ -975,6 +1009,13 @@ Maybe<bool> ContentBlocking::CheckSameSiteCallingContextDecidesStorageAccessAPI(
 Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
     dom::Document* aDocument) {
   MOZ_ASSERT(aDocument);
+  if (aDocument->StorageAccessSandboxed()) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessSandboxed");
+    return Some(false);
+  }
   nsPIDOMWindowInner* inner = aDocument->GetInnerWindow();
   if (!inner) {
     return Some(false);
@@ -986,6 +1027,9 @@ Maybe<bool> ContentBlocking::CheckExistingPermissionDecidesStorageAccessAPI(
   }
   bool explicitPermissionGranted = outer->IsStorageAccessPermissionGranted();
   if (explicitPermissionGranted) {
+    return Some(true);
+  }
+  if (aDocument->HasStorageAccessPermissionGranted()) {
     return Some(true);
   }
   return Nothing();
