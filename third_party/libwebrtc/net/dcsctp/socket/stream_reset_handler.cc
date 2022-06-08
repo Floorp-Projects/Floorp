@@ -343,4 +343,20 @@ absl::optional<DurationMs> StreamResetHandler::OnReconfigTimerExpiry() {
   return ctx_->current_rto();
 }
 
+HandoverReadinessStatus StreamResetHandler::GetHandoverReadiness() const {
+  HandoverReadinessStatus status;
+  if (!streams_to_reset_.empty()) {
+    status.Add(HandoverUnreadinessReason::kPendingStreamReset);
+  }
+  if (current_request_.has_value()) {
+    status.Add(HandoverUnreadinessReason::kPendingStreamResetRequest);
+  }
+  return status;
+}
+
+void StreamResetHandler::AddHandoverState(DcSctpSocketHandoverState& state) {
+  state.rx.last_completed_reset_req_sn = last_processed_req_seq_nbr_.value();
+  state.tx.next_reset_req_sn = next_outgoing_req_seq_nbr_.value();
+}
+
 }  // namespace dcsctp

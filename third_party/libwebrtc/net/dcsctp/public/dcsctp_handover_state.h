@@ -46,6 +46,7 @@ struct DcSctpSocketHandoverState {
     uint32_t last_cumulative_acked_tsn = 0;
     uint32_t last_assembled_tsn = 0;
     uint32_t last_completed_deferred_reset_req_sn = 0;
+    uint32_t last_completed_reset_req_sn = 0;
     std::vector<OrderedStream> ordered_streams;
     std::vector<UnorderedStream> unordered_streams;
   };
