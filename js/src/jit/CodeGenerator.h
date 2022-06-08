@@ -366,7 +366,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   IonScriptCounts* scriptCounts_;
 
 #if defined(JS_ION_PERF)
-  PerfSpewer perfSpewer_;
+  IonPerfSpewer perfSpewer_;
 #endif
 
   // Bit mask of JitRealm stubs that are to be read-barriered.

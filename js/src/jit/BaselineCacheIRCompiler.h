@@ -45,7 +45,8 @@ ICAttachResult AttachBaselineCacheIRStub(JSContext* cx,
                                          const CacheIRWriter& writer,
                                          CacheKind kind, JSScript* outerScript,
                                          ICScript* icScript,
-                                         ICFallbackStub* stub);
+                                         ICFallbackStub* stub,
+                                         const char* name);
 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {

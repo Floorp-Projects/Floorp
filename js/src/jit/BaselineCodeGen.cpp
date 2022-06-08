@@ -333,7 +333,7 @@ MethodStatus BaselineCompiler::compile() {
   script->jitScript()->setBaselineScript(script, baselineScript.release());
 
 #ifdef JS_ION_PERF
-  writePerfSpewerBaselineProfile(script, code);
+  perfSpewer_.writeProfile(script, code);
 #endif
 
 #ifdef MOZ_VTUNE
