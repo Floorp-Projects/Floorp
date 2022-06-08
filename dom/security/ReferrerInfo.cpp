@@ -20,13 +20,13 @@
 #include "ReferrerInfo.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/Telemetry.h"
 #include "nsIWebProgressListener.h"
@@ -210,8 +210,7 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     if (XRE_IsParentProcess() && cjs->GetRejectThirdPartyContexts()) {
       uint32_t rejectedReason = 0;
       thirdPartyTrackerIsolated =
-          !ContentBlocking::ShouldAllowAccessFor(aChannel, aURI,
-                                                 &rejectedReason) &&
+          !ShouldAllowAccessFor(aChannel, aURI, &rejectedReason) &&
           rejectedReason !=
               static_cast<uint32_t>(
                   nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN);
