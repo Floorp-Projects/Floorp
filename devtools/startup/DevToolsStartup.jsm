@@ -974,10 +974,9 @@ DevToolsStartup.prototype = {
       portOrPath = Number(port) ? port : defaultPort;
     }
 
-    const {
-      useDistinctSystemPrincipalLoader,
-      releaseDistinctSystemPrincipalLoader,
-    } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+    const { DevToolsLoader } = ChromeUtils.import(
+      "resource://devtools/shared/loader/Loader.jsm"
+    );
 
     try {
       // Create a separate loader instance, so that we can be sure to receive
@@ -986,7 +985,9 @@ DevToolsStartup.prototype = {
       // actors and DebuggingServer itself, especially since we can mark
       // serverLoader as invisible to the debugger (unlike the usual loader
       // settings).
-      const serverLoader = useDistinctSystemPrincipalLoader(this);
+      const serverLoader = new DevToolsLoader({
+        invisibleToDebugger: true,
+      });
       const { DevToolsServer: devToolsServer } = serverLoader.require(
         "devtools/server/devtools-server"
       );
@@ -994,11 +995,6 @@ DevToolsStartup.prototype = {
         "devtools/shared/security/socket"
       );
       devToolsServer.init();
-
-      // Force the server to be kept running when the last connection closes.
-      // So that another client can connect after the previous one is disconnected.
-      devToolsServer.keepAlive = true;
-
       devToolsServer.registerAllActors();
       devToolsServer.allowChromeProcess = true;
       const socketOptions = { portOrPath, webSocket };
@@ -1017,7 +1013,7 @@ DevToolsStartup.prototype = {
         if (devToolsServer) {
           devToolsServer.destroy();
         }
-        releaseDistinctSystemPrincipalLoader(this);
+        serverLoader.destroy();
       };
       Services.obs.addObserver(close, "quit-application");
     } catch (e) {

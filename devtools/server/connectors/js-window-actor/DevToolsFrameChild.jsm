@@ -330,6 +330,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     DevToolsServer.init();
 
+    // Ask DevToolsServer to automatically destroy itself once the last
+    // connection is closed.
+    DevToolsServer.autoDestroy = true;
+
     // We want a special server without any root actor and only target-scoped actors.
     // We are going to spawn a WindowGlobalTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.

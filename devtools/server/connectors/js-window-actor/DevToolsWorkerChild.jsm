@@ -58,6 +58,8 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     //   See WatcherRegistry.getSessionData to see the full list of properties.
     this._connections = new Map();
 
+    this._onConnectionChange = this._onConnectionChange.bind(this);
+
     EventEmitter.decorate(this);
   }
 
@@ -281,6 +283,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     // We are going to spawn a WorkerTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
     DevToolsServer.registerActors({ target: true });
+    DevToolsServer.on("connectionchange", this._onConnectionChange);
 
     const connection = DevToolsServer.connectToParentWindowActor(
       this,
@@ -408,6 +411,30 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     }
 
     watcherConnectionData.connection.close();
+  }
+
+  /**
+   * Destroy the server once its last connection closes. Note that multiple
+   * worker scripts may be running in parallel and reuse the same server.
+   */
+  _onConnectionChange() {
+    const { DevToolsServer } = lazy.Loader.require(
+      "devtools/server/devtools-server"
+    );
+
+    // Only destroy the server if there is no more connections to it. It may be
+    // used to debug another tab running in the same process.
+    if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
+      return;
+    }
+
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+
+    DevToolsServer.off("connectionchange", this._onConnectionChange);
+    DevToolsServer.destroy();
   }
 
   async sendPacket(packet, prefix) {
