@@ -2744,10 +2744,66 @@ TypedArrayStdSort(JSContext* cx, TypedArrayObject* typedArray) {
   return true;
 }
 
+template <typename T, typename Ops>
+static bool TypedArrayCountingSort(JSContext* cx,
+                                   TypedArrayObject* typedArray) {
+  static_assert(std::is_integral_v<T> || std::is_same_v<T, uint8_clamped>,
+                "Counting sort expects integral array elements");
+
+  size_t length = typedArray->length();
+
+  // Determined by performance testing.
+  if (length <= 64) {
+    return TypedArrayStdSort<T, Ops>(cx, typedArray);
+  }
+
+  // Map signed values onto the unsigned range when storing in buffer.
+  using UnsignedT =
+      typename mozilla::UnsignedStdintTypeForSize<sizeof(T)>::Type;
+  constexpr T min = std::numeric_limits<T>::min();
+
+  constexpr size_t InlineStorage = 256;
+  Vector<size_t, InlineStorage> buffer(cx);
+  if (!buffer.resize(size_t(std::numeric_limits<UnsignedT>::max()) + 1)) {
+    return false;
+  }
+
+  SharedMem<T*> data = typedArray->dataPointerEither().cast<T*>();
+
+  // Populate the buffer.
+  for (size_t i = 0; i < length; i++) {
+    T val = Ops::load(data + i);
+    buffer[UnsignedT(val - min)]++;
+  }
+
+  // Traverse the buffer in order and write back elements to array.
+  UnsignedT val = UnsignedT(-1);  // intentional overflow on first increment
+  for (size_t i = 0; i < length;) {
+    // Invariant: sum(buffer[val:]) == length-i
+    size_t j;
+    do {
+      j = buffer[++val];
+    } while (j == 0);
+
+    for (; j > 0; j--) {
+      Ops::store(data + i++, T(val + min));
+    }
+  }
+
+  return true;
+}
+
 using TypedArraySortFn = bool (*)(JSContext*, TypedArrayObject*);
 
 template <typename T, typename Ops>
-static constexpr TypedArraySortFn TypedArraySort() {
+static constexpr typename std::enable_if_t<sizeof(T) == 1, TypedArraySortFn>
+TypedArraySort() {
+  return TypedArrayCountingSort<T, Ops>;
+}
+
+template <typename T, typename Ops>
+static constexpr typename std::enable_if_t<sizeof(T) != 1, TypedArraySortFn>
+TypedArraySort() {
   return TypedArrayStdSort<T, Ops>;
 }
 
