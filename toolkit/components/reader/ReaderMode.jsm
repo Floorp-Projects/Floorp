@@ -36,29 +36,31 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CommonUtils",
   "resource://services-common/utils.js"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "EventDispatcher",
   "resource://gre/modules/Messaging.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ReaderWorker",
   "resource://gre/modules/reader/ReaderWorker.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "LanguageDetector",
   "resource:///modules/translation/LanguageDetector.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Readerable",
   "resource://gre/modules/Readerable.jsm"
 );
@@ -244,8 +246,8 @@ var ReaderMode = {
    */
   parseDocument(doc) {
     if (
-      !Readerable.shouldCheckUri(doc.documentURIObject) ||
-      !Readerable.shouldCheckUri(doc.baseURIObject, true)
+      !lazy.Readerable.shouldCheckUri(doc.documentURIObject) ||
+      !lazy.Readerable.shouldCheckUri(doc.baseURIObject, true)
     ) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -268,8 +270,8 @@ var ReaderMode = {
     }
     let { doc, newURL } = result;
     if (
-      !Readerable.shouldCheckUri(doc.documentURIObject) ||
-      !Readerable.shouldCheckUri(doc.baseURIObject, true)
+      !lazy.Readerable.shouldCheckUri(doc.documentURIObject) ||
+      !lazy.Readerable.shouldCheckUri(doc.baseURIObject, true)
     ) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -287,7 +289,7 @@ var ReaderMode = {
 
   _downloadDocument(url, docContentType = "document") {
     try {
-      if (!Readerable.shouldCheckUri(Services.io.newURI(url))) {
+      if (!lazy.Readerable.shouldCheckUri(Services.io.newURI(url))) {
         return null;
       }
     } catch (ex) {
@@ -366,10 +368,10 @@ var ReaderMode = {
   async getArticleFromCache(url) {
     let path = this._toHashedPath(url);
     try {
-      let array = await OS.File.read(path);
+      let array = await lazy.OS.File.read(path);
       return JSON.parse(new TextDecoder().decode(array));
     } catch (e) {
-      if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
+      if (!(e instanceof lazy.OS.File.Error) || !e.becauseNoSuchFile) {
         throw e;
       }
       return null;
@@ -388,18 +390,18 @@ var ReaderMode = {
     let array = new TextEncoder().encode(JSON.stringify(article));
     let path = this._toHashedPath(article.url);
     await this._ensureCacheDir();
-    return OS.File.writeAtomic(path, array, { tmpPath: path + ".tmp" }).then(
-      success => {
-        OS.File.stat(path).then(info => {
-          return EventDispatcher.instance.sendRequest({
-            type: "Reader:AddedToCache",
-            url: article.url,
-            size: info.size,
-            path,
-          });
+    return lazy.OS.File.writeAtomic(path, array, {
+      tmpPath: path + ".tmp",
+    }).then(success => {
+      lazy.OS.File.stat(path).then(info => {
+        return lazy.EventDispatcher.instance.sendRequest({
+          type: "Reader:AddedToCache",
+          url: article.url,
+          size: info.size,
+          path,
         });
-      }
-    );
+      });
+    });
   },
 
   /**
@@ -412,7 +414,7 @@ var ReaderMode = {
    */
   async removeArticleFromCache(url) {
     let path = this._toHashedPath(url);
-    await OS.File.remove(path);
+    await lazy.OS.File.remove(path);
   },
 
   log(msg) {
@@ -489,7 +491,7 @@ var ReaderMode = {
 
     let article = null;
     try {
-      article = await ReaderWorker.post("parseDocument", [
+      article = await lazy.ReaderWorker.post("parseDocument", [
         uriParam,
         serializedDoc,
         options,
@@ -555,9 +557,13 @@ var ReaderMode = {
     this._cryptoHash.init(this._cryptoHash.MD5);
     this._cryptoHash.update(value, value.length);
 
-    let hash = CommonUtils.encodeBase32(this._cryptoHash.finish(false));
+    let hash = lazy.CommonUtils.encodeBase32(this._cryptoHash.finish(false));
     let fileName = hash.substring(0, hash.indexOf("=")) + ".json";
-    return OS.Path.join(OS.Constants.Path.profileDir, "readercache", fileName);
+    return lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
+      "readercache",
+      fileName
+    );
   },
 
   /**
@@ -568,10 +574,13 @@ var ReaderMode = {
    * @rejects OS.File.Error
    */
   _ensureCacheDir() {
-    let dir = OS.Path.join(OS.Constants.Path.profileDir, "readercache");
-    return OS.File.exists(dir).then(exists => {
+    let dir = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
+      "readercache"
+    );
+    return lazy.OS.File.exists(dir).then(exists => {
       if (!exists) {
-        return OS.File.makeDir(dir);
+        return lazy.OS.File.makeDir(dir);
       }
       return undefined;
     });
@@ -584,9 +593,11 @@ var ReaderMode = {
    * @resolves when the language is detected
    */
   _assignLanguage(article) {
-    return LanguageDetector.detectLanguage(article.textContent).then(result => {
-      article.language = result.confident ? result.language : null;
-    });
+    return lazy.LanguageDetector.detectLanguage(article.textContent).then(
+      result => {
+        article.language = result.confident ? result.language : null;
+      }
+    );
   },
 
   _maybeAssignTextDirection(article) {
