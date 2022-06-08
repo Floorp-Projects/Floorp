@@ -28,6 +28,8 @@ status = (
 )
 print(" status:")
 print("-" * 80)
+
+failures = []
 for l in status:
     if not l:
         # Ignore empty lines
@@ -38,11 +40,21 @@ for l in status:
         # building bundles.
         continue
 
-    print(f"TEST-UNEXPECTED-FAIL | devtools-bundle | {l}")
+    failures.append(l)
     overall_failure = True
 
 # Revert all the changes created by `node bin/bundle.js`
 subprocess.check_output(["hg", "revert", "-C", "."])
 
 if overall_failure:
+    doc = "https://firefox-source-docs.mozilla.org/devtools/tests/node-tests.html#devtools-bundle"
+    print(
+        "TEST-UNEXPECTED-FAIL | devtools-bundle | DevTools bundles need to be regenerated, "
+        + f"instructions at: {doc}"
+    )
+
+    print("The following devtools bundles were detected as outdated:")
+    for failure in failures:
+        print(failure)
+
     sys.exit(1)

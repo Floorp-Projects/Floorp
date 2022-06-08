@@ -7,4 +7,5 @@ The source files for the source-map shared helpers can be found under
 After modifying the sources in debugger/packages/devtools-source-map, regenerate
 the files in this folder by running:
 
-  `yarn && node devtools/client/debugger/bin/bundle.js`
+  > cd devtools/client/debugger
+  > yarn && node bin/bundle.js
