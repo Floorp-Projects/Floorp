@@ -5,6 +5,7 @@
 import("//build/config/sanitizers/sanitizers.gni")
 import("//third_party/abseil-cpp/absl.gni")
 
+if (!moz_webrtc_build) {
 absl_source_set("stacktrace") {
   sources = [
     "internal/stacktrace_aarch64-inl.inc",
@@ -167,4 +168,5 @@ absl_source_set("stack_consumption") {
     "//third_party/abseil-cpp/absl/base:raw_logging_internal",
   ]
   visibility = [ ":*" ]
+}
 }

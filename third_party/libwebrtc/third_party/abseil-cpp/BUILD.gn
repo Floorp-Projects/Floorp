@@ -22,7 +22,7 @@ component("absl") {
     public_configs = [ ":absl_component_build" ]
 
     if (is_win && is_clang) {
-      if (current_cpu == "x64") {
+      if (target_cpu == "x64") {
         if (is_debug) {
           sources = [ "symbols_x64_dbg.def" ]
         } else {
@@ -33,14 +33,14 @@ component("absl") {
           }
         }
       }
-      if (current_cpu == "x86") {
+      if (target_cpu == "x86") {
         if (is_debug) {
           sources = [ "symbols_x86_dbg.def" ]
         } else {
           sources = [ "symbols_x86_rel.def" ]
         }
       }
-      if (current_cpu == "arm64") {
+      if (target_cpu == "arm64") {
         if (is_debug) {
           sources = [ "symbols_arm64_dbg.def" ]
         } else {
@@ -52,6 +52,11 @@ component("absl") {
 }
 
 group("absl_component_deps") {
+if (moz_webrtc_build) {
+  public_deps = [
+    "//third_party/abseil-cpp/absl/numeric:bits",
+  ]
+} else {
   public_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base",
@@ -83,7 +88,9 @@ group("absl_component_deps") {
     "//third_party/abseil-cpp/absl/types:span",
     "//third_party/abseil-cpp/absl/types:variant",
   ]
+}
 
+if (!moz_webrtc_build) {
   # The following dependencies currently don't build with NaCl.
   # TODO(https://crbug.com/1114625): Fix build errors and remove this section.
   if (is_nacl) {
@@ -95,11 +102,16 @@ group("absl_component_deps") {
       "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
     ]
   }
+}
 
   visibility = [ ":absl" ]
 }
 
 group("default") {
+if (moz_webrtc_build) {
+  deps = [
+  ]
+} else {
   deps = [
     "absl/types:any",
     "absl/types:bad_any_cast",
@@ -107,6 +119,7 @@ group("default") {
     "absl/types:optional",
     "absl/types:span",
   ]
+}
 }
 
 config("absl_include_config") {
@@ -218,8 +231,6 @@ if (build_with_chromium) {
     deps = [
       "//base/test:run_all_unittests",
       "//third_party/abseil-cpp/absl/base:config",
-      "//third_party/abseil-cpp/absl/container:fixed_array",
-      "//third_party/abseil-cpp/absl/container:inlined_vector",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
       "//third_party/abseil-cpp/absl/types:span",

@@ -5,6 +5,7 @@
 import("//build_overrides/build.gni")
 import("//third_party/abseil-cpp/absl.gni")
 
+if (!moz_webrtc_build) {
 absl_source_set("hash") {
   sources = [
     "internal/hash.cc",
@@ -80,4 +81,5 @@ absl_source_set("low_level_hash_test") {
     "//third_party/googletest:gtest",
     "//third_party/googletest:gmock",
   ]
+}
 }

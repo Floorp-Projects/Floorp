@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 
 import("//build/config/arm.gni")
-import("//testing/libfuzzer/fuzzer_test.gni")
-import("//testing/test.gni")
+#import("//testing/libfuzzer/fuzzer_test.gni")
+#import("//testing/test.gni")
 
 config("common_config") {
   if (is_win) {
@@ -15,9 +15,9 @@ config("common_config") {
   }
 
   # PFFFT doesn't support SIMD on some cpus, so build a scalar version.
-  if ((current_cpu == "arm" && !arm_use_neon) || current_cpu == "mipsel" ||
-      current_cpu == "mips64el" || current_cpu == "ppc64" ||
-      current_cpu == "s390x") {
+  if ((target_cpu == "arm" && !arm_use_neon) || target_cpu == "mipsel" ||
+      target_cpu == "mips64el" || target_cpu == "ppc64" ||
+      target_cpu == "s390x") {
     defines = [ "PFFFT_SIMD_DISABLE" ]
   }
 }
@@ -31,7 +31,7 @@ static_library("pffft") {
 }
 
 # Fuzzing.
-
+if (false) {
 group("fuzzers") {
   testonly = true
   deps = [
@@ -107,4 +107,5 @@ test("pffft_unittest") {
     "//testing/gtest",
     "//testing/gtest:gtest_main",
   ]
+}
 }

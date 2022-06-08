@@ -9,6 +9,7 @@ absl_source_set("type_traits") {
   deps = [ "//third_party/abseil-cpp/absl/base:config" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("type_traits_test") {
   testonly = true
   sources = [ "type_traits_test.cc" ]
@@ -19,4 +20,5 @@ absl_source_set("type_traits_test") {
     ":type_traits",
     "//third_party/googletest:gtest",
   ]
+}
 }
