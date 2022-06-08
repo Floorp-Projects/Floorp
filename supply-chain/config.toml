@@ -25,6 +25,13 @@ notes = "Used for fuzzing."
 criteria = "safe-to-run"
 notes = "Used for testing."
 
+[policy.l10nregistry]
+notes = "This crate has two testing-only dependencies which are specified as regular-but-optional rather than a dev-dependencies, because they need to be available to both benchmarks and integration tests."
+
+[policy.l10nregistry.dependency-criteria]
+fluent-testing = "safe-to-run"
+tokio = "safe-to-run"
+
 [policy.webdriver]
 criteria = "safe-to-run"
 notes = "Used for automation."
