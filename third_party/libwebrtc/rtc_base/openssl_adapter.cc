@@ -868,11 +868,11 @@ int OpenSSLAdapter::SSLVerifyCallback(int status, X509_STORE_CTX* store) {
   return status;
 }
 
-int OpenSSLAdapter::SSLVerifyInternal(int status_on_failure,
+int OpenSSLAdapter::SSLVerifyInternal(int previous_status,
                                       SSL* ssl,
                                       X509_STORE_CTX* store) {
 #if !defined(NDEBUG)
-  if (!status_on_failure) {
+  if (!previous_status) {
     char data[256];
     X509* cert = X509_STORE_CTX_get_current_cert(store);
     int depth = X509_STORE_CTX_get_error_depth(store);
@@ -887,8 +887,10 @@ int OpenSSLAdapter::SSLVerifyInternal(int status_on_failure,
                       << X509_verify_cert_error_string(err);
   }
 #endif
-  if (ssl_cert_verifier_ == nullptr) {
-    return status_on_failure;
+  // `ssl_cert_verifier_` is used to override errors; if there is no error
+  // there is no reason to call it.
+  if (previous_status || ssl_cert_verifier_ == nullptr) {
+    return previous_status;
   }
 
   RTC_LOG(LS_INFO) << "Invoking SSL Verify Callback.";
@@ -898,14 +900,14 @@ int OpenSSLAdapter::SSLVerifyInternal(int status_on_failure,
   int length = i2d_X509(X509_STORE_CTX_get_current_cert(store), &data);
   if (length < 0) {
     RTC_LOG(LS_ERROR) << "Failed to encode X509.";
-    return status_on_failure;
+    return previous_status;
   }
   bssl::UniquePtr<uint8_t> owned_data(data);
   bssl::UniquePtr<CRYPTO_BUFFER> crypto_buffer(
       CRYPTO_BUFFER_new(data, length, openssl::GetBufferPool()));
   if (!crypto_buffer) {
     RTC_LOG(LS_ERROR) << "Failed to allocate CRYPTO_BUFFER.";
-    return status_on_failure;
+    return previous_status;
   }
   const BoringSSLCertificate cert(std::move(crypto_buffer));
 #else
@@ -913,7 +915,7 @@ int OpenSSLAdapter::SSLVerifyInternal(int status_on_failure,
 #endif
   if (!ssl_cert_verifier_->Verify(cert)) {
     RTC_LOG(LS_INFO) << "Failed to verify certificate using custom callback";
-    return status_on_failure;
+    return previous_status;
   }
 
   custom_cert_verifier_status_ = true;
