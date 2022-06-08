@@ -55,7 +55,6 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
@@ -83,6 +82,7 @@
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Telemetry.h"
@@ -6406,18 +6406,17 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
         aReason.value());
   }
 
-  ContentBlocking::SaveAccessForOriginOnParentProcess(
+  StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
       aTopLevelWindowId, aParentContext.get_canonical(), aTrackingPrincipal,
       aAllowMode)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolver = std::move(aResolver)](
-              ContentBlocking::ParentAccessGrantPromise::ResolveOrRejectValue&&
-                  aValue) {
-            bool success =
-                aValue.IsResolve() && NS_SUCCEEDED(aValue.ResolveValue());
-            aResolver(success);
-          });
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aResolver = std::move(aResolver)](
+                 StorageAccessAPIHelper::ParentAccessGrantPromise::
+                     ResolveOrRejectValue&& aValue) {
+               bool success =
+                   aValue.IsResolve() && NS_SUCCEEDED(aValue.ResolveValue());
+               aResolver(success);
+             });
   return IPC_OK();
 }
 
@@ -6432,12 +6431,12 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
     return IPC_OK();
   }
 
-  ContentBlocking::CompleteAllowAccessFor(
+  StorageAccessAPIHelper::CompleteAllowAccessFor(
       aParentContext.get_canonical(), aTopLevelWindowId, aTrackingPrincipal,
       aTrackingOrigin, aCookieBehavior, aReason, nullptr)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver = std::move(aResolver)](
-                 ContentBlocking::StorageAccessPermissionGrantPromise::
+                 StorageAccessAPIHelper::StorageAccessPermissionGrantPromise::
                      ResolveOrRejectValue&& aValue) {
                Maybe<StorageAccessPromptChoices> choice;
                if (aValue.IsResolve()) {
@@ -6471,8 +6470,8 @@ mozilla::ipc::IPCResult ContentParent::RecvTestCookiePermissionDecided(
   nsCOMPtr<nsICookieJarSettings> cjs = wgp->CookieJarSettings();
 
   Maybe<bool> result =
-      ContentBlocking::CheckCookiesPermittedDecidesStorageAccessAPI(cjs,
-                                                                    aPrincipal);
+      StorageAccessAPIHelper::CheckCookiesPermittedDecidesStorageAccessAPI(
+          cjs, aPrincipal);
   aResolver(result);
   return IPC_OK();
 }
