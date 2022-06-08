@@ -7,14 +7,12 @@
 
 #include "FetchPreloader.h"
 
-#include "mozilla/CORSMode.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "nsContentPolicyUtils.h"
-#include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIClassOfService.h"
@@ -88,9 +86,14 @@ nsresult FetchPreloader::CreateChannel(
   nsresult rv;
 
   nsSecurityFlags securityFlags =
-      nsContentSecurityManager::ComputeSecurityFlags(
-          aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
-                         CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS);
+      aCORSMode == CORS_NONE
+          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL
+          : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+  if (aCORSMode == CORS_ANONYMOUS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  } else if (aCORSMode == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelWithTriggeringPrincipal(
