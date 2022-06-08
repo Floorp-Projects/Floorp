@@ -27,6 +27,7 @@ class RejectForeignAllowList final
   static bool Check(dom::Document* aDocument);
   static bool Check(nsIHttpChannel* aChannel);
   static bool Check(nsIPrincipal* aPrincipal);
+  static bool Check(nsIURI* aURI);
 
  private:
   static RejectForeignAllowList* GetOrCreate();
