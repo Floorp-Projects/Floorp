@@ -31,7 +31,12 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"(index)\\"
+                }
               }
             },
             {
@@ -49,7 +54,12 @@ exports[`calls updateTree.js adds one source 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/source1.js\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"source1.js\\"
+                }
               }
             }
           ]
@@ -91,7 +101,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"(index)\\"
+                }
               }
             },
             {
@@ -109,7 +124,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/source1.js\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"source1.js\\"
+                }
               }
             },
             {
@@ -127,7 +147,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/source2.js\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/source2.js\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"source2.js\\"
+                }
               }
             }
           ]
@@ -169,7 +194,12 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"(index)\\"
+                }
               }
             },
             {
@@ -187,7 +217,12 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/source1.js\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/source1.js\\",
+                  \\"search\\": \\"\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"source1.js\\"
+                }
               }
             }
           ]
@@ -229,7 +264,12 @@ exports[`calls updateTree.js update sources that change their display URL 1`] = 
                 \\"extensionName\\": null,
                 \\"isExtension\\": false,
                 \\"isOriginal\\": false,
-                \\"displayURL\\": \\"https://davidwalsh.name/?param\\"
+                \\"displayURL\\": {
+                  \\"path\\": \\"/\\",
+                  \\"search\\": \\"?param\\",
+                  \\"group\\": \\"davidwalsh.name\\",
+                  \\"filename\\": \\"(index)\\"
+                }
               }
             }
           ]
