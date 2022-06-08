@@ -109,12 +109,8 @@ export function updateInTree(
   mainThreadHost,
   thread
 ) {
-  const newUrl = newSource.displayURL;
-  const prevUrl = prevSource.displayURL;
-
   const prevEntries = findEntries(
     tree,
-    prevUrl,
     prevSource,
     thread,
     mainThreadHost
@@ -123,7 +119,7 @@ export function updateInTree(
     return;
   }
 
-  const parts = getPathParts(newUrl, thread, mainThreadHost);
+  const parts = getPathParts(newSource.displayURL, thread, mainThreadHost);
 
   if (parts.length === prevEntries.length) {
     let match = true;
@@ -161,8 +157,8 @@ export function updateInTree(
   addToTree(tree, newSource, mainThreadHost, thread);
 }
 
-function findEntries(tree, url, source, thread, mainThreadHost) {
-  const parts = getPathParts(url, thread, mainThreadHost);
+function findEntries(tree, source, thread, mainThreadHost) {
+  const parts = getPathParts(source.displayURL, thread, mainThreadHost);
 
   // We're searching for the directory containing the file so we pop off the
   // potential filename. This is because the tree has some logic to inject
