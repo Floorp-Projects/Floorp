@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = [
   "ErrorSanitizer", // for testing.
+  "SyncRecord",
   "SyncTelemetry",
 ];
 
@@ -873,7 +874,8 @@ class SyncTelemetryImpl {
 
   _checkCurrent(topic) {
     if (!this.current) {
-      log.warn(
+      // This is only `info` because it happens when we do a tabs "quick-write"
+      log.info(
         `Observed notification ${topic} but no current sync is being recorded.`
       );
       return false;
@@ -952,18 +954,23 @@ class SyncTelemetryImpl {
     }
     this.current.finished(error);
     this.currentSyncNodeType = this.current.syncNodeType;
+    let current = this.current;
+    this.current = null;
+    this.takeTelemetryRecord(current);
+  }
+
+  takeTelemetryRecord(record) {
     // We check for "data change" before appending the current sync to payloads,
     // as it is the current sync which has the data with the new data, and thus
     // must go in the *next* submission.
     this.maybeSubmitForDataChange();
     if (this.payloads.length < this.maxPayloadCount) {
-      this.payloads.push(this.current.toJSON());
+      this.payloads.push(record.toJSON());
     } else {
       ++this.discarded;
     }
-    this.current = null;
     // If we are submitting due to timing, it's desirable that the most recent
-    // sync is included, so we check after appending `this.current`.
+    // sync is included, so we check after appending the record.
     this.maybeSubmitForInterval();
   }
 
