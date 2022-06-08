@@ -36,6 +36,7 @@ rtc_source_set("reassembly_streams") {
     "../common:sequence_numbers",
     "../packet:chunk",
     "../packet:data",
+    "../public:socket",
     "../public:types",
   ]
   sources = [ "reassembly_streams.h" ]
