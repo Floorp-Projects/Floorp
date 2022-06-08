@@ -5310,15 +5310,30 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
     return false;
   }
   addEffectful(call);
-  if (!resumeAfter(call)) {
-    return false;
+  if (kind == CompletionKind::Throw) {
+    return resumeAfter(call);
   }
 
-  if (kind != CompletionKind::Throw) {
-    MCheckIsObj* check = MCheckIsObj::New(
-        alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
-    add(check);
+  // If we bail out here, after the call but before the CheckIsObj, we
+  // can't simply resume in the baseline interpreter. If we resume
+  // after the CloseIter, we won't check the return value. If we
+  // resume at the CloseIter, we will call the |return| method twice.
+  // Instead, we use a special resume mode that captures the
+  // intermediate value, and then checks that it's an object while
+  // bailing out.
+  current->push(call);
+  MResumePoint* resumePoint =
+      MResumePoint::New(alloc(), current, loc_.toRawBytecode(),
+                        ResumeMode::ResumeAfterCheckIsObject);
+  if (!resumePoint) {
+    return false;
   }
+  call->setResumePoint(resumePoint);
+  current->pop();
+
+  MCheckIsObj* check = MCheckIsObj::New(
+      alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
+  add(check);
 
   return true;
 }
