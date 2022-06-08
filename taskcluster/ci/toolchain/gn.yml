@@ -34,14 +34,14 @@ macosx64-gn:
             - linux64-clang-toolchain
             - macosx64-sdk-11.0
 
-win32-gn:
+win64-gn:
     treeherder:
         symbol: TW64(gn)
     worker-type: b-win2012
     worker:
         max-run-time: 3600
     run:
-        script: build-gn-win32.sh
+        script: build-gn-win64.sh
     fetches:
         fetch:
             - ninja
