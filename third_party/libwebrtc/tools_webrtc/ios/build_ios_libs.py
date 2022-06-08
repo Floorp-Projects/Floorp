@@ -160,7 +160,7 @@ def BuildWebRTC(output_dir, target_environment, target_arch, flavor,
     gn_args = [
         'target_os="ios"', 'ios_enable_code_signing=false',
         'use_xcode_clang=true', 'is_component_build=false',
-        'rtc_include_tests=false',
+        'rtc_include_tests=false', 'use_lld=false',
     ]
 
     # Add flavor option.
