@@ -167,6 +167,7 @@ rtc_library("rtp_video_frame_assembler") {
     ":encoded_frame",
     "../../modules/rtp_rtcp:rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
+    "../../modules/video_coding:packet_buffer",
     "../../modules/video_coding:video_coding",
     "../../rtc_base:logging",
   ]

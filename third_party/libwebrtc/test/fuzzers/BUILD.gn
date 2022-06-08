@@ -197,6 +197,7 @@ webrtc_fuzzer_test("flexfec_receiver_fuzzer") {
 webrtc_fuzzer_test("packet_buffer_fuzzer") {
   sources = [ "packet_buffer_fuzzer.cc" ]
   deps = [
+    "../../modules/video_coding:packet_buffer",
     "../../modules/video_coding/",
     "../../system_wrappers",
   ]
