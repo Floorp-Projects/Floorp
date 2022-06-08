@@ -18,7 +18,6 @@
 // and thus avoid the need for many #ifdefs.
 
 #  define AUTO_PROFILER_THREAD_SLEEP
-#  define AUTO_PROFILER_THREAD_WAKE
 
 static inline void profiler_thread_sleep() {}
 
