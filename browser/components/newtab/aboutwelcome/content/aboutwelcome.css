@@ -253,6 +253,10 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .welcome-text.fancy h1 {
     background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
   }
+  .onboardingContainer .welcome-text.fancy h1::selection {
+    color: #FFF;
+    background-color: #696977;
+  }
 }
 .onboardingContainer .welcome-text.shine h1 {
   animation: shine 50s linear infinite;
