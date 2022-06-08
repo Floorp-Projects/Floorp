@@ -1498,6 +1498,20 @@ bool WarpCacheIRTranspiler::emitLoadDynamicSlotResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadFixedSlot(ValOperandId resultId,
+                                              ObjOperandId objId,
+                                              uint32_t offsetOffset) {
+  MDefinition* obj = getOperand(objId);
+
+  size_t offset = int32StubField(offsetOffset);
+  uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
+
+  auto* load = MLoadFixedSlot::New(alloc(), obj, slotIndex);
+  add(load);
+
+  return defineOperand(resultId, load);
+}
+
 bool WarpCacheIRTranspiler::emitLoadFixedSlotResult(ObjOperandId objId,
                                                     uint32_t offsetOffset) {
   int32_t offset = int32StubField(offsetOffset);
