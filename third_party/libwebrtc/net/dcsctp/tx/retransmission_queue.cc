@@ -274,8 +274,10 @@ void RetransmissionQueue::HandleIncreasedCumulativeTsnAck(
       // data outstanding (i.e., before arrival of the SACK, flightsize was
       // greater than or equal to cwnd), increase cwnd by MTU, and reset
       // partial_bytes_acked to (partial_bytes_acked - cwnd)."
-      cwnd_ += options_.mtu;
+
+      // Errata: https://datatracker.ietf.org/doc/html/rfc8540#section-3.12
       partial_bytes_acked_ -= cwnd_;
+      cwnd_ += options_.mtu;
       RTC_DLOG(LS_VERBOSE) << log_prefix_ << "CA increase cwnd=" << cwnd_
                            << " (" << old_cwnd << ") ssthresh=" << ssthresh_
                            << ", pba=" << partial_bytes_acked_ << " ("
@@ -488,6 +490,8 @@ void RetransmissionQueue::HandleT3RtxTimerExpiry() {
   // its ssthresh with rules defined in Section 7.2.3 and set the cwnd <- MTU."
   ssthresh_ = std::max(cwnd_ / 2, 4 * options_.mtu);
   cwnd_ = 1 * options_.mtu;
+  // Errata: https://datatracker.ietf.org/doc/html/rfc8540#section-3.11
+  partial_bytes_acked_ = 0;
 
   // https://tools.ietf.org/html/rfc4960#section-6.3.3
   // "For the destination address for which the timer expires, set RTO
