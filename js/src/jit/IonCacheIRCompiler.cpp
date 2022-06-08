@@ -515,6 +515,8 @@ bool IonCacheIRCompiler::init() {
       allocator.initInputLocation(1, ic->rhs());
       break;
     }
+    case CacheKind::CloseIter:
+      MOZ_CRASH("TODO");
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
@@ -610,6 +612,7 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
     case CacheKind::UnaryArith:
     case CacheKind::ToPropertyKey:
     case CacheKind::OptimizeSpreadCall:
+    case CacheKind::CloseIter:
       MOZ_CRASH("No float registers available");
     case CacheKind::SetProp:
     case CacheKind::SetElem:

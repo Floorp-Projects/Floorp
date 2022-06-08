@@ -282,6 +282,7 @@ namespace jit {
   _(DoBinaryArithFallback, js::jit::DoBinaryArithFallback, 2)               \
   _(DoBindNameFallback, js::jit::DoBindNameFallback, 0)                     \
   _(DoCheckPrivateFieldFallback, js::jit::DoCheckPrivateFieldFallback, 2)   \
+  _(DoCloseIterFallback, js::jit::DoCloseIterFallback, 0)                   \
   _(DoCompareFallback, js::jit::DoCompareFallback, 2)                       \
   _(DoConcatStringObject, js::jit::DoConcatStringObject, 2)                 \
   _(DoGetElemFallback, js::jit::DoGetElemFallback, 2)                       \

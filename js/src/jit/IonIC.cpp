@@ -66,6 +66,8 @@ Register IonIC::scratchRegisterForEntryJump() {
       return asBinaryArithIC()->output().scratchReg();
     case CacheKind::Compare:
       return asCompareIC()->output();
+    case CacheKind::CloseIter:
+      MOZ_CRASH("TODO");
     case CacheKind::Call:
     case CacheKind::TypeOf:
     case CacheKind::ToBool:

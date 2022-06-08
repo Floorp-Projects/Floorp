@@ -318,6 +318,8 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
             BaselineICFallbackKind::OptimizeSpreadCall);
 
     setKind(JSOp::Rest, BaselineICFallbackKind::Rest);
+
+    setKind(JSOp::CloseIter, BaselineICFallbackKind::CloseIter);
   }
 };
 
@@ -2412,6 +2414,31 @@ bool FallbackICCodeCompiler::emit_NewObject() {
   using Fn =
       bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, MutableHandleValue);
   return tailCallVM<Fn, DoNewObjectFallback>(masm);
+}
+
+//
+// CloseIter_Fallback
+//
+
+bool DoCloseIterFallback(JSContext* cx, BaselineFrame* frame,
+                         ICFallbackStub* stub, HandleObject iter) {
+  stub->incrementEnteredCount();
+  MaybeNotifyWarp(frame->outerScript(), stub);
+  FallbackICSpew(cx, stub, "CloseIter");
+
+  return CloseIterOperation(cx, iter);
+}
+
+bool FallbackICCodeCompiler::emit_CloseIter() {
+  EmitRestoreTailCallReg(masm);
+
+  masm.push(R0.scratchReg());
+  masm.push(ICStubReg);
+  pushStubPayload(masm, R0.scratchReg());
+
+  using Fn =
+      bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleObject);
+  return tailCallVM<Fn, DoCloseIterFallback>(masm);
 }
 
 bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {

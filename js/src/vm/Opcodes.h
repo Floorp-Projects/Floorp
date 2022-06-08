@@ -1396,7 +1396,7 @@
      *   Operands:
      *   Stack: iter =>
      */ \
-    MACRO(CloseIter, close_iter, NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(CloseIter, close_iter, NULL, 1, 1, 0, JOF_BYTE|JOF_IC) \
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error

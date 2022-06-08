@@ -5299,15 +5299,7 @@ bool BaselineCodeGen<Handler>::emit_CloseIter() {
   Register iter = R0.scratchReg();
   masm.unboxObject(R0, iter);
 
-  // TODO: Use an IC here.
-  prepareVMCall();
-  pushArg(iter);
-
-  using Fn = bool (*)(JSContext*, HandleObject);
-  if (!callVM<Fn, CloseIterOperation>()) {
-    return false;
-  }
-  return true;
+  return emitNextIC();
 }
 
 template <typename Handler>

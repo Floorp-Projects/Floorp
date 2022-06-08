@@ -3198,6 +3198,8 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       current->push(ins);
       return true;
     }
+    case CacheKind::CloseIter:
+      MOZ_CRASH("TODO");
     case CacheKind::GetIntrinsic:
     case CacheKind::ToBool:
     case CacheKind::Call:
@@ -3249,6 +3251,7 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
       break;
     case CacheKind::SetProp:
     case CacheKind::SetElem:
+    case CacheKind::CloseIter:
       return true;  // No result.
   }
 
