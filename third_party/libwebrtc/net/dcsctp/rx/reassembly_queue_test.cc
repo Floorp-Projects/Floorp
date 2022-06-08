@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
 #include "net/dcsctp/packet/chunk/iforward_tsn_chunk.h"
@@ -367,6 +368,7 @@ TEST_F(ReassemblyQueueTest, HandoverInInitialState) {
   EXPECT_EQ(reasm1.GetHandoverReadiness(), HandoverReadinessStatus());
   DcSctpSocketHandoverState state;
   reasm1.AddHandoverState(state);
+  g_handover_state_transformer_for_test(&state);
   ReassemblyQueue reasm2("log: ", TSN(100), kBufferSize, &state);
 
   reasm2.Add(TSN(10), gen_.Ordered({1, 2, 3, 4}, "BE"));
@@ -381,6 +383,7 @@ TEST_F(ReassemblyQueueTest, HandoverAfterHavingAssembedOneMessage) {
   EXPECT_EQ(reasm1.GetHandoverReadiness(), HandoverReadinessStatus());
   DcSctpSocketHandoverState state;
   reasm1.AddHandoverState(state);
+  g_handover_state_transformer_for_test(&state);
   ReassemblyQueue reasm2("log: ", TSN(100), kBufferSize, &state);
 
   reasm2.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE"));

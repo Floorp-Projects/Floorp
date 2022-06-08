@@ -54,3 +54,12 @@ if (rtc_include_tests) {
     ]
   }
 }
+
+rtc_library("handover_testing") {
+  deps = [ "../public:socket" ]
+  testonly = true
+  sources = [
+    "handover_testing.cc",
+    "handover_testing.h",
+  ]
+}

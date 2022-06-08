@@ -21,6 +21,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/packet/chunk/chunk.h"
 #include "net/dcsctp/packet/chunk/cookie_echo_chunk.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
@@ -324,6 +325,7 @@ class DcSctpSocketTest : public testing::Test {
     absl::optional<DcSctpSocketHandoverState> handover_state =
         sock_z_->GetHandoverStateAndClose();
     EXPECT_TRUE(handover_state.has_value());
+    g_handover_state_transformer_for_test(&*handover_state);
     cb_z_.Reset();
     sock_z_ = std::make_unique<DcSctpSocket>("Z", cb_z_, GetPacketObserver("Z"),
                                              options_);

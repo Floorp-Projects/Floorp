@@ -13,6 +13,7 @@
 #include <memory>
 #include <utility>
 
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/common/sequence_numbers.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
@@ -156,6 +157,7 @@ TEST_F(TraditionalReassemblyStreamsTest, NoStreamsCanBeHandedOver) {
 
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
+  g_handover_state_transformer_for_test(&state);
   TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
                                         &state);
 
@@ -191,6 +193,7 @@ TEST_F(TraditionalReassemblyStreamsTest,
 
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
+  g_handover_state_transformer_for_test(&state);
   TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
                                         &state);
   EXPECT_EQ(streams2.Add(tsn(4), gen_.Ordered({7})), 1);
@@ -223,6 +226,7 @@ TEST_F(TraditionalReassemblyStreamsTest,
 
   DcSctpSocketHandoverState state;
   streams1.AddHandoverState(state);
+  g_handover_state_transformer_for_test(&state);
   TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
                                         &state);
   EXPECT_EQ(streams2.Add(tsn(4), gen_.Unordered({7})), 1);

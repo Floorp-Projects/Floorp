@@ -17,6 +17,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/packet/chunk/reconfig_chunk.h"
 #include "net/dcsctp/packet/parameter/incoming_ssn_reset_request_parameter.h"
@@ -185,6 +186,8 @@ class StreamResetHandlerTest : public testing::Test {
     reasm_->AddHandoverState(state);
 
     retransmission_queue_->AddHandoverState(state);
+
+    g_handover_state_transformer_for_test(&state);
 
     data_tracker_ = std::make_unique<DataTracker>(
         "log: ", delayed_ack_timer_.get(), kPeerInitialTsn, &state);
