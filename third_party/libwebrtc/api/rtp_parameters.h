@@ -305,13 +305,6 @@ struct RTC_EXPORT RtpExtension {
   static constexpr char kAudioLevelUri[] =
       "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
 
-#if defined(WEBRTC_MOZILLA_BUILD)
-  // Header extension for Mixer-to-Client audio level indication, as defined in:
-  // https://tools.ietf.org/html/rfc6465
-  static constexpr char kCsrcAudioLevelUri[] =
-      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
-#endif
-
   // Header extension for RTP timestamp offset, see RFC 5450 for details:
   // http://tools.ietf.org/html/rfc5450
   static constexpr char kTimestampOffsetUri[] =
@@ -387,12 +380,10 @@ struct RTC_EXPORT RtpExtension {
   static constexpr char kVideoFrameTrackingIdUri[] =
       "http://www.webrtc.org/experiments/rtp-hdrext/video-frame-tracking-id";
 
-#if !defined(WEBRTC_MOZILLA_BUILD)
   // Header extension for Mixer-to-Client audio levels per CSRC as defined in
   // https://tools.ietf.org/html/rfc6465
   static constexpr char kCsrcAudioLevelsUri[] =
       "urn:ietf:params:rtp-hdrext:csrc-audio-level";
-#endif
 
   // Inclusive min and max IDs for two-byte header extensions and one-byte
   // header extensions, per RFC8285 Section 4.2-4.3.
