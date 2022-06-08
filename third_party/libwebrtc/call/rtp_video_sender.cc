@@ -367,9 +367,9 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      simulate_vp9_structure_(absl::StartsWith(
+      simulate_vp9_structure_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-Vp9DependencyDescriptor"),
-          "Enabled")),
+          "Disabled")),
       simulate_generic_structure_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-GenericCodecDependencyDescriptor"),
           "Enabled")),
