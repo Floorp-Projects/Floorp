@@ -50,7 +50,7 @@ absl_cc_test(
   DEPS
     absl::status
     absl::strings
-    gmock_main
+    GTest::gmock_main
 )
 
 absl_cc_library(
@@ -64,6 +64,8 @@ absl_cc_library(
   COPTS
     ${ABSL_DEFAULT_COPTS}
   DEPS
+    absl::base
+    absl::status
     absl::core_headers
     absl::raw_logging_internal
     absl::type_traits
@@ -83,5 +85,5 @@ absl_cc_test(
   DEPS
     absl::status
     absl::statusor
-    gmock_main
+    GTest::gmock_main
 )
