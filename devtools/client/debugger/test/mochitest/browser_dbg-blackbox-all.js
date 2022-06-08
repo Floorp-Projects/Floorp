@@ -25,21 +25,17 @@ const NODE_SELECTORS = {
 };
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-blackbox-all.html");
-
-  info("Loads the source file and sets a breakpoint at line 2.");
-  await waitForSources(
-    dbg,
+  const dbg = await initDebugger(
+    "doc-blackbox-all.html",
     SOURCE_FILES.nestedSource,
     SOURCE_FILES.codeReload1
   );
+
+  info("Loads the source file and sets a breakpoint at line 2.");
   await selectSource(dbg, SOURCE_FILES.nestedSource);
   await addBreakpoint(dbg, SOURCE_FILES.nestedSource, 2);
 
-  info("Expands the whole source tree.");
-  rightClickElement(dbg, "sourceTreeRootNode");
-  await waitForContextMenu(dbg);
-  selectContextMenuItem(dbg, "#node-menu-expand-all");
+  info("Selecting the source will highlight it and expand the tree down to it");
   await waitForAllElements(dbg, "sourceTreeFolderNode", 3);
   const sourceTreeFolderNodeEls = findAllElements(dbg, "sourceTreeFolderNode");
   const sourceTreeRootNodeEl = findElement(dbg, "sourceTreeRootNode");

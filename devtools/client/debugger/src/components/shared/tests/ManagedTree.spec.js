@@ -68,14 +68,6 @@ describe("ManagedTree", () => {
     expect(
       shallow(<ManagedTree {...getTestContent().props} />)
     ).toMatchSnapshot());
-  it("expands list items", () => {
-    const { props, testTree } = getTestContent();
-    const wrapper = shallow(<ManagedTree {...props} />);
-    wrapper.setProps({
-      listItems: testTree.b.children,
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
   it("highlights list items", () => {
     const { props, testTree } = getTestContent();
     const wrapper = shallow(<ManagedTree {...props} />);

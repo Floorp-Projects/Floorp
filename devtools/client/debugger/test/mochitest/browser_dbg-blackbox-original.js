@@ -8,20 +8,16 @@
 
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  const dbg = await initDebugger("doc-sourcemaps3.html");
+  const dbg = await initDebugger(
+    "doc-sourcemaps3.html",
+    "bundle.js",
+    "sorted.js",
+    "test.js"
+  );
   dbg.actions.toggleMapScopes();
 
-  await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
-
   const sortedSrc = findSource(dbg, "sorted.js");
-
   await selectSource(dbg, sortedSrc);
-
-  // Show the source in source tree in primiany panel for blackBox icon check
-  rightClickElement(dbg, "CodeMirrorLines");
-  await waitForContextMenu(dbg);
-  selectContextMenuItem(dbg, "#node-menu-show-source");
-  await waitForDispatch(dbg.store, "SHOW_SOURCE");
 
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg.store, "BLACKBOX");
