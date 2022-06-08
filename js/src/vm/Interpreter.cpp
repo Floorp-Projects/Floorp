@@ -2505,6 +2505,15 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(EndIter)
 
+    CASE(CloseIter) {
+      ReservedRooted<JSObject*> iter(&rootObject0, &REGS.sp[-1].toObject());
+      if (!CloseIterOperation(cx, iter)) {
+        goto error;
+      }
+      REGS.sp--;
+    }
+    END_CASE(CloseIter)
+
     CASE(IsGenClosing) {
       bool b = REGS.sp[-1].isMagic(JS_GENERATOR_CLOSING);
       PUSH_BOOLEAN(b);
@@ -5428,5 +5437,31 @@ bool js::LoadAliasedDebugVar(JSContext* cx, JSObject* env, jsbytecode* pc,
           : env->as<DebugEnvironmentProxy>().environment();
 
   result.set(finalEnv.aliasedBinding(ec));
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-iteratorclose
+// TODO: support throw completions
+bool js::CloseIterOperation(JSContext* cx, HandleObject iter) {
+  RootedValue returnMethod(cx);
+  if (!GetProperty(cx, iter, iter, cx->names().return_, &returnMethod)) {
+    return false;
+  }
+
+  if (returnMethod.isNullOrUndefined()) {
+    return true;
+  }
+  if (!IsCallable(returnMethod)) {
+    return ReportIsNotFunction(cx, returnMethod);
+  }
+
+  RootedValue thisVal(cx, ObjectValue(*iter));
+  RootedValue res(cx);
+  if (!Call(cx, returnMethod, thisVal, &res)) {
+    return false;
+  }
+  if (!res.isObject()) {
+    return ThrowCheckIsObject(cx, CheckIsObjectKind::IteratorReturn);
+  }
   return true;
 }
