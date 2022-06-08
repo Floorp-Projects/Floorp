@@ -8,7 +8,6 @@ import {
   partIsFile,
   createSourceNode,
   createDirectoryNode,
-  getPathParts,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 
@@ -28,16 +27,8 @@ function createNodeInTree(part, path, tree, index) {
  * 1. if it exists return it
  * 2. if it does not exist create it
  */
-function findOrCreateNode(
-  parts,
-  subTree,
-  path,
-  part,
-  index,
-  source,
-  mainThreadHost
-) {
-  const addedPartIsFile = partIsFile(index, parts, source.displayURL);
+function findOrCreateNode(source, subTree, path, part, index, mainThreadHost) {
+  const addedPartIsFile = partIsFile(index, source.parts, source.displayURL);
 
   const { found: childFound, index: childIndex } = findNodeInContents(
     subTree,
@@ -78,18 +69,16 @@ function findOrCreateNode(
  * walk the source tree to the final node for a given url,
  * adding new nodes along the way
  */
-function traverseTree(source, tree, mainThreadHost, thread) {
-  const parts = getPathParts(source.displayURL, thread, mainThreadHost);
-  return parts.reduce(
+function traverseTree(source, tree) {
+  return source.parts.reduce(
     (subTree, { part, path, mainThreadHostIfRoot }, index) =>
       findOrCreateNode(
-        parts,
+        source,
         subTree,
         path,
         part,
         index,
-        source,
-        mainThreadHostIfRoot,
+        mainThreadHostIfRoot
       ),
     tree
   );
@@ -148,8 +137,8 @@ function addSourceToNode(node, source) {
  * @memberof utils/sources-tree
  * @static
  */
-export function addToTree(tree, source, mainThreadHost, thread) {
-  const finalNode = traverseTree(source, tree, mainThreadHost, thread);
+export function addToTree(tree, source) {
+  const finalNode = traverseTree(source, tree);
 
   finalNode.contents = addSourceToNode(finalNode, source);
 }

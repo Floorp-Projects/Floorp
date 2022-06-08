@@ -36,7 +36,19 @@ exports[`calls updateTree.js adds one source 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"(index)\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  }
+                ]
               }
             },
             {
@@ -59,7 +71,24 @@ exports[`calls updateTree.js adds one source 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"source1.js\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  },
+                  {
+                    \\"part\\": \\"source1.js\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name/source1.js\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  }
+                ]
               }
             }
           ]
@@ -106,7 +135,19 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"(index)\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  }
+                ]
               }
             },
             {
@@ -129,7 +170,24 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"source1.js\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  },
+                  {
+                    \\"part\\": \\"source1.js\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name/source1.js\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  }
+                ]
               }
             },
             {
@@ -152,7 +210,24 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"source2.js\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  },
+                  {
+                    \\"part\\": \\"source2.js\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name/source2.js\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  }
+                ]
               }
             }
           ]
@@ -199,7 +274,19 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"(index)\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  }
+                ]
               }
             },
             {
@@ -222,7 +309,24 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                   \\"search\\": \\"\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"source1.js\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  },
+                  {
+                    \\"part\\": \\"source1.js\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name/source1.js\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  }
+                ]
               }
             }
           ]
@@ -269,7 +373,24 @@ exports[`calls updateTree.js update sources that change their display URL 1`] = 
                   \\"search\\": \\"?param\\",
                   \\"group\\": \\"davidwalsh.name\\",
                   \\"filename\\": \\"(index)\\"
-                }
+                },
+                \\"parts\\": [
+                  {
+                    \\"part\\": \\"FakeThread\\",
+                    \\"path\\": \\"FakeThread\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  },
+                  {
+                    \\"part\\": \\"davidwalsh.name\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name\\",
+                    \\"mainThreadHostIfRoot\\": \\"http://www.example.com\\"
+                  },
+                  {
+                    \\"part\\": \\"?param\\",
+                    \\"path\\": \\"FakeThread/davidwalsh.name/?param\\",
+                    \\"mainThreadHostIfRoot\\": null
+                  }
+                ]
               }
             }
           ]

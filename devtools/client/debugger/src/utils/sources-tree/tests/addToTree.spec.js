@@ -16,7 +16,11 @@ import {
 
 function createSourcesMap(sources) {
   const sourcesMap = sources.reduce((map, source) => {
-    map[source.id] = makeMockDisplaySource(source.url, source.id);
+    map[source.id] = makeMockDisplaySource(
+      source.url,
+      source.id,
+      source.thread
+    );
     return map;
   }, {});
 
@@ -61,7 +65,7 @@ describe("sources-tree", () => {
       );
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "FakeThread");
+      addToTree(tree, source1);
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0].contents[0];
@@ -79,11 +83,12 @@ describe("sources-tree", () => {
     it("builds a path-based tree for webpack URLs", () => {
       const source1 = makeMockDisplaySource(
         "webpack:///foo/source1.js",
-        "actor1"
+        "actor1",
+        ""
       );
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "");
+      addToTree(tree, source1);
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
@@ -101,11 +106,12 @@ describe("sources-tree", () => {
     it("builds a path-based tree for webpack URLs with absolute path", () => {
       const source1 = makeMockDisplaySource(
         "webpack:////Users/foo/source1.js",
-        "actor1"
+        "actor1",
+        ""
       );
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "");
+      addToTree(tree, source1);
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
@@ -125,10 +131,14 @@ describe("sources-tree", () => {
     });
 
     it("handles url with no filename", function() {
-      const source1 = makeMockDisplaySource("http://example.com/", "actor1");
+      const source1 = makeMockDisplaySource(
+        "http://example.com/",
+        "actor1",
+        ""
+      );
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "");
+      addToTree(tree, source1);
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
@@ -150,7 +160,7 @@ describe("sources-tree", () => {
 
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "FakeThread");
+      addToTree(tree, source1);
       const childNode = getChildNode(tree, 0, 0, 0, 0);
       expect(childNode.name).toEqual(sourceName);
       expect(formatTree(tree)).toMatchSnapshot();
@@ -166,7 +176,7 @@ describe("sources-tree", () => {
 
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source1, "http://example.com/", "FakeThread");
+      addToTree(tree, source1);
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
@@ -239,10 +249,17 @@ describe("sources-tree", () => {
           url: "https://davidwalsh.name/util.js",
         },
       ];
+      const sources2 = [
+        {
+          id: "server1.conn13.child1/37",
+          url: "https://davidwalsh.name/util.js",
+          thread: "FakeThread2",
+        },
+      ];
 
       const sourceMap = {
         FakeThread: createSourcesMap(sources),
-        FakeThread2: createSourcesMap([sources[1]]),
+        FakeThread2: createSourcesMap(sources2),
       };
 
       const tree = createTree({
@@ -278,7 +295,7 @@ describe("sources-tree", () => {
       const source = makeMockDisplaySource("file:///a/b.js", "actor1");
       const tree = createDirectoryNode("root", "", []);
 
-      addToTree(tree, source, "file:///a/index.html", "FakeThread");
+      addToTree(tree, source);
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0].contents[0];
@@ -308,9 +325,7 @@ describe("sources-tree", () => {
 
       const sources = createSourcesList(testData);
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source =>
-        addToTree(tree, source, "https://unpkg.com/", "FakeThread")
-      );
+      sources.forEach(source => addToTree(tree, source));
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
@@ -329,9 +344,7 @@ describe("sources-tree", () => {
 
       const sources = createSourcesList(testData);
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source =>
-        addToTree(tree, source, "https://unpkg.com/", "FakeThread")
-      );
+      sources.forEach(source => addToTree(tree, source));
       expect(formatTree(tree)).toMatchSnapshot();
     });
   });

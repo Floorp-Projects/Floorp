@@ -29,6 +29,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -70,6 +87,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -95,6 +129,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -152,6 +203,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -179,6 +247,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -226,6 +311,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -265,6 +367,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -290,6 +409,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -333,6 +469,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -380,6 +533,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -406,6 +571,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -464,6 +646,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -492,6 +686,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -539,6 +750,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -584,6 +812,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -610,6 +850,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -653,6 +910,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -695,6 +969,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -721,6 +1007,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -779,6 +1082,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -807,6 +1122,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -854,6 +1186,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -894,6 +1243,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -920,6 +1281,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -994,6 +1372,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1063,6 +1458,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1139,6 +1551,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1214,6 +1643,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1284,6 +1730,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1361,6 +1824,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1603,6 +2083,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1671,6 +2168,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1746,6 +2260,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -1820,6 +2351,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -1890,6 +2438,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -1967,6 +2532,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2374,6 +2956,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2443,6 +3042,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2519,6 +3135,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2593,6 +3226,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2663,6 +3313,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2740,6 +3407,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -2814,6 +3498,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -2882,6 +3583,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -2957,6 +3675,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3021,6 +3756,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3047,6 +3799,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3104,6 +3873,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3132,6 +3918,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3198,6 +4001,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3224,6 +4044,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3289,6 +4126,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -3315,6 +4164,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3373,6 +4239,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -3401,6 +4279,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3468,6 +4363,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -3494,6 +4401,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3537,6 +4461,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3578,6 +4519,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -3604,6 +4557,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3661,6 +4631,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -3689,6 +4671,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -3736,6 +4735,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3775,6 +4791,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -3801,6 +4829,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -3844,6 +4889,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3887,6 +4949,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -3912,6 +4991,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -3971,6 +5067,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -3998,6 +5111,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -4045,6 +5175,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -4086,6 +5233,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -4111,6 +5275,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",
@@ -4154,6 +5335,23 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
           "relativeUrl": "http://mdn.com/one.js",
           "thread": "FakeThread",
           "url": "http://mdn.com/one.js",
@@ -4195,6 +5393,18 @@ Object {
           "isOriginal": false,
           "isPrettyPrinted": false,
           "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "",
+              "path": "FakeThread/",
+            },
+          ],
           "relativeUrl": "url",
           "thread": "FakeThread",
           "url": "url",
@@ -4221,6 +5431,23 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "mdn.com",
+            "path": "FakeThread/mdn.com",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "one.js",
+            "path": "FakeThread/mdn.com/one.js",
+          },
+        ],
         "relativeUrl": "http://mdn.com/one.js",
         "thread": "FakeThread",
         "url": "http://mdn.com/one.js",
@@ -4278,6 +5505,18 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "",
+                    "path": "FakeThread/",
+                  },
+                ],
                 "relativeUrl": "url",
                 "thread": "FakeThread",
                 "url": "url",
@@ -4306,6 +5545,23 @@ Object {
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "one.js",
+                  "path": "FakeThread/mdn.com/one.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/one.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/one.js",
@@ -4353,6 +5609,23 @@ Object {
                 "isOriginal": false,
                 "isPrettyPrinted": false,
                 "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
                 "relativeUrl": "http://mdn.com/one.js",
                 "thread": "FakeThread",
                 "url": "http://mdn.com/one.js",
@@ -4392,6 +5665,18 @@ Object {
         "isOriginal": false,
         "isPrettyPrinted": false,
         "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "",
+            "path": "FakeThread/",
+          },
+        ],
         "relativeUrl": "url",
         "thread": "FakeThread",
         "url": "url",
@@ -4418,6 +5703,23 @@ Object {
       "isOriginal": false,
       "isPrettyPrinted": false,
       "isWasm": false,
+      "parts": Array [
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "FakeThread",
+          "path": "FakeThread",
+        },
+        Object {
+          "mainThreadHostIfRoot": "http://www.example.com",
+          "part": "mdn.com",
+          "path": "FakeThread/mdn.com",
+        },
+        Object {
+          "mainThreadHostIfRoot": null,
+          "part": "one.js",
+          "path": "FakeThread/mdn.com/one.js",
+        },
+      ],
       "relativeUrl": "http://mdn.com/one.js",
       "thread": "FakeThread",
       "url": "http://mdn.com/one.js",

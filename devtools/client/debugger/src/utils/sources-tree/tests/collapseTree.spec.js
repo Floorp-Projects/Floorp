@@ -4,30 +4,29 @@
 
 import { makeMockDisplaySource, formatTree } from "../../../utils/test-mockup";
 
-import {
-  collapseTree,
-  addToTree,
-  createDirectoryNode,
-} from "../index";
+import { collapseTree, addToTree, createDirectoryNode } from "../index";
 
 const abcSource = makeMockDisplaySource(
   "http://example.com/a/b/c.js",
-  "actor1"
+  "actor1",
+  "Main Thread"
 );
 const abcdeSource = makeMockDisplaySource(
   "http://example.com/a/b/c/d/e.js",
-  "actor2"
+  "actor2",
+  "Main Thread"
 );
 const abxSource = makeMockDisplaySource(
   "http://example.com/a/b/x.js",
-  "actor3"
+  "actor3",
+  "Main Thread"
 );
 
 describe("sources tree", () => {
   describe("collapseTree", () => {
     it("can collapse a single source", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/", "Main Thread");
+      addToTree(fullTree, abcSource);
       expect(fullTree.contents).toHaveLength(1);
       const tree = collapseTree(fullTree);
 
@@ -47,7 +46,7 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with a deeper level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/", "Main Thread");
+      addToTree(fullTree, abcSource);
       addToTree(fullTree, abcdeSource, "http://example.com/", "Main Thread");
       const tree = collapseTree(fullTree);
 
@@ -72,8 +71,8 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with a shallower level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcSource, "http://example.com/", "Main Thread");
-      addToTree(fullTree, abxSource, "http://example.com/", "Main Thread");
+      addToTree(fullTree, abcSource);
+      addToTree(fullTree, abxSource);
       const tree = collapseTree(fullTree);
 
       expect(tree.contents).toHaveLength(1);
@@ -96,7 +95,7 @@ describe("sources tree", () => {
 
     it("correctly merges in a collapsed source with the same level", () => {
       const fullTree = createDirectoryNode("root", "", []);
-      addToTree(fullTree, abcdeSource, "http://example.com/", "Main Thread");
+      addToTree(fullTree, abcdeSource);
       addToTree(fullTree, abcSource, "http://example.com/", "Main Thread");
       const tree = collapseTree(fullTree);
 

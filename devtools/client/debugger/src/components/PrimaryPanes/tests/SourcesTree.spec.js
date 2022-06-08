@@ -173,7 +173,8 @@ describe("SourcesTree", () => {
         const newSource = createMockDisplaySource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
-          true
+          true,
+          "FakeThread1"
         );
 
         const newThreadSources = {
@@ -417,9 +418,9 @@ function render(overrides = {}) {
   return { component, props, defaultState, instance };
 }
 
-function createMockDisplaySource(id, url, isBlackBoxed = false) {
+function createMockDisplaySource(id, url, isBlackBoxed = false, thread) {
   return {
-    ...makeMockDisplaySource(url, id),
+    ...makeMockDisplaySource(url, id, thread),
     isBlackBoxed,
   };
 }

@@ -148,6 +148,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               "isOriginal": false,
               "isPrettyPrinted": false,
               "isWasm": false,
+              "parts": Array [
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "FakeThread",
+                  "path": "FakeThread",
+                },
+                Object {
+                  "mainThreadHostIfRoot": "http://www.example.com",
+                  "part": "mdn.com",
+                  "path": "FakeThread/mdn.com",
+                },
+                Object {
+                  "mainThreadHostIfRoot": null,
+                  "part": "three.js",
+                  "path": "FakeThread/mdn.com/three.js",
+                },
+              ],
               "relativeUrl": "http://mdn.com/three.js",
               "thread": "FakeThread",
               "url": "http://mdn.com/three.js",
@@ -173,6 +190,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "isOriginal": false,
                   "isPrettyPrinted": false,
                   "isWasm": false,
+                  "parts": Array [
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "FakeThread",
+                      "path": "FakeThread",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": "http://www.example.com",
+                      "part": "mdn.com",
+                      "path": "FakeThread/mdn.com",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "four.js",
+                      "path": "FakeThread/mdn.com/four.js",
+                    },
+                  ],
                   "relativeUrl": "http://mdn.com/four.js",
                   "thread": "FakeThread",
                   "url": "http://mdn.com/four.js",
@@ -196,6 +230,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "isOriginal": true,
                   "isPrettyPrinted": false,
                   "isWasm": false,
+                  "parts": Array [
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "FakeThread",
+                      "path": "FakeThread",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": "http://www.example.com",
+                      "part": "mdn.com",
+                      "path": "FakeThread/mdn.com",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "four.js%20[original]",
+                      "path": "FakeThread/mdn.com/four.js%20[original]",
+                    },
+                  ],
                   "relativeUrl": "http://mdn.com/four.js [original]",
                   "thread": "FakeThread",
                   "url": "http://mdn.com/four.js [original]",
@@ -219,6 +270,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "isOriginal": false,
                   "isPrettyPrinted": false,
                   "isWasm": false,
+                  "parts": Array [
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "FakeThread",
+                      "path": "FakeThread",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": "http://www.example.com",
+                      "part": "mdn.com",
+                      "path": "FakeThread/mdn.com",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "one.js",
+                      "path": "FakeThread/mdn.com/one.js",
+                    },
+                  ],
                   "relativeUrl": "http://mdn.com/one.js",
                   "thread": "FakeThread",
                   "url": "http://mdn.com/one.js",
@@ -242,6 +310,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "isOriginal": false,
                   "isPrettyPrinted": false,
                   "isWasm": false,
+                  "parts": Array [
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "FakeThread",
+                      "path": "FakeThread",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": "http://www.example.com",
+                      "part": "mdn.com",
+                      "path": "FakeThread/mdn.com",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "three.js",
+                      "path": "FakeThread/mdn.com/three.js",
+                    },
+                  ],
                   "relativeUrl": "http://mdn.com/three.js",
                   "thread": "FakeThread",
                   "url": "http://mdn.com/three.js",
@@ -265,6 +350,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "isOriginal": false,
                   "isPrettyPrinted": false,
                   "isWasm": false,
+                  "parts": Array [
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "FakeThread",
+                      "path": "FakeThread",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": "http://www.example.com",
+                      "part": "mdn.com",
+                      "path": "FakeThread/mdn.com",
+                    },
+                    Object {
+                      "mainThreadHostIfRoot": null,
+                      "part": "two.js",
+                      "path": "FakeThread/mdn.com/two.js",
+                    },
+                  ],
                   "relativeUrl": "http://mdn.com/two.js",
                   "thread": "FakeThread",
                   "url": "http://mdn.com/two.js",
@@ -297,6 +399,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                       "isOriginal": false,
                       "isPrettyPrinted": false,
                       "isWasm": false,
+                      "parts": Array [
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "FakeThread",
+                          "path": "FakeThread",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": "http://www.example.com",
+                          "part": "mdn.com",
+                          "path": "FakeThread/mdn.com",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "four.js",
+                          "path": "FakeThread/mdn.com/four.js",
+                        },
+                      ],
                       "relativeUrl": "http://mdn.com/four.js",
                       "thread": "FakeThread",
                       "url": "http://mdn.com/four.js",
@@ -320,6 +439,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                       "isOriginal": true,
                       "isPrettyPrinted": false,
                       "isWasm": false,
+                      "parts": Array [
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "FakeThread",
+                          "path": "FakeThread",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": "http://www.example.com",
+                          "part": "mdn.com",
+                          "path": "FakeThread/mdn.com",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "four.js%20[original]",
+                          "path": "FakeThread/mdn.com/four.js%20[original]",
+                        },
+                      ],
                       "relativeUrl": "http://mdn.com/four.js [original]",
                       "thread": "FakeThread",
                       "url": "http://mdn.com/four.js [original]",
@@ -343,6 +479,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                       "isOriginal": false,
                       "isPrettyPrinted": false,
                       "isWasm": false,
+                      "parts": Array [
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "FakeThread",
+                          "path": "FakeThread",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": "http://www.example.com",
+                          "part": "mdn.com",
+                          "path": "FakeThread/mdn.com",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "one.js",
+                          "path": "FakeThread/mdn.com/one.js",
+                        },
+                      ],
                       "relativeUrl": "http://mdn.com/one.js",
                       "thread": "FakeThread",
                       "url": "http://mdn.com/one.js",
@@ -366,6 +519,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                       "isOriginal": false,
                       "isPrettyPrinted": false,
                       "isWasm": false,
+                      "parts": Array [
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "FakeThread",
+                          "path": "FakeThread",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": "http://www.example.com",
+                          "part": "mdn.com",
+                          "path": "FakeThread/mdn.com",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "three.js",
+                          "path": "FakeThread/mdn.com/three.js",
+                        },
+                      ],
                       "relativeUrl": "http://mdn.com/three.js",
                       "thread": "FakeThread",
                       "url": "http://mdn.com/three.js",
@@ -389,6 +559,23 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                       "isOriginal": false,
                       "isPrettyPrinted": false,
                       "isWasm": false,
+                      "parts": Array [
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "FakeThread",
+                          "path": "FakeThread",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": "http://www.example.com",
+                          "part": "mdn.com",
+                          "path": "FakeThread/mdn.com",
+                        },
+                        Object {
+                          "mainThreadHostIfRoot": null,
+                          "part": "two.js",
+                          "path": "FakeThread/mdn.com/two.js",
+                        },
+                      ],
                       "relativeUrl": "http://mdn.com/two.js",
                       "thread": "FakeThread",
                       "url": "http://mdn.com/two.js",
