@@ -136,8 +136,8 @@ struct draw_data_t
 };
 
 static void
-move_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
-	 hb_draw_state_t *st,
+move_to (hb_draw_funcs_t *, draw_data_t *draw_data,
+	 hb_draw_state_t *,
 	 float to_x, float to_y,
 	 void *)
 {
@@ -145,8 +145,8 @@ move_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
 }
 
 static void
-line_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
-	 hb_draw_state_t *st,
+line_to (hb_draw_funcs_t *, draw_data_t *draw_data,
+	 hb_draw_state_t *,
 	 float to_x, float to_y,
 	 void *)
 {
@@ -154,8 +154,8 @@ line_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
 }
 
 static void
-quadratic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
-	      hb_draw_state_t *st,
+quadratic_to (hb_draw_funcs_t *, draw_data_t *draw_data,
+	      hb_draw_state_t *,
 	      float control_x, float control_y,
 	      float to_x, float to_y,
 	      void *)
@@ -165,8 +165,8 @@ quadratic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
 }
 
 static void
-cubic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
-	  hb_draw_state_t *st,
+cubic_to (hb_draw_funcs_t *, draw_data_t *draw_data,
+	  hb_draw_state_t *,
 	  float control1_x, float control1_y,
 	  float control2_x, float control2_y,
 	  float to_x, float to_y,
@@ -178,8 +178,8 @@ cubic_to (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
 }
 
 static void
-close_path (hb_draw_funcs_t *dfuncs, draw_data_t *draw_data,
-	    hb_draw_state_t *st,
+close_path (hb_draw_funcs_t *, draw_data_t *draw_data,
+	    hb_draw_state_t *,
 	    void *)
 {
   fprintf (draw_data->f, "Z");

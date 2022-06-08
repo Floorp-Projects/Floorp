@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
     'hb-draw.cc',
     'hb-face.cc',
     'hb-font.cc',
+    'hb-map.cc',
     'hb-number.cc',
     'hb-ot-cff1-table.cc',
     'hb-ot-cff2-table.cc',
@@ -83,10 +84,6 @@ UNIFIED_SOURCES += [
     'hb-shaper.cc',
     'hb-static.cc',
     'hb-style.cc',
-    'hb-subset-cff-common.cc',
-    'hb-subset-cff1.cc',
-    'hb-subset-cff2.cc',
-    'hb-subset-repacker.cc',
     'hb-unicode.cc',
 ]
 
