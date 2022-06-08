@@ -5,7 +5,6 @@
 import {
   nodeHasChildren,
   isPathDirectory,
-  isInvalidUrl,
   partIsFile,
   createSourceNode,
   createDirectoryNode,
@@ -152,10 +151,6 @@ function addSourceToNode(node, url, source) {
  */
 export function addToTree(tree, source, mainThreadHost, thread) {
   const url = source.displayURL;
-
-  if (isInvalidUrl(url, source)) {
-    return;
-  }
 
   const finalNode = traverseTree(url, tree, mainThreadHost, source, thread);
 

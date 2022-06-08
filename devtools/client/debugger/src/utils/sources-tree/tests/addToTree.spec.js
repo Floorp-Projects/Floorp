@@ -275,33 +275,6 @@ describe("sources-tree", () => {
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
-    it("excludes javascript: URLs from the tree", () => {
-      const source1 = makeMockDisplaySource(
-        "javascript:alert('Hello World')",
-        "actor1"
-      );
-      const source2 = makeMockDisplaySource(
-        "http://example.com/source1.js",
-        "actor2"
-      );
-      const source3 = makeMockDisplaySource(
-        "javascript:let i = 10; while (i > 0) i--; console.log(i);",
-        "actor3"
-      );
-      const tree = createDirectoryNode("root", "", []);
-
-      addToTree(tree, source1, "http://example.com/", "FakeThread");
-      addToTree(tree, source2, "http://example.com/", "FakeThread");
-      addToTree(tree, source3, "http://example.com/", "FakeThread");
-
-      const base = tree.contents[0].contents[0];
-      expect(tree.contents).toHaveLength(1);
-
-      const source1Node = base.contents[0];
-      expect(source1Node.name).toBe("source1.js");
-      expect(formatTree(tree)).toMatchSnapshot();
-    });
-
     it("correctly parses file sources", () => {
       const source = makeMockDisplaySource("file:///a/b.js", "actor1");
       const tree = createDirectoryNode("root", "", []);

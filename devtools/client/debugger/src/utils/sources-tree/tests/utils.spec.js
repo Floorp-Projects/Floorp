@@ -9,7 +9,6 @@ import {
   createDirectoryNode,
   isDirectory,
   addToTree,
-  isNotJavaScript,
   getPathWithoutThread,
   createTree,
   getSourcesInsideGroup,
@@ -45,28 +44,6 @@ describe("sources tree", () => {
       expect(isDirectory(aFileNode)).toBe(false);
       expect(isDirectory(cFolderNode)).toBe(true);
       expect(isDirectory(dFileNode)).toBe(false);
-    });
-  });
-
-  describe("isNotJavaScript", () => {
-    it("js file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.js");
-      expect(isNotJavaScript(source)).toBe(false);
-    });
-
-    it("css file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.css");
-      expect(isNotJavaScript(source)).toBe(true);
-    });
-
-    it("svg file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.svg");
-      expect(isNotJavaScript(source)).toBe(true);
-    });
-
-    it("png file", () => {
-      const source = makeMockDisplaySource("http://example.com/foo.png");
-      expect(isNotJavaScript(source)).toBe(true);
     });
   });
 

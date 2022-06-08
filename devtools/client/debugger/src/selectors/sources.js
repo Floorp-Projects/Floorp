@@ -4,6 +4,7 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
+import { getFileExtension } from "../utils/sources-tree/utils";
 import { getDisplayURL } from "../utils/sources-tree/getURL";
 
 import {
@@ -31,6 +32,9 @@ import {
 } from "./source-actors";
 import { getSourceTextContent } from "./sources-content";
 import { getAllThreads, getMainThreadHost } from "./threads";
+
+const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
+const IGNORED_EXTENSIONS = ["css", "svg", "png"];
 
 export function hasSource(state, id) {
   return state.sources.sources.has(id);
@@ -238,7 +242,8 @@ const getDisplayedSourceIDs = createSelector(
         isDescendantOfRoot(source, rootWithoutThreadActor) &&
         (!source.isExtension ||
           chromeAndExtensionsEnabled ||
-          debuggeeIsWebExtension);
+          debuggeeIsWebExtension) &&
+        !isSourceHiddenInSourceTree(source);
       if (!displayed) {
         continue;
       }
@@ -264,15 +269,23 @@ export const getDisplayedSources = createSelector(
       const entriesByNoQueryURL = Object.create(null);
 
       for (const id of idsByThread[thread]) {
-        if (!result[thread]) {
-          result[thread] = {};
-        }
         const source = sourcesMap.get(id);
+        const displayURL = getDisplayURL(source.url, mainThreadHost);
+
+        // Ignore source which have not been able to be sorted in a group by getDisplayURL
+        // It should be only javascript: URLs and weird URLs without protocols.
+        if (!displayURL.group) {
+          continue;
+        }
 
         const entry = {
           ...source,
-          displayURL: getDisplayURL(source.url, mainThreadHost),
+          displayURL,
         };
+
+        if (!result[thread]) {
+          result[thread] = {};
+        }
         result[thread][id] = entry;
 
         const noQueryURL = stripQuery(entry.url);
@@ -296,6 +309,14 @@ export const getDisplayedSources = createSelector(
     return result;
   }
 );
+
+function isSourceHiddenInSourceTree(source) {
+  return (
+    IGNORED_EXTENSIONS.includes(getFileExtension(source)) ||
+    IGNORED_URLS.includes(source.url) ||
+    isPretty(source)
+  );
+}
 
 export function getSourceActorsForSource(state, id) {
   const actors = state.sources.actors[id];
