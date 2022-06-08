@@ -12,10 +12,8 @@
 #define MEDIA_ENGINE_INTERNAL_ENCODER_FACTORY_H_
 
 #include <memory>
-#include <string>
 #include <vector>
 
-#include "absl/types/optional.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
@@ -27,9 +25,7 @@ class RTC_EXPORT InternalEncoderFactory : public VideoEncoderFactory {
  public:
   static std::vector<SdpVideoFormat> SupportedFormats();
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
-  CodecSupport QueryCodecSupport(
-      const SdpVideoFormat& format,
-      absl::optional<std::string> scalability_mode) const override;
+
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(
       const SdpVideoFormat& format) override;
 };
