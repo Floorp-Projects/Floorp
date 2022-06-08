@@ -663,5 +663,5 @@ cargo-vet:
     description: cargo-vet source
     fetch:
         type: git
-        repo: https://github.com/bholley/cargo-vet
+        repo: https://github.com/mozilla/cargo-vet
         revision: 97cdbfdab0ed3008160cf5bee534fb534fce08c5
