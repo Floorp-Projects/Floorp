@@ -1310,7 +1310,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
       mIsChrome(false),
       mAllowScriptsToClose(false),
       mTopLevelOuterContentWindow(false),
-      mStorageAccessPermissionGranted(false),
       mDelayedPrintUntilAfterLoad(false),
       mDelayedCloseForPrinting(false),
       mShouldDelayPrintUntilAfterLoad(false),
@@ -2506,8 +2505,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   }
 
   PreloadLocalStorage();
-
-  mStorageAccessPermissionGranted = false;
 
   // Do this here rather than in say the Document constructor, since
   // we need a WindowContext available.

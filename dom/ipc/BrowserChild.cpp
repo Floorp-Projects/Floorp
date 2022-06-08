@@ -939,8 +939,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
   }
   docShell->LoadURI(aLoadState, true);
 
-  nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
-
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, spec);
   return IPC_OK();
 }
