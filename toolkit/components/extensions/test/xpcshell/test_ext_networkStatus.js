@@ -166,35 +166,41 @@ add_task(async function test_networkStatus() {
   mockNetworkStatusService.unregister();
 });
 
-add_task(async function test_networkStatus_permission() {
-  let extension = ExtensionTestUtils.loadExtension({
-    temporarilyInstalled: true,
-    isPrivileged: false,
-    manifest: {
-      applications: {
-        gecko: { id: "networkstatus-permission@tests.mozilla.org" },
-      },
-      permissions: ["networkStatus"],
-    },
-  });
-  ExtensionTestUtils.failOnSchemaWarnings(false);
-  let { messages } = await promiseConsoleOutput(async () => {
-    await Assert.rejects(
-      extension.startup(),
-      /Using the privileged permission/,
-      "Startup failed with privileged permission"
-    );
-  });
-  ExtensionTestUtils.failOnSchemaWarnings(true);
-  AddonTestUtils.checkMessages(
-    messages,
-    {
-      expected: [
-        {
-          message: /Using the privileged permission 'networkStatus' requires a privileged add-on/,
+add_task(
+  {
+    // Some builds (e.g. thunderbird) have experiments enabled by default.
+    pref_set: [["extensions.experiments.enabled", false]],
+  },
+  async function test_networkStatus_permission() {
+    let extension = ExtensionTestUtils.loadExtension({
+      temporarilyInstalled: true,
+      isPrivileged: false,
+      manifest: {
+        applications: {
+          gecko: { id: "networkstatus-permission@tests.mozilla.org" },
         },
-      ],
-    },
-    true
-  );
-});
+        permissions: ["networkStatus"],
+      },
+    });
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+    let { messages } = await promiseConsoleOutput(async () => {
+      await Assert.rejects(
+        extension.startup(),
+        /Using the privileged permission/,
+        "Startup failed with privileged permission"
+      );
+    });
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+    AddonTestUtils.checkMessages(
+      messages,
+      {
+        expected: [
+          {
+            message: /Using the privileged permission 'networkStatus' requires a privileged add-on/,
+          },
+        ],
+      },
+      true
+    );
+  }
+);
