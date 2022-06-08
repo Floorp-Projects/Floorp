@@ -5552,8 +5552,7 @@ bool nsContentUtils::SchemeIs(nsIURI* aURI, const char* aScheme) {
 }
 
 bool nsContentUtils::IsExpandedPrincipal(nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
-  return !!ep;
+  return aPrincipal && aPrincipal->GetIsExpandedPrincipal();
 }
 
 bool nsContentUtils::IsSystemOrExpandedPrincipal(nsIPrincipal* aPrincipal) {

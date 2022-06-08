@@ -42,6 +42,7 @@
 #include "nsISupportsImpl.h"
 #include "nsHttpChannel.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -393,12 +394,31 @@ void nsCORSListenerProxy::ClearPrivateBrowsingCache() {
   sPreflightCache->PurgePrivateBrowsingEntries();
 }
 
+// Usually, when using an expanded principal, there's no particularly good
+// origin to do the request with. However if the expanded principal only wraps
+// one principal, we can use that one instead.
+//
+// This is needed so that DevTools can still do CORS-enabled requests (since
+// DevTools uses a triggering principal expanding the node principal to bypass
+// CSP checks, see Element::CreateDevToolsPrincipal(), bug 1604562, and bug
+// 1391994).
+static nsIPrincipal* GetOriginHeaderPrincipal(nsIPrincipal* aPrincipal) {
+  while (aPrincipal && aPrincipal->GetIsExpandedPrincipal()) {
+    auto* ep = BasePrincipal::Cast(aPrincipal)->As<ExpandedPrincipal>();
+    if (ep->AllowList().Length() != 1) {
+      break;
+    }
+    aPrincipal = ep->AllowList()[0];
+  }
+  return aPrincipal;
+}
+
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          bool aWithCredentials)
     : mOuterListener(aOuter),
       mRequestingPrincipal(aRequestingPrincipal),
-      mOriginHeaderPrincipal(aRequestingPrincipal),
+      mOriginHeaderPrincipal(GetOriginHeaderPrincipal(aRequestingPrincipal)),
       mWithCredentials(aWithCredentials),
       mRequestApproved(false),
       mHasBeenCrossSite(false),
@@ -614,7 +634,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   }
 
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
-    MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(mOriginHeaderPrincipal));
+    MOZ_ASSERT(!mOriginHeaderPrincipal->GetIsExpandedPrincipal());
     nsAutoCString origin;
     mOriginHeaderPrincipal->GetAsciiOrigin(origin);
 
@@ -775,19 +795,15 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
 
-      if (NS_SUCCEEDED(rv)) {
-        bool equal;
-        rv = oldChannelPrincipal->Equals(newChannelPrincipal, &equal);
-        if (NS_SUCCEEDED(rv) && !equal) {
-          // Spec says to set our source origin to a unique origin.
-          mOriginHeaderPrincipal =
-              NullPrincipal::CreateWithInheritedAttributes(oldChannelPrincipal);
-        }
-      }
-
       if (NS_FAILED(rv)) {
         aOldChannel->Cancel(rv);
         return rv;
+      }
+
+      if (!oldChannelPrincipal->Equals(newChannelPrincipal)) {
+        // Spec says to set our source origin to a unique origin.
+        mOriginHeaderPrincipal =
+            NullPrincipal::CreateWithInheritedAttributes(oldChannelPrincipal);
       }
     }
 
