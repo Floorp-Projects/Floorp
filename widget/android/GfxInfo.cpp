@@ -570,6 +570,18 @@ nsresult GfxInfo::GetFeatureStatusImpl(
           mGLStrings->Renderer().Find("Vivante GC7000UL",
                                       /* ignoreCase */ true) >= 0;
 
+      const bool isPowerVrFenceSyncCrash =
+          (mGLStrings->Renderer().Find("PowerVR Rogue G6200",
+                                       /* ignoreCase */ true) >= 0 ||
+           mGLStrings->Renderer().Find("PowerVR Rogue G6430",
+                                       /* ignoreCase */ true) >= 0 ||
+           mGLStrings->Renderer().Find("PowerVR Rogue GX6250",
+                                       /* ignoreCase */ true) >= 0) &&
+          (mGLStrings->Version().Find("3283119", /* ignoreCase */ true) >= 0 ||
+           mGLStrings->Version().Find("3443629", /* ignoreCase */ true) >= 0 ||
+           mGLStrings->Version().Find("3573678", /* ignoreCase */ true) >= 0 ||
+           mGLStrings->Version().Find("3830101", /* ignoreCase */ true) >= 0);
+
       if (isMali4xx) {
         // Mali 4xx does not support GLES 3.
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
@@ -582,6 +594,10 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         // Blocked on Vivante GC7000UL due to bug 1719327.
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_VIVANTE_GC7000UL";
+      } else if (isPowerVrFenceSyncCrash) {
+        // Blocked on various PowerVR GPUs due to bug 1773128.
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_POWERVR_FENCE_SYNC_CRASH";
       } else {
         *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }
