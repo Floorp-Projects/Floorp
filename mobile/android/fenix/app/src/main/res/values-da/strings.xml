@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">Deaktiver privat browsing</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Søg eller indtast adresse</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Indtast søgestrenge</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Dine åbne faneblade vil blive vist her.</string>
 
@@ -40,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Seneste bogmærker</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Bogmærker gemt for nylig</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Vis alle</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -237,8 +237,6 @@
     <string name="search_suggestions_onboarding_title">Tillad søgeforslag i private sessioner?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s deler alt, du skriver i adressefeltet, med din standard-søgetjeneste.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Læs mere</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Søg med %s</string>
@@ -723,7 +721,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Gem faneblade til samling</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Faneblads-menu</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Faneblads-menu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Slet samling</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1164,32 +1162,6 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Gruppe slettet</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview er nu Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly bliver opdateret hver nat og har nye, eksperimentelle funktioner.
-        Nightly kan dog være ustabil nogle gange. Hent vores beta-version, hvis du vil have en mere stabil browser.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Hent Firefox Beta til Android</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly er flyttet</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Denne app modtager ikke længere sikkerhedsopdateringer. Stop med at bruge appen og skift til den nye Nightly.
-        \n\nOpret en Firefox-konto for at overføre dine bogmærker, logins og historik til en anden app.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Skift til den nye Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly er flyttet</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Denne app modtager ikke længere sikkerhedsopdateringer. Hent den nye Nightly og stop med at bruge denne app.
-        \n\nOpret en Firefox-konto for at overføre dine bogmærker, logins og historik til en anden app.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Hent den nye Nightly</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1197,8 +1169,6 @@
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Synkroniser Firefox mellem enheder</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synkroniser %1$s mellem enheder</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Synkroniser bogmærker, historik og adgangskoder med %1$s på denne enhed.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1609,8 +1579,10 @@
     <string name="addresses_street_address">Postadresse</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">By</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Stat</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Område</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postnummer</string>
     <!-- The header for the country or region of an address -->
@@ -1676,19 +1648,6 @@
     <string name="search_edit_custom_engine_success_message">%s blev gemt</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s blev slettet</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Velkommen til den nye %s</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">En komplet redesignet browser venter forude! Du får både forbedret ydelse og nye funktioner, så du får mere ud af internettet.\n\n Vent venligst, mens vi opdaterer %s med dine</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Opdaterer %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Start %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migreringen er færdig</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Adgangskoder</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">For at tillade:</string>
@@ -1781,8 +1740,6 @@
     <string name="synced_tabs_enable_tab_syncing">Aktiver synkronisering af faneblade.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Du har ikke nogen faneblade åbne i Firefox på dine andre enheder.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Du har ikke nogen åbne faneblade i %1$s på dine andre enheder.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Se en liste med faneblade fra dine andre enheder.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1833,6 +1790,11 @@
     <string name="inactive_tabs_title">Inaktive faneblade</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Luk alle inaktive faneblade</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Udvid inaktive faneblade</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Sammenfold inaktive faneblade</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

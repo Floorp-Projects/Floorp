@@ -15,6 +15,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Іздеу немесе адресті енгізу</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Іздеу жолын енгізіңіз</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Сіздің ашық беттеріңіз осында көрсетілетін болады.</string>
     <!-- No Private Tabs Message Description -->
@@ -38,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Жуырдағы бетбелгілер</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Жуырда сақталған бетбелгілер</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Барлығын көрсету</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -235,8 +235,6 @@
     <string name="search_suggestions_onboarding_title">Жекелік терезелерінде іздеу жүйелерінің ұсыныстарын рұқсат ету керек пе?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s сіз адрестік жолақта терген барлық нәрсемен сіздің іздеу жүйеңізбен бөлісетін болады.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Көбірек білу</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ішінен іздеу</string>
@@ -718,7 +716,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Беттерді жинаққа сақтау</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Бет мәзірі</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Бет мәзірі</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Жинақты өшіру</string>
@@ -1162,43 +1160,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Топ өшірілді</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview енді Firefox Night болып табылады</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly әр түн сайын жаңартылып отырады және тәжірибелік жаңа мүмкіндіктерге ие.
-        Алайда, түрақтылығы аздау болуы мүмкін. Тұрақты тәжірибе алу үшін біздің бета-браузерімізді жүктеп алыңыз.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Android үшін Firefox Beta алу</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly көшіп кетті</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Бұл қолданба енді қауіпсіздік жаңартуларын алмайды. Оны пайдалануды тоқтатыңыз және жаңа Nightly өніміне ауысыңыз.
-        \n\nБетбелгілер, логиндер және тарихыңызды басқа қолданбаға тасымалдау үшін Firefox тіркелгісін жасаңыз.</string>
-
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Жаңа Nightly өніміне ауысу</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly көшіп кетті</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Бұл қолданба енді қауіпсіздік жаңартуларын алмайды. Жаңа Nightly өніміне ауысып, осы қолданбаны пайдалануды тоқтатыңыз.
-        \n\nБетбелгілер, логиндер және тарихыңызды басқа қолданбаға тасымалдау үшін Firefox тіркелгісін жасаңыз.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Жаңа Nightly өнімін алу</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s өніміне қош келдіңіз!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Firefox-ты құрылғылар арасында синхрондау</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">%1$s құрылғылар арасында синхрондау</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Осы құрылғыдағы %1$s ішіне бетбелгілер, шолу тарихын және парольдерді әкелу.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1616,8 +1583,10 @@
     <string name="addresses_street_address">Көше адресі</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Қала</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Аймақ</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Облыс</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Пошталық индексі</string>
     <!-- The header for the country or region of an address -->
@@ -1683,19 +1652,6 @@
     <string name="search_edit_custom_engine_success_message">%s сақталды</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s өшірілді</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Су жаңа %s ішіне қош келдіңіз</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Желіде көбірек бітіруге көмектесетін, жетілдірілген өнімділік пен мүмкіндіктермен толығымен қайта өңделген браузер сізді күтеді.\n\n%s жаңартып болғанша күте тұрыңыз, соның ішінде:</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s жаңарту…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s іске қосу</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Көшіру аяқталды</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Парольдер</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Рұқсат ету үшін:</string>
@@ -1790,8 +1746,6 @@
     <string name="synced_tabs_enable_tab_syncing">Беттер синхрондауын іске қосыңыз.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Сізде басқа құрылғыларыңызда Firefox-та ашық беттер жоқ.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Сізде басқа құрылғылардағы %1$s ішіндегі ашық беттер жоқ.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Басқа құрылғыларыңыздан беттер тізімін қарау.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1842,6 +1796,11 @@
     <string name="inactive_tabs_title">Белсенді емес беттер</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Барлық белсенді емес беттерді жабу</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Белсенді емес беттерді жазық қылу</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Белсенді емес беттерді бүктеу</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
