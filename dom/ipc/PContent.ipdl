@@ -140,7 +140,7 @@ using mozilla::dom::PositionState from "mozilla/dom/MediaSession.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
-using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
+using mozilla::StorageAccessAPIHelper::StorageAccessPromptChoices from "mozilla/StorageAccessAPIHelper.h";
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateHandler.h";

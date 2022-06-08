@@ -18,7 +18,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/FOGIPC.h"
 #include "GMPServiceChild.h"
 #include "Geolocation.h"
@@ -49,6 +48,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WebBrowserPersistDocumentChild.h"
@@ -3621,8 +3621,8 @@ mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
         aReason) {
   MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
 
-  ContentBlocking::OnAllowAccessFor(aContext.GetMaybeDiscarded(),
-                                    aTrackingOrigin, aCookieBehavior, aReason);
+  StorageAccessAPIHelper::OnAllowAccessFor(
+      aContext.GetMaybeDiscarded(), aTrackingOrigin, aCookieBehavior, aReason);
 
   return IPC_OK();
 }
