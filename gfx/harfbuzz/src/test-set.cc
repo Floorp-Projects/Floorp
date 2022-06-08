@@ -42,21 +42,26 @@ main (int argc, char **argv)
   /* Test copy assignment. */
   {
     hb_set_t v1 {1, 2};
-    hb_set_t v2 = v1;
+    hb_set_t v2;
+    v2 = v1;
     assert (v1.get_population () == 2);
     assert (v2.get_population () == 2);
   }
 
   /* Test move constructor. */
   {
-    hb_set_t v {hb_set_t {1, 2}};
+    hb_set_t s {1, 2};
+    hb_set_t v (std::move (s));
+    assert (s.get_population () == 0);
     assert (v.get_population () == 2);
   }
 
   /* Test move assignment. */
   {
+    hb_set_t s = hb_set_t {1, 2};
     hb_set_t v;
-    v = hb_set_t {1, 2};
+    v = std::move (s);
+    assert (s.get_population () == 0);
     assert (v.get_population () == 2);
   }
 
@@ -67,9 +72,15 @@ main (int argc, char **argv)
     s.add (18);
     s.add (12);
 
-    hb_set_t v (s);
+    hb_vector_t<hb_codepoint_t> v (s);
+    hb_set_t v0 (v);
+    hb_set_t v1 (s);
+    hb_set_t v2 (std::move (s));
 
-    assert (v.get_population () == 2);
+    assert (s.get_population () == 0);
+    assert (v0.get_population () == 2);
+    assert (v1.get_population () == 2);
+    assert (v2.get_population () == 2);
   }
 
   /* Test initializing from iterator. */

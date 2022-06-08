@@ -54,6 +54,8 @@
 #include "hb-aat-layout-morx-table.hh"
 #include "hb-aat-layout-opbd-table.hh" // Just so we compile it; unused otherwise.
 
+using OT::Layout::GSUB::GSUB;
+
 /**
  * SECTION:hb-ot-layout
  * @title: hb-ot-layout
@@ -389,7 +391,7 @@ hb_ot_layout_get_ligature_carets (hb_font_t      *font,
  */
 
 bool
-OT::GSUB::is_blocklisted (hb_blob_t *blob HB_UNUSED,
+GSUB::is_blocklisted (hb_blob_t *blob HB_UNUSED,
 			  hb_face_t *face) const
 {
 #ifdef HB_NO_OT_LAYOUT_BLOCKLIST
@@ -1529,7 +1531,7 @@ hb_ot_layout_lookups_substitute_closure (hb_face_t      *face,
   hb_map_t done_lookups_glyph_count;
   hb_hashmap_t<unsigned, hb_set_t *> done_lookups_glyph_set;
   OT::hb_closure_context_t c (face, glyphs, &done_lookups_glyph_count, &done_lookups_glyph_set);
-  const OT::GSUB& gsub = *face->table.GSUB->table;
+  const GSUB& gsub = *face->table.GSUB->table;
 
   unsigned int iteration_count = 0;
   unsigned int glyphs_length;
@@ -1808,7 +1810,7 @@ struct GSUBProxy
     table (*face->table.GSUB->table),
     accels (face->table.GSUB->accels) {}
 
-  const OT::GSUB &table;
+  const GSUB &table;
   const OT::hb_ot_layout_lookup_accelerator_t *accels;
 };
 
@@ -1929,6 +1931,7 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
       c.set_auto_zwj (lookups[table_index][i].auto_zwj);
       c.set_auto_zwnj (lookups[table_index][i].auto_zwnj);
       c.set_random (lookups[table_index][i].random);
+      c.set_per_syllable (lookups[table_index][i].per_syllable);
 
       apply_string<Proxy> (&c,
 			   proxy.table.get_lookup (lookup_index),

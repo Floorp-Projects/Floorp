@@ -185,6 +185,12 @@ hb_set_previous_range (const hb_set_t *set,
 		       hb_codepoint_t *first,
 		       hb_codepoint_t *last);
 
+/* Pass HB_SET_VALUE_INVALID in to get started. */
+HB_EXTERN unsigned int
+hb_set_next_many (const hb_set_t *set,
+		  hb_codepoint_t  codepoint,
+		  hb_codepoint_t *out,
+		  unsigned int    size);
 
 HB_END_DECLS
 

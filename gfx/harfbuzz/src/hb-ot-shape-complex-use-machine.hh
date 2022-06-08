@@ -620,7 +620,7 @@ struct machine_index_t :
   machine_index_t (const Iter& it) : it (it) {}
   machine_index_t (const machine_index_t& o) : hb_iter_with_fallback_t<machine_index_t<Iter>,
 								       typename Iter::item_t> (),
-					       it (o.it) {}
+					       it (o.it), is_null (o.is_null) {}
 
   static constexpr bool is_random_access_iterator = Iter::is_random_access_iterator;
   static constexpr bool is_sorted_iterator = Iter::is_sorted_iterator;
@@ -632,14 +632,28 @@ struct machine_index_t :
   void __forward__ (unsigned n) { it += n; }
   void __prev__ () { --it; }
   void __rewind__ (unsigned n) { it -= n; }
+
   void operator = (unsigned n)
-  { unsigned index = (*it).first; if (index < n) it += n - index; else if (index > n) it -= index - n; }
-  void operator = (const machine_index_t& o) { *this = (*o.it).first; }
-  bool operator == (const machine_index_t& o) const { return (*it).first == (*o.it).first; }
+  {
+    assert (n == 0);
+    is_null = true;
+  }
+  explicit operator bool () { return !is_null; }
+
+  void operator = (const machine_index_t& o)
+  {
+    is_null = o.is_null;
+    unsigned index = (*it).first;
+    unsigned n = (*o.it).first;
+    if (index < n) it += n - index; else if (index > n) it -= index - n;
+  }
+  bool operator == (const machine_index_t& o) const
+  { return is_null ? o.is_null : !o.is_null && (*it).first == (*o.it).first; }
   bool operator != (const machine_index_t& o) const { return !(*this == o); }
 
   private:
   Iter it;
+  bool is_null = false;
 };
 struct
 {
@@ -684,7 +698,7 @@ find_syllables_use (hb_buffer_t *buffer)
   unsigned int act HB_UNUSED;
   int cs;
   
-#line 688 "hb-ot-shape-complex-use-machine.hh"
+#line 702 "hb-ot-shape-complex-use-machine.hh"
 	{
 	cs = use_syllable_machine_start;
 	ts = 0;
@@ -692,12 +706,12 @@ find_syllables_use (hb_buffer_t *buffer)
 	act = 0;
 	}
 
-#line 267 "hb-ot-shape-complex-use-machine.rl"
+#line 281 "hb-ot-shape-complex-use-machine.rl"
 
 
   unsigned int syllable_serial = 1;
   
-#line 701 "hb-ot-shape-complex-use-machine.hh"
+#line 715 "hb-ot-shape-complex-use-machine.hh"
 	{
 	int _slen;
 	int _trans;
@@ -711,7 +725,7 @@ _resume:
 #line 1 "NONE"
 	{ts = p;}
 	break;
-#line 715 "hb-ot-shape-complex-use-machine.hh"
+#line 729 "hb-ot-shape-complex-use-machine.hh"
 	}
 
 	_keys = _use_syllable_machine_trans_keys + (cs<<1);
@@ -801,7 +815,7 @@ _eof_trans:
 #line 170 "hb-ot-shape-complex-use-machine.rl"
 	{act = 2;}
 	break;
-#line 805 "hb-ot-shape-complex-use-machine.hh"
+#line 819 "hb-ot-shape-complex-use-machine.hh"
 	}
 
 _again:
@@ -810,7 +824,7 @@ _again:
 #line 1 "NONE"
 	{ts = 0;}
 	break;
-#line 814 "hb-ot-shape-complex-use-machine.hh"
+#line 828 "hb-ot-shape-complex-use-machine.hh"
 	}
 
 	if ( ++p != pe )
@@ -826,7 +840,7 @@ _again:
 
 	}
 
-#line 272 "hb-ot-shape-complex-use-machine.rl"
+#line 286 "hb-ot-shape-complex-use-machine.rl"
 
 }
 
