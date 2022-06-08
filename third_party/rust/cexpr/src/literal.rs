@@ -224,7 +224,7 @@ fn c_string(i: &[u8]) -> nom::IResult<&[u8], Vec<u8>> {
                 map(escaped_char, |c: CChar| c.into()),
                 map(is_not([b'\\', b'"']), |c: &[u8]| c.into()),
             )),
-            Vec::new(),
+            Vec::new,
             |mut v: Vec<u8>, res: Vec<u8>| {
                 v.extend_from_slice(&res);
                 v
