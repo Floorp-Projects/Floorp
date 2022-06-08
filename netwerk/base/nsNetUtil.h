@@ -1012,6 +1012,9 @@ struct LinkHeader {
 
   LinkHeader();
   void Reset();
+
+  nsresult NewResolveHref(nsIURI** aOutURI, nsIURI* aBaseURI) const;
+
   bool operator==(const LinkHeader& rhs) const;
 };
 
