@@ -608,6 +608,15 @@
     offset: RawInt32Field
     val: ValueField
 
+- name: LoadFixedSlot
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    result: ValId
+    obj: ObjId
+    offset: RawInt32Field
+
 - name: LoadDynamicSlot
   shared: true
   transpile: true
