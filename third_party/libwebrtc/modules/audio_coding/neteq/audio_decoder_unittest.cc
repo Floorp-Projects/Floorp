@@ -590,7 +590,7 @@ TEST_F(AudioDecoderIsacFixTest, EncodeDecode) {
 #if defined(WEBRTC_ANDROID) && defined(WEBRTC_ARCH_ARM)
   static const int kEncodedBytes = 685;
 #elif defined(WEBRTC_MAC) && defined(WEBRTC_ARCH_ARM64)  // M1 Mac
-  static const int kEncodedBytes = 684;
+  static const int kEncodedBytes = 673;
 #elif defined(WEBRTC_ARCH_ARM64)
   static const int kEncodedBytes = 673;
 #elif defined(WEBRTC_WIN) && defined(_MSC_VER) && !defined(__clang__)
