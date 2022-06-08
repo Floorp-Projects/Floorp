@@ -7,24 +7,23 @@
 
 #include "nsGNOMEShellSearchProvider.h"
 
-#include "nsIWidget.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIFaviconService.h"
-#include "RemoteUtils.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
-#include "nsIServiceManager.h"
+#include "mozilla/gfx/2D.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
-#include "nsIIOService.h"
+#include "nsServiceManagerUtils.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
 #include "imgIContainer.h"
 #include "imgITools.h"
-#include "mozilla/gfx/DataSurfaceHelpers.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

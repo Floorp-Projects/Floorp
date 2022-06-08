@@ -7,8 +7,8 @@
 
 #include "nsGNOMEShellSearchProvider.h"
 
-#include "nsPrintfCString.h"
 #include "RemoteUtils.h"
+#include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
 
 static bool GetGnomeSearchTitle(const char* aSearchedTerm,
