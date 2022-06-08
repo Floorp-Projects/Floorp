@@ -156,28 +156,39 @@ def add_backfill_suffix(regex, symbol, suffix):
     return symbol
 
 
-def test_manifests_modifier(task, label, symbol, revision, test_manifests):
-    """In the case of test tasks we can modify the test paths they execute."""
-    if task.label != label:
+def backfill_modifier(task, input):
+    if task.label != input["label"]:
         return task
 
     logger.debug(f"Modifying test_manifests for {task.label}")
-    test_manifests = test_manifests
-    task.attributes["test_manifests"] = test_manifests
-    task.task["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(test_manifests)
-    # The name/label might have been modify in new_label, thus, change it here as well
-    task.task["metadata"]["name"] = task.label
-    th_info = task.task["extra"]["treeherder"]
-    # Use a job symbol of the originating task as defined in the backfill action
-    th_info["symbol"] = add_backfill_suffix(
-        SYMBOL_REGEX, th_info["symbol"], f"-{revision[0:11]}-bk"
-    )
-    if th_info.get("groupSymbol"):
-        # Group all backfilled tasks together
-        th_info["groupSymbol"] = add_backfill_suffix(
-            GROUP_SYMBOL_REGEX, th_info["groupSymbol"], "-bk"
+    times = input.get("times", 1)
+
+    # Set task duplicates based on 'times' value.
+    if times > 1:
+        task.attributes["task_duplicates"] = times
+
+    # If the original task has defined test paths
+    test_manifests = input.get("test_manifests")
+    if test_manifests:
+        revision = input.get("revision")
+
+        task.attributes["test_manifests"] = test_manifests
+        task.task["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
+            test_manifests
         )
-    task.task["tags"]["action"] = "backfill-task"
+        # The name/label might have been modify in new_label, thus, change it here as well
+        task.task["metadata"]["name"] = task.label
+        th_info = task.task["extra"]["treeherder"]
+        # Use a job symbol of the originating task as defined in the backfill action
+        th_info["symbol"] = add_backfill_suffix(
+            SYMBOL_REGEX, th_info["symbol"], f"-{revision[0:11]}-bk"
+        )
+        if th_info.get("groupSymbol"):
+            # Group all backfilled tasks together
+            th_info["groupSymbol"] = add_backfill_suffix(
+                GROUP_SYMBOL_REGEX, th_info["groupSymbol"], "-bk"
+            )
+        task.task["tags"]["action"] = "backfill-task"
     return task
 
 
@@ -284,33 +295,21 @@ def add_task_with_original_manifests(
 
     to_run = [label]
 
-    modifier = do_not_modify
-    test_manifests = input.get("test_manifests")
-    # If the original task has defined test paths
-    if test_manifests:
-        modifier = partial(
-            test_manifests_modifier,
-            label=label,
-            revision=input.get("revision"),
-            symbol=input.get("symbol"),
-            test_manifests=test_manifests,
-        )
-
     logger.info("Creating tasks...")
-    times = input.get("times", 1)
-    for i in range(times):
-        create_tasks(
-            graph_config,
-            to_run,
-            full_task_graph,
-            label_to_taskid,
-            parameters,
-            decision_task_id,
-            suffix=i,
-            modifier=modifier,
-        )
+    create_tasks(
+        graph_config,
+        to_run,
+        full_task_graph,
+        label_to_taskid,
+        parameters,
+        decision_task_id,
+        suffix="0",
+        modifier=partial(backfill_modifier, input=input),
+    )
 
-    combine_task_graph_files(list(range(times)))
+    # TODO Implement a way to write out artifacts without assuming there's
+    # multiple sets of them so we can stop passing in "suffix".
+    combine_task_graph_files(["0"])
 
 
 @register_callback_action(
