@@ -94,9 +94,6 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Patch itoa 0.4 to 1.0.
 itoa = { path = "build/rust/itoa" }
 
-# Patch cexpr 0.6 down to cexpr 0.5, which is enough for bindgen 0.59's needs and avoids pulling another version of nom.
-cexpr = { path = "build/rust/cexpr" }
-
 # Patch bindgen 0.56 to 0.59.
 bindgen = { path = "build/rust/bindgen" }
 

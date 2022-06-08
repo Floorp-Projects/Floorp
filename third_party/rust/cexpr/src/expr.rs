@@ -308,7 +308,7 @@ impl<'a> PRef<'a> {
             pair(complete(one_of_punctuation(&["*", "/", "%"][..])), |i| {
                 self.unary(i)
             }),
-            acc,
+            move || acc.clone(),
             |mut acc, (op, val): (&[u8], EvalResult)| {
                 match op[0] as char {
                     '*' => acc *= &val,
@@ -327,7 +327,7 @@ impl<'a> PRef<'a> {
             pair(complete(one_of_punctuation(&["+", "-"][..])), |i| {
                 self.mul_div_rem(i)
             }),
-            acc,
+            move || acc.clone(),
             |mut acc, (op, val): (&[u8], EvalResult)| {
                 match op[0] as char {
                     '+' => acc += &val,
@@ -345,7 +345,7 @@ impl<'a> PRef<'a> {
             pair(complete(one_of_punctuation(&["<<", ">>"][..])), |i| {
                 self.add_sub(i)
             }),
-            acc,
+            move || acc.clone(),
             |mut acc, (op, val): (&[u8], EvalResult)| {
                 match op {
                     b"<<" => acc <<= &val,
@@ -361,7 +361,7 @@ impl<'a> PRef<'a> {
         let (input, acc) = self.shl_shr(input)?;
         numeric(fold_many0(
             preceded(complete(p("&")), |i| self.shl_shr(i)),
-            acc,
+            move || acc.clone(),
             |mut acc, val: EvalResult| {
                 acc &= &val;
                 acc
@@ -373,7 +373,7 @@ impl<'a> PRef<'a> {
         let (input, acc) = self.and(input)?;
         numeric(fold_many0(
             preceded(complete(p("^")), |i| self.and(i)),
-            acc,
+            move || acc.clone(),
             |mut acc, val: EvalResult| {
                 acc ^= &val;
                 acc
@@ -385,7 +385,7 @@ impl<'a> PRef<'a> {
         let (input, acc) = self.xor(input)?;
         numeric(fold_many0(
             preceded(complete(p("|")), |i| self.xor(i)),
-            acc,
+            move || acc.clone(),
             |mut acc, val: EvalResult| {
                 acc |= &val;
                 acc
