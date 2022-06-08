@@ -139,7 +139,56 @@ TieTag MakeTieTag(DcSctpSocketCallbacks& cb) {
                 static_cast<uint64_t>(tie_tag_lower));
 }
 
+constexpr absl::string_view HandoverUnreadinessReasonToString(
+    HandoverUnreadinessReason reason) {
+  switch (reason) {
+    case HandoverUnreadinessReason::kWrongConnectionState:
+      return "WRONG_CONNECTION_STATE";
+    case HandoverUnreadinessReason::kSendQueueNotEmpty:
+      return "SEND_QUEUE_NOT_EMPTY";
+    case HandoverUnreadinessReason::kDataTrackerTsnBlocksPending:
+      return "DATA_TRACKER_TSN_BLOCKS_PENDING";
+    case HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap:
+      return "REASSEMBLY_QUEUE_DELIVERED_TSN_GAP";
+    case HandoverUnreadinessReason::kStreamResetDeferred:
+      return "STREAM_RESET_DEFERRED";
+    case HandoverUnreadinessReason::kOrderedStreamHasUnassembledChunks:
+      return "ORDERED_STREAM_HAS_UNASSEMBLED_CHUNKS";
+    case HandoverUnreadinessReason::kUnorderedStreamHasUnassembledChunks:
+      return "UNORDERED_STREAM_HAS_UNASSEMBLED_CHUNKS";
+    case HandoverUnreadinessReason::kRetransmissionQueueOutstandingData:
+      return "RETRANSMISSION_QUEUE_OUTSTANDING_DATA";
+    case HandoverUnreadinessReason::kRetransmissionQueueFastRecovery:
+      return "RETRANSMISSION_QUEUE_FAST_RECOVERY";
+    case HandoverUnreadinessReason::kRetransmissionQueueNotEmpty:
+      return "RETRANSMISSION_QUEUE_NOT_EMPTY";
+    case HandoverUnreadinessReason::kPendingStreamReset:
+      return "PENDING_STREAM_RESET";
+    case HandoverUnreadinessReason::kPendingStreamResetRequest:
+      return "PENDING_STREAM_RESET_REQUEST";
+  }
+}
 }  // namespace
+
+std::string HandoverReadinessStatus::ToString() const {
+  std::string result;
+  for (uint32_t bit = 1;
+       bit <= static_cast<uint32_t>(HandoverUnreadinessReason::kMax);
+       bit *= 2) {
+    auto flag = static_cast<HandoverUnreadinessReason>(bit);
+    if (Contains(flag)) {
+      if (!result.empty()) {
+        result.append(",");
+      }
+      absl::string_view s = HandoverUnreadinessReasonToString(flag);
+      result.append(s.data(), s.size());
+    }
+  }
+  if (result.empty()) {
+    result = "READY";
+  }
+  return result;
+}
 
 DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
                            DcSctpSocketCallbacks& callbacks,
@@ -282,6 +331,42 @@ void DcSctpSocket::Connect() {
     RTC_DLOG(LS_WARNING) << log_prefix()
                          << "Called Connect on a socket that is not closed";
   }
+  RTC_DCHECK(IsConsistent());
+  callbacks_.TriggerDeferred();
+}
+
+void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
+  if (state_ != State::kClosed) {
+    callbacks_.OnError(ErrorKind::kUnsupportedOperation,
+                       "Only closed socket can be restored from state");
+  } else {
+    if (state.socket_state ==
+        DcSctpSocketHandoverState::SocketState::kConnected) {
+      VerificationTag my_verification_tag =
+          VerificationTag(state.my_verification_tag);
+      connect_params_.verification_tag = my_verification_tag;
+
+      Capabilities capabilities;
+      capabilities.partial_reliability = state.capabilities.partial_reliability;
+      capabilities.message_interleaving =
+          state.capabilities.message_interleaving;
+      capabilities.reconfig = state.capabilities.reconfig;
+
+      tcb_ = std::make_unique<TransmissionControlBlock>(
+          timer_manager_, log_prefix_, options_, capabilities, callbacks_,
+          send_queue_, my_verification_tag, TSN(state.my_initial_tsn),
+          VerificationTag(state.peer_verification_tag),
+          TSN(state.peer_initial_tsn), static_cast<size_t>(0),
+          TieTag(state.tie_tag), packet_sender_,
+          [this]() { return state_ == State::kEstablished; }, &state);
+      RTC_DLOG(LS_VERBOSE) << log_prefix() << "Created peer TCB from state: "
+                           << tcb_->ToString();
+
+      SetState(State::kEstablished, "restored from handover state");
+      callbacks_.OnConnected();
+    }
+  }
+
   RTC_DCHECK(IsConsistent());
   callbacks_.TriggerDeferred();
 }
@@ -1577,6 +1662,40 @@ void DcSctpSocket::SendShutdownAck() {
   packet_sender_.Send(tcb_->PacketBuilder().Add(ShutdownAckChunk()));
   t2_shutdown_->set_duration(tcb_->current_rto());
   t2_shutdown_->Start();
+}
+
+HandoverReadinessStatus DcSctpSocket::GetHandoverReadiness() const {
+  HandoverReadinessStatus status;
+  if (state_ != State::kClosed && state_ != State::kEstablished) {
+    status.Add(HandoverUnreadinessReason::kWrongConnectionState);
+  }
+  if (!send_queue_.IsEmpty()) {
+    status.Add(HandoverUnreadinessReason::kSendQueueNotEmpty);
+  }
+  if (tcb_) {
+    status.Add(tcb_->GetHandoverReadiness());
+  }
+  return status;
+}
+
+absl::optional<DcSctpSocketHandoverState>
+DcSctpSocket::GetHandoverStateAndClose() {
+  if (!GetHandoverReadiness().IsReady()) {
+    return absl::nullopt;
+  }
+
+  DcSctpSocketHandoverState state;
+
+  if (state_ == State::kClosed) {
+    state.socket_state = DcSctpSocketHandoverState::SocketState::kClosed;
+  } else if (state_ == State::kEstablished) {
+    state.socket_state = DcSctpSocketHandoverState::SocketState::kConnected;
+    tcb_->AddHandoverState(state);
+    InternalClose(ErrorKind::kNoError, "handover");
+    callbacks_.TriggerDeferred();
+  }
+
+  return std::move(state);
 }
 
 }  // namespace dcsctp

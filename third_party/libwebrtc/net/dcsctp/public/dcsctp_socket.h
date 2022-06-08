@@ -17,6 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "net/dcsctp/public/dcsctp_handover_state.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/public/packet_observer.h"
@@ -355,6 +356,14 @@ class DcSctpSocketInterface {
   // `DcSctpSocketCallbacks::OnConnected` will be called on success.
   virtual void Connect() = 0;
 
+  // Puts this socket to the state in which the original socket was when its
+  // `DcSctpSocketHandoverState` was captured by `GetHandoverStateAndClose`.
+  // `RestoreFromState` is allowed only on the closed socket.
+  // `DcSctpSocketCallbacks::OnConnected` will be called if a connected socket
+  // state is restored.
+  // `DcSctpSocketCallbacks::OnError` will be called on error.
+  virtual void RestoreFromState(const DcSctpSocketHandoverState& state) = 0;
+
   // Gracefully shutdowns the socket and sends all outstanding data. This is an
   // asynchronous operation and `DcSctpSocketCallbacks::OnClosed` will be called
   // on success.
@@ -417,6 +426,20 @@ class DcSctpSocketInterface {
 
   // Retrieves the latest metrics.
   virtual Metrics GetMetrics() const = 0;
+
+  // Returns empty bitmask if the socket is in the state in which a snapshot of
+  // the state can be made by `GetHandoverStateAndClose()`. Return value is
+  // invalidated by a call to any non-const method.
+  virtual HandoverReadinessStatus GetHandoverReadiness() const = 0;
+
+  // Collects a snapshot of the socket state that can be used to reconstruct
+  // this socket in another process. On success this socket object is closed
+  // synchronously and no callbacks will be made after the method has returned.
+  // The method fails if the socket is not in a state ready for handover.
+  // nullopt indicates the failure. `DcSctpSocketCallbacks::OnClosed` will be
+  // called on success.
+  virtual absl::optional<DcSctpSocketHandoverState>
+  GetHandoverStateAndClose() = 0;
 };
 }  // namespace dcsctp
 

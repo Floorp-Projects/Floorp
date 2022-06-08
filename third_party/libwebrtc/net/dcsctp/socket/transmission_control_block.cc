@@ -183,4 +183,30 @@ std::string TransmissionControlBlock::ToString() const {
   return sb.Release();
 }
 
+HandoverReadinessStatus TransmissionControlBlock::GetHandoverReadiness() const {
+  HandoverReadinessStatus status;
+  status.Add(data_tracker_.GetHandoverReadiness());
+  status.Add(stream_reset_handler_.GetHandoverReadiness());
+  status.Add(reassembly_queue_.GetHandoverReadiness());
+  status.Add(retransmission_queue_.GetHandoverReadiness());
+  return status;
+}
+
+void TransmissionControlBlock::AddHandoverState(
+    DcSctpSocketHandoverState& state) {
+  state.capabilities.partial_reliability = capabilities_.partial_reliability;
+  state.capabilities.message_interleaving = capabilities_.message_interleaving;
+  state.capabilities.reconfig = capabilities_.reconfig;
+
+  state.my_verification_tag = my_verification_tag().value();
+  state.peer_verification_tag = peer_verification_tag().value();
+  state.my_initial_tsn = my_initial_tsn().value();
+  state.peer_initial_tsn = peer_initial_tsn().value();
+  state.tie_tag = tie_tag().value();
+
+  data_tracker_.AddHandoverState(state);
+  stream_reset_handler_.AddHandoverState(state);
+  reassembly_queue_.AddHandoverState(state);
+  retransmission_queue_.AddHandoverState(state);
+}
 }  // namespace dcsctp

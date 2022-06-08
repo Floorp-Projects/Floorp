@@ -44,20 +44,22 @@ namespace dcsctp {
 // closed or restarted, this object will be deleted and/or replaced.
 class TransmissionControlBlock : public Context {
  public:
-  TransmissionControlBlock(TimerManager& timer_manager,
-                           absl::string_view log_prefix,
-                           const DcSctpOptions& options,
-                           const Capabilities& capabilities,
-                           DcSctpSocketCallbacks& callbacks,
-                           SendQueue& send_queue,
-                           VerificationTag my_verification_tag,
-                           TSN my_initial_tsn,
-                           VerificationTag peer_verification_tag,
-                           TSN peer_initial_tsn,
-                           size_t a_rwnd,
-                           TieTag tie_tag,
-                           PacketSender& packet_sender,
-                           std::function<bool()> is_connection_established)
+  TransmissionControlBlock(
+      TimerManager& timer_manager,
+      absl::string_view log_prefix,
+      const DcSctpOptions& options,
+      const Capabilities& capabilities,
+      DcSctpSocketCallbacks& callbacks,
+      SendQueue& send_queue,
+      VerificationTag my_verification_tag,
+      TSN my_initial_tsn,
+      VerificationTag peer_verification_tag,
+      TSN peer_initial_tsn,
+      size_t a_rwnd,
+      TieTag tie_tag,
+      PacketSender& packet_sender,
+      std::function<bool()> is_connection_established,
+      const DcSctpSocketHandoverState* handover_state = nullptr)
       : log_prefix_(log_prefix),
         options_(options),
         timer_manager_(timer_manager),
@@ -86,10 +88,14 @@ class TransmissionControlBlock : public Context {
         packet_sender_(packet_sender),
         rto_(options),
         tx_error_counter_(log_prefix, options),
-        data_tracker_(log_prefix, delayed_ack_timer_.get(), peer_initial_tsn),
+        data_tracker_(log_prefix,
+                      delayed_ack_timer_.get(),
+                      peer_initial_tsn,
+                      handover_state),
         reassembly_queue_(log_prefix,
                           peer_initial_tsn,
-                          options.max_receiver_window_buffer_size),
+                          options.max_receiver_window_buffer_size,
+                          handover_state),
         retransmission_queue_(
             log_prefix,
             my_initial_tsn,
@@ -100,13 +106,15 @@ class TransmissionControlBlock : public Context {
             *t3_rtx_,
             options,
             capabilities.partial_reliability,
-            capabilities.message_interleaving),
+            capabilities.message_interleaving,
+            handover_state),
         stream_reset_handler_(log_prefix,
                               this,
                               &timer_manager,
                               &data_tracker_,
                               &reassembly_queue_,
-                              &retransmission_queue_),
+                              &retransmission_queue_,
+                              handover_state),
         heartbeat_handler_(log_prefix, options, this, &timer_manager_) {}
 
   // Implementation of `Context`.
@@ -187,6 +195,10 @@ class TransmissionControlBlock : public Context {
 
   // Returns a textual representation of this object, for logging.
   std::string ToString() const;
+
+  HandoverReadinessStatus GetHandoverReadiness() const;
+
+  void AddHandoverState(DcSctpSocketHandoverState& state);
 
  private:
   // Will be called when the retransmission timer (t3-rtx) expires.
