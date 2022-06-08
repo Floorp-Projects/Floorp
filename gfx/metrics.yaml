@@ -28,6 +28,22 @@ paint:
     telemetry_mirror: PAINT_BUILD_DISPLAYLIST_TIME
 
 wr:
+  gpu_wait_time:
+    type: timing_distribution
+    description: >
+      The time spent waiting for the GPU to complete previously issued drawing
+      commands.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1772216
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1772216
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: WR_GPU_WAIT_TIME
   rasterize_glyphs_time:
     type: timing_distribution
     description: >
