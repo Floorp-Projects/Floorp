@@ -54,20 +54,16 @@ class ServiceWorkerCloneData final : public ipc::StructuredCloneData {
  public:
   ServiceWorkerCloneData();
 
-  bool StealFromAndBuildClonedMessageDataForBackgroundParent(
+  // FIXME: Now that there's nothing in ClonedOrErrorMessageData tied to a
+  // specific actor, it should be possible to just pass on the same cloned data,
+  // which means this method is effectively an expensive no-op.
+  bool StealFromAndBuildClonedMessageData(
       ClonedOrErrorMessageData& aFromClonedData,
-      mozilla::ipc::PBackgroundParent* aParent,
       ClonedOrErrorMessageData& aToClonedData);
 
-  bool BuildClonedMessageDataForBackgroundChild(
-      mozilla::ipc::PBackgroundChild* aChild,
-      ClonedOrErrorMessageData& aClonedData);
+  bool BuildClonedMessageData(ClonedOrErrorMessageData& aClonedData);
 
-  void CopyFromClonedMessageDataForBackgroundParent(
-      const ClonedOrErrorMessageData& aClonedData);
-
-  void CopyFromClonedMessageDataForBackgroundChild(
-      const ClonedOrErrorMessageData& aClonedData);
+  void CopyFromClonedMessageData(const ClonedOrErrorMessageData& aClonedData);
 
   void SetAsErrorMessageData();
 

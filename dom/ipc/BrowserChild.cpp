@@ -2349,7 +2349,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
   JS::Rooted<JSObject*> kungFuDeathGrip(
       dom::RootingCx(), mBrowserChildMessageManager->GetWrapper());
   StructuredCloneData data;
-  UnpackClonedMessageDataForChild(aData, data);
+  UnpackClonedMessageData(aData, data);
   mm->ReceiveMessage(static_cast<EventTarget*>(mBrowserChildMessageManager),
                      nullptr, aMessage, false, &data, nullptr, IgnoreErrors());
   return IPC_OK();
@@ -3018,7 +3018,7 @@ bool BrowserChild::DoSendBlockingMessage(
     const nsAString& aMessage, StructuredCloneData& aData,
     nsTArray<StructuredCloneData>* aRetVal) {
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
+  if (!BuildClonedMessageData(aData, data)) {
     return false;
   }
   return SendSyncMessage(PromiseFlatString(aMessage), data, aRetVal);
@@ -3027,7 +3027,7 @@ bool BrowserChild::DoSendBlockingMessage(
 nsresult BrowserChild::DoSendAsyncMessage(const nsAString& aMessage,
                                           StructuredCloneData& aData) {
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
+  if (!BuildClonedMessageData(aData, data)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
   if (!SendAsyncMessage(PromiseFlatString(aMessage), data)) {

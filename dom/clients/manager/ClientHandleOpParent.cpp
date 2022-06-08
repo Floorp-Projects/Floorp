@@ -53,10 +53,8 @@ void ClientHandleOpParent::Init(ClientOpConstructorArgs&& aArgs) {
               rebuild.serviceWorker() = orig.serviceWorker();
 
               ipc::StructuredCloneData data;
-              data.BorrowFromClonedMessageDataForBackgroundParent(
-                  orig.clonedData());
-              if (!data.BuildClonedMessageDataForBackgroundParent(
-                      source->Manager()->Manager(), rebuild.clonedData())) {
+              data.BorrowFromClonedMessageData(orig.clonedData());
+              if (!data.BuildClonedMessageData(rebuild.clonedData())) {
                 CopyableErrorResult rv;
                 rv.ThrowAbortError("Aborting client operation");
                 Unused << PClientHandleOpParent::Send__delete__(this, rv);

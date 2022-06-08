@@ -1501,25 +1501,12 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
   if (aParam.mStateData) {
     stateData.emplace();
-    uint32_t version;
-    NS_ENSURE_SUCCESS_VOID(aParam.mStateData->GetFormatVersion(&version));
-    Get<0>(*stateData) = version;
-
-    IToplevelProtocol* topLevel = aActor->ToplevelProtocol();
-    MOZ_RELEASE_ASSERT(topLevel->GetProtocolId() == PContentMsgStart);
-    if (topLevel->GetSide() == ChildSide) {
-      auto* contentChild = static_cast<dom::ContentChild*>(topLevel);
-      if (NS_WARN_IF(!aParam.mStateData->BuildClonedMessageDataForChild(
-              contentChild, Get<1>(*stateData)))) {
-        return;
-      }
-    } else {
-      auto* contentParent = static_cast<dom::ContentParent*>(topLevel);
-      if (NS_WARN_IF(!aParam.mStateData->BuildClonedMessageDataForParent(
-              contentParent, Get<1>(*stateData)))) {
-        return;
-      }
-    }
+    // FIXME: We should fail more aggressively if this fails, as currently we'll
+    // just early return and the deserialization will break.
+    NS_ENSURE_SUCCESS_VOID(
+        aParam.mStateData->GetFormatVersion(&Get<0>(*stateData)));
+    NS_ENSURE_TRUE_VOID(
+        aParam.mStateData->BuildClonedMessageData(Get<1>(*stateData)));
   }
 
   WriteIPDLParam(aWriter, aActor, aParam.mURI);
@@ -1669,13 +1656,7 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
   if (stateData.isSome()) {
     uint32_t version = Get<0>(*stateData);
     aResult->mStateData = new nsStructuredCloneContainer(version);
-    if (aActor->GetSide() == ChildSide) {
-      aResult->mStateData->StealFromClonedMessageDataForChild(
-          Get<1>(*stateData));
-    } else {
-      aResult->mStateData->StealFromClonedMessageDataForParent(
-          Get<1>(*stateData));
-    }
+    aResult->mStateData->StealFromClonedMessageData(Get<1>(*stateData));
   }
   MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
   return true;

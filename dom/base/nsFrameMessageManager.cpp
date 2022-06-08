@@ -224,26 +224,14 @@ void MessageManagerCallback::DoGetRemoteType(nsACString& aRemoteType,
   parent->GetRemoteType(aRemoteType, aError);
 }
 
-bool MessageManagerCallback::BuildClonedMessageDataForParent(
-    ContentParent* aParent, StructuredCloneData& aData,
-    ClonedMessageData& aClonedData) {
-  return aData.BuildClonedMessageDataForParent(aParent, aClonedData);
+bool MessageManagerCallback::BuildClonedMessageData(
+    StructuredCloneData& aData, ClonedMessageData& aClonedData) {
+  return aData.BuildClonedMessageData(aClonedData);
 }
 
-bool MessageManagerCallback::BuildClonedMessageDataForChild(
-    ContentChild* aChild, StructuredCloneData& aData,
-    ClonedMessageData& aClonedData) {
-  return aData.BuildClonedMessageDataForChild(aChild, aClonedData);
-}
-
-void mozilla::dom::ipc::UnpackClonedMessageDataForParent(
+void mozilla::dom::ipc::UnpackClonedMessageData(
     const ClonedMessageData& aClonedData, StructuredCloneData& aData) {
-  aData.BorrowFromClonedMessageDataForParent(aClonedData);
-}
-
-void mozilla::dom::ipc::UnpackClonedMessageDataForChild(
-    const ClonedMessageData& aClonedData, StructuredCloneData& aData) {
-  aData.BorrowFromClonedMessageDataForChild(aClonedData);
+  aData.BorrowFromClonedMessageData(aClonedData);
 }
 
 void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
@@ -1471,7 +1459,7 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
       return true;
     }
     ClonedMessageData data;
-    if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+    if (!BuildClonedMessageData(aData, data)) {
       return false;
     }
     return cc->SendSyncMessage(PromiseFlatString(aMessage), data, aRetVal);
@@ -1484,7 +1472,7 @@ class ChildProcessMessageManagerCallback : public MessageManagerCallback {
       return NS_OK;
     }
     ClonedMessageData data;
-    if (!BuildClonedMessageDataForChild(cc, aData, data)) {
+    if (!BuildClonedMessageData(aData, data)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
     if (!cc->SendAsyncMessage(PromiseFlatString(aMessage), data)) {

@@ -32,11 +32,9 @@ ServiceWorkerCloneData::ServiceWorkerCloneData()
   MOZ_DIAGNOSTIC_ASSERT(mEventTarget);
 }
 
-bool ServiceWorkerCloneData::
-    StealFromAndBuildClonedMessageDataForBackgroundParent(
-        ClonedOrErrorMessageData& aFromClonedData,
-        mozilla::ipc::PBackgroundParent* aParent,
-        ClonedOrErrorMessageData& aToClonedData) {
+bool ServiceWorkerCloneData::StealFromAndBuildClonedMessageData(
+    ClonedOrErrorMessageData& aFromClonedData,
+    ClonedOrErrorMessageData& aToClonedData) {
   if (aFromClonedData.type() == ClonedOrErrorMessageData::TErrorMessageData) {
     mIsErrorMessageData = true;
     aToClonedData = ErrorMessageData();
@@ -46,12 +44,10 @@ bool ServiceWorkerCloneData::
   MOZ_DIAGNOSTIC_ASSERT(aFromClonedData.type() ==
                         ClonedOrErrorMessageData::TClonedMessageData);
 
-  StructuredCloneData::StealFromClonedMessageDataForBackgroundParent(
-      aFromClonedData);
+  StructuredCloneData::StealFromClonedMessageData(aFromClonedData);
 
   ClonedMessageData messageData;
-  if (!StructuredCloneData::BuildClonedMessageDataForBackgroundParent(
-          aParent, messageData)) {
+  if (!StructuredCloneData::BuildClonedMessageData(messageData)) {
     return false;
   }
 
@@ -60,8 +56,7 @@ bool ServiceWorkerCloneData::
   return true;
 }
 
-bool ServiceWorkerCloneData::BuildClonedMessageDataForBackgroundChild(
-    mozilla::ipc::PBackgroundChild* aChild,
+bool ServiceWorkerCloneData::BuildClonedMessageData(
     ClonedOrErrorMessageData& aClonedData) {
   if (IsErrorMessageData()) {
     aClonedData = ErrorMessageData();
@@ -73,8 +68,7 @@ bool ServiceWorkerCloneData::BuildClonedMessageDataForBackgroundChild(
       StructuredCloneHolder::StructuredCloneScope::DifferentProcess);
 
   ClonedMessageData messageData;
-  if (!StructuredCloneData::BuildClonedMessageDataForBackgroundChild(
-          aChild, messageData)) {
+  if (!StructuredCloneData::BuildClonedMessageData(messageData)) {
     return false;
   }
 
@@ -83,7 +77,7 @@ bool ServiceWorkerCloneData::BuildClonedMessageDataForBackgroundChild(
   return true;
 }
 
-void ServiceWorkerCloneData::CopyFromClonedMessageDataForBackgroundParent(
+void ServiceWorkerCloneData::CopyFromClonedMessageData(
     const ClonedOrErrorMessageData& aClonedData) {
   if (aClonedData.type() == ClonedOrErrorMessageData::TErrorMessageData) {
     mIsErrorMessageData = true;
@@ -93,21 +87,7 @@ void ServiceWorkerCloneData::CopyFromClonedMessageDataForBackgroundParent(
   MOZ_DIAGNOSTIC_ASSERT(aClonedData.type() ==
                         ClonedOrErrorMessageData::TClonedMessageData);
 
-  StructuredCloneData::CopyFromClonedMessageDataForBackgroundParent(
-      aClonedData);
-}
-
-void ServiceWorkerCloneData::CopyFromClonedMessageDataForBackgroundChild(
-    const ClonedOrErrorMessageData& aClonedData) {
-  if (aClonedData.type() == ClonedOrErrorMessageData::TErrorMessageData) {
-    mIsErrorMessageData = true;
-    return;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(aClonedData.type() ==
-                        ClonedOrErrorMessageData::TClonedMessageData);
-
-  StructuredCloneData::CopyFromClonedMessageDataForBackgroundChild(aClonedData);
+  StructuredCloneData::CopyFromClonedMessageData(aClonedData);
 }
 
 void ServiceWorkerCloneData::SetAsErrorMessageData() {
