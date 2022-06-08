@@ -10,6 +10,7 @@ per-file .../BUILD.gn=mbonadei@webrtc.org
 per-file *.gni=mbonadei@webrtc.org
 per-file .../*.gni=mbonadei@webrtc.org
 per-file .vpython=mbonadei@webrtc.org
+per-file .vpython3=mbonadei@webrtc.org
 per-file AUTHORS=*
 per-file DEPS=*
 per-file pylintrc=mbonadei@webrtc.org
