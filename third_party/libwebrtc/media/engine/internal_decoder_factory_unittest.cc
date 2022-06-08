@@ -55,11 +55,13 @@ TEST(InternalDecoderFactory, Av1) {
   InternalDecoderFactory factory;
   if (kIsLibaomAv1DecoderSupported) {
     EXPECT_THAT(factory.GetSupportedFormats(),
-                Contains(Field(&SdpVideoFormat::name, "AV1X")));
-    EXPECT_TRUE(factory.CreateVideoDecoder(SdpVideoFormat("AV1X")));
+                Contains(Field(&SdpVideoFormat::name, cricket::kAv1CodecName)));
+    EXPECT_TRUE(
+        factory.CreateVideoDecoder(SdpVideoFormat(cricket::kAv1CodecName)));
   } else {
-    EXPECT_THAT(factory.GetSupportedFormats(),
-                Not(Contains(Field(&SdpVideoFormat::name, "AV1X"))));
+    EXPECT_THAT(
+        factory.GetSupportedFormats(),
+        Not(Contains(Field(&SdpVideoFormat::name, cricket::kAv1CodecName))));
   }
 }
 

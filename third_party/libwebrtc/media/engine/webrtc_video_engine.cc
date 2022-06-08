@@ -172,7 +172,8 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
     VideoCodec codec(format);
     bool isCodecValidForLowerRange =
         absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName) ||
-        absl::EqualsIgnoreCase(codec.name, kAv1CodecName);
+        absl::EqualsIgnoreCase(codec.name, kAv1CodecName) ||
+        absl::EqualsIgnoreCase(codec.name, kAv1xCodecName);
     bool isFecCodec = absl::EqualsIgnoreCase(codec.name, kUlpfecCodecName) ||
                       absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
 
