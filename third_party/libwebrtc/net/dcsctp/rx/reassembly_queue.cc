@@ -34,20 +34,29 @@
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
-ReassemblyQueue::ReassemblyQueue(absl::string_view log_prefix,
-                                 TSN peer_initial_tsn,
-                                 size_t max_size_bytes)
+ReassemblyQueue::ReassemblyQueue(
+    absl::string_view log_prefix,
+    TSN peer_initial_tsn,
+    size_t max_size_bytes,
+    const DcSctpSocketHandoverState* handover_state)
     : log_prefix_(std::string(log_prefix) + "reasm: "),
       max_size_bytes_(max_size_bytes),
       watermark_bytes_(max_size_bytes * kHighWatermarkLimit),
-      last_assembled_tsn_watermark_(
-          tsn_unwrapper_.Unwrap(TSN(*peer_initial_tsn - 1))),
+      last_assembled_tsn_watermark_(tsn_unwrapper_.Unwrap(
+          handover_state ? TSN(handover_state->rx.last_assembled_tsn)
+                         : TSN(*peer_initial_tsn - 1))),
+      last_completed_reset_req_seq_nbr_(
+          handover_state
+              ? ReconfigRequestSN(
+                    handover_state->rx.last_completed_deferred_reset_req_sn)
+              : ReconfigRequestSN(0)),
       streams_(std::make_unique<TraditionalReassemblyStreams>(
           log_prefix_,
           [this](rtc::ArrayView<const UnwrappedTSN> tsns,
                  DcSctpMessage message) {
             AddReassembledMessage(tsns, std::move(message));
-          })) {}
+          },
+          handover_state)) {}
 
 void ReassemblyQueue::Add(TSN tsn, Data data) {
   RTC_DCHECK(IsConsistent());
@@ -240,6 +249,24 @@ bool ReassemblyQueue::IsConsistent() const {
   // enforced in this class. This comparison will still trigger if queued_bytes_
   // became "negative".
   return (queued_bytes_ >= 0 && queued_bytes_ <= 2 * max_size_bytes_);
+}
+
+HandoverReadinessStatus ReassemblyQueue::GetHandoverReadiness() const {
+  HandoverReadinessStatus status = streams_->GetHandoverReadiness();
+  if (!delivered_tsns_.empty()) {
+    status.Add(HandoverUnreadinessReason::kReassemblyQueueDeliveredTSNsGap);
+  }
+  if (deferred_reset_streams_.has_value()) {
+    status.Add(HandoverUnreadinessReason::kStreamResetDeferred);
+  }
+  return status;
+}
+
+void ReassemblyQueue::AddHandoverState(DcSctpSocketHandoverState& state) {
+  state.rx.last_assembled_tsn = last_assembled_tsn_watermark_.Wrap().value();
+  state.rx.last_completed_deferred_reset_req_sn =
+      last_completed_reset_req_seq_nbr_.value();
+  streams_->AddHandoverState(state);
 }
 
 }  // namespace dcsctp
