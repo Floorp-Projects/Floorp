@@ -18,7 +18,7 @@ main(...arguments);
 
 async function main(outPath) {
   const capabililitySet = RecipeRunner.getCapabilities();
-  await IOUtils.writeUTF8(
+  await OS.File.writeAtomic(
     outPath,
     JSON.stringify(
       {
