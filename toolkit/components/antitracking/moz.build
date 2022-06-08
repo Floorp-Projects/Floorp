@@ -46,6 +46,7 @@ EXPORTS.mozilla = [
     "ContentBlockingUserInteraction.h",
     "DynamicFpiRedirectHeuristic.h",
     "PartitioningExceptionList.h",
+    "RejectForeignAllowList.h",
     "StorageAccess.h",
     "StoragePrincipalHelper.h",
     "URLDecorationStripper.h",
