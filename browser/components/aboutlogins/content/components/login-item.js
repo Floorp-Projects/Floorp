@@ -5,7 +5,7 @@
 import {
   recordTelemetryEvent,
   promptForPrimaryPassword,
-} from "../aboutLoginsUtils.mjs";
+} from "../aboutLoginsUtils.js";
 
 export default class LoginItem extends HTMLElement {
   /**
