@@ -559,6 +559,9 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
     case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 1.0f;
       break;
+    case FloatID::TextScaleFactor:
+      aResult = WindowsUIUtils::ComputeTextScaleFactor();
+      break;
     default:
       aResult = -1.0;
       res = NS_ERROR_FAILURE;
