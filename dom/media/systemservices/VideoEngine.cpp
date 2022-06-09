@@ -204,11 +204,9 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
 }
 
 already_AddRefed<VideoEngine> VideoEngine::Create(
-    UniquePtr<const webrtc::Config>&& aConfig) {
+    const CaptureDeviceType& aCaptureDeviceType) {
   LOG(("%s", __PRETTY_FUNCTION__));
-  LOG(("Creating new VideoEngine with CaptureDeviceType %s",
-       aConfig->Get<CaptureDeviceInfo>().TypeName()));
-  return do_AddRef(new VideoEngine(std::move(aConfig)));
+  return do_AddRef(new VideoEngine(aCaptureDeviceType));
 }
 
 VideoEngine::CaptureEntry::CaptureEntry(
@@ -249,11 +247,11 @@ int32_t VideoEngine::GenerateId() {
   return mId = sId++;
 }
 
-VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
-    : mId(0),
-      mCaptureDevInfo(aConfig->Get<CaptureDeviceInfo>()),
-      mDeviceInfo(nullptr) {
+VideoEngine::VideoEngine(const CaptureDeviceType& aCaptureDeviceType)
+    : mId(0), mCaptureDevInfo(aCaptureDeviceType), mDeviceInfo(nullptr) {
   LOG(("%s", __PRETTY_FUNCTION__));
+  LOG(("Creating new VideoEngine with CaptureDeviceType %s",
+       mCaptureDevInfo.TypeName()));
 }
 
 }  // namespace mozilla::camera
