@@ -1306,7 +1306,7 @@ version = "1.0.9"
 criteria = "safe-to-deploy"
 
 [[unaudited.serde]]
-version = "1.0.136"
+version = "1.0.137"
 criteria = "safe-to-deploy"
 
 [[unaudited.serde_bytes]]
@@ -1314,7 +1314,7 @@ version = "0.11.6"
 criteria = "safe-to-deploy"
 
 [[unaudited.serde_derive]]
-version = "1.0.136"
+version = "1.0.137"
 criteria = "safe-to-deploy"
 
 [[unaudited.serde_json]]

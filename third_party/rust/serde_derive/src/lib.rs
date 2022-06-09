@@ -13,7 +13,7 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.136")]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.137")]
 #![allow(unknown_lints, bare_trait_objects)]
 // Ignored clippy lints
 #![allow(
@@ -60,6 +60,7 @@
     clippy::use_self,
     clippy::wildcard_imports
 )]
+#![cfg_attr(all(test, exhaustive), feature(non_exhaustive_omitted_patterns_lint))]
 
 #[macro_use]
 extern crate quote;
