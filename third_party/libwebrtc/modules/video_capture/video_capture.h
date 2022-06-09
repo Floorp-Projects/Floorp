@@ -11,7 +11,6 @@
 #ifndef MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 #define MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 
-#include "modules/audio_processing/include/config.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/include/module.h"
