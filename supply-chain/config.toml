@@ -1602,7 +1602,7 @@ version = "2.1.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.uuid]]
-version = "0.8.1"
+version = "0.8.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.version_check]]

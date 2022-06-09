@@ -138,6 +138,7 @@ const HYPHEN_POSITIONS: [usize; 4] = [8, 13, 18, 23];
 /// The `start` parameter allows writing a prefix (such as
 /// "urn:uuid:") to the buffer that's included in the final encoded
 /// UUID.
+#[allow(clippy::needless_range_loop)]
 fn encode<'a>(
     full_buffer: &'a mut [u8],
     start: usize,
@@ -215,22 +216,26 @@ impl Hyphenated {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_hyphenated()
-    ///         .encode_lower(&mut Uuid::encode_buffer()),
-    ///     "936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated()
+    ///             .encode_lower(&mut Uuid::encode_buffer()),
+    ///         "936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 40];
-    /// uuid.to_hyphenated().encode_lower(&mut buf);
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 40];
+    ///     uuid.to_hyphenated().encode_lower(&mut buf);
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -261,22 +266,26 @@ impl Hyphenated {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_hyphenated()
-    ///         .encode_upper(&mut Uuid::encode_buffer()),
-    ///     "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated()
+    ///             .encode_upper(&mut Uuid::encode_buffer()),
+    ///         "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 40];
-    /// uuid.to_hyphenated().encode_upper(&mut buf);
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 40];
+    ///     uuid.to_hyphenated().encode_upper(&mut buf);
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -322,26 +331,30 @@ impl<'a> HyphenatedRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_hyphenated()
-    ///         .encode_lower(&mut Uuid::encode_buffer()),
-    ///     "936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated()
+    ///             .encode_lower(&mut Uuid::encode_buffer()),
+    ///         "936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
+    ///     
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 40];
+    ///     uuid.to_hyphenated().encode_lower(&mut buf);
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated().encode_lower(&mut buf),
+    ///         "936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 40];
-    /// uuid.to_hyphenated().encode_lower(&mut buf);
-    /// assert_eq!(
-    ///     uuid.to_hyphenated().encode_lower(&mut buf),
-    ///     "936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
-    /// );
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -372,25 +385,29 @@ impl<'a> HyphenatedRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_hyphenated()
-    ///         .encode_upper(&mut Uuid::encode_buffer()),
-    ///     "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated()
+    ///             .encode_upper(&mut Uuid::encode_buffer()),
+    ///         "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 40];
-    /// assert_eq!(
-    ///     uuid.to_hyphenated().encode_upper(&mut buf),
-    ///     "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 40];
+    ///     assert_eq!(
+    ///         uuid.to_hyphenated().encode_upper(&mut buf),
+    ///         "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -435,24 +452,28 @@ impl Simple {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
-    ///     "936da01f9abd4d9d80c702af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
+    ///         "936da01f9abd4d9d80c702af85c822a8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 36];
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_lower(&mut buf),
-    ///     "936da01f9abd4d9d80c702af85c822a8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936da01f9abd4d9d80c702af85c822a8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 36];
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_lower(&mut buf),
+    ///         "936da01f9abd4d9d80c702af85c822a8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936da01f9abd4d9d80c702af85c822a8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -478,24 +499,28 @@ impl Simple {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_upper(&mut Uuid::encode_buffer()),
-    ///     "936DA01F9ABD4D9D80C702AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_upper(&mut Uuid::encode_buffer()),
+    ///         "936DA01F9ABD4D9D80C702AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 36];
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_upper(&mut buf),
-    ///     "936DA01F9ABD4D9D80C702AF85C822A8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936DA01F9ABD4D9D80C702AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 36];
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_upper(&mut buf),
+    ///         "936DA01F9ABD4D9D80C702AF85C822A8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936DA01F9ABD4D9D80C702AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -540,24 +565,28 @@ impl<'a> SimpleRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
-    ///     "936da01f9abd4d9d80c702af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
+    ///         "936da01f9abd4d9d80c702af85c822a8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 36];
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_lower(&mut buf),
-    ///     "936da01f9abd4d9d80c702af85c822a8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936da01f9abd4d9d80c702af85c822a8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 36];
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_lower(&mut buf),
+    ///         "936da01f9abd4d9d80c702af85c822a8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936da01f9abd4d9d80c702af85c822a8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -583,24 +612,28 @@ impl<'a> SimpleRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_upper(&mut Uuid::encode_buffer()),
-    ///     "936DA01F9ABD4D9D80C702AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_upper(&mut Uuid::encode_buffer()),
+    ///         "936DA01F9ABD4D9D80C702AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 36];
-    /// assert_eq!(
-    ///     uuid.to_simple().encode_upper(&mut buf),
-    ///     "936DA01F9ABD4D9D80C702AF85C822A8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"936DA01F9ABD4D9D80C702AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 36];
+    ///     assert_eq!(
+    ///         uuid.to_simple().encode_upper(&mut buf),
+    ///         "936DA01F9ABD4D9D80C702AF85C822A8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"936DA01F9ABD4D9D80C702AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -646,25 +679,29 @@ impl Urn {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
-    ///     "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
+    ///         "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 49];
-    /// uuid.to_urn().encode_lower(&mut buf);
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_lower(&mut buf),
-    ///     "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 49];
+    ///     uuid.to_urn().encode_lower(&mut buf);
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_lower(&mut buf),
+    ///         "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
+    ///     );
+    ///     
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -696,24 +733,28 @@ impl Urn {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_upper(&mut Uuid::encode_buffer()),
-    ///     "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_upper(&mut Uuid::encode_buffer()),
+    ///         "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 49];
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_upper(&mut buf),
-    ///     "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 49];
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_upper(&mut buf),
+    ///         "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -760,25 +801,29 @@ impl<'a> UrnRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936DA01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
-    ///     "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
+    ///         "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 49];
-    /// uuid.to_urn().encode_lower(&mut buf);
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_lower(&mut buf),
-    ///     "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 49];
+    ///     uuid.to_urn().encode_lower(&mut buf);
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_lower(&mut buf),
+    ///         "urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"urn:uuid:936da01f-9abd-4d9d-80c7-02af85c822a8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_lower<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {
@@ -810,24 +855,28 @@ impl<'a> UrnRef<'a> {
     /// ```rust
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8").unwrap();
+    /// fn main() -> Result<(), uuid::Error> {
+    ///     let uuid = Uuid::parse_str("936da01f9abd4d9d80c702af85c822a8")?;
     ///
-    /// // the encoded portion is returned
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_upper(&mut Uuid::encode_buffer()),
-    ///     "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
+    ///     // the encoded portion is returned
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_upper(&mut Uuid::encode_buffer()),
+    ///         "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
     ///
-    /// // the buffer is mutated directly, and trailing contents remains
-    /// let mut buf = [b'!'; 49];
-    /// assert_eq!(
-    ///     uuid.to_urn().encode_upper(&mut buf),
-    ///     "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
-    /// );
-    /// assert_eq!(
-    ///     &buf as &[_],
-    ///     b"urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
-    /// );
+    ///     // the buffer is mutated directly, and trailing contents remains
+    ///     let mut buf = [b'!'; 49];
+    ///     assert_eq!(
+    ///         uuid.to_urn().encode_upper(&mut buf),
+    ///         "urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+    ///     );
+    ///     assert_eq!(
+    ///         &buf as &[_],
+    ///         b"urn:uuid:936DA01F-9ABD-4D9D-80C7-02AF85C822A8!!!!" as &[_]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     /// */
     pub fn encode_upper<'buf>(&self, buffer: &'buf mut [u8]) -> &'buf mut str {

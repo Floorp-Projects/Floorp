@@ -59,7 +59,7 @@ impl Timestamp {
     /// This constructs a `Timestamp` from the seconds and fractional
     /// nanoseconds of a unix timestamp, converting the duration since 1970
     /// into the number of 100-nanosecond intervals since 00:00:00.00, 15
-    /// Oct 1982 specified by RFC4122 and used internally by `Timestamp`.
+    /// Oct 1582 specified by RFC4122 and used internally by `Timestamp`.
     ///
     /// The function is not guaranteed to produce monotonically increasing
     /// values however. There is a slight possibility that two successive
@@ -77,7 +77,8 @@ impl Timestamp {
         let counter = context.generate_sequence(seconds, subsec_nanos);
         let ticks = UUID_TICKS_BETWEEN_EPOCHS
             + seconds * 10_000_000
-            + (subsec_nanos as u64 / 100);
+            + u64::from(subsec_nanos) / 100;
+
         Timestamp { ticks, counter }
     }
 
@@ -99,10 +100,10 @@ impl Timestamp {
     /// thus the maximum precision represented by the fractional nanoseconds
     /// value is less than its unit size (100 ns vs. 1 ns).
     pub const fn to_unix(&self) -> (u64, u32) {
-        let unix_ticks = self.ticks - UUID_TICKS_BETWEEN_EPOCHS;
         (
-            unix_ticks / 10_000_000,
-            (unix_ticks % 10_000_000) as u32 * 100,
+            (self.ticks - UUID_TICKS_BETWEEN_EPOCHS) / 10_000_000,
+            ((self.ticks - UUID_TICKS_BETWEEN_EPOCHS) % 10_000_000) as u32
+                * 100,
         )
     }
 

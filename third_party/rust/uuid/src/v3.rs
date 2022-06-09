@@ -15,10 +15,10 @@ impl Uuid {
     /// Note that usage of this method requires the `v3` feature of this crate
     /// to be enabled.
     ///
-    /// [`NAMESPACE_DNS`]: ns/const.NAMESPACE_DNS.html
-    /// [`NAMESPACE_OID`]: ns/const.NAMESPACE_OID.html
-    /// [`NAMESPACE_URL`]: ns/const.NAMESPACE_URL.html
-    /// [`NAMESPACE_X500`]: ns/const.NAMESPACE_X500.html
+    /// [`NAMESPACE_DNS`]: #associatedconstant.NAMESPACE_DNS
+    /// [`NAMESPACE_OID`]: #associatedconstant.NAMESPACE_OID
+    /// [`NAMESPACE_URL`]: #associatedconstant.NAMESPACE_URL
+    /// [`NAMESPACE_X500`]: #associatedconstant.NAMESPACE_X500
     pub fn new_v3(namespace: &Uuid, name: &[u8]) -> Uuid {
         let mut context = md5::Context::new();
 
@@ -28,7 +28,7 @@ impl Uuid {
         let computed = context.compute();
         let bytes = computed.into();
 
-        let mut builder = crate::builder::Builder::from_bytes(bytes);
+        let mut builder = crate::Builder::from_bytes(bytes);
 
         builder
             .set_variant(Variant::RFC4122)

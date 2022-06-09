@@ -276,11 +276,12 @@ impl Uuid {
 ///     .set_version(Version::Random)
 ///     .build();
 /// ```
-#[allow(missing_copy_implementations)]
-#[derive(Debug)]
-pub struct Builder(crate::Bytes);
+// TODO: remove in 1.0.0
+#[allow(dead_code)]
+#[deprecated]
+pub type Builder = crate::Builder;
 
-impl Builder {
+impl crate::Builder {
     /// Creates a `Builder` using the supplied big-endian bytes.
     ///
     /// # Examples
@@ -398,13 +399,13 @@ impl Builder {
         Uuid::from_fields(d1, d2, d3, d4).map(|uuid| {
             let bytes = *uuid.as_bytes();
 
-            Builder::from_bytes(bytes)
+            crate::Builder::from_bytes(bytes)
         })
     }
 
     /// Creates a `Builder` from a big-endian 128bit value.
     pub fn from_u128(v: u128) -> Self {
-        Builder::from_bytes(*Uuid::from_u128(v).as_bytes())
+        crate::Builder::from_bytes(*Uuid::from_u128(v).as_bytes())
     }
 
     /// Creates a `Builder` with an initial [`Uuid::nil`].
@@ -467,8 +468,6 @@ impl Builder {
     ///
     /// [`Uuid`]: struct.Uuid.html
     pub fn build(&mut self) -> Uuid {
-        let uuid = Uuid::from_bytes(self.0);
-
-        uuid
+        Uuid::from_bytes(self.0)
     }
 }

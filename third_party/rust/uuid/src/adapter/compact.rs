@@ -32,7 +32,9 @@ mod tests {
 
     #[test]
     fn test_serialize_compact() {
-        #[derive(serde::Serialize, Debug, serde::Deserialize, PartialEq)]
+        #[derive(
+            serde_derive::Serialize, Debug, serde_derive::Deserialize, PartialEq,
+        )]
         struct UuidContainer {
             #[serde(with = "super")]
             u: crate::Uuid,
