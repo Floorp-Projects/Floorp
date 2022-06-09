@@ -14,12 +14,20 @@ objects but skipped for "untested" interface objects.</p>
 <script>
 "use strict";
 
-function FooParent() {}
+function FooParent() {
+    if (!new.target) {
+        throw new TypeError('FooParent() must be called with new');
+    }
+}
 Object.defineProperty(window, "Foo", {
     enumerable: false,
     writable: true,
     configurable: true,
-    value: function Foo() {}
+    value: function Foo() {
+        if (!new.target) {
+            throw new TypeError('Foo() must be called with new');
+        }
+    }
   });
 Object.defineProperty(window.Foo, "prototype", {
     writable: false,
