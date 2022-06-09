@@ -123,11 +123,6 @@
 //! currently default `Dispatch`. This is used primarily by `tracing`
 //! instrumentation.
 //!
-//! [`Subscriber`]: Subscriber
-//! [`with_default`]: with_default
-//! [`set_global_default`]: set_global_default
-//! [`get_default`]: get_default
-//! [`Dispatch`]: Dispatch
 use crate::{
     callsite, span,
     subscriber::{self, NoSubscriber, Subscriber},
@@ -139,7 +134,7 @@ use crate::stdlib::{
     fmt,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc, Weak,
+        Arc,
     },
 };
 
@@ -147,11 +142,11 @@ use crate::stdlib::{
 use crate::stdlib::{
     cell::{Cell, RefCell, RefMut},
     error,
+    sync::Weak,
 };
 
 /// `Dispatch` trace data to a [`Subscriber`].
 ///
-/// [`Subscriber`]: Subscriber
 #[derive(Clone)]
 pub struct Dispatch {
     subscriber: Arc<dyn Subscriber + Send + Sync>,
@@ -393,6 +388,7 @@ fn get_global() -> Option<&'static Dispatch> {
     }
 }
 
+#[cfg(feature = "std")]
 pub(crate) struct Registrar(Weak<dyn Subscriber + Send + Sync>);
 
 impl Dispatch {
@@ -418,6 +414,7 @@ impl Dispatch {
         me
     }
 
+    #[cfg(feature = "std")]
     pub(crate) fn registrar(&self) -> Registrar {
         Registrar(Arc::downgrade(&self.subscriber))
     }
@@ -579,7 +576,7 @@ impl Dispatch {
     /// [`Subscriber`]: super::subscriber::Subscriber
     /// [`drop_span`]: super::subscriber::Subscriber::drop_span
     /// [`new_span`]: super::subscriber::Subscriber::new_span
-    /// [`try_close`]: #method.try_close
+    /// [`try_close`]: Entered::try_close()
     #[inline]
     #[deprecated(since = "0.1.2", note = "use `Dispatch::try_close` instead")]
     pub fn drop_span(&self, id: span::Id) {
@@ -657,14 +654,8 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl Registrar {
-    pub(crate) fn try_register(
-        &self,
-        metadata: &'static Metadata<'static>,
-    ) -> Option<subscriber::Interest> {
-        self.0.upgrade().map(|s| s.register_callsite(metadata))
-    }
-
     pub(crate) fn upgrade(&self) -> Option<Dispatch> {
         self.0.upgrade().map(|subscriber| Dispatch { subscriber })
     }

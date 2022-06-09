@@ -1,9 +1,40 @@
+# 0.1.27 (June 7, 2022)
+
+This release of `tracing-core` introduces a new `DefaultCallsite` type, which
+can be used by instrumentation crates rather than implementing their own
+callsite types. Using `DefaultCallsite` may offer reduced overhead from callsite
+registration.
+
+### Added
+
+- `DefaultCallsite`, a pre-written `Callsite` implementation for use in
+  instrumentation crates ([#2083])
+- `ValueSet::len` and `Record::len` methods returning the number of fields in a
+  `ValueSet` or `Record` ([#2152])
+
+### Changed
+
+- Replaced `lazy_static` dependency with `once_cell` ([#2147])
+
+### Documented
+
+- Added documentation to the `callsite` module ([#2088], [#2149])
+
+Thanks to new contributors @jamesmunns and @james7132 for contributing to this
+release!
+
+[#2083]: https://github.com/tokio-rs/tracing/pull/2083
+[#2152]: https://github.com/tokio-rs/tracing/pull/2152
+[#2147]: https://github.com/tokio-rs/tracing/pull/2147
+[#2088]: https://github.com/tokio-rs/tracing/pull/2088
+[#2149]: https://github.com/tokio-rs/tracing/pull/2149
+
 # 0.1.26 (April 14, 2022)
 
 This release adds a `Value` implementation for `Box<T: Value>` to allow
 recording boxed values more conveniently. In particular, this should improve
 the ergonomics of the implementations for `dyn std::error::Error` trait objects,
-including those added in [v0.1.25]. 
+including those added in [v0.1.25].
 
 ### Added
 

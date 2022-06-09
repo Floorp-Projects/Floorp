@@ -47,13 +47,13 @@ use crate::stdlib::{
 ///
 /// [span]: super::span
 /// [event]: super::event
-/// [name]: #method.name
-/// [target]: #method.target
-/// [fields]: #method.fields
-/// [verbosity level]: #method.level
-/// [file name]: #method.file
-/// [line number]: #method.line
-/// [module path]: #method.module
+/// [name]: Metadata::name()
+/// [target]: Metadata::target()
+/// [fields]: Metadata::fields()
+/// [verbosity level]: Metadata::level()
+/// [file name]: Metadata::file()
+/// [line number]: Metadata::line()
+/// [module path]: Metadata::module_path()
 /// [`Subscriber`]: super::subscriber::Subscriber
 /// [`id`]: Metadata::id
 /// [callsite identifier]: super::callsite::Identifier
@@ -604,8 +604,7 @@ impl LevelFilter {
     /// Returns the most verbose [`Level`] that this filter accepts, or `None`
     /// if it is [`OFF`].
     ///
-    /// [`Level`]: super::Level
-    /// [`OFF`]: #associatedconstant.OFF
+    /// [`OFF`]: LevelFilter::OFF
     pub const fn into_level(self) -> Option<Level> {
         self.0
     }

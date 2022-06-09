@@ -100,7 +100,6 @@
 //! [`record_value`]: Visit::record_value
 //! [`record_debug`]: Visit::record_debug
 //!
-//! [`Value`]: Value
 //! [span]: super::span
 //! [`Event`]: super::event::Event
 //! [`Metadata`]: super::metadata::Metadata
@@ -110,7 +109,6 @@
 //! [`record`]: super::subscriber::Subscriber::record
 //! [`event`]:  super::subscriber::Subscriber::event
 //! [`Value::record`]: Value::record
-//! [`Visit`]: Visit
 use crate::callsite;
 use crate::stdlib::{
     borrow::Borrow,
@@ -249,13 +247,11 @@ pub struct Iter {
 /// <code>std::error::Error</code> trait.
 /// </pre></div>
 ///
-/// [`Value`]: Value
 /// [recorded]: Value::record
 /// [`Subscriber`]: super::subscriber::Subscriber
 /// [records an `Event`]: super::subscriber::Subscriber::event
 /// [set of `Value`s added to a `Span`]: super::subscriber::Subscriber::record
 /// [`Event`]: super::event::Event
-/// [`ValueSet`]: ValueSet
 pub trait Visit {
     /// Visits an arbitrary type implementing the [`valuable`] crate's `Valuable` trait.
     ///
@@ -939,6 +935,19 @@ impl<'a> ValueSet<'a> {
         }
     }
 
+    /// Returns the number of fields in this `ValueSet` that would be visited
+    /// by a given [visitor] to the [`ValueSet::record()`] method.
+    ///
+    /// [visitor]: Visit
+    /// [`ValueSet::record()`]: ValueSet::record()
+    pub fn len(&self) -> usize {
+        let my_callsite = self.callsite();
+        self.values
+            .iter()
+            .filter(|(field, _)| field.callsite() == my_callsite)
+            .count()
+    }
+
     /// Returns `true` if this `ValueSet` contains a value for the given `Field`.
     pub(crate) fn contains(&self, field: &Field) -> bool {
         field.callsite() == self.callsite()
@@ -949,7 +958,7 @@ impl<'a> ValueSet<'a> {
     }
 
     /// Returns true if this `ValueSet` contains _no_ values.
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         let my_callsite = self.callsite();
         self.values
             .iter()

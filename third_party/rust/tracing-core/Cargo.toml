@@ -13,29 +13,54 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "tracing-core"
-version = "0.1.26"
+version = "0.1.27"
 authors = ["Tokio Contributors <team@tokio.rs>"]
-description = "Core primitives for application-level tracing.\n"
+description = """
+Core primitives for application-level tracing.
+"""
 homepage = "https://tokio.rs"
 readme = "README.md"
-keywords = ["logging", "tracing", "profiling"]
-categories = ["development-tools::debugging", "development-tools::profiling", "asynchronous"]
+keywords = [
+    "logging",
+    "tracing",
+    "profiling",
+]
+categories = [
+    "development-tools::debugging",
+    "development-tools::profiling",
+    "asynchronous",
+]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tracing"
+
 [package.metadata.docs.rs]
 all-features = true
-rustc-args = ["--cfg", "tracing_unstable"]
-rustdoc-args = ["--cfg", "docsrs", "--cfg", "tracing_unstable"]
-[dependencies.lazy_static]
-version = "1.0.2"
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+    "--cfg",
+    "tracing_unstable",
+]
+rustc-args = [
+    "--cfg",
+    "tracing_unstable",
+]
+
+[dependencies.once_cell]
+version = "1.12"
 optional = true
 
 [features]
-default = ["std", "valuable/std"]
-std = ["lazy_static"]
+default = [
+    "std",
+    "valuable/std",
+]
+std = ["once_cell"]
+
 [target."cfg(tracing_unstable)".dependencies.valuable]
 version = "0.1.0"
 optional = true
 default_features = false
+
 [badges.maintenance]
 status = "actively-developed"
