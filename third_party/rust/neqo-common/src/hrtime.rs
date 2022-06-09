@@ -82,6 +82,7 @@ impl PeriodSet {
 #[allow(non_camel_case_types)]
 mod mac {
     use std::mem::size_of;
+    use std::ptr::addr_of_mut;
 
     // These are manually extracted from the many bindings generated
     // by bindgen when provided with the simple header:
@@ -162,7 +163,7 @@ mod mac {
             thread_policy_set(
                 pthread_mach_thread_np(pthread_self()),
                 THREAD_TIME_CONSTRAINT_POLICY,
-                &mut policy as *mut thread_time_constraint_policy as *mut _,
+                addr_of_mut!(policy) as _, // horror!
                 THREAD_TIME_CONSTRAINT_POLICY_COUNT,
             )
         };
@@ -197,7 +198,7 @@ mod mac {
             thread_policy_get(
                 pthread_mach_thread_np(pthread_self()),
                 THREAD_TIME_CONSTRAINT_POLICY,
-                &mut policy as *mut thread_time_constraint_policy as *mut _,
+                addr_of_mut!(policy) as _, // horror!
                 &mut count,
                 &mut get_default,
             )

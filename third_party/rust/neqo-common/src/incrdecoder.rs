@@ -178,7 +178,7 @@ mod tests {
 
             for tail in 1..db.len() {
                 let split = db.len() - tail;
-                let mut dv = Decoder::from(&db[0..split]);
+                let mut dv = Decoder::from(&db.as_ref()[0..split]);
                 eprintln!("  split at {}: {:?}", split, dv);
 
                 // Clone the basic decoder for each iteration of the loop.
@@ -192,7 +192,7 @@ mod tests {
                 if tail > 1 {
                     assert_eq!(res, None);
                     assert!(dec.min_remaining() > 0);
-                    let mut dv = Decoder::from(&db[split..]);
+                    let mut dv = Decoder::from(&db.as_ref()[split..]);
                     eprintln!("  split remainder {}: {:?}", split, dv);
                     res = dec.consume(&mut dv);
                     assert_eq!(dv.remaining(), 1);
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn zero_len() {
         let enc = Encoder::from_hex("ff");
-        let mut dec = Decoder::new(&enc);
+        let mut dec = Decoder::new(enc.as_ref());
         let mut incr = IncrementalDecoderBuffer::new(0);
         assert_eq!(incr.consume(&mut dec), Some(Vec::new()));
         assert_eq!(dec.remaining(), enc.len());
@@ -244,7 +244,7 @@ mod tests {
 
         for tail in 1..db.len() {
             let split = db.len() - tail;
-            let mut dv = Decoder::from(&db[0..split]);
+            let mut dv = Decoder::from(&db.as_ref()[0..split]);
             eprintln!("  split at {}: {:?}", split, dv);
 
             // Clone the basic decoder for each iteration of the loop.
@@ -256,7 +256,7 @@ mod tests {
             if tail > 1 {
                 assert!(!res);
                 assert!(dec.min_remaining() > 0);
-                let mut dv = Decoder::from(&db[split..]);
+                let mut dv = Decoder::from(&db.as_ref()[split..]);
                 eprintln!("  split remainder {}: {:?}", split, dv);
                 res = dec.consume(&mut dv);
                 assert_eq!(dv.remaining(), 1);

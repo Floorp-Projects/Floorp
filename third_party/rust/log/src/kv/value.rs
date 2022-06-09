@@ -37,6 +37,49 @@ impl<'v> ToValue for Value<'v> {
     }
 }
 
+/// Get a value from a type implementing `std::fmt::Debug`.
+#[macro_export]
+macro_rules! as_debug {
+    ($capture:expr) => {
+        $crate::kv::Value::from_debug(&$capture)
+    };
+}
+
+/// Get a value from a type implementing `std::fmt::Display`.
+#[macro_export]
+macro_rules! as_display {
+    ($capture:expr) => {
+        $crate::kv::Value::from_display(&$capture)
+    };
+}
+
+/// Get a value from an error.
+#[cfg(feature = "kv_unstable_std")]
+#[macro_export]
+macro_rules! as_error {
+    ($capture:expr) => {
+        $crate::kv::Value::from_dyn_error(&$capture)
+    };
+}
+
+#[cfg(feature = "kv_unstable_serde")]
+/// Get a value from a type implementing `serde::Serialize`.
+#[macro_export]
+macro_rules! as_serde {
+    ($capture:expr) => {
+        $crate::kv::Value::from_serde(&$capture)
+    };
+}
+
+/// Get a value from a type implementing `sval::value::Value`.
+#[cfg(feature = "kv_unstable_sval")]
+#[macro_export]
+macro_rules! as_sval {
+    ($capture:expr) => {
+        $crate::kv::Value::from_sval(&$capture)
+    };
+}
+
 /// A value in a structured key-value pair.
 ///
 /// # Capturing values
@@ -263,6 +306,78 @@ impl<'v> Value<'v> {
     pub fn downcast_ref<T: 'static>(&self) -> Option<&T> {
         self.inner.downcast_ref::<T>()
     }
+
+    /// Inspect this value using a simple visitor.
+    pub fn visit(&self, visitor: impl Visit<'v>) -> Result<(), Error> {
+        struct Visitor<V>(V);
+
+        impl<'v, V> value_bag::visit::Visit<'v> for Visitor<V>
+        where
+            V: Visit<'v>,
+        {
+            fn visit_any(&mut self, value: ValueBag) -> Result<(), value_bag::Error> {
+                self.0
+                    .visit_any(Value { inner: value })
+                    .map_err(Error::into_value)
+            }
+
+            fn visit_u64(&mut self, value: u64) -> Result<(), value_bag::Error> {
+                self.0.visit_u64(value).map_err(Error::into_value)
+            }
+
+            fn visit_i64(&mut self, value: i64) -> Result<(), value_bag::Error> {
+                self.0.visit_i64(value).map_err(Error::into_value)
+            }
+
+            fn visit_u128(&mut self, value: u128) -> Result<(), value_bag::Error> {
+                self.0.visit_u128(value).map_err(Error::into_value)
+            }
+
+            fn visit_i128(&mut self, value: i128) -> Result<(), value_bag::Error> {
+                self.0.visit_i128(value).map_err(Error::into_value)
+            }
+
+            fn visit_f64(&mut self, value: f64) -> Result<(), value_bag::Error> {
+                self.0.visit_f64(value).map_err(Error::into_value)
+            }
+
+            fn visit_bool(&mut self, value: bool) -> Result<(), value_bag::Error> {
+                self.0.visit_bool(value).map_err(Error::into_value)
+            }
+
+            fn visit_str(&mut self, value: &str) -> Result<(), value_bag::Error> {
+                self.0.visit_str(value).map_err(Error::into_value)
+            }
+
+            fn visit_borrowed_str(&mut self, value: &'v str) -> Result<(), value_bag::Error> {
+                self.0.visit_borrowed_str(value).map_err(Error::into_value)
+            }
+
+            fn visit_char(&mut self, value: char) -> Result<(), value_bag::Error> {
+                self.0.visit_char(value).map_err(Error::into_value)
+            }
+
+            #[cfg(feature = "kv_unstable_std")]
+            fn visit_error(
+                &mut self,
+                err: &(dyn std::error::Error + 'static),
+            ) -> Result<(), value_bag::Error> {
+                self.0.visit_error(err).map_err(Error::into_value)
+            }
+
+            #[cfg(feature = "kv_unstable_std")]
+            fn visit_borrowed_error(
+                &mut self,
+                err: &'v (dyn std::error::Error + 'static),
+            ) -> Result<(), value_bag::Error> {
+                self.0.visit_borrowed_error(err).map_err(Error::into_value)
+            }
+        }
+
+        self.inner
+            .visit(&mut Visitor(visitor))
+            .map_err(Error::from_value)
+    }
 }
 
 impl<'v> fmt::Debug for Value<'v> {
@@ -326,9 +441,59 @@ impl ToValue for str {
     }
 }
 
+impl ToValue for u128 {
+    fn to_value(&self) -> Value {
+        Value::from(self)
+    }
+}
+
+impl ToValue for i128 {
+    fn to_value(&self) -> Value {
+        Value::from(self)
+    }
+}
+
+impl ToValue for std::num::NonZeroU128 {
+    fn to_value(&self) -> Value {
+        Value::from(self)
+    }
+}
+
+impl ToValue for std::num::NonZeroI128 {
+    fn to_value(&self) -> Value {
+        Value::from(self)
+    }
+}
+
 impl<'v> From<&'v str> for Value<'v> {
     fn from(value: &'v str) -> Self {
         Value::from_value_bag(value)
+    }
+}
+
+impl<'v> From<&'v u128> for Value<'v> {
+    fn from(value: &'v u128) -> Self {
+        Value::from_value_bag(value)
+    }
+}
+
+impl<'v> From<&'v i128> for Value<'v> {
+    fn from(value: &'v i128) -> Self {
+        Value::from_value_bag(value)
+    }
+}
+
+impl<'v> From<&'v std::num::NonZeroU128> for Value<'v> {
+    fn from(v: &'v std::num::NonZeroU128) -> Value<'v> {
+        // SAFETY: `NonZeroU128` and `u128` have the same ABI
+        Value::from_value_bag(unsafe { std::mem::transmute::<&std::num::NonZeroU128, &u128>(v) })
+    }
+}
+
+impl<'v> From<&'v std::num::NonZeroI128> for Value<'v> {
+    fn from(v: &'v std::num::NonZeroI128) -> Value<'v> {
+        // SAFETY: `NonZeroI128` and `i128` have the same ABI
+        Value::from_value_bag(unsafe { std::mem::transmute::<&std::num::NonZeroI128, &i128>(v) })
     }
 }
 
@@ -368,6 +533,24 @@ macro_rules! impl_to_value_primitive {
     };
 }
 
+macro_rules! impl_to_value_nonzero_primitive {
+    ($($into_ty:ident,)*) => {
+        $(
+            impl ToValue for std::num::$into_ty {
+                fn to_value(&self) -> Value {
+                    Value::from(self.get())
+                }
+            }
+
+            impl<'v> From<std::num::$into_ty> for Value<'v> {
+                fn from(value: std::num::$into_ty) -> Self {
+                    Value::from(value.get())
+                }
+            }
+        )*
+    };
+}
+
 macro_rules! impl_value_to_primitive {
     ($(#[doc = $doc:tt] $into_name:ident -> $into_ty:ty,)*) => {
         impl<'v> Value<'v> {
@@ -381,8 +564,12 @@ macro_rules! impl_value_to_primitive {
     }
 }
 
-impl_to_value_primitive![
-    usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64, char, bool,
+impl_to_value_primitive![usize, u8, u16, u32, u64, isize, i8, i16, i32, i64, f32, f64, char, bool,];
+
+#[rustfmt::skip]
+impl_to_value_nonzero_primitive![
+    NonZeroUsize, NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64,
+    NonZeroIsize, NonZeroI8, NonZeroI16, NonZeroI32, NonZeroI64,
 ];
 
 impl_value_to_primitive![
@@ -448,6 +635,142 @@ mod std_support {
             self.inner.to_str()
         }
     }
+
+    impl<'v> From<&'v String> for Value<'v> {
+        fn from(v: &'v String) -> Self {
+            Value::from(&**v)
+        }
+    }
+}
+
+/// A visitor for a `Value`.
+pub trait Visit<'v> {
+    /// Visit a `Value`.
+    ///
+    /// This is the only required method on `Visit` and acts as a fallback for any
+    /// more specific methods that aren't overridden.
+    /// The `Value` may be formatted using its `fmt::Debug` or `fmt::Display` implementation,
+    /// or serialized using its `sval::Value` or `serde::Serialize` implementation.
+    fn visit_any(&mut self, value: Value) -> Result<(), Error>;
+
+    /// Visit an unsigned integer.
+    fn visit_u64(&mut self, value: u64) -> Result<(), Error> {
+        self.visit_any(value.into())
+    }
+
+    /// Visit a signed integer.
+    fn visit_i64(&mut self, value: i64) -> Result<(), Error> {
+        self.visit_any(value.into())
+    }
+
+    /// Visit a big unsigned integer.
+    fn visit_u128(&mut self, value: u128) -> Result<(), Error> {
+        self.visit_any((&value).into())
+    }
+
+    /// Visit a big signed integer.
+    fn visit_i128(&mut self, value: i128) -> Result<(), Error> {
+        self.visit_any((&value).into())
+    }
+
+    /// Visit a floating point.
+    fn visit_f64(&mut self, value: f64) -> Result<(), Error> {
+        self.visit_any(value.into())
+    }
+
+    /// Visit a boolean.
+    fn visit_bool(&mut self, value: bool) -> Result<(), Error> {
+        self.visit_any(value.into())
+    }
+
+    /// Visit a string.
+    fn visit_str(&mut self, value: &str) -> Result<(), Error> {
+        self.visit_any(value.into())
+    }
+
+    /// Visit a string.
+    fn visit_borrowed_str(&mut self, value: &'v str) -> Result<(), Error> {
+        self.visit_str(value)
+    }
+
+    /// Visit a Unicode character.
+    fn visit_char(&mut self, value: char) -> Result<(), Error> {
+        let mut b = [0; 4];
+        self.visit_str(&*value.encode_utf8(&mut b))
+    }
+
+    /// Visit an error.
+    #[cfg(feature = "kv_unstable_std")]
+    fn visit_error(&mut self, err: &(dyn std::error::Error + 'static)) -> Result<(), Error> {
+        self.visit_any(Value::from_dyn_error(err))
+    }
+
+    /// Visit an error.
+    #[cfg(feature = "kv_unstable_std")]
+    fn visit_borrowed_error(
+        &mut self,
+        err: &'v (dyn std::error::Error + 'static),
+    ) -> Result<(), Error> {
+        self.visit_any(Value::from_dyn_error(err))
+    }
+}
+
+impl<'a, 'v, T: ?Sized> Visit<'v> for &'a mut T
+where
+    T: Visit<'v>,
+{
+    fn visit_any(&mut self, value: Value) -> Result<(), Error> {
+        (**self).visit_any(value)
+    }
+
+    fn visit_u64(&mut self, value: u64) -> Result<(), Error> {
+        (**self).visit_u64(value)
+    }
+
+    fn visit_i64(&mut self, value: i64) -> Result<(), Error> {
+        (**self).visit_i64(value)
+    }
+
+    fn visit_u128(&mut self, value: u128) -> Result<(), Error> {
+        (**self).visit_u128(value)
+    }
+
+    fn visit_i128(&mut self, value: i128) -> Result<(), Error> {
+        (**self).visit_i128(value)
+    }
+
+    fn visit_f64(&mut self, value: f64) -> Result<(), Error> {
+        (**self).visit_f64(value)
+    }
+
+    fn visit_bool(&mut self, value: bool) -> Result<(), Error> {
+        (**self).visit_bool(value)
+    }
+
+    fn visit_str(&mut self, value: &str) -> Result<(), Error> {
+        (**self).visit_str(value)
+    }
+
+    fn visit_borrowed_str(&mut self, value: &'v str) -> Result<(), Error> {
+        (**self).visit_borrowed_str(value)
+    }
+
+    fn visit_char(&mut self, value: char) -> Result<(), Error> {
+        (**self).visit_char(value)
+    }
+
+    #[cfg(feature = "kv_unstable_std")]
+    fn visit_error(&mut self, err: &(dyn std::error::Error + 'static)) -> Result<(), Error> {
+        (**self).visit_error(err)
+    }
+
+    #[cfg(feature = "kv_unstable_std")]
+    fn visit_borrowed_error(
+        &mut self,
+        err: &'v (dyn std::error::Error + 'static),
+    ) -> Result<(), Error> {
+        (**self).visit_borrowed_error(err)
+    }
 }
 
 #[cfg(test)]
@@ -469,6 +792,11 @@ pub(crate) mod tests {
             Value::from(32u32),
             Value::from(64u64),
             Value::from(1usize),
+            Value::from(std::num::NonZeroU8::new(8).unwrap()),
+            Value::from(std::num::NonZeroU16::new(16).unwrap()),
+            Value::from(std::num::NonZeroU32::new(32).unwrap()),
+            Value::from(std::num::NonZeroU64::new(64).unwrap()),
+            Value::from(std::num::NonZeroUsize::new(1).unwrap()),
         ]
         .into_iter()
     }
@@ -480,6 +808,11 @@ pub(crate) mod tests {
             Value::from(-32i32),
             Value::from(-64i64),
             Value::from(-1isize),
+            Value::from(std::num::NonZeroI8::new(-8).unwrap()),
+            Value::from(std::num::NonZeroI16::new(-16).unwrap()),
+            Value::from(std::num::NonZeroI32::new(-32).unwrap()),
+            Value::from(std::num::NonZeroI64::new(-64).unwrap()),
+            Value::from(std::num::NonZeroIsize::new(-1).unwrap()),
         ]
         .into_iter()
     }
@@ -651,5 +984,51 @@ pub(crate) mod tests {
 
         assert!(v.is::<Foo>());
         assert_eq!(42u64, v.downcast_ref::<Foo>().expect("invalid downcast").0);
+    }
+
+    #[test]
+    fn test_visit_integer() {
+        struct Extract(Option<u64>);
+
+        impl<'v> Visit<'v> for Extract {
+            fn visit_any(&mut self, value: Value) -> Result<(), Error> {
+                unimplemented!("unexpected value: {:?}", value)
+            }
+
+            fn visit_u64(&mut self, value: u64) -> Result<(), Error> {
+                self.0 = Some(value);
+
+                Ok(())
+            }
+        }
+
+        let mut extract = Extract(None);
+        Value::from(42u64).visit(&mut extract).unwrap();
+
+        assert_eq!(Some(42), extract.0);
+    }
+
+    #[test]
+    fn test_visit_borrowed_str() {
+        struct Extract<'v>(Option<&'v str>);
+
+        impl<'v> Visit<'v> for Extract<'v> {
+            fn visit_any(&mut self, value: Value) -> Result<(), Error> {
+                unimplemented!("unexpected value: {:?}", value)
+            }
+
+            fn visit_borrowed_str(&mut self, value: &'v str) -> Result<(), Error> {
+                self.0 = Some(value);
+
+                Ok(())
+            }
+        }
+
+        let mut extract = Extract(None);
+
+        let short_lived = String::from("A short-lived string");
+        Value::from(&*short_lived).visit(&mut extract).unwrap();
+
+        assert_eq!(Some("A short-lived string"), extract.0);
     }
 }

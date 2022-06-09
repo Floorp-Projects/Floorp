@@ -94,9 +94,6 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Patch itoa 0.4 to 1.0.
 itoa = { path = "build/rust/itoa" }
 
-# Patch bindgen 0.56 to 0.59.
-bindgen = { path = "build/rust/bindgen" }
-
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 

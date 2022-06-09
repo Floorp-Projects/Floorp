@@ -17,7 +17,7 @@ use test_fixture::{default_client, default_server, now};
 pub fn enc_dec<T: FrameDecoder<T>>(d: &Encoder, st: &str, remaining: usize) -> T {
     // For data, headers and push_promise we do not read all bytes from the buffer
     let d2 = Encoder::from_hex(st);
-    assert_eq!(&d[..], &d2[..d.len()]);
+    assert_eq!(d.as_ref(), &d2.as_ref()[..d.as_ref().len()]);
 
     let mut conn_c = default_client();
     let mut conn_s = default_server();
@@ -36,7 +36,7 @@ pub fn enc_dec<T: FrameDecoder<T>>(d: &Encoder, st: &str, remaining: usize) -> T
 
     // conver string into u8 vector
     let buf = Encoder::from_hex(st);
-    conn_s.stream_send(stream_id, &buf[..]).unwrap();
+    conn_s.stream_send(stream_id, buf.as_ref()).unwrap();
     let out = conn_s.process(None, now());
     mem::drop(conn_c.process(out.dgram(), now()));
 

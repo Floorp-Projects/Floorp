@@ -39,7 +39,7 @@ impl ControlStreamLocal {
     pub fn queue_frame(&mut self, f: &HFrame) {
         let mut enc = Encoder::default();
         f.encode(&mut enc);
-        self.stream.buffer(&enc);
+        self.stream.buffer(enc.as_ref());
     }
 
     pub fn queue_update_priority(&mut self, stream_id: StreamId) {
@@ -80,7 +80,7 @@ impl ControlStreamLocal {
             if let Some(hframe) = stream.priority_update_frame() {
                 let mut enc = Encoder::new();
                 hframe.encode(&mut enc);
-                if self.stream.send_atomic(conn, &enc)? {
+                if self.stream.send_atomic(conn, enc.as_ref())? {
                     stream.priority_update_sent();
                 } else {
                     self.outstanding_priority_update.push_front(update_id);

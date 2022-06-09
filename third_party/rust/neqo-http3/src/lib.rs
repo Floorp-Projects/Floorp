@@ -60,11 +60,6 @@ pub use stream_type_reader::NewStreamType;
 type Res<T> = Result<T, Error>;
 
 #[derive(Clone, Debug, PartialEq)]
-#[allow(
-    renamed_and_removed_lints,
-    clippy::pub_enum_variant_names,
-    clippy::enum_variant_names
-)]
 pub enum Error {
     HttpNoError,
     HttpGeneralProtocol,
@@ -153,8 +148,7 @@ impl Error {
                 | Self::HttpId
                 | Self::HttpSettings
                 | Self::HttpMissingSettings
-                | Self::QpackError(QpackError::EncoderStream)
-                | Self::QpackError(QpackError::DecoderStream)
+                | Self::QpackError(QpackError::EncoderStream | QpackError::DecoderStream)
         )
     }
 
@@ -168,10 +162,9 @@ impl Error {
     #[must_use]
     pub fn map_stream_send_errors(err: &Error) -> Self {
         match err {
-            Self::TransportError(TransportError::InvalidStreamId)
-            | Self::TransportError(TransportError::FinalSizeError) => {
-                Error::TransportStreamDoesNotExist
-            }
+            Self::TransportError(
+                TransportError::InvalidStreamId | TransportError::FinalSizeError,
+            ) => Error::TransportStreamDoesNotExist,
             Self::TransportError(TransportError::InvalidInput) => Error::InvalidInput,
             _ => {
                 debug_assert!(false, "Unexpected error");
