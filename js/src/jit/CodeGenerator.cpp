@@ -12720,7 +12720,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   size_t numNurseryObjects = snapshot->nurseryObjects().length();
 
   IonScript* ionScript = IonScript::New(
-      cx, compilationId, graph.totalSlotCount(), argumentSlots, frameDepth_,
+      cx, compilationId, graph.totalSlotsSize(), argumentSlots, frameDepth_,
       snapshots_.listSize(), snapshots_.RVATableSize(), recovers_.size(),
       graph.numConstants(), numNurseryObjects, safepointIndices_.length(),
       osiIndices_.length(), icList_.length(), runtimeData_.length(),
