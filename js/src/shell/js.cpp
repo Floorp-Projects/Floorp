@@ -5557,7 +5557,7 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   ShellContext* sc = GetShellContext(cx);
-  RootedModuleObject module(
+  Rooted<ModuleObject*> module(
       cx, args[1].toObject().as<ShellModuleObjectWrapper>().get());
 
   RootedAtom specifier(cx, AtomizeString(cx, args[0].toString()));
@@ -5585,10 +5585,10 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static ModuleEnvironmentObject* GetModuleInitialEnvironment(
-    JSContext* cx, HandleModuleObject module) {
+    JSContext* cx, Handle<ModuleObject*> module) {
   // Use the initial environment so that tests can check bindings exists
   // before they have been instantiated.
-  RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
+  Rooted<ModuleEnvironmentObject*> env(cx, &module->initialEnvironment());
   MOZ_ASSERT(env);
   return env;
 }
@@ -5607,15 +5607,15 @@ static bool GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedModuleObject module(
+  Rooted<ModuleObject*> module(
       cx, args[0].toObject().as<ShellModuleObjectWrapper>().get());
   if (module->hadEvaluationError()) {
     JS_ReportErrorASCII(cx, "Module environment unavailable");
     return false;
   }
 
-  RootedModuleEnvironmentObject env(cx,
-                                    GetModuleInitialEnvironment(cx, module));
+  Rooted<ModuleEnvironmentObject*> env(cx,
+                                       GetModuleInitialEnvironment(cx, module));
   Rooted<IdVector> ids(cx, IdVector(cx));
   if (!JS_Enumerate(cx, env, &ids)) {
     return false;
@@ -5659,15 +5659,15 @@ static bool GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedModuleObject module(
+  Rooted<ModuleObject*> module(
       cx, args[0].toObject().as<ShellModuleObjectWrapper>().get());
   if (module->hadEvaluationError()) {
     JS_ReportErrorASCII(cx, "Module environment unavailable");
     return false;
   }
 
-  RootedModuleEnvironmentObject env(cx,
-                                    GetModuleInitialEnvironment(cx, module));
+  Rooted<ModuleEnvironmentObject*> env(cx,
+                                       GetModuleInitialEnvironment(cx, module));
   RootedString name(cx, args[1].toString());
   RootedId id(cx);
   if (!JS_StringToId(cx, name, &id)) {

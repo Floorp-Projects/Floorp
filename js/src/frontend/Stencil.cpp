@@ -1658,7 +1658,7 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   // Finish initializing the ModuleObject if needed.
   if (scriptExtra.isModule()) {
     RootedScript script(cx, gcOutput.script);
-    RootedModuleObject module(cx, gcOutput.module);
+    Rooted<ModuleObject*> module(cx, gcOutput.module);
 
     script->outermostScope()->as<ModuleScope>().initModule(module);
 

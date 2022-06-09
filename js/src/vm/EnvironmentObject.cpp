@@ -402,13 +402,13 @@ const JSClass ModuleEnvironmentObject::class_ = {
 
 /* static */
 ModuleEnvironmentObject* ModuleEnvironmentObject::create(
-    JSContext* cx, HandleModuleObject module) {
+    JSContext* cx, Handle<ModuleObject*> module) {
   RootedScript script(cx, module->script());
   RootedShape shape(cx,
                     script->bodyScope()->as<ModuleScope>().environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-  RootedModuleEnvironmentObject env(
+  Rooted<ModuleEnvironmentObject*> env(
       cx, CreateEnvironmentObject<ModuleEnvironmentObject>(cx, shape,
                                                            TenuredObject));
   if (!env) {
@@ -454,11 +454,11 @@ IndirectBindingMap& ModuleEnvironmentObject::importBindings() const {
 
 bool ModuleEnvironmentObject::createImportBinding(JSContext* cx,
                                                   HandleAtom importName,
-                                                  HandleModuleObject module,
+                                                  Handle<ModuleObject*> module,
                                                   HandleAtom localName) {
   RootedId importNameId(cx, AtomToId(importName));
   RootedId localNameId(cx, AtomToId(localName));
-  RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
+  Rooted<ModuleEnvironmentObject*> env(cx, &module->initialEnvironment());
   if (!importBindings().put(cx, importNameId, env, localNameId)) {
     return false;
   }
@@ -534,7 +534,8 @@ bool ModuleEnvironmentObject::setProperty(JSContext* cx, HandleObject obj,
                                           HandleId id, HandleValue v,
                                           HandleValue receiver,
                                           JS::ObjectOpResult& result) {
-  RootedModuleEnvironmentObject self(cx, &obj->as<ModuleEnvironmentObject>());
+  Rooted<ModuleEnvironmentObject*> self(cx,
+                                        &obj->as<ModuleEnvironmentObject>());
   if (self->importBindings().has(id)) {
     return result.failReadOnly();
   }
@@ -572,7 +573,8 @@ bool ModuleEnvironmentObject::deleteProperty(JSContext* cx, HandleObject obj,
 bool ModuleEnvironmentObject::newEnumerate(JSContext* cx, HandleObject obj,
                                            MutableHandleIdVector properties,
                                            bool enumerableOnly) {
-  RootedModuleEnvironmentObject self(cx, &obj->as<ModuleEnvironmentObject>());
+  Rooted<ModuleEnvironmentObject*> self(cx,
+                                        &obj->as<ModuleEnvironmentObject>());
   const IndirectBindingMap& bs(self->importBindings());
 
   MOZ_ASSERT(properties.length() == 0);
