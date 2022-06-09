@@ -1030,7 +1030,7 @@ version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.os_str_bytes]]
-version = "6.0.1"
+version = "6.1.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.oslog]]
