@@ -15,7 +15,7 @@
 #include "jstypes.h"           // for JS_PUBLIC_API
 #include "NamespaceImports.h"  // for Value, MutableHandleValue, HandleId
 
-#include "gc/Rooting.h"       // for HandleDebuggerObject
+#include "gc/Rooting.h"       // for HandleObject
 #include "js/Promise.h"       // for PromiseState
 #include "js/Proxy.h"         // for PropertyDescriptor
 #include "vm/JSObject.h"      // for JSObject (ptr only)
@@ -46,114 +46,119 @@ class DebuggerObject : public NativeObject {
 
   // Properties
   [[nodiscard]] static bool getClassName(JSContext* cx,
-                                         HandleDebuggerObject object,
+                                         Handle<DebuggerObject*> object,
                                          MutableHandleString result);
   [[nodiscard]] static bool getBoundTargetFunction(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandle<DebuggerObject*> result);
   [[nodiscard]] static bool getBoundThis(JSContext* cx,
-                                         HandleDebuggerObject object,
+                                         Handle<DebuggerObject*> object,
                                          MutableHandleValue result);
   [[nodiscard]] static bool getBoundArguments(
-      JSContext* cx, HandleDebuggerObject object,
+      JSContext* cx, Handle<DebuggerObject*> object,
       MutableHandle<ValueVector> result);
   [[nodiscard]] static bool getAllocationSite(JSContext* cx,
-                                              HandleDebuggerObject object,
+                                              Handle<DebuggerObject*> object,
                                               MutableHandleObject result);
   [[nodiscard]] static bool getErrorMessageName(JSContext* cx,
-                                                HandleDebuggerObject object,
+                                                Handle<DebuggerObject*> object,
                                                 MutableHandleString result);
   [[nodiscard]] static bool getErrorNotes(JSContext* cx,
-                                          HandleDebuggerObject object,
+                                          Handle<DebuggerObject*> object,
                                           MutableHandleValue result);
   [[nodiscard]] static bool getErrorLineNumber(JSContext* cx,
-                                               HandleDebuggerObject object,
+                                               Handle<DebuggerObject*> object,
                                                MutableHandleValue result);
   [[nodiscard]] static bool getErrorColumnNumber(JSContext* cx,
-                                                 HandleDebuggerObject object,
+                                                 Handle<DebuggerObject*> object,
                                                  MutableHandleValue result);
   [[nodiscard]] static bool getScriptedProxyTarget(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandle<DebuggerObject*> result);
   [[nodiscard]] static bool getScriptedProxyHandler(
-      JSContext* cx, HandleDebuggerObject object,
-      MutableHandleDebuggerObject result);
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandle<DebuggerObject*> result);
   [[nodiscard]] static bool getPromiseValue(JSContext* cx,
-                                            HandleDebuggerObject object,
+                                            Handle<DebuggerObject*> object,
                                             MutableHandleValue result);
   [[nodiscard]] static bool getPromiseReason(JSContext* cx,
-                                             HandleDebuggerObject object,
+                                             Handle<DebuggerObject*> object,
                                              MutableHandleValue result);
 
   // Methods
   [[nodiscard]] static bool isExtensible(JSContext* cx,
-                                         HandleDebuggerObject object,
+                                         Handle<DebuggerObject*> object,
                                          bool& result);
-  [[nodiscard]] static bool isSealed(JSContext* cx, HandleDebuggerObject object,
+  [[nodiscard]] static bool isSealed(JSContext* cx,
+                                     Handle<DebuggerObject*> object,
                                      bool& result);
-  [[nodiscard]] static bool isFrozen(JSContext* cx, HandleDebuggerObject object,
+  [[nodiscard]] static bool isFrozen(JSContext* cx,
+                                     Handle<DebuggerObject*> object,
                                      bool& result);
   [[nodiscard]] static JS::Result<Completion> getProperty(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
       HandleValue receiver);
   [[nodiscard]] static JS::Result<Completion> setProperty(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
       HandleValue value, HandleValue receiver);
-  [[nodiscard]] static bool getPrototypeOf(JSContext* cx,
-                                           HandleDebuggerObject object,
-                                           MutableHandleDebuggerObject result);
+  [[nodiscard]] static bool getPrototypeOf(
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandle<DebuggerObject*> result);
   [[nodiscard]] static bool getOwnPropertyNames(JSContext* cx,
-                                                HandleDebuggerObject object,
+                                                Handle<DebuggerObject*> object,
                                                 MutableHandleIdVector result);
   [[nodiscard]] static bool getOwnPropertyNamesLength(
-      JSContext* cx, HandleDebuggerObject object, size_t* result);
-  [[nodiscard]] static bool getOwnPropertySymbols(JSContext* cx,
-                                                  HandleDebuggerObject object,
-                                                  MutableHandleIdVector result);
+      JSContext* cx, Handle<DebuggerObject*> object, size_t* result);
+  [[nodiscard]] static bool getOwnPropertySymbols(
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandleIdVector result);
   [[nodiscard]] static bool getOwnPrivateProperties(
-      JSContext* cx, HandleDebuggerObject object, MutableHandleIdVector result);
+      JSContext* cx, Handle<DebuggerObject*> object,
+      MutableHandleIdVector result);
   [[nodiscard]] static bool getOwnPropertyDescriptor(
-      JSContext* cx, HandleDebuggerObject object, HandleId id,
+      JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
       MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc);
   [[nodiscard]] static bool preventExtensions(JSContext* cx,
-                                              HandleDebuggerObject object);
-  [[nodiscard]] static bool seal(JSContext* cx, HandleDebuggerObject object);
-  [[nodiscard]] static bool freeze(JSContext* cx, HandleDebuggerObject object);
+                                              Handle<DebuggerObject*> object);
+  [[nodiscard]] static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
+  [[nodiscard]] static bool freeze(JSContext* cx,
+                                   Handle<DebuggerObject*> object);
   [[nodiscard]] static bool defineProperty(JSContext* cx,
-                                           HandleDebuggerObject object,
+                                           Handle<DebuggerObject*> object,
                                            HandleId id,
                                            Handle<PropertyDescriptor> desc);
   [[nodiscard]] static bool defineProperties(
-      JSContext* cx, HandleDebuggerObject object, Handle<IdVector> ids,
+      JSContext* cx, Handle<DebuggerObject*> object, Handle<IdVector> ids,
       Handle<PropertyDescriptorVector> descs);
   [[nodiscard]] static bool deleteProperty(JSContext* cx,
-                                           HandleDebuggerObject object,
+                                           Handle<DebuggerObject*> object,
                                            HandleId id, ObjectOpResult& result);
   [[nodiscard]] static mozilla::Maybe<Completion> call(
-      JSContext* cx, HandleDebuggerObject object, HandleValue thisv,
+      JSContext* cx, Handle<DebuggerObject*> object, HandleValue thisv,
       Handle<ValueVector> args);
   [[nodiscard]] static bool forceLexicalInitializationByName(
-      JSContext* cx, HandleDebuggerObject object, HandleId id, bool& result);
+      JSContext* cx, Handle<DebuggerObject*> object, HandleId id, bool& result);
   [[nodiscard]] static JS::Result<Completion> executeInGlobal(
-      JSContext* cx, HandleDebuggerObject object,
+      JSContext* cx, Handle<DebuggerObject*> object,
       mozilla::Range<const char16_t> chars, HandleObject bindings,
       const EvalOptions& options);
   [[nodiscard]] static bool makeDebuggeeValue(JSContext* cx,
-                                              HandleDebuggerObject object,
+                                              Handle<DebuggerObject*> object,
                                               HandleValue value,
                                               MutableHandleValue result);
   [[nodiscard]] static bool makeDebuggeeNativeFunction(
-      JSContext* cx, HandleDebuggerObject object, HandleValue value,
+      JSContext* cx, Handle<DebuggerObject*> object, HandleValue value,
       MutableHandleValue result);
   [[nodiscard]] static bool isSameNative(JSContext* cx,
-                                         HandleDebuggerObject object,
+                                         Handle<DebuggerObject*> object,
                                          HandleValue value,
                                          MutableHandleValue result);
   [[nodiscard]] static bool unsafeDereference(JSContext* cx,
-                                              HandleDebuggerObject object,
+                                              Handle<DebuggerObject*> object,
                                               MutableHandleObject result);
-  [[nodiscard]] static bool unwrap(JSContext* cx, HandleDebuggerObject object,
-                                   MutableHandleDebuggerObject result);
+  [[nodiscard]] static bool unwrap(JSContext* cx,
+                                   Handle<DebuggerObject*> object,
+                                   MutableHandle<DebuggerObject*> result);
 
   // Infallible properties
   bool isCallable() const;
@@ -200,9 +205,9 @@ class DebuggerObject : public NativeObject {
   PromiseObject* promise() const;
 
   [[nodiscard]] static bool requireGlobal(JSContext* cx,
-                                          HandleDebuggerObject object);
+                                          Handle<DebuggerObject*> object);
   [[nodiscard]] static bool requirePromise(JSContext* cx,
-                                           HandleDebuggerObject object);
+                                           Handle<DebuggerObject*> object);
   [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   struct CallData;

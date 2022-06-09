@@ -1151,8 +1151,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    */
   [[nodiscard]] bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
                                      MutableHandleValue vp);
-  [[nodiscard]] bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
-                                     MutableHandleDebuggerEnvironment result);
+  [[nodiscard]] bool wrapEnvironment(
+      JSContext* cx, Handle<Env*> env,
+      MutableHandle<DebuggerEnvironment*> result);
 
   /*
    * Like cx->compartment()->wrap(cx, vp), but for the debugger realm.
@@ -1176,9 +1177,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    */
   [[nodiscard]] bool wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
   [[nodiscard]] bool wrapDebuggeeObject(JSContext* cx, HandleObject obj,
-                                        MutableHandleDebuggerObject result);
+                                        MutableHandle<DebuggerObject*> result);
   [[nodiscard]] bool wrapNullableDebuggeeObject(
-      JSContext* cx, HandleObject obj, MutableHandleDebuggerObject result);
+      JSContext* cx, HandleObject obj, MutableHandle<DebuggerObject*> result);
 
   /*
    * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
@@ -1222,12 +1223,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    */
   [[nodiscard]] bool getFrame(JSContext* cx, const FrameIter& iter,
                               MutableHandleValue vp);
-  [[nodiscard]] bool getFrame(JSContext* cx, MutableHandleDebuggerFrame result);
+  [[nodiscard]] bool getFrame(JSContext* cx,
+                              MutableHandle<DebuggerFrame*> result);
   [[nodiscard]] bool getFrame(JSContext* cx, const FrameIter& iter,
-                              MutableHandleDebuggerFrame result);
+                              MutableHandle<DebuggerFrame*> result);
   [[nodiscard]] bool getFrame(JSContext* cx,
                               Handle<AbstractGeneratorObject*> genObj,
-                              MutableHandleDebuggerFrame result);
+                              MutableHandle<DebuggerFrame*> result);
 
   /*
    * Return the Debugger.Script object for |script|, or create a new one if
