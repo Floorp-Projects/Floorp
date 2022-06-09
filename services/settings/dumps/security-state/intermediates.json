@@ -2557,24 +2557,6 @@
       "last_modified": 1648112255984
     },
     {
-      "schema": 1648025322112,
-      "derHash": "qXyhN1uRlT5TalVHawrERMcIapUeSQo6PRNjChn0DNQ=",
-      "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
-      "subjectDN": "MFcxCzAJBgNVBAYTAlRXMRcwFQYDVQQKEw5UQUlXQU4tQ0EgSW5jLjEQMA4GA1UECxMHVXNlciBDQTEdMBsGA1UEAxMUVFdDQSBJbmZvU2VjIFVzZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6aaaa07d5c201417999a0e22e73d6ede06b3ae7309353301a6d321d172316983",
-        "size": 1703,
-        "filename": "bqhl3DAHcc4Kg-bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=.pem",
-        "location": "security-state-staging/intermediates/dbc7f86a-a8bd-4852-9d23-1d43fa46ee74.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bqhl3DAHcc4Kg+bxpYCIoIh4Tjx38mrpuN4vD6gDaHY=",
-      "crlite_enrolled": false,
-      "id": "ffdd983c-ad21-42e0-bd71-4c89196fb73c",
-      "last_modified": 1648025848804
-    },
-    {
       "schema": 1648025321155,
       "derHash": "B0hA46Z9zSYAtrAE4Rh6yAvf6JbK9JPflMw9mjymiBQ=",
       "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
@@ -24859,5 +24841,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1653965830382
+  "timestamp": 1654693023115
 }
