@@ -84,7 +84,10 @@ static const char* sEGLExtensionNames[] = {
     "EGL_EXT_buffer_age",
     "EGL_KHR_partial_update",
     "EGL_NV_robustness_video_memory_purge",
-    "EGL_MESA_platform_surfaceless"};
+    "EGL_MESA_platform_surfaceless",
+    "EGL_EXT_image_dma_buf_import",
+    "EGL_EXT_image_dma_buf_import_modifiers",
+    "EGL_MESA_image_dma_buf_export"};
 
 PRLibrary* LoadApitraceLibrary() {
   const char* path = nullptr;
@@ -646,6 +649,12 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
   }
   {
     const SymLoadStruct symbols[] = {SYMBOL(GetPlatformDisplay),
+                                     END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
+  {
+    const SymLoadStruct symbols[] = {SYMBOL(ExportDMABUFImageQueryMESA),
+                                     SYMBOL(ExportDMABUFImageMESA),
                                      END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
