@@ -131,16 +131,4 @@ void ScrollbarDrawingGTK::RecomputeScrollbarParams() {
     defaultSize = overrideSize;
   }
   mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
-
-  // On GTK, widgets don't account for text scale factor, but that's included
-  // in the usual DPI computations, so we undo that here, just like
-  // GetMonitorScaleFactor does it in nsNativeThemeGTK.
-  float scale =
-      LookAndFeel::GetFloat(LookAndFeel::FloatID::TextScaleFactor, 1.0f);
-  if (scale != 1.0f) {
-    mVerticalScrollbarWidth =
-        uint32_t(round(float(mVerticalScrollbarWidth) / scale));
-    mHorizontalScrollbarHeight =
-        uint32_t(round(float(mHorizontalScrollbarHeight) / scale));
-  }
 }

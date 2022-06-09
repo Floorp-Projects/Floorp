@@ -66,17 +66,7 @@ static inline gint GetMonitorScaleFactor(nsPresContext* aPresContext) {
   double scale = StaticPrefs::layout_css_devPixelsPerPx();
   if (scale <= 0) {
     if (nsCOMPtr<nsIWidget> rootWidget = aPresContext->GetRootWidget()) {
-      // We need to use GetDefaultScale() despite it returns monitor scale
-      // factor multiplied by font scale factor because it is the only scale
-      // updated in nsPuppetWidget.
-      // Since we don't want to apply font scale factor for UI elements
-      // (because GTK does not do so) we need to remove that from returned
-      // value. The computed monitor scale factor needs to be rounded before
-      // casting to integer to avoid rounding errors which would lead to
-      // returning 0.
-      int monitorScale = int(
-          round(rootWidget->GetDefaultScale().scale /
-                LookAndFeel::GetFloat(LookAndFeel::FloatID::TextScaleFactor)));
+      int monitorScale = int(round(rootWidget->GetDefaultScale().scale));
       // Monitor scale can be negative if it has not been initialized in the
       // puppet widget yet. We also make sure that we return positive value.
       if (monitorScale < 1) {
