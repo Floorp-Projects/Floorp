@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 var { Front } = require("devtools/shared/protocol/Front");
 
 /**
@@ -32,7 +30,6 @@ var generateRequestMethods = function(actorSpec, frontProto) {
         );
       }
 
-      const startTime = Cu.now();
       let packet;
       try {
         packet = spec.request.write(args, this);
@@ -62,11 +59,6 @@ var generateRequestMethods = function(actorSpec, frontProto) {
           console.error("Error reading response to: " + name + "\n" + ex);
           throw ex;
         }
-        ChromeUtils.addProfilerMarker(
-          "RDP Front",
-          startTime,
-          `${this.typeName}:${name}()`
-        );
         return ret;
       });
     };
