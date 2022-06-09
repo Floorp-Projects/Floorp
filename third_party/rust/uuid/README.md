@@ -3,11 +3,12 @@ uuid
 
 [![Latest Version](https://img.shields.io/crates/v/uuid.svg)](https://crates.io/crates/uuid)
 [![Join the chat at https://gitter.im/uuid-rs/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/uuid-rs/Lobby?utm_source=badge&utm_medium=badge&utm_content=badge)
-![Minimum rustc version](https://img.shields.io/badge/rustc-1.31.0+-yellow.svg)
+![Minimum rustc version](https://img.shields.io/badge/rustc-1.34.0+-yellow.svg)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/uuid-rs/uuid?branch=master&svg=true)](https://ci.appveyor.com/project/uuid-rs/uuid/branch/master)
 [![Build Status](https://travis-ci.org/uuid-rs/uuid.svg?branch=master)](https://travis-ci.org/uuid-rs/uuid)
 [![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/uuid-rs/uuid.svg)](https://isitmaintained.com/project/uuid-rs/uuid "Average time to resolve an issue")
 [![Percentage of issues still open](https://isitmaintained.com/badge/open/uuid-rs/uuid.svg)](https://isitmaintained.com/project/uuid-rs/uuid "Percentage of issues still open")
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fuuid-rs%2Fuuid.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fuuid-rs%2Fuuid?ref=badge_shield)
 
 ---
 
@@ -18,7 +19,7 @@ unique 128-bit number, stored as 16 octets. UUIDs are used to  assign
 unique identifiers to entities without requiring a central allocating
 authority.
 
-They are particularly useful in distributed systems, though can be used in
+They are particularly useful in distributed systems, though they can be used in
 disparate areas, such as databases and network protocols.  Typically a UUID
 is displayed in a readable string form as a sequence of hexadecimal digits,
 separated into groups by hyphens.
@@ -46,7 +47,7 @@ various pieces of functionality:
   `serde` crate.
 
 You need to enable one of the following Cargo features together with
-`v3`, `v4` or `v5` feature if you're targeting `wasm32` architecture:
+`v3`, `v4` or `v5` feature if you're targeting `wasm32-unknown-unknown` target:
 
 * `stdweb` - enables support for `OsRng` on `wasm32-unknown-unknown` via
   `stdweb` combined with `cargo-web`
@@ -81,10 +82,11 @@ To parse a UUID given in the simple format and print it as a urn:
 ```rust
 use uuid::Uuid;
 
-fn main() {
+fn main() -> Result<(), uuid::Error> {
     let my_uuid =
-        Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
+        Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8")?;
     println!("{}", my_uuid.to_urn());
+    Ok(())
 }
 ```
 
@@ -98,6 +100,7 @@ use uuid::Uuid;
 fn main() {
     let my_uuid = Uuid::new_v4();
     println!("{}", my_uuid);
+    Ok(())
 }
 ```
 
@@ -116,7 +119,7 @@ Examples of string representations:
 
 [`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
 
-[`Uuid`]: https://docs.rs/uuid/0.8.1/uuid/struct.Uuid.html
+[`Uuid`]: https://docs.rs/uuid/0.8.2/uuid/struct.Uuid.html
 
 ---
 # License
@@ -127,6 +130,9 @@ Licensed under either of
 * MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT)
 
 at your option.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fuuid-rs%2Fuuid.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fuuid-rs%2Fuuid?ref=badge_large)
 
 ## Contribution
 

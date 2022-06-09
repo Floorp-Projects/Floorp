@@ -33,7 +33,7 @@ fn len_matches_any(len: usize, crits: &[usize]) -> bool {
 /// (inclusive).
 #[allow(dead_code)]
 fn len_matches_range(len: usize, min: usize, max: usize) -> bool {
-    for crit in min..(max + 1) {
+    for crit in min..=max {
         if len == crit {
             return true;
         }

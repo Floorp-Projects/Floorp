@@ -29,7 +29,7 @@ impl Uuid {
         let mut bytes = crate::Bytes::default();
         bytes.copy_from_slice(&buffer[..16]);
 
-        let mut builder = crate::builder::Builder::from_bytes(bytes);
+        let mut builder = crate::Builder::from_bytes(bytes);
         builder
             .set_variant(Variant::RFC4122)
             .set_version(Version::Sha1);

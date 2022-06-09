@@ -4,6 +4,7 @@ use crate::std::fmt;
 ///
 /// [`Uuid`]: ../struct.Uuid.html
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum Error {
     /// Invalid character in the [`Uuid`] string.
     ///
