@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "_methodsCallableFromChild",
   "resource://gre/modules/ContentPrefUtils.jsm"
 );
@@ -40,7 +42,7 @@ class ContentPrefsParent extends JSProcessActorParent {
   didDestroy() {
     if (this._observer) {
       for (let i of this._prefsToObserve) {
-        cps2.removeObserverForName(i, this._observer);
+        lazy.cps2.removeObserverForName(i, this._observer);
       }
       this._observer = null;
     }
@@ -65,7 +67,7 @@ class ContentPrefsParent extends JSProcessActorParent {
 
         let prefName = msg.data.name;
         this._prefsToObserve.add(prefName);
-        cps2.addObserverForName(prefName, this._observer);
+        lazy.cps2.addObserverForName(prefName, this._observer);
         break;
       }
 
@@ -73,7 +75,7 @@ class ContentPrefsParent extends JSProcessActorParent {
         let prefName = msg.data.name;
         this._prefsToObserve.delete(prefName);
         if (this._prefsToObserve.size == 0) {
-          cps2.removeObserverForName(prefName, this._observer);
+          lazy.cps2.removeObserverForName(prefName, this._observer);
           this._observer = null;
         }
         break;
@@ -84,7 +86,7 @@ class ContentPrefsParent extends JSProcessActorParent {
         let signature;
 
         if (
-          !_methodsCallableFromChild.some(([method, args]) => {
+          !lazy._methodsCallableFromChild.some(([method, args]) => {
             if (method == data.call) {
               signature = args;
               return true;
@@ -134,7 +136,7 @@ class ContentPrefsParent extends JSProcessActorParent {
           }
 
           // And call the function.
-          cps2[data.call](...args);
+          lazy.cps2[data.call](...args);
         });
     }
 
@@ -159,7 +161,7 @@ class ContentPrefsParent extends JSProcessActorParent {
 }
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "cps2",
   "@mozilla.org/content-pref/service;1",
   "nsIContentPrefService2"

@@ -986,6 +986,10 @@ class Shims {
         }
       } catch (_) {}
 
+      if (!redirect.indexOf("http://") || !redirect.indexOf("https://")) {
+        return { redirectUrl: redirect };
+      }
+
       // If any shims matched the request to replace it, then redirect to the local
       // file bundled with SmartBlock, so the request never hits the network.
       return { redirectUrl: browser.runtime.getURL(`shims/${redirect}`) };

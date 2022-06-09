@@ -14,14 +14,16 @@ const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
 
+const lazy = {};
+
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "swm",
   "@mozilla.org/serviceworkers/manager;1",
   "nsIServiceWorkerManager"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["indexedDB"]);
 
 /**
  * This module assists with tasks around testing functionality that shows
@@ -61,7 +63,11 @@ var SiteDataTestUtils = {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
-      let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+      let request = lazy.indexedDB.openForPrincipal(
+        principal,
+        "TestDatabase",
+        1
+      );
       request.onupgradeneeded = function(e) {
         let db = e.target.result;
         db.createObjectStore("TestStore");
@@ -250,7 +256,11 @@ var SiteDataTestUtils = {
     );
     return new Promise(resolve => {
       let data = true;
-      let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+      let request = lazy.indexedDB.openForPrincipal(
+        principal,
+        "TestDatabase",
+        1
+      );
       request.onupgradeneeded = function(e) {
         data = false;
       };
@@ -310,7 +320,7 @@ var SiteDataTestUtils = {
    * @returns {Boolean} whether or not the site has ServiceWorkers.
    */
   hasServiceWorkers(origin) {
-    let serviceWorkers = swm.getAllRegistrations();
+    let serviceWorkers = lazy.swm.getAllRegistrations();
     for (let i = 0; i < serviceWorkers.length; i++) {
       let sw = serviceWorkers.queryElementAt(
         i,
@@ -342,11 +352,11 @@ var SiteDataTestUtils = {
           if (registration.principal.host != url.host) {
             return;
           }
-          swm.removeListener(listener);
+          lazy.swm.removeListener(listener);
           resolve(registration);
         },
       };
-      swm.addListener(listener);
+      lazy.swm.addListener(listener);
     });
   },
 
@@ -369,11 +379,11 @@ var SiteDataTestUtils = {
           if (registration.principal.host != url.host) {
             return;
           }
-          swm.removeListener(listener);
+          lazy.swm.removeListener(listener);
           resolve(registration);
         },
       };
-      swm.addListener(listener);
+      lazy.swm.addListener(listener);
     });
   },
 

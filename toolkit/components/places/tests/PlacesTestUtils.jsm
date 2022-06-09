@@ -3,13 +3,14 @@
 var EXPORTED_SYMBOLS = ["PlacesTestUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "TestUtils",
   "resource://testing-common/TestUtils.jsm"
 );
@@ -86,7 +87,7 @@ var PlacesTestUtils = Object.freeze({
               "AddVisits expects a Date object or _micro_seconds!"
             );
           }
-          visitDate = PlacesUtils.toDate(visitDate);
+          visitDate = lazy.PlacesUtils.toDate(visitDate);
         }
       } else {
         visitDate = new Date();
@@ -101,15 +102,15 @@ var PlacesTestUtils = Object.freeze({
       infos.push(info);
       if (
         !place.transition ||
-        place.transition != PlacesUtils.history.TRANSITIONS.EMBED
+        place.transition != lazy.PlacesUtils.history.TRANSITIONS.EMBED
       ) {
         lastStoredVisit = info;
       }
     }
-    await PlacesUtils.history.insertMany(infos);
+    await lazy.PlacesUtils.history.insertMany(infos);
     if (lastStoredVisit) {
-      await TestUtils.waitForCondition(
-        () => PlacesUtils.history.fetch(lastStoredVisit.url),
+      await lazy.TestUtils.waitForCondition(
+        () => lazy.PlacesUtils.history.fetch(lastStoredVisit.url),
         "Ensure history has been updated and is visible to read-only connections"
       );
     }
@@ -138,11 +139,11 @@ var PlacesTestUtils = Object.freeze({
           let uri = Services.io.newURI(key);
           let faviconURI = Services.io.newURI(val);
           try {
-            PlacesUtils.favicons.setAndFetchFaviconForPage(
+            lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
               uri,
               faviconURI,
               false,
-              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+              lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
               resolve,
               Services.scriptSecurityManager.getSystemPrincipal()
             );
@@ -164,7 +165,7 @@ var PlacesTestUtils = Object.freeze({
         Services.obs.removeObserver(observer, "places-favicons-expired");
         resolve();
       }, "places-favicons-expired");
-      PlacesUtils.favicons.expireAllFavicons();
+      lazy.PlacesUtils.favicons.expireAllFavicons();
     });
   },
 
@@ -176,14 +177,14 @@ var PlacesTestUtils = Object.freeze({
    * @param {string} [aBookmarkObj.keyword]
    */
   async addBookmarkWithDetails(aBookmarkObj) {
-    await PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    await lazy.PlacesUtils.bookmarks.insert({
+      parentGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
       title: aBookmarkObj.title || "A bookmark",
       url: aBookmarkObj.uri,
     });
 
     if (aBookmarkObj.keyword) {
-      await PlacesUtils.keywords.insert({
+      await lazy.PlacesUtils.keywords.insert({
         keyword: aBookmarkObj.keyword,
         url:
           aBookmarkObj.uri instanceof Ci.nsIURI
@@ -198,7 +199,7 @@ var PlacesTestUtils = Object.freeze({
         aBookmarkObj.uri instanceof Ci.nsIURI
           ? aBookmarkObj.uri
           : Services.io.newURI(aBookmarkObj.uri);
-      PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
+      lazy.PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
     }
   },
 
@@ -216,7 +217,7 @@ var PlacesTestUtils = Object.freeze({
    *       this is a problem only across different connections.
    */
   promiseAsyncUpdates() {
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "promiseAsyncUpdates",
       async function(db) {
         try {
@@ -241,7 +242,7 @@ var PlacesTestUtils = Object.freeze({
    */
   async isPageInDB(aURI) {
     let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let rows = await db.executeCached(
       "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
       { url }
@@ -260,7 +261,7 @@ var PlacesTestUtils = Object.freeze({
    */
   async visitsInDB(aURI) {
     let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let rows = await db.executeCached(
       `SELECT count(*) FROM moz_historyvisits v
        JOIN moz_places h ON h.id = v.place_id
@@ -281,7 +282,7 @@ var PlacesTestUtils = Object.freeze({
    */
   fieldInDB(aURI, field) {
     let url = aURI instanceof Ci.nsIURI ? new URL(aURI.spec) : new URL(aURI);
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils.jsm: fieldInDb",
       async db => {
         let rows = await db.executeCached(
@@ -304,7 +305,7 @@ var PlacesTestUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   markBookmarksAsSynced() {
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils: markBookmarksAsSynced",
       function(db) {
         return db.executeTransaction(async function() {
@@ -322,7 +323,7 @@ var PlacesTestUtils = Object.freeze({
            SET syncChangeCounter = 0,
                syncStatus = :syncStatus
            WHERE id IN syncedItems`,
-            { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL }
+            { syncStatus: lazy.PlacesUtils.bookmarks.SYNC_STATUS.NORMAL }
           );
           await db.executeCached("DELETE FROM moz_bookmarks_deleted");
         });
@@ -345,12 +346,12 @@ var PlacesTestUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   setBookmarkSyncFields(...aFieldInfos) {
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils: setBookmarkSyncFields",
       function(db) {
         return db.executeTransaction(async function() {
           for (let info of aFieldInfos) {
-            if (!PlacesUtils.isValidGuid(info.guid)) {
+            if (!lazy.PlacesUtils.isValidGuid(info.guid)) {
               throw new Error(`Invalid GUID: ${info.guid}`);
             }
             await db.executeCached(
@@ -366,11 +367,11 @@ var PlacesTestUtils = Object.freeze({
                 syncStatus: "syncStatus" in info ? info.syncStatus : null,
                 lastModified:
                   "lastModified" in info
-                    ? PlacesUtils.toPRTime(info.lastModified)
+                    ? lazy.PlacesUtils.toPRTime(info.lastModified)
                     : null,
                 dateAdded:
                   "dateAdded" in info
-                    ? PlacesUtils.toPRTime(info.dateAdded)
+                    ? lazy.PlacesUtils.toPRTime(info.dateAdded)
                     : null,
               }
             );
@@ -381,7 +382,7 @@ var PlacesTestUtils = Object.freeze({
   },
 
   async fetchBookmarkSyncFields(...aGuids) {
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let results = [];
     for (let guid of aGuids) {
       let rows = await db.executeCached(
@@ -398,24 +399,26 @@ var PlacesTestUtils = Object.freeze({
         guid,
         syncStatus: rows[0].getResultByName("syncStatus"),
         syncChangeCounter: rows[0].getResultByName("syncChangeCounter"),
-        lastModified: PlacesUtils.toDate(
+        lastModified: lazy.PlacesUtils.toDate(
           rows[0].getResultByName("lastModified")
         ),
-        dateAdded: PlacesUtils.toDate(rows[0].getResultByName("dateAdded")),
+        dateAdded: lazy.PlacesUtils.toDate(
+          rows[0].getResultByName("dateAdded")
+        ),
       });
     }
     return results;
   },
 
   async fetchSyncTombstones() {
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let rows = await db.executeCached(`
       SELECT guid, dateRemoved
       FROM moz_bookmarks_deleted
       ORDER BY guid`);
     return rows.map(row => ({
       guid: row.getResultByName("guid"),
-      dateRemoved: PlacesUtils.toDate(row.getResultByName("dateRemoved")),
+      dateRemoved: lazy.PlacesUtils.toDate(row.getResultByName("dateRemoved")),
     }));
   },
 
@@ -443,7 +446,7 @@ var PlacesTestUtils = Object.freeze({
             if (name == notification) {
               return (...args) => {
                 if (!conditionFn || conditionFn.apply(this, args)) {
-                  PlacesUtils[type].removeObserver(proxifiedObserver);
+                  lazy.PlacesUtils[type].removeObserver(proxifiedObserver);
                   resolve();
                 }
               };
@@ -455,7 +458,7 @@ var PlacesTestUtils = Object.freeze({
           },
         }
       );
-      PlacesUtils[type].addObserver(proxifiedObserver);
+      lazy.PlacesUtils[type].addObserver(proxifiedObserver);
     });
   },
 
@@ -507,11 +510,11 @@ var PlacesTestUtils = Object.freeze({
    * Removes all stored metadata.
    */
   clearMetadata() {
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils: clearMetadata",
       async db => {
         await db.execute(`DELETE FROM moz_meta`);
-        PlacesUtils.metadata.cache.clear();
+        lazy.PlacesUtils.metadata.cache.clear();
       }
     );
   },
@@ -520,9 +523,12 @@ var PlacesTestUtils = Object.freeze({
    * Clear moz_inputhistory table.
    */
   async clearInputHistory() {
-    await PlacesUtils.withConnectionWrapper("test:clearInputHistory", db => {
-      return db.executeCached("DELETE FROM moz_inputhistory");
-    });
+    await lazy.PlacesUtils.withConnectionWrapper(
+      "test:clearInputHistory",
+      db => {
+        return db.executeCached("DELETE FROM moz_inputhistory");
+      }
+    );
   },
 
   /**

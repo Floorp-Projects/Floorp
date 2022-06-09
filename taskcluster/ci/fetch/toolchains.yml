@@ -301,7 +301,7 @@ gn:
     fetch:
         type: git
         repo: https://gn.googlesource.com/gn
-        revision: d69a9c3765dee2e650bcccebbadf72c5d42d92b1
+        revision: 7e05276308f3d49f8514ef02afe4f94487b1efb2
 
 grcov:
     description: grcov source code
@@ -663,5 +663,5 @@ cargo-vet:
     description: cargo-vet source
     fetch:
         type: git
-        repo: https://github.com/bholley/cargo-vet
+        repo: https://github.com/mozilla/cargo-vet
         revision: 97cdbfdab0ed3008160cf5bee534fb534fce08c5

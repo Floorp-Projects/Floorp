@@ -13,12 +13,12 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -512,8 +512,8 @@ ThirdPartyUtil::AnalyzeChannel(nsIChannel* aChannel, bool aNotify, nsIURI* aURI,
         aRequireThirdPartyCheck ? result.contains(ThirdPartyAnalysis::IsForeign)
                                 : true;
     if (performStorageChecks &&
-        ContentBlocking::ShouldAllowAccessFor(aChannel, aURI ? aURI : uri.get(),
-                                              aRejectedReason)) {
+        ShouldAllowAccessFor(aChannel, aURI ? aURI : uri.get(),
+                             aRejectedReason)) {
       result += ThirdPartyAnalysis::IsStorageAccessPermissionGranted;
     }
 

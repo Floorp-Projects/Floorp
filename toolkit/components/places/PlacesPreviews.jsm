@@ -14,7 +14,9 @@ const { ComponentUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
@@ -23,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
   return console.createInstance({
     prefix: "PlacesPreviews",
     maxLogLevel: Services.prefs.getBoolPref("places.previews.log", false)
@@ -35,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 // Toggling Places previews requires a restart, because a database trigger
 // filling up tombstones is enabled on the database only when the pref is set
 // on startup.
-XPCOMUtils.defineLazyGetter(this, "previewsEnabled", function() {
+XPCOMUtils.defineLazyGetter(lazy, "previewsEnabled", function() {
   return Services.prefs.getBoolPref("places.previews.enabled", false);
 });
 
@@ -89,7 +91,7 @@ class DeletionHandler {
   }
   set timeout(val) {
     if (this.#timeoutId) {
-      clearTimeout(this.#timeoutId);
+      lazy.clearTimeout(this.#timeoutId);
       this.#timeoutId = null;
     }
     this.#timeout = val;
@@ -98,11 +100,11 @@ class DeletionHandler {
 
   constructor() {
     // Clear any pending timeouts on shutdown.
-    PlacesUtils.history.shutdownClient.jsclient.addBlocker(
+    lazy.PlacesUtils.history.shutdownClient.jsclient.addBlocker(
       "PlacesPreviews.jsm::DeletionHandler",
       async () => {
         this.#shutdownProgress.shuttingDown = true;
-        clearTimeout(this.#timeoutId);
+        lazy.clearTimeout(this.#timeoutId);
         this.#timeoutId = null;
       },
       { fetchState: () => this.#shutdownProgress }
@@ -117,11 +119,11 @@ class DeletionHandler {
     if (this.#timeoutId || this.#shutdownProgress.shuttingDown) {
       return;
     }
-    this.#timeoutId = setTimeout(() => {
+    this.#timeoutId = lazy.setTimeout(() => {
       this.#timeoutId = null;
       ChromeUtils.idleDispatch(() => {
         this.#deleteChunk().catch(ex =>
-          logConsole.error("Error during previews deletion:" + ex)
+          lazy.logConsole.error("Error during previews deletion:" + ex)
         );
       });
     }, this.timeout);
@@ -136,7 +138,7 @@ class DeletionHandler {
     }
     // Select tombstones, delete images, then delete tombstones. This order
     // ensures that in case of problems we'll try again in the future.
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let count;
     let hashes = (
       await db.executeCached(
@@ -165,7 +167,7 @@ class DeletionHandler {
         if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
           deleted.push(hash);
         } else {
-          logConsole.error("Unable to delete file: " + filePath);
+          lazy.logConsole.error("Unable to delete file: " + filePath);
         }
       }
       if (this.#shutdownProgress.shuttingDown) {
@@ -177,7 +179,7 @@ class DeletionHandler {
       p["hash" + i] = c;
       return p;
     }, {});
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "PlacesPreviews.jsm::ExpirePreviews",
       async db => {
         await db.execute(
@@ -202,7 +204,7 @@ class DeletionHandler {
  * format. All the previews are saved into a "places-previews" folder under
  * the roaming profile folder.
  */
-const PlacesPreviews = new (class extends EventEmitter {
+const PlacesPreviews = new (class extends lazy.EventEmitter {
   #placesObserver = null;
   #deletionHandler = null;
   // This is used as a cache to avoid fetching the same preview multiple
@@ -246,7 +248,7 @@ const PlacesPreviews = new (class extends EventEmitter {
    * the pref, since it requires a restart.
    */
   get enabled() {
-    return previewsEnabled;
+    return lazy.previewsEnabled;
   }
 
   /**
@@ -269,7 +271,7 @@ const PlacesPreviews = new (class extends EventEmitter {
   getPathForUrl(url) {
     return PathUtils.join(
       this.getPath(),
-      PlacesUtils.md5(url, { format: "hex" }) + this.fileExtension
+      lazy.PlacesUtils.md5(url, { format: "hex" }) + this.fileExtension
     );
   }
 
@@ -294,7 +296,7 @@ const PlacesPreviews = new (class extends EventEmitter {
       "/?url=" +
       encodeURIComponent(url) +
       "&revision=" +
-      PageThumbsStorage.getRevision(url)
+      lazy.PageThumbsStorage.getRevision(url)
     );
   }
 
@@ -319,7 +321,7 @@ const PlacesPreviews = new (class extends EventEmitter {
     let filePath = this.getPathForUrl(url);
     if (!forceUpdate) {
       if (this.#recentlyUpdatedPreviews.has(filePath)) {
-        logConsole.debug("Skipping update because recently updated");
+        lazy.logConsole.debug("Skipping update because recently updated");
         return true;
       }
       try {
@@ -330,13 +332,13 @@ const PlacesPreviews = new (class extends EventEmitter {
         ) {
           // File is recent enough.
           this.#recentlyUpdatedPreviews.add(filePath);
-          logConsole.debug("Skipping update because file is recent");
+          lazy.logConsole.debug("Skipping update because file is recent");
           return true;
         }
       } catch (ex) {
         // If the file doesn't exist, we always update it.
         if (!DOMException.isInstance(ex) || ex.name != "NotFoundError") {
-          logConsole.error("Error while trying to stat() preview" + ex);
+          lazy.logConsole.error("Error while trying to stat() preview" + ex);
           return false;
         }
       }
@@ -349,7 +351,7 @@ const PlacesPreviews = new (class extends EventEmitter {
         }
       };
       Services.obs.addObserver(observer, "page-thumbnail:error");
-      BackgroundPageThumbs.capture(url, {
+      lazy.BackgroundPageThumbs.capture(url, {
         dontStore: true,
         contentType: this.fileContentType,
         onDone: (url, reason, handle) => {
@@ -359,7 +361,7 @@ const PlacesPreviews = new (class extends EventEmitter {
       });
     });
     if (!buffer) {
-      logConsole.error("Unable to fetch preview: " + url);
+      lazy.logConsole.error("Unable to fetch preview: " + url);
       return false;
     }
     try {
@@ -368,7 +370,9 @@ const PlacesPreviews = new (class extends EventEmitter {
         tmpPath: filePath + ".tmp",
       });
     } catch (ex) {
-      logConsole.error(logConsole.error("Unable to create preview: " + ex));
+      lazy.logConsole.error(
+        lazy.logConsole.error("Unable to create preview: " + ex)
+      );
       return false;
     }
     this.#recentlyUpdatedPreviews.add(filePath);
@@ -398,7 +402,7 @@ const PlacesPreviews = new (class extends EventEmitter {
       .filter(n => /^[a-f0-9]{32}\.webp$/)
       .map(n => n.substring(0, n.lastIndexOf(".")));
 
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "PlacesPreviews.jsm::deleteOrphans",
       async db => {
         await db.execute(

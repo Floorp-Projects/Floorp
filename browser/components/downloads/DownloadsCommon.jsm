@@ -35,7 +35,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
@@ -45,7 +47,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
+XPCOMUtils.defineLazyServiceGetters(lazy, {
   gClipboardHelper: [
     "@mozilla.org/widget/clipboardhelper;1",
     "nsIClipboardHelper",
@@ -53,7 +55,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
-XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
+XPCOMUtils.defineLazyGetter(lazy, "DownloadsLogger", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
     maxLogLevelPref: "browser.download.loglevel",
@@ -63,7 +65,7 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gAlwaysOpenPanel",
   "browser.download.alwaysOpenPanel",
   true
@@ -228,17 +230,19 @@ var DownloadsCommon = {
    */
   getData(window, history = false, privateAll = false, limited = false) {
     let isPrivate =
-      window && PrivateBrowsingUtils.isContentWindowPrivate(window);
+      window && lazy.PrivateBrowsingUtils.isContentWindowPrivate(window);
     if (isPrivate && !privateAll) {
-      return PrivateDownloadsData;
+      return lazy.PrivateDownloadsData;
     }
     if (history) {
       if (isPrivate && privateAll) {
-        return LimitedPrivateHistoryDownloadData;
+        return lazy.LimitedPrivateHistoryDownloadData;
       }
-      return limited ? LimitedHistoryDownloadsData : HistoryDownloadsData;
+      return limited
+        ? lazy.LimitedHistoryDownloadsData
+        : lazy.HistoryDownloadsData;
     }
-    return DownloadsData;
+    return lazy.DownloadsData;
   },
 
   /**
@@ -246,8 +250,8 @@ var DownloadsCommon = {
    * private and non-private downloads data objects.
    */
   initializeAllDataLinks() {
-    DownloadsData.initializeDataLink();
-    PrivateDownloadsData.initializeDataLink();
+    lazy.DownloadsData.initializeDataLink();
+    lazy.PrivateDownloadsData.initializeDataLink();
   },
 
   /**
@@ -256,10 +260,10 @@ var DownloadsCommon = {
    * the window in question.
    */
   getIndicatorData(aWindow) {
-    if (PrivateBrowsingUtils.isContentWindowPrivate(aWindow)) {
-      return PrivateDownloadsIndicatorData;
+    if (lazy.PrivateBrowsingUtils.isContentWindowPrivate(aWindow)) {
+      return lazy.PrivateDownloadsIndicatorData;
     }
-    return DownloadsIndicatorData;
+    return lazy.DownloadsIndicatorData;
   },
 
   /**
@@ -273,7 +277,7 @@ var DownloadsCommon = {
    *        from the summary.
    */
   getSummary(aWindow, aNumToExclude) {
-    if (PrivateBrowsingUtils.isContentWindowPrivate(aWindow)) {
+    if (lazy.PrivateBrowsingUtils.isContentWindowPrivate(aWindow)) {
       if (this._privateSummary) {
         return this._privateSummary;
       }
@@ -338,11 +342,11 @@ var DownloadsCommon = {
     // that combine history and session downloads won't resurrect the history
     // download into the view just before it is deleted permanently.
     try {
-      await PlacesUtils.history.remove(download.source.url);
+      await lazy.PlacesUtils.history.remove(download.source.url);
     } catch (ex) {
       Cu.reportError(ex);
     }
-    let list = await Downloads.getList(Downloads.ALL);
+    let list = await lazy.Downloads.getList(lazy.Downloads.ALL);
     await list.remove(download);
     await download.finalize(true);
   },
@@ -362,18 +366,18 @@ var DownloadsCommon = {
   async deleteDownloadFiles(download, clearHistory = 0) {
     if (clearHistory > 1) {
       try {
-        await PlacesUtils.history.remove(download.source.url);
+        await lazy.PlacesUtils.history.remove(download.source.url);
       } catch (ex) {
         Cu.reportError(ex);
       }
     }
     if (clearHistory > 0) {
-      let list = await Downloads.getList(Downloads.ALL);
+      let list = await lazy.Downloads.getList(lazy.Downloads.ALL);
       await list.remove(download);
     }
     await download.manuallyRemoveData();
     if (clearHistory < 2) {
-      DownloadHistory.updateMetaData(download).catch(Cu.reportError);
+      lazy.DownloadHistory.updateMetaData(download).catch(Cu.reportError);
     }
   },
 
@@ -396,7 +400,7 @@ var DownloadsCommon = {
     // look at file extension if there's no contentType or it is generic
     if (!contentType || kGenericContentTypes.includes(contentType)) {
       try {
-        contentType = gMIMEService.getTypeFromExtension(fileExtension);
+        contentType = lazy.gMIMEService.getTypeFromExtension(fileExtension);
       } catch (ex) {
         DownloadsCommon.log(
           "Cant get mimeType from file extension: ",
@@ -409,7 +413,7 @@ var DownloadsCommon = {
     }
     let mimeInfo = null;
     try {
-      mimeInfo = gMIMEService.getFromTypeAndExtension(
+      mimeInfo = lazy.gMIMEService.getFromTypeAndExtension(
         contentType || "",
         fileExtension || ""
       );
@@ -442,7 +446,7 @@ var DownloadsCommon = {
    * Copies the source URI of the given Download object to the clipboard.
    */
   copyDownloadLink(download) {
-    gClipboardHelper.copyString(
+    lazy.gClipboardHelper.copyString(
       download.source.originalUrl || download.source.url
     );
   },
@@ -578,7 +582,7 @@ var DownloadsCommon = {
   async openDownload(download, options) {
     // some download objects got serialized and need reconstituting
     if (typeof download.launch !== "function") {
-      download = await Downloads.createDownload(download);
+      download = await lazy.Downloads.createDownload(download);
     }
     return download.launch(options).catch(ex => Cu.reportError(ex));
   },
@@ -624,7 +628,7 @@ var DownloadsCommon = {
       Cc["@mozilla.org/uriloader/external-protocol-service;1"]
         .getService(Ci.nsIExternalProtocolService)
         .loadURI(
-          NetUtil.newURI(aDirectory),
+          lazy.NetUtil.newURI(aDirectory),
           Services.scriptSecurityManager.getSystemPrincipal()
         );
     }
@@ -699,13 +703,13 @@ var DownloadsCommon = {
 
     let message;
     switch (verdict) {
-      case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+      case lazy.Downloads.Error.BLOCK_VERDICT_UNCOMMON:
         message = s.unblockTypeUncommon2;
         break;
-      case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+      case lazy.Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         message = s.unblockTypePotentiallyUnwanted2;
         break;
-      case Downloads.Error.BLOCK_VERDICT_INSECURE:
+      case lazy.Downloads.Error.BLOCK_VERDICT_INSECURE:
         message = s.unblockInsecure;
         break;
       default:
@@ -755,10 +759,10 @@ var DownloadsCommon = {
 };
 
 XPCOMUtils.defineLazyGetter(DownloadsCommon, "log", () => {
-  return DownloadsLogger.log.bind(DownloadsLogger);
+  return lazy.DownloadsLogger.log.bind(lazy.DownloadsLogger);
 });
 XPCOMUtils.defineLazyGetter(DownloadsCommon, "error", () => {
-  return DownloadsLogger.error.bind(DownloadsLogger);
+  return lazy.DownloadsLogger.error.bind(lazy.DownloadsLogger);
 });
 
 /**
@@ -799,14 +803,14 @@ function DownloadsDataCtor({ isPrivate, isHistory, maxHistoryResults } = {}) {
   // allowing the endTime property to be set correctly.
   if (isHistory) {
     if (isPrivate) {
-      PrivateDownloadsData.initializeDataLink();
+      lazy.PrivateDownloadsData.initializeDataLink();
     }
-    DownloadsData.initializeDataLink();
-    this._promiseList = DownloadsData._promiseList.then(() => {
+    lazy.DownloadsData.initializeDataLink();
+    this._promiseList = lazy.DownloadsData._promiseList.then(() => {
       // For history downloads in Private Browsing mode, we'll fetch the combined
       // list of public and private downloads.
-      return DownloadHistory.getList({
-        type: isPrivate ? Downloads.ALL : Downloads.PUBLIC,
+      return lazy.DownloadHistory.getList({
+        type: isPrivate ? lazy.Downloads.ALL : lazy.Downloads.PUBLIC,
         maxHistoryResults,
       });
     });
@@ -818,8 +822,8 @@ function DownloadsDataCtor({ isPrivate, isHistory, maxHistoryResults } = {}) {
   // underlying data to be loaded only when actually needed.
   this._promiseList = (async () => {
     await new Promise(resolve => (this.initializeDataLink = resolve));
-    let list = await Downloads.getList(
-      isPrivate ? Downloads.PRIVATE : Downloads.PUBLIC
+    let list = await lazy.Downloads.getList(
+      isPrivate ? lazy.Downloads.PRIVATE : lazy.Downloads.PUBLIC
     );
     await list.addView(this);
     return list;
@@ -864,7 +868,9 @@ DownloadsDataCtor.prototype = {
    * is only called after the data link has been initialized.
    */
   removeFinished() {
-    Downloads.getList(this._isPrivate ? Downloads.PRIVATE : Downloads.PUBLIC)
+    lazy.Downloads.getList(
+      this._isPrivate ? lazy.Downloads.PRIVATE : lazy.Downloads.PUBLIC
+    )
       .then(list => list.removeFinished())
       .catch(Cu.reportError);
   },
@@ -903,7 +909,7 @@ DownloadsDataCtor.prototype = {
 
         // This state transition code should actually be located in a Downloads
         // API module (bug 941009).
-        DownloadHistory.updateMetaData(download).catch(Cu.reportError);
+        lazy.DownloadHistory.updateMetaData(download).catch(Cu.reportError);
       }
 
       if (
@@ -986,7 +992,7 @@ DownloadsDataCtor.prototype = {
     );
 
     // Show the panel in the most recent browser window, if present.
-    let browserWin = BrowserWindowTracker.getTopWindow({
+    let browserWin = lazy.BrowserWindowTracker.getTopWindow({
       private: this._isPrivate,
     });
     if (!browserWin) {
@@ -1001,7 +1007,7 @@ DownloadsDataCtor.prototype = {
       ) &&
       DownloadsCommon.summarizeDownloads(this._downloads).numDownloading <= 1 &&
       browserWin == Services.focus.activeWindow &&
-      gAlwaysOpenPanel;
+      lazy.gAlwaysOpenPanel;
 
     if (
       this.panelHasShownBefore &&
@@ -1020,11 +1026,11 @@ DownloadsDataCtor.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "HistoryDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "HistoryDownloadsData", function() {
   return new DownloadsDataCtor({ isHistory: true });
 });
 
-XPCOMUtils.defineLazyGetter(this, "LimitedHistoryDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function() {
   return new DownloadsDataCtor({
     isHistory: true,
     maxHistoryResults: kMaxHistoryResultsForLimitedView,
@@ -1032,7 +1038,7 @@ XPCOMUtils.defineLazyGetter(this, "LimitedHistoryDownloadsData", function() {
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "LimitedPrivateHistoryDownloadData",
   function() {
     return new DownloadsDataCtor({
@@ -1043,11 +1049,11 @@ XPCOMUtils.defineLazyGetter(
   }
 );
 
-XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsData", function() {
   return new DownloadsDataCtor({ isPrivate: true });
 });
 
-XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DownloadsData", function() {
   return new DownloadsDataCtor();
 });
 
@@ -1095,9 +1101,9 @@ const DownloadsViewPrototype = {
     // Start receiving events when the first of our views is registered.
     if (!this._views.length) {
       if (this._isPrivate) {
-        PrivateDownloadsData.addView(this);
+        lazy.PrivateDownloadsData.addView(this);
       } else {
-        DownloadsData.addView(this);
+        lazy.DownloadsData.addView(this);
       }
     }
 
@@ -1133,9 +1139,9 @@ const DownloadsViewPrototype = {
     // Stop receiving events when the last of our views is unregistered.
     if (!this._views.length) {
       if (this._isPrivate) {
-        PrivateDownloadsData.removeView(this);
+        lazy.PrivateDownloadsData.removeView(this);
       } else {
-        DownloadsData.removeView(this);
+        lazy.DownloadsData.removeView(this);
       }
     }
   },
@@ -1328,15 +1334,15 @@ DownloadsIndicatorDataCtor.prototype = {
       download.error.reputationCheckVerdict
     ) {
       switch (download.error.reputationCheckVerdict) {
-        case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+        case lazy.Downloads.Error.BLOCK_VERDICT_UNCOMMON:
           attention = DownloadsCommon.ATTENTION_INFO;
           break;
-        case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED: // fall-through
-        case Downloads.Error.BLOCK_VERDICT_INSECURE:
-        case Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
+        case lazy.Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED: // fall-through
+        case lazy.Downloads.Error.BLOCK_VERDICT_INSECURE:
+        case lazy.Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
           attention = DownloadsCommon.ATTENTION_WARNING;
           break;
-        case Downloads.Error.BLOCK_VERDICT_MALWARE:
+        case lazy.Downloads.Error.BLOCK_VERDICT_MALWARE:
           attention = DownloadsCommon.ATTENTION_SEVERE;
           break;
         default:
@@ -1449,8 +1455,8 @@ DownloadsIndicatorDataCtor.prototype = {
    */
   *_activeDownloads() {
     let downloads = this._isPrivate
-      ? PrivateDownloadsData._downloads
-      : DownloadsData._downloads;
+      ? lazy.PrivateDownloadsData._downloads
+      : lazy.DownloadsData._downloads;
     for (let download of downloads) {
       if (!download.stopped || (download.canceled && download.hasPartialData)) {
         yield download;
@@ -1478,11 +1484,11 @@ DownloadsIndicatorDataCtor.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "PrivateDownloadsIndicatorData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsIndicatorData", function() {
   return new DownloadsIndicatorDataCtor(true);
 });
 
-XPCOMUtils.defineLazyGetter(this, "DownloadsIndicatorData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DownloadsIndicatorData", function() {
   return new DownloadsIndicatorDataCtor(false);
 });
 
@@ -1648,7 +1654,7 @@ DownloadsSummaryData.prototype = {
           this._lastTimeLeft
         );
       }
-      [this._details] = DownloadUtils.getDownloadStatusNoRate(
+      [this._details] = lazy.DownloadUtils.getDownloadStatusNoRate(
         summary.totalTransferred,
         summary.totalSize,
         summary.slowestSpeed,

@@ -13,7 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+const lazy = {};
+
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchUtils",
     maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
@@ -60,14 +62,14 @@ class LoadListener {
 
   // nsIRequestObserver
   onStartRequest(request) {
-    logConsole.debug("loadListener: Starting request:", request.name);
+    lazy.logConsole.debug("loadListener: Starting request:", request.name);
     this._stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
       Ci.nsIBinaryInputStream
     );
   }
 
   onStopRequest(request, statusCode) {
-    logConsole.debug("loadListener: Stopping request:", request.name);
+    lazy.logConsole.debug("loadListener: Stopping request:", request.name);
 
     var requestFailed = !Components.isSuccessCode(statusCode);
     if (!requestFailed && request instanceof Ci.nsIHttpChannel) {
@@ -75,11 +77,11 @@ class LoadListener {
     }
 
     if (requestFailed || this._countRead == 0) {
-      logConsole.warn("loadListener: request failed!");
+      lazy.logConsole.warn("loadListener: request failed!");
       // send null so the callback can deal with the failure
       this._bytes = null;
     } else if (!this._expectedContentType.test(this._channel.contentType)) {
-      logConsole.warn(
+      lazy.logConsole.warn(
         "loadListener: Content type does not match expected",
         this._channel.contentType
       );
@@ -215,7 +217,7 @@ var SearchUtils = {
    */
   notifyAction(engine, verb) {
     if (Services.search.isInitialized) {
-      logConsole.debug("NOTIFY: Engine:", engine.name, "Verb:", verb);
+      lazy.logConsole.debug("NOTIFY: Engine:", engine.name, "Verb:", verb);
       Services.obs.notifyObservers(engine, this.TOPIC_ENGINE_MODIFIED, verb);
     }
   },

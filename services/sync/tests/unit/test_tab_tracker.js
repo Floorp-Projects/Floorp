@@ -284,8 +284,8 @@ add_task(async function run_sync_on_tab_change_test() {
     "about page triggers a modified after we changed the pref"
   );
   Assert.ok(
-    scheduler.nextSync - Date.now() <= testExperimentDelay,
-    "about page should trigger a sync soon after we changed the pref"
+    tracker.tabsQuickWriteTimer,
+    "about page should schedule a quickWrite sync soon after we changed the pref"
   );
 
   _("Test no sync after tab change for accounts with <= 1 clients");
@@ -330,7 +330,7 @@ add_task(async function run_sync_on_tab_change_test() {
   // Ensure the tracker fired
   Assert.ok(tracker.modified);
   // We should be scheduling <= preference value
-  Assert.ok(scheduler.nextSync - Date.now() <= delayPref);
+  Assert.equal(tracker.tabsQuickWriteTimer.delay, delayPref);
 
   _("We should not have a sync if experiment if off and pref is 0");
 

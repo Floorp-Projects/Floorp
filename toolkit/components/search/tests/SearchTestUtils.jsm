@@ -9,7 +9,9 @@ const { MockRegistrar } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
@@ -33,11 +35,11 @@ var SearchTestUtils = {
     this._isMochitest = !env.exists("XPCSHELL_TEST_PROFILE_DIR");
     if (this._isMochitest) {
       this._isMochitest = true;
-      AddonTestUtils.initMochitest(testScope);
+      lazy.AddonTestUtils.initMochitest(testScope);
     } else {
       this._isMochitest = false;
       // This handles xpcshell-tests.
-      gTestScope.ExtensionTestUtils = ExtensionTestUtils;
+      gTestScope.ExtensionTestUtils = lazy.ExtensionTestUtils;
       this.initXPCShellAddonManager(testScope);
     }
   },
@@ -115,14 +117,14 @@ var SearchTestUtils = {
       .QueryInterface(Ci.nsIResProtocolHandler);
     resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
-    const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+    const settings = await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
     if (config) {
-      return sinon.stub(settings, "get").returns(config);
+      return lazy.sinon.stub(settings, "get").returns(config);
     }
 
     let response = await fetch(`resource://search-extensions/engines.json`);
     let json = await response.json();
-    return sinon.stub(settings, "get").returns(json.data);
+    return lazy.sinon.stub(settings, "get").returns(json.data);
   },
 
   async useMochitestEngines(testDir) {
@@ -167,7 +169,8 @@ var SearchTestUtils = {
    *  How to sign created addons.
    */
   initXPCShellAddonManager(scope, usePrivilegedSignatures = false) {
-    let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
+    let scopes =
+      lazy.AddonManager.SCOPE_PROFILE | lazy.AddonManager.SCOPE_APPLICATION;
     Services.prefs.setIntPref("extensions.enabledScopes", scopes);
     // Only do this once.
     try {
@@ -178,8 +181,8 @@ var SearchTestUtils = {
         throw ex;
       }
     }
-    AddonTestUtils.usePrivilegedSignatures = usePrivilegedSignatures;
-    AddonTestUtils.overrideCertDB();
+    lazy.AddonTestUtils.usePrivilegedSignatures = usePrivilegedSignatures;
+    lazy.AddonTestUtils.overrideCertDB();
   },
 
   /**
@@ -219,7 +222,7 @@ var SearchTestUtils = {
     extension = gTestScope.ExtensionTestUtils.loadExtension(extensionInfo);
     await extension.startup();
     if (!options.skipWaitForSearchEngine) {
-      await AddonTestUtils.waitForSearchProviderStartup(extension);
+      await lazy.AddonTestUtils.waitForSearchProviderStartup(extension);
     }
 
     // For xpcshell-tests we must register the unload after adding the extension.
@@ -242,7 +245,7 @@ var SearchTestUtils = {
    */
   async installSystemSearchExtension(options = {}) {
     options.id = (options.id ?? "example") + "@search.mozilla.org";
-    let xpi = await AddonTestUtils.createTempWebExtensionFile({
+    let xpi = await lazy.AddonTestUtils.createTempWebExtensionFile({
       manifest: this.createEngineManifest(options),
       background() {
         // eslint-disable-next-line no-undef
@@ -251,9 +254,12 @@ var SearchTestUtils = {
     });
     let wrapper = gTestScope.ExtensionTestUtils.expectExtension(options.id);
 
-    const install = await AddonManager.getInstallForURL(`file://${xpi.path}`, {
-      useSystemLocation: true,
-    });
+    const install = await lazy.AddonManager.getInstallForURL(
+      `file://${xpi.path}`,
+      {
+        useSystemLocation: true,
+      }
+    );
 
     install.install();
 
@@ -409,13 +415,13 @@ var SearchTestUtils = {
    */
   async updateRemoteSettingsConfig(config) {
     if (!config) {
-      let settings = RemoteSettings(SearchUtils.SETTINGS_KEY);
+      let settings = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
       config = await settings.get();
     }
     const reloadObserved = SearchTestUtils.promiseSearchNotification(
       "engines-reloaded"
     );
-    await RemoteSettings(SearchUtils.SETTINGS_KEY).emit("sync", {
+    await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY).emit("sync", {
       data: { current: config },
     });
 

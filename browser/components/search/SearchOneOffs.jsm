@@ -10,7 +10,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
 });
@@ -349,7 +350,7 @@ class SearchOneOffs {
     }
 
     this._engineInfo = {};
-    if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(this.window)) {
       this._engineInfo.default = await Services.search.getDefaultPrivate();
     } else {
       this._engineInfo.default = await Services.search.getDefault();
@@ -1031,7 +1032,7 @@ class SearchOneOffs {
     if (target.classList.contains("searchbar-engine-one-off-add-engine")) {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
-      SearchUIUtils.addOpenSearchEngine(
+      lazy.SearchUIUtils.addOpenSearchEngine(
         target.getAttribute("uri"),
         target.getAttribute("image"),
         this.window.gBrowser.selectedBrowser.browsingContext
@@ -1064,7 +1065,9 @@ class SearchOneOffs {
         : "defaultEngine";
       let currentEngine = Services.search[engineType];
 
-      const isPrivateWin = PrivateBrowsingUtils.isWindowPrivate(this.window);
+      const isPrivateWin = lazy.PrivateBrowsingUtils.isWindowPrivate(
+        this.window
+      );
       if (
         !this.getAttribute("includecurrentengine") &&
         isPrivateButton == isPrivateWin

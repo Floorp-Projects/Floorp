@@ -9,15 +9,17 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchSettings",
-    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+    maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",
   });
 });
 
@@ -70,16 +72,16 @@ class SearchSettings {
   _currentSettings = null;
 
   addObservers() {
-    Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
-    Services.obs.addObserver(this, SearchUtils.TOPIC_SEARCH_SERVICE);
+    Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
+    Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_SEARCH_SERVICE);
   }
 
   /**
    * Cleans up, removing observers.
    */
   removeObservers() {
-    Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
-    Services.obs.removeObserver(this, SearchUtils.TOPIC_SEARCH_SERVICE);
+    Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
+    Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_SEARCH_SERVICE);
   }
 
   /**
@@ -105,7 +107,7 @@ class SearchSettings {
         throw new Error("no engine in the file");
       }
     } catch (ex) {
-      logConsole.warn("get: No settings file exists, new profile?", ex);
+      lazy.logConsole.warn("get: No settings file exists, new profile?", ex);
       json = {};
     }
     if (json.metaData) {
@@ -114,7 +116,7 @@ class SearchSettings {
     // Versions of gecko older than 82 stored the order flag as a preference.
     // This was changed in version 6 of the settings file.
     if (json.version < 6 || !("useSavedOrder" in this._metaData)) {
-      const prefName = SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
+      const prefName = lazy.SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
       let useSavedOrder = Services.prefs.getBoolPref(prefName, false);
 
       this.setAttribute("useSavedOrder", useSavedOrder);
@@ -145,10 +147,10 @@ class SearchSettings {
           this._batchTask.arm();
           return;
         }
-        logConsole.debug("batchTask: Invalidating engine settings");
+        lazy.logConsole.debug("batchTask: Invalidating engine settings");
         await this._write();
       };
-      this._batchTask = new DeferredTask(
+      this._batchTask = new lazy.DeferredTask(
         task,
         SearchSettings.SETTINGS_INVALIDATION_DELAY
       );
@@ -169,7 +171,7 @@ class SearchSettings {
     if (!this._batchTask) {
       return;
     }
-    logConsole.debug("finalizing batch task");
+    lazy.logConsole.debug("finalizing batch task");
     let task = this._batchTask;
     this._batchTask = null;
     // Tests manipulate the settings directly, so let's not double-write with
@@ -192,7 +194,7 @@ class SearchSettings {
     let settings = {};
 
     // Allows us to force a settings refresh should the settings format change.
-    settings.version = SearchUtils.SETTINGS_VERSION;
+    settings.version = lazy.SearchUtils.SETTINGS_VERSION;
     settings.engines = [...this._searchService._engines.values()];
     settings.metaData = this._metaData;
 
@@ -216,20 +218,20 @@ class SearchSettings {
         throw new Error("cannot write without any engine.");
       }
 
-      logConsole.debug("_write: Writing to settings file.");
+      lazy.logConsole.debug("_write: Writing to settings file.");
       let path = PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME);
       await IOUtils.writeJSON(path, settings, {
         compress: true,
         tmpPath: path + ".tmp",
       });
-      logConsole.debug("_write: settings file written to disk.");
+      lazy.logConsole.debug("_write: settings file written to disk.");
       Services.obs.notifyObservers(
         null,
-        SearchUtils.TOPIC_SEARCH_SERVICE,
+        lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
         "write-settings-to-disk-complete"
       );
     } catch (ex) {
-      logConsole.error("_write: Could not write to settings file:", ex);
+      lazy.logConsole.error("_write: Could not write to settings file:", ex);
     }
   }
 
@@ -257,9 +259,9 @@ class SearchSettings {
    */
   setVerifiedAttribute(name, val) {
     this._metaData[name] = val;
-    this._metaData[this.getHashName(name)] = SearchUtils.getVerificationHash(
-      val
-    );
+    this._metaData[
+      this.getHashName(name)
+    ] = lazy.SearchUtils.getVerificationHash(val);
     this._delayedWrite();
   }
 
@@ -289,9 +291,9 @@ class SearchSettings {
     if (
       val &&
       this.getAttribute(this.getHashName(name)) !=
-        SearchUtils.getVerificationHash(val)
+        lazy.SearchUtils.getVerificationHash(val)
     ) {
-      logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
+      lazy.logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
       return undefined;
     }
     return val;
@@ -342,16 +344,16 @@ class SearchSettings {
   // nsIObserver
   observe(engine, topic, verb) {
     switch (topic) {
-      case SearchUtils.TOPIC_ENGINE_MODIFIED:
+      case lazy.SearchUtils.TOPIC_ENGINE_MODIFIED:
         switch (verb) {
-          case SearchUtils.MODIFIED_TYPE.ADDED:
-          case SearchUtils.MODIFIED_TYPE.CHANGED:
-          case SearchUtils.MODIFIED_TYPE.REMOVED:
+          case lazy.SearchUtils.MODIFIED_TYPE.ADDED:
+          case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
+          case lazy.SearchUtils.MODIFIED_TYPE.REMOVED:
             this._delayedWrite();
             break;
         }
         break;
-      case SearchUtils.TOPIC_SEARCH_SERVICE:
+      case lazy.SearchUtils.TOPIC_SEARCH_SERVICE:
         switch (verb) {
           case "init-complete":
           case "engines-reloaded":

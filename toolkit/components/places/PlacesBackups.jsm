@@ -11,13 +11,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
-  this,
+  lazy,
   "filenamesRegex",
   () =>
     /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
@@ -41,7 +43,7 @@ async function limitBackups(aMaxBackups, backupFiles) {
  * Appends meta-data information to a given filename.
  */
 function appendMetaDataToFilename(aFilename, aMetaData) {
-  let matches = aFilename.match(filenamesRegex);
+  let matches = aFilename.match(lazy.filenamesRegex);
   return (
     "bookmarks-" +
     matches[1] +
@@ -60,7 +62,7 @@ function appendMetaDataToFilename(aFilename, aMetaData) {
  * @return the extracted hash or null.
  */
 function getHashFromFilename(aFilename) {
-  let matches = aFilename.match(filenamesRegex);
+  let matches = aFilename.match(lazy.filenamesRegex);
   if (matches && matches[3]) {
     return matches[3];
   }
@@ -71,8 +73,8 @@ function getHashFromFilename(aFilename) {
  * Given two filenames, checks if they contain the same date.
  */
 function isFilenameWithSameDate(aSourceName, aTargetName) {
-  let sourceMatches = aSourceName.match(filenamesRegex);
-  let targetMatches = aTargetName.match(filenamesRegex);
+  let sourceMatches = aSourceName.match(lazy.filenamesRegex);
+  let targetMatches = aTargetName.match(lazy.filenamesRegex);
 
   return sourceMatches && targetMatches && sourceMatches[1] == targetMatches[1];
 }
@@ -104,7 +106,7 @@ var PlacesBackups = {
    *  4: file extension
    */
   get filenamesRegex() {
-    return filenamesRegex;
+    return lazy.filenamesRegex;
   },
 
   /**
@@ -155,7 +157,7 @@ var PlacesBackups = {
           continue;
         }
 
-        if (filenamesRegex.test(filename)) {
+        if (lazy.filenamesRegex.test(filename)) {
           // Remove bogus backups in future dates.
           if (this.getDateForFile(entry) > new Date()) {
             list.push(IOUtils.remove(entry));
@@ -234,7 +236,7 @@ var PlacesBackups = {
    */
   getDateForFile: function PB_getDateForFile(aBackupFile) {
     let filename = PathUtils.filename(aBackupFile);
-    let matches = filename.match(filenamesRegex);
+    let matches = filename.match(lazy.filenamesRegex);
     if (!matches) {
       throw new Error(`Invalid backup file name: ${filename}`);
     }
@@ -300,9 +302,10 @@ var PlacesBackups = {
    * @resolves the number of serialized uri nodes.
    */
   async saveBookmarksToJSONFile(aFilePath) {
-    let { count: nodeCount, hash: hash } = await BookmarkJSONUtils.exportToFile(
-      aFilePath
-    );
+    let {
+      count: nodeCount,
+      hash: hash,
+    } = await lazy.BookmarkJSONUtils.exportToFile(aFilePath);
 
     let backupFolderPath = await this.getBackupFolder();
     if (PathUtils.profileDir == backupFolderPath) {
@@ -422,7 +425,7 @@ var PlacesBackups = {
         let {
           count: nodeCount,
           hash: hash,
-        } = await BookmarkJSONUtils.exportToFile(newBackupFile, {
+        } = await lazy.BookmarkJSONUtils.exportToFile(newBackupFile, {
           compress: true,
           failIfHashIs: mostRecentHash,
         });
@@ -473,7 +476,7 @@ var PlacesBackups = {
   getBookmarkCountForFile: function PB_getBookmarkCountForFile(aFilePath) {
     let count = null;
     let filename = PathUtils.filename(aFilePath);
-    let matches = filename.match(filenamesRegex);
+    let matches = filename.match(lazy.filenamesRegex);
     if (matches && matches[2]) {
       count = matches[2];
     }
@@ -506,8 +509,8 @@ var PlacesBackups = {
    */
   async getBookmarksTree() {
     let startTime = Date.now();
-    let root = await PlacesUtils.promiseBookmarksTree(
-      PlacesUtils.bookmarks.rootGuid,
+    let root = await lazy.PlacesUtils.promiseBookmarksTree(
+      lazy.PlacesUtils.bookmarks.rootGuid,
       {
         includeItemIds: true,
       }
