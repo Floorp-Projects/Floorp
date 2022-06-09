@@ -147,6 +147,10 @@ let AVAILABLE_PIP_OVERRIDES;
         visibilityThreshold: 0.9,
         videoWrapperScriptPath: "video-wrappers/youtube.js",
       },
+      "https://*.youtube-nocookie.com/*": {
+        visibilityThreshold: 0.9,
+        videoWrapperScriptPath: "video-wrappers/youtube.js",
+      },
     },
 
     primeVideo: {
