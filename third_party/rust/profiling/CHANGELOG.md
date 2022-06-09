@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.6
+ * Update tracy-client to 0.13
+
 ## 1.0.5
  * Update puffin to 0.12.1
 

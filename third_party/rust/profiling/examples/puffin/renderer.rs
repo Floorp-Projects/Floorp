@@ -469,7 +469,7 @@ rafx::declare_render_phase!(
     opaque_render_phase_sort_submit_nodes
 );
 
-fn opaque_render_phase_sort_submit_nodes(_submit_nodes: &mut Vec<RenderFeatureSubmitNode>) {
+fn opaque_render_phase_sort_submit_nodes(_submit_nodes: &mut [RenderFeatureSubmitNode]) {
     // No sort needed
 }
 

@@ -1142,7 +1142,7 @@ version = "1.0.38"
 criteria = "safe-to-deploy"
 
 [[unaudited.profiling]]
-version = "1.0.5"
+version = "1.0.6"
 criteria = "safe-to-deploy"
 
 [[unaudited.prost]]
