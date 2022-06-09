@@ -210,38 +210,34 @@ static inline ValueOperand GetTempValue(Register type, Register payload) {
 #endif
 }
 
-int32_t CodeGeneratorShared::ArgToStackOffset(int32_t slot) const {
+uint32_t CodeGeneratorShared::ArgToStackOffset(uint32_t slot) const {
   return masm.framePushed() +
          (gen->compilingWasm() ? sizeof(wasm::Frame) : sizeof(JitFrameLayout)) +
          slot;
 }
 
-int32_t CodeGeneratorShared::SlotToStackOffset(int32_t slot) const {
-  MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotsSize()));
-  int32_t offset = masm.framePushed() - slot;
-  MOZ_ASSERT(offset >= 0);
-  return offset;
+uint32_t CodeGeneratorShared::SlotToStackOffset(uint32_t slot) const {
+  MOZ_ASSERT(slot > 0 && slot <= graph.localSlotsSize());
+  MOZ_ASSERT(slot <= masm.framePushed());
+  return masm.framePushed() - slot;
 }
 
 // For argument construction for calls. Argslots are Value-sized.
-int32_t CodeGeneratorShared::StackOffsetOfPassedArg(int32_t slot) const {
+uint32_t CodeGeneratorShared::StackOffsetOfPassedArg(uint32_t slot) const {
   // A slot of 0 is permitted only to calculate %esp offset for calls.
-  MOZ_ASSERT(slot >= 0 && slot <= int32_t(graph.argumentSlotCount()));
-  int32_t offset = masm.framePushed() - graph.paddedLocalSlotsSize() -
-                   (slot * sizeof(Value));
+  MOZ_ASSERT(slot <= graph.argumentSlotCount());
+  uint32_t offsetFromBase = graph.paddedLocalSlotsSize() + slot * sizeof(Value);
+  MOZ_ASSERT(offsetFromBase <= masm.framePushed());
+  uint32_t offset = masm.framePushed() - offsetFromBase;
 
-  // Passed arguments go below A function's local stack storage.
-  // When arguments are being pushed, there is nothing important on the stack.
-  // Therefore, It is safe to push the arguments down arbitrarily.  Pushing
-  // by sizeof(Value) is desirable since everything on the stack is a Value.
-  // Note that paddedLocalSlotCount() aligns to at least a Value boundary
-  // specifically to support this.
-  MOZ_ASSERT(offset >= 0);
+  // Space for passed arguments is reserved below a function's local stack
+  // storage. Note that paddedLocalSlotsSize() is aligned to at least
+  // sizeof(Value) to ensure proper alignment.
   MOZ_ASSERT(offset % sizeof(Value) == 0);
   return offset;
 }
 
-int32_t CodeGeneratorShared::ToStackOffset(LAllocation a) const {
+uint32_t CodeGeneratorShared::ToStackOffset(LAllocation a) const {
   if (a.isArgument()) {
     return ArgToStackOffset(a.toArgument()->index());
   }
@@ -249,7 +245,7 @@ int32_t CodeGeneratorShared::ToStackOffset(LAllocation a) const {
                                            : a.toStackArea()->base());
 }
 
-int32_t CodeGeneratorShared::ToStackOffset(const LAllocation* a) const {
+uint32_t CodeGeneratorShared::ToStackOffset(const LAllocation* a) const {
   return ToStackOffset(*a);
 }
 
@@ -276,13 +272,13 @@ Address CodeGeneratorShared::ToAddress(Register elements,
   return Address(elements, offset);
 }
 
-int32_t CodeGeneratorShared::ToFramePointerOffset(LAllocation a) const {
+uint32_t CodeGeneratorShared::ToFramePointerOffset(LAllocation a) const {
   MOZ_ASSERT(useWasmStackArgumentAbi());
   MOZ_ASSERT(a.isArgument());
   return a.toArgument()->index() + sizeof(wasm::Frame);
 }
 
-int32_t CodeGeneratorShared::ToFramePointerOffset(const LAllocation* a) const {
+uint32_t CodeGeneratorShared::ToFramePointerOffset(const LAllocation* a) const {
   return ToFramePointerOffset(*a);
 }
 
