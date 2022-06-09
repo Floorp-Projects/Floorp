@@ -203,10 +203,6 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   return mDeviceInfo;
 }
 
-const UniquePtr<const webrtc::Config>& VideoEngine::GetConfiguration() {
-  return mConfig;
-}
-
 already_AddRefed<VideoEngine> VideoEngine::Create(
     UniquePtr<const webrtc::Config>&& aConfig) {
   LOG(("%s", __PRETTY_FUNCTION__));
@@ -256,8 +252,7 @@ int32_t VideoEngine::GenerateId() {
 VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
     : mId(0),
       mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>()),
-      mDeviceInfo(nullptr),
-      mConfig(std::move(aConfig)) {
+      mDeviceInfo(nullptr) {
   LOG(("%s", __PRETTY_FUNCTION__));
 }
 
