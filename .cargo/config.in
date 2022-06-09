@@ -50,7 +50,7 @@ rev = "2689788cecf24c385e6b7440e3aa1a89c511f14a"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "b86a26dee550081fa49bf34e3a5e6d7a673ea7a9"
+rev = "20d01b2c01a5be01d3dea3ec7a1ede2fdda3d9d2"
 
 [source."https://github.com/kinetiknz/mio-named-pipes"]
 git = "https://github.com/kinetiknz/mio-named-pipes"
