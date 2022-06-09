@@ -13,7 +13,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::vec;
-use unicode_xid::UnicodeXID;
 
 /// Force use of proc-macro2's fallback implementation of the API for now, even
 /// if the compiler's implementation is available.
@@ -666,11 +665,11 @@ impl Ident {
 }
 
 pub(crate) fn is_ident_start(c: char) -> bool {
-    c == '_' || UnicodeXID::is_xid_start(c)
+    c == '_' || unicode_ident::is_xid_start(c)
 }
 
 pub(crate) fn is_ident_continue(c: char) -> bool {
-    UnicodeXID::is_xid_continue(c)
+    unicode_ident::is_xid_continue(c)
 }
 
 fn validate_ident(string: &str) {
