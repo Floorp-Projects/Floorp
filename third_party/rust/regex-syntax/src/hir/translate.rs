@@ -434,20 +434,14 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
             }
             ast::ClassSetItem::Ascii(ref x) => {
                 if self.flags().unicode() {
+                    let xcls = self.hir_ascii_unicode_class(x)?;
                     let mut cls = self.pop().unwrap().unwrap_class_unicode();
-                    for &(s, e) in ascii_class(&x.kind) {
-                        cls.push(hir::ClassUnicodeRange::new(s, e));
-                    }
-                    self.unicode_fold_and_negate(
-                        &x.span, x.negated, &mut cls,
-                    )?;
+                    cls.union(&xcls);
                     self.push(HirFrame::ClassUnicode(cls));
                 } else {
+                    let xcls = self.hir_ascii_byte_class(x)?;
                     let mut cls = self.pop().unwrap().unwrap_class_bytes();
-                    for &(s, e) in ascii_class(&x.kind) {
-                        cls.push(hir::ClassBytesRange::new(s as u8, e as u8));
-                    }
-                    self.bytes_fold_and_negate(&x.span, x.negated, &mut cls)?;
+                    cls.union(&xcls);
                     self.push(HirFrame::ClassBytes(cls));
                 }
             }
@@ -853,6 +847,32 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         result
     }
 
+    fn hir_ascii_unicode_class(
+        &self,
+        ast: &ast::ClassAscii,
+    ) -> Result<hir::ClassUnicode> {
+        let mut cls = hir::ClassUnicode::new(
+            ascii_class(&ast.kind)
+                .iter()
+                .map(|&(s, e)| hir::ClassUnicodeRange::new(s, e)),
+        );
+        self.unicode_fold_and_negate(&ast.span, ast.negated, &mut cls)?;
+        Ok(cls)
+    }
+
+    fn hir_ascii_byte_class(
+        &self,
+        ast: &ast::ClassAscii,
+    ) -> Result<hir::ClassBytes> {
+        let mut cls = hir::ClassBytes::new(
+            ascii_class(&ast.kind)
+                .iter()
+                .map(|&(s, e)| hir::ClassBytesRange::new(s as u8, e as u8)),
+        );
+        self.bytes_fold_and_negate(&ast.span, ast.negated, &mut cls)?;
+        Ok(cls)
+    }
+
     fn hir_perl_unicode_class(
         &self,
         ast_class: &ast::ClassPerl,
@@ -948,7 +968,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         class: &mut hir::ClassBytes,
     ) -> Result<()> {
         // Note that we must apply case folding before negation!
-        // Consider `(?i)[^x]`. If we applied negation field, then
+        // Consider `(?i)[^x]`. If we applied negation first, then
         // the result would be the character class that matched any
         // Unicode scalar value.
         if self.flags().case_insensitive() {
@@ -1940,6 +1960,25 @@ mod tests {
                     Position::new(17, 1, 18)
                 ),
             }
+        );
+    }
+
+    #[test]
+    fn class_ascii_multiple() {
+        // See: https://github.com/rust-lang/regex/issues/680
+        assert_eq!(
+            t("[[:alnum:][:^ascii:]]"),
+            hir_union(
+                hir_uclass(ascii_class(&ast::ClassAsciiKind::Alnum)),
+                hir_uclass(&[('\u{80}', '\u{10FFFF}')]),
+            ),
+        );
+        assert_eq!(
+            t_bytes("(?-u)[[:alnum:][:^ascii:]]"),
+            hir_union(
+                hir_bclass_from_char(ascii_class(&ast::ClassAsciiKind::Alnum)),
+                hir_bclass(&[(0x80, 0xFF)]),
+            ),
         );
     }
 
@@ -3100,6 +3139,9 @@ mod tests {
         assert!(t(r"\pL*").is_match_empty());
         assert!(t(r"a*|b").is_match_empty());
         assert!(t(r"b|a*").is_match_empty());
+        assert!(t(r"a|").is_match_empty());
+        assert!(t(r"|a").is_match_empty());
+        assert!(t(r"a||b").is_match_empty());
         assert!(t(r"a*a?(abcd)*").is_match_empty());
         assert!(t(r"^").is_match_empty());
         assert!(t(r"$").is_match_empty());
@@ -3109,6 +3151,8 @@ mod tests {
         assert!(t(r"\z").is_match_empty());
         assert!(t(r"\B").is_match_empty());
         assert!(t_bytes(r"(?-u)\B").is_match_empty());
+        assert!(t(r"\b").is_match_empty());
+        assert!(t(r"(?-u)\b").is_match_empty());
 
         // Negative examples.
         assert!(!t(r"a+").is_match_empty());
@@ -3118,8 +3162,6 @@ mod tests {
         assert!(!t(r"a{1,10}").is_match_empty());
         assert!(!t(r"b|a").is_match_empty());
         assert!(!t(r"a*a+(abcd)*").is_match_empty());
-        assert!(!t(r"\b").is_match_empty());
-        assert!(!t(r"(?-u)\b").is_match_empty());
     }
 
     #[test]
