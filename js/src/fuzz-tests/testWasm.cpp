@@ -276,6 +276,9 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     SharedModule module =
         CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
     if (!module) {
+      // We should always have a valid module if we are using wasm-smith. Check
+      // that no error is reported, signalling an OOM.
+      MOZ_RELEASE_ASSERT(!gIsWasmSmith || !error);
       continue;
     }
 
