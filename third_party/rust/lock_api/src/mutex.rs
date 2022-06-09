@@ -149,7 +149,7 @@ unsafe impl<R: RawMutex + Sync, T: ?Sized + Send> Sync for Mutex<R, T> {}
 
 impl<R: RawMutex, T> Mutex<R, T> {
     /// Creates a new mutex in an unlocked state ready for use.
-    #[cfg(feature = "nightly")]
+    #[cfg(has_const_fn_trait_bound)]
     #[inline]
     pub const fn new(val: T) -> Mutex<R, T> {
         Mutex {
@@ -159,7 +159,7 @@ impl<R: RawMutex, T> Mutex<R, T> {
     }
 
     /// Creates a new mutex in an unlocked state ready for use.
-    #[cfg(not(feature = "nightly"))]
+    #[cfg(not(has_const_fn_trait_bound))]
     #[inline]
     pub fn new(val: T) -> Mutex<R, T> {
         Mutex {
@@ -565,6 +565,17 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
         defer!(s.mutex.raw.lock());
         f()
     }
+
+    /// Leaks the mutex guard and returns a mutable reference to the data
+    /// protected by the mutex.
+    ///
+    /// This will leave the `Mutex` in a locked state.
+    #[inline]
+    pub fn leak(s: Self) -> &'a mut T {
+        let r = unsafe { &mut *s.mutex.data.get() };
+        mem::forget(s);
+        r
+    }
 }
 
 impl<'a, R: RawMutexFair + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
@@ -663,8 +674,8 @@ impl<'a, R: RawMutex + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display for Mutex
 unsafe impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> StableAddress for MutexGuard<'a, R, T> {}
 
 /// An RAII mutex guard returned by the `Arc` locking operations on `Mutex`.
-/// 
-/// This is similar to the `MutexGuard` struct, except instead of using a reference to unlock the `Mutex` it 
+///
+/// This is similar to the `MutexGuard` struct, except instead of using a reference to unlock the `Mutex` it
 /// uses an `Arc<Mutex>`. This has several advantages, most notably that it has an `'static` lifetime.
 #[cfg(feature = "arc_lock")]
 #[must_use = "if unused the Mutex will immediately unlock"]
@@ -713,7 +724,7 @@ impl<R: RawMutexFair, T: ?Sized> ArcMutexGuard<R, T> {
 
         // SAFETY: make sure the Arc gets it reference decremented
         let mut s = ManuallyDrop::new(s);
-        unsafe { ptr::drop_in_place(&mut s.mutex) }; 
+        unsafe { ptr::drop_in_place(&mut s.mutex) };
     }
 
     /// Temporarily unlocks the mutex to execute the given function.

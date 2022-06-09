@@ -230,7 +230,7 @@ unsafe impl<R: RawMutex + Sync, G: GetThreadId + Sync, T: ?Sized + Send> Sync
 
 impl<R: RawMutex, G: GetThreadId, T> ReentrantMutex<R, G, T> {
     /// Creates a new reentrant mutex in an unlocked state ready for use.
-    #[cfg(feature = "nightly")]
+    #[cfg(has_const_fn_trait_bound)]
     #[inline]
     pub const fn new(val: T) -> ReentrantMutex<R, G, T> {
         ReentrantMutex {
@@ -245,7 +245,7 @@ impl<R: RawMutex, G: GetThreadId, T> ReentrantMutex<R, G, T> {
     }
 
     /// Creates a new reentrant mutex in an unlocked state ready for use.
-    #[cfg(not(feature = "nightly"))]
+    #[cfg(not(has_const_fn_trait_bound))]
     #[inline]
     pub fn new(val: T) -> ReentrantMutex<R, G, T> {
         ReentrantMutex {
@@ -401,7 +401,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     }
 
     /// # Safety
-    /// 
+    ///
     /// The lock must be held before calling this method.
     #[cfg(feature = "arc_lock")]
     #[inline]
@@ -413,7 +413,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     }
 
     /// Acquires a reentrant mutex through an `Arc`.
-    /// 
+    ///
     /// This method is similar to the `lock` method; however, it requires the `ReentrantMutex` to be inside of an
     /// `Arc` and the resulting mutex guard has no lifetime requirements.
     #[cfg(feature = "arc_lock")]
@@ -425,7 +425,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     }
 
     /// Attempts to acquire a reentrant mutex through an `Arc`.
-    /// 
+    ///
     /// This method is similar to the `try_lock` method; however, it requires the `ReentrantMutex` to be inside
     /// of an `Arc` and the resulting mutex guard has no lifetime requirements.
     #[cfg(feature = "arc_lock")]
@@ -490,12 +490,15 @@ impl<R: RawMutexTimed, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     }
 
     /// Attempts to acquire this lock until a timeout is reached, through an `Arc`.
-    /// 
+    ///
     /// This method is similar to the `try_lock_for` method; however, it requires the `ReentrantMutex` to be
     /// inside of an `Arc` and the resulting mutex guard has no lifetime requirements.
     #[cfg(feature = "arc_lock")]
     #[inline]
-    pub fn try_lock_arc_for(self: &Arc<Self>, timeout: R::Duration) -> Option<ArcReentrantMutexGuard<R, G, T>> {
+    pub fn try_lock_arc_for(
+        self: &Arc<Self>,
+        timeout: R::Duration,
+    ) -> Option<ArcReentrantMutexGuard<R, G, T>> {
         if self.raw.try_lock_for(timeout) {
             // SAFETY: locking guarantee is upheld
             Some(unsafe { self.guard_arc() })
@@ -505,12 +508,15 @@ impl<R: RawMutexTimed, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     }
 
     /// Attempts to acquire this lock until a timeout is reached, through an `Arc`.
-    /// 
+    ///
     /// This method is similar to the `try_lock_until` method; however, it requires the `ReentrantMutex` to be
     /// inside of an `Arc` and the resulting mutex guard has no lifetime requirements.
     #[cfg(feature = "arc_lock")]
     #[inline]
-    pub fn try_lock_arc_until(self: &Arc<Self>, timeout: R::Instant) -> Option<ArcReentrantMutexGuard<R, G, T>> {
+    pub fn try_lock_arc_until(
+        self: &Arc<Self>,
+        timeout: R::Instant,
+    ) -> Option<ArcReentrantMutexGuard<R, G, T>> {
         if self.raw.try_lock_until(timeout) {
             // SAFETY: locking guarantee is upheld
             Some(unsafe { self.guard_arc() })
@@ -736,7 +742,6 @@ impl<'a, R: RawMutexFair + 'a, G: GetThreadId + 'a, T: ?Sized + 'a>
             s.remutex.raw.bump();
         }
     }
-
 }
 
 impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a> Deref
@@ -783,9 +788,9 @@ unsafe impl<'a, R: RawMutex + 'a, G: GetThreadId + 'a, T: ?Sized + 'a> StableAdd
 {
 }
 
-/// An RAII mutex guard returned by the `Arc` locking operations on `ReentrantMutex`. 
-/// 
-/// This is similar to the `ReentrantMutexGuard` struct, except instead of using a reference to unlock the 
+/// An RAII mutex guard returned by the `Arc` locking operations on `ReentrantMutex`.
+///
+/// This is similar to the `ReentrantMutexGuard` struct, except instead of using a reference to unlock the
 /// `Mutex` it uses an `Arc<ReentrantMutex>`. This has several advantages, most notably that it has an `'static`
 /// lifetime.
 #[cfg(feature = "arc_lock")]
@@ -821,9 +826,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ArcReentrantMutexGuard<R, G, T> {
 }
 
 #[cfg(feature = "arc_lock")]
-impl<R: RawMutexFair, G: GetThreadId, T: ?Sized>
-    ArcReentrantMutexGuard<R, G, T>
-{
+impl<R: RawMutexFair, G: GetThreadId, T: ?Sized> ArcReentrantMutexGuard<R, G, T> {
     /// Unlocks the mutex using a fair unlock protocol.
     ///
     /// This is functionally identical to the `unlock_fair` method on [`ReentrantMutexGuard`].
@@ -868,9 +871,7 @@ impl<R: RawMutexFair, G: GetThreadId, T: ?Sized>
 }
 
 #[cfg(feature = "arc_lock")]
-impl<R: RawMutex, G: GetThreadId, T: ?Sized> Deref
-    for ArcReentrantMutexGuard<R, G, T>
-{
+impl<R: RawMutex, G: GetThreadId, T: ?Sized> Deref for ArcReentrantMutexGuard<R, G, T> {
     type Target = T;
     #[inline]
     fn deref(&self) -> &T {
@@ -879,9 +880,7 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> Deref
 }
 
 #[cfg(feature = "arc_lock")]
-impl<R: RawMutex, G: GetThreadId, T: ?Sized> Drop
-    for ArcReentrantMutexGuard<R, G, T>
-{
+impl<R: RawMutex, G: GetThreadId, T: ?Sized> Drop for ArcReentrantMutexGuard<R, G, T> {
     #[inline]
     fn drop(&mut self) {
         // Safety: A ReentrantMutexGuard always holds the lock.

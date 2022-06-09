@@ -84,13 +84,10 @@
 //! - `owning_ref`: Allows your lock types to be used with the `owning_ref` crate.
 //! - `arc_lock`: Enables locking from an `Arc`. This enables types such as `ArcMutexGuard`. Note that this
 //!   requires the `alloc` crate to be present.
-//! - `nightly`: Enables nightly-only features. At the moment the only such
-//!   feature is `const fn` constructors for lock types.
 
 #![no_std]
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
-#![cfg_attr(feature = "nightly", feature(const_fn_trait_bound))]
 
 #[macro_use]
 extern crate scopeguard;
