@@ -223,16 +223,6 @@ int32_t CodeGeneratorShared::SlotToStackOffset(int32_t slot) const {
   return offset;
 }
 
-int32_t CodeGeneratorShared::StackOffsetToSlot(int32_t offset) const {
-  // See: SlotToStackOffset. This is used to convert pushed arguments
-  // to a slot index that safepoints can use.
-  //
-  // offset = framePushed - frameInitialAdjustment - slot
-  // offset + slot = framePushed - frameInitialAdjustment
-  // slot = framePushed - frameInitialAdjustement - offset
-  return masm.framePushed() - offset;
-}
-
 // For argument construction for calls. Argslots are Value-sized.
 int32_t CodeGeneratorShared::StackOffsetOfPassedArg(int32_t slot) const {
   // A slot of 0 is permitted only to calculate %esp offset for calls.

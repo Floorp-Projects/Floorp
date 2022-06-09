@@ -641,15 +641,15 @@ void JitCode::finalize(JS::GCContext* gcx) {
   pool_ = nullptr;
 }
 
-IonScript::IonScript(IonCompilationId compilationId, uint32_t frameSlotsSize,
+IonScript::IonScript(IonCompilationId compilationId, uint32_t localSlotsSize,
                      uint32_t argumentSlotsSize, uint32_t frameSize)
-    : frameSlotsSize_(frameSlotsSize),
+    : localSlotsSize_(localSlotsSize),
       argumentSlotsSize_(argumentSlotsSize),
       frameSize_(frameSize),
       compilationId_(compilationId) {}
 
 IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
-                          uint32_t frameSlotsSize, uint32_t argumentSlotsSize,
+                          uint32_t localSlotsSize, uint32_t argumentSlotsSize,
                           uint32_t frameSize, size_t snapshotsListSize,
                           size_t snapshotsRVATableSize, size_t recoversSize,
                           size_t constants, size_t nurseryObjects,
@@ -690,7 +690,7 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
     return nullptr;
   }
   IonScript* script = new (raw)
-      IonScript(compilationId, frameSlotsSize, argumentSlotsSize, frameSize);
+      IonScript(compilationId, localSlotsSize, argumentSlotsSize, frameSize);
 
   Offset offsetCursor = sizeof(IonScript);
 
