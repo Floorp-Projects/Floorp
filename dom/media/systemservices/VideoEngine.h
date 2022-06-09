@@ -18,34 +18,6 @@
 
 namespace mozilla::camera {
 
-enum class CaptureDeviceType { Camera, Screen, Window, Browser };
-
-struct CaptureDeviceInfo {
-  CaptureDeviceType type;
-
-  CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
-  explicit CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
-
-  const char* TypeName() const {
-    switch (type) {
-      case CaptureDeviceType::Camera: {
-        return "Camera";
-      }
-      case CaptureDeviceType::Screen: {
-        return "Screen";
-      }
-      case CaptureDeviceType::Window: {
-        return "Window";
-      }
-      case CaptureDeviceType::Browser: {
-        return "Browser";
-      }
-    }
-    assert(false);
-    return "UNKOWN-CaptureDeviceType!";
-  }
-};
-
 // Historically the video engine was part of webrtc
 // it was removed (and reimplemented in Talk)
 class VideoEngine {
@@ -62,7 +34,7 @@ class VideoEngine {
   NS_INLINE_DECL_REFCOUNTING(VideoEngine)
 
   static already_AddRefed<VideoEngine> Create(
-      const CaptureDeviceType& aCaptureDeviceType);
+      UniquePtr<const webrtc::Config>&& aConfig);
 #if defined(ANDROID)
   static int SetAndroidObjects();
 #endif
@@ -86,6 +58,8 @@ class VideoEngine {
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
   GetOrCreateVideoCaptureDeviceInfo();
 
+  const UniquePtr<const webrtc::Config>& GetConfiguration();
+
   class CaptureEntry {
    public:
     CaptureEntry(int32_t aCapnum,
@@ -104,10 +78,11 @@ class VideoEngine {
                  const std::function<void(CaptureEntry& entry)>&& fn);
 
  private:
-  explicit VideoEngine(const CaptureDeviceType& aCaptureDeviceType);
+  explicit VideoEngine(UniquePtr<const webrtc::Config>&& aConfig);
   int32_t mId;
-  CaptureDeviceInfo mCaptureDevInfo;
+  webrtc::CaptureDeviceInfo mCaptureDevInfo;
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> mDeviceInfo;
+  UniquePtr<const webrtc::Config> mConfig;
   std::map<int32_t, CaptureEntry> mCaps;
   std::map<int32_t, int32_t> mIdMap;
   // The validity period for non-camera capture device infos`
