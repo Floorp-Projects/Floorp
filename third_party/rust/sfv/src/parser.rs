@@ -227,27 +227,23 @@ impl Parser {
         Err("parse_inner_list: the end of the inner list was not found")
     }
 
-    pub(crate) fn parse_bare_item(mut input_chars: &mut Peekable<Chars>) -> SFVResult<BareItem> {
+    pub(crate) fn parse_bare_item(input_chars: &mut Peekable<Chars>) -> SFVResult<BareItem> {
         // https://httpwg.org/specs/rfc8941.html#parse-bare-item
         if input_chars.peek().is_none() {
             return Err("parse_bare_item: empty item");
         }
 
         match input_chars.peek() {
-            Some(&'?') => Ok(BareItem::Boolean(Self::parse_bool(&mut input_chars)?)),
-            Some(&'"') => Ok(BareItem::String(Self::parse_string(&mut input_chars)?)),
-            Some(&':') => Ok(BareItem::ByteSeq(Self::parse_byte_sequence(
-                &mut input_chars,
-            )?)),
+            Some(&'?') => Ok(BareItem::Boolean(Self::parse_bool(input_chars)?)),
+            Some(&'"') => Ok(BareItem::String(Self::parse_string(input_chars)?)),
+            Some(&':') => Ok(BareItem::ByteSeq(Self::parse_byte_sequence(input_chars)?)),
             Some(&c) if c == '*' || c.is_ascii_alphabetic() => {
-                Ok(BareItem::Token(Self::parse_token(&mut input_chars)?))
+                Ok(BareItem::Token(Self::parse_token(input_chars)?))
             }
-            Some(&c) if c == '-' || c.is_ascii_digit() => {
-                match Self::parse_number(&mut input_chars)? {
-                    Num::Decimal(val) => Ok(BareItem::Decimal(val)),
-                    Num::Integer(val) => Ok(BareItem::Integer(val)),
-                }
-            }
+            Some(&c) if c == '-' || c.is_ascii_digit() => match Self::parse_number(input_chars)? {
+                Num::Decimal(val) => Ok(BareItem::Decimal(val)),
+                Num::Integer(val) => Ok(BareItem::Integer(val)),
+            },
             _ => Err("parse_bare_item: item type can't be identified"),
         }
     }
