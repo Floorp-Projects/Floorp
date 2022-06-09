@@ -225,8 +225,10 @@ void GenerateJitExitPrologue(jit::MacroAssembler& masm, unsigned framePushed,
 void GenerateJitExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
                              CallableOffsets* offsets);
 
-void GenerateJitEntryPrologue(jit::MacroAssembler& masm, Offsets* offsets);
-void GenerateJitEntryEpilogue(jit::MacroAssembler& masm);
+void GenerateJitEntryPrologue(jit::MacroAssembler& masm,
+                              CallableOffsets* offsets);
+void GenerateJitEntryEpilogue(jit::MacroAssembler& masm,
+                              CallableOffsets* offsets);
 
 void GenerateFunctionPrologue(jit::MacroAssembler& masm,
                               const TypeIdDesc& funcTypeId,
