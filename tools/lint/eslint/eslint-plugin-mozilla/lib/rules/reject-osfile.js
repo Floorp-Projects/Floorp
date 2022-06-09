@@ -13,6 +13,26 @@ function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
 
+function isOSProp(expr, prop) {
+  if (!isIdentifier(expr.property, prop)) {
+    return false;
+  }
+
+  if (isIdentifier(expr.object, "OS")) {
+    return true;
+  }
+
+  if (
+    expr.object.type === "MemberExpression" &&
+    isIdentifier(expr.object.object, "lazy") &&
+    isIdentifier(expr.object.property, "OS")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 module.exports = {
   meta: {
     docs: {
@@ -25,18 +45,16 @@ module.exports = {
   create(context) {
     return {
       MemberExpression(node) {
-        if (isIdentifier(node.object, "OS")) {
-          if (isIdentifier(node.property, "File")) {
-            context.report(
-              node,
-              "OS.File is deprecated. You should use IOUtils instead."
-            );
-          } else if (isIdentifier(node.property, "Path")) {
-            context.report(
-              node,
-              "OS.Path is deprecated. You should use PathUtils instead."
-            );
-          }
+        if (isOSProp(node, "File")) {
+          context.report(
+            node,
+            "OS.File is deprecated. You should use IOUtils instead."
+          );
+        } else if (isOSProp(node, "Path")) {
+          context.report(
+            node,
+            "OS.Path is deprecated. You should use PathUtils instead."
+          );
         }
       },
     };
