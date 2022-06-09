@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.historymetadata
 
+import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
@@ -15,11 +16,11 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
@@ -218,17 +219,15 @@ class HistoryMetadataGroupFragment :
     }
 
     private fun promptDeleteAll(delete: () -> Unit) {
-        AlertDialog.Builder(requireContext()).apply {
-            setMessage(R.string.delete_history_group_prompt_message)
-            setNegativeButton(R.string.delete_history_group_prompt_cancel) { dialog: DialogInterface, _ ->
-                dialog.cancel()
-            }
-            setPositiveButton(R.string.delete_history_group_prompt_allow) { dialog: DialogInterface, _ ->
-                delete.invoke()
-                dialog.dismiss()
-            }
-            create()
-        }.show()
+        if (childFragmentManager.findFragmentByTag(DeleteAllConfirmationDialogFragment.TAG)
+            as? DeleteAllConfirmationDialogFragment != null
+        ) {
+            return
+        }
+
+        DeleteAllConfirmationDialogFragment(delete).show(
+            childFragmentManager, DeleteAllConfirmationDialogFragment.TAG
+        )
     }
 
     private fun allDeletedSnackbar() {
@@ -253,5 +252,23 @@ class HistoryMetadataGroupFragment :
             requireContext().getString(R.string.history_delete_single_item_snackbar),
             historyItem.url.toShortUrl(requireComponents.publicSuffixList)
         )
+    }
+
+    internal class DeleteAllConfirmationDialogFragment(private val delete: () -> Unit) : DialogFragment() {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+            AlertDialog.Builder(requireContext())
+                .setMessage(R.string.delete_history_group_prompt_message)
+                .setNegativeButton(R.string.delete_history_group_prompt_cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                .setPositiveButton(R.string.delete_history_group_prompt_allow) { dialog: DialogInterface, _ ->
+                    delete.invoke()
+                    dialog.dismiss()
+                }
+                .create()
+
+        companion object {
+            const val TAG = "DELETE_CONFIRMATION_DIALOG_FRAGMENT"
+        }
     }
 }
