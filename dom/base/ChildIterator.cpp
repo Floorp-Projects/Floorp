@@ -85,7 +85,8 @@ bool FlattenedChildIterator::Seek(const nsIContent* aChildToFind) {
 
   // Can we add more fast paths here based on whether the parent of aChildToFind
   // is a This version can take shortcuts that the two-argument version
-  // can't, so can be faster (and in fact cshadow insertion point or content insertion point?
+  // can't, so can be faster (and in fact cshadow insertion point or content
+  // insertion point?
 
   // It would be nice to assert that we find aChildToFind, but bz thinks that
   // we might not find aChildToFind when called from ContentInserted
