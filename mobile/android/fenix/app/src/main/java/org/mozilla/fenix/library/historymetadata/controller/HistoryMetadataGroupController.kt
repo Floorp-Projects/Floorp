@@ -178,7 +178,7 @@ class DefaultHistoryMetadataGroupController(
             GleanHistory.searchTermGroupRemoveAll.record(NoExtras())
             allDeletedSnackbar.invoke()
             launch(Main) {
-                navController.popBackStack()
+                navController.popBackStack(R.id.historyFragment, false)
             }
         }
     }
