@@ -139,6 +139,8 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     MOZ_ASSERT(!header_);
     MOZ_ASSERT(bufferUsed_ == 0);
 
+    prevFramePtr_ = frame_->callerFramePtr();
+
     uint8_t* bufferRaw = cx_->pod_calloc<uint8_t>(bufferTotal_);
     if (!bufferRaw) {
       return false;
@@ -410,62 +412,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
     }
     return reinterpret_cast<uint8_t*>(frame_) + (offset - bufferUsed_);
   }
-
-  BufferPointer<JitFrameLayout> topFrameAddress() {
-    return pointerAtStackOffset<JitFrameLayout>(0);
-  }
-
-  // This method should only be called when the builder is in a state where it
-  // is starting to construct the stack frame for the next callee.  This means
-  // that the lowest value on the constructed stack is the return address for
-  // the previous caller frame.
-  //
-  // This method is used to compute the value of the frame pointer (e.g. ebp on
-  // x86) that would have been saved by the baseline jitcode when it was
-  // entered.  In some cases, this value can be bogus since we can ensure that
-  // the caller would have saved it anyway.
-  //
-  void* calculatePrevFramePtr() {
-    // Get the incoming frame.
-    BufferPointer<JitFrameLayout> topFrame = topFrameAddress();
-    FrameType type = topFrame->prevType();
-
-    // For IonJS, IonICCall and Entry frames, the "saved" frame pointer
-    // in the baseline frame is meaningless, since Ion saves all registers
-    // before calling other ion frames, and the entry frame saves all
-    // registers too.
-    if (JSJitFrameIter::isEntry(type) || type == FrameType::IonJS ||
-        type == FrameType::IonICCall) {
-      return nullptr;
-    }
-
-    // If the previous frame is BaselineJS, with no intervening
-    // BaselineStubFrame, then the caller is responsible for recomputing
-    // BaselineFramePointer from the descriptor when returning. This currently
-    // only happens in frames constructed by emit_Resume().
-    if (type == FrameType::BaselineJS) {
-      return nullptr;
-    }
-
-    // BaselineStub - Baseline calling into Ion.
-    //  PrevFramePtr needs to point to the BaselineStubFrame's saved frame
-    //  pointer.
-    //      STACK_START_ADDR
-    //          + JitFrameLayout::Size()
-    //          + PREV_FRAME_SIZE
-    //          - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
-    if (type == FrameType::BaselineStub) {
-      size_t offset = JitFrameLayout::Size() + topFrame->prevFrameLocalSize() +
-                      BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
-      return virtualPointerAtStackOffset(offset);
-    }
-
-    // Rectifier - the FramePointer is pushed as the first value in the frame.
-    MOZ_ASSERT(type == FrameType::Rectifier);
-    size_t priorOffset =
-        JitFrameLayout::Size() + topFrame->prevFrameLocalSize() - sizeof(void*);
-    return virtualPointerAtStackOffset(priorOffset);
-  }
 };
 
 BaselineStackBuilder::BaselineStackBuilder(JSContext* cx,
@@ -524,12 +470,10 @@ bool BaselineStackBuilder::initFrame() {
           script_->filename(), script_->lineno(), script_->column());
   JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
-  // Calculate and write the previous frame pointer value.
-  // Record the virtual stack offset at this location.  Later on, if we end up
-  // writing out a BaselineStub frame for the next callee, we'll need to save
-  // the address.
-  void* prevFramePtr = calculatePrevFramePtr();
-  if (!writePtr(prevFramePtr, "PrevFramePtr")) {
+  // Write the previous frame pointer value. Record the virtual stack offset at
+  // this location.  Later on, if we end up writing out a BaselineStub frame for
+  // the next callee, we'll need to save the address.
+  if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
     return false;
   }
   prevFramePtr_ = virtualPointerAtStackOffset(0);
