@@ -22,7 +22,7 @@ use crate::path::PathRef;
 use crate::stream_id::StreamType as NeqoStreamType;
 use crate::tparams::{self, TransportParametersHandler};
 use crate::tracking::SentPacket;
-use crate::Version;
+use crate::QuicVersion;
 
 pub fn connection_tparams_set(qlog: &mut NeqoQlog, tph: &TransportParametersHandler) {
     qlog.add_event(|| {
@@ -98,7 +98,7 @@ fn connection_started(qlog: &mut NeqoQlog, path: &PathRef) {
             Some("QUIC".into()),
             p.local_address().port().into(),
             p.remote_address().port().into(),
-            Some(format!("{:x}", Version::default().wire_version())),
+            Some(format!("{:x}", QuicVersion::default().as_u32())),
             Some(format!("{}", p.local_cid())),
             Some(format!("{}", p.remote_cid())),
         ))
@@ -110,7 +110,7 @@ pub fn connection_state_updated(qlog: &mut NeqoQlog, new: &State) {
         Some(Event::connection_state_updated_min(match new {
             State::Init => qlog::ConnectionState::Attempted,
             State::WaitInitial => qlog::ConnectionState::Attempted,
-            State::WaitVersion | State::Handshaking => qlog::ConnectionState::Handshake,
+            State::Handshaking => qlog::ConnectionState::Handshake,
             State::Connected => qlog::ConnectionState::Active,
             State::Confirmed => qlog::ConnectionState::Active,
             State::Closing { .. } => qlog::ConnectionState::Draining,

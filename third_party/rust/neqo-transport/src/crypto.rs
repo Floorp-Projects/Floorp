@@ -6,7 +6,6 @@
 
 use std::cell::RefCell;
 use std::cmp::{max, min};
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::mem;
 use std::ops::{Index, IndexMut, Range};
@@ -23,15 +22,13 @@ use neqo_crypto::{
     TLS_VERSION_1_3,
 };
 
-use crate::cid::ConnectionIdRef;
-use crate::packet::{PacketBuilder, PacketNumber};
+use crate::packet::{PacketBuilder, PacketNumber, QuicVersion};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
 use crate::stats::FrameStats;
 use crate::tparams::{TpZeroRttChecker, TransportParameters, TransportParametersHandler};
 use crate::tracking::PacketNumberSpace;
-use crate::version::Version;
 use crate::{Error, Res};
 
 const MAX_AUTH_TAG: usize = 32;
@@ -51,8 +48,6 @@ thread_local!(pub(crate) static OVERWRITE_INVOCATIONS: RefCell<Option<PacketNumb
 
 #[derive(Debug)]
 pub struct Crypto {
-    version: Version,
-    protocols: Vec<String>,
     pub(crate) tls: Agent,
     pub(crate) streams: CryptoStreams,
     pub(crate) states: CryptoStates,
@@ -62,9 +57,9 @@ type TpHandler = Rc<RefCell<TransportParametersHandler>>;
 
 impl Crypto {
     pub fn new(
-        version: Version,
+        version: QuicVersion,
         mut agent: Agent,
-        protocols: Vec<String>,
+        protocols: &[impl AsRef<str>],
         tphandler: TpHandler,
     ) -> Res<Self> {
         agent.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
@@ -73,7 +68,7 @@ impl Crypto {
             TLS_AES_256_GCM_SHA384,
             TLS_CHACHA20_POLY1305_SHA256,
         ])?;
-        agent.set_alpn(&protocols)?;
+        agent.set_alpn(protocols)?;
         agent.disable_end_of_early_data()?;
         // Always enable 0-RTT on the client, but the server needs
         // more configuration passed to server_enable_0rtt.
@@ -81,31 +76,18 @@ impl Crypto {
             c.enable_0rtt()?;
         }
         let extension = match version {
-            Version::Version2 | Version::Version1 => 0x39,
-            Version::Draft29 | Version::Draft30 | Version::Draft31 | Version::Draft32 => 0xffa5,
+            QuicVersion::Version1 => 0x39,
+            QuicVersion::Draft29
+            | QuicVersion::Draft30
+            | QuicVersion::Draft31
+            | QuicVersion::Draft32 => 0xffa5,
         };
         agent.extension_handler(extension, tphandler)?;
         Ok(Self {
-            version,
-            protocols,
             tls: agent,
             streams: Default::default(),
             states: Default::default(),
         })
-    }
-
-    /// Get the name of the server.  (Only works for the client currently).
-    pub fn server_name(&self) -> Option<&str> {
-        if let Agent::Client(c) = &self.tls {
-            Some(c.server_name())
-        } else {
-            None
-        }
-    }
-
-    /// Get the set of enabled protocols.
-    pub fn protocols(&self) -> &[String] {
-        &self.protocols
     }
 
     pub fn server_enable_0rtt(
@@ -192,7 +174,7 @@ impl Crypto {
     }
 
     /// Enable 0-RTT and return `true` if it is enabled successfully.
-    pub fn enable_0rtt(&mut self, version: Version, role: Role) -> Res<bool> {
+    pub fn enable_0rtt(&mut self, role: Role) -> Res<bool> {
         let info = self.tls.preinfo()?;
         // `info.early_data()` returns false for a server,
         // so use `early_data_cipher()` to tell if 0-RTT is enabled.
@@ -211,15 +193,8 @@ impl Crypto {
             ),
         };
         let secret = secret.ok_or(Error::InternalError(1))?;
-        self.states
-            .set_0rtt_keys(version, dir, &secret, cipher.unwrap());
+        self.states.set_0rtt_keys(dir, &secret, cipher.unwrap());
         Ok(true)
-    }
-
-    /// Lock in a compatible upgrade.
-    pub fn confirm_version(&mut self, confirmed: Version) {
-        self.states.confirm_version(self.version, confirmed);
-        self.version = confirmed;
     }
 
     /// Returns true if new handshake keys were installed.
@@ -227,7 +202,7 @@ impl Crypto {
         if !self.tls.state().is_final() {
             let installed_hs = self.install_handshake_keys()?;
             if role == Role::Server {
-                self.maybe_install_application_write_key(self.version)?;
+                self.maybe_install_application_write_key()?;
             }
             Ok(installed_hs)
         } else {
@@ -253,22 +228,22 @@ impl Crypto {
         }
         .ok_or(Error::InternalError(3))?;
         self.states
-            .set_handshake_keys(self.version, &write_secret, &read_secret, cipher);
+            .set_handshake_keys(&write_secret, &read_secret, cipher);
         qdebug!([self], "Handshake keys installed");
         Ok(true)
     }
 
-    fn maybe_install_application_write_key(&mut self, version: Version) -> Res<()> {
+    fn maybe_install_application_write_key(&mut self) -> Res<()> {
         qtrace!([self], "Attempt to install application write key");
         if let Some(secret) = self.tls.write_secret(TLS_EPOCH_APPLICATION_DATA) {
-            self.states.set_application_write_key(version, secret)?;
+            self.states.set_application_write_key(secret)?;
             qdebug!([self], "Application write key installed");
         }
         Ok(())
     }
 
-    pub fn install_application_keys(&mut self, version: Version, expire_0rtt: Instant) -> Res<()> {
-        self.maybe_install_application_write_key(version)?;
+    pub fn install_application_keys(&mut self, expire_0rtt: Instant) -> Res<()> {
+        self.maybe_install_application_write_key()?;
         // The write key might have been installed earlier, but it should
         // always be installed now.
         debug_assert!(self.states.app_write.is_some());
@@ -277,7 +252,7 @@ impl Crypto {
             .read_secret(TLS_EPOCH_APPLICATION_DATA)
             .ok_or(Error::InternalError(4))?;
         self.states
-            .set_application_read_key(version, read_secret, expire_0rtt)?;
+            .set_application_read_key(read_secret, expire_0rtt)?;
         qdebug!([self], "application read keys installed");
         Ok(())
     }
@@ -341,21 +316,19 @@ impl Crypto {
         &mut self,
         new_token: Option<&[u8]>,
         tps: &TransportParameters,
-        version: Version,
         rtt: u64,
     ) -> Option<ResumptionToken> {
         if let Agent::Client(ref mut c) = self.tls {
             if let Some(ref t) = c.resumption_token() {
                 qtrace!("TLS token {}", hex(t.as_ref()));
                 let mut enc = Encoder::default();
-                enc.encode_uint(4, version.wire_version());
                 enc.encode_varint(rtt);
                 enc.encode_vvec_with(|enc_inner| {
                     tps.encode(enc_inner);
                 });
                 enc.encode_vvec(new_token.unwrap_or(&[]));
                 enc.encode(t.as_ref());
-                qinfo!("resumption token {}", hex_snip_middle(enc.as_ref()));
+                qinfo!("resumption token {}", hex_snip_middle(&enc[..]));
                 Some(ResumptionToken::new(enc.into(), t.expiration_time()))
             } else {
                 None
@@ -388,9 +361,6 @@ pub enum CryptoDxDirection {
 
 #[derive(Debug)]
 pub struct CryptoDxState {
-    /// The QUIC version.
-    version: Version,
-    /// Whether packets protected with this state will be read or written.
     direction: CryptoDxDirection,
     /// The epoch of this crypto state.  This initially tracks TLS epochs
     /// via DTLS: 0 = initial, 1 = 0-RTT, 2 = handshake, 3 = application.
@@ -413,26 +383,22 @@ pub struct CryptoDxState {
 impl CryptoDxState {
     #[allow(clippy::reversed_empty_ranges)] // To initialize an empty range.
     pub fn new(
-        version: Version,
         direction: CryptoDxDirection,
         epoch: Epoch,
         secret: &SymKey,
         cipher: Cipher,
     ) -> Self {
         qinfo!(
-            "Making {:?} {} CryptoDxState, v={:?} cipher={}",
+            "Making {:?} {} CryptoDxState, cipher={}",
             direction,
             epoch,
-            version,
-            cipher,
+            cipher
         );
-        let hplabel = String::from(version.label_prefix()) + "hp";
         Self {
-            version,
             direction,
             epoch: usize::from(epoch),
-            aead: Aead::new(TLS_VERSION_1_3, cipher, secret, version.label_prefix()).unwrap(),
-            hpkey: HpKey::extract(TLS_VERSION_1_3, cipher, secret, &hplabel).unwrap(),
+            aead: Aead::new(TLS_VERSION_1_3, cipher, secret, "quic ").unwrap(),
+            hpkey: HpKey::extract(TLS_VERSION_1_3, cipher, secret, "quic hp").unwrap(),
             used_pn: 0..0,
             min_pn: 0,
             invocations: Self::limit(direction, cipher),
@@ -440,13 +406,27 @@ impl CryptoDxState {
     }
 
     pub fn new_initial(
-        version: Version,
+        quic_version: QuicVersion,
         direction: CryptoDxDirection,
         label: &str,
         dcid: &[u8],
     ) -> Self {
-        qtrace!("new_initial {:?} {}", version, ConnectionIdRef::from(dcid));
-        let salt = version.initial_salt();
+        const INITIAL_SALT_V1: &[u8] = &[
+            0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17, 0x9a, 0xe6, 0xa4, 0xc8,
+            0x0c, 0xad, 0xcc, 0xbb, 0x7f, 0x0a,
+        ];
+        const INITIAL_SALT_29_32: &[u8] = &[
+            0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
+            0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
+        ];
+        qtrace!("new_initial for {:?}", quic_version);
+        let salt = match quic_version {
+            QuicVersion::Version1 => INITIAL_SALT_V1,
+            QuicVersion::Draft29
+            | QuicVersion::Draft30
+            | QuicVersion::Draft31
+            | QuicVersion::Draft32 => INITIAL_SALT_29_32,
+        };
         let cipher = TLS_AES_128_GCM_SHA256;
         let initial_secret = hkdf::extract(
             TLS_VERSION_1_3,
@@ -459,7 +439,7 @@ impl CryptoDxState {
         let secret =
             hkdf::expand_label(TLS_VERSION_1_3, cipher, &initial_secret, &[], label).unwrap();
 
-        Self::new(version, direction, TLS_EPOCH_INITIAL, &secret, cipher)
+        Self::new(direction, TLS_EPOCH_INITIAL, &secret, cipher)
     }
 
     /// Determine the confidentiality and integrity limits for the cipher.
@@ -515,26 +495,14 @@ impl CryptoDxState {
             Self::limit(CryptoDxDirection::Write, cipher)
         };
         Self {
-            version: self.version,
             direction: self.direction,
             epoch: self.epoch + 1,
-            aead: Aead::new(
-                TLS_VERSION_1_3,
-                cipher,
-                next_secret,
-                self.version.label_prefix(),
-            )
-            .unwrap(),
+            aead: Aead::new(TLS_VERSION_1_3, cipher, next_secret, "quic ").unwrap(),
             hpkey: self.hpkey.clone(),
             used_pn: pn..pn,
             min_pn: pn,
             invocations,
         }
-    }
-
-    #[must_use]
-    pub fn version(&self) -> Version {
-        self.version
     }
 
     #[must_use]
@@ -549,7 +517,8 @@ impl CryptoDxState {
         debug_assert_eq!(self.direction, prev.direction);
         let next = prev.next_pn();
         self.min_pn = next;
-        if self.used_pn.is_empty() {
+        // TODO(mt) use Range::is_empty() when available
+        if self.used_pn.start == self.used_pn.end {
             self.used_pn = next..next;
             Ok(())
         } else if prev.used_pn.end > self.used_pn.start {
@@ -669,7 +638,7 @@ impl CryptoDxState {
         // This matches the value in packet.rs
         const CLIENT_CID: &[u8] = &[0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08];
         Self::new_initial(
-            Version::default(),
+            QuicVersion::default(),
             CryptoDxDirection::Write,
             "server in",
             CLIENT_CID,
@@ -729,14 +698,9 @@ pub(crate) struct CryptoDxAppData {
 }
 
 impl CryptoDxAppData {
-    pub fn new(
-        version: Version,
-        dir: CryptoDxDirection,
-        secret: SymKey,
-        cipher: Cipher,
-    ) -> Res<Self> {
+    pub fn new(dir: CryptoDxDirection, secret: SymKey, cipher: Cipher) -> Res<Self> {
         Ok(Self {
-            dx: CryptoDxState::new(version, dir, TLS_EPOCH_APPLICATION_DATA, &secret, cipher),
+            dx: CryptoDxState::new(dir, TLS_EPOCH_APPLICATION_DATA, &secret, cipher),
             cipher,
             next_secret: Self::update_secret(cipher, &secret)?,
         })
@@ -773,14 +737,9 @@ pub enum CryptoSpace {
     ApplicationData,
 }
 
-/// All of the keying material needed for a connection.
-///
-/// Note that the methods on this struct take a version but those are only ever
-/// used for Initial keys; a version has been selected at the time we need to
-/// get other keys, so those have fixed versions.
 #[derive(Debug, Default)]
 pub struct CryptoStates {
-    initials: HashMap<Version, CryptoState>,
+    initial: Option<CryptoState>,
     handshake: Option<CryptoState>,
     zero_rtt: Option<CryptoDxState>, // One direction only!
     cipher: Cipher,
@@ -798,15 +757,14 @@ impl CryptoStates {
     /// not yet available.
     pub fn select_tx_mut(
         &mut self,
-        version: Version,
         space: PacketNumberSpace,
     ) -> Option<(CryptoSpace, &mut CryptoDxState)> {
         match space {
             PacketNumberSpace::Initial => self
-                .tx_mut(version, CryptoSpace::Initial)
+                .tx_mut(CryptoSpace::Initial)
                 .map(|dx| (CryptoSpace::Initial, dx)),
             PacketNumberSpace::Handshake => self
-                .tx_mut(version, CryptoSpace::Handshake)
+                .tx_mut(CryptoSpace::Handshake)
                 .map(|dx| (CryptoSpace::Handshake, dx)),
             PacketNumberSpace::ApplicationData => {
                 if let Some(app) = self.app_write.as_mut() {
@@ -818,14 +776,10 @@ impl CryptoStates {
         }
     }
 
-    pub fn tx_mut<'a>(
-        &'a mut self,
-        version: Version,
-        cspace: CryptoSpace,
-    ) -> Option<&'a mut CryptoDxState> {
+    pub fn tx_mut<'a>(&'a mut self, cspace: CryptoSpace) -> Option<&'a mut CryptoDxState> {
         let tx = |k: Option<&'a mut CryptoState>| k.map(|dx| &mut dx.tx);
         match cspace {
-            CryptoSpace::Initial => tx(self.initials.get_mut(&version)),
+            CryptoSpace::Initial => tx(self.initial.as_mut()),
             CryptoSpace::ZeroRtt => self
                 .zero_rtt
                 .as_mut()
@@ -835,10 +789,10 @@ impl CryptoStates {
         }
     }
 
-    pub fn tx<'a>(&'a self, version: Version, cspace: CryptoSpace) -> Option<&'a CryptoDxState> {
+    pub fn tx<'a>(&'a self, cspace: CryptoSpace) -> Option<&'a CryptoDxState> {
         let tx = |k: Option<&'a CryptoState>| k.map(|dx| &dx.tx);
         match cspace {
-            CryptoSpace::Initial => tx(self.initials.get(&version)),
+            CryptoSpace::Initial => tx(self.initial.as_ref()),
             CryptoSpace::ZeroRtt => self
                 .zero_rtt
                 .as_ref()
@@ -848,17 +802,13 @@ impl CryptoStates {
         }
     }
 
-    pub fn select_tx(
-        &self,
-        version: Version,
-        space: PacketNumberSpace,
-    ) -> Option<(CryptoSpace, &CryptoDxState)> {
+    pub fn select_tx(&self, space: PacketNumberSpace) -> Option<(CryptoSpace, &CryptoDxState)> {
         match space {
             PacketNumberSpace::Initial => self
-                .tx(version, CryptoSpace::Initial)
+                .tx(CryptoSpace::Initial)
                 .map(|dx| (CryptoSpace::Initial, dx)),
             PacketNumberSpace::Handshake => self
-                .tx(version, CryptoSpace::Handshake)
+                .tx(CryptoSpace::Handshake)
                 .map(|dx| (CryptoSpace::Handshake, dx)),
             PacketNumberSpace::ApplicationData => {
                 if let Some(app) = self.app_write.as_ref() {
@@ -870,23 +820,22 @@ impl CryptoStates {
         }
     }
 
-    pub fn rx_hp(&mut self, version: Version, cspace: CryptoSpace) -> Option<&mut CryptoDxState> {
+    pub fn rx_hp(&mut self, cspace: CryptoSpace) -> Option<&mut CryptoDxState> {
         if let CryptoSpace::ApplicationData = cspace {
             self.app_read.as_mut().map(|ar| &mut ar.dx)
         } else {
-            self.rx(version, cspace, false)
+            self.rx(cspace, false)
         }
     }
 
     pub fn rx<'a>(
         &'a mut self,
-        version: Version,
         cspace: CryptoSpace,
         key_phase: bool,
     ) -> Option<&'a mut CryptoDxState> {
         let rx = |x: Option<&'a mut CryptoState>| x.map(|dx| &mut dx.rx);
         match cspace {
-            CryptoSpace::Initial => rx(self.initials.get_mut(&version)),
+            CryptoSpace::Initial => rx(self.initial.as_mut()),
             CryptoSpace::ZeroRtt => self
                 .zero_rtt
                 .as_mut()
@@ -915,101 +864,52 @@ impl CryptoStates {
     pub fn rx_pending(&self, space: CryptoSpace) -> bool {
         match space {
             CryptoSpace::Initial | CryptoSpace::ZeroRtt => false,
-            CryptoSpace::Handshake => self.handshake.is_none() && !self.initials.is_empty(),
+            CryptoSpace::Handshake => self.handshake.is_none() && self.initial.is_some(),
             CryptoSpace::ApplicationData => self.app_read.is_none(),
         }
     }
 
     /// Create the initial crypto state.
-    /// Note that the version here can change and that's OK.
-    pub fn init<'v, V>(&mut self, versions: V, role: Role, dcid: &[u8])
-    where
-        V: IntoIterator<Item = &'v Version>,
-    {
+    pub fn init(&mut self, quic_version: QuicVersion, role: Role, dcid: &[u8]) {
         const CLIENT_INITIAL_LABEL: &str = "client in";
         const SERVER_INITIAL_LABEL: &str = "server in";
+
+        qinfo!(
+            [self],
+            "Creating initial cipher state role={:?} dcid={}",
+            role,
+            hex(dcid)
+        );
 
         let (write, read) = match role {
             Role::Client => (CLIENT_INITIAL_LABEL, SERVER_INITIAL_LABEL),
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
-        for v in versions {
+        let mut initial = CryptoState {
+            tx: CryptoDxState::new_initial(quic_version, CryptoDxDirection::Write, write, dcid),
+            rx: CryptoDxState::new_initial(quic_version, CryptoDxDirection::Read, read, dcid),
+        };
+        if let Some(prev) = &self.initial {
             qinfo!(
                 [self],
-                "Creating initial cipher state v={:?}, role={:?} dcid={}",
-                v,
-                role,
-                hex(dcid)
+                "Continue packet numbers for initial after retry (write is {:?})",
+                prev.rx.used_pn,
             );
-
-            let mut initial = CryptoState {
-                tx: CryptoDxState::new_initial(*v, CryptoDxDirection::Write, write, dcid),
-                rx: CryptoDxState::new_initial(*v, CryptoDxDirection::Read, read, dcid),
-            };
-            if let Some(prev) = self.initials.get(v) {
-                qinfo!(
-                    [self],
-                    "Continue packet numbers for initial after retry (write is {:?})",
-                    prev.rx.used_pn,
-                );
-                initial.tx.continuation(&prev.tx).unwrap();
-            }
-            self.initials.insert(*v, initial);
+            initial.tx.continuation(&prev.tx).unwrap();
         }
+        self.initial = Some(initial);
     }
 
-    /// At a server, we can be more targeted in initializing.
-    /// Initialize on demand: either to decrypt Initial packets that we receive
-    /// or after a version has been selected.
-    /// This is maybe slightly inefficient in the first case, because we might
-    /// not need the send keys if the packet is subsequently discarded, but
-    /// the overall effort is small enough to write off.
-    pub fn init_server(&mut self, version: Version, dcid: &[u8]) {
-        if !self.initials.contains_key(&version) {
-            self.init(&[version], Role::Server, dcid);
-        }
-    }
-
-    pub fn confirm_version(&mut self, orig: Version, confirmed: Version) {
-        if orig != confirmed {
-            // This part where the old data is removed and then re-added is to
-            // appease the borrow checker.
-            // Note that on the server, we might not have initials for |orig| if it
-            // was configured for |orig| and only |confirmed| Initial packets arrived.
-            if let Some(prev) = self.initials.remove(&orig) {
-                let next = self.initials.get_mut(&confirmed).unwrap();
-                next.tx.continuation(&prev.tx).unwrap();
-                self.initials.insert(orig, prev);
-            }
-        }
-    }
-
-    pub fn set_0rtt_keys(
-        &mut self,
-        version: Version,
-        dir: CryptoDxDirection,
-        secret: &SymKey,
-        cipher: Cipher,
-    ) {
+    pub fn set_0rtt_keys(&mut self, dir: CryptoDxDirection, secret: &SymKey, cipher: Cipher) {
         qtrace!([self], "install 0-RTT keys");
-        self.zero_rtt = Some(CryptoDxState::new(
-            version,
-            dir,
-            TLS_EPOCH_ZERO_RTT,
-            secret,
-            cipher,
-        ));
+        self.zero_rtt = Some(CryptoDxState::new(dir, TLS_EPOCH_ZERO_RTT, secret, cipher));
     }
 
     /// Discard keys and return true if that happened.
     pub fn discard(&mut self, space: PacketNumberSpace) -> bool {
         match space {
-            PacketNumberSpace::Initial => {
-                let empty = self.initials.is_empty();
-                self.initials.clear();
-                !empty
-            }
+            PacketNumberSpace::Initial => self.initial.take().is_some(),
             PacketNumberSpace::Handshake => self.handshake.take().is_some(),
             PacketNumberSpace::ApplicationData => panic!("Can't drop application data keys"),
         }
@@ -1026,7 +926,6 @@ impl CryptoStates {
 
     pub fn set_handshake_keys(
         &mut self,
-        version: Version,
         write_secret: &SymKey,
         read_secret: &SymKey,
         cipher: Cipher,
@@ -1034,14 +933,12 @@ impl CryptoStates {
         self.cipher = cipher;
         self.handshake = Some(CryptoState {
             tx: CryptoDxState::new(
-                version,
                 CryptoDxDirection::Write,
                 TLS_EPOCH_HANDSHAKE,
                 write_secret,
                 cipher,
             ),
             rx: CryptoDxState::new(
-                version,
                 CryptoDxDirection::Read,
                 TLS_EPOCH_HANDSHAKE,
                 read_secret,
@@ -1050,10 +947,10 @@ impl CryptoStates {
         });
     }
 
-    pub fn set_application_write_key(&mut self, version: Version, secret: SymKey) -> Res<()> {
+    pub fn set_application_write_key(&mut self, secret: SymKey) -> Res<()> {
         debug_assert!(self.app_write.is_none());
         debug_assert_ne!(self.cipher, 0);
-        let mut app = CryptoDxAppData::new(version, CryptoDxDirection::Write, secret, self.cipher)?;
+        let mut app = CryptoDxAppData::new(CryptoDxDirection::Write, secret, self.cipher)?;
         if let Some(z) = &self.zero_rtt {
             if z.direction == CryptoDxDirection::Write {
                 app.dx.continuation(z)?;
@@ -1064,15 +961,10 @@ impl CryptoStates {
         Ok(())
     }
 
-    pub fn set_application_read_key(
-        &mut self,
-        version: Version,
-        secret: SymKey,
-        expire_0rtt: Instant,
-    ) -> Res<()> {
+    pub fn set_application_read_key(&mut self, secret: SymKey, expire_0rtt: Instant) -> Res<()> {
         debug_assert!(self.app_write.is_some(), "should have write keys installed");
         debug_assert!(self.app_read.is_none());
-        let mut app = CryptoDxAppData::new(version, CryptoDxDirection::Read, secret, self.cipher)?;
+        let mut app = CryptoDxAppData::new(CryptoDxDirection::Read, secret, self.cipher)?;
         if let Some(z) = &self.zero_rtt {
             if z.direction == CryptoDxDirection::Read {
                 app.dx.continuation(z)?;
@@ -1228,16 +1120,11 @@ impl CryptoStates {
             cipher: TLS_AES_128_GCM_SHA256,
             next_secret: hkdf::import_key(TLS_VERSION_1_3, &[0xaa; 32]).unwrap(),
         };
-        let mut initials = HashMap::new();
-        initials.insert(
-            Version::Version1,
-            CryptoState {
+        Self {
+            initial: Some(CryptoState {
                 tx: CryptoDxState::test_default(),
                 rx: read(0),
-            },
-        );
-        Self {
-            initials,
+            }),
             handshake: None,
             zero_rtt: None,
             cipher: TLS_AES_128_GCM_SHA256,
@@ -1259,14 +1146,13 @@ impl CryptoStates {
         let secret = hkdf::import_key(TLS_VERSION_1_3, SECRET).unwrap();
         let app_read = |epoch| CryptoDxAppData {
             dx: CryptoDxState {
-                version: Version::Version1,
                 direction: CryptoDxDirection::Read,
                 epoch,
                 aead: Aead::new(
                     TLS_VERSION_1_3,
                     TLS_CHACHA20_POLY1305_SHA256,
                     &secret,
-                    "quic ", // This is a v1 test so hard-code the label.
+                    "quic ",
                 )
                 .unwrap(),
                 hpkey: HpKey::extract(
@@ -1284,7 +1170,7 @@ impl CryptoStates {
             next_secret: secret.clone(),
         };
         Self {
-            initials: HashMap::new(),
+            initial: None,
             handshake: None,
             zero_rtt: None,
             cipher: TLS_CHACHA20_POLY1305_SHA256,

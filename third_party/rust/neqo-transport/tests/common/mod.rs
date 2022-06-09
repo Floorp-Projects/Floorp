@@ -26,8 +26,8 @@ use std::mem;
 use std::ops::Range;
 use std::rc::Rc;
 
-/// Create a server.  This is different than the one in the fixture, which is a single connection.
-pub fn new_server(params: ConnectionParameters) -> Server {
+// Different than the one in the fixture, which is a single connection.
+pub fn default_server() -> Server {
     Server::new(
         now(),
         test_fixture::DEFAULT_KEYS,
@@ -35,14 +35,9 @@ pub fn new_server(params: ConnectionParameters) -> Server {
         test_fixture::anti_replay(),
         Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        params,
+        ConnectionParameters::default(),
     )
     .expect("should create a server")
-}
-
-/// Create a server.  This is different than the one in the fixture, which is a single connection.
-pub fn default_server() -> Server {
-    new_server(ConnectionParameters::default())
 }
 
 // Check that there is at least one connection.  Returns a ref to the first confirmed connection.
@@ -115,8 +110,7 @@ pub fn decode_initial_header(dgram: &Datagram) -> (&[u8], &[u8], &[u8], &[u8]) {
     )
 }
 
-/// Generate an AEAD and header protection object for a client Initial.
-/// Note that this works for QUIC version 1 only.
+// Generate an AEAD and header protection object for a client Initial.
 #[must_use]
 pub fn client_initial_aead_and_hp(dcid: &[u8]) -> (Aead, HpKey) {
     const INITIAL_SALT: &[u8] = &[
@@ -190,9 +184,15 @@ pub fn apply_header_protection(hp: &HpKey, packet: &mut [u8], pn_bytes: Range<us
     }
 }
 
-/// Scrub through client events to find a resumption token.
-pub fn find_ticket(client: &mut Connection) -> ResumptionToken {
-    client
+pub fn get_ticket(server: &mut Server) -> ResumptionToken {
+    let mut client = default_client();
+    let mut server_conn = connect(&mut client, server);
+
+    server_conn.borrow_mut().send_ticket(now(), &[]).unwrap();
+    let dgram = server.process(None, now()).dgram();
+    client.process_input(dgram.unwrap(), now()); // Consume ticket, ignore output.
+
+    let ticket = client
         .events()
         .find_map(|e| {
             if let ConnectionEvent::ResumptionToken(token) = e {
@@ -201,18 +201,7 @@ pub fn find_ticket(client: &mut Connection) -> ResumptionToken {
                 None
             }
         })
-        .unwrap()
-}
-
-/// Connect to the server and have it generate a ticket.
-pub fn generate_ticket(server: &mut Server) -> ResumptionToken {
-    let mut client = default_client();
-    let mut server_conn = connect(&mut client, server);
-
-    server_conn.borrow_mut().send_ticket(now(), &[]).unwrap();
-    let dgram = server.process(None, now()).dgram();
-    client.process_input(dgram.unwrap(), now()); // Consume ticket, ignore output.
-    let ticket = find_ticket(&mut client);
+        .unwrap();
 
     // Have the client close the connection and then let the server clean up.
     client.close(now(), 0, "got a ticket");

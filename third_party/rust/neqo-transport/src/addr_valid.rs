@@ -127,7 +127,7 @@ impl AddressValidation {
 
         // Include the token identifier ("Retry"/~) in the AAD, then keep it for plaintext.
         let mut buf = Self::encode_aad(peer_address, retry);
-        let encrypted = self.self_encrypt.seal(buf.as_ref(), data.as_ref())?;
+        let encrypted = self.self_encrypt.seal(&buf, &data)?;
         buf.truncate(TOKEN_IDENTIFIER_RETRY.len());
         buf.encode(&encrypted);
         Ok(buf.into())
@@ -165,7 +165,7 @@ impl AddressValidation {
         now: Instant,
     ) -> Option<ConnectionId> {
         let peer_addr = Self::encode_aad(peer_address, retry);
-        let data = self.self_encrypt.open(peer_addr.as_ref(), token).ok()?;
+        let data = self.self_encrypt.open(&peer_addr, token).ok()?;
         let mut dec = Decoder::new(&data);
         match dec.decode_uint(4) {
             Some(d) => {

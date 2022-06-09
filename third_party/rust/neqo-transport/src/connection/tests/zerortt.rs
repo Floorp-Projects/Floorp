@@ -6,11 +6,11 @@
 
 use super::super::Connection;
 use super::{
-    connect, default_client, default_server, exchange_ticket, new_server, resumed_server,
+    connect, default_client, default_server, exchange_ticket, new_server,
     CountingConnectionIdGenerator,
 };
 use crate::events::ConnectionEvent;
-use crate::{ConnectionParameters, Error, StreamType, Version};
+use crate::{ConnectionParameters, Error, StreamType};
 
 use neqo_common::event::Provider;
 use neqo_crypto::{AllowZeroRtt, AntiReplay};
@@ -31,7 +31,7 @@ fn zero_rtt_negotiate() {
     client
         .enable_resumption(now(), token)
         .expect("should set token");
-    let mut server = resumed_server(&client);
+    let mut server = default_server();
     connect(&mut client, &mut server);
     assert!(client.tls_info().unwrap().early_data_accepted());
     assert!(server.tls_info().unwrap().early_data_accepted());
@@ -48,7 +48,7 @@ fn zero_rtt_send_recv() {
     client
         .enable_resumption(now(), token)
         .expect("should set token");
-    let mut server = resumed_server(&client);
+    let mut server = default_server();
 
     // Send ClientHello.
     let client_hs = client.process(None, now());
@@ -93,7 +93,7 @@ fn zero_rtt_send_coalesce() {
     client
         .enable_resumption(now(), token)
         .expect("should set token");
-    let mut server = resumed_server(&client);
+    let mut server = default_server();
 
     // Write 0-RTT before generating any packets.
     // This should result in a datagram that coalesces Initial and 0-RTT.
@@ -140,7 +140,7 @@ fn zero_rtt_send_reject() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default().versions(client.version(), Version::all()),
+        ConnectionParameters::default(),
     )
     .unwrap();
     // Using a freshly initialized anti-replay context
@@ -221,8 +221,7 @@ fn zero_rtt_update_flow_control() {
     let mut server = new_server(
         ConnectionParameters::default()
             .max_stream_data(StreamType::UniDi, true, HIGH)
-            .max_stream_data(StreamType::BiDi, true, HIGH)
-            .versions(client.version, Version::all()),
+            .max_stream_data(StreamType::BiDi, true, HIGH),
     );
 
     // Stream limits should be low for 0-RTT.
