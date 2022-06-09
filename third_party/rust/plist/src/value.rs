@@ -15,6 +15,7 @@ use crate::{
 
 /// Represents any plist value.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Value {
     Array(Vec<Value>),
     Dictionary(Dictionary),
@@ -25,8 +26,6 @@ pub enum Value {
     Integer(Integer),
     String(String),
     Uid(Uid),
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 impl Value {
@@ -312,6 +311,163 @@ impl Value {
             _ => None,
         }
     }
+
+    /// If the `Value` is a Uid, returns the underlying `Uid`.
+    ///
+    /// Returns `None` otherwise.
+    ///
+    /// This method consumes the `Value`. If this is not desired, please use
+    /// `as_uid` method.
+    pub fn into_uid(self) -> Option<Uid> {
+        match self {
+            Value::Uid(u) => Some(u),
+            _ => None,
+        }
+    }
+
+    /// If the `Value` is a Uid, returns the associated `Uid`.
+    ///
+    /// Returns `None` otherwise.
+    pub fn as_uid(&self) -> Option<&Uid> {
+        match *self {
+            Value::Uid(ref u) => Some(u),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+pub mod serde_impls {
+    use serde::{
+        de,
+        de::{EnumAccess, MapAccess, SeqAccess, VariantAccess, Visitor},
+        ser,
+    };
+
+    use crate::{
+        date::serde_impls::DATE_NEWTYPE_STRUCT_NAME, uid::serde_impls::UID_NEWTYPE_STRUCT_NAME,
+        Dictionary, Value,
+    };
+
+    pub const VALUE_NEWTYPE_STRUCT_NAME: &str = "PLIST-VALUE";
+
+    impl ser::Serialize for Value {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            match *self {
+                Value::Array(ref v) => v.serialize(serializer),
+                Value::Dictionary(ref m) => m.serialize(serializer),
+                Value::Boolean(b) => serializer.serialize_bool(b),
+                Value::Data(ref v) => serializer.serialize_bytes(v),
+                Value::Date(d) => d.serialize(serializer),
+                Value::Real(n) => serializer.serialize_f64(n),
+                Value::Integer(n) => n.serialize(serializer),
+                Value::String(ref s) => serializer.serialize_str(s),
+                Value::Uid(ref u) => u.serialize(serializer),
+            }
+        }
+    }
+
+    impl<'de> de::Deserialize<'de> for Value {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            struct ValueVisitor;
+
+            impl<'de> Visitor<'de> for ValueVisitor {
+                type Value = Value;
+
+                fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                    formatter.write_str("any supported plist value")
+                }
+
+                fn visit_bool<E>(self, value: bool) -> Result<Value, E> {
+                    Ok(Value::Boolean(value))
+                }
+
+                fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Value, E> {
+                    Ok(Value::Data(v))
+                }
+
+                fn visit_bytes<E>(self, v: &[u8]) -> Result<Value, E> {
+                    Ok(Value::Data(v.to_vec()))
+                }
+
+                fn visit_i64<E>(self, value: i64) -> Result<Value, E> {
+                    Ok(Value::Integer(value.into()))
+                }
+
+                fn visit_u64<E>(self, value: u64) -> Result<Value, E> {
+                    Ok(Value::Integer(value.into()))
+                }
+
+                fn visit_f64<E>(self, value: f64) -> Result<Value, E> {
+                    Ok(Value::Real(value))
+                }
+
+                fn visit_map<V>(self, mut map: V) -> Result<Value, V::Error>
+                where
+                    V: MapAccess<'de>,
+                {
+                    let mut values = Dictionary::new();
+                    while let Some((k, v)) = map.next_entry()? {
+                        values.insert(k, v);
+                    }
+                    Ok(Value::Dictionary(values))
+                }
+
+                fn visit_str<E>(self, value: &str) -> Result<Value, E> {
+                    Ok(Value::String(value.to_owned()))
+                }
+
+                fn visit_string<E>(self, value: String) -> Result<Value, E> {
+                    Ok(Value::String(value))
+                }
+
+                fn visit_newtype_struct<T>(self, deserializer: T) -> Result<Value, T::Error>
+                where
+                    T: de::Deserializer<'de>,
+                {
+                    deserializer.deserialize_any(self)
+                }
+
+                fn visit_seq<A>(self, mut seq: A) -> Result<Value, A::Error>
+                where
+                    A: SeqAccess<'de>,
+                {
+                    let mut vec = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+                    while let Some(elem) = seq.next_element()? {
+                        vec.push(elem);
+                    }
+                    Ok(Value::Array(vec))
+                }
+
+                fn visit_enum<A>(self, data: A) -> Result<Value, A::Error>
+                where
+                    A: EnumAccess<'de>,
+                {
+                    let (name, variant) = data.variant::<String>()?;
+                    match &*name {
+                        DATE_NEWTYPE_STRUCT_NAME => Ok(Value::Date(variant.newtype_variant()?)),
+                        UID_NEWTYPE_STRUCT_NAME => Ok(Value::Uid(variant.newtype_variant()?)),
+                        _ => Err(de::Error::unknown_variant(
+                            &name,
+                            &[DATE_NEWTYPE_STRUCT_NAME, UID_NEWTYPE_STRUCT_NAME],
+                        )),
+                    }
+                }
+            }
+
+            // Serde serialisers are encouraged to treat newtype structs as insignificant
+            // wrappers around the data they contain. That means not parsing anything other
+            // than the contained value. Therefore, this should not prevent using `Value`
+            // with other `Serializer`s.
+            deserializer.deserialize_newtype_struct(VALUE_NEWTYPE_STRUCT_NAME, ValueVisitor)
+        }
+    }
 }
 
 impl From<Vec<Value>> for Value {
@@ -526,8 +682,6 @@ impl<T: Iterator<Item = Result<OwnedEvent, Error>>> Builder<T> {
                 EventKind::ValueOrStartCollection,
                 &event,
             )),
-
-            Some(Event::__Nonexhaustive) => unreachable!(),
 
             None => Err(ErrorKind::UnexpectedEndOfEventStream.without_position()),
         }

@@ -54,11 +54,18 @@ pub mod serde_impls {
             formatter.write_str("a plist uid")
         }
 
+        fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            UidU64Visitor.visit_u64(v)
+        }
+
         fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where
             D: Deserializer<'de>,
         {
-            deserializer.deserialize_str(UidU64Visitor)
+            deserializer.deserialize_u64(UidU64Visitor)
         }
     }
 

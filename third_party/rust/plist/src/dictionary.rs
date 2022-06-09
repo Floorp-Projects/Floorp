@@ -4,7 +4,6 @@
 //!
 //! [`IndexMap`]: https://docs.rs/indexmap/latest/indexmap/map/struct.IndexMap.html
 
-//use serde::{de, ser};
 use indexmap::{map, IndexMap};
 use std::{
     fmt::{self, Debug},
@@ -231,71 +230,13 @@ impl Debug for Dictionary {
     }
 }
 
-/*impl ser::Serialize for Dictionary {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: ser::Serializer,
-    {
-        use serde::ser::SerializeMap;
-        let mut map = try!(serializer.serialize_map(Some(self.len())));
-        for (k, v) in self {
-            try!(map.serialize_key(k));
-            try!(map.serialize_value(v));
-        }
-        map.end()
-    }
-}
-
-impl<'de> de::Deserialize<'de> for Dictionary {
-    #[inline]
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: de::Deserializer<'de>,
-    {
-        struct Visitor;
-
-        impl<'de> de::Visitor<'de> for Visitor {
-            type Value = Dictionary;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("a map")
-            }
-
-            #[inline]
-            fn visit_unit<E>(self) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
-                Ok(Dictionary::new())
-            }
-
-            #[inline]
-            fn visit_map<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-            where
-                V: de::MapAccess<'de>,
-            {
-                let mut values = Dictionary::new();
-
-                while let Some((key, value)) = try!(visitor.next_entry()) {
-                    values.insert(key, value);
-                }
-
-                Ok(values)
-            }
-        }
-
-        deserializer.deserialize_map(Visitor)
-    }
-}*/
-
-impl FromIterator<(String, Value)> for Dictionary {
-    fn from_iter<T>(iter: T) -> Self
-    where
-        T: IntoIterator<Item = (String, Value)>,
-    {
+impl<K: Into<String>, V: Into<Value>> FromIterator<(K, V)> for Dictionary {
+    fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
         Dictionary {
-            map: FromIterator::from_iter(iter),
+            map: iter
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
         }
     }
 }
@@ -715,3 +656,102 @@ pub struct ValuesMut<'a> {
 }
 
 delegate_iterator!((ValuesMut<'a>) => &'a mut Value);
+
+#[cfg(feature = "serde")]
+pub mod serde_impls {
+    use serde::{de, ser};
+    use std::fmt;
+
+    use crate::Dictionary;
+
+    impl ser::Serialize for Dictionary {
+        #[inline]
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: ser::Serializer,
+        {
+            use serde::ser::SerializeMap;
+            let mut map = serializer.serialize_map(Some(self.len()))?;
+            for (k, v) in self {
+                map.serialize_key(k)?;
+                map.serialize_value(v)?;
+            }
+            map.end()
+        }
+    }
+
+    impl<'de> de::Deserialize<'de> for Dictionary {
+        #[inline]
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            struct Visitor;
+
+            impl<'de> de::Visitor<'de> for Visitor {
+                type Value = Dictionary;
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a map")
+                }
+
+                #[inline]
+                fn visit_unit<E>(self) -> Result<Self::Value, E>
+                where
+                    E: de::Error,
+                {
+                    Ok(Dictionary::new())
+                }
+
+                #[inline]
+                fn visit_map<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+                where
+                    V: de::MapAccess<'de>,
+                {
+                    let mut values = Dictionary::new();
+
+                    while let Some((key, value)) = visitor.next_entry()? {
+                        values.insert(key, value);
+                    }
+
+                    Ok(values)
+                }
+            }
+
+            deserializer.deserialize_map(Visitor)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Dictionary;
+    use std::array::IntoIter;
+
+    #[test]
+    fn from_hash_map_to_dict() {
+        let dict: Dictionary = IntoIter::new([
+            ("Doge", "Shiba Inu"),
+            ("Cheems", "Shiba Inu"),
+            ("Walter", "Bull Terrier"),
+            ("Perro", "Golden Retriever"),
+        ])
+        .collect();
+        assert_eq!(
+            dict.get("Doge").and_then(|v| v.as_string()),
+            Some("Shiba Inu")
+        );
+        assert_eq!(
+            dict.get("Cheems").and_then(|v| v.as_string()),
+            Some("Shiba Inu")
+        );
+        assert_eq!(
+            dict.get("Walter").and_then(|v| v.as_string()),
+            Some("Bull Terrier")
+        );
+        assert_eq!(
+            dict.get("Perro").and_then(|v| v.as_string()),
+            Some("Golden Retriever")
+        );
+    }
+}

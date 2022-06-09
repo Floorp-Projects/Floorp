@@ -2,11 +2,11 @@ use serde::{
     de::{Deserialize, DeserializeOwned},
     ser::Serialize,
 };
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug, fs::File, io::Cursor, path::Path};
 
 use crate::{
     stream::{private::Sealed, Event, OwnedEvent, Writer},
-    Date, Deserializer, Error, Integer, Serializer, Uid,
+    Date, Deserializer, Dictionary, Error, Integer, Serializer, Uid, Value,
 };
 
 struct VecWriter {
@@ -582,4 +582,306 @@ fn deserialise_old_enum_unit_variant_encoding() {
     let obj = Foo::deserialize(&mut de).unwrap();
 
     assert_eq!(obj, Foo::Baz);
+}
+
+#[test]
+fn deserialize_dictionary_xml() {
+    let reader = File::open(&Path::new("./tests/data/xml.plist")).unwrap();
+    let dict: Dictionary = crate::from_reader(reader).unwrap();
+
+    check_common_plist(&dict);
+
+    // xml.plist has this member, but binary.plist does not.
+    assert_eq!(
+        dict.get("HexademicalNumber") // sic
+            .unwrap()
+            .as_unsigned_integer()
+            .unwrap(),
+        0xDEADBEEF
+    );
+}
+
+#[test]
+fn deserialize_dictionary_binary() {
+    let reader = File::open(&Path::new("./tests/data/binary.plist")).unwrap();
+    let dict: Dictionary = crate::from_reader(reader).unwrap();
+
+    check_common_plist(&dict);
+}
+
+// Shared checks used by the tests deserialize_dictionary_xml() and
+// deserialize_dictionary_binary(), which load files with different formats
+// but the same data elements.
+fn check_common_plist(dict: &Dictionary) {
+    // Array elements
+
+    let lines = dict.get("Lines").unwrap().as_array().unwrap();
+    assert_eq!(lines.len(), 2);
+    assert_eq!(
+        lines[0].as_string().unwrap(),
+        "It is a tale told by an idiot,"
+    );
+    assert_eq!(
+        lines[1].as_string().unwrap(),
+        "Full of sound and fury, signifying nothing."
+    );
+
+    // Dictionary
+    //
+    // There is no embedded dictionary in this plist.  See
+    // deserialize_dictionary_binary_nskeyedarchiver() below for an example
+    // of that.
+
+    // Boolean elements
+
+    assert_eq!(dict.get("IsTrue").unwrap().as_boolean().unwrap(), true);
+
+    assert_eq!(dict.get("IsNotFalse").unwrap().as_boolean().unwrap(), false);
+
+    // Data
+
+    let data = dict.get("Data").unwrap().as_data().unwrap();
+    assert_eq!(data.len(), 15);
+    assert_eq!(
+        data,
+        &[0, 0, 0, 0xbe, 0, 0, 0, 0x03, 0, 0, 0, 0x1e, 0, 0, 0]
+    );
+
+    // Date
+
+    assert_eq!(
+        dict.get("Birthdate").unwrap().as_date().unwrap(),
+        Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()
+    );
+
+    // Real
+
+    assert_eq!(dict.get("Height").unwrap().as_real().unwrap(), 1.6);
+
+    // Integer
+
+    assert_eq!(
+        dict.get("BiggestNumber")
+            .unwrap()
+            .as_unsigned_integer()
+            .unwrap(),
+        18446744073709551615
+    );
+
+    assert_eq!(
+        dict.get("Death").unwrap().as_unsigned_integer().unwrap(),
+        1564
+    );
+
+    assert_eq!(
+        dict.get("SmallestNumber")
+            .unwrap()
+            .as_signed_integer()
+            .unwrap(),
+        -9223372036854775808
+    );
+
+    // String
+
+    assert_eq!(
+        dict.get("Author").unwrap().as_string().unwrap(),
+        "William Shakespeare"
+    );
+
+    assert_eq!(dict.get("Blank").unwrap().as_string().unwrap(), "");
+
+    // Uid
+    //
+    // No checks for Uid value type in this test. See
+    // deserialize_dictionary_binary_nskeyedarchiver() below for an example
+    // of that.
+}
+
+#[test]
+fn deserialize_dictionary_binary_nskeyedarchiver() {
+    let reader = File::open(&Path::new("./tests/data/binary_NSKeyedArchiver.plist")).unwrap();
+    let dict: Dictionary = crate::from_reader(reader).unwrap();
+
+    assert_eq!(
+        dict.get("$archiver").unwrap().as_string().unwrap(),
+        "NSKeyedArchiver"
+    );
+
+    let objects = dict.get("$objects").unwrap().as_array().unwrap();
+    assert_eq!(objects.len(), 5);
+
+    assert_eq!(objects[0].as_string().unwrap(), "$null");
+
+    let objects_1 = objects[1].as_dictionary().unwrap();
+    assert_eq!(
+        *objects_1.get("$class").unwrap().as_uid().unwrap(),
+        Uid::new(4)
+    );
+    assert_eq!(
+        objects_1
+            .get("NSRangeCount")
+            .unwrap()
+            .as_unsigned_integer()
+            .unwrap(),
+        42
+    );
+    assert_eq!(
+        *objects_1.get("NSRangeData").unwrap().as_uid().unwrap(),
+        Uid::new(2)
+    );
+
+    let objects_2 = objects[2].as_dictionary().unwrap();
+    assert_eq!(
+        *objects_2.get("$class").unwrap().as_uid().unwrap(),
+        Uid::new(3)
+    );
+    let objects_2_nsdata = objects_2.get("NS.data").unwrap().as_data().unwrap();
+    assert_eq!(objects_2_nsdata.len(), 103);
+    assert_eq!(objects_2_nsdata[0], 0x03);
+    assert_eq!(objects_2_nsdata[102], 0x01);
+
+    let objects_3 = objects[3].as_dictionary().unwrap();
+    let objects_3_classes = objects_3.get("$classes").unwrap().as_array().unwrap();
+    assert_eq!(objects_3_classes.len(), 3);
+    assert_eq!(objects_3_classes[0].as_string().unwrap(), "NSMutableData");
+    assert_eq!(objects_3_classes[1].as_string().unwrap(), "NSData");
+    assert_eq!(objects_3_classes[2].as_string().unwrap(), "NSObject");
+    assert_eq!(
+        objects_3.get("$classname").unwrap().as_string().unwrap(),
+        "NSMutableData"
+    );
+
+    let objects_4 = objects[4].as_dictionary().unwrap();
+    let objects_4_classes = objects_4.get("$classes").unwrap().as_array().unwrap();
+    assert_eq!(objects_4_classes.len(), 3);
+    assert_eq!(
+        objects_4_classes[0].as_string().unwrap(),
+        "NSMutableIndexSet"
+    );
+    assert_eq!(objects_4_classes[1].as_string().unwrap(), "NSIndexSet");
+    assert_eq!(objects_4_classes[2].as_string().unwrap(), "NSObject");
+    assert_eq!(
+        objects_4.get("$classname").unwrap().as_string().unwrap(),
+        "NSMutableIndexSet"
+    );
+
+    let top = dict.get("$top").unwrap().as_dictionary().unwrap();
+    assert_eq!(
+        *top.get("foundItems").unwrap().as_uid().unwrap(),
+        Uid::new(1)
+    );
+
+    let version = dict.get("$version").unwrap().as_unsigned_integer().unwrap();
+    assert_eq!(version, 100000);
+}
+
+#[test]
+fn dictionary_deserialize_dictionary_in_struct() {
+    // Example from <https://github.com/ebarnard/rust-plist/issues/54>
+    #[derive(Deserialize)]
+    struct LayerinfoData {
+        color: Option<String>,
+        lib: Option<Dictionary>,
+    }
+
+    let lib_dict: LayerinfoData = crate::from_bytes(r#"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>color</key>
+            <string>1,0.75,0,0.7</string>
+            <key>lib</key>
+            <dict>
+            <key>com.typemytype.robofont.segmentType</key>
+            <string>curve</string>
+            </dict>
+        </dict>
+        </plist>
+        "#.as_bytes()).unwrap();
+
+    assert_eq!(lib_dict.color.unwrap(), "1,0.75,0,0.7");
+    assert_eq!(
+        lib_dict
+            .lib
+            .unwrap()
+            .get("com.typemytype.robofont.segmentType")
+            .unwrap()
+            .as_string()
+            .unwrap(),
+        "curve"
+    );
+}
+
+#[test]
+fn dictionary_serialize_xml() {
+    // Dictionary to be embedded in dict, below.
+    let mut inner_dict = Dictionary::new();
+    inner_dict.insert(
+        "FirstKey".to_owned(),
+        Value::String("FirstValue".to_owned()),
+    );
+    inner_dict.insert("SecondKey".to_owned(), Value::Data(vec![10, 20, 30, 40]));
+    inner_dict.insert("ThirdKey".to_owned(), Value::Real(1.234));
+    inner_dict.insert(
+        "FourthKey".to_owned(),
+        Value::Date(Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
+    );
+
+    // Top-level dictionary.
+    let mut dict = Dictionary::new();
+    dict.insert(
+        "AnArray".to_owned(),
+        Value::Array(vec![
+            Value::String("Hello, world!".to_owned()),
+            Value::Integer(Integer::from(345)),
+        ]),
+    );
+    dict.insert("ADictionary".to_owned(), Value::Dictionary(inner_dict));
+    dict.insert("AnInteger".to_owned(), Value::Integer(Integer::from(123)));
+    dict.insert("ATrueBoolean".to_owned(), Value::Boolean(true));
+    dict.insert("AFalseBoolean".to_owned(), Value::Boolean(false));
+
+    // Serialize dictionary as an XML plist.
+    let mut buf = Cursor::new(Vec::new());
+    crate::to_writer_xml(&mut buf, &dict).unwrap();
+    let buf = buf.into_inner();
+    let xml = std::str::from_utf8(&buf).unwrap();
+
+    let comparison = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+\t<key>AnArray</key>
+\t<array>
+\t\t<string>Hello, world!</string>
+\t\t<integer>345</integer>
+\t</array>
+\t<key>ADictionary</key>
+\t<dict>
+\t\t<key>FirstKey</key>
+\t\t<string>FirstValue</string>
+\t\t<key>SecondKey</key>
+\t\t<data>\n\t\tChQeKA==\n\t\t</data>
+\t\t<key>ThirdKey</key>
+\t\t<real>1.234</real>
+\t\t<key>FourthKey</key>
+\t\t<date>1981-05-16T11:32:06Z</date>
+\t</dict>
+\t<key>AnInteger</key>
+\t<integer>123</integer>
+\t<key>ATrueBoolean</key>
+\t<true/>
+\t<key>AFalseBoolean</key>
+\t<false/>
+</dict>
+</plist>";
+
+    assert_eq!(xml, comparison);
+}
+
+#[test]
+fn serde_yaml_to_value() {
+    let value: Value = serde_yaml::from_str("true").unwrap();
+    assert_eq!(value, Value::Boolean(true));
 }
