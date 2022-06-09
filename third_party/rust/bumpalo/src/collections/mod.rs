@@ -8,7 +8,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Collection types.
+//! Collection types that allocate inside a [`Bump`] arena.
+//!
+//! [`Bump`]: ../struct.Bump.html
 
 #![allow(deprecated)]
 
@@ -56,14 +58,14 @@ pub use collect_in::{CollectIn, FromIteratorIn};
 
 use crate::alloc::{AllocErr, LayoutErr};
 
-/// Augments `AllocErr` with a CapacityOverflow variant.
+/// Augments `AllocErr` with a `CapacityOverflow` variant.
 #[derive(Clone, PartialEq, Eq, Debug)]
 // #[unstable(feature = "try_reserve", reason = "new API", issue="48043")]
 pub enum CollectionAllocErr {
     /// Error due to the computed capacity exceeding the collection's maximum
     /// (usually `isize::MAX` bytes).
     CapacityOverflow,
-    /// Error due to the allocator (see the `AllocErr` type's docs).
+    /// Error due to the allocator (see the documentation for the [`AllocErr`] type).
     AllocErr,
 }
 

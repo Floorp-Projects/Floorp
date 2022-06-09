@@ -190,7 +190,7 @@ version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.bumpalo]]
-version = "3.9.1"
+version = "3.10.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.byteorder]]

@@ -12,15 +12,26 @@
 [package]
 edition = "2018"
 name = "bumpalo"
-version = "3.9.1"
+version = "3.10.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
-exclude = ["/.github/*", "/benches", "/tests", "valgrind.supp", "bumpalo.png"]
+exclude = [
+    "/.github/*",
+    "/benches",
+    "/tests",
+    "valgrind.supp",
+    "bumpalo.png",
+]
 description = "A fast bump allocation arena for Rust."
 documentation = "https://docs.rs/bumpalo"
-readme = "./README.md"
-categories = ["memory-management", "rust-patterns", "no-std"]
+readme = "README.md"
+categories = [
+    "memory-management",
+    "rust-patterns",
+    "no-std",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/fitzgen/bumpalo"
+
 [package.metadata.docs.rs]
 all-features = true
 
@@ -38,6 +49,7 @@ name = "benches"
 path = "benches/benches.rs"
 harness = false
 required-features = ["collections"]
+
 [dev-dependencies.criterion]
 version = "0.3.0"
 
