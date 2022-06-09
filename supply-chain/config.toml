@@ -1254,7 +1254,7 @@ version = "1.4.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.rust_decimal]]
-version = "1.23.1"
+version = "1.24.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.rustc-demangle]]

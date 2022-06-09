@@ -17,8 +17,8 @@ To get started, add `rust_decimal` and optionally `rust_decimal_macros` to your 
 
 ```toml
 [dependencies]
-rust_decimal = "1.23"
-rust_decimal_macros = "1.23"
+rust_decimal = "1.24"
+rust_decimal_macros = "1.24"
 ```
 
 ## Usage
@@ -140,6 +140,10 @@ Please note that `ln` and `log10` will panic on invalid input with `checked_ln` 
 to curb against this. When the `maths` feature was first developed the library would return `0` on invalid input. To re-enable this
 non-panicking behavior, please use the feature: `maths-nopanic`.
 
+### `rand`
+
+Implements `rand::distributions::Distribution<Decimal>` to allow the creation of random instances.
+
 ### `rocket-traits`
 
 Enable support for Rocket forms by implementing the `FromFormField` trait.
@@ -234,8 +238,8 @@ Please refer to the [Build document](BUILD.md) for more information on building 
 
 ## Minimum Rust Compiler Version
 
-The current _minimum_ compiler version is [`1.54.0`](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1540-2021-07-29)
-which was released on `2021-07-29`.
+The current _minimum_ compiler version is [`1.56.0`](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1560-2021-10-21)
+which was released on `2021-10-21`.
 
 This library maintains support for rust compiler versions that are 4 minor versions away from the current stable rust compiler version.
 For example, if the current stable compiler version is `1.50.0` then we will guarantee support up to and including `1.46.0`.

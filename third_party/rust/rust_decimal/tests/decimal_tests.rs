@@ -1,10 +1,6 @@
 mod macros;
 
-use core::{
-    cmp::Ordering::*,
-    convert::{TryFrom, TryInto},
-    str::FromStr,
-};
+use core::{cmp::Ordering::*, str::FromStr};
 use num_traits::{Inv, Signed, ToPrimitive};
 use rust_decimal::{Decimal, Error, RoundingStrategy};
 
@@ -146,8 +142,12 @@ fn it_can_serialize_deserialize_borsh() {
         borsh::BorshSerialize::serialize(&a, &mut bytes).unwrap();
         let b: Decimal = borsh::BorshDeserialize::deserialize(&mut bytes.as_slice()).unwrap();
         assert_eq!(test.to_string(), b.to_string());
-        let bytes = borsh::schema_helper::serialize_with_schema(&a);
-        let b: Decimal = borsh::schema_helper::deserialize_with_schema(&bytes);
+        let bytes = borsh::try_to_vec_with_schema(&a);
+        assert!(bytes.is_ok(), "try_to_vec_with_schema.is_ok()");
+        let bytes = bytes.unwrap();
+        let result = borsh::try_from_slice_with_schema(&bytes);
+        assert!(result.is_ok(), "try_from_slice_with_schema.is_ok()");
+        let b: Decimal = result.unwrap();
         assert_eq!(test.to_string(), b.to_string());
     }
 }

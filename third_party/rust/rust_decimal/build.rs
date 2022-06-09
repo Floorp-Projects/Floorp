@@ -42,7 +42,7 @@ fn prepare(readme: &str) -> String {
             if !feature_section && line.starts_with("## Features") {
                 feature_section = true;
             } else if feature_section && line.starts_with("### ") {
-                feature = line.replace("### ", "").replace("`", "");
+                feature = line.replace("### ", "").replace('`', "");
             }
             cleaned.push_str(line);
         }
