@@ -55,12 +55,12 @@ onmessage = async function(msg) {
       // Ensure files are writable and executable. Otherwise, we may be
       // unable to execute or uninstall them.
       await IOUtils.setPermissions(destPath, 0o700);
-      if (IOUtils.removeMacXAttr) {
+      if (IOUtils.delMacXAttr) {
         // If we're on MacOS Firefox will add the quarantine xattr to files it
         // downloads. In this case we want to clear that xattr so we can load
         // the CDM.
         try {
-          await IOUtils.removeMacXAttr(destPath, "com.apple.quarantine");
+          await IOUtils.delMacXAttr(destPath, "com.apple.quarantine");
         } catch (e) {
           // Failed to remove the attribute. This could be because the profile
           // exists on a file system without xattr support.
