@@ -39,7 +39,6 @@ pub struct Record<'a> {
 /// - "some", with the current span's [`Id`] and [`Metadata`].
 ///
 /// [the `Subscriber` considers]: super::subscriber::Subscriber::current_span
-/// [`Id`]: Id
 /// [`Metadata`]: super::metadata::Metadata
 #[derive(Debug)]
 pub struct Current {
@@ -73,7 +72,7 @@ impl Id {
 
     /// Constructs a new span ID from the given `NonZeroU64`.
     ///
-    /// Unlike [`Id::from_u64`](#method.from_u64), this will never panic.
+    /// Unlike [`Id::from_u64`](Id::from_u64()), this will never panic.
     #[inline]
     pub const fn from_non_zero_u64(id: NonZeroU64) -> Self {
         Id(id)
@@ -226,6 +225,14 @@ impl<'a> Record<'a> {
         self.values.record(visitor)
     }
 
+    /// Returns the number of fields that would be visited from this `Record`
+    /// when [`Record::record()`] is called
+    ///
+    /// [`Record::record()`]: Record::record()
+    pub fn len(&self) -> usize {
+        self.values.len()
+    }
+
     /// Returns `true` if this `Record` contains a value for the given `Field`.
     pub fn contains(&self, field: &field::Field) -> bool {
         self.values.contains(field)
@@ -273,9 +280,9 @@ impl Current {
     /// `None`, but in this case, that is because the subscriber does not keep
     /// track of the currently-entered span.
     ///
-    /// [`id`]: #method.id
-    /// [`metadata`]: #method.metadata
-    /// [`into_inner`]: #method.into_inner
+    /// [`id`]: Current::id()
+    /// [`metadata`]: Current::metadata()
+    /// [`into_inner`]: Current::into_inner()
     pub fn is_known(&self) -> bool {
         !matches!(self.inner, CurrentInner::Unknown)
     }
