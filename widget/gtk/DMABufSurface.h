@@ -184,9 +184,9 @@ class DMABufSurface {
 
   int mBufferPlaneCount;
   int mDmabufFds[DMABUF_BUFFER_PLANES];
-  uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
-  uint32_t mStrides[DMABUF_BUFFER_PLANES];
-  uint32_t mOffsets[DMABUF_BUFFER_PLANES];
+  int32_t mDrmFormats[DMABUF_BUFFER_PLANES];
+  int32_t mStrides[DMABUF_BUFFER_PLANES];
+  int32_t mOffsets[DMABUF_BUFFER_PLANES];
 
   struct gbm_bo* mGbmBufferObject[DMABUF_BUFFER_PLANES];
   void* mMappedRegion[DMABUF_BUFFER_PLANES];
@@ -208,6 +208,10 @@ class DMABufSurfaceRGBA : public DMABufSurface {
  public:
   static already_AddRefed<DMABufSurfaceRGBA> CreateDMABufSurface(
       int aWidth, int aHeight, int aDMABufSurfaceFlags);
+
+  static already_AddRefed<DMABufSurface> CreateDMABufSurface(
+      mozilla::gl::GLContext* aGLContext, const EGLImageKHR aEGLImage,
+      int aWidth, int aHeight);
 
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
 
@@ -258,6 +262,8 @@ class DMABufSurfaceRGBA : public DMABufSurface {
 
   bool Create(int aWidth, int aHeight, int aDMABufSurfaceFlags);
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
+  bool Create(mozilla::gl::GLContext* aGLContext, const EGLImageKHR aEGLImage,
+              int aWidth, int aHeight);
 
   bool ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
 
