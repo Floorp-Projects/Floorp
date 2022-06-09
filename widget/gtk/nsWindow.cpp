@@ -934,23 +934,22 @@ void nsWindow::Show(bool aState) {
   NativeShow(aState);
 }
 
-void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove) {
-  LOG("nsWindow::ResizeInt x:%d y:%d -> w:%d h:%d aMove %d\n", aX, aY, aWidth,
-      aHeight, aMove);
-
-  ConstrainSize(&aWidth, &aHeight);
-
-  LOG("  ConstrainSize: w:%d h;%d\n", aWidth, aHeight);
-
+void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
+                         LayoutDeviceIntSize aSize) {
+  LOG("nsWindow::ResizeInt w:%d h:%d\n", aSize.width, aSize.height);
   if (aMove) {
-    mBounds.x = aX;
-    mBounds.y = aY;
+    mBounds.x = aMove->x;
+    mBounds.y = aMove->y;
+    LOG("  with move to left:%d top:%d", aMove->x, aMove->y);
   }
 
-  // For top-level windows, aWidth and aHeight should possibly be
+  ConstrainSize(&aSize.width, &aSize.height);
+  LOG("  ConstrainSize: w:%d h;%d\n", aSize.width, aSize.height);
+
+  // For top-level windows, aSize should possibly be
   // interpreted as frame bounds, but NativeResize treats these as window
   // bounds (Bug 581866).
-  mBounds.SizeTo(aWidth, aHeight);
+  mBounds.SizeTo(aSize);
   // Check mBounds size
   if (mCompositorSession &&
       !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
@@ -971,7 +970,7 @@ void nsWindow::ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove) {
     return;
   }
 
-  NativeMoveResize(aMove, true);
+  NativeMoveResize(aMove.isSome(), true);
 
   DispatchResized();
 }
@@ -981,10 +980,9 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  int32_t width = NSToIntRound(scale * aWidth);
-  int32_t height = NSToIntRound(scale * aHeight);
+  auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
 
-  ResizeInt(0, 0, width, height, /* aMove */ false);
+  ResizeInt(Nothing(), size);
 }
 
 void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
@@ -994,13 +992,10 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  int32_t width = NSToIntRound(scale * aWidth);
-  int32_t height = NSToIntRound(scale * aHeight);
+  auto size = LayoutDeviceIntSize::Round(scale * aWidth, scale * aHeight);
+  auto topLeft = LayoutDeviceIntPoint::Round(scale * aX, scale * aY);
 
-  int32_t x = NSToIntRound(scale * aX);
-  int32_t y = NSToIntRound(scale * aY);
-
-  ResizeInt(x, y, width, height, /* aMove */ true);
+  ResizeInt(Some(topLeft), size);
 }
 
 void nsWindow::Enable(bool aState) { mEnabled = aState; }
