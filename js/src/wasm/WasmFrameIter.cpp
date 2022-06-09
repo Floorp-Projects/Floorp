@@ -841,6 +841,21 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm, Offsets* offsets) {
   masm.setFramePushed(0);
 }
 
+void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm) {
+#ifdef JS_CODEGEN_ARM64
+  masm.loadPtr(Address(sp, 0), lr);
+  masm.addToStackPtr(Imm32(8));
+  // Copy SP into PSP to enforce return-point invariants (SP == PSP).
+  // `addToStackPtr` won't sync them because SP is the active pointer here.
+  // For the same reason, we can't use initPseudoStackPtr to do the sync, so
+  // we have to do it "by hand".  Omitting this causes many tests to segfault.
+  masm.moveStackPtrTo(PseudoStackPointer);
+  masm.abiret();
+#else
+  masm.ret();
+#endif
+}
+
 /*****************************************************************************/
 // ProfilingFrameIterator
 
