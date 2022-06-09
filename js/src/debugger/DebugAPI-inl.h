@@ -53,7 +53,7 @@ void DebugAPI::notifyParticipatesInGC(GlobalObject* global,
 
 /* static */
 bool DebugAPI::onLogAllocationSite(JSContext* cx, JSObject* obj,
-                                   HandleSavedFrame frame,
+                                   Handle<SavedFrame*> frame,
                                    mozilla::TimeStamp when) {
   Realm::DebuggerVector& dbgs = cx->global()->getDebuggers();
   if (dbgs.empty()) {

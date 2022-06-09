@@ -64,8 +64,8 @@ class SavedFrame : public NativeObject {
 
   // Iterator for use with C++11 range based for loops, eg:
   //
-  //     RootedSavedFrame stack(cx, getSomeSavedFrameStack());
-  //     for (HandleSavedFrame frame : SavedFrame::RootedRange(cx, stack)) {
+  //     Rooted<SavedFrame*> stack(cx, getSomeSavedFrameStack());
+  //     for (Handle<SavedFrame*> frame : SavedFrame::RootedRange(cx, stack)) {
   //         ...
   //     }
   //
@@ -83,7 +83,7 @@ class SavedFrame : public NativeObject {
 
    public:
     explicit RootedIterator(RootedRange& range) : range_(&range) {}
-    HandleSavedFrame operator*() {
+    Handle<SavedFrame*> operator*() {
       MOZ_ASSERT(range_);
       return range_->frame_;
     }
@@ -98,10 +98,10 @@ class SavedFrame : public NativeObject {
 
   class MOZ_STACK_CLASS RootedRange {
     friend class RootedIterator;
-    RootedSavedFrame frame_;
+    Rooted<SavedFrame*> frame_;
 
    public:
-    RootedRange(JSContext* cx, HandleSavedFrame frame) : frame_(cx, frame) {}
+    RootedRange(JSContext* cx, Handle<SavedFrame*> frame) : frame_(cx, frame) {}
     RootedIterator begin() { return RootedIterator(*this); }
     RootedIterator end() { return RootedIterator(); }
   };

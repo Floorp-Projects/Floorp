@@ -29,7 +29,7 @@
 #include "debugger/Object.h"        // for DebuggerObject
 #include "ds/TraceableFifo.h"       // for TraceableFifo
 #include "gc/Barrier.h"             // for WeakHeapPtrGlobalObject, HeapPtr
-#include "gc/Rooting.h"             // for HandleSavedFrame, HandleAtom
+#include "gc/Rooting.h"             // for HandleAtom
 #include "gc/Tracer.h"              // for TraceNullableEdge, TraceEdge
 #include "gc/WeakMap.h"             // for WeakMap
 #include "gc/ZoneAllocator.h"       // for ZoneAllocPolicy
@@ -269,7 +269,7 @@ class Completion {
    * completion.
    */
   void toResumeMode(ResumeMode& resumeMode, MutableHandleValue value,
-                    MutableHandleSavedFrame exnStack) const;
+                    MutableHandle<SavedFrame*> exnStack) const;
   /*
    * Given a `ResumeMode` and value (typically derived from a resumption value
    * returned by a Debugger hook), update this completion as requested.
@@ -650,7 +650,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static const size_t DEFAULT_MAX_LOG_LENGTH = 5000;
 
   [[nodiscard]] bool appendAllocationSite(JSContext* cx, HandleObject obj,
-                                          HandleSavedFrame frame,
+                                          Handle<SavedFrame*> frame,
                                           mozilla::TimeStamp when);
 
   /*

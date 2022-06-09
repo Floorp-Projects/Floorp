@@ -52,7 +52,7 @@ void JS::SetPendingExceptionStack(JSContext* cx,
   // compartment while stored stack values are always the unwrapped
   // object anyway.
 
-  RootedSavedFrame nstack(cx);
+  Rooted<SavedFrame*> nstack(cx);
   if (exceptionStack.stack()) {
     nstack = &UncheckedUnwrap(exceptionStack.stack())->as<SavedFrame>();
   }

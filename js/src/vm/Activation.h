@@ -376,13 +376,13 @@ class LiveSavedFrameCache {
   // SavedFrame objects for a different compartment than cx's current
   // compartment. In this case, the entire cache is flushed.
   void find(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
-            MutableHandleSavedFrame frame) const;
+            MutableHandle<SavedFrame*> frame) const;
 
   // Search the cache for a frame matching |framePtr|, without removing any
   // entries. Return the matching saved frame, or nullptr if none is found.
   // This is used for resolving |evalInFramePrev| links.
   void findWithoutInvalidation(const FramePtr& framePtr,
-                               MutableHandleSavedFrame frame) const;
+                               MutableHandle<SavedFrame*> frame) const;
 
   // Push a cache entry mapping |framePtr| and |pc| to |savedFrame| on the top
   // of the cache's stack. You must insert entries for frames from oldest to
@@ -390,7 +390,7 @@ class LiveSavedFrameCache {
   // found a hit for; or you must have cleared the entire cache with the
   // |clear| method.
   bool insert(JSContext* cx, FramePtr&& framePtr, const jsbytecode* pc,
-              HandleSavedFrame savedFrame);
+              Handle<SavedFrame*> savedFrame);
 
   // Remove all entries from the cache.
   void clear() {

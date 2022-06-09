@@ -1095,7 +1095,7 @@ static bool IsOutOfMemoryException(JSContext* cx, const Value& v) {
 }
 #endif
 
-void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
+void JSContext::setPendingException(HandleValue v, Handle<SavedFrame*> stack) {
 #if defined(NIGHTLY_BUILD)
   do {
     // Do not intercept exceptions if we are already
@@ -1139,7 +1139,7 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
 
 void JSContext::setPendingException(HandleValue value,
                                     ShouldCaptureStack captureStack) {
-  RootedSavedFrame nstack(this);
+  Rooted<SavedFrame*> nstack(this);
   if (captureStack == ShouldCaptureStack::Always ||
       realm()->shouldCaptureStackForThrow()) {
     RootedObject stack(this);
@@ -1159,7 +1159,7 @@ bool JSContext::getPendingException(MutableHandleValue rval) {
   if (zone()->isAtomsZone()) {
     return true;
   }
-  RootedSavedFrame stack(this, unwrappedExceptionStack());
+  Rooted<SavedFrame*> stack(this, unwrappedExceptionStack());
   JS::ExceptionStatus prevStatus = status;
   clearPendingException();
   if (!compartment()->wrap(this, rval)) {
