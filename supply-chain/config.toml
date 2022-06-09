@@ -774,7 +774,7 @@ version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.indexmap]]
-version = "1.8.1"
+version = "1.8.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.inherent]]
