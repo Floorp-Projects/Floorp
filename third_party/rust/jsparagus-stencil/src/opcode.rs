@@ -105,6 +105,7 @@ macro_rules! using_opcode_database {
                 (MoreIter, more_iter, NULL, 1, 1, 2, JOF_BYTE),
                 (IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE),
                 (EndIter, end_iter, NULL, 1, 2, 0, JOF_BYTE),
+                (CloseIter, close_iter, NULL, 2, 1, 0, JOF_UINT8|JOF_IC),
                 (CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8),
                 (CheckObjCoercible, check_obj_coercible, NULL, 1, 1, 1, JOF_BYTE),
                 (ToAsyncIter, to_async_iter, NULL, 1, 2, 1, JOF_BYTE),

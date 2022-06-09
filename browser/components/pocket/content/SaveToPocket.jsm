@@ -9,32 +9,33 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Pocket",
   "chrome://pocket/content/Pocket.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AboutReaderParent",
   "resource:///actors/AboutReaderParent.jsm"
 );
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
-XPCOMUtils.defineLazyGetter(this, "gStrings", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gStrings", () => {
   return Services.strings.createBundle(
     "chrome://global/locale/aboutReader.properties"
   );
 });
 var PocketCustomizableWidget = {
   init() {
-    CustomizableUI.createWidget({
+    lazy.CustomizableUI.createWidget({
       id: "save-to-pocket-button",
       l10nId: "save-to-pocket-button",
       type: "view",
@@ -68,7 +69,7 @@ var PocketCustomizableWidget = {
     });
   },
   shutdown() {
-    CustomizableUI.destroyWidget("save-to-pocket-button");
+    lazy.CustomizableUI.destroyWidget("save-to-pocket-button");
   },
 };
 
@@ -112,8 +113,11 @@ var SaveToPocket = {
       this.updateElements(false);
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
-    AboutReaderParent.addMessageListener("Reader:OnSetup", this);
-    AboutReaderParent.addMessageListener("Reader:Clicked-pocket-button", this);
+    lazy.AboutReaderParent.addMessageListener("Reader:OnSetup", this);
+    lazy.AboutReaderParent.addMessageListener(
+      "Reader:Clicked-pocket-button",
+      this
+    );
   },
 
   observe(subject, topic, data) {
@@ -127,7 +131,7 @@ var SaveToPocket = {
   _readerButtonData: {
     id: "pocket-button",
     telemetryId: "save-to-pocket",
-    label: gStrings.formatStringFromName("readerView.savetopocket.label", [
+    label: lazy.gStrings.formatStringFromName("readerView.savetopocket.label", [
       "Pocket",
     ]),
     image: "chrome://global/skin/icons/pocket.svg",
@@ -137,13 +141,13 @@ var SaveToPocket = {
 
   onPrefChange(pref, oldValue, newValue) {
     if (!newValue) {
-      AboutReaderParent.broadcastAsyncMessage("Reader:RemoveButton", {
+      lazy.AboutReaderParent.broadcastAsyncMessage("Reader:RemoveButton", {
         id: "pocket-button",
       });
       PocketOverlay.shutdown();
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     } else {
-      AboutReaderParent.broadcastAsyncMessage(
+      lazy.AboutReaderParent.broadcastAsyncMessage(
         "Reader:AddButton",
         this._readerButtonData
       );
@@ -197,7 +201,7 @@ var SaveToPocket = {
   onShownInToolbarPanel(panel, frame) {
     let window = panel.ownerGlobal;
     window.pktUI.setToolbarPanelFrame(frame);
-    Pocket._initPanelView(window);
+    lazy.Pocket._initPanelView(window);
   },
 
   // If an item is saved to Pocket, we cache the browser's inner window ID,
@@ -255,7 +259,7 @@ var SaveToPocket = {
           pocketPanel.hidePopup();
         } else {
           // Saves the currently viewed page.
-          Pocket.savePage(message.target);
+          lazy.Pocket.savePage(message.target);
         }
         break;
       }

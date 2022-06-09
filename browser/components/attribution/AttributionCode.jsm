@@ -21,16 +21,18 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "MacAttribution",
   "resource:///modules/MacAttribution.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
-    // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
-    // messages during development. See LOG_LEVELS in Console.jsm for details.
+    // tip: set maxLogLevel to "debug" and use lazy.log.debug() to create
+    // detailed messages during development. See LOG_LEVELS in Console.jsm for
+    // details.
     maxLogLevel: "error",
     maxLogLevelPref: "browser.attribution.loglevel",
     prefix: "AttributionCode",
@@ -158,7 +160,7 @@ var AttributionCode = {
           }
         }
       } else {
-        log.debug(
+        lazy.log.debug(
           `parseAttributionCode: "${code}" => isValid = false: "${key}", "${value}"`
         );
         isValid = false;
@@ -246,7 +248,7 @@ var AttributionCode = {
    */
   async getAttrDataAsync() {
     if (gCachedAttrData != null) {
-      log.debug(
+      lazy.log.debug(
         `getAttrDataAsync: attribution is cached: ${JSON.stringify(
           gCachedAttrData
         )}`
@@ -258,7 +260,9 @@ var AttributionCode = {
     let attributionFile = this.attributionFile;
     if (!attributionFile) {
       // This platform doesn't support attribution.
-      log.debug(`getAttrDataAsync: no attribution (attributionFile is null)`);
+      lazy.log.debug(
+        `getAttrDataAsync: no attribution (attributionFile is null)`
+      );
       return gCachedAttrData;
     }
 
@@ -266,14 +270,14 @@ var AttributionCode = {
       AppConstants.platform == "macosx" &&
       !(await AttributionIOUtils.exists(attributionFile.path))
     ) {
-      log.debug(
+      lazy.log.debug(
         `getAttrDataAsync: macOS && !exists("${attributionFile.path}")`
       );
 
       // On macOS, we fish the attribution data from the system quarantine DB.
       try {
-        let referrer = await MacAttribution.getReferrerUrl();
-        log.debug(
+        let referrer = await lazy.MacAttribution.getReferrerUrl();
+        lazy.log.debug(
           `getAttrDataAsync: macOS attribution getReferrerUrl: "${referrer}"`
         );
 
@@ -283,7 +287,7 @@ var AttributionCode = {
         gCachedAttrData = {};
 
         // No attributions.  Just `warn` 'cuz this isn't necessarily an error.
-        log.warn("Caught exception fetching macOS attribution codes!", ex);
+        lazy.log.warn("Caught exception fetching macOS attribution codes!", ex);
 
         if (
           ex instanceof Ci.nsIException &&
@@ -296,29 +300,36 @@ var AttributionCode = {
         }
       }
 
-      log.debug(`macOS attribution data is ${JSON.stringify(gCachedAttrData)}`);
+      lazy.log.debug(
+        `macOS attribution data is ${JSON.stringify(gCachedAttrData)}`
+      );
 
       // We only want to try to fetch the referrer from the quarantine
       // database once on macOS.
       try {
         let code = this.serializeAttributionData(gCachedAttrData);
-        log.debug(`macOS attribution data serializes as "${code}"`);
+        lazy.log.debug(`macOS attribution data serializes as "${code}"`);
         await this.writeAttributionFile(code);
       } catch (ex) {
-        log.debug(`Caught exception writing "${attributionFile.path}"`, ex);
+        lazy.log.debug(
+          `Caught exception writing "${attributionFile.path}"`,
+          ex
+        );
         Services.telemetry
           .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
           .add("write_error");
         return gCachedAttrData;
       }
 
-      log.debug(
+      lazy.log.debug(
         `Returning after successfully writing "${attributionFile.path}"`
       );
       return gCachedAttrData;
     }
 
-    log.debug(`getAttrDataAsync: !macOS || !exists("${attributionFile.path}")`);
+    lazy.log.debug(
+      `getAttrDataAsync: !macOS || !exists("${attributionFile.path}")`
+    );
 
     let bytes;
     try {
@@ -329,7 +340,7 @@ var AttributionCode = {
         // This comes out of windows-package-manager _not_ URL encoded or in an ArrayBuffer,
         // but the parsing code wants it that way. It's easier to just provide that
         // than have the parsing code support both.
-        log.debug(
+        lazy.log.debug(
           `winPackageFamilyName is: ${Services.sysinfo.getProperty(
             "winPackageFamilyName"
           )}`
@@ -347,19 +358,19 @@ var AttributionCode = {
       }
     } catch (ex) {
       if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
-        log.debug(
+        lazy.log.debug(
           `getAttrDataAsync: !exists("${
             attributionFile.path
           }"), returning ${JSON.stringify(gCachedAttrData)}`
         );
         return gCachedAttrData;
       }
-      log.debug(
+      lazy.log.debug(
         `other error trying to read attribution data:
           attributionFile.path is: ${attributionFile.path}`
       );
-      log.debug("Full exception is:");
-      log.debug(ex);
+      lazy.log.debug("Full exception is:");
+      lazy.log.debug(ex);
 
       Services.telemetry
         .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
@@ -369,7 +380,7 @@ var AttributionCode = {
       try {
         let decoder = new TextDecoder();
         let code = decoder.decode(bytes);
-        log.debug(
+        lazy.log.debug(
           `getAttrDataAsync: attribution bytes deserializes to ${code}`
         );
         if (AppConstants.platform == "macosx" && !code) {
@@ -380,7 +391,7 @@ var AttributionCode = {
         }
 
         gCachedAttrData = this.parseAttributionCode(code);
-        log.debug(
+        lazy.log.debug(
           `getAttrDataAsync: ${code} parses to ${JSON.stringify(
             gCachedAttrData
           )}`

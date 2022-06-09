@@ -325,25 +325,19 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
   StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
 
   if (!engine) {
-    UniquePtr<webrtc::CaptureDeviceInfo> captureDeviceInfo;
-    auto config = MakeUnique<webrtc::Config>();
-
+    CaptureDeviceType captureDeviceType = CaptureDeviceType::Camera;
     switch (aCapEngine) {
       case ScreenEngine:
-        captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
-            webrtc::CaptureDeviceType::Screen);
+        captureDeviceType = CaptureDeviceType::Screen;
         break;
       case BrowserEngine:
-        captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
-            webrtc::CaptureDeviceType::Browser);
+        captureDeviceType = CaptureDeviceType::Browser;
         break;
       case WinEngine:
-        captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
-            webrtc::CaptureDeviceType::Window);
+        captureDeviceType = CaptureDeviceType::Window;
         break;
       case CameraEngine:
-        captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
-            webrtc::CaptureDeviceType::Camera);
+        captureDeviceType = CaptureDeviceType::Camera;
         break;
       default:
         LOG("Invalid webrtc Video engine");
@@ -351,8 +345,7 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
         break;
     }
 
-    config->Set<webrtc::CaptureDeviceInfo>(captureDeviceInfo.release());
-    engine = VideoEngine::Create(std::move(config));
+    engine = VideoEngine::Create(captureDeviceType);
 
     if (!engine) {
       LOG("VideoEngine::Create failed");

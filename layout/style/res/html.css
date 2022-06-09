@@ -825,7 +825,7 @@ dialog:not([open]) {
   display: none;
 }
 
-dialog:-moz-modal-dialog {
+dialog:modal {
   -moz-top-layer: top !important;
   position: fixed;
   overflow: auto;

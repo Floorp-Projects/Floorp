@@ -2326,12 +2326,35 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
   }
 }
 
+bool DrawTargetWebgl::ShouldUseSubpixelAA(ScaledFont* aFont,
+                                          const DrawOptions& aOptions) {
+  AntialiasMode aaMode = aFont->GetDefaultAAMode();
+  if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
+    aaMode = aOptions.mAntialiasMode;
+  }
+  return GetPermitSubpixelAA() &&
+         (aaMode == AntialiasMode::DEFAULT ||
+          aaMode == AntialiasMode::SUBPIXEL) &&
+         aOptions.mCompositionOp == CompositionOp::OP_OVER;
+}
+
 void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
                                    const GlyphBuffer& aBuffer,
                                    const Pattern& aPattern,
                                    const StrokeOptions& aStrokeOptions,
                                    const DrawOptions& aOptions) {
-  MarkSkiaChanged(aOptions);
+  if (!aFont || !aBuffer.mNumGlyphs) {
+    return;
+  }
+
+  bool useSubpixelAA = ShouldUseSubpixelAA(aFont, aOptions);
+  if (useSubpixelAA) {
+    // Subpixel AA does not support layering because the subpixel masks can't
+    // blend with the over op.
+    MarkSkiaChanged();
+  } else {
+    MarkSkiaChanged(aOptions);
+  }
   mSkia->StrokeGlyphs(aFont, aBuffer, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -2616,14 +2639,7 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
     return;
   }
 
-  AntialiasMode aaMode = aFont->GetDefaultAAMode();
-  if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
-    aaMode = aOptions.mAntialiasMode;
-  }
-  bool useSubpixelAA =
-      GetPermitSubpixelAA() &&
-      (aaMode == AntialiasMode::DEFAULT || aaMode == AntialiasMode::SUBPIXEL) &&
-      aOptions.mCompositionOp == CompositionOp::OP_OVER;
+  bool useSubpixelAA = ShouldUseSubpixelAA(aFont, aOptions);
 
   if (mWebglValid && SupportsDrawOptions(aOptions) &&
       aPattern.GetType() == PatternType::COLOR && PrepareContext() &&

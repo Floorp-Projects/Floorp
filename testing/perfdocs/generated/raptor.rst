@@ -2119,7 +2119,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
-   * **page cycles**: 1
+   * **page cycles**: 5
    * **page timeout**: 420000
    * **subtest lower is better**: true
    * **subtest unit**: ms

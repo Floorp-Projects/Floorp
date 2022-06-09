@@ -94,27 +94,6 @@ add_task(async function testEnableNetworkMonitoringInBrowserConsole() {
 });
 
 /**
- * Toggle Enable network monitoring setting
- *
- *  @param object hud
- *         The web console.
- *  @param boolean on
- *         The toggle flag.
- */
-async function toggleNetworkMonitoringConsoleSetting(hud, on) {
-  const selector =
-    ".webconsole-console-settings-menu-item-enableNetworkMonitoring";
-  const settingChanged = waitFor(() => {
-    const el = getConsoleSettingElement(hud, selector);
-    return on
-      ? el.getAttribute("aria-checked") === "true"
-      : el.getAttribute("aria-checked") !== "true";
-  });
-  await toggleConsoleSetting(hud, selector);
-  await settingChanged;
-}
-
-/**
  * Check that a message is not logged.
  *
  * @param object hud

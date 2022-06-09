@@ -447,6 +447,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   void MarkSkiaChanged(const DrawOptions& aOptions);
 
+  bool ShouldUseSubpixelAA(ScaledFont* aFont, const DrawOptions& aOptions);
+
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
   already_AddRefed<DataSourceSurface> ReadSnapshot();
   already_AddRefed<TextureHandle> CopySnapshot();

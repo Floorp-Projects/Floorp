@@ -12,21 +12,36 @@
 
 namespace mozilla::gl {
 
+static bool HasDmaBufExtensions(const GLContextEGL* gl) {
+  const auto& egl = *(gl->mEgl);
+  return egl.IsExtensionSupported(EGLExtension::EXT_image_dma_buf_import) &&
+         egl.IsExtensionSupported(
+             EGLExtension::EXT_image_dma_buf_import_modifiers) &&
+         egl.IsExtensionSupported(EGLExtension::MESA_image_dma_buf_export);
+}
+
 /*static*/
 UniquePtr<SharedSurface_DMABUF> SharedSurface_DMABUF::Create(
     const SharedSurfaceDesc& desc) {
-  const auto flags = static_cast<DMABufSurfaceFlags>(
-      DMABUF_TEXTURE | DMABUF_USE_MODIFIERS | DMABUF_ALPHA);
-  const RefPtr<DMABufSurface> surface = DMABufSurfaceRGBA::CreateDMABufSurface(
-      desc.size.width, desc.size.height, flags);
-  if (!surface || !surface->CreateTexture(desc.gl)) {
+  const auto& gle = GLContextEGL::Cast(desc.gl);
+  const auto& context = gle->mContext;
+  const auto& egl = *(gle->mEgl);
+
+  if (!HasDmaBufExtensions(gle)) {
     return nullptr;
   }
 
-  const auto tex = surface->GetTexture();
-  auto fb = MozFramebuffer::CreateForBacking(desc.gl, desc.size, 0, false,
-                                             LOCAL_GL_TEXTURE_2D, tex);
+  auto fb = MozFramebuffer::Create(desc.gl, desc.size, 0, false);
   if (!fb) return nullptr;
+
+  const auto buffer = reinterpret_cast<EGLClientBuffer>(fb->ColorTex());
+  const auto image =
+      egl.fCreateImage(context, LOCAL_EGL_GL_TEXTURE_2D, buffer, nullptr);
+  if (!image) return nullptr;
+
+  const RefPtr<DMABufSurface> surface = DMABufSurfaceRGBA::CreateDMABufSurface(
+      desc.gl, image, desc.size.width, desc.size.height);
+  if (!surface) return nullptr;
 
   return AsUnique(new SharedSurface_DMABUF(desc, std::move(fb), surface));
 }
@@ -61,7 +76,7 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
   }
 
   auto dmabufFactory = MakeUnique<SurfaceFactory_DMABUF>(gl);
-  if (dmabufFactory->CanCreateSurface()) {
+  if (dmabufFactory->CanCreateSurface(gl)) {
     return dmabufFactory;
   }
 
@@ -71,8 +86,38 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
   return nullptr;
 }
 
+bool SurfaceFactory_DMABUF::CanCreateSurface(GLContext& gl) {
+  UniquePtr<SharedSurface> test =
+      CreateShared(gfx::IntSize(1, 1), gfx::ColorSpace2::SRGB);
+  if (!test) {
+    LOGDMABUF((
+        "SurfaceFactory_DMABUF::CanCreateSurface() failed to create surface."));
+    return false;
+  }
+  auto desc = test->ToSurfaceDescriptor();
+  if (!desc) {
+    LOGDMABUF(
+        ("SurfaceFactory_DMABUF::CanCreateSurface() failed to serialize "
+         "surface."));
+    return false;
+  }
+  RefPtr<DMABufSurface> importedSurface =
+      DMABufSurface::CreateDMABufSurface(*desc);
+  if (!importedSurface) {
+    LOGDMABUF((
+        "SurfaceFactory_DMABUF::CanCreateSurface() failed to import surface."));
+    return false;
+  }
+  if (!importedSurface->CreateTexture(&gl)) {
+    LOGDMABUF(
+        ("SurfaceFactory_DMABUF::CanCreateSurface() failed to create texture "
+         "over surface."));
+    return false;
+  }
+  return true;
+}
+
 SurfaceFactory_DMABUF::SurfaceFactory_DMABUF(GLContext& gl)
     : SurfaceFactory({&gl, SharedSurfaceType::EGLSurfaceDMABUF,
                       layers::TextureType::DMABUF, true}) {}
-
 }  // namespace mozilla::gl

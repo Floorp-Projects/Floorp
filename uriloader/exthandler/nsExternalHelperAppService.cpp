@@ -427,6 +427,7 @@ static const nsDefaultMimeTypeEntry defaultMimeEntries[] = {
     {"application/xhtml+xml", "xht"},
     {TEXT_PLAIN, "txt"},
     {APPLICATION_JSON, "json"},
+    {APPLICATION_XJAVASCRIPT, "mjs"},
     {APPLICATION_XJAVASCRIPT, "js"},
     {APPLICATION_XJAVASCRIPT, "jsm"},
     {VIDEO_OGG, "ogv"},

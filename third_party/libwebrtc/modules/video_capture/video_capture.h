@@ -11,7 +11,6 @@
 #ifndef MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 #define MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 
-#include "modules/audio_processing/include/config.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/include/module.h"
@@ -24,43 +23,6 @@
 #endif
 
 namespace webrtc {
-
-// Mozilla addition
-enum class CaptureDeviceType {
-  Camera,
-  Screen,
-  Window,
-  Browser
-};
-// Mozilla addition
-
-struct CaptureDeviceInfo {
-  CaptureDeviceType type;
-
-  CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
-  CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
-
-  static const ConfigOptionID identifier = ConfigOptionID::kCaptureDeviceInfo;
-  const char * TypeName() const
-  {
-    switch(type) {
-    case CaptureDeviceType::Camera: {
-      return "Camera";
-    }
-    case CaptureDeviceType::Screen: {
-      return "Screen";
-    }
-    case CaptureDeviceType::Window: {
-      return "Window";
-    }
-    case CaptureDeviceType::Browser: {
-      return "Browser";
-    }
-    }
-    assert(false);
-    return "UNKOWN-CaptureDeviceType!";
-  }
-};
 
 class VideoInputFeedBack
 {
