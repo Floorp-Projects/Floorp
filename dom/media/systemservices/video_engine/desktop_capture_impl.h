@@ -31,6 +31,7 @@
 #include "desktop_device_info.h"
 
 using namespace webrtc::videocapturemodule;
+using namespace mozilla::camera;  // for mozilla::camera::CaptureDeviceType
 
 namespace rtc {
 #if defined(_WIN32)
