@@ -1446,7 +1446,8 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
     // Restore the stack pointer so that the return address is on top of
     // the stack.
-    masm.addToStackPtr(Imm32(frame.frameSize()));
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
 
 #ifdef DEBUG
     // Get a scratch register that's not osrDataReg or OsrFrameReg.
