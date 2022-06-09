@@ -31,6 +31,10 @@
 
 /* mingw currently doesn't support windows.ui.viewmanagement.h, so we disable it
  * until it's fixed. */
+
+// See
+// https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/winrt/windows.ui.viewmanagement.h
+// for the source of some of these definitions for older SDKs.
 #ifndef __MINGW32__
 
 #  include <inspectable.h>
@@ -330,57 +334,108 @@ WindowsUIUtils::GetInTabletMode(bool* aResult) {
   return NS_OK;
 }
 
-bool WindowsUIUtils::ComputeOverlayScrollbars() {
+static IInspectable* GetUISettings() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
-
 #ifndef __MINGW32__
   // We need to keep this alive for ~ever so that change callbacks work as
   // expected, sigh.
-  static ComPtr<IUISettings5> sUiSettings;
+  static ComPtr<IInspectable> sUiSettingsAsInspectable;
+  if (!IsWin10OrLater()) {
+    // Windows.UI.ViewManagement.UISettings is Win10+ only.
+    return nullptr;
+  }
 
+  if (!sUiSettingsAsInspectable) {
+    ::RoActivateInstance(
+        HStringReference(RuntimeClass_Windows_UI_ViewManagement_UISettings)
+            .Get(),
+        &sUiSettingsAsInspectable);
+    if (NS_WARN_IF(!sUiSettingsAsInspectable)) {
+      return nullptr;
+    }
+
+    ComPtr<IUISettings5> uiSettings5;
+    if (SUCCEEDED(sUiSettingsAsInspectable.As(&uiSettings5))) {
+      EventRegistrationToken unusedToken;
+      auto callback = Callback<ITypedEventHandler<
+          UISettings*, UISettingsAutoHideScrollBarsChangedEventArgs*>>(
+          [](auto...) {
+            // Scrollbar sizes change layout.
+            LookAndFeel::NotifyChangedAllWindows(
+                widget::ThemeChangeKind::StyleAndLayout);
+            return S_OK;
+          });
+      (void)NS_WARN_IF(FAILED(uiSettings5->add_AutoHideScrollBarsChanged(
+          callback.Get(), &unusedToken)));
+    }
+
+    ComPtr<IUISettings2> uiSettings2;
+    if (SUCCEEDED(sUiSettingsAsInspectable.As(&uiSettings2))) {
+      EventRegistrationToken unusedToken;
+      auto callback =
+          Callback<ITypedEventHandler<UISettings*, IInspectable*>>([](auto...) {
+            // Text scale factor changes style and layout.
+            LookAndFeel::NotifyChangedAllWindows(
+                widget::ThemeChangeKind::StyleAndLayout);
+            return S_OK;
+          });
+      (void)NS_WARN_IF(FAILED(uiSettings2->add_TextScaleFactorChanged(
+          callback.Get(), &unusedToken)));
+    }
+  }
+
+  return sUiSettingsAsInspectable.Get();
+#else
+  return nullptr;
+#endif
+}
+
+bool WindowsUIUtils::ComputeOverlayScrollbars() {
+#ifndef __MINGW32__
   if (!IsWin11OrLater()) {
     // While in theory Windows 10 supports overlay scrollbar settings, it's off
     // by default and it's untested whether our Win10 scrollbar drawing code
     // deals with it properly.
     return false;
   }
-
   if (!StaticPrefs::widget_windows_overlay_scrollbars_enabled()) {
     return false;
   }
-
-  if (!sUiSettings) {
-    ComPtr<IInspectable> uiSettingsAsInspectable;
-    ::RoActivateInstance(
-        HStringReference(RuntimeClass_Windows_UI_ViewManagement_UISettings)
-            .Get(),
-        &uiSettingsAsInspectable);
-    if (NS_WARN_IF(!uiSettingsAsInspectable)) {
-      return false;
-    }
-
-    if (NS_WARN_IF(FAILED(uiSettingsAsInspectable.As(&sUiSettings)))) {
-      return false;
-    }
-
-    EventRegistrationToken unusedToken;
-    auto callback = Callback<ITypedEventHandler<
-        UISettings*, UISettingsAutoHideScrollBarsChangedEventArgs*>>(
-        [](auto...) {
-          // Scrollbar sizes change layout.
-          LookAndFeel::NotifyChangedAllWindows(
-              widget::ThemeChangeKind::StyleAndLayout);
-          return S_OK;
-        });
-    (void)NS_WARN_IF(FAILED(sUiSettings->add_AutoHideScrollBarsChanged(
-        callback.Get(), &unusedToken)));
+  ComPtr<IInspectable> settings = GetUISettings();
+  if (NS_WARN_IF(!settings)) {
+    return false;
   }
-
+  ComPtr<IUISettings5> uiSettings5;
+  if (NS_WARN_IF(FAILED(settings.As(&uiSettings5)))) {
+    return false;
+  }
   boolean autoHide = false;
-  sUiSettings->get_AutoHideScrollBars(&autoHide);
+  if (NS_WARN_IF(FAILED(uiSettings5->get_AutoHideScrollBars(&autoHide)))) {
+    return false;
+  }
   return autoHide;
 #else
   return false;
+#endif
+}
+
+double WindowsUIUtils::ComputeTextScaleFactor() {
+#ifndef __MINGW32__
+  ComPtr<IInspectable> settings = GetUISettings();
+  if (NS_WARN_IF(!settings)) {
+    return 1.0;
+  }
+  ComPtr<IUISettings2> uiSettings2;
+  if (NS_WARN_IF(FAILED(settings.As(&uiSettings2)))) {
+    return false;
+  }
+  double scaleFactor = 1.0;
+  if (NS_WARN_IF(FAILED(uiSettings2->get_TextScaleFactor(&scaleFactor)))) {
+    return 1.0;
+  }
+  return scaleFactor;
+#else
+  return 1.0;
 #endif
 }
 
