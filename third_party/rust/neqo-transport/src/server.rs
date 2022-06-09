@@ -20,7 +20,7 @@ use crate::addr_valid::{AddressValidation, AddressValidationResult};
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef};
 use crate::connection::{Connection, Output, State};
 use crate::packet::{PacketBuilder, PacketType, PublicPacket};
-use crate::{ConnectionParameters, Res, Version};
+use crate::{ConnectionParameters, QuicVersion, Res};
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -109,7 +109,7 @@ struct InitialDetails {
     src_cid: ConnectionId,
     dst_cid: ConnectionId,
     token: Vec<u8>,
-    version: Version,
+    quic_version: QuicVersion,
 }
 
 impl InitialDetails {
@@ -118,7 +118,7 @@ impl InitialDetails {
             src_cid: ConnectionId::from(packet.scid()),
             dst_cid: ConnectionId::from(packet.dcid()),
             token: packet.token().to_vec(),
-            version: packet.version().unwrap(),
+            quic_version: packet.version().unwrap(),
         }
     }
 }
@@ -339,7 +339,7 @@ impl Server {
                 };
                 if let Some(new_dcid) = self.cid_generator.borrow_mut().generate_cid() {
                     let packet = PacketBuilder::retry(
-                        initial.version,
+                        initial.quic_version,
                         &initial.src_cid,
                         &new_dcid,
                         &token,
@@ -478,13 +478,11 @@ impl Server {
             saved_cids: Vec::new(),
         }));
 
-        let mut params = self.conn_params.clone();
-        params.get_versions_mut().set_initial(initial.version);
         let sconn = Connection::new_server(
             &self.certs,
             &self.protocols,
             Rc::clone(&cid_mgr) as _,
-            params,
+            self.conn_params.quic_version(initial.quic_version),
         );
 
         if let Ok(mut c) = sconn {
@@ -556,29 +554,6 @@ impl Server {
             return None;
         }
 
-        if packet.packet_type() == PacketType::OtherVersion
-            || (packet.packet_type() == PacketType::Initial
-                && !self
-                    .conn_params
-                    .get_versions()
-                    .all()
-                    .contains(&packet.version().unwrap()))
-        {
-            if dgram.len() < MIN_INITIAL_PACKET_SIZE {
-                qdebug!([self], "Unsupported version: too short");
-                return None;
-            }
-
-            qdebug!([self], "Unsupported version: {:x}", packet.wire_version());
-            let vn = PacketBuilder::version_negotiation(
-                packet.scid(),
-                packet.dcid(),
-                packet.wire_version(),
-                self.conn_params.get_versions().all(),
-            );
-            return Some(Datagram::new(dgram.destination(), dgram.source(), vn));
-        }
-
         match packet.packet_type() {
             PacketType::Initial => {
                 if dgram.len() < MIN_INITIAL_PACKET_SIZE {
@@ -593,7 +568,14 @@ impl Server {
                 let dcid = ConnectionId::from(packet.dcid());
                 self.handle_0rtt(dgram, dcid, now)
             }
-            PacketType::OtherVersion => unreachable!(),
+            PacketType::OtherVersion => {
+                if dgram.len() < MIN_INITIAL_PACKET_SIZE {
+                    qdebug!([self], "Unsupported version: too short");
+                    return None;
+                }
+                let vn = PacketBuilder::version_negotiation(packet.scid(), packet.dcid());
+                Some(Datagram::new(dgram.destination(), dgram.source(), vn))
+            }
             _ => {
                 qtrace!([self], "Not an initial packet");
                 None

@@ -33,10 +33,7 @@ fn target_has_atomic_cas(target: &str) -> bool {
 
 fn target_has_atomics(target: &str) -> bool {
     match &target[..] {
-        "thumbv4t-none-eabi"
-        | "msp430-none-elf"
-        | "riscv32i-unknown-none-elf"
-        | "riscv32imc-unknown-none-elf" => false,
+        "msp430-none-elf" | "riscv32i-unknown-none-elf" | "riscv32imc-unknown-none-elf" => false,
         _ => true,
     }
 }

@@ -37,7 +37,7 @@ fn make_aead(cipher: Cipher) -> Aead {
         TLS_VERSION_1_3,
         cipher,
         &secret,
-        "quic ", // QUICv1 label prefix; note the trailing space here.
+        "quic ", // Note the trailing space here.
     )
     .expect("can make an AEAD")
 }

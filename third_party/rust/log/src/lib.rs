@@ -24,7 +24,7 @@
 //! though that default may be overridden. Logger implementations typically use
 //! the target to filter requests based on some user configuration.
 //!
-//! # Usage
+//! # Use
 //!
 //! The basic use of the log crate is through the five logging macros: [`error!`],
 //! [`warn!`], [`info!`], [`debug!`] and [`trace!`]
@@ -86,42 +86,6 @@
 //!
 //! The logging system may only be initialized once.
 //!
-//! ## Structured logging
-//!
-//! If you enable the `kv_unstable` feature you can associate structured values
-//! with your log records. If we take the example from before, we can include
-//! some additional context besides what's in the formatted message:
-//!
-//! ```edition2018
-//! # #[macro_use] extern crate serde;
-//! # #[derive(Debug, Serialize)] pub struct Yak(String);
-//! # impl Yak { fn shave(&mut self, _: u32) {} }
-//! # fn find_a_razor() -> Result<u32, std::io::Error> { Ok(1) }
-//! # #[cfg(feature = "kv_unstable_serde")]
-//! # fn main() {
-//! use log::{info, warn, as_serde, as_error};
-//!
-//! pub fn shave_the_yak(yak: &mut Yak) {
-//!     info!(target: "yak_events", yak = as_serde!(yak); "Commencing yak shaving");
-//!
-//!     loop {
-//!         match find_a_razor() {
-//!             Ok(razor) => {
-//!                 info!(razor = razor; "Razor located");
-//!                 yak.shave(razor);
-//!                 break;
-//!             }
-//!             Err(err) => {
-//!                 warn!(err = as_error!(err); "Unable to locate a razor, retrying");
-//!             }
-//!         }
-//!     }
-//! }
-//! # }
-//! # #[cfg(not(feature = "kv_unstable_serde"))]
-//! # fn main() {}
-//! ```
-//!
 //! # Available logging implementations
 //!
 //! In order to produce log output executables have to use
@@ -142,14 +106,6 @@
 //! * Adaptors for other facilities:
 //!     * [syslog]
 //!     * [slog-stdlog]
-//!     * [systemd-journal-logger]
-//!     * [android_log]
-//!     * [win_dbg_logger]
-//!     * [db_logger]
-//! * For WebAssembly binaries:
-//!     * [console_log]
-//! * For dynamic libraries:
-//!     * You may need to construct an FFI-safe wrapper over `log` to initialize in your libraries
 //!
 //! # Implementing a Logger
 //!
@@ -306,18 +262,14 @@
 //! [slog-stdlog]: https://docs.rs/slog-stdlog/*/slog_stdlog/
 //! [log4rs]: https://docs.rs/log4rs/*/log4rs/
 //! [fern]: https://docs.rs/fern/*/fern/
-//! [systemd-journal-logger]: https://docs.rs/systemd-journal-logger/*/systemd_journal_logger/
-//! [android_log]: https://docs.rs/android_log/*/android_log/
-//! [win_dbg_logger]: https://docs.rs/win_dbg_logger/*/win_dbg_logger/
-//! [console_log]: https://docs.rs/console_log/*/console_log/
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-    html_root_url = "https://docs.rs/log/0.4.17"
+    html_root_url = "https://docs.rs/log/0.4.14"
 )]
 #![warn(missing_docs)]
-#![deny(missing_debug_implementations, unconditional_recursion)]
+#![deny(missing_debug_implementations)]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 // When compiled for the rustc compiler itself we want to make sure that this is
 // an unstable crate
@@ -608,24 +560,6 @@ impl Level {
     pub fn as_str(&self) -> &'static str {
         LOG_LEVEL_NAMES[*self as usize]
     }
-
-    /// Iterate through all supported logging levels.
-    ///
-    /// The order of iteration is from more severe to less severe log messages.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use log::Level;
-    ///
-    /// let mut levels = Level::iter();
-    ///
-    /// assert_eq!(Some(Level::Error), levels.next());
-    /// assert_eq!(Some(Level::Trace), levels.last());
-    /// ```
-    pub fn iter() -> impl Iterator<Item = Self> {
-        (1..6).map(|i| Self::from_usize(i).unwrap())
-    }
 }
 
 /// An enum representing the available verbosity level filters of the logger.
@@ -768,7 +702,6 @@ impl LevelFilter {
             _ => None,
         }
     }
-
     /// Returns the most verbose logging level filter.
     #[inline]
     pub fn max() -> LevelFilter {
@@ -788,24 +721,6 @@ impl LevelFilter {
     /// This returns the same string as the `fmt::Display` implementation.
     pub fn as_str(&self) -> &'static str {
         LOG_LEVEL_NAMES[*self as usize]
-    }
-
-    /// Iterate through all supported filtering levels.
-    ///
-    /// The order of iteration is from less to more verbose filtering.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use log::LevelFilter;
-    ///
-    /// let mut levels = LevelFilter::iter();
-    ///
-    /// assert_eq!(Some(LevelFilter::Off), levels.next());
-    /// assert_eq!(Some(LevelFilter::Trace), levels.last());
-    /// ```
-    pub fn iter() -> impl Iterator<Item = Self> {
-        (0..6).map(|i| Self::from_usize(i).unwrap())
     }
 }
 
@@ -965,7 +880,7 @@ impl<'a> Record<'a> {
         self.line
     }
 
-    /// The structured key-value pairs associated with the message.
+    /// The structued key-value pairs associated with the message.
     #[cfg(feature = "kv_unstable")]
     #[inline]
     pub fn key_values(&self) -> &dyn kv::Source {
@@ -999,6 +914,7 @@ impl<'a> Record<'a> {
 /// the created object when `build` is called.
 ///
 /// # Examples
+///
 ///
 /// ```edition2018
 /// use log::{Level, Record};
@@ -1273,17 +1189,9 @@ pub trait Log: Sync + Send {
     /// This is used by the `log_enabled!` macro to allow callers to avoid
     /// expensive computation of log message arguments if the message would be
     /// discarded anyway.
-    ///
-    /// # For implementors
-    ///
-    /// This method isn't called automatically by the `log!` macros.
-    /// It's up to an implementation of the `Log` trait to call `enabled` in its own
-    /// `log` method implementation to guarantee that filtering is applied.
     fn enabled(&self, metadata: &Metadata) -> bool;
 
     /// Logs the `Record`.
-    ///
-    /// # For implementors
     ///
     /// Note that `enabled` is *not* necessarily called before this method.
     /// Implementations of `log` should perform all necessary filtering
@@ -1306,41 +1214,8 @@ impl Log for NopLogger {
     fn flush(&self) {}
 }
 
-impl<T> Log for &'_ T
-where
-    T: ?Sized + Log,
-{
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        (**self).enabled(metadata)
-    }
-
-    fn log(&self, record: &Record) {
-        (**self).log(record)
-    }
-    fn flush(&self) {
-        (**self).flush()
-    }
-}
-
 #[cfg(feature = "std")]
 impl<T> Log for std::boxed::Box<T>
-where
-    T: ?Sized + Log,
-{
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        self.as_ref().enabled(metadata)
-    }
-
-    fn log(&self, record: &Record) {
-        self.as_ref().log(record)
-    }
-    fn flush(&self) {
-        self.as_ref().flush()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<T> Log for std::sync::Arc<T>
 where
     T: ?Sized + Log,
 {
@@ -1359,11 +1234,9 @@ where
 /// Sets the global maximum log level.
 ///
 /// Generally, this should only be called by the active logging implementation.
-///
-/// Note that `Trace` is the maximum level, because it provides the maximum amount of detail in the emitted logs.
 #[inline]
 pub fn set_max_level(level: LevelFilter) {
-    MAX_LOG_LEVEL_FILTER.store(level as usize, Ordering::Relaxed)
+    MAX_LOG_LEVEL_FILTER.store(level as usize, Ordering::SeqCst)
 }
 
 /// Returns the current maximum log level.
@@ -1489,8 +1362,6 @@ where
         }
         INITIALIZING => {
             while STATE.load(Ordering::SeqCst) == INITIALIZING {
-                // TODO: replace with `hint::spin_loop` once MSRV is 1.49.0.
-                #[allow(deprecated)]
                 std::sync::atomic::spin_loop_hint();
             }
             Err(SetLoggerError(()))
@@ -1581,39 +1452,10 @@ pub fn logger() -> &'static dyn Log {
 
 // WARNING: this is not part of the crate's public API and is subject to change at any time
 #[doc(hidden)]
-#[cfg(not(feature = "kv_unstable"))]
 pub fn __private_api_log(
     args: fmt::Arguments,
     level: Level,
     &(target, module_path, file, line): &(&str, &'static str, &'static str, u32),
-    kvs: Option<&[(&str, &str)]>,
-) {
-    if kvs.is_some() {
-        panic!(
-            "key-value support is experimental and must be enabled using the `kv_unstable` feature"
-        )
-    }
-
-    logger().log(
-        &Record::builder()
-            .args(args)
-            .level(level)
-            .target(target)
-            .module_path_static(Some(module_path))
-            .file_static(Some(file))
-            .line(Some(line))
-            .build(),
-    );
-}
-
-// WARNING: this is not part of the crate's public API and is subject to change at any time
-#[doc(hidden)]
-#[cfg(feature = "kv_unstable")]
-pub fn __private_api_log(
-    args: fmt::Arguments,
-    level: Level,
-    &(target, module_path, file, line): &(&str, &'static str, &'static str, u32),
-    kvs: Option<&[(&str, &dyn kv::ToValue)]>,
 ) {
     logger().log(
         &Record::builder()
@@ -1623,7 +1465,6 @@ pub fn __private_api_log(
             .module_path_static(Some(module_path))
             .file_static(Some(file))
             .line(Some(line))
-            .key_values(&kvs)
             .build(),
     );
 }
@@ -1632,12 +1473,6 @@ pub fn __private_api_log(
 #[doc(hidden)]
 pub fn __private_api_enabled(level: Level, target: &str) -> bool {
     logger().enabled(&Metadata::builder().level(level).target(target).build())
-}
-
-// WARNING: this is not part of the crate's public API and is subject to change at any time
-#[doc(hidden)]
-pub mod __private_api {
-    pub use std::option::Option;
 }
 
 /// The statically resolved maximum log level.
@@ -1936,36 +1771,5 @@ mod tests {
                 .to_borrowed_str()
                 .expect("invalid value")
         );
-    }
-
-    // Test that the `impl Log for Foo` blocks work
-    // This test mostly operates on a type level, so failures will be compile errors
-    #[test]
-    fn test_foreign_impl() {
-        use super::Log;
-        #[cfg(feature = "std")]
-        use std::sync::Arc;
-
-        fn assert_is_log<T: Log + ?Sized>() {}
-
-        assert_is_log::<&dyn Log>();
-
-        #[cfg(feature = "std")]
-        assert_is_log::<Box<dyn Log>>();
-
-        #[cfg(feature = "std")]
-        assert_is_log::<Arc<dyn Log>>();
-
-        // Assert these statements for all T: Log + ?Sized
-        #[allow(unused)]
-        fn forall<T: Log + ?Sized>() {
-            #[cfg(feature = "std")]
-            assert_is_log::<Box<T>>();
-
-            assert_is_log::<&T>();
-
-            #[cfg(feature = "std")]
-            assert_is_log::<Arc<T>>();
-        }
     }
 }
