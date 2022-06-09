@@ -1138,7 +1138,7 @@ version = "0.5.19"
 criteria = "safe-to-deploy"
 
 [[unaudited.proc-macro2]]
-version = "1.0.38"
+version = "1.0.39"
 criteria = "safe-to-deploy"
 
 [[unaudited.profiling]]
@@ -1555,6 +1555,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.unicode-bidi]]
 version = "0.3.8"
+criteria = "safe-to-deploy"
+
+[[unaudited.unicode-ident]]
+version = "1.0.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.unicode-normalization]]
