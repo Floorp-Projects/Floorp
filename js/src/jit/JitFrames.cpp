@@ -862,7 +862,7 @@ CalleeToken TraceCalleeToken(JSTracer* trc, CalleeToken token) {
 
 uintptr_t* JitFrameLayout::slotRef(SafepointSlotEntry where) {
   if (where.stack) {
-    return (uintptr_t*)((uint8_t*)this - where.slot);
+    return (uintptr_t*)((uint8_t*)this - IonFirstSlotOffset - where.slot);
   }
   return (uintptr_t*)((uint8_t*)argv() + where.slot);
 }
