@@ -516,7 +516,7 @@ mod tests {
     use crate::QpackSettings;
     use neqo_transport::{ConnectionParameters, StreamId, StreamType};
     use std::mem;
-    use test_fixture::{configure_server, default_client, default_server, handshake, now};
+    use test_fixture::{default_client, default_server, handshake, new_server, now, DEFAULT_ALPN};
 
     struct TestEncoder {
         encoder: QPackEncoder,
@@ -571,7 +571,8 @@ mod tests {
     fn connect_generic(huffman: bool, max_data: Option<u64>) -> TestEncoder {
         let mut conn = default_client();
         let mut peer_conn = max_data.map_or_else(default_server, |max| {
-            configure_server(
+            new_server(
+                DEFAULT_ALPN,
                 ConnectionParameters::default()
                     .max_stream_data(StreamType::UniDi, true, max)
                     .max_stream_data(StreamType::BiDi, true, max)

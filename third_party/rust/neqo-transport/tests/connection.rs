@@ -34,8 +34,8 @@ fn truncate_long_packet() {
         dupe.destination(),
         &dupe[..(dupe.len() - tail)],
     );
-    let dupe_ack = client.process(Some(truncated), now()).dgram();
-    assert!(dupe_ack.is_some());
+    let hs_probe = client.process(Some(truncated), now()).dgram();
+    assert!(hs_probe.is_some());
 
     // Now feed in the untruncated packet.
     let dgram = client.process(dgram, now()).dgram();
