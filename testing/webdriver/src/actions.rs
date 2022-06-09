@@ -7,6 +7,7 @@ use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::Value;
 use std::default::Default;
+use std::f64;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -139,12 +140,66 @@ pub enum PointerAction {
     Up(PointerUpAction),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerDownAction {
     pub button: u64,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub width: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub height: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_pressure"
+    )]
+    pub pressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tangential_pressure"
+    )]
+    pub tangentialPressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltX: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltY: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_twist"
+    )]
+    pub twist: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_altitude_angle"
+    )]
+    pub altitudeAngle: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_azimuth_angle"
+    )]
+    pub azimuthAngle: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerMoveAction {
     #[serde(
         default,
@@ -166,11 +221,119 @@ pub struct PointerMoveAction {
         deserialize_with = "deserialize_to_option_i64"
     )]
     pub y: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub width: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub height: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_pressure"
+    )]
+    pub pressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tangential_pressure"
+    )]
+    pub tangentialPressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltX: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltY: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_twist"
+    )]
+    pub twist: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_altitude_angle"
+    )]
+    pub altitudeAngle: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_azimuth_angle"
+    )]
+    pub azimuthAngle: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerUpAction {
     pub button: u64,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub width: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub height: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_pressure"
+    )]
+    pub pressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tangential_pressure"
+    )]
+    pub tangentialPressure: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltX: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_tilt"
+    )]
+    pub tiltY: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_twist"
+    )]
+    pub twist: Option<u64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_altitude_angle"
+    )]
+    pub altitudeAngle: Option<f64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_azimuth_angle"
+    )]
+    pub azimuthAngle: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -241,11 +404,112 @@ where
         .ok_or_else(|| de::Error::custom("invalid type: null, expected i64"))
 }
 
+fn deserialize_to_option_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::deserialize(deserializer)?
+        .ok_or_else(|| de::Error::custom("invalid type: null, expected f64"))
+}
+
+fn deserialize_to_pressure<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_f64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(0f64..=1.0).contains(&value) {
+            return Err(de::Error::custom(format!("{} is outside range 0-1", value)));
+        }
+    };
+    Ok(opt_value)
+}
+
+fn deserialize_to_tangential_pressure<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_f64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(-1.0..=1.0).contains(&value) {
+            return Err(de::Error::custom(format!(
+                "{} is outside range -1-1",
+                value
+            )));
+        }
+    };
+    Ok(opt_value)
+}
+
+fn deserialize_to_tilt<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_i64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(-90..=90).contains(&value) {
+            return Err(de::Error::custom(format!(
+                "{} is outside range -90-90",
+                value
+            )));
+        }
+    };
+    Ok(opt_value)
+}
+
+fn deserialize_to_twist<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_u64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(0..=359).contains(&value) {
+            return Err(de::Error::custom(format!(
+                "{} is outside range 0-359",
+                value
+            )));
+        }
+    };
+    Ok(opt_value)
+}
+
+fn deserialize_to_altitude_angle<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_f64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(0f64..=f64::consts::FRAC_PI_2).contains(&value) {
+            return Err(de::Error::custom(format!(
+                "{} is outside range 0-PI/2",
+                value
+            )));
+        }
+    };
+    Ok(opt_value)
+}
+
+fn deserialize_to_azimuth_angle<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt_value = deserialize_to_option_f64(deserializer)?;
+    if let Some(value) = opt_value {
+        if !(0f64..=f64::consts::TAU).contains(&value) {
+            return Err(de::Error::custom(format!(
+                "{} is outside range 0-2*PI",
+                value
+            )));
+        }
+    };
+    Ok(opt_value)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use crate::test::{assert_de, assert_ser_de};
-    use serde_json::{self, json};
+    use serde_json::{self, json, Value};
 
     #[test]
     fn test_json_action_sequence_null() {
@@ -313,14 +577,19 @@ mod test {
                 actions: vec![
                     PointerActionItem::Pointer(PointerAction::Down(PointerDownAction {
                         button: 0,
+                        ..Default::default()
                     })),
                     PointerActionItem::Pointer(PointerAction::Move(PointerMoveAction {
                         origin: PointerOrigin::Pointer,
                         duration: None,
                         x: Some(10),
                         y: Some(20),
+                        ..Default::default()
                     })),
-                    PointerActionItem::Pointer(PointerAction::Up(PointerUpAction { button: 0 })),
+                    PointerActionItem::Pointer(PointerAction::Up(PointerUpAction {
+                        button: 0,
+                        ..Default::default()
+                    })),
                 ],
             },
         };
@@ -419,7 +688,10 @@ mod test {
                 pointer_type: PointerType::Mouse,
             },
             actions: vec![PointerActionItem::Pointer(PointerAction::Down(
-                PointerDownAction { button: 1 },
+                PointerDownAction {
+                    button: 1,
+                    ..Default::default()
+                },
             ))],
         };
 
@@ -438,7 +710,10 @@ mod test {
                 pointer_type: PointerType::Mouse,
             },
             actions: vec![PointerActionItem::Pointer(PointerAction::Down(
-                PointerDownAction { button: 1 },
+                PointerDownAction {
+                    button: 1,
+                    ..Default::default()
+                },
             ))],
         };
 
@@ -694,7 +969,10 @@ mod test {
 
     #[test]
     fn test_json_pointer_action_down() {
-        let pointer_down = PointerAction::Down(PointerDownAction { button: 1 });
+        let pointer_down = PointerAction::Down(PointerDownAction {
+            button: 1,
+            ..Default::default()
+        });
         assert_ser_de(&pointer_down, json!({"type": "pointerDown", "button": 1}));
     }
 
@@ -745,6 +1023,7 @@ mod test {
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
+            ..Default::default()
         });
 
         assert_ser_de(&pointer_move, json);
@@ -786,6 +1065,7 @@ mod test {
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
+            ..Default::default()
         });
 
         assert_ser_de(&pointer_move, json);
@@ -840,6 +1120,7 @@ mod test {
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
+            ..Default::default()
         });
 
         assert_de(&pointer_move, json);
@@ -859,6 +1140,7 @@ mod test {
             origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
+            ..Default::default()
         });
 
         assert_ser_de(&pointer_move, json);
@@ -878,6 +1160,7 @@ mod test {
             origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
+            ..Default::default()
         });
 
         assert_de(&pointer_move, json);
@@ -908,6 +1191,7 @@ mod test {
             origin: PointerOrigin::Viewport,
             x: None,
             y: Some(10),
+            ..Default::default()
         });
 
         assert_ser_de(&pointer_move, json);
@@ -950,6 +1234,7 @@ mod test {
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: None,
+            ..Default::default()
         });
 
         assert_ser_de(&pointer_move, json);
@@ -981,7 +1266,10 @@ mod test {
 
     #[test]
     fn test_json_pointer_action_up() {
-        let pointer_up = PointerAction::Up(PointerUpAction { button: 1 });
+        let pointer_up = PointerAction::Up(PointerUpAction {
+            button: 1,
+            ..Default::default()
+        });
         assert_ser_de(&pointer_up, json!({"type": "pointerUp", "button": 1}));
     }
 
@@ -1056,5 +1344,73 @@ mod test {
     #[test]
     fn test_json_pointer_type_invalid_type() {
         assert!(serde_json::from_value::<PointerType>(json!("invalid")).is_err());
+    }
+
+    #[test]
+    fn test_pointer_properties() {
+        // Ideally these would be seperate tests, but it was too much boilerplate to write
+        // and adding a macro seemed like overkill.
+        for actionType in ["pointerUp", "pointerDown", "pointerMove"] {
+            for (prop_name, value, is_valid) in [
+                ("pressure", Value::from(0), true),
+                ("pressure", Value::from(0.5), true),
+                ("pressure", Value::from(1), true),
+                ("pressure", Value::from(1.1), false),
+                ("pressure", Value::from(-0.1), false),
+                ("tangentialPressure", Value::from(-1), true),
+                ("tangentialPressure", Value::from(0), true),
+                ("tangentialPressure", Value::from(1.0), true),
+                ("tangentialPressure", Value::from(-1.1), false),
+                ("tangentialPressure", Value::from(1.1), false),
+                ("tiltX", Value::from(-90), true),
+                ("tiltX", Value::from(0), true),
+                ("tiltX", Value::from(45), true),
+                ("tiltX", Value::from(90), true),
+                ("tiltX", Value::from(0.5), false),
+                ("tiltX", Value::from(-91), false),
+                ("tiltX", Value::from(91), false),
+                ("tiltY", Value::from(-90), true),
+                ("tiltY", Value::from(0), true),
+                ("tiltY", Value::from(45), true),
+                ("tiltY", Value::from(90), true),
+                ("tiltY", Value::from(0.5), false),
+                ("tiltY", Value::from(-91), false),
+                ("tiltY", Value::from(91), false),
+                ("twist", Value::from(0), true),
+                ("twist", Value::from(180), true),
+                ("twist", Value::from(359), true),
+                ("twist", Value::from(360), false),
+                ("twist", Value::from(-1), false),
+                ("twist", Value::from(23.5), false),
+                ("altitudeAngle", Value::from(0), true),
+                ("altitudeAngle", Value::from(f64::consts::FRAC_PI_4), true),
+                ("altitudeAngle", Value::from(f64::consts::FRAC_PI_2), true),
+                (
+                    "altitudeAngle",
+                    Value::from(f64::consts::FRAC_PI_2 + 0.1),
+                    false,
+                ),
+                ("altitudeAngle", Value::from(-f64::consts::FRAC_PI_4), false),
+                ("azimuthAngle", Value::from(0), true),
+                ("azimuthAngle", Value::from(f64::consts::PI), true),
+                ("azimuthAngle", Value::from(f64::consts::TAU), true),
+                ("azimuthAngle", Value::from(f64::consts::TAU + 0.01), false),
+                ("azimuthAngle", Value::from(-f64::consts::FRAC_PI_4), false),
+            ] {
+                let mut json = serde_json::Map::new();
+                json.insert("type".into(), actionType.into());
+                if actionType != "pointerMove" {
+                    json.insert("button".into(), Value::from(0));
+                }
+                json.insert(prop_name.into(), value);
+                println!("{:?}", json);
+                let deserialized = serde_json::from_value::<PointerAction>(json.into());
+                if is_valid {
+                    assert!(deserialized.is_ok());
+                } else {
+                    assert!(deserialized.is_err());
+                }
+            }
+        }
     }
 }
