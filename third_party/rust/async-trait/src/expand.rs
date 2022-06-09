@@ -1,7 +1,7 @@
-use crate::lifetime::CollectLifetimes;
+use crate::lifetime::{AddLifetimeToImplTrait, CollectLifetimes};
 use crate::parse::Item;
 use crate::receiver::{has_self_in_block, has_self_in_sig, mut_pat, ReplaceSelf};
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
 use std::collections::BTreeSet as Set;
 use std::mem;
@@ -283,6 +283,7 @@ fn transform_sig(
                     let m = mut_pat(&mut arg.pat);
                     arg.pat = parse_quote!(#m #positional);
                 }
+                AddLifetimeToImplTrait.visit_type_mut(&mut arg.ty);
             }
         }
     }
@@ -354,7 +355,11 @@ fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
                 } else {
                     let pat = &arg.pat;
                     let ident = positional_arg(i, pat);
-                    quote!(let #pat = #ident;)
+                    if let Pat::Wild(_) = **pat {
+                        quote!(let #ident = #ident;)
+                    } else {
+                        quote!(let #pat = #ident;)
+                    }
                 }
             }
         })
@@ -398,8 +403,10 @@ fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
 }
 
 fn positional_arg(i: usize, pat: &Pat) -> Ident {
-    use syn::spanned::Spanned;
-    format_ident!("__arg{}", i, span = pat.span())
+    let span: Span = syn::spanned::Spanned::span(pat);
+    #[cfg(not(no_span_mixed_site))]
+    let span = span.resolved_at(Span::mixed_site());
+    format_ident!("__arg{}", i, span = span)
 }
 
 fn has_bound(supertraits: &Supertraits, marker: &Ident) -> bool {

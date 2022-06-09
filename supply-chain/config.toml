@@ -114,7 +114,7 @@ version = "0.12.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.async-trait]]
-version = "0.1.53"
+version = "0.1.56"
 criteria = "safe-to-deploy"
 
 [[unaudited.atomic]]

@@ -9,7 +9,7 @@ error: future cannot be sent between threads safely
 12 | |     }
    | |_____^ future created by async block is not `Send`
    |
-   = help: within `impl Future`, the trait `Send` is not implemented for `MutexGuard<'_, ()>`
+   = help: within `impl Future<Output = ()>`, the trait `Send` is not implemented for `MutexGuard<'_, ()>`
 note: future is not `Send` as this value is used across an await
   --> tests/ui/send-not-implemented.rs:11:12
    |
@@ -33,7 +33,7 @@ error: future cannot be sent between threads safely
 19 | |     }
    | |_____^ future created by async block is not `Send`
    |
-   = help: within `impl Future`, the trait `Send` is not implemented for `MutexGuard<'_, ()>`
+   = help: within `impl Future<Output = bool>`, the trait `Send` is not implemented for `MutexGuard<'_, ()>`
 note: future is not `Send` as this value is used across an await
   --> tests/ui/send-not-implemented.rs:17:12
    |
