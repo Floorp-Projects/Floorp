@@ -28,6 +28,9 @@ const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.import(
 const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
   "resource://gre/modules/addons/ProductAddonChecker.jsm"
 );
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
@@ -1148,6 +1151,9 @@ add_test(function test_installAddon_noServer() {
 /***
  * Tests GMPExtractor (an internal component of GMPInstallManager) to ensure
  * it handles paths with certain characters.
+ *
+ * On Mac, test that the com.apple.quarantine extended attribute is removed
+ * from installed plugin files.
  */
 
 add_task(async function test_GMPExtractor_paths() {
@@ -1204,6 +1210,13 @@ add_task(async function test_GMPExtractor_paths() {
     await IOUtils.exists(extractedFile),
     "Extraction should have created dummy_file.txt"
   );
+  if (AppConstants.platform == "macosx") {
+    await Assert.rejects(
+      IOUtils.getMacXAttr(extractedFile, "com.apple.quarantine"),
+      /NotFoundError: The file `.+' does not have an extended attribute `com.apple.quarantine'/,
+      "The 'com.apple.quarantine' attribute should not be present"
+    );
+  }
   let unextractedFile = PathUtils.join(
     PathUtils.profileDir,
     relativeExtractPath,

@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "http"
-version = "0.2.7"
+version = "0.2.8"
 authors = [
     "Alex Crichton <alex@alexcrichton.com>",
     "Carl Lerche <me@carllerche.com>",
@@ -38,6 +38,11 @@ name = "header_name"
 path = "benches/header_name.rs"
 
 [[bench]]
+name = "header_name2"
+path = "benches/header_name2.rs"
+harness = false
+
+[[bench]]
 name = "header_value"
 path = "benches/header_value.rs"
 
@@ -57,6 +62,9 @@ version = "1.0.5"
 
 [dependencies.itoa]
 version = "1"
+
+[dev-dependencies.criterion]
+version = "0.3.2"
 
 [dev-dependencies.doc-comment]
 version = "0.3"

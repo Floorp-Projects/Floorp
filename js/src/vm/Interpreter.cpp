@@ -4718,7 +4718,7 @@ bool js::ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind) {
 }
 
 bool js::GetAndClearExceptionAndStack(JSContext* cx, MutableHandleValue res,
-                                      MutableHandleSavedFrame stack) {
+                                      MutableHandle<SavedFrame*> stack) {
   if (!cx->getPendingException(res)) {
     return false;
   }
@@ -4730,7 +4730,7 @@ bool js::GetAndClearExceptionAndStack(JSContext* cx, MutableHandleValue res,
 }
 
 bool js::GetAndClearException(JSContext* cx, MutableHandleValue res) {
-  RootedSavedFrame stack(cx);
+  Rooted<SavedFrame*> stack(cx);
   return GetAndClearExceptionAndStack(cx, res, &stack);
 }
 

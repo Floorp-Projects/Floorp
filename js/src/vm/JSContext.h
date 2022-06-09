@@ -784,7 +784,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool isThrowingDebuggeeWouldRun();
   bool isClosingGenerator();
 
-  void setPendingException(JS::HandleValue v, js::HandleSavedFrame stack);
+  void setPendingException(JS::HandleValue v,
+                           JS::Handle<js::SavedFrame*> stack);
   void setPendingException(JS::HandleValue v,
                            js::ShouldCaptureStack captureStack);
 

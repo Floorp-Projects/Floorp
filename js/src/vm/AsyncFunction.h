@@ -313,7 +313,7 @@ class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
                                               HandleFunction asyncGen);
 
   static AsyncFunctionGeneratorObject* create(JSContext* cx,
-                                              HandleModuleObject module);
+                                              Handle<ModuleObject*> module);
 
   PromiseObject* promise() {
     return &getFixedSlot(PROMISE_SLOT).toObject().as<PromiseObject>();

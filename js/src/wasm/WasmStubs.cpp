@@ -992,7 +992,7 @@ static void GenerateBigIntInitialization(MacroAssembler& masm,
 
 static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
                              const FuncExport& fe, const Maybe<ImmPtr>& funcPtr,
-                             Offsets* offsets) {
+                             CallableOffsets* offsets) {
   AutoCreatedBy acb(masm, "GenerateJitEntry");
 
   AssertExpectedSP(masm);
@@ -1004,6 +1004,11 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // The jit caller has set up the following stack layout (sp grows to the
   // left):
   // <-- retAddr | descriptor | callee | argc | this | arg1..N
+  //
+  // GenerateJitEntryPrologue has additionally pushed a JSJitToWasmFrame storing
+  // the caller's frame pointer.
+
+  MOZ_ASSERT(masm.framePushed() == sizeof(JSJitToWasmFrame));
 
   unsigned normalBytesNeeded = StackArgBytesForWasmABI(fe.funcType());
 
@@ -1017,12 +1022,14 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   // Note the jit caller ensures the stack is aligned *after* the call
   // instruction.
-  unsigned frameSize = StackDecrementForCall(WasmStackAlignment,
-                                             masm.framePushed(), bytesNeeded);
+  unsigned frameSizeExclFP = StackDecrementForCall(
+      WasmStackAlignment, masm.framePushed(), bytesNeeded);
 
   // Reserve stack space for wasm ABI arguments, set up like this:
   // <-- ABI args | padding
-  masm.reserveStack(frameSize);
+  masm.reserveStack(frameSizeExclFP);
+
+  uint32_t frameSize = masm.framePushed();
 
   GenerateJitEntryLoadInstance(masm, frameSize);
 
@@ -1295,7 +1302,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   masm.branchPtr(Assembler::Equal, FramePointer, Imm32(FailFP), &exception);
 
   // Pop arguments.
-  masm.freeStack(frameSize);
+  masm.freeStack(frameSizeExclFP);
 
   GenPrintf(DebugChannel::Function, masm, "wasm-function[%d]; returns ",
             fe.funcIndex());
@@ -1336,11 +1343,11 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         masm.jump(&done);
         masm.bind(&fail);
         // Fixup the stack for the exception tail so that we can share it.
-        masm.reserveStack(frameSize);
+        masm.reserveStack(frameSizeExclFP);
         masm.jump(&exception);
         masm.bind(&done);
         // Un-fixup the stack for the benefit of the assertion below.
-        masm.setFramePushed(0);
+        masm.setFramePushed(sizeof(JSJitToWasmFrame));
         break;
       }
       case ValType::Rtt:
@@ -1356,7 +1363,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
           case RefType::Extern:
             // Per comment above, the call may have clobbered the instance
             // register, so reload since unboxing will need it.
-            GenerateJitEntryLoadInstance(masm, /* frameSize */ 0);
+            GenerateJitEntryLoadInstance(masm, sizeof(JSJitToWasmFrame));
             UnboxAnyrefIntoValueReg(masm, InstanceReg, ReturnReg,
                                     JSReturnOperand, WasmJitEntryReturnScratch);
             break;
@@ -1370,20 +1377,11 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   GenPrintf(DebugChannel::Function, masm, "\n");
 
-  MOZ_ASSERT(masm.framePushed() == 0);
-#ifdef JS_CODEGEN_ARM64
+  MOZ_ASSERT(masm.framePushed() == sizeof(JSJitToWasmFrame));
+
   AssertExpectedSP(masm);
-  masm.loadPtr(Address(sp, 0), lr);
-  masm.addToStackPtr(Imm32(8));
-  // Copy SP into PSP to enforce return-point invariants (SP == PSP).
-  // `addToStackPtr` won't sync them because SP is the active pointer here.
-  // For the same reason, we can't use initPseudoStackPtr to do the sync, so
-  // we have to do it "by hand".  Omitting this causes many tests to segfault.
-  masm.moveStackPtrTo(PseudoStackPointer);
-  masm.abiret();
-#else
-  masm.ret();
-#endif
+  GenerateJitEntryEpilogue(masm, offsets);
+  MOZ_ASSERT(masm.framePushed() == 0);
 
   // Generate an OOL call to the C++ conversion path.
   if (fe.funcType().args().length()) {
@@ -3021,10 +3019,12 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
     return true;
   }
 
-  if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, &offsets)) {
+  CallableOffsets jitOffsets;
+  if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, &jitOffsets)) {
     return false;
   }
-  if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets)) {
+  if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(),
+                               jitOffsets)) {
     return false;
   }
 

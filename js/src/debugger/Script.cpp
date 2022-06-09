@@ -22,7 +22,7 @@
 #include "debugger/Source.h"       // for DebuggerSource
 #include "gc/Barrier.h"            // for ImmutablePropertyNamePtr
 #include "gc/GC.h"                 // for MemoryUse, MemoryUse::Breakpoint
-#include "gc/Rooting.h"            // for RootedDebuggerScript
+#include "gc/Rooting.h"            // for RootedValue
 #include "gc/Tracer.h"         // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "gc/Zone.h"           // for Zone
 #include "gc/ZoneAllocator.h"  // for AddCellMemory
@@ -183,11 +183,11 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
   JSContext* cx;
   const CallArgs& args;
 
-  HandleDebuggerScript obj;
+  Handle<DebuggerScript*> obj;
   Rooted<DebuggerScriptReferent> referent;
   RootedScript script;
 
-  CallData(JSContext* cx, const CallArgs& args, HandleDebuggerScript obj)
+  CallData(JSContext* cx, const CallArgs& args, Handle<DebuggerScript*> obj)
       : cx(cx),
         args(args),
         obj(obj),
@@ -258,7 +258,7 @@ bool DebuggerScript::CallData::ToNative(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedDebuggerScript obj(cx, DebuggerScript::check(cx, args.thisv()));
+  Rooted<DebuggerScript*> obj(cx, DebuggerScript::check(cx, args.thisv()));
   if (!obj) {
     return false;
   }
@@ -439,7 +439,7 @@ bool DebuggerScript::CallData::getSource() {
   Debugger* dbg = obj->owner();
 
   GetSourceMatcher matcher(cx, dbg);
-  RootedDebuggerSource sourceObject(cx, referent.match(matcher));
+  Rooted<DebuggerSource*> sourceObject(cx, referent.match(matcher));
   if (!sourceObject) {
     return false;
   }

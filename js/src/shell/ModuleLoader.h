@@ -21,7 +21,7 @@ class ModuleLoader {
 
   // Testing hook to register a module that wasn't loaded by the module loader.
   bool registerTestModule(JSContext* cx, HandleObject moduleRequest,
-                          HandleModuleObject module);
+                          Handle<ModuleObject*> module);
 
  private:
   static JSObject* ResolveImportedModule(JSContext* cx,

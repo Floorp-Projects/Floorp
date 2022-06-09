@@ -1668,7 +1668,7 @@ bool JSStructuredCloneWriter::traverseSet(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
-  RootedSavedFrame savedFrame(context(), obj->maybeUnwrapAs<SavedFrame>());
+  Rooted<SavedFrame*> savedFrame(context(), obj->maybeUnwrapAs<SavedFrame>());
   MOZ_ASSERT(savedFrame);
 
   RootedObject parent(context(), savedFrame->getParent());
@@ -3039,7 +3039,7 @@ bool JSStructuredCloneReader::readTransferMap() {
 }
 
 JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
-  RootedSavedFrame savedFrame(context(), SavedFrame::create(context()));
+  Rooted<SavedFrame*> savedFrame(context(), SavedFrame::create(context()));
   if (!savedFrame) {
     return nullptr;
   }

@@ -190,7 +190,7 @@ version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.bumpalo]]
-version = "3.9.1"
+version = "3.10.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.byteorder]]
@@ -246,7 +246,7 @@ version = "0.1.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.clang-sys]]
-version = "1.3.2"
+version = "1.3.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.clap]]
@@ -358,7 +358,7 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.crossbeam-epoch]]
-version = "0.9.6"
+version = "0.9.8"
 criteria = "safe-to-deploy"
 
 [[unaudited.crossbeam-utils]]
@@ -530,7 +530,7 @@ version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.flate2]]
-version = "1.0.23"
+version = "1.0.24"
 criteria = "safe-to-deploy"
 
 [[unaudited.float-cmp]]
@@ -738,7 +738,7 @@ version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.http]]
-version = "0.2.7"
+version = "0.2.8"
 criteria = "safe-to-run"
 
 [[unaudited.http-body]]
@@ -758,7 +758,7 @@ version = "2.1.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.hyper]]
-version = "0.14.18"
+version = "0.14.19"
 criteria = "safe-to-run"
 
 [[unaudited.id-arena]]
@@ -774,7 +774,7 @@ version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.indexmap]]
-version = "1.8.1"
+version = "1.8.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.inherent]]
