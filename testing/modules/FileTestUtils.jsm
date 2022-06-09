@@ -10,9 +10,6 @@
 
 var EXPORTED_SYMBOLS = ["FileTestUtils"];
 
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
 const { DownloadPaths } = ChromeUtils.import(
   "resource://gre/modules/DownloadPaths.jsm"
 );
@@ -122,31 +119,34 @@ XPCOMUtils.defineLazyGetter(
     let randomNumber = Math.floor(Math.random() * 1000000);
     let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
     dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-    AsyncShutdown.profileBeforeChange.addBlocker(
-      "Removing test files",
-      async () => {
-        // Remove the files we know about first.
-        for (let path of gPathsToRemove) {
-          await this.tolerantRemove(path);
-        }
 
-        if (!(await OS.File.exists(dir.path))) {
-          return;
-        }
-
-        // Detect any extra files, like the ".part" files of downloads.
-        let iterator = new OS.File.DirectoryIterator(dir.path);
-        try {
-          await iterator.forEach(entry =>
-            this.tolerantRemove(entry.path, entry.isDir)
-          );
-        } finally {
-          iterator.close();
-        }
-        // This will fail if any test leaves inaccessible files behind.
-        await OS.File.removeEmptyDir(dir.path);
+    // We need to run this *after* the profile-before-change phase because
+    // otherwise we can race other shutdown blockers who have created files in
+    // our temporary directory. This can cause our shutdown blocker to fail due
+    // to, e.g., JSONFile attempting to flush its contents to disk while we are
+    // trying to delete the file.
+    OS.File.shutdown.addBlocker("Removing test files", async () => {
+      // Remove the files we know about first.
+      for (let path of gPathsToRemove) {
+        await this.tolerantRemove(path);
       }
-    );
+
+      if (!(await OS.File.exists(dir.path))) {
+        return;
+      }
+
+      // Detect any extra files, like the ".part" files of downloads.
+      let iterator = new OS.File.DirectoryIterator(dir.path);
+      try {
+        await iterator.forEach(entry =>
+          this.tolerantRemove(entry.path, entry.isDir)
+        );
+      } finally {
+        iterator.close();
+      }
+      // This will fail if any test leaves inaccessible files behind.
+      await OS.File.removeEmptyDir(dir.path);
+    });
     return dir;
   }
 );
