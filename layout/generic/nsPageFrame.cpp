@@ -55,7 +55,13 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   //
   // Reflow our ::-moz-page-content frame, allowing it only to be as big as we
   // are (minus margins).
-
+  const nsSize pageSize = ComputePageSize();
+  // Scaling applied to the page after rendering, used for down-scaling when a
+  // CSS-specified page-size is too large to fit on the paper we are printing
+  // on. This is needed for scaling margins that are applied as physical sizes,
+  // in this case the user-provided margins from the print UI and the printer-
+  // provided unwriteable margins.
+  const float pageSizeScale = ComputePageSizeScale(pageSize);
   // Scaling applied to content, as given by the print UI.
   // This is an additional scale factor that is applied to the content in the
   // nsPageContentFrame.
@@ -63,7 +69,7 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   // Size for the page content. This will be scaled by extraContentScale, and
   // is used to calculate the computed size of the nsPageContentFrame content
   // by subtracting margins.
-  nsSize availableSpace = ComputePageSize();
+  nsSize availableSpace = pageSize;
 
   // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
   // a single page to print selection. So this means we want to use
@@ -95,6 +101,13 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   kidReflowInput.mFlags.mTableIsSplittable = true;
 
   nsMargin defaultMargins = aPresContext->GetDefaultPageMargin();
+  // The default margins are in the coordinate space of the physical paper.
+  // Scale them by the pageSizeScale to convert them to the content coordinate
+  // space.
+  for (const auto side : mozilla::AllPhysicalSides()) {
+    defaultMargins.Side(side) =
+        NSToCoordRound((float)defaultMargins.Side(side) / pageSizeScale);
+  }
   mPageContentMargin = defaultMargins;
 
   // Use the margins given in the @page rule if told to do so.
@@ -115,8 +128,13 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
         if (computed == 0) {
           mPageContentMargin.Side(side) = 0;
         } else {
+          // Unwriteable margins are in the coordinate space of the physical
+          // paper. Scale them by the pageSizeScale to convert them to the
+          // content coordinate space.
+          const int32_t unwriteableTwips =
+              mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side);
           const nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
-              mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
+              (float)unwriteableTwips / pageSizeScale);
           mPageContentMargin.Side(side) = std::max(
               kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
         }
