@@ -25,43 +25,6 @@
 
 namespace webrtc {
 
-// Mozilla addition
-enum class CaptureDeviceType {
-  Camera,
-  Screen,
-  Window,
-  Browser
-};
-// Mozilla addition
-
-struct CaptureDeviceInfo {
-  CaptureDeviceType type;
-
-  CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
-  CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
-
-  static const ConfigOptionID identifier = ConfigOptionID::kCaptureDeviceInfo;
-  const char * TypeName() const
-  {
-    switch(type) {
-    case CaptureDeviceType::Camera: {
-      return "Camera";
-    }
-    case CaptureDeviceType::Screen: {
-      return "Screen";
-    }
-    case CaptureDeviceType::Window: {
-      return "Window";
-    }
-    case CaptureDeviceType::Browser: {
-      return "Browser";
-    }
-    }
-    assert(false);
-    return "UNKOWN-CaptureDeviceType!";
-  }
-};
-
 class VideoInputFeedBack
 {
 public:

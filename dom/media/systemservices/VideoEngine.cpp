@@ -62,7 +62,7 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
 
   CaptureEntry entry = {-1, nullptr};
 
-  if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
+  if (mCaptureDevInfo.type == CaptureDeviceType::Camera) {
     entry = CaptureEntry(
         id, webrtc::VideoCaptureFactory::Create(deviceUniqueIdUTF8));
     if (entry.VideoCapture()) {
@@ -142,12 +142,12 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   webrtc::Timestamp currentTime = webrtc::Timestamp::Micros(0);
 
   const char* capDevTypeName =
-      webrtc::CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
+      CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
 
   if (mDeviceInfo) {
     LOG(("Device cache available."));
     // Camera cache is invalidated by HW change detection elsewhere
-    if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
+    if (mCaptureDevInfo.type == CaptureDeviceType::Camera) {
       LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
       return mDeviceInfo;
     }
@@ -171,7 +171,7 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   LOG(("creating a new VideoCaptureDeviceInfo of type %s", capDevTypeName));
 
   switch (mCaptureDevInfo.type) {
-    case webrtc::CaptureDeviceType::Camera: {
+    case CaptureDeviceType::Camera: {
 #ifdef MOZ_WIDGET_ANDROID
       if (SetAndroidObjects()) {
         LOG(("VideoEngine::SetAndroidObjects Failed"));
@@ -179,13 +179,13 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
       }
 #endif
       mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
-      LOG(("webrtc::CaptureDeviceType::Camera: Finished creating new device."));
+      LOG(("CaptureDeviceType::Camera: Finished creating new device."));
       break;
     }
     // Window and Screen and Browser (tab) types are handled by DesktopCapture
-    case webrtc::CaptureDeviceType::Browser:
-    case webrtc::CaptureDeviceType::Window:
-    case webrtc::CaptureDeviceType::Screen: {
+    case CaptureDeviceType::Browser:
+    case CaptureDeviceType::Window:
+    case CaptureDeviceType::Screen: {
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
       mDeviceInfo.reset(webrtc::DesktopCaptureImpl::CreateDeviceInfo(
           mId, mCaptureDevInfo.type));
@@ -207,7 +207,7 @@ already_AddRefed<VideoEngine> VideoEngine::Create(
     UniquePtr<const webrtc::Config>&& aConfig) {
   LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("Creating new VideoEngine with CaptureDeviceType %s",
-       aConfig->Get<webrtc::CaptureDeviceInfo>().TypeName()));
+       aConfig->Get<CaptureDeviceInfo>().TypeName()));
   return do_AddRef(new VideoEngine(std::move(aConfig)));
 }
 
@@ -251,7 +251,7 @@ int32_t VideoEngine::GenerateId() {
 
 VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
     : mId(0),
-      mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>()),
+      mCaptureDevInfo(aConfig->Get<CaptureDeviceInfo>()),
       mDeviceInfo(nullptr) {
   LOG(("%s", __PRETTY_FUNCTION__));
 }
