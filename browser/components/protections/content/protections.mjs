@@ -4,10 +4,10 @@
 
 /* eslint-env mozilla/frame-script */
 
-import LockwiseCard from "./lockwise-card.js";
-import MonitorCard from "./monitor-card.js";
-import ProxyCard from "./proxy-card.js";
-import VPNCard from "./vpn-card.js";
+import LockwiseCard from "./lockwise-card.mjs";
+import MonitorCard from "./monitor-card.mjs";
+import ProxyCard from "./proxy-card.mjs";
+import VPNCard from "./vpn-card.mjs";
 
 let cbCategory = RPMGetStringPref("browser.contentblocking.category");
 document.sendTelemetryEvent = (action, object, value = "") => {
