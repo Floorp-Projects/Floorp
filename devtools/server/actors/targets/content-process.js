@@ -219,6 +219,8 @@ const ContentProcessTargetActor = TargetActorMixin(
       }
       Resources.unwatchAllResources(this);
 
+      this.emit("destroyed");
+
       Actor.prototype.destroy.call(this);
 
       if (this.threadActor) {

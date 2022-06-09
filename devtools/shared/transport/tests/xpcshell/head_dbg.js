@@ -101,6 +101,8 @@ function initTestDevToolsServer() {
   DevToolsServer.setRootActor(createRootActor);
   // Allow incoming connections.
   DevToolsServer.init();
+  // Avoid the server from being destroyed when the last connection closes
+  DevToolsServer.keepAlive = true;
 }
 
 /**

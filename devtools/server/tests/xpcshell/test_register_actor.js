@@ -5,6 +5,7 @@
 
 function run_test() {
   // Allow incoming connections.
+  DevToolsServer.keepAlive = true;
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 

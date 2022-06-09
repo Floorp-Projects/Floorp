@@ -16,27 +16,26 @@
 /* exported initContentProcessTarget */
 const EXPORTED_SYMBOLS = ["initContentProcessTarget"];
 
-let gLoader;
-
-function setupServer(mm) {
-  // Prevent spawning multiple server per process, even if the caller call us
-  // multiple times
-  if (gLoader) {
-    return gLoader;
-  }
+function initContentProcessTarget(msg) {
+  const mm = msg.target;
+  const prefix = msg.data.prefix;
+  const watcherActorID = msg.data.watcherActorID;
 
   // Lazy load Loader.jsm to prevent loading any devtools dependency too early.
-  const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/Loader.jsm"
-  );
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
+
+  // Use a unique object to identify this one usage of the loader
+  const loaderRequester = {};
 
   // Init a custom, invisible DevToolsServer, in order to not pollute the
   // debugger with all devtools modules, nor break the debugger itself with
   // using it in the same process.
-  gLoader = new DevToolsLoader({
-    invisibleToDebugger: true,
-  });
-  const { DevToolsServer } = gLoader.require("devtools/server/devtools-server");
+  const loader = useDistinctSystemPrincipalLoader(loaderRequester);
+
+  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
 
   DevToolsServer.init();
   // For browser content toolbox, we do need a regular root actor and all tab
@@ -44,36 +43,8 @@ function setupServer(mm) {
   // debugging the parent process via the browser toolbox.
   DevToolsServer.registerActors({ root: true, target: true });
 
-  // Destroy the server once its last connection closes. Note that multiple frame
-  // scripts may be running in parallel and reuse the same server.
-  function destroyServer() {
-    // Only destroy the server if there is no more connections to it. It may be used
-    // to debug the same process from another client.
-    if (DevToolsServer.hasConnection()) {
-      return;
-    }
-    DevToolsServer.off("connectionchange", destroyServer);
-
-    DevToolsServer.destroy();
-    gLoader.destroy();
-    gLoader = null;
-  }
-  DevToolsServer.on("connectionchange", destroyServer);
-
-  return gLoader;
-}
-
-function initContentProcessTarget(msg) {
-  const mm = msg.target;
-  const prefix = msg.data.prefix;
-  const watcherActorID = msg.data.watcherActorID;
-
-  // Setup a server if none started yet
-  const loader = setupServer(mm);
-
   // Connect both parent/child processes devtools servers RDP via message
   // managers
-  const { DevToolsServer } = loader.require("devtools/server/devtools-server");
   const conn = DevToolsServer.connectToParent(prefix, mm);
   conn.parentMessageManager = mm;
 
@@ -106,6 +77,13 @@ function initContentProcessTarget(msg) {
     // pools.
     conn.close();
   });
+
+  // Destroy the related loader when the target is destroyed
+  // and we were the last user of the special loader
+  actor.once("destroyed", () => {
+    releaseDistinctSystemPrincipalLoader(loaderRequester);
+  });
+
   return {
     actor,
     connection: conn,
