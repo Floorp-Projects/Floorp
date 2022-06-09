@@ -24,7 +24,8 @@ pub unsafe extern "C" fn wasm_text_to_binary(
 ) -> bool {
     let text_slice = std::slice::from_raw_parts(text, text_len);
     let text = String::from_utf16_lossy(text_slice);
-    match wat::parse_str(&text) {
+
+    match text_to_binary(&text) {
         Ok(bytes) => {
             let bytes_box = bytes.into_boxed_slice();
             let bytes_slice = Box::leak(bytes_box);
@@ -39,6 +40,16 @@ pub unsafe extern "C" fn wasm_text_to_binary(
             false
         }
     }
+}
+
+fn text_to_binary(text: &str) -> Result<Vec<u8>, wast::Error> {
+    let mut lexer = wast::lexer::Lexer::new(text);
+    // The 'names.wast' spec test has confusable unicode, so disable detection.
+    // This protection is not very useful for a shell testing function anyways.
+    lexer.allow_confusing_unicode(true);
+    let buf = wast::parser::ParseBuffer::new_with_lexer(lexer)?;
+    let mut ast = wast::parser::parse::<wast::Wat>(&buf)?;
+    return ast.encode();
 }
 
 #[no_mangle]
