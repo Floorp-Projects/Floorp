@@ -358,7 +358,7 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.crossbeam-epoch]]
-version = "0.9.6"
+version = "0.9.8"
 criteria = "safe-to-deploy"
 
 [[unaudited.crossbeam-utils]]

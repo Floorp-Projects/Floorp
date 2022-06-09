@@ -342,8 +342,16 @@ impl<T: ?Sized + Pointable> Atomic<T> {
     ///
     /// let a = Atomic::<i32>::null();
     /// ```
-    ///
-    #[cfg_attr(all(feature = "nightly", not(crossbeam_loom)), const_fn::const_fn)]
+    #[cfg(all(crossbeam_const_fn_trait_bound, not(crossbeam_loom)))]
+    pub const fn null() -> Atomic<T> {
+        Self {
+            data: AtomicUsize::new(0),
+            _marker: PhantomData,
+        }
+    }
+
+    /// Returns a new null atomic pointer.
+    #[cfg(not(all(crossbeam_const_fn_trait_bound, not(crossbeam_loom))))]
     pub fn null() -> Atomic<T> {
         Self {
             data: AtomicUsize::new(0),
@@ -1284,7 +1292,6 @@ impl<'g, T> Shared<'g, T> {
     /// let p = a.load(SeqCst, guard);
     /// assert_eq!(p.as_raw(), raw);
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn as_raw(&self) -> *const T {
         let (raw, _) = decompose_tag::<T>(self.data);
         raw as *const _
@@ -1323,7 +1330,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     /// a.store(Owned::new(1234), SeqCst);
     /// assert!(!a.load(SeqCst, guard).is_null());
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn is_null(&self) -> bool {
         let (raw, _) = decompose_tag::<T>(self.data);
         raw == 0
@@ -1360,8 +1366,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     ///     assert_eq!(p.deref(), &1234);
     /// }
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[allow(clippy::should_implement_trait)]
     pub unsafe fn deref(&self) -> &'g T {
         let (raw, _) = decompose_tag::<T>(self.data);
         T::deref(raw)
@@ -1403,7 +1407,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     ///     assert_eq!(p.deref(), &vec![1, 2, 3, 4, 5]);
     /// }
     /// ```
-    #[allow(clippy::should_implement_trait)]
     pub unsafe fn deref_mut(&mut self) -> &'g mut T {
         let (raw, _) = decompose_tag::<T>(self.data);
         T::deref_mut(raw)
@@ -1440,7 +1443,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     ///     assert_eq!(p.as_ref(), Some(&1234));
     /// }
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub unsafe fn as_ref(&self) -> Option<&'g T> {
         let (raw, _) = decompose_tag::<T>(self.data);
         if raw == 0 {
@@ -1492,7 +1494,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     /// let p = a.load(SeqCst, guard);
     /// assert_eq!(p.tag(), 2);
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn tag(&self) -> usize {
         let (_, tag) = decompose_tag::<T>(self.data);
         tag
@@ -1516,7 +1517,6 @@ impl<'g, T: ?Sized + Pointable> Shared<'g, T> {
     /// assert_eq!(p2.tag(), 2);
     /// assert_eq!(p1.as_raw(), p2.as_raw());
     /// ```
-    #[allow(clippy::trivially_copy_pass_by_ref)]
     pub fn with_tag(&self, tag: usize) -> Shared<'g, T> {
         unsafe { Self::from_usize(compose_tag::<T>(self.data, tag)) }
     }
@@ -1602,7 +1602,7 @@ mod tests {
         Shared::<i64>::null().with_tag(7);
     }
 
-    #[cfg(feature = "nightly")]
+    #[rustversion::since(1.61)]
     #[test]
     fn const_atomic_null() {
         use super::Atomic;
