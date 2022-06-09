@@ -377,7 +377,12 @@ async function testNestedResourceUpdateFeature() {
 
   info("Apply new media query");
   // In order to avoid applying the media query (min-height: 400px).
-  tab.ownerGlobal.resizeTo(originalWindowWidth, 300);
+  if (originalWindowHeight !== 300) {
+    await new Promise(resolve => {
+      tab.ownerGlobal.addEventListener("resize", resolve, { once: true });
+      tab.ownerGlobal.resizeTo(originalWindowWidth, 300);
+    });
+  }
 
   // Retrieve the stylesheet of the top-level target
   const resource = availableResources.find(
