@@ -17,25 +17,26 @@ const { Download, DownloadError } = ChromeUtils.import(
   "resource://gre/modules/DownloadCore.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DownloadCombinedList",
   "resource://gre/modules/DownloadList.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DownloadList",
   "resource://gre/modules/DownloadList.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DownloadSummary",
   "resource://gre/modules/DownloadList.jsm"
 );
 
-/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(
-  this,
+  lazy,
   "DownloadIntegration",
   "resource://gre/modules/DownloadIntegration.jsm"
 );
@@ -173,14 +174,19 @@ var Downloads = {
   getList(aType) {
     if (!this._promiseListsInitialized) {
       this._promiseListsInitialized = (async () => {
-        let publicList = new DownloadList();
-        let privateList = new DownloadList();
-        let combinedList = new DownloadCombinedList(publicList, privateList);
+        let publicList = new lazy.DownloadList();
+        let privateList = new lazy.DownloadList();
+        let combinedList = new lazy.DownloadCombinedList(
+          publicList,
+          privateList
+        );
 
         try {
-          await DownloadIntegration.addListObservers(publicList, false);
-          await DownloadIntegration.addListObservers(privateList, true);
-          await DownloadIntegration.initializePublicDownloadList(publicList);
+          await lazy.DownloadIntegration.addListObservers(publicList, false);
+          await lazy.DownloadIntegration.addListObservers(privateList, true);
+          await lazy.DownloadIntegration.initializePublicDownloadList(
+            publicList
+          );
         } catch (ex) {
           Cu.reportError(ex);
         }
@@ -241,7 +247,7 @@ var Downloads = {
     }
 
     if (!(aType in this._summaries)) {
-      this._summaries[aType] = new DownloadSummary();
+      this._summaries[aType] = new lazy.DownloadSummary();
     }
 
     return Promise.resolve(this._summaries[aType]);
@@ -271,7 +277,7 @@ var Downloads = {
    * @resolves The downloads directory string path.
    */
   getSystemDownloadsDirectory: function D_getSystemDownloadsDirectory() {
-    return DownloadIntegration.getSystemDownloadsDirectory();
+    return lazy.DownloadIntegration.getSystemDownloadsDirectory();
   },
 
   /**
@@ -282,7 +288,7 @@ var Downloads = {
    * @resolves The downloads directory string path.
    */
   getPreferredDownloadsDirectory: function D_getPreferredDownloadsDirectory() {
-    return DownloadIntegration.getPreferredDownloadsDirectory();
+    return lazy.DownloadIntegration.getPreferredDownloadsDirectory();
   },
 
   /**
@@ -295,7 +301,7 @@ var Downloads = {
    * @resolves The downloads directory string path.
    */
   getTemporaryDownloadsDirectory: function D_getTemporaryDownloadsDirectory() {
-    return DownloadIntegration.getTemporaryDownloadsDirectory();
+    return lazy.DownloadIntegration.getTemporaryDownloadsDirectory();
   },
 
   /**

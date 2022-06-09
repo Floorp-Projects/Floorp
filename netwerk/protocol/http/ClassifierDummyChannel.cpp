@@ -7,19 +7,18 @@
 
 #include "ClassifierDummyChannel.h"
 
-#include "mozilla/ContentBlocking.h"
 #include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StorageAccess.h"
 #include "nsContentSecurityManager.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "NeckoChild.h"
-#include "mozilla/ContentBlocking.h"
 #include "nsIHttpChannel.h"
 #include "nsIStreamListener.h"
 
@@ -64,7 +63,7 @@ ClassifierDummyChannel::StorageAllowed(
     return eAsyncNeeded;
   }
 
-  if (ContentBlocking::ShouldAllowAccessFor(httpChannel, uri, nullptr)) {
+  if (ShouldAllowAccessFor(httpChannel, uri, nullptr)) {
     return eStorageGranted;
   }
 

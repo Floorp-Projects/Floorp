@@ -2124,16 +2124,16 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
   return ctm;
 }
 
-MatrixScalesDouble nsLayoutUtils::GetTransformToAncestorScale(
+MatrixScales nsLayoutUtils::GetTransformToAncestorScale(
     const nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestor(
       RelativeTo{aFrame},
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   Matrix transform2D;
   if (transform.CanDraw2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors();
+    return ThebesMatrix(transform2D).ScaleFactors().ConvertTo<float>();
   }
-  return MatrixScalesDouble();
+  return MatrixScales();
 }
 
 static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
@@ -2161,15 +2161,15 @@ static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
   return ctm;
 }
 
-MatrixScalesDouble nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
+MatrixScales nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
     nsIFrame* aFrame) {
   Matrix4x4Flagged transform = GetTransformToAncestorExcludingAnimated(
       aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors();
+    return ThebesMatrix(transform2D).ScaleFactors().ConvertTo<float>();
   }
-  return MatrixScalesDouble();
+  return MatrixScales();
 }
 
 const nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(
@@ -2796,9 +2796,9 @@ nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
 mozilla::ParentLayerToScreenScale2D
 nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
     const nsIFrame* aFrame) {
-  MatrixScalesDouble scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
   ParentLayerToScreenScale2D transformToAncestorScale =
-      ViewAs<ParentLayerToScreenScale2D>(scale.ConvertTo<float>());
+      ViewAs<ParentLayerToScreenScale2D>(
+          nsLayoutUtils::GetTransformToAncestorScale(aFrame));
 
   if (BrowserChild* browserChild = BrowserChild::GetFrom(aFrame->PresShell())) {
     transformToAncestorScale =

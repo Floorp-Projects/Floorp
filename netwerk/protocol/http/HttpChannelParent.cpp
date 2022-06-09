@@ -16,7 +16,6 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/net/NeckoParent.h"
-#include "mozilla/net/ExecuteIfOnMainThreadEventTarget.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ProfilerLabels.h"
@@ -62,7 +61,8 @@ using mozilla::BasePrincipal;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
                                      nsILoadContext* aLoadContext,
@@ -560,9 +560,7 @@ bool HttpChannelParent::DoAsyncOpen(
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent()
       ->Then(
-          ExecuteIfOnMainThreadEventTarget::
-              GetExecuteIfOnMainThreadEventTarget(),
-          __func__,
+          GetMainThreadSerialEventTarget(), __func__,
           [self]() {
             self->mRequest.Complete();
             self->TryInvokeAsyncOpen(NS_OK);
@@ -644,9 +642,8 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent()
       ->Then(
-          ExecuteIfOnMainThreadEventTarget::
-              GetExecuteIfOnMainThreadEventTarget(),
-          __func__, [self]() { self->mRequest.Complete(); },
+          GetMainThreadSerialEventTarget(), __func__,
+          [self]() { self->mRequest.Complete(); },
           [self](const nsresult& aResult) {
             NS_ERROR("failed to establish the background channel");
             self->mRequest.Complete();
@@ -883,8 +880,8 @@ HttpChannelParent::ContinueVerification(
   // Otherwise, wait for the background channel.
   nsCOMPtr<nsIAsyncVerifyRedirectReadyCallback> callback = aCallback;
   WaitForBgParent()->Then(
-      ExecuteIfOnMainThreadEventTarget::GetExecuteIfOnMainThreadEventTarget(),
-      __func__, [callback]() { callback->ReadyToVerify(NS_OK); },
+      GetMainThreadSerialEventTarget(), __func__,
+      [callback]() { callback->ReadyToVerify(NS_OK); },
       [callback](const nsresult& aResult) {
         NS_ERROR("failed to establish the background channel");
         callback->ReadyToVerify(aResult);
@@ -2011,4 +2008,5 @@ void HttpChannelParent::SetCookie(nsCString&& aCookie) {
   mCookie = std::move(aCookie);
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

@@ -2186,6 +2186,7 @@ dependencies = [
  "mapped_hyph",
  "mdns_service",
  "midir_impl",
+ "mio 0.8.0",
  "moz_asserts",
  "mozurl",
  "mp4parse_capi",
@@ -2664,7 +2665,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=2689788cecf24c385e6b7440e3aa1a89c511f14a#2689788cecf24c385e6b7440e3aa1a89c511f14a"
 dependencies = [
  "lazy_static",
- "parking_lot",
+ "parking_lot 0.12.999",
  "rusqlite",
 ]
 
@@ -3963,6 +3964,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "parking_lot"
+version = "0.12.999"
+dependencies = [
+ "parking_lot 0.11.1",
+]
+
+[[package]]
 name = "parking_lot_core"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4797,7 +4805,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0bccbcf40c8938196944a3da0e133e031a33f4d6b72db3bda3cc556e361905d"
 dependencies = [
  "lazy_static",
- "parking_lot",
+ "parking_lot 0.11.1",
  "serial_test_derive",
 ]
 
@@ -5012,7 +5020,7 @@ dependencies = [
  "num-traits",
  "num_cpus",
  "owning_ref",
- "parking_lot",
+ "parking_lot 0.11.1",
  "precomputed-hash",
  "rayon",
  "regex",
@@ -6061,7 +6069,7 @@ dependencies = [
  "fxhash",
  "log",
  "naga",
- "parking_lot",
+ "parking_lot 0.12.999",
  "profiling",
  "ron",
  "serde",
@@ -6096,7 +6104,7 @@ dependencies = [
  "metal",
  "naga",
  "objc",
- "parking_lot",
+ "parking_lot 0.12.999",
  "profiling",
  "range-alloc",
  "raw-window-handle",
@@ -6124,7 +6132,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "log",
- "parking_lot",
+ "parking_lot 0.11.1",
  "serde",
  "wgpu-core",
  "wgpu-hal",

@@ -30,6 +30,10 @@ class ContentBlockingAllowList final {
                         bool aIsPrivateBrowsing, bool& aIsAllowListed);
 
   static bool Check(nsIHttpChannel* aChannel);
+  // Utility APIs for ContentBlocking.
+  static bool Check(nsPIDOMWindowInner* aWindow);
+  static bool Check(nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing);
+  static bool Check(nsICookieJarSettings* aCookieJarSettings);
 
   // Computes the principal used to check the content blocking allow list for a
   // top-level document based on the document principal.  This function is used
@@ -40,14 +44,6 @@ class ContentBlockingAllowList final {
   static void RecomputePrincipal(nsIURI* aURIBeingLoaded,
                                  const OriginAttributes& aAttrs,
                                  nsIPrincipal** aPrincipal);
-
- private:
-  // Utility APIs for ContentBlocking.
-  static bool Check(nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing);
-  static bool Check(nsPIDOMWindowInner* aWindow);
-  static bool Check(nsICookieJarSettings* aCookieJarSettings);
-
-  friend class ContentBlocking;
 };
 
 }  // namespace mozilla

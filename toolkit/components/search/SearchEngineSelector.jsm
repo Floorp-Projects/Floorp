@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
@@ -19,10 +21,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const USER_LOCALE = "$USER_LOCALE";
 const USER_REGION = "$USER_REGION";
 
-XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchEngineSelector",
-    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+    maxLogLevel: lazy.SearchUtils.loggingEnabled ? "Debug" : "Warn",
   });
 });
 
@@ -88,7 +90,7 @@ class SearchEngineSelector {
    */
   constructor(listener) {
     this.QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
-    this._remoteConfig = RemoteSettings(SearchUtils.SETTINGS_KEY);
+    this._remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
     this._listenerAdded = false;
     this._onConfigurationUpdated = this._onConfigurationUpdated.bind(this);
     this._changeListener = listener;
@@ -144,11 +146,11 @@ class SearchEngineSelector {
         order: "id",
       });
     } catch (ex) {
-      logConsole.error(ex);
+      lazy.logConsole.error(ex);
       failed = true;
     }
     if (!result.length) {
-      logConsole.error("Received empty search configuration!");
+      lazy.logConsole.error("Received empty search configuration!");
       failed = true;
     }
     // If we failed, or the result is empty, try loading from the local dump.
@@ -166,7 +168,7 @@ class SearchEngineSelector {
    */
   _onConfigurationUpdated({ data: { current } }) {
     this._configuration = current;
-    logConsole.debug("Search configuration updated remotely");
+    lazy.logConsole.debug("Search configuration updated remotely");
     if (this._changeListener) {
       this._changeListener();
     }
@@ -201,7 +203,7 @@ class SearchEngineSelector {
     }
     let name = getAppInfo("name");
     let version = getAppInfo("version");
-    logConsole.debug(
+    lazy.logConsole.debug(
       `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${experiment}:${name}:${version}`
     );
     let engines = [];
@@ -282,7 +284,7 @@ class SearchEngineSelector {
         } else {
           const engine = { ...baseConfig };
           (engine.webExtension = engine.webExtension || {}).locale =
-            SearchUtils.DEFAULT_TAG;
+            lazy.SearchUtils.DEFAULT_TAG;
           engines.push(engine);
         }
       }
@@ -335,8 +337,8 @@ class SearchEngineSelector {
       result.privateDefault = privateEngine;
     }
 
-    if (SearchUtils.loggingEnabled) {
-      logConsole.debug(
+    if (lazy.SearchUtils.loggingEnabled) {
+      lazy.logConsole.debug(
         "fetchEngineConfiguration: " +
           result.engines.map(e => e.webExtension.id)
       );

@@ -21,7 +21,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
@@ -146,7 +148,7 @@ var PlacesDBUtils = {
 
   invalidateCaches() {
     let logs = [];
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: invalidate caches",
       async db => {
         let idsWithStaleGuidsRows = await db.execute(
@@ -156,11 +158,11 @@ var PlacesDBUtils = {
                  (type = :bookmark_type AND fk IS NULL) OR
                  (type <> :bookmark_type AND fk NOT NULL) OR
                  type IS NULL`,
-          { bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK }
+          { bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK }
         );
         for (let row of idsWithStaleGuidsRows) {
           let id = row.getResultByName("id");
-          PlacesUtils.invalidateCachedGuidFor(id);
+          lazy.PlacesUtils.invalidateCachedGuidFor(id);
         }
         logs.push("The caches have been invalidated");
         return logs;
@@ -182,7 +184,7 @@ var PlacesDBUtils = {
     let logs = [];
     let stmts = await PlacesDBUtils._getCoherenceStatements();
     let coherenceCheck = true;
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: coherence check:",
       db =>
         db.executeTransaction(async () => {
@@ -215,7 +217,7 @@ var PlacesDBUtils = {
    */
   async incrementalVacuum() {
     let logs = [];
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: incrementalVacuum",
       async db => {
         let count = (
@@ -256,7 +258,7 @@ var PlacesDBUtils = {
   async deleteOrphanPreviews() {
     let logs = [];
     try {
-      let deleted = await PlacesPreviews.deleteOrphans();
+      let deleted = await lazy.PlacesPreviews.deleteOrphans();
       if (deleted) {
         logs.push(`Orphan previews deleted.`);
       }
@@ -442,13 +444,13 @@ var PlacesDBUtils = {
             AND b.type <> :bookmark_type
         )`,
         params: {
-          tags_folder: PlacesUtils.tagsFolderId,
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -464,12 +466,12 @@ var PlacesDBUtils = {
               (SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1)
         )`,
         params: {
-          tags_folder: PlacesUtils.tagsFolderId,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -485,11 +487,11 @@ var PlacesDBUtils = {
             (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
         )`,
         params: {
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -509,11 +511,11 @@ var PlacesDBUtils = {
                         fk IS NULL) OR
                        type IS NULL)`,
         params: {
-          dateRemoved: PlacesUtils.toPRTime(new Date()),
-          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          dateRemoved: lazy.PlacesUtils.toPRTime(new Date()),
+          syncStatus: lazy.PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          separator_type: lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR,
         },
       },
 
@@ -535,14 +537,14 @@ var PlacesDBUtils = {
             AND fk NOTNULL
         )`,
         params: {
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          separator_type: lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -561,13 +563,13 @@ var PlacesDBUtils = {
             AND fk IS NULL
         )`,
         params: {
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -582,13 +584,13 @@ var PlacesDBUtils = {
          :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
         ) AND type IS NULL`,
         params: {
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -608,13 +610,13 @@ var PlacesDBUtils = {
               LIMIT 1)
         )`,
         params: {
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          separator_type: lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -631,12 +633,12 @@ var PlacesDBUtils = {
           AND b.type = :bookmark_type
           AND NOT EXISTS (SELECT 1 FROM moz_places h WHERE h.id = b.fk)`,
         params: {
-          bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          rootGuid: PlacesUtils.bookmarks.rootGuid,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          bookmark_type: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          rootGuid: lazy.PlacesUtils.bookmarks.rootGuid,
+          menuGuid: lazy.PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: lazy.PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: lazy.PlacesUtils.bookmarks.tagsGuid,
         },
       },
 
@@ -701,8 +703,8 @@ var PlacesDBUtils = {
                       WHERE length(p.title) = 0 AND p.type = :folder_type AND
                             p.parent = :tags_folder)`,
         params: {
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          tags_folder: PlacesUtils.tagsFolderId,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
         },
       },
       {
@@ -711,8 +713,8 @@ var PlacesDBUtils = {
           AND parent = :tags_folder`,
         params: {
           empty_title: "(notitle)",
-          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          tags_folder: PlacesUtils.tagsFolderId,
+          folder_type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
         },
       },
 
@@ -858,8 +860,8 @@ var PlacesDBUtils = {
               guid NOT NULL AND
               NOT IS_VALID_GUID(guid)`,
         params: {
-          dateRemoved: PlacesUtils.toPRTime(new Date()),
-          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+          dateRemoved: lazy.PlacesUtils.toPRTime(new Date()),
+          syncStatus: lazy.PlacesUtils.bookmarks.SYNC_STATUS.NEW,
         },
       },
       {
@@ -869,7 +871,7 @@ var PlacesDBUtils = {
         WHERE guid IS NULL OR
               NOT IS_VALID_GUID(guid)`,
         params: {
-          syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+          syncStatus: lazy.PlacesUtils.bookmarks.SYNC_STATUS.NEW,
         },
       },
 
@@ -956,7 +958,7 @@ var PlacesDBUtils = {
     let placesDbPath = PathUtils.join(PathUtils.profileDir, "places.sqlite");
     let info = await IOUtils.stat(placesDbPath);
     logs.push(`Initial database size is ${parseInt(info.size / 1024)}KiB`);
-    return PlacesUtils.withConnectionWrapper(
+    return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: vacuum",
       async db => {
         await db.execute("VACUUM");
@@ -993,7 +995,10 @@ var PlacesDBUtils = {
         logs.push("Database cleaned up");
         res(logs);
       };
-      Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+      Services.obs.addObserver(
+        observer,
+        lazy.PlacesUtils.TOPIC_EXPIRATION_FINISHED
+      );
     });
 
     // Force an orphans expiration step.
@@ -1029,7 +1034,7 @@ var PlacesDBUtils = {
       "synchronous",
     ].map(p => `pragma_${p}`);
     let pragmaQuery = `SELECT * FROM ${pragmas.join(", ")}`;
-    await PlacesUtils.withConnectionWrapper(
+    await lazy.PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: pragma for stats",
       async db => {
         let row = (await db.execute(pragmaQuery))[0];
@@ -1054,7 +1059,7 @@ var PlacesDBUtils = {
     let query = "SELECT name FROM sqlite_master WHERE type = :type";
     let params = {};
     let _getTableCount = async tableName => {
-      let db = await PlacesUtils.promiseDBConnection();
+      let db = await lazy.PlacesUtils.promiseDBConnection();
       let rows = await db.execute(`SELECT count(*) FROM ${tableName}`);
       logs.push(
         `Table ${tableName} has ${rows[0].getResultByIndex(0)} records`
@@ -1063,7 +1068,7 @@ var PlacesDBUtils = {
 
     try {
       params.type = "table";
-      let db = await PlacesUtils.promiseDBConnection();
+      let db = await lazy.PlacesUtils.promiseDBConnection();
       await db.execute(query, params, r =>
         _getTableCount(r.getResultByIndex(0))
       );
@@ -1097,7 +1102,7 @@ var PlacesDBUtils = {
    */
   originFrecencyStats() {
     return new Promise(resolve => {
-      PlacesUtils.history.recalculateOriginFrecencyStats(() =>
+      lazy.PlacesUtils.history.recalculateOriginFrecencyStats(() =>
         resolve(["Recalculated origin frecency stats"])
       );
     });
@@ -1144,8 +1149,8 @@ var PlacesDBUtils = {
                     AND t.parent <> :tags_folder
                     WHERE b.type = :type_bookmark`,
         params: {
-          tags_folder: PlacesUtils.tagsFolderId,
-          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          type_bookmark: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
         },
       },
 
@@ -1154,7 +1159,7 @@ var PlacesDBUtils = {
         query: `SELECT count(*) FROM moz_bookmarks
                     WHERE parent = :tags_folder`,
         params: {
-          tags_folder: PlacesUtils.tagsFolderId,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
         },
       },
 
@@ -1177,9 +1182,9 @@ var PlacesDBUtils = {
                       WHERE b.type = :type_bookmark
                     )), 0)`,
         params: {
-          places_root: PlacesUtils.placesRootId,
-          tags_folder: PlacesUtils.tagsFolderId,
-          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          places_root: lazy.PlacesUtils.placesRootId,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          type_bookmark: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
         },
       },
 
@@ -1196,8 +1201,8 @@ var PlacesDBUtils = {
                       WHERE b.type = :type_bookmark
                     )), 0)`,
         params: {
-          tags_folder: PlacesUtils.tagsFolderId,
-          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          tags_folder: lazy.PlacesUtils.tagsFolderId,
+          type_bookmark: lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK,
         },
       },
 
@@ -1271,7 +1276,7 @@ var PlacesDBUtils = {
     for (let probe of probes) {
       let val;
       if ("query" in probe) {
-        let db = await PlacesUtils.promiseDBConnection();
+        let db = await lazy.PlacesUtils.promiseDBConnection();
         val = (
           await db.execute(probe.query, probe.params || {})
         )[0].getResultByIndex(0);
@@ -1344,7 +1349,7 @@ var PlacesDBUtils = {
    *              need for vacuum.
    */
   async getEntitiesStats() {
-    let db = await PlacesUtils.promiseDBConnection();
+    let db = await lazy.PlacesUtils.promiseDBConnection();
     let rows = await db.execute(`
       /* do not warn (bug no): no need for index */
       SELECT name,
@@ -1391,7 +1396,7 @@ var PlacesDBUtils = {
   async runTasks(tasks) {
     if (!this._registeredShutdownObserver) {
       this._registeredShutdownObserver = true;
-      PlacesUtils.registerShutdownFunction(() => {
+      lazy.PlacesUtils.registerShutdownFunction(() => {
         this._isShuttingDown = true;
       });
     }
@@ -1439,7 +1444,7 @@ async function integrity(dbName) {
   // we should do the same everywhere we want maintenance to try replacing the
   // database on next startup.
   let path = PathUtils.join(PathUtils.profileDir, dbName);
-  let db = await Sqlite.openConnection({ path });
+  let db = await lazy.Sqlite.openConnection({ path });
   try {
     if (await check(db)) {
       return;
