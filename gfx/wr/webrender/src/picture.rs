@@ -2080,6 +2080,10 @@ impl TileCacheInstance {
         for (_, external_surface) in self.external_native_surface_cache {
             resource_cache.destroy_compositor_surface(external_surface.native_surface_id)
         }
+
+        if let Some(backdrop_surface) = &self.backdrop_surface {
+            resource_cache.destroy_compositor_surface(backdrop_surface.id);
+        }
     }
 
     /// Get the tile coordinates for a given rectangle.
