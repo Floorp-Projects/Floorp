@@ -73,6 +73,9 @@ module.exports = {
       configFile: path.join(__dirname, ".babel-eslint.rc.js"),
     },
   },
+  settings: {
+    "import/extensions": [".mjs"],
+  },
   ignorePatterns,
   // Ignore eslint configurations in parent directories.
   root: true,
@@ -80,7 +83,7 @@ module.exports = {
   // tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js to
   // allow external repositories that use the plugin to pick them up as well.
   extends: ["plugin:mozilla/recommended"],
-  plugins: ["mozilla"],
+  plugins: ["mozilla", "import"],
   overrides: [
     {
       // All .eslintrc.js files are in the node environment, so turn that
@@ -90,6 +93,41 @@ module.exports = {
       env: {
         node: true,
         browser: false,
+      },
+    },
+    {
+      files: ["*.mjs"],
+      rules: {
+        "import/default": "error",
+        "import/export": "error",
+        "import/named": "error",
+        "import/namespace": "error",
+        "import/newline-after-import": "error",
+        "import/no-anonymous-default-export": "error",
+        "import/no-duplicates": "error",
+        "import/no-absolute-path": "error",
+        "import/no-named-default": "error",
+        "import/no-named-as-default": "error",
+        "import/no-named-as-default-member": "error",
+        "import/no-self-import": "error",
+        "import/no-unassigned-import": "error",
+        "import/no-unresolved": "error",
+        "import/no-useless-path-segments": "error",
+        "import/prefer-default-export": "error",
+      },
+    },
+    {
+      files: [
+        // Bug 1773473 - Turn off no-unresolved for system mjs modules, as we
+        // do not yet have a resolver for resource:// uris.
+        "*.sys.mjs",
+        // Bug 1773475 - For now, turn off no-unresolved on some paths where we import
+        // from node_modules, as the ESLint setup only installs modules at the
+        // top-level.
+        "devtools/shared/compatibility/**",
+      ],
+      rules: {
+        "import/no-unresolved": "off",
       },
     },
     {
