@@ -685,12 +685,13 @@ class LoginAutoComplete {
         this.isProbablyANewPasswordField(inputElement);
     }
 
-    const messageData = {
+    let messageData = {
       actionOrigin,
       searchString,
       previousResult,
       forcePasswordGeneration,
       hasBeenTypePassword,
+      isSecure: lazy.InsecurePasswordUtils.isFormSecure(form),
       isProbablyANewPasswordField,
     };
 
@@ -700,6 +701,7 @@ class LoginAutoComplete {
 
     lazy.log.debug("LoginAutoComplete search:", {
       forcePasswordGeneration,
+      isSecure: messageData.isSecure,
       hasBeenTypePassword,
       isProbablyANewPasswordField,
       searchStringLength: searchString.length,
