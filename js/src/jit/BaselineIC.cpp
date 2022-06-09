@@ -105,7 +105,7 @@ class MOZ_RAII FallbackICCodeCompiler final {
   // to pc mapping to work.
   void enterStubFrame(MacroAssembler& masm, Register scratch);
   void assumeStubFrame();
-  void leaveStubFrame(MacroAssembler& masm);
+  void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 };
 
 AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
@@ -565,14 +565,18 @@ void FallbackICCodeCompiler::assumeStubFrame() {
 #endif
 }
 
-void FallbackICCodeCompiler::leaveStubFrame(MacroAssembler& masm) {
+void FallbackICCodeCompiler::leaveStubFrame(MacroAssembler& masm,
+                                            bool calledIntoIon) {
   MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
   inStubFrame_ = false;
 
 #ifdef DEBUG
   masm.setFramePushed(framePushedAtEnterStubFrame_);
+  if (calledIntoIon) {
+    masm.adjustFrame(sizeof(intptr_t));  // Calls into ion have this extra.
+  }
 #endif
-  EmitBaselineLeaveStubFrame(masm);
+  EmitBaselineLeaveStubFrame(masm, calledIntoIon);
 }
 
 void FallbackICCodeCompiler::pushStubPayload(MacroAssembler& masm,
@@ -740,7 +744,7 @@ bool FallbackICCodeCompiler::emitGetElem(bool hasReceiver) {
                                  masm.currentOffset());
   }
 
-  leaveStubFrame(masm);
+  leaveStubFrame(masm, true);
 
   EmitReturnFromIC(masm);
   return true;
@@ -1296,7 +1300,7 @@ bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
                                  masm.currentOffset());
   }
 
-  leaveStubFrame(masm);
+  leaveStubFrame(masm, true);
 
   EmitReturnFromIC(masm);
   return true;
@@ -1490,7 +1494,7 @@ bool FallbackICCodeCompiler::emit_SetProp() {
   code.initBailoutReturnOffset(BailoutReturnKind::SetProp,
                                masm.currentOffset());
 
-  leaveStubFrame(masm);
+  leaveStubFrame(masm, true);
   EmitReturnFromIC(masm);
 
   return true;
@@ -1793,7 +1797,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
   // Current stack:  [...., ThisV, ActualArgc, CalleeToken, Descriptor ]
   masm.loadValue(Address(masm.getStackPointer(), 3 * sizeof(size_t)), R1);
 
-  leaveStubFrame(masm);
+  leaveStubFrame(masm, true);
 
   // If this is a |constructing| call, if the callee returns a non-object, we
   // replace it with the |this| object passed in.

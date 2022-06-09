@@ -276,17 +276,6 @@ class JitFrameLayout : public CommonFrameLayout {
   }
   uintptr_t numActualArgs() const { return numActualArgs_; }
 
-  void* callerFramePtr() const {
-    // The caller's frame pointer is pushed after the JitFrameLayout.
-    auto* p = reinterpret_cast<const uintptr_t*>(this) - 1;
-    return reinterpret_cast<void*>(*p);
-  }
-
-  // For IonJS frames: the distance from the JitFrameLayout to the first local
-  // slot. The caller's frame pointer is stored in this space. 32-bit platforms
-  // have 4 bytes of padding to ensure doubles are properly aligned.
-  static constexpr size_t IonFirstSlotOffset = 8;
-
   // Computes a reference to a stack or argument slot, where a slot is a
   // distance from the base frame pointer, as would be used for LStackSlot
   // or LArgument.

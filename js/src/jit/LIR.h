@@ -1834,9 +1834,9 @@ class LIRGraph {
   uint32_t numVirtualRegisters_;
   uint32_t numInstructions_;
 
-  // Size of stack slots needed for local spills.
-  uint32_t localSlotsSize_;
-  // Number of JS::Value stack slots needed for argument construction for calls.
+  // Number of stack slots needed for local spills.
+  uint32_t localSlotCount_;
+  // Number of stack slots needed for argument construction for calls.
   uint32_t argumentSlotCount_;
 
   MIRGraph& mir_;
@@ -1867,14 +1867,30 @@ class LIRGraph {
   }
   uint32_t getInstructionId() { return numInstructions_++; }
   uint32_t numInstructions() const { return numInstructions_; }
-  void setLocalSlotsSize(uint32_t localSlotsSize) {
-    localSlotsSize_ = localSlotsSize;
+  void setLocalSlotCount(uint32_t localSlotCount) {
+    localSlotCount_ = localSlotCount;
   }
-  uint32_t localSlotsSize() const { return localSlotsSize_; }
+  uint32_t localSlotCount() const { return localSlotCount_; }
+  // Return the localSlotCount() value rounded up so that it satisfies the
+  // platform stack alignment requirement, and so that it's a multiple of
+  // the number of slots per Value.
+  uint32_t paddedLocalSlotCount() const {
+    // Round to JitStackAlignment, and implicitly to sizeof(Value) as
+    // JitStackAlignment is a multiple of sizeof(Value). These alignments
+    // are needed for spilling SIMD registers properly, and for
+    // StackOffsetOfPassedArg which rounds argument slots to 8-byte
+    // boundaries.
+    return AlignBytes(localSlotCount(), JitStackAlignment);
+  }
+  size_t paddedLocalSlotsSize() const { return paddedLocalSlotCount(); }
   void setArgumentSlotCount(uint32_t argumentSlotCount) {
     argumentSlotCount_ = argumentSlotCount;
   }
   uint32_t argumentSlotCount() const { return argumentSlotCount_; }
+  size_t argumentsSize() const { return argumentSlotCount() * sizeof(Value); }
+  uint32_t totalSlotCount() const {
+    return paddedLocalSlotCount() + argumentsSize();
+  }
   [[nodiscard]] bool addConstantToPool(const Value& v, uint32_t* index);
   size_t numConstants() const { return constantPool_.length(); }
   Value* constantPool() { return &constantPool_[0]; }

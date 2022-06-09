@@ -645,7 +645,16 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
       break;
   }
 
-  masm.mov(FramePointer, StackPointer);
+  // Remove the rectifier frame.
+  masm.pop(r9);  // r9 <- descriptor with FrameType.
+  masm.shrq(Imm32(FRAMESIZE_SHIFT), r9);
+  masm.pop(r11);  // Discard calleeToken.
+  masm.pop(r11);  // Discard numActualArgs.
+
+  // Discard pushed arguments, but not the pushed frame pointer.
+  BaseIndex unwind(rsp, r9, TimesOne, -int32_t(sizeof(void*)));
+  masm.lea(Operand(unwind), rsp);
+
   masm.pop(FramePointer);
   masm.ret();
 }

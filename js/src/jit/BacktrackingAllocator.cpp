@@ -3258,7 +3258,7 @@ bool BacktrackingAllocator::reifyAllocations() {
     }
   }
 
-  graph.setLocalSlotsSize(stackSlotAllocator.stackHeight());
+  graph.setLocalSlotCount(stackSlotAllocator.stackHeight());
   return true;
 }
 
