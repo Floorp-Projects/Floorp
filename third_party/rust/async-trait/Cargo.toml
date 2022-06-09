@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.39"
 name = "async-trait"
-version = "0.1.53"
+version = "0.1.56"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Type erasure for async trait methods"
 documentation = "https://docs.rs/async-trait"
@@ -35,7 +35,7 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.syn]
-version = "1.0.84"
+version = "1.0.96"
 features = [
     "full",
     "visit-mut",

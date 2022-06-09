@@ -2,9 +2,13 @@ error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/lifetime-span.rs:12:6
    |
 12 | impl Trait for A {
-   |      ^^^^^- help: indicate the anonymous lifetime: `<'_>`
+   |      ^^^^^ expected lifetime parameter
    |
    = note: assuming a `'static` lifetime...
+help: indicate the anonymous lifetime
+   |
+12 | impl Trait<'_> for A {
+   |           ++++
 
 error[E0107]: this trait takes 0 lifetime arguments but 1 lifetime argument was supplied
   --> tests/ui/lifetime-span.rs:32:10

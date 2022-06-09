@@ -8,6 +8,10 @@ fn main() {
         None => return,
     };
 
+    if compiler < 45 {
+        println!("cargo:rustc-cfg=no_span_mixed_site");
+    }
+
     if compiler < 47 {
         println!("cargo:rustc-cfg=self_span_hack");
     }
