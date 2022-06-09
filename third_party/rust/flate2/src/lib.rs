@@ -13,30 +13,24 @@
 //!
 //! # Implementation
 //!
-//! In addition to supporting three formats, this crate supports three different
+//! In addition to supporting three formats, this crate supports several different
 //! backends, controlled through this crate's features:
 //!
 //! * `default`, or `rust_backend` - this implementation uses the `miniz_oxide`
 //!   crate which is a port of `miniz.c` (below) to Rust. This feature does not
 //!   require a C compiler and only requires Rust code.
 //!
-//! * `miniz-sys` - when enabled this feature will enable this crate to instead
-//!   use `miniz.c`, distributed with `miniz-sys`, to implement
-//!   compression/decompression.
+//! * `zlib` - this feature will enable linking against the `libz` library, typically found on most
+//!   Linux systems by default. If the library isn't found to already be on the system it will be
+//!   compiled from source (this is a C library).
 //!
-//! * `zlib` - finally, this feature will enable linking against the `libz`
-//!   library, typically found on most Linux systems by default. If the library
-//!   isn't found to already be on the system it will be compiled from source
-//!   (this is a C library).
-//!
-//! There's various tradeoffs associated with each implementation, but in
-//! general you probably won't have to tweak the defaults. The default choice is
-//! selected to avoid the need for a C compiler at build time. The `miniz-sys`
-//! feature is largely a historical artifact at this point and is unlikely to be
-//! needed, and `zlib` is often useful if you're already using `zlib` for other
-//! C dependencies. The compression ratios and performance of each of these
-//! feature should be roughly comparable, but you'll likely want to run your own
-//! tests if you're curious about the performance.
+//! There's various tradeoffs associated with each implementation, but in general you probably
+//! won't have to tweak the defaults. The default choice is selected to avoid the need for a C
+//! compiler at build time. `zlib-ng-compat` is useful if you're using zlib for compatibility but
+//! want performance via zlib-ng's zlib-compat mode. `zlib` is useful if something else in your
+//! dependencies links the original zlib so you cannot use zlib-ng-compat. The compression ratios
+//! and performance of each of these feature should be roughly comparable, but you'll likely want
+//! to run your own tests if you're curious about the performance.
 //!
 //! # Organization
 //!
