@@ -1700,6 +1700,8 @@ toolbar#nav-bar {
                 testob["expected"] = test["expected"]
             if "https_first_disabled" in test:
                 testob["https_first_disabled"] = test["https_first_disabled"] == "true"
+            if "allow_xul_xbl" in test:
+                testob["allow_xul_xbl"] = test["allow_xul_xbl"] == "true"
             if "scheme" in test:
                 testob["scheme"] = test["scheme"]
             if "tags" in test:

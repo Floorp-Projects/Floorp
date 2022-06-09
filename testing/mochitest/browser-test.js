@@ -1087,6 +1087,13 @@ Tester.prototype = {
       });
     }
 
+    if (currentTest.allow_xul_xbl) {
+      window.SpecialPowers.pushPermissions([
+        { type: "allowXULXBL", allow: true, context: "http://mochi.test:8888" },
+        { type: "allowXULXBL", allow: true, context: "http://example.org" },
+      ]);
+    }
+
     // Import utils in the test scope.
     let { scope } = this.currentTest;
     scope.EventUtils = this.EventUtils;
