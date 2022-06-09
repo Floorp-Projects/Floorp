@@ -229,7 +229,15 @@ function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
     let payloadStream = Cc[
       "@mozilla.org/io/string-input-stream;1"
     ].createInstance(Ci.nsIStringInputStream);
-    payloadStream.data = gzipCompressString(payload);
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+      // eslint-disable-next-line mozilla/reject-scriptableunicodeconverter
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let utf8Payload = converter.ConvertFromUnicode(payload);
+    utf8Payload += converter.Finish();
+
+    payloadStream.data = gzipCompressString(utf8Payload);
     request.sendInputStream(payloadStream);
   });
 }
