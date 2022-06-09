@@ -280,7 +280,7 @@ JSFunction* NewHandler(JSContext* cx, Native handler,
 }
 
 AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
-    JSContext* cx, HandleModuleObject module) {
+    JSContext* cx, Handle<ModuleObject*> module) {
   // TODO: Module is currently hitching a ride with
   // AsyncFunctionGeneratorObject. The reason for this is we have some work in
   // the JITs that make use of this object when we hit AsyncAwait bytecode. At

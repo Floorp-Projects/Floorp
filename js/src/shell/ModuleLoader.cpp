@@ -124,7 +124,7 @@ bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
 }
 
 bool ModuleLoader::registerTestModule(JSContext* cx, HandleObject moduleRequest,
-                                      HandleModuleObject module) {
+                                      Handle<ModuleObject*> module) {
   RootedLinearString path(cx, resolve(cx, moduleRequest, UndefinedHandleValue));
   if (!path) {
     return false;

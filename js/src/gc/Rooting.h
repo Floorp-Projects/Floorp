@@ -26,7 +26,6 @@ class ScriptSourceObject;
 class SavedFrame;
 class Shape;
 class Scope;
-class ModuleObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
@@ -40,7 +39,6 @@ using HandlePlainObject = JS::Handle<PlainObject*>;
 using HandleSavedFrame = JS::Handle<SavedFrame*>;
 using HandleScriptSourceObject = JS::Handle<ScriptSourceObject*>;
 using HandleScope = JS::Handle<Scope*>;
-using HandleModuleObject = JS::Handle<ModuleObject*>;
 
 using MutableHandleShape = JS::MutableHandle<Shape*>;
 using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
@@ -48,7 +46,6 @@ using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
 using MutableHandlePlainObject = JS::MutableHandle<PlainObject*>;
 using MutableHandleSavedFrame = JS::MutableHandle<SavedFrame*>;
 using MutableHandleScope = JS::MutableHandle<Scope*>;
-using MutableHandleModuleObject = JS::MutableHandle<ModuleObject*>;
 using MutableHandleArrayObject = JS::MutableHandle<ArrayObject*>;
 
 using RootedNativeObject = JS::Rooted<NativeObject*>;
@@ -62,7 +59,6 @@ using RootedPlainObject = JS::Rooted<PlainObject*>;
 using RootedSavedFrame = JS::Rooted<SavedFrame*>;
 using RootedScriptSourceObject = JS::Rooted<ScriptSourceObject*>;
 using RootedScope = JS::Rooted<Scope*>;
-using RootedModuleObject = JS::Rooted<ModuleObject*>;
 
 using FunctionVector = JS::GCVector<JSFunction*>;
 using PropertyNameVector = JS::GCVector<PropertyName*>;
