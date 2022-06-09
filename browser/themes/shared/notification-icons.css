@@ -386,3 +386,19 @@
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
 }
+
+/* UPDATE */
+.popup-notification-icon[popupid="update-available"],
+.popup-notification-icon[popupid="update-manual"],
+.popup-notification-icon[popupid="update-other-instance"],
+.popup-notification-icon[popupid="update-restart"] {
+  background: url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  -moz-context-properties: fill;
+  fill: var(--panel-banner-item-update-supported-bgcolor);
+}
+
+.popup-notification-icon[popupid="update-unsupported"] {
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
+  -moz-context-properties: fill;
+  fill: var(--warning-icon-bgcolor);
+}
