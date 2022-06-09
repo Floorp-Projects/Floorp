@@ -512,10 +512,10 @@ void JS::ProfilingFrameIterator::settleFrames() {
     return;
   }
 
-  if (isWasm() && wasmIter().done() && wasmIter().unwoundIonCallerFP()) {
-    uint8_t* fp = wasmIter().unwoundIonCallerFP();
+  if (isWasm() && wasmIter().done() && wasmIter().unwoundJitCallerFP()) {
+    uint8_t* fp = wasmIter().unwoundJitCallerFP();
     iteratorDestroy();
-    // Using this ctor will skip the first ion->wasm frame, which is
+    // Using this ctor will skip the first jit->wasm frame, which is
     // needed because the profiling iterator doesn't know how to unwind
     // when the callee has no script.
     new (storage())

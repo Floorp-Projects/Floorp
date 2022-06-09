@@ -60,8 +60,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       lineOrBytecode_(0),
       fp_(fp ? fp : activation->wasmExitFP()),
       instance_(nullptr),
-      unwoundIonCallerFP_(nullptr),
-      unwoundIonFrameType_(jit::FrameType(-1)),
+      unwoundJitCallerFP_(nullptr),
+      unwoundJitFrameType_(jit::FrameType(-1)),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr) {
@@ -97,7 +97,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
   // was Ion, we can just skip the wasm frames.
 
   popFrame();
-  MOZ_ASSERT(!done() || unwoundIonCallerFP_);
+  MOZ_ASSERT(!done() || unwoundJitCallerFP_);
 }
 
 bool WasmFrameIter::done() const {
@@ -147,11 +147,11 @@ void WasmFrameIter::popFrame() {
     // Mark the frame as such and untag FP.
     MOZ_ASSERT(!LookupCode(fp_->returnAddress()));
 
-    unwoundIonCallerFP_ = fp_->jitEntryCaller();
-    unwoundIonFrameType_ = FrameType::Exit;
+    unwoundJitCallerFP_ = fp_->jitEntryCaller();
+    unwoundJitFrameType_ = FrameType::Exit;
 
     if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundIonCallerFP());
+      activation_->setJSExitFP(unwoundJitCallerFP());
       unwoundAddressOfReturnAddress_ = fp_->addressOfReturnAddress();
     }
 
@@ -199,15 +199,15 @@ void WasmFrameIter::popFrame() {
     //
     // The next value of FP is just a regular jit frame used as a marker to
     // know that we should transition to a JSJit frame iterator.
-    unwoundIonCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
-    unwoundIonFrameType_ = FrameType::JSJitToWasm;
+    unwoundJitCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
+    unwoundJitFrameType_ = FrameType::JSJitToWasm;
 
     fp_ = nullptr;
     code_ = nullptr;
     codeRange_ = nullptr;
 
     if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundIonCallerFP());
+      activation_->setJSExitFP(unwoundJitCallerFP());
       unwoundAddressOfReturnAddress_ = prevFP->addressOfReturnAddress();
     }
 
@@ -320,10 +320,10 @@ DebugFrame* WasmFrameIter::debugFrame() const {
   return DebugFrame::from(fp_);
 }
 
-jit::FrameType WasmFrameIter::unwoundIonFrameType() const {
-  MOZ_ASSERT(unwoundIonCallerFP_);
-  MOZ_ASSERT(unwoundIonFrameType_ != jit::FrameType(-1));
-  return unwoundIonFrameType_;
+jit::FrameType WasmFrameIter::unwoundJitFrameType() const {
+  MOZ_ASSERT(unwoundJitCallerFP_);
+  MOZ_ASSERT(unwoundJitFrameType_ != jit::FrameType(-1));
+  return unwoundJitFrameType_;
 }
 
 uint8_t* WasmFrameIter::resumePCinCurrentFrame() const {
@@ -865,7 +865,7 @@ ProfilingFrameIterator::ProfilingFrameIterator()
       callerFP_(nullptr),
       callerPC_(nullptr),
       stackAddress_(nullptr),
-      unwoundIonCallerFP_(nullptr),
+      unwoundJitCallerFP_(nullptr),
       exitReason_(ExitReason::Fixed::None) {
   MOZ_ASSERT(done());
 }
@@ -876,7 +876,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation)
       callerFP_(nullptr),
       callerPC_(nullptr),
       stackAddress_(nullptr),
-      unwoundIonCallerFP_(nullptr),
+      unwoundJitCallerFP_(nullptr),
       exitReason_(activation.wasmExitReason()) {
   initFromExitFP(activation.wasmExitFP());
 }
@@ -887,7 +887,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const Frame* fp)
       callerFP_(nullptr),
       callerPC_(nullptr),
       stackAddress_(nullptr),
-      unwoundIonCallerFP_(nullptr),
+      unwoundJitCallerFP_(nullptr),
       exitReason_(ExitReason::Fixed::ImportJit) {
   MOZ_ASSERT(fp);
   initFromExitFP(fp);
@@ -944,7 +944,7 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
     // tagged JIT caller's frame.
     AssertDirectJitCall(fp->jitEntryCaller());
 
-    unwoundIonCallerFP_ = fp->jitEntryCaller();
+    unwoundJitCallerFP_ = fp->jitEntryCaller();
     MOZ_ASSERT(done());
     return;
   }
@@ -967,7 +967,7 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
     case CodeRange::JitEntry:
       callerPC_ = nullptr;
       callerFP_ = nullptr;
-      unwoundIonCallerFP_ = fp->rawCaller();
+      unwoundJitCallerFP_ = fp->rawCaller();
       break;
     case CodeRange::Function:
       fp = fp->wasmCaller();
@@ -1315,7 +1315,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
       callerFP_(nullptr),
       callerPC_(nullptr),
       stackAddress_(nullptr),
-      unwoundIonCallerFP_(nullptr),
+      unwoundJitCallerFP_(nullptr),
       exitReason_(ExitReason::Fixed::None) {
   // Let wasmExitFP take precedence to StartUnwinding when it is set since
   // during the body of an exit stub, the register state may not be valid
@@ -1345,7 +1345,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     // StartUnwinding would not have unwound then.
     if (unwindState.codeRange->isFunction() &&
         Frame::isExitOrJitEntryFP(reinterpret_cast<uint8_t*>(state.fp))) {
-      unwoundIonCallerFP_ = callerFP_;
+      unwoundJitCallerFP_ = callerFP_;
     }
   } else {
     callerFP_ = Frame::fromUntaggedWasmExitFP(unwindState.fp)->rawCaller();
@@ -1354,13 +1354,13 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     // the caller is a fast JIT caller which called into a wasm function.
     if (Frame::isExitOrJitEntryFP(callerFP_)) {
       MOZ_ASSERT(unwindState.codeRange->isFunction());
-      unwoundIonCallerFP_ = Frame::toJitEntryCaller(callerFP_);
+      unwoundJitCallerFP_ = Frame::toJitEntryCaller(callerFP_);
     }
   }
 
   if (unwindState.codeRange->isJitEntry()) {
-    MOZ_ASSERT(!unwoundIonCallerFP_);
-    unwoundIonCallerFP_ = callerFP_;
+    MOZ_ASSERT(!unwoundJitCallerFP_);
+    unwoundJitCallerFP_ = callerFP_;
   }
 
   if (unwindState.codeRange->isInterpEntry()) {
@@ -1383,7 +1383,7 @@ void ProfilingFrameIterator::operator++() {
     return;
   }
 
-  if (unwoundIonCallerFP_) {
+  if (unwoundJitCallerFP_) {
     MOZ_ASSERT(codeRange_->isFunction() || codeRange_->isJitEntry());
     callerPC_ = nullptr;
     callerFP_ = nullptr;
@@ -1416,7 +1416,7 @@ void ProfilingFrameIterator::operator++() {
     // the fake exit frame.
     MOZ_ASSERT(!codeRange_);
     AssertDirectJitCall(callerFP_);
-    unwoundIonCallerFP_ = Frame::toJitEntryCaller(callerFP_);
+    unwoundJitCallerFP_ = Frame::toJitEntryCaller(callerFP_);
     MOZ_ASSERT(done());
     return;
   }
@@ -1424,7 +1424,7 @@ void ProfilingFrameIterator::operator++() {
   MOZ_ASSERT(codeRange_);
 
   if (codeRange_->isJitEntry()) {
-    unwoundIonCallerFP_ = callerFP_;
+    unwoundJitCallerFP_ = callerFP_;
     MOZ_ASSERT(!done());
     return;
   }

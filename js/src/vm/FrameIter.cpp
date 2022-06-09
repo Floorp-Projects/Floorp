@@ -180,7 +180,7 @@ void JitFrameIter::settle() {
 
   if (isWasm()) {
     const wasm::WasmFrameIter& wasmFrame = asWasm();
-    if (!wasmFrame.unwoundIonCallerFP()) {
+    if (!wasmFrame.unwoundJitCallerFP()) {
       return;
     }
 
@@ -195,8 +195,8 @@ void JitFrameIter::settle() {
     // The wasm iterator has saved the previous jit frame pointer for us.
 
     MOZ_ASSERT(wasmFrame.done());
-    uint8_t* prevFP = wasmFrame.unwoundIonCallerFP();
-    jit::FrameType prevFrameType = wasmFrame.unwoundIonFrameType();
+    uint8_t* prevFP = wasmFrame.unwoundJitCallerFP();
+    jit::FrameType prevFrameType = wasmFrame.unwoundJitFrameType();
 
     if (mustUnwindActivation_) {
       act_->setJSExitFP(prevFP);

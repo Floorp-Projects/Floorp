@@ -66,8 +66,8 @@ class WasmFrameIter {
   unsigned lineOrBytecode_;
   Frame* fp_;
   Instance* instance_;
-  uint8_t* unwoundIonCallerFP_;
-  jit::FrameType unwoundIonFrameType_;
+  uint8_t* unwoundJitCallerFP_;
+  jit::FrameType unwoundJitFrameType_;
   Unwind unwind_;
   void** unwoundAddressOfReturnAddress_;
   uint8_t* resumePCinCurrentFrame_;
@@ -92,8 +92,8 @@ class WasmFrameIter {
   void** unwoundAddressOfReturnAddress() const;
   bool debugEnabled() const;
   DebugFrame* debugFrame() const;
-  jit::FrameType unwoundIonFrameType() const;
-  uint8_t* unwoundIonCallerFP() const { return unwoundIonCallerFP_; }
+  jit::FrameType unwoundJitFrameType() const;
+  uint8_t* unwoundJitCallerFP() const { return unwoundJitCallerFP_; }
   Frame* frame() const { return fp_; }
   Instance* instance() const { return instance_; }
 
@@ -174,7 +174,7 @@ class ProfilingFrameIterator {
   uint8_t* callerFP_;
   void* callerPC_;
   void* stackAddress_;
-  uint8_t* unwoundIonCallerFP_;
+  uint8_t* unwoundJitCallerFP_;
   ExitReason exitReason_;
 
   void initFromExitFP(const Frame* fp);
@@ -202,9 +202,9 @@ class ProfilingFrameIterator {
     MOZ_ASSERT(!done());
     return stackAddress_;
   }
-  uint8_t* unwoundIonCallerFP() const {
+  uint8_t* unwoundJitCallerFP() const {
     MOZ_ASSERT(done());
-    return unwoundIonCallerFP_;
+    return unwoundJitCallerFP_;
   }
   const char* label() const;
 };
