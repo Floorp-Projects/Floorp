@@ -1,11 +1,36 @@
 #[macro_export]
 macro_rules! scope {
-    ($name:expr) => {
+    // Note: literal patterns provided as an optimization since they can skip an allocation.
+    ($name:literal) => {
         // Note: callstack_depth is 0 since this has significant overhead
-        let _tracy_span = $crate::tracy_client::Span::new($name, "", file!(), line!(), 0);
+        let _tracy_span = $crate::tracy_client::span!($name, 0);
+    };
+    ($name:literal, $data:expr) => {
+        // Note: callstack_depth is 0 since this has significant overhead
+        let _tracy_span = $crate::tracy_client::span!($name, 0);
+        _tracy_span.emit_text($data);
+    };
+    ($name:expr) => {
+        let function_name = {
+            struct S;
+            let type_name = core::any::type_name::<S>();
+            &type_name[..type_name.len() - 3]
+        };
+        let _tracy_span = $crate::tracy_client::Client::running()
+            .expect("scope! without a running tracy_client::Client")
+            // Note: callstack_depth is 0 since this has significant overhead
+            .span_alloc($name, function_name, file!(), line!(), 0);
     };
     ($name:expr, $data:expr) => {
-        let _tracy_span = $crate::tracy_client::Span::new($name, "", file!(), line!(), 0);
+        let function_name = {
+            struct S;
+            let type_name = core::any::type_name::<S>();
+            &type_name[..type_name.len() - 3]
+        };
+        let _tracy_span = $crate::tracy_client::Client::running()
+            .expect("scope! without a running tracy_client::Client")
+            // Note: callstack_depth is 0 since this has significant overhead
+            .span_alloc($name, function_name, file!(), line!(), 0);
         _tracy_span.emit_text($data);
     };
 }
@@ -25,7 +50,9 @@ macro_rules! register_thread {
         $crate::register_thread!(&thread_name);
     };
     ($name:expr) => {
-        $crate::tracy_client::set_thread_name($name);
+        $crate::tracy_client::Client::running()
+            .expect("register_thread! without a running tracy_client::Client")
+            .set_thread_name($name);
     };
 }
 
@@ -34,6 +61,8 @@ macro_rules! register_thread {
 #[macro_export]
 macro_rules! finish_frame {
     () => {
-        $crate::tracy_client::finish_continuous_frame!();
+        $crate::tracy_client::Client::running()
+            .expect("finish_frame! without a running tracy_client::Client")
+            .frame_mark();
     };
 }

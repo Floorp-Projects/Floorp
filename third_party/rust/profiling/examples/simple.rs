@@ -20,6 +20,10 @@ fn main() {
     feature = "profile-with-tracy",
 ))]
 fn main() {
+    // Starting the Tracy client is necessary before any invoking any of its APIs
+    #[cfg(feature = "profile-with-tracy")]
+    tracy_client::Client::start();
+
     // Good to call this on any threads that are created to get clearer profiling results
     profiling::register_thread!("Main Thread");
 
@@ -39,6 +43,34 @@ fn main() {
     profiling::puffin::set_scopes_on(true);
 
     println!("Starting loop, profiler can now be attached");
+
+    // Test that using this macro multiple times in the same scope level will compile.
+    //
+    // optick backend currently won't work with multiple `profiling::scope!` in the same scope
+    #[cfg(not(any(feature = "profile-with-optick")))]
+    {
+        profiling::scope!("Outer scope");
+        burn_time(5);
+        profiling::scope!("Inner scope");
+        burn_time(5);
+    }
+
+    // Test that non-literals can be used
+    //
+    // Does not work with these two backends:
+    #[cfg(not(any(feature = "profile-with-puffin", feature = "profile-with-tracing")))]
+    // optick backend currently won't work with multiple `profiling::scope!` in the same scope
+    #[cfg(not(any(feature = "profile-with-optick")))]
+    {
+        let scope_name = String::from("Some scope name");
+        profiling::scope!(&scope_name);
+        burn_time(5);
+
+        let another_scope_name = String::from("Another scope name");
+        let some_data = String::from("Some data");
+        profiling::scope!(&another_scope_name, &some_data);
+        burn_time(5);
+    }
 
     loop {
         // Generate some profiling info

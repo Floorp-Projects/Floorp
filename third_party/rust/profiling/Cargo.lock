@@ -507,6 +507,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
+name = "generator"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1d9279ca822891c1a4dae06d185612cf8fc6acfe5dff37781b41297811b12ee"
+dependencies = [
+ "cc",
+ "libc",
+ "log",
+ "rustversion",
+ "winapi",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -714,6 +727,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff50ecb28bb86013e935fb6683ab1f6d3a20016f123c76fd4c27470076ac30f5"
+dependencies = [
+ "cfg-if 1.0.0",
+ "generator",
+ "scoped-tls",
+ "tracing",
+ "tracing-subscriber 0.3.7",
+]
+
+[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -727,6 +753,15 @@ name = "matchers"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f099785f7595cc4b4553a174ce30dd7589ef93391ff414dbb67f62392b9e0ce1"
+dependencies = [
+ "regex-automata",
+]
+
+[[package]]
+name = "matchers"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8263075bb86c5a1b1427b5ae862e8889656f126e9f77c484496e8b47cf5c5558"
 dependencies = [
  "regex-automata",
 ]
@@ -961,9 +996,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.9.0"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da32515d9f6e6e489d7bc9d84c71b060db7247dc035bbe44eac88cf87486d8d5"
+checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
 
 [[package]]
 name = "optick"
@@ -1062,7 +1097,7 @@ dependencies = [
 
 [[package]]
 name = "profiling"
-version = "1.0.5"
+version = "1.0.6"
 dependencies = [
  "bincode",
  "env_logger",
@@ -1078,17 +1113,17 @@ dependencies = [
  "rafx",
  "superluminal-perf",
  "tracing",
- "tracing-subscriber",
+ "tracing-subscriber 0.2.25",
  "tracing-tracy",
- "tracy-client 0.12.6",
+ "tracy-client 0.13.2",
  "winit",
 ]
 
 [[package]]
 name = "profiling-procmacros"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "151b4774158c69aae073abb06d0cf879c4657966e6f2d7535d9b0e94e85500af"
+checksum = "98eee3c112f2a6f784b6713fe1d7fb7d6506e066121c0a49371fdb976f72bae5"
 dependencies = [
  "quote",
  "syn",
@@ -1321,6 +1356,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2cc38e8fa666e2de3c4aba7edeb5ffc5246c1c2ed0e3d17e560aeeba736b23f"
+
+[[package]]
 name = "ryu"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1524,9 +1565,9 @@ dependencies = [
 
 [[package]]
 name = "thread_local"
-version = "1.1.3"
+version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8018d24e04c95ac8790716a5987d0fec4f8b27249ffa0f7d33f1369bdfb88cbd"
+checksum = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180"
 dependencies = [
  "once_cell",
 ]
@@ -1602,7 +1643,7 @@ dependencies = [
  "ansi_term",
  "chrono",
  "lazy_static",
- "matchers",
+ "matchers 0.0.1",
  "regex",
  "serde",
  "serde_json",
@@ -1616,13 +1657,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-subscriber"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5312f325fe3588e277415f5a6cca1f4ccad0f248c4cd5a4bd33032d7286abc22"
+dependencies = [
+ "ansi_term",
+ "lazy_static",
+ "matchers 0.1.0",
+ "regex",
+ "sharded-slab",
+ "smallvec",
+ "thread_local",
+ "tracing",
+ "tracing-core",
+ "tracing-log",
+]
+
+[[package]]
 name = "tracing-tracy"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b668a0e08f29842a38973cc33317dba03a3062538c762df7425aa6397bce480a"
 dependencies = [
  "tracing-core",
- "tracing-subscriber",
+ "tracing-subscriber 0.2.25",
  "tracy-client 0.10.0",
 ]
 
@@ -1637,11 +1696,13 @@ dependencies = [
 
 [[package]]
 name = "tracy-client"
-version = "0.12.6"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c0e37fbf87980abd5c35c3d86fd150c5ed349c3ae90959ba1877c799388203"
+checksum = "42ebfe7a24c18b5ba86d8920c124b41b942352f863fbe0c84d3d63428fa1860f"
 dependencies = [
- "tracy-client-sys 0.16.0",
+ "loom",
+ "once_cell",
+ "tracy-client-sys 0.17.0",
 ]
 
 [[package]]
@@ -1655,9 +1716,9 @@ dependencies = [
 
 [[package]]
 name = "tracy-client-sys"
-version = "0.16.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6226e4e77f0d46ce7ebb0a4b1daa82790035248b75bbf605b932a1d7b3b22b6d"
+checksum = "9012b9dfeccaff16e93f5a8b02336125113a80a769902e679d334cbdd4d83f3b"
 dependencies = [
  "cc",
 ]
