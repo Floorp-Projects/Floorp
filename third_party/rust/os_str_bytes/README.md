@@ -19,7 +19,7 @@ Add the following lines to your "Cargo.toml" file:
 
 ```toml
 [dependencies]
-os_str_bytes = "6.0"
+os_str_bytes = "6.1"
 ```
 
 See the [documentation] for available functionality and examples.
@@ -40,6 +40,16 @@ The minimum supported Rust toolchain version depends on the platform:
         <td>nightly (<a href="https://doc.rust-lang.org/unstable-book/library-features/sgx-platform.html"><code>sgx_platform</code></a>)</td>
     </tr>
     <tr>
+        <td>HermitCore</td>
+        <td><code>*-*-hermit</code></td>
+        <td>1.52.0</td>
+    </tr>
+    <tr>
+        <td>SOLID</td>
+        <td><code>*-*-solid_asp3(-*)</code></td>
+        <td>1.57.0</td>
+    </tr>
+    <tr>
         <td>Unix</td>
         <td>Unix</td>
         <td>1.52.0</td>
@@ -56,7 +66,7 @@ The minimum supported Rust toolchain version depends on the platform:
     </tr>
     <tr>
         <td>Windows</td>
-        <td><code>*-windows-*</code></td>
+        <td><code>*-*-windows-*</code></td>
         <td>1.52.0</td>
     </tr>
 </table>
@@ -68,7 +78,7 @@ crate's minor version:
 
 ```toml
 [dependencies]
-os_str_bytes = "~6.0"
+os_str_bytes = "~6.1"
 ```
 
 ## License
