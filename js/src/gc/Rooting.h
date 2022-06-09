@@ -23,7 +23,6 @@ class ArrayObject;
 class GlobalObject;
 class PlainObject;
 class ScriptSourceObject;
-class SavedFrame;
 class Shape;
 class Scope;
 
@@ -36,7 +35,6 @@ using HandleLinearString = JS::Handle<JSLinearString*>;
 using HandlePropertyName = JS::Handle<PropertyName*>;
 using HandleArrayObject = JS::Handle<ArrayObject*>;
 using HandlePlainObject = JS::Handle<PlainObject*>;
-using HandleSavedFrame = JS::Handle<SavedFrame*>;
 using HandleScriptSourceObject = JS::Handle<ScriptSourceObject*>;
 using HandleScope = JS::Handle<Scope*>;
 
@@ -44,7 +42,6 @@ using MutableHandleShape = JS::MutableHandle<Shape*>;
 using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
 using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
 using MutableHandlePlainObject = JS::MutableHandle<PlainObject*>;
-using MutableHandleSavedFrame = JS::MutableHandle<SavedFrame*>;
 using MutableHandleScope = JS::MutableHandle<Scope*>;
 using MutableHandleArrayObject = JS::MutableHandle<ArrayObject*>;
 
@@ -56,7 +53,6 @@ using RootedPropertyName = JS::Rooted<PropertyName*>;
 using RootedArrayObject = JS::Rooted<ArrayObject*>;
 using RootedGlobalObject = JS::Rooted<GlobalObject*>;
 using RootedPlainObject = JS::Rooted<PlainObject*>;
-using RootedSavedFrame = JS::Rooted<SavedFrame*>;
 using RootedScriptSourceObject = JS::Rooted<ScriptSourceObject*>;
 using RootedScope = JS::Rooted<Scope*>;
 

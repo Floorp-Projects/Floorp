@@ -1501,7 +1501,7 @@ bool DebuggerFrame::CallData::olderSavedFrameGetter() {
     return false;
   }
 
-  RootedSavedFrame result(cx);
+  Rooted<SavedFrame*> result(cx);
   if (!DebuggerFrame::getOlderSavedFrame(cx, frame, &result)) {
     return false;
   }
@@ -1513,7 +1513,7 @@ bool DebuggerFrame::CallData::olderSavedFrameGetter() {
 /* static */
 bool DebuggerFrame::getOlderSavedFrame(JSContext* cx,
                                        Handle<DebuggerFrame*> frame,
-                                       MutableHandleSavedFrame result) {
+                                       MutableHandle<SavedFrame*> result) {
   if (frame->isOnStack()) {
     Debugger* dbg = frame->owner();
     FrameIter iter = frame->getFrameIter(cx);
@@ -1532,7 +1532,7 @@ bool DebuggerFrame::getOlderSavedFrame(JSContext* cx,
         if (!causeAtom) {
           return false;
         }
-        RootedSavedFrame stackObj(cx, activation.asyncStack());
+        Rooted<SavedFrame*> stackObj(cx, activation.asyncStack());
 
         return cx->realm()->savedStacks().copyAsyncStack(
             cx, stackObj, causeAtom, result, mozilla::Nothing());

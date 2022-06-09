@@ -337,10 +337,9 @@ class DebugAPI {
 
   // If necessary, record an object that was just allocated for any observing
   // debuggers.
-  [[nodiscard]] static inline bool onLogAllocationSite(JSContext* cx,
-                                                       JSObject* obj,
-                                                       HandleSavedFrame frame,
-                                                       mozilla::TimeStamp when);
+  [[nodiscard]] static inline bool onLogAllocationSite(
+      JSContext* cx, JSObject* obj, Handle<SavedFrame*> frame,
+      mozilla::TimeStamp when);
 
   // Announce to the debugger that a global object is being collected by the
   // specified major GC.
@@ -355,7 +354,7 @@ class DebugAPI {
   static void slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,
                                              JS::Realm::DebuggerVector& dbgs);
   [[nodiscard]] static bool slowPathOnLogAllocationSite(
-      JSContext* cx, HandleObject obj, HandleSavedFrame frame,
+      JSContext* cx, HandleObject obj, Handle<SavedFrame*> frame,
       mozilla::TimeStamp when, JS::Realm::DebuggerVector& dbgs);
   [[nodiscard]] static bool slowPathOnLeaveFrame(JSContext* cx,
                                                  AbstractFramePtr frame,

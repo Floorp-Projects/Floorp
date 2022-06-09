@@ -28,7 +28,7 @@ BEGIN_TEST(testSavedStacks_withNoStack) {
 END_TEST(testSavedStacks_withNoStack)
 
 BEGIN_TEST(testSavedStacks_ApiDefaultValues) {
-  js::RootedSavedFrame savedFrame(cx, nullptr);
+  JS::Rooted<js::SavedFrame*> savedFrame(cx, nullptr);
 
   JSPrincipals* principals = cx->realm()->principals();
 

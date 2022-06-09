@@ -172,9 +172,9 @@ class DebuggerFrame : public NativeObject {
   [[nodiscard]] static bool getAsyncPromise(
       JSContext* cx, Handle<DebuggerFrame*> frame,
       MutableHandle<DebuggerObject*> result);
-  [[nodiscard]] static bool getOlderSavedFrame(JSContext* cx,
-                                               Handle<DebuggerFrame*> frame,
-                                               MutableHandleSavedFrame result);
+  [[nodiscard]] static bool getOlderSavedFrame(
+      JSContext* cx, Handle<DebuggerFrame*> frame,
+      MutableHandle<SavedFrame*> result);
   [[nodiscard]] static bool getThis(JSContext* cx, Handle<DebuggerFrame*> frame,
                                     MutableHandleValue result);
   static DebuggerFrameType getType(Handle<DebuggerFrame*> frame);

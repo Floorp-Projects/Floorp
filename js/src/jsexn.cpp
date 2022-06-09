@@ -354,7 +354,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
 
   // Throw it.
   RootedValue errValue(cx, ObjectValue(*errObject));
-  RootedSavedFrame nstack(cx);
+  Rooted<SavedFrame*> nstack(cx);
   if (stack) {
     nstack = &stack->as<SavedFrame>();
   }
@@ -654,7 +654,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
   ownedReport.errorNumber = JSMSG_UNCAUGHT_EXCEPTION;
 
   bool skippedAsync;
-  RootedSavedFrame frame(
+  Rooted<SavedFrame*> frame(
       cx, UnwrapSavedFrame(cx, cx->realm()->principals(), stack,
                            SavedFrameSelfHosted::Exclude, skippedAsync));
   if (frame) {

@@ -1379,7 +1379,7 @@ static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject options(
       cx, &GetFunctionNativeReserved(&args.callee(), 1).toObject());
 
-  RootedSavedFrame stack(cx, nullptr);
+  Rooted<SavedFrame*> stack(cx, nullptr);
   bool isExplicit;
 
   RootedValue v(cx);

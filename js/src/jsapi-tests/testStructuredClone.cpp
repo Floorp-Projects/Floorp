@@ -310,7 +310,7 @@ BEGIN_TEST(testStructuredClone_SavedFrame) {
     JS::RootedObject srcObj(cx, &srcVal.toObject());
 
     CHECK(srcObj->is<js::SavedFrame>());
-    js::RootedSavedFrame srcFrame(cx, &srcObj->as<js::SavedFrame>());
+    JS::Rooted<js::SavedFrame*> srcFrame(cx, &srcObj->as<js::SavedFrame>());
 
     CHECK(srcFrame->getPrincipals() == pp->principals);
 

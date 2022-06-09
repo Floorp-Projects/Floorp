@@ -270,7 +270,7 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
                                                AbstractFramePtr frame,
                                                ResumeMode resumeMode,
                                                HandleValue rv,
-                                               HandleSavedFrame exnStack) {
+                                               Handle<SavedFrame*> exnStack) {
   RootedValue rval(cx, rv);
 
   // The value passed in here is unwrapped and has no guarantees about what
@@ -314,7 +314,7 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
 }
 static bool ApplyFrameResumeMode(JSContext* cx, AbstractFramePtr frame,
                                  ResumeMode resumeMode, HandleValue rval) {
-  RootedSavedFrame nullStack(cx);
+  Rooted<SavedFrame*> nullStack(cx);
   return ApplyFrameResumeMode(cx, frame, resumeMode, rval, nullStack);
 }
 
@@ -1220,7 +1220,7 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
   // Now that we've run all the handlers, extract the final resumption mode. */
   ResumeMode completionResumeMode;
   RootedValue completionValue(cx);
-  RootedSavedFrame completionStack(cx);
+  Rooted<SavedFrame*> completionStack(cx);
   completion.get().toResumeMode(completionResumeMode, &completionValue,
                                 &completionStack);
 
@@ -1339,7 +1339,7 @@ bool DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
   // for each 'onExceptionUnwind' hook that has been registered, and we also
   // only do it if the debuggerList contains items in order to avoid extra work.
   RootedValue exc(cx);
-  RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
+  Rooted<SavedFrame*> stack(cx, cx->getPendingExceptionStack());
   if (!cx->getPendingException(&exc)) {
     return false;
   }
@@ -1966,7 +1966,7 @@ Completion Completion::fromJSResult(JSContext* cx, bool ok, const Value& rv) {
   }
 
   RootedValue exception(cx);
-  RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
+  Rooted<SavedFrame*> stack(cx, cx->getPendingExceptionStack());
   bool getSucceeded = cx->getPendingException(&exception);
   cx->clearPendingException();
   if (!getSucceeded) {
@@ -2153,9 +2153,9 @@ void Completion::updateFromHookResult(ResumeMode resumeMode,
 
 struct MOZ_STACK_CLASS Completion::ToResumeModeMatcher {
   MutableHandleValue value;
-  MutableHandleSavedFrame exnStack;
+  MutableHandle<SavedFrame*> exnStack;
   ToResumeModeMatcher(MutableHandleValue value,
-                      MutableHandleSavedFrame exnStack)
+                      MutableHandle<SavedFrame*> exnStack)
       : value(value), exnStack(exnStack) {}
 
   ResumeMode operator()(const Return& ret) {
@@ -2191,7 +2191,7 @@ struct MOZ_STACK_CLASS Completion::ToResumeModeMatcher {
 };
 
 void Completion::toResumeMode(ResumeMode& resumeMode, MutableHandleValue value,
-                              MutableHandleSavedFrame exnStack) const {
+                              MutableHandle<SavedFrame*> exnStack) const {
   resumeMode = variant.match(ToResumeModeMatcher(value, exnStack));
 }
 
@@ -2859,7 +2859,7 @@ Maybe<double> DebugAPI::allocationSamplingProbability(GlobalObject* global) {
 
 /* static */
 bool DebugAPI::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj,
-                                           HandleSavedFrame frame,
+                                           Handle<SavedFrame*> frame,
                                            mozilla::TimeStamp when,
                                            Realm::DebuggerVector& dbgs) {
   MOZ_ASSERT(!dbgs.empty());
@@ -2900,7 +2900,7 @@ bool Debugger::isDebuggeeUnbarriered(const Realm* realm) const {
 }
 
 bool Debugger::appendAllocationSite(JSContext* cx, HandleObject obj,
-                                    HandleSavedFrame frame,
+                                    Handle<SavedFrame*> frame,
                                     mozilla::TimeStamp when) {
   MOZ_ASSERT(trackingAllocationSites);
 
