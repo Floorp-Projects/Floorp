@@ -1371,19 +1371,9 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   GenPrintf(DebugChannel::Function, masm, "\n");
 
   MOZ_ASSERT(masm.framePushed() == 0);
-#ifdef JS_CODEGEN_ARM64
   AssertExpectedSP(masm);
-  masm.loadPtr(Address(sp, 0), lr);
-  masm.addToStackPtr(Imm32(8));
-  // Copy SP into PSP to enforce return-point invariants (SP == PSP).
-  // `addToStackPtr` won't sync them because SP is the active pointer here.
-  // For the same reason, we can't use initPseudoStackPtr to do the sync, so
-  // we have to do it "by hand".  Omitting this causes many tests to segfault.
-  masm.moveStackPtrTo(PseudoStackPointer);
-  masm.abiret();
-#else
-  masm.ret();
-#endif
+  GenerateJitEntryEpilogue(masm);
+  MOZ_ASSERT(masm.framePushed() == 0);
 
   // Generate an OOL call to the C++ conversion path.
   if (fe.funcType().args().length()) {
