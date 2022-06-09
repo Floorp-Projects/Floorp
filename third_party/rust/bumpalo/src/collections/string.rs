@@ -13,6 +13,10 @@
 //! This module contains the [`String`] type and several error types that may
 //! result from working with [`String`]s.
 //!
+//! This module is a fork of the [`std::string`] module, that uses a bump allocator.
+//!
+//! [`std::string`]: https://doc.rust-lang.org/std/string/index.html
+//!
 //! # Examples
 //!
 //! You can create a new [`String`] from a string literal with [`String::from_str_in`]:
@@ -25,19 +29,8 @@
 //! let s = String::from_str_in("world", &b);
 //! ```
 //!
-//! You can create a new [`String`] from an existing one by concatenating with
-//! `+`:
-//!
 //! [`String`]: struct.String.html
 //! [`String::from_str_in`]: struct.String.html#method.from_str_in
-//!
-//! ```
-//! use bumpalo::{Bump, collections::String};
-//!
-//! let s = "Hello".to_string();
-//!
-//! let message = s + " world!";
-//! ```
 //!
 //! If you have a vector of valid UTF-8 bytes, you can make a [`String`] out of
 //! it. You can do the reverse too.
@@ -74,8 +67,10 @@ use core::ptr;
 use core::str::{self, Chars, Utf8Error};
 use core_alloc::borrow::Cow;
 
-/// Like the `format!` macro for creating `std::string::String`s but for
-/// `bumpalo::collections::String`.
+/// Like the [`format!`] macro, but for creating [`bumpalo::collections::String`]s.
+///
+/// [`format!`]: https://doc.rust-lang.org/std/macro.format.html
+/// [`bumpalo::collections::String`]: collections/string/struct.String.html
 ///
 /// # Examples
 ///
@@ -109,11 +104,11 @@ macro_rules! format {
 /// contents of the string. It has a close relationship with its borrowed
 /// counterpart, the primitive [`str`].
 ///
-/// [`str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
+/// [`str`]: https://doc.rust-lang.org/std/primitive.str.html
 ///
 /// # Examples
 ///
-/// You can create a `String` from a literal string with [`String::from_iter_in`]:
+/// You can create a `String` from a literal string with [`String::from_str_in`]:
 ///
 /// ```
 /// use bumpalo::{Bump, collections::String};
@@ -137,8 +132,7 @@ macro_rules! format {
 /// hello.push_str("orld!");
 /// ```
 ///
-/// [`String::from_iter_in`]: #method.from_iter_in
-/// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+/// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
 /// [`push`]: #method.push
 /// [`push_str`]: #method.push_str
 ///
@@ -161,33 +155,9 @@ macro_rules! format {
 ///
 /// [`from_utf8`]: #method.from_utf8
 ///
-/// # UTF-8
-///
-/// `String`s are always valid UTF-8. This has a few implications, the first of
-/// which is that if you need a non-UTF-8 string, consider [`OsString`]. It is
-/// similar, but without the UTF-8 constraint. The second implication is that
-/// you cannot index into a `String`:
-///
-/// ```compile_fail,E0277
-/// let s = "hello";
-///
-/// println!("The first letter of s is {}", s[0]); // ERROR!!!
-/// ```
-///
-/// [`OsString`]: https://doc.rust-lang.org/nightly/std/ffi/struct.OsString.html
-///
-/// Indexing is intended to be a constant-time operation, but UTF-8 encoding
-/// does not allow us to do this. Furthermore, it's not clear what sort of
-/// thing the index should return: a byte, a codepoint, or a grapheme cluster.
-/// The [`bytes`] and [`chars`] methods return iterators over the first
-/// two, respectively.
-///
-/// [`bytes`]: #method.bytes
-/// [`chars`]: #method.chars
-///
 /// # Deref
 ///
-/// `String`s implement [`Deref`]`<Target=str>`, and so inherit all of [`str`]'s
+/// `String`s implement <code>[`Deref`]<Target = [`str`]></code>, and so inherit all of [`str`]'s
 /// methods. In addition, this means that you can pass a `String` to a
 /// function which takes a [`&str`] by using an ampersand (`&`):
 ///
@@ -278,7 +248,7 @@ macro_rules! format {
 /// assert_eq!(String::from_str_in("Once upon a time...", &b), s);
 /// ```
 ///
-/// [`as_ptr`]: #method.as_ptr
+/// [`as_ptr`]: https://doc.rust-lang.org/std/primitive.str.html#method.as_ptr
 /// [`len`]: #method.len
 /// [`capacity`]: #method.capacity
 ///
@@ -345,8 +315,8 @@ macro_rules! format {
 ///
 /// Here, there's no need to allocate more memory inside the loop.
 ///
-/// [`&str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
-/// [`Deref`]: https://doc.rust-lang.org/nightly/std/ops/trait.Deref.html
+/// [`&str`]: https://doc.rust-lang.org/std/primitive.str.html
+/// [`Deref`]: https://doc.rust-lang.org/std/ops/trait.Deref.html
 /// [`as_str()`]: struct.String.html#method.as_str
 #[derive(PartialOrd, Eq, Ord)]
 pub struct String<'bump> {
@@ -369,10 +339,10 @@ pub struct String<'bump> {
 /// an analogue to `FromUtf8Error`, and you can get one from a `FromUtf8Error`
 /// through the [`utf8_error`] method.
 ///
-/// [`Utf8Error`]: https://doc.rust-lang.org/nightly/std/str/struct.Utf8Error.html
-/// [`std::str`]: https://doc.rust-lang.org/nightly/std/str/index.html
-/// [`u8`]: https://doc.rust-lang.org/nightly/std/primitive.u8.html
-/// [`&str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
+/// [`Utf8Error`]: https://doc.rust-lang.org/std/str/struct.Utf8Error.html
+/// [`std::str`]: https://doc.rust-lang.org/std/str/index.html
+/// [`u8`]: https://doc.rust-lang.org/std/primitive.u8.html
+/// [`&str`]: https://doc.rust-lang.org/std/primitive.str.html
 /// [`utf8_error`]: #method.utf8_error
 ///
 /// # Examples
@@ -400,9 +370,9 @@ pub struct FromUtf8Error<'bump> {
 
 /// A possible error value when converting a `String` from a UTF-16 byte slice.
 ///
-/// This type is the error type for the [`from_utf16`] method on [`String`].
+/// This type is the error type for the [`from_utf16_in`] method on [`String`].
 ///
-/// [`from_utf16`]: struct.String.html#method.from_utf16
+/// [`from_utf16_in`]: struct.String.html#method.from_utf16_in
 /// [`String`]: struct.String.html
 ///
 /// # Examples
@@ -415,8 +385,7 @@ pub struct FromUtf8Error<'bump> {
 /// let b = Bump::new();
 ///
 /// // 𝄞mu<invalid>ic
-/// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
-///           0xD800, 0x0069, 0x0063];
+/// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075, 0xD800, 0x0069, 0x0063];
 ///
 /// assert!(String::from_utf16_in(v, &b).is_err());
 /// ```
@@ -503,7 +472,7 @@ impl<'bump> String<'bump> {
 
     /// Converts a vector of bytes to a `String`.
     ///
-    /// A string slice ([`&str`]) is made of bytes ([`u8`]), and a vector of bytes
+    /// A string (`String`) is made of bytes ([`u8`]), and a vector of bytes
     /// ([`Vec<u8>`]) is made of bytes, so this function converts between the
     /// two. Not all byte slices are valid `String`s, however: `String`
     /// requires that it is valid UTF-8. `from_utf8()` checks to ensure that
@@ -520,7 +489,7 @@ impl<'bump> String<'bump> {
     /// If you need a [`&str`] instead of a `String`, consider
     /// [`str::from_utf8`].
     ///
-    /// The inverse of this method is [`as_bytes`].
+    /// The inverse of this method is [`into_bytes`].
     ///
     /// # Errors
     ///
@@ -562,13 +531,13 @@ impl<'bump> String<'bump> {
     /// with this error.
     ///
     /// [`from_utf8_unchecked`]: struct.String.html#method.from_utf8_unchecked
-    /// [`&str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
-    /// [`u8`]: https://doc.rust-lang.org/nightly/std/primitive.u8.html
+    /// [`&str`]: https://doc.rust-lang.org/std/primitive.str.html
+    /// [`u8`]: https://doc.rust-lang.org/std/primitive.u8.html
     /// [`Vec<u8>`]: ../vec/struct.Vec.html
-    /// [`str::from_utf8`]: https://doc.rust-lang.org/nightly/std/str/fn.from_utf8.html
-    /// [`as_bytes`]: struct.String.html#method.as_bytes
+    /// [`str::from_utf8`]: https://doc.rust-lang.org/std/str/fn.from_utf8.html
+    /// [`into_bytes`]: struct.String.html#method.into_bytes
     /// [`FromUtf8Error`]: struct.FromUtf8Error.html
-    /// [`Err`]: https://doc.rust-lang.org/nightly/std/result/enum.Result.html#variant.Err
+    /// [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
     #[inline]
     pub fn from_utf8(vec: Vec<'bump, u8>) -> Result<String<'bump>, FromUtf8Error<'bump>> {
         match str::from_utf8(&vec) {
@@ -583,15 +552,15 @@ impl<'bump> String<'bump> {
     /// Converts a slice of bytes to a string, including invalid characters.
     ///
     /// Strings are made of bytes ([`u8`]), and a slice of bytes
-    /// ([`&[u8]`][byteslice]) is made of bytes, so this function converts
+    /// ([`&[u8]`][slice]) is made of bytes, so this function converts
     /// between the two. Not all byte slices are valid strings, however: strings
     /// are required to be valid UTF-8. During this conversion,
-    /// `from_utf8_lossy()` will replace any invalid UTF-8 sequences with
+    /// `from_utf8_lossy_in()` will replace any invalid UTF-8 sequences with
     /// [`U+FFFD REPLACEMENT CHARACTER`][U+FFFD], which looks like this: �
     ///
-    /// [`u8`]: https://doc.rust-lang.org/nightly/std/primitive.u8.html
-    /// [byteslice]: https://doc.rust-lang.org/nightly/std/primitive.slice.html
-    /// [U+FFFD]: ../char/constant.REPLACEMENT_CHARACTER.html
+    /// [`u8`]: https://doc.rust-lang.org/std/primitive.u8.html
+    /// [slice]: https://doc.rust-lang.org/std/primitive.slice.html
+    /// [U+FFFD]: https://doc.rust-lang.org/std/char/constant.REPLACEMENT_CHARACTER.html
     ///
     /// If you are sure that the byte slice is valid UTF-8, and you don't want
     /// to incur the overhead of the conversion, there is an unsafe version
@@ -664,10 +633,10 @@ impl<'bump> String<'bump> {
         res
     }
 
-    /// Decode a UTF-16 encoded vector `v` into a `String`, returning [`Err`]
+    /// Decode a UTF-16 encoded slice `v` into a `String`, returning [`Err`]
     /// if `v` contains any invalid data.
     ///
-    /// [`Err`]: https://doc.rust-lang.org/nightly/std/result/enum.Result.html#variant.Err
+    /// [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
     ///
     /// # Examples
     ///
@@ -679,14 +648,11 @@ impl<'bump> String<'bump> {
     /// let b = Bump::new();
     ///
     /// // 𝄞music
-    /// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
-    ///           0x0073, 0x0069, 0x0063];
-    /// assert_eq!(String::from_str_in("𝄞music", &b),
-    ///            String::from_utf16_in(v, &b).unwrap());
+    /// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075, 0x0073, 0x0069, 0x0063];
+    /// assert_eq!(String::from_str_in("𝄞music", &b), String::from_utf16_in(v, &b).unwrap());
     ///
     /// // 𝄞mu<invalid>ic
-    /// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
-    ///           0xD800, 0x0069, 0x0063];
+    /// let v = &[0xD834, 0xDD1E, 0x006d, 0x0075, 0xD800, 0x0069, 0x0063];
     /// assert!(String::from_utf16_in(v, &b).is_err());
     /// ```
     pub fn from_utf16_in(v: &[u16], bump: &'bump Bump) -> Result<String<'bump>, FromUtf16Error> {
@@ -701,7 +667,7 @@ impl<'bump> String<'bump> {
         Ok(ret)
     }
 
-    /// Construct a new `String<'bump>` from an iterator of `char`s.
+    /// Construct a new `String<'bump>` from a string slice.
     ///
     /// # Examples
     ///
@@ -728,7 +694,7 @@ impl<'bump> String<'bump> {
     ///
     /// let b = Bump::new();
     ///
-    /// let s = String::from_str_in("hello", &b);
+    /// let s = String::from_iter_in(['h', 'e', 'l', 'l', 'o'].iter().cloned(), &b);
     /// assert_eq!(s, "hello");
     /// ```
     pub fn from_iter_in<I: IntoIterator<Item = char>>(iter: I, bump: &'bump Bump) -> String<'bump> {
@@ -780,7 +746,7 @@ impl<'bump> String<'bump> {
     ///
     ///     let s = String::from_raw_parts_in(ptr as *mut _, len, capacity, &b);
     ///
-    ///     assert_eq!(String::from_str_in("hello", &b), s);
+    ///     assert_eq!(s, "hello");
     /// }
     /// ```
     #[inline]
@@ -806,8 +772,8 @@ impl<'bump> String<'bump> {
     ///
     /// This function is unsafe because it does not check that the bytes passed
     /// to it are valid UTF-8. If this constraint is violated, it may cause
-    /// memory unsafety issues with future users of the `String`, as the rest of
-    /// the standard library assumes that `String`s are valid UTF-8.
+    /// memory unsafety issues with future users of the `String`,
+    /// as it is assumed that `String`s are valid UTF-8.
     ///
     /// # Examples
     ///
@@ -846,9 +812,8 @@ impl<'bump> String<'bump> {
     /// let b = Bump::new();
     ///
     /// let s = String::from_str_in("hello", &b);
-    /// let bytes = s.into_bytes();
     ///
-    /// assert_eq!(&[104, 101, 108, 108, 111][..], &bytes[..]);
+    /// assert_eq!(s.into_bytes(), [104, 101, 108, 108, 111]);
     /// ```
     #[inline]
     pub fn into_bytes(self) -> Vec<'bump, u8> {
@@ -856,7 +821,9 @@ impl<'bump> String<'bump> {
     }
 
     /// Convert this `String<'bump>` into a `&'bump str`. This is analogous to
-    /// `std::string::String::into_boxed_str`.
+    /// [`std::string::String::into_boxed_str`][into_boxed_str].
+    ///
+    /// [into_boxed_str]: https://doc.rust-lang.org/std/string/struct.String.html#method.into_boxed_str
     ///
     /// # Example
     ///
@@ -866,8 +833,8 @@ impl<'bump> String<'bump> {
     /// let b = Bump::new();
     ///
     /// let s = String::from_str_in("foo", &b);
-    /// let t = s.into_bump_str();
-    /// assert_eq!("foo", t);
+    ///
+    /// assert_eq!(s.into_bump_str(), "foo");
     /// ```
     pub fn into_bump_str(self) -> &'bump str {
         let s = unsafe {
@@ -977,7 +944,7 @@ impl<'bump> String<'bump> {
     /// Panics if the new capacity overflows [`usize`].
     ///
     /// [`reserve_exact`]: struct.String.html#method.reserve_exact
-    /// [`usize`]: https://doc.rust-lang.org/nightly/std/primitive.usize.html
+    /// [`usize`]: https://doc.rust-lang.org/std/primitive.usize.html
     ///
     /// # Examples
     ///
@@ -1101,7 +1068,7 @@ impl<'bump> String<'bump> {
 
     /// Appends the given [`char`] to the end of this `String`.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1160,13 +1127,13 @@ impl<'bump> String<'bump> {
     /// effect.
     ///
     /// Note that this method has no effect on the allocated capacity
-    /// of the string
+    /// of the string.
     ///
     /// # Panics
     ///
     /// Panics if `new_len` does not lie on a [`char`] boundary.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1195,7 +1162,7 @@ impl<'bump> String<'bump> {
     ///
     /// Returns [`None`] if this `String` is empty.
     ///
-    /// [`None`]: https://doc.rust-lang.org/nightly/std/option/enum.Option.html#variant.None
+    /// [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
     ///
     /// # Examples
     ///
@@ -1234,7 +1201,7 @@ impl<'bump> String<'bump> {
     /// Panics if `idx` is larger than or equal to the `String`'s length,
     /// or if it does not lie on a [`char`] boundary.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1336,7 +1303,7 @@ impl<'bump> String<'bump> {
     /// Panics if `idx` is larger than the `String`'s length, or if it does not
     /// lie on a [`char`] boundary.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1390,7 +1357,7 @@ impl<'bump> String<'bump> {
     /// Panics if `idx` is larger than the `String`'s length, or if it does not
     /// lie on a [`char`] boundary.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1420,10 +1387,10 @@ impl<'bump> String<'bump> {
     ///
     /// # Safety
     ///
-    /// This function is unsafe because it does not check that the bytes passed
-    /// to it are valid UTF-8. If this constraint is violated, it may cause
-    /// memory unsafety issues with future users of the `String`, as the rest of
-    /// the standard library assumes that `String`s are valid UTF-8.
+    /// This function is unsafe because the returned `&mut Vec` allows writing
+    /// bytes which are not valid UTF-8. If this constraint is violated, using
+    /// the original `String` after dropping the `&mut Vec` may violate memory
+    /// safety, as it is assumed that `String`s are valid UTF-8.
     ///
     /// # Examples
     ///
@@ -1438,7 +1405,7 @@ impl<'bump> String<'bump> {
     ///
     /// unsafe {
     ///     let vec = s.as_mut_vec();
-    ///     assert_eq!(&[104, 101, 108, 108, 111][..], &vec[..]);
+    ///     assert_eq!(vec, &[104, 101, 108, 108, 111]);
     ///
     ///     vec.reverse();
     /// }
@@ -1503,7 +1470,7 @@ impl<'bump> String<'bump> {
     ///
     /// # Panics
     ///
-    /// Panics if `at` is not on a `UTF-8` code point boundary, or if it is beyond the last
+    /// Panics if `at` is not on a UTF-8 code point boundary, or if it is beyond the last
     /// code point of the string.
     ///
     /// # Examples
@@ -1563,7 +1530,7 @@ impl<'bump> String<'bump> {
     /// Panics if the starting point or end point do not lie on a [`char`]
     /// boundary, or if they're out of bounds.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     ///
     /// # Examples
     ///
@@ -1631,7 +1598,7 @@ impl<'bump> String<'bump> {
     /// Panics if the starting point or end point do not lie on a [`char`]
     /// boundary, or if they're out of bounds.
     ///
-    /// [`char`]: https://doc.rust-lang.org/nightly/std/primitive.char.html
+    /// [`char`]: https://doc.rust-lang.org/std/primitive.char.html
     /// [`Vec::splice`]: ../vec/struct.Vec.html#method.splice
     ///
     /// # Examples
@@ -1675,7 +1642,7 @@ impl<'bump> String<'bump> {
 }
 
 impl<'bump> FromUtf8Error<'bump> {
-    /// Returns a slice of [`u8`]s bytes that were attempted to convert to a `String`.
+    /// Returns a slice of bytes that were attempted to convert to a `String`.
     ///
     /// # Examples
     ///
@@ -1730,10 +1697,10 @@ impl<'bump> FromUtf8Error<'bump> {
     /// an analogue to `FromUtf8Error`. See its documentation for more details
     /// on using it.
     ///
-    /// [`Utf8Error`]: https://doc.rust-lang.org/nightly/std/str/struct.Utf8Error.html
-    /// [`std::str`]: https://doc.rust-lang.org/nightly/std/str/index.html
-    /// [`u8`]: https://doc.rust-lang.org/nightly/std/primitive.u8.html
-    /// [`&str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
+    /// [`Utf8Error`]: https://doc.rust-lang.org/std/str/struct.Utf8Error.html
+    /// [`std::str`]: https://doc.rust-lang.org/std/str/index.html
+    /// [`u8`]: https://doc.rust-lang.org/std/primitive.u8.html
+    /// [`&str`]: https://doc.rust-lang.org/std/primitive.str.html
     ///
     /// # Examples
     ///
@@ -1924,11 +1891,11 @@ impl<'bump> hash::Hash for String<'bump> {
 /// ```
 /// use bumpalo::{Bump, collections::String};
 ///
-/// let b = Bump::new();
+/// let bump = Bump::new();
 ///
 /// let a = "hello";
 /// let b = " world";
-/// let c = a.to_string() + b;
+/// let c = String::from_str_in(a, &bump) + b;
 /// ```
 impl<'a, 'bump> Add<&'a str> for String<'bump> {
     type Output = String<'bump>;
@@ -2096,11 +2063,8 @@ impl<'bump> BorrowMut<str> for String<'bump> {
 
 /// A draining iterator for `String`.
 ///
-/// This struct is created by the [`drain`] method on [`String`]. See its
-/// documentation for more.
-///
-/// [`drain`]: struct.String.html#method.drain
-/// [`String`]: struct.String.html
+/// This struct is created by the [`String::drain`] method. See its
+/// documentation for more information.
 pub struct Drain<'a, 'bump> {
     /// Will be used as &'a mut String in the destructor
     string: *mut String<'bump>,
