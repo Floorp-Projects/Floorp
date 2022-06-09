@@ -167,7 +167,7 @@ impl ParserBuilder {
     /// they should impose a limit on the length, in bytes, of the concrete
     /// pattern string. In particular, this is viable since this parser
     /// implementation will limit itself to heap space proportional to the
-    /// lenth of the pattern string.
+    /// length of the pattern string.
     ///
     /// Note that a nest limit of `0` will return a nest limit error for most
     /// patterns but not all. For example, a nest limit of `0` permits `a` but
@@ -236,7 +236,7 @@ pub struct Parser {
     /// supported.
     octal: bool,
     /// The initial setting for `ignore_whitespace` as provided by
-    /// Th`ParserBuilder`. is is used when reseting the parser's state.
+    /// `ParserBuilder`. It is used when resetting the parser's state.
     initial_ignore_whitespace: bool,
     /// Whether whitespace should be ignored. When enabled, comments are
     /// also permitted.
@@ -1023,7 +1023,7 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
     /// The given `kind` should correspond to the operator observed by the
     /// caller.
     ///
-    /// This assumes that the paser is currently positioned at the repetition
+    /// This assumes that the parser is currently positioned at the repetition
     /// operator and advances the parser to the first character after the
     /// operator. (Note that the operator may include a single additional `?`,
     /// which makes the operator ungreedy.)
@@ -1078,7 +1078,7 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
     /// corresponds to the {m,n} syntax, and does not include the ?, * or +
     /// operators.
     ///
-    /// This assumes that the paser is currently positioned at the opening `{`
+    /// This assumes that the parser is currently positioned at the opening `{`
     /// and advances the parser to the first character after the operator.
     /// (Note that the operator may include a single additional `?`, which
     /// makes the operator ungreedy.)

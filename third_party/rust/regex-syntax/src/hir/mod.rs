@@ -334,9 +334,13 @@ impl Hir {
         info.set_any_anchored_end(false);
         info.set_literal(false);
         info.set_alternation_literal(false);
-        // A negated word boundary matches the empty string, but a normal
-        // word boundary does not!
-        info.set_match_empty(word_boundary.is_negated());
+        // A negated word boundary matches '', so that's fine. But \b does not
+        // match \b, so why do we say it can match the empty string? Well,
+        // because, if you search for \b against 'a', it will report [0, 0) and
+        // [1, 1) as matches, and both of those matches correspond to the empty
+        // string. Thus, only *certain* empty strings match \b, which similarly
+        // applies to \B.
+        info.set_match_empty(true);
         // Negated ASCII word boundaries can match invalid UTF-8.
         if let WordBoundary::AsciiNegate = word_boundary {
             info.set_always_utf8(false);
@@ -661,8 +665,8 @@ impl Hir {
     /// Return true if and only if the empty string is part of the language
     /// matched by this regular expression.
     ///
-    /// This includes `a*`, `a?b*`, `a{0}`, `()`, `()+`, `^$`, `a|b?`, `\B`,
-    /// but not `a`, `a+` or `\b`.
+    /// This includes `a*`, `a?b*`, `a{0}`, `()`, `()+`, `^$`, `a|b?`, `\b`
+    /// and `\B`, but not `a` or `a+`.
     pub fn is_match_empty(&self) -> bool {
         self.info.is_match_empty()
     }
