@@ -204,8 +204,7 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
   }
 #endif
 
-  CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor *
-                                         gfxPlatformGtk::GetFontScaleFactor());
+  CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor);
 
   float dpi = 96.0f;
   gint heightMM = gdk_screen_get_monitor_height_mm(aScreen, aMonitorNum);
@@ -371,8 +370,7 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
   // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(monitor->scale);
 
-  CSSToLayoutDeviceScale defaultCssScale(monitor->scale *
-                                         gfxPlatformGtk::GetFontScaleFactor());
+  CSSToLayoutDeviceScale defaultCssScale(monitor->scale);
 
   float dpi = 96.0f;
   gint heightMM = monitor->height_mm;

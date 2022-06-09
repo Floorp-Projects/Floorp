@@ -646,9 +646,7 @@ float nsWindow::GetDPI() {
   return dpi;
 }
 
-double nsWindow::GetDefaultScaleInternal() {
-  return FractionalScaleFactor() * gfxPlatformGtk::GetFontScaleFactor();
-}
+double nsWindow::GetDefaultScaleInternal() { return FractionalScaleFactor(); }
 
 DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScale() {
 #ifdef MOZ_WAYLAND

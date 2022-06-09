@@ -576,7 +576,8 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
   result.haveFont() = false;
 
   // Get scaling factor from physical to logical pixels
-  double pixelScale = 1.0 / WinUtils::SystemScaleFactor();
+  double pixelScale =
+      1.0 / WinUtils::SystemScaleFactor() / LookAndFeel::GetTextScaleFactor();
 
   // The lfHeight is in pixels, and it needs to be adjusted for the
   // device it will be displayed on.
