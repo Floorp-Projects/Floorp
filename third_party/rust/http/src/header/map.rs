@@ -3293,19 +3293,16 @@ mod into_header_name {
     // ==== impls ====
 
     impl Sealed for HeaderName {
-        #[doc(hidden)]
         #[inline]
         fn insert<T>(self, map: &mut HeaderMap<T>, val: T) -> Option<T> {
             map.insert2(self, val)
         }
 
-        #[doc(hidden)]
         #[inline]
         fn append<T>(self, map: &mut HeaderMap<T>, val: T) -> bool {
             map.append2(self, val)
         }
 
-        #[doc(hidden)]
         #[inline]
         fn entry<T>(self, map: &mut HeaderMap<T>) -> Entry<'_, T> {
             map.entry2(self)
@@ -3315,18 +3312,15 @@ mod into_header_name {
     impl IntoHeaderName for HeaderName {}
 
     impl<'a> Sealed for &'a HeaderName {
-        #[doc(hidden)]
         #[inline]
         fn insert<T>(self, map: &mut HeaderMap<T>, val: T) -> Option<T> {
             map.insert2(self, val)
         }
-        #[doc(hidden)]
         #[inline]
         fn append<T>(self, map: &mut HeaderMap<T>, val: T) -> bool {
             map.append2(self, val)
         }
 
-        #[doc(hidden)]
         #[inline]
         fn entry<T>(self, map: &mut HeaderMap<T>) -> Entry<'_, T> {
             map.entry2(self)
@@ -3336,18 +3330,15 @@ mod into_header_name {
     impl<'a> IntoHeaderName for &'a HeaderName {}
 
     impl Sealed for &'static str {
-        #[doc(hidden)]
         #[inline]
         fn insert<T>(self, map: &mut HeaderMap<T>, val: T) -> Option<T> {
             HdrName::from_static(self, move |hdr| map.insert2(hdr, val))
         }
-        #[doc(hidden)]
         #[inline]
         fn append<T>(self, map: &mut HeaderMap<T>, val: T) -> bool {
             HdrName::from_static(self, move |hdr| map.append2(hdr, val))
         }
 
-        #[doc(hidden)]
         #[inline]
         fn entry<T>(self, map: &mut HeaderMap<T>) -> Entry<'_, T> {
             HdrName::from_static(self, move |hdr| map.entry2(hdr))
@@ -3386,19 +3377,16 @@ mod as_header_name {
     // ==== impls ====
 
     impl Sealed for HeaderName {
-        #[doc(hidden)]
         #[inline]
         fn try_entry<T>(self, map: &mut HeaderMap<T>) -> Result<Entry<'_, T>, InvalidHeaderName> {
             Ok(map.entry2(self))
         }
 
-        #[doc(hidden)]
         #[inline]
         fn find<T>(&self, map: &HeaderMap<T>) -> Option<(usize, usize)> {
             map.find(self)
         }
 
-        #[doc(hidden)]
         fn as_str(&self) -> &str {
             <HeaderName>::as_str(self)
         }
@@ -3407,19 +3395,16 @@ mod as_header_name {
     impl AsHeaderName for HeaderName {}
 
     impl<'a> Sealed for &'a HeaderName {
-        #[doc(hidden)]
         #[inline]
         fn try_entry<T>(self, map: &mut HeaderMap<T>) -> Result<Entry<'_, T>, InvalidHeaderName> {
             Ok(map.entry2(self))
         }
 
-        #[doc(hidden)]
         #[inline]
         fn find<T>(&self, map: &HeaderMap<T>) -> Option<(usize, usize)> {
             map.find(*self)
         }
 
-        #[doc(hidden)]
         fn as_str(&self) -> &str {
             <HeaderName>::as_str(*self)
         }
@@ -3428,19 +3413,16 @@ mod as_header_name {
     impl<'a> AsHeaderName for &'a HeaderName {}
 
     impl<'a> Sealed for &'a str {
-        #[doc(hidden)]
         #[inline]
         fn try_entry<T>(self, map: &mut HeaderMap<T>) -> Result<Entry<'_, T>, InvalidHeaderName> {
             HdrName::from_bytes(self.as_bytes(), move |hdr| map.entry2(hdr))
         }
 
-        #[doc(hidden)]
         #[inline]
         fn find<T>(&self, map: &HeaderMap<T>) -> Option<(usize, usize)> {
             HdrName::from_bytes(self.as_bytes(), move |hdr| map.find(&hdr)).unwrap_or(None)
         }
 
-        #[doc(hidden)]
         fn as_str(&self) -> &str {
             self
         }
@@ -3449,19 +3431,16 @@ mod as_header_name {
     impl<'a> AsHeaderName for &'a str {}
 
     impl Sealed for String {
-        #[doc(hidden)]
         #[inline]
         fn try_entry<T>(self, map: &mut HeaderMap<T>) -> Result<Entry<'_, T>, InvalidHeaderName> {
             self.as_str().try_entry(map)
         }
 
-        #[doc(hidden)]
         #[inline]
         fn find<T>(&self, map: &HeaderMap<T>) -> Option<(usize, usize)> {
             Sealed::find(&self.as_str(), map)
         }
 
-        #[doc(hidden)]
         fn as_str(&self) -> &str {
             self
         }
@@ -3470,19 +3449,16 @@ mod as_header_name {
     impl AsHeaderName for String {}
 
     impl<'a> Sealed for &'a String {
-        #[doc(hidden)]
         #[inline]
         fn try_entry<T>(self, map: &mut HeaderMap<T>) -> Result<Entry<'_, T>, InvalidHeaderName> {
             self.as_str().try_entry(map)
         }
 
-        #[doc(hidden)]
         #[inline]
         fn find<T>(&self, map: &HeaderMap<T>) -> Option<(usize, usize)> {
             Sealed::find(*self, map)
         }
 
-        #[doc(hidden)]
         fn as_str(&self) -> &str {
             *self
         }

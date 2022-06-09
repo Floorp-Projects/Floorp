@@ -738,7 +738,7 @@ version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.http]]
-version = "0.2.7"
+version = "0.2.8"
 criteria = "safe-to-run"
 
 [[unaudited.http-body]]
