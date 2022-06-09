@@ -1,13 +1,13 @@
 pub(crate) mod duration;
 
-use crate::de::{DeserializeAs, DeserializeAsWrap};
-use serde::de::{MapAccess, SeqAccess};
-use std::marker::PhantomData;
+use alloc::string::String;
+use core::marker::PhantomData;
+use serde::de::{Deserialize, MapAccess, SeqAccess};
 
 /// Re-Implementation of `serde::private::de::size_hint::cautious`
 #[inline]
 pub(crate) fn size_hint_cautious(hint: Option<usize>) -> usize {
-    std::cmp::min(hint.unwrap_or(0), 4096)
+    core::cmp::min(hint.unwrap_or(0), 4096)
 }
 
 pub(crate) const NANOS_PER_SEC: u32 = 1_000_000_000;
@@ -16,12 +16,12 @@ pub(crate) const NANOS_PER_SEC: u32 = 1_000_000_000;
 // pub(crate) const MILLIS_PER_SEC: u64 = 1_000;
 // pub(crate) const MICROS_PER_SEC: u64 = 1_000_000;
 
-pub(crate) struct MapIter<'de, A, K, KAs, V, VAs> {
+pub(crate) struct MapIter<'de, A, K, V> {
     pub(crate) access: A,
-    marker: PhantomData<(&'de (), K, KAs, V, VAs)>,
+    marker: PhantomData<(&'de (), K, V)>,
 }
 
-impl<'de, A, K, KAs, V, VAs> MapIter<'de, A, K, KAs, V, VAs> {
+impl<'de, A, K, V> MapIter<'de, A, K, V> {
     pub(crate) fn new(access: A) -> Self
     where
         A: MapAccess<'de>,
@@ -33,14 +33,13 @@ impl<'de, A, K, KAs, V, VAs> MapIter<'de, A, K, KAs, V, VAs> {
     }
 }
 
-impl<'de, A, K, KAs, V, VAs> Iterator for MapIter<'de, A, K, KAs, V, VAs>
+impl<'de, A, K, V> Iterator for MapIter<'de, A, K, V>
 where
     A: MapAccess<'de>,
-    KAs: DeserializeAs<'de, K>,
-    VAs: DeserializeAs<'de, V>,
+    K: Deserialize<'de>,
+    V: Deserialize<'de>,
 {
-    #[allow(clippy::type_complexity)]
-    type Item = Result<(DeserializeAsWrap<K, KAs>, DeserializeAsWrap<V, VAs>), A::Error>;
+    type Item = Result<(K, V), A::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.access.next_entry().transpose()
@@ -54,12 +53,12 @@ where
     }
 }
 
-pub(crate) struct SeqIter<'de, A, K, KAs, V, VAs> {
+pub(crate) struct SeqIter<'de, A, T> {
     access: A,
-    marker: PhantomData<(&'de (), K, KAs, V, VAs)>,
+    marker: PhantomData<(&'de (), T)>,
 }
 
-impl<'de, A, K, KAs, V, VAs> SeqIter<'de, A, K, KAs, V, VAs> {
+impl<'de, A, T> SeqIter<'de, A, T> {
     pub(crate) fn new(access: A) -> Self
     where
         A: SeqAccess<'de>,
@@ -71,14 +70,12 @@ impl<'de, A, K, KAs, V, VAs> SeqIter<'de, A, K, KAs, V, VAs> {
     }
 }
 
-impl<'de, A, K, KAs, V, VAs> Iterator for SeqIter<'de, A, K, KAs, V, VAs>
+impl<'de, A, T> Iterator for SeqIter<'de, A, T>
 where
     A: SeqAccess<'de>,
-    KAs: DeserializeAs<'de, K>,
-    VAs: DeserializeAs<'de, V>,
+    T: Deserialize<'de>,
 {
-    #[allow(clippy::type_complexity)]
-    type Item = Result<(DeserializeAsWrap<K, KAs>, DeserializeAsWrap<V, VAs>), A::Error>;
+    type Item = Result<T, A::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.access.next_element().transpose()
@@ -92,7 +89,7 @@ where
     }
 }
 
-pub(crate) fn duration_as_secs_f64(dur: &std::time::Duration) -> f64 {
+pub(crate) fn duration_as_secs_f64(dur: &core::time::Duration) -> f64 {
     (dur.as_secs() as f64) + (dur.subsec_nanos() as f64) / (NANOS_PER_SEC as f64)
 }
 

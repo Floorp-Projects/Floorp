@@ -6,15 +6,17 @@ use crate::{
     DurationMilliSecondsWithFrac, DurationNanoSeconds, DurationNanoSecondsWithFrac,
     DurationSeconds, DurationSecondsWithFrac, SerializeAs,
 };
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::{fmt, ops::Neg, time::Duration};
 use serde::{
     de::{self, Unexpected, Visitor},
     ser, Deserialize, Deserializer, Serialize, Serializer,
 };
-use std::{
-    fmt,
-    ops::Neg,
-    time::{Duration, SystemTime},
-};
+use std::time::SystemTime;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub(crate) enum Sign {
@@ -58,12 +60,12 @@ impl DurationSigned {
         }
     }
 
-    #[cfg(feature = "chrono")]
+    #[cfg(any(feature = "chrono", feature = "time_0_3"))]
     pub(crate) fn with_duration(sign: Sign, duration: Duration) -> Self {
         Self { sign, duration }
     }
 
-    pub(crate) fn to_system_time<'de, D>(&self) -> Result<SystemTime, D::Error>
+    pub(crate) fn to_system_time<'de, D>(self) -> Result<SystemTime, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -76,7 +78,7 @@ impl DurationSigned {
         })
     }
 
-    pub(crate) fn to_std_duration<'de, D>(&self) -> Result<Duration, D::Error>
+    pub(crate) fn to_std_duration<'de, D>(self) -> Result<Duration, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -111,7 +113,7 @@ impl From<&SystemTime> for DurationSigned {
     }
 }
 
-impl std::ops::Mul<u32> for DurationSigned {
+impl core::ops::Mul<u32> for DurationSigned {
     type Output = DurationSigned;
 
     fn mul(mut self, rhs: u32) -> Self::Output {
@@ -120,7 +122,7 @@ impl std::ops::Mul<u32> for DurationSigned {
     }
 }
 
-impl std::ops::Div<u32> for DurationSigned {
+impl core::ops::Div<u32> for DurationSigned {
     type Output = DurationSigned;
 
     fn div(mut self, rhs: u32) -> Self::Output {
@@ -306,7 +308,7 @@ struct DurationVisitorFlexible;
 impl<'de> Visitor<'de> for DurationVisitorFlexible {
     type Value = DurationSigned;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> ::std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("an integer, a float, or a string containing a number")
     }
 
@@ -493,14 +495,14 @@ fn parse_float_into_time_parts(mut value: &str) -> Result<(Sign, u64, u32), Pars
     let parts: Vec<_> = value.split('.').collect();
     match *parts.as_slice() {
         [seconds] => {
-            if let Ok(seconds) = u64::from_str_radix(seconds, 10) {
+            if let Ok(seconds) = seconds.parse() {
                 Ok((sign, seconds, 0))
             } else {
                 Err(ParseFloatError::InvalidValue)
             }
         }
         [seconds, subseconds] => {
-            if let Ok(seconds) = u64::from_str_radix(seconds, 10) {
+            if let Ok(seconds) = seconds.parse() {
                 let subseclen = subseconds.chars().count() as u32;
                 if subseclen > 9 {
                     return Err(ParseFloatError::Custom(format!(
@@ -509,7 +511,7 @@ fn parse_float_into_time_parts(mut value: &str) -> Result<(Sign, u64, u32), Pars
                     )));
                 }
 
-                if let Ok(mut subseconds) = u32::from_str_radix(subseconds, 10) {
+                if let Ok(mut subseconds) = subseconds.parse() {
                     // convert subseconds to nanoseconds (10^-9), require 9 places for nanoseconds
                     subseconds *= 10u32.pow(9 - subseclen);
                     Ok((sign, seconds, subseconds))

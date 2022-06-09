@@ -1,23 +1,30 @@
 //! De/Serialization for Rust's builtin and std types
 
-use crate::Separator;
-use serde::{
-    de::{Deserialize, DeserializeOwned, Deserializer, Error, MapAccess, SeqAccess, Visitor},
-    ser::{Serialize, SerializeMap, SerializeSeq, Serializer},
+use crate::{utils, Separator};
+#[cfg(doc)]
+use alloc::collections::BTreeMap;
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
 };
-use std::{
+use core::{
     cmp::Eq,
-    collections::{BTreeMap, HashMap},
     fmt::{self, Display},
-    hash::{BuildHasher, Hash},
+    hash::Hash,
     iter::FromIterator,
     marker::PhantomData,
     str::FromStr,
 };
+use serde::{
+    de::{Deserialize, DeserializeOwned, Deserializer, Error, MapAccess, SeqAccess, Visitor},
+    ser::{Serialize, Serializer},
+};
+#[cfg(doc)]
+use std::collections::HashMap;
 
 /// De/Serialize using [`Display`] and [`FromStr`] implementation
 ///
-/// This allows to deserialize a string as a number.
+/// This allows deserializing a string as a number.
 /// It can be very useful for serialization formats like JSON, which do not support integer
 /// numbers and have to resort to strings to represent them.
 ///
@@ -30,7 +37,7 @@ use std::{
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, DisplayFromStr};
 /// #
 /// #[serde_as]
@@ -45,7 +52,7 @@ use std::{
 /// # Examples
 ///
 /// ```rust
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// #[derive(Deserialize, Serialize)]
 /// struct A {
@@ -66,7 +73,10 @@ use std::{
 ///     mime: mime::STAR_STAR,
 ///     number: 777,
 /// };
-/// assert_eq!(r#"{"mime":"*/*","number":"777"}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(
+///     r#"{"mime":"*/*","number":"777"}"#,
+///     serde_json::to_string(&x).unwrap()
+/// );
 /// ```
 ///
 /// [`DeserializeFromStr`]: serde_with_macros::DeserializeFromStr
@@ -75,7 +85,6 @@ use std::{
 /// [`SerializeDisplay`]: serde_with_macros::SerializeDisplay
 pub mod display_fromstr {
     use super::*;
-    use std::str::FromStr;
 
     /// Deserialize T using [`FromStr`]
     pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
@@ -114,7 +123,7 @@ pub mod display_fromstr {
         T: Display,
         S: Serializer,
     {
-        serializer.serialize_str(&*value.to_string())
+        serializer.collect_str(&value)
     }
 }
 
@@ -146,7 +155,7 @@ pub mod display_fromstr {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// use std::collections::BTreeSet;
 /// use std::net::Ipv4Addr;
@@ -179,22 +188,16 @@ pub mod display_fromstr {
 ///     ].into_iter().collect(),
 ///     bs: vec![false, true],
 /// };
-/// assert_eq!(r#"{"addresses":["127.53.0.1","127.53.0.2","127.53.1.1"],"bs":["false","true"]}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(
+///     r#"{"addresses":["127.53.0.1","127.53.0.2","127.53.1.1"],"bs":["false","true"]}"#,
+///     serde_json::to_string(&x).unwrap()
+/// );
 /// ```
 ///
 /// [`DisplayFromStr`]: crate::DisplayFromStr
 /// [`serde_as`]: crate::guide::serde_as
 pub mod seq_display_fromstr {
-    use serde::{
-        de::{Deserializer, Error, SeqAccess, Visitor},
-        ser::{SerializeSeq, Serializer},
-    };
-    use std::{
-        fmt::{self, Display},
-        iter::{FromIterator, IntoIterator},
-        marker::PhantomData,
-        str::FromStr,
-    };
+    use super::*;
 
     /// Deserialize collection T using [FromIterator] and [FromStr] for each element
     pub fn deserialize<'de, D, T, I>(deserializer: D) -> Result<T, D::Error>
@@ -217,20 +220,15 @@ pub mod seq_display_fromstr {
                 write!(formatter, "a sequence")
             }
 
-            fn visit_seq<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
             {
-                let mut values = access
-                    .size_hint()
-                    .map(Self::Value::with_capacity)
-                    .unwrap_or_else(Self::Value::new);
-
-                while let Some(value) = access.next_element::<&str>()? {
-                    values.push(value.parse::<S>().map_err(Error::custom)?);
-                }
-
-                Ok(values)
+                utils::SeqIter::new(seq)
+                    .map(|res| {
+                        res.and_then(|value: &str| value.parse::<S>().map_err(Error::custom))
+                    })
+                    .collect()
             }
         }
 
@@ -246,13 +244,21 @@ pub mod seq_display_fromstr {
         for<'a> &'a T: IntoIterator<Item = &'a I>,
         I: Display,
     {
-        let iter = value.into_iter();
-        let (_, to) = iter.size_hint();
-        let mut seq = serializer.serialize_seq(to)?;
-        for item in iter {
-            seq.serialize_element(&item.to_string())?;
+        struct SerializeString<'a, I>(&'a I);
+
+        impl<'a, I> Serialize for SerializeString<'a, I>
+        where
+            I: Display,
+        {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer,
+            {
+                serializer.collect_str(self.0)
+            }
         }
-        seq.end()
+
+        serializer.collect_seq(value.into_iter().map(SerializeString))
     }
 }
 
@@ -271,7 +277,7 @@ pub mod seq_display_fromstr {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, SpaceSeparator, StringWithSeparator};
 /// #
 /// #[serde_as]
@@ -286,7 +292,7 @@ pub mod seq_display_fromstr {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// use serde_with::{CommaSeparator, SpaceSeparator};
 /// use std::collections::BTreeSet;
@@ -310,7 +316,10 @@ pub mod seq_display_fromstr {
 ///     tags: vec!["1".to_string(), "2".to_string(), "3".to_string()],
 ///     more_tags: BTreeSet::new(),
 /// };
-/// assert_eq!(r#"{"tags":"1 2 3","more_tags":""}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(
+///     r#"{"tags":"1 2 3","more_tags":""}"#,
+///     serde_json::to_string(&x).unwrap()
+/// );
 /// ```
 ///
 /// [`serde_as`]: crate::guide::serde_as
@@ -375,7 +384,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// # #[derive(Debug, PartialEq, Eq)]
 /// #[derive(Deserialize, Serialize)]
@@ -389,18 +398,18 @@ where
 /// }
 /// // Missing Value
 /// let s = r#"{}"#;
-/// assert_eq!(Doc {a: None}, serde_json::from_str(s).unwrap());
-/// assert_eq!(s, serde_json::to_string(&Doc {a: None}).unwrap());
+/// assert_eq!(Doc { a: None }, serde_json::from_str(s).unwrap());
+/// assert_eq!(s, serde_json::to_string(&Doc { a: None }).unwrap());
 ///
 /// // Unset Value
 /// let s = r#"{"a":null}"#;
-/// assert_eq!(Doc {a: Some(None)}, serde_json::from_str(s).unwrap());
-/// assert_eq!(s, serde_json::to_string(&Doc {a: Some(None)}).unwrap());
+/// assert_eq!(Doc { a: Some(None) }, serde_json::from_str(s).unwrap());
+/// assert_eq!(s, serde_json::to_string(&Doc { a: Some(None) }).unwrap());
 ///
 /// // Existing Value
 /// let s = r#"{"a":5}"#;
-/// assert_eq!(Doc {a: Some(Some(5))}, serde_json::from_str(s).unwrap());
-/// assert_eq!(s, serde_json::to_string(&Doc {a: Some(Some(5))}).unwrap());
+/// assert_eq!(Doc { a: Some(Some(5)) }, serde_json::from_str(s).unwrap());
+/// assert_eq!(s, serde_json::to_string(&Doc { a: Some(Some(5)) }).unwrap());
 /// ```
 #[allow(clippy::option_option)]
 pub mod double_option {
@@ -446,7 +455,7 @@ pub mod double_option {
 /// # Example
 ///
 /// ```rust
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
 /// #[derive(Deserialize, Serialize)]
@@ -462,7 +471,7 @@ pub mod double_option {
 ///
 /// // Transparently add/remove Some() wrapper
 /// # let pretty_config = ron::ser::PrettyConfig::new()
-/// #     .with_new_line("\n".into());
+/// #     .new_line("\n".into());
 /// let s = r#"(
 ///     mandatory: 1,
 ///     optional: 2,
@@ -477,7 +486,7 @@ pub mod double_option {
 /// // Missing values are deserialized as `None`
 /// // while `None` values are skipped during serialization.
 /// # let pretty_config = ron::ser::PrettyConfig::new()
-/// #     .with_new_line("\n".into());
+/// #     .new_line("\n".into());
 /// let s = r#"(
 ///     mandatory: 1,
 /// )"#;
@@ -531,7 +540,7 @@ pub mod unwrap_or_skip {
 ///
 /// ```rust
 /// # use std::{collections::HashSet, iter::FromIterator};
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
 /// #[derive(Deserialize)]
@@ -629,7 +638,7 @@ pub mod sets_duplicate_value_is_error {
 /// # Example
 ///
 /// ```rust
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use std::collections::HashMap;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
@@ -866,7 +875,7 @@ pub mod sets_last_value_wins {
 /// # Example
 ///
 /// ```rust
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use std::collections::HashMap;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
@@ -958,9 +967,9 @@ pub mod maps_first_key_wins {
     }
 }
 
-/// De/Serialize a [`Option`]`<`[`String`]`>` type while transforming the empty string to [`None`]
+/// De/Serialize a [`Option<String>`] type while transforming the empty string to [`None`]
 ///
-/// Convert an [`Option`]`<T>` from/to string using [`FromStr`] and [`AsRef`]`<`[`str`]`>` implementations.
+/// Convert an [`Option<T>`] from/to string using [`FromStr`] and [`AsRef<str>`] implementations.
 /// An empty string is deserialized as [`None`] and a [`None`] vice versa.
 ///
 /// ## Converting to `serde_as`
@@ -969,7 +978,7 @@ pub mod maps_first_key_wins {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, NoneAsEmptyString};
 /// #
 /// #[serde_as]
@@ -984,7 +993,7 @@ pub mod maps_first_key_wins {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use serde_with::rust::string_empty_as_none;
 /// #
@@ -1081,7 +1090,144 @@ pub mod string_empty_as_none {
     }
 }
 
-/// De/Serialize a [`HashMap`] into a list of tuples
+/// De/Serialize a Map into a list of tuples
+///
+/// Some formats, like JSON, have limitations on the type of keys for maps.
+/// In case of JSON, keys are restricted to strings.
+/// Rust features more powerful keys, for example tuple, which can not be serialized to JSON.
+///
+/// This helper serializes the Map into a list of tuples, which does not have the same type restrictions.
+/// The module can be applied on any type implementing `IntoIterator<Item = (&'a K, &'a V)>` and `FromIterator<(K, V)>`, with `K` and `V` being the key and value types.
+/// From the standard library both [`HashMap`] and [`BTreeMap`] fullfil the condition and can be used here.
+///
+/// ## Converting to `serde_as`
+///
+/// If the map is of type [`HashMap`] or [`BTreeMap`] the same functionality can be expressed more clearly using the [`serde_as`] macro.
+/// The `_` is a placeholder which works for any type which implements [`Serialize`]/[`Deserialize`], such as the tuple and `u32` type.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde::{Deserialize, Serialize};
+/// # use serde_with::serde_as;
+/// # use std::collections::{BTreeMap, HashMap};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "Vec<(_, _)>")]
+///     hashmap: HashMap<(String, u32), u32>,
+///     #[serde_as(as = "Vec<(_, _)>")]
+///     btreemap: BTreeMap<(String, u32), u32>,
+/// }
+/// # }
+/// ```
+///
+/// # Examples
+///
+/// ```
+/// # use serde::{Deserialize, Serialize};
+/// # use serde_json::json;
+/// # use std::collections::BTreeMap;
+/// #
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde(with = "serde_with::rust::map_as_tuple_list")]
+///     s: BTreeMap<(String, u32), u32>,
+/// }
+///
+/// let v: A = serde_json::from_value(json!({
+///     "s": [
+///         [["Hello", 123], 0],
+///         [["World", 456], 1]
+///     ]
+/// })).unwrap();
+///
+/// assert_eq!(2, v.s.len());
+/// assert_eq!(1, v.s[&("World".to_string(), 456)]);
+/// ```
+///
+/// The helper is generic over the hasher type of the [`HashMap`] and works with different variants, such as `FnvHashMap`.
+///
+/// ```
+/// # use serde::{Deserialize, Serialize};
+/// # use serde_json::json;
+/// #
+/// use fnv::FnvHashMap;
+///
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde(with = "serde_with::rust::map_as_tuple_list")]
+///     s: FnvHashMap<u32, bool>,
+/// }
+///
+/// let v: A = serde_json::from_value(json!({
+///     "s": [
+///         [0, false],
+///         [1, true]
+///     ]
+/// })).unwrap();
+///
+/// assert_eq!(2, v.s.len());
+/// assert_eq!(true, v.s[&1]);
+/// ```
+///
+/// [`serde_as`]: crate::guide::serde_as
+pub mod map_as_tuple_list {
+    // Trait bounds based on this answer: https://stackoverflow.com/a/66600486/15470286
+    use super::*;
+
+    /// Serialize the map as a list of tuples
+    pub fn serialize<'a, T, K, V, S>(map: T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: IntoIterator<Item = (&'a K, &'a V)>,
+        T::IntoIter: ExactSizeIterator,
+        K: Serialize + 'a,
+        V: Serialize + 'a,
+    {
+        serializer.collect_seq(map)
+    }
+
+    /// Deserialize a map from a list of tuples
+    pub fn deserialize<'de, T, K, V, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: FromIterator<(K, V)>,
+        K: Deserialize<'de>,
+        V: Deserialize<'de>,
+    {
+        struct SeqVisitor<T, K, V>(PhantomData<(T, K, V)>);
+
+        impl<'de, T, K, V> Visitor<'de> for SeqVisitor<T, K, V>
+        where
+            T: FromIterator<(K, V)>,
+            K: Deserialize<'de>,
+            V: Deserialize<'de>,
+        {
+            type Value = T;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a list of key-value pairs")
+            }
+
+            fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                utils::SeqIter::new(seq).collect()
+            }
+        }
+
+        deserializer.deserialize_seq(SeqVisitor(PhantomData))
+    }
+}
+
+/// DEPRECATED De/Serialize a [`HashMap`] into a list of tuples
+///
+/// Use the [`map_as_tuple_list`] module which is more general than this.
+/// It should work with everything convertible to and from an `Iterator` including [`BTreeMap`] and [`HashMap`].
+///
+/// ---
 ///
 /// Some formats, like JSON, have limitations on the type of keys for maps.
 /// In case of JSON, keys are restricted to strings.
@@ -1098,7 +1244,7 @@ pub mod string_empty_as_none {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_with::serde_as;
 /// # use std::collections::HashMap;
 /// #
@@ -1114,7 +1260,7 @@ pub mod string_empty_as_none {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use std::collections::HashMap;
 /// #
@@ -1138,7 +1284,7 @@ pub mod string_empty_as_none {
 /// The helper is generic over the hasher type of the [`HashMap`] and works with different variants, such as `FnvHashMap`.
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// #
 /// use fnv::FnvHashMap;
@@ -1161,65 +1307,31 @@ pub mod string_empty_as_none {
 /// ```
 ///
 /// [`serde_as`]: crate::guide::serde_as
+#[deprecated(
+    since = "1.8.0",
+    note = "Use the more general map_as_tuple_list module."
+)]
 pub mod hashmap_as_tuple_list {
-    use super::{SerializeSeq, *}; // Needed to remove the unused import warning in the parent scope
-
-    /// Serialize the [`HashMap`] as a list of tuples
-    pub fn serialize<K, V, S, BH>(map: &HashMap<K, V, BH>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        K: Eq + Hash + Serialize,
-        V: Serialize,
-        BH: BuildHasher,
-    {
-        let mut seq = serializer.serialize_seq(Some(map.len()))?;
-        for item in map.iter() {
-            seq.serialize_element(&item)?;
-        }
-        seq.end()
-    }
-
-    /// Deserialize a [`HashMap`] from a list of tuples
-    pub fn deserialize<'de, K, V, BH, D>(deserializer: D) -> Result<HashMap<K, V, BH>, D::Error>
-    where
-        D: Deserializer<'de>,
-        K: Eq + Hash + Deserialize<'de>,
-        V: Deserialize<'de>,
-        BH: BuildHasher + Default,
-    {
-        deserializer.deserialize_seq(HashMapVisitor(PhantomData))
-    }
-
-    #[allow(clippy::type_complexity)]
-    struct HashMapVisitor<K, V, BH>(PhantomData<fn() -> HashMap<K, V, BH>>);
-
-    impl<'de, K, V, BH> Visitor<'de> for HashMapVisitor<K, V, BH>
-    where
-        K: Deserialize<'de> + Eq + Hash,
-        V: Deserialize<'de>,
-        BH: BuildHasher + Default,
-    {
-        type Value = HashMap<K, V, BH>;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            formatter.write_str("a list of key-value pairs")
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut map =
-                HashMap::with_capacity_and_hasher(seq.size_hint().unwrap_or(0), BH::default());
-            while let Some((key, value)) = seq.next_element()? {
-                map.insert(key, value);
-            }
-            Ok(map)
-        }
-    }
+    #[doc(inline)]
+    #[deprecated(
+        since = "1.8.0",
+        note = "Use the more general map_as_tuple_list::deserialize function."
+    )]
+    pub use super::map_as_tuple_list::deserialize;
+    #[doc(inline)]
+    #[deprecated(
+        since = "1.8.0",
+        note = "Use the more general map_as_tuple_list::serialize function."
+    )]
+    pub use super::map_as_tuple_list::serialize;
 }
 
-/// De/Serialize a [`BTreeMap`] into a list of tuples
+/// DEPRECATED De/Serialize a [`BTreeMap`] into a list of tuples
+///
+/// Use the [`map_as_tuple_list`] module which is more general than this.
+/// It should work with everything convertible to and from an `Iterator` including [`BTreeMap`] and [`HashMap`].
+///
+/// ---
 ///
 /// Some formats, like JSON, have limitations on the type of keys for maps.
 /// In case of JSON, keys are restricted to strings.
@@ -1236,7 +1348,7 @@ pub mod hashmap_as_tuple_list {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_with::serde_as;
 /// # use std::collections::BTreeMap;
 /// #
@@ -1252,7 +1364,7 @@ pub mod hashmap_as_tuple_list {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use std::collections::BTreeMap;
 /// #
@@ -1274,58 +1386,23 @@ pub mod hashmap_as_tuple_list {
 /// ```
 ///
 /// [`serde_as`]: crate::guide::serde_as
+#[deprecated(
+    since = "1.8.0",
+    note = "Use the more general map_as_tuple_list module."
+)]
 pub mod btreemap_as_tuple_list {
-    use super::*;
-
-    /// Serialize the [`BTreeMap`] as a list of tuples
-    pub fn serialize<K, V, S>(map: &BTreeMap<K, V>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        K: Eq + Hash + Serialize,
-        V: Serialize,
-    {
-        let mut seq = serializer.serialize_seq(Some(map.len()))?;
-        for item in map.iter() {
-            seq.serialize_element(&item)?;
-        }
-        seq.end()
-    }
-
-    /// Deserialize a [`BTreeMap`] from a list of tuples
-    pub fn deserialize<'de, K, V, D>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
-    where
-        D: Deserializer<'de>,
-        K: Deserialize<'de> + Ord,
-        V: Deserialize<'de>,
-    {
-        deserializer.deserialize_seq(BTreeMapVisitor(PhantomData))
-    }
-
-    #[allow(clippy::type_complexity)]
-    struct BTreeMapVisitor<K, V>(PhantomData<fn() -> BTreeMap<K, V>>);
-
-    impl<'de, K, V> Visitor<'de> for BTreeMapVisitor<K, V>
-    where
-        K: Deserialize<'de> + Ord,
-        V: Deserialize<'de>,
-    {
-        type Value = BTreeMap<K, V>;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-            formatter.write_str("a list of key-value pairs")
-        }
-
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where
-            A: SeqAccess<'de>,
-        {
-            let mut map = BTreeMap::default();
-            while let Some((key, value)) = seq.next_element()? {
-                map.insert(key, value);
-            }
-            Ok(map)
-        }
-    }
+    #[doc(inline)]
+    #[deprecated(
+        since = "1.8.0",
+        note = "Use the more general map_as_tuple_list::deserialize function."
+    )]
+    pub use super::map_as_tuple_list::deserialize;
+    #[doc(inline)]
+    #[deprecated(
+        since = "1.8.0",
+        note = "Use the more general map_as_tuple_list::serialize function."
+    )]
+    pub use super::map_as_tuple_list::serialize;
 }
 
 /// This serializes a list of tuples into a map and back
@@ -1344,7 +1421,7 @@ pub mod btreemap_as_tuple_list {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// # use serde_with::serde_as;
 /// # use std::collections::BTreeMap;
 /// #
@@ -1362,7 +1439,7 @@ pub mod btreemap_as_tuple_list {
 /// `Wrapper` does not implement [`Hash`] nor [`Ord`], thus prohibiting the use [`HashMap`] or [`BTreeMap`].
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// #[derive(Debug, Deserialize, Serialize, Default)]
 /// struct S {
@@ -1397,7 +1474,7 @@ pub mod btreemap_as_tuple_list {
 /// In this example, the serialized format contains duplicate keys, which is not supported with [`HashMap`] or [`BTreeMap`].
 ///
 /// ```
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// #[derive(Debug, Deserialize, Serialize, PartialEq, Default)]
 /// struct S {
@@ -1425,7 +1502,7 @@ pub mod btreemap_as_tuple_list {
 ///
 /// [`serde_as`]: crate::guide::serde_as
 pub mod tuple_list_as_map {
-    use super::{SerializeMap, *}; // Needed to remove the unused import warning in the parent scope
+    use super::*;
 
     /// Serialize any iteration of tuples into a map.
     pub fn serialize<'a, I, K, V, S>(iter: I, serializer: S) -> Result<S::Ok, S::Error>
@@ -1436,12 +1513,9 @@ pub mod tuple_list_as_map {
         V: Serialize + 'a,
         S: Serializer,
     {
-        let iter = iter.into_iter();
-        let mut map = serializer.serialize_map(Some(iter.len()))?;
-        for (key, value) in iter {
-            map.serialize_entry(&key, &value)?;
-        }
-        map.end()
+        // Convert &(K, V) to (&K, &V) for collect_map.
+        let iter = iter.into_iter().map(|(k, v)| (k, v));
+        serializer.collect_map(iter)
     }
 
     /// Deserialize a map into an iterator of tuples.
@@ -1474,34 +1548,7 @@ pub mod tuple_list_as_map {
         where
             A: MapAccess<'de>,
         {
-            let iter = MapIter(map, PhantomData);
-            iter.collect()
-        }
-    }
-
-    struct MapIter<'de, A, K, V>(A, PhantomData<(&'de (), A, K, V)>);
-
-    impl<'de, A, K, V> Iterator for MapIter<'de, A, K, V>
-    where
-        A: MapAccess<'de>,
-        K: Deserialize<'de>,
-        V: Deserialize<'de>,
-    {
-        type Item = Result<(K, V), A::Error>;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            match self.0.next_entry() {
-                Ok(Some(x)) => Some(Ok(x)),
-                Ok(None) => None,
-                Err(err) => Some(Err(err)),
-            }
-        }
-
-        fn size_hint(&self) -> (usize, Option<usize>) {
-            match self.0.size_hint() {
-                Some(size) => (size, Some(size)),
-                None => (0, None),
-            }
+            utils::MapIter::new(map).collect()
         }
     }
 }
@@ -1518,7 +1565,7 @@ pub mod tuple_list_as_map {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, BytesOrString};
 /// #
 /// #[serde_as]
@@ -1532,7 +1579,7 @@ pub mod tuple_list_as_map {
 ///
 /// # Example
 /// ```rust
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde::{Deserialize, Serialize};
 /// #
 /// #[derive(Debug, Deserialize, Serialize, PartialEq, Default)]
 /// struct S {
@@ -1576,7 +1623,7 @@ pub mod tuple_list_as_map {
 pub mod bytes_or_string {
     use super::*;
 
-    /// Deserialize a [`Vec`]`<u8>` from either bytes or string
+    /// Deserialize a [`Vec<u8>`] from either bytes or string
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,
@@ -1609,15 +1656,11 @@ pub mod bytes_or_string {
             Ok(v.into_bytes())
         }
 
-        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
         where
             A: SeqAccess<'de>,
         {
-            let mut res = Vec::with_capacity(seq.size_hint().unwrap_or(0));
-            while let Some(value) = seq.next_element()? {
-                res.push(value);
-            }
-            Ok(res)
+            utils::SeqIter::new(seq).collect()
         }
     }
 }
@@ -1631,11 +1674,11 @@ pub mod bytes_or_string {
 /// ## Converting to `serde_as`
 ///
 /// The same functionality can be more clearly expressed via [`DefaultOnError`] and using the [`serde_as`] macro.
-/// It can be combined with other convertes as shown.
+/// It can be combined with other converts as shown.
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, DefaultOnError, DisplayFromStr};
 /// #
 /// #[serde_as]
@@ -1655,7 +1698,7 @@ pub mod bytes_or_string {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// #
 /// #[derive(Deserialize)]
 /// struct A {
@@ -1685,14 +1728,13 @@ pub mod bytes_or_string {
 /// Deserializing missing values can be supported by adding the `default` field attribute:
 ///
 /// ```
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// #
 /// #[derive(Deserialize)]
 /// struct B {
 ///     #[serde(default, deserialize_with = "serde_with::rust::default_on_error::deserialize")]
 ///     value: u32,
 /// }
-///
 ///
 /// let b: B = serde_json::from_str(r#"{  }"#).unwrap();
 /// assert_eq!(0, b.value);
@@ -1744,7 +1786,7 @@ pub mod default_on_error {
 ///
 /// ```rust
 /// # #[cfg(feature = "macros")] {
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// # use serde_with::{serde_as, DefaultOnNull, DisplayFromStr};
 /// #
 /// #[serde_as]
@@ -1764,7 +1806,7 @@ pub mod default_on_error {
 /// # Examples
 ///
 /// ```
-/// # use serde_derive::Deserialize;
+/// # use serde::Deserialize;
 /// #
 /// #[derive(Deserialize)]
 /// struct A {

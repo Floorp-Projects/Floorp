@@ -7,6 +7,8 @@
 //!
 //! [user guide]: crate::guide
 
+mod const_arrays;
+#[macro_use]
 mod impls;
 
 use super::*;
@@ -20,7 +22,7 @@ use super::*;
 /// # Differences to [`Serialize`]
 ///
 /// The trait is only required for container-like types or types implementing specific conversion functions.
-/// Container-like types are [`Vec`][], [`BTreeMap`][], but also [`Option`][] and [`Box`][].
+/// Container-like types are [`Vec`], [`BTreeMap`], but also [`Option`] and [`Box`].
 /// Conversion types serialize into a different serde data type.
 /// For example, [`DisplayFromStr`] uses the [`Display`] trait to serialize a String and [`DurationSeconds`] converts a [`Duration`] into either String or integer values.
 ///
@@ -84,7 +86,7 @@ use super::*;
 ///     where
 ///         S: serde::Serializer,
 ///     {
-///         serializer.serialize_str(&source.to_string())
+///         serializer.collect_str(&source)
 ///     }
 /// }
 /// #
@@ -96,9 +98,11 @@ use super::*;
 /// # }
 /// ```
 ///
+/// [`Box`]: std::boxed::Box
 /// [`BTreeMap`]: std::collections::BTreeMap
 /// [`Display`]: std::fmt::Display
 /// [`Duration`]: std::time::Duration
+/// [`Vec`]: std::vec::Vec
 /// [impl-serialize]: https://serde.rs/impl-serialize.html
 pub trait SerializeAs<T: ?Sized> {
     /// Serialize this value into the given Serde serializer.

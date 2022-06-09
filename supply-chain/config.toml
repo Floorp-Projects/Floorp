@@ -1330,7 +1330,7 @@ version = "0.7.1"
 criteria = "safe-to-run"
 
 [[unaudited.serde_with]]
-version = "1.6.4"
+version = "1.14.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.serde_with_macros]]
