@@ -1474,7 +1474,7 @@ version = "1.17.0"
 criteria = "safe-to-run"
 
 [[unaudited.tokio-macros]]
-version = "1.7.0"
+version = "1.8.0"
 criteria = "safe-to-run"
 
 [[unaudited.tokio-stream]]
