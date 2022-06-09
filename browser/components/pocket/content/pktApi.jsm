@@ -48,14 +48,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "IndexedDB",
   "resource://gre/modules/IndexedDB.jsm"
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "gCookieFirstPartyIsolate",
   "privacy.firstparty.isolate",
   false
@@ -70,7 +71,7 @@ const RECENT_SAVES_UPDATE_TIME = 5 * 60 * 1000; // 30 minutes
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_VERSION, db => {
+  return lazy.IndexedDB.open(DB_NAME, DB_VERSION, db => {
     db.createObjectStore(STORE_NAME);
   });
 }
@@ -197,7 +198,7 @@ var pktApi = (function() {
   function getCookiesFromPocket() {
     var cookies = {};
     let oa = {};
-    if (gCookieFirstPartyIsolate) {
+    if (lazy.gCookieFirstPartyIsolate) {
       oa.firstPartyDomain = pocketSiteHost;
     }
     for (let cookie of Services.cookies.getCookiesFromHost(

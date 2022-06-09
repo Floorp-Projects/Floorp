@@ -8,13 +8,15 @@ var EXPORTED_SYMBOLS = ["Pocket"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUIUtils",
   "resource:///modules/BrowserUIUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
@@ -32,7 +34,7 @@ var Pocket = {
 
     let libraryButton = document.getElementById("library-button");
     if (libraryButton) {
-      BrowserUIUtils.setToolbarButtonHeightProperty(libraryButton);
+      lazy.BrowserUIUtils.setToolbarButtonHeightProperty(libraryButton);
     }
 
     let urlToSave = Pocket._urlToSave;
@@ -62,7 +64,7 @@ var Pocket = {
       return;
     }
 
-    let widget = CustomizableUI.getWidget("save-to-pocket-button");
+    let widget = lazy.CustomizableUI.getWidget("save-to-pocket-button");
     let anchorNode = widget.areaType
       ? widget.forWindow(ownerGlobal).anchor
       : ownerDocument.getElementById("PanelUI-menu-button");
