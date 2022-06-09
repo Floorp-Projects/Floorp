@@ -218,20 +218,22 @@ uint32_t CodeGeneratorShared::ArgToStackOffset(uint32_t slot) const {
 
 uint32_t CodeGeneratorShared::SlotToStackOffset(uint32_t slot) const {
   MOZ_ASSERT(slot > 0 && slot <= graph.localSlotsSize());
-  MOZ_ASSERT(slot <= masm.framePushed());
-  return masm.framePushed() - slot;
+  uint32_t offsetFromBase = offsetOfLocalSlots_ + slot;
+  MOZ_ASSERT(offsetFromBase <= masm.framePushed());
+  return masm.framePushed() - offsetFromBase;
 }
 
 // For argument construction for calls. Argslots are Value-sized.
 uint32_t CodeGeneratorShared::StackOffsetOfPassedArg(uint32_t slot) const {
   // A slot of 0 is permitted only to calculate %esp offset for calls.
   MOZ_ASSERT(slot <= graph.argumentSlotCount());
-  uint32_t offsetFromBase = graph.paddedLocalSlotsSize() + slot * sizeof(Value);
+  uint32_t offsetFromBase = offsetOfPassedArgSlots_ + slot * sizeof(Value);
+
   MOZ_ASSERT(offsetFromBase <= masm.framePushed());
   uint32_t offset = masm.framePushed() - offsetFromBase;
 
   // Space for passed arguments is reserved below a function's local stack
-  // storage. Note that paddedLocalSlotsSize() is aligned to at least
+  // storage. Note that passedArgSlotsOffset_ is aligned to at least
   // sizeof(Value) to ensure proper alignment.
   MOZ_ASSERT(offset % sizeof(Value) == 0);
   return offset;
