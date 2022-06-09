@@ -542,9 +542,11 @@ bool Module::instantiateFunctions(JSContext* cx,
 
     if (funcExport.funcType() != metadata(tier).funcImports[i].funcType()) {
       const Import& import = FindImportFunction(imports_, i);
+      UniqueChars importModuleName = import.module.toQuotedString(cx);
+      UniqueChars importFieldName = import.field.toQuotedString(cx);
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_IMPORT_SIG, import.module.get(),
-                               import.field.get());
+                               JSMSG_WASM_BAD_IMPORT_SIG,
+                               importModuleName.get(), importFieldName.get());
       return false;
     }
   }
@@ -930,7 +932,7 @@ static bool CreateExportObject(
   const GlobalDescVector& globals = metadata.globals;
 
   if (metadata.isAsmJS() && exports.length() == 1 &&
-      strlen(exports[0].fieldName()) == 0) {
+      exports[0].fieldName().isEmpty()) {
     RootedFunction func(cx);
     if (!GetFunctionExport(cx, instanceObj, funcImports, exports[0].funcIndex(),
                            &func)) {
@@ -954,8 +956,7 @@ static bool CreateExportObject(
   }
 
   for (const Export& exp : exports) {
-    JSAtom* atom =
-        AtomizeUTF8Chars(cx, exp.fieldName(), strlen(exp.fieldName()));
+    JSAtom* atom = exp.fieldName().toAtom(cx);
     if (!atom) {
       return false;
     }

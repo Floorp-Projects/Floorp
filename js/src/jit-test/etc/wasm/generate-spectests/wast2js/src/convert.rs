@@ -232,9 +232,20 @@ fn convert_directive(
 }
 
 fn escape_template_string(text: &str) -> String {
-    text.replace("$", "$$")
-        .replace("\\", "\\\\")
-        .replace("`", "\\`")
+    let mut escaped = String::new();
+    for c in text.chars() {
+        match c {
+            '$' => escaped.push_str("$$"),
+            '\\' => escaped.push_str("\\\\"),
+            '`' => escaped.push_str("\\`"),
+            c if c.is_ascii_control() && c != '\n' && c != '\t' => {
+                escaped.push_str(&format!("\\x{:02x}", c as u32))
+            }
+            c if !c.is_ascii() => escaped.push_str(&c.escape_unicode().to_string()),
+            c => escaped.push(c),
+        }
+    }
+    escaped
 }
 
 fn span_to_offset(span: wast::Span, text: &str) -> Result<usize> {

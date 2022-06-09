@@ -491,22 +491,12 @@ static bool ThrowBadImportArg(JSContext* cx) {
   return false;
 }
 
-static bool ThrowBadImportType(JSContext* cx, const char* field,
+static bool ThrowBadImportType(JSContext* cx, const CacheableName& field,
                                const char* str) {
+  UniqueChars fieldQuoted = field.toQuotedString(cx);
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_IMPORT_TYPE, field, str);
+                           JSMSG_WASM_BAD_IMPORT_TYPE, fieldQuoted.get(), str);
   return false;
-}
-
-static bool GetProperty(JSContext* cx, HandleObject obj, const char* chars,
-                        MutableHandleValue v) {
-  JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
-  if (!atom) {
-    return false;
-  }
-
-  RootedId id(cx, AtomToId(atom));
-  return GetProperty(cx, obj, obj, id, v);
 }
 
 bool js::wasm::GetImports(JSContext* cx, const Module& module,
@@ -524,27 +514,36 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
   uint32_t tableIndex = 0;
   const TableDescVector& tables = metadata.tables;
   for (const Import& import : module.imports()) {
+    RootedId moduleName(cx);
+    if (!import.module.toPropertyKey(cx, &moduleName)) {
+      return false;
+    }
+    RootedId fieldName(cx);
+    if (!import.field.toPropertyKey(cx, &fieldName)) {
+      return false;
+    }
+
     RootedValue v(cx);
-    if (!GetProperty(cx, importObj, import.module.get(), &v)) {
+    if (!GetProperty(cx, importObj, importObj, moduleName, &v)) {
       return false;
     }
 
     if (!v.isObject()) {
+      UniqueChars moduleQuoted = import.module.toQuotedString(cx);
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_IMPORT_FIELD,
-                               import.module.get());
+                               JSMSG_WASM_BAD_IMPORT_FIELD, moduleQuoted.get());
       return false;
     }
 
     RootedObject obj(cx, &v.toObject());
-    if (!GetProperty(cx, obj, import.field.get(), &v)) {
+    if (!GetProperty(cx, obj, obj, fieldName, &v)) {
       return false;
     }
 
     switch (import.kind) {
       case DefinitionKind::Function: {
         if (!IsFunctionObject(v)) {
-          return ThrowBadImportType(cx, import.field.get(), "Function");
+          return ThrowBadImportType(cx, import.field, "Function");
         }
 
         if (!imports->funcs.append(&v.toObject().as<JSFunction>())) {
@@ -556,7 +555,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
       case DefinitionKind::Table: {
         const uint32_t index = tableIndex++;
         if (!v.isObject() || !v.toObject().is<WasmTableObject>()) {
-          return ThrowBadImportType(cx, import.field.get(), "Table");
+          return ThrowBadImportType(cx, import.field, "Table");
         }
 
         RootedWasmTableObject obj(cx, &v.toObject().as<WasmTableObject>());
@@ -573,7 +572,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
       }
       case DefinitionKind::Memory: {
         if (!v.isObject() || !v.toObject().is<WasmMemoryObject>()) {
-          return ThrowBadImportType(cx, import.field.get(), "Memory");
+          return ThrowBadImportType(cx, import.field, "Memory");
         }
 
         MOZ_ASSERT(!imports->memory);
@@ -583,7 +582,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
       case DefinitionKind::Tag: {
         const uint32_t index = tagIndex++;
         if (!v.isObject() || !v.toObject().is<WasmTagObject>()) {
-          return ThrowBadImportType(cx, import.field.get(), "Tag");
+          return ThrowBadImportType(cx, import.field, "Tag");
         }
 
         RootedWasmTagObject obj(cx, &v.toObject().as<WasmTagObject>());
@@ -591,9 +590,11 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         // Checks whether the signature of the imported exception object matches
         // the signature declared in the exception import's TagDesc.
         if (obj->resultType() != tags[index].type->resultType()) {
+          UniqueChars fieldQuoted = import.field.toQuotedString(cx);
+          UniqueChars moduleQuoted = import.module.toQuotedString(cx);
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                   JSMSG_WASM_BAD_TAG_SIG, import.module.get(),
-                                   import.field.get());
+                                   JSMSG_WASM_BAD_TAG_SIG, moduleQuoted.get(),
+                                   fieldQuoted.get());
           return false;
         }
 
@@ -633,14 +634,14 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         } else {
           if (!global.type().isRefType()) {
             if (global.type() == ValType::I64 && !v.isBigInt()) {
-              return ThrowBadImportType(cx, import.field.get(), "BigInt");
+              return ThrowBadImportType(cx, import.field, "BigInt");
             }
             if (global.type() != ValType::I64 && !v.isNumber()) {
-              return ThrowBadImportType(cx, import.field.get(), "Number");
+              return ThrowBadImportType(cx, import.field, "Number");
             }
           } else {
             if (!global.type().isExternRef() && !v.isObjectOrNull()) {
-              return ThrowBadImportType(cx, import.field.get(),
+              return ThrowBadImportType(cx, import.field,
                                         "Object-or-null value required for "
                                         "non-externref reference type");
             }
@@ -1469,14 +1470,14 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    JSString* moduleStr = UTF8CharsToString(cx, import.module.get());
+    JSString* moduleStr = import.module.toAtom(cx);
     if (!moduleStr) {
       return false;
     }
     props.infallibleAppend(
         IdValuePair(NameToId(cx->names().module), StringValue(moduleStr)));
 
-    JSString* nameStr = UTF8CharsToString(cx, import.field.get());
+    JSString* nameStr = import.field.toAtom(cx);
     if (!nameStr) {
       return false;
     }
@@ -1585,7 +1586,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    JSString* nameStr = UTF8CharsToString(cx, exp.fieldName());
+    JSString* nameStr = exp.fieldName().toAtom(cx);
     if (!nameStr) {
       return false;
     }
@@ -4327,7 +4328,7 @@ JSFunction* WasmFunctionCreate(JSContext* cx, HandleFunction func,
 
   // We will be looking up and using the function in the future by index so the
   // name doesn't matter.
-  CacheableChars fieldName = DuplicateString("");
+  CacheableName fieldName;
   if (!moduleEnv.exports.emplaceBack(std::move(fieldName), 0,
                                      DefinitionKind::Function)) {
     return nullptr;

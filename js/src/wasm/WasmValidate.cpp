@@ -19,6 +19,7 @@
 #include "wasm/WasmValidate.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Span.h"
 #include "mozilla/Utf8.h"
 
 #include "js/Printf.h"
@@ -1684,34 +1685,33 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "type");
 }
 
-static UniqueChars DecodeName(Decoder& d) {
+[[nodiscard]] static bool DecodeName(Decoder& d, CacheableName* name) {
   uint32_t numBytes;
   if (!d.readVarU32(&numBytes)) {
-    return nullptr;
+    return false;
   }
 
   if (numBytes > MaxStringBytes) {
-    return nullptr;
+    return false;
   }
 
   const uint8_t* bytes;
   if (!d.readBytes(numBytes, &bytes)) {
-    return nullptr;
+    return false;
   }
 
   if (!IsUtf8(AsChars(Span(bytes, numBytes)))) {
-    return nullptr;
+    return false;
   }
 
-  UniqueChars name(js_pod_malloc<char>(numBytes + 1));
-  if (!name) {
-    return nullptr;
+  UTF8Bytes utf8Bytes;
+  if (!utf8Bytes.resizeUninitialized(numBytes)) {
+    return false;
   }
+  memcpy(utf8Bytes.begin(), bytes, numBytes);
 
-  memcpy(name.get(), bytes, numBytes);
-  name[numBytes] = '\0';
-
-  return name;
+  *name = CacheableName(std::move(utf8Bytes));
+  return true;
 }
 
 static bool DecodeFuncTypeIndex(Decoder& d, const SharedTypeContext& types,
@@ -1968,14 +1968,14 @@ static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
 }
 
 static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
-  UniqueChars moduleName = DecodeName(d);
-  if (!moduleName) {
+  CacheableName moduleName;
+  if (!DecodeName(d, &moduleName)) {
     return d.fail("expected valid import module name");
   }
 
-  UniqueChars funcName = DecodeName(d);
-  if (!funcName) {
-    return d.fail("expected valid import func name");
+  CacheableName funcName;
+  if (!DecodeName(d, &funcName)) {
+    return d.fail("expected valid import field name");
   }
 
   uint8_t rawImportKind;
@@ -2287,33 +2287,27 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "tag");
 }
 
-using CStringSet =
-    HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy>;
+using NameSet = HashSet<Span<char>, NameHasher, SystemAllocPolicy>;
 
-static UniqueChars DecodeExportName(Decoder& d, CStringSet* dupSet) {
-  UniqueChars exportName = DecodeName(d);
-  if (!exportName) {
+[[nodiscard]] static bool DecodeExportName(Decoder& d, NameSet* dupSet,
+                                           CacheableName* exportName) {
+  if (!DecodeName(d, exportName)) {
     d.fail("expected valid export name");
-    return nullptr;
+    return false;
   }
 
-  CStringSet::AddPtr p = dupSet->lookupForAdd(exportName.get());
+  NameSet::AddPtr p = dupSet->lookupForAdd(exportName->utf8Bytes());
   if (p) {
     d.fail("duplicate export");
-    return nullptr;
+    return false;
   }
 
-  if (!dupSet->add(p, exportName.get())) {
-    return nullptr;
-  }
-
-  return exportName;
+  return dupSet->add(p, exportName->utf8Bytes());
 }
 
-static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
-                         CStringSet* dupSet) {
-  UniqueChars fieldName = DecodeExportName(d, dupSet);
-  if (!fieldName) {
+static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
+  CacheableName fieldName;
+  if (!DecodeExportName(d, dupSet, &fieldName)) {
     return false;
   }
 
@@ -2423,7 +2417,7 @@ static bool DecodeExportSection(Decoder& d, ModuleEnvironment* env) {
     return true;
   }
 
-  CStringSet dupSet;
+  NameSet dupSet;
 
   uint32_t numExports;
   if (!d.readVarU32(&numExports)) {

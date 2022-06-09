@@ -18,24 +18,75 @@
 
 #include "wasm/WasmModuleTypes.h"
 
+#include "mozilla/Range.h"
+
+#include "vm/JSAtom.h"
 #include "vm/MallocProvider.h"
 #include "wasm/WasmUtility.h"
 
+#include "vm/JSAtom-inl.h"
+
 using namespace js;
 using namespace js::wasm;
+
+/* static */
+CacheableName CacheableName::fromUTF8Chars(UniqueChars&& utf8Chars) {
+  size_t length = strlen(utf8Chars.get());
+  UTF8Bytes bytes;
+  bytes.replaceRawBuffer(utf8Chars.release(), length, length + 1);
+  return CacheableName(std::move(bytes));
+}
+
+/* static */
+bool CacheableName::fromUTF8Chars(const char* utf8Chars, CacheableName* name) {
+  size_t utf8CharsLen = strlen(utf8Chars);
+  UTF8Bytes bytes;
+  if (!bytes.resizeUninitialized(utf8CharsLen)) {
+    return false;
+  }
+  memcpy(bytes.begin(), utf8Chars, utf8CharsLen);
+  *name = CacheableName(std::move(bytes));
+  return true;
+}
+
+JSAtom* CacheableName::toAtom(JSContext* cx) const {
+  return AtomizeUTF8Chars(cx, begin(), length());
+}
+
+bool CacheableName::toPropertyKey(JSContext* cx,
+                                  MutableHandleId propertyKey) const {
+  JSAtom* atom = toAtom(cx);
+  if (!atom) {
+    return false;
+  }
+  propertyKey.set(AtomToId(atom));
+  return true;
+}
+
+UniqueChars CacheableName::toQuotedString(JSContext* cx) const {
+  RootedString atom(cx, toAtom(cx));
+  if (!atom) {
+    return nullptr;
+  }
+  return QuoteString(cx, atom.get());
+}
+
+size_t CacheableName::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return bytes_.sizeOfExcludingThis(mallocSizeOf);
+}
 
 size_t Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return module.sizeOfExcludingThis(mallocSizeOf) +
          field.sizeOfExcludingThis(mallocSizeOf);
 }
 
-Export::Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind)
+Export::Export(CacheableName&& fieldName, uint32_t index, DefinitionKind kind)
     : fieldName_(std::move(fieldName)) {
   pod.kind_ = kind;
   pod.index_ = index;
 }
 
-Export::Export(UniqueChars fieldName, DefinitionKind kind)
+Export::Export(CacheableName&& fieldName, DefinitionKind kind)
     : fieldName_(std::move(fieldName)) {
   pod.kind_ = kind;
   pod.index_ = 0;

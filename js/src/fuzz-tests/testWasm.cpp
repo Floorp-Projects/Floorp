@@ -82,6 +82,10 @@ static bool assignImportKind(const Import& import, HandleObject obj,
                              JS::Handle<JS::IdVector> lastExportIds,
                              size_t* currentExportId, size_t exportsLength,
                              HandleValue defaultValue) {
+  RootedId fieldName(gCx);
+  if (!import.field.toPropertyKey(gCx, &fieldName)) {
+    return false;
+  }
   bool assigned = false;
   while (*currentExportId < exportsLength) {
     RootedValue propVal(gCx);
@@ -93,7 +97,7 @@ static bool assignImportKind(const Import& import, HandleObject obj,
     (*currentExportId)++;
 
     if (propVal.isObject() && propVal.toObject().is<T>()) {
-      if (!JS_SetProperty(gCx, obj, import.field.get(), propVal)) {
+      if (!JS_SetPropertyById(gCx, obj, fieldName, propVal)) {
         return false;
       }
 
@@ -102,7 +106,7 @@ static bool assignImportKind(const Import& import, HandleObject obj,
     }
   }
   if (!assigned) {
-    if (!JS_SetProperty(gCx, obj, import.field.get(), defaultValue)) {
+    if (!JS_SetPropertyById(gCx, obj, fieldName, defaultValue)) {
       return false;
     }
   }
@@ -306,12 +310,21 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     size_t currentTagExportId = 0;
 
     for (const Import& import : importVec) {
+      RootedId moduleName(gCx);
+      if (!import.module.toPropertyKey(gCx, &moduleName)) {
+        return false;
+      }
+      RootedId fieldName(gCx);
+      if (!import.field.toPropertyKey(gCx, &fieldName)) {
+        return false;
+      }
+
       // First try to get the namespace object, create one if this is the
       // first time.
       RootedValue v(gCx);
-      if (!JS_GetProperty(gCx, importObj, import.module.get(), &v) ||
+      if (!JS_GetPropertyById(gCx, importObj, moduleName, &v) ||
           !v.isObject()) {
-        // Insert empty object at importObj[import.module.get()]
+        // Insert empty object at importObj[moduleName]
         RootedObject plainObj(gCx, JS_NewPlainObject(gCx));
 
         if (!plainObj) {
@@ -319,13 +332,13 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
         }
 
         RootedValue plainVal(gCx, ObjectValue(*plainObj));
-        if (!JS_SetProperty(gCx, importObj, import.module.get(), plainVal)) {
+        if (!JS_SetPropertyById(gCx, importObj, moduleName, plainVal)) {
           return 0;
         }
 
         // Get the object we just inserted, store in v, ensure it is an
         // object (no proxies or other magic at work).
-        if (!JS_GetProperty(gCx, importObj, import.module.get(), &v) ||
+        if (!JS_GetPropertyById(gCx, importObj, moduleName, &v) ||
             !v.isObject()) {
           return 0;
         }
@@ -333,9 +346,9 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
 
       RootedObject obj(gCx, &v.toObject());
       bool found = false;
-      if (JS_HasProperty(gCx, obj, import.field.get(), &found) && !found) {
+      if (JS_HasPropertyById(gCx, obj, fieldName, &found) && !found) {
         // Insert i-th export object that fits the type requirement
-        // at `v[import.field.get()]`.
+        // at `v[fieldName]`.
 
         switch (import.kind) {
           case DefinitionKind::Function:

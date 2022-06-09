@@ -20,6 +20,7 @@
 #define wasm_module_types_h
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 
 #include "js/AllocPolicy.h"
 #include "js/RefCounted.h"
@@ -42,6 +43,7 @@ namespace wasm {
 
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::Span;
 
 class FuncType;
 class TypeIdDesc;
@@ -62,6 +64,54 @@ struct CacheableChars : UniqueChars {
 
 using CacheableCharsVector = Vector<CacheableChars, 0, SystemAllocPolicy>;
 
+// CacheableName is used to cacheably store a UTF-8 string that may contain
+// null terminators in sequence.
+
+struct CacheableName {
+ private:
+  UTF8Bytes bytes_;
+
+  const char* begin() const { return (const char*)bytes_.begin(); }
+  size_t length() const { return bytes_.length(); }
+
+ public:
+  CacheableName() = default;
+  MOZ_IMPLICIT CacheableName(UTF8Bytes&& rhs) : bytes_(std::move(rhs)) {}
+
+  bool isEmpty() const { return bytes_.length() == 0; }
+
+  Span<char> utf8Bytes() { return Span<char>(bytes_); }
+  Span<const char> utf8Bytes() const { return Span<const char>(bytes_); }
+
+  static CacheableName fromUTF8Chars(UniqueChars&& utf8Chars);
+  [[nodiscard]] static bool fromUTF8Chars(const char* utf8Chars,
+                                          CacheableName* name);
+
+  [[nodiscard]] JSAtom* toAtom(JSContext* cx) const;
+  [[nodiscard]] bool toPropertyKey(JSContext* cx,
+                                   MutableHandleId propertyKey) const;
+  [[nodiscard]] UniqueChars toQuotedString(JSContext* cx) const;
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(CacheableName);
+};
+
+using CacheableNameVector = Vector<CacheableName, 0, SystemAllocPolicy>;
+
+// A hash policy for names.
+struct NameHasher {
+  using Key = Span<const char>;
+  using Lookup = Span<const char>;
+
+  static HashNumber hash(const Lookup& aLookup) {
+    return mozilla::HashString(aLookup.data(), aLookup.Length());
+  }
+
+  static bool match(const Key& aKey, const Lookup& aLookup) {
+    return aKey == aLookup;
+  }
+};
+
 // Import describes a single wasm import. An ImportVector describes all
 // of a single module's imports.
 //
@@ -69,12 +119,12 @@ using CacheableCharsVector = Vector<CacheableChars, 0, SystemAllocPolicy>;
 // immutably by Module.
 
 struct Import {
-  CacheableChars module;
-  CacheableChars field;
+  CacheableName module;
+  CacheableName field;
   DefinitionKind kind;
 
   Import() = default;
-  Import(UniqueChars&& module, UniqueChars&& field, DefinitionKind kind)
+  Import(CacheableName&& module, CacheableName&& field, DefinitionKind kind)
       : module(std::move(module)), field(std::move(field)), kind(kind) {}
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -103,15 +153,16 @@ class Export {
   };
 
  private:
-  CacheableChars fieldName_;
+  CacheableName fieldName_;
   CacheablePod pod;
 
  public:
   Export() = default;
-  explicit Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind);
-  explicit Export(UniqueChars fieldName, DefinitionKind kind);
+  explicit Export(CacheableName&& fieldName, uint32_t index,
+                  DefinitionKind kind);
+  explicit Export(CacheableName&& fieldName, DefinitionKind kind);
 
-  const char* fieldName() const { return fieldName_.get(); }
+  const CacheableName& fieldName() const { return fieldName_; }
 
   DefinitionKind kind() const { return pod.kind_; }
   uint32_t funcIndex() const;
