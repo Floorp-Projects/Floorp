@@ -28,6 +28,22 @@ function getFontSize(pipBrowser) {
   });
 }
 
+function promiseResize(win, width, height) {
+  if (win.outerWidth == width && win.outerHeight == height) {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    // More than one "resize" might be received if the window was recently
+    // created.
+    win.addEventListener("resize", () => {
+      if (win.outerWidth == width && win.outerHeight == height) {
+        resolve();
+      }
+    });
+    win.resizeTo(width, height);
+  });
+}
+
 /**
  * Tests the font size is correct for PiP windows
  */
@@ -52,12 +68,12 @@ add_task(async () => {
       ok(pipWin, "Got Picture-in-Picture window.");
 
       // move PiP window to 0, 0 so resizing the window doesn't go offscreen
-      await pipWin.moveTo(0, 0);
+      pipWin.moveTo(0, 0);
 
       let width = pipWin.innerWidth;
       let height = pipWin.innerHeight;
 
-      pipWin.resizeTo(250 * (width / height), 250);
+      await promiseResize(pipWin, Math.round(250 * (width / height)), 250);
 
       width = pipWin.innerWidth;
       height = pipWin.innerHeight;
@@ -92,7 +108,7 @@ add_task(async () => {
       // resize PiP window to a larger size
       width = pipWin.innerWidth * 2;
       height = pipWin.innerHeight * 2;
-      await pipWin.resizeTo(width, height);
+      await promiseResize(pipWin, width, height);
 
       fontSize = await getFontSize(pipBrowser);
       checkFontSize(fontSize, 40, "The large font size is the max of 40px");
