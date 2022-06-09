@@ -1,7 +1,9 @@
 //! Reimplements core logic and types from `std::io` in an `alloc`-friendly
 //! fashion.
 
-use crate::lib::*;
+use alloc::vec::Vec;
+use core::fmt::{self, Display};
+use core::result;
 
 pub enum ErrorKind {
     Other,

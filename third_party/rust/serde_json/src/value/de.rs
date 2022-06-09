@@ -1,9 +1,15 @@
 use crate::error::Error;
-use crate::lib::str::FromStr;
-use crate::lib::*;
 use crate::map::Map;
 use crate::number::Number;
 use crate::value::Value;
+use alloc::borrow::{Cow, ToOwned};
+use alloc::string::String;
+#[cfg(feature = "raw_value")]
+use alloc::string::ToString;
+use alloc::vec::{self, Vec};
+use core::fmt;
+use core::slice;
+use core::str::FromStr;
 use serde::de::{
     self, Deserialize, DeserializeSeed, EnumAccess, Expected, IntoDeserializer, MapAccess,
     SeqAccess, Unexpected, VariantAccess, Visitor,

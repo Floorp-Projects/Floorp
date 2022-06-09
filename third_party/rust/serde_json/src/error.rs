@@ -1,9 +1,14 @@
 //! When serializing or deserializing JSON goes wrong.
 
 use crate::io;
-use crate::lib::str::FromStr;
-use crate::lib::*;
+use alloc::boxed::Box;
+use alloc::string::{String, ToString};
+use core::fmt::{self, Debug, Display};
+use core::result;
+use core::str::FromStr;
 use serde::{de, ser};
+#[cfg(feature = "std")]
+use std::error;
 
 /// This type represents all possible errors that can occur when serializing or
 /// deserializing JSON data.

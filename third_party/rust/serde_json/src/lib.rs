@@ -227,10 +227,10 @@
 //! });
 //! ```
 //!
-//! This is amazingly convenient but we have the problem we had before with
-//! `Value` which is that the IDE and Rust compiler cannot help us if we get it
-//! wrong. Serde JSON provides a better way of serializing strongly-typed data
-//! structures into JSON text.
+//! This is amazingly convenient, but we have the problem we had before with
+//! `Value`: the IDE and Rust compiler cannot help us if we get it wrong. Serde
+//! JSON provides a better way of serializing strongly-typed data structures
+//! into JSON text.
 //!
 //! # Creating JSON by serializing data structures
 //!
@@ -300,9 +300,10 @@
 //! [macro]: https://docs.serde.rs/serde_json/macro.json.html
 //! [`serde-json-core`]: https://github.com/rust-embedded-community/serde-json-core
 
-#![doc(html_root_url = "https://docs.rs/serde_json/1.0.72")]
+#![doc(html_root_url = "https://docs.rs/serde_json/1.0.81")]
 // Ignored clippy lints
 #![allow(
+    clippy::collapsible_else_if,
     clippy::comparison_chain,
     clippy::deprecated_cfg_attr,
     clippy::doc_markdown,
@@ -312,6 +313,10 @@
     clippy::match_like_matches_macro,
     clippy::match_single_binding,
     clippy::needless_doctest_main,
+    clippy::needless_late_init,
+    // clippy bug: https://github.com/rust-lang/rust-clippy/issues/8366
+    clippy::ptr_arg,
+    clippy::return_self_not_must_use,
     clippy::transmute_ptr_to_ptr,
     clippy::unnecessary_wraps,
     // clippy bug: https://github.com/rust-lang/rust-clippy/issues/5704
@@ -319,6 +324,8 @@
 )]
 // Ignored clippy_pedantic lints
 #![allow(
+    // buggy
+    clippy::iter_not_returning_iterator, // https://github.com/rust-lang/rust-clippy/issues/8285
     // Deserializer::from_str, into_iter
     clippy::should_implement_trait,
     // integer and float ser/de requires these sorts of casts
@@ -358,64 +365,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-////////////////////////////////////////////////////////////////////////////////
-
-#[cfg(not(feature = "std"))]
 extern crate alloc;
-
-/// A facade around all the types we need from the `std`, `core`, and `alloc`
-/// crates. This avoids elaborate import wrangling having to happen in every
-/// module.
-mod lib {
-    mod core {
-        #[cfg(not(feature = "std"))]
-        pub use core::*;
-        #[cfg(feature = "std")]
-        pub use std::*;
-    }
-
-    pub use self::core::cell::{Cell, RefCell};
-    pub use self::core::clone::{self, Clone};
-    pub use self::core::convert::{self, From, Into};
-    pub use self::core::default::{self, Default};
-    pub use self::core::fmt::{self, Debug, Display};
-    pub use self::core::hash::{self, Hash, Hasher};
-    pub use self::core::iter::FusedIterator;
-    pub use self::core::marker::{self, PhantomData};
-    pub use self::core::ops::{Bound, RangeBounds};
-    pub use self::core::result::{self, Result};
-    pub use self::core::{borrow, char, cmp, iter, mem, num, ops, slice, str};
-
-    #[cfg(not(feature = "std"))]
-    pub use alloc::borrow::{Cow, ToOwned};
-    #[cfg(feature = "std")]
-    pub use std::borrow::{Cow, ToOwned};
-
-    #[cfg(not(feature = "std"))]
-    pub use alloc::string::{String, ToString};
-    #[cfg(feature = "std")]
-    pub use std::string::{String, ToString};
-
-    #[cfg(not(feature = "std"))]
-    pub use alloc::vec::{self, Vec};
-    #[cfg(feature = "std")]
-    pub use std::vec::{self, Vec};
-
-    #[cfg(not(feature = "std"))]
-    pub use alloc::boxed::Box;
-    #[cfg(feature = "std")]
-    pub use std::boxed::Box;
-
-    #[cfg(not(feature = "std"))]
-    pub use alloc::collections::{btree_map, BTreeMap};
-    #[cfg(feature = "std")]
-    pub use std::collections::{btree_map, BTreeMap};
-
-    #[cfg(feature = "std")]
-    pub use std::error;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "std")]
 #[doc(inline)]
@@ -435,14 +385,11 @@ pub use crate::value::{from_value, to_value, Map, Number, Value};
 // We only use our own error type; no need for From conversions provided by the
 // standard library's try! macro. This reduces lines of LLVM IR by 4%.
 macro_rules! tri {
-    ($e:expr) => {
+    ($e:expr $(,)?) => {
         match $e {
-            crate::lib::Result::Ok(val) => val,
-            crate::lib::Result::Err(err) => return crate::lib::Result::Err(err),
+            core::result::Result::Ok(val) => val,
+            core::result::Result::Err(err) => return core::result::Result::Err(err),
         }
-    };
-    ($e:expr,) => {
-        tri!($e)
     };
 }
 

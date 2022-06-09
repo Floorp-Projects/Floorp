@@ -3,10 +3,16 @@
 use crate::error::{Error, ErrorCode, Result};
 #[cfg(feature = "float_roundtrip")]
 use crate::lexical;
-use crate::lib::str::FromStr;
-use crate::lib::*;
 use crate::number::Number;
 use crate::read::{self, Fused, Reference};
+use alloc::string::String;
+use alloc::vec::Vec;
+#[cfg(feature = "float_roundtrip")]
+use core::iter;
+use core::iter::FusedIterator;
+use core::marker::PhantomData;
+use core::result;
+use core::str::FromStr;
 use serde::de::{self, Expected, Unexpected};
 use serde::{forward_to_deserialize_any, serde_if_integer128};
 
@@ -87,7 +93,9 @@ impl<'a> Deserializer<read::StrRead<'a>> {
 
 macro_rules! overflow {
     ($a:ident * 10 + $b:ident, $c:expr) => {
-        $a >= $c / 10 && ($a > $c / 10 || $b > $c % 10)
+        match $c {
+            c => $a >= c / 10 && ($a > c / 10 || $b > c % 10),
+        }
     };
 }
 
@@ -856,6 +864,15 @@ impl<'de, R: Read<'de>> Deserializer<R> {
             buf.push('-');
         }
         self.scan_integer(&mut buf)?;
+        if positive {
+            if let Ok(unsigned) = buf.parse() {
+                return Ok(ParserNumber::U64(unsigned));
+            }
+        } else {
+            if let Ok(signed) = buf.parse() {
+                return Ok(ParserNumber::I64(signed));
+            }
+        }
         Ok(ParserNumber::String(buf))
     }
 
@@ -2167,10 +2184,18 @@ where
     }
 
     #[inline]
-    fn deserialize_newtype_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
+    fn deserialize_newtype_struct<V>(self, name: &'static str, visitor: V) -> Result<V::Value>
     where
         V: de::Visitor<'de>,
     {
+        #[cfg(feature = "raw_value")]
+        {
+            if name == crate::raw::TOKEN {
+                return self.de.deserialize_raw_value(visitor);
+            }
+        }
+
+        let _ = name;
         visitor.visit_newtype_struct(self)
     }
 

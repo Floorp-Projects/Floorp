@@ -9,7 +9,8 @@
 use super::large_powers;
 use super::num::*;
 use super::small_powers::*;
-use crate::lib::{cmp, iter, mem, Vec};
+use alloc::vec::Vec;
+use core::{cmp, iter, mem};
 
 // ALIASES
 // -------
@@ -593,7 +594,7 @@ mod large {
 
         // Iteratively add elements from y to x.
         let mut carry = false;
-        for (xi, yi) in (&mut x[xstart..]).iter_mut().zip(y.iter()) {
+        for (xi, yi) in x[xstart..].iter_mut().zip(y.iter()) {
             // Only one op of the two can overflow, since we added at max
             // Limb::max_value() + Limb::max_value(). Add the previous carry,
             // and store the current carry for the next.
