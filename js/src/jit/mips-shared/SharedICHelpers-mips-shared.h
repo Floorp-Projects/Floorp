@@ -52,19 +52,8 @@ inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
 
 inline void EmitReturnFromIC(MacroAssembler& masm) { masm.branch(ra); }
 
-inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm,
-                                       bool calledIntoIon = false) {
-  // Ion frames do not save and restore the frame pointer. If we called
-  // into Ion, we have to restore the stack pointer from the frame descriptor.
-  // If we performed a VM call, the descriptor has been popped already so
-  // in that case we use the frame pointer.
-  if (calledIntoIon) {
-    masm.pop(ScratchRegister);
-    masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), ScratchRegister);
-    masm.addPtr(ScratchRegister, BaselineStackReg);
-  } else {
-    masm.movePtr(FramePointer, BaselineStackReg);
-  }
+inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
+  masm.movePtr(FramePointer, BaselineStackReg);
 
   masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)),
                FramePointer);

@@ -6016,25 +6016,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
     return false;
   }
 
-  Label afterFrameRestore;
-  masm.jump(&afterFrameRestore);
   masm.bind(&returnTarget);
-
-  // When we call into a function which may end up in Warp/Ion,
-  // we need to account for the possibility that FramePointer
-  // is clobbered. So we recompute it based on the frame descriptor.
-
-  // Load the frame descriptor into FramePointer.
-  masm.loadPtr(Address(masm.getStackPointer(), 0), FramePointer);
-  // Compute Frame Size.
-  masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), FramePointer);
-  // Add stack pointer.
-  masm.addStackPtrTo(FramePointer);
-
-  // This magic constant corresponds to the callee token and
-  // actualArgc pushed before the frame descriptor was pushed.
-  masm.addPtr(Imm32(2 * sizeof(void*)), FramePointer);
-  masm.bind(&afterFrameRestore);
 
   // Restore Stack pointer
   masm.computeEffectiveAddress(frame.addressOfStackValue(-1),
