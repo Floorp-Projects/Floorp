@@ -12,12 +12,18 @@
 [package]
 edition = "2018"
 name = "target-lexicon"
-version = "0.12.3"
+version = "0.12.4"
 authors = ["Dan Gohman <sunfish@mozilla.com>"]
 description = "Targeting utilities for compilers and related tools"
 documentation = "https://docs.rs/target-lexicon/"
 readme = "README.md"
-keywords = ["target", "host", "triple", "compiler", "jit"]
+keywords = [
+    "target",
+    "host",
+    "triple",
+    "compiler",
+    "jit",
+]
 categories = ["no-std"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/target-lexicon"
@@ -25,5 +31,6 @@ repository = "https://github.com/bytecodealliance/target-lexicon"
 [features]
 default = []
 std = []
+
 [badges.maintenance]
 status = "passively-maintained"
