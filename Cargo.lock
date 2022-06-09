@@ -2844,7 +2844,7 @@ dependencies = [
  "jsrust_shared",
  "mozglue-static",
  "wasmparser",
- "wat",
+ "wast",
 ]
 
 [[package]]
@@ -5864,15 +5864,6 @@ dependencies = [
  "leb128",
  "memchr",
  "unicode-width",
-]
-
-[[package]]
-name = "wat"
-version = "1.0.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48b3b9b3e39e66c7fd3f8be785e74444d216260f491e93369e317ed6482ff80f"
-dependencies = [
- "wast",
 ]
 
 [[package]]
