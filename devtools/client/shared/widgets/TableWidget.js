@@ -994,7 +994,7 @@ TableWidget.prototype = {
 
     const sortedItems = this.columns.get(column).sort([...this.items.values()]);
     for (const [id, col] of this.columns) {
-      if (id != col) {
+      if (id === col) {
         col.sort(sortedItems);
       }
     }
@@ -1229,8 +1229,6 @@ Column.prototype = {
   /**
    * Called when the column is sorted by.
    *
-   * @param {string} event
-   *        The event name of the event. i.e. EVENTS.COLUMN_SORTED
    * @param {string} column
    *        The id of the column being sorted by.
    */

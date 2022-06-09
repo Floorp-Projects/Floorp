@@ -3,6 +3,8 @@
 
 "use strict";
 
+const l10n = new Localization(["devtools/client/storage.ftl"], true);
+const sessionString = l10n.formatValueSync("storage-expires-session");
 const {
   naturalSortCaseSensitive,
   naturalSortCaseInsensitive,
@@ -160,6 +162,44 @@ function run_test() {
         "2015-01-01",
       ],
       "mixed Date types"
+    );
+    runTest(
+      [
+        "Tue, 29 Jun 2021 11:31:17 GMT",
+        "Sun, 14 Jun 2009 11:11:15 GMT",
+        sessionString,
+        "Mon, 15 Jun 2009 20:45:30 GMT",
+      ],
+      [
+        sessionString,
+        "Sun, 14 Jun 2009 11:11:15 GMT",
+        "Mon, 15 Jun 2009 20:45:30 GMT",
+        "Tue, 29 Jun 2021 11:31:17 GMT",
+      ],
+      `"${sessionString}" amongst date strings`
+    );
+    runTest(
+      [
+        "Madras",
+        "Jalfrezi",
+        "Rogan Josh",
+        "Vindaloo",
+        "Tikka Masala",
+        sessionString,
+        "Masala",
+        "Korma",
+      ],
+      [
+        "Jalfrezi",
+        "Korma",
+        "Madras",
+        "Masala",
+        "Rogan Josh",
+        sessionString,
+        "Tikka Masala",
+        "Vindaloo",
+      ],
+      `"${sessionString}" amongst strings`
     );
   });
 
