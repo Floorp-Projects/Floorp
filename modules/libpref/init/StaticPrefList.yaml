@@ -11182,6 +11182,11 @@
   value: 1
   mirror: always
 
+- name: network.allow_raw_sockets_in_content_processes
+  type: bool
+  value: false
+  mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
