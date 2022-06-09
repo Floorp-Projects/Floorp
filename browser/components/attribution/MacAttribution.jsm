@@ -8,11 +8,13 @@ var EXPORTED_SYMBOLS = ["MacAttribution"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+const lazy = {};
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   let consoleOptions = {
-    // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
-    // messages during development. See LOG_LEVELS in Console.jsm for details.
+    // tip: set maxLogLevel to "debug" and use lazy.log.debug() to create
+    // detailed messages during development. See LOG_LEVELS in Console.jsm for
+    // details.
     maxLogLevel: "error",
     maxLogLevelPref: "browser.attribution.mac.loglevel",
     prefix: "MacAttribution",
@@ -22,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "Subprocess",
   "resource://gre/modules/Subprocess.jsm"
 );
@@ -92,7 +94,7 @@ async function queryQuarantineDatabase(
        WHERE LSQuarantineEventIdentifier = '${guid}'
        ORDER BY LSQuarantineTimeStamp DESC LIMIT 1`;
 
-  let proc = await Subprocess.call({
+  let proc = await lazy.Subprocess.call({
     command: "/usr/bin/sqlite3",
     arguments: [path, query],
     environment: {},
@@ -148,7 +150,7 @@ var MacAttribution = {
    * @throws NS_ERROR_UNEXPECTED if there is a quarantine GUID, but no corresponding referrer URL is known.
    */
   async getReferrerUrl(path = this.applicationPath) {
-    log.debug(`getReferrerUrl(${JSON.stringify(path)})`);
+    lazy.log.debug(`getReferrerUrl(${JSON.stringify(path)})`);
 
     // First, determine the quarantine GUID assigned by macOS to the given path.
     let guid;
@@ -160,13 +162,13 @@ var MacAttribution = {
         Cr.NS_ERROR_NOT_AVAILABLE
       );
     }
-    log.debug(`getReferrerUrl: guid: ${guid}`);
+    lazy.log.debug(`getReferrerUrl: guid: ${guid}`);
 
     // Second, fish the relevant record from the quarantine database.
     let url = "";
     try {
       url = await queryQuarantineDatabase(guid);
-      log.debug(`getReferrerUrl: url: ${url}`);
+      lazy.log.debug(`getReferrerUrl: url: ${url}`);
     } catch (ex) {
       // This path is known to macOS but we failed to extract a referrer -- be noisy.
       throw new Components.Exception(
