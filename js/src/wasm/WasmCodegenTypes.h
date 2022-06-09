@@ -343,12 +343,12 @@ class CodeRange {
   bool isDebugTrap() const { return kind() == DebugTrap; }
   bool isThunk() const { return kind() == FarJumpIsland; }
 
-  // Function, import exits and trap exits have standard callable prologues
-  // and epilogues. Asynchronous frame iteration needs to know the offset of
-  // the return instruction to calculate the frame pointer.
+  // Functions, import exits, trap exits and JitEntry stubs have standard
+  // callable prologues and epilogues. Asynchronous frame iteration needs to
+  // know the offset of the return instruction to calculate the frame pointer.
 
   bool hasReturn() const {
-    return isFunction() || isImportExit() || isDebugTrap();
+    return isFunction() || isImportExit() || isDebugTrap() || isJitEntry();
   }
   uint32_t ret() const {
     MOZ_ASSERT(hasReturn());
