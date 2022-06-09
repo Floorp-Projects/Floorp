@@ -72,6 +72,15 @@ class nsPageFrame final : public nsContainerFrame {
 
   nsSize ComputePageSize() const;
 
+  // Computes the scaling factor caused by a CSS page-size that is to large to
+  // fit on the paper we are printing to.
+  // Callers that have already computed the page size with ComputePageSize
+  // should use the first version of the function, which avoids recomputing it.
+  float ComputePageSizeScale(const nsSize aContentPageSize) const;
+  inline float ComputePageSizeScale() const {
+    return ComputePageSizeScale(ComputePageSize());
+  }
+
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();
