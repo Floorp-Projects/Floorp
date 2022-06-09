@@ -1018,7 +1018,7 @@ version = "0.28.4"
 criteria = "safe-to-deploy"
 
 [[unaudited.once_cell]]
-version = "1.10.0"
+version = "1.12.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.ordered-float]]

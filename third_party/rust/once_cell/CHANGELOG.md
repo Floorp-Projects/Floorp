@@ -1,10 +1,24 @@
 # Changelog
 
-## 1.10
+## Unreleased
+
+-
+
+## 1.12.0
+
+- Add `OnceCell::wait`, a blocking variant of `get`.
+
+## 1.11.0
+
+- Add `OnceCell::with_value` to create initialized `OnceCell` in `const` context.
+- Improve `Clone` implementation for `OnceCell`.
+- Rewrite `parking_lot` version on top of `parking_lot_core`, for even smaller cells!
+
+## 1.10.0
 
 - upgrade `parking_lot` to `0.12.0` (note that this bumps MSRV with `parking_lot` feature enabled to `1.49.0`).
 
-## 1.9
+## 1.9.0
 
 - Added an `atomic-polyfill` optional dependency to compile `race` on platforms without atomics
 

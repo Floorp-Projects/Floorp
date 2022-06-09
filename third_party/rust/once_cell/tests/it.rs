@@ -18,6 +18,13 @@ mod unsync {
     }
 
     #[test]
+    fn once_cell_with_value() {
+        const CELL: OnceCell<i32> = OnceCell::with_value(12);
+        let cell = CELL;
+        assert_eq!(cell.get(), Some(&12));
+    }
+
+    #[test]
     fn once_cell_get_mut() {
         let mut c = OnceCell::new();
         assert!(c.get_mut().is_none());
@@ -231,6 +238,12 @@ mod sync {
     }
 
     #[test]
+    fn once_cell_with_value() {
+        static CELL: OnceCell<i32> = OnceCell::with_value(12);
+        assert_eq!(CELL.get(), Some(&12));
+    }
+
+    #[test]
     fn once_cell_get_mut() {
         let mut c = OnceCell::new();
         assert!(c.get_mut().is_none());
@@ -304,6 +317,41 @@ mod sync {
             Ok(&"hello".to_string())
         );
         assert_eq!(cell.get(), Some(&"hello".to_string()));
+    }
+
+    #[test]
+    fn wait() {
+        let cell: OnceCell<String> = OnceCell::new();
+        scope(|s| {
+            s.spawn(|_| cell.set("hello".to_string()));
+            let greeting = cell.wait();
+            assert_eq!(greeting, "hello")
+        })
+        .unwrap();
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)] // miri doesn't support Barrier
+    fn get_or_init_stress() {
+        use std::sync::Barrier;
+        let n_threads = 1_000;
+        let n_cells = 1_000;
+        let cells: Vec<_> = std::iter::repeat_with(|| (Barrier::new(n_threads), OnceCell::new()))
+            .take(n_cells)
+            .collect();
+        scope(|s| {
+            for t in 0..n_threads {
+                let cells = &cells;
+                s.spawn(move |_| {
+                    for (i, (b, s)) in cells.iter().enumerate() {
+                        b.wait();
+                        let j = if t % 2 == 0 { s.wait() } else { s.get_or_init(|| i) };
+                        assert_eq!(*j, i);
+                    }
+                });
+            }
+        })
+        .unwrap();
     }
 
     #[test]
