@@ -48,6 +48,7 @@ use crate::{
 /// During deserialization, data is always copied anyway, and this lifetime
 /// is always `'static`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Event<'a> {
     // While the length of an array or dict cannot be feasably greater than max(usize) this better
     // conveys the concept of an effectively unbounded event stream.
@@ -62,9 +63,6 @@ pub enum Event<'a> {
     Real(f64),
     String(Cow<'a, str>),
     Uid(Uid),
-
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
 /// An owned [`Event`].
@@ -147,7 +145,6 @@ impl<'a> Iterator for Events<'a> {
                 Value::Integer(value) => Event::Integer(*value),
                 Value::String(value) => Event::String(Cow::Borrowed(value.as_str())),
                 Value::Uid(value) => Event::Uid(*value),
-                Value::__Nonexhaustive => unreachable!(),
             }
         }
 
@@ -243,7 +240,6 @@ pub trait Writer: private::Sealed {
             Event::Real(value) => self.write_real(*value),
             Event::String(value) => self.write_string(value),
             Event::Uid(value) => self.write_uid(*value),
-            Event::__Nonexhaustive => unreachable!(),
         }
     }
 

@@ -186,7 +186,6 @@ impl EventKind {
             Event::Real(_) => EventKind::Real,
             Event::String(_) => EventKind::String,
             Event::Uid(_) => EventKind::Uid,
-            Event::__Nonexhaustive => unreachable!(),
         }
     }
 }
