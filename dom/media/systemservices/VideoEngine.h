@@ -26,8 +26,6 @@ struct CaptureDeviceInfo {
   CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
   explicit CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
 
-  static const webrtc::ConfigOptionID identifier =
-      webrtc::ConfigOptionID::kCaptureDeviceInfo;
   const char* TypeName() const {
     switch (type) {
       case CaptureDeviceType::Camera: {
@@ -64,7 +62,7 @@ class VideoEngine {
   NS_INLINE_DECL_REFCOUNTING(VideoEngine)
 
   static already_AddRefed<VideoEngine> Create(
-      UniquePtr<const webrtc::Config>&& aConfig);
+      const CaptureDeviceType& aCaptureDeviceType);
 #if defined(ANDROID)
   static int SetAndroidObjects();
 #endif
@@ -106,7 +104,7 @@ class VideoEngine {
                  const std::function<void(CaptureEntry& entry)>&& fn);
 
  private:
-  explicit VideoEngine(UniquePtr<const webrtc::Config>&& aConfig);
+  explicit VideoEngine(const CaptureDeviceType& aCaptureDeviceType);
   int32_t mId;
   CaptureDeviceInfo mCaptureDevInfo;
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> mDeviceInfo;
