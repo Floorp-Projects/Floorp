@@ -35,6 +35,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.history.History
@@ -231,10 +232,12 @@ class HistoryMetadataGroupFragment :
     }
 
     private fun allDeletedSnackbar() {
-        showSnackBar(
-            requireView(),
-            getString(R.string.delete_history_group_snackbar)
-        )
+        runIfFragmentIsAttached {
+            showSnackBar(
+                binding.root,
+                getString(R.string.delete_history_group_snackbar)
+            )
+        }
     }
 
     private fun showTabTray() {
