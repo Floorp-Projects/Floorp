@@ -533,6 +533,12 @@ class nsWindow final : public nsBaseWidget {
   nsSizeMode mSizeState = nsSizeMode_Normal;
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;
+  // The size requested, which might not be reflected in mBounds.  Used in
+  // WaylandPopupSetDirectPosition() to remember intended size for popup
+  // positioning, in LockAspect() to remember the intended aspect ratio, and
+  // to remember a size requested while waiting for moved-to-rect when
+  // OnSizeAllocate() might change mBounds.Size().
+  LayoutDeviceIntSize mLastSizeRequest;
   nsIntPoint mClientOffset;
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
@@ -615,10 +621,8 @@ class nsWindow final : public nsBaseWidget {
   bool mAlwaysOnTop : 1;
   bool mNoAutoHide : 1;
   bool mIsTransparent : 1;
-  // We can't detect size state changes correctly so set this flag
-  // to force update mBounds after a size state change from a configure
-  // event.
-  bool mBoundsAreValid : 1;
+  // We can expect at least one size-allocate event after early resizes.
+  bool mHasReceivedSizeAllocate : 1;
 
   /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
    *  Kind of popup is choosen before GdkWindow is mapped so we can change
@@ -696,9 +700,11 @@ class nsWindow final : public nsBaseWidget {
    * and we're waiting for move-to-rect callback.
    *
    * If another position/resize request comes between move-to-rect call and
-   * move-to-rect callback we set mNewBoundsAfterMoveToRect.
+   * move-to-rect callback we set mMovedAfterMoveToRect/mResizedAfterMoveToRect.
    */
   bool mWaitingForMoveToRectCallback : 1;
+  bool mMovedAfterMoveToRect : 1;
+  bool mResizedAfterMoveToRect : 1;
 
   // Params used for popup placemend by GdkWindowMoveToRect.
   // When popup is only resized and not positioned,
@@ -838,8 +844,6 @@ class nsWindow final : public nsBaseWidget {
   // we store final popup size here. Then we use mMoveToRectPopupSize size
   // in following popup operations unless mLayoutPopupSizeCleared is set.
   LayoutDeviceIntSize mMoveToRectPopupSize;
-
-  LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 
   /**
    * |mIMContext| takes all IME related stuff.
