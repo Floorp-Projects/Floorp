@@ -83,15 +83,18 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
     compiler.makesGCCalls_ = true;
   }
 }
-void AutoStubFrame::leave(MacroAssembler& masm) {
+void AutoStubFrame::leave(MacroAssembler& masm, bool calledIntoIon) {
   MOZ_ASSERT(compiler.enteredStubFrame_);
   compiler.enteredStubFrame_ = false;
 
 #ifdef DEBUG
   masm.setFramePushed(framePushedAtEnterStubFrame_);
+  if (calledIntoIon) {
+    masm.adjustFrame(sizeof(intptr_t));  // Calls into ion have this extra.
+  }
 #endif
 
-  EmitBaselineLeaveStubFrame(masm);
+  EmitBaselineLeaveStubFrame(masm, calledIntoIon);
 }
 
 #ifdef DEBUG
@@ -517,7 +520,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterShared(
   masm.bind(&noUnderflow);
   masm.callJit(code);
 
-  stubFrame.leave(masm);
+  stubFrame.leave(masm, true);
 
   if (!sameRealm) {
     masm.switchToBaselineFrameRealm(R1.scratchReg());
@@ -1626,7 +1629,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetterShared(
   masm.bind(&noUnderflow);
   masm.callJit(code);
 
-  stubFrame.leave(masm);
+  stubFrame.leave(masm, true);
 
   if (!sameRealm) {
     masm.switchToBaselineFrameRealm(R1.scratchReg());
@@ -2928,7 +2931,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
     updateReturnValue();
   }
 
-  stubFrame.leave(masm);
+  stubFrame.leave(masm, true);
 
   if (!isSameRealm) {
     masm.switchToBaselineFrameRealm(scratch2);
@@ -3038,7 +3041,7 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
     updateReturnValue();
   }
 
-  stubFrame.leave(masm);
+  stubFrame.leave(masm, true);
 
   if (!isSameRealm) {
     masm.switchToBaselineFrameRealm(codeReg);
@@ -3208,6 +3211,6 @@ bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
     masm.bind(&success);
   }
 
-  stubFrame.leave(masm);
+  stubFrame.leave(masm, true);
   return true;
 }

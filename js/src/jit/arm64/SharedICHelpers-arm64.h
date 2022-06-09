@@ -43,11 +43,22 @@ inline void EmitReturnFromIC(MacroAssembler& masm) {
   masm.abiret();  // Defaults to lr.
 }
 
-inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
+inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm,
+                                       bool calledIntoIon = false) {
   vixl::UseScratchRegisterScope temps(&masm.asVIXL());
   const ARMRegister scratch64 = temps.AcquireX();
 
-  masm.moveToStackPtr(FramePointer);
+  // Ion frames do not save and restore the frame pointer. If we called
+  // into Ion, we have to restore the stack pointer from the frame descriptor.
+  // If we performed a VM call, the descriptor has been popped already so
+  // in that case we use the frame pointer.
+  if (calledIntoIon) {
+    masm.pop(scratch64.asUnsized());
+    masm.Lsr(scratch64, scratch64, FRAMESIZE_SHIFT);
+    masm.Add(masm.GetStackPointer64(), masm.GetStackPointer64(), scratch64);
+  } else {
+    masm.Mov(masm.GetStackPointer64(), FramePointer64);
+  }
 
   // Pop values, discarding the frame descriptor.
   masm.pop(FramePointer, ICStubReg, ICTailCallReg, scratch64.asUnsized());
