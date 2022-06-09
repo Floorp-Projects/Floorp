@@ -10,7 +10,7 @@ use std::path::Path;
 use tar::Archive;
 use walkdir::DirEntry;
 
-const REVISION: &str = "e95b10ba4ac4564ed25f7eef143e3182c33b3902";
+const REVISION: &str = "ee160f2f5e73b6f5954bc33f059c316d9e8582c4";
 
 #[rustfmt::skip]
 static EXCLUDE: &[&str] = &[
@@ -22,6 +22,9 @@ static EXCLUDE: &[&str] = &[
     "src/test/ui/const-generics/early/closing-args-token.rs",
     "src/test/ui/const-generics/early/const-expression-parameter.rs",
 
+    // Need at least one trait in impl Trait, no such type as impl 'static
+    "src/test/ui/type-alias-impl-trait/generic_type_does_not_live_long_enough.rs",
+
     // Deprecated anonymous parameter syntax in traits
     "src/test/ui/issues/issue-13105.rs",
     "src/test/ui/issues/issue-13775.rs",
@@ -29,6 +32,11 @@ static EXCLUDE: &[&str] = &[
     "src/test/ui/proc-macro/trait-fn-args-2015.rs",
     "src/tools/rustfmt/tests/source/trait.rs",
     "src/tools/rustfmt/tests/target/trait.rs",
+
+    // Placeholder syntax for "throw expressions"
+    "src/test/pretty/yeet-expr.rs",
+    "src/test/ui/try-trait/yeet-for-option.rs",
+    "src/test/ui/try-trait/yeet-for-result.rs",
 
     // Excessive nesting
     "src/test/ui/issues/issue-74564-if-expr-stack-overflow.rs",
@@ -45,6 +53,9 @@ static EXCLUDE: &[&str] = &[
     "src/tools/rustfmt/tests/target/configs/spaces_around_ranges/false.rs",
     "src/tools/rustfmt/tests/target/configs/spaces_around_ranges/true.rs",
     "src/tools/rustfmt/tests/target/type.rs",
+
+    // Testing compiler diagnostic localization on invalid syntax
+    "src/test/run-make/translation/basic-translation.rs",
 
     // Clippy lint lists represented as expressions
     "src/tools/clippy/clippy_lints/src/lib.deprecated.rs",
