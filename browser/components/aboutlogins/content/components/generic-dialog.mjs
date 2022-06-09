@@ -5,7 +5,7 @@
 import {
   setKeyboardAccessForNonDialogElements,
   initDialog,
-} from "../aboutLoginsUtils.js";
+} from "../aboutLoginsUtils.mjs";
 
 export default class GenericDialog extends HTMLElement {
   constructor() {
