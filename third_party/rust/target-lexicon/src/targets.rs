@@ -309,6 +309,7 @@ pub enum Riscv32Architecture {
     Riscv32,
     Riscv32gc,
     Riscv32i,
+    Riscv32im,
     Riscv32imac,
     Riscv32imc,
 }
@@ -685,6 +686,7 @@ impl fmt::Display for Riscv32Architecture {
             Riscv32 => "riscv32",
             Riscv32gc => "riscv32gc",
             Riscv32i => "riscv32i",
+            Riscv32im => "riscv32im",
             Riscv32imac => "riscv32imac",
             Riscv32imc => "riscv32imc",
         };
@@ -856,6 +858,7 @@ impl FromStr for Riscv32Architecture {
             "riscv32" => Riscv32,
             "riscv32gc" => Riscv32gc,
             "riscv32i" => Riscv32i,
+            "riscv32im" => Riscv32im,
             "riscv32imac" => Riscv32imac,
             "riscv32imc" => Riscv32imc,
             _ => return Err(()),
@@ -1454,6 +1457,7 @@ mod tests {
             "riscv32gc-unknown-linux-gnu",
             "riscv32gc-unknown-linux-musl",
             "riscv32i-unknown-none-elf",
+            "riscv32im-unknown-none-elf",
             "riscv32imac-unknown-none-elf",
             "riscv32imc-unknown-none-elf",
             "riscv32i-unknown-none-elf",

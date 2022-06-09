@@ -1418,7 +1418,7 @@ version = "1.0.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.target-lexicon]]
-version = "0.12.3"
+version = "0.12.4"
 criteria = "safe-to-deploy"
 
 [[unaudited.tempfile]]
