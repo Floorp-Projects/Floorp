@@ -1016,7 +1016,7 @@ class MOZ_RAII AutoStubFrame {
 
   void enter(MacroAssembler& masm, Register scratch,
              CallCanGC canGC = CallCanGC::CanGC);
-  void leave(MacroAssembler& masm, bool calledIntoIon = false);
+  void leave(MacroAssembler& masm);
 
 #ifdef DEBUG
   ~AutoStubFrame();

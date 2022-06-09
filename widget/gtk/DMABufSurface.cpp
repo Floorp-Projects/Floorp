@@ -247,6 +247,8 @@ void DMABufSurface::FenceDelete() {
 
 void DMABufSurface::FenceSet() {
   if (!mGL || !mGL->MakeCurrent()) {
+    MOZ_DIAGNOSTIC_ASSERT(mGL,
+                          "DMABufSurface::FenceSet(): missing GL context!");
     return;
   }
   const auto& gle = gl::GLContextEGL::Cast(mGL);
@@ -271,6 +273,8 @@ void DMABufSurface::FenceSet() {
 
 void DMABufSurface::FenceWait() {
   if (!mGL || mSyncFd < 0) {
+    MOZ_DIAGNOSTIC_ASSERT(mGL,
+                          "DMABufSurface::FenceWait() missing GL context!");
     return;
   }
 
@@ -281,7 +285,7 @@ void DMABufSurface::FenceWait() {
                             LOCAL_EGL_NONE};
   EGLSync sync = egl->fCreateSync(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, attribs);
   if (!sync) {
-    MOZ_ASSERT(false, "Failed to create GLFence!");
+    MOZ_ASSERT(false, "DMABufSurface::FenceWait(): Failed to create GLFence!");
     // We failed to create GLFence so clear mSyncFd to avoid another try.
     close(mSyncFd);
     mSyncFd = -1;
@@ -381,13 +385,14 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     // Requested DRM format is not supported.
     return false;
   }
+  mDrmFormats[0] = mGmbFormat->mFormat;
 
   bool useModifiers = (aDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
                       mGmbFormat->mModifiersCount > 0;
   if (useModifiers) {
     LOGDMABUF(("    Creating with modifiers\n"));
     mGbmBufferObject[0] = nsGbmLib::CreateWithModifiers(
-        GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
+        GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mDrmFormats[0],
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
     if (mGbmBufferObject[0]) {
       mBufferModifiers[0] = nsGbmLib::GetModifier(mGbmBufferObject[0]);
@@ -399,7 +404,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     mGbmBufferFlags = GBM_BO_USE_LINEAR;
     mGbmBufferObject[0] =
         nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
-                         mGmbFormat->mFormat, mGbmBufferFlags);
+                         mDrmFormats[0], mGbmBufferFlags);
     mBufferModifiers[0] = DRM_FORMAT_MOD_INVALID;
   }
 
@@ -429,6 +434,39 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   return true;
 }
 
+bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext,
+                               const EGLImageKHR aEGLImage, int aWidth,
+                               int aHeight) {
+  LOGDMABUF(("DMABufSurfaceRGBA::Create() from EGLImage UID = %d\n", mUID));
+  if (!aGLContext) {
+    return false;
+  }
+  const auto& gle = gl::GLContextEGL::Cast(aGLContext);
+  const auto& egl = gle->mEgl;
+
+  mGL = aGLContext;
+  mWidth = aWidth;
+  mHeight = aHeight;
+  mEGLImage = aEGLImage;
+  if (!egl->fExportDMABUFImageQuery(mEGLImage, mDrmFormats, &mBufferPlaneCount,
+                                    mBufferModifiers)) {
+    LOGDMABUF(("  ExportDMABUFImageQueryMESA failed, quit\n"));
+    return false;
+  }
+  if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
+    LOGDMABUF(("  wrong plane count %d, quit\n", mBufferPlaneCount));
+    return false;
+  }
+  if (!egl->fExportDMABUFImage(mEGLImage, mDmabufFds, mStrides, mOffsets)) {
+    LOGDMABUF(("  ExportDMABUFImageMESA failed, quit\n"));
+    return false;
+  }
+
+  LOGDMABUF(("  imported size %d x %d format %x planes %d", mWidth, mHeight,
+             mDrmFormats[0], mBufferPlaneCount));
+  return true;
+}
+
 bool DMABufSurfaceRGBA::ImportSurfaceDescriptor(
     const SurfaceDescriptor& aDesc) {
   const SurfaceDescriptorDMABuf& desc = aDesc.get_SurfaceDescriptorDMABuf();
@@ -436,11 +474,7 @@ bool DMABufSurfaceRGBA::ImportSurfaceDescriptor(
   mWidth = desc.width()[0];
   mHeight = desc.height()[0];
   mBufferModifiers[0] = desc.modifier()[0];
-  if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {
-    mGmbFormat = GetDMABufDevice()->GetExactGbmFormat(desc.format()[0]);
-  } else {
-    mDrmFormats[0] = desc.format()[0];
-  }
+  mDrmFormats[0] = desc.format()[0];
   mBufferPlaneCount = desc.fds().Length();
   mGbmBufferFlags = desc.flags();
   MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
@@ -474,6 +508,8 @@ bool DMABufSurfaceRGBA::ImportSurfaceDescriptor(
     GlobalRefCountImport(desc.refCount()[0].ClonePlatformHandle().release());
   }
 
+  LOGDMABUF(("  imported size %d x %d format %x planes %d", mWidth, mHeight,
+             mDrmFormats[0], mBufferPlaneCount));
   return true;
 }
 
@@ -503,7 +539,7 @@ bool DMABufSurfaceRGBA::Serialize(
 
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
-  format.AppendElement(mGmbFormat->mFormat);
+  format.AppendElement(mDrmFormats[0]);
   modifiers.AppendElement(mBufferModifiers[0]);
   for (int i = 0; i < mBufferPlaneCount; i++) {
     fds.AppendElement(ipc::FileDescriptor(mDmabufFds[i]));
@@ -529,6 +565,7 @@ bool DMABufSurfaceRGBA::Serialize(
 }
 
 bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
+  LOGDMABUF(("DMABufSurfaceRGBA::CreateTexture() UID %d\n", mUID));
   MOZ_ASSERT(!mEGLImage && !mTexture, "EGLImage is already created!");
 
   nsTArray<EGLint> attribs;
@@ -537,11 +574,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
   attribs.AppendElement(LOCAL_EGL_HEIGHT);
   attribs.AppendElement(mHeight);
   attribs.AppendElement(LOCAL_EGL_LINUX_DRM_FOURCC_EXT);
-  if (mGmbFormat) {
-    attribs.AppendElement(mGmbFormat->mFormat);
-  } else {
-    attribs.AppendElement(mDrmFormats[0]);
-  }
+  attribs.AppendElement(mDrmFormats[0]);
 #define ADD_PLANE_ATTRIBS(plane_idx)                                        \
   {                                                                         \
     attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_FD_EXT);     \
@@ -608,6 +641,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 }
 
 void DMABufSurfaceRGBA::ReleaseTextures() {
+  LOGDMABUF(("DMABufSurfaceRGBA::ReleaseTextures() UID %d\n", mUID));
   FenceDelete();
 
   if (!mTexture) {
@@ -666,7 +700,7 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
                                  mBufferModifiers[0] & 0xffffffff);
 
   mWlBuffer = zwp_linux_buffer_params_v1_create_immed(
-      params, GetWidth(), GetHeight(), mGmbFormat->mFormat, 0);
+      params, GetWidth(), GetHeight(), mDrmFormats[0], 0);
 
   CloseFileDescriptors(lockFD);
 
@@ -849,6 +883,16 @@ already_AddRefed<DMABufSurfaceRGBA> DMABufSurfaceRGBA::CreateDMABufSurface(
     int aWidth, int aHeight, int aDMABufSurfaceFlags) {
   RefPtr<DMABufSurfaceRGBA> surf = new DMABufSurfaceRGBA();
   if (!surf->Create(aWidth, aHeight, aDMABufSurfaceFlags)) {
+    return nullptr;
+  }
+  return surf.forget();
+}
+
+already_AddRefed<DMABufSurface> DMABufSurfaceRGBA::CreateDMABufSurface(
+    mozilla::gl::GLContext* aGLContext, const EGLImageKHR aEGLImage, int aWidth,
+    int aHeight) {
+  RefPtr<DMABufSurfaceRGBA> surf = new DMABufSurfaceRGBA();
+  if (!surf->Create(aGLContext, aEGLImage, aWidth, aHeight)) {
     return nullptr;
   }
   return surf.forget();

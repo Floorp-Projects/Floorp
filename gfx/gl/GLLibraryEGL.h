@@ -108,6 +108,9 @@ enum class EGLExtension {
   KHR_partial_update,
   NV_robustness_video_memory_purge,
   MESA_platform_surfaceless,
+  EXT_image_dma_buf_import,
+  EXT_image_dma_buf_import_modifiers,
+  MESA_image_dma_buf_export,
   Max
 };
 
@@ -463,6 +466,19 @@ class GLLibraryEGL final {
                               const EGLint* rects, EGLint n_rects) {
     WRAP(fSetDamageRegion(dpy, surface, rects, n_rects));
   }
+  // EGL_MESA_image_dma_buf_export
+  EGLBoolean fExportDMABUFImageQuery(EGLDisplay dpy, EGLImage image,
+                                     int* fourcc, int* num_planes,
+                                     uint64_t* modifiers) {
+    WRAP(
+        fExportDMABUFImageQueryMESA(dpy, image, fourcc, num_planes, modifiers));
+  }
+  EGLBoolean fExportDMABUFImage(EGLDisplay dpy, EGLImage image, int* fds,
+                                EGLint* strides, EGLint* offsets) {
+    WRAP(fExportDMABUFImageMESA(dpy, image, fds, strides, offsets));
+  }
+
+#undef WRAP
 
 #undef WRAP
 #undef PROFILE_CALL
@@ -595,6 +611,18 @@ class GLLibraryEGL final {
                                              EGLint n_rects);
     EGLClientBuffer(GLAPIENTRY* fGetNativeClientBufferANDROID)(
         const struct AHardwareBuffer* buffer);
+
+    // EGL_MESA_image_dma_buf_export
+    EGLBoolean(GLAPIENTRY* fExportDMABUFImageQueryMESA)(EGLDisplay dpy,
+                                                        EGLImage image,
+                                                        int* fourcc,
+                                                        int* num_planes,
+                                                        uint64_t* modifiers);
+    EGLBoolean(GLAPIENTRY* fExportDMABUFImageMESA)(EGLDisplay dpy,
+                                                   EGLImage image, int* fds,
+                                                   EGLint* strides,
+                                                   EGLint* offsets);
+
   } mSymbols = {};
 };
 
@@ -853,6 +881,19 @@ class EglDisplay final {
                               EGLint n_rects) {
     MOZ_ASSERT(IsExtensionSupported(EGLExtension::KHR_partial_update));
     return mLib->fSetDamageRegion(mDisplay, surface, rects, n_rects);
+  }
+
+  EGLBoolean fExportDMABUFImageQuery(EGLImage image, int* fourcc,
+                                     int* num_planes,
+                                     uint64_t* modifiers) const {
+    MOZ_ASSERT(IsExtensionSupported(EGLExtension::MESA_image_dma_buf_export));
+    return mLib->fExportDMABUFImageQuery(mDisplay, image, fourcc, num_planes,
+                                         modifiers);
+  }
+  EGLBoolean fExportDMABUFImage(EGLImage image, int* fds, EGLint* strides,
+                                EGLint* offsets) const {
+    MOZ_ASSERT(IsExtensionSupported(EGLExtension::MESA_image_dma_buf_export));
+    return mLib->fExportDMABUFImage(mDisplay, image, fds, strides, offsets);
   }
 };
 

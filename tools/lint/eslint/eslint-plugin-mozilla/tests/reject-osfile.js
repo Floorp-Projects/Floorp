@@ -28,6 +28,10 @@ ruleTester.run("reject-osfile", rule, {
       code: "OS.File.write()",
       errors: invalidError("OS.File", "IOUtils"),
     },
+    {
+      code: "lazy.OS.File.write()",
+      errors: invalidError("OS.File", "IOUtils"),
+    },
   ],
 });
 
@@ -36,6 +40,10 @@ ruleTester.run("reject-osfile", rule, {
   invalid: [
     {
       code: "OS.Path.join()",
+      errors: invalidError("OS.Path", "PathUtils"),
+    },
+    {
+      code: "lazy.OS.Path.join()",
       errors: invalidError("OS.Path", "PathUtils"),
     },
   ],

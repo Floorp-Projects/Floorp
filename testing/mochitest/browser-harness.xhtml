@@ -111,6 +111,7 @@
       this.path = aTestFile['url'];
       this.expected = aTestFile['expected'];
       this.https_first_disabled = aTestFile['https_first_disabled'] || false,
+      this.allow_xul_xbl = aTestFile['allow_xul_xbl'] || false,
       this.dumper = gDumper;
       this.results = [];
       this.scope = null;

@@ -14,7 +14,6 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
@@ -660,42 +659,6 @@ struct QueueParamTraits<std::pair<TypeA, TypeB>> {
   static bool Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
     aConsumerView.ReadParam(aArg->first());
     return aConsumerView.ReadParam(aArg->second());
-  }
-};
-
-// ---------------------------------------------------------------
-
-template <>
-struct QueueParamTraits<mozilla::ipc::Shmem> {
-  using ParamType = mozilla::ipc::Shmem;
-
-  template <typename U>
-  static bool Write(ProducerView<U>& aProducerView, ParamType&& aParam) {
-    if (!aProducerView.WriteParam(
-            aParam.Id(mozilla::ipc::Shmem::PrivateIPDLCaller()))) {
-      return false;
-    }
-
-    aParam.RevokeRights(mozilla::ipc::Shmem::PrivateIPDLCaller());
-    aParam.forget(mozilla::ipc::Shmem::PrivateIPDLCaller());
-  }
-
-  template <typename U>
-  static bool Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
-    ParamType::id_t id;
-    if (!aConsumerView.ReadParam(&id)) {
-      return false;
-    }
-
-    mozilla::ipc::Shmem::SharedMemory* rawmem =
-        aConsumerView.LookupSharedMemory(id);
-    if (!rawmem) {
-      return false;
-    }
-
-    *aResult = mozilla::ipc::Shmem(mozilla::ipc::Shmem::PrivateIPDLCaller(),
-                                   rawmem, id);
-    return true;
   }
 };
 

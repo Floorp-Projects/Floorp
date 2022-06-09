@@ -17,6 +17,7 @@
 #include "mozilla/PublicSSL.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "nsASocketHandler.h"
 #include "nsError.h"
@@ -768,9 +769,26 @@ nsSocketTransportService::Init() {
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-      NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!XRE_IsContentProcess() ||
+      StaticPrefs::network_allow_raw_sockets_in_content_processes_AtStartup()) {
+    nsresult rv =
+        NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // In the child process, we just want a regular nsThread with no socket
+    // polling. So we don't want to run the nsSocketTransportService runnable on
+    // it.
+    nsresult rv =
+        NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Set up some of the state that nsSocketTransportService::Run would set.
+    PRThread* prthread = nullptr;
+    thread->GetPRThread(&prthread);
+    gSocketThread = prthread;
+    mRawThread = thread;
+  }
 
   {
     MutexAutoLock lock(mLock);

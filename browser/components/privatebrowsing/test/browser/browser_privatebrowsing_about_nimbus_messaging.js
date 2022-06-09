@@ -67,7 +67,7 @@ add_task(async function test_experiment_messaging_system() {
 
 add_task(async function test_experiment_promo_action() {
   let doExperimentCleanup = await setupMSExperimentWithMessage({
-    id: "PB_NEWTAB_TEST",
+    id: "PB_NEWTAB_TEST_URL",
     template: "pb_newtab",
     content: {
       hideDefault: true,
@@ -141,6 +141,93 @@ add_task(async function test_experiment_promo_action() {
     promoAction.data.args,
     expectedUrl,
     "Should be called with right URL"
+  );
+
+  await doExperimentCleanup();
+});
+
+add_task(async function test_experiment_open_spotlight_action() {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_TEST_SPOTLIGHT",
+    template: "pb_newtab",
+    content: {
+      hideDefault: true,
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/",
+      promoLinkType: "button",
+      promoButton: {
+        action: {
+          type: "SHOW_SPOTLIGHT",
+          data: {
+            content: {
+              template: "multistage",
+              screens: [
+                {
+                  content: {
+                    title: "Test",
+                    subtitle: "Sub Title",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
+  });
+
+  let { win, tab } = await openTabAndWaitForRender();
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    ASRouter.resetMessageState();
+    sandbox.restore();
+    BrowserTestUtils.closeWindow(win);
+  });
+
+  let windowGlobalParent =
+    win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+  let aboutPrivateBrowsingActor = windowGlobalParent.getActor(
+    "AboutPrivateBrowsing"
+  );
+
+  let specialActionSpy = sandbox.spy(
+    aboutPrivateBrowsingActor,
+    "receiveMessage"
+  );
+
+  await SpecialPowers.spawn(tab, [], async function() {
+    ok(
+      content.document.querySelector(".promo"),
+      "should render the promo experiment message"
+    );
+    content.document.querySelector(".promo button").click();
+  });
+
+  Assert.equal(
+    specialActionSpy.callCount,
+    1,
+    "Should be called by promo action"
+  );
+
+  let promoAction = specialActionSpy.firstCall.args[0].data;
+
+  Assert.equal(
+    promoAction.type,
+    "SHOW_SPOTLIGHT",
+    "Should be called with promo button spotlight action"
+  );
+
+  Assert.equal(
+    promoAction.data.content.metrics,
+    "allow",
+    "Should be called with metrics property set as allow for experiments"
   );
 
   await doExperimentCleanup();

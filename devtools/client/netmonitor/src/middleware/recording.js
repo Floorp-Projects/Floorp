@@ -20,7 +20,7 @@ const {
  * middleware.
  */
 function recordingMiddleware(connector) {
-  return store => next => action => {
+  return store => next => async action => {
     const res = next(action);
 
     // Pause/resume HTTP monitoring according to
@@ -28,7 +28,7 @@ function recordingMiddleware(connector) {
     if (action.type === TOGGLE_RECORDING) {
       const recording = getRecordingState(store.getState());
       if (recording) {
-        connector.resume();
+        await connector.resume();
       } else {
         connector.pause();
       }

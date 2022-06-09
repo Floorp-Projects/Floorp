@@ -44,6 +44,13 @@ pub enum CheckIsObjectKind {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub enum CompletionKind {
+    Normal = 0,
+    Return = 1,
+    Throw = 2,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum FunctionPrefixKind {
     None = 0,
     Get = 1,
@@ -707,6 +714,11 @@ impl InstructionWriter {
 
     pub fn end_iter(&mut self) {
         self.emit_op(Opcode::EndIter);
+    }
+
+    pub fn close_iter(&mut self, kind: CompletionKind) {
+        self.emit_op(Opcode::CloseIter);
+        self.write_u8(kind as u8);
     }
 
     pub fn check_is_obj(&mut self, kind: CheckIsObjectKind) {

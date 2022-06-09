@@ -10036,7 +10036,8 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
 }
 
 bool nsIFrame::ZIndexApplies() const {
-  return StyleDisplay()->IsPositionedStyle() || IsFlexOrGridItem();
+  return StyleDisplay()->IsPositionedStyle() || IsFlexOrGridItem() ||
+         IsMenuPopupFrame();
 }
 
 Maybe<int32_t> nsIFrame::ZIndex() const {

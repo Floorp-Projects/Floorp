@@ -88,7 +88,8 @@ uint32_t ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict) {
 uint32_t ResourceQueue::EvictBefore(uint64_t aOffset) {
   SBR_DEBUG("EvictBefore(%" PRIu64 ")", aOffset);
   uint32_t evicted = 0;
-  while (ResourceItem* item = ResourceAt(0)) {
+  while (GetSize()) {
+    ResourceItem* item = ResourceAt(0);
     SBR_DEBUG("item=%p length=%zu offset=%" PRIu64, item, item->mData.Length(),
               mOffset);
     if (item->mData.Length() + mOffset >= aOffset) {
@@ -112,7 +113,8 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset) {
 uint32_t ResourceQueue::EvictAll() {
   SBR_DEBUG("EvictAll()");
   uint32_t evicted = 0;
-  while (ResourceItem* item = ResourceAt(0)) {
+  while (GetSize()) {
+    ResourceItem* item = ResourceAt(0);
     SBR_DEBUG("item=%p length=%zu offset=%" PRIu64, item, item->mData.Length(),
               mOffset);
     mOffset += item->mData.Length();

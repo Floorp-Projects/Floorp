@@ -535,16 +535,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
       break;
   }
 
-  // Clean up!
-  // Get the size of the stack frame, and clean up the later fixed frame.
-  masm.Ldr(x4, MemOperand(masm.GetStackPointer64(), 24, vixl::PostIndex));
-
-  // Discard pushed arguments, but not the pushed frame pointer.
-  masm.rshift32(Imm32(FRAMESIZE_SHIFT), r4);
-  masm.sub32(Imm32(sizeof(void*)), r4);
-  masm.addToStackPtr(r4);
-
-  // Pop the frame pointer and return address from earlier and branch.
+  masm.moveToStackPtr(FramePointer);
   masm.pop(FramePointer);
   masm.ret();
 }

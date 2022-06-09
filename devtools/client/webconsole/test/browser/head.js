@@ -452,6 +452,27 @@ function _getContextMenu(hud) {
   return doc.getElementById("webconsole-menu");
 }
 
+/**
+ * Toggle Enable network monitoring setting
+ *
+ *  @param object hud
+ *         The web console.
+ *  @param boolean shouldBeSwitchedOn
+ *         The expected state the setting should be in after the toggle.
+ */
+async function toggleNetworkMonitoringConsoleSetting(hud, shouldBeSwitchedOn) {
+  const selector =
+    ".webconsole-console-settings-menu-item-enableNetworkMonitoring";
+  const settingChanged = waitFor(() => {
+    const el = getConsoleSettingElement(hud, selector);
+    return shouldBeSwitchedOn
+      ? el.getAttribute("aria-checked") === "true"
+      : el.getAttribute("aria-checked") !== "true";
+  });
+  await toggleConsoleSetting(hud, selector);
+  await settingChanged;
+}
+
 async function toggleConsoleSetting(hud, selector) {
   const toolbox = hud.toolbox;
   const doc = toolbox ? toolbox.doc : hud.chromeWindow.document;

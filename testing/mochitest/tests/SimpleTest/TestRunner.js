@@ -564,7 +564,7 @@ TestRunner.getNextUrl = function() {
  * Run the next test. If no test remains, calls onComplete().
  **/
 TestRunner._haltTests = false;
-TestRunner.runNextTest = function() {
+async function _runNextTest() {
   if (
     TestRunner._currentTest < TestRunner._urls.length &&
     !TestRunner._haltTests
@@ -582,6 +582,12 @@ TestRunner.runNextTest = function() {
 
     TestRunner.structuredLogger.testStart(url);
 
+    if (TestRunner._urls[TestRunner._currentTest].test.allow_xul_xbl) {
+      await SpecialPowers.pushPermissions([
+        { type: "allowXULXBL", allow: true, context: "http://mochi.test:8888" },
+        { type: "allowXULXBL", allow: true, context: "http://example.org" },
+      ]);
+    }
     TestRunner._makeIframe(url, 0);
   } else {
     $("current-test").innerHTML = "<b>Finished</b>";
@@ -659,7 +665,8 @@ TestRunner.runNextTest = function() {
       coverageCollector.finalize();
     }
   }
-};
+}
+TestRunner.runNextTest = _runNextTest;
 
 TestRunner.expectChildProcessCrash = function() {
   TestRunner._expectingProcessCrash = true;
