@@ -1406,7 +1406,7 @@ version = "0.4.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.syn]]
-version = "1.0.94"
+version = "1.0.96"
 criteria = "safe-to-deploy"
 
 [[unaudited.synstructure]]

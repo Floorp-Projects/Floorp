@@ -945,6 +945,31 @@ impl<T, P> Pair<T, P> {
         }
     }
 
+    /// Mutably borrows the punctuation from this punctuated pair, unless the
+    /// pair is the final one and there is no trailing punctuation.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use proc_macro2::Span;
+    /// # use syn::punctuated::Punctuated;
+    /// # use syn::{parse_quote, Token, TypeParamBound};
+    /// #
+    /// # let mut punctuated = Punctuated::<TypeParamBound, Token![+]>::new();
+    /// # let span = Span::call_site();
+    /// #
+    /// punctuated.insert(0, parse_quote!('lifetime));
+    /// if let Some(punct) = punctuated.pairs_mut().next().unwrap().punct_mut() {
+    ///     punct.span = span;
+    /// }
+    /// ```
+    pub fn punct_mut(&mut self) -> Option<&mut P> {
+        match self {
+            Pair::Punctuated(_, p) => Some(p),
+            Pair::End(_) => None,
+        }
+    }
+
     /// Creates a punctuated pair out of a syntax tree node and an optional
     /// following punctuation.
     pub fn new(t: T, p: Option<P>) -> Self {

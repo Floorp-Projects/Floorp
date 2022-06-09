@@ -247,6 +247,7 @@ pub type ParseStream<'a> = &'a ParseBuffer<'a>;
 /// - One of [the `syn::parse*` functions][syn-parse]; or
 /// - A method of the [`Parser`] trait.
 ///
+/// [`parse_macro_input!`]: crate::parse_macro_input!
 /// [syn-parse]: self#the-synparse-functions
 pub struct ParseBuffer<'a> {
     scope: Span,

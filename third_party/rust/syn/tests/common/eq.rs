@@ -4,24 +4,125 @@ extern crate rustc_ast;
 extern crate rustc_data_structures;
 extern crate rustc_span;
 
-use rustc_ast::ast::{
-    AngleBracketedArg, AngleBracketedArgs, AnonConst, Arm, AssocConstraint, AssocConstraintKind,
-    AssocItemKind, Async, AttrId, AttrItem, AttrKind, AttrStyle, Attribute, BareFnTy, BinOpKind,
-    BindingMode, Block, BlockCheckMode, BorrowKind, CaptureBy, Const, Crate, CrateSugar,
-    Defaultness, EnumDef, Expr, ExprField, ExprKind, Extern, FieldDef, FloatTy, Fn, FnDecl,
-    FnHeader, FnRetTy, FnSig, ForeignItemKind, ForeignMod, GenericArg, GenericArgs, GenericBound,
-    GenericParam, GenericParamKind, Generics, Impl, ImplPolarity, Inline, InlineAsm,
-    InlineAsmOperand, InlineAsmOptions, InlineAsmRegOrRegClass, InlineAsmSym,
-    InlineAsmTemplatePiece, IntTy, IsAuto, Item, ItemKind, Label, Lifetime, Lit, LitFloatType,
-    LitIntType, LitKind, Local, LocalKind, MacArgs, MacArgsEq, MacCall, MacCallStmt, MacDelimiter,
-    MacStmtStyle, MacroDef, ModKind, ModSpans, Movability, MutTy, Mutability, NodeId, Param,
-    ParenthesizedArgs, Pat, PatField, PatKind, Path, PathSegment, PolyTraitRef, QSelf, RangeEnd,
-    RangeLimits, RangeSyntax, Stmt, StmtKind, StrLit, StrStyle, StructExpr, StructRest, Term,
-    Trait, TraitBoundModifier, TraitObjectSyntax, TraitRef, Ty, TyAlias, TyAliasWhereClause,
-    TyKind, UintTy, UnOp, Unsafe, UnsafeSource, UseTree, UseTreeKind, Variant, VariantData,
-    Visibility, VisibilityKind, WhereBoundPredicate, WhereClause, WhereEqPredicate, WherePredicate,
-    WhereRegionPredicate,
-};
+use rustc_ast::ast::AngleBracketedArg;
+use rustc_ast::ast::AngleBracketedArgs;
+use rustc_ast::ast::AnonConst;
+use rustc_ast::ast::Arm;
+use rustc_ast::ast::AssocConstraint;
+use rustc_ast::ast::AssocConstraintKind;
+use rustc_ast::ast::AssocItemKind;
+use rustc_ast::ast::Async;
+use rustc_ast::ast::AttrId;
+use rustc_ast::ast::AttrItem;
+use rustc_ast::ast::AttrKind;
+use rustc_ast::ast::AttrStyle;
+use rustc_ast::ast::Attribute;
+use rustc_ast::ast::BareFnTy;
+use rustc_ast::ast::BinOpKind;
+use rustc_ast::ast::BindingMode;
+use rustc_ast::ast::Block;
+use rustc_ast::ast::BlockCheckMode;
+use rustc_ast::ast::BorrowKind;
+use rustc_ast::ast::CaptureBy;
+use rustc_ast::ast::Const;
+use rustc_ast::ast::Crate;
+use rustc_ast::ast::Defaultness;
+use rustc_ast::ast::EnumDef;
+use rustc_ast::ast::Expr;
+use rustc_ast::ast::ExprField;
+use rustc_ast::ast::ExprKind;
+use rustc_ast::ast::Extern;
+use rustc_ast::ast::FieldDef;
+use rustc_ast::ast::FloatTy;
+use rustc_ast::ast::Fn;
+use rustc_ast::ast::FnDecl;
+use rustc_ast::ast::FnHeader;
+use rustc_ast::ast::FnRetTy;
+use rustc_ast::ast::FnSig;
+use rustc_ast::ast::ForeignItemKind;
+use rustc_ast::ast::ForeignMod;
+use rustc_ast::ast::GenericArg;
+use rustc_ast::ast::GenericArgs;
+use rustc_ast::ast::GenericBound;
+use rustc_ast::ast::GenericParam;
+use rustc_ast::ast::GenericParamKind;
+use rustc_ast::ast::Generics;
+use rustc_ast::ast::Impl;
+use rustc_ast::ast::ImplPolarity;
+use rustc_ast::ast::Inline;
+use rustc_ast::ast::InlineAsm;
+use rustc_ast::ast::InlineAsmOperand;
+use rustc_ast::ast::InlineAsmOptions;
+use rustc_ast::ast::InlineAsmRegOrRegClass;
+use rustc_ast::ast::InlineAsmSym;
+use rustc_ast::ast::InlineAsmTemplatePiece;
+use rustc_ast::ast::IntTy;
+use rustc_ast::ast::IsAuto;
+use rustc_ast::ast::Item;
+use rustc_ast::ast::ItemKind;
+use rustc_ast::ast::Label;
+use rustc_ast::ast::Lifetime;
+use rustc_ast::ast::Lit;
+use rustc_ast::ast::LitFloatType;
+use rustc_ast::ast::LitIntType;
+use rustc_ast::ast::LitKind;
+use rustc_ast::ast::Local;
+use rustc_ast::ast::LocalKind;
+use rustc_ast::ast::MacArgs;
+use rustc_ast::ast::MacArgsEq;
+use rustc_ast::ast::MacCall;
+use rustc_ast::ast::MacCallStmt;
+use rustc_ast::ast::MacDelimiter;
+use rustc_ast::ast::MacStmtStyle;
+use rustc_ast::ast::MacroDef;
+use rustc_ast::ast::ModKind;
+use rustc_ast::ast::ModSpans;
+use rustc_ast::ast::Movability;
+use rustc_ast::ast::MutTy;
+use rustc_ast::ast::Mutability;
+use rustc_ast::ast::NodeId;
+use rustc_ast::ast::Param;
+use rustc_ast::ast::ParenthesizedArgs;
+use rustc_ast::ast::Pat;
+use rustc_ast::ast::PatField;
+use rustc_ast::ast::PatKind;
+use rustc_ast::ast::Path;
+use rustc_ast::ast::PathSegment;
+use rustc_ast::ast::PolyTraitRef;
+use rustc_ast::ast::QSelf;
+use rustc_ast::ast::RangeEnd;
+use rustc_ast::ast::RangeLimits;
+use rustc_ast::ast::RangeSyntax;
+use rustc_ast::ast::Stmt;
+use rustc_ast::ast::StmtKind;
+use rustc_ast::ast::StrLit;
+use rustc_ast::ast::StrStyle;
+use rustc_ast::ast::StructExpr;
+use rustc_ast::ast::StructRest;
+use rustc_ast::ast::Term;
+use rustc_ast::ast::Trait;
+use rustc_ast::ast::TraitBoundModifier;
+use rustc_ast::ast::TraitObjectSyntax;
+use rustc_ast::ast::TraitRef;
+use rustc_ast::ast::Ty;
+use rustc_ast::ast::TyAlias;
+use rustc_ast::ast::TyAliasWhereClause;
+use rustc_ast::ast::TyKind;
+use rustc_ast::ast::UintTy;
+use rustc_ast::ast::UnOp;
+use rustc_ast::ast::Unsafe;
+use rustc_ast::ast::UnsafeSource;
+use rustc_ast::ast::UseTree;
+use rustc_ast::ast::UseTreeKind;
+use rustc_ast::ast::Variant;
+use rustc_ast::ast::VariantData;
+use rustc_ast::ast::Visibility;
+use rustc_ast::ast::VisibilityKind;
+use rustc_ast::ast::WhereBoundPredicate;
+use rustc_ast::ast::WhereClause;
+use rustc_ast::ast::WhereEqPredicate;
+use rustc_ast::ast::WherePredicate;
+use rustc_ast::ast::WhereRegionPredicate;
 use rustc_ast::ptr::P;
 use rustc_ast::token::{self, CommentKind, Delimiter, Nonterminal, Token, TokenKind};
 use rustc_ast::tokenstream::{
@@ -303,7 +404,7 @@ spanless_eq_struct!(AttrAnnotatedTokenStream; 0);
 spanless_eq_struct!(AttrItem; path args tokens);
 spanless_eq_struct!(Attribute; kind id style span);
 spanless_eq_struct!(AttributesData; attrs tokens);
-spanless_eq_struct!(BareFnTy; unsafety ext generic_params decl);
+spanless_eq_struct!(BareFnTy; unsafety ext generic_params decl decl_span);
 spanless_eq_struct!(Block; stmts id rules span tokens could_be_bare_literal);
 spanless_eq_struct!(Crate; attrs items spans id is_placeholder);
 spanless_eq_struct!(EnumDef; variants);
@@ -366,7 +467,6 @@ spanless_eq_enum!(BlockCheckMode; Default Unsafe(0));
 spanless_eq_enum!(BorrowKind; Ref Raw);
 spanless_eq_enum!(CaptureBy; Value Ref);
 spanless_eq_enum!(Const; Yes(0) No);
-spanless_eq_enum!(CrateSugar; PubCrate JustCrate);
 spanless_eq_enum!(Defaultness; Default(0) Final);
 spanless_eq_enum!(Extern; None Implicit Explicit(0));
 spanless_eq_enum!(FloatTy; F32 F64);
@@ -407,7 +507,7 @@ spanless_eq_enum!(Unsafe; Yes(0) No);
 spanless_eq_enum!(UnsafeSource; CompilerGenerated UserProvided);
 spanless_eq_enum!(UseTreeKind; Simple(0 1 2) Nested(0) Glob);
 spanless_eq_enum!(VariantData; Struct(0 1) Tuple(0 1) Unit(0));
-spanless_eq_enum!(VisibilityKind; Public Crate(0) Restricted(path id) Inherited);
+spanless_eq_enum!(VisibilityKind; Public Restricted(path id) Inherited);
 spanless_eq_enum!(WherePredicate; BoundPredicate(0) RegionPredicate(0) EqPredicate(0));
 spanless_eq_enum!(ExprKind; Box(0) Array(0) ConstBlock(0) Call(0 1)
     MethodCall(0 1 2) Tup(0) Binary(0 1 2) Unary(0 1) Lit(0) Cast(0 1) Type(0 1)
@@ -507,7 +607,7 @@ impl SpanlessEq for TokenStream {
                 None => return false,
                 Some(tree) => tree,
             };
-            if SpanlessEq::eq(&this, &other) {
+            if SpanlessEq::eq(this, other) {
                 continue;
             }
             if let (TokenTree::Token(this), TokenTree::Token(other)) = (this, other) {
@@ -531,10 +631,10 @@ impl SpanlessEq for TokenStream {
     }
 }
 
-fn doc_comment(
+fn doc_comment<'a>(
     style: AttrStyle,
     unescaped: Symbol,
-    trees: &mut impl Iterator<Item = TokenTree>,
+    trees: &mut impl Iterator<Item = &'a TokenTree>,
 ) -> bool {
     if match style {
         AttrStyle::Outer => false,
@@ -557,7 +657,7 @@ fn doc_comment(
         Some(TokenTree::Token(Token {
             kind: TokenKind::Ident(symbol, false),
             span: _,
-        })) if symbol == sym::doc => {}
+        })) if *symbol == sym::doc => {}
         _ => return false,
     }
     match trees.next() {
@@ -569,7 +669,7 @@ fn doc_comment(
     }
     match trees.next() {
         Some(TokenTree::Token(token)) => {
-            is_escaped_literal_token(&token, unescaped) && trees.next().is_none()
+            is_escaped_literal_token(token, unescaped) && trees.next().is_none()
         }
         _ => false,
     }

@@ -196,7 +196,7 @@ fn librustc_parse_and_rewrite(input: &str) -> Option<P<ast::Expr>> {
 }
 
 /// Wrap every expression which is not already wrapped in parens with parens, to
-/// reveal the precidence of the parsed expressions, and produce a stringified
+/// reveal the precedence of the parsed expressions, and produce a stringified
 /// form of the resulting expression.
 ///
 /// This method operates on librustc objects.

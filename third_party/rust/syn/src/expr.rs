@@ -1092,6 +1092,8 @@ pub(crate) fn requires_terminator(expr: &Expr) -> bool {
 #[cfg(feature = "parsing")]
 pub(crate) mod parsing {
     use super::*;
+    #[cfg(feature = "full")]
+    use crate::parse::ParseBuffer;
     use crate::parse::{Parse, ParseStream, Result};
     use crate::path;
     #[cfg(feature = "full")]
@@ -1525,7 +1527,7 @@ pub(crate) mod parsing {
         } else if input.peek(Token![*]) || input.peek(Token![!]) || input.peek(Token![-]) {
             expr_unary(input, attrs, allow_struct).map(Expr::Unary)
         } else {
-            trailer_expr(attrs, input, allow_struct)
+            trailer_expr(begin, attrs, input, allow_struct)
         }
     }
 
@@ -1550,6 +1552,7 @@ pub(crate) mod parsing {
     // <atom> ? ...
     #[cfg(feature = "full")]
     fn trailer_expr(
+        begin: ParseBuffer,
         mut attrs: Vec<Attribute>,
         input: ParseStream,
         allow_struct: AllowStruct,
@@ -1557,9 +1560,14 @@ pub(crate) mod parsing {
         let atom = atom_expr(input, allow_struct)?;
         let mut e = trailer_helper(input, atom)?;
 
-        let inner_attrs = e.replace_attrs(Vec::new());
-        attrs.extend(inner_attrs);
-        e.replace_attrs(attrs);
+        if let Expr::Verbatim(tokens) = &mut e {
+            *tokens = verbatim::between(begin, input);
+        } else {
+            let inner_attrs = e.replace_attrs(Vec::new());
+            attrs.extend(inner_attrs);
+            e.replace_attrs(attrs);
+        }
+
         Ok(e)
     }
 
