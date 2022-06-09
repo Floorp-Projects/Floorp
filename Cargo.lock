@@ -270,7 +270,7 @@ dependencies = [
  "miow",
  "serde",
  "serde_derive",
- "tokio 0.1.14",
+ "tokio 0.1.22",
  "tokio-io",
  "tokio-reactor",
  "winapi",
@@ -287,7 +287,7 @@ dependencies = [
  "futures 0.1.31",
  "futures-cpupool",
  "log",
- "tokio 0.1.14",
+ "tokio 0.1.22",
 ]
 
 [[package]]
@@ -303,7 +303,7 @@ dependencies = [
  "log",
  "once_cell",
  "slab",
- "tokio 0.1.14",
+ "tokio 0.1.22",
 ]
 
 [[package]]
@@ -5290,9 +5290,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "0.1.14"
+version = "0.1.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4790d0be6f4ba6ae4f48190efa2ed7780c9e3567796abdb285003cf39840d9c5"
+checksum = "5a09c0b5bb588872ab2f09afa13ee6e9dac11e10a0ec9e8e3ba39a5a5d530af6"
 dependencies = [
  "bytes 0.4.12",
  "futures 0.1.31",
