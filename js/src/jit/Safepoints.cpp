@@ -19,10 +19,10 @@ using namespace jit;
 
 using mozilla::FloorLog2;
 
-SafepointWriter::SafepointWriter(uint32_t slotCount, uint32_t argumentCount)
-    : frameSlots_((slotCount / sizeof(intptr_t)) +
+SafepointWriter::SafepointWriter(uint32_t slotsSize, uint32_t argumentsSize)
+    : frameSlots_((slotsSize / sizeof(intptr_t)) +
                   1),  // Stack slot counts are inclusive.
-      argumentSlots_(argumentCount / sizeof(intptr_t)) {}
+      argumentSlots_(argumentsSize / sizeof(intptr_t)) {}
 
 bool SafepointWriter::init(TempAllocator& alloc) {
   return frameSlots_.init(alloc) && argumentSlots_.init(alloc);
@@ -402,9 +402,9 @@ void SafepointWriter::endEntry() {
 SafepointReader::SafepointReader(IonScript* script, const SafepointIndex* si)
     : stream_(script->safepoints() + si->safepointOffset(),
               script->safepoints() + script->safepointsSize()),
-      frameSlots_((script->frameSlots() / sizeof(intptr_t)) +
+      frameSlots_((script->frameSlotsSize() / sizeof(intptr_t)) +
                   1),  // Stack slot counts are inclusive.
-      argumentSlots_(script->argumentSlots() / sizeof(intptr_t)),
+      argumentSlots_(script->argumentSlotsSize() / sizeof(intptr_t)),
       nunboxSlotsRemaining_(0),
       slotsOrElementsSlotsRemaining_(0) {
   osiCallPointOffset_ = stream_.readUnsigned();

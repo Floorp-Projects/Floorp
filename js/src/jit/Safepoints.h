@@ -34,7 +34,7 @@ class SafepointWriter {
   BitSet argumentSlots_;
 
  public:
-  explicit SafepointWriter(uint32_t slotCount, uint32_t argumentCount);
+  explicit SafepointWriter(uint32_t slotsSize, uint32_t argumentsSize);
   [[nodiscard]] bool init(TempAllocator& alloc);
 
  private:
