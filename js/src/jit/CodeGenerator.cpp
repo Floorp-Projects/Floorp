@@ -3737,10 +3737,15 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.setFramePushed(0);
 
+  // Frame prologue.
+  masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  masm.reserveStack(frameSize() - sizeof(uintptr_t));
+  MOZ_ASSERT(masm.framePushed() == frameSize());
+
   // Ensure that the Ion frames is properly aligned.
   masm.assertStackAlignment(JitStackAlignment, 0);
-
-  masm.reserveStack(frameSize());
 }
 
 void CodeGenerator::visitOsrEnvironmentChain(LOsrEnvironmentChain* lir) {

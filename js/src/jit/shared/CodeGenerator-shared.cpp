@@ -102,12 +102,16 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                                           WasmStackAlignment);
     }
   } else {
-    // Round to JitStackAlignment, and implicitly to sizeof(Value) as
-    // JitStackAlignment is a multiple of sizeof(Value). This was originally
-    // implemented for SIMD.js, but now lets us use faster ABI calls via
-    // setupAlignedABICall.
-    MOZ_ASSERT(offsetOfLocalSlots_ == 0);
-    frameDepth_ = AlignBytes(graph->localSlotsSize(), JitStackAlignment);
+    // Reserve space for frame pointer (and padding on 32-bit platforms).
+    offsetOfLocalSlots_ = JitFrameLayout::IonFirstSlotOffset;
+    frameDepth_ = offsetOfLocalSlots_;
+
+    // Allocate space for local slots (register allocator spills). Round to
+    // JitStackAlignment, and implicitly to sizeof(Value) as JitStackAlignment
+    // is a multiple of sizeof(Value). This was originally implemented for
+    // SIMD.js, but now lets us use faster ABI calls via setupAlignedABICall.
+    frameDepth_ += graph->localSlotsSize();
+    frameDepth_ = AlignBytes(frameDepth_, JitStackAlignment);
 
     // Allocate space for argument Values passed to callee functions.
     offsetOfPassedArgSlots_ = frameDepth_;
@@ -134,8 +138,13 @@ bool CodeGeneratorShared::generatePrologue() {
   // Ensure that the Ion frame is properly aligned.
   masm.assertStackAlignment(JitStackAlignment, 0);
 
+  // Frame prologue.
+  masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   // Note that this automatically sets MacroAssembler::framePushed().
-  masm.reserveStack(frameSize());
+  masm.reserveStack(frameSize() - sizeof(uintptr_t));
+  MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.checkStackAlignment();
 
   if (JS::TraceLoggerSupported()) {
@@ -153,8 +162,10 @@ bool CodeGeneratorShared::generateEpilogue() {
     emitTracelogIonStop();
   }
 
-  masm.freeStack(frameSize());
-  MOZ_ASSERT(masm.framePushed() == 0);
+  MOZ_ASSERT(masm.framePushed() == frameSize());
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
+  masm.setFramePushed(0);
 
   // If profiling, reset the per-thread global lastJitFrame to point to
   // the previous frame.
@@ -336,7 +347,7 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx) {
 static inline int32_t ToStackIndex(LAllocation* a) {
   if (a->isStackSlot()) {
     MOZ_ASSERT(a->toStackSlot()->slot() >= 1);
-    return a->toStackSlot()->slot();
+    return JitFrameLayout::IonFirstSlotOffset + a->toStackSlot()->slot();
   }
   return -int32_t(sizeof(JitFrameLayout) + a->toArgument()->index());
 }
