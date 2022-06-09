@@ -19,6 +19,10 @@ add_task(async function() {
   await addTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
+  // Network monitoring is turned off by default in the browser console
+  info("Turn on network monitoring");
+  await toggleNetworkMonitoringConsoleSetting(hud, true);
+
   info("Reload the content window to produce a network log");
   const onNetworkMessage = waitForMessageByType(
     hud,
@@ -119,6 +123,7 @@ add_task(async function() {
   );
 
   await hideContextMenu(hud);
+  await toggleNetworkMonitoringConsoleSetting(hud, false);
 });
 
 function addPrefBasedEntries(expectedEntries) {
