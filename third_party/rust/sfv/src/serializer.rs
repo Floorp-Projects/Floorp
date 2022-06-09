@@ -4,7 +4,6 @@ use crate::{
     SFVResult,
 };
 use data_encoding::BASE64;
-use rust_decimal::prelude::Zero;
 
 /// Serializes structured field value into String.
 pub trait SerializeValue {
@@ -104,12 +103,12 @@ impl Serializer {
                         Self::serialize_parameters(&item.params, output)?;
                     } else {
                         output.push('=');
-                        Self::serialize_item(&item, output)?;
+                        Self::serialize_item(item, output)?;
                     }
                 }
                 ListEntry::InnerList(inner_list) => {
                     output.push('=');
-                    Self::serialize_inner_list(&inner_list, output)?;
+                    Self::serialize_inner_list(inner_list, output)?;
                 }
             }
 
@@ -135,7 +134,7 @@ impl Serializer {
 
             // If more values remain in inner_list, append a single SP to output
             if idx < items.len() - 1 {
-                output.push_str(" ");
+                output.push(' ');
             }
         }
         output.push(')');
@@ -258,7 +257,7 @@ impl Serializer {
             return Err("serialize_string: non-ascii character");
         }
 
-        let vchar_or_sp = |char| char == '\x7f' || (char >= '\x00' && char <= '\x1f');
+        let vchar_or_sp = |char| char == '\x7f' || ('\x00'..='\x1f').contains(&char);
         if value.chars().any(vchar_or_sp) {
             return Err("serialize_string: not a visible character");
         }

@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "sfv"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Tania Batieva <yalyna.ts@gmail.com>"]
 exclude = ["tests/**", ".github/*"]
 description = "Structured Field Values for HTTP parser.\nImplementation of RFC 8941."
@@ -27,13 +26,13 @@ repository = "https://github.com/undef1nd/sfv"
 name = "bench"
 harness = false
 [dependencies.data-encoding]
-version = "2.2.1"
+version = "2.3.2"
 
 [dependencies.indexmap]
-version = "1.1.0"
+version = "1.8.0"
 
 [dependencies.rust_decimal]
-version = "1.8.0"
+version = "1.20.0"
 features = ["std"]
 [dev-dependencies.criterion]
 version = "0.3.3"
@@ -44,4 +43,3 @@ features = ["derive"]
 
 [dev-dependencies.serde_json]
 version = "1.0"
-features = ["preserve_order"]
