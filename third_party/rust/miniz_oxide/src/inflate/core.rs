@@ -875,7 +875,7 @@ fn apply_match(
 /// and already improves decompression speed a fair bit.
 fn decompress_fast(
     r: &mut DecompressorOxide,
-    mut in_iter: &mut slice::Iter<u8>,
+    in_iter: &mut slice::Iter<u8>,
     out_buf: &mut OutputBuffer,
     flags: u32,
     local_vars: &mut LocalVars,
@@ -900,7 +900,7 @@ fn decompress_fast(
                 break 'o TINFLStatus::Done;
             }
 
-            fill_bit_buffer(&mut l, &mut in_iter);
+            fill_bit_buffer(&mut l, in_iter);
 
             if let Some((symbol, code_len)) = r.tables[LITLEN_TABLE].lookup(l.bit_buf) {
                 l.counter = symbol as u32;
@@ -914,7 +914,7 @@ fn decompress_fast(
                     // If we have a 32-bit buffer we need to read another two bytes now
                     // to have enough bits to keep going.
                     if cfg!(not(target_pointer_width = "64")) {
-                        fill_bit_buffer(&mut l, &mut in_iter);
+                        fill_bit_buffer(&mut l, in_iter);
                     }
 
                     if let Some((symbol, code_len)) = r.tables[LITLEN_TABLE].lookup(l.bit_buf) {
@@ -964,7 +964,7 @@ fn decompress_fast(
             // Length and distance codes have a number of extra bits depending on
             // the base, which together with the base gives us the exact value.
 
-            fill_bit_buffer(&mut l, &mut in_iter);
+            fill_bit_buffer(&mut l, in_iter);
             if l.num_extra != 0 {
                 let extra_bits = l.bit_buf & ((1 << l.num_extra) - 1);
                 l.bit_buf >>= l.num_extra;
@@ -975,7 +975,7 @@ fn decompress_fast(
             // We found a length code, so a distance code should follow.
 
             if cfg!(not(target_pointer_width = "64")) {
-                fill_bit_buffer(&mut l, &mut in_iter);
+                fill_bit_buffer(&mut l, in_iter);
             }
 
             if let Some((mut symbol, code_len)) = r.tables[DIST_TABLE].lookup(l.bit_buf) {
@@ -995,7 +995,7 @@ fn decompress_fast(
             }
 
             if l.num_extra != 0 {
-                fill_bit_buffer(&mut l, &mut in_iter);
+                fill_bit_buffer(&mut l, in_iter);
                 let extra_bits = l.bit_buf & ((1 << l.num_extra) - 1);
                 l.bit_buf >>= l.num_extra;
                 l.num_bits -= l.num_extra;
@@ -1648,7 +1648,13 @@ pub fn decompress(
         0
     };
 
-    if status == TINFLStatus::NeedsMoreInput && out_buf.bytes_left() == 0 {
+    // Make sure HasMoreOutput overrides NeedsMoreInput if the output buffer is full.
+    // (Unless the missing input is the adler32 value in which case we don't need to write anything.)
+    // TODO: May want to see if we can do this in a better way.
+    if status == TINFLStatus::NeedsMoreInput
+        && out_buf.bytes_left() == 0
+        && state != State::ReadAdler32
+    {
         status = TINFLStatus::HasMoreOutput
     }
 

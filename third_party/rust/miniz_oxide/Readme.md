@@ -15,16 +15,20 @@ miniz_oxide can optionally be made to use a simd-accelerated version of adler32 
 Simple compression/decompression:
 ```rust
 
-extern crate miniz_oxide;
-
-use miniz_oxide::inflate::decompress_to_vec;
 use miniz_oxide::deflate::compress_to_vec;
+use miniz_oxide::inflate::decompress_to_vec;
 
 fn roundtrip(data: &[u8]) {
-    # compress the input
+    // Compress the input
     let compressed = compress_to_vec(data, 6);
-    # decompress the compressed input
-    let decompressed = decompress_to_vec(decompressed.as_slice()).expect("Failed to decompress!");
+    // Decompress the compressed input
+    let decompressed = decompress_to_vec(compressed.as_slice()).expect("Failed to decompress!");
+    // Check roundtrip succeeded
+    assert_eq!(data, decompressed);
+}
+
+fn main() {
+    roundtrip("Hello, world!".as_bytes());
 }
 
 ```
