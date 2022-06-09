@@ -571,7 +571,8 @@ static ALWAYS_INLINE IntRange clip_distance_range(const E& left,
   // Get the change in clip dist per X step.
   Float clipStep = (rightClip - leftClip) / (right.cur_x() - left.cur_x());
   // Find the zero intercepts starting from the left edge.
-  Float clipDist = left.cur_x() - leftClip * recip(clipStep);
+  Float clipDist =
+      clamp(left.cur_x() - leftClip * recip(clipStep), 0.0f, 1.0e6f);
   // Find the distance to the start of the span for any clip distances that
   // are increasing in value. If the clip distance is constant or decreasing
   // in value, then check if it starts outside the clip volume.
