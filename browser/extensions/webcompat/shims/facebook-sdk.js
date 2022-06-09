@@ -83,7 +83,7 @@ if (!window.FB) {
     // which try to match the examples and documentation here:
     // https://developers.facebook.com/docs/facebook-login/web/login-button/
 
-    if (target.hasAttribute("fb-xfbml-state")) {
+    if (target.textContent || target.hasAttribute("fb-xfbml-state")) {
       return;
     }
     target.setAttribute("fb-xfbml-state", "");
