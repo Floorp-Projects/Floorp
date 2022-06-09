@@ -1,5 +1,5 @@
-use std::fmt;
-
+use alloc::string::String;
+use core::fmt;
 use serde::{
     de::{self, DeserializeSeed, Deserializer, IgnoredAny, IntoDeserializer, MapAccess, Visitor},
     forward_to_deserialize_any,
@@ -8,6 +8,10 @@ use serde::{
 
 /// Serialize with an added prefix on every field name and deserialize by
 /// trimming away the prefix.
+///
+/// You can set the visibility of the generated module by prefixing the module name with a module visibility.
+/// `with_prefix!(pub(crate) prefix_foo "foo_");` creates a module with `pub(crate)` visibility.
+/// The visibility is optional and by default `pub(self)`, i.e., private visibility is assumed.
 ///
 /// **Note:** Use of this macro is incompatible with applying the [`deny_unknown_fields`] attribute
 /// on the container.
@@ -31,7 +35,7 @@ use serde::{
 /// }
 /// ```
 ///
-/// In Rust we would ideally like to model this data as a pair of `Player`
+/// In Rust, we would ideally like to model this data as a pair of `Player`
 /// structs, rather than repeating the fields of `Player` for each prefix.
 ///
 /// ```rust
@@ -53,7 +57,7 @@ use serde::{
 /// An implementation of the Challonge API would use `with_prefix!` like this:
 ///
 /// ```rust
-/// use serde_derive::{Deserialize, Serialize};
+/// use serde::{Deserialize, Serialize};
 /// use serde_with::with_prefix;
 ///
 /// #[derive(Serialize, Deserialize)]
@@ -71,7 +75,8 @@ use serde::{
 /// }
 ///
 /// with_prefix!(prefix_player1 "player1_");
-/// with_prefix!(prefix_player2 "player2_");
+/// // You can also set the visibility of the generated prefix module, the default is private.
+/// with_prefix!(pub prefix_player2 "player2_");
 /// #
 /// # const EXPECTED: &str = r#"{
 /// #   "player1_name": "name1",
@@ -103,15 +108,14 @@ use serde::{
 /// [issue-with_prefix-deny_unknown_fields]: https://github.com/jonasbb/serde_with/issues/57
 #[macro_export]
 macro_rules! with_prefix {
-    ($module:ident $prefix:expr) => {
-        mod $module {
-            use $crate::{
-                serde::{Deserialize, Deserializer, Serialize, Serializer},
-                with_prefix::WithPrefix,
-            };
+    ($module:ident $prefix:expr) => {$crate::with_prefix!(pub(self) $module $prefix);};
+    ($vis:vis $module:ident $prefix:expr) => {
+        $vis mod $module {
+            use $crate::serde::{Deserialize, Deserializer, Serialize, Serializer};
+            use $crate::with_prefix::WithPrefix;
 
             #[allow(dead_code)]
-            pub fn serialize<T, S>(object: &T, serializer: S) -> Result<S::Ok, S::Error>
+            pub fn serialize<T, S>(object: &T, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
             where
                 T: Serialize,
                 S: Serializer,
@@ -123,7 +127,7 @@ macro_rules! with_prefix {
             }
 
             #[allow(dead_code)]
-            pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+            pub fn deserialize<'de, T, D>(deserializer: D) -> ::std::result::Result<T, D::Error>
             where
                 T: Deserialize<'de>,
                 D: Deserializer<'de>,
@@ -489,16 +493,15 @@ where
 {
     type Error = A::Error;
 
-    // Use `strip_prefix` with Rust 1.45
-    #[allow(clippy::manual_strip)]
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
     where
         K: DeserializeSeed<'de>,
     {
         while let Some(s) = self.delegate.next_key::<String>()? {
-            if s.starts_with(self.prefix) {
-                let without_prefix = s[self.prefix.len()..].into_deserializer();
-                return seed.deserialize(without_prefix).map(Some);
+            if let Some(without_prefix) = s.strip_prefix(self.prefix) {
+                return seed
+                    .deserialize(without_prefix.into_deserializer())
+                    .map(Some);
             }
             self.delegate.next_value::<IgnoredAny>()?;
         }
@@ -581,8 +584,6 @@ where
 {
     type Error = A::Error;
 
-    // Use `strip_prefix` with Rust 1.45
-    #[allow(clippy::manual_strip)]
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
     where
         K: DeserializeSeed<'de>,
@@ -592,9 +593,10 @@ where
             return seed.deserialize(without_prefix).map(Some);
         }
         while let Some(s) = self.delegate.next_key::<String>()? {
-            if s.starts_with(self.prefix) {
-                let without_prefix = s[self.prefix.len()..].into_deserializer();
-                return seed.deserialize(without_prefix).map(Some);
+            if let Some(without_prefix) = s.strip_prefix(self.prefix) {
+                return seed
+                    .deserialize(without_prefix.into_deserializer())
+                    .map(Some);
             }
             self.delegate.next_value::<IgnoredAny>()?;
         }

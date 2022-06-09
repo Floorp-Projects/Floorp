@@ -1,13 +1,33 @@
-use utils::duration::DurationSigned;
-
 use super::*;
-use crate::{formats::Strictness, rust::StringWithSeparator, Separator};
-use std::{
-    collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
-    fmt::Display,
-    hash::{BuildHasher, Hash},
-    time::{Duration, SystemTime},
+use crate::{
+    formats::Strictness, rust::StringWithSeparator, utils::duration::DurationSigned, Separator,
 };
+use alloc::{
+    borrow::Cow,
+    boxed::Box,
+    collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque},
+    rc::{Rc, Weak as RcWeak},
+    string::{String, ToString},
+    sync::{Arc, Weak as ArcWeak},
+    vec::Vec,
+};
+use core::{
+    cell::{Cell, RefCell},
+    convert::TryInto,
+    fmt::Display,
+    time::Duration,
+};
+#[cfg(feature = "indexmap")]
+use indexmap_crate::{IndexMap, IndexSet};
+use serde::ser::Error;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::{Mutex, RwLock},
+    time::SystemTime,
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// region: Simple Wrapper types (e.g., Box, Option)
 
 impl<'a, T, U> SerializeAs<&'a T> for &'a U
 where
@@ -16,6 +36,20 @@ where
     U: ?Sized,
 {
     fn serialize_as<S>(source: &&'a T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, U>::new(source).serialize(serializer)
+    }
+}
+
+impl<'a, T, U> SerializeAs<&'a mut T> for &'a mut U
+where
+    U: SerializeAs<T>,
+    T: ?Sized,
+    U: ?Sized,
+{
+    fn serialize_as<S>(source: &&'a mut T, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -50,13 +84,142 @@ where
     }
 }
 
+impl<T, U> SerializeAs<Rc<T>> for Rc<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Rc<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, U>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<RcWeak<T>> for RcWeak<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &RcWeak<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<Option<Rc<T>>, Option<Rc<U>>>::new(&source.upgrade())
+            .serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<Arc<T>> for Arc<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Arc<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, U>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<ArcWeak<T>> for ArcWeak<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &ArcWeak<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<Option<Arc<T>>, Option<Arc<U>>>::new(&source.upgrade())
+            .serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<Cell<T>> for Cell<U>
+where
+    U: SerializeAs<T>,
+    T: Copy,
+{
+    fn serialize_as<S>(source: &Cell<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, U>::new(&source.get()).serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<RefCell<T>> for RefCell<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &RefCell<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match source.try_borrow() {
+            Ok(source) => SerializeAsWrap::<T, U>::new(&*source).serialize(serializer),
+            Err(_) => Err(S::Error::custom("already mutably borrowed")),
+        }
+    }
+}
+
+impl<T, U> SerializeAs<Mutex<T>> for Mutex<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Mutex<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match source.lock() {
+            Ok(source) => SerializeAsWrap::<T, U>::new(&*source).serialize(serializer),
+            Err(_) => Err(S::Error::custom("lock poison error while serializing")),
+        }
+    }
+}
+
+impl<T, U> SerializeAs<RwLock<T>> for RwLock<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &RwLock<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match source.read() {
+            Ok(source) => SerializeAsWrap::<T, U>::new(&*source).serialize(serializer),
+            Err(_) => Err(S::Error::custom("lock poison error while serializing")),
+        }
+    }
+}
+
+impl<T, TAs, E, EAs> SerializeAs<Result<T, E>> for Result<TAs, EAs>
+where
+    TAs: SerializeAs<T>,
+    EAs: SerializeAs<E>,
+{
+    fn serialize_as<S>(source: &Result<T, E>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        source
+            .as_ref()
+            .map(SerializeAsWrap::<T, TAs>::new)
+            .map_err(SerializeAsWrap::<E, EAs>::new)
+            .serialize(serializer)
+    }
+}
+
+// endregion
+///////////////////////////////////////////////////////////////////////////////
+// region: Collection Types (e.g., Maps, Sets, Vec)
+
 macro_rules! seq_impl {
-    ($ty:ident < T $(: $tbound1:ident $(+ $tbound2:ident)*)* $(, $typaram:ident : $bound:ident $(+ $bound2:ident)*)* >) => {
+    ($ty:ident < T $(: $tbound1:ident $(+ $tbound2:ident)*)* $(, $typaram:ident : $bound:ident )* >) => {
         impl<T, U $(, $typaram)*> SerializeAs<$ty<T $(, $typaram)*>> for $ty<U $(, $typaram)*>
         where
             U: SerializeAs<T>,
             $(T: ?Sized + $tbound1 $(+ $tbound2)*,)*
-            $($typaram: ?Sized + $bound $(+ $bound2)*,)*
+            $($typaram: ?Sized + $bound,)*
         {
             fn serialize_as<S>(source: &$ty<T $(, $typaram)*>, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -70,14 +233,16 @@ macro_rules! seq_impl {
 
 type BoxedSlice<T> = Box<[T]>;
 type Slice<T> = [T];
-seq_impl!(BinaryHeap<T: Ord + Sized>);
+seq_impl!(BinaryHeap<T>);
 seq_impl!(BoxedSlice<T>);
-seq_impl!(BTreeSet<T: Ord + Sized>);
-seq_impl!(HashSet<T: Eq + Hash + Sized, H: BuildHasher + Sized>);
+seq_impl!(BTreeSet<T>);
+seq_impl!(HashSet<T, H: Sized>);
 seq_impl!(LinkedList<T>);
 seq_impl!(Slice<T>);
 seq_impl!(Vec<T>);
 seq_impl!(VecDeque<T>);
+#[cfg(feature = "indexmap")]
+seq_impl!(IndexSet<T, H: Sized>);
 
 macro_rules! map_impl {
     ($ty:ident < K $(: $kbound1:ident $(+ $kbound2:ident)*)*, V $(, $typaram:ident : $bound:ident)* >) => {
@@ -85,8 +250,8 @@ macro_rules! map_impl {
         where
             KU: SerializeAs<K>,
             VU: SerializeAs<V>,
-            $(K: $kbound1 $(+ $kbound2)*,)*
-            $($typaram: $bound,)*
+            $(K: ?Sized + $kbound1 $(+ $kbound2)*,)*
+            $($typaram: ?Sized + $bound,)*
         {
             fn serialize_as<S>(source: &$ty<K, V $(, $typaram)*>, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -98,20 +263,10 @@ macro_rules! map_impl {
     }
 }
 
-map_impl!(BTreeMap<K: Ord, V>);
-map_impl!(HashMap<K: Eq + Hash, V, H: BuildHasher>);
-
-impl<T> SerializeAs<T> for DisplayFromStr
-where
-    T: Display,
-{
-    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        crate::rust::display_fromstr::serialize(source, serializer)
-    }
-}
+map_impl!(BTreeMap<K, V>);
+map_impl!(HashMap<K, V, H: Sized>);
+#[cfg(feature = "indexmap")]
+map_impl!(IndexMap<K, V, H: Sized>);
 
 macro_rules! tuple_impl {
     ($len:literal $($n:tt $t:ident $tas:ident)+) => {
@@ -151,75 +306,8 @@ tuple_impl!(14 0 T0 As0 1 T1 As1 2 T2 As2 3 T3 As3 4 T4 As4 5 T5 As5 6 T6 As6 7 
 tuple_impl!(15 0 T0 As0 1 T1 As1 2 T2 As2 3 T3 As3 4 T4 As4 5 T5 As5 6 T6 As6 7 T7 As7 8 T8 As8 9 T9 As9 10 T10 As10 11 T11 As11 12 T12 As12 13 T13 As13 14 T14 As14);
 tuple_impl!(16 0 T0 As0 1 T1 As1 2 T2 As2 3 T3 As3 4 T4 As4 5 T5 As5 6 T6 As6 7 T7 As7 8 T8 As8 9 T9 As9 10 T10 As10 11 T11 As11 12 T12 As12 13 T13 As13 14 T14 As14 15 T15 As15);
 
-macro_rules! array_impl {
-    ($len:literal) => {
-        impl<T, As> SerializeAs<[T; $len]> for [As; $len]
-        where
-            As: SerializeAs<T>,
-        {
-            fn serialize_as<S>(array: &[T; $len], serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                use serde::ser::SerializeTuple;
-                let mut arr = serializer.serialize_tuple($len)?;
-                for elem in array {
-                    arr.serialize_element(&SerializeAsWrap::<T, As>::new(elem))?;
-                }
-                arr.end()
-            }
-        }
-    };
-}
-
-array_impl!(0);
-array_impl!(1);
-array_impl!(2);
-array_impl!(3);
-array_impl!(4);
-array_impl!(5);
-array_impl!(6);
-array_impl!(7);
-array_impl!(8);
-array_impl!(9);
-array_impl!(10);
-array_impl!(11);
-array_impl!(12);
-array_impl!(13);
-array_impl!(14);
-array_impl!(15);
-array_impl!(16);
-array_impl!(17);
-array_impl!(18);
-array_impl!(19);
-array_impl!(20);
-array_impl!(21);
-array_impl!(22);
-array_impl!(23);
-array_impl!(24);
-array_impl!(25);
-array_impl!(26);
-array_impl!(27);
-array_impl!(28);
-array_impl!(29);
-array_impl!(30);
-array_impl!(31);
-array_impl!(32);
-
-impl<T> SerializeAs<T> for Same
-where
-    T: Serialize + ?Sized,
-{
-    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        source.serialize(serializer)
-    }
-}
-
 macro_rules! map_as_tuple_seq {
-    ($ty:ident < K $(: $kbound1:ident $(+ $kbound2:ident)*)*, V $(, $typaram:ident : $bound:ident)* >) => {
+    ($ty:ident < K $(: $kbound1:ident $(+ $kbound2:ident)*)*, V >) => {
         impl<K, KAs, V, VAs> SerializeAs<$ty<K, V>> for Vec<(KAs, VAs)>
         where
             KAs: SerializeAs<K>,
@@ -239,8 +327,51 @@ macro_rules! map_as_tuple_seq {
         }
     };
 }
-map_as_tuple_seq!(BTreeMap<K: Ord, V>);
-map_as_tuple_seq!(HashMap<K: Eq + Hash, V, H: BuildHasher>);
+map_as_tuple_seq!(BTreeMap<K, V>);
+// TODO HashMap with a custom hasher support would be better, but results in "unconstrained type parameter"
+map_as_tuple_seq!(HashMap<K, V>);
+#[cfg(feature = "indexmap")]
+map_as_tuple_seq!(IndexMap<K, V>);
+
+// endregion
+///////////////////////////////////////////////////////////////////////////////
+// region: Conversion types which cause different serialization behavior
+
+impl<T> SerializeAs<T> for Same
+where
+    T: Serialize + ?Sized,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        source.serialize(serializer)
+    }
+}
+
+impl<T> SerializeAs<T> for DisplayFromStr
+where
+    T: Display,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        crate::rust::display_fromstr::serialize(source, serializer)
+    }
+}
+
+impl<T, U> SerializeAs<Vec<T>> for VecSkipError<U>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Vec<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Vec::<U>::serialize_as(source, serializer)
+    }
+}
 
 impl<AsRefStr> SerializeAs<Option<AsRefStr>> for NoneAsEmptyString
 where
@@ -286,19 +417,14 @@ macro_rules! tuple_seq_as_map_impl {
 tuple_seq_as_map_impl! {
     BinaryHeap<(K, V)>,
     BTreeSet<(K, V)>,
-    HashSet<(K, V)>,
     LinkedList<(K, V)>,
     Option<(K, V)>,
     Vec<(K, V)>,
     VecDeque<(K, V)>,
 }
-tuple_seq_as_map_impl! {
-    [(K, V); 0], [(K, V); 1], [(K, V); 2], [(K, V); 3], [(K, V); 4], [(K, V); 5], [(K, V); 6],
-    [(K, V); 7], [(K, V); 8], [(K, V); 9], [(K, V); 10], [(K, V); 11], [(K, V); 12], [(K, V); 13],
-    [(K, V); 14], [(K, V); 15], [(K, V); 16], [(K, V); 17], [(K, V); 18], [(K, V); 19], [(K, V); 20],
-    [(K, V); 21], [(K, V); 22], [(K, V); 23], [(K, V); 24], [(K, V); 25], [(K, V); 26], [(K, V); 27],
-    [(K, V); 28], [(K, V); 29], [(K, V); 30], [(K, V); 31], [(K, V); 32],
-}
+tuple_seq_as_map_impl!(HashSet<(K, V)>);
+#[cfg(feature = "indexmap")]
+tuple_seq_as_map_impl!(IndexSet<(K, V)>);
 
 impl<T, TAs> SerializeAs<T> for DefaultOnError<TAs>
 where
@@ -349,10 +475,10 @@ macro_rules! use_signed_duration {
     (
         $main_trait:ident $internal_trait:ident =>
         {
-            $ty:ty; $converter:ident =>
+            $ty:ty =>
             $({
                 $format:ty, $strictness:ty =>
-                $($tbound:ident: $bound:ident)*
+                $($tbound:ident: $bound:ident $(,)?)*
             })*
         }
     ) => {
@@ -386,7 +512,7 @@ use_signed_duration!(
     DurationMicroSeconds DurationMicroSeconds,
     DurationNanoSeconds DurationNanoSeconds,
     => {
-        Duration; to_std_duration =>
+        Duration =>
         {u64, STRICTNESS => STRICTNESS: Strictness}
         {f64, STRICTNESS => STRICTNESS: Strictness}
         {String, STRICTNESS => STRICTNESS: Strictness}
@@ -398,7 +524,7 @@ use_signed_duration!(
     DurationMicroSecondsWithFrac DurationMicroSecondsWithFrac,
     DurationNanoSecondsWithFrac DurationNanoSecondsWithFrac,
     => {
-        Duration; to_std_duration =>
+        Duration =>
         {f64, STRICTNESS => STRICTNESS: Strictness}
         {String, STRICTNESS => STRICTNESS: Strictness}
     }
@@ -410,7 +536,7 @@ use_signed_duration!(
     TimestampMicroSeconds DurationMicroSeconds,
     TimestampNanoSeconds DurationNanoSeconds,
     => {
-        SystemTime; to_system_time =>
+        SystemTime =>
         {i64, STRICTNESS => STRICTNESS: Strictness}
         {f64, STRICTNESS => STRICTNESS: Strictness}
         {String, STRICTNESS => STRICTNESS: Strictness}
@@ -422,7 +548,7 @@ use_signed_duration!(
     TimestampMicroSecondsWithFrac DurationMicroSecondsWithFrac,
     TimestampNanoSecondsWithFrac DurationNanoSecondsWithFrac,
     => {
-        SystemTime; to_system_time =>
+        SystemTime =>
         {f64, STRICTNESS => STRICTNESS: Strictness}
         {String, STRICTNESS => STRICTNESS: Strictness}
     }
@@ -439,3 +565,175 @@ where
         serializer.serialize_some(&SerializeAsWrap::<T, U>::new(source))
     }
 }
+
+impl SerializeAs<&[u8]> for Bytes {
+    fn serialize_as<S>(bytes: &&[u8], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(bytes)
+    }
+}
+
+impl SerializeAs<Vec<u8>> for Bytes {
+    fn serialize_as<S>(bytes: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(bytes)
+    }
+}
+
+impl SerializeAs<Box<[u8]>> for Bytes {
+    fn serialize_as<S>(bytes: &Box<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(bytes)
+    }
+}
+
+impl<'a> SerializeAs<Cow<'a, [u8]>> for Bytes {
+    fn serialize_as<S>(bytes: &Cow<'a, [u8]>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_bytes(bytes)
+    }
+}
+
+impl<T, U> SerializeAs<Vec<T>> for OneOrMany<U, formats::PreferOne>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Vec<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match source.len() {
+            1 => SerializeAsWrap::<T, U>::new(source.iter().next().expect("Cannot be empty"))
+                .serialize(serializer),
+            _ => SerializeAsWrap::<Vec<T>, Vec<U>>::new(source).serialize(serializer),
+        }
+    }
+}
+
+impl<T, U> SerializeAs<Vec<T>> for OneOrMany<U, formats::PreferMany>
+where
+    U: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &Vec<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<Vec<T>, Vec<U>>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, TAs1> SerializeAs<T> for PickFirst<(TAs1,)>
+where
+    TAs1: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, TAs1>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, TAs1, TAs2> SerializeAs<T> for PickFirst<(TAs1, TAs2)>
+where
+    TAs1: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, TAs1>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, TAs1, TAs2, TAs3> SerializeAs<T> for PickFirst<(TAs1, TAs2, TAs3)>
+where
+    TAs1: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, TAs1>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, TAs1, TAs2, TAs3, TAs4> SerializeAs<T> for PickFirst<(TAs1, TAs2, TAs3, TAs4)>
+where
+    TAs1: SerializeAs<T>,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        SerializeAsWrap::<T, TAs1>::new(source).serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<T> for FromInto<U>
+where
+    T: Into<U> + Clone,
+    U: Serialize,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        source.clone().into().serialize(serializer)
+    }
+}
+
+impl<T, U> SerializeAs<T> for TryFromInto<U>
+where
+    T: TryInto<U> + Clone,
+    <T as TryInto<U>>::Error: Display,
+    U: Serialize,
+{
+    fn serialize_as<S>(source: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        source
+            .clone()
+            .try_into()
+            .map_err(S::Error::custom)?
+            .serialize(serializer)
+    }
+}
+
+impl<'a> SerializeAs<Cow<'a, str>> for BorrowCow {
+    fn serialize_as<S>(source: &Cow<'a, str>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(source)
+    }
+}
+
+impl<'a> SerializeAs<Cow<'a, [u8]>> for BorrowCow {
+    fn serialize_as<S>(value: &Cow<'a, [u8]>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_seq(value.iter())
+    }
+}
+
+impl<STRICTNESS: Strictness> SerializeAs<bool> for BoolFromInt<STRICTNESS> {
+    fn serialize_as<S>(source: &bool, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u8(*source as u8)
+    }
+}
+
+// endregion

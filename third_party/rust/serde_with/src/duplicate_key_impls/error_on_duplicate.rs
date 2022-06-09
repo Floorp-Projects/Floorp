@@ -1,7 +1,8 @@
-use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    hash::{BuildHasher, Hash},
-};
+use alloc::collections::{BTreeMap, BTreeSet};
+use core::hash::{BuildHasher, Hash};
+#[cfg(feature = "indexmap")]
+use indexmap_crate::{IndexMap, IndexSet};
+use std::collections::{HashMap, HashSet};
 
 pub trait PreventDuplicateInsertsSet<T> {
     fn new(size_hint: Option<usize>) -> Self;
@@ -36,6 +37,26 @@ where
     }
 }
 
+#[cfg(feature = "indexmap")]
+impl<T, S> PreventDuplicateInsertsSet<T> for IndexSet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    #[inline]
+    fn new(size_hint: Option<usize>) -> Self {
+        match size_hint {
+            Some(size) => Self::with_capacity_and_hasher(size, S::default()),
+            None => Self::with_hasher(S::default()),
+        }
+    }
+
+    #[inline]
+    fn insert(&mut self, value: T) -> bool {
+        self.insert(value)
+    }
+}
+
 impl<T> PreventDuplicateInsertsSet<T> for BTreeSet<T>
 where
     T: Ord,
@@ -52,6 +73,26 @@ where
 }
 
 impl<K, V, S> PreventDuplicateInsertsMap<K, V> for HashMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    #[inline]
+    fn new(size_hint: Option<usize>) -> Self {
+        match size_hint {
+            Some(size) => Self::with_capacity_and_hasher(size, S::default()),
+            None => Self::with_hasher(S::default()),
+        }
+    }
+
+    #[inline]
+    fn insert(&mut self, key: K, value: V) -> bool {
+        self.insert(key, value).is_none()
+    }
+}
+
+#[cfg(feature = "indexmap")]
+impl<K, V, S> PreventDuplicateInsertsMap<K, V> for IndexMap<K, V, S>
 where
     K: Eq + Hash,
     S: BuildHasher + Default,
