@@ -59,7 +59,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       pushedArgs_(0),
 #endif
       lastOsiPointOffset_(0),
-      safepoints_(graph->totalSlotCount(),
+      safepoints_(graph->totalSlotsSize(),
                   (gen->outerInfo().nargs() + 1) * sizeof(Value)),
       returnLabel_(),
       nativeToBytecodeMap_(nullptr),

@@ -217,7 +217,7 @@ int32_t CodeGeneratorShared::ArgToStackOffset(int32_t slot) const {
 }
 
 int32_t CodeGeneratorShared::SlotToStackOffset(int32_t slot) const {
-  MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
+  MOZ_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotsSize()));
   int32_t offset = masm.framePushed() - slot;
   MOZ_ASSERT(offset >= 0);
   return offset;

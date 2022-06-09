@@ -110,10 +110,10 @@ class alignas(8) IonScript final : public TrailingArray {
   bool hasProfilingInstrumentation_ = false;
 
   // Number of bytes this function reserves on the stack.
-  uint32_t frameSlots_ = 0;
+  uint32_t frameSlotsSize_ = 0;
 
   // Number of bytes used passed in as formal arguments or |this|.
-  uint32_t argumentSlots_ = 0;
+  uint32_t argumentSlotsSize_ = 0;
 
   // Frame size is the value that can be added to the StackPointer along
   // with the frame prefix to get a valid JitFrameLayout.
@@ -264,12 +264,12 @@ class alignas(8) IonScript final : public TrailingArray {
   }
 
  private:
-  IonScript(IonCompilationId compilationId, uint32_t frameSlots,
-            uint32_t argumentSlots, uint32_t frameSize);
+  IonScript(IonCompilationId compilationId, uint32_t frameSlotsSize,
+            uint32_t argumentSlotsSize, uint32_t frameSize);
 
  public:
   static IonScript* New(JSContext* cx, IonCompilationId compilationId,
-                        uint32_t frameSlots, uint32_t argumentSlots,
+                        uint32_t frameSlotsSize, uint32_t argumentSlotsSize,
                         uint32_t frameSize, size_t snapshotsListSize,
                         size_t snapshotsRVATableSize, size_t recoversSize,
                         size_t constants, size_t nurseryObjects,
@@ -365,8 +365,8 @@ class alignas(8) IonScript final : public TrailingArray {
     MOZ_ASSERT(index < numConstants());
     return constants()[index];
   }
-  uint32_t frameSlots() const { return frameSlots_; }
-  uint32_t argumentSlots() const { return argumentSlots_; }
+  uint32_t frameSlotsSize() const { return frameSlotsSize_; }
+  uint32_t argumentSlotsSize() const { return argumentSlotsSize_; }
   uint32_t frameSize() const { return frameSize_; }
   const SafepointIndex* getSafepointIndex(uint32_t disp) const;
   const SafepointIndex* getSafepointIndex(uint8_t* retAddr) const {
