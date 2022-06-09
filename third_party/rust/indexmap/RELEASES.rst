@@ -1,3 +1,7 @@
+- 1.8.2
+
+  - Bump the ``rustc-rayon`` dependency, for compiler use only.
+
 - 1.8.1
 
   - The new ``IndexSet::replace_full`` will return the index of the item along

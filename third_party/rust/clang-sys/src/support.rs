@@ -58,7 +58,10 @@ impl Clang {
     /// `x86_64-unknown-linux-gnu-clang` for the above example).
     pub fn find(path: Option<&Path>, args: &[String]) -> Option<Clang> {
         if let Ok(path) = env::var("CLANG_PATH") {
-            return Some(Clang::new(path, args));
+            let p = Path::new(&path);
+            if p.is_file() && is_executable(&p).unwrap_or(false) {
+                return Some(Clang::new(p, args));
+            }
         }
 
         // Determine the cross-compilation target, if any.

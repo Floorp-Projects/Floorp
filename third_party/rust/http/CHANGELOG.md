@@ -1,5 +1,10 @@
+# 0.2.8 (June 6, 2022)
+
+* Fix internal usage of uninitialized memory to use `MaybeUninit` inside `HeaderName`.
+
 # 0.2.7 (April 28, 2022)
 
+* MSRV bumped to `1.49`.
 * Add `extend()` method to `Extensions`.
 * Add `From<Authority>` and `From<PathAndQuery>` impls for `Uri`.
 * Make `HeaderName::from_static` a `const fn`.

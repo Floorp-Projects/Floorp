@@ -7515,7 +7515,7 @@
 # Is support for CSS backdrop-filter enabled?
 - name: layout.css.backdrop-filter.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Should stray control characters be rendered visibly?
@@ -9392,6 +9392,11 @@
 #else
   value: false
 #endif
+  mirror: always
+
+- name: media.av1.new-thread-count-strategy
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 - name: media.flac.enabled

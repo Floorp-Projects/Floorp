@@ -580,7 +580,7 @@ bool ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind);
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
 
 bool GetAndClearExceptionAndStack(JSContext* cx, MutableHandleValue res,
-                                  MutableHandleSavedFrame stack);
+                                  MutableHandle<SavedFrame*> stack);
 
 bool DeleteNameOperation(JSContext* cx, HandlePropertyName name,
                          HandleObject scopeObj, MutableHandleValue res);

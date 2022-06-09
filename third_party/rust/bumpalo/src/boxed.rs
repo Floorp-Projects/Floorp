@@ -1,6 +1,6 @@
 //! A pointer type for bump allocation.
 //!
-//! [`Box<'a, T>`], provides the simplest form of
+//! [`Box<'a, T>`] provides the simplest form of
 //! bump allocation in `bumpalo`. Boxes provide ownership for this allocation, and
 //! drop their contents when they go out of scope.
 //!
@@ -28,9 +28,9 @@
 //! let val: u8 = *boxed;
 //! ```
 //!
-//! Running `Drop` implementations on bump-allocated values:
+//! Running [`Drop`] implementations on bump-allocated values:
 //!
-//! ```rust
+//! ```
 //! use bumpalo::{Bump, boxed::Box};
 //! use std::sync::atomic::{AtomicUsize, Ordering};
 //!
@@ -90,7 +90,7 @@
 //!
 //! It wouldn't work. This is because the size of a `List` depends on how many
 //! elements are in the list, and so we don't know how much memory to allocate
-//! for a `Cons`. By introducing a [`Box<T>`], which has a defined size, we know how
+//! for a `Cons`. By introducing a [`Box<'a, T>`], which has a defined size, we know how
 //! big `Cons` needs to be.
 //!
 //! # Memory layout
@@ -105,17 +105,17 @@
 //! T` obtained from [`Box::<T>::into_raw`] will be deallocated by the
 //! [`Bump`] allocator with [`Layout::for_value(&*value)`].
 //!
-//! Note that roundtrip `Box::from_raw(Box::into_raw(b))` looses lifetime bound to the
-//! [`Bump`] immutable borrow which guarantees that allocator will not be reset
+//! Note that roundtrip `Box::from_raw(Box::into_raw(b))` looses the lifetime bound to the
+//! [`Bump`] immutable borrow which guarantees that the allocator will not be reset
 //! and memory will not be freed.
 //!
 //! [dereferencing]: https://doc.rust-lang.org/std/ops/trait.Deref.html
 //! [`Box`]: struct.Box.html
-//! [`Box<T>`]: struct.Box.html
 //! [`Box<'a, T>`]: struct.Box.html
 //! [`Box::<T>::from_raw(value)`]: struct.Box.html#method.from_raw
 //! [`Box::<T>::into_raw`]: struct.Box.html#method.into_raw
 //! [`Bump`]: ../struct.Bump.html
+//! [`Drop`]: https://doc.rust-lang.org/std/ops/trait.Drop.html
 //! [`Layout`]: https://doc.rust-lang.org/std/alloc/struct.Layout.html
 //! [`Layout::for_value(&*value)`]: https://doc.rust-lang.org/std/alloc/struct.Layout.html#method.for_value
 
@@ -180,7 +180,7 @@ impl<'a, T: ?Sized> Box<'a, T> {
     /// resulting `Box`. Specifically, the `Box` destructor will call
     /// the destructor of `T` and free the allocated memory. For this
     /// to be safe, the memory must have been allocated in accordance
-    /// with the [memory layout] used by `Box` .
+    /// with the memory layout used by `Box` .
     ///
     /// # Safety
     ///
@@ -189,6 +189,7 @@ impl<'a, T: ?Sized> Box<'a, T> {
     /// function is called twice on the same raw pointer.
     ///
     /// # Examples
+    ///
     /// Recreate a `Box` which was previously converted to a raw pointer
     /// using [`Box::into_raw`]:
     /// ```
@@ -213,10 +214,6 @@ impl<'a, T: ?Sized> Box<'a, T> {
     ///     let x = Box::from_raw(ptr); // Note that `x`'s lifetime is unbound. It must be bound to the `b` immutable borrow before `b` is reset.
     /// }
     /// ```
-    ///
-    /// [memory layout]: https://doc.rust-lang.org/std/boxed/index.html#memory-layout
-    /// [`Layout`]: https://doc.rust-lang.org/std/alloc/struct.Layout.html
-    /// [`Box::into_raw`]: https://doc.rust-lang.org/std/boxed/struct.Box.html#method.into_raw
     #[inline]
     pub unsafe fn from_raw(raw: *mut T) -> Self {
         Box(&mut *raw)
@@ -238,6 +235,7 @@ impl<'a, T: ?Sized> Box<'a, T> {
     /// is so that there is no conflict with a method on the inner type.
     ///
     /// # Examples
+    ///
     /// Converting the raw pointer back into a `Box` with [`Box::from_raw`]
     /// for automatic cleanup:
     /// ```
@@ -262,9 +260,6 @@ impl<'a, T: ?Sized> Box<'a, T> {
     ///     ptr::drop_in_place(p);
     /// }
     /// ```
-    ///
-    /// [memory layout]: index.html#memory-layout
-    /// [`Box::from_raw`]: struct.Box.html#method.from_raw
     #[inline]
     pub fn into_raw(b: Box<'a, T>) -> *mut T {
         let ptr = b.0 as *mut T;
@@ -288,8 +283,6 @@ impl<'a, T: ?Sized> Box<'a, T> {
     /// to call it as `Box::leak(b)` instead of `b.leak()`. This
     /// is so that there is no conflict with a method on the inner type.
     ///
-    /// [`Box::from_raw`]: struct.Box.html#method.from_raw
-    ///
     /// # Examples
     ///
     /// Simple usage:
@@ -308,14 +301,14 @@ impl<'a, T: ?Sized> Box<'a, T> {
     ///```
     /// # #[cfg(feature = "collections")]
     /// # {
-    ///use bumpalo::{Bump, boxed::Box, vec};
+    /// use bumpalo::{Bump, boxed::Box, vec};
     ///
-    ///let b = Bump::new();
+    /// let b = Bump::new();
     ///
-    ///let x = vec![in &b; 1, 2, 3].into_boxed_slice();
-    ///let reference = Box::leak(x);
-    ///reference[0] = 4;
-    ///assert_eq!(*reference, [4, 2, 3]);
+    /// let x = vec![in &b; 1, 2, 3].into_boxed_slice();
+    /// let reference = Box::leak(x);
+    /// reference[0] = 4;
+    /// assert_eq!(*reference, [4, 2, 3]);
     /// # }
     ///```
     #[inline]
@@ -443,7 +436,7 @@ impl<'a, T: ?Sized + Hasher> Hasher for Box<'a, T> {
 }
 
 impl<'a, T: ?Sized> From<Box<'a, T>> for Pin<Box<'a, T>> {
-    /// Converts a `Box<T>` into a `Pin<Box<T>>`
+    /// Converts a `Box<T>` into a `Pin<Box<T>>`.
     ///
     /// This conversion does not allocate on the heap and happens in place.
     fn from(boxed: Box<'a, T>) -> Self {
@@ -590,8 +583,10 @@ impl<'a, I: FusedIterator + ?Sized> FusedIterator for Box<'a, I> {}
 #[cfg(feature = "collections")]
 impl<'a, A> Box<'a, [A]> {
     /// Creates a value from an iterator.
-    /// This method is adapted version of `FromIterator::from_iter`.
+    /// This method is an adapted version of [`FromIterator::from_iter`][from_iter].
     /// It cannot be made as that trait implementation given different signature.
+    ///
+    /// [from_iter]: https://doc.rust-lang.org/std/iter/trait.FromIterator.html#tymethod.from_iter
     ///
     /// # Examples
     ///

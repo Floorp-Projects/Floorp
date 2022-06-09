@@ -5,27 +5,18 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::marker;
 use std::ops::{Deref, DerefMut};
+use std::os::raw::{c_int, c_uint, c_void};
 use std::ptr;
-
-pub use libc::{c_int, c_uint, c_void, size_t};
 
 use super::*;
 use crate::mem::{self, FlushDecompress, Status};
 
-// miniz doesn't provide any error messages, so only enable the field when we use a real zlib
 #[derive(Default)]
-pub struct ErrorMessage(#[cfg(feature = "any_zlib")] Option<&'static str>);
+pub struct ErrorMessage(Option<&'static str>);
 
 impl ErrorMessage {
     pub fn get(&self) -> Option<&str> {
-        #[cfg(feature = "any_zlib")]
-        {
-            self.0
-        }
-        #[cfg(not(feature = "any_zlib"))]
-        {
-            None
-        }
+        self.0
     }
 }
 
@@ -157,20 +148,13 @@ pub struct Stream<D: Direction> {
 
 impl<D: Direction> Stream<D> {
     pub fn msg(&self) -> ErrorMessage {
-        #[cfg(feature = "any_zlib")]
-        {
-            let msg = self.stream_wrapper.msg;
-            ErrorMessage(if msg.is_null() {
-                None
-            } else {
-                let s = unsafe { std::ffi::CStr::from_ptr(msg) };
-                std::str::from_utf8(s.to_bytes()).ok()
-            })
-        }
-        #[cfg(not(feature = "any_zlib"))]
-        {
-            ErrorMessage()
-        }
+        let msg = self.stream_wrapper.msg;
+        ErrorMessage(if msg.is_null() {
+            None
+        } else {
+            let s = unsafe { std::ffi::CStr::from_ptr(msg) };
+            std::str::from_utf8(s.to_bytes()).ok()
+        })
     }
 }
 
@@ -252,7 +236,6 @@ impl InflateBackend for Inflate {
         }
     }
 
-    #[cfg(feature = "any_zlib")]
     fn reset(&mut self, zlib_header: bool) {
         let bits = if zlib_header {
             MZ_DEFAULT_WINDOW_BITS
@@ -264,11 +247,6 @@ impl InflateBackend for Inflate {
         }
         self.inner.total_out = 0;
         self.inner.total_in = 0;
-    }
-
-    #[cfg(not(feature = "any_zlib"))]
-    fn reset(&mut self, zlib_header: bool) {
-        *self = Self::make(zlib_header, MZ_DEFAULT_WINDOW_BITS as u8);
     }
 }
 
@@ -367,23 +345,19 @@ impl Backend for Deflate {
 
 pub use self::c_backend::*;
 
-/// Miniz specific
-#[cfg(not(feature = "any_zlib"))]
-mod c_backend {
-    pub use miniz_sys::*;
-    pub type AllocSize = libc::size_t;
-}
-
-/// Zlib specific - make zlib mimic miniz' API
-#[cfg(feature = "any_zlib")]
+/// For backwards compatibility, we provide symbols as `mz_` to mimic the miniz API
 #[allow(bad_style)]
 mod c_backend {
-    use libc::{c_char, c_int};
     use std::mem;
+    use std::os::raw::{c_char, c_int};
 
-    #[cfg(feature = "cloudflare_zlib")]
+    #[cfg(feature = "zlib-ng")]
+    use libz_ng_sys as libz;
+
+    #[cfg(all(not(feature = "zlib-ng"), feature = "cloudflare_zlib"))]
     use cloudflare_zlib_sys as libz;
-    #[cfg(not(feature = "cloudflare_zlib"))]
+
+    #[cfg(all(not(feature = "cloudflare_zlib"), not(feature = "zlib-ng")))]
     use libz_sys as libz;
 
     pub use libz::deflate as mz_deflate;
@@ -412,6 +386,9 @@ mod c_backend {
 
     pub const MZ_DEFAULT_WINDOW_BITS: c_int = 15;
 
+    #[cfg(feature = "zlib-ng")]
+    const ZLIB_VERSION: &'static str = "2.1.0.devel\0";
+    #[cfg(not(feature = "zlib-ng"))]
     const ZLIB_VERSION: &'static str = "1.2.8\0";
 
     pub unsafe extern "C" fn mz_deflateInit2(

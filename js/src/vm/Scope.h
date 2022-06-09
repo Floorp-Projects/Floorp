@@ -19,7 +19,7 @@
 #include <stdint.h>     // uint8_t, uint16_t, uint32_t, uintptr_t
 #include <type_traits>  // std::is_same_v, std::is_base_of_v
 
-#include "builtin/ModuleObject.h"  // ModuleObject, HandleModuleObject
+#include "builtin/ModuleObject.h"  // ModuleObject, Handle<ModuleObject*>
 #include "frontend/ParserAtom.h"   // frontend::TaggedParserAtomIndex
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr

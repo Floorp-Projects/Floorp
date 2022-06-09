@@ -27,7 +27,9 @@ class Browser extends lazy.Domain {
     ].getService(Ci.nsIHttpProtocolHandler);
     return {
       protocolVersion: "1.3",
-      product: (isHeadless ? "Headless " : "") + Services.appinfo.name,
+      product:
+        (isHeadless ? "Headless" : "") +
+        `${Services.appinfo.name}/${Services.appinfo.version}`,
       revision: Services.appinfo.sourceURL.split("/").pop(),
       userAgent,
       jsVersion: "1.8.5",

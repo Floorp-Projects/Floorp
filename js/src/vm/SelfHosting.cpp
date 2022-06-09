@@ -480,7 +480,7 @@ static bool intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc,
   MOZ_RELEASE_ASSERT(args[2].isInt32());
   MOZ_ASSERT(args[3].isString());
 
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   RootedString filename(cx,
                         JS_NewStringCopyZ(cx, module->script()->filename()));
   if (!filename) {
@@ -1816,7 +1816,7 @@ static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   RootedObject moduleRequest(cx, &args[1].toObject());
 
   RootedValue referencingPrivate(cx, JS::GetModulePrivate(module));
@@ -1839,10 +1839,10 @@ static bool intrinsic_CreateImportBinding(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
-  RootedModuleEnvironmentObject environment(
+  Rooted<ModuleEnvironmentObject*> environment(
       cx, &args[0].toObject().as<ModuleEnvironmentObject>());
   RootedAtom importedName(cx, &args[1].toString()->asAtom());
-  RootedModuleObject module(cx, &args[2].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[2].toObject().as<ModuleObject>());
   RootedAtom localName(cx, &args[3].toString()->asAtom());
   if (!environment->createImportBinding(cx, importedName, module, localName)) {
     return false;
@@ -1856,7 +1856,7 @@ static bool intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc,
                                              Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
-  RootedModuleEnvironmentObject environment(
+  Rooted<ModuleEnvironmentObject*> environment(
       cx, &args[0].toObject().as<ModuleEnvironmentObject>());
   RootedId name(cx, AtomToId(&args[1].toString()->asAtom()));
   MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
@@ -1874,9 +1874,10 @@ static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
                                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   MOZ_ASSERT(args[1].toObject().is<ModuleNamespaceObject>());
-  RootedModuleEnvironmentObject environment(cx, &module->initialEnvironment());
+  Rooted<ModuleEnvironmentObject*> environment(cx,
+                                               &module->initialEnvironment());
   // The property already exists in the evironment but is not writable, so set
   // the slot directly.
   mozilla::Maybe<PropertyInfo> prop =
@@ -1892,7 +1893,7 @@ static bool intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx,
                                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   args.rval().setUndefined();
   return ModuleObject::instantiateFunctionDeclarations(cx, module);
 }
@@ -1900,15 +1901,15 @@ static bool intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx,
 static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   return ModuleObject::execute(cx, module, args.rval());
 }
 
 static bool intrinsic_SetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedModuleObject cycleRoot(cx, &args[1].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> cycleRoot(cx, &args[1].toObject().as<ModuleObject>());
   module->setCycleRoot(cycleRoot);
   args.rval().setUndefined();
   return true;
@@ -1917,7 +1918,7 @@ static bool intrinsic_SetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
 static bool intrinsic_GetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   JSObject* result = module->getCycleRoot();
   if (!result) {
     return false;
@@ -1930,8 +1931,8 @@ static bool intrinsic_AppendAsyncParentModule(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject self(cx, &args[0].toObject().as<ModuleObject>());
-  RootedModuleObject parent(cx, &args[1].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> self(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> parent(cx, &args[1].toObject().as<ModuleObject>());
   return ModuleObject::appendAsyncParentModule(cx, self, parent);
 }
 
@@ -1939,7 +1940,7 @@ static bool intrinsic_InitAsyncEvaluating(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   if (!module->initAsyncEvaluatingSlot()) {
     return false;
   }
@@ -1951,7 +1952,7 @@ static bool intrinsic_IsAsyncEvaluating(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   bool isAsyncEvaluating = module->isAsyncEvaluating();
   args.rval().setBoolean(isAsyncEvaluating);
   return true;
@@ -1961,7 +1962,7 @@ static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
                                                Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject self(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> self(cx, &args[0].toObject().as<ModuleObject>());
   PromiseObject* result = ModuleObject::createTopLevelCapability(cx, self);
   if (!result) {
     return false;
@@ -1975,7 +1976,7 @@ static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
                                                       Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
     return false;
   }
@@ -1987,7 +1988,7 @@ static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
                                                      unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   HandleValue error = args[1];
   if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
     return false;
@@ -2000,7 +2001,7 @@ static bool intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
   RootedObject exports(cx, &args[1].toObject());
   JSObject* namespace_ = ModuleObject::createNamespace(cx, module, exports);
   if (!namespace_) {
@@ -2015,10 +2016,11 @@ static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
-  RootedModuleNamespaceObject namespace_(
+  Rooted<ModuleNamespaceObject*> namespace_(
       cx, &args[0].toObject().as<ModuleNamespaceObject>());
   RootedAtom exportedName(cx, &args[1].toString()->asAtom());
-  RootedModuleObject targetModule(cx, &args[2].toObject().as<ModuleObject>());
+  Rooted<ModuleObject*> targetModule(cx,
+                                     &args[2].toObject().as<ModuleObject>());
   RootedAtom targetName(cx, &args[3].toString()->asAtom());
   if (!namespace_->addBinding(cx, exportedName, targetModule, targetName)) {
     return false;

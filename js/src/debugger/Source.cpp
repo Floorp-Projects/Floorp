@@ -159,10 +159,10 @@ struct MOZ_STACK_CLASS DebuggerSource::CallData {
   JSContext* cx;
   const CallArgs& args;
 
-  HandleDebuggerSource obj;
+  Handle<DebuggerSource*> obj;
   Rooted<DebuggerSourceReferent> referent;
 
-  CallData(JSContext* cx, const CallArgs& args, HandleDebuggerSource obj)
+  CallData(JSContext* cx, const CallArgs& args, Handle<DebuggerSource*> obj)
       : cx(cx), args(args), obj(obj), referent(cx, obj->getReferent()) {}
 
   bool getText();
@@ -191,7 +191,7 @@ bool DebuggerSource::CallData::ToNative(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedDebuggerSource obj(cx, DebuggerSource::check(cx, args.thisv()));
+  Rooted<DebuggerSource*> obj(cx, DebuggerSource::check(cx, args.thisv()));
   if (!obj) {
     return false;
   }
@@ -492,7 +492,7 @@ bool DebuggerSource::CallData::getIntroductionType() {
 }
 
 ScriptSourceObject* EnsureSourceObject(JSContext* cx,
-                                       HandleDebuggerSource obj) {
+                                       Handle<DebuggerSource*> obj) {
   if (!obj->getReferent().is<ScriptSourceObject*>()) {
     RootedValue v(cx, ObjectValue(*obj));
     ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, v,

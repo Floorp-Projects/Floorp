@@ -408,7 +408,7 @@ void IndirectBindingMap::trace(JSTracer* trc) {
 }
 
 bool IndirectBindingMap::put(JSContext* cx, HandleId name,
-                             HandleModuleEnvironmentObject environment,
+                             Handle<ModuleEnvironmentObject*> environment,
                              HandleId targetName) {
   if (!map_) {
     map_.emplace(cx->zone());
@@ -457,7 +457,7 @@ bool ModuleNamespaceObject::isInstance(HandleValue value) {
 
 /* static */
 ModuleNamespaceObject* ModuleNamespaceObject::create(
-    JSContext* cx, HandleModuleObject module, HandleArrayObject exports,
+    JSContext* cx, Handle<ModuleObject*> module, HandleArrayObject exports,
     UniquePtr<IndirectBindingMap> bindings) {
   RootedValue priv(cx, ObjectValue(*module));
   ProxyOptions options;
@@ -499,9 +499,9 @@ bool ModuleNamespaceObject::hasBindings() const {
 }
 
 bool ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
-                                       HandleModuleObject targetModule,
+                                       Handle<ModuleObject*> targetModule,
                                        HandleAtom targetName) {
-  RootedModuleEnvironmentObject environment(
+  Rooted<ModuleEnvironmentObject*> environment(
       cx, &targetModule->initialEnvironment());
   RootedId exportedNameId(cx, AtomToId(exportedName));
   RootedId targetNameId(cx, AtomToId(targetName));
@@ -829,7 +829,8 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
     return nullptr;
   }
 
-  RootedModuleObject self(cx, NewObjectWithGivenProto<ModuleObject>(cx, proto));
+  Rooted<ModuleObject*> self(cx,
+                             NewObjectWithGivenProto<ModuleObject>(cx, proto));
   if (!self) {
     return nullptr;
   }
@@ -940,7 +941,7 @@ void ModuleObject::initScriptSlots(HandleScript script) {
 }
 
 void ModuleObject::setInitialEnvironment(
-    HandleModuleEnvironmentObject initialEnvironment) {
+    Handle<ModuleEnvironmentObject*> initialEnvironment) {
   initReservedSlot(EnvironmentSlot, ObjectValue(*initialEnvironment));
 }
 
@@ -968,7 +969,7 @@ static bool FreezeObjectProperty(JSContext* cx, HandleNativeObject obj,
 }
 
 /* static */
-bool ModuleObject::Freeze(JSContext* cx, HandleModuleObject self) {
+bool ModuleObject::Freeze(JSContext* cx, Handle<ModuleObject*> self) {
   return FreezeObjectProperty(cx, self, RequestedModulesSlot) &&
          FreezeObjectProperty(cx, self, ImportEntriesSlot) &&
          FreezeObjectProperty(cx, self, LocalExportEntriesSlot) &&
@@ -991,8 +992,8 @@ static inline bool CheckObjectPropertyFrozen(JSContext* cx,
   return CheckObjectFrozen(cx, property, result);
 }
 
-/* static */ inline bool ModuleObject::AssertFrozen(JSContext* cx,
-                                                    HandleModuleObject self) {
+/* static */ inline bool ModuleObject::AssertFrozen(
+    JSContext* cx, Handle<ModuleObject*> self) {
   static const mozilla::EnumSet<ModuleSlot> slotsToCheck = {
       RequestedModulesSlot, ImportEntriesSlot, LocalExportEntriesSlot,
       IndirectExportEntriesSlot, StarExportEntriesSlot};
@@ -1081,7 +1082,7 @@ JSObject* ModuleObject::topLevelCapability() const {
 }
 
 PromiseObject* ModuleObject::createTopLevelCapability(
-    JSContext* cx, HandleModuleObject module) {
+    JSContext* cx, Handle<ModuleObject*> module) {
   MOZ_ASSERT(module->getReservedSlot(TopLevelCapabilitySlot).isUndefined());
   Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
   if (!resultPromise) {
@@ -1100,8 +1101,8 @@ inline ListObject* ModuleObject::asyncParentModules() const {
 }
 
 bool ModuleObject::appendAsyncParentModule(JSContext* cx,
-                                           HandleModuleObject self,
-                                           HandleModuleObject parent) {
+                                           Handle<ModuleObject*> self,
+                                           Handle<ModuleObject*> parent) {
   Rooted<Value> parentValue(cx, ObjectValue(*parent));
   return self->asyncParentModules()->append(cx, parentValue);
 }
@@ -1174,7 +1175,7 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
 
 /* static */
 bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
-                                                   HandleModuleObject self) {
+                                                   Handle<ModuleObject*> self) {
 #ifdef DEBUG
   MOZ_ASSERT(self->status() == MODULE_STATUS_LINKING);
   if (!AssertFrozen(cx, self)) {
@@ -1190,7 +1191,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
     return false;
   }
 
-  RootedModuleEnvironmentObject env(cx, &self->initialEnvironment());
+  Rooted<ModuleEnvironmentObject*> env(cx, &self->initialEnvironment());
   RootedObject obj(cx);
   RootedValue value(cx);
   RootedFunction fun(cx);
@@ -1218,7 +1219,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
 }
 
 /* static */
-bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
+bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self,
                            MutableHandleValue rval) {
 #ifdef DEBUG
   MOZ_ASSERT(self->status() == MODULE_STATUS_EVALUATING ||
@@ -1239,7 +1240,7 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
     ModuleObject::onTopLevelEvaluationFinished(self);
   });
 
-  RootedModuleEnvironmentObject env(cx, self->environment());
+  Rooted<ModuleEnvironmentObject*> env(cx, self->environment());
   if (!env) {
     JS_ReportErrorASCII(cx,
                         "Module declarations have not yet been instantiated");
@@ -1259,7 +1260,7 @@ void ModuleObject::onTopLevelEvaluationFinished(ModuleObject* module) {
 
 /* static */
 ModuleNamespaceObject* ModuleObject::createNamespace(JSContext* cx,
-                                                     HandleModuleObject self,
+                                                     Handle<ModuleObject*> self,
                                                      HandleObject exports) {
   MOZ_ASSERT(!self->namespace_());
   MOZ_ASSERT(exports->is<ArrayObject>());
@@ -1280,9 +1281,10 @@ ModuleNamespaceObject* ModuleObject::createNamespace(JSContext* cx,
 }
 
 /* static */
-bool ModuleObject::createEnvironment(JSContext* cx, HandleModuleObject self) {
-  RootedModuleEnvironmentObject env(cx,
-                                    ModuleEnvironmentObject::create(cx, self));
+bool ModuleObject::createEnvironment(JSContext* cx,
+                                     Handle<ModuleObject*> self) {
+  Rooted<ModuleEnvironmentObject*> env(
+      cx, ModuleEnvironmentObject::create(cx, self));
   if (!env) {
     return false;
   }
@@ -1291,7 +1293,7 @@ bool ModuleObject::createEnvironment(JSContext* cx, HandleModuleObject self) {
   return true;
 }
 
-static bool InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self,
+static bool InvokeSelfHostedMethod(JSContext* cx, Handle<ModuleObject*> self,
                                    HandlePropertyName name,
                                    MutableHandleValue rval) {
   RootedValue thisv(cx, ObjectValue(*self));
@@ -1301,21 +1303,21 @@ static bool InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self,
 }
 
 /* static */
-bool ModuleObject::Instantiate(JSContext* cx, HandleModuleObject self) {
+bool ModuleObject::Instantiate(JSContext* cx, Handle<ModuleObject*> self) {
   RootedValue ignored(cx);
   return InvokeSelfHostedMethod(cx, self, cx->names().ModuleInstantiate,
                                 &ignored);
 }
 
 /* static */
-bool ModuleObject::Evaluate(JSContext* cx, HandleModuleObject self,
+bool ModuleObject::Evaluate(JSContext* cx, Handle<ModuleObject*> self,
                             MutableHandleValue rval) {
   return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, rval);
 }
 
 /* static */
 ModuleNamespaceObject* ModuleObject::GetOrCreateModuleNamespace(
-    JSContext* cx, HandleModuleObject self) {
+    JSContext* cx, Handle<ModuleObject*> self) {
   FixedInvokeArgs<1> args(cx);
   args[0].setObject(*self);
 
@@ -2151,7 +2153,7 @@ ArrayObject* js::CreateArray(JSContext* cx,
 
 JSObject* js::GetOrCreateModuleMetaObject(JSContext* cx,
                                           HandleObject moduleArg) {
-  HandleModuleObject module = moduleArg.as<ModuleObject>();
+  Handle<ModuleObject*> module = moduleArg.as<ModuleObject>();
   if (JSObject* obj = module->metaObject()) {
     return obj;
   }
@@ -2230,7 +2232,7 @@ bool js::AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 // Top Level Await
 // https://tc39.es/proposal-top-level-await/#sec-gather-async-parent-completions
 bool ModuleObject::GatherAsyncParentCompletions(
-    JSContext* cx, HandleModuleObject module,
+    JSContext* cx, Handle<ModuleObject*> module,
     MutableHandleArrayObject execList) {
   FixedInvokeArgs<1> args(cx);
   args[0].setObject(*module);
@@ -2250,7 +2252,7 @@ bool ModuleObject::GatherAsyncParentCompletions(
 // Top Level Await
 // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
 void js::AsyncModuleExecutionFulfilled(JSContext* cx,
-                                       HandleModuleObject module) {
+                                       Handle<ModuleObject*> module) {
   // Step 1.
   MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
 
@@ -2329,7 +2331,8 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 }
 
 // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
-void js::AsyncModuleExecutionRejected(JSContext* cx, HandleModuleObject module,
+void js::AsyncModuleExecutionRejected(JSContext* cx,
+                                      Handle<ModuleObject*> module,
                                       HandleValue error) {
   // Step 1.
   MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED ||
@@ -2374,7 +2377,7 @@ void js::AsyncModuleExecutionRejected(JSContext* cx, HandleModuleObject module,
 }
 
 bool ModuleObject::topLevelCapabilityResolve(JSContext* cx,
-                                             HandleModuleObject module) {
+                                             Handle<ModuleObject*> module) {
   RootedValue rval(cx);
   Rooted<PromiseObject*> promise(
       cx, &module->topLevelCapability()->as<PromiseObject>());
@@ -2382,7 +2385,7 @@ bool ModuleObject::topLevelCapabilityResolve(JSContext* cx,
 }
 
 bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
-                                            HandleModuleObject module,
+                                            Handle<ModuleObject*> module,
                                             HandleValue error) {
   Rooted<PromiseObject*> promise(
       cx, &module->topLevelCapability()->as<PromiseObject>());
@@ -2680,7 +2683,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  RootedModuleObject module(cx, &result->as<ModuleObject>());
+  Rooted<ModuleObject*> module(cx, &result->as<ModuleObject>());
   if (module->status() != MODULE_STATUS_EVALUATED) {
     JS_ReportErrorASCII(
         cx, "Unevaluated or errored module returned by module resolve hook");

@@ -9,14 +9,18 @@
 // except according to those terms.
 
 //! A contiguous growable array type with heap-allocated contents, written
-//! `Vec<'bump, T>`.
+//! [`Vec<'bump, T>`].
 //!
 //! Vectors have `O(1)` indexing, amortized `O(1)` push (to the end) and
 //! `O(1)` pop (from the end).
 //!
+//! This module is a fork of the [`std::vec`] module, that uses a bump allocator.
+//!
+//! [`std::vec`]: https://doc.rust-lang.org/std/vec/index.html
+//!
 //! # Examples
 //!
-//! You can explicitly create a [`Vec<'bump, T>`] with [`new`]:
+//! You can explicitly create a [`Vec<'bump, T>`] with [`new_in`]:
 //!
 //! ```
 //! use bumpalo::{Bump, collections::Vec};
@@ -25,7 +29,7 @@
 //! let v: Vec<i32> = Vec::new_in(&b);
 //! ```
 //!
-//! ...or by using the [`vec!`] macro:
+//! ... or by using the [`vec!`] macro:
 //!
 //! ```
 //! use bumpalo::{Bump, collections::Vec};
@@ -61,7 +65,7 @@
 //!
 //! let mut v = bumpalo::vec![in &b; 1, 2];
 //!
-//! let two = v.pop();
+//! assert_eq!(v.pop(), Some(2));
 //! ```
 //!
 //! Vectors also support indexing (through the [`Index`] and [`IndexMut`] traits):
@@ -72,15 +76,16 @@
 //! let b = Bump::new();
 //!
 //! let mut v = bumpalo::vec![in &b; 1, 2, 3];
-//! let three = v[2];
-//! v[1] = v[1] + 5;
+//! assert_eq!(v[2], 3);
+//! v[1] += 5;
+//! assert_eq!(v, [1, 7, 3]);
 //! ```
 //!
-//! [`Vec<'bump, T>`]: ./struct.Vec.html
-//! [`new`]: ./struct.Vec.html#method.new
-//! [`push`]: ./struct.Vec.html#method.push
-//! [`Index`]: https://doc.rust-lang.org/nightly/std/ops/trait.Index.html
-//! [`IndexMut`]: ../../std/ops/trait.IndexMut.html
+//! [`Vec<'bump, T>`]: struct.Vec.html
+//! [`new_in`]: struct.Vec.html#method.new_in
+//! [`push`]: struct.Vec.html#method.push
+//! [`Index`]: https://doc.rust-lang.org/std/ops/trait.Index.html
+//! [`IndexMut`]: https://doc.rust-lang.org/std/ops/trait.IndexMut.html
 //! [`vec!`]: ../../macro.vec.html
 
 use super::raw_vec::RawVec;
@@ -215,37 +220,35 @@ where
 /// - Create a [`Vec`] containing a given list of elements:
 ///
 /// ```
-/// use bumpalo::{Bump, vec};
+/// use bumpalo::Bump;
 ///
 /// let b = Bump::new();
 /// let v = bumpalo::vec![in &b; 1, 2, 3];
-/// assert_eq!(v[0], 1);
-/// assert_eq!(v[1], 2);
-/// assert_eq!(v[2], 3);
+/// assert_eq!(v, [1, 2, 3]);
 /// ```
 ///
 /// - Create a [`Vec`] from a given element and size:
 ///
 /// ```
-/// use bumpalo::{Bump, vec};
+/// use bumpalo::Bump;
 ///
 /// let b = Bump::new();
 /// let v = bumpalo::vec![in &b; 1; 3];
 /// assert_eq!(v, [1, 1, 1]);
 /// ```
 ///
-/// Note that unlike array expressions this syntax supports all elements
+/// Note that unlike array expressions, this syntax supports all elements
 /// which implement [`Clone`] and the number of elements doesn't have to be
 /// a constant.
 ///
 /// This will use `clone` to duplicate an expression, so one should be careful
-/// using this with types having a nonstandard `Clone` implementation. For
+/// using this with types having a non-standard `Clone` implementation. For
 /// example, `bumpalo::vec![in &bump; Rc::new(1); 5]` will create a vector of five references
 /// to the same boxed integer value, not five references pointing to independently
 /// boxed integers.
 ///
-/// [`Vec`]: ../collections/vec/struct.Vec.html
-/// [`Clone`]: https://doc.rust-lang.org/nightly/std/clone/trait.Clone.html
+/// [`Vec`]: collections/vec/struct.Vec.html
+/// [`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 #[macro_export]
 macro_rules! vec {
     (in $bump:expr; $elem:expr; $n:expr) => {{
@@ -438,17 +441,17 @@ macro_rules! vec {
 /// on an empty Vec, it will not allocate memory. Similarly, if you store zero-sized
 /// types inside a `Vec`, it will not allocate space for them. *Note that in this case
 /// the `Vec` may not report a [`capacity`] of 0*. `Vec` will allocate if and only
-/// if [`mem::size_of::<T>`]`() * capacity() > 0`. In general, `Vec`'s allocation
+/// if <code>[`mem::size_of::<T>`]\() * capacity() > 0</code>. In general, `Vec`'s allocation
 /// details are very subtle &mdash; if you intend to allocate memory using a `Vec`
 /// and use it for something else (either to pass to unsafe code, or to build your
 /// own memory-backed collection), be sure to deallocate this memory by using
 /// `from_raw_parts` to recover the `Vec` and then dropping it.
 ///
-/// If a `Vec` *has* allocated memory, then the memory it points to is on the heap
-/// (as defined by the allocator Rust is configured to use by default), and its
+/// If a `Vec` *has* allocated memory, then the memory it points to is
+/// in the [`Bump`] arena used to construct it, and its
 /// pointer points to [`len`] initialized, contiguous elements in order (what
-/// you would see if you coerced it to a slice), followed by [`capacity`]` -
-/// `[`len`] logically uninitialized, contiguous elements.
+/// you would see if you coerced it to a slice), followed by <code>[`capacity`] -
+/// [`len`]</code> logically uninitialized, contiguous elements.
 ///
 /// `Vec` will never perform a "small optimization" where elements are actually
 /// stored on the stack for two reasons:
@@ -469,7 +472,7 @@ macro_rules! vec {
 ///
 /// [`push`] and [`insert`] will never (re)allocate if the reported capacity is
 /// sufficient. [`push`] and [`insert`] *will* (re)allocate if
-/// [`len`]` == `[`capacity`]. That is, the reported capacity is completely
+/// <code>[`len`] == [`capacity`]</code>. That is, the reported capacity is completely
 /// accurate, and can be relied on. It can even be used to manually free the memory
 /// allocated by a `Vec` if desired. Bulk insertion methods *may* reallocate, even
 /// when not necessary.
@@ -481,7 +484,7 @@ macro_rules! vec {
 ///
 /// `bumpalo::vec![in bump; x; n]`, `bumpalo::vec![in bump; a, b, c, d]`, and
 /// [`Vec::with_capacity_in(n)`][`Vec::with_capacity_in`], will all produce a
-/// `Vec` with exactly the requested capacity. If [`len`]` == `[`capacity`], (as
+/// `Vec` with exactly the requested capacity. If <code>[`len`] == [`capacity`]</code>, (as
 /// is the case for the [`vec!`] macro), then a `Vec<'bump, T>` can be converted
 /// to and from a [`Box<[T]>`][owned slice] without reallocating or moving the
 /// elements.
@@ -501,19 +504,19 @@ macro_rules! vec {
 /// The order has changed in the past and may change again.
 ///
 /// [`vec!`]: ../../macro.vec.html
-/// [`Index`]: https://doc.rust-lang.org/nightly/std/ops/trait.Index.html
-/// [`String`]: https://doc.rust-lang.org/nightly/std/string/struct.String.html
-/// [`&str`]: https://doc.rust-lang.org/nightly/std/primitive.str.html
-/// [`Vec::with_capacity_in`]: ./struct.Vec.html#method.with_capacity_in
-/// [`Vec::new_in`]: ./struct.Vec.html#method.new
-/// [`shrink_to_fit`]: ./struct.Vec.html#method.shrink_to_fit
-/// [`capacity`]: ./struct.Vec.html#method.capacity
-/// [`mem::size_of::<T>`]: https://doc.rust-lang.org/nightly/std/mem/fn.size_of.html
-/// [`len`]: ./struct.Vec.html#method.len
-/// [`push`]: ./struct.Vec.html#method.push
-/// [`insert`]: ./struct.Vec.html#method.insert
-/// [`reserve`]: ./struct.Vec.html#method.reserve
-/// [owned slice]: https://doc.rust-lang.org/nightly/std/boxed/struct.Box.html
+/// [`Index`]: https://doc.rust-lang.org/std/ops/trait.Index.html
+/// [`String`]: ../string/struct.String.html
+/// [`&str`]: https://doc.rust-lang.org/std/primitive.str.html
+/// [`Vec::with_capacity_in`]: struct.Vec.html#method.with_capacity_in
+/// [`Vec::new_in`]: struct.Vec.html#method.new_in
+/// [`shrink_to_fit`]: struct.Vec.html#method.shrink_to_fit
+/// [`capacity`]: struct.Vec.html#method.capacity
+/// [`mem::size_of::<T>`]: https://doc.rust-lang.org/std/mem/fn.size_of.html
+/// [`len`]: struct.Vec.html#method.len
+/// [`push`]: struct.Vec.html#method.push
+/// [`insert`]: struct.Vec.html#method.insert
+/// [`reserve`]: struct.Vec.html#method.reserve
+/// [owned slice]: https://doc.rust-lang.org/std/boxed/struct.Box.html
 pub struct Vec<'bump, T: 'bump> {
     buf: RawVec<'bump, T>,
     len: usize,
@@ -626,7 +629,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// that nothing else uses the pointer after calling this
     /// function.
     ///
-    /// [`String`]: https://doc.rust-lang.org/nightly/std/string/struct.String.html
+    /// [`String`]: ../string/struct.String.html
     ///
     /// # Examples
     ///
@@ -1178,7 +1181,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// let b = Bump::new();
     ///
     /// let mut vec = bumpalo::vec![in &b; 1, 2, 3, 4];
-    /// vec.retain(|&x| x%2 == 0);
+    /// vec.retain(|&x| x % 2 == 0);
     /// assert_eq!(vec, [2, 4]);
     /// ```
     pub fn retain<F>(&mut self, mut f: F)
@@ -1188,7 +1191,25 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
         self.drain_filter(|x| !f(x));
     }
 
-    fn drain_filter<'a, F>(&'a mut self, filter: F) -> DrainFilter<'a, 'bump, T, F>
+    /// Creates an iterator that removes the elements in the vector
+    /// for which the predicate returns `true` and yields the removed items.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::Bump;
+    /// use bumpalo::collections::{CollectIn, Vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let mut numbers = bumpalo::vec![in &b; 1, 2, 3, 4, 5];
+    ///
+    /// let evens: Vec<_> = numbers.drain_filter(|x| *x % 2 == 0).collect_in(&b);
+    ///
+    /// assert_eq!(numbers, &[1, 3, 5]);
+    /// assert_eq!(evens, &[2, 4]);
+    /// ```
+    pub fn drain_filter<'a, F>(&'a mut self, filter: F) -> DrainFilter<'a, 'bump, T, F>
     where
         F: FnMut(&mut T) -> bool,
     {
@@ -1268,7 +1289,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
         self.truncate(len);
     }
 
-    /// Appends an element to the back of a collection.
+    /// Appends an element to the back of a vector.
     ///
     /// # Panics
     ///
@@ -1293,7 +1314,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
             self.reserve(1);
         }
         unsafe {
-            let end = self.as_mut_ptr().add(self.len);
+            let end = self.buf.ptr().add(self.len);
             ptr::write(end, value);
             self.len += 1;
         }
@@ -1302,7 +1323,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// Removes the last element from a vector and returns it, or [`None`] if it
     /// is empty.
     ///
-    /// [`None`]: https://doc.rust-lang.org/nightly/std/option/enum.Option.html#variant.None
+    /// [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
     ///
     /// # Examples
     ///
@@ -1381,14 +1402,14 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// # Examples
     ///
     /// ```
-    /// use bumpalo::{Bump, collections::Vec};
+    /// use bumpalo::Bump;
+    /// use bumpalo::collections::{CollectIn, Vec};
     ///
     /// let b = Bump::new();
     ///
     /// let mut v = bumpalo::vec![in &b; 1, 2, 3];
     ///
-    /// let mut u: Vec<_> = Vec::new_in(&b);
-    /// u.extend(v.drain(1..));
+    /// let u: Vec<_> = v.drain(1..).collect_in(&b);
     ///
     /// assert_eq!(v, &[1]);
     /// assert_eq!(u, &[2, 3]);
@@ -1502,8 +1523,8 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
 
     /// Splits the collection into two at the given index.
     ///
-    /// Returns a newly allocated `Self`. `self` contains elements `[0, at)`,
-    /// and the returned `Self` contains elements `[at, len)`.
+    /// Returns a newly allocated vector. `self` contains elements `[0, at)`,
+    /// and the returned vector contains elements `[at, len)`.
     ///
     /// Note that the capacity of `self` does not change.
     ///
@@ -1518,7 +1539,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     ///
     /// let b = Bump::new();
     ///
-    /// let mut vec = bumpalo::vec![in &b; 1,2,3];
+    /// let mut vec = bumpalo::vec![in &b; 1, 2, 3];
     /// let vec2 = vec.split_off(1);
     /// assert_eq!(vec, [1]);
     /// assert_eq!(vec2, [2, 3]);
@@ -1547,7 +1568,7 @@ impl<'bump, T> Vec<'bump, T> {
     ///
     /// Note that this will drop any excess capacity.
     ///
-    /// [owned slice]: ../boxed/struct.Box.html
+    /// [owned slice]: ../../boxed/struct.Box.html
     ///
     /// # Examples
     ///
@@ -1600,8 +1621,8 @@ impl<'bump, T: 'bump + Clone> Vec<'bump, T> {
     /// assert_eq!(vec, [1, 2]);
     /// ```
     ///
-    /// [`Clone`]: https://doc.rust-lang.org/nightly/std/clone/trait.Clone.html
-    /// [`Default`]: https://doc.rust-lang.org/nightly/std/default/trait.Default.html
+    /// [`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
+    /// [`Default`]: https://doc.rust-lang.org/std/default/trait.Default.html
     /// [`resize_with`]: #method.resize_with
     pub fn resize(&mut self, new_len: usize, value: T) {
         let len = self.len();
@@ -1954,7 +1975,7 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
 /// This implementation is specialized for slice iterators, where it uses [`copy_from_slice`] to
 /// append the entire slice at once.
 ///
-/// [`copy_from_slice`]: https://doc.rust-lang.org/nightly/std/primitive.slice.html#method.copy_from_slice
+/// [`copy_from_slice`]: https://doc.rust-lang.org/std/primitive.slice.html#method.copy_from_slice
 impl<'a, 'bump, T: 'a + Copy> Extend<&'a T> for Vec<'bump, T> {
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         self.extend(iter.into_iter().cloned())
@@ -2104,11 +2125,10 @@ impl<'bump, T> Drop for Vec<'bump, T> {
 
 /// An iterator that moves out of a vector.
 ///
-/// This `struct` is created by the `into_iter` method on [`Vec`][`Vec`] (provided
-/// by the [`IntoIterator`] trait).
+/// This `struct` is created by the [`Vec::into_iter`] method
+/// (provided by the [`IntoIterator`] trait).
 ///
-/// [`Vec`]: struct.Vec.html
-/// [`IntoIterator`]: https://doc.rust-lang.org/nightly/std/iter/trait.IntoIterator.html
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
 pub struct IntoIter<T> {
     phantom: PhantomData<T>,
     ptr: *const T,
@@ -2234,10 +2254,7 @@ impl<'bump, T: 'bump> FusedIterator for IntoIter<T> {}
 
 /// A draining iterator for `Vec<'bump, T>`.
 ///
-/// This `struct` is created by the [`drain`] method on [`Vec`].
-///
-/// [`drain`]: struct.Vec.html#method.drain
-/// [`Vec`]: struct.Vec.html
+/// This `struct` is created by the [`Vec::drain`] method.
 pub struct Drain<'a, 'bump, T: 'a + 'bump> {
     /// Index of tail to preserve
     tail_start: usize,
@@ -2309,11 +2326,8 @@ impl<'a, 'bump, T> FusedIterator for Drain<'a, 'bump, T> {}
 
 /// A splicing iterator for `Vec`.
 ///
-/// This struct is created by the [`splice()`] method on [`Vec`]. See its
-/// documentation for more.
-///
-/// [`splice()`]: struct.Vec.html#method.splice
-/// [`Vec`]: struct.Vec.html
+/// This struct is created by the [`Vec::splice`] method. See its
+/// documentation for more information.
 #[derive(Debug)]
 pub struct Splice<'a, 'bump, I: Iterator + 'a + 'bump> {
     drain: Drain<'a, 'bump, I::Item>,
@@ -2420,7 +2434,7 @@ impl<'a, 'bump, T> Drain<'a, 'bump, T> {
     }
 }
 
-/// An iterator produced by calling `drain_filter` on Vec.
+/// An iterator produced by calling [`Vec::drain_filter`].
 #[derive(Debug)]
 pub struct DrainFilter<'a, 'bump: 'a, T: 'a + 'bump, F>
 where

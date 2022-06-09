@@ -606,7 +606,7 @@ impl<'a, T> RawVec<'a, T> {
         strategy: ReserveStrategy,
     ) -> Result<(), CollectionAllocErr> {
         unsafe {
-            use crate::alloc::AllocErr;
+            use crate::AllocErr;
 
             // NOTE: we don't early branch on ZSTs here because we want this
             // to actually catch "asking for more than usize::MAX" in that case.

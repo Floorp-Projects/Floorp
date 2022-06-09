@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   enableEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
   getMarionetteCommandsActorProxy:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   IdlePromise: "chrome://remote/content/marionette/sync.js",
@@ -1099,7 +1100,19 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
   lazy.assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
-  let { x, y, width, height } = cmd.parameters;
+  const { x = null, y = null, width = null, height = null } = cmd.parameters;
+  if (x !== null) {
+    lazy.assert.integer(x);
+  }
+  if (y !== null) {
+    lazy.assert.integer(y);
+  }
+  if (height !== null) {
+    lazy.assert.positiveInteger(height);
+  }
+  if (width !== null) {
+    lazy.assert.positiveInteger(width);
+  }
 
   const win = this.getCurrentWindow();
   switch (lazy.WindowState.from(win.windowState)) {
@@ -1113,23 +1126,48 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
       break;
   }
 
-  if (width != null && height != null) {
-    lazy.assert.positiveInteger(height);
-    lazy.assert.positiveInteger(width);
-
-    if (win.outerWidth != width || win.outerHeight != height) {
-      win.resizeTo(width, height);
-      await new lazy.IdlePromise(win);
+  function geometryMatches() {
+    if (
+      width !== null &&
+      height !== null &&
+      (win.outerWidth !== width || win.outerHeight !== height)
+    ) {
+      return false;
     }
+    if (x !== null && y !== null && (win.screenX !== x || win.screenY !== y)) {
+      return false;
+    }
+    lazy.logger.trace(`Requested window geometry matches`);
+    return true;
   }
 
-  if (x != null && y != null) {
-    lazy.assert.integer(x);
-    lazy.assert.integer(y);
-
-    if (win.screenX != x || win.screenY != y) {
+  if (!geometryMatches()) {
+    // There might be more than one resize or MozUpdateWindowPos event due
+    // to previous geometry changes, such as from restoreWindow(), so
+    // wait longer if window geometry does not match.
+    const options = { checkFn: geometryMatches, timeout: 500 };
+    const promises = [];
+    if (width !== null && height !== null) {
+      promises.push(new lazy.EventPromise(win, "resize", options));
+      win.resizeTo(width, height);
+    }
+    if (x !== null && y !== null) {
+      promises.push(
+        new lazy.EventPromise(win.windowRoot, "MozUpdateWindowPos", options)
+      );
       win.moveTo(x, y);
-      await new lazy.IdlePromise(win);
+    }
+    try {
+      await Promise.race(promises);
+    } catch (e) {
+      if (e instanceof lazy.error.TimeoutError) {
+        // The operating system might not honor the move or resize, in which
+        // case assume that geometry will have been adjusted "as close as
+        // possible" to that requested.  There may be no event received if the
+        // geometry is already as close as possible.
+      } else {
+        throw e;
+      }
     }
   }
 
