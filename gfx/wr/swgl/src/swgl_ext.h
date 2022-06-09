@@ -689,7 +689,7 @@ static inline int computeNoRepeatSteps(Float uv, float uv_step,
   }
   return uv.x >= 0.0f && uv.w < limit
              ? (uv_step != 0.0f
-                    ? int(min(float(steps), (limit - uv.x) / uv_step))
+                    ? int(clamp((limit - uv.x) / uv_step, 0.0f, float(steps)))
                     : steps)
              : 0;
 }
