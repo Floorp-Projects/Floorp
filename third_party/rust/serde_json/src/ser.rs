@@ -2,8 +2,10 @@
 
 use crate::error::{Error, ErrorCode, Result};
 use crate::io;
-use crate::lib::num::FpCategory;
-use crate::lib::*;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+use core::fmt::{self, Display};
+use core::num::FpCategory;
 use serde::ser::{self, Impossible, Serialize};
 use serde::serde_if_integer128;
 
@@ -1545,6 +1547,13 @@ impl<'a, W: io::Write, F: Formatter> ser::Serializer for RawValueStrEmitter<'a, 
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
         Err(ser::Error::custom("expected RawValue"))
+    }
+
+    fn collect_str<T>(self, value: &T) -> Result<Self::Ok>
+    where
+        T: ?Sized + Display,
+    {
+        self.serialize_str(&value.to_string())
     }
 }
 

@@ -1,6 +1,8 @@
 use crate::de::ParserNumber;
 use crate::error::Error;
-use crate::lib::*;
+use core::fmt::{self, Debug, Display};
+#[cfg(not(feature = "arbitrary_precision"))]
+use core::hash::{Hash, Hasher};
 use serde::de::{self, Unexpected, Visitor};
 use serde::{
     forward_to_deserialize_any, serde_if_integer128, Deserialize, Deserializer, Serialize,
@@ -286,7 +288,7 @@ impl Number {
     }
 }
 
-impl fmt::Display for Number {
+impl Display for Number {
     #[cfg(not(feature = "arbitrary_precision"))]
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self.n {

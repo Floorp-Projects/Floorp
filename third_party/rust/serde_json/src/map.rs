@@ -6,12 +6,19 @@
 //! [`BTreeMap`]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
 //! [`IndexMap`]: https://docs.rs/indexmap/*/indexmap/map/struct.IndexMap.html
 
-use crate::lib::borrow::Borrow;
-use crate::lib::iter::FromIterator;
-use crate::lib::*;
 use crate::value::Value;
+use alloc::string::String;
+use core::borrow::Borrow;
+use core::fmt::{self, Debug};
+use core::hash::Hash;
+use core::iter::{FromIterator, FusedIterator};
+#[cfg(feature = "preserve_order")]
+use core::mem;
+use core::ops;
 use serde::de;
 
+#[cfg(not(feature = "preserve_order"))]
+use alloc::collections::{btree_map, BTreeMap};
 #[cfg(feature = "preserve_order")]
 use indexmap::{self, IndexMap};
 
@@ -165,6 +172,8 @@ impl Map<String, Value> {
             no_btreemap_get_key_value,
         ))]
         {
+            use core::ops::{Bound, RangeBounds};
+
             struct Key<'a, Q: ?Sized>(&'a Q);
 
             impl<'a, Q: ?Sized> RangeBounds<Q> for Key<'a, Q> {
@@ -202,7 +211,7 @@ impl Map<String, Value> {
         S: Into<String>,
     {
         #[cfg(not(feature = "preserve_order"))]
-        use crate::lib::btree_map::Entry as EntryImpl;
+        use alloc::collections::btree_map::Entry as EntryImpl;
         #[cfg(feature = "preserve_order")]
         use indexmap::map::Entry as EntryImpl;
 

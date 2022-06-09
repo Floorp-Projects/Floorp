@@ -92,7 +92,11 @@
 
 use crate::error::Error;
 use crate::io;
-use crate::lib::*;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::fmt::{self, Debug, Display};
+use core::mem;
+use core::str;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 
@@ -191,7 +195,7 @@ impl Debug for Value {
     }
 }
 
-impl fmt::Display for Value {
+impl Display for Value {
     /// Display a JSON value as a string.
     ///
     /// ```
