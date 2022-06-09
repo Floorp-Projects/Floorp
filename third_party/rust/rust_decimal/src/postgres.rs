@@ -3,7 +3,7 @@ use crate::{
     ops::array::{div_by_u32, is_all_zero, mul_by_u32},
     Decimal,
 };
-use core::{convert::TryInto, fmt};
+use core::fmt;
 use std::error;
 
 #[derive(Debug, Clone)]
@@ -149,7 +149,6 @@ mod diesel_postgres {
         serialize::{self, Output, ToSql},
         sql_types::Numeric,
     };
-    use core::convert::{TryFrom, TryInto};
     use std::io::Write;
 
     impl<'a> TryFrom<&'a PgNumeric> for Decimal {

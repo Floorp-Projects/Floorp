@@ -748,6 +748,9 @@ impl Pow<f64> for Decimal {
 mod test {
     use super::*;
 
+    #[cfg(not(feature = "std"))]
+    use alloc::string::ToString;
+
     #[test]
     fn test_factorials() {
         assert_eq!("1", FACTORIAL[0].to_string(), "0!");

@@ -118,8 +118,7 @@ dependencies = [
     "test-db",
     "test-rocket-traits",
     "test-serde",
-    "test-macros",
-    "test-borsh"
+    "test-macros"
 ]
 
 [tasks.test-db]
@@ -175,6 +174,12 @@ command = "cargo"
 args = ["test", "--workspace", "--no-default-features", "--features=maths-nopanic", "maths", "--", "--skip", "generated"]
 
 [tasks.test-misc]
+dependencies = [
+    "test-rust-fuzz",
+    "test-borsh"
+]
+
+[tasks.test-rust-fuzz]
 command = "cargo"
 args = ["test", "--workspace", "--no-default-features", "--features=rust-fuzz", "rust_fuzz", "--", "--skip", "generated"]
 
@@ -245,4 +250,8 @@ args = ["test", "--workspace", "--tests", "--features=serde-with-str", "serde", 
 [tasks.test-borsh]
 command = "cargo"
 args = ["test", "--workspace", "--features=borsh"]
+
+[tasks.test-rand]
+command = "cargo"
+args = ["test", "--workspace", "--features=rand"]
 

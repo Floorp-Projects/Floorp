@@ -1720,7 +1720,7 @@ macro_rules! impl_try_from_decimal {
             stringify!($TInto),
             "`.",
         )]
-        impl core::convert::TryFrom<Decimal> for $TInto {
+        impl TryFrom<Decimal> for $TInto {
             type Error = crate::Error;
 
             #[inline]
@@ -1756,7 +1756,7 @@ macro_rules! impl_try_from_primitive {
             stringify!($TFrom),
             "` into a `Decimal`.\n\nCan fail if the value is out of range for `Decimal`."
         )]
-        impl core::convert::TryFrom<$TFrom> for Decimal {
+        impl TryFrom<$TFrom> for Decimal {
             type Error = crate::Error;
 
             #[inline]

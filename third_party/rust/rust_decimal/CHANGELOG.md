@@ -1,5 +1,14 @@
 # Version History
 
+## 1.24.0
+
+* Introduces new feature `rand` which allows for random number generation within `rust_decimal` ([#517](https://github.com/paupino/rust-decimal/pull/517)).
+* Upgrade to Rust 2021 and remove unnecessary dependencies to improve build speed ([#513](https://github.com/paupino/rust-decimal/pull/513), [#516](https://github.com/paupino/rust-decimal/pull/516))
+* Some test scoping improvements to ensure we capture as many test combinations as possible ([#503](https://github.com/paupino/rust-decimal/pull/503), [#504](https://github.com/paupino/rust-decimal/pull/504)). 
+
+A big thank you to [@c410-f3r](https://github.com/c410-f3r) for their contributions to this release!
+
+
 ## 1.23.1
 
 Fixes issue with `no_std` compatability introduced in `1.23.0` ([#501](https://github.com/paupino/rust-decimal/pull/501)).

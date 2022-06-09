@@ -7,6 +7,7 @@ mod constants;
 mod decimal;
 mod error;
 mod ops;
+mod rand;
 mod str;
 
 // We purposely place this here for documentation ordering
