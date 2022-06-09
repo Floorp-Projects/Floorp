@@ -71,7 +71,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 #ifdef CHECK_OSIPOINT_REGISTERS
       checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
-      frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()) {
+      frameDepth_(0) {
   if (gen->isProfilerInstrumentationEnabled()) {
     masm.enableProfilingInstrumentation();
   }
@@ -81,6 +81,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
     // regular array where all slots are sizeof(Value), it maintains the max
     // argument stack depth separately.
     MOZ_ASSERT(graph->argumentSlotCount() == 0);
+    frameDepth_ = AlignBytes(graph->localSlotsSize(), sizeof(uintptr_t));
     frameDepth_ += gen->wasmMaxStackArgBytes();
 
 #ifdef ENABLE_WASM_SIMD
@@ -100,6 +101,20 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
                                           WasmStackAlignment);
     }
+  } else {
+    // Round to JitStackAlignment, and implicitly to sizeof(Value) as
+    // JitStackAlignment is a multiple of sizeof(Value). This was originally
+    // implemented for SIMD.js, but now lets us use faster ABI calls via
+    // setupAlignedABICall.
+    MOZ_ASSERT(offsetOfLocalSlots_ == 0);
+    frameDepth_ = AlignBytes(graph->localSlotsSize(), JitStackAlignment);
+
+    // Allocate space for argument Values passed to callee functions.
+    offsetOfPassedArgSlots_ = frameDepth_;
+    MOZ_ASSERT((offsetOfPassedArgSlots_ % sizeof(JS::Value)) == 0);
+    frameDepth_ += graph->argumentSlotCount() * sizeof(JS::Value);
+
+    MOZ_ASSERT((frameDepth_ % JitStackAlignment) == 0);
   }
 }
 
