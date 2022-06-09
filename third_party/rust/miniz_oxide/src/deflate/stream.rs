@@ -3,7 +3,6 @@
 //! As of now this is mainly intended for use to build a higher-level wrapper.
 //!
 //! There is no DeflateState as the needed state is contained in the compressor struct itself.
-use core::convert::{AsMut, AsRef};
 
 use crate::deflate::core::{compress, CompressorOxide, TDEFLFlush, TDEFLStatus};
 use crate::{MZError, MZFlush, MZStatus, StreamResult};
@@ -45,8 +44,8 @@ pub fn deflate(
     let mut bytes_written = 0;
     let mut bytes_consumed = 0;
 
-    let mut next_in = input.as_ref();
-    let mut next_out = output.as_mut();
+    let mut next_in = input;
+    let mut next_out = output;
 
     let status = loop {
         let in_bytes;

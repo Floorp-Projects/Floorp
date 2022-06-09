@@ -21,7 +21,6 @@
 //!
 //! ```
 
-#![allow(warnings)]
 #![forbid(unsafe_code)]
 #![no_std]
 

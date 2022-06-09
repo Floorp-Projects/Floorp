@@ -104,9 +104,10 @@ impl InflateState {
     /// `data_format`: Determines whether the compressed data is assumed to wrapped with zlib
     /// metadata.
     pub fn new(data_format: DataFormat) -> InflateState {
-        let mut b = InflateState::default();
-        b.data_format = data_format;
-        b
+        InflateState {
+            data_format,
+            ..Default::default()
+        }
     }
 
     /// Create a new state on the heap.
@@ -355,7 +356,7 @@ fn inflate_loop(
 fn push_dict_out(state: &mut InflateState, next_out: &mut &mut [u8]) -> usize {
     let n = cmp::min(state.dict_avail as usize, next_out.len());
     (next_out[..n]).copy_from_slice(&state.dict[state.dict_ofs..state.dict_ofs + n]);
-    *next_out = &mut mem::replace(next_out, &mut [])[n..];
+    *next_out = &mut mem::take(next_out)[n..];
     state.dict_avail -= n;
     state.dict_ofs = (state.dict_ofs + (n)) & (TINFL_LZ_DICT_SIZE - 1);
     n

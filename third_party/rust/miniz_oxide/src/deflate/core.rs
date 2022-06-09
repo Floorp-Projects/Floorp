@@ -476,7 +476,7 @@ impl CompressorOxide {
 
     /// Set the compression level of the compressor.
     ///
-    /// Using this to change level after compresson has started is supported.
+    /// Using this to change level after compression has started is supported.
     /// # Notes
     /// The compression strategy will be reset to the default one when this is called.
     pub fn set_compression_level(&mut self, level: CompressionLevel) {
@@ -486,7 +486,7 @@ impl CompressorOxide {
 
     /// Set the compression level of the compressor using an integer value.
     ///
-    /// Using this to change level after compresson has started is supported.
+    /// Using this to change level after compression has started is supported.
     /// # Notes
     /// The compression strategy will be reset to the default one when this is called.
     pub fn set_compression_level_raw(&mut self, level: u8) {
@@ -500,7 +500,7 @@ impl CompressorOxide {
     /// a corrupted stream.
     ///
     /// # Notes
-    /// This function mainly intented for setting the initial settings after e.g creating with
+    /// This function mainly intended for setting the initial settings after e.g creating with
     /// `default` or after calling `CompressorOxide::reset()`, and behaviour may be changed
     /// to disallow calling it after starting compression in the future.
     pub fn set_format_and_level(&mut self, data_format: DataFormat, level: u8) {
@@ -773,17 +773,17 @@ struct HuffmanOxide {
 const LITLEN_TABLE: usize = 0;
 /// Tables for distances.
 const DIST_TABLE: usize = 1;
-/// Tables for the run-length encoded huffman lenghts for literals/lengths/distances.
+/// Tables for the run-length encoded huffman lengths for literals/lengths/distances.
 const HUFF_CODES_TABLE: usize = 2;
 
 /// Status of RLE encoding of huffman code lengths.
-struct RLE {
+struct Rle {
     pub z_count: u32,
     pub repeat_count: u32,
     pub prev_code_size: u8,
 }
 
-impl RLE {
+impl Rle {
     fn prev_code_size(
         &mut self,
         packed_code_sizes: &mut [u8],
@@ -873,12 +873,12 @@ impl HuffmanOxide {
         let mut current_symbols = symbols0;
         let mut new_symbols = symbols1;
 
-        for pass in 0..n_passes {
+        for (pass, hist_item) in hist.iter().enumerate().take(n_passes) {
             let mut offsets = [0; 256];
             let mut offset = 0;
             for i in 0..256 {
                 offsets[i] = offset;
-                offset += hist[pass][i];
+                offset += hist_item[i];
             }
 
             for sym in current_symbols.iter() {
@@ -1024,8 +1024,13 @@ impl HuffmanOxide {
             memset(&mut self.codes[table_num][..], 0);
 
             let mut last = num_used_symbols;
-            for i in 1..=code_size_limit {
-                let first = last - num_codes[i] as usize;
+            for (i, &num_item) in num_codes
+                .iter()
+                .enumerate()
+                .take(code_size_limit + 1)
+                .skip(1)
+            {
+                let first = last - num_item as usize;
                 for symbol in &symbols[first..last] {
                     self.code_sizes[table_num][symbol.sym_index as usize] = i as u8;
                 }
@@ -1106,7 +1111,7 @@ impl HuffmanOxide {
         code_sizes_to_pack[num_lit_codes..total_code_sizes_to_pack]
             .copy_from_slice(&self.code_sizes[1][..num_dist_codes]);
 
-        let mut rle = RLE {
+        let mut rle = Rle {
             z_count: 0,
             repeat_count: 0,
             prev_code_size: 0xFF,
@@ -1168,7 +1173,7 @@ impl HuffmanOxide {
             );
         }
 
-        let mut packed_code_size_index = 0 as usize;
+        let mut packed_code_size_index = 0;
         while packed_code_size_index < packed_pos {
             let code = packed_code_sizes[packed_code_size_index] as usize;
             packed_code_size_index += 1;
@@ -2192,7 +2197,13 @@ fn flush_output_buffer(c: &mut CallbackOxide, p: &mut ParamsOxide) -> (TDEFLStat
 ///
 /// The value of `flush` determines if the compressor should attempt to flush all output
 /// and alternatively try to finish the stream.
-/// Should be [`TDEFLFlush::Finish`] on the final call.
+///
+/// Use [`TDEFLFlush::Finish`] on the final call to signal that the stream is finishing.
+///
+/// Note that this function does not keep track of whether a flush marker has been output, so
+/// if called using [`TDEFLFlush::Sync`], the caller needs to ensure there is enough space in the
+/// output buffer if they want to avoid repeated flush markers.
+/// See #105 for details.
 ///
 /// # Returns
 /// Returns a tuple containing the current status of the compressor, the current position
@@ -2326,11 +2337,11 @@ fn compress_inner(
 }
 
 /// Create a set of compression flags using parameters used by zlib and other compressors.
-/// Mainly intented for use with transition from c libraries as it deals with raw integers.
+/// Mainly intended for use with transition from c libraries as it deals with raw integers.
 ///
 /// # Parameters
 /// `level` determines compression level. Clamped to maximum of 10. Negative values result in
-/// `Compressionlevel::DefaultLevel`.
+/// `CompressionLevel::DefaultLevel`.
 /// `window_bits`: Above 0, wraps the stream in a zlib wrapper, 0 or negative for a raw deflate
 /// stream.
 /// `strategy`: Sets the strategy if this conforms to any of the values in `CompressionStrategy`.

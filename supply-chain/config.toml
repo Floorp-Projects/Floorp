@@ -934,7 +934,7 @@ version = "0.2.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.miniz_oxide]]
-version = "0.5.1"
+version = "0.5.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.mio]]

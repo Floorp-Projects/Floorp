@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "miniz_oxide"
-version = "0.5.1"
+version = "0.5.3"
 authors = ["Frommi <daniil.liferenko@gmail.com>", "oyvindln <oyvindln@users.noreply.github.com>"]
 exclude = ["benches/*", "tests/*"]
 description = "DEFLATE compression and decompression library rewritten in Rust based on miniz"
@@ -51,5 +51,5 @@ default-features = false
 
 [features]
 default = []
-rustc-dep-of-std = ["core", "alloc", "compiler_builtins", "adler/rustc-dep-of-std", "simd-adler32/std"]
+rustc-dep-of-std = ["core", "alloc", "compiler_builtins", "adler/rustc-dep-of-std"]
 simd = ["simd-adler32"]
