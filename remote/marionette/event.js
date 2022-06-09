@@ -102,52 +102,22 @@ event.DoubleClickTracker = {
   },
 };
 
-/**
- * Get shifted key character for a given key character.
- *
- * For characters unaffected by the shift key, this returns the input.
- *
- * @param {string} rawKey Key for which to get shifted key.
- * @returns {string} Key string to use when the shift modifier is set.
- */
-event.getShiftedKey = function(rawKey) {
-  return lazy.keyData.getShiftedKey(rawKey);
-};
-
-/**
- * Get key event data for a given key character.
- *
- * @param {string} key
- *     Key for which to get data. This can either be the key codepoint
- *     itself or one of the codepoints in the range U+E000-U+E05D that
- *     WebDriver uses to represent keys not corresponding directly to
- *     a codepoint.
- * @returns {Object} Key event data object.
- */
-event.getKeyData = function(rawKey) {
-  return lazy.keyData.getData(rawKey);
-};
-
 // Only used by legacyactions.js
 event.parseModifiers_ = function(modifiers, win) {
   return _getEventUtils(win)._parseModifiers(modifiers);
 };
 
 /**
- * Synthesise a mouse event on a target.
+ * Synthesise a mouse event at a point.
  *
- * The actual client point is determined by taking the aTarget's client
- * box and offseting it by offsetX and offsetY.  This allows mouse clicks
- * to be simulated by calling this method.
- *
- * If the type is specified, an mouse event of that type is
- * fired. Otherwise, a mousedown followed by a mouse up is performed.
+ * If the type is specified in opts, an mouse event of that type is
+ * fired. Otherwise, a mousedown followed by a mouseup is performed.
  *
  * @param {number} left
- *     Horizontal offset to click from the target's bounding box.
+ *     Offset from viewport left, in CSS pixels
  * @param {number} top
- *     Vertical offset to click from the target's bounding box.
- * @param {Object.<string, ?>} opts
+ *     Offset from viewport top, in CSS pixels
+ * @param {Object} opts
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "clickCount", "button", and
  *     "type".

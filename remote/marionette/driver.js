@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   atom: "chrome://remote/content/marionette/atom.js",
   browser: "chrome://remote/content/marionette/browser.js",
   capture: "chrome://remote/content/marionette/capture.js",
-  clearActionInputState:
-    "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm",
   clearElementIdCache:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   Context: "chrome://remote/content/marionette/browser.js",
@@ -2213,7 +2211,6 @@ GeckoDriver.prototype.deleteSession = function() {
 
   Services.obs.removeObserver(this, "browser-delayed-startup-finished");
 
-  lazy.clearActionInputState();
   lazy.clearElementIdCache();
 
   // Always unregister actors after all other observers
