@@ -21,8 +21,6 @@ excluded_tests = [
   "exports.wast",
   # false-positive windows-specific failure
   "memory_trap.wast",
-  # false-positive error on duplicate export name (names.wast:19)
-  "names.wast",
   # false-positive error on invalid UTF-8 custom section name (utf8-custom-section-id.wast:6)
   "utf8-custom-section-id.wast",
   # invalid table maximum length for web embeddings

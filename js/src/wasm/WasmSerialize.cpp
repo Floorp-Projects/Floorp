@@ -393,6 +393,16 @@ CoderResult CodeCacheableChars(Coder<mode>& coder, const CacheableChars* item) {
   return Ok();
 }
 
+// Code a CacheableName
+
+template <CoderMode mode>
+CoderResult CodeCacheableName(Coder<mode>& coder,
+                              CoderArg<mode, CacheableName> item) {
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::CacheableName, 40);
+  MOZ_TRY(CodePodVector(coder, &item->bytes_));
+  return Ok();
+}
+
 // Code a ShareableBytes. This function only needs to forward to the inner
 // bytes vector.
 template <CoderMode mode>
@@ -491,17 +501,17 @@ CoderResult CodeTypeDefWithId(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeImport(Coder<mode>& coder, CoderArg<mode, Import> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Import, 24);
-  MOZ_TRY(CodeCacheableChars(coder, &item->module));
-  MOZ_TRY(CodeCacheableChars(coder, &item->field));
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Import, 88);
+  MOZ_TRY(CodeCacheableName(coder, &item->module));
+  MOZ_TRY(CodeCacheableName(coder, &item->field));
   MOZ_TRY(CodePod(coder, &item->kind));
   return Ok();
 }
 
 template <CoderMode mode>
 CoderResult CodeExport(Coder<mode>& coder, CoderArg<mode, Export> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Export, 16);
-  MOZ_TRY(CodeCacheableChars(coder, &item->fieldName_));
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Export, 48);
+  MOZ_TRY(CodeCacheableName(coder, &item->fieldName_));
   MOZ_TRY(CodePod(coder, &item->pod));
   return Ok();
 }
