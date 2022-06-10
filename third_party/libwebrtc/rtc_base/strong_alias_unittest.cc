@@ -8,7 +8,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "net/dcsctp/public/strong_alias.h"
+#include "rtc_base/strong_alias.h"
 
 #include <cstdint>
 #include <map>
@@ -26,7 +26,7 @@
 // but adapted to use WebRTC's includes, remove unit tests that test the ostream
 // operator (it's removed in this port) and other adaptations to pass lint.
 
-namespace dcsctp {
+namespace webrtc {
 namespace {
 
 // For test correctnenss, it's important that these getters return lexically
@@ -359,4 +359,4 @@ TEST(StrongAliasTest, BooleansAreEvaluatedAsBooleans) {
   EXPECT_TRUE(*happy);
   EXPECT_FALSE(*sad);
 }
-}  // namespace dcsctp
+}  // namespace webrtc

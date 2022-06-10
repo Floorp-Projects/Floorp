@@ -8,13 +8,13 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef NET_DCSCTP_PUBLIC_STRONG_ALIAS_H_
-#define NET_DCSCTP_PUBLIC_STRONG_ALIAS_H_
+#ifndef RTC_BASE_STRONG_ALIAS_H_
+#define RTC_BASE_STRONG_ALIAS_H_
 
 #include <type_traits>
 #include <utility>
 
-namespace dcsctp {
+namespace webrtc {
 
 // This is a copy of
 // https://source.chromium.org/chromium/chromium/src/+/main:base/types/strong_alias.h
@@ -71,6 +71,6 @@ class StrongAlias {
   UnderlyingType value_;
 };
 
-}  // namespace dcsctp
+}  // namespace webrtc
 
-#endif  // NET_DCSCTP_PUBLIC_STRONG_ALIAS_H_
+#endif  // RTC_BASE_STRONG_ALIAS_H_
