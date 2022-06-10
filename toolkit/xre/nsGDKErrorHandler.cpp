@@ -79,8 +79,7 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
     }
 
     constexpr auto minorCodeString = " minor_code "_ns;
-    start = buffer.Find(minorCodeString, /* aIgnoreCase = */ false,
-                        endptr - buffer.BeginReading());
+    start = buffer.Find(minorCodeString, endptr - buffer.BeginReading());
     if (!start) {
       MOZ_CRASH_UNSAFE(message);
     }

@@ -206,12 +206,12 @@ KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
   keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
 
   uint32_t modifierMask = 0;
-  if (modifiersStr.Find("shift") != -1) modifierMask |= KeyBinding::kShift;
-  if (modifiersStr.Find("alt") != -1) modifierMask |= KeyBinding::kAlt;
-  if (modifiersStr.Find("meta") != -1) modifierMask |= KeyBinding::kMeta;
-  if (modifiersStr.Find("os") != -1) modifierMask |= KeyBinding::kOS;
-  if (modifiersStr.Find("control") != -1) modifierMask |= KeyBinding::kControl;
-  if (modifiersStr.Find("accel") != -1) {
+  if (modifiersStr.Find(u"shift") != -1) modifierMask |= KeyBinding::kShift;
+  if (modifiersStr.Find(u"alt") != -1) modifierMask |= KeyBinding::kAlt;
+  if (modifiersStr.Find(u"meta") != -1) modifierMask |= KeyBinding::kMeta;
+  if (modifiersStr.Find(u"os") != -1) modifierMask |= KeyBinding::kOS;
+  if (modifiersStr.Find(u"control") != -1) modifierMask |= KeyBinding::kControl;
+  if (modifiersStr.Find(u"accel") != -1) {
     modifierMask |= KeyBinding::AccelModifier();
   }
 

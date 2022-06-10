@@ -281,18 +281,18 @@ void DocumentL10n::MaybeRecordTelemetry() {
 
   nsCString key;
 
-  if (documentURI.Find("chrome://browser/content/browser.xhtml") == 0) {
+  if (documentURI.Find(u"chrome://browser/content/browser.xhtml") == 0) {
     if (mIsFirstBrowserWindow) {
       key = "browser_first_window";
       mIsFirstBrowserWindow = false;
     } else {
       key = "browser_new_window";
     }
-  } else if (documentURI.Find("about:home") == 0) {
+  } else if (documentURI.Find(u"about:home") == 0) {
     key = "about:home";
-  } else if (documentURI.Find("about:newtab") == 0) {
+  } else if (documentURI.Find(u"about:newtab") == 0) {
     key = "about:newtab";
-  } else if (documentURI.Find("about:preferences") == 0) {
+  } else if (documentURI.Find(u"about:preferences") == 0) {
     key = "about:preferences";
   } else {
     return;

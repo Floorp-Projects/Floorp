@@ -620,19 +620,19 @@ static void ParseAlignAttribute(nsString& aValue, eAlign& aAlign,
   // ToInteger ignores the whitespaces around the number
   aValue.CompressWhitespace(true, false);
 
-  if (0 == aValue.Find("top")) {
+  if (0 == aValue.Find(u"top")) {
     len = 3;  // 3 is the length of 'top'
     aAlign = eAlign_top;
-  } else if (0 == aValue.Find("bottom")) {
+  } else if (0 == aValue.Find(u"bottom")) {
     len = 6;  // 6 is the length of 'bottom'
     aAlign = eAlign_bottom;
-  } else if (0 == aValue.Find("center")) {
+  } else if (0 == aValue.Find(u"center")) {
     len = 6;  // 6 is the length of 'center'
     aAlign = eAlign_center;
-  } else if (0 == aValue.Find("baseline")) {
+  } else if (0 == aValue.Find(u"baseline")) {
     len = 8;  // 8 is the length of 'baseline'
     aAlign = eAlign_baseline;
-  } else if (0 == aValue.Find("axis")) {
+  } else if (0 == aValue.Find(u"axis")) {
     len = 4;  // 4 is the length of 'axis'
     aAlign = eAlign_axis;
   }

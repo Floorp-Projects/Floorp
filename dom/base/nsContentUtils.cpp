@@ -10624,7 +10624,7 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aList) {
     ToLowerCase(host);
 
     for (;;) {
-      int32_t index = token.Find(host, false);
+      int32_t index = token.Find(host);
       if (index >= 0 &&
           static_cast<uint32_t>(index) + host.Length() <= token.Length()) {
         // If we found a full match, return true.
@@ -10653,7 +10653,7 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aList) {
       }
       int32_t startIndexOfCurrentLevel = host[0] == '*' ? 1 : 0;
       int32_t startIndexOfNextLevel =
-          host.Find(".", false, startIndexOfCurrentLevel + 1);
+          host.Find(".", startIndexOfCurrentLevel + 1);
       if (startIndexOfNextLevel <= 0) {
         break;
       }

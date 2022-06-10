@@ -2041,7 +2041,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
-    if (persistString.Find("screenX") >= 0) {
+    if (persistString.Find(u"screenX") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
@@ -2049,7 +2049,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
         Unused << SetPersistentValue(nsGkAtoms::screenX, sizeString);
       }
     }
-    if (persistString.Find("screenY") >= 0) {
+    if (persistString.Find(u"screenY") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(rect.Y() / posScale.scale));
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
@@ -2062,7 +2062,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
     LayoutDeviceIntRect innerRect =
         rect - GetOuterToInnerSizeDifference(mWindow);
-    if (persistString.Find("width") >= 0) {
+    if (persistString.Find(u"width") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
@@ -2070,7 +2070,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
         Unused << SetPersistentValue(nsGkAtoms::width, sizeString);
       }
     }
-    if (persistString.Find("height") >= 0) {
+    if (persistString.Find(u"height") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(innerRect.Height() / sizeScale.scale));
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
@@ -2093,7 +2093,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
       else
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
-      if (shouldPersist && persistString.Find("sizemode") >= 0) {
+      if (shouldPersist && persistString.Find(u"sizemode") >= 0) {
         Unused << SetPersistentValue(nsGkAtoms::sizemode, sizeString);
       }
     }
@@ -2104,7 +2104,7 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
       sizeString.Assign(u"false"_ns);
     }
     docShellElement->SetAttribute(TILED_ATTRIBUTE, sizeString, rv);
-    if (persistString.Find("zlevel") >= 0) {
+    if (persistString.Find(u"zlevel") >= 0) {
       uint32_t zLevel;
       nsCOMPtr<nsIWindowMediator> mediator(
           do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));

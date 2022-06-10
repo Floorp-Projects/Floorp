@@ -613,33 +613,42 @@ TEST_F(Strings, test2) {
 TEST_F(Strings, find) {
   nsCString src("<!DOCTYPE blah blah blah>");
 
-  int32_t i = src.Find("DOCTYPE", true, 2, 1);
+  int32_t i = src.Find("DOCTYPE", 2);
+  EXPECT_EQ(i, 2);
+
+  i = src.Find("DOCTYPE");
+  EXPECT_EQ(i, 2);
+}
+
+TEST_F(Strings, lower_case_find) {
+  nsCString src("<!DOCTYPE blah blah blah>");
+
+  int32_t i = src.LowerCaseFindASCII("doctype", 2);
+  EXPECT_EQ(i, 2);
+
+  i = src.LowerCaseFindASCII("doctype");
   EXPECT_EQ(i, 2);
 }
 
 TEST_F(Strings, rfind) {
-  const char text[] = "<!DOCTYPE blah blah blah>";
-  const char term[] = "bLaH";
+  const char text[] = "<!DOCTYPE blah bLaH bLaH>";
   nsCString src(text);
   int32_t i;
 
-  i = src.RFind(term, true, 3, -1);
-  EXPECT_EQ(i, kNotFound);
-
-  i = src.RFind(term, true, -1, -1);
+  i = src.RFind("bLaH");
   EXPECT_EQ(i, 20);
 
-  i = src.RFind(term, true, 13, -1);
+  i = src.RFind("blah");
   EXPECT_EQ(i, 10);
 
-  i = src.RFind(term, true, 22, 3);
-  EXPECT_EQ(i, 20);
+  i = src.RFind("BLAH");
+  EXPECT_EQ(i, kNotFound);
 }
 
 TEST_F(Strings, rfind_2) {
   const char text[] = "<!DOCTYPE blah blah blah>";
   nsCString src(text);
-  int32_t i = src.RFind("TYPE", false, 5, -1);
+  int32_t i = src.RFind("TYPE");
   EXPECT_EQ(i, 5);
 }
 

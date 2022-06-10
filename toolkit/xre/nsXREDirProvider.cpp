@@ -1218,7 +1218,7 @@ nsresult nsXREDirProvider::GetUpdateRootDir(nsIFile** aResult,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t dotIndex = appDirPath.RFind(".app");
+  int32_t dotIndex = appDirPath.RFind(u".app");
   if (dotIndex == kNotFound) {
     dotIndex = appDirPath.Length();
   }
