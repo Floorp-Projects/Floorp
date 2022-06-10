@@ -19,9 +19,6 @@
 namespace webrtc {
 namespace {
 
-using LevelEstimatorType =
-    AudioProcessing::Config::GainController2::LevelEstimator;
-
 float ClampLevelEstimateDbfs(float level_estimate_dbfs) {
   return rtc::SafeClamp<float>(level_estimate_dbfs, -90.f, 30.f);
 }

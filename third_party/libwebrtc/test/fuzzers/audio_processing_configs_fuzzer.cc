@@ -76,10 +76,8 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   field_trial::InitFieldTrialsFromString(field_trial_string->c_str());
 
   bool use_agc2_adaptive_digital = fuzz_data->ReadOrDefaultValue(true);
-  bool use_agc2_adaptive_digital_rms_estimator =
-      fuzz_data->ReadOrDefaultValue(true);
-  bool use_agc2_adaptive_digital_saturation_protector =
-      fuzz_data->ReadOrDefaultValue(true);
+  static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
+  static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
 
   // Ignore a few bytes. Bytes from this segment will be used for
   // future config flag changes. We assume 40 bytes is enough for
@@ -123,14 +121,6 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   apm_config.gain_controller2.fixed_digital.gain_db = gain_controller2_gain_db;
   apm_config.gain_controller2.adaptive_digital.enabled =
       use_agc2_adaptive_digital;
-  apm_config.gain_controller2.adaptive_digital.level_estimator =
-      use_agc2_adaptive_digital_rms_estimator
-          ? webrtc::AudioProcessing::Config::GainController2::LevelEstimator::
-                kRms
-          : webrtc::AudioProcessing::Config::GainController2::LevelEstimator::
-                kPeak;
-  apm_config.gain_controller2.adaptive_digital.use_saturation_protector =
-      use_agc2_adaptive_digital_saturation_protector;
   apm_config.noise_suppression.enabled = use_ns;
   apm_config.transient_suppression.enabled = use_ts;
   apm_config.voice_detection.enabled = use_vad;

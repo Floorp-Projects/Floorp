@@ -355,9 +355,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         return !(*this == rhs);
       }
 
-      // TODO(crbug.com/webrtc/7494): Remove `LevelEstimator`.
-      enum LevelEstimator { kRms, kPeak };
-      enum NoiseEstimator { kStationaryNoise, kNoiseFloor };
       bool enabled = false;
       struct FixedDigital {
         float gain_db = 0.0f;
@@ -378,15 +375,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         bool sse2_allowed = true;
         bool avx2_allowed = true;
         bool neon_allowed = true;
-        // TODO(crbug.com/webrtc/7494): Remove deprecated settings below.
-        NoiseEstimator noise_estimator = kNoiseFloor;
-        float vad_probability_attack = 1.0f;
-        LevelEstimator level_estimator = kRms;
-        int level_estimator_adjacent_speech_frames_threshold = 12;
-        bool use_saturation_protector = true;
-        float initial_saturation_margin_db = 25.0f;
-        float extra_saturation_margin_db = 5.0f;
-        int gain_applier_adjacent_speech_frames_threshold = 12;
       } adaptive_digital;
     } gain_controller2;
 
