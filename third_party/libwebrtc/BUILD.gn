@@ -118,6 +118,10 @@ config("common_inherited_config") {
   cflags = []
   ldflags = []
 
+  if (rtc_dlog_always_on) {
+    defines += [ "DLOG_ALWAYS_ON" ]
+  }
+
   if (rtc_enable_symbol_export || is_component_build) {
     defines += [ "WEBRTC_ENABLE_SYMBOL_EXPORT" ]
   }

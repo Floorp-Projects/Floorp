@@ -55,6 +55,11 @@ declare_args() {
 }
 
 declare_args() {
+  # Setting this to trye, will make RTC_DLOG() expand to log statements instead
+  # of being removed by the preprocessor.
+  # This is useful for example to be able to get RTC_DLOGs on a release build.
+  rtc_dlog_always_on = false
+
   # Setting this to true will make RTC_OBJC_EXPORT expand to code that will
   # manage symbols visibility. By default, Obj-C/Obj-C++ symbols are exported
   # if C++ symbols are but setting this arg to true while keeping
