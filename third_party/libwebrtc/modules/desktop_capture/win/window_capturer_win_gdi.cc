@@ -29,7 +29,7 @@
 #include "rtc_base/string_utils.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "rtc_base/win32.h"
+#include "rtc_base/win/windows_version.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
@@ -295,7 +295,7 @@ WindowCapturerWinGdi::CaptureResults WindowCapturerWinGdi::CaptureFrame(
   // on Windows 8.1 and later, PrintWindow is only used when the window is
   // occluded. When the window is not occluded, it is much faster to capture
   // the screen and to crop it to the window position and size.
-  if (rtc::IsWindows8OrLater()) {
+  if (rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN8) {
     // Special flag that makes PrintWindow to work on Windows 8.1 and later.
     // Indeed certain apps (e.g. those using DirectComposition rendering) can't
     // be captured using BitBlt or PrintWindow without this flag. Note that on
