@@ -5155,6 +5155,7 @@ impl PicturePrimitive {
                         r.intersection(&tile_cache.local_clip_rect)
                 });
 
+                let mut backdrop_in_use_and_visible = false;
                 if let Some(backdrop_rect) = backdrop_rect {
                     let supports_surface_for_backdrop = match frame_state.composite_state.compositor_kind {
                         CompositorKind::Draw { .. } => {
@@ -5164,7 +5165,6 @@ impl PicturePrimitive {
                             capabilities.supports_surface_for_backdrop
                         }
                     };
-                    let mut backdrop_in_use_and_visible = false;
                     if supports_surface_for_backdrop && !tile_cache.found_prims_after_backdrop && at_least_one_tile_visible {
                         if let Some(BackdropKind::Color { color }) = tile_cache.backdrop.kind {
                             backdrop_in_use_and_visible = true;
@@ -5205,14 +5205,14 @@ impl PicturePrimitive {
                             }
                         }
                     }
+                }
 
-                    if !backdrop_in_use_and_visible {
-                        if let Some(backdrop_surface) = &tile_cache.backdrop_surface {
-                            // We've already allocated a backdrop surface, but we're not using it.
-                            // Tell the compositor to get rid of it.
-                            frame_state.resource_cache.destroy_compositor_surface(backdrop_surface.id);
-                            tile_cache.backdrop_surface = None;
-                        }
+                if !backdrop_in_use_and_visible {
+                    if let Some(backdrop_surface) = &tile_cache.backdrop_surface {
+                        // We've already allocated a backdrop surface, but we're not using it.
+                        // Tell the compositor to get rid of it.
+                        frame_state.resource_cache.destroy_compositor_surface(backdrop_surface.id);
+                        tile_cache.backdrop_surface = None;
                     }
                 }
 
