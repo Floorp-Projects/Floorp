@@ -116,6 +116,26 @@ size_t ExpectedEncodingSize(const FieldParameters& params,
   return tag_size + base_size + delta_header_size + positions_size + delta_size;
 }
 
+size_t ExpectedStringEncodingSize(const FieldParameters& params,
+                                  const std::vector<std::string>& values) {
+  EXPECT_EQ(params.field_type, FieldType::kString);
+  uint64_t numeric_field_type = static_cast<uint64_t>(params.field_type);
+  RTC_DCHECK_LT(numeric_field_type, 1u << 3);
+  size_t tag_size =
+      ExpectedVarIntSize((params.field_id << 3) + numeric_field_type);
+
+  size_t expected_size = tag_size;
+  if (values.size() > 1) {
+    // VarInt encoding header reserved for future use. Currently always 0.
+    expected_size += 1;
+  }
+  for (const auto& s : values) {
+    expected_size += ExpectedVarIntSize(s.size());
+    expected_size += s.size();
+  }
+  return expected_size;
+}
+
 }  // namespace
 
 class RtcTestEvent final : public RtcEvent {
@@ -137,7 +157,8 @@ class RtcTestEvent final : public RtcEvent {
                uint64_t unsigned64,
                absl::optional<int32_t> optional_signed32,
                absl::optional<int64_t> optional_signed64,
-               uint32_t wrapping21)
+               uint32_t wrapping21,
+               std::string string)
       : b_(b),
         signed32_(signed32),
         unsigned32_(unsigned32),
@@ -145,7 +166,8 @@ class RtcTestEvent final : public RtcEvent {
         unsigned64_(unsigned64),
         optional_signed32_(optional_signed32),
         optional_signed64_(optional_signed64),
-        wrapping21_(wrapping21) {}
+        wrapping21_(wrapping21),
+        string_(string) {}
   ~RtcTestEvent() override = default;
 
   Type GetType() const override { return static_cast<Type>(4711); }
@@ -170,6 +192,8 @@ class RtcTestEvent final : public RtcEvent {
                                                      FieldType::kVarInt, 64};
   static constexpr FieldParameters wrapping21_params{"wrapping21", 9,
                                                      FieldType::kFixed32, 21};
+  static constexpr FieldParameters string_params{
+      "string", 10, FieldType::kString, /*value_width = */ 0};
 
   static constexpr Type kType = static_cast<RtcEvent::Type>(4711);
 
@@ -181,6 +205,7 @@ class RtcTestEvent final : public RtcEvent {
   const absl::optional<int32_t> optional_signed32_ = absl::nullopt;
   const absl::optional<int64_t> optional_signed64_ = absl::nullopt;
   const uint32_t wrapping21_ = 0;
+  const std::string string_;
 };
 
 constexpr EventParameters RtcTestEvent::event_params;
@@ -194,6 +219,7 @@ constexpr FieldParameters RtcTestEvent::unsigned64_params;
 constexpr FieldParameters RtcTestEvent::optional32_params;
 constexpr FieldParameters RtcTestEvent::optional64_params;
 constexpr FieldParameters RtcTestEvent::wrapping21_params;
+constexpr FieldParameters RtcTestEvent::string_params;
 
 constexpr RtcEvent::Type RtcTestEvent::kType;
 
@@ -209,7 +235,8 @@ class RtcEventFieldTest : public ::testing::Test {
       const std::vector<uint64_t>& unsigned64_values,
       const std::vector<absl::optional<int32_t>>& optional32_values,
       const std::vector<absl::optional<int64_t>>& optional64_values,
-      const std::vector<uint32_t>& wrapping21_values) {
+      const std::vector<uint32_t>& wrapping21_values,
+      const std::vector<std::string>& string_values) {
     size_t size = bool_values.size();
     RTC_CHECK_EQ(signed32_values.size(), size);
     RTC_CHECK_EQ(unsigned32_values.size(), size);
@@ -218,12 +245,13 @@ class RtcEventFieldTest : public ::testing::Test {
     RTC_CHECK_EQ(optional32_values.size(), size);
     RTC_CHECK_EQ(optional64_values.size(), size);
     RTC_CHECK_EQ(wrapping21_values.size(), size);
+    RTC_CHECK_EQ(string_values.size(), size);
 
     for (size_t i = 0; i < size; i++) {
       batch_.push_back(new RtcTestEvent(
           bool_values[i], signed32_values[i], unsigned32_values[i],
           signed64_values[i], unsigned64_values[i], optional32_values[i],
-          optional64_values[i], wrapping21_values[i]));
+          optional64_values[i], wrapping21_values[i], string_values[i]));
     }
   }
 
@@ -252,13 +280,31 @@ class RtcEventFieldTest : public ::testing::Test {
   }
 
   void ParseAndVerifyTimestamps() {
-    std::vector<uint64_t> values;
-    auto status = parser_.ParseField(RtcTestEvent::timestamp_params, &values);
-    ASSERT_TRUE(status.ok()) << status.message().c_str();
-    ASSERT_EQ(values.size(), batch_.size());
+    auto result = parser_.ParseNumericField(RtcTestEvent::timestamp_params);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    ASSERT_EQ(result.value().size(), batch_.size());
     for (size_t i = 0; i < batch_.size(); i++) {
-      EXPECT_EQ(values[i], static_cast<uint64_t>(batch_[i]->timestamp_ms()));
+      EXPECT_EQ(result.value()[i],
+                static_cast<uint64_t>(batch_[i]->timestamp_ms()));
     }
+  }
+
+  void ParseAndVerifyStringField(
+      const FieldParameters& params,
+      const std::vector<std::string>& expected_values,
+      size_t expected_skipped_bytes = 0) {
+    size_t expected_size = ExpectedStringEncodingSize(params, expected_values) +
+                           expected_skipped_bytes;
+    size_t size_before = parser_.RemainingBytes();
+    auto result = parser_.ParseStringField(params);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    ASSERT_EQ(result.value().size(), expected_values.size());
+    for (size_t i = 0; i < expected_values.size(); i++) {
+      EXPECT_EQ(result.value()[i], expected_values[i]);
+    }
+    size_t size_after = parser_.RemainingBytes();
+    EXPECT_EQ(size_before - size_after, expected_size)
+        << " for field " << params.name;
   }
 
   template <typename T>
@@ -269,13 +315,13 @@ class RtcEventFieldTest : public ::testing::Test {
     size_t expected_size =
         ExpectedEncodingSize(params, expected_values, expected_bits_per_delta) +
         expected_skipped_bytes;
-    std::vector<uint64_t> values;
     size_t size_before = parser_.RemainingBytes();
-    auto status = parser_.ParseField(params, &values);
-    ASSERT_TRUE(status.ok()) << status.message().c_str();
-    ASSERT_EQ(values.size(), expected_values.size());
+    auto result = parser_.ParseNumericField(params);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    ASSERT_EQ(result.value().size(), expected_values.size());
     for (size_t i = 0; i < expected_values.size(); i++) {
-      EXPECT_EQ(DecodeFromUnsignedToType<T>(values[i]), expected_values[i]);
+      EXPECT_EQ(DecodeFromUnsignedToType<T>(result.value()[i]),
+                expected_values[i]);
     }
     size_t size_after = parser_.RemainingBytes();
     EXPECT_EQ(size_before - size_after, expected_size)
@@ -291,15 +337,13 @@ class RtcEventFieldTest : public ::testing::Test {
     size_t expected_size =
         ExpectedEncodingSize(params, expected_values, expected_bits_per_delta) +
         expected_skipped_bytes;
-    std::vector<bool> positions;
-    positions.reserve(expected_values.size());
-    std::vector<uint64_t> values;
-    values.reserve(expected_values.size());
     size_t size_before = parser_.RemainingBytes();
-    auto status = parser_.ParseField(params, &values, &positions);
-    ASSERT_TRUE(status.ok()) << status.message().c_str();
-    auto value_it = values.begin();
+    auto result = parser_.ParseOptionalNumericField(params);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    rtc::ArrayView<uint64_t> values = result.value().values;
+    rtc::ArrayView<uint8_t> positions = result.value().positions;
     ASSERT_EQ(positions.size(), expected_values.size());
+    auto value_it = values.begin();
     for (size_t i = 0; i < expected_values.size(); i++) {
       if (positions[i]) {
         ASSERT_NE(value_it, values.end());
@@ -317,17 +361,17 @@ class RtcEventFieldTest : public ::testing::Test {
   }
 
   void ParseAndVerifyMissingField(const FieldParameters& params) {
-    std::vector<uint64_t> values{4711};
-    auto status = parser_.ParseField(params, &values);
-    ASSERT_TRUE(status.ok()) << status.message().c_str();
-    EXPECT_EQ(values.size(), 0u);
+    auto result = parser_.ParseNumericField(params, /*required_field=*/false);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    EXPECT_EQ(result.value().size(), 0u);
   }
 
   void ParseAndVerifyMissingOptionalField(const FieldParameters& params) {
-    std::vector<bool> positions{true, false};
-    std::vector<uint64_t> values{4711};
-    auto status = parser_.ParseField(params, &values, &positions);
-    ASSERT_TRUE(status.ok()) << status.message().c_str();
+    auto result =
+        parser_.ParseOptionalNumericField(params, /*required_field=*/false);
+    ASSERT_TRUE(result.ok()) << result.message().c_str();
+    rtc::ArrayView<uint64_t> values = result.value().values;
+    rtc::ArrayView<uint8_t> positions = result.value().positions;
     EXPECT_EQ(positions.size(), 0u);
     EXPECT_EQ(values.size(), 0u);
   }
@@ -359,10 +403,11 @@ TEST_F(RtcEventFieldTest, Singleton) {
   std::vector<absl::optional<int32_t>> optional32_values = {kInt32Min};
   std::vector<absl::optional<int64_t>> optional64_values = {kInt64Max};
   std::vector<uint32_t> wrapping21_values = {(1 << 21) - 1};
+  std::vector<std::string> string_values = {"foo"};
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   encoder.EncodeField(RtcTestEvent::bool_params,
@@ -386,6 +431,8 @@ TEST_F(RtcEventFieldTest, Singleton) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -409,6 +456,8 @@ TEST_F(RtcEventFieldTest, Singleton) {
                               optional64_values, /*no deltas*/ 0);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*no deltas*/ 0);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, EqualElements) {
@@ -426,10 +475,11 @@ TEST_F(RtcEventFieldTest, EqualElements) {
       kInt64Max, kInt64Max, kInt64Max, kInt64Max};
   std::vector<uint32_t> wrapping21_values = {(1 << 21) - 1, (1 << 21) - 1,
                                              (1 << 21) - 1, (1 << 21) - 1};
+  std::vector<std::string> string_values = {"foo", "foo", "foo", "foo"};
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   encoder.EncodeField(RtcTestEvent::bool_params,
                       ExtractRtcEventMember(batch_, &RtcTestEvent::b_));
@@ -452,6 +502,8 @@ TEST_F(RtcEventFieldTest, EqualElements) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -475,6 +527,8 @@ TEST_F(RtcEventFieldTest, EqualElements) {
                               optional64_values, /*no deltas*/ 0);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*no deltas*/ 0);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, Increasing) {
@@ -490,10 +544,12 @@ TEST_F(RtcEventFieldTest, Increasing) {
       kInt64Max - 1, kInt64Max, kInt64Min, kInt64Min + 1};
   std::vector<uint32_t> wrapping21_values = {(1 << 21) - 2, (1 << 21) - 1, 0,
                                              1};
+  std::vector<std::string> string_values = {
+      "", "a", "bc", "def"};  // No special compression of strings.
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   encoder.EncodeField(RtcTestEvent::bool_params,
@@ -517,6 +573,8 @@ TEST_F(RtcEventFieldTest, Increasing) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -540,6 +598,8 @@ TEST_F(RtcEventFieldTest, Increasing) {
                               optional64_values, /*delta bits*/ 1);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*delta bits*/ 1);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, Decreasing) {
@@ -555,10 +615,12 @@ TEST_F(RtcEventFieldTest, Decreasing) {
       kInt64Min + 1, kInt64Min, kInt64Max, kInt64Max - 1};
   std::vector<uint32_t> wrapping21_values = {1, 0, (1 << 21) - 1,
                                              (1 << 21) - 2};
+  std::vector<std::string> string_values = {
+      "def", "bc", "a", ""};  // No special compression of strings.
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   encoder.EncodeField(RtcTestEvent::bool_params,
@@ -582,6 +644,8 @@ TEST_F(RtcEventFieldTest, Decreasing) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -605,6 +669,8 @@ TEST_F(RtcEventFieldTest, Decreasing) {
                               optional64_values, /*delta bits*/ 1);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*delta bits*/ 1);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
@@ -620,6 +686,7 @@ TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
   std::vector<absl::optional<int64_t>> optional64_values = {kInt64Min / 2,
                                                             kInt64Max / 2};
   std::vector<uint32_t> wrapping21_values = {0, 1 << 20};
+  std::vector<std::string> string_values = {"foo", "bar"};
 
   size_t signed32_encoding_size =
       /*tag*/ 1 + /* varint base*/ 5 + /* delta_header*/ 1 + /*deltas*/ 4;
@@ -630,7 +697,7 @@ TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   encoder.EncodeField(RtcTestEvent::bool_params,
@@ -654,6 +721,8 @@ TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -666,7 +735,8 @@ TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
   // Skips parsing the `signed32_values`. The following unsigned fields should
   // still be found.
   ParseAndVerifyField(RtcTestEvent::unsigned32_params, unsigned32_values,
-                      /*delta_bits=*/31, signed32_encoding_size);
+                      /*delta_bits=*/31,
+                      /*expected_skipped_bytes=*/signed32_encoding_size);
   // Skips parsing the `signed64_values`. The following unsigned fields should
   // still be found.
   ParseAndVerifyField(RtcTestEvent::unsigned64_params, unsigned64_values,
@@ -678,6 +748,8 @@ TEST_F(RtcEventFieldTest, SkipsDeprecatedFields) {
                               /*delta_bits=*/63, optional32_encoding_size);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*delta_bits=*/20);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, SkipsMissingFields) {
@@ -693,10 +765,11 @@ TEST_F(RtcEventFieldTest, SkipsMissingFields) {
   std::vector<absl::optional<int64_t>> optional64_values = {kInt64Min / 2,
                                                             kInt64Max / 2};
   std::vector<uint32_t> wrapping21_values = {0, 1 << 20};
+  std::vector<std::string> string_values = {"foo", "foo"};
 
   CreateFullEvents(bool_values, signed32_values, unsigned32_values,
                    signed64_values, unsigned64_values, optional32_values,
-                   optional64_values, wrapping21_values);
+                   optional64_values, wrapping21_values, string_values);
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
   // Skip encoding the `bool_values`.
@@ -713,6 +786,8 @@ TEST_F(RtcEventFieldTest, SkipsMissingFields) {
   encoder.EncodeField(
       RtcTestEvent::wrapping21_params,
       ExtractRtcEventMember(batch_, &RtcTestEvent::wrapping21_));
+  encoder.EncodeField(RtcTestEvent::string_params,
+                      ExtractRtcEventMember(batch_, &RtcTestEvent::string_));
   std::string s = encoder.AsString();
 
   // Optional debug printing
@@ -732,6 +807,8 @@ TEST_F(RtcEventFieldTest, SkipsMissingFields) {
   ParseAndVerifyMissingOptionalField(RtcTestEvent::optional64_params);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*delta_bits=*/20);
+  ParseAndVerifyStringField(RtcTestEvent::string_params, string_values);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, OptionalFields) {
@@ -744,7 +821,7 @@ TEST_F(RtcEventFieldTest, OptionalFields) {
   for (size_t i = 0; i < optional32_values.size(); i++) {
     batch_.push_back(new RtcTestEvent(0, 0, 0, 0, 0, optional32_values[i],
                                       optional64_values[i],
-                                      wrapping21_values[i]));
+                                      wrapping21_values[i], ""));
   }
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
@@ -770,6 +847,7 @@ TEST_F(RtcEventFieldTest, OptionalFields) {
                               optional64_values, /*delta bits*/ 1);
   ParseAndVerifyField(RtcTestEvent::wrapping21_params, wrapping21_values,
                       /*delta bits*/ 2);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 TEST_F(RtcEventFieldTest, AllNulloptTreatedAsMissing) {
@@ -781,7 +859,7 @@ TEST_F(RtcEventFieldTest, AllNulloptTreatedAsMissing) {
 
   for (size_t i = 0; i < optional32_values.size(); i++) {
     batch_.push_back(new RtcTestEvent(0, 0, 0, 0, 0, optional32_values[i],
-                                      optional64_values[i], 0));
+                                      optional64_values[i], 0, ""));
   }
 
   EventEncoder encoder(RtcTestEvent::event_params, batch_);
@@ -801,6 +879,7 @@ TEST_F(RtcEventFieldTest, AllNulloptTreatedAsMissing) {
   ParseAndVerifyMissingOptionalField(RtcTestEvent::optional32_params);
   ParseAndVerifyOptionalField(RtcTestEvent::optional64_params,
                               optional64_values, /*delta_bits=*/1);
+  EXPECT_EQ(parser_.RemainingBytes(), 0u);
 }
 
 }  // namespace webrtc

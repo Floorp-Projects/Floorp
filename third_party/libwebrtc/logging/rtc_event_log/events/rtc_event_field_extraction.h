@@ -116,13 +116,27 @@ ValuesWithPositions ExtractRtcEventMember(rtc::ArrayView<const RtcEvent*> batch,
   return result;
 }
 
+template <typename E>
+std::vector<absl::string_view> ExtractRtcEventMember(
+    rtc::ArrayView<const RtcEvent*> batch,
+    const std::string E::*member) {
+  std::vector<absl::string_view> values;
+  values.reserve(batch.size());
+  for (const RtcEvent* event : batch) {
+    RTC_CHECK_EQ(event->GetType(), E::kType);
+    absl::string_view str = static_cast<const E*>(event)->*member;
+    values.push_back(str);
+  }
+  return values;
+}
+
 // Inverse of the ExtractRtcEventMember function used when parsing
 // a log. Uses a vector of values to populate a specific field in a
 // vector of structs.
 template <typename T,
           typename E,
           std::enable_if_t<std::is_integral<T>::value, bool> = true>
-void PopulateRtcEventMember(const std::vector<uint64_t>& values,
+void PopulateRtcEventMember(const rtc::ArrayView<uint64_t> values,
                             T E::*member,
                             rtc::ArrayView<E> output) {
   size_t batch_size = values.size();
@@ -136,8 +150,8 @@ void PopulateRtcEventMember(const std::vector<uint64_t>& values,
 template <typename T,
           typename E,
           std::enable_if_t<std::is_integral<T>::value, bool> = true>
-void PopulateRtcEventMember(const std::vector<bool>& positions,
-                            const std::vector<uint64_t>& values,
+void PopulateRtcEventMember(const rtc::ArrayView<uint8_t> positions,
+                            const rtc::ArrayView<uint64_t> values,
                             absl::optional<T> E::*member,
                             rtc::ArrayView<E> output) {
   size_t batch_size = positions.size();
@@ -154,6 +168,17 @@ void PopulateRtcEventMember(const std::vector<bool>& positions,
     }
   }
   RTC_CHECK(value_it == values.end());
+}
+
+template <typename E>
+void PopulateRtcEventMember(const rtc::ArrayView<absl::string_view> values,
+                            std::string E::*member,
+                            rtc::ArrayView<E> output) {
+  size_t batch_size = values.size();
+  RTC_CHECK_EQ(output.size(), batch_size);
+  for (size_t i = 0; i < batch_size; ++i) {
+    output[i].*member = values[i];
+  }
 }
 
 }  // namespace webrtc
