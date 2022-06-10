@@ -1,0 +1,28 @@
+<html class="reftest-paged">
+<head>
+<title>Testcase bug 1767364 - page breaks & empty thead causing data loss and asserts</title>
+<style>
+  .bb {
+    break-before: page;
+  }
+  .red {
+    border-top: 1px red solid;
+    border-bottom: 1px red solid;
+  }
+  .green {
+    border-top: 1px green solid;
+    border-bottom: 1px green solid;
+  }
+  .blue {
+    border-top: 1px blue solid;
+    border-bottom: 1px blue solid;
+  }
+</style>
+</head>
+<body>
+<div class="bb red">
+<table class="bb green">
+  <thead></thead>
+  <tfoot><td class="blue">data</td></tfoot>
+</table>
+</div>

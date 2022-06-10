@@ -1072,11 +1072,12 @@ class ScriptSourceObject : public NativeObject {
 
   // Initialize those properties of this ScriptSourceObject whose values
   // are provided by |options|, re-wrapping as necessary.
-  static bool initFromOptions(JSContext* cx, HandleScriptSourceObject source,
+  static bool initFromOptions(JSContext* cx,
+                              JS::Handle<ScriptSourceObject*> source,
                               const JS::InstantiateOptions& options);
 
   static bool initElementProperties(JSContext* cx,
-                                    HandleScriptSourceObject source,
+                                    JS::Handle<ScriptSourceObject*> source,
                                     HandleString elementAttrName);
 
   bool hasSource() const { return !getReservedSlot(SOURCE_SLOT).isUndefined(); }
@@ -1453,14 +1454,14 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
 
  public:
   static BaseScript* New(JSContext* cx, JS::Handle<JSFunction*> function,
-                         js::HandleScriptSourceObject sourceObject,
+                         JS::Handle<js::ScriptSourceObject*> sourceObject,
                          const js::SourceExtent& extent,
                          uint32_t immutableFlags);
 
   // Create a lazy BaseScript without initializing any gc-things.
   static BaseScript* CreateRawLazy(JSContext* cx, uint32_t ngcthings,
                                    HandleFunction fun,
-                                   HandleScriptSourceObject sourceObject,
+                                   JS::Handle<ScriptSourceObject*> sourceObject,
                                    const SourceExtent& extent,
                                    uint32_t immutableFlags);
 
@@ -1635,7 +1636,7 @@ class JSScript : public js::BaseScript {
 
  public:
   static JSScript* Create(JSContext* cx, JS::Handle<JSFunction*> function,
-                          js::HandleScriptSourceObject sourceObject,
+                          JS::Handle<js::ScriptSourceObject*> sourceObject,
                           const js::SourceExtent& extent,
                           js::ImmutableScriptFlags flags);
 

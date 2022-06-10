@@ -45,7 +45,7 @@
 #include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModuleTypes.h"
-#include "wasm/WasmTypeDecls.h"  // MutableHandleWasmInstanceObject
+#include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmValType.h"
 #include "wasm/WasmValue.h"
 
@@ -173,7 +173,7 @@ bool ExceptionsAvailable(JSContext* cx);
 
 [[nodiscard]] bool Eval(JSContext* cx, Handle<TypedArrayObject*> code,
                         HandleObject importObj, HandleValue maybeOptions,
-                        MutableHandleWasmInstanceObject instanceObj);
+                        MutableHandle<WasmInstanceObject*> instanceObj);
 
 // Extracts the various imports from the given import object into the given
 // ImportValues structure while checking the imports against the given module.
@@ -331,7 +331,7 @@ class WasmInstanceObject : public NativeObject {
       JSContext* cx, RefPtr<const wasm::Code> code,
       const wasm::DataSegmentVector& dataSegments,
       const wasm::ElemSegmentVector& elemSegments, uint32_t globalDataLength,
-      HandleWasmMemoryObject memory,
+      Handle<WasmMemoryObject*> memory,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
       const JSFunctionVector& funcImports,
       const wasm::GlobalDescVector& globals,
@@ -345,16 +345,17 @@ class WasmInstanceObject : public NativeObject {
   JSObject& exportsObj() const;
 
   [[nodiscard]] static bool getExportedFunction(
-      JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex,
-      MutableHandleFunction fun);
+      JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
+      uint32_t funcIndex, MutableHandleFunction fun);
 
   const wasm::CodeRange& getExportedFunctionCodeRange(JSFunction* fun,
                                                       wasm::Tier tier);
 
   static WasmInstanceScope* getScope(JSContext* cx,
-                                     HandleWasmInstanceObject instanceObj);
+                                     Handle<WasmInstanceObject*> instanceObj);
   static WasmFunctionScope* getFunctionScope(
-      JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex);
+      JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
+      uint32_t funcIndex);
 
   using GlobalObjectVector =
       GCVector<HeapPtr<WasmGlobalObject*>, 0, CellAllocPolicy>;
@@ -377,12 +378,11 @@ class WasmMemoryObject : public NativeObject {
   static bool type(JSContext* cx, unsigned argc, Value* vp);
   static bool growImpl(JSContext* cx, const CallArgs& args);
   static bool grow(JSContext* cx, unsigned argc, Value* vp);
-  static uint64_t growShared(HandleWasmMemoryObject memory, uint64_t delta);
+  static uint64_t growShared(Handle<WasmMemoryObject*> memory, uint64_t delta);
 
-  using InstanceSet =
-      JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
-                              MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
-                              CellAllocPolicy>>;
+  using InstanceSet = JS::WeakCache<GCHashSet<
+      WeakHeapPtr<WasmInstanceObject*>,
+      MovableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, CellAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);
@@ -433,7 +433,7 @@ class WasmMemoryObject : public NativeObject {
   SharedArrayRawBuffer* sharedArrayRawBuffer() const;
 
   bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
-  static uint64_t grow(HandleWasmMemoryObject memory, uint64_t delta,
+  static uint64_t grow(Handle<WasmMemoryObject*> memory, uint64_t delta,
                        JSContext* cx);
 };
 

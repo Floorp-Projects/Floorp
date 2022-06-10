@@ -3031,7 +3031,7 @@ bool BaselineCodeGen<Handler>::emit_MutateProto() {
   pushArg(R1);
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, HandlePlainObject, HandleValue);
+  using Fn = bool (*)(JSContext*, Handle<PlainObject*>, HandleValue);
   if (!callVM<Fn, MutatePrototype>()) {
     return false;
   }
@@ -3314,7 +3314,7 @@ bool BaselineCompilerCodeGen::tryOptimizeBindGlobalName() {
   JSScript* script = handler.script();
   MOZ_ASSERT(!script->hasNonSyntacticScope());
 
-  RootedGlobalObject global(cx, &script->global());
+  Rooted<GlobalObject*> global(cx, &script->global());
   RootedPropertyName name(cx, script->getName(handler.pc()));
   if (JSObject* binding = MaybeOptimizeBindGlobalName(cx, global, name)) {
     frame.push(ObjectValue(*binding));
@@ -4790,7 +4790,7 @@ bool BaselineCodeGen<Handler>::emit_PushVarEnv() {
                        R2.scratchReg());
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, BaselineFrame*, HandleScope);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, Handle<Scope*>);
   return callVM<Fn, jit::PushVarEnv>();
 }
 

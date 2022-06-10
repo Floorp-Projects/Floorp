@@ -47,10 +47,13 @@ inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
   vixl::UseScratchRegisterScope temps(&masm.asVIXL());
   const ARMRegister scratch64 = temps.AcquireX();
 
+  Address stubAddr(FramePointer, BaselineStubFrameLayout::ICStubOffsetFromFP);
+  masm.loadPtr(stubAddr, ICStubReg);
+
   masm.moveToStackPtr(FramePointer);
 
   // Pop values, discarding the frame descriptor.
-  masm.pop(FramePointer, ICStubReg, ICTailCallReg, scratch64.asUnsized());
+  masm.pop(FramePointer, ICTailCallReg, scratch64.asUnsized());
 
   // Stack should remain 16-byte aligned.
   masm.checkStackAlignment();

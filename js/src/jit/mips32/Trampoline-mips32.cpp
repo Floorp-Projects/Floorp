@@ -1117,8 +1117,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //      |       ... BL-FrameData ...
   //      |       BLStub-Descriptor
   //      |       BLStub-ReturnAddr
-  //      |       BLStub-StubPointer          |
-  //      +------ BLStub-SavedFramePointer    |- Descriptor.Size
+  //      +------ BLStub-SavedFramePointer    |
+  //              BLStub-StubPointer          |- Descriptor.Size
   //              ... arguments ...           |
   //              ActualArgc          |
   //              CalleeToken         |- JitFrameLayout::Size()
@@ -1139,7 +1139,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.storePtr(scratch2, lastProfilingCallSite);
 
     Address stubFrameSavedFramePtr(
-        scratch3, JitFrameLayout::Size() - (2 * sizeof(void*)));
+        scratch3,
+        JitFrameLayout::Size() - BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch2);
     masm.addPtr(Imm32(sizeof(void*)), scratch2);  // Skip past BL-PrevFramePtr
     masm.storePtr(scratch2, lastProfilingFrame);
@@ -1167,8 +1168,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //      |       ... baseline frame data ...
   //      |       BLStub-Descriptor
   //      |       BLStub-ReturnAddr
-  //      |       BLStub-StubPointer          |
-  //      +------ BLStub-SavedFramePointer    |- Rect-Descriptor.Size
+  //      +------ BLStub-SavedFramePointer    |
+  //              BLStub-StubPointer          |- Descriptor.Size
   //              ... args to rectifier ...   |
   //              < COMMON LAYOUT >
   //
@@ -1235,7 +1236,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.storePtr(scratch2, lastProfilingCallSite);
 
     Address stubFrameSavedFramePtr(
-        scratch3, RectifierFrameLayout::Size() - (2 * sizeof(void*)));
+        scratch3, RectifierFrameLayout::Size() -
+                      BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch2);
     masm.addPtr(Imm32(sizeof(void*)), scratch2);
     masm.storePtr(scratch2, lastProfilingFrame);

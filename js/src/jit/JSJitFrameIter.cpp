@@ -723,8 +723,7 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     MOZ_ASSERT(stubFrame->prevType() == FrameType::BaselineJS);
 
     resumePCinCurrentFrame_ = stubFrame->returnAddress();
-    fp_ = ((uint8_t*)stubFrame->reverseSavedFramePtr()) +
-          jit::BaselineFrame::FramePointerOffset;
+    fp_ = GetPreviousRawFrame<uint8_t*>(stubFrame);
     type_ = FrameType::BaselineJS;
     return;
   }
@@ -744,9 +743,9 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     if (rectPrevType == FrameType::BaselineStub) {
       BaselineStubFrameLayout* stubFrame =
           GetPreviousRawFrame<BaselineStubFrameLayout*>(rectFrame);
+      MOZ_ASSERT(stubFrame->prevType() == FrameType::BaselineJS);
       resumePCinCurrentFrame_ = stubFrame->returnAddress();
-      fp_ = ((uint8_t*)stubFrame->reverseSavedFramePtr()) +
-            jit::BaselineFrame::FramePointerOffset;
+      fp_ = GetPreviousRawFrame<uint8_t*>(stubFrame);
       type_ = FrameType::BaselineJS;
       return;
     }

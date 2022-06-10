@@ -429,7 +429,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
 /* static */
 inline NativeObject* NativeObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape, js::gc::AllocSite* site /* = nullptr */) {
+    js::Handle<Shape*> shape, js::gc::AllocSite* site /* = nullptr */) {
   debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();
@@ -623,7 +623,8 @@ inline bool NativeObject::denseElementsMaybeInIteration() {
  *  - Otherwise no property was resolved. Set propp to NotFound and return true.
  */
 static MOZ_ALWAYS_INLINE bool CallResolveOp(JSContext* cx,
-                                            HandleNativeObject obj, HandleId id,
+                                            Handle<NativeObject*> obj,
+                                            HandleId id,
                                             PropertyResult* propp) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
@@ -858,7 +859,7 @@ inline bool IsPackedArray(JSObject* obj) {
 // Like AddDataProperty but optimized for plain objects. Plain objects don't
 // have an addProperty hook.
 MOZ_ALWAYS_INLINE bool AddDataPropertyToPlainObject(JSContext* cx,
-                                                    HandlePlainObject obj,
+                                                    Handle<PlainObject*> obj,
                                                     HandleId id,
                                                     HandleValue v) {
   MOZ_ASSERT(!id.isInt());

@@ -267,8 +267,8 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
     return false;
   }
 
-  RootedArrayObject partsArray(cx,
-                               NewDenseFullyAllocatedArray(cx, parts.length()));
+  Rooted<ArrayObject*> partsArray(
+      cx, NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }
@@ -340,7 +340,7 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
   Vector<UniqueTwoByteChars, mozilla::intl::DEFAULT_LIST_LENGTH> strings(cx);
   mozilla::intl::ListFormat::StringList list;
 
-  RootedArrayObject listObj(cx, &args[1].toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> listObj(cx, &args[1].toObject().as<ArrayObject>());
   RootedValue value(cx);
   uint32_t listLen = listObj->length();
   for (uint32_t i = 0; i < listLen; i++) {

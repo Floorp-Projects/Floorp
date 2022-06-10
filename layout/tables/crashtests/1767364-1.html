@@ -1,0 +1,16 @@
+<html class="reftest-paged">
+<head>
+<title>Testcase bug 1767364 - page breaks, empty thead & `position: fixed` div inside tbody causing a crash</title>
+<style>
+* {
+  border-bottom: -moz-default-color solid;
+  break-before: page
+}
+</style>
+</head>
+<table id="a">
+<thead></thead>
+<th>
+<div style="position: fixed">a</div>
+</table>
+<h1>

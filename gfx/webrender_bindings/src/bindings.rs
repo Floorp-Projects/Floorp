@@ -2294,7 +2294,7 @@ fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
 fn read_font_descriptor(bytes: &mut WrVecU8, _index: u32) -> NativeFontHandle {
     let chars = bytes.flush_into_vec();
     NativeFontHandle {
-        name: String::from_utf8(chars).unwrap()
+        name: String::from_utf8(chars).unwrap(),
     }
 }
 

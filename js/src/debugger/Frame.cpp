@@ -233,7 +233,7 @@ NativeObject* DebuggerFrame::initClass(JSContext* cx,
 
 /* static */
 DebuggerFrame* DebuggerFrame::create(
-    JSContext* cx, HandleObject proto, HandleNativeObject debugger,
+    JSContext* cx, HandleObject proto, Handle<NativeObject*> debugger,
     const FrameIter* maybeIter,
     Handle<AbstractGeneratorObject*> maybeGenerator) {
   Rooted<DebuggerFrame*> frame(
@@ -975,8 +975,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
 
   if (frame) {
     MOZ_ASSERT(scopeKind == ScopeKind::NonSyntactic);
-    RootedScope scope(cx,
-                      GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
+    Rooted<Scope*> scope(cx,
+                         GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
     if (!scope) {
       return false;
     }
@@ -1049,7 +1049,7 @@ Result<Completion> js::DebuggerGenericEval(
 
   // If evalWithBindings, create the inner environment.
   if (bindings) {
-    RootedPlainObject nenv(cx, NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> nenv(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!nenv) {
       return cx->alreadyReportedError();
     }
@@ -1713,7 +1713,8 @@ bool DebuggerFrame::CallData::getScript() {
     AbstractFramePtr framePtr = iter.abstractFramePtr();
 
     if (framePtr.isWasmDebugFrame()) {
-      RootedWasmInstanceObject instance(cx, framePtr.wasmInstance()->object());
+      Rooted<WasmInstanceObject*> instance(cx,
+                                           framePtr.wasmInstance()->object());
       scriptObject = debug->wrapWasmScript(cx, instance);
     } else {
       RootedScript script(cx, framePtr.script());

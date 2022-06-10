@@ -19,6 +19,7 @@ add_task(async function test_untrimmed_secure_www() {
     context,
     autofilled: "mozilla.org/",
     completed: "https://www.mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.mozilla.org/",
@@ -44,10 +45,11 @@ add_task(async function test_untrimmed_secure_www_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "https://www.mozilla.org/test/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://www.mozilla.org/test/",
-        title: "https://www.mozilla.org/test/",
+        title: "test visit for https://www.mozilla.org/test/",
         heuristic: true,
       }),
     ],
@@ -65,6 +67,7 @@ add_task(async function test_untrimmed_secure() {
     context,
     autofilled: "mozilla.org/",
     completed: "https://mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "https://mozilla.org/",
@@ -90,10 +93,11 @@ add_task(async function test_untrimmed_secure_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "https://mozilla.org/test/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "https://mozilla.org/test/",
-        title: "https://mozilla.org/test/",
+        title: "test visit for https://mozilla.org/test/",
         heuristic: true,
       }),
     ],
@@ -111,6 +115,7 @@ add_task(async function test_untrimmed_www() {
     context,
     autofilled: "mozilla.org/",
     completed: "http://www.mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/",
@@ -136,10 +141,11 @@ add_task(async function test_untrimmed_www_path() {
     context,
     autofilled: "mozilla.org/test/",
     completed: "http://www.mozilla.org/test/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/test/",
-        title: "www.mozilla.org/test/",
+        title: "test visit for http://www.mozilla.org/test/",
         heuristic: true,
       }),
     ],

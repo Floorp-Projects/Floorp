@@ -586,7 +586,7 @@ static bool DeletePropertiesOrThrow(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static bool SetArrayLengthProperty(JSContext* cx, HandleArrayObject obj,
+static bool SetArrayLengthProperty(JSContext* cx, Handle<ArrayObject*> obj,
                                    HandleValue value) {
   RootedId id(cx, NameToId(cx->names().length));
   ObjectOpResult result;
@@ -633,7 +633,7 @@ bool js::ArrayLengthSetter(JSContext* cx, HandleObject obj, HandleId id,
                            HandleValue v, ObjectOpResult& result) {
   MOZ_ASSERT(id == NameToId(cx->names().length));
 
-  HandleArrayObject arr = obj.as<ArrayObject>();
+  Handle<ArrayObject*> arr = obj.as<ArrayObject>();
   MOZ_ASSERT(arr->lengthIsWritable(),
              "setter shouldn't be called if property is non-writable");
 
@@ -934,7 +934,7 @@ static bool array_addProperty(JSContext* cx, HandleObject obj, HandleId id,
   return true;
 }
 
-static Shape* AddLengthProperty(JSContext* cx, HandleShape shape) {
+static Shape* AddLengthProperty(JSContext* cx, Handle<Shape*> shape) {
   // Add the 'length' property for a newly created array shape.
 
   MOZ_ASSERT(shape->propMapLength() == 0);
@@ -1149,7 +1149,7 @@ static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
 template <typename SeparatorOp>
 static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
-                                 HandleNativeObject obj, uint64_t length,
+                                 Handle<NativeObject*> obj, uint64_t length,
                                  StringBuffer& sb, uint32_t* numProcessed) {
   // This loop handles all elements up to initializedLength. If
   // length > initLength we rely on the second loop to add the
@@ -1471,7 +1471,7 @@ static bool SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
 }
 
 static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
-                                                  HandleNativeObject obj,
+                                                  Handle<NativeObject*> obj,
                                                   uint32_t length) {
   MOZ_ASSERT(length > 1);
 
@@ -1510,7 +1510,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     return DenseElementResult::Success;
   }
 
-  auto setElementMaybeHole = [](JSContext* cx, HandleNativeObject obj,
+  auto setElementMaybeHole = [](JSContext* cx, Handle<NativeObject*> obj,
                                 uint32_t index, const Value& val) {
     if (MOZ_LIKELY(!val.isMagic(JS_ELEMENTS_HOLE))) {
       obj->setDenseElement(index, val);
@@ -2122,7 +2122,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
     bool allInts = true;
     RootedValue v(cx);
     if (IsPackedArray(obj)) {
-      HandleArrayObject array = obj.as<ArrayObject>();
+      Handle<ArrayObject*> array = obj.as<ArrayObject>();
 
       for (uint32_t i = 0; i < len; i++) {
         if (!CheckForInterrupt(cx)) {
@@ -2233,7 +2233,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
-  HandleArrayObject arr = obj.as<ArrayObject>();
+  Handle<ArrayObject*> arr = obj.as<ArrayObject>();
 
   MOZ_ASSERT(!v.isMagic());
   MOZ_ASSERT(arr->lengthIsWritable());
@@ -2391,7 +2391,7 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
     return DenseElementResult::Incomplete;
   }
 
-  HandleNativeObject nobj = obj.as<NativeObject>();
+  Handle<NativeObject*> nobj = obj.as<NativeObject>();
   if (nobj->denseElementsMaybeInIteration()) {
     return DenseElementResult::Incomplete;
   }
@@ -2688,7 +2688,7 @@ static bool CanOptimizeForDenseStorage(HandleObject arr, uint64_t endIndex) {
 }
 
 static ArrayObject* CopyDenseArrayElements(JSContext* cx,
-                                           HandleNativeObject obj,
+                                           Handle<NativeObject*> obj,
                                            uint32_t begin, uint32_t count) {
   size_t initlen = obj->getDenseInitializedLength();
   MOZ_ASSERT(initlen <= UINT32_MAX,
@@ -2714,7 +2714,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
 }
 
 static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
-                              uint64_t count, HandleArrayObject result) {
+                              uint64_t count, Handle<ArrayObject*> result) {
   MOZ_ASSERT(result->length() == count);
 
   uint64_t startIndex = 0;
@@ -2973,7 +2973,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       MOZ_ASSERT(obj->is<NativeObject>());
 
       /* Step 16.b. */
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       if (targetIndex != 0 || !arr->tryShiftDenseElements(sourceIndex)) {
         arr->moveDenseElements(uint32_t(targetIndex), uint32_t(sourceIndex),
                                uint32_t(len - sourceIndex));
@@ -3047,7 +3047,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       // slow path handle it. We also have to ensure we maintain the
       // |capacity <= initializedLength| invariant for such objects. See
       // NativeObject::shrinkCapacityToInitializedLength.
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       if (!arr->lengthIsWritable() || !arr->isExtensible()) {
         return DenseElementResult::Incomplete;
       }
@@ -3077,7 +3077,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       uint32_t start = uint32_t(actualStart);
       uint32_t length = uint32_t(len);
 
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       arr->moveDenseElements(start + itemCount, start + deleteCount,
                              length - (start + deleteCount));
 
@@ -3496,7 +3496,7 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
 }
 
 static bool SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin,
-                        uint64_t end, HandleArrayObject result) {
+                        uint64_t end, Handle<ArrayObject*> result) {
   MOZ_ASSERT(begin <= end);
 
   Vector<uint32_t> indexes(cx);
@@ -3603,7 +3603,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
     }
   }
 
-  RootedArrayObject narr(cx, NewDensePartlyAllocatedArray(cx, count));
+  Rooted<ArrayObject*> narr(cx, NewDensePartlyAllocatedArray(cx, count));
   if (!narr) {
     return false;
   }
@@ -4482,7 +4482,7 @@ bool js::array_construct(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 ArrayObject* js::ArrayConstructorOneArg(JSContext* cx,
-                                        HandleArrayObject templateObject,
+                                        Handle<ArrayObject*> templateObject,
                                         int32_t lengthInt) {
   // JIT code can call this with a template object from a different realm when
   // calling another realm's Array constructor.
@@ -4527,7 +4527,7 @@ static inline bool EnsureNewArrayElements(JSContext* cx, ArrayObject* obj,
 
 template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
-    JSContext* cx, HandleShape shape, uint32_t length, NewObjectKind newKind,
+    JSContext* cx, Handle<Shape*> shape, uint32_t length, NewObjectKind newKind,
     gc::AllocSite* site = nullptr) {
   // The shape must already have the |length| property defined on it.
   MOZ_ASSERT(shape->propMapLength() == 1);
@@ -4560,7 +4560,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithShape(
 static Shape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
   // Get a shape with zero fixed slots, because arrays store the ObjectElements
   // header inline.
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::getInitialShape(cx, &ArrayObject::class_, cx->realm(),
                                        TaggedProto(proto), /* nfixed = */ 0));
   if (!shape) {
@@ -4605,7 +4605,7 @@ template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
                                                NewObjectKind newKind,
                                                gc::AllocSite* site = nullptr) {
-  RootedShape shape(cx, GlobalObject::getArrayShapeWithDefaultProto(cx));
+  Rooted<Shape*> shape(cx, GlobalObject::getArrayShapeWithDefaultProto(cx));
   if (!shape) {
     return nullptr;
   }
@@ -4618,7 +4618,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArrayWithProto(JSContext* cx,
                                                         uint32_t length,
                                                         HandleObject proto,
                                                         NewObjectKind newKind) {
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (!proto || proto == cx->global()->maybeGetArrayPrototype()) {
     shape = GlobalObject::getArrayShapeWithDefaultProto(cx);
   } else {
@@ -4787,7 +4787,7 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
   allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
-  RootedShape shape(cx, templateObject->shape());
+  Rooted<Shape*> shape(cx, templateObject->shape());
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
   ArrayObject* arr = ArrayObject::create(cx, allocKind, heap, shape, length,
@@ -4807,7 +4807,7 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
 
 // TODO(no-TI): clean up.
 ArrayObject* js::NewArrayWithShape(JSContext* cx, uint32_t length,
-                                   HandleShape shape) {
+                                   Handle<Shape*> shape) {
   // Ion can call this with a shape from a different realm when calling
   // another realm's Array constructor.
   Maybe<AutoRealm> ar;
@@ -5062,7 +5062,7 @@ bool js::intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  RootedShape shape(cx, GetArrayShapeWithProto(cx, nullptr));
+  Rooted<Shape*> shape(cx, GetArrayShapeWithProto(cx, nullptr));
   if (!shape) {
     return false;
   }

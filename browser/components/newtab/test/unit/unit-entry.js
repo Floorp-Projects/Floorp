@@ -74,6 +74,14 @@ class Logger {
   warn() {}
 }
 
+function ConsoleAPI() {}
+ConsoleAPI.prototype.debug = () => {};
+ConsoleAPI.prototype.trace = () => {};
+// Comment out the above prototype assignments and uncomment the ones below to get more
+// ASRouter logging in tests:
+//ConsoleAPI.prototype.debug = console.debug;
+//ConsoleAPI.prototype.trace = console.trace;
+
 // Detect plain object passed to lazy getter APIs, and set its prototype to
 // global object, and return the global object for further modification.
 // Returns the object if it's not plain object.
@@ -117,6 +125,9 @@ const TEST_GLOBAL = {
     },
     platform: "win",
   },
+  ASRouterPreferences: {
+    console: new ConsoleAPI(),
+  },
   UpdateUtils: { getUpdateChannel() {} },
   BasePromiseWorker: class {
     constructor() {
@@ -154,6 +165,7 @@ const TEST_GLOBAL = {
     },
     isSuccessCode: () => true,
   },
+  ConsoleAPI,
   // NB: These are functions/constructors
   // eslint-disable-next-line object-shorthand
   ContentSearchUIController: function() {},

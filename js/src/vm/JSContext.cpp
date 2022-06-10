@@ -656,7 +656,7 @@ bool js::ReportValueError(JSContext* cx, const unsigned errorNumber,
 }
 
 JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
-  RootedArrayObject notesArray(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> notesArray(cx, NewDenseEmptyArray(cx));
   if (!notesArray) {
     return nullptr;
   }
@@ -666,7 +666,7 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
   }
 
   for (auto&& note : *report->notes) {
-    RootedPlainObject noteObj(cx, NewPlainObject(cx));
+    Rooted<PlainObject*> noteObj(cx, NewPlainObject(cx));
     if (!noteObj) {
       return nullptr;
     }
@@ -746,7 +746,7 @@ JS_PUBLIC_API bool js::UseInternalJobQueues(JSContext* cx) {
 
 #ifdef DEBUG
 JSObject* InternalJobQueue::copyJobs(JSContext* cx) {
-  RootedArrayObject jobs(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> jobs(cx, NewDenseEmptyArray(cx));
   if (!jobs) {
     return nullptr;
   }

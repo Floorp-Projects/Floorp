@@ -269,8 +269,8 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 }
 
 /* static */
-Scope* Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
-                     HandleShape envShape) {
+Scope* Scope::create(JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
+                     Handle<Shape*> envShape) {
   Scope* scope = Allocate<Scope>(cx);
   if (scope) {
     new (scope) Scope(kind, enclosing, envShape);
@@ -281,7 +281,8 @@ Scope* Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
 template <typename ConcreteScope>
 /* static */
 ConcreteScope* Scope::create(
-    JSContext* cx, ScopeKind kind, HandleScope enclosing, HandleShape envShape,
+    JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
+    Handle<Shape*> envShape,
     MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data) {
   Scope* scope = create(cx, kind, enclosing, envShape);
   if (!scope) {
@@ -650,7 +651,7 @@ GlobalScope* GlobalScope::createWithData(
 }
 
 /* static */
-WithScope* WithScope::create(JSContext* cx, HandleScope enclosing) {
+WithScope* WithScope::create(JSContext* cx, Handle<Scope*> enclosing) {
   Scope* scope = Scope::create(cx, ScopeKind::With, enclosing, nullptr);
   return static_cast<WithScope*>(scope);
 }
@@ -773,7 +774,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
   data->instance.init(instance);
   data->slotInfo.globalsStart = globalsStart;
 
-  RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
+  Rooted<Scope*> enclosing(cx, &cx->global()->emptyGlobalScope());
   return Scope::create<WasmInstanceScope>(cx, ScopeKind::WasmInstance,
                                           enclosing,
                                           /* envShape = */ nullptr, &data);
@@ -781,7 +782,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
 
 /* static */
 WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
-                                             HandleScope enclosing,
+                                             Handle<Scope*> enclosing,
                                              uint32_t funcIndex) {
   MOZ_ASSERT(enclosing->is<WasmInstanceScope>());
 
@@ -1280,7 +1281,7 @@ PositionalFormalParameterIter::PositionalFormalParameterIter(JSScript* script)
     : PositionalFormalParameterIter(script->bodyScope()) {}
 
 void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
-  RootedScope scope(cx, scopeArg);
+  Rooted<Scope*> scope(cx, scopeArg);
   for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
     UniqueChars bytes = AtomToPrintableString(cx, bi.name());
     if (!bytes) {
@@ -1586,7 +1587,7 @@ bool ScopeStencil::createForModuleScope(
 template <typename SpecificEnvironmentT>
 bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
                                        BaseScopeData* scopeData,
-                                       MutableHandleShape shape) const {
+                                       MutableHandle<Shape*> shape) const {
   const JSClass* cls = &SpecificEnvironmentT::class_;
   constexpr ObjectFlags objectFlags = SpecificEnvironmentT::OBJECT_FLAGS;
 
@@ -1661,16 +1662,16 @@ ScopeStencil::createSpecificScopeData<ModuleScope>(
 // WithScope does not use binding data.
 template <>
 Scope* ScopeStencil::createSpecificScope<WithScope, std::nullptr_t>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const {
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const {
   return Scope::create(cx, ScopeKind::With, enclosingScope, nullptr);
 }
 
 // GlobalScope has bindings but no environment shape.
 template <>
 Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const {
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const {
   Rooted<UniquePtr<GlobalScope::RuntimeData>> rootedData(
       cx, createSpecificScopeData<GlobalScope>(cx, atomCache, baseData));
   if (!rootedData) {
@@ -1687,7 +1688,7 @@ Scope* ScopeStencil::createSpecificScope<GlobalScope, std::nullptr_t>(
 template <typename SpecificScopeT, typename SpecificEnvironmentT>
 Scope* ScopeStencil::createSpecificScope(JSContext* cx,
                                          CompilationAtomCache& atomCache,
-                                         HandleScope enclosingScope,
+                                         Handle<Scope*> enclosingScope,
                                          BaseParserScopeData* baseData) const {
   Rooted<UniquePtr<typename SpecificScopeT::RuntimeData>> rootedData(
       cx, createSpecificScopeData<SpecificScopeT>(cx, atomCache, baseData));
@@ -1695,7 +1696,7 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
     return nullptr;
   }
 
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (!createSpecificShape<SpecificEnvironmentT>(
           cx, kind(), rootedData.get().get(), &shape)) {
     return nullptr;
@@ -1707,25 +1708,25 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
 }
 
 template Scope* ScopeStencil::createSpecificScope<FunctionScope, CallObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;
 template Scope*
 ScopeStencil::createSpecificScope<LexicalScope, BlockLexicalEnvironmentObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;
 template Scope* ScopeStencil::createSpecificScope<
     ClassBodyScope, BlockLexicalEnvironmentObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;
 template Scope*
 ScopeStencil::createSpecificScope<EvalScope, VarEnvironmentObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;
 template Scope*
 ScopeStencil::createSpecificScope<VarScope, VarEnvironmentObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;
 template Scope*
 ScopeStencil::createSpecificScope<ModuleScope, ModuleEnvironmentObject>(
-    JSContext* cx, CompilationAtomCache& atomCache, HandleScope enclosingScope,
-    BaseParserScopeData* baseData) const;
+    JSContext* cx, CompilationAtomCache& atomCache,
+    Handle<Scope*> enclosingScope, BaseParserScopeData* baseData) const;

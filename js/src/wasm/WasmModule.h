@@ -115,7 +115,7 @@ class Module : public JS::WasmModule {
   bool instantiateFunctions(JSContext* cx,
                             const JSFunctionVector& funcImports) const;
   bool instantiateMemory(JSContext* cx,
-                         MutableHandleWasmMemoryObject memory) const;
+                         MutableHandle<WasmMemoryObject*> memory) const;
   bool instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs) const;
   bool instantiateImportedTable(JSContext* cx, const TableDesc& td,
                                 Handle<WasmTableObject*> table,
@@ -130,8 +130,8 @@ class Module : public JS::WasmModule {
                          SharedTableVector* tables) const;
   bool instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
                           WasmGlobalObjectVector& globalObjs) const;
-  bool initSegments(JSContext* cx, HandleWasmInstanceObject instance,
-                    HandleWasmMemoryObject memory,
+  bool initSegments(JSContext* cx, Handle<WasmInstanceObject*> instance,
+                    Handle<WasmMemoryObject*> memory,
                     const ValVector& globalImportValues) const;
 
   class Tier2GeneratorTaskImpl;
@@ -169,7 +169,7 @@ class Module : public JS::WasmModule {
 
   bool instantiate(JSContext* cx, ImportValues& imports,
                    HandleObject instanceProto,
-                   MutableHandleWasmInstanceObject instanceObj) const;
+                   MutableHandle<WasmInstanceObject*> instanceObj) const;
 
   // Tier-2 compilation may be initiated after the Module is constructed at
   // most once. When tier-2 compilation completes, ModuleGenerator calls

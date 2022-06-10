@@ -68,6 +68,15 @@ function originQuery(where) {
       SELECT 1 FROM moz_places WHERE origin_id = o.id AND visit_count > 0
     )) OVER (PARTITION BY fixup_url(host)) > 0`
     : "0";
+  let selectTitle;
+  let joinBookmarks;
+  if (where.includes("bookmarked")) {
+    selectTitle = "ifnull(b.title, h.title)";
+    joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = h.id";
+  } else {
+    selectTitle = "h.title";
+    joinBookmarks = "";
+  }
   return `/* do not warn (bug no): cannot use an index to sort */
     ${SQL_AUTOFILL_WITH},
     origins(id, prefix, host_prefix, host, fixed, host_frecency, frecency, bookmarked, visited) AS (
@@ -88,50 +97,78 @@ function originQuery(where) {
       FROM moz_origins o
       WHERE (host BETWEEN :searchString AND :searchString || X'FFFF')
          OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF')
+    ),
+    matched_origin(host_fixed, url) AS (
+      SELECT iif(instr(host, :searchString) = 1, host, fixed) || '/',
+             ifnull(:prefix, host_prefix) || host || '/'
+      FROM origins
+      ${where}
+      ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+      LIMIT 1
     )
     SELECT :query_type AS query_type,
            :searchString AS search_string,
-           iif(instr(host, :searchString) = 1, host, fixed) || '/' AS host_fixed,
-           ifnull(:prefix, host_prefix) || host || '/' AS url
-    FROM origins
-    ${where}
-    ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
-    LIMIT 1
+           matched_origin.host_fixed AS host_fixed,
+           matched_origin.url AS url,
+           ${selectTitle} AS title
+    FROM matched_origin
+    LEFT JOIN moz_places h ON h.url_hash = hash(matched_origin.url)
+    ${joinBookmarks}
   `;
 }
 
-function urlQuery(where1, where2) {
+function urlQuery(where1, where2, isBookmarkContained) {
   // We limit the search to places that are either bookmarked or have a frecency
   // over some small, arbitrary threshold (20) in order to avoid scanning as few
   // rows as possible.  Keep in mind that we run this query every time the user
   // types a key when the urlbar value looks like a URL with a path.
+  let selectTitle;
+  let joinBookmarks;
+  if (isBookmarkContained) {
+    selectTitle = "ifnull(b.title, matched_url.title)";
+    joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = matched_url.id";
+  } else {
+    selectTitle = "matched_url.title";
+    joinBookmarks = "";
+  }
   return `/* do not warn (bug no): cannot use an index to sort */
-            SELECT :query_type AS query_type,
-                   :searchString AS search_string,
-                   url,
-                   :strippedURL AS stripped_url,
-                   frecency,
-                   foreign_count > 0 AS bookmarked,
-                   visit_count > 0 AS visited,
-                   id
-            FROM moz_places
-            WHERE rev_host = :revHost
-                  ${where1}
-            UNION ALL
-            SELECT :query_type AS query_type,
-                   :searchString AS search_string,
-                   url,
-                   :strippedURL AS stripped_url,
-                   frecency,
-                   foreign_count > 0 AS bookmarked,
-                   visit_count > 0 AS visited,
-                   id
-            FROM moz_places
-            WHERE rev_host = :revHost || 'www.'
-                  ${where2}
-            ORDER BY frecency DESC, id DESC
-            LIMIT 1 `;
+    WITH matched_url(url, title, frecency, bookmarked, visited, stripped_url, is_exact_match, id) AS (
+      SELECT url,
+             title,
+             frecency,
+             foreign_count > 0 AS bookmarked,
+             visit_count > 0 AS visited,
+             strip_prefix_and_userinfo(url) AS stripped_url,
+             strip_prefix_and_userinfo(url) = strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
+             id
+      FROM moz_places
+      WHERE rev_host = :revHost
+            ${where1}
+      UNION ALL
+      SELECT url,
+             title,
+             frecency,
+             foreign_count > 0 AS bookmarked,
+             visit_count > 0 AS visited,
+             strip_prefix_and_userinfo(url) AS stripped_url,
+             strip_prefix_and_userinfo(url) = 'www.' || strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
+             id
+      FROM moz_places
+      WHERE rev_host = :revHost || 'www.'
+            ${where2}
+      ORDER BY is_exact_match DESC, frecency DESC, id DESC
+      LIMIT 1
+    )
+    SELECT :query_type AS query_type,
+           :searchString AS search_string,
+           :strippedURL AS stripped_url,
+           matched_url.url AS url,
+           ${selectTitle} AS title
+    FROM matched_url
+    ${joinBookmarks}
+  `;
 }
+
 // Queries
 const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery(
   `WHERE bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`
@@ -159,11 +196,12 @@ const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery(
 
 const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
   `AND (bookmarked OR frecency > 20)
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
+     AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND (bookmarked OR frecency > 20)
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND stripped_url COLLATE NOCASE
+       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
+  true
 );
 
 const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
@@ -172,18 +210,20 @@ const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND (bookmarked OR frecency > 20)
      AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
+  true
 );
 
 const QUERY_URL_HISTORY = urlQuery(
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
+     AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND stripped_url COLLATE NOCASE
+       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
+  false
 );
 
 const QUERY_URL_PREFIX_HISTORY = urlQuery(
@@ -194,16 +234,18 @@ const QUERY_URL_PREFIX_HISTORY = urlQuery(
   `AND (visited OR NOT bookmarked)
      AND frecency > 20
      AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
+  false
 );
 
 const QUERY_URL_BOOKMARK = urlQuery(
   `AND bookmarked
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
+     AND stripped_url COLLATE NOCASE
        BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND bookmarked
-     AND strip_prefix_and_userinfo(url) COLLATE NOCASE
-       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+     AND stripped_url COLLATE NOCASE
+       BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`,
+  true
 );
 
 const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
@@ -212,7 +254,8 @@ const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
        BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND bookmarked
      AND url COLLATE NOCASE
-       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+       BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`,
+  true
 );
 
 /**
@@ -577,6 +620,34 @@ class ProviderAutofill extends UrlbarProvider {
       return [];
     }
 
+    // Change the search target dependent on user's input contains URI scheme.
+    let selectFixedURL;
+    let urlCondition;
+    if (this._strippedPrefix) {
+      selectFixedURL = `
+        FALSE AS fixed_url,
+        NULL AS is_fixed_url_match
+      `;
+      urlCondition =
+        "(h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')";
+    } else {
+      selectFixedURL = `
+        fixup_url(h.url) AS fixed_url,
+        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS is_fixed_url_match
+      `;
+      urlCondition = "is_fixed_url_match";
+    }
+
+    let selectTitle;
+    let joinBookmarks;
+    if (UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
+      selectTitle = "ifnull(b.title, matched.title)";
+      joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = matched.id";
+    } else {
+      selectTitle = "matched.title";
+      joinBookmarks = "";
+    }
+
     const params = {
       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
       searchString: queryContext.searchString.toLowerCase(),
@@ -586,25 +657,34 @@ class ProviderAutofill extends UrlbarProvider {
     };
 
     const query = `
+      WITH matched(input, url, title, is_exact_match, fixed_url, is_fixed_url_match, id) AS (
+        SELECT
+          i.input AS input,
+          h.url AS url,
+          h.title AS title,
+          strip_prefix_and_userinfo(h.url) = strip_prefix_and_userinfo(:searchString) AS is_exact_match,
+          ${selectFixedURL},
+          h.id AS id
+        FROM moz_places h
+        JOIN moz_inputhistory i ON i.place_id = h.id
+        WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
+        AND ${urlCondition}
+        AND i.use_count >= :useCountThreshold
+        ${additionalCondition ? `AND ${additionalCondition}` : ""}
+        ORDER BY is_exact_match DESC, i.use_count DESC, is_fixed_url_match DESC, h.frecency DESC, h.id DESC
+        LIMIT 1
+      )
       SELECT
         :queryType AS query_type,
         :searchString AS search_string,
-        i.input AS input,
-        h.url AS url,
-        fixup_url(h.url) AS fixed_url,
-        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
-      FROM moz_places h
-      JOIN moz_inputhistory i ON i.place_id = h.id
-      WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
-      AND (
-        fixed_url_match OR (h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')
-      )
-      AND i.use_count >= :useCountThreshold
-      ${additionalCondition ? `AND ${additionalCondition}` : ""}
-      ORDER BY i.use_count DESC, fixed_url_match DESC, h.frecency DESC, h.id DESC
-      LIMIT 1
+        input,
+        url,
+        ${selectTitle} AS title,
+        fixed_url,
+        is_fixed_url_match
+      FROM matched
+      ${joinBookmarks}
     `;
-
     return [query, params];
   }
 
@@ -618,6 +698,7 @@ class ProviderAutofill extends UrlbarProvider {
   _processRow(row, queryContext) {
     let queryType = row.getResultByName("query_type");
     let searchString = row.getResultByName("search_string");
+    let title = row.getResultByName("title");
     let autofilledValue, finalCompleteValue, autofilledType;
     let adaptiveHistoryInput;
     switch (queryType) {
@@ -655,11 +736,16 @@ class ProviderAutofill extends UrlbarProvider {
           autofilledValue = url.substring(strippedURLIndex, nextSlashIndex + 1);
         }
         finalCompleteValue = strippedPrefix + autofilledValue;
+
+        if (finalCompleteValue !== url) {
+          title = null;
+        }
+
         autofilledType = "url";
         break;
       case QUERYTYPE.AUTOFILL_ADAPTIVE:
         finalCompleteValue = row.getResultByName("url");
-        const isFixedUrlMatched = row.getResultByName("fixed_url_match");
+        const isFixedUrlMatched = row.getResultByName("is_fixed_url_match");
         autofilledValue = isFixedUrlMatched
           ? row.getResultByName("fixed_url")
           : finalCompleteValue;
@@ -683,28 +769,41 @@ class ProviderAutofill extends UrlbarProvider {
       queryType != QUERYTYPE.AUTOFILL_ORIGIN &&
       queryContext.searchString.length == autofilledValue.length
     ) {
-      finalCompleteValue =
-        finalCompleteValue.substring(
-          0,
-          finalCompleteValue.length - autofilledValue.length
-        ) + autofilledValue;
+      const originalCompleteValue = new URL(finalCompleteValue).href;
       // Make sure the domain is lowercased in the final URL. This isn't
       // necessary since domains are case insensitive, but it looks nicer
       // because it means the domain will remain lowercased in the input, and it
       // also reflects the fact that Firefox will visit the lowercased name.
-      finalCompleteValue = new URL(finalCompleteValue).href;
+      finalCompleteValue = new URL(
+        finalCompleteValue.substring(
+          0,
+          finalCompleteValue.length - autofilledValue.length
+        ) + autofilledValue
+      ).href;
+
+      // If the character case of except origin part of the original
+      // finalCompleteValue differs from finalCompleteValue that includes user's
+      // input, we set title null because it expresses different web page.
+      if (finalCompleteValue !== originalCompleteValue) {
+        title = null;
+      }
     }
 
-    let [title] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
-      stripHttp: true,
-      trimEmptyQuery: true,
-      trimSlash: !this._searchString.includes("/"),
-    });
+    const hasTitle = title !== null;
+    if (!hasTitle) {
+      let [autofilled] = UrlbarUtils.stripPrefixAndTrim(finalCompleteValue, {
+        stripHttp: true,
+        trimEmptyQuery: true,
+        trimSlash: !this._searchString.includes("/"),
+      });
+      title = [autofilled, UrlbarUtils.HIGHLIGHT.TYPED];
+    }
+
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.HISTORY,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+        title,
         url: [finalCompleteValue, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
       })
@@ -715,6 +814,7 @@ class ProviderAutofill extends UrlbarProvider {
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
       type: autofilledType,
+      hasTitle,
     };
     return result;
   }

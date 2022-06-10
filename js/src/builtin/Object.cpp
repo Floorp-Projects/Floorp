@@ -862,7 +862,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   }
 
   // Don't use the fast path if |from| may have extra indexed properties.
-  HandlePlainObject fromPlain = from.as<PlainObject>();
+  Handle<PlainObject*> fromPlain = from.as<PlainObject>();
   if (fromPlain->getDenseInitializedLength() > 0 || fromPlain->isIndexed()) {
     return true;
   }
@@ -875,7 +875,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     return true;
   }
 
-  HandlePlainObject toPlain = to.as<PlainObject>();
+  Handle<PlainObject*> toPlain = to.as<PlainObject>();
   if (!CanAddNewPropertyExcludingProtoFast(toPlain)) {
     return true;
   }
@@ -885,7 +885,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
 #ifdef DEBUG
-  RootedShape fromShape(cx, fromPlain->shape());
+  Rooted<Shape*> fromShape(cx, fromPlain->shape());
 #endif
 
   bool hasPropsWithNonDefaultAttrs = false;
@@ -994,7 +994,7 @@ static bool TryAssignNative(JSContext* cx, HandleObject to, HandleObject from,
 
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
-  RootedShape fromShape(cx, fromNative->shape());
+  Rooted<Shape*> fromShape(cx, fromNative->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
     // Symbol properties need to be assigned last. For now fall back to the
     // slow path if we see a symbol property.
@@ -1182,7 +1182,7 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
 }
 
 PlainObject* js::ObjectCreateWithTemplate(JSContext* cx,
-                                          HandlePlainObject templateObj) {
+                                          Handle<PlainObject*> templateObj) {
   RootedObject proto(cx, templateObj->staticPrototype());
   return ObjectCreateImpl(cx, proto, GenericObject);
 }
@@ -1278,7 +1278,7 @@ bool js::obj_create(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   RootedObject proto(cx, args[0].toObjectOrNull());
-  RootedPlainObject obj(cx, ObjectCreateImpl(cx, proto));
+  Rooted<PlainObject*> obj(cx, ObjectCreateImpl(cx, proto));
   if (!obj) {
     return false;
   }
@@ -1331,7 +1331,7 @@ static bool FromPropertyDescriptorToArray(
     attrsAndKind |= ACCESSOR_DESCRIPTOR_KIND;
   }
 
-  RootedArrayObject result(cx);
+  Rooted<ArrayObject*> result(cx);
   if (!desc->isAccessorDescriptor()) {
     result = NewDenseFullyAllocatedArray(cx, 2);
     if (!result) {
@@ -1457,7 +1457,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
   }
 #endif
 
-  HandleNativeObject nobj = obj.as<NativeObject>();
+  Handle<NativeObject*> nobj = obj.as<NativeObject>();
 
   // Resolve lazy properties on |nobj|.
   if (JSEnumerateOp enumerate = nobj->getClass()->getEnumerate()) {
@@ -1566,7 +1566,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 #ifdef ENABLE_RECORD_TUPLE
   else if (obj->is<RecordType>()) {
     RecordType* rec = &obj->as<RecordType>();
-    RootedArrayObject keys(cx, rec->keys());
+    Rooted<ArrayObject*> keys(cx, rec->keys());
     RootedId keyId(cx);
     RootedString keyStr(cx);
 
@@ -1683,7 +1683,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
     // Collect all non-symbol properties.
-    RootedShape objShape(cx, nobj->shape());
+    Rooted<Shape*> objShape(cx, nobj->shape());
     for (ShapePropertyIter<NoGC> iter(objShape); !iter.done(); iter++) {
       if (iter->key().isSymbol()) {
         continue;
@@ -1793,7 +1793,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
   RootedId id(cx);
   RootedValue key(cx);
   RootedValue value(cx);
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   Rooted<Maybe<PropertyDescriptor>> desc(cx);
   // Step 4.
   size_t out = 0;
@@ -1811,7 +1811,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
 
     // Step 4.a.i.
     if (obj->is<NativeObject>()) {
-      HandleNativeObject nobj = obj.as<NativeObject>();
+      Handle<NativeObject*> nobj = obj.as<NativeObject>();
       if (id.isInt() && nobj->containsDenseElement(id.toInt())) {
         value.set(nobj->getDenseElement(id.toInt()));
       } else {
@@ -1953,7 +1953,8 @@ bool js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags,
   }
 
   // Step 5 (Inlined CreateArrayFromList).
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, keys.length()));
+  Rooted<ArrayObject*> array(cx,
+                             NewDenseFullyAllocatedArray(cx, keys.length()));
   if (!array) {
     return false;
   }
@@ -2230,7 +2231,7 @@ static JSObject* CreateObjectPrototype(JSContext* cx, JSProtoKey key) {
    * Create |Object.prototype| first, mirroring CreateBlankProto but for the
    * prototype of the created object.
    */
-  RootedPlainObject objectProto(
+  Rooted<PlainObject*> objectProto(
       cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
   if (!objectProto) {
     return nullptr;

@@ -51,10 +51,9 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
                                                   Register reg,
                                                   uint32_t headerSize) {
-  // Compute stub frame size. We have to add two pointers: the stub reg and
-  // previous frame pointer pushed by EmitEnterStubFrame.
+  // Compute stub frame size.
   masm.mov(FramePointer, reg);
-  masm.as_add(reg, reg, Imm8(sizeof(void*) * 2));
+  masm.as_add(reg, reg, Imm8(BaselineStubFrameLayout::FramePointerOffset));
   masm.ma_sub(BaselineStackReg, reg);
 
   masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
@@ -65,10 +64,6 @@ inline void EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm) {
   masm.push(r0);
   masm.call(target);
 }
-
-// Size of values pushed by EmitBaselineEnterStubFrame.
-static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void*);
-static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void*);
 
 inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   MOZ_ASSERT(scratch != ICTailCallReg);
@@ -84,7 +79,7 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.store32(scratch, frameSizeAddr);
 #endif
 
-  // Note: when making changes here, don't forget to update STUB_FRAME_SIZE if
+  // Note: when making changes here, don't forget to update StubFrameSize if
   // needed.
 
   // Push frame descriptor and return address.
@@ -94,9 +89,10 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.Push(ICTailCallReg);
 
   // Save old frame pointer, stack pointer and stub reg.
-  masm.Push(ICStubReg);
   masm.Push(FramePointer);
   masm.mov(BaselineStackReg, FramePointer);
+
+  masm.Push(ICStubReg);
 
   // We pushed 4 words, so the stack is still aligned to 8 bytes.
   masm.checkStackAlignment();

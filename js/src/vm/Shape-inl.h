@@ -36,10 +36,10 @@ template <class ObjectSubclass>
 
   // Ensure the initial shape isn't collected under assignInitialShape, to
   // simplify insertInitialShape.
-  RootedShape emptyShape(cx, obj->shape());
+  Rooted<Shape*> emptyShape(cx, obj->shape());
 
   // If no initial shape was assigned, do so.
-  RootedShape shape(cx, ObjectSubclass::assignInitialShape(cx, obj));
+  Rooted<Shape*> shape(cx, ObjectSubclass::assignInitialShape(cx, obj));
   if (!shape) {
     return false;
   }

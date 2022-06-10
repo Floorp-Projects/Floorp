@@ -252,6 +252,7 @@ add_task(async function test_prefix_autofill() {
     incompleteSearch: "moz",
     autofilled: "mozilla.org/",
     completed: "http://mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",

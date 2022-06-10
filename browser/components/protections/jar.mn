@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/lockwise-card.js                      (content/lockwise-card.js)
-    content/browser/monitor-card.js                       (content/monitor-card.js)
+    content/browser/lockwise-card.mjs                      (content/lockwise-card.mjs)
+    content/browser/monitor-card.mjs                       (content/monitor-card.mjs)
     content/browser/protections.css                       (content/protections.css)
     content/browser/protections.html                      (content/protections.html)
-    content/browser/protections.js                        (content/protections.js)
-    content/browser/proxy-card.js                         (content/proxy-card.js)
-    content/browser/vpn-card.js                           (content/vpn-card.js)
+    content/browser/protections.mjs                        (content/protections.mjs)
+    content/browser/proxy-card.mjs                         (content/proxy-card.mjs)
+    content/browser/vpn-card.mjs                           (content/vpn-card.mjs)

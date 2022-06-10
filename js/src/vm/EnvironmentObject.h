@@ -337,7 +337,7 @@ class CallObject : public EnvironmentObject {
    * Construct a bare-bones call object given a shape and a group.
    * The call object must be further initialized to be usable.
    */
-  static CallObject* create(JSContext* cx, HandleShape shape);
+  static CallObject* create(JSContext* cx, Handle<Shape*> shape);
 
   static CallObject* createTemplateObject(JSContext* cx, HandleScript script,
                                           HandleObject enclosing,
@@ -382,7 +382,8 @@ class CallObject : public EnvironmentObject {
 class VarEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t SCOPE_SLOT = 1;
 
-  static VarEnvironmentObject* createInternal(JSContext* cx, HandleShape shape,
+  static VarEnvironmentObject* createInternal(JSContext* cx,
+                                              Handle<Shape*> shape,
                                               HandleObject enclosing);
 
   void initScope(Scope* scope) {
@@ -395,9 +396,10 @@ class VarEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t RESERVED_SLOTS = 2;
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
-  static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
+  static VarEnvironmentObject* create(JSContext* cx, Handle<Scope*> scope,
                                       HandleObject enclosing);
-  static VarEnvironmentObject* createForFrame(JSContext* cx, HandleScope scope,
+  static VarEnvironmentObject* createForFrame(JSContext* cx,
+                                              Handle<Scope*> scope,
                                               AbstractFramePtr frame);
   static VarEnvironmentObject* createHollowForDebug(JSContext* cx,
                                                     Handle<Scope*> scope);
@@ -531,7 +533,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
 
  protected:
   static LexicalEnvironmentObject* createTemplateObject(JSContext* cx,
-                                                        HandleShape shape,
+                                                        Handle<Shape*> shape,
                                                         HandleObject enclosing,
                                                         gc::InitialHeap heap);
 
@@ -1323,19 +1325,19 @@ ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 [[nodiscard]] bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                   AbstractFramePtr frame);
 
-[[nodiscard]] bool PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
+[[nodiscard]] bool PushVarEnvironmentObject(JSContext* cx, Handle<Scope*> scope,
                                             AbstractFramePtr frame);
 
 [[nodiscard]] bool GetFrameEnvironmentAndScope(JSContext* cx,
                                                AbstractFramePtr frame,
                                                const jsbytecode* pc,
                                                MutableHandleObject env,
-                                               MutableHandleScope scope);
+                                               MutableHandle<Scope*> scope);
 
 void GetSuspendedGeneratorEnvironmentAndScope(AbstractGeneratorObject& genObj,
                                               JSScript* script,
                                               MutableHandleObject env,
-                                              MutableHandleScope scope);
+                                              MutableHandle<Scope*> scope);
 
 #ifdef DEBUG
 bool AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);

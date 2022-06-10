@@ -1207,8 +1207,8 @@ static bool CreateDateTimePartArray(
     return false;
   }
 
-  RootedArrayObject partsArray(cx,
-                               NewDenseFullyAllocatedArray(cx, parts.length()));
+  Rooted<ArrayObject*> partsArray(
+      cx, NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }

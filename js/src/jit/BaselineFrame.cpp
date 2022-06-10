@@ -101,7 +101,7 @@ bool BaselineFrame::initFunctionEnvironmentObjects(JSContext* cx) {
   return js::InitFunctionEnvironmentObjects(cx, this);
 }
 
-bool BaselineFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
+bool BaselineFrame::pushVarEnvironment(JSContext* cx, Handle<Scope*> scope) {
   return js::PushVarEnvironmentObject(cx, scope, this);
 }
 

@@ -60,7 +60,7 @@ class Theme {
       }
 
       if (experiment) {
-        if (extension.isPrivileged) {
+        if (extension.canUseThemeExperiment()) {
           this.lwtStyles.experimental = {
             colors: {},
             images: {},

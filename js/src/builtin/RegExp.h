@@ -106,7 +106,7 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
                                                        JSObject* proto);
 
 [[nodiscard]] extern bool RegExpGetSubstitution(
-    JSContext* cx, HandleArrayObject matchResult, HandleLinearString string,
+    JSContext* cx, Handle<ArrayObject*> matchResult, HandleLinearString string,
     size_t position, HandleLinearString replacement, size_t firstDollarIndex,
     HandleValue namedCaptures, MutableHandleValue rval);
 

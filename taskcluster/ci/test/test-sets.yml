@@ -450,7 +450,8 @@ android-hw-browsertime-a51:
     - browsertime-speedometer-mobile
     - browsertime-youtube-playback-mobile
     - browsertime-unity-webgl-mobile
-    # not live, or tp6 proper
+    - browsertime-tp6m-a51  # -a51 is half the pageset
+    # - browsertime-tp6m-live
 
 android-hw-browsertime-g5:
     - browsertime-tp6m

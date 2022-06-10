@@ -449,7 +449,7 @@ inline bool AbstractFramePtr::initFunctionEnvironmentObjects(JSContext* cx) {
 }
 
 inline bool AbstractFramePtr::pushVarEnvironment(JSContext* cx,
-                                                 HandleScope scope) {
+                                                 Handle<Scope*> scope) {
   return js::PushVarEnvironmentObject(cx, scope, *this);
 }
 

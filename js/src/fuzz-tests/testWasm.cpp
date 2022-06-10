@@ -252,7 +252,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     currentIndex += 8;
     moduleLen -= 8;
 
-    RootedWasmInstanceObject instanceObj(gCx);
+    Rooted<WasmInstanceObject*> instanceObj(gCx);
 
     MutableBytes bytecode = gCx->new_<ShareableBytes>();
     if (!bytecode || !bytecode->append((uint8_t*)&magic_header, 4) ||

@@ -138,6 +138,8 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
         return StaticPrefs::widget_use_xdg_desktop_portal_settings();
       case PortalKind::Location:
         return StaticPrefs::widget_use_xdg_desktop_portal_location();
+      case PortalKind::OpenUri:
+        return StaticPrefs::widget_use_xdg_desktop_portal_open_uri();
     }
     return 2;
   }();

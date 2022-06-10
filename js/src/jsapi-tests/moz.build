@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     "testAtomicOperations.cpp",
     "testAtomizeUtf8NonAsciiLatin1CodePoint.cpp",
     "testAtomizeWithoutActiveZone.cpp",
+    "testAvlTree.cpp",
     "testBigInt.cpp",
     "testBoundFunction.cpp",
     "testBug604087.cpp",

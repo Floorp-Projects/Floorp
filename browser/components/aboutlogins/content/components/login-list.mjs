@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import LoginListItemFactory from "./login-list-item.js";
-import LoginListSectionFactory from "./login-list-section.js";
-import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
+import LoginListItemFactory from "./login-list-item.mjs";
+import LoginListSectionFactory from "./login-list-section.mjs";
+import { recordTelemetryEvent } from "../aboutLoginsUtils.mjs";
 
 const collator = new Intl.Collator();
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long" });

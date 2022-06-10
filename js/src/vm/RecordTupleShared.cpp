@@ -124,7 +124,7 @@ bool ExtendedPrimitiveGetProperty(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  RootedNativeObject rootedProto(cx, &proto->as<NativeObject>());
+  Rooted<NativeObject*> rootedProto(cx, &proto->as<NativeObject>());
   return NativeGetProperty(cx, rootedProto, receiver, id, vp);
 }
 

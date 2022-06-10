@@ -446,8 +446,38 @@ add_task(async function test_crlite_confirm_revocations_mode() {
   );
 
   // OCSP should be consulted for this certificate, but OCSP is disabled by
-  // Ci.nsIX509CertDB.FLAG_LOCAL_ONLY so this will return Success.
+  // Ci.nsIX509CertDB.FLAG_LOCAL_ONLY so this will be treated as a soft-failure
+  // and the CRLite result will be used.
   let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "us-datarecovery.com",
+    Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+  );
+
+  // Reload the filter w/o coverage and enrollment metadata.
+  result = await syncAndDownload([
+    {
+      timestamp: "2020-10-17T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [],
+      enrolledIssuers: [],
+    },
+  ]);
+  equal(
+    result,
+    "finished;2020-10-17T00:00:00Z-full",
+    "CRLite filter download should have run"
+  );
+
+  // OCSP will be consulted for the revoked certificate, but a soft-failure
+  // should now result in a Success return.
   await checkCertErrorGenericAtTime(
     certdb,
     revokedCert,
@@ -457,24 +487,6 @@ add_task(async function test_crlite_confirm_revocations_mode() {
     undefined,
     "us-datarecovery.com",
     Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
-  );
-
-  // Switch back to enforcement to confirm that it was the security.pki.crlite_mode
-  // that caused us to return Success for revokedCert.
-  Services.prefs.setIntPref(
-    "security.pki.crlite_mode",
-    CRLiteModeEnforcePrefValue
-  );
-
-  await checkCertErrorGenericAtTime(
-    certdb,
-    revokedCert,
-    SEC_ERROR_REVOKED_CERTIFICATE,
-    certificateUsageSSLServer,
-    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
-    undefined,
-    "us-datarecovery.com",
-    0
   );
 });
 

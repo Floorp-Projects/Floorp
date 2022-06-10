@@ -592,7 +592,8 @@ bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame) {
   return CheckOverRecursedImpl(cx, extra);
 }
 
-bool MutatePrototype(JSContext* cx, HandlePlainObject obj, HandleValue value) {
+bool MutatePrototype(JSContext* cx, Handle<PlainObject*> obj,
+                     HandleValue value) {
   if (!value.isObjectOrNull()) {
     return true;
   }
@@ -641,7 +642,7 @@ template bool StringsCompare<ComparisonKind::LessThan>(JSContext* cx,
 template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
     JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
-bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
+bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
                     uint32_t* length) {
   *length = arr->length();
   DenseElementResult result =
@@ -781,7 +782,7 @@ bool InterruptCheck(JSContext* cx) {
   return CheckForInterrupt(cx);
 }
 
-JSObject* NewCallObject(JSContext* cx, HandleShape shape) {
+JSObject* NewCallObject(JSContext* cx, Handle<Shape*> shape) {
   JSObject* obj = CallObject::create(cx, shape);
   if (!obj) {
     return nullptr;
@@ -1294,7 +1295,7 @@ bool PushClassBodyEnv(JSContext* cx, BaselineFrame* frame,
   return frame->pushClassBodyEnvironment(cx, scope);
 }
 
-bool PushVarEnv(JSContext* cx, BaselineFrame* frame, HandleScope scope) {
+bool PushVarEnv(JSContext* cx, BaselineFrame* frame, Handle<Scope*> scope) {
   return frame->pushVarEnvironment(cx, scope);
 }
 
@@ -1326,7 +1327,7 @@ JSString* StringReplace(JSContext* cx, HandleString string,
   return str_replace_string_raw(cx, string, pattern, repl);
 }
 
-bool SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index,
+bool SetDenseElement(JSContext* cx, Handle<NativeObject*> obj, int32_t index,
                      HandleValue value, bool strict) {
   // This function is called from Ion code for StoreElementHole's OOL path.
   // In this case we know the object is native.

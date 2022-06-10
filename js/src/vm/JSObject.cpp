@@ -535,7 +535,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
   // Steps 6-9, loosely interpreted.
   if (obj->is<NativeObject>() && !obj->is<TypedArrayObject>() &&
       !obj->is<MappedArgumentsObject>()) {
-    HandleNativeObject nobj = obj.as<NativeObject>();
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
 
     // Use a fast path to seal/freeze properties. This has the benefit of
     // creating shared property maps if possible, whereas the slower/generic
@@ -609,7 +609,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static bool ResolveLazyProperties(JSContext* cx, HandleNativeObject obj) {
+static bool ResolveLazyProperties(JSContext* cx, Handle<NativeObject*> obj) {
   const JSClass* clasp = obj->getClass();
   if (JSEnumerateOp enumerate = clasp->getEnumerate()) {
     if (!enumerate(cx, obj)) {
@@ -650,7 +650,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
   // Fast path for native objects.
   if (obj->is<NativeObject>()) {
-    HandleNativeObject nobj = obj.as<NativeObject>();
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
 
     // Force lazy properties to be resolved.
     if (!ResolveLazyProperties(cx, nobj)) {
@@ -770,7 +770,7 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
     kind = ForegroundToBackgroundAllocKind(kind);
   }
 
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
                                        ObjectFlags()));
   if (!shape) {
@@ -972,7 +972,7 @@ JS_PUBLIC_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
 }
 
 static bool InitializePropertiesFromCompatibleNativeObject(
-    JSContext* cx, HandleNativeObject dst, HandleNativeObject src) {
+    JSContext* cx, Handle<NativeObject*> dst, Handle<NativeObject*> src) {
   cx->check(src, dst);
   MOZ_ASSERT(src->getClass() == dst->getClass());
   MOZ_ASSERT(dst->shape()->objectFlags().isEmpty());
@@ -995,7 +995,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     return true;
   }
 
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (src->staticPrototype() == dst->staticPrototype()) {
     shape = src->shape();
   } else {
@@ -1099,7 +1099,7 @@ bool NativeObject::prepareForSwap(JSContext* cx,
 }
 
 /* static */
-bool NativeObject::fixupAfterSwap(JSContext* cx, HandleNativeObject obj,
+bool NativeObject::fixupAfterSwap(JSContext* cx, Handle<NativeObject*> obj,
                                   gc::AllocKind kind,
                                   HandleValueVector slotValues) {
   // This object has just been swapped with some other object, and its shape
@@ -1433,13 +1433,13 @@ static NativeObject* DefineConstructorAndPrototype(
     const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
     NativeObject** ctorp) {
   // Create the prototype object.
-  RootedNativeObject proto(
+  Rooted<NativeObject*> proto(
       cx, GlobalObject::createBlankPrototypeInheriting(cx, clasp, protoProto));
   if (!proto) {
     return nullptr;
   }
 
-  RootedNativeObject ctor(cx);
+  Rooted<NativeObject*> ctor(cx);
   if (!constructor) {
     ctor = proto;
   } else {
@@ -2041,7 +2041,7 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
 
   if (obj->is<NativeObject>()) {
     // Force lazy properties to be resolved.
-    HandleNativeObject nobj = obj.as<NativeObject>();
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
     if (!ResolveLazyProperties(cx, nobj)) {
       return false;
     }

@@ -1238,9 +1238,9 @@ static ArrayBufferObject* NewArrayBufferObject(JSContext* cx,
   constexpr size_t nfixed = ArrayBufferObject::RESERVED_SLOTS;
   static_assert(nfixed <= NativeObject::MAX_FIXED_SLOTS);
 
-  RootedShape shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
-                                                     AsTaggedProto(proto),
-                                                     nfixed, ObjectFlags()));
+  Rooted<Shape*> shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
+                                                        AsTaggedProto(proto),
+                                                        nfixed, ObjectFlags()));
   if (!shape) {
     return nullptr;
   }

@@ -1126,7 +1126,7 @@ static bool WasmGlobalFromArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   if (!proto) {
     return false;
   }
-  RootedWasmGlobalObject result(
+  Rooted<WasmGlobalObject*> result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
   if (!result) {
     return false;
@@ -1205,8 +1205,8 @@ static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
 
   // Check that we have a v128 value
   if (global->type().kind() != wasm::ValType::V128) {
@@ -1253,7 +1253,7 @@ static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject proto(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
-  RootedWasmGlobalObject result(
+  Rooted<WasmGlobalObject*> result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
   args.rval().setObject(*result.get());
   return true;
@@ -1279,8 +1279,10 @@ static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedWasmGlobalObject a(cx, &args.get(0).toObject().as<WasmGlobalObject>());
-  RootedWasmGlobalObject b(cx, &args.get(1).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> a(cx,
+                              &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> b(cx,
+                              &args.get(1).toObject().as<WasmGlobalObject>());
 
   if (a->type() != b->type()) {
     JS_ReportErrorASCII(cx, "globals are of different type");
@@ -1416,8 +1418,8 @@ static bool WasmGlobalIsNaN(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
 
   NaNFlavor flavor;
   if (!ToNaNFlavor(cx, args.get(1), &flavor)) {
@@ -1459,8 +1461,8 @@ static bool WasmGlobalToString(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
   const wasm::Val& globalVal = global->val().get();
 
   UniqueChars result;
@@ -2007,7 +2009,7 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   wasm::IntrinsicId ids[] = {wasm::IntrinsicId::I8VecMul};
-  RootedWasmModuleObject module(cx);
+  Rooted<WasmModuleObject*> module(cx);
   if (!wasm::CompileIntrinsicModule(cx, ids, wasm::Shareable::False, &module)) {
     return false;
   }
@@ -3754,7 +3756,7 @@ static bool GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp) {
         cx, "first argument must be a dense Array of Promise objects");
     return false;
   }
-  RootedNativeObject list(cx, &args[0].toObject().as<NativeObject>());
+  Rooted<NativeObject*> list(cx, &args[0].toObject().as<NativeObject>());
   RootedObjectVector promises(cx);
   uint32_t count = list->getDenseInitializedLength();
   if (!promises.resize(count)) {
@@ -5674,7 +5676,7 @@ static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
   //
   //   { node: undefined, edge: <string> }
   size_t length = nodes.length();
-  RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> result(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!result) {
     return false;
   }
@@ -5730,7 +5732,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedArrayObject objs(cx, &args[0].toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> objs(cx, &args[0].toObject().as<ArrayObject>());
   size_t length = objs->getDenseInitializedLength();
   if (length == 0) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
@@ -5871,7 +5873,7 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(values.length() == names.length());
   MOZ_ASSERT(values.length() == length);
 
-  RootedArrayObject results(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> results(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!results) {
     return false;
   }
@@ -5881,7 +5883,8 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     size_t numPaths = values[i].length();
     MOZ_ASSERT(names[i].length() == numPaths);
 
-    RootedArrayObject pathsArray(cx, NewDenseFullyAllocatedArray(cx, numPaths));
+    Rooted<ArrayObject*> pathsArray(cx,
+                                    NewDenseFullyAllocatedArray(cx, numPaths));
     if (!pathsArray) {
       return false;
     }
@@ -5891,14 +5894,15 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
       size_t pathLength = values[i][j].length();
       MOZ_ASSERT(names[i][j].length() == pathLength);
 
-      RootedArrayObject path(cx, NewDenseFullyAllocatedArray(cx, pathLength));
+      Rooted<ArrayObject*> path(cx,
+                                NewDenseFullyAllocatedArray(cx, pathLength));
       if (!path) {
         return false;
       }
       path->ensureDenseInitializedLength(0, pathLength);
 
       for (size_t k = 0; k < pathLength; k++) {
-        RootedPlainObject part(cx, NewPlainObject(cx));
+        Rooted<PlainObject*> part(cx, NewPlainObject(cx));
         if (!part) {
           return false;
         }
@@ -7371,7 +7375,7 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
 
   // Create the amounts array early so that the raw pointer into Uint8Array
   // data has as short a lifetime as possible
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, 2));
+  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, 2));
   if (!array) {
     return false;
   }

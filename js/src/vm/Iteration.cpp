@@ -76,7 +76,7 @@ void NativeIterator::trace(JSTracer* trc) {
   // The limits below are correct at every instant of |NativeIterator|
   // initialization, with the end-pointer incremented as each new shape is
   // created, so they're safe to use here.
-  std::for_each(shapesBegin(), shapesEnd(), [trc](GCPtrShape& shape) {
+  std::for_each(shapesBegin(), shapesEnd(), [trc](GCPtr<Shape*>& shape) {
     TraceEdge(trc, &shape, "iterator_shape");
   });
 
@@ -189,7 +189,7 @@ static bool SortComparatorIntegerIds(jsid a, jsid b, bool* lessOrEqualp) {
 }
 
 template <bool CheckForDuplicates>
-static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
+static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
                                       unsigned flags,
                                       MutableHandle<PropertyKeySet> visited,
                                       MutableHandleIdVector props) {
@@ -255,7 +255,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     else {
       Rooted<RecordType*> rec(cx);
       if (RecordObject::maybeUnbox(pobj, &rec)) {
-        RootedArrayObject keys(cx, rec->keys());
+        Rooted<ArrayObject*> keys(cx, rec->keys());
         RootedId id(cx);
         RootedString key(cx);
 
@@ -386,7 +386,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
   return true;
 }
 
-static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
+static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
                                       unsigned flags,
                                       MutableHandle<PropertyKeySet> visited,
                                       MutableHandleIdVector props,
@@ -720,9 +720,9 @@ static inline void RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni) {
 
 static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   const JSClass* clasp = &PropertyIteratorObject::class_;
-  RootedShape shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
-                                                     TaggedProto(nullptr),
-                                                     ITERATOR_FINALIZE_KIND));
+  Rooted<Shape*> shape(cx, SharedShape::getInitialShape(
+                               cx, clasp, cx->realm(), TaggedProto(nullptr),
+                               ITERATOR_FINALIZE_KIND));
   if (!shape) {
     return nullptr;
   }
@@ -743,7 +743,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
 
 static inline size_t NumTrailingWords(size_t propertyCount, size_t shapeCount) {
   static_assert(sizeof(GCPtrLinearString) == sizeof(uintptr_t));
-  static_assert(sizeof(GCPtrShape) == sizeof(uintptr_t));
+  static_assert(sizeof(GCPtr<Shape*>) == sizeof(uintptr_t));
   return propertyCount + shapeCount;
 }
 
@@ -877,7 +877,7 @@ NativeIterator::NativeIterator(JSContext* cx,
     do {
       MOZ_ASSERT(pobj->is<NativeObject>());
       Shape* shape = pobj->shape();
-      new (shapesEnd_) GCPtrShape(shape);
+      new (shapesEnd_) GCPtr<Shape*>(shape);
       shapesEnd_++;
 #ifdef DEBUG
       i++;

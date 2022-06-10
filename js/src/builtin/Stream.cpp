@@ -749,7 +749,7 @@ enum BYOBRequestSlots {
     return true;
   }
 
-  RootedNativeObject unwrappedBYOBRequest(
+  Rooted<NativeObject*> unwrappedBYOBRequest(
       cx, UnwrapAndDowncastValue<NativeObject>(cx, unwrappedBYOBRequestVal));
   if (!unwrappedBYOBRequest) {
     return false;

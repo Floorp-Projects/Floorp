@@ -31,6 +31,10 @@ RefPtr<DBusCallPromise> DBusProxyCall(GDBusProxy*, const char* aMethod,
                                       gint aTimeout = -1,
                                       GCancellable* = nullptr);
 
+RefPtr<DBusCallPromise> DBusProxyCallWithUnixFDList(
+    GDBusProxy*, const char* aMethod, GVariant* aArgs, GDBusCallFlags,
+    gint aTimeout = -1, GUnixFDList* = nullptr, GCancellable* = nullptr);
+
 }  // namespace mozilla::widget
 
 #endif

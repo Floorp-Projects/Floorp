@@ -655,7 +655,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
          */
         MOZ_ASSERT(obj->is<ArrayObject>());
         MOZ_ASSERT(obj->is<NativeObject>());
-        RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
+        Rooted<NativeObject*> nativeObj(cx, &obj->as<NativeObject>());
         if (i <= PropertyKey::IntMax) {
           MOZ_ASSERT(
               nativeObj->containsDenseElement(i) != nativeObj->isIndexed(),
@@ -941,7 +941,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     MOZ_ASSERT(gap.empty());
   }
 
-  RootedPlainObject wrapper(cx);
+  Rooted<PlainObject*> wrapper(cx);
   RootedId emptyId(cx, NameToId(cx->names().empty));
   if (replacer && replacer->isCallable()) {
     // We can skip creating the initial wrapper object if no replacer
@@ -1090,7 +1090,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 }
 
 static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
-  RootedPlainObject obj(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }
@@ -1185,7 +1185,7 @@ bool BuildImmutableProperty(JSContext* cx, HandleValue value, HandleId name,
 
     // Step 1.a-1.b
     if (value.toObject().is<ArrayObject>()) {
-      RootedArrayObject arr(cx, &value.toObject().as<ArrayObject>());
+      Rooted<ArrayObject*> arr(cx, &value.toObject().as<ArrayObject>());
 
       // Step 1.b.iii
       uint32_t len = arr->length();

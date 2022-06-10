@@ -48,8 +48,8 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // During the pushes below, use the normal stack pointer.
   masm.SetStackPointer64(sp);
 
-  // Save old frame pointer and return address; set new frame pointer.
-  masm.push(r29, r30);
+  // Save return address and old frame pointer; set new frame pointer.
+  masm.push(r30, r29);
   masm.moveStackPtrTo(r29);
 
   // Save callee-save integer registers.
@@ -82,8 +82,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.Mov(PseudoStackPointer64, sp);
   masm.SetStackPointer64(PseudoStackPointer64);
 
-  // Save the stack pointer at this point for Baseline OSR.
-  masm.moveStackPtrTo(FramePointer);
   // Remember stack depth without padding and arguments.
   masm.moveStackPtrTo(r19);
 
@@ -317,7 +315,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.storeValue(JSReturnOperand, Address(reg_vp, 0));
 
   // Restore old frame pointer.
-  masm.pop(r30, r29);
+  masm.pop(r29, r30);
 
   // Return using the value popped into x30.
   masm.abiret();
@@ -1054,8 +1052,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //      |       ... BL-FrameData ...
   //      |       BLStub-Descriptor
   //      |       BLStub-ReturnAddr
-  //      |       BLStub-StubPointer          |
-  //      +------ BLStub-SavedFramePointer    |- Descriptor.Size
+  //      +------ BLStub-SavedFramePointer    |
+  //              BLStub-StubPointer          |- Descriptor.Size
   //              ... arguments ...           |
   //              ActualArgc          |
   //              CalleeToken         |- JitFrameLayout::Size()
@@ -1078,7 +1076,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.storePtr(scratch2, lastProfilingCallSite);
 
     Address stubFrameSavedFramePtr(
-        scratch3, JitFrameLayout::Size() - (2 * sizeof(void*)));
+        scratch3,
+        JitFrameLayout::Size() - BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch2);
     masm.addPtr(Imm32(sizeof(void*)), scratch2);  // Skip past BL-PrevFramePtr.
     masm.storePtr(scratch2, lastProfilingFrame);
@@ -1106,8 +1105,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //      |       ... baseline frame data ...
   //      |       BLStub-Descriptor
   //      |       BLStub-ReturnAddr
-  //      |       BLStub-StubPointer          |
-  //      +------ BLStub-SavedFramePointer    |- Rect-Descriptor.Size
+  //      +------ BLStub-SavedFramePointer    |
+  //              BLStub-StubPointer          |- Rect-Descriptor.Size
   //              ... args to rectifier ...   |
   //              < COMMON LAYOUT >
   //
@@ -1176,7 +1175,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.storePtr(scratch2, lastProfilingCallSite);
 
     Address stubFrameSavedFramePtr(
-        scratch3, RectifierFrameLayout::Size() - (2 * sizeof(void*)));
+        scratch3, RectifierFrameLayout::Size() -
+                      BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch2);
     masm.addPtr(Imm32(sizeof(void*)), scratch2);
     masm.storePtr(scratch2, lastProfilingFrame);

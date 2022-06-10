@@ -90,7 +90,7 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedArrayObject weekendArray(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> weekendArray(cx, NewDenseEmptyArray(cx));
   if (!weekendArray) {
     return false;
   }
@@ -524,7 +524,7 @@ static ArrayObject* CreateArrayFromSortedList(
 
   size_t length = std::size(list);
 
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!array) {
     return nullptr;
   }

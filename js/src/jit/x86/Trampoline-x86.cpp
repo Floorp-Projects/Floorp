@@ -1055,7 +1055,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
 
     BaseIndex stubFrameSavedFramePtr(
         StackPointer, scratch1, TimesOne,
-        JitFrameLayout::Size() - (2 * sizeof(void*)));
+        JitFrameLayout::Size() - BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch2);
     masm.addPtr(Imm32(sizeof(void*)), scratch2);  // Skip past BL-PrevFramePtr
     masm.storePtr(scratch2, lastProfilingFrame);
@@ -1083,8 +1083,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //      |       ... baseline frame data ...
   //      |       BLStub-Descriptor
   //      |       BLStub-ReturnAddr
-  //      |       BLStub-StubPointer          |
-  //      +------ BLStub-SavedFramePointer    |- Rect-Descriptor.Size
+  //      +------ BLStub-SavedFramePointer    |
+  //              BLStub-StubPointer          |- Rect-Descriptor.Size
   //              ... args to rectifier ...   |
   //              < COMMON LAYOUT >
   //
@@ -1154,7 +1154,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
 
     BaseIndex stubFrameSavedFramePtr(
         scratch2, scratch1, TimesOne,
-        RectifierFrameLayout::Size() - (2 * sizeof(void*)));
+        RectifierFrameLayout::Size() -
+            BaselineStubFrameLayout::FramePointerOffset);
     masm.loadPtr(stubFrameSavedFramePtr, scratch3);
     masm.addPtr(Imm32(sizeof(void*)), scratch3);
     masm.storePtr(scratch3, lastProfilingFrame);

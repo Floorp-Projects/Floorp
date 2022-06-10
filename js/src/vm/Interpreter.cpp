@@ -1036,7 +1036,7 @@ void js::UnwindEnvironment(JSContext* cx, EnvironmentIter& ei, jsbytecode* pc) {
     return;
   }
 
-  RootedScope scope(cx, ei.initialFrame().script()->innermostScope(pc));
+  Rooted<Scope*> scope(cx, ei.initialFrame().script()->innermostScope(pc));
 
 #ifdef DEBUG
   // A frame's environment chain cannot be unwound to anything enclosing the
@@ -1820,7 +1820,7 @@ static MOZ_ALWAYS_INLINE bool SetObjectElementOperation(
 
 static MOZ_ALWAYS_INLINE void InitElemArrayOperation(JSContext* cx,
                                                      jsbytecode* pc,
-                                                     HandleArrayObject arr,
+                                                     Handle<ArrayObject*> arr,
                                                      HandleValue val) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitElemArray);
 
@@ -5022,7 +5022,7 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                              HandleValue thisv, HandleValue callee,
                              HandleValue arr, HandleValue newTarget,
                              MutableHandleValue res) {
-  RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> aobj(cx, &arr.toObject().as<ArrayObject>());
   uint32_t length = aobj->length();
   JSOp op = JSOp(*pc);
   bool constructing = op == JSOp::SpreadNew || op == JSOp::SpreadSuperCall;
@@ -5230,7 +5230,7 @@ ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  const jsbytecode* pc) {
   if (JSOp(*pc) == JSOp::NewObject) {
-    RootedShape shape(cx, script->getShape(pc));
+    Rooted<Shape*> shape(cx, script->getShape(pc));
     return PlainObject::createWithShape(cx, shape);
   }
 
@@ -5238,7 +5238,8 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   return NewPlainObject(cx);
 }
 
-JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
+JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx,
+                                             Handle<Shape*> shape,
                                              gc::AllocKind allocKind,
                                              gc::AllocSite* site) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
@@ -5253,7 +5254,8 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
 
-JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
+JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx,
+                                              Handle<Shape*> shape,
                                               gc::AllocKind allocKind,
                                               gc::InitialHeap initialHeap) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);

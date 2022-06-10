@@ -1999,6 +1999,10 @@ void Document::LoadEventFired() {
   }
 }
 
+static uint32_t ConvertToUnsignedFromDouble(double aNumber) {
+  return aNumber < 0 ? 0 : static_cast<uint32_t>(aNumber);
+}
+
 void Document::RecordPageLoadEventTelemetry(
     PageLoadEventTelemetryData aEventTelemetryData) {
   static bool sTelemetryEventEnabled = false;
@@ -2064,14 +2068,14 @@ void Document::RecordPageLoadEventTelemetry(
   }
 
   mozilla::glean::perf::PageLoadExtra extra = {
-      mozilla::Some(static_cast<uint32_t>(
+      mozilla::Some(ConvertToUnsignedFromDouble(
           aEventTelemetryData.mFirstContentfulPaintTime.ToMilliseconds())),
-      mozilla::Some(static_cast<uint32_t>(
+      mozilla::Some(ConvertToUnsignedFromDouble(
           aEventTelemetryData.mTotalJSExecutionTime.ToMilliseconds())),
-      mozilla::Some(static_cast<uint32_t>(
+      mozilla::Some(ConvertToUnsignedFromDouble(
           aEventTelemetryData.mPageLoadTime.ToMilliseconds())),
       mozilla::Some(loadTypeStr),
-      mozilla::Some(static_cast<uint32_t>(
+      mozilla::Some(ConvertToUnsignedFromDouble(
           aEventTelemetryData.mResponseStartTime.ToMilliseconds()))};
   mozilla::glean::perf::page_load.Record(mozilla::Some(extra));
 }
@@ -2216,38 +2220,38 @@ void Document::AccumulateJSTelemetry(
   if (!timers.executionTime.IsZero()) {
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_EXECUTION_MS,
-        static_cast<uint32_t>(timers.executionTime.ToMilliseconds()));
+        ConvertToUnsignedFromDouble(timers.executionTime.ToMilliseconds()));
     aEventTelemetryDataOut.mTotalJSExecutionTime = timers.executionTime;
   }
 
   if (!timers.delazificationTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_DELAZIFICATION_MS,
-        static_cast<uint32_t>(timers.delazificationTime.ToMilliseconds()));
+    Telemetry::Accumulate(Telemetry::JS_PAGELOAD_DELAZIFICATION_MS,
+                          ConvertToUnsignedFromDouble(
+                              timers.delazificationTime.ToMilliseconds()));
   }
 
   if (!timers.xdrEncodingTime.IsZero()) {
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_XDR_ENCODING_MS,
-        static_cast<uint32_t>(timers.xdrEncodingTime.ToMilliseconds()));
+        ConvertToUnsignedFromDouble(timers.xdrEncodingTime.ToMilliseconds()));
   }
 
   if (!timers.baselineCompileTime.IsZero()) {
-    Telemetry::Accumulate(
-        Telemetry::JS_PAGELOAD_BASELINE_COMPILE_MS,
-        static_cast<uint32_t>(timers.baselineCompileTime.ToMilliseconds()));
+    Telemetry::Accumulate(Telemetry::JS_PAGELOAD_BASELINE_COMPILE_MS,
+                          ConvertToUnsignedFromDouble(
+                              timers.baselineCompileTime.ToMilliseconds()));
   }
 
   if (!timers.gcTime.IsZero()) {
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_GC_MS,
-        static_cast<uint32_t>(timers.gcTime.ToMilliseconds()));
+        ConvertToUnsignedFromDouble(timers.gcTime.ToMilliseconds()));
   }
 
   if (!timers.protectTime.IsZero()) {
     Telemetry::Accumulate(
         Telemetry::JS_PAGELOAD_PROTECT_MS,
-        static_cast<uint32_t>(timers.protectTime.ToMilliseconds()));
+        ConvertToUnsignedFromDouble(timers.protectTime.ToMilliseconds()));
   }
 }
 

@@ -91,7 +91,7 @@ bool RecordType::copy(JSContext* cx, Handle<RecordType*> in,
 
 RecordType* RecordType::createUninitialized(JSContext* cx,
                                             uint32_t initialLength) {
-  RootedShape shape(cx, getInitialShape(cx));
+  Rooted<Shape*> shape(cx, getInitialShape(cx));
   if (!shape) {
     return nullptr;
   }
@@ -108,8 +108,8 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
   rec->initEmptyDynamicSlots();
   rec->initFixedSlots(SLOT_COUNT);
 
-  RootedArrayObject sortedKeys(cx,
-                               NewDenseFullyAllocatedArray(cx, initialLength));
+  Rooted<ArrayObject*> sortedKeys(
+      cx, NewDenseFullyAllocatedArray(cx, initialLength));
   if (!sortedKeys) {
     return nullptr;
   }
@@ -178,7 +178,7 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
 }
 
 bool RecordType::finishInitialization(JSContext* cx) {
-  RootedNativeObject obj(cx, this);
+  Rooted<NativeObject*> obj(cx, this);
   if (!JSObject::setFlag(cx, obj, ObjectFlag::NotExtensible)) {
     return false;
   }
@@ -386,9 +386,9 @@ bool RecordType::sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
   RootedId id(cx);
   RootedValue v1(cx), v2(cx);
 
-  RootedArrayObject sortedKeysLHS(
+  Rooted<ArrayObject*> sortedKeysLHS(
       cx, &lhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>());
-  RootedArrayObject sortedKeysRHS(
+  Rooted<ArrayObject*> sortedKeysRHS(
       cx, &rhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>());
 
   for (uint32_t index = 0; index < length; index++) {

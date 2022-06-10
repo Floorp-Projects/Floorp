@@ -368,24 +368,6 @@ android-hw-g5-7-0-arm7-shippable-qr/opt:
 
 # android-hw-a51-11-0 Samsung Galaxy A51 Android 11.0
 
-android-hw-a51-11-0-arm7-qr/opt:
-    build-platform: android-arm/opt
-    test-sets:
-        - android-hw-browsertime-a51
-#        - android-hw-browsertime
-#        - android-hw-browsertime-power
-#        - android-hw-arm7-raptor-cpu-memory
-#        - android-hw-arm7-raptor-cpu-memory-power
-
-android-hw-a51-11-0-arm7-shippable-qr/opt:
-    build-platform: android-arm-shippable/opt
-    test-sets:
-        - android-hw-browsertime-a51
-#        - android-hw-browsertime
-#        - android-hw-browsertime-power
-#        - android-hw-arm7-raptor-cpu-memory
-#        - android-hw-arm7-raptor-cpu-memory-power
-
 android-hw-a51-11-0-aarch64-qr/opt:
     build-platform: android-aarch64/opt
     test-sets:

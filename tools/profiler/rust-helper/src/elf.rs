@@ -4,7 +4,7 @@
 
 use compact_symbol_table::CompactSymbolTable;
 use object::read::{NativeFile, Object};
-use object::{ObjectSection, ObjectSymbol, SymbolKind, SectionKind};
+use object::{ObjectSection, ObjectSymbol, SectionKind, SymbolKind};
 use std::cmp;
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -20,7 +20,12 @@ where
         .dynamic_symbols()
         .chain(object_file.symbols())
         .filter(|symbol| symbol.kind() == SymbolKind::Text)
-        .filter_map(|symbol| symbol.name().map(|name| (symbol.address() as u32, name)).ok())
+        .filter_map(|symbol| {
+            symbol
+                .name()
+                .map(|name| (symbol.address() as u32, name))
+                .ok()
+        })
         .collect()
 }
 

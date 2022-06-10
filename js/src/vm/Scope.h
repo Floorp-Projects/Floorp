@@ -24,14 +24,13 @@
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
-#include "gc/Rooting.h"      // HandleScope, HandleShape, MutableHandleShape
-#include "js/GCPolicyAPI.h"  // GCPolicy, IgnoreGCPolicy
-#include "js/HeapAPI.h"      // CellFlagBitsReservedForGC
-#include "js/RootingAPI.h"   // Handle, MutableHandle
-#include "js/TraceKind.h"    // JS::TraceKind
-#include "js/TypeDecls.h"    // HandleFunction
-#include "js/UbiNode.h"      // ubi::*
-#include "js/UniquePtr.h"    // UniquePtr
+#include "js/GCPolicyAPI.h"        // GCPolicy, IgnoreGCPolicy
+#include "js/HeapAPI.h"            // CellFlagBitsReservedForGC
+#include "js/RootingAPI.h"         // Handle, MutableHandle
+#include "js/TraceKind.h"          // JS::TraceKind
+#include "js/TypeDecls.h"          // HandleFunction
+#include "js/UbiNode.h"            // ubi::*
+#include "js/UniquePtr.h"          // UniquePtr
 #include "util/Poison.h"  // AlwaysPoison, JS_SCOPE_DATA_TRAILING_NAMES_PATTERN, MemCheckKind
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/ScopeKind.h"   // ScopeKind
@@ -324,8 +323,8 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
         environmentShape_(environmentShape),
         enclosingScope_(enclosing) {}
 
-  static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
-                       HandleShape envShape);
+  static Scope* create(JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
+                       Handle<Shape*> envShape);
 
   template <typename ConcreteScope>
   void initData(
@@ -340,8 +339,8 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
  public:
   template <typename ConcreteScope>
   static ConcreteScope* create(
-      JSContext* cx, ScopeKind kind, HandleScope enclosing,
-      HandleShape envShape,
+      JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
+      Handle<Shape*> envShape,
       MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
@@ -873,7 +872,7 @@ class WithScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::With;
 
  public:
-  static WithScope* create(JSContext* cx, HandleScope enclosing);
+  static WithScope* create(JSContext* cx, Handle<Scope*> enclosing);
 };
 
 //
@@ -1112,7 +1111,7 @@ class WasmFunctionScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  static WasmFunctionScope* create(JSContext* cx, HandleScope enclosing,
+  static WasmFunctionScope* create(JSContext* cx, Handle<Scope*> enclosing,
                                    uint32_t funcIndex);
 
  private:

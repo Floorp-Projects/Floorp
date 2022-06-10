@@ -9,8 +9,8 @@ use crate::{
 
 use wgc::{gfx_select, id};
 
-use std::{error::Error, os::raw::c_char, ptr, slice};
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::{error::Error, os::raw::c_char, ptr, slice};
 
 /// A fixed-capacity, null-terminated error buffer owned by C++.
 ///
@@ -222,8 +222,10 @@ pub extern "C" fn wgpu_server_device_create_buffer(
     let usage = match wgt::BufferUsages::from_bits(usage) {
         Some(usage) => usage,
         None => {
-            error_buf.init_str("GPUBufferDescriptor's 'usage' includes invalid unimplemented bits \
-                                or unimplemented usages");
+            error_buf.init_str(
+                "GPUBufferDescriptor's 'usage' includes invalid unimplemented bits \
+                                or unimplemented usages",
+            );
             gfx_select!(self_id => global.create_buffer_error(buffer_id, label));
             return;
         }
@@ -255,7 +257,7 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
     let callback = wgc::resource::BufferMapCallback::from_c(callback);
     let operation = wgc::resource::BufferMapOperation {
         host: map_mode,
-        callback
+        callback,
     };
     gfx_select!(buffer_id => global.buffer_map_async(
         buffer_id,

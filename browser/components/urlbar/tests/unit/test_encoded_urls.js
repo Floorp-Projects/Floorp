@@ -10,6 +10,7 @@ add_task(async function test_encoded() {
     context,
     autofilled: url,
     completed: url,
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: url,
@@ -35,6 +36,7 @@ add_task(async function test_encoded_trimmed() {
     context,
     autofilled: "mozilla.com/search/top/?q=%25%32%35",
     completed: url,
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: url,
@@ -60,6 +62,7 @@ add_task(async function test_encoded_partial() {
     context,
     autofilled: url,
     completed: url,
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: url,
@@ -83,6 +86,9 @@ add_task(async function test_encoded_path() {
   });
   await check_results({
     context,
+    autofilled: url,
+    completed: url,
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: url,
@@ -90,8 +96,6 @@ add_task(async function test_encoded_path() {
         heuristic: true,
       }),
     ],
-    autofilled: url,
-    completed: url,
   });
   await cleanupPlaces();
 });
