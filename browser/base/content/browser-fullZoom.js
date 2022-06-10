@@ -120,6 +120,10 @@ var FullZoom = {
               "browser.zoom.updateBackgroundTabs"
             );
             break;
+          case "browser.zoom.full": {
+            this.updateCommands();
+            break;
+          }
         }
         break;
     }
@@ -317,12 +321,42 @@ var FullZoom = {
     });
   },
 
-  // update state of zoom type menu item
+  // update state of zoom menu items
 
-  updateMenu: function FullZoom_updateMenu() {
-    var menuItem = document.getElementById("toggle_zoom");
+  updateCommands: function FullZoom_updateCommands() {
+    let zoomLevel = ZoomManager.zoom;
+    let reduceCmd = document.getElementById("cmd_fullZoomReduce");
+    if (zoomLevel == ZoomManager.MIN) {
+      reduceCmd.setAttribute("disabled", "true");
+    } else {
+      reduceCmd.removeAttribute("disabled");
+    }
 
-    menuItem.setAttribute("checked", !ZoomManager.useFullZoom);
+    let enlargeCmd = document.getElementById("cmd_fullZoomEnlarge");
+    if (zoomLevel == ZoomManager.MAX) {
+      enlargeCmd.setAttribute("disabled", "true");
+    } else {
+      enlargeCmd.removeAttribute("disabled");
+    }
+
+    let resetCmd = document.getElementById("cmd_fullZoomReset");
+    if (zoomLevel == 1) {
+      resetCmd.setAttribute("disabled", "true");
+    } else {
+      resetCmd.removeAttribute("disabled");
+    }
+
+    let fullZoomCmd = document.getElementById("cmd_fullZoomToggle");
+    if (!ZoomManager.useFullZoom) {
+      fullZoomCmd.setAttribute("checked", "true");
+    } else {
+      fullZoomCmd.setAttribute("checked", "false");
+    }
+    let event = new CustomEvent("ZoomCommandsUpdated", {
+      bubbles: false,
+      cancelable: false,
+    });
+    window.dispatchEvent(event);
   },
 
   // Setting & Pref Manipulation
