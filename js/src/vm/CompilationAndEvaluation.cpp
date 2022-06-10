@@ -450,7 +450,7 @@ JS_PUBLIC_API bool JS::UpdateDebugMetadata(
     JSContext* cx, Handle<JSScript*> script, const InstantiateOptions& options,
     HandleValue privateValue, HandleString elementAttributeName,
     HandleScript introScript, HandleScript scriptOrModule) {
-  RootedScriptSourceObject sso(cx, script->sourceObject());
+  Rooted<ScriptSourceObject*> sso(cx, script->sourceObject());
 
   if (!ScriptSourceObject::initElementProperties(cx, sso,
                                                  elementAttributeName)) {

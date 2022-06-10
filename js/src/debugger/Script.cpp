@@ -427,7 +427,7 @@ class DebuggerScript::GetSourceMatcher {
   using ReturnType = DebuggerSource*;
 
   ReturnType match(Handle<BaseScript*> script) {
-    RootedScriptSourceObject source(cx_, script->sourceObject());
+    Rooted<ScriptSourceObject*> source(cx_, script->sourceObject());
     return dbg_->wrapSource(cx_, source);
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {

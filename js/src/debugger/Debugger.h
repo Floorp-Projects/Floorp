@@ -1253,7 +1253,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * must be a script source object in a debuggee realm.
    */
   DebuggerSource* wrapSource(JSContext* cx,
-                             js::HandleScriptSourceObject source);
+                             js::Handle<ScriptSourceObject*> source);
 
   /*
    * Return the Debugger.Source object for |wasmInstance| (the entire module),

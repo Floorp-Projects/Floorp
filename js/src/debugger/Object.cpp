@@ -1307,7 +1307,7 @@ bool DebuggerObject::CallData::createSource() {
     }
   }
 
-  RootedScriptSourceObject sso(cx, script->sourceObject());
+  Rooted<ScriptSourceObject*> sso(cx, script->sourceObject());
   RootedObject wrapped(cx, dbg->wrapSource(cx, sso));
   if (!wrapped) {
     return false;

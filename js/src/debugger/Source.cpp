@@ -208,7 +208,7 @@ class DebuggerSourceGetTextMatcher {
 
   using ReturnType = JSString*;
 
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     bool hasSourceText;
     if (!ScriptSource::loadSource(cx_, ss, &hasSourceText)) {
@@ -294,7 +294,7 @@ class DebuggerSourceGetURLMatcher {
 
   using ReturnType = Maybe<JSString*>;
 
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     MOZ_ASSERT(ss);
     if (ss->filename()) {
@@ -326,7 +326,7 @@ class DebuggerSourceGetStartLineMatcher {
  public:
   using ReturnType = uint32_t;
 
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     return ss->startLine();
   }
@@ -344,7 +344,7 @@ class DebuggerSourceGetIdMatcher {
  public:
   using ReturnType = uint32_t;
 
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     return ss->id();
   }
@@ -360,7 +360,7 @@ bool DebuggerSource::CallData::getId() {
 
 struct DebuggerSourceGetDisplayURLMatcher {
   using ReturnType = const char16_t*;
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     MOZ_ASSERT(ss);
     return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
@@ -386,7 +386,7 @@ bool DebuggerSource::CallData::getDisplayURL() {
 
 struct DebuggerSourceGetElementPropertyMatcher {
   using ReturnType = Value;
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     return sourceObject->unwrappedElementAttributeName();
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
@@ -412,7 +412,7 @@ class DebuggerSourceGetIntroductionScriptMatcher {
 
   using ReturnType = bool;
 
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     Rooted<BaseScript*> script(cx_,
                                sourceObject->unwrappedIntroductionScript());
     if (script) {
@@ -445,7 +445,7 @@ bool DebuggerSource::CallData::getIntroductionScript() {
 
 struct DebuggerGetIntroductionOffsetMatcher {
   using ReturnType = Value;
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     // Regardless of what's recorded in the ScriptSourceObject and
     // ScriptSource, only hand out the introduction offset if we also have
     // the script within which it applies.
@@ -469,7 +469,7 @@ bool DebuggerSource::CallData::getIntroductionOffset() {
 
 struct DebuggerSourceGetIntroductionTypeMatcher {
   using ReturnType = const char*;
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     MOZ_ASSERT(ss);
     return ss->hasIntroductionType() ? ss->introductionType() : nullptr;
@@ -504,7 +504,7 @@ ScriptSourceObject* EnsureSourceObject(JSContext* cx,
 }
 
 bool DebuggerSource::CallData::setSourceMapURL() {
-  RootedScriptSourceObject sourceObject(cx, EnsureSourceObject(cx, obj));
+  Rooted<ScriptSourceObject*> sourceObject(cx, EnsureSourceObject(cx, obj));
   if (!sourceObject) {
     return false;
   }
@@ -543,7 +543,7 @@ class DebuggerSourceGetSourceMapURLMatcher {
       : cx_(cx), result_(result) {}
 
   using ReturnType = bool;
-  ReturnType match(HandleScriptSourceObject sourceObject) {
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
     MOZ_ASSERT(ss);
     if (!ss->hasSourceMapURL()) {
@@ -589,7 +589,7 @@ bool DebuggerSource::CallData::getSourceMapURL() {
 }
 
 template <typename Unit>
-static JSScript* ReparseSource(JSContext* cx, HandleScriptSourceObject sso) {
+static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso) {
   AutoRealm ar(cx, sso);
   ScriptSource* ss = sso->source();
 
@@ -614,7 +614,7 @@ static JSScript* ReparseSource(JSContext* cx, HandleScriptSourceObject sso) {
 }
 
 bool DebuggerSource::CallData::reparse() {
-  RootedScriptSourceObject sourceObject(cx, EnsureSourceObject(cx, obj));
+  Rooted<ScriptSourceObject*> sourceObject(cx, EnsureSourceObject(cx, obj));
   if (!sourceObject) {
     return false;
   }
