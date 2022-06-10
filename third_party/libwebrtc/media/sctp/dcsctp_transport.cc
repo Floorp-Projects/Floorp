@@ -37,6 +37,13 @@ namespace webrtc {
 namespace {
 using ::dcsctp::SendPacketStatus;
 
+// When there is packet loss for a long time, the SCTP retry timers will use
+// exponential backoff, which can grow to very long durations and when the
+// connection recovers, it may take a long time to reach the new backoff
+// duration. By limiting it to a reasonable limit, the time to recover reduces.
+constexpr dcsctp::DurationMs kMaxTimerBackoffDuration =
+    dcsctp::DurationMs(3000);
+
 enum class WebrtcPPID : dcsctp::PPID::UnderlyingType {
   // https://www.rfc-editor.org/rfc/rfc8832.html#section-8.1
   kDCEP = 50,
@@ -156,6 +163,10 @@ bool DcSctpTransport::Start(int local_sctp_port,
     options.local_port = local_sctp_port;
     options.remote_port = remote_sctp_port;
     options.max_message_size = max_message_size;
+    options.max_timer_backoff_duration = kMaxTimerBackoffDuration;
+    // Don't close the connection automatically on too many retransmissions.
+    options.max_retransmissions = absl::nullopt;
+    options.max_init_retransmits = absl::nullopt;
 
     std::unique_ptr<dcsctp::PacketObserver> packet_observer;
     if (RTC_LOG_CHECK_LEVEL(LS_VERBOSE)) {
