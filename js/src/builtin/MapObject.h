@@ -381,7 +381,7 @@ template <SetInitGetPrototypeOp getPrototypeOp, SetInitIsBuiltinOp isBuiltinOp>
   }
 
   // Get the canonical prototype object.
-  RootedNativeObject setProto(cx, getPrototypeOp(cx, cx->global()));
+  Rooted<NativeObject*> setProto(cx, getPrototypeOp(cx, cx->global()));
   if (!setProto) {
     return false;
   }

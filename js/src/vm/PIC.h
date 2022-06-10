@@ -147,8 +147,8 @@ struct ForOfPIC {
     const GCPtrObject picObject_;
 
     // Pointer to canonical Array.prototype and ArrayIterator.prototype
-    GCPtrNativeObject arrayProto_;
-    GCPtrNativeObject arrayIteratorProto_;
+    GCPtr<NativeObject*> arrayProto_;
+    GCPtr<NativeObject*> arrayIteratorProto_;
 
     // Shape of matching Array.prototype object, and slot containing
     // the @@iterator for it, and the canonical value.

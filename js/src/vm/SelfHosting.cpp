@@ -3026,7 +3026,7 @@ static bool GetComputedIntrinsic(JSContext* cx, HandlePropertyName name,
   // save them on a special "computed intrinsics holder". We then can check for
   // our required values and cache on the normal intrinsics holder.
 
-  RootedNativeObject computedIntrinsicsHolder(
+  Rooted<NativeObject*> computedIntrinsicsHolder(
       cx, cx->global()->getComputedIntrinsicsHolder());
   if (!computedIntrinsicsHolder) {
     auto computedIntrinsicHolderGuard = mozilla::MakeScopeExit(

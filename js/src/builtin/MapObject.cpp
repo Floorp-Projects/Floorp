@@ -484,7 +484,7 @@ const JSPropertySpec MapObject::staticProperties[] = {
 
 /* static */ bool MapObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   RootedValue entriesFn(cx);
   RootedId entriesId(cx, NameToId(cx->names().entries));
@@ -1274,7 +1274,7 @@ const JSPropertySpec SetObject::staticProperties[] = {
 
 /* static */ bool SetObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   RootedValue valuesFn(cx);
   RootedId valuesId(cx, NameToId(cx->names().values));

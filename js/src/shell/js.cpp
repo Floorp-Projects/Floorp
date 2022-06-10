@@ -7902,7 +7902,7 @@ class StreamCacheEntryObject : public NativeObject {
       return false;
     }
 
-    RootedNativeObject obj(
+    Rooted<NativeObject*> obj(
         cx, NewObjectWithGivenProto<StreamCacheEntryObject>(cx, nullptr));
     if (!obj) {
       return false;

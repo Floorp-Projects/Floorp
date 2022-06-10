@@ -1767,7 +1767,7 @@ RObjectState::RObjectState(CompactBufferReader& reader) {
 bool RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject object(cx, &iter.read().toObject());
   RootedValue val(cx);
-  RootedNativeObject nativeObject(cx, &object->as<NativeObject>());
+  Rooted<NativeObject*> nativeObject(cx, &object->as<NativeObject>());
   MOZ_ASSERT(nativeObject->slotSpan() == numSlots());
 
   for (size_t i = 0; i < numSlots(); i++) {

@@ -636,7 +636,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
       }
     }
     if (!data.capture_name_map.is_null()) {
-      RootedNativeObject namedCaptures(cx, data.capture_name_map->inner());
+      Rooted<NativeObject*> namedCaptures(cx, data.capture_name_map->inner());
       if (!RegExpShared::initializeNamedCaptures(cx, re, namedCaptures)) {
         return false;
       }

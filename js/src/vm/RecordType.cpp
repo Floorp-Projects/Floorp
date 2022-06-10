@@ -178,7 +178,7 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
 }
 
 bool RecordType::finishInitialization(JSContext* cx) {
-  RootedNativeObject obj(cx, this);
+  Rooted<NativeObject*> obj(cx, this);
   if (!JSObject::setFlag(cx, obj, ObjectFlag::NotExtensible)) {
     return false;
   }

@@ -78,7 +78,7 @@ NativeObject* DebuggerSource::initClass(JSContext* cx,
 /* static */
 DebuggerSource* DebuggerSource::create(JSContext* cx, HandleObject proto,
                                        Handle<DebuggerSourceReferent> referent,
-                                       HandleNativeObject debugger) {
+                                       Handle<NativeObject*> debugger) {
   Rooted<DebuggerSource*> sourceObj(
       cx, NewTenuredObjectWithGivenProto<DebuggerSource>(cx, proto));
   if (!sourceObj) {

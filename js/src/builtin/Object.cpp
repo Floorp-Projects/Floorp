@@ -1457,7 +1457,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
   }
 #endif
 
-  HandleNativeObject nobj = obj.as<NativeObject>();
+  Handle<NativeObject*> nobj = obj.as<NativeObject>();
 
   // Resolve lazy properties on |nobj|.
   if (JSEnumerateOp enumerate = nobj->getClass()->getEnumerate()) {
@@ -1811,7 +1811,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
 
     // Step 4.a.i.
     if (obj->is<NativeObject>()) {
-      HandleNativeObject nobj = obj.as<NativeObject>();
+      Handle<NativeObject*> nobj = obj.as<NativeObject>();
       if (id.isInt() && nobj->containsDenseElement(id.toInt())) {
         value.set(nobj->getDenseElement(id.toInt()));
       } else {

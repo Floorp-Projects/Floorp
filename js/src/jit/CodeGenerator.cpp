@@ -11522,7 +11522,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   }
   pushArg(object);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, int32_t, HandleValue,
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue,
                       bool strict);
   callVM<Fn, jit::SetDenseElement>(ins);
 
@@ -13206,7 +13206,7 @@ void CodeGenerator::visitAddSlotAndCallAddPropHook(
   pushArg(obj);
 
   using Fn =
-      bool (*)(JSContext*, HandleNativeObject, HandleValue, Handle<Shape*>);
+      bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, Handle<Shape*>);
   callVM<Fn, AddSlotAndCallAddPropHook>(ins);
 }
 
@@ -16505,7 +16505,7 @@ void CodeGenerator::visitCallNativeGetElement(LCallNativeGetElement* lir) {
   pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(object)));
   pushArg(object);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, int32_t,
                       MutableHandleValue);
   callVM<Fn, js::NativeGetElement>(lir);
 }

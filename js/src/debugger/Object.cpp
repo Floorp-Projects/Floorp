@@ -1540,7 +1540,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
 NativeObject* DebuggerObject::initClass(JSContext* cx,
                                         Handle<GlobalObject*> global,
                                         HandleObject debugCtor) {
-  RootedNativeObject objectProto(
+  Rooted<NativeObject*> objectProto(
       cx, InitClass(cx, debugCtor, nullptr, &class_, construct, 0, properties_,
                     methods_, nullptr, nullptr));
 
@@ -1559,7 +1559,7 @@ NativeObject* DebuggerObject::initClass(JSContext* cx,
 /* static */
 DebuggerObject* DebuggerObject::create(JSContext* cx, HandleObject proto,
                                        HandleObject referent,
-                                       HandleNativeObject debugger) {
+                                       Handle<NativeObject*> debugger) {
   DebuggerObject* obj =
       IsInsideNursery(referent)
           ? NewObjectWithGivenProto<DebuggerObject>(cx, proto)

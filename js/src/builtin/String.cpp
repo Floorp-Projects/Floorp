@@ -3835,7 +3835,7 @@ JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
 
 static bool StringClassFinish(JSContext* cx, HandleObject ctor,
                               HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   // Create "trimLeft" as an alias for "trimStart".
   RootedValue trimFn(cx);

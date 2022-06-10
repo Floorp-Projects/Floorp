@@ -623,7 +623,8 @@ inline bool NativeObject::denseElementsMaybeInIteration() {
  *  - Otherwise no property was resolved. Set propp to NotFound and return true.
  */
 static MOZ_ALWAYS_INLINE bool CallResolveOp(JSContext* cx,
-                                            HandleNativeObject obj, HandleId id,
+                                            Handle<NativeObject*> obj,
+                                            HandleId id,
                                             PropertyResult* propp) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 

@@ -189,7 +189,7 @@ static bool SortComparatorIntegerIds(jsid a, jsid b, bool* lessOrEqualp) {
 }
 
 template <bool CheckForDuplicates>
-static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
+static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
                                       unsigned flags,
                                       MutableHandle<PropertyKeySet> visited,
                                       MutableHandleIdVector props) {
@@ -386,7 +386,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
   return true;
 }
 
-static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
+static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
                                       unsigned flags,
                                       MutableHandle<PropertyKeySet> visited,
                                       MutableHandleIdVector props,
