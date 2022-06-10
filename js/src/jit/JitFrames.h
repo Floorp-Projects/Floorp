@@ -689,33 +689,7 @@ class DirectWasmJitCallFrameLayout {
 
 class ICStub;
 
-class JitStubFrameLayout : public CommonFrameLayout {
-  /* clang-format off */
-    // Info on the stack
-    //
-    // --------------------
-    // |JitStubFrameLayout|
-    // +------------------+
-    // | - Descriptor     | => Marks end of FrameType::IonJS
-    // | - returnaddres   |
-    // +------------------+
-    // | - StubPtr        | => First thing pushed in a stub only when the stub will do
-    // --------------------    a vmcall. Else we cannot have JitStubFrame. But technically
-    //                         not a member of the layout.
-  /* clang-format on */
-
- public:
-  static size_t Size() { return sizeof(JitStubFrameLayout); }
-
-  static inline int reverseOffsetOfStubPtr() { return -int(sizeof(void*)); }
-
-  inline ICStub* maybeStubPtr() {
-    uint8_t* fp = reinterpret_cast<uint8_t*>(this);
-    return *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr());
-  }
-};
-
-class BaselineStubFrameLayout : public JitStubFrameLayout {
+class BaselineStubFrameLayout : public CommonFrameLayout {
   /* clang-format off */
     // Info on the stack
     //
@@ -738,6 +712,13 @@ class BaselineStubFrameLayout : public JitStubFrameLayout {
 
   static inline int reverseOffsetOfSavedFramePtr() {
     return -int(2 * sizeof(void*));
+  }
+
+  static inline int reverseOffsetOfStubPtr() { return -int(sizeof(void*)); }
+
+  inline ICStub* maybeStubPtr() {
+    uint8_t* fp = reinterpret_cast<uint8_t*>(this);
+    return *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr());
   }
 };
 
