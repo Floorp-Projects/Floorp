@@ -62,12 +62,7 @@ interface nsITransfer : nsIWebProgressListener2 {
      *
      * @param aDownloadClassification Indicates wheter the download is unwanted,
      *                                should be considered dangerous or insecure. 
-     *
      * @param aReferrerInfo The Referrer this download is started with
-     *
-     * @param aOpenDownloadsListOnStart true (default) - Open downloads panel.
-     *                                  false - Only show an icon indicator.
-     *                                  This parameter is optional.
      */
     void init(in nsIURI aSource,
               in nsIURI aSourceOriginalURI,
@@ -79,8 +74,7 @@ interface nsITransfer : nsIWebProgressListener2 {
               in nsICancelable aCancelable,
               in boolean aIsPrivate,
               in long aDownloadClassification,
-              in nsIReferrerInfo aReferrerInfo,
-              [optional] in boolean aOpenDownloadsListOnStart);
+              in nsIReferrerInfo aReferrerInfo);
 
     /**
      * Same as init, but allows for passing the browsingContext
@@ -103,7 +97,6 @@ interface nsITransfer : nsIWebProgressListener2 {
                                     in boolean aIsPrivate,
                                     in long aDownloadClassification,
                                     in nsIReferrerInfo aReferrerInfo,
-                                    [optional] in boolean aOpenDownloadsListOnStart,
                                     in BrowsingContext aBrowsingContext,
                                     in boolean aHandleInternally,
                                     in nsIHttpChannel aHttpChannel);

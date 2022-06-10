@@ -1281,7 +1281,6 @@ nsExternalAppHandler::nsExternalAppHandler(
       mIsFileChannel(false),
       mShouldCloseWindow(false),
       mHandleInternally(false),
-      mDialogShowing(false),
       mReason(aReason),
       mTempFileIsExecutable(false),
       mTimeDownloadStarted(0),
@@ -1857,9 +1856,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     // this will create a reference cycle (the dialog holds a reference to us as
     // nsIHelperAppLauncher), which will be broken in Cancel or CreateTransfer.
     nsCOMPtr<nsIInterfaceRequestor> dialogParent = GetDialogParent();
-    // Don't pop up the downloads panel since we're already going to pop up the
-    // UCT dialog for basically the same effect.
-    mDialogShowing = true;
     rv = mDialog->Show(this, dialogParent, mReason);
 
     // what do we do if the dialog failed? I guess we should call Cancel and
@@ -2356,15 +2352,14 @@ nsresult nsExternalAppHandler::CreateTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, target, u""_ns, mMimeInfo, mTimeDownloadStarted, mTempFile,
         this, channel && NS_UsePrivateBrowsing(channel),
-        mDownloadClassification, referrerInfo, !mDialogShowing,
-        mBrowsingContext, mHandleInternally, nullptr);
+        mDownloadClassification, referrerInfo, mBrowsingContext,
+        mHandleInternally, nullptr);
   } else {
     rv = transfer->Init(mSourceUrl, nullptr, target, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification, referrerInfo, !mDialogShowing);
+                        mDownloadClassification, referrerInfo);
   }
-  mDialogShowing = false;
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2449,13 +2444,13 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, pseudoTarget, u""_ns, mMimeInfo, mTimeDownloadStarted,
         mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
-        mDownloadClassification, referrerInfo, true, mBrowsingContext,
+        mDownloadClassification, referrerInfo, mBrowsingContext,
         mHandleInternally, httpChannel);
   } else {
     rv = transfer->Init(mSourceUrl, nullptr, pseudoTarget, u""_ns, mMimeInfo,
                         mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
-                        mDownloadClassification, referrerInfo, true);
+                        mDownloadClassification, referrerInfo);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2465,16 +2460,11 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::SaveDestinationAvailable(nsIFile* aFile,
-                                                        bool aDialogWasShown) {
-  if (aFile) {
-    if (aDialogWasShown) {
-      mDialogShowing = true;
-    }
+nsresult nsExternalAppHandler::SaveDestinationAvailable(nsIFile* aFile) {
+  if (aFile)
     ContinueSave(aFile);
-  } else {
+  else
     Cancel(NS_BINDING_ABORTED);
-  }
 
   return NS_OK;
 }
@@ -2746,7 +2736,6 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason) {
   // Break our reference cycle with the helper app dialog (set up in
   // OnStartRequest)
   mDialog = nullptr;
-  mDialogShowing = false;
 
   mRequest = nullptr;
 

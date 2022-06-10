@@ -52,6 +52,22 @@ add_setup(async function() {
   });
 });
 
+async function closeDownloadsPanel() {
+  if (DownloadsPanel.panel.state !== "closed") {
+    let hiddenPromise = BrowserTestUtils.waitForEvent(
+      DownloadsPanel.panel,
+      "popuphidden"
+    );
+    DownloadsPanel.hidePanel();
+    await hiddenPromise;
+  }
+  is(
+    DownloadsPanel.panel.state,
+    "closed",
+    "Check that the download panel is closed"
+  );
+}
+
 /**
  * Check clicking the download button saves the file and doesn't open a new viewer
  */
@@ -59,10 +75,7 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
   const pdfUrl = TESTROOT + "file_pdfjs_test.pdf";
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.improvements_to_download_panel", true]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -74,6 +87,7 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
       info(`${tabCount} tabs are open at the start of the test`);
 
       let downloadList = await Downloads.getList(Downloads.PUBLIC);
+      const initialDownloadCount = (await downloadList.getAll()).length;
 
       let filePickerShown = createPromiseForFilePicker();
 
@@ -86,16 +100,23 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
       info("Waiting for a filename to be picked from the file picker");
       await filePickerShown;
 
+      // check that resulted in a download being added to the list. The
+      // download panel should not open.
       await downloadFinishedPromise;
-      ok(true, "A download was added when we clicked download");
-
-      // See bug 1739348 - don't show panel for downloads that opened dialogs
-      ok(
-        !DownloadsPanel.isPanelShowing,
-        "The download panel did not open, since the file picker was shown already"
+      is(
+        DownloadsPanel.panel.state,
+        "closed",
+        "Check the download panel state is 'closed'"
+      );
+      downloadList = await Downloads.getList(Downloads.PUBLIC);
+      const allDownloads = await downloadList.getAll();
+      let currentDownloadCount = allDownloads.length;
+      is(
+        currentDownloadCount,
+        initialDownloadCount + 1,
+        "A download was added when we clicked download"
       );
 
-      const allDownloads = await downloadList.getAll();
       const dl = allDownloads.find(dl => dl.source.originalUrl === pdfUrl);
       ok(!!dl, "The pdf download has the correct url in source.originalUrl");
 
