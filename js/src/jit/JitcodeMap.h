@@ -372,8 +372,7 @@ class JitcodeGlobalEntry {
   };
 
   // QueryEntry is never stored in the table, just used for queries
-  // where an instance of JitcodeGlobalEntry is required to do tree
-  // lookups.
+  // where an instance of JitcodeGlobalEntry is required to do lookups.
   struct QueryEntry : public BaseEntry {
     void init(void* addr) { BaseEntry::init(Query, nullptr, addr, addr); }
     uint8_t* addr() const {
@@ -403,8 +402,8 @@ class JitcodeGlobalEntry {
     // Dummy entries.
     DummyEntry dummy_;
 
-    // When doing queries on the SplayTree for particular addresses,
-    // the query addresses are representd using a QueryEntry.
+    // When doing queries for particular addresses, the query addresses are
+    // represented using a QueryEntry.
     QueryEntry query_;
   };
 
