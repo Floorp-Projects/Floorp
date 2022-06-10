@@ -20,7 +20,10 @@
 
   <body>
     <nav>
-      <div class="brand-logo"></div>
+      <div class="content-container brand-logo">
+        <span class="brand-icon"></span>
+        <span class="brand-feature-name" data-l10n-id="firefoxview-page-title"></span>
+      </div>
     </nav>
     <main>
       <template id="sync-setup-template">
@@ -84,17 +87,20 @@
         </div>
       </template>
 
-      <section is="tabs-pickup-container" id="tabs-pickup-container">
-        <h1 data-l10n-id="firefoxview-tabpickup-header"></h1>
-        <p data-l10n-id="firefoxview-tabpickup-description"></p>
+      <section class="content-container" is="tabs-pickup-container" id="tabs-pickup-container">
+        <header class="page-section-header">
+          <h1 data-l10n-id="firefoxview-tabpickup-header"></h1>
+          <button class="ghost-button twisty icon arrow-up"></button>
+          <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
+        </header>
       </section>
-      <aside id="colorways">
-        <div>
+      <aside class="content-container">
+        <div id="colorways">
           <button data-l10n-id="firefoxview-colorways-button" id="colorways-button"></button>
           <div id="colorways-no-collection-message" data-l10n-id="firefoxview-colorways-no-collection-label"></div>
         </div>
       </aside>
-      <section is="recently-closed-tabs-container" id="recently-closed-tabs-container">
+      <section class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container">
         <header class="page-section-header">
           <h1 data-l10n-id="firefoxview-closed-tabs-title" ></h1>
           <button data-l10n-id="firefoxview-closed-tabs-collapse-button" id="collapsible-tabs-button" class="ghost-button twisty icon arrow-up"></button>
