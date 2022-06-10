@@ -108,6 +108,7 @@ UNIFIED_SOURCES += [
     "nsArrayEnumerator.cpp",
     "nsArrayUtils.cpp",
     "nsAtomTable.cpp",
+    "nsCharSeparatedTokenizer.cpp",
     "nsCOMArray.cpp",
     "nsCRT.cpp",
     "nsDeque.cpp",

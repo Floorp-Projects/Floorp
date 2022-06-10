@@ -21,3 +21,6 @@ void nsTPromiseFlatString<T>::Init(const substring_type& str) {
     this->Assign(str);
   }
 }
+
+template class nsTPromiseFlatString<char>;
+template class nsTPromiseFlatString<char16_t>;

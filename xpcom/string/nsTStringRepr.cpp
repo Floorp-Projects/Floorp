@@ -187,3 +187,6 @@ bool nsTStringRepr<T>::EqualsIgnoreCase(const std::string_view& aString) const {
 }
 
 }  // namespace mozilla::detail
+
+template class mozilla::detail::nsTStringRepr<char>;
+template class mozilla::detail::nsTStringRepr<char16_t>;

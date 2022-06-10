@@ -67,3 +67,9 @@ void nsTString<T>::Rebind(const char_type* data, size_type length) {
   this->SetData(const_cast<char_type*>(data), length, DataFlags::TERMINATED);
   this->AssertValidDependentString();
 }
+
+template class nsTString<char>;
+template class nsTString<char16_t>;
+
+template class nsTAutoStringN<char, 64>;
+template class nsTAutoStringN<char16_t, 64>;
