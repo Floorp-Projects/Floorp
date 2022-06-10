@@ -42,6 +42,9 @@ PROXY_SECONDARY_METHOD1(void,
 PROXY_SECONDARY_METHOD1(void,
                         RemoveEncodedSink,
                         rtc::VideoSinkInterface<RecordableEncodedFrame>*)
+PROXY_SECONDARY_METHOD1(void,
+                        ProcessConstraints,
+                        const webrtc::VideoTrackSourceConstraints&)
 END_PROXY_MAP(VideoTrackSource)
 
 }  // namespace webrtc

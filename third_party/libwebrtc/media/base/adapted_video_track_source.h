@@ -86,6 +86,8 @@ class RTC_EXPORT AdaptedVideoTrackSource
       rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame>* sink) override {}
   void RemoveEncodedSink(
       rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame>* sink) override {}
+  void ProcessConstraints(
+      const webrtc::VideoTrackSourceConstraints& constraints) override;
 
   cricket::VideoAdapter video_adapter_;
 
