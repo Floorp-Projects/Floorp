@@ -595,6 +595,8 @@ class _ASRouter {
 
   // Fetch and decode the message provider pref JSON, and update the message providers
   async _updateMessageProviders() {
+    lazy.ASRouterPreferences.console.debug("entering updateMessageProviders");
+
     const previousProviders = this.state.providers;
     const providers = await Promise.all(
       [
@@ -777,6 +779,10 @@ class _ASRouter {
       : this.state.providers.filter(provider =>
           MessageLoaderUtils.shouldProviderUpdate(provider)
         );
+    lazy.ASRouterPreferences.console.debug(
+      "entering loadMessagesFromAllProviders"
+    );
+
     await this.loadAllMessageGroups();
     // Don't do extra work if we don't need any updates
     if (needsUpdate.length) {
@@ -984,6 +990,11 @@ class _ASRouter {
   }
 
   setState(callbackOrObj) {
+    lazy.ASRouterPreferences.console.debug(
+      "in setState, callbackOrObj = ",
+      callbackOrObj
+    );
+    lazy.ASRouterPreferences.console.trace();
     const newState =
       typeof callbackOrObj === "function"
         ? callbackOrObj(this.state)
@@ -1090,7 +1101,7 @@ class _ASRouter {
   }
 
   isUnblockedMessage(message) {
-    let { state } = this;
+    const { state } = this;
     return (
       !state.messageBlockList.includes(message.id) &&
       (!message.campaign ||
@@ -1366,25 +1377,45 @@ class _ASRouter {
     returnAll = false,
   }) {
     let shouldCache;
+    lazy.ASRouterPreferences.console.debug(
+      "in handleMessageRequest, arguments = ",
+      Array.from(arguments) // eslint-disable-line prefer-rest-params
+    );
+    lazy.ASRouterPreferences.console.trace();
     const messages =
       candidates ||
       this.state.messages.filter(m => {
         if (provider && m.provider !== provider) {
+          lazy.ASRouterPreferences.console.debug(m.id, " filtered by provider");
           return false;
         }
         if (template && m.template !== template) {
+          lazy.ASRouterPreferences.console.debug(m.id, " filtered by template");
           return false;
         }
         if (triggerId && !m.trigger) {
+          lazy.ASRouterPreferences.console.debug(m.id, " filtered by trigger");
           return false;
         }
         if (triggerId && m.trigger.id !== triggerId) {
+          lazy.ASRouterPreferences.console.debug(
+            m.id,
+            " filtered by triggerId"
+          );
           return false;
         }
         if (!this.isUnblockedMessage(m)) {
+          lazy.ASRouterPreferences.console.debug(
+            m.id,
+            " filtered because blocked"
+          );
           return false;
         }
         if (!this.isBelowFrequencyCaps(m)) {
+          lazy.ASRouterPreferences.console.debug(
+            m.id,
+            " filtered because capped"
+          );
           return false;
         }
 
@@ -1423,6 +1454,12 @@ class _ASRouter {
   }
 
   blockMessageById(idOrIds) {
+    lazy.ASRouterPreferences.console.debug(
+      "blockMessageById called, idOrIds = ",
+      idOrIds
+    );
+    lazy.ASRouterPreferences.console.trace();
+
     const idsToBlock = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
 
     return this.setState(state => {
