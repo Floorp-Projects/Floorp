@@ -160,6 +160,7 @@ rtc_library("dcsctp_socket") {
     "../tx:send_queue",
   ]
   sources = [
+    "callback_deferrer.cc",
     "callback_deferrer.h",
     "dcsctp_socket.cc",
     "dcsctp_socket.h",
