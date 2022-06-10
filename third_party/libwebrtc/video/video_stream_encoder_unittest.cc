@@ -8210,36 +8210,6 @@ TEST_F(VideoStreamEncoderTest,
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest, QualityScalingAllowed_IsQpTrustedSetFalse) {
-  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
-
-  // Disable scaling settings in encoder info.
-  fake_encoder_.SetQualityScaling(false);
-  // Set QP not trusted in encoder info.
-  fake_encoder_.SetIsQpTrusted(false);
-  // Enable quality scaling in encoder config.
-  video_encoder_config.is_quality_scaling_allowed = true;
-  ConfigureEncoder(std::move(video_encoder_config));
-
-  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
-      DataRate::BitsPerSec(kTargetBitrateBps),
-      DataRate::BitsPerSec(kTargetBitrateBps),
-      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
-
-  test::FrameForwarder source;
-  video_stream_encoder_->SetSource(
-      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
-  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
-  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
-
-  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
-  WaitForEncodedFrame(1);
-  video_stream_encoder_->TriggerQualityLow();
-  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
-
-  video_stream_encoder_->Stop();
-}
-
 TEST_F(VideoStreamEncoderTest, QualityScalingNotAllowed_IsQpTrustedSetTrue) {
   VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
 
@@ -8266,6 +8236,147 @@ TEST_F(VideoStreamEncoderTest, QualityScalingNotAllowed_IsQpTrustedSetTrue) {
   WaitForEncodedFrame(1);
   video_stream_encoder_->TriggerQualityLow();
   EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       QualityScalingNotAllowedAndQPIsTrusted_BandwidthScalerDisable) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(true);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = false;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       QualityScalingNotAllowedAndQPIsNotTrusted_BandwidthScalerDisable) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = false;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, EncoderProvideLimitsWhenQPIsNotTrusted) {
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+
+  const int MinEncBitrateKbps = 30;
+  const int MaxEncBitrateKbps = 100;
+  const int MinStartBitrateKbp = 50;
+  const VideoEncoder::ResolutionBitrateLimits encoder_bitrate_limits(
+      /*frame_size_pixels=*/codec_width_ * codec_height_,
+      /*min_start_bitrate_bps=*/MinStartBitrateKbp,
+      /*min_bitrate_bps=*/MinEncBitrateKbps * 1000,
+      /*max_bitrate_bps=*/MaxEncBitrateKbps * 1000);
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  fake_encoder_.SetResolutionBitrateLimits({encoder_bitrate_limits});
+
+  VideoEncoderConfig video_encoder_config;
+  test::FillEncoderConfiguration(kVideoCodecH264, 1, &video_encoder_config);
+  video_encoder_config.max_bitrate_bps = MaxEncBitrateKbps * 1000;
+  video_encoder_config.simulcast_layers[0].min_bitrate_bps =
+      MinEncBitrateKbps * 1000;
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength);
+
+  video_source_.IncomingCapturedFrame(CreateFrame(1, nullptr));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(
+      MaxEncBitrateKbps,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().maxBitrate));
+  EXPECT_EQ(
+      MinEncBitrateKbps,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().minBitrate));
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, EncoderDoesnotProvideLimitsWhenQPIsNotTrusted) {
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+
+  absl::optional<VideoEncoder::ResolutionBitrateLimits> suitable_bitrate_limit =
+      EncoderInfoSettings::
+          GetSinglecastBitrateLimitForResolutionWhenQpIsUntrusted(
+              codec_width_ * codec_height_,
+              EncoderInfoSettings::
+                  GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
+  EXPECT_TRUE(suitable_bitrate_limit.has_value());
+
+  const int MaxEncBitrate = suitable_bitrate_limit->max_bitrate_bps;
+  const int MinEncBitrate = suitable_bitrate_limit->min_bitrate_bps;
+  const int TargetEncBitrate = MaxEncBitrate;
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(TargetEncBitrate),
+      DataRate::BitsPerSec(TargetEncBitrate),
+      DataRate::BitsPerSec(TargetEncBitrate), 0, 0, 0);
+
+  VideoEncoderConfig video_encoder_config;
+  test::FillEncoderConfiguration(kVideoCodecH264, 1, &video_encoder_config);
+  video_encoder_config.max_bitrate_bps = MaxEncBitrate;
+  video_encoder_config.simulcast_layers[0].min_bitrate_bps = MinEncBitrate;
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength);
+
+  video_source_.IncomingCapturedFrame(CreateFrame(1, nullptr));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(
+      MaxEncBitrate / 1000,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().maxBitrate));
+  EXPECT_EQ(
+      MinEncBitrate / 1000,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().minBitrate));
 
   video_stream_encoder_->Stop();
 }
@@ -8330,6 +8441,102 @@ TEST_F(VideoStreamEncoderTest, QualityScalingAllowed_IsQpTrustedSetTrue) {
 
   video_stream_encoder_->Stop();
 }
+
+TEST_F(VideoStreamEncoderTest, QualityScalingAllowed_IsQpTrustedSetFalse) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Set QP not trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = true;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  // When quality_scaler doesn't work and is_quality_scaling_allowed is
+  // true,the bandwidth_quality_scaler_ works,so bw_limited_resolution is true.
+  EXPECT_TRUE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       QualityScalingAllowedAndQPIsTrusted_BandwidthScalerDisable) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(true);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = true;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  // bandwidth_quality_scaler isn't working, but quality_scaler is working.
+  EXPECT_TRUE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       QualityScalingAllowedAndQPIsNotTrusted_BandwidthScalerEnabled) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Set QP trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = true;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  EXPECT_TRUE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
 #endif
 
 // Test parameters: (VideoCodecType codec, bool allow_i420_conversion)

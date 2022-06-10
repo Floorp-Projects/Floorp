@@ -366,6 +366,8 @@ rtc_source_set("codec_globals_headers") {
 rtc_library("video_coding_utility") {
   visibility = [ "*" ]
   sources = [
+    "utility/bandwidth_quality_scaler.cc",
+    "utility/bandwidth_quality_scaler.h",
     "utility/decoded_frames_history.cc",
     "utility/decoded_frames_history.h",
     "utility/frame_dropper.cc",
@@ -412,6 +414,8 @@ rtc_library("video_coding_utility") {
     "../../rtc_base:rtc_numerics",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:weak_ptr",
+    "../../rtc_base/experiments:bandwidth_quality_scaler_settings",
+    "../../rtc_base/experiments:encoder_info_settings",
     "../../rtc_base/experiments:quality_scaler_settings",
     "../../rtc_base/experiments:quality_scaling_experiment",
     "../../rtc_base/experiments:rate_control_settings",
@@ -1055,6 +1059,7 @@ if (rtc_include_tests) {
       "timestamp_map_unittest.cc",
       "timing_unittest.cc",
       "unique_timestamp_counter_unittest.cc",
+      "utility/bandwidth_quality_scaler_unittest.cc",
       "utility/decoded_frames_history_unittest.cc",
       "utility/frame_dropper_unittest.cc",
       "utility/framerate_controller_deprecated_unittest.cc",
@@ -1130,6 +1135,7 @@ if (rtc_include_tests) {
       "../../rtc_base:rtc_numerics",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:task_queue_for_test",
+      "../../rtc_base/experiments:encoder_info_settings",
       "../../rtc_base/experiments:jitter_upper_bound_experiment",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:unused",
