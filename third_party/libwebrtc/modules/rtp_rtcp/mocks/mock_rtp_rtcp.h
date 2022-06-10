@@ -50,10 +50,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               RegisterRtpHeaderExtension,
               (absl::string_view uri, int id),
               (override));
-  MOCK_METHOD(int32_t,
-              DeregisterSendRtpHeaderExtension,
-              (RTPExtensionType type),
-              (override));
   MOCK_METHOD(void,
               DeregisterSendRtpHeaderExtension,
               (absl::string_view uri),

@@ -591,10 +591,6 @@ void ModuleRtpRtcpImpl2::RegisterRtpHeaderExtension(absl::string_view uri,
   RTC_CHECK(registered);
 }
 
-int32_t ModuleRtpRtcpImpl2::DeregisterSendRtpHeaderExtension(
-    const RTPExtensionType type) {
-  return rtp_sender_->packet_generator.DeregisterRtpHeaderExtension(type);
-}
 void ModuleRtpRtcpImpl2::DeregisterSendRtpHeaderExtension(
     absl::string_view uri) {
   rtp_sender_->packet_generator.DeregisterRtpHeaderExtension(uri);
