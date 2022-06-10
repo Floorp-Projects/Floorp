@@ -246,14 +246,6 @@ bool RTPSender::IsRtpHeaderExtensionRegistered(RTPExtensionType type) const {
   return rtp_header_extension_map_.IsRegistered(type);
 }
 
-int32_t RTPSender::DeregisterRtpHeaderExtension(RTPExtensionType type) {
-  MutexLock lock(&send_mutex_);
-  rtp_header_extension_map_.Deregister(type);
-  supports_bwe_extension_ = HasBweExtension(rtp_header_extension_map_);
-  UpdateHeaderSizes();
-  return 0;
-}
-
 void RTPSender::DeregisterRtpHeaderExtension(absl::string_view uri) {
   MutexLock lock(&send_mutex_);
   rtp_header_extension_map_.Deregister(uri);

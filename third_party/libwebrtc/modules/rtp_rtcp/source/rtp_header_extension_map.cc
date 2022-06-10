@@ -118,13 +118,6 @@ RTPExtensionType RtpHeaderExtensionMap::GetType(int id) const {
   return kInvalidType;
 }
 
-int32_t RtpHeaderExtensionMap::Deregister(RTPExtensionType type) {
-  if (IsRegistered(type)) {
-    ids_[type] = kInvalidId;
-  }
-  return 0;
-}
-
 void RtpHeaderExtensionMap::Deregister(absl::string_view uri) {
   for (const ExtensionInfo& extension : kExtensions) {
     if (extension.uri == uri) {
