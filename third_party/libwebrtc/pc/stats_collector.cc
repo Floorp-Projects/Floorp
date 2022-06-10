@@ -962,9 +962,9 @@ void StatsCollector::ExtractSessionInfo_s(SessionStats& session_stats) {
     }
 
     for (const auto& channel_iter : transport.stats.channel_stats) {
-      StatsReport::Id id(
+      StatsReport::Id channel_stats_id(
           StatsReport::NewComponentId(transport.name, channel_iter.component));
-      StatsReport* channel_report = reports_.ReplaceOrAddNew(id);
+      StatsReport* channel_report = reports_.ReplaceOrAddNew(channel_stats_id);
       channel_report->set_timestamp(stats_gathering_started_);
       channel_report->AddInt(StatsReport::kStatsValueNameComponent,
                              channel_iter.component);

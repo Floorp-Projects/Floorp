@@ -272,9 +272,9 @@ void RtcEventLogSession::WriteVideoRecvConfigs(size_t video_recv_streams,
     } while (SsrcUsed(ssrc, incoming_extensions_));
     RtpHeaderExtensionMap extensions = gen_.NewRtpHeaderExtensionMap();
     incoming_extensions_.emplace_back(ssrc, extensions);
-    auto event = gen_.NewVideoReceiveStreamConfig(ssrc, extensions);
-    event_log->Log(event->Copy());
-    video_recv_config_list_.push_back(std::move(event));
+    auto new_event = gen_.NewVideoReceiveStreamConfig(ssrc, extensions);
+    event_log->Log(new_event->Copy());
+    video_recv_config_list_.push_back(std::move(new_event));
   }
 }
 

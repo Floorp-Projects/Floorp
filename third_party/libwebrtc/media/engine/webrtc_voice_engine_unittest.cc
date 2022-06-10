@@ -1569,17 +1569,17 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedFmtpAmountOfRedundancy) {
   for (int i = 1; i < 32; i++) {
     parameters.codecs[0].params[""] += "/111";
     SetSendParameters(parameters);
-    const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(111, send_codec_spec.payload_type);
-    EXPECT_STRCASEEQ("opus", send_codec_spec.format.name.c_str());
-    EXPECT_EQ(112, send_codec_spec.red_payload_type);
+    const auto& send_codec_spec2 = *GetSendStreamConfig(kSsrcX).send_codec_spec;
+    EXPECT_EQ(111, send_codec_spec2.payload_type);
+    EXPECT_STRCASEEQ("opus", send_codec_spec2.format.name.c_str());
+    EXPECT_EQ(112, send_codec_spec2.red_payload_type);
   }
   parameters.codecs[0].params[""] += "/111";
   SetSendParameters(parameters);
-  const auto& send_codec_spec2 = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(111, send_codec_spec2.payload_type);
-  EXPECT_STRCASEEQ("opus", send_codec_spec2.format.name.c_str());
-  EXPECT_EQ(absl::nullopt, send_codec_spec2.red_payload_type);
+  const auto& send_codec_spec3 = *GetSendStreamConfig(kSsrcX).send_codec_spec;
+  EXPECT_EQ(111, send_codec_spec3.payload_type);
+  EXPECT_STRCASEEQ("opus", send_codec_spec3.format.name.c_str());
+  EXPECT_EQ(absl::nullopt, send_codec_spec3.red_payload_type);
 }
 
 // Test that WebRtcVoiceEngine reconfigures, rather than recreates its
