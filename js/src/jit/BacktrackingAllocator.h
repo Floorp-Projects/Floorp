@@ -11,8 +11,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
+#include "ds/AvlTree.h"
 #include "ds/PriorityQueue.h"
-#include "ds/SplayTree.h"
 #include "jit/RegisterAllocator.h"
 #include "jit/StackSlotAllocator.h"
 
@@ -558,7 +558,9 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
   PriorityQueue<QueueItem, QueueItem, 0, SystemAllocPolicy> allocationQueue;
 
-  using LiveRangeSet = SplayTree<LiveRange*, LiveRange>;
+  // This is a set of LiveRanges.  They must be non-overlapping.  Attempts to
+  // add an overlapping range will cause AvlTree::insert to MOZ_CRASH().
+  using LiveRangeSet = AvlTree<LiveRange*, LiveRange>;
 
   // Each physical register is associated with the set of ranges over which
   // that register is currently allocated.
@@ -595,7 +597,7 @@ class BacktrackingAllocator : protected RegisterAllocator {
   // Ranges where all registers must be spilled due to call instructions.
   using CallRangeList = InlineList<CallRange>;
   CallRangeList callRangesList;
-  SplayTree<CallRange*, CallRange> callRanges;
+  AvlTree<CallRange*, CallRange> callRanges;
 
   // Information about an allocated stack slot.
   struct SpillSlot : public TempObject,
@@ -773,7 +775,6 @@ class BacktrackingAllocator : protected RegisterAllocator {
 #ifdef JS_JITSPEW
   void dumpLiveRangesByVReg(const char* who);
   void dumpLiveRangesByBundle(const char* who);
-  struct PrintLiveRange;
   void dumpAllocations();
 #endif
 
