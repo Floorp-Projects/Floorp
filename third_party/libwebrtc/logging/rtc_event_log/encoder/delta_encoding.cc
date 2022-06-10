@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "logging/rtc_event_log/encoder/bit_writer.h"
 #include "logging/rtc_event_log/encoder/var_int.h"
 #include "rtc_base/bit_buffer.h"
 #include "rtc_base/bitstream_reader.h"
@@ -106,58 +107,6 @@ static_assert(static_cast<size_t>(EncodingType::kNumberOfEncodingTypes) <=
 constexpr bool kDefaultSignedDeltas = false;
 constexpr bool kDefaultValuesOptional = false;
 constexpr uint64_t kDefaultValueWidthBits = 64;
-
-// Wrap BitBufferWriter and extend its functionality by (1) keeping track of
-// the number of bits written and (2) owning its buffer.
-class BitWriter final {
- public:
-  explicit BitWriter(size_t byte_count)
-      : buffer_(byte_count, '\0'),
-        bit_writer_(reinterpret_cast<uint8_t*>(&buffer_[0]), buffer_.size()),
-        written_bits_(0),
-        valid_(true) {
-    RTC_DCHECK_GT(byte_count, 0);
-  }
-
-  void WriteBits(uint64_t val, size_t bit_count) {
-    RTC_DCHECK(valid_);
-    const bool success = bit_writer_.WriteBits(val, bit_count);
-    RTC_DCHECK(success);
-    written_bits_ += bit_count;
-  }
-
-  void WriteBits(const std::string& input) {
-    RTC_DCHECK(valid_);
-    for (std::string::value_type c : input) {
-      WriteBits(c, 8 * sizeof(std::string::value_type));
-    }
-  }
-
-  // Returns everything that was written so far.
-  // Nothing more may be written after this is called.
-  std::string GetString() {
-    RTC_DCHECK(valid_);
-    valid_ = false;
-
-    buffer_.resize(BitsToBytes(written_bits_));
-    written_bits_ = 0;
-
-    std::string result;
-    std::swap(buffer_, result);
-    return result;
-  }
-
- private:
-  std::string buffer_;
-  rtc::BitBufferWriter bit_writer_;
-  // Note: Counting bits instead of bytes wraps around earlier than it has to,
-  // which means the maximum length is lower than it could be. We don't expect
-  // to go anywhere near the limit, though, so this is good enough.
-  size_t written_bits_;
-  bool valid_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(BitWriter);
-};
 
 // Parameters for fixed-size delta-encoding/decoding.
 // These are tailored for the sequence which will be encoded (e.g. widths).

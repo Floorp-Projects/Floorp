@@ -32,6 +32,27 @@ rtc_source_set("rtc_event_log_api") {
   deps = [ "../api/rtc_event_log" ]
 }
 
+rtc_library("rtc_event_field") {
+  sources = [
+    "rtc_event_log/events/rtc_event_field_extraction.cc",
+    "rtc_event_log/events/rtc_event_field_extraction.h",
+  ]
+
+  deps = [
+    ":rtc_event_number_encodings",
+    "../api:array_view",
+    "../api/rtc_event_log",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:rtc_base_approved",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("rtc_stream_config") {
   sources = [
     "rtc_event_log/rtc_stream_config.cc",
@@ -190,14 +211,10 @@ rtc_library("rtc_event_video") {
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
-# TODO(eladalon): Break down into (1) encoder and (2) decoder; we don't need
-# the decoder code in the WebRTC library, only in unit tests and tools.
-rtc_library("rtc_event_log_impl_encoder") {
+rtc_library("rtc_event_number_encodings") {
   sources = [
-    "rtc_event_log/encoder/blob_encoding.cc",
-    "rtc_event_log/encoder/blob_encoding.h",
-    "rtc_event_log/encoder/delta_encoding.cc",
-    "rtc_event_log/encoder/delta_encoding.h",
+    "rtc_event_log/encoder/bit_writer.cc",
+    "rtc_event_log/encoder/bit_writer.h",
     "rtc_event_log/encoder/rtc_event_log_encoder_common.cc",
     "rtc_event_log/encoder/rtc_event_log_encoder_common.h",
     "rtc_event_log/encoder/var_int.cc",
@@ -207,6 +224,33 @@ rtc_library("rtc_event_log_impl_encoder") {
   defines = []
 
   deps = [
+    "../rtc_base:bitstream_reader",
+    "../rtc_base:checks",
+    "../rtc_base:ignore_wundef",
+    "../rtc_base:macromagic",
+    "../rtc_base:rtc_base_approved",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+# TODO(eladalon): Break down into (1) encoder and (2) decoder; we don't need
+# the decoder code in the WebRTC library, only in unit tests and tools.
+rtc_library("rtc_event_log_impl_encoder") {
+  sources = [
+    "rtc_event_log/encoder/blob_encoding.cc",
+    "rtc_event_log/encoder/blob_encoding.h",
+    "rtc_event_log/encoder/delta_encoding.cc",
+    "rtc_event_log/encoder/delta_encoding.h",
+  ]
+
+  defines = []
+
+  deps = [
+    ":rtc_event_number_encodings",
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api/transport:network_control",
@@ -332,6 +376,7 @@ if (rtc_enable_protobuf) {
       ":rtc_event_log2_proto",
       ":rtc_event_log_impl_encoder",
       ":rtc_event_log_proto",
+      ":rtc_event_number_encodings",
       ":rtc_event_pacing",
       ":rtc_event_rtp_rtcp",
       ":rtc_event_video",
@@ -371,6 +416,7 @@ if (rtc_enable_protobuf) {
         "rtc_event_log/encoder/delta_encoding_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_common_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_unittest.cc",
+        "rtc_event_log/events/rtc_event_field_extraction_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest_helper.cc",
         "rtc_event_log/rtc_event_log_unittest_helper.h",
@@ -380,12 +426,14 @@ if (rtc_enable_protobuf) {
         ":ice_log",
         ":rtc_event_audio",
         ":rtc_event_bwe",
+        ":rtc_event_field",
         ":rtc_event_frame_events",
         ":rtc_event_generic_packet_events",
         ":rtc_event_log2_proto",
         ":rtc_event_log_impl_encoder",
         ":rtc_event_log_parser",
         ":rtc_event_log_proto",
+        ":rtc_event_number_encodings",
         ":rtc_event_pacing",
         ":rtc_event_rtp_rtcp",
         ":rtc_event_video",
