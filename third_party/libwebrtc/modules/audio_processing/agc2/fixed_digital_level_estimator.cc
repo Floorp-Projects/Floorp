@@ -57,7 +57,7 @@ std::array<float, kSubFramesInFrame> FixedDigitalLevelEstimator::ComputeLevel(
 
   // Compute max envelope without smoothing.
   std::array<float, kSubFramesInFrame> envelope{};
-  for (size_t channel_idx = 0; channel_idx < float_frame.num_channels();
+  for (int channel_idx = 0; channel_idx < float_frame.num_channels();
        ++channel_idx) {
     const auto channel = float_frame.channel(channel_idx);
     for (int sub_frame = 0; sub_frame < kSubFramesInFrame; ++sub_frame) {

@@ -27,7 +27,7 @@ constexpr int kFramesPerSecond = 100;
 
 float FrameEnergy(const AudioFrameView<const float>& audio) {
   float energy = 0.0f;
-  for (size_t k = 0; k < audio.num_channels(); ++k) {
+  for (int k = 0; k < audio.num_channels(); ++k) {
     float channel_energy =
         std::accumulate(audio.channel(k).begin(), audio.channel(k).end(), 0.0f,
                         [](float a, float b) -> float { return a + b * b; });

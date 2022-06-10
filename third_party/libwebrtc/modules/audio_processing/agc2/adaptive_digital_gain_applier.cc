@@ -106,7 +106,7 @@ void CopyAudio(AudioFrameView<const float> src,
   RTC_DCHECK_GT(src.num_channels(), 0);
   RTC_DCHECK_GT(src.samples_per_channel(), 0);
   RTC_DCHECK_EQ(dst.size(), src.num_channels());
-  for (size_t c = 0; c < src.num_channels(); ++c) {
+  for (int c = 0; c < src.num_channels(); ++c) {
     rtc::ArrayView<const float> channel_view = src.channel(c);
     RTC_DCHECK_EQ(channel_view.size(), src.samples_per_channel());
     RTC_DCHECK_EQ(dst[c].size(), src.samples_per_channel());
