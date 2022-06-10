@@ -13,6 +13,7 @@ package org.webrtc;
 import android.graphics.Matrix;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 /**
@@ -53,8 +54,11 @@ public class VideoFrame implements RefCounted {
      * Returns a memory-backed frame in I420 format. If the pixel data is in another format, a
      * conversion will take place. All implementations must provide a fallback to I420 for
      * compatibility with e.g. the internal WebRTC software encoders.
+     *
+     * <p> Conversion may fail, for example if reading the pixel data from a texture fails. If the
+     * conversion fails, null is returned.
      */
-    @CalledByNative("Buffer") I420Buffer toI420();
+    @Nullable @CalledByNative("Buffer") I420Buffer toI420();
 
     @Override @CalledByNative("Buffer") void retain();
     @Override @CalledByNative("Buffer") void release();
