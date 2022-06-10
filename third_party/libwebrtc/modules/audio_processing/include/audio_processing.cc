@@ -82,7 +82,9 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
          analog_lhs.clipping_predictor.clipping_threshold ==
              analog_rhs.clipping_predictor.clipping_threshold &&
          analog_lhs.clipping_predictor.crest_factor_margin ==
-             analog_rhs.clipping_predictor.crest_factor_margin;
+             analog_rhs.clipping_predictor.crest_factor_margin &&
+         analog_lhs.clipping_predictor.use_predicted_step ==
+             analog_rhs.clipping_predictor.use_predicted_step;
 }
 
 bool Agc2Config::AdaptiveDigital::operator==(
@@ -186,6 +188,9 @@ std::string AudioProcessing::Config::ToString() const {
       << ", crest_factor_margin: "
       << gain_controller1.analog_gain_controller.clipping_predictor
              .crest_factor_margin
+      << ", use_predicted_step: "
+      << gain_controller1.analog_gain_controller.clipping_predictor
+             .use_predicted_step
       << " }}}, gain_controller2: { enabled: " << gain_controller2.enabled
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db
