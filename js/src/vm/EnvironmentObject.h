@@ -337,7 +337,7 @@ class CallObject : public EnvironmentObject {
    * Construct a bare-bones call object given a shape and a group.
    * The call object must be further initialized to be usable.
    */
-  static CallObject* create(JSContext* cx, HandleShape shape);
+  static CallObject* create(JSContext* cx, Handle<Shape*> shape);
 
   static CallObject* createTemplateObject(JSContext* cx, HandleScript script,
                                           HandleObject enclosing,
@@ -382,7 +382,8 @@ class CallObject : public EnvironmentObject {
 class VarEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t SCOPE_SLOT = 1;
 
-  static VarEnvironmentObject* createInternal(JSContext* cx, HandleShape shape,
+  static VarEnvironmentObject* createInternal(JSContext* cx,
+                                              Handle<Shape*> shape,
                                               HandleObject enclosing);
 
   void initScope(Scope* scope) {
@@ -531,7 +532,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
 
  protected:
   static LexicalEnvironmentObject* createTemplateObject(JSContext* cx,
-                                                        HandleShape shape,
+                                                        Handle<Shape*> shape,
                                                         HandleObject enclosing,
                                                         gc::InitialHeap heap);
 

@@ -544,7 +544,7 @@ class SharedShape : public js::Shape {
    * getInitialShape calls, until the new shape becomes unreachable in a GC
    * and the table entry is purged.
    */
-  static void insertInitialShape(JSContext* cx, HandleShape shape);
+  static void insertInitialShape(JSContext* cx, Handle<Shape*> shape);
 
   /*
    * Some object subclasses are allocated with a built-in set of properties.

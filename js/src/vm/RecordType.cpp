@@ -91,7 +91,7 @@ bool RecordType::copy(JSContext* cx, Handle<RecordType*> in,
 
 RecordType* RecordType::createUninitialized(JSContext* cx,
                                             uint32_t initialLength) {
-  RootedShape shape(cx, getInitialShape(cx));
+  Rooted<Shape*> shape(cx, getInitialShape(cx));
   if (!shape) {
     return nullptr;
   }

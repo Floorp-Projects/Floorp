@@ -685,7 +685,7 @@ T* TypedObject::create(JSContext* cx, js::gc::AllocKind allocKind,
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), TaggedProto(),
                                        /* nfixed = */ 0, ObjectFlags()));
   if (!shape) {

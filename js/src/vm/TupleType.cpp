@@ -274,7 +274,7 @@ TupleType* TupleType::create(JSContext* cx, uint32_t length,
 }
 
 static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
-  RootedShape shape(cx, TupleType::getInitialShape(cx));
+  Rooted<Shape*> shape(cx, TupleType::getInitialShape(cx));
   if (!shape) {
     return nullptr;
   }

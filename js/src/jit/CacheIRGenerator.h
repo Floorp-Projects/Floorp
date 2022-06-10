@@ -347,7 +347,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
                      HandleValue idVal, HandleValue rhsVal);
 
   AttachDecision tryAttachStub();
-  AttachDecision tryAttachAddSlotStub(HandleShape oldShape);
+  AttachDecision tryAttachAddSlotStub(Handle<Shape*> oldShape);
   void trackAttached(const char* name);
 
   DeferType deferType() const { return deferType_; }
@@ -488,7 +488,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   friend class InlinableNativeIRGenerator;
 
   ScriptedThisResult getThisShapeForScripted(HandleFunction calleeFunc,
-                                             MutableHandleShape result);
+                                             MutableHandle<Shape*> result);
 
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
 

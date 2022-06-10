@@ -4715,7 +4715,8 @@ static PropertyFlags SetPropertyFlags(JSOp op, bool isFunctionPrototype) {
   return PropertyFlags::defaultDataPropFlags;
 }
 
-AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
+AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
+    Handle<Shape*> oldShape) {
   ValOperandId objValId(writer.setInputOperandId(0));
   ValOperandId rhsValId;
   if (cacheKind_ == CacheKind::SetProp) {
@@ -5280,7 +5281,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_, GlobalObject::getArrayShapeWithDefaultProto(cx_));
+  Rooted<Shape*> shape(cx_, GlobalObject::getArrayShapeWithDefaultProto(cx_));
   if (!shape) {
     cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
@@ -9763,7 +9764,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
 // Remember the shape of the this object for any script being called as a
 // constructor, for later use during Ion compilation.
 ScriptedThisResult CallIRGenerator::getThisShapeForScripted(
-    HandleFunction calleeFunc, MutableHandleShape result) {
+    HandleFunction calleeFunc, MutableHandle<Shape*> result) {
   // Some constructors allocate their own |this| object.
   if (calleeFunc->constructorNeedsUninitializedThis()) {
     return ScriptedThisResult::UninitializedThis;
@@ -9826,7 +9827,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::NoAction;
   }
 
-  RootedShape thisShape(cx_);
+  Rooted<Shape*> thisShape(cx_);
   if (isConstructing && isSpecialized) {
     switch (getThisShapeForScripted(calleeFunc, &thisShape)) {
       case ScriptedThisResult::PlainObjectShape:

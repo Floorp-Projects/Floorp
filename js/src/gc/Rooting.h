@@ -23,13 +23,11 @@ class ArrayObject;
 class GlobalObject;
 class PlainObject;
 class ScriptSourceObject;
-class Shape;
 class Scope;
 
 // These are internal counterparts to the public types such as HandleObject.
 
 using HandleNativeObject = JS::Handle<NativeObject*>;
-using HandleShape = JS::Handle<Shape*>;
 using HandleAtom = JS::Handle<JSAtom*>;
 using HandleLinearString = JS::Handle<JSLinearString*>;
 using HandlePropertyName = JS::Handle<PropertyName*>;
@@ -38,7 +36,6 @@ using HandlePlainObject = JS::Handle<PlainObject*>;
 using HandleScriptSourceObject = JS::Handle<ScriptSourceObject*>;
 using HandleScope = JS::Handle<Scope*>;
 
-using MutableHandleShape = JS::MutableHandle<Shape*>;
 using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
 using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
 using MutableHandlePlainObject = JS::MutableHandle<PlainObject*>;
@@ -46,7 +43,6 @@ using MutableHandleScope = JS::MutableHandle<Scope*>;
 using MutableHandleArrayObject = JS::MutableHandle<ArrayObject*>;
 
 using RootedNativeObject = JS::Rooted<NativeObject*>;
-using RootedShape = JS::Rooted<Shape*>;
 using RootedAtom = JS::Rooted<JSAtom*>;
 using RootedLinearString = JS::Rooted<JSLinearString*>;
 using RootedPropertyName = JS::Rooted<PropertyName*>;
@@ -58,7 +54,6 @@ using RootedScope = JS::Rooted<Scope*>;
 
 using FunctionVector = JS::GCVector<JSFunction*>;
 using PropertyNameVector = JS::GCVector<PropertyName*>;
-using ShapeVector = JS::GCVector<Shape*>;
 using StringVector = JS::GCVector<JSString*>;
 
 } /* namespace js */

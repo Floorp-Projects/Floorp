@@ -656,7 +656,7 @@ class NativeObject : public JSObject {
   inline bool isInWholeCellBuffer() const;
 
   static inline NativeObject* create(JSContext* cx, gc::AllocKind kind,
-                                     gc::InitialHeap heap, HandleShape shape,
+                                     gc::InitialHeap heap, Handle<Shape*> shape,
                                      gc::AllocSite* site = nullptr);
 
 #ifdef DEBUG
@@ -1755,7 +1755,7 @@ inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
 }
 
 bool AddSlotAndCallAddPropHook(JSContext* cx, HandleNativeObject obj,
-                               HandleValue v, HandleShape newShape);
+                               HandleValue v, Handle<Shape*> newShape);
 
 }  // namespace js
 

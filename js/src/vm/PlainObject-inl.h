@@ -74,7 +74,7 @@ static MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx,
 
   MOZ_ASSERT(thisv.isMagic(JS_IS_CONSTRUCTING));
 
-  RootedShape shape(cx, ThisShapeForFunction(cx, callee, newTarget));
+  Rooted<Shape*> shape(cx, ThisShapeForFunction(cx, callee, newTarget));
   if (!shape) {
     return false;
   }
