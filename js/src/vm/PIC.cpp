@@ -112,7 +112,7 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
 }
 
 bool js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx,
-                                           HandleArrayObject array,
+                                           Handle<ArrayObject*> array,
                                            bool* optimized) {
   MOZ_ASSERT(optimized);
 

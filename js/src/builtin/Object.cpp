@@ -1331,7 +1331,7 @@ static bool FromPropertyDescriptorToArray(
     attrsAndKind |= ACCESSOR_DESCRIPTOR_KIND;
   }
 
-  RootedArrayObject result(cx);
+  Rooted<ArrayObject*> result(cx);
   if (!desc->isAccessorDescriptor()) {
     result = NewDenseFullyAllocatedArray(cx, 2);
     if (!result) {
@@ -1566,7 +1566,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 #ifdef ENABLE_RECORD_TUPLE
   else if (obj->is<RecordType>()) {
     RecordType* rec = &obj->as<RecordType>();
-    RootedArrayObject keys(cx, rec->keys());
+    Rooted<ArrayObject*> keys(cx, rec->keys());
     RootedId keyId(cx);
     RootedString keyStr(cx);
 
@@ -1953,7 +1953,8 @@ bool js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags,
   }
 
   // Step 5 (Inlined CreateArrayFromList).
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, keys.length()));
+  Rooted<ArrayObject*> array(cx,
+                             NewDenseFullyAllocatedArray(cx, keys.length()));
   if (!array) {
     return false;
   }

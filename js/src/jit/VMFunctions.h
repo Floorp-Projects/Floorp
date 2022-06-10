@@ -26,6 +26,7 @@ class JSLinearString;
 namespace js {
 
 class AbstractGeneratorObject;
+class ArrayObject;
 class GlobalObject;
 class InterpreterFrame;
 class LexicalScope;
@@ -373,7 +374,7 @@ template <ComparisonKind Kind>
 bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
                     bool* res);
 
-[[nodiscard]] bool ArrayPushDense(JSContext* cx, HandleArrayObject arr,
+[[nodiscard]] bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr,
                                   HandleValue v, uint32_t* length);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 [[nodiscard]] bool SetArrayLength(JSContext* cx, HandleObject obj,

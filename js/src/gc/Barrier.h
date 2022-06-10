@@ -1234,7 +1234,6 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 namespace js {
 
-class ArrayObject;
 class DebugEnvironmentProxy;
 class GlobalObject;
 class PropertyName;
@@ -1249,7 +1248,6 @@ using PreBarrieredId = PreBarriered<jsid>;
 using PreBarrieredObject = PreBarriered<JSObject*>;
 using PreBarrieredValue = PreBarriered<Value>;
 
-using GCPtrArrayObject = GCPtr<ArrayObject*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
 using GCPtrFunction = GCPtr<JSFunction*>;

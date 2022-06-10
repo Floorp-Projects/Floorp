@@ -1792,7 +1792,7 @@ bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper(
   masm.Push(id);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+  using Fn = bool (*)(JSContext * cx, Handle<ArrayObject*> obj, int32_t int_id,
                       HandleValue v, bool strict);
   callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
 

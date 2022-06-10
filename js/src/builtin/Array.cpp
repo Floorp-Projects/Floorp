@@ -586,7 +586,7 @@ static bool DeletePropertiesOrThrow(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static bool SetArrayLengthProperty(JSContext* cx, HandleArrayObject obj,
+static bool SetArrayLengthProperty(JSContext* cx, Handle<ArrayObject*> obj,
                                    HandleValue value) {
   RootedId id(cx, NameToId(cx->names().length));
   ObjectOpResult result;
@@ -633,7 +633,7 @@ bool js::ArrayLengthSetter(JSContext* cx, HandleObject obj, HandleId id,
                            HandleValue v, ObjectOpResult& result) {
   MOZ_ASSERT(id == NameToId(cx->names().length));
 
-  HandleArrayObject arr = obj.as<ArrayObject>();
+  Handle<ArrayObject*> arr = obj.as<ArrayObject>();
   MOZ_ASSERT(arr->lengthIsWritable(),
              "setter shouldn't be called if property is non-writable");
 
@@ -2122,7 +2122,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
     bool allInts = true;
     RootedValue v(cx);
     if (IsPackedArray(obj)) {
-      HandleArrayObject array = obj.as<ArrayObject>();
+      Handle<ArrayObject*> array = obj.as<ArrayObject>();
 
       for (uint32_t i = 0; i < len; i++) {
         if (!CheckForInterrupt(cx)) {
@@ -2233,7 +2233,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
-  HandleArrayObject arr = obj.as<ArrayObject>();
+  Handle<ArrayObject*> arr = obj.as<ArrayObject>();
 
   MOZ_ASSERT(!v.isMagic());
   MOZ_ASSERT(arr->lengthIsWritable());
@@ -2714,7 +2714,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
 }
 
 static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
-                              uint64_t count, HandleArrayObject result) {
+                              uint64_t count, Handle<ArrayObject*> result) {
   MOZ_ASSERT(result->length() == count);
 
   uint64_t startIndex = 0;
@@ -2973,7 +2973,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       MOZ_ASSERT(obj->is<NativeObject>());
 
       /* Step 16.b. */
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       if (targetIndex != 0 || !arr->tryShiftDenseElements(sourceIndex)) {
         arr->moveDenseElements(uint32_t(targetIndex), uint32_t(sourceIndex),
                                uint32_t(len - sourceIndex));
@@ -3047,7 +3047,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       // slow path handle it. We also have to ensure we maintain the
       // |capacity <= initializedLength| invariant for such objects. See
       // NativeObject::shrinkCapacityToInitializedLength.
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       if (!arr->lengthIsWritable() || !arr->isExtensible()) {
         return DenseElementResult::Incomplete;
       }
@@ -3077,7 +3077,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
       uint32_t start = uint32_t(actualStart);
       uint32_t length = uint32_t(len);
 
-      HandleArrayObject arr = obj.as<ArrayObject>();
+      Handle<ArrayObject*> arr = obj.as<ArrayObject>();
       arr->moveDenseElements(start + itemCount, start + deleteCount,
                              length - (start + deleteCount));
 
@@ -3496,7 +3496,7 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
 }
 
 static bool SliceSparse(JSContext* cx, HandleObject obj, uint64_t begin,
-                        uint64_t end, HandleArrayObject result) {
+                        uint64_t end, Handle<ArrayObject*> result) {
   MOZ_ASSERT(begin <= end);
 
   Vector<uint32_t> indexes(cx);
@@ -3603,7 +3603,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
     }
   }
 
-  RootedArrayObject narr(cx, NewDensePartlyAllocatedArray(cx, count));
+  Rooted<ArrayObject*> narr(cx, NewDensePartlyAllocatedArray(cx, count));
   if (!narr) {
     return false;
   }
@@ -4482,7 +4482,7 @@ bool js::array_construct(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 ArrayObject* js::ArrayConstructorOneArg(JSContext* cx,
-                                        HandleArrayObject templateObject,
+                                        Handle<ArrayObject*> templateObject,
                                         int32_t lengthInt) {
   // JIT code can call this with a template object from a different realm when
   // calling another realm's Array constructor.

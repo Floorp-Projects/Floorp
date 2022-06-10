@@ -588,7 +588,7 @@ static inline JS::Symbol* NewPrivateName(JSContext* cx, HandleAtom name) {
   return JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, name);
 }
 
-inline bool InitElemIncOperation(JSContext* cx, HandleArrayObject arr,
+inline bool InitElemIncOperation(JSContext* cx, Handle<ArrayObject*> arr,
                                  uint32_t index, HandleValue val) {
   if (index == INT32_MAX) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -612,7 +612,7 @@ static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
                                                        const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::CallSiteObj);
 
-  RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());
+  Rooted<ArrayObject*> cso(cx, &script->getObject(pc)->as<ArrayObject>());
 
   if (cso->isExtensible()) {
     RootedObject raw(cx, script->getObject(GET_GCTHING_INDEX(pc).next()));

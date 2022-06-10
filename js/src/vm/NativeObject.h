@@ -1669,7 +1669,7 @@ extern bool NativeGetElement(JSContext* cx, Handle<NativeObject*> obj,
                              HandleValue receiver, int32_t index,
                              MutableHandleValue vp);
 
-bool GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
+bool GetSparseElementHelper(JSContext* cx, Handle<ArrayObject*> obj,
                             int32_t int_id, MutableHandleValue result);
 
 bool SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v,
@@ -1679,7 +1679,7 @@ bool SetPropertyOnProto(JSContext* cx, HandleObject obj, HandleId id,
                         HandleValue v, HandleValue receiver,
                         ObjectOpResult& result);
 
-bool AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
+bool AddOrUpdateSparseElementHelper(JSContext* cx, Handle<ArrayObject*> obj,
                                     int32_t int_id, HandleValue v, bool strict);
 
 /*

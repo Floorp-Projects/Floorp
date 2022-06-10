@@ -143,7 +143,7 @@ extern bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp);
 extern bool NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v);
 
 extern ArrayObject* ArrayConstructorOneArg(JSContext* cx,
-                                           HandleArrayObject templateObject,
+                                           Handle<ArrayObject*> templateObject,
                                            int32_t lengthInt);
 
 #ifdef DEBUG
