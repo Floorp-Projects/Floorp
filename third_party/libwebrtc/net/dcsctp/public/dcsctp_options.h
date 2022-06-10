@@ -143,9 +143,6 @@ struct DcSctpOptions {
   // https://datatracker.ietf.org/doc/html/rfc6298#section-4.
   DurationMs min_rtt_variance = DurationMs(220);
 
-  // Do slow start as TCP - double cwnd instead of increasing it by MTU.
-  bool slow_start_tcp_style = false;
-
   // The initial congestion window size, in number of MTUs.
   // See https://tools.ietf.org/html/rfc4960#section-7.2.1 which defaults at ~3
   // and https://research.google/pubs/pub36640/ which argues for at least ten

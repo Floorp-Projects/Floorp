@@ -249,11 +249,7 @@ void RetransmissionQueue::HandleIncreasedCumulativeTsnAck(
       // conditions are met, then cwnd MUST be increased by, at most, the
       // lesser of 1) the total size of the previously outstanding DATA
       // chunk(s) acknowledged, and 2) the destination's path MTU."
-      if (options_.slow_start_tcp_style) {
-        cwnd_ += std::min(total_bytes_acked, cwnd_);
-      } else {
-        cwnd_ += std::min(total_bytes_acked, options_.mtu);
-      }
+      cwnd_ += std::min(total_bytes_acked, options_.mtu);
       RTC_DLOG(LS_VERBOSE) << log_prefix_ << "SS increase cwnd=" << cwnd_
                            << " (" << old_cwnd << ")";
     }
