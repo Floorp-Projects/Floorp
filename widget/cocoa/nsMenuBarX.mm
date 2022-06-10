@@ -17,6 +17,7 @@
 #include "nsGkAtoms.h"
 #include "nsObjCExceptions.h"
 #include "nsThreadUtils.h"
+#include "nsTouchBarNativeAPIDefines.h"
 
 #include "nsIContent.h"
 #include "nsIWidget.h"

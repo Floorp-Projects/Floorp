@@ -85,7 +85,7 @@ with only_when(host_is_osx | target_is_osx):
         # When we change the SDK we build with, please update the manual SDK
         # installation docs:
         # https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported
-        sdk_min_version = Version("11.0")
+        sdk_min_version = Version("10.12")
 
         if sdk:
             sdk = sdk[0]

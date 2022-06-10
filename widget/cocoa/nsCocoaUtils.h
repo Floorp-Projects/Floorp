@@ -100,6 +100,10 @@ struct KeyBindingsCommand {
 
 @end  // NativeKeyBindingsRecorder
 
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+typedef NSString* AVMediaType;
+#endif
+
 class nsCocoaUtils {
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;

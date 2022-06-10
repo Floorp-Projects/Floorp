@@ -15,6 +15,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
+#if !defined(MAC_OS_VERSION_11_0) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
+#  include "nsCocoaFeatures.h"
+#endif
 
 extern "C" {
 // Only exists from MacOS 11

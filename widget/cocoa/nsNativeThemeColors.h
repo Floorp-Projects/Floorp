@@ -49,6 +49,12 @@ inline void DrawNativeGreyColorInRect(CGContextRef context, ColorName name, CGRe
   CGContextFillRect(context, rect);
 }
 
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSColor (NSColorControlAccentColor)
+@property(class, strong, readonly) NSColor* controlAccentColor NS_AVAILABLE_MAC(10_14);
+@end
+#endif
+
 inline NSColor* ControlAccentColor() {
   if (@available(macOS 10.14, *)) {
     return [NSColor controlAccentColor];
