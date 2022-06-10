@@ -9401,6 +9401,11 @@
   value: false
   mirror: always
 
+- name: media.av1.force-thread-count
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
 - name: media.flac.enabled
   type: RelaxedAtomicBool
   value: true
