@@ -378,6 +378,7 @@ rtc_library("rtcp_transceiver") {
     "../../api/video:video_bitrate_allocation",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base/containers:flat_map",
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/task_utils:to_queued_task",
     "../../system_wrappers",
