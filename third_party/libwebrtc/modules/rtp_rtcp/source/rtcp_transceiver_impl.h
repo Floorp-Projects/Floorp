@@ -25,6 +25,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/target_bitrate.h"
 #include "modules/rtp_rtcp/source/rtcp_transceiver_config.h"
+#include "rtc_base/containers/flat_map.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "system_wrappers/include/ntp_time.h"
 
@@ -118,7 +119,7 @@ class RtcpTransceiverImpl {
   absl::optional<rtcp::Remb> remb_;
   // TODO(danilchap): Remove entries from remote_senders_ that are no longer
   // needed.
-  std::map<uint32_t, RemoteSenderState> remote_senders_;
+  flat_map<uint32_t, RemoteSenderState> remote_senders_;
   RepeatingTaskHandle periodic_task_handle_;
 };
 
