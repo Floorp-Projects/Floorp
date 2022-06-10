@@ -54,7 +54,7 @@ class CAPABILITY EventTargetCapability final {
                 "T must derive from nsIEventTarget");
 
  public:
-  EventTargetCapability(T* aTarget) : mTarget(aTarget) {
+  explicit EventTargetCapability(T* aTarget) : mTarget(aTarget) {
     MOZ_ASSERT(mTarget, "mTarget should be non-null");
   }
   ~EventTargetCapability() = default;
