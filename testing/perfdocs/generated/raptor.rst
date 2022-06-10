@@ -1650,53 +1650,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ✅
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-speedometer-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-geckoview-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-speedometer-mobile-chrome-m-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-geckoview-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-
-
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -2150,53 +2103,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-speedometer-mobile-chrome-m-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-geckoview-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-speedometer-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-speedometer-mobile-geckoview-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -3169,63 +3075,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-refbrow-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-chrome-m-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-unity-webgl-mobile-refbrow-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-android-hw-p2-8-0-android-aarch64-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -3591,63 +3440,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-chrome-m-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-unity-webgl-mobile-refbrow-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-unity-webgl-mobile-fenix-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-geckoview-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-unity-webgl-mobile-refbrow-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -5672,58 +5464,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-mobile-fenix-youtube-playback-h264-sfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-geckoview-youtube-playback-h264-sfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-refbrow-youtube-playback-h264-sfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-mobile-fenix-youtube-playback-h264-sfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-geckoview-youtube-playback-h264-sfr-e10s**
-        - ✅
-        - ❌
-        - ✅
-        - ❌
-      * - **browsertime-mobile-refbrow-youtube-playback-h264-sfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-android-hw-p2-8-0-android-aarch64-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -6048,58 +5788,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-mobile-fenix-youtube-playback-hfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-geckoview-youtube-playback-hfr-e10s**
-        - ✅
-        - ❌
-        - ✅
-        - ❌
-      * - **browsertime-mobile-refbrow-youtube-playback-hfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-mobile-fenix-youtube-playback-hfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-geckoview-youtube-playback-hfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-mobile-refbrow-youtube-playback-hfr-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -7808,6 +7496,63 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-amazon-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -9020,6 +8765,63 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -9991,63 +9793,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -10895,63 +10640,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -22513,6 +22201,63 @@ A set of test pages that are run as live sites instead of recorded versions. The
    * **use live sites**: true
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -23066,6 +22811,63 @@ A set of test pages that are run as live sites instead of recorded versions. The
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-ampstories-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -25907,63 +25709,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-allrecipes-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-allrecipes-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -26197,6 +25942,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-amazon-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-amazon-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -26877,63 +26679,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-amazon-search-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-amazon-search-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -27167,6 +26912,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-bing-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-bing-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -27437,6 +27239,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-bing-search-restaurants-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-bing-search-restaurants-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -27706,6 +27565,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-booking-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-booking-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -27974,6 +27890,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-cnn-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -28532,6 +28505,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-cnn-ampstories-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-cnn-ampstories-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -28800,6 +28830,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-dailymail-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-dailymail-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -29070,6 +29157,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-ebay-kleinanzeigen-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-ebay-kleinanzeigen-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -29338,6 +29482,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-ebay-kleinanzeigen-search-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-ebay-kleinanzeigen-search-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
 
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
@@ -29635,63 +29836,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-espn-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -30192,63 +30336,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-facebook-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -30841,6 +30928,63 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
    * **Test Task**:
 
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-fenix-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-refbrow-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-a51-chrome-m-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-fenix-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-a51-geckoview-facebook-cristiano-e10s**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6m-a51-refbrow-facebook-cristiano-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-android-hw-g5-7-0-arm7-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -31138,63 +31282,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-google-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-google-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -33100,63 +33187,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-microsoft-support-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-microsoft-support-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -35976,63 +36006,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-youtube-watch-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
-      * - **browsertime-tp6m-essential-refbrow-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-fenix-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-youtube-watch-e10s**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a51-11-0-arm7-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
