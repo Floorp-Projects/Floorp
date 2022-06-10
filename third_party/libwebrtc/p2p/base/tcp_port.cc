@@ -71,6 +71,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "p2p/base/p2p_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
@@ -99,7 +100,6 @@ TCPPort::TCPPort(rtc::Thread* thread,
            username,
            password),
       allow_listen_(allow_listen),
-      socket_(NULL),
       error_(0) {
   // TODO(mallinath) - Set preference value as per RFC 6544.
   // http://b/issue?id=7141794
@@ -109,7 +109,7 @@ TCPPort::TCPPort(rtc::Thread* thread,
 }
 
 TCPPort::~TCPPort() {
-  delete socket_;
+  listen_socket_ = nullptr;
   std::list<Incoming>::iterator it;
   for (it = incoming_.begin(); it != incoming_.end(); ++it)
     delete it->socket;
@@ -165,16 +165,16 @@ Connection* TCPPort::CreateConnection(const Candidate& address,
 }
 
 void TCPPort::PrepareAddress() {
-  if (socket_) {
+  if (listen_socket_) {
     // Socket may be in the CLOSED state if Listen()
     // failed, we still want to add the socket address.
     RTC_LOG(LS_VERBOSE) << "Preparing TCP address, current state: "
-                        << socket_->GetState();
-    if (socket_->GetState() == rtc::AsyncPacketSocket::STATE_BOUND ||
-        socket_->GetState() == rtc::AsyncPacketSocket::STATE_CLOSED)
-      AddAddress(socket_->GetLocalAddress(), socket_->GetLocalAddress(),
-                 rtc::SocketAddress(), TCP_PROTOCOL_NAME, "",
-                 TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE,
+                        << listen_socket_->GetState();
+    if (listen_socket_->GetState() == rtc::AsyncPacketSocket::STATE_BOUND ||
+        listen_socket_->GetState() == rtc::AsyncPacketSocket::STATE_CLOSED)
+      AddAddress(listen_socket_->GetLocalAddress(),
+                 listen_socket_->GetLocalAddress(), rtc::SocketAddress(),
+                 TCP_PROTOCOL_NAME, "", TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE,
                  ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
   } else {
     RTC_LOG(LS_INFO) << ToString()
@@ -245,16 +245,16 @@ int TCPPort::SendTo(const void* data,
 }
 
 int TCPPort::GetOption(rtc::Socket::Option opt, int* value) {
-  if (socket_) {
-    return socket_->GetOption(opt, value);
+  if (listen_socket_) {
+    return listen_socket_->GetOption(opt, value);
   } else {
     return SOCKET_ERROR;
   }
 }
 
 int TCPPort::SetOption(rtc::Socket::Option opt, int value) {
-  if (socket_) {
-    return socket_->SetOption(opt, value);
+  if (listen_socket_) {
+    return listen_socket_->SetOption(opt, value);
   } else {
     return SOCKET_ERROR;
   }
@@ -272,9 +272,9 @@ ProtocolType TCPPort::GetProtocol() const {
   return PROTO_TCP;
 }
 
-void TCPPort::OnNewConnection(rtc::AsyncPacketSocket* socket,
+void TCPPort::OnNewConnection(rtc::AsyncListenSocket* socket,
                               rtc::AsyncPacketSocket* new_socket) {
-  RTC_DCHECK(socket == socket_);
+  RTC_DCHECK(socket == listen_socket_.get());
 
   Incoming incoming;
   incoming.addr = new_socket->GetRemoteAddress();
@@ -289,16 +289,16 @@ void TCPPort::OnNewConnection(rtc::AsyncPacketSocket* socket,
 }
 
 void TCPPort::TryCreateServerSocket() {
-  socket_ = socket_factory()->CreateServerTcpSocket(
+  listen_socket_ = absl::WrapUnique(socket_factory()->CreateServerTcpSocket(
       rtc::SocketAddress(Network()->GetBestIP(), 0), min_port(), max_port(),
-      false /* ssl */);
-  if (!socket_) {
+      false /* ssl */));
+  if (!listen_socket_) {
     RTC_LOG(LS_WARNING)
         << ToString()
         << ": TCP server socket creation failed; continuing anyway.";
     return;
   }
-  socket_->SignalNewConnection.connect(this, &TCPPort::OnNewConnection);
+  listen_socket_->SignalNewConnection.connect(this, &TCPPort::OnNewConnection);
 }
 
 rtc::AsyncPacketSocket* TCPPort::GetIncoming(const rtc::SocketAddress& addr,

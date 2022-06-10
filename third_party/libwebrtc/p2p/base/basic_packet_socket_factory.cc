@@ -50,7 +50,7 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateUdpSocket(
   return new AsyncUDPSocket(socket);
 }
 
-AsyncPacketSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
+AsyncListenSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
     const SocketAddress& local_address,
     uint16_t min_port,
     uint16_t max_port,

@@ -86,7 +86,7 @@ class PacketSocketFactoryWrapper : public rtc::PacketSocketFactory {
     return turn_server_->CreatePeerSocket();
   }
 
-  rtc::AsyncPacketSocket* CreateServerTcpSocket(
+  rtc::AsyncListenSocket* CreateServerTcpSocket(
       const rtc::SocketAddress& local_address,
       uint16_t min_port,
       uint16_t max_port,

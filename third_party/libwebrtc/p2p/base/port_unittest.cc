@@ -66,6 +66,7 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 
+using rtc::AsyncListenSocket;
 using rtc::AsyncPacketSocket;
 using rtc::ByteBufferReader;
 using rtc::ByteBufferWriter;
@@ -970,12 +971,12 @@ class FakePacketSocketFactory : public rtc::PacketSocketFactory {
     return result;
   }
 
-  AsyncPacketSocket* CreateServerTcpSocket(const SocketAddress& local_address,
+  AsyncListenSocket* CreateServerTcpSocket(const SocketAddress& local_address,
                                            uint16_t min_port,
                                            uint16_t max_port,
                                            int opts) override {
     EXPECT_TRUE(next_server_tcp_socket_ != NULL);
-    AsyncPacketSocket* result = next_server_tcp_socket_;
+    AsyncListenSocket* result = next_server_tcp_socket_;
     next_server_tcp_socket_ = NULL;
     return result;
   }
@@ -995,7 +996,7 @@ class FakePacketSocketFactory : public rtc::PacketSocketFactory {
   void set_next_udp_socket(AsyncPacketSocket* next_udp_socket) {
     next_udp_socket_ = next_udp_socket;
   }
-  void set_next_server_tcp_socket(AsyncPacketSocket* next_server_tcp_socket) {
+  void set_next_server_tcp_socket(AsyncListenSocket* next_server_tcp_socket) {
     next_server_tcp_socket_ = next_server_tcp_socket;
   }
   void set_next_client_tcp_socket(AsyncPacketSocket* next_client_tcp_socket) {
@@ -1008,7 +1009,7 @@ class FakePacketSocketFactory : public rtc::PacketSocketFactory {
 
  private:
   AsyncPacketSocket* next_udp_socket_;
-  AsyncPacketSocket* next_server_tcp_socket_;
+  AsyncListenSocket* next_server_tcp_socket_;
   absl::optional<AsyncPacketSocket*> next_client_tcp_socket_;
 };
 
