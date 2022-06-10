@@ -227,6 +227,7 @@ if (is_linux || is_chromeos) {
     #  }
     #}
 
+if (!build_with_mozilla) {
     pkg_config("gbm") {
       packages = [ "gbm" ]
     }
@@ -243,6 +244,7 @@ if (is_linux || is_chromeos) {
         ignore_libs = true
       }
     }
+}
 
     if (!rtc_link_pipewire) {
       # When libpipewire is not directly linked, use stubs to allow for dlopening of
