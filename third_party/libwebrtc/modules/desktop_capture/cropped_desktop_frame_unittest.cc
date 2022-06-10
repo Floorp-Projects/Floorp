@@ -32,9 +32,14 @@ TEST(CroppedDesktopFrameTest, DoNotCreateWrapperIfSizeIsNotChanged) {
   ASSERT_EQ(cropped.get(), raw_original);
 }
 
-TEST(CroppedDesktopFrameTest, ReturnNullptrIfSizeIsNotSufficient) {
-  ASSERT_EQ(nullptr, CreateCroppedDesktopFrame(CreateTestFrame(),
-                                               DesktopRect::MakeWH(11, 10)));
+TEST(CroppedDesktopFrameTest, CropWhenPartiallyOutOfBounds) {
+  std::unique_ptr<DesktopFrame> cropped =
+      CreateCroppedDesktopFrame(CreateTestFrame(), DesktopRect::MakeWH(11, 10));
+  ASSERT_NE(nullptr, cropped);
+  ASSERT_EQ(cropped->size().width(), 10);
+  ASSERT_EQ(cropped->size().height(), 10);
+  ASSERT_EQ(cropped->top_left().x(), 0);
+  ASSERT_EQ(cropped->top_left().y(), 0);
 }
 
 TEST(CroppedDesktopFrameTest, ReturnNullIfCropRegionIsOutOfBounds) {
