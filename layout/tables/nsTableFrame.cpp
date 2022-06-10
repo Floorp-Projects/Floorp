@@ -3063,6 +3063,36 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   // the children.
   mBits.mResizedColumns = false;
   ClearGeometryDirty();
+
+  // nsTableFrame does not pull children from its next-in-flow (bug 1772383).
+  // This is generally fine, since tables only fragment for printing
+  // (bug 888257) where incremental-reflow is impossible, and so children don't
+  // usually dynamically move back and forth between continuations. However,
+  // there are edge cases even with printing where nsTableFrame:
+  // (1) Generates a continuation and passes children to it,
+  // (2) Receives another call to Reflow, during which it
+  // (3) Successfully lays out its remaining children.
+  // If the completed status flows up as-is, the continuation will be destroyed.
+  // To avoid that, we return an incomplete status if the continuation contains
+  // any child that is not a repeated frame.
+  auto hasNextInFlowThatMustBePreserved = [this, isPaginated]() -> bool {
+    if (!isPaginated) {
+      return false;
+    }
+    auto* nextInFlow = static_cast<nsTableFrame*>(GetNextInFlow());
+    if (!nextInFlow) {
+      return false;
+    }
+    for (nsIFrame* kidFrame : nextInFlow->mFrames) {
+      if (!IsRepeatedFrame(kidFrame)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  if (aStatus.IsComplete() && hasNextInFlowThatMustBePreserved()) {
+    aStatus.SetIncomplete();
+  }
 }
 
 void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
