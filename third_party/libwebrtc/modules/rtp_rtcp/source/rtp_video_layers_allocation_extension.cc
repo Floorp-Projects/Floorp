@@ -21,7 +21,6 @@
 namespace webrtc {
 
 constexpr RTPExtensionType RtpVideoLayersAllocationExtension::kId;
-constexpr const char RtpVideoLayersAllocationExtension::kUri[];
 
 namespace {
 

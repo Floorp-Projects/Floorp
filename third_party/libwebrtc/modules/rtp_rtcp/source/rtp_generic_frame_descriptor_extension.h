@@ -13,7 +13,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtp_parameters.h"
@@ -26,9 +25,6 @@ class RtpGenericFrameDescriptorExtension00 {
  public:
   using value_type = RtpGenericFrameDescriptor;
   static constexpr RTPExtensionType kId = kRtpExtensionGenericFrameDescriptor00;
-  static constexpr ABSL_DEPRECATED("Use Uri()") char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/"
-      "generic-frame-descriptor-00";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kGenericFrameDescriptorUri00;
   }

@@ -16,7 +16,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtp_headers.h"
@@ -34,8 +33,6 @@ class AbsoluteSendTime {
   using value_type = uint32_t;
   static constexpr RTPExtensionType kId = kRtpExtensionAbsoluteSendTime;
   static constexpr uint8_t kValueSizeBytes = 3;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kAbsSendTimeUri;
   }
@@ -56,8 +53,6 @@ class AbsoluteCaptureTimeExtension {
   static constexpr uint8_t kValueSizeBytes = 16;
   static constexpr uint8_t kValueSizeBytesWithoutEstimatedCaptureClockOffset =
       8;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kAbsoluteCaptureTimeUri;
   }
@@ -73,8 +68,6 @@ class AudioLevel {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionAudioLevel;
   static constexpr uint8_t kValueSizeBytes = 1;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kAudioLevelUri;
   }
@@ -95,8 +88,6 @@ class CsrcAudioLevel {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
   static constexpr uint8_t kMaxValueSizeBytes = 15;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:csrc-audio-level";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kCsrcAudioLevelsUri;
   }
@@ -114,8 +105,6 @@ class TransmissionOffset {
   using value_type = int32_t;
   static constexpr RTPExtensionType kId = kRtpExtensionTransmissionTimeOffset;
   static constexpr uint8_t kValueSizeBytes = 3;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:toffset";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kTimestampOffsetUri;
   }
@@ -130,9 +119,6 @@ class TransportSequenceNumber {
   using value_type = uint16_t;
   static constexpr RTPExtensionType kId = kRtpExtensionTransportSequenceNumber;
   static constexpr uint8_t kValueSizeBytes = 2;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.ietf.org/id/"
-      "draft-holmer-rmcat-transport-wide-cc-extensions-01";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kTransportSequenceNumberUri;
   }
@@ -152,8 +138,6 @@ class TransportSequenceNumberV2 {
       kRtpExtensionTransportSequenceNumber02;
   static constexpr uint8_t kValueSizeBytes = 4;
   static constexpr uint8_t kValueSizeBytesWithoutFeedbackRequest = 2;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/transport-wide-cc-02";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kTransportSequenceNumberV2Uri;
   }
@@ -180,8 +164,6 @@ class VideoOrientation {
   using value_type = VideoRotation;
   static constexpr RTPExtensionType kId = kRtpExtensionVideoRotation;
   static constexpr uint8_t kValueSizeBytes = 1;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:3gpp:video-orientation";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kVideoRotationUri;
   }
@@ -199,8 +181,6 @@ class PlayoutDelayLimits {
   using value_type = VideoPlayoutDelay;
   static constexpr RTPExtensionType kId = kRtpExtensionPlayoutDelay;
   static constexpr uint8_t kValueSizeBytes = 3;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kPlayoutDelayUri;
   }
@@ -224,8 +204,6 @@ class VideoContentTypeExtension {
   using value_type = VideoContentType;
   static constexpr RTPExtensionType kId = kRtpExtensionVideoContentType;
   static constexpr uint8_t kValueSizeBytes = 1;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/video-content-type";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kVideoContentTypeUri;
   }
@@ -242,8 +220,6 @@ class VideoTimingExtension {
   using value_type = VideoSendTiming;
   static constexpr RTPExtensionType kId = kRtpExtensionVideoTiming;
   static constexpr uint8_t kValueSizeBytes = 13;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "http://www.webrtc.org/experiments/rtp-hdrext/video-timing";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kVideoTimingUri;
   }
@@ -279,8 +255,6 @@ class ColorSpaceExtension {
   static constexpr RTPExtensionType kId = kRtpExtensionColorSpace;
   static constexpr uint8_t kValueSizeBytes = 28;
   static constexpr uint8_t kValueSizeBytesWithoutHdrMetadata = 4;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "http://www.webrtc.org/experiments/rtp-hdrext/color-space";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kColorSpaceUri;
   }
@@ -349,16 +323,12 @@ class BaseRtpStringExtension {
 class RtpStreamId : public BaseRtpStringExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionRtpStreamId;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
   static constexpr absl::string_view Uri() { return RtpExtension::kRidUri; }
 };
 
 class RepairedRtpStreamId : public BaseRtpStringExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionRepairedRtpStreamId;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kRepairedRidUri;
   }
@@ -367,8 +337,6 @@ class RepairedRtpStreamId : public BaseRtpStringExtension {
 class RtpMid : public BaseRtpStringExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionMid;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const
-      char kUri[] = "urn:ietf:params:rtp-hdrext:sdes:mid";
   static constexpr absl::string_view Uri() { return RtpExtension::kMidUri; }
 };
 
@@ -396,8 +364,6 @@ class VideoFrameTrackingIdExtension {
   using value_type = uint16_t;
   static constexpr RTPExtensionType kId = kRtpExtensionVideoFrameTrackingId;
   static constexpr uint8_t kValueSizeBytes = 2;
-  static constexpr ABSL_DEPRECATED("Use Uri()") const char kUri[] =
-      "http://www.webrtc.org/experiments/rtp-hdrext/video-frame-tracking-id";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kVideoFrameTrackingIdUri;
   }
