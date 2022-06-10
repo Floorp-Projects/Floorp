@@ -216,7 +216,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
  public:
   explicit InitExprInterpreter(JSContext* cx,
                                const ValVector& globalImportValues,
-                               HandleWasmInstanceObject instanceObj)
+                               Handle<WasmInstanceObject*> instanceObj)
       : features(FeatureArgs::build(cx, FeatureOptions())),
         stack(cx),
         globalImportValues(globalImportValues),
@@ -233,7 +233,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   FeatureArgs features;
   RootedValVector stack;
   const ValVector& globalImportValues;
-  RootedWasmInstanceObject instanceObj;
+  Rooted<WasmInstanceObject*> instanceObj;
 
   Instance& instance() { return instanceObj->instance(); }
 
@@ -248,7 +248,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool pushFuncRef(HandleFuncRef ref) {
     return stack.append(Val(RefType::func(), ref));
   }
-  bool pushRtt(HandleRttValue rtt) {
+  bool pushRtt(Handle<RttValue*> rtt) {
     // The exact rtt type is not important, evaluation won't use it
     return stack.append(Val(ValType::fromRtt(0, 0), AnyRef::fromJSObject(rtt)));
   }
@@ -329,15 +329,15 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 #endif
 #ifdef ENABLE_WASM_GC
   bool evalRttCanon(JSContext* cx, uint32_t typeIndex) {
-    RootedRttValue result(cx, nullptr);
+    Rooted<RttValue*> result(cx, nullptr);
     if (!instance().constantRttCanon(cx, typeIndex, &result)) {
       return false;
     }
     return pushRtt(result);
   }
   bool evalRttSub(JSContext* cx, uint32_t typeIndex) {
-    RootedRttValue parentRtt(cx, popRtt(cx));
-    RootedRttValue result(cx, nullptr);
+    Rooted<RttValue*> parentRtt(cx, popRtt(cx));
+    Rooted<RttValue*> result(cx, nullptr);
     if (!instance().constantRttSub(cx, parentRtt, typeIndex, &result)) {
       return false;
     }
@@ -518,7 +518,7 @@ bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
 }
 
 bool InitExpr::evaluate(JSContext* cx, const ValVector& globalImportValues,
-                        HandleWasmInstanceObject instanceObj,
+                        Handle<WasmInstanceObject*> instanceObj,
                         MutableHandleVal result) const {
   MOZ_ASSERT(kind_ != InitExprKind::None);
 

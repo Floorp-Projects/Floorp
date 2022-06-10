@@ -34,7 +34,7 @@ using mozilla::CheckedInt;
 using mozilla::PodZero;
 
 Table::Table(JSContext* cx, const TableDesc& desc,
-             HandleWasmTableObject maybeObject, UniqueFuncRefArray functions)
+             Handle<WasmTableObject*> maybeObject, UniqueFuncRefArray functions)
     : maybeObject_(maybeObject),
       observers_(cx->zone()),
       functions_(std::move(functions)),
@@ -46,7 +46,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
 }
 
 Table::Table(JSContext* cx, const TableDesc& desc,
-             HandleWasmTableObject maybeObject, TableAnyRefVector&& objects)
+             Handle<WasmTableObject*> maybeObject, TableAnyRefVector&& objects)
     : maybeObject_(maybeObject),
       observers_(cx->zone()),
       objects_(std::move(objects)),
@@ -59,7 +59,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
 
 /* static */
 SharedTable Table::create(JSContext* cx, const TableDesc& desc,
-                          HandleWasmTableObject maybeObject) {
+                          Handle<WasmTableObject*> maybeObject) {
   // We don't support non-nullable references in tables yet.
   MOZ_RELEASE_ASSERT(desc.elemType.isNullable());
 
@@ -158,7 +158,7 @@ bool Table::getFuncRef(JSContext* cx, uint32_t index,
   Instance& instance = *elem.instance;
   const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
 
-  RootedWasmInstanceObject instanceObj(cx, instance.object());
+  Rooted<WasmInstanceObject*> instanceObj(cx, instance.object());
   return instanceObj->getExportedFunction(cx, instanceObj,
                                           codeRange.funcIndex(), fun);
 }
@@ -196,8 +196,8 @@ void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
   RootedFunction fun(cx, ref.asJSFunction());
   MOZ_RELEASE_ASSERT(IsWasmExportedFunction(fun));
 
-  RootedWasmInstanceObject instanceObj(cx,
-                                       ExportedFunctionToInstanceObject(fun));
+  Rooted<WasmInstanceObject*> instanceObj(
+      cx, ExportedFunctionToInstanceObject(fun));
   uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
 
 #ifdef DEBUG

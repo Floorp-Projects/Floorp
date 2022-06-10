@@ -1241,8 +1241,6 @@ class PropertyName;
 class ScriptSourceObject;
 class GetterSetter;
 class PropMap;
-class WasmInstanceObject;
-class WasmTableObject;
 
 namespace jit {
 class JitCode;
@@ -1277,8 +1275,6 @@ using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
 using WeakHeapPtrScriptSourceObject = WeakHeapPtr<ScriptSourceObject*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
-using WeakHeapPtrWasmInstanceObject = WeakHeapPtr<WasmInstanceObject*>;
-using WeakHeapPtrWasmTableObject = WeakHeapPtr<WasmTableObject*>;
 
 using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
 using HeapPtrNativeObject = HeapPtr<NativeObject*>;

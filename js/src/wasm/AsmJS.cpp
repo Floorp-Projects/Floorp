@@ -6903,7 +6903,7 @@ static bool GetImports(JSContext* cx, const AsmJSMetadata& metadata,
 
 static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
                            const AsmJSMetadata& metadata,
-                           MutableHandleWasmInstanceObject instanceObj,
+                           MutableHandle<WasmInstanceObject*> instanceObj,
                            MutableHandleObject exportObj) {
   HandleValue globalVal = args.get(0);
   HandleValue importVal = args.get(1);
@@ -7031,7 +7031,7 @@ bool js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp) {
   const Module& module = AsmJSModuleFunctionToModule(callee);
   const AsmJSMetadata& metadata = module.metadata().asAsmJS();
 
-  RootedWasmInstanceObject instanceObj(cx);
+  Rooted<WasmInstanceObject*> instanceObj(cx);
   RootedObject exportObj(cx);
   if (!TryInstantiate(cx, args, module, metadata, &instanceObj, &exportObj)) {
     // Link-time validation checks failed, so reparse the entire asm.js
