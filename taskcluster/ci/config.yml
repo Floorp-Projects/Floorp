@@ -572,6 +572,11 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
+        t-linux(-large|-xlarge)-gcp:
+            provisioner: '{trust-domain}-t'
+            implementation: docker-worker
+            os: linux
+            worker-type: '{alias}'
         t-linux-talos:
             provisioner: releng-hardware
             implementation: generic-worker
