@@ -415,7 +415,9 @@ static bool ParseFailed(absl::string_view message,
   RTC_LOG(LS_ERROR) << "Failed to parse: \"" << first_line
                     << "\". Reason: " << description;
   if (error) {
-    error->line = std::string(first_line);
+    // TODO(bugs.webrtc.org/13220): In C++17, we can use plain assignment, with
+    // a string_view on the right hand side.
+    error->line.assign(first_line.data(), first_line.size());
     error->description = std::move(description);
   }
   return false;
