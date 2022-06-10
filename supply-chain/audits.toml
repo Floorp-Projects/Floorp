@@ -7,6 +7,12 @@ notes = "I maintain this crate and have reviewed every line."
 criteria = "safe-to-deploy"
 version = "0.1.8"
 
+[[audits.bit-set]]
+who = "Aria Beingessner <a.beingessner@gmail.com>"
+notes = "Another crate I own via contain-rs that is ancient and maintenance mode, no known issues."
+criteria = "safe-to-deploy"
+version = "0.5.2"
+
 [[audits.bit-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 notes = "Another crate I own via contain-rs that is ancient and in maintenance mode but otherwise perfectly fine."
