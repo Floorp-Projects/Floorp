@@ -140,8 +140,7 @@ class TestFrameBuffer2 : public ::testing::Test {
   static constexpr size_t kFrameSize = 10;
 
   TestFrameBuffer2()
-      : trial_("WebRTC-AddRttToPlayoutDelay/Enabled/"),
-        time_controller_(Timestamp::Seconds(0)),
+      : time_controller_(Timestamp::Seconds(0)),
         time_task_queue_(
             time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
                 "extract queue",
@@ -232,8 +231,6 @@ class TestFrameBuffer2 : public ::testing::Test {
 
   uint32_t Rand() { return rand_.Rand<uint32_t>(); }
 
-  // The ProtectionMode tests depends on rtt-multiplier experiment.
-  test::ScopedFieldTrials trial_;
   webrtc::GlobalSimulatedTimeController time_controller_;
   rtc::TaskQueue time_task_queue_;
   VCMTimingFake timing_;
@@ -457,28 +454,6 @@ TEST_F(TestFrameBuffer2, ProtectionModeNackFEC) {
   ExtractFrame();
   ASSERT_EQ(4u, frames_.size());
   EXPECT_LT(timing_.GetCurrentJitter(), kRttMs);
-}
-
-TEST_F(TestFrameBuffer2, ProtectionModeNack) {
-  uint16_t pid = Rand();
-  uint32_t ts = Rand();
-  constexpr int64_t kRttMs = 200;
-
-  buffer_->UpdateRtt(kRttMs);
-
-  // Jitter estimate includes RTT (after 3 retransmitted packets)
-  buffer_->SetProtectionMode(kProtectionNack);
-  InsertNackedFrame(pid, ts);
-  InsertNackedFrame(pid + 1, ts + 100);
-  InsertNackedFrame(pid + 2, ts + 200);
-  InsertFrame(pid + 3, 0, ts + 300, true, kFrameSize);
-  ExtractFrame();
-  ExtractFrame();
-  ExtractFrame();
-  ExtractFrame();
-  ASSERT_EQ(4u, frames_.size());
-
-  EXPECT_GT(timing_.GetCurrentJitter(), kRttMs);
 }
 
 TEST_F(TestFrameBuffer2, NoContinuousFrame) {

@@ -189,8 +189,6 @@ class FrameBuffer {
   VCMReceiveStatisticsCallback* const stats_callback_;
   int64_t last_log_non_decoded_ms_ RTC_GUARDED_BY(mutex_);
 
-  const bool add_rtt_to_playout_delay_;
-
   // rtt_mult experiment settings.
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_;
 

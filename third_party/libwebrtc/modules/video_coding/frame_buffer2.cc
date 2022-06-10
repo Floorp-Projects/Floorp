@@ -65,8 +65,6 @@ FrameBuffer::FrameBuffer(Clock* clock,
       protection_mode_(kProtectionNack),
       stats_callback_(stats_callback),
       last_log_non_decoded_ms_(-kLogNonDecodedIntervalMs),
-      add_rtt_to_playout_delay_(
-          webrtc::field_trial::IsEnabled("WebRTC-AddRttToPlayoutDelay")),
       rtt_mult_settings_(RttMultExperiment::GetRttMultValue()),
       zero_playout_delay_max_decode_queue_size_(
           "max_decode_queue_size",
@@ -330,7 +328,7 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
         jitter_estimator_.GetJitterEstimate(rtt_mult, rtt_mult_add_cap_ms));
     timing_->UpdateCurrentDelay(render_time_ms, now_ms);
   } else {
-    if (RttMultExperiment::RttMultEnabled() || add_rtt_to_playout_delay_)
+    if (RttMultExperiment::RttMultEnabled())
       jitter_estimator_.FrameNacked();
   }
 
