@@ -46,6 +46,7 @@ UNIFIED_SOURCES += [
     "nsStringComparator.cpp",
     "nsStringObsolete.cpp",
     "nsTextFormatter.cpp",
+    "nsTStringRepr.cpp",
     "nsTSubstring.cpp",
     "nsTSubstringTuple.cpp",
     "precompiled_templates.cpp",
