@@ -609,7 +609,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   };
 
  private:
-  HeapPtrNativeObject object; /* The Debugger object. Strong reference. */
+  HeapPtr<NativeObject*> object; /* The Debugger object. Strong reference. */
   WeakGlobalObjectSet
       debuggees; /* Debuggee globals. Cross-compartment weak references. */
   JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
@@ -1111,8 +1111,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   Debugger(JSContext* cx, NativeObject* dbg);
   ~Debugger();
 
-  inline const js::HeapPtrNativeObject& toJSObject() const;
-  inline js::HeapPtrNativeObject& toJSObjectRef();
+  inline const js::HeapPtr<NativeObject*>& toJSObject() const;
+  inline js::HeapPtr<NativeObject*>& toJSObjectRef();
   static inline Debugger* fromJSObject(const JSObject* obj);
 
 #ifdef DEBUG
@@ -1577,12 +1577,12 @@ Breakpoint* Debugger::firstBreakpoint() const {
   return &(*breakpoints.begin());
 }
 
-const js::HeapPtrNativeObject& Debugger::toJSObject() const {
+const js::HeapPtr<NativeObject*>& Debugger::toJSObject() const {
   MOZ_ASSERT(object);
   return object;
 }
 
-js::HeapPtrNativeObject& Debugger::toJSObjectRef() {
+js::HeapPtr<NativeObject*>& Debugger::toJSObjectRef() {
   MOZ_ASSERT(object);
   return object;
 }

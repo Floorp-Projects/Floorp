@@ -491,7 +491,7 @@ bool ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  RootedNativeObject target(cx, &obj->as<NativeObject>());
+  Rooted<NativeObject*> target(cx, &obj->as<NativeObject>());
   if (!NativeLookupOwnProperty<CanGC>(cx, target, id, propp)) {
     return false;
   }
@@ -508,7 +508,7 @@ bool ModuleEnvironmentObject::hasProperty(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  RootedNativeObject self(cx, &obj->as<NativeObject>());
+  Rooted<NativeObject*> self(cx, &obj->as<NativeObject>());
   return NativeHasProperty(cx, self, id, foundp);
 }
 
@@ -525,7 +525,7 @@ bool ModuleEnvironmentObject::getProperty(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  RootedNativeObject self(cx, &obj->as<NativeObject>());
+  Rooted<NativeObject*> self(cx, &obj->as<NativeObject>());
   return NativeGetProperty(cx, self, receiver, id, vp);
 }
 
@@ -558,7 +558,7 @@ bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
     return true;
   }
 
-  RootedNativeObject self(cx, &obj->as<NativeObject>());
+  Rooted<NativeObject*> self(cx, &obj->as<NativeObject>());
   return NativeGetOwnPropertyDescriptor(cx, self, id, desc);
 }
 

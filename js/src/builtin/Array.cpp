@@ -1149,7 +1149,7 @@ static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
 template <typename SeparatorOp>
 static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
-                                 HandleNativeObject obj, uint64_t length,
+                                 Handle<NativeObject*> obj, uint64_t length,
                                  StringBuffer& sb, uint32_t* numProcessed) {
   // This loop handles all elements up to initializedLength. If
   // length > initLength we rely on the second loop to add the
@@ -1471,7 +1471,7 @@ static bool SetArrayElements(JSContext* cx, HandleObject obj, uint64_t start,
 }
 
 static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
-                                                  HandleNativeObject obj,
+                                                  Handle<NativeObject*> obj,
                                                   uint32_t length) {
   MOZ_ASSERT(length > 1);
 
@@ -1510,7 +1510,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     return DenseElementResult::Success;
   }
 
-  auto setElementMaybeHole = [](JSContext* cx, HandleNativeObject obj,
+  auto setElementMaybeHole = [](JSContext* cx, Handle<NativeObject*> obj,
                                 uint32_t index, const Value& val) {
     if (MOZ_LIKELY(!val.isMagic(JS_ELEMENTS_HOLE))) {
       obj->setDenseElement(index, val);
@@ -2391,7 +2391,7 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
     return DenseElementResult::Incomplete;
   }
 
-  HandleNativeObject nobj = obj.as<NativeObject>();
+  Handle<NativeObject*> nobj = obj.as<NativeObject>();
   if (nobj->denseElementsMaybeInIteration()) {
     return DenseElementResult::Incomplete;
   }
@@ -2688,7 +2688,7 @@ static bool CanOptimizeForDenseStorage(HandleObject arr, uint64_t endIndex) {
 }
 
 static ArrayObject* CopyDenseArrayElements(JSContext* cx,
-                                           HandleNativeObject obj,
+                                           Handle<NativeObject*> obj,
                                            uint32_t begin, uint32_t count) {
   size_t initlen = obj->getDenseInitializedLength();
   MOZ_ASSERT(initlen <= UINT32_MAX,

@@ -655,7 +655,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
          */
         MOZ_ASSERT(obj->is<ArrayObject>());
         MOZ_ASSERT(obj->is<NativeObject>());
-        RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
+        Rooted<NativeObject*> nativeObj(cx, &obj->as<NativeObject>());
         if (i <= PropertyKey::IntMax) {
           MOZ_ASSERT(
               nativeObj->containsDenseElement(i) != nativeObj->isIndexed(),

@@ -18,23 +18,19 @@ class JSLinearString;
 namespace js {
 
 class PropertyName;
-class NativeObject;
 class ArrayObject;
 class GlobalObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
-using HandleNativeObject = JS::Handle<NativeObject*>;
 using HandleAtom = JS::Handle<JSAtom*>;
 using HandleLinearString = JS::Handle<JSLinearString*>;
 using HandlePropertyName = JS::Handle<PropertyName*>;
 using HandleArrayObject = JS::Handle<ArrayObject*>;
 
 using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
-using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
 using MutableHandleArrayObject = JS::MutableHandle<ArrayObject*>;
 
-using RootedNativeObject = JS::Rooted<NativeObject*>;
 using RootedAtom = JS::Rooted<JSAtom*>;
 using RootedLinearString = JS::Rooted<JSLinearString*>;
 using RootedPropertyName = JS::Rooted<PropertyName*>;

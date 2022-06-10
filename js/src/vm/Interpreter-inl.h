@@ -254,7 +254,7 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
   RootedId id(cx, NameToId(name));
   RootedValue receiver(cx, ObjectValue(*env));
   if (env->isUnqualifiedVarObj()) {
-    RootedNativeObject varobj(cx);
+    Rooted<NativeObject*> varobj(cx);
     if (env->is<DebugEnvironmentProxy>()) {
       varobj =
           &env->as<DebugEnvironmentProxy>().environment().as<NativeObject>();

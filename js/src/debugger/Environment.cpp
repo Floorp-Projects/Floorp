@@ -391,10 +391,9 @@ NativeObject* DebuggerEnvironment::initClass(JSContext* cx,
 }
 
 /* static */
-DebuggerEnvironment* DebuggerEnvironment::create(JSContext* cx,
-                                                 HandleObject proto,
-                                                 HandleObject referent,
-                                                 HandleNativeObject debugger) {
+DebuggerEnvironment* DebuggerEnvironment::create(
+    JSContext* cx, HandleObject proto, HandleObject referent,
+    Handle<NativeObject*> debugger) {
   DebuggerEnvironment* obj =
       IsInsideNursery(referent)
           ? NewObjectWithGivenProto<DebuggerEnvironment>(cx, proto)

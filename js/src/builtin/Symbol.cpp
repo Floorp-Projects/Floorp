@@ -52,7 +52,7 @@ const JSFunctionSpec SymbolObject::staticMethods[] = {
 
 static bool SymbolClassFinish(JSContext* cx, HandleObject ctor,
                               HandleObject proto) {
-  HandleNativeObject nativeCtor = ctor.as<NativeObject>();
+  Handle<NativeObject*> nativeCtor = ctor.as<NativeObject>();
 
   // Define the well-known symbol properties, such as Symbol.iterator.
   ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();

@@ -3756,7 +3756,7 @@ static bool GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp) {
         cx, "first argument must be a dense Array of Promise objects");
     return false;
   }
-  RootedNativeObject list(cx, &args[0].toObject().as<NativeObject>());
+  Rooted<NativeObject*> list(cx, &args[0].toObject().as<NativeObject>());
   RootedObjectVector promises(cx);
   uint32_t count = list->getDenseInitializedLength();
   if (!promises.resize(count)) {

@@ -173,7 +173,7 @@ class RegExpShared
   void useRegExpMatch(size_t parenCount);
 
   static bool initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
-                                      HandleNativeObject namedCaptures);
+                                      Handle<NativeObject*> namedCaptures);
   PlainObject* getGroupsTemplate() { return groupsTemplate_; }
 
   void tierUpTick();

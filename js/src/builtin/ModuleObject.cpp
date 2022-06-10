@@ -962,7 +962,7 @@ void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
   initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
 }
 
-static bool FreezeObjectProperty(JSContext* cx, HandleNativeObject obj,
+static bool FreezeObjectProperty(JSContext* cx, Handle<NativeObject*> obj,
                                  uint32_t slot) {
   RootedObject property(cx, &obj->getSlot(slot).toObject());
   return FreezeObject(cx, property);
@@ -986,7 +986,7 @@ static inline bool CheckObjectFrozen(JSContext* cx, HandleObject obj,
 }
 
 static inline bool CheckObjectPropertyFrozen(JSContext* cx,
-                                             HandleNativeObject obj,
+                                             Handle<NativeObject*> obj,
                                              uint32_t slot, bool* result) {
   RootedObject property(cx, &obj->getSlot(slot).toObject());
   return CheckObjectFrozen(cx, property, result);

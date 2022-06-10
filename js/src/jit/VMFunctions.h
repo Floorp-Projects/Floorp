@@ -503,7 +503,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
 
-[[nodiscard]] bool SetDenseElement(JSContext* cx, HandleNativeObject obj,
+[[nodiscard]] bool SetDenseElement(JSContext* cx, Handle<NativeObject*> obj,
                                    int32_t index, HandleValue value,
                                    bool strict);
 

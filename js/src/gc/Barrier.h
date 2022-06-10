@@ -1249,7 +1249,6 @@ using PreBarrieredId = PreBarriered<jsid>;
 using PreBarrieredObject = PreBarriered<JSObject*>;
 using PreBarrieredValue = PreBarriered<Value>;
 
-using GCPtrNativeObject = GCPtr<NativeObject*>;
 using GCPtrArrayObject = GCPtr<ArrayObject*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
@@ -1275,7 +1274,6 @@ using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
 
 using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
-using HeapPtrNativeObject = HeapPtr<NativeObject*>;
 using HeapPtrObject = HeapPtr<JSObject*>;
 using HeapPtrRegExpShared = HeapPtr<RegExpShared*>;
 using HeapPtrValue = HeapPtr<Value>;

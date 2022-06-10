@@ -4514,7 +4514,7 @@ bool CacheIRCompiler::emitAddSlotAndCallAddPropHook(ObjOperandId objId,
   masm.Push(obj);
 
   using Fn =
-      bool (*)(JSContext*, HandleNativeObject, HandleValue, Handle<Shape*>);
+      bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, Handle<Shape*>);
   callvm.callNoResult<Fn, AddSlotAndCallAddPropHook>();
   return true;
 }
@@ -7553,7 +7553,7 @@ bool CacheIRCompiler::emitCallNativeGetElementResult(ObjOperandId objId,
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, int32_t,
                       MutableHandleValue);
   callvm.call<Fn, NativeGetElement>();
 

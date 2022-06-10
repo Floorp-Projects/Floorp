@@ -733,8 +733,8 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
 }
 
 /* static */
-bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
-                                           HandleNativeObject namedCaptures) {
+bool RegExpShared::initializeNamedCaptures(
+    JSContext* cx, HandleRegExpShared re, Handle<NativeObject*> namedCaptures) {
   MOZ_ASSERT(!re->groupsTemplate_);
   MOZ_ASSERT(!re->namedCaptureIndices_);
 

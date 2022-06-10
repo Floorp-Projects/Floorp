@@ -9,7 +9,7 @@
 
 #include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent
-#include "gc/Rooting.h"         // for HandleNativeObject
+#include "gc/Rooting.h"         //
 #include "vm/NativeObject.h"    // for NativeObject
 
 namespace js {
@@ -33,7 +33,7 @@ class DebuggerSource : public NativeObject {
                                  HandleObject debugCtor);
   static DebuggerSource* create(JSContext* cx, HandleObject proto,
                                 Handle<DebuggerSourceReferent> referent,
-                                HandleNativeObject debugger);
+                                Handle<NativeObject*> debugger);
 
   void trace(JSTracer* trc);
 
