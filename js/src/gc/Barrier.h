@@ -1235,7 +1235,6 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 namespace js {
 
 class DebugEnvironmentProxy;
-class GlobalObject;
 class PropertyName;
 class GetterSetter;
 class PropMap;
@@ -1265,7 +1264,6 @@ using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
 using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
 using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
-using WeakHeapPtrGlobalObject = WeakHeapPtr<GlobalObject*>;
 using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;
 using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;

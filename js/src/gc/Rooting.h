@@ -18,7 +18,6 @@ class JSLinearString;
 namespace js {
 
 class PropertyName;
-class GlobalObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
@@ -31,7 +30,6 @@ using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
 using RootedAtom = JS::Rooted<JSAtom*>;
 using RootedLinearString = JS::Rooted<JSLinearString*>;
 using RootedPropertyName = JS::Rooted<PropertyName*>;
-using RootedGlobalObject = JS::Rooted<GlobalObject*>;
 
 using FunctionVector = JS::GCVector<JSFunction*>;
 using PropertyNameVector = JS::GCVector<PropertyName*>;

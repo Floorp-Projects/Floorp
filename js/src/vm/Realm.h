@@ -306,7 +306,7 @@ class JS::Realm : public JS::shadow::Realm {
   JS::RealmBehaviors behaviors_;
 
   friend struct ::JSContext;
-  js::WeakHeapPtrGlobalObject global_;
+  js::WeakHeapPtr<js::GlobalObject*> global_;
 
   // Note: this is private to enforce use of ObjectRealm::get(obj).
   js::ObjectRealm objects_;
