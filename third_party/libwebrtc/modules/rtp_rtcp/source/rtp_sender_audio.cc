@@ -60,8 +60,8 @@ RTPSenderAudio::RTPSenderAudio(Clock* clock, RTPSender* rtp_sender)
       rtp_sender_(rtp_sender),
       absolute_capture_time_sender_(clock),
       include_capture_clock_offset_(
-          absl::StartsWith(field_trials_.Lookup(kIncludeCaptureClockOffset),
-                           "Enabled")) {
+          !absl::StartsWith(field_trials_.Lookup(kIncludeCaptureClockOffset),
+                            "Disabled")) {
   RTC_DCHECK(clock_);
 }
 

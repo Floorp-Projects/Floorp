@@ -159,7 +159,7 @@ class FieldTrials : public WebRtcKeyValueConfig {
     if (key == "WebRTC-SendSideBwe-WithOverhead") {
       return use_send_side_bwe_with_overhead_ ? "Enabled" : "";
     } else if (key == "WebRTC-IncludeCaptureClockOffset") {
-      return include_capture_clock_offset_ ? "Enabled" : "";
+      return include_capture_clock_offset_ ? "" : "Disabled";
     }
     return "";
   }
