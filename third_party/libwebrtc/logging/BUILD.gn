@@ -34,6 +34,12 @@ rtc_source_set("rtc_event_log_api") {
 
 rtc_library("rtc_event_field") {
   sources = [
+    "rtc_event_log/events/fixed_length_encoding_parameters_v3.cc",
+    "rtc_event_log/events/fixed_length_encoding_parameters_v3.h",
+    "rtc_event_log/events/rtc_event_field_encoding.cc",
+    "rtc_event_log/events/rtc_event_field_encoding.h",
+    "rtc_event_log/events/rtc_event_field_encoding_parser.cc",
+    "rtc_event_log/events/rtc_event_field_encoding_parser.h",
     "rtc_event_log/events/rtc_event_field_extraction.cc",
     "rtc_event_log/events/rtc_event_field_extraction.h",
   ]
@@ -42,12 +48,12 @@ rtc_library("rtc_event_field") {
     ":rtc_event_number_encodings",
     "../api:array_view",
     "../api/rtc_event_log",
+    "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
-    "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -416,6 +422,7 @@ if (rtc_enable_protobuf) {
         "rtc_event_log/encoder/delta_encoding_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_common_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_unittest.cc",
+        "rtc_event_log/events/rtc_event_field_encoding_unittest.cc",
         "rtc_event_log/events/rtc_event_field_extraction_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest.cc",
         "rtc_event_log/rtc_event_log_unittest_helper.cc",
