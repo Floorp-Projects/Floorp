@@ -315,12 +315,10 @@ void RTPSenderVideo::SetVideoLayersAllocationInternal(
   allocation_ = std::move(allocation);
 }
 
-void RTPSenderVideo::AddRtpHeaderExtensions(
-    const RTPVideoHeader& video_header,
-    const absl::optional<AbsoluteCaptureTime>& absolute_capture_time,
-    bool first_packet,
-    bool last_packet,
-    RtpPacketToSend* packet) const {
+void RTPSenderVideo::AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
+                                            bool first_packet,
+                                            bool last_packet,
+                                            RtpPacketToSend* packet) const {
   // Send color space when changed or if the frame is a key frame. Keep
   // sending color space information until the first base layer frame to
   // guarantee that the information is retrieved by the receiver.
@@ -369,8 +367,9 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
     packet->SetExtension<PlayoutDelayLimits>(current_playout_delay_);
   }
 
-  if (first_packet && absolute_capture_time) {
-    packet->SetExtension<AbsoluteCaptureTimeExtension>(*absolute_capture_time);
+  if (first_packet && video_header.absolute_capture_time.has_value()) {
+    packet->SetExtension<AbsoluteCaptureTimeExtension>(
+        *video_header.absolute_capture_time);
   }
 
   if (video_header.generic) {
@@ -477,8 +476,7 @@ bool RTPSenderVideo::SendVideo(
     int64_t capture_time_ms,
     rtc::ArrayView<const uint8_t> payload,
     RTPVideoHeader video_header,
-    absl::optional<int64_t> expected_retransmission_time_ms,
-    absl::optional<int64_t> estimated_capture_clock_offset_ms) {
+    absl::optional<int64_t> expected_retransmission_time_ms) {
 #if RTC_TRACE_EVENTS_ENABLED
   TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", capture_time_ms, "Send", "type",
                           FrameTypeToString(video_header.frame_type));
@@ -538,22 +536,31 @@ bool RTPSenderVideo::SendVideo(
   single_packet->SetTimestamp(rtp_timestamp);
   single_packet->set_capture_time_ms(capture_time_ms);
 
-  const absl::optional<AbsoluteCaptureTime> absolute_capture_time =
+  // Construct the absolute capture time extension if not provided.
+  if (!video_header.absolute_capture_time.has_value()) {
+    video_header.absolute_capture_time.emplace();
+    video_header.absolute_capture_time->absolute_capture_timestamp =
+        Int64MsToUQ32x32(
+            clock_->ConvertTimestampToNtpTimeInMilliseconds(capture_time_ms));
+    if (include_capture_clock_offset_) {
+      video_header.absolute_capture_time->estimated_capture_clock_offset = 0;
+    }
+  }
+
+  // Let `absolute_capture_time_sender_` decide if the extension should be sent.
+  video_header.absolute_capture_time =
       absolute_capture_time_sender_.OnSendPacket(
           AbsoluteCaptureTimeSender::GetSource(single_packet->Ssrc(),
                                                single_packet->Csrcs()),
           single_packet->Timestamp(), kVideoPayloadTypeFrequency,
-          Int64MsToUQ32x32(
-              clock_->ConvertTimestampToNtpTimeInMilliseconds(capture_time_ms)),
-          /*estimated_capture_clock_offset=*/
-          include_capture_clock_offset_ ? estimated_capture_clock_offset_ms
-                                        : absl::nullopt);
+          video_header.absolute_capture_time->absolute_capture_timestamp,
+          video_header.absolute_capture_time->estimated_capture_clock_offset);
 
   auto first_packet = std::make_unique<RtpPacketToSend>(*single_packet);
   auto middle_packet = std::make_unique<RtpPacketToSend>(*single_packet);
   auto last_packet = std::make_unique<RtpPacketToSend>(*single_packet);
   // Simplest way to estimate how much extensions would occupy is to set them.
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
+  AddRtpHeaderExtensions(video_header,
                          /*first_packet=*/true, /*last_packet=*/true,
                          single_packet.get());
   if (video_structure_ != nullptr &&
@@ -568,13 +575,13 @@ bool RTPSenderVideo::SendVideo(
     video_structure_ = nullptr;
   }
 
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
+  AddRtpHeaderExtensions(video_header,
                          /*first_packet=*/true, /*last_packet=*/false,
                          first_packet.get());
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
+  AddRtpHeaderExtensions(video_header,
                          /*first_packet=*/false, /*last_packet=*/false,
                          middle_packet.get());
-  AddRtpHeaderExtensions(video_header, absolute_capture_time,
+  AddRtpHeaderExtensions(video_header,
                          /*first_packet=*/false, /*last_packet=*/true,
                          last_packet.get());
 
