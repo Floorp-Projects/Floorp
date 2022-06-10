@@ -31,7 +31,7 @@ constexpr float kMaxSpeechProbability = 1.0f;
 
 // Constants used in place of estimated noise levels.
 constexpr float kNoNoiseDbfs = kMinLevelDbfs;
-constexpr float kWithNoiseDbfs = -20.f;
+constexpr float kWithNoiseDbfs = -20.0f;
 
 constexpr float kMaxGainChangePerSecondDb = 3.0f;
 constexpr float kMaxGainChangePerFrameDb =
@@ -54,10 +54,10 @@ struct GainApplierHelper {
   std::unique_ptr<AdaptiveDigitalGainApplier> gain_applier;
 };
 
-// Voice on, no noise, low limiter, confident level.
-static_assert(std::is_trivially_destructible<
-                  AdaptiveDigitalGainApplier::FrameInfo>::value,
-              "");
+// Sample frame information for the tests mocking noiseless speech detected
+// with maximum probability and with level, headroom and limiter envelope chosen
+// so that the resulting gain equals `kInitialAdaptiveDigitalGainDb` - i.e., no
+// gain adaptation is expected.
 constexpr AdaptiveDigitalGainApplier::FrameInfo kFrameInfo{
     /*speech_probability=*/kMaxSpeechProbability,
     /*speech_level_dbfs=*/kInitialSpeechLevelEstimateDbfs,
@@ -241,14 +241,18 @@ TEST_P(AdaptiveDigitalGainApplierTest,
   GainApplierHelper helper(adjacent_speech_frames_threshold);
   helper.gain_applier->Initialize(/*sample_rate_hz=*/48000, kMono);
 
+  // Lower the speech level so that the target gain will be increased.
+  AdaptiveDigitalGainApplier::FrameInfo info = kFrameInfo;
+  info.speech_level_dbfs -= 12.0f;
+
   float prev_gain = 0.0f;
   for (int i = 0; i < adjacent_speech_frames_threshold; ++i) {
     SCOPED_TRACE(i);
     VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.0f);
-    helper.gain_applier->Process(kFrameInfo, audio.float_frame_view());
+    helper.gain_applier->Process(info, audio.float_frame_view());
     const float gain = audio.float_frame_view().channel(0)[0];
     if (i > 0) {
-      EXPECT_EQ(prev_gain, gain);  // No gain increase.
+      EXPECT_EQ(prev_gain, gain);  // No gain increase applied.
     }
     prev_gain = gain;
   }
@@ -259,25 +263,30 @@ TEST_P(AdaptiveDigitalGainApplierTest, IncreaseGainWithEnoughSpeechFrames) {
   GainApplierHelper helper(adjacent_speech_frames_threshold);
   helper.gain_applier->Initialize(/*sample_rate_hz=*/48000, kMono);
 
+  // Lower the speech level so that the target gain will be increased.
+  AdaptiveDigitalGainApplier::FrameInfo info = kFrameInfo;
+  info.speech_level_dbfs -= 12.0f;
+
   float prev_gain = 0.0f;
   for (int i = 0; i < adjacent_speech_frames_threshold; ++i) {
     SCOPED_TRACE(i);
     VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.0f);
-    helper.gain_applier->Process(kFrameInfo, audio.float_frame_view());
+    helper.gain_applier->Process(info, audio.float_frame_view());
     prev_gain = audio.float_frame_view().channel(0)[0];
   }
 
   // Process one more speech frame.
   VectorFloatFrame audio(kMono, kFrameLen10ms48kHz, 1.0f);
-  helper.gain_applier->Process(kFrameInfo, audio.float_frame_view());
+  helper.gain_applier->Process(info, audio.float_frame_view());
 
-  // The gain has increased.
+  // An increased gain has been applied.
   EXPECT_GT(audio.float_frame_view().channel(0)[0], prev_gain);
 }
 
 INSTANTIATE_TEST_SUITE_P(GainController2,
                          AdaptiveDigitalGainApplierTest,
-                         ::testing::Values(1, 7, 31));
+                         ::testing::Values(1000));
+// ::testing::Values(1, 7, 31));
 
 // Checks that the input is never modified when running in dry run mode.
 TEST(GainController2GainApplier, DryRunDoesNotChangeInput) {

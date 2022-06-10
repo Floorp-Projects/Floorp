@@ -20,7 +20,7 @@ namespace webrtc {
 
 class ApmDataDumper;
 
-// TODO(bugs.webrtc.org): Split into `GainAdaptor` and `GainApplier`.
+// TODO(bugs.webrtc.org/7494): Split into `GainAdaptor` and `GainApplier`.
 // Selects the target digital gain, decides when and how quickly to adapt to the
 // target and applies the current gain to 10 ms frames.
 class AdaptiveDigitalGainApplier {
