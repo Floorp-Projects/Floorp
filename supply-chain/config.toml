@@ -865,10 +865,6 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 criteria = "safe-to-run"
 
-[[unaudited.linked-hash-map]]
-version = "0.5.4"
-criteria = "safe-to-run"
-
 [[unaudited.lmdb-rkv]]
 version = "0.14.0"
 criteria = "safe-to-deploy"
