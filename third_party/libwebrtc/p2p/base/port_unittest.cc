@@ -395,7 +395,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   PortTest()
       : ss_(new rtc::VirtualSocketServer()),
         main_(ss_.get()),
-        socket_factory_(rtc::Thread::Current()),
+        socket_factory_(ss_.get()),
         nat_factory1_(ss_.get(), kNatAddr1, SocketAddress()),
         nat_factory2_(ss_.get(), kNatAddr2, SocketAddress()),
         nat_socket_factory1_(&nat_factory1_),

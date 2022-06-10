@@ -208,11 +208,13 @@ class FakePortAllocatorSession : public PortAllocatorSession {
 
 class FakePortAllocator : public cricket::PortAllocator {
  public:
+  // TODO(bugs.webrtc.org/13145): Require non-null `factory`.
   FakePortAllocator(rtc::Thread* network_thread,
                     rtc::PacketSocketFactory* factory)
       : network_thread_(network_thread), factory_(factory) {
     if (factory_ == NULL) {
-      owned_factory_.reset(new rtc::BasicPacketSocketFactory(network_thread_));
+      owned_factory_.reset(new rtc::BasicPacketSocketFactory(
+          network_thread_ ? network_thread_->socketserver() : nullptr));
       factory_ = owned_factory_.get();
     }
 
