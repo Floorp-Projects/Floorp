@@ -150,8 +150,11 @@ interface nsIHelperAppLauncher : nsICancelable
    * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
    * after the user has chosen a file through the File Picker (or dismissed it).
    * @param aFile The file that was chosen by the user (or null if dialog was dismissed).
+   * @param aDialogWasShown Optional boolean - false by default. Pass true if a
+   *  dialog was opened in the process of reaching this file result. If true, we
+   *  suppress the opening of the downloads panel to avoid redundancy.
    */
-  void saveDestinationAvailable(in nsIFile aFile);
+  void saveDestinationAvailable(in nsIFile aFile, [optional] in boolean aDialogWasShown);
 
   /**
    * The following methods are used by the progress dialog to get or set
