@@ -59,6 +59,8 @@ class TransformableVideoReceiverFrame
     return std::move(frame_);
   }
 
+  Direction GetDirection() const override { return Direction::kReceiver; }
+
  private:
   std::unique_ptr<RtpFrameObject> frame_;
   const VideoFrameMetadata metadata_;
@@ -111,6 +113,8 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::OnTransformedFrame(
 void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
     std::unique_ptr<TransformableFrameInterface> frame) {
   RTC_DCHECK_RUN_ON(&network_sequence_checker_);
+  RTC_CHECK_EQ(frame->GetDirection(),
+               TransformableFrameInterface::Direction::kReceiver);
   if (!receiver_)
     return;
   auto transformed_frame = absl::WrapUnique(

@@ -78,6 +78,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
     return expected_retransmission_time_ms_;
   }
 
+  Direction GetDirection() const override { return Direction::kSender; }
+
  private:
   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   const RTPVideoHeader header_;
@@ -147,6 +149,8 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
 void RTPSenderVideoFrameTransformerDelegate::SendVideo(
     std::unique_ptr<TransformableFrameInterface> transformed_frame) const {
   RTC_CHECK(encoder_queue_->IsCurrent());
+  RTC_CHECK_EQ(transformed_frame->GetDirection(),
+               TransformableFrameInterface::Direction::kSender);
   MutexLock lock(&sender_lock_);
   if (!sender_)
     return;
