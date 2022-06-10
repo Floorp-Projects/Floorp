@@ -739,16 +739,6 @@ class BaselineStubFrameLayout : public JitStubFrameLayout {
   static inline int reverseOffsetOfSavedFramePtr() {
     return -int(2 * sizeof(void*));
   }
-
-  void* reverseSavedFramePtr() {
-    uint8_t* addr = ((uint8_t*)this) + reverseOffsetOfSavedFramePtr();
-    return *(void**)addr;
-  }
-
-  inline void setStubPtr(ICStub* stub) {
-    uint8_t* fp = reinterpret_cast<uint8_t*>(this);
-    *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr()) = stub;
-  }
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
