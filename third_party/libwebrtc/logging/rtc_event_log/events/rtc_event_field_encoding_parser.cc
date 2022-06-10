@@ -74,13 +74,10 @@ uint64_t EventParser::ReadVarInt() {
   return output;
 }
 
-uint64_t EventParser::ReadOptionalValuePositions(std::vector<bool>* positions) {
-  if (!positions) {
-    return CountAndIgnoreOptionalValuePositions();
-  }
-
+uint64_t EventParser::ReadOptionalValuePositions() {
+  RTC_DCHECK(positions_.empty());
   size_t bits_to_read = NumEventsInBatch();
-  RTC_DCHECK(positions->empty());
+  positions_.reserve(bits_to_read);
   if (pending_data_.size() * 8 < bits_to_read) {
     SetError();
     return 0;
@@ -88,7 +85,7 @@ uint64_t EventParser::ReadOptionalValuePositions(std::vector<bool>* positions) {
 
   BitstreamReader reader(pending_data_);
   for (size_t i = 0; i < bits_to_read; i++) {
-    positions->push_back(reader.ReadBit());
+    positions_.push_back(reader.ReadBit());
   }
   if (!reader.Ok()) {
     SetError();
@@ -96,30 +93,7 @@ uint64_t EventParser::ReadOptionalValuePositions(std::vector<bool>* positions) {
   }
 
   size_t num_existing_values =
-      std::count(positions->begin(), positions->end(), true);
-  pending_data_ = pending_data_.substr((bits_to_read + 7) / 8);
-  return num_existing_values;
-}
-
-uint64_t EventParser::CountAndIgnoreOptionalValuePositions() {
-  size_t bits_to_read = NumEventsInBatch();
-  if (pending_data_.size() * 8 < bits_to_read) {
-    SetError();
-    return 0;
-  }
-
-  BitstreamReader reader(pending_data_);
-  size_t num_existing_values = 0;
-  for (size_t i = 0; i < bits_to_read; i++) {
-    if (reader.ReadBit()) {
-      ++num_existing_values;
-    }
-  }
-  if (!reader.Ok()) {
-    SetError();
-    return 0;
-  }
-
+      std::count(positions_.begin(), positions_.end(), 1);
   pending_data_ = pending_data_.substr((bits_to_read + 7) / 8);
   return num_existing_values;
 }
@@ -144,12 +118,10 @@ uint64_t EventParser::ReadSingleValue(FieldType field_type) {
 void EventParser::ReadDeltasAndPopulateValues(
     FixedLengthEncodingParametersV3 params,
     uint64_t num_deltas,
-    uint64_t base,
-    std::vector<uint64_t>* values) {
-  RTC_CHECK(values != nullptr);
-  RTC_DCHECK(values->empty());
-  values->reserve(num_deltas + 1);
-  values->push_back(base);
+    uint64_t base) {
+  RTC_DCHECK(values_.empty());
+  values_.reserve(num_deltas + 1);
+  values_.push_back(base);
 
   if (pending_data_.size() * 8 < num_deltas * params.delta_bit_width()) {
     SetError();
@@ -174,7 +146,7 @@ void EventParser::ReadDeltasAndPopulateValues(
     } else {
       value = (value + delta) & params.value_mask();
     }
-    values->push_back(value);
+    values_.push_back(value);
   }
 
   if (!reader.Ok()) {
@@ -201,11 +173,111 @@ RtcEventLogParseStatus EventParser::Initialize(absl::string_view s,
   return RtcEventLogParseStatus::Success();
 }
 
-RtcEventLogParseStatus EventParser::ParseField(const FieldParameters& params,
-                                               std::vector<uint64_t>* values,
-                                               std::vector<bool>* positions) {
-  RTC_CHECK(values != nullptr);
+RtcEventLogParseStatus EventParser::ParseNumericFieldInternal(
+    uint64_t value_bit_width,
+    FieldType field_type) {
+  RTC_DCHECK(values_.empty());
+  RTC_DCHECK(positions_.empty());
 
+  if (num_events_ == 1) {
+    // Just a single value in the batch.
+    uint64_t base = ReadSingleValue(field_type);
+    if (!Ok()) {
+      return RtcEventLogParseStatus::Error("Failed to read value", __FILE__,
+                                           __LINE__);
+    }
+    positions_.push_back(true);
+    values_.push_back(base);
+  } else {
+    // Delta compressed batch.
+    // Read delta header.
+    uint64_t header_value = ReadVarInt();
+    if (!Ok())
+      return RtcEventLogParseStatus::Error("Failed to read delta header",
+                                           __FILE__, __LINE__);
+    // NB: value_bit_width may be incorrect for the field, if this isn't the
+    // field we are looking for.
+    absl::optional<FixedLengthEncodingParametersV3> delta_header =
+        FixedLengthEncodingParametersV3::ParseDeltaHeader(header_value,
+                                                          value_bit_width);
+    if (!delta_header.has_value()) {
+      return RtcEventLogParseStatus::Error("Failed to parse delta header",
+                                           __FILE__, __LINE__);
+    }
+
+    uint64_t num_existing_deltas = NumEventsInBatch() - 1;
+    if (delta_header->values_optional()) {
+      size_t num_nonempty_values = ReadOptionalValuePositions();
+      if (!Ok()) {
+        return RtcEventLogParseStatus::Error(
+            "Failed to read positions of optional values", __FILE__, __LINE__);
+      }
+      if (num_nonempty_values < 1 || NumEventsInBatch() < num_nonempty_values) {
+        return RtcEventLogParseStatus::Error(
+            "Expected at least one non_empty value", __FILE__, __LINE__);
+      }
+      num_existing_deltas = num_nonempty_values - 1;
+    } else {
+      // All elements in the batch have values.
+      positions_.assign(NumEventsInBatch(), 1u);
+    }
+
+    // Read base.
+    uint64_t base = ReadSingleValue(field_type);
+    if (!Ok()) {
+      return RtcEventLogParseStatus::Error("Failed to read value", __FILE__,
+                                           __LINE__);
+    }
+
+    if (delta_header->values_equal()) {
+      // Duplicate the base value num_existing_deltas times.
+      values_.assign(num_existing_deltas + 1, base);
+    } else {
+      // Read deltas; ceil(num_existing_deltas*delta_width/8) bits
+      ReadDeltasAndPopulateValues(delta_header.value(), num_existing_deltas,
+                                  base);
+      if (!Ok()) {
+        return RtcEventLogParseStatus::Error("Failed to decode deltas",
+                                             __FILE__, __LINE__);
+      }
+    }
+  }
+  return RtcEventLogParseStatus::Success();
+}
+
+RtcEventLogParseStatus EventParser::ParseStringFieldInternal() {
+  RTC_DCHECK(strings_.empty());
+  if (num_events_ > 1) {
+    // String encoding params reserved for future use.
+    uint64_t encoding_params = ReadVarInt();
+    if (!Ok()) {
+      return RtcEventLogParseStatus::Error("Failed to read string encoding",
+                                           __FILE__, __LINE__);
+    }
+    if (encoding_params != 0) {
+      return RtcEventLogParseStatus::Error(
+          "Unrecognized string encoding parameters", __FILE__, __LINE__);
+    }
+  }
+  strings_.reserve(num_events_);
+  for (uint64_t i = 0; i < num_events_; ++i) {
+    // Just a single value in the batch.
+    uint64_t size = ReadVarInt();
+    if (!Ok()) {
+      return RtcEventLogParseStatus::Error("Failed to read string size",
+                                           __FILE__, __LINE__);
+    }
+    if (size > pending_data_.size()) {
+      return RtcEventLogParseStatus::Error("String size exceeds remaining data",
+                                           __FILE__, __LINE__);
+    }
+    strings_.push_back(pending_data_.substr(0, size));
+    pending_data_ = pending_data_.substr(size);
+  }
+  return RtcEventLogParseStatus::Success();
+}
+
+RtcEventLogParseStatus EventParser::ParseField(const FieldParameters& params) {
   // Verify that the event parses fields in increasing order.
   if (params.field_id == FieldParameters::kTimestampField) {
     RTC_DCHECK_EQ(last_field_id_, FieldParameters::kTimestampField);
@@ -224,10 +296,7 @@ RtcEventLogParseStatus EventParser::ParseField(const FieldParameters& params,
   // params.field_id doesn't exist.
   while (!pending_data_.empty()) {
     absl::string_view field_start = pending_data_;
-    values->clear();
-    if (positions) {
-      positions->clear();
-    }
+    ClearTemporaries();
 
     // Read tag for non-positional fields.
     if (params.field_id != FieldParameters::kTimestampField) {
@@ -252,72 +321,15 @@ RtcEventLogParseStatus EventParser::ParseField(const FieldParameters& params,
       return RtcEventLogParseStatus::Success();
     }
 
-    if (num_events_ == 1) {
-      // Just a single value in the batch.
-      uint64_t base = ReadSingleValue(field_type);
-      if (!Ok())
-        return RtcEventLogParseStatus::Error("Failed to read value", __FILE__,
-                                             __LINE__);
-      if (positions) {
-        positions->push_back(true);
+    if (field_type == FieldType::kString) {
+      auto status = ParseStringFieldInternal();
+      if (!status.ok()) {
+        return status;
       }
-      values->push_back(base);
     } else {
-      // Delta compressed batch.
-      // Read delta header.
-      uint64_t header_value = ReadVarInt();
-      if (!Ok())
-        return RtcEventLogParseStatus::Error("Failed to read delta header",
-                                             __FILE__, __LINE__);
-      // NB: value_width may be incorrect for the field, if this isn't the field
-      // we are looking for.
-      absl::optional<FixedLengthEncodingParametersV3> delta_header =
-          FixedLengthEncodingParametersV3::ParseDeltaHeader(header_value,
-                                                            params.value_width);
-      if (!delta_header.has_value()) {
-        return RtcEventLogParseStatus::Error("Failed to parse delta header",
-                                             __FILE__, __LINE__);
-      }
-
-      uint64_t num_existing_deltas = NumEventsInBatch() - 1;
-      if (delta_header->values_optional()) {
-        size_t num_nonempty_values = ReadOptionalValuePositions(positions);
-        if (!Ok()) {
-          return RtcEventLogParseStatus::Error(
-              "Failed to read positions of optional values", __FILE__,
-              __LINE__);
-        }
-        if (num_nonempty_values < 1 ||
-            NumEventsInBatch() < num_nonempty_values) {
-          return RtcEventLogParseStatus::Error(
-              "Expected at least one non_empty value", __FILE__, __LINE__);
-        }
-        num_existing_deltas = num_nonempty_values - 1;
-      } else {
-        // All elements in the batch have values.
-        if (positions) {
-          positions->assign(NumEventsInBatch(), true);
-        }
-      }
-
-      // Read base.
-      uint64_t base = ReadSingleValue(field_type);
-      if (!Ok()) {
-        return RtcEventLogParseStatus::Error("Failed to read value", __FILE__,
-                                             __LINE__);
-      }
-
-      if (delta_header->values_equal()) {
-        // Duplicate the base value num_existing_deltas times.
-        values->assign(num_existing_deltas + 1, base);
-      } else {
-        // Read deltas; ceil(num_existing_deltas*delta_width/8) bits
-        ReadDeltasAndPopulateValues(delta_header.value(), num_existing_deltas,
-                                    base, values);
-        if (!Ok()) {
-          return RtcEventLogParseStatus::Error("Failed to decode deltas",
-                                               __FILE__, __LINE__);
-        }
+      auto status = ParseNumericFieldInternal(params.value_width, field_type);
+      if (!status.ok()) {
+        return status;
       }
     }
 
@@ -328,11 +340,56 @@ RtcEventLogParseStatus EventParser::ParseField(const FieldParameters& params,
   }
 
   // Field not found because the event ended.
-  values->clear();
-  if (positions) {
-    positions->clear();
-  }
+  ClearTemporaries();
   return RtcEventLogParseStatus::Success();
+}
+
+RtcEventLogParseStatusOr<rtc::ArrayView<absl::string_view>>
+EventParser::ParseStringField(const FieldParameters& params,
+                              bool required_field) {
+  using StatusOr = RtcEventLogParseStatusOr<rtc::ArrayView<absl::string_view>>;
+  RTC_DCHECK_EQ(params.field_type, FieldType::kString);
+  auto status = ParseField(params);
+  if (!status.ok())
+    return StatusOr(status);
+  rtc::ArrayView<absl::string_view> strings = GetStrings();
+  if (required_field && strings.size() != NumEventsInBatch()) {
+    return StatusOr::Error("Required string field not found", __FILE__,
+                           __LINE__);
+  }
+  return StatusOr(strings);
+}
+
+RtcEventLogParseStatusOr<rtc::ArrayView<uint64_t>>
+EventParser::ParseNumericField(const FieldParameters& params,
+                               bool required_field) {
+  using StatusOr = RtcEventLogParseStatusOr<rtc::ArrayView<uint64_t>>;
+  RTC_DCHECK_NE(params.field_type, FieldType::kString);
+  auto status = ParseField(params);
+  if (!status.ok())
+    return StatusOr(status);
+  rtc::ArrayView<uint64_t> values = GetValues();
+  if (required_field && values.size() != NumEventsInBatch()) {
+    return StatusOr::Error("Required numerical field not found", __FILE__,
+                           __LINE__);
+  }
+  return StatusOr(values);
+}
+
+RtcEventLogParseStatusOr<EventParser::ValueAndPostionView>
+EventParser::ParseOptionalNumericField(const FieldParameters& params,
+                                       bool required_field) {
+  using StatusOr = RtcEventLogParseStatusOr<ValueAndPostionView>;
+  RTC_DCHECK_NE(params.field_type, FieldType::kString);
+  auto status = ParseField(params);
+  if (!status.ok())
+    return StatusOr(status);
+  ValueAndPostionView view{GetValues(), GetPositions()};
+  if (required_field && view.positions.size() != NumEventsInBatch()) {
+    return StatusOr::Error("Required numerical field not found", __FILE__,
+                           __LINE__);
+  }
+  return StatusOr(view);
 }
 
 }  // namespace webrtc

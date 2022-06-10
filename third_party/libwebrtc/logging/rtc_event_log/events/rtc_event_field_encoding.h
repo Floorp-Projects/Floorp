@@ -77,6 +77,9 @@ class EventEncoder {
   void EncodeField(const FieldParameters& params,
                    const ValuesWithPositions& values);
 
+  void EncodeField(const FieldParameters& params,
+                   const std::vector<absl::string_view>& values);
+
   std::string AsString();
 
  private:

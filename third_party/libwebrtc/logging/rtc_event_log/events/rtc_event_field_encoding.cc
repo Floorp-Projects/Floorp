@@ -229,6 +229,38 @@ void EventEncoder::EncodeField(const FieldParameters& params,
   }
 }
 
+void EventEncoder::EncodeField(const FieldParameters& params,
+                               const std::vector<absl::string_view>& values) {
+  RTC_DCHECK_EQ(values.size(), batch_size_);
+
+  if (values.size() == 0) {
+    // If all values for a particular field is empty/nullopt,
+    // then we completely skip the field even if the the batch is non-empty.
+    return;
+  }
+
+  // Write the field tag.
+  RTC_CHECK_NE(params.field_id, FieldParameters::kTimestampField);
+  RTC_DCHECK_LE(params.field_id, std::numeric_limits<uint64_t>::max() >> 3);
+  RTC_DCHECK_EQ(params.field_type, FieldType::kString);
+  uint64_t field_tag = params.field_id << 3;
+  field_tag += static_cast<uint64_t>(params.field_type);
+  encoded_fields_.push_back(EncodeVarInt(field_tag));
+
+  if (values.size() > 1) {
+    // If multiple values in the batch, write the encoding
+    // parameters. (Values >0 reserved for future use.)
+    uint64_t encoding_params = 0;
+    encoded_fields_.push_back(EncodeVarInt(encoding_params));
+  }
+
+  // Write the strings as (length, data) pairs.
+  for (absl::string_view s : values) {
+    encoded_fields_.push_back(EncodeVarInt(s.size()));
+    encoded_fields_.push_back(std::string(s));
+  }
+}
+
 std::string EventEncoder::AsString() {
   std::string encoded_event;
 

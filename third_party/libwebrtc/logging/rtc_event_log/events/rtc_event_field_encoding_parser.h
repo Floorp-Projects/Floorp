@@ -24,6 +24,9 @@
 // If/when we start using absl::Status in WebRTC, consider
 // whether payloads would be an appropriate alternative.
 class RtcEventLogParseStatus {
+  template <typename T>
+  friend class RtcEventLogParseStatusOr;
+
  public:
   static RtcEventLogParseStatus Success() { return RtcEventLogParseStatus(); }
   static RtcEventLogParseStatus Error(std::string error,
@@ -33,6 +36,7 @@ class RtcEventLogParseStatus {
   }
 
   bool ok() const { return error_.empty(); }
+
   std::string message() const { return error_; }
 
  private:
@@ -43,10 +47,52 @@ class RtcEventLogParseStatus {
   std::string error_;
 };
 
+template <typename T>
+class RtcEventLogParseStatusOr {
+ public:
+  explicit RtcEventLogParseStatusOr(RtcEventLogParseStatus status)
+      : status_(status), value_() {}
+  explicit RtcEventLogParseStatusOr(const T& value)
+      : status_(), value_(value) {}
+
+  bool ok() const { return status_.ok(); }
+
+  std::string message() const { return status_.message(); }
+
+  const T& value() const {
+    RTC_DCHECK(ok());
+    return value_;
+  }
+
+  T& value() {
+    RTC_DCHECK(ok());
+    return value_;
+  }
+
+  static RtcEventLogParseStatusOr Error(std::string error,
+                                        std::string file,
+                                        int line) {
+    return RtcEventLogParseStatusOr(error, file, line);
+  }
+
+ private:
+  RtcEventLogParseStatusOr() : status_() {}
+  RtcEventLogParseStatusOr(std::string error, std::string file, int line)
+      : status_(error, file, line), value_() {}
+
+  RtcEventLogParseStatus status_;
+  T value_;
+};
+
 namespace webrtc {
 
 class EventParser {
  public:
+  struct ValueAndPostionView {
+    rtc::ArrayView<uint64_t> values;
+    rtc::ArrayView<uint8_t> positions;
+  };
+
   EventParser() = default;
 
   // N.B: This method stores a abls::string_view into the string to be
@@ -55,17 +101,18 @@ class EventParser {
   RtcEventLogParseStatus Initialize(absl::string_view s, bool batched);
 
   // Attempts to parse the field specified by `params`, skipping past
-  // other fields that may occur before it. Returns
-  // RtcEventLogParseStatus::Success() and populates `values` (and `positions`)
-  // if the field is found. Returns RtcEventLogParseStatus::Success() and clears
-  // `values` (and `positions`) if the field doesn't exist. Returns a
-  // RtcEventLogParseStatus::Error if the log is incomplete, malformed or
-  // otherwise can't be parsed. `values` and `positions` are pure out-parameters
-  // that allow the caller to reuse the same temporary storage for all fields.
-  // Any previous content in the out parameters is cleared.
-  RtcEventLogParseStatus ParseField(const FieldParameters& params,
-                                    std::vector<uint64_t>* values,
-                                    std::vector<bool>* positions = nullptr);
+  // other fields that may occur before it. If 'required_field == true',
+  // then failing to find the field is an error, otherwise the functions
+  // return success, but with an empty view of values.
+  RtcEventLogParseStatusOr<rtc::ArrayView<absl::string_view>> ParseStringField(
+      const FieldParameters& params,
+      bool required_field = true);
+  RtcEventLogParseStatusOr<rtc::ArrayView<uint64_t>> ParseNumericField(
+      const FieldParameters& params,
+      bool required_field = true);
+  RtcEventLogParseStatusOr<ValueAndPostionView> ParseOptionalNumericField(
+      const FieldParameters& params,
+      bool required_field = true);
 
   // Number of events in a batch.
   uint64_t NumEventsInBatch() const { return num_events_; }
@@ -79,23 +126,47 @@ class EventParser {
   uint64_t ReadLittleEndian(uint8_t bytes);
   uint64_t ReadVarInt();
   uint64_t ReadSingleValue(FieldType field_type);
-  uint64_t ReadOptionalValuePositions(std::vector<bool>* positions);
-  uint64_t CountAndIgnoreOptionalValuePositions();
+  uint64_t ReadOptionalValuePositions();
   void ReadDeltasAndPopulateValues(FixedLengthEncodingParametersV3 params,
                                    uint64_t num_deltas,
-                                   const uint64_t base,
-                                   std::vector<uint64_t>* values);
+                                   const uint64_t base);
+  RtcEventLogParseStatus ParseNumericFieldInternal(uint64_t value_bit_width,
+                                                   FieldType field_type);
+  RtcEventLogParseStatus ParseStringFieldInternal();
+
+  // Attempts to parse the field specified by `params`, skipping past
+  // other fields that may occur before it. Returns
+  // RtcEventLogParseStatus::Success() and populates `values_` (and
+  // `positions_`) if the field is found. Returns
+  // RtcEventLogParseStatus::Success() and clears `values_` (and `positions_`)
+  // if the field doesn't exist. Returns a RtcEventLogParseStatus::Error() if
+  // the log is incomplete, malformed or otherwise can't be parsed.
+  RtcEventLogParseStatus ParseField(const FieldParameters& params);
 
   void SetError() { error_ = true; }
   bool Ok() const { return !error_; }
 
-  // String to be consumed.
-  absl::string_view pending_data_;
+  rtc::ArrayView<uint64_t> GetValues() { return values_; }
+  rtc::ArrayView<uint8_t> GetPositions() { return positions_; }
+  rtc::ArrayView<absl::string_view> GetStrings() { return strings_; }
+
+  void ClearTemporaries() {
+    positions_.clear();
+    values_.clear();
+    strings_.clear();
+  }
 
   // Tracks whether an error has occurred in one of the helper
   // functions above.
   bool error_ = false;
 
+  // Temporary storage for result.
+  std::vector<uint8_t> positions_;
+  std::vector<uint64_t> values_;
+  std::vector<absl::string_view> strings_;
+
+  // String to be consumed.
+  absl::string_view pending_data_;
   uint64_t num_events_ = 1;
   uint64_t last_field_id_ = FieldParameters::kTimestampField;
 };
