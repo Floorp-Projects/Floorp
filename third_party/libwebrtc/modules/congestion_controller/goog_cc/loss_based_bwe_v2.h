@@ -59,6 +59,8 @@ class LossBasedBweV2 {
 
   struct Config {
     double bandwidth_rampup_upper_bound_factor = 0.0;
+    double rampup_acceleration_max_factor = 0.0;
+    TimeDelta rampup_acceleration_maxout_time = TimeDelta::Zero();
     std::vector<double> candidate_factors;
     double higher_bandwidth_bias_factor = 0.0;
     double higher_log_bandwidth_bias_factor = 0.0;
@@ -109,6 +111,7 @@ class LossBasedBweV2 {
   double GetAverageReportedLossRatio() const;
   std::vector<ChannelParameters> GetCandidates(
       DataRate delay_based_estimate) const;
+  DataRate GetCandidateBandwidthUpperBound() const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
   double GetFeasibleInherentLoss(
       const ChannelParameters& channel_parameters) const;
@@ -132,6 +135,7 @@ class LossBasedBweV2 {
   std::vector<Observation> observations_;
   PartialObservation partial_observation_;
   Timestamp last_send_time_most_recent_observation_ = Timestamp::PlusInfinity();
+  Timestamp last_time_estimate_reduced_ = Timestamp::MinusInfinity();
   absl::optional<DataRate> cached_instant_upper_bound_;
   std::vector<double> instant_upper_bound_temporal_weights_;
   std::vector<double> temporal_weights_;
