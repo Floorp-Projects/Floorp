@@ -20,6 +20,7 @@ RetransmissionTimeout::RetransmissionTimeout(const DcSctpOptions& options)
     : min_rto_(*options.rto_min),
       max_rto_(*options.rto_max),
       max_rtt_(*options.rtt_max),
+      min_rtt_variance_(*options.min_rtt_variance),
       rto_(*options.rto_initial) {}
 
 void RetransmissionTimeout::ObserveRTT(DurationMs measured_rtt) {
@@ -48,12 +49,12 @@ void RetransmissionTimeout::ObserveRTT(DurationMs measured_rtt) {
     rtt_diff -= (scaled_rtt_var_ >> kRttVarShift);
     scaled_rtt_var_ += rtt_diff;
   }
-  rto_ = (scaled_srtt_ >> kRttShift) + scaled_rtt_var_;
 
-  // If the RTO becomes smaller or equal to RTT, expiration timers will be
-  // scheduled at the same time as packets are expected. Only happens in
-  // extremely stable RTTs, i.e. in simulations.
-  rto_ = std::max(rto_, rtt + 1);
+  if (scaled_rtt_var_ < min_rtt_variance_) {
+    scaled_rtt_var_ = min_rtt_variance_;
+  }
+
+  rto_ = (scaled_srtt_ >> kRttShift) + scaled_rtt_var_;
 
   // Clamp RTO between min and max.
   rto_ = std::min(std::max(rto_, min_rto_), max_rto_);
