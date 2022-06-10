@@ -80,10 +80,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
             storeLink.start()
 
-            GlobalScope.launch(Dispatchers.IO) {
-                components.migrator.start(this@FocusApplication)
-            }
-
             initializeWebExtensionSupport()
 
             setupLeakCanary()

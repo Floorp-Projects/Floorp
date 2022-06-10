@@ -165,8 +165,6 @@ class Components(
         }
     }
 
-    val migrator by lazy { EngineProvider.provideTrackingProtectionMigrator(context) }
-
     /**
      * The [CustomTabsServiceStore] holds global custom tabs related data.
      */
