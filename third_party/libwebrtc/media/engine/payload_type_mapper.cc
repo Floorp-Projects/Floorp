@@ -73,7 +73,12 @@ PayloadTypeMapper::PayloadTypeMapper()
               {kCodecParamUseInbandFec, kParamValueTrue}}},
             111},
            // RED for opus is assigned in the lower range, starting at the top.
-           {{kRedCodecName, 48000, 2}, 63},
+           // Note that the FMTP refers to the opus payload type.
+           {{kRedCodecName,
+             48000,
+             2,
+             {{kCodecParamNotInNameValueFormat, "111/111"}}},
+            63},
            // TODO(solenberg): Remove the hard coded 16k,32k,48k DTMF once we
            // assign payload types dynamically for send side as well.
            {{kDtmfCodecName, 48000, 1}, 110},
