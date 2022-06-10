@@ -206,6 +206,31 @@ struct Metrics {
   absl::optional<uint32_t> peer_rwnd_bytes = absl::nullopt;
 };
 
+// Represent known SCTP implementations.
+enum class SctpImplementation {
+  // There is not enough information toto determine any SCTP implementation.
+  kUnknown,
+  // This implementation.
+  kDcsctp,
+  // https://github.com/sctplab/usrsctp.
+  kUsrSctp,
+  // Any other implementation.
+  kOther,
+};
+
+inline constexpr absl::string_view ToString(SctpImplementation implementation) {
+  switch (implementation) {
+    case SctpImplementation::kUnknown:
+      return "unknown";
+    case SctpImplementation::kDcsctp:
+      return "dcsctp";
+    case SctpImplementation::kUsrSctp:
+      return "usrsctp";
+    case SctpImplementation::kOther:
+      return "other";
+  }
+}
+
 // Callbacks that the DcSctpSocket will call synchronously to the owning
 // client. It is allowed to call back into the library from callbacks that start
 // with "On". It has been explicitly documented when it's not allowed to call
@@ -440,6 +465,15 @@ class DcSctpSocketInterface {
   // called on success.
   virtual absl::optional<DcSctpSocketHandoverState>
   GetHandoverStateAndClose() = 0;
+
+  // Returns the detected SCTP implementation of the peer. As this is not
+  // explicitly signalled during the connection establishment, heuristics is
+  // used to analyze e.g. the state cookie in the INIT-ACK chunk.
+  //
+  // If this method is called too early (before
+  // `DcSctpSocketCallbacks::OnConnected` has triggered), this will likely
+  // return `SctpImplementation::kUnknown`.
+  virtual SctpImplementation peer_implementation() const = 0;
 };
 }  // namespace dcsctp
 

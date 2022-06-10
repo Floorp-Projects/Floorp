@@ -138,6 +138,20 @@ TieTag MakeTieTag(DcSctpSocketCallbacks& cb) {
   return TieTag(static_cast<uint64_t>(tie_tag_upper) << 32 |
                 static_cast<uint64_t>(tie_tag_lower));
 }
+
+SctpImplementation DeterminePeerImplementation(
+    rtc::ArrayView<const uint8_t> cookie) {
+  if (cookie.size() > 8) {
+    absl::string_view magic(reinterpret_cast<const char*>(cookie.data()), 8);
+    if (magic == "dcSCTP00") {
+      return SctpImplementation::kDcsctp;
+    }
+    if (magic == "KAME-BSD") {
+      return SctpImplementation::kUsrSctp;
+    }
+  }
+  return SctpImplementation::kOther;
+}
 }  // namespace
 
 DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
@@ -1148,6 +1162,8 @@ void DcSctpSocket::HandleInitAck(
   }
   Capabilities capabilities = GetCapabilities(options_, chunk->parameters());
   t1_init_->Stop();
+
+  peer_implementation_ = DeterminePeerImplementation(cookie->data());
 
   tcb_ = std::make_unique<TransmissionControlBlock>(
       timer_manager_, log_prefix_, options_, capabilities, callbacks_,

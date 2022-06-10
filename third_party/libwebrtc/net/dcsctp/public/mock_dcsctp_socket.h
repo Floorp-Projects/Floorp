@@ -73,6 +73,8 @@ class MockDcSctpSocket : public DcSctpSocketInterface {
               GetHandoverStateAndClose,
               (),
               (override));
+
+  MOCK_METHOD(SctpImplementation, peer_implementation, (), (const));
 };
 
 }  // namespace dcsctp
