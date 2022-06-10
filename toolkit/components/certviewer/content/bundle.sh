@@ -9,11 +9,11 @@
 WHICH="${1}"
 
 # Run the browserify command
-./node_modules/browserify/bin/cmd.js "$WHICH".js --standalone "$WHICH" -o ./vendor/"$WHICH"_bundle.js
+./node_modules/browserify/bin/cmd.js "$WHICH".js --standalone "$WHICH" -o ./vendor/"$WHICH"_bundle.jsm
 
 # Amend 'this' in the first line to 'globalThis'
-sed -e '1s/{g=this}/{g=globalThis}/' -i "" ./vendor/"$WHICH"_bundle.js
+sed -e '1s/{g=this}/{g=globalThis}/' -i "" ./vendor/"$WHICH"_bundle.jsm
 
 # Append code to export the library
-echo "var $WHICH = globalThis.$WHICH;" >> ./vendor/"$WHICH"_bundle.js
-echo "var EXPORTED_SYMBOLS = [\"$WHICH\"];" >> ./vendor/"$WHICH"_bundle.js
+echo "var $WHICH = globalThis.$WHICH;" >> ./vendor/"$WHICH"_bundle.jsm
+echo "var EXPORTED_SYMBOLS = [\"$WHICH\"];" >> ./vendor/"$WHICH"_bundle.jsm
