@@ -39,6 +39,9 @@ const char kCodecParamRtxTime[] = "rtx-time";
 const char kCodecParamAssociatedPayloadType[] = "apt";
 
 const char kCodecParamAssociatedCodecName[] = "acn";
+// Parameters that do not follow the key-value convention
+// are treated as having the empty string as key.
+const char kCodecParamNotInNameValueFormat[] = "";
 
 const char kOpusCodecName[] = "opus";
 const char kIsacCodecName[] = "ISAC";
