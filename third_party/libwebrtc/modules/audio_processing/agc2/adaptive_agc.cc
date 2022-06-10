@@ -55,7 +55,6 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
       noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
       saturation_protector_(
           CreateSaturationProtector(kSaturationProtectorInitialHeadroomDb,
-                                    kSaturationProtectorExtraHeadroomDb,
                                     config.adjacent_speech_frames_threshold,
                                     apm_data_dumper)) {
   RTC_DCHECK(apm_data_dumper);
