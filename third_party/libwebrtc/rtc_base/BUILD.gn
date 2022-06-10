@@ -696,7 +696,10 @@ rtc_library("net_helpers") {
     deps += [ ":ifaddrs_android" ]
   }
   if (is_win) {
-    deps += [ ":win32" ]
+    deps += [
+      ":rtc_base_approved",
+      ":win32",
+    ]
   }
 }
 
@@ -1410,7 +1413,6 @@ if (rtc_include_tests) {
         ":socket_server",
         ":stringutils",
         ":testclient",
-        "containers:flat_map",
         ":threading",
         "../api:array_view",
         "../api:scoped_refptr",
@@ -1420,6 +1422,7 @@ if (rtc_include_tests) {
         "../test:fileutils",
         "../test:test_main",
         "../test:test_support",
+        "containers:flat_map",
         "containers:unittests",
         "memory:unittests",
         "synchronization:mutex",

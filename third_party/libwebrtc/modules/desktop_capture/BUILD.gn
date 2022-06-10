@@ -81,9 +81,6 @@ if (rtc_include_tests) {
         "window_finder_unittest.cc",
       ]
       public_configs = [ ":x11_config" ]
-      if (is_win) {
-        deps += [ "../../rtc_base:win32" ]
-      }
     }
   }
 
@@ -499,7 +496,10 @@ rtc_library("desktop_capture_generic") {
       "d3d11.lib",
       "dxgi.lib",
     ]
-    deps += [ "../../rtc_base:win32" ]
+    deps += [
+      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:win32",
+    ]
   }
 
   absl_deps = [

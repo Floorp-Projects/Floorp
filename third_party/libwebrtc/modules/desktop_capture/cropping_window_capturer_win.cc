@@ -15,7 +15,7 @@
 #include "modules/desktop_capture/win/window_capture_utils.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
-#include "rtc_base/win32.h"
+#include "rtc_base/win/windows_version.h"
 
 namespace webrtc {
 
@@ -196,7 +196,8 @@ void CroppingWindowCapturerWin::CaptureFrame() {
 }
 
 bool CroppingWindowCapturerWin::ShouldUseScreenCapturer() {
-  if (!rtc::IsWindows8OrLater() && window_capture_helper_.IsAeroEnabled()) {
+  if (rtc::rtc_win::GetVersion() < rtc::rtc_win::Version::VERSION_WIN8 &&
+      window_capture_helper_.IsAeroEnabled()) {
     return false;
   }
 
