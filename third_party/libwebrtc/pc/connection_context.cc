@@ -119,7 +119,7 @@ ConnectionContext::ConnectionContext(
   // If network_monitor_factory_ is non-null, it will be used to create a
   // network monitor while on the network thread.
   default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
-      network_monitor_factory_.get());
+      network_monitor_factory_.get(), network_thread()->socketserver());
 
   // TODO(bugs.webrtc.org/13145): Either require that a PacketSocketFactory
   // always is injected (with no need to construct this default factory), or get
