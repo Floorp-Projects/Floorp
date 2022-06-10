@@ -111,8 +111,8 @@ Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
 ParseContentRangeHeaderString(const nsAutoCString& aRangeStr) {
   // Parse the range header: e.g. Content-Range: bytes 7000-7999/8000.
   const int32_t spacePos = aRangeStr.Find(" "_ns);
-  const int32_t dashPos = aRangeStr.Find("-"_ns, spacePos);
-  const int32_t slashPos = aRangeStr.Find("/"_ns, dashPos);
+  const int32_t dashPos = aRangeStr.Find("-"_ns, true, spacePos);
+  const int32_t slashPos = aRangeStr.Find("/"_ns, true, dashPos);
 
   nsAutoCString rangeStartText;
   aRangeStr.Mid(rangeStartText, spacePos + 1, dashPos - (spacePos + 1));

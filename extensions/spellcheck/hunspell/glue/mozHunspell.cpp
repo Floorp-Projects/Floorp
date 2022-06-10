@@ -354,7 +354,7 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir) {
     if (NS_FAILED(rv) || !check) continue;
 
     // Replace '_' separator with '-'
-    dict.ReplaceChar('_', '-');
+    dict.ReplaceChar("_", '-');
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewFileURI(getter_AddRefs(uri), file);

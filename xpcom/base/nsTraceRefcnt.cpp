@@ -513,9 +513,8 @@ static bool InitLog(const EnvCharType* aEnvVar, const char* aMsg,
       return true;
     }
     if (!XRE_IsParentProcess()) {
-      nsTString<EnvCharType> extension;
-      extension.AssignLiteral(".log");
-      bool hasLogExtension = StringEndsWith(fname, extension);
+      bool hasLogExtension =
+          fname.RFind(".log", true, -1, 4) == kNotFound ? false : true;
       if (hasLogExtension) {
         fname.Cut(fname.Length() - 4, 4);
       }

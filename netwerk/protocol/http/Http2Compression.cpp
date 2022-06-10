@@ -1084,12 +1084,13 @@ nsresult Http2Compressor::EncodeHeaderBlock(
   while (true) {
     int32_t startIndex = crlfIndex + 2;
 
-    crlfIndex = nvInput.Find("\r\n", startIndex);
+    crlfIndex = nvInput.Find("\r\n", false, startIndex);
     if (crlfIndex == -1) {
       break;
     }
 
-    int32_t colonIndex = Substring(nvInput, 0, crlfIndex).Find(":", startIndex);
+    int32_t colonIndex =
+        nvInput.Find(":", false, startIndex, crlfIndex - startIndex);
     if (colonIndex == -1) {
       break;
     }
@@ -1150,7 +1151,7 @@ nsresult Http2Compressor::EncodeHeaderBlock(
       int32_t nextCookie = valueIndex;
       while (haveMoreCookies) {
         int32_t semiSpaceIndex =
-            Substring(nvInput, 0, crlfIndex).Find("; ", nextCookie);
+            nvInput.Find("; ", false, nextCookie, crlfIndex - nextCookie);
         if (semiSpaceIndex == -1) {
           haveMoreCookies = false;
           semiSpaceIndex = crlfIndex;

@@ -1268,12 +1268,13 @@ EditActionResult HTMLEditor::HandleInsertText(
       }
       constexpr auto tabStr = u"\t"_ns;
       constexpr auto spacesStr = u"    "_ns;
+      char specialChars[] = {TAB, nsCRT::LF, 0};
       nsAutoString insertionString(aInsertionString);  // For FindCharInSet().
       while (pos != -1 &&
              pos < AssertedCast<int32_t>(insertionString.Length())) {
         int32_t oldPos = pos;
         int32_t subStrLen;
-        pos = insertionString.FindCharInSet(u"\t\n", oldPos);
+        pos = insertionString.FindCharInSet(specialChars, oldPos);
 
         if (pos != -1) {
           subStrLen = pos - oldPos;

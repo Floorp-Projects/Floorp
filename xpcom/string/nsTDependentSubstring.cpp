@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// FIXME: Due to an include cycle, we need to include `nsTSubstring` first.
-#include "nsTSubstring.h"
 #include "nsTDependentSubstring.h"
 
 template <typename T>
@@ -101,6 +99,3 @@ const nsTDependentSubstring<char16_t> Substring(char16ptr_t aStart,
                    static_cast<const char16_t*>(aEnd));
 }
 #endif
-
-template class nsTDependentSubstring<char>;
-template class nsTDependentSubstring<char16_t>;

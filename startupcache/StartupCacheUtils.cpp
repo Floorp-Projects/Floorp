@@ -102,8 +102,9 @@ static inline bool canonicalizeBase(nsAutoCString& spec, nsACString& out) {
   rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, appBase);
   if (NS_FAILED(rv)) return false;
 
-  bool underGre = StringBeginsWith(spec, greBase);
-  bool underApp = appBase.Length() && StringBeginsWith(spec, appBase);
+  bool underGre = !greBase.Compare(spec.get(), false, greBase.Length());
+  bool underApp =
+      appBase.Length() && !appBase.Compare(spec.get(), false, appBase.Length());
 
   if (!underGre && !underApp) return false;
 

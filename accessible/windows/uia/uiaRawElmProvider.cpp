@@ -169,7 +169,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
         nsAutoString value;
         attribIter.AttrName()->ToString(attribName);
         attribIter.AttrValue(attribValue);
-        if (StringBeginsWith(attribName, u"aria-"_ns)) {
+        if (attribName.Find("aria-", false, 0, 1) == 0) {
           // Found 'aria-'
           attribName.ReplaceLiteral(0, 5, u"");
         }

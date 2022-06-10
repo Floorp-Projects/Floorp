@@ -641,7 +641,7 @@ void MatchGlob::Init(JSContext* aCx, const nsAString& aGlob,
   mGlob = aGlob;
 
   // Check for a literal match with no glob metacharacters.
-  auto index = mGlob.FindCharInSet(aAllowQuestion ? u"*?" : u"*");
+  auto index = mGlob.FindCharInSet(aAllowQuestion ? "*?" : "*");
   if (index < 0) {
     mPathLiteral = mGlob;
     return;

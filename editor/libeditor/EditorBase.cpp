@@ -5894,9 +5894,9 @@ NS_IMETHODIMP EditorBase::GetWrapWidth(int32_t* aWrapColumn) {
 //
 static void CutStyle(const char* stylename, nsString& styleValue) {
   // Find the current wrapping type:
-  int32_t styleStart = styleValue.LowerCaseFindASCII(stylename);
+  int32_t styleStart = styleValue.Find(stylename, true);
   if (styleStart >= 0) {
-    int32_t styleEnd = styleValue.Find(u";", styleStart);
+    int32_t styleEnd = styleValue.Find(";", false, styleStart);
     if (styleEnd > styleStart) {
       styleValue.Cut(styleStart, styleEnd - styleStart + 1);
     } else {
