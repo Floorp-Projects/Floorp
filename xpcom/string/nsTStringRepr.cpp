@@ -107,4 +107,18 @@ bool nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData) const {
              this->mData, this->mLength, aData) == 0;
 }
 
+template <typename T>
+int32_t nsTStringRepr<T>::Compare(const string_view& aString) const {
+  return View().compare(aString);
+}
+
+template <typename T>
+bool nsTStringRepr<T>::EqualsIgnoreCase(const std::string_view& aString) const {
+  return std::equal(BeginReading(), EndReading(), aString.begin(),
+                    aString.end(), [](char_type l, char r) {
+                      return char_traits::ASCIIToLower(l) ==
+                             char_traits::ASCIIToLower(char_type(r));
+                    });
+}
+
 }  // namespace mozilla::detail
