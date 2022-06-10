@@ -274,8 +274,8 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
           nsIMIMEService::VALIDATE_DEFAULT, targetFilename);
     } else {
       // make the filename safe for the filesystem
-      targetFilename.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS,
-                                 '-');
+      targetFilename.ReplaceChar(
+          u"" FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, u'-');
     }
 #endif /* defined(XP_MACOSX) */
 
@@ -745,7 +745,7 @@ nsresult DragDataProducer::AddStringsToDataTransfer(
     // that expects url\ntitle formatted data for x-moz-url.
     nsAutoString title(mTitleString);
     title.Trim("\r\n");
-    title.ReplaceChar("\r\n", ' ');
+    title.ReplaceChar(u"\r\n", ' ');
     dragData += title;
 
     AddString(aDataTransfer, NS_LITERAL_STRING_FROM_CSTRING(kURLMime), dragData,

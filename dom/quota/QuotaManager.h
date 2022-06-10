@@ -103,6 +103,7 @@ class QuotaManager final : public BackgroundThreadObject {
   }
 
   static const char kReplaceChars[];
+  static const char16_t kReplaceChars16[];
 
   static Result<MovingNotNull<RefPtr<QuotaManager>>, nsresult> GetOrCreate();
 

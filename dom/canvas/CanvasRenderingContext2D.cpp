@@ -3559,7 +3559,7 @@ void CanvasRenderingContext2D::GetDirection(nsAString& aDirection) {
  * @param str The string whose whitespace characters to replace.
  */
 static inline void TextReplaceWhitespaceCharacters(nsAutoString& aStr) {
-  aStr.ReplaceChar("\x09\x0A\x0B\x0C\x0D", char16_t(' '));
+  aStr.ReplaceChar(u"\x09\x0A\x0B\x0C\x0D", char16_t(' '));
 }
 
 void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
