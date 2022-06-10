@@ -152,7 +152,7 @@ In most cases, one will want to explicitly control lifetimes, and therefore use
 exist both from the API users and internally, with no way to invalidate pointers
 held by the API user, `rtc::scoped_refptr` can be appropriate.
 
-[chr-std-shared-ptr]: https://chromium-cpp.appspot.com/#library-blocklist
+[chr-std-shared-ptr]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md#shared-pointers
 
 ### `std::bind`
 
