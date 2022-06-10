@@ -23,9 +23,7 @@ import org.mozilla.fenix.databinding.SettingsHttpsOnlyBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
-// To be replaced with a SUMO link when available. This is the desktop link.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1758066.
-private const val SUMO_URL = "https://support.mozilla.org/en-US/kb/https-only-prefs"
+private const val SUMO_URL = "https://support.mozilla.org/en-US/kb/https-only-mode-firefox-android"
 
 /**
  * Lets the user customize HTTPS-only mode.
