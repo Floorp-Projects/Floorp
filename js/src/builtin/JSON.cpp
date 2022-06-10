@@ -941,7 +941,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     MOZ_ASSERT(gap.empty());
   }
 
-  RootedPlainObject wrapper(cx);
+  Rooted<PlainObject*> wrapper(cx);
   RootedId emptyId(cx, NameToId(cx->names().empty));
   if (replacer && replacer->isCallable()) {
     // We can skip creating the initial wrapper object if no replacer
@@ -1090,7 +1090,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 }
 
 static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
-  RootedPlainObject obj(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }

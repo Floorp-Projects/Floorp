@@ -666,7 +666,7 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
   }
 
   for (auto&& note : *report->notes) {
-    RootedPlainObject noteObj(cx, NewPlainObject(cx));
+    Rooted<PlainObject*> noteObj(cx, NewPlainObject(cx));
     if (!noteObj) {
       return nullptr;
     }

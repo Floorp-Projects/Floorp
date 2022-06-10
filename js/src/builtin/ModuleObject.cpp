@@ -1517,7 +1517,7 @@ static ArrayObject* ModuleBuilderInitArray(
   RootedObject req(cx);
   RootedObject moduleRequest(cx);
   RootedArrayObject assertionArray(cx);
-  RootedPlainObject assertionObject(cx);
+  Rooted<PlainObject*> assertionObject(cx);
   RootedId assertionKey(cx);
   RootedValue assertionValue(cx);
 
@@ -2493,7 +2493,7 @@ static bool EvaluateDynamicImportOptions(
       }
 
       if (supported) {
-        RootedPlainObject assertionObj(cx, NewPlainObject(cx));
+        Rooted<PlainObject*> assertionObj(cx, NewPlainObject(cx));
         if (!assertionObj) {
           return false;
         }
