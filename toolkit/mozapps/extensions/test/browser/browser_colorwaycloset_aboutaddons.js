@@ -4,6 +4,9 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+const { ColorwayClosetOpener } = ChromeUtils.import(
+  "resource:///modules/ColorwayClosetOpener.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 
@@ -89,4 +92,57 @@ add_task(async function testColorwayClosetSectionPrefDisabled() {
 
   await closeView(win);
   await addon.uninstall(true);
+});
+
+/**
+ * Tests that the colorway closet opener is called when the Try Colorways button
+ * is selected.
+ */
+add_task(async function testButtonOpenModal() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.colorway-closet", true]],
+  });
+
+  let originalOpenModal = ColorwayClosetOpener.openModal;
+  const clearOpenModalMock = () => {
+    if (originalOpenModal) {
+      ColorwayClosetOpener.openModal = originalOpenModal;
+      originalOpenModal = null;
+    }
+  };
+  registerCleanupFunction(clearOpenModalMock);
+
+  const themeXpi = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      name: "Monochromatic Theme",
+      applications: { gecko: { id: kTestThemeId } },
+      theme: {},
+    },
+  });
+  const { addon } = await AddonTestUtils.promiseInstallFile(themeXpi);
+
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+  let colorwayClosetList = doc.querySelector("colorways-list");
+
+  ok(colorwayClosetList, "colorway closet list was found");
+
+  let cards = colorwayClosetList.querySelectorAll("colorways-card");
+  ok(cards.length, "At least one colorway closet card was found");
+
+  let colorwaysButton = cards[0].querySelector("#colorways-button");
+  ok(colorwaysButton, "colorway collection button found");
+  let colorwayOpenerPromise = new Promise(resolve => {
+    ColorwayClosetOpener.openModal = () => {
+      ok(true, "openModal was called");
+      resolve();
+    };
+  });
+  colorwaysButton.click();
+  info("Waiting for openModal promise to resolve");
+  await colorwayOpenerPromise;
+
+  await closeView(win);
+  await addon.uninstall(true);
+  clearOpenModalMock();
 });
