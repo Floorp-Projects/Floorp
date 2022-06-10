@@ -47,136 +47,30 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
   explicit CallbackDeferrer(DcSctpSocketCallbacks& underlying)
       : underlying_(underlying) {}
 
-  void TriggerDeferred() {
-    // Need to swap here. The client may call into the library from within a
-    // callback, and that might result in adding new callbacks to this instance,
-    // and the vector can't be modified while iterated on.
-    std::vector<std::function<void(DcSctpSocketCallbacks & cb)>> deferred;
-    deferred.swap(deferred_);
+  void TriggerDeferred();
 
-    for (auto& cb : deferred) {
-      cb(underlying_);
-    }
-  }
-
+  // Implementation of DcSctpSocketCallbacks
   SendPacketStatus SendPacketWithStatus(
-      rtc::ArrayView<const uint8_t> data) override {
-    // Will not be deferred - call directly.
-    return underlying_.SendPacketWithStatus(data);
-  }
-
-  std::unique_ptr<Timeout> CreateTimeout() override {
-    // Will not be deferred - call directly.
-    return underlying_.CreateTimeout();
-  }
-
-  TimeMs TimeMillis() override {
-    // Will not be deferred - call directly.
-    return underlying_.TimeMillis();
-  }
-
-  uint32_t GetRandomInt(uint32_t low, uint32_t high) override {
-    // Will not be deferred - call directly.
-    return underlying_.GetRandomInt(low, high);
-  }
-
-  void OnMessageReceived(DcSctpMessage message) override {
-    deferred_.emplace_back(
-        [deliverer = MessageDeliverer(std::move(message))](
-            DcSctpSocketCallbacks& cb) mutable { deliverer.Deliver(cb); });
-  }
-
-  void OnError(ErrorKind error, absl::string_view message) override {
-    deferred_.emplace_back(
-        [error, message = std::string(message)](DcSctpSocketCallbacks& cb) {
-          cb.OnError(error, message);
-        });
-  }
-
-  void OnAborted(ErrorKind error, absl::string_view message) override {
-    deferred_.emplace_back(
-        [error, message = std::string(message)](DcSctpSocketCallbacks& cb) {
-          cb.OnAborted(error, message);
-        });
-  }
-
-  void OnConnected() override {
-    deferred_.emplace_back([](DcSctpSocketCallbacks& cb) { cb.OnConnected(); });
-  }
-
-  void OnClosed() override {
-    deferred_.emplace_back([](DcSctpSocketCallbacks& cb) { cb.OnClosed(); });
-  }
-
-  void OnConnectionRestarted() override {
-    deferred_.emplace_back(
-        [](DcSctpSocketCallbacks& cb) { cb.OnConnectionRestarted(); });
-  }
-
+      rtc::ArrayView<const uint8_t> data) override;
+  std::unique_ptr<Timeout> CreateTimeout() override;
+  TimeMs TimeMillis() override;
+  uint32_t GetRandomInt(uint32_t low, uint32_t high) override;
+  void OnMessageReceived(DcSctpMessage message) override;
+  void OnError(ErrorKind error, absl::string_view message) override;
+  void OnAborted(ErrorKind error, absl::string_view message) override;
+  void OnConnected() override;
+  void OnClosed() override;
+  void OnConnectionRestarted() override;
   void OnStreamsResetFailed(rtc::ArrayView<const StreamID> outgoing_streams,
-                            absl::string_view reason) override {
-    deferred_.emplace_back(
-        [streams = std::vector<StreamID>(outgoing_streams.begin(),
-                                         outgoing_streams.end()),
-         reason = std::string(reason)](DcSctpSocketCallbacks& cb) {
-          cb.OnStreamsResetFailed(streams, reason);
-        });
-  }
-
+                            absl::string_view reason) override;
   void OnStreamsResetPerformed(
-      rtc::ArrayView<const StreamID> outgoing_streams) override {
-    deferred_.emplace_back(
-        [streams = std::vector<StreamID>(outgoing_streams.begin(),
-                                         outgoing_streams.end())](
-            DcSctpSocketCallbacks& cb) {
-          cb.OnStreamsResetPerformed(streams);
-        });
-  }
-
+      rtc::ArrayView<const StreamID> outgoing_streams) override;
   void OnIncomingStreamsReset(
-      rtc::ArrayView<const StreamID> incoming_streams) override {
-    deferred_.emplace_back(
-        [streams = std::vector<StreamID>(incoming_streams.begin(),
-                                         incoming_streams.end())](
-            DcSctpSocketCallbacks& cb) { cb.OnIncomingStreamsReset(streams); });
-  }
-
-  void OnBufferedAmountLow(StreamID stream_id) override {
-    deferred_.emplace_back([stream_id](DcSctpSocketCallbacks& cb) {
-      cb.OnBufferedAmountLow(stream_id);
-    });
-  }
-
-  void OnTotalBufferedAmountLow() override {
-    deferred_.emplace_back(
-        [](DcSctpSocketCallbacks& cb) { cb.OnTotalBufferedAmountLow(); });
-  }
+      rtc::ArrayView<const StreamID> incoming_streams) override;
+  void OnBufferedAmountLow(StreamID stream_id) override;
+  void OnTotalBufferedAmountLow() override;
 
  private:
-  // A wrapper around the move-only DcSctpMessage, to let it be captured in a
-  // lambda.
-  class MessageDeliverer {
-   public:
-    explicit MessageDeliverer(DcSctpMessage&& message)
-        : state_(rtc::make_ref_counted<State>(std::move(message))) {}
-
-    void Deliver(DcSctpSocketCallbacks& c) {
-      // Really ensure that it's only called once.
-      RTC_DCHECK(!state_->has_delivered);
-      state_->has_delivered = true;
-      c.OnMessageReceived(std::move(state_->message));
-    }
-
-   private:
-    struct State : public rtc::RefCountInterface {
-      explicit State(DcSctpMessage&& m)
-          : has_delivered(false), message(std::move(m)) {}
-      bool has_delivered;
-      DcSctpMessage message;
-    };
-    rtc::scoped_refptr<State> state_;
-  };
-
   DcSctpSocketCallbacks& underlying_;
   std::vector<std::function<void(DcSctpSocketCallbacks& cb)>> deferred_;
 };
