@@ -157,10 +157,6 @@ criteria = "safe-to-deploy"
 version = "0.5.2"
 criteria = "safe-to-deploy"
 
-[[unaudited.bit-vec]]
-version = "0.6.3"
-criteria = "safe-to-deploy"
-
 [[unaudited.bitflags]]
 version = "1.3.2"
 criteria = "safe-to-deploy"
