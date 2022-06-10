@@ -24,12 +24,12 @@ class ApmDataDumper;
 // Level estimator for the digital adaptive gain controller.
 class AdaptiveModeLevelEstimator {
  public:
-  explicit AdaptiveModeLevelEstimator(ApmDataDumper* apm_data_dumper);
+  AdaptiveModeLevelEstimator(
+      ApmDataDumper* apm_data_dumper,
+      const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
   AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
   AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
       delete;
-  AdaptiveModeLevelEstimator(ApmDataDumper* apm_data_dumper,
-                             int adjacent_speech_frames_threshold);
 
   // Updates the level estimation.
   void Update(const VadLevelAnalyzer::Result& vad_data);
@@ -63,6 +63,7 @@ class AdaptiveModeLevelEstimator {
 
   ApmDataDumper* const apm_data_dumper_;
 
+  const float initial_speech_level_dbfs_;
   const int adjacent_speech_frames_threshold_;
   LevelEstimatorState preliminary_state_;
   LevelEstimatorState reliable_state_;

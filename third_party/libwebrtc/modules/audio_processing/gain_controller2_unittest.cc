@@ -89,6 +89,36 @@ TEST(GainController2, CheckFixedDigitalConfig) {
   EXPECT_TRUE(GainController2::Validate(config));
 }
 
+TEST(GainController2, CheckHeadroomDb) {
+  AudioProcessing::Config::GainController2 config;
+  config.adaptive_digital.headroom_db = -1.0f;
+  EXPECT_FALSE(GainController2::Validate(config));
+  config.adaptive_digital.headroom_db = 0.0f;
+  EXPECT_TRUE(GainController2::Validate(config));
+  config.adaptive_digital.headroom_db = 5.0f;
+  EXPECT_TRUE(GainController2::Validate(config));
+}
+
+TEST(GainController2, CheckMaxGainDb) {
+  AudioProcessing::Config::GainController2 config;
+  config.adaptive_digital.max_gain_db = -1.0f;
+  EXPECT_FALSE(GainController2::Validate(config));
+  config.adaptive_digital.max_gain_db = 0.0f;
+  EXPECT_FALSE(GainController2::Validate(config));
+  config.adaptive_digital.max_gain_db = 5.0f;
+  EXPECT_TRUE(GainController2::Validate(config));
+}
+
+TEST(GainController2, CheckInitialGainDb) {
+  AudioProcessing::Config::GainController2 config;
+  config.adaptive_digital.initial_gain_db = -1.0f;
+  EXPECT_FALSE(GainController2::Validate(config));
+  config.adaptive_digital.initial_gain_db = 0.0f;
+  EXPECT_TRUE(GainController2::Validate(config));
+  config.adaptive_digital.initial_gain_db = 5.0f;
+  EXPECT_TRUE(GainController2::Validate(config));
+}
+
 TEST(GainController2, CheckAdaptiveDigitalMaxGainChangeSpeedConfig) {
   AudioProcessing::Config::GainController2 config;
   config.adaptive_digital.max_gain_change_db_per_second = -1.0f;

@@ -90,6 +90,8 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
 bool Agc2Config::AdaptiveDigital::operator==(
     const Agc2Config::AdaptiveDigital& rhs) const {
   return enabled == rhs.enabled && dry_run == rhs.dry_run &&
+         headroom_db == rhs.headroom_db && max_gain_db == rhs.max_gain_db &&
+         initial_gain_db == rhs.initial_gain_db &&
          vad_reset_period_ms == rhs.vad_reset_period_ms &&
          adjacent_speech_frames_threshold ==
              rhs.adjacent_speech_frames_threshold &&
@@ -197,6 +199,10 @@ std::string AudioProcessing::Config::ToString() const {
       << " }, adaptive_digital: { enabled: "
       << gain_controller2.adaptive_digital.enabled
       << ", dry_run: " << gain_controller2.adaptive_digital.dry_run
+      << ", headroom_db: " << gain_controller2.adaptive_digital.headroom_db
+      << ", max_gain_db: " << gain_controller2.adaptive_digital.max_gain_db
+      << ", initial_gain_db: "
+      << gain_controller2.adaptive_digital.initial_gain_db
       << ", vad_reset_period_ms: "
       << gain_controller2.adaptive_digital.vad_reset_period_ms
       << ", adjacent_speech_frames_threshold: "

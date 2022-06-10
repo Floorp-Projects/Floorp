@@ -43,14 +43,9 @@ AvailableCpuFeatures GetAllowedCpuFeatures(
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
                          const AdaptiveDigitalConfig& config)
-    : speech_level_estimator_(apm_data_dumper,
-                              config.adjacent_speech_frames_threshold),
+    : speech_level_estimator_(apm_data_dumper, config),
       vad_(config.vad_reset_period_ms, GetAllowedCpuFeatures(config)),
-      gain_controller_(apm_data_dumper,
-                       config.adjacent_speech_frames_threshold,
-                       config.max_gain_change_db_per_second,
-                       config.max_output_noise_level_dbfs,
-                       config.dry_run),
+      gain_controller_(apm_data_dumper, config),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
       saturation_protector_(
