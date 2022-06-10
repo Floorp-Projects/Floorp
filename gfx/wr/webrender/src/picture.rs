@@ -2055,13 +2055,6 @@ impl TileCacheInstance {
         // Since the slice flags may have changed, ensure we re-evaluate the
         // appropriate tile size for this cache next update.
         self.frames_until_size_eval = 0;
-        
-        // Forget about any backdrop we've been tracking.
-        self.found_prims_after_backdrop = false;
-        if let Some(backdrop_surface) = &self.backdrop_surface {
-            resource_cache.destroy_compositor_surface(backdrop_surface.id);
-            self.backdrop_surface = None;
-        }
     }
 
     /// Destroy any manually managed resources before this picture cache is
@@ -2079,6 +2072,10 @@ impl TileCacheInstance {
 
         for (_, external_surface) in self.external_native_surface_cache {
             resource_cache.destroy_compositor_surface(external_surface.native_surface_id)
+        }
+
+        if let Some(backdrop_surface) = &self.backdrop_surface {
+            resource_cache.destroy_compositor_surface(backdrop_surface.id);
         }
     }
 
@@ -5158,6 +5155,7 @@ impl PicturePrimitive {
                         r.intersection(&tile_cache.local_clip_rect)
                 });
 
+                let mut backdrop_in_use_and_visible = false;
                 if let Some(backdrop_rect) = backdrop_rect {
                     let supports_surface_for_backdrop = match frame_state.composite_state.compositor_kind {
                         CompositorKind::Draw { .. } => {
@@ -5167,7 +5165,6 @@ impl PicturePrimitive {
                             capabilities.supports_surface_for_backdrop
                         }
                     };
-                    let mut backdrop_in_use_and_visible = false;
                     if supports_surface_for_backdrop && !tile_cache.found_prims_after_backdrop && at_least_one_tile_visible {
                         if let Some(BackdropKind::Color { color }) = tile_cache.backdrop.kind {
                             backdrop_in_use_and_visible = true;
@@ -5208,14 +5205,14 @@ impl PicturePrimitive {
                             }
                         }
                     }
+                }
 
-                    if !backdrop_in_use_and_visible {
-                        if let Some(backdrop_surface) = &tile_cache.backdrop_surface {
-                            // We've already allocated a backdrop surface, but we're not using it.
-                            // Tell the compositor to get rid of it.
-                            frame_state.resource_cache.destroy_compositor_surface(backdrop_surface.id);
-                            tile_cache.backdrop_surface = None;
-                        }
+                if !backdrop_in_use_and_visible {
+                    if let Some(backdrop_surface) = &tile_cache.backdrop_surface {
+                        // We've already allocated a backdrop surface, but we're not using it.
+                        // Tell the compositor to get rid of it.
+                        frame_state.resource_cache.destroy_compositor_surface(backdrop_surface.id);
+                        tile_cache.backdrop_surface = None;
                     }
                 }
 

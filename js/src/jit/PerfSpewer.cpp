@@ -4,46 +4,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/PerfSpewer.h"
-
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Printf.h"
-
-#include "jit/Jitdump.h"
-
-#ifdef XP_UNIX
-#  include <fcntl.h>
-#  include <sys/mman.h>
-#  include <sys/stat.h>
-#  include <unistd.h>
-#endif
-
-#if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
-#  include <dlfcn.h>
-#  include <sys/syscall.h>
-#  include <sys/types.h>
-#  include <unistd.h>
-#  define gettid() static_cast<pid_t>(syscall(__NR_gettid))
-#endif
-
 #ifdef JS_ION_PERF
+
+#  include "mozilla/IntegerPrintfMacros.h"
+#  include "mozilla/Printf.h"
+
+#  ifdef XP_UNIX
+#    include <fcntl.h>
+#    include <sys/mman.h>
+#    include <sys/stat.h>
+#    include <unistd.h>
+#  endif
+
+#  if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
+#    include <dlfcn.h>
+#    include <sys/syscall.h>
+#    include <sys/types.h>
+#    include <unistd.h>
+#    define gettid() static_cast<pid_t>(syscall(__NR_gettid))
+#  endif
+
+#  include "jit/PerfSpewer.h"
+#  include "jit/Jitdump.h"
 #  include "jit/JitSpewer.h"
 #  include "jit/LIR.h"
 #  include "jit/MIR.h"
-#endif
-
-#include "js/Printf.h"
-#include "vm/MutexIDs.h"
+#  include "js/Printf.h"
+#  include "vm/MutexIDs.h"
 
 using namespace js;
 using namespace js::jit;
 
-#define PERF_MODE_NONE 1
-#define PERF_MODE_FUNC 2
-#define PERF_MODE_SRC 3
-#define PERF_MODE_IR 4
-
-#ifdef JS_ION_PERF
+#  define PERF_MODE_NONE 1
+#  define PERF_MODE_FUNC 2
+#  define PERF_MODE_SRC 3
+#  define PERF_MODE_IR 4
 
 static uint32_t PerfMode = 0;
 
