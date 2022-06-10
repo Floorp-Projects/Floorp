@@ -135,6 +135,29 @@ TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
   handler_.HandleHeartbeatAck(std::move(ack));
 }
 
+TEST_F(HeartbeatHandlerTest, DoesntObserveInvalidHeartbeats) {
+  AdvanceTime(options_.heartbeat_interval);
+
+  // Grab the request, and make a response.
+  std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
+  ASSERT_THAT(packet.descriptors(), SizeIs(1));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      HeartbeatRequestChunk req,
+      HeartbeatRequestChunk::Parse(packet.descriptors()[0].data));
+
+  HeartbeatAckChunk ack(std::move(req).extract_parameters());
+
+  EXPECT_CALL(context_, ObserveRTT).Times(0);
+
+  // Go backwards in time - which make the HEARTBEAT-ACK have an invalid
+  // timestamp in it, as it will be in the future.
+  callbacks_.AdvanceTime(DurationMs(-100));
+
+  handler_.HandleHeartbeatAck(std::move(ack));
+}
+
 TEST_F(HeartbeatHandlerTest, IncreasesErrorIfNotAckedInTime) {
   DurationMs rto(105);
   EXPECT_CALL(context_, current_rto).WillOnce(Return(rto));
