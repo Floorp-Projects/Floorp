@@ -7,3 +7,9 @@ notes = "I maintain this crate and have reviewed every line."
 criteria = "safe-to-deploy"
 version = "0.1.8"
 
+[[audits.thin-vec]]
+who = "Aria Beingessner <a.beingessner@gmail.com>"
+notes = "I own this crate, and most of its versions were codeveloped and reviewed by Nika Layzell. This version was not explicitly reviewed by her, but it was specifically a release that made the code pass miri and was reviewed by me. Firefox uses it in the gecko-ffi configuration which is less thoroughly tested and more dangerous but we're reasonably confident in it. The real danger is from C++ code failing to use it correctly in FFI but that's just how FFI is."
+criteria = "safe-to-deploy"
+version = "0.2.5"
+

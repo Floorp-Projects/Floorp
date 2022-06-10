@@ -1437,10 +1437,6 @@ criteria = "safe-to-deploy"
 version = "0.15.0"
 criteria = "safe-to-deploy"
 
-[[unaudited.thin-vec]]
-version = "0.2.5"
-criteria = "safe-to-deploy"
-
 [[unaudited.thiserror]]
 version = "1.0.31"
 criteria = "safe-to-deploy"
