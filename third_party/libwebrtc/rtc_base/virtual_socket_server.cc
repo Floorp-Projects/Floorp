@@ -846,12 +846,12 @@ void VirtualSocketServer::CancelConnects(VirtualSocket* socket) {
     MessageAddress* data = static_cast<MessageAddress*>(it->pdata);
     SocketAddress local_addr = socket->GetLocalAddress();
     // Lookup remote side.
-    VirtualSocket* socket = LookupConnection(local_addr, data->addr);
-    if (socket) {
+    VirtualSocket* lookup_socket = LookupConnection(local_addr, data->addr);
+    if (lookup_socket) {
       // Server socket, remote side is a socket retreived by
       // accept. Accepted sockets are not bound so we will not
       // find it by looking in the bindings table.
-      Disconnect(socket);
+      Disconnect(lookup_socket);
       RemoveConnection(local_addr, data->addr);
     } else {
       Disconnect(data->addr);

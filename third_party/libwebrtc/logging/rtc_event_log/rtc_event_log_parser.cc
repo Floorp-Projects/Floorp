@@ -1171,24 +1171,24 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
     const int64_t timestamp_us = incoming.rtcp.timestamp.us();
     const uint8_t* packet_begin = incoming.rtcp.raw_data.data();
     const uint8_t* packet_end = packet_begin + incoming.rtcp.raw_data.size();
-    auto status = StoreRtcpBlocks(
+    auto store_rtcp_status = StoreRtcpBlocks(
         timestamp_us, packet_begin, packet_end, &incoming_sr_, &incoming_rr_,
         &incoming_xr_, &incoming_remb_, &incoming_nack_, &incoming_fir_,
         &incoming_pli_, &incoming_bye_, &incoming_transport_feedback_,
         &incoming_loss_notification_);
-    RTC_RETURN_IF_ERROR(status);
+    RTC_RETURN_IF_ERROR(store_rtcp_status);
   }
 
   for (const auto& outgoing : outgoing_rtcp_packets_) {
     const int64_t timestamp_us = outgoing.rtcp.timestamp.us();
     const uint8_t* packet_begin = outgoing.rtcp.raw_data.data();
     const uint8_t* packet_end = packet_begin + outgoing.rtcp.raw_data.size();
-    auto status = StoreRtcpBlocks(
+    auto store_rtcp_status = StoreRtcpBlocks(
         timestamp_us, packet_begin, packet_end, &outgoing_sr_, &outgoing_rr_,
         &outgoing_xr_, &outgoing_remb_, &outgoing_nack_, &outgoing_fir_,
         &outgoing_pli_, &outgoing_bye_, &outgoing_transport_feedback_,
         &outgoing_loss_notification_);
-    RTC_RETURN_IF_ERROR(status);
+    RTC_RETURN_IF_ERROR(store_rtcp_status);
   }
 
   // Store first and last timestamp events that might happen before the call is
@@ -3165,12 +3165,12 @@ ParsedRtcEventLog::StoreAudioNetworkAdaptationEvent(
       runtime_config.frame_length_ms = signed_frame_length_ms;
     }
     if (uplink_packet_loss_fraction_values[i].has_value()) {
-      float uplink_packet_loss_fraction;
+      float uplink_packet_loss_fraction2;
       RTC_PARSE_CHECK_OR_RETURN(ParsePacketLossFractionFromProtoFormat(
           rtc::checked_cast<uint32_t>(
               uplink_packet_loss_fraction_values[i].value()),
-          &uplink_packet_loss_fraction));
-      runtime_config.uplink_packet_loss_fraction = uplink_packet_loss_fraction;
+          &uplink_packet_loss_fraction2));
+      runtime_config.uplink_packet_loss_fraction = uplink_packet_loss_fraction2;
     }
     if (enable_fec_values[i].has_value()) {
       runtime_config.enable_fec =

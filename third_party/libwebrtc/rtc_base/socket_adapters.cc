@@ -308,12 +308,12 @@ void AsyncHttpsProxySocket::ProcessInput(char* data, size_t* len) {
     if (data[pos++] != '\n')
       continue;
 
-    size_t len = pos - start - 1;
-    if ((len > 0) && (data[start + len - 1] == '\r'))
-      --len;
+    size_t length = pos - start - 1;
+    if ((length > 0) && (data[start + length - 1] == '\r'))
+      --length;
 
-    data[start + len] = 0;
-    ProcessLine(data + start, len);
+    data[start + length] = 0;
+    ProcessLine(data + start, length);
     start = pos;
   }
 
@@ -566,9 +566,9 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
         return;
       RTC_LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;
     } else if (atyp == 3) {
-      uint8_t len;
+      uint8_t length;
       std::string addr;
-      if (!response.ReadUInt8(&len) || !response.ReadString(&addr, len) ||
+      if (!response.ReadUInt8(&length) || !response.ReadString(&addr, length) ||
           !response.ReadUInt16(&port))
         return;
       RTC_LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;
