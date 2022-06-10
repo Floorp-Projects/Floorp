@@ -91,6 +91,7 @@ rtc_library("fixed_digital") {
     "../../../rtc_base:checks",
     "../../../rtc_base:gtest_prod",
     "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:safe_conversions",
     "../../../rtc_base:safe_minmax",
     "../../../system_wrappers:metrics",
   ]
