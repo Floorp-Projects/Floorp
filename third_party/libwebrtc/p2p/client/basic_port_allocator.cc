@@ -378,7 +378,7 @@ void BasicPortAllocatorSession::StartGettingPorts() {
   state_ = SessionState::GATHERING;
   if (!socket_factory_) {
     owned_socket_factory_.reset(
-        new rtc::BasicPacketSocketFactory(network_thread_));
+        new rtc::BasicPacketSocketFactory(network_thread_->socketserver()));
     socket_factory_ = owned_socket_factory_.get();
   }
 

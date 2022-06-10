@@ -19,11 +19,9 @@
 namespace rtc {
 
 class SocketFactory;
-class Thread;
 
 class BasicPacketSocketFactory : public PacketSocketFactory {
  public:
-  explicit BasicPacketSocketFactory(Thread* thread);
   explicit BasicPacketSocketFactory(SocketFactory* socket_factory);
   ~BasicPacketSocketFactory() override;
 
@@ -49,9 +47,6 @@ class BasicPacketSocketFactory : public PacketSocketFactory {
                  uint16_t min_port,
                  uint16_t max_port);
 
-  SocketFactory* socket_factory();
-
-  Thread* thread_;
   SocketFactory* socket_factory_;
 };
 

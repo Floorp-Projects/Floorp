@@ -48,7 +48,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
       : ss_(new rtc::VirtualSocketServer()),
         thread_(ss_.get()),
         network_("unittest", "unittest", kLocalAddr.ipaddr(), 32),
-        socket_factory_(rtc::Thread::Current()),
+        socket_factory_(ss_.get()),
         stun_server_1_(cricket::TestStunServer::Create(ss_.get(), kStunAddr1)),
         stun_server_2_(cricket::TestStunServer::Create(ss_.get(), kStunAddr2)),
         done_(false),
