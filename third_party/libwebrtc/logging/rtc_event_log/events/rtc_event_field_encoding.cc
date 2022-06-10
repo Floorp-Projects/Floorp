@@ -79,6 +79,8 @@ std::string EncodeSingleValue(uint64_t value, FieldType field_type) {
       RTC_NOTREACHED();
       return std::string();
   }
+  RTC_NOTREACHED();
+  return std::string();
 }
 
 absl::optional<FieldType> ConvertFieldType(uint64_t value) {
