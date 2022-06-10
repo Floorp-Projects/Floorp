@@ -686,6 +686,17 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
       JSContext* cx, const JS::ReadOnlyCompileOptions& options,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
 
+  // This function is called by delazify task thread to know whether the task
+  // should be interrupted.
+  //
+  // A delazify task holds on a thread until all functions iterated over by the
+  // strategy. However, as a delazify task iterates over multiple functions, it
+  // can easily be interrupted at function boundaries.
+  //
+  // TODO: (Bug 1773683) Plug this with the mozilla::Task::RequestInterrupt
+  // function which is wrapping HelperThreads tasks within Mozilla.
+  bool isInterrupted() { return false; }
+
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
