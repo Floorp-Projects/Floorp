@@ -308,7 +308,10 @@ config("common_config") {
     defines += [ "WEBRTC_EXCLUDE_AUDIO_PROCESSING_MODULE" ]
   }
 
-  cflags = []
+  # TODO(webrtc:13219): Fix -Wshadow instances and enable.
+  if (is_clang) {
+    cflags += [ "-Wno-shadow" ]
+  }
 
   if (build_with_chromium) {
     defines += [
