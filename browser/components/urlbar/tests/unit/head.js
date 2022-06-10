@@ -834,6 +834,7 @@ async function check_results({
   incompleteSearch,
   autofilled,
   completed,
+  hasAutofillTitle,
   matches = [],
 } = {}) {
   if (!context) {
@@ -886,6 +887,11 @@ async function check_results({
         "The completed autofill value is correct."
       );
     }
+    Assert.equal(
+      context.results[0].autofill.hasTitle,
+      hasAutofillTitle,
+      "The hasTitle flag is correct."
+    );
   }
   if (context.results.length != matches.length) {
     info("Actual results: " + JSON.stringify(context.results));

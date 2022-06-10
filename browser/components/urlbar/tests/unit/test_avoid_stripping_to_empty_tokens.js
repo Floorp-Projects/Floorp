@@ -26,6 +26,7 @@ add_task(async function test_protocol_trimming() {
       context,
       autofilled: prot + "://www.mozilla.org/",
       completed: prot + "://www.mozilla.org/",
+      hasAutofillTitle: false,
       matches: [
         makeVisitResult(context, {
           uri: prot + "://www.mozilla.org/",
@@ -47,6 +48,7 @@ add_task(async function test_protocol_trimming() {
       context,
       autofilled: "www.mozilla.org/",
       completed: prot + "://www.mozilla.org/",
+      hasAutofillTitle: false,
       matches: [
         makeVisitResult(context, {
           uri: prot + "://www.mozilla.org/",

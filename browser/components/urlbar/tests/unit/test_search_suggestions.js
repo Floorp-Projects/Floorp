@@ -1765,7 +1765,7 @@ add_task(async function formHistory() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: "http://foo.example.com/",
-        title: "foo.example.com",
+        title: "test visit for http://foo.example.com/",
         heuristic: true,
       }),
       makeFormHistoryResult(context, {

@@ -181,10 +181,11 @@ add_task(async function test() {
     context,
     autofilled: "www.example.com/",
     completed: "https://www.example.com/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: `${wwwUrl}/`,
-        title: wwwUrl,
+        title: "Example",
         heuristic: true,
         providerName: "Autofill",
       }),
