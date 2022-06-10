@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsString.h"
+#include "plstr.h"
 
 template <typename T>
 int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
@@ -61,3 +62,30 @@ template int nsTDefaultStringComparator(const char*, const char*, size_t,
                                         size_t);
 template int nsTDefaultStringComparator(const char16_t*, const char16_t*,
                                         size_t, size_t);
+
+int nsCaseInsensitiveCStringComparator(const char* aLhs, const char* aRhs,
+                                       size_t aLhsLength, size_t aRhsLength) {
+#if defined(LIBFUZZER) && defined(LINUX)
+  // Make sure libFuzzer can see this string compare by calling the POSIX
+  // native function which is intercepted. We also call this if the lengths
+  // don't match so libFuzzer can at least see a partial string, but we throw
+  // away the result afterwards again.
+  int32_t result =
+      int32_t(strncasecmp(aLhs, aRhs, std::min(aLhsLength, aRhsLength)));
+
+  if (aLhsLength != aRhsLength) {
+    return (aLhsLength > aRhsLength) ? 1 : -1;
+  }
+#else
+  if (aLhsLength != aRhsLength) {
+    return (aLhsLength > aRhsLength) ? 1 : -1;
+  }
+  int32_t result = int32_t(PL_strncasecmp(aLhs, aRhs, aLhsLength));
+#endif
+  // Egads. PL_strncasecmp is returning *very* negative numbers.
+  // Some folks expect -1,0,1, so let's temper its enthusiasm.
+  if (result < 0) {
+    result = -1;
+  }
+  return result;
+}
