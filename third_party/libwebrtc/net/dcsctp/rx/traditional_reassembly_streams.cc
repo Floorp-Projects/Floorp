@@ -273,7 +273,7 @@ size_t TraditionalReassemblyStreams::HandleForwardTsn(
     UnwrappedTSN new_cumulative_ack_tsn,
     rtc::ArrayView<const AnyForwardTsnChunk::SkippedStream> skipped_streams) {
   size_t bytes_removed = 0;
-  // The `skipped_streams` only over ordered messages - need to
+  // The `skipped_streams` only cover ordered messages - need to
   // iterate all unordered streams manually to remove those chunks.
   for (auto& entry : unordered_streams_) {
     bytes_removed += entry.second.EraseTo(new_cumulative_ack_tsn);
