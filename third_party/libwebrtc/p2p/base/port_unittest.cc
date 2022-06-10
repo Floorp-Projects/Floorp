@@ -1503,22 +1503,6 @@ TEST_F(PortTest, TestDelayedBindingUdp) {
   EXPECT_EQ(1U, port->Candidates().size());
 }
 
-TEST_F(PortTest, TestDelayedBindingTcp) {
-  FakeAsyncPacketSocket* socket = new FakeAsyncPacketSocket();
-  FakePacketSocketFactory socket_factory;
-
-  socket_factory.set_next_server_tcp_socket(socket);
-  auto port = CreateTcpPort(kLocalAddr1, &socket_factory);
-
-  socket->set_state(AsyncPacketSocket::STATE_BINDING);
-  port->PrepareAddress();
-
-  EXPECT_EQ(0U, port->Candidates().size());
-  socket->SignalAddressReady(socket, kLocalAddr2);
-
-  EXPECT_EQ(1U, port->Candidates().size());
-}
-
 TEST_F(PortTest, TestDisableInterfaceOfTcpPort) {
   FakeAsyncPacketSocket* lsocket = new FakeAsyncPacketSocket();
   FakeAsyncPacketSocket* rsocket = new FakeAsyncPacketSocket();
@@ -1530,10 +1514,10 @@ TEST_F(PortTest, TestDisableInterfaceOfTcpPort) {
   socket_factory.set_next_server_tcp_socket(rsocket);
   auto rport = CreateTcpPort(kLocalAddr2, &socket_factory);
 
-  lsocket->set_state(AsyncPacketSocket::STATE_BINDING);
-  lsocket->SignalAddressReady(lsocket, kLocalAddr1);
-  rsocket->set_state(AsyncPacketSocket::STATE_BINDING);
-  rsocket->SignalAddressReady(rsocket, kLocalAddr2);
+  lsocket->set_state(AsyncPacketSocket::STATE_BOUND);
+  lsocket->local_address_ = kLocalAddr1;
+  rsocket->set_state(AsyncPacketSocket::STATE_BOUND);
+  rsocket->local_address_ = kLocalAddr2;
 
   lport->SetIceRole(cricket::ICEROLE_CONTROLLING);
   lport->SetIceTiebreaker(kTiebreaker1);
@@ -1576,12 +1560,14 @@ void PortTest::TestCrossFamilyPorts(int type) {
     if (type == SOCK_DGRAM) {
       factory.set_next_udp_socket(socket);
       ports[i] = CreateUdpPort(addresses[i], &factory);
+      socket->set_state(AsyncPacketSocket::STATE_BINDING);
+      socket->SignalAddressReady(socket, addresses[i]);
     } else if (type == SOCK_STREAM) {
       factory.set_next_server_tcp_socket(socket);
       ports[i] = CreateTcpPort(addresses[i], &factory);
+      socket->set_state(AsyncPacketSocket::STATE_BOUND);
+      socket->local_address_ = addresses[i];
     }
-    socket->set_state(AsyncPacketSocket::STATE_BINDING);
-    socket->SignalAddressReady(socket, addresses[i]);
     ports[i]->PrepareAddress();
   }
 

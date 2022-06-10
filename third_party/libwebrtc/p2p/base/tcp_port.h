@@ -102,9 +102,6 @@ class TCPPort : public Port {
 
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
 
-  void OnAddressReady(rtc::AsyncPacketSocket* socket,
-                      const rtc::SocketAddress& address);
-
   bool allow_listen_;
   rtc::AsyncPacketSocket* socket_;
   int error_;

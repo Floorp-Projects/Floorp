@@ -166,8 +166,7 @@ Connection* TCPPort::CreateConnection(const Candidate& address,
 
 void TCPPort::PrepareAddress() {
   if (socket_) {
-    // If socket isn't bound yet the address will be added in
-    // OnAddressReady(). Socket may be in the CLOSED state if Listen()
+    // Socket may be in the CLOSED state if Listen()
     // failed, we still want to add the socket address.
     RTC_LOG(LS_VERBOSE) << "Preparing TCP address, current state: "
                         << socket_->GetState();
@@ -300,7 +299,6 @@ void TCPPort::TryCreateServerSocket() {
     return;
   }
   socket_->SignalNewConnection.connect(this, &TCPPort::OnNewConnection);
-  socket_->SignalAddressReady.connect(this, &TCPPort::OnAddressReady);
 }
 
 rtc::AsyncPacketSocket* TCPPort::GetIncoming(const rtc::SocketAddress& addr,
@@ -333,13 +331,6 @@ void TCPPort::OnSentPacket(rtc::AsyncPacketSocket* socket,
 
 void TCPPort::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
   Port::OnReadyToSend();
-}
-
-void TCPPort::OnAddressReady(rtc::AsyncPacketSocket* socket,
-                             const rtc::SocketAddress& address) {
-  AddAddress(address, address, rtc::SocketAddress(), TCP_PROTOCOL_NAME, "",
-             TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE, ICE_TYPE_PREFERENCE_HOST_TCP,
-             0, "", true);
 }
 
 // TODO(qingsi): `CONNECTION_WRITE_CONNECT_TIMEOUT` is overriden by
