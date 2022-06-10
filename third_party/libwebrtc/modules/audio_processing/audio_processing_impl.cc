@@ -1146,13 +1146,15 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
                                 levels.peak, 1, RmsLevel::kMinLevelDb, 64);
   }
 
+  // Detect an analog gain change.
+  int analog_mic_level = recommended_stream_analog_level_locked();
+  const bool analog_mic_level_changed =
+      capture_.prev_analog_mic_level != analog_mic_level &&
+      capture_.prev_analog_mic_level != -1;
+  capture_.prev_analog_mic_level = analog_mic_level;
+
   if (submodules_.echo_controller) {
-    // Detect and flag any change in the analog gain.
-    int analog_mic_level = recommended_stream_analog_level_locked();
-    capture_.echo_path_gain_change =
-        capture_.prev_analog_mic_level != analog_mic_level &&
-        capture_.prev_analog_mic_level != -1;
-    capture_.prev_analog_mic_level = analog_mic_level;
+    capture_.echo_path_gain_change = analog_mic_level_changed;
 
     // Detect and flag any change in the capture level adjustment pre-gain.
     if (submodules_.capture_levels_adjuster) {
