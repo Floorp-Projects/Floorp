@@ -22,7 +22,6 @@ class NativeObject;
 class ArrayObject;
 class GlobalObject;
 class PlainObject;
-class ScriptSourceObject;
 
 // These are internal counterparts to the public types such as HandleObject.
 
@@ -32,7 +31,6 @@ using HandleLinearString = JS::Handle<JSLinearString*>;
 using HandlePropertyName = JS::Handle<PropertyName*>;
 using HandleArrayObject = JS::Handle<ArrayObject*>;
 using HandlePlainObject = JS::Handle<PlainObject*>;
-using HandleScriptSourceObject = JS::Handle<ScriptSourceObject*>;
 
 using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
 using MutableHandleNativeObject = JS::MutableHandle<NativeObject*>;
@@ -46,7 +44,6 @@ using RootedPropertyName = JS::Rooted<PropertyName*>;
 using RootedArrayObject = JS::Rooted<ArrayObject*>;
 using RootedGlobalObject = JS::Rooted<GlobalObject*>;
 using RootedPlainObject = JS::Rooted<PlainObject*>;
-using RootedScriptSourceObject = JS::Rooted<ScriptSourceObject*>;
 
 using FunctionVector = JS::GCVector<JSFunction*>;
 using PropertyNameVector = JS::GCVector<PropertyName*>;

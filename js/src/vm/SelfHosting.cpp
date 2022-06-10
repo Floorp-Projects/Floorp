@@ -2964,7 +2964,7 @@ ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
     return nullptr;
   }
 
-  RootedScriptSourceObject sourceObject(
+  Rooted<ScriptSourceObject*> sourceObject(
       cx, ScriptSourceObject::create(cx, source.get()));
   if (!sourceObject) {
     return nullptr;

@@ -1238,7 +1238,6 @@ class ArrayObject;
 class DebugEnvironmentProxy;
 class GlobalObject;
 class PropertyName;
-class ScriptSourceObject;
 class GetterSetter;
 class PropMap;
 
@@ -1272,7 +1271,6 @@ using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
 using WeakHeapPtrGlobalObject = WeakHeapPtr<GlobalObject*>;
 using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;
 using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
-using WeakHeapPtrScriptSourceObject = WeakHeapPtr<ScriptSourceObject*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
 
