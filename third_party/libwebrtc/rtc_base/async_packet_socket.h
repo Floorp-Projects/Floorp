@@ -135,6 +135,11 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
   RTC_DISALLOW_COPY_AND_ASSIGN(AsyncPacketSocket);
 };
 
+// TODO(bugs.webrtc.org/13065): Intended to be broken out into a separate class,
+// after downstream has adapted the new name. The main feature to move from
+// AsyncPacketSocket to AsyncListenSocket is the SignalNewConnection.
+using AsyncListenSocket = AsyncPacketSocket;
+
 void CopySocketInformationToPacketInfo(size_t packet_size_bytes,
                                        const AsyncPacketSocket& socket_from,
                                        bool is_connectionless,

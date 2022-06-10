@@ -59,7 +59,7 @@ class RTC_EXPORT PacketSocketFactory {
   virtual AsyncPacketSocket* CreateUdpSocket(const SocketAddress& address,
                                              uint16_t min_port,
                                              uint16_t max_port) = 0;
-  virtual AsyncPacketSocket* CreateServerTcpSocket(
+  virtual AsyncListenSocket* CreateServerTcpSocket(
       const SocketAddress& local_address,
       uint16_t min_port,
       uint16_t max_port,
