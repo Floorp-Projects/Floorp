@@ -128,6 +128,21 @@ struct DcSctpOptions {
   // unacknowledged packet. Whatever is smallest of RTO/2 and this will be used.
   DurationMs delayed_ack_max_timeout = DurationMs(200);
 
+  // The minimum limit for the measured RTT variance
+  //
+  // Setting this below the expected delayed ack timeout (+ margin) of the peer
+  // might result in unnecessary retransmissions, as the maximum time it takes
+  // to ACK a DATA chunk is typically RTT + ATO (delayed ack timeout), and when
+  // the SCTP channel is quite idle, and heartbeats dominate the source of RTT
+  // measurement, the RTO would converge with the smoothed RTT (SRTT). The
+  // default ATO is 200ms in usrsctp, and a 20ms (10%) margin would include the
+  // processing time of received packets and the clock granularity when setting
+  // the delayed ack timer on the peer.
+  //
+  // This is described for TCP in
+  // https://datatracker.ietf.org/doc/html/rfc6298#section-4.
+  DurationMs min_rtt_variance = DurationMs(220);
+
   // Do slow start as TCP - double cwnd instead of increasing it by MTU.
   bool slow_start_tcp_style = false;
 
