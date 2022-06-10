@@ -26,9 +26,9 @@ rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilder::Create() {
   return nullptr;
 #else  // WEBRTC_EXCLUDE_AUDIO_PROCESSING_MODULE
   return rtc::make_ref_counted<AudioProcessingImpl>(
-      std::move(capture_post_processing_), std::move(render_pre_processing_),
-      std::move(echo_control_factory_), std::move(echo_detector_),
-      std::move(capture_analyzer_));
+      config_, std::move(capture_post_processing_),
+      std::move(render_pre_processing_), std::move(echo_control_factory_),
+      std::move(echo_detector_), std::move(capture_analyzer_));
 #endif
 }
 
