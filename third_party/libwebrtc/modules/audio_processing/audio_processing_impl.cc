@@ -235,7 +235,8 @@ bool AudioProcessingImpl::SubmoduleStates::HighPassFilteringRequired() const {
 }
 
 AudioProcessingImpl::AudioProcessingImpl()
-    : AudioProcessingImpl(/*capture_post_processor=*/nullptr,
+    : AudioProcessingImpl(/*config=*/{},
+                          /*capture_post_processor=*/nullptr,
                           /*render_pre_processor=*/nullptr,
                           /*echo_control_factory=*/nullptr,
                           /*echo_detector=*/nullptr,
@@ -244,6 +245,7 @@ AudioProcessingImpl::AudioProcessingImpl()
 int AudioProcessingImpl::instance_count_ = 0;
 
 AudioProcessingImpl::AudioProcessingImpl(
+    const AudioProcessing::Config& config,
     std::unique_ptr<CustomProcessing> capture_post_processor,
     std::unique_ptr<CustomProcessing> render_pre_processor,
     std::unique_ptr<EchoControlFactory> echo_control_factory,
@@ -260,6 +262,7 @@ AudioProcessingImpl::AudioProcessingImpl(
       capture_runtime_settings_enqueuer_(&capture_runtime_settings_),
       render_runtime_settings_enqueuer_(&render_runtime_settings_),
       echo_control_factory_(std::move(echo_control_factory)),
+      config_(config),
       submodule_states_(!!capture_post_processor,
                         !!render_pre_processor,
                         !!capture_analyzer),
