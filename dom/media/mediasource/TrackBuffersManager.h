@@ -8,6 +8,7 @@
 #define MOZILLA_TRACKBUFFERSMANAGER_H_
 
 #include "mozilla/Atomics.h"
+#include "mozilla/EventTargetCapability.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
@@ -152,7 +153,8 @@ class TrackBuffersManager final
                                            const media::TimeUnit& aFuzz,
                                            MediaResult& aResult);
   int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
-                              const media::TimeUnit& aFuzz) const;
+                              const media::TimeUnit& aFuzz) const
+      REQUIRES(mTaskQueueCapability);
 
   // Will set the next GetSample index if needed. This information is determined
   // through the value of mNextSampleTimecode. Return false if the index
@@ -160,7 +162,8 @@ class TrackBuffersManager final
   // This occurs if either the track buffer doesn't contain the required
   // timecode or is empty.
   nsresult SetNextGetSampleIndexIfNeeded(TrackInfo::TrackType aTrack,
-                                         const media::TimeUnit& aFuzz);
+                                         const media::TimeUnit& aFuzz)
+      REQUIRES(mTaskQueueCapability);
 
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz);
@@ -180,92 +183,103 @@ class TrackBuffersManager final
   // All following functions run on the taskqueue.
   RefPtr<AppendPromise> DoAppendData(already_AddRefed<MediaByteBuffer> aData,
                                      const SourceBufferAttributes& aAttributes);
-  void ScheduleSegmentParserLoop();
-  void SegmentParserLoop();
-  void InitializationSegmentReceived();
-  void ShutdownDemuxers();
-  void CreateDemuxerforMIMEType();
-  void ResetDemuxingState();
-  void NeedMoreData();
-  void RejectAppend(const MediaResult& aRejectValue, const char* aName);
+  void ScheduleSegmentParserLoop() REQUIRES(mTaskQueueCapability);
+  void SegmentParserLoop() REQUIRES(mTaskQueueCapability);
+  void InitializationSegmentReceived() REQUIRES(mTaskQueueCapability);
+  void ShutdownDemuxers() REQUIRES(mTaskQueueCapability);
+  void CreateDemuxerforMIMEType() REQUIRES(mTaskQueueCapability);
+  void ResetDemuxingState() REQUIRES(mTaskQueueCapability);
+  void NeedMoreData() REQUIRES(mTaskQueueCapability);
+  void RejectAppend(const MediaResult& aRejectValue, const char* aName)
+      REQUIRES(mTaskQueueCapability);
   // Will return a promise that will be resolved once all frames of the current
   // media segment have been processed.
-  RefPtr<CodedFrameProcessingPromise> CodedFrameProcessing();
-  void CompleteCodedFrameProcessing();
+  RefPtr<CodedFrameProcessingPromise> CodedFrameProcessing()
+      REQUIRES(mTaskQueueCapability);
+  void CompleteCodedFrameProcessing() REQUIRES(mTaskQueueCapability);
   // Called by ResetParserState.
-  void CompleteResetParserState();
+  void CompleteResetParserState() REQUIRES(mTaskQueueCapability);
   RefPtr<RangeRemovalPromise> CodedFrameRemovalWithPromise(
-      media::TimeInterval aInterval);
-  bool CodedFrameRemoval(media::TimeInterval aInterval);
+      media::TimeInterval aInterval) REQUIRES(mTaskQueueCapability);
+  bool CodedFrameRemoval(media::TimeInterval aInterval)
+      REQUIRES(mTaskQueueCapability);
   // Removes all coded frames -- this is not to spec and should be used as a
   // last resort to clear buffers only if other methods cannot.
-  void RemoveAllCodedFrames();
-  void SetAppendState(SourceBufferAttributes::AppendState aAppendState);
+  void RemoveAllCodedFrames() REQUIRES(mTaskQueueCapability);
+  void SetAppendState(SourceBufferAttributes::AppendState aAppendState)
+      REQUIRES(mTaskQueueCapability);
 
   bool HasVideo() const { return mVideoTracks.mNumTracks > 0; }
   bool HasAudio() const { return mAudioTracks.mNumTracks > 0; }
 
   // The input buffer as per
   // http://w3c.github.io/media-source/index.html#sourcebuffer-input-buffer
-  Maybe<MediaSpan> mInputBuffer;
+  Maybe<MediaSpan> mInputBuffer GUARDED_BY(mTaskQueueCapability);
   // Buffer full flag as per
   // https://w3c.github.io/media-source/#sourcebuffer-buffer-full-flag. Accessed
   // on both the main thread and the task queue.
   Atomic<bool> mBufferFull;
-  bool mFirstInitializationSegmentReceived;
-  bool mChangeTypeReceived;
+  bool mFirstInitializationSegmentReceived GUARDED_BY(mTaskQueueCapability);
+  bool mChangeTypeReceived GUARDED_BY(mTaskQueueCapability);
   // Set to true once a new segment is started.
-  bool mNewMediaSegmentStarted;
-  bool mActiveTrack;
-  MediaContainerType mType;
+  bool mNewMediaSegmentStarted GUARDED_BY(mTaskQueueCapability);
+  bool mActiveTrack GUARDED_BY(mTaskQueueCapability);
+  MediaContainerType mType GUARDED_BY(mTaskQueueCapability);
 
   // ContainerParser objects and methods.
   // Those are used to parse the incoming input buffer.
 
   // Recreate the ContainerParser and if aReuseInitData is true then
   // feed it with the previous init segment found.
-  void RecreateParser(bool aReuseInitData);
+  void RecreateParser(bool aReuseInitData) REQUIRES(mTaskQueueCapability);
   UniquePtr<ContainerParser> mParser;
 
   // Demuxer objects and methods.
-  void AppendDataToCurrentInputBuffer(const MediaSpan& aData);
+  void AppendDataToCurrentInputBuffer(const MediaSpan& aData)
+      REQUIRES(mTaskQueueCapability);
 
-  RefPtr<MediaByteBuffer> mInitData;
+  RefPtr<MediaByteBuffer> mInitData GUARDED_BY(mTaskQueueCapability);
 
   // Checks if a new set of init data is a repeat of the last set of init data
   // received. Because streams may retransmit the same init data (or
   // functionally equivalent init data) we do not want to perform costly
   // operations each time we receive init data, only when it's actually
   // different data.
-  bool IsRepeatInitData(const MediaInfo& aNewMediaInfo) const;
+  bool IsRepeatInitData(const MediaInfo& aNewMediaInfo) const
+      REQUIRES(mTaskQueueCapability);
 
   // Temporary input buffer to handle partial media segment header.
   // We store the current input buffer content into it should we need to
   // reinitialize the demuxer once we have some samples and a discontinuity is
   // detected.
-  Maybe<MediaSpan> mPendingInputBuffer;
-  RefPtr<SourceBufferResource> mCurrentInputBuffer;
-  RefPtr<MediaDataDemuxer> mInputDemuxer;
+  Maybe<MediaSpan> mPendingInputBuffer GUARDED_BY(mTaskQueueCapability);
+  RefPtr<SourceBufferResource> mCurrentInputBuffer
+      GUARDED_BY(mTaskQueueCapability);
+  RefPtr<MediaDataDemuxer> mInputDemuxer GUARDED_BY(mTaskQueueCapability);
   // Length already processed in current media segment.
-  uint64_t mProcessedInput;
-  Maybe<media::TimeUnit> mLastParsedEndTime;
+  uint64_t mProcessedInput GUARDED_BY(mTaskQueueCapability);
+  Maybe<media::TimeUnit> mLastParsedEndTime GUARDED_BY(mTaskQueueCapability);
 
   void OnDemuxerInitDone(const MediaResult& aResult);
   void OnDemuxerInitFailed(const MediaResult& aFailure);
-  void OnDemuxerResetDone(const MediaResult& aResult);
+  void OnDemuxerResetDone(const MediaResult& aResult)
+      REQUIRES(mTaskQueueCapability);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
 
-  void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
-  void DoDemuxVideo();
+  void OnDemuxFailed(TrackType aTrack, const MediaResult& aError)
+      REQUIRES(mTaskQueueCapability);
+  void DoDemuxVideo() REQUIRES(mTaskQueueCapability);
   void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
   void OnVideoDemuxFailed(const MediaResult& aError) {
     mVideoTracks.mDemuxRequest.Complete();
+    mTaskQueueCapability->AssertOnCurrentThread();
     OnDemuxFailed(TrackType::kVideoTrack, aError);
   }
-  void DoDemuxAudio();
+  void DoDemuxAudio() REQUIRES(mTaskQueueCapability);
   void OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
   void OnAudioDemuxFailed(const MediaResult& aError) {
     mAudioTracks.mDemuxRequest.Complete();
+    mTaskQueueCapability->AssertOnCurrentThread();
     OnDemuxFailed(TrackType::kAudioTrack, aError);
   }
 
@@ -274,9 +288,11 @@ class TrackBuffersManager final
   void MaybeDispatchEncryptedEvent(
       const nsTArray<RefPtr<MediaRawData>>& aSamples);
 
-  void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aSizeToEvict);
+  void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aSizeToEvict)
+      REQUIRES(mTaskQueueCapability);
 
-  void GetDebugInfo(dom::TrackBuffersManagerDebugInfo& aInfo) const;
+  void GetDebugInfo(dom::TrackBuffersManagerDebugInfo& aInfo) const
+      REQUIRES(mTaskQueueCapability);
 
   struct TrackData {
     TrackData() : mNumTracks(0), mNeedRandomAccessPoint(true), mSizeBuffer(0) {}
@@ -399,16 +415,21 @@ class TrackBuffersManager final
     void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes) const;
   };
 
-  void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime);
-  void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData);
-  media::TimeInterval PresentationInterval(const TrackBuffer& aSamples) const;
+  void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime)
+      REQUIRES(mTaskQueueCapability);
+  void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
+      REQUIRES(mTaskQueueCapability);
+  media::TimeInterval PresentationInterval(const TrackBuffer& aSamples) const
+      REQUIRES(mTaskQueueCapability);
   bool CheckNextInsertionIndex(TrackData& aTrackData,
-                               const media::TimeUnit& aSampleTime);
+                               const media::TimeUnit& aSampleTime)
+      REQUIRES(mTaskQueueCapability);
   void InsertFrames(TrackBuffer& aSamples,
                     const media::TimeIntervals& aIntervals,
-                    TrackData& aTrackData);
+                    TrackData& aTrackData) REQUIRES(mTaskQueueCapability);
   void UpdateHighestTimestamp(TrackData& aTrackData,
-                              const media::TimeUnit& aHighestTime);
+                              const media::TimeUnit& aHighestTime)
+      REQUIRES(mTaskQueueCapability);
   // Remove all frames and their dependencies contained in aIntervals.
   // Return the index at which frames were first removed or 0 if no frames
   // removed.
@@ -486,14 +507,15 @@ class TrackBuffersManager final
   void ProcessTasks();
   // Set if the TrackBuffersManager is currently processing a task.
   // At this stage, this task is always a AppendBufferTask.
-  RefPtr<SourceBufferTask> mCurrentTask;
+  RefPtr<SourceBufferTask> mCurrentTask GUARDED_BY(mTaskQueueCapability);
   // Current SourceBuffer state for ongoing task.
   // Its content is returned to the SourceBuffer once the AppendBufferTask has
   // completed.
-  UniquePtr<SourceBufferAttributes> mSourceBufferAttributes;
+  UniquePtr<SourceBufferAttributes> mSourceBufferAttributes
+      GUARDED_BY(mTaskQueueCapability);
   // The current sourcebuffer append window. It's content is equivalent to
   // mSourceBufferAttributes.mAppendWindowStart/End
-  media::TimeInterval mAppendWindow;
+  media::TimeInterval mAppendWindow GUARDED_BY(mTaskQueueCapability);
 
   // Strong references to external objects.
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
@@ -530,6 +552,14 @@ class TrackBuffersManager final
   media::TimeIntervals mAudioBufferedRanges;
   // MediaInfo of the first init segment read.
   MediaInfo mInfo;
+  // End mutex protected members.
+
+  // EventTargetCapability used to ensure we're running on the task queue
+  // as expected for various accesses.
+  // TODO: we could store only this and dispatch to it, rather than also having
+  // mTaskQueue. However, there's special locking around mTaskQueue, so we keep
+  // both for now.
+  Maybe<EventTargetCapability<TaskQueue>> mTaskQueueCapability;
 };
 
 }  // namespace mozilla
