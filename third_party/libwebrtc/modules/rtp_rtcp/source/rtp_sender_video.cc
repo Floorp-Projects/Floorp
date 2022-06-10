@@ -292,11 +292,25 @@ void RTPSenderVideo::SetVideoLayersAllocationAfterTransformation(
 void RTPSenderVideo::SetVideoLayersAllocationInternal(
     VideoLayersAllocation allocation) {
   RTC_DCHECK_RUNS_SERIALIZED(&send_checker_);
-  if (!allocation_ || allocation.active_spatial_layers.size() >
+  if (!allocation_ || allocation.active_spatial_layers.size() !=
                           allocation_->active_spatial_layers.size()) {
     send_allocation_ = SendVideoLayersAllocation::kSendWithResolution;
   } else if (send_allocation_ == SendVideoLayersAllocation::kDontSend) {
     send_allocation_ = SendVideoLayersAllocation::kSendWithoutResolution;
+  }
+  if (send_allocation_ == SendVideoLayersAllocation::kSendWithoutResolution) {
+    // Check if frame rate changed more than 5fps since the last time the
+    // extension was sent with frame rate and resolution.
+    for (size_t i = 0; i < allocation.active_spatial_layers.size(); ++i) {
+      if (abs(static_cast<int>(
+                  allocation.active_spatial_layers[i].frame_rate_fps) -
+              static_cast<int>(
+                  last_full_sent_allocation_->active_spatial_layers[i]
+                      .frame_rate_fps)) > 5) {
+        send_allocation_ = SendVideoLayersAllocation::kSendWithResolution;
+        break;
+      }
+    }
   }
   allocation_ = std::move(allocation);
 }
@@ -726,6 +740,9 @@ bool RTPSenderVideo::SendVideo(
     // This frame will likely be delivered, no need to populate playout
     // delay extensions until it changes again.
     playout_delay_pending_ = false;
+    if (send_allocation_ == SendVideoLayersAllocation::kSendWithResolution) {
+      last_full_sent_allocation_ = allocation_;
+    }
     send_allocation_ = SendVideoLayersAllocation::kDontSend;
   }
 
