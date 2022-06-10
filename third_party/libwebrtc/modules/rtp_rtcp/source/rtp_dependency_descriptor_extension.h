@@ -13,7 +13,6 @@
 #include <bitset>
 #include <cstdint>
 
-#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtp_parameters.h"
@@ -28,9 +27,6 @@ namespace webrtc {
 class RtpDependencyDescriptorExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionGenericFrameDescriptor02;
-  static constexpr ABSL_DEPRECATED("Use Uri()") char kUri[] =
-      "https://aomediacodec.github.io/av1-rtp-spec/"
-      "#dependency-descriptor-rtp-header-extension";
   static constexpr absl::string_view Uri() {
     return RtpExtension::kDependencyDescriptorUri;
   }

@@ -41,7 +41,6 @@ namespace webrtc {
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType AbsoluteSendTime::kId;
 constexpr uint8_t AbsoluteSendTime::kValueSizeBytes;
-constexpr const char AbsoluteSendTime::kUri[];
 
 bool AbsoluteSendTime::Parse(rtc::ArrayView<const uint8_t> data,
                              uint32_t* time_24bits) {
@@ -98,7 +97,6 @@ constexpr RTPExtensionType AbsoluteCaptureTimeExtension::kId;
 constexpr uint8_t AbsoluteCaptureTimeExtension::kValueSizeBytes;
 constexpr uint8_t AbsoluteCaptureTimeExtension::
     kValueSizeBytesWithoutEstimatedCaptureClockOffset;
-constexpr const char AbsoluteCaptureTimeExtension::kUri[];
 
 bool AbsoluteCaptureTimeExtension::Parse(rtc::ArrayView<const uint8_t> data,
                                          AbsoluteCaptureTime* extension) {
@@ -164,7 +162,6 @@ bool AbsoluteCaptureTimeExtension::Write(rtc::ArrayView<uint8_t> data,
 
 constexpr RTPExtensionType AudioLevel::kId;
 constexpr uint8_t AudioLevel::kValueSizeBytes;
-constexpr const char AudioLevel::kUri[];
 
 bool AudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
                        bool* voice_activity,
@@ -211,7 +208,6 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
 // Sample Audio Level Encoding Using the Two-Byte Header Format
 constexpr RTPExtensionType CsrcAudioLevel::kId;
 constexpr uint8_t CsrcAudioLevel::kMaxValueSizeBytes;
-constexpr const char CsrcAudioLevel::kUri[];
 
 bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
                            std::vector<uint8_t>* csrc_audio_levels) {
@@ -261,7 +257,6 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType TransmissionOffset::kId;
 constexpr uint8_t TransmissionOffset::kValueSizeBytes;
-constexpr const char TransmissionOffset::kUri[];
 
 bool TransmissionOffset::Parse(rtc::ArrayView<const uint8_t> data,
                                int32_t* rtp_time) {
@@ -287,7 +282,6 @@ bool TransmissionOffset::Write(rtc::ArrayView<uint8_t> data, int32_t rtp_time) {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType TransportSequenceNumber::kId;
 constexpr uint8_t TransportSequenceNumber::kValueSizeBytes;
-constexpr const char TransportSequenceNumber::kUri[];
 
 bool TransportSequenceNumber::Parse(rtc::ArrayView<const uint8_t> data,
                                     uint16_t* transport_sequence_number) {
@@ -325,7 +319,6 @@ constexpr RTPExtensionType TransportSequenceNumberV2::kId;
 constexpr uint8_t TransportSequenceNumberV2::kValueSizeBytes;
 constexpr uint8_t
     TransportSequenceNumberV2::kValueSizeBytesWithoutFeedbackRequest;
-constexpr const char TransportSequenceNumberV2::kUri[];
 constexpr uint16_t TransportSequenceNumberV2::kIncludeTimestampsBit;
 
 bool TransportSequenceNumberV2::Parse(
@@ -387,7 +380,6 @@ bool TransportSequenceNumberV2::Write(
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType VideoOrientation::kId;
 constexpr uint8_t VideoOrientation::kValueSizeBytes;
-constexpr const char VideoOrientation::kUri[];
 
 bool VideoOrientation::Parse(rtc::ArrayView<const uint8_t> data,
                              VideoRotation* rotation) {
@@ -425,7 +417,6 @@ bool VideoOrientation::Write(rtc::ArrayView<uint8_t> data, uint8_t value) {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType PlayoutDelayLimits::kId;
 constexpr uint8_t PlayoutDelayLimits::kValueSizeBytes;
-constexpr const char PlayoutDelayLimits::kUri[];
 
 bool PlayoutDelayLimits::Parse(rtc::ArrayView<const uint8_t> data,
                                VideoPlayoutDelay* playout_delay) {
@@ -508,7 +499,6 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 constexpr RTPExtensionType VideoContentTypeExtension::kId;
 constexpr uint8_t VideoContentTypeExtension::kValueSizeBytes;
-constexpr const char VideoContentTypeExtension::kUri[];
 
 bool VideoContentTypeExtension::Parse(rtc::ArrayView<const uint8_t> data,
                                       VideoContentType* content_type) {
@@ -551,7 +541,6 @@ bool VideoContentTypeExtension::Write(rtc::ArrayView<uint8_t> data,
 
 constexpr RTPExtensionType VideoTimingExtension::kId;
 constexpr uint8_t VideoTimingExtension::kValueSizeBytes;
-constexpr const char VideoTimingExtension::kUri[];
 constexpr uint8_t VideoTimingExtension::kFlagsOffset;
 constexpr uint8_t VideoTimingExtension::kEncodeStartDeltaOffset;
 constexpr uint8_t VideoTimingExtension::kEncodeFinishDeltaOffset;
@@ -661,7 +650,6 @@ bool VideoTimingExtension::Write(rtc::ArrayView<uint8_t> data,
 
 constexpr RTPExtensionType ColorSpaceExtension::kId;
 constexpr uint8_t ColorSpaceExtension::kValueSizeBytes;
-constexpr const char ColorSpaceExtension::kUri[];
 
 bool ColorSpaceExtension::Parse(rtc::ArrayView<const uint8_t> data,
                                 ColorSpace* color_space) {
@@ -865,16 +853,10 @@ bool BaseRtpStringExtension::Write(rtc::ArrayView<uint8_t> data,
   return true;
 }
 
-// Constant declarations for string RTP header extension types.
-
+// Constant declarations for RTP header extension types.
 constexpr RTPExtensionType RtpStreamId::kId;
-constexpr const char RtpStreamId::kUri[];
-
 constexpr RTPExtensionType RepairedRtpStreamId::kId;
-constexpr const char RepairedRtpStreamId::kUri[];
-
 constexpr RTPExtensionType RtpMid::kId;
-constexpr const char RtpMid::kUri[];
 
 // An RTP Header Extension for Inband Comfort Noise
 //
@@ -931,7 +913,6 @@ bool InbandComfortNoiseExtension::Write(rtc::ArrayView<uint8_t> data,
 
 constexpr RTPExtensionType VideoFrameTrackingIdExtension::kId;
 constexpr uint8_t VideoFrameTrackingIdExtension::kValueSizeBytes;
-constexpr const char VideoFrameTrackingIdExtension::kUri[];
 
 bool VideoFrameTrackingIdExtension::Parse(rtc::ArrayView<const uint8_t> data,
                                           uint16_t* video_frame_tracking_id) {
