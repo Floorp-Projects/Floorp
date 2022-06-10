@@ -105,7 +105,9 @@ bool GainController2::Validate(
     const AudioProcessing::Config::GainController2& config) {
   const auto& fixed = config.fixed_digital;
   const auto& adaptive = config.adaptive_digital;
-  return fixed.gain_db >= 0.f && fixed.gain_db < 50.f &&
+  return fixed.gain_db >= 0.0f && fixed.gain_db < 50.f &&
+         adaptive.headroom_db >= 0.0f && adaptive.max_gain_db > 0.0f &&
+         adaptive.initial_gain_db >= 0.0f &&
          adaptive.max_gain_change_db_per_second > 0.0f &&
          adaptive.max_output_noise_level_dbfs <= 0.0f;
 }

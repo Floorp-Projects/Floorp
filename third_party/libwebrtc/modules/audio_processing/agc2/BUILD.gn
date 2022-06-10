@@ -179,6 +179,7 @@ rtc_library("adaptive_digital_unittests") {
     ":common",
     ":gain_applier",
     ":test_utils",
+    "..:api",
     "..:apm_logging",
     "..:audio_frame_view",
     "../../../api:array_view",

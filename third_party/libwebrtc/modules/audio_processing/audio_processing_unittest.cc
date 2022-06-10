@@ -3107,6 +3107,18 @@ TEST(AudioProcessing, GainController2ConfigEqual) {
   b_adaptive.dry_run = a_adaptive.dry_run;
   EXPECT_EQ(a, b);
 
+  a_adaptive.headroom_db += 1.0f;
+  b_adaptive.headroom_db = a_adaptive.headroom_db;
+  EXPECT_EQ(a, b);
+
+  a_adaptive.max_gain_db += 1.0f;
+  b_adaptive.max_gain_db = a_adaptive.max_gain_db;
+  EXPECT_EQ(a, b);
+
+  a_adaptive.initial_gain_db += 1.0f;
+  b_adaptive.initial_gain_db = a_adaptive.initial_gain_db;
+  EXPECT_EQ(a, b);
+
   a_adaptive.vad_reset_period_ms++;
   b_adaptive.vad_reset_period_ms = a_adaptive.vad_reset_period_ms;
   EXPECT_EQ(a, b);
@@ -3161,6 +3173,18 @@ TEST(AudioProcessing, GainController2ConfigNotEqual) {
   a_adaptive = b_adaptive;
 
   Toggle(a_adaptive.dry_run);
+  EXPECT_NE(a, b);
+  a_adaptive = b_adaptive;
+
+  a_adaptive.headroom_db += 1.0f;
+  EXPECT_NE(a, b);
+  a_adaptive = b_adaptive;
+
+  a_adaptive.max_gain_db += 1.0f;
+  EXPECT_NE(a, b);
+  a_adaptive = b_adaptive;
+
+  a_adaptive.initial_gain_db += 1.0f;
   EXPECT_NE(a, b);
   a_adaptive = b_adaptive;
 
