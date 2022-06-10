@@ -40,6 +40,10 @@
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"  // for signal_with_thread...
 
+#if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
+#include "rtc_base/task_queue_gcd.h"
+#endif
+
 namespace rtc {
 
 int ResolveHostname(const std::string& hostname,
@@ -123,7 +127,7 @@ void AsyncResolver::Start(const SocketAddress& addr) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DCHECK(!destroy_called_);
   addr_ = addr;
-  PlatformThread::SpawnDetached(
+  auto thread_function =
       [this, addr, caller_task_queue = webrtc::TaskQueueBase::Current(),
        state = state_] {
         std::vector<IPAddress> addresses;
@@ -146,8 +150,13 @@ void AsyncResolver::Start(const SocketAddress& addr) {
                 }
               }));
         }
-      },
-      "AsyncResolver");
+      };
+#if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
+  webrtc::PostTaskToGlobalQueue(
+      webrtc::ToQueuedTask(std::move(thread_function)));
+#else
+  PlatformThread::SpawnDetached(std::move(thread_function), "AsyncResolver");
+#endif
 }
 
 bool AsyncResolver::GetResolvedAddress(int family, SocketAddress* addr) const {
