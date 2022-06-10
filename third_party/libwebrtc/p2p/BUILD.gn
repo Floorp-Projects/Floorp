@@ -108,7 +108,6 @@ rtc_library("rtc_p2p") {
     "../rtc_base:rtc_numerics",
     "../rtc_base:socket",
     "../rtc_base:socket_address",
-    "../rtc_base:socket_factory",
     "../rtc_base:socket_server",
     "../rtc_base:threading",
     "../rtc_base/experiments:field_trial_parser",
