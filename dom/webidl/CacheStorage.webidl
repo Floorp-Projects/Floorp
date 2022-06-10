@@ -4,16 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
- *
+ * https://w3c.github.io/ServiceWorker/#cachestorage-interface
  */
-
-// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-storage
 
 interface Principal;
 
 [Exposed=(Window,Worker),
- Pref="dom.caches.enabled"]
+ Func="nsGlobalWindowInner::CachesEnabled"]
 interface CacheStorage {
   [Throws, ChromeOnly]
   constructor(CacheStorageNamespace namespace, Principal principal);

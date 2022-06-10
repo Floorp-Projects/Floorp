@@ -407,6 +407,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   static bool ContentPropertyEnabled(JSContext* aCx, JSObject*);
 
+  static bool CachesEnabled(JSContext* aCx, JSObject*);
+
   bool DoResolve(
       JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
       JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc);
