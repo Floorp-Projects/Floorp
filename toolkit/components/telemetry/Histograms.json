@@ -3092,6 +3092,28 @@
     "n_values": 672,
     "description": "SSL handshake result, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
   },
+  "SSL_HANDSHAKE_RESULT_ECH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1771479],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 672,
+    "description": "SSL handshake result for connections which used ECH 'Real', 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
+  },
+  "SSL_HANDSHAKE_RESULT_ECH_GREASE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1771479],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 672,
+    "description": "SSL handshake result for connections which used ECH GREASE, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
+  },
   "SSL_TIME_UNTIL_READY": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -3103,6 +3125,30 @@
     "high": 60000,
     "n_buckets": 200,
     "description": "ms of SSL wait time including TCP and proxy tunneling"
+  },
+  "SSL_TIME_UNTIL_READY_ECH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1771479],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 200,
+    "description": "ms of SSL wait time including TCP and proxy tunneling for connections using ECH 'Real'"
+  },
+  "SSL_TIME_UNTIL_READY_ECH_GREASE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1771479],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 200,
+    "description": "ms of SSL wait time including TCP and proxy tunneling for connections using ECH GREASE"
   },
   "SSL_TIME_UNTIL_HANDSHAKE_FINISHED_KEYED_BY_KA": {
     "record_in_processes": ["main", "content"],
