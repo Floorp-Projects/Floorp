@@ -378,6 +378,15 @@ static void AddGLDependencies(SandboxBroker::Policy* policy) {
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
 
+  // Snap puts the usual /usr/share things in a different place, and
+  // we'll fail to load the library if we don't have (at least) the
+  // glvnd config:
+  if (const char* snapDesktopDir = PR_GetEnv("SNAP_DESKTOP_RUNTIME")) {
+    nsAutoCString snapDesktopShare(snapDesktopDir);
+    snapDesktopShare.AppendLiteral("/usr/share");
+    policy->AddDir(rdonly, snapDesktopShare.get());
+  }
+
   // Note: This function doesn't do anything about Mesa's shader
   // cache, because the details can vary by process type, including
   // whether caching is enabled.
