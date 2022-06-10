@@ -4,13 +4,21 @@
 
 :host,
 :root {
+  --content-area-padding: 16px;
+  --sidebar-width: var(--in-content-sidebar-width);
+  --header-spacing: 40px;
+  --footer-spacing: 80px;
+
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
 body {
   display: flex;
   align-items: stretch;
-  padding-block: 40px 80px;
+  justify-content: center;
+  padding-block: var(--header-spacing) var(--footer-spacing);
+  padding-inline: var(--content-area-padding);
+  max-width: 90rem;
 }
 
 h1 {
@@ -18,26 +26,85 @@ h1 {
   font-size: 1.5em;
 }
 
+.content-container {
+  padding-inline: var(--content-area-padding);
+}
+
 body > nav {
   border-inline-end-width: 1px;
-  width: var(--in-content-sidebar-width);
-  flex: 0 1 auto;
+  flex: 0 1 content;
+  min-width: calc(var(--content-area-padding) * 2 + var(--sidebar-width));
 }
 
 body > main {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   column-gap: 16px;
 }
 
 body > main > section {
-  grid-column: 1 / 9;
+  grid-column: 1 / 5;
+}
+
+body > main > aside {
+  grid-column: 5 / -1;
+}
+
+@media (max-width: 76rem) {
+  :host,
+  :root {
+    --sidebar-width: 40px;
+  }
+  .brand-logo > .brand-feature-name {
+    display: none;
+  }
+}
+
+@media (max-width: 65rem) {
+  body > main > section,
+  body > main > aside {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 45rem) {
+  :host,
+  :root {
+    --header-spacing: 16px;
+    --footer-spacing: 16px;
+    --content-area-padding: 8px;
+  }
+}
+
+@media (max-width: 28rem) {
+  body {
+    flex-wrap: wrap;
+  }
+}
+
+.brand-logo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.5em;
+}
+
+.brand-logo > .brand-icon {
+  display: inline-block;
+  background: url("chrome://branding/content/about-logo.png") no-repeat center;
+  background-size: 32px;
+  min-width: 40px;
+  height: 32px;
+}
+
+.brand-logo > .brand-feature-name {
+  margin-inline-start: 8px;
+  flex: 1 1 auto;
 }
 
 #colorways {
   position: relative;
-  grid-column: 9 / 12;
 }
 
 #colorways.no-collection {
