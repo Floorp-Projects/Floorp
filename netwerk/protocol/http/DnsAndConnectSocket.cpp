@@ -1155,7 +1155,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
 
   Unused << socketTransport->SetIsPrivate(ci->GetPrivate());
 
-  if (dnsAndSock->mCaps & NS_HTTP_DISALLOW_ECH) {
+  if (ci->GetLessThanTls13()) {
     tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
   }
 
