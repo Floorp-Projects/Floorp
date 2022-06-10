@@ -255,10 +255,14 @@ class DcSctpSocketTest : public testing::Test {
       : options_(MakeOptionsForTest(enable_message_interleaving)),
         cb_a_("A"),
         cb_z_("Z"),
-        sock_a_(std::make_unique<DcSctpSocket>(
-            "A", cb_a_, GetPacketObserver("A"), options_)),
-        sock_z_(std::make_unique<DcSctpSocket>(
-            "Z", cb_z_, GetPacketObserver("Z"), options_)) {}
+        sock_a_(std::make_unique<DcSctpSocket>("A",
+                                               cb_a_,
+                                               GetPacketObserver("A"),
+                                               options_)),
+        sock_z_(std::make_unique<DcSctpSocket>("Z",
+                                               cb_z_,
+                                               GetPacketObserver("Z"),
+                                               options_)) {}
 
   void AdvanceTime(DurationMs duration) {
     cb_a_.AdvanceTime(duration);
@@ -2050,5 +2054,26 @@ TEST_F(DcSctpSocketTest, SendMessagesAfterHandover) {
   EXPECT_THAT(msg->payload(), testing::ElementsAre(1, 2, 3));
 }
 
+TEST_F(DcSctpSocketTest, CanDetectDcsctpImplementation) {
+  ConnectSockets();
+
+  EXPECT_EQ(sock_a_->peer_implementation(), SctpImplementation::kDcsctp);
+
+  // As A initiated the connection establishment, Z will not receive enough
+  // information to know about A's implementation
+  EXPECT_EQ(sock_z_->peer_implementation(), SctpImplementation::kUnknown);
+}
+
+TEST_F(DcSctpSocketTest, BothCanDetectDcsctpImplementation) {
+  EXPECT_CALL(cb_a_, OnConnected).Times(1);
+  EXPECT_CALL(cb_z_, OnConnected).Times(1);
+  sock_a_->Connect();
+  sock_z_->Connect();
+
+  ExchangeMessages(*sock_a_, cb_a_, *sock_z_, cb_z_);
+
+  EXPECT_EQ(sock_a_->peer_implementation(), SctpImplementation::kDcsctp);
+  EXPECT_EQ(sock_z_->peer_implementation(), SctpImplementation::kDcsctp);
+}
 }  // namespace
 }  // namespace dcsctp
