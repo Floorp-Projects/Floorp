@@ -8,9 +8,13 @@
 #ifndef js_TraceLoggerAPI_h
 #define js_TraceLoggerAPI_h
 
-#include "jstypes.h"
+#include <stddef.h>  // size_t
+#include <stdint.h>  // int32_t
 
-#include "js/TypeDecls.h"
+#include "jstypes.h"  // JS_TRACE_LOGGING, JS_PUBLIC_API
+
+#include "js/TypeDecls.h"  // JSContext
+#include "js/Utility.h"    // js_pod_malloc
 
 namespace mozilla {
 class JSONWriteFunc;

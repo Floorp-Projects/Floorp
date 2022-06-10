@@ -9,8 +9,13 @@
 #ifndef js_Zone_h
 #define js_Zone_h
 
-#include "jspubtd.h"
-#include "js/Context.h"
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+
+#include <stddef.h>  // size_t
+
+#include "jstypes.h"        // JS_PUBLIC_API
+#include "js/RootingAPI.h"  // JS::Handle
+#include "js/TypeDecls.h"  // JSContext, JSObject, jsid, JS::Compartment, JS::GCContext, JS::Value, JS::Zone
 
 // [SMDOC] Nested GC Data Structures (Compartments and Zones)
 //
