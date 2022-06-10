@@ -36,12 +36,19 @@ class MessageDeliverer {
 };
 }  // namespace
 
+void CallbackDeferrer::Prepare() {
+  RTC_DCHECK(!prepared_);
+  prepared_ = true;
+}
+
 void CallbackDeferrer::TriggerDeferred() {
   // Need to swap here. The client may call into the library from within a
   // callback, and that might result in adding new callbacks to this instance,
   // and the vector can't be modified while iterated on.
+  RTC_DCHECK(prepared_);
   std::vector<std::function<void(DcSctpSocketCallbacks & cb)>> deferred;
   deferred.swap(deferred_);
+  prepared_ = false;
 
   for (auto& cb : deferred) {
     cb(underlying_);
@@ -70,12 +77,14 @@ uint32_t CallbackDeferrer::GetRandomInt(uint32_t low, uint32_t high) {
 }
 
 void CallbackDeferrer::OnMessageReceived(DcSctpMessage message) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [deliverer = MessageDeliverer(std::move(message))](
           DcSctpSocketCallbacks& cb) mutable { deliverer.Deliver(cb); });
 }
 
 void CallbackDeferrer::OnError(ErrorKind error, absl::string_view message) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [error, message = std::string(message)](DcSctpSocketCallbacks& cb) {
         cb.OnError(error, message);
@@ -83,6 +92,7 @@ void CallbackDeferrer::OnError(ErrorKind error, absl::string_view message) {
 }
 
 void CallbackDeferrer::OnAborted(ErrorKind error, absl::string_view message) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [error, message = std::string(message)](DcSctpSocketCallbacks& cb) {
         cb.OnAborted(error, message);
@@ -90,14 +100,17 @@ void CallbackDeferrer::OnAborted(ErrorKind error, absl::string_view message) {
 }
 
 void CallbackDeferrer::OnConnected() {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back([](DcSctpSocketCallbacks& cb) { cb.OnConnected(); });
 }
 
 void CallbackDeferrer::OnClosed() {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back([](DcSctpSocketCallbacks& cb) { cb.OnClosed(); });
 }
 
 void CallbackDeferrer::OnConnectionRestarted() {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [](DcSctpSocketCallbacks& cb) { cb.OnConnectionRestarted(); });
 }
@@ -105,6 +118,7 @@ void CallbackDeferrer::OnConnectionRestarted() {
 void CallbackDeferrer::OnStreamsResetFailed(
     rtc::ArrayView<const StreamID> outgoing_streams,
     absl::string_view reason) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [streams = std::vector<StreamID>(outgoing_streams.begin(),
                                        outgoing_streams.end()),
@@ -115,6 +129,7 @@ void CallbackDeferrer::OnStreamsResetFailed(
 
 void CallbackDeferrer::OnStreamsResetPerformed(
     rtc::ArrayView<const StreamID> outgoing_streams) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [streams = std::vector<StreamID>(outgoing_streams.begin(),
                                        outgoing_streams.end())](
@@ -123,6 +138,7 @@ void CallbackDeferrer::OnStreamsResetPerformed(
 
 void CallbackDeferrer::OnIncomingStreamsReset(
     rtc::ArrayView<const StreamID> incoming_streams) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [streams = std::vector<StreamID>(incoming_streams.begin(),
                                        incoming_streams.end())](
@@ -130,12 +146,14 @@ void CallbackDeferrer::OnIncomingStreamsReset(
 }
 
 void CallbackDeferrer::OnBufferedAmountLow(StreamID stream_id) {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back([stream_id](DcSctpSocketCallbacks& cb) {
     cb.OnBufferedAmountLow(stream_id);
   });
 }
 
 void CallbackDeferrer::OnTotalBufferedAmountLow() {
+  RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [](DcSctpSocketCallbacks& cb) { cb.OnTotalBufferedAmountLow(); });
 }

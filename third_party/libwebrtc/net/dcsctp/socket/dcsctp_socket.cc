@@ -281,6 +281,8 @@ void DcSctpSocket::MakeConnectionParameters() {
 }
 
 void DcSctpSocket::Connect() {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (state_ == State::kClosed) {
     MakeConnectionParameters();
     RTC_DLOG(LS_INFO)
@@ -296,10 +298,11 @@ void DcSctpSocket::Connect() {
                          << "Called Connect on a socket that is not closed";
   }
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (state_ != State::kClosed) {
     callbacks_.OnError(ErrorKind::kUnsupportedOperation,
                        "Only closed socket can be restored from state");
@@ -334,10 +337,11 @@ void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
   }
 
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::Shutdown() {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (tcb_ != nullptr) {
     // https://tools.ietf.org/html/rfc4960#section-9.2
     // "Upon receipt of the SHUTDOWN primitive from its upper layer, the
@@ -361,10 +365,11 @@ void DcSctpSocket::Shutdown() {
     InternalClose(ErrorKind::kNoError, "");
   }
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::Close() {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (state_ != State::kClosed) {
     if (tcb_ != nullptr) {
       SctpPacket::Builder b = tcb_->PacketBuilder();
@@ -379,7 +384,6 @@ void DcSctpSocket::Close() {
     RTC_DLOG(LS_INFO) << log_prefix() << "Called Close on a closed socket";
   }
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::CloseConnectionBecauseOfTooManyTransmissionErrors() {
@@ -411,6 +415,8 @@ void DcSctpSocket::InternalClose(ErrorKind error, absl::string_view message) {
 
 SendStatus DcSctpSocket::Send(DcSctpMessage message,
                               const SendOptions& send_options) {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (message.payload().empty()) {
     callbacks_.OnError(ErrorKind::kProtocolViolation,
                        "Unable to send empty message");
@@ -445,12 +451,13 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
   }
 
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
   return SendStatus::kSuccess;
 }
 
 ResetStreamsStatus DcSctpSocket::ResetStreams(
     rtc::ArrayView<const StreamID> outgoing_streams) {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (tcb_ == nullptr) {
     callbacks_.OnError(ErrorKind::kWrongSequence,
                        "Can't reset streams as the socket is not connected");
@@ -472,7 +479,6 @@ ResetStreamsStatus DcSctpSocket::ResetStreams(
   }
 
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
   return ResetStreamsStatus::kPerformed;
 }
 
@@ -654,6 +660,8 @@ bool DcSctpSocket::ValidatePacket(const SctpPacket& packet) {
 }
 
 void DcSctpSocket::HandleTimeout(TimeoutID timeout_id) {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   timer_manager_.HandleTimeout(timeout_id);
 
   if (tcb_ != nullptr && tcb_->HasTooManyTxErrors()) {
@@ -662,10 +670,11 @@ void DcSctpSocket::HandleTimeout(TimeoutID timeout_id) {
   }
 
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   ++metrics_.rx_packets_count;
 
   if (packet_observer_ != nullptr) {
@@ -681,7 +690,6 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
     callbacks_.OnError(ErrorKind::kParseFailed,
                        "Failed to parse received SCTP packet");
     RTC_DCHECK(IsConsistent());
-    callbacks_.TriggerDeferred();
     return;
   }
 
@@ -696,7 +704,6 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
     RTC_DLOG(LS_VERBOSE) << log_prefix()
                          << "Packet failed verification tag check - dropping";
     RTC_DCHECK(IsConsistent());
-    callbacks_.TriggerDeferred();
     return;
   }
 
@@ -714,7 +721,6 @@ void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
   }
 
   RTC_DCHECK(IsConsistent());
-  callbacks_.TriggerDeferred();
 }
 
 void DcSctpSocket::DebugPrintOutgoing(rtc::ArrayView<const uint8_t> payload) {
@@ -1646,6 +1652,8 @@ HandoverReadinessStatus DcSctpSocket::GetHandoverReadiness() const {
 
 absl::optional<DcSctpSocketHandoverState>
 DcSctpSocket::GetHandoverStateAndClose() {
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+
   if (!GetHandoverReadiness().IsReady()) {
     return absl::nullopt;
   }
@@ -1659,7 +1667,6 @@ DcSctpSocket::GetHandoverStateAndClose() {
     tcb_->AddHandoverState(state);
     send_queue_.AddHandoverState(state);
     InternalClose(ErrorKind::kNoError, "handover");
-    callbacks_.TriggerDeferred();
   }
 
   return std::move(state);

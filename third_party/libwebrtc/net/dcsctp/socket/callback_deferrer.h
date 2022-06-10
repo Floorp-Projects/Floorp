@@ -26,7 +26,6 @@
 #include "rtc_base/ref_counted_object.h"
 
 namespace dcsctp {
-
 // Defers callbacks until they can be safely triggered.
 //
 // There are a lot of callbacks from the dcSCTP library to the client,
@@ -44,10 +43,21 @@ namespace dcsctp {
 // There are a number of exceptions, which is clearly annotated in the API.
 class CallbackDeferrer : public DcSctpSocketCallbacks {
  public:
+  class ScopedDeferrer {
+   public:
+    explicit ScopedDeferrer(CallbackDeferrer& callback_deferrer)
+        : callback_deferrer_(callback_deferrer) {
+      callback_deferrer_.Prepare();
+    }
+
+    ~ScopedDeferrer() { callback_deferrer_.TriggerDeferred(); }
+
+   private:
+    CallbackDeferrer& callback_deferrer_;
+  };
+
   explicit CallbackDeferrer(DcSctpSocketCallbacks& underlying)
       : underlying_(underlying) {}
-
-  void TriggerDeferred();
 
   // Implementation of DcSctpSocketCallbacks
   SendPacketStatus SendPacketWithStatus(
@@ -71,7 +81,11 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
   void OnTotalBufferedAmountLow() override;
 
  private:
+  void Prepare();
+  void TriggerDeferred();
+
   DcSctpSocketCallbacks& underlying_;
+  bool prepared_ = false;
   std::vector<std::function<void(DcSctpSocketCallbacks& cb)>> deferred_;
 };
 }  // namespace dcsctp
