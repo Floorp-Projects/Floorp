@@ -48,8 +48,8 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // During the pushes below, use the normal stack pointer.
   masm.SetStackPointer64(sp);
 
-  // Save old frame pointer and return address; set new frame pointer.
-  masm.push(r29, r30);
+  // Save return address and old frame pointer; set new frame pointer.
+  masm.push(r30, r29);
   masm.moveStackPtrTo(r29);
 
   // Save callee-save integer registers.
@@ -82,8 +82,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.Mov(PseudoStackPointer64, sp);
   masm.SetStackPointer64(PseudoStackPointer64);
 
-  // Save the stack pointer at this point for Baseline OSR.
-  masm.moveStackPtrTo(FramePointer);
   // Remember stack depth without padding and arguments.
   masm.moveStackPtrTo(r19);
 
@@ -317,7 +315,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.storeValue(JSReturnOperand, Address(reg_vp, 0));
 
   // Restore old frame pointer.
-  masm.pop(r30, r29);
+  masm.pop(r29, r30);
 
   // Return using the value popped into x30.
   masm.abiret();
