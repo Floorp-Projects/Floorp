@@ -214,8 +214,6 @@ using mozilla::net::MozURL;
 // of illegal characters so we use its FILE_ILLEGAL_CHARACTERS and
 // FILE_PATH_SEPARATOR.
 const char QuotaManager::kReplaceChars[] = CONTROL_CHARACTERS "/:*?\"<>|\\";
-const char16_t QuotaManager::kReplaceChars16[] =
-    u"" CONTROL_CHARACTERS "/:*?\"<>|\\";
 
 namespace {
 

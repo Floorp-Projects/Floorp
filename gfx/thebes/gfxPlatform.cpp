@@ -2857,7 +2857,7 @@ void gfxPlatform::InitWebGLConfig() {
     // It causes the linking of some shaders to fail. See bug 1485441.
     nsAutoString renderer;
     gfxInfo->GetAdapterDeviceID(renderer);
-    if (renderer.Find(u"Adreno (TM) 630") != -1) {
+    if (renderer.Find("Adreno (TM) 630") != -1) {
       gfxVars::SetAllowEglRbab(false);
     }
   }

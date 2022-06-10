@@ -15,6 +15,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#define kNotFound -1
+
 #include "nsStringFlags.h"
 #include "nsTStringRepr.h"
 #include "nsTSubstring.h"

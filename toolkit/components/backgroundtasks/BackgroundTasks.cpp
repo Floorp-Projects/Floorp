@@ -276,7 +276,7 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
     }
 
     // Find profile folders matching our prefix.
-    if (!StringBeginsWith(entryName, aPrefix)) {
+    if (aPrefix.Compare(entryName.get(), false, aPrefix.Length()) != 0) {
       continue;
     }
 

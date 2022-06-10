@@ -34,7 +34,6 @@
 // memory checking. (Limited to avoid quadratic behavior.)
 const size_t kNsStringBufferMaxPoison = 16;
 
-class nsStringBuffer;
 template <typename T>
 class nsTSubstringSplitter;
 template <typename T>
@@ -286,7 +285,6 @@ class BulkWriteHandle final {
 template <typename T>
 class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   friend class mozilla::BulkWriteHandle<T>;
-  friend class nsStringBuffer;
 
  public:
   typedef nsTSubstring<T> self_type;
@@ -311,8 +309,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   typedef typename base_string_type::comparator_type comparator_type;
 
   typedef typename base_string_type::const_char_iterator const_char_iterator;
-
-  typedef typename base_string_type::string_view string_view;
 
   typedef typename base_string_type::index_type index_type;
   typedef typename base_string_type::size_type size_type;
@@ -637,7 +633,10 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * swaps occurence of 1 string for another
    */
   void ReplaceChar(char_type aOldChar, char_type aNewChar);
-  void ReplaceChar(const string_view& aSet, char_type aNewChar);
+  void ReplaceChar(const char_type* aSet, char_type aNewChar);
+
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
+  void ReplaceChar(const char* aSet, char16_t aNewChar);
 
   /**
    * Replace all occurrences of aTarget with aNewValue.
@@ -654,27 +653,28 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
                                       const fallible_t&);
 
   /**
-   *  This method trims characters found in aSet from either end of the
-   *  underlying string.
+   *  This method trims characters found in aTrimSet from
+   *  either end of the underlying string.
    *
    *  @param   aSet -- contains chars to be trimmed from both ends
-   *  @param   aTrimLeading
-   *  @param   aTrimTrailing
+   *  @param   aEliminateLeading
+   *  @param   aEliminateTrailing
    *  @param   aIgnoreQuotes -- if true, causes surrounding quotes to be ignored
    *  @return  this
    */
-  void Trim(const std::string_view& aSet, bool aTrimLeading = true,
-            bool aTrimTrailing = true, bool aIgnoreQuotes = false);
+  void Trim(const char* aSet, bool aEliminateLeading = true,
+            bool aEliminateTrailing = true, bool aIgnoreQuotes = false);
 
   /**
    *  This method strips whitespace from string.
    *  You can control whether whitespace is yanked from start and end of
    *  string as well.
    *
-   *  @param   aTrimLeading controls stripping of leading ws
-   *  @param   aTrimTrailing controls stripping of trailing ws
+   *  @param   aEliminateLeading controls stripping of leading ws
+   *  @param   aEliminateTrailing controls stripping of trailing ws
    */
-  void CompressWhitespace(bool aTrimLeading = true, bool aTrimTrailing = true);
+  void CompressWhitespace(bool aEliminateLeading = true,
+                          bool aEliminateTrailing = true);
 
   void Append(char_type aChar);
 

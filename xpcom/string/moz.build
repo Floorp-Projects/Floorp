@@ -37,22 +37,19 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "nsASCIIMask.cpp",
+    "nsDependentString.cpp",
+    "nsDependentSubstring.cpp",
+    "nsPromiseFlatString.cpp",
     "nsReadableUtils.cpp",
-    "nsStringBuffer.cpp",
-    "nsTDependentString.cpp",
-    "nsTDependentSubstring.cpp",
+    "nsString.cpp",
+    "nsStringComparator.cpp",
+    "nsStringObsolete.cpp",
+    "nsSubstring.cpp",
     "nsTextFormatter.cpp",
-    "nsTLiteralString.cpp",
-    "nsTPromiseFlatString.cpp",
-    "nsTString.cpp",
-    "nsTStringComparator.cpp",
-    "nsTStringRepr.cpp",
-    "nsTSubstring.cpp",
     "nsTSubstringTuple.cpp",
-    "RustStringAPI.cpp",
+    "precompiled_templates.cpp",
 ]
 
-if CONFIG["MOZ_DEBUG"]:
-    UNIFIED_SOURCES += ["nsStringStats.cpp"]
-
 FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

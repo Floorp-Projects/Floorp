@@ -310,7 +310,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
       nsAutoString userDir;
       userDir.AssignLiteral("mozilla_");
       userDir.AppendASCII(userName);
-      userDir.ReplaceChar(u"" FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+      userDir.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
 
       int counter = 0;
       bool pathExists;
@@ -769,7 +769,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
   }
 
   nsAutoString extension;
-  int32_t dotidx = fileName.RFind(u".");
+  int32_t dotidx = fileName.RFind(".");
   if (dotidx != -1) {
     extension = Substring(fileName, dotidx + 1);
   }
@@ -3273,7 +3273,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
   // Just sanitize the filename only.
   if (aFlags & VALIDATE_SANITIZE_ONLY) {
     nsAutoString extension;
-    int32_t dotidx = fileName.RFind(u".");
+    int32_t dotidx = fileName.RFind(".");
     if (dotidx != -1) {
       extension = Substring(fileName, dotidx + 1);
     }
@@ -3327,7 +3327,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
       }
     } else {
       // Determine the current extension for the filename.
-      int32_t dotidx = fileName.RFind(u".");
+      int32_t dotidx = fileName.RFind(".");
       if (dotidx != -1) {
         CopyUTF16toUTF8(Substring(fileName, dotidx + 1), extension);
       }
@@ -3420,7 +3420,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         ModifyExtensionType modify =
             ShouldModifyExtension(mimeInfo, originalExtension);
         if (modify == ModifyExtension_Replace) {
-          int32_t dotidx = fileName.RFind(u".");
+          int32_t dotidx = fileName.RFind(".");
           if (dotidx != -1) {
             // Remove the existing extension and replace it.
             fileName.Truncate(dotidx);
@@ -3444,7 +3444,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
 
   // If no filename is present, use a default filename.
   if (!(aFlags & VALIDATE_NO_DEFAULT_FILENAME) &&
-      (fileName.Length() == 0 || fileName.RFind(u".") == 0)) {
+      (fileName.Length() == 0 || fileName.RFind(".") == 0)) {
     nsCOMPtr<nsIStringBundleService> stringService =
         mozilla::components::StringBundle::Service();
     if (stringService) {
@@ -3478,8 +3478,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   nsAutoString fileName(aFileName);
 
   // Replace characters
-  fileName.ReplaceChar(u"" KNOWN_PATH_SEPARATORS, u'_');
-  fileName.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, u' ');
+  fileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
+  fileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
   fileName.StripChar(char16_t(0));
 
   const char16_t *startStr, *endStr;

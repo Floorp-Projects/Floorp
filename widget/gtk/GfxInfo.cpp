@@ -576,13 +576,13 @@ void GfxInfo::GetData() {
 
   if (!ddxDriver.IsEmpty()) {
     PRInt32 start = 0;
-    PRInt32 loc = ddxDriver.Find(";", start);
+    PRInt32 loc = ddxDriver.Find(";", PR_FALSE, start);
     while (loc != kNotFound) {
       nsCString line(ddxDriver.get() + start, loc - start);
       mDdxDrivers.AppendElement(std::move(line));
 
       start = loc + 1;
-      loc = ddxDriver.Find(";", start);
+      loc = ddxDriver.Find(";", PR_FALSE, start);
     }
   }
 

@@ -1418,7 +1418,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
       const char* kWhitespace = "\b\t\r\n ";
       nsAutoCString extraHeaders(aExtraHeaders);
       while (true) {
-        crlf = extraHeaders.Find("\r\n");
+        crlf = extraHeaders.Find("\r\n", true);
         if (crlf == -1) break;
         extraHeaders.Mid(oneHeader, 0, crlf);
         extraHeaders.Cut(0, crlf + 2);

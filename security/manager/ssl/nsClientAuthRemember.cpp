@@ -332,7 +332,7 @@ void nsClientAuthRememberService::GetEntryKey(
 
 bool nsClientAuthRememberService::IsPrivateBrowsingKey(
     const nsCString& entryKey) {
-  const int32_t separator = entryKey.Find(":");
+  const int32_t separator = entryKey.Find(":", false, 0, -1);
   nsCString suffix;
   if (separator >= 0) {
     entryKey.Left(suffix, separator);
