@@ -296,10 +296,16 @@ static bool ValidateStreamParams(const StreamParams& sp) {
 // Returns true if the given codec is disallowed from doing simulcast.
 bool IsCodecDisabledForSimulcast(const std::string& codec_name,
                                  const webrtc::WebRtcKeyValueConfig& trials) {
-  return !absl::StartsWith(trials.Lookup("WebRTC-H264Simulcast"), "Disabled")
-             ? absl::EqualsIgnoreCase(codec_name, kVp9CodecName)
-             : absl::EqualsIgnoreCase(codec_name, kH264CodecName) ||
-                   absl::EqualsIgnoreCase(codec_name, kVp9CodecName);
+  if (absl::EqualsIgnoreCase(codec_name, kVp9CodecName) ||
+      absl::EqualsIgnoreCase(codec_name, kAv1CodecName)) {
+    return true;
+  }
+
+  if (absl::EqualsIgnoreCase(codec_name, kH264CodecName)) {
+    return absl::StartsWith(trials.Lookup("WebRTC-H264Simulcast"), "Disabled");
+  }
+
+  return false;
 }
 
 // The selected thresholds for QVGA and VGA corresponded to a QP around 10.
