@@ -1559,7 +1559,7 @@ bool js::proxy_revocable(JSContext* cx, unsigned argc, Value* vp) {
 
   revoker->initExtendedSlot(ScriptedProxyHandler::REVOKE_SLOT, proxyVal);
 
-  RootedPlainObject result(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> result(cx, NewPlainObject(cx));
   if (!result) {
     return false;
   }

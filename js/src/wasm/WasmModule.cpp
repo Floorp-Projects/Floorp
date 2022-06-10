@@ -335,7 +335,7 @@ void Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 // segment/function body.
 bool Module::extractCode(JSContext* cx, Tier tier,
                          MutableHandleValue vp) const {
-  RootedPlainObject result(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> result(cx, NewPlainObject(cx));
   if (!result) {
     return false;
   }

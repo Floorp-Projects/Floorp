@@ -862,7 +862,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   }
 
   // Don't use the fast path if |from| may have extra indexed properties.
-  HandlePlainObject fromPlain = from.as<PlainObject>();
+  Handle<PlainObject*> fromPlain = from.as<PlainObject>();
   if (fromPlain->getDenseInitializedLength() > 0 || fromPlain->isIndexed()) {
     return true;
   }
@@ -875,7 +875,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     return true;
   }
 
-  HandlePlainObject toPlain = to.as<PlainObject>();
+  Handle<PlainObject*> toPlain = to.as<PlainObject>();
   if (!CanAddNewPropertyExcludingProtoFast(toPlain)) {
     return true;
   }
@@ -1182,7 +1182,7 @@ PlainObject* js::ObjectCreateImpl(JSContext* cx, HandleObject proto,
 }
 
 PlainObject* js::ObjectCreateWithTemplate(JSContext* cx,
-                                          HandlePlainObject templateObj) {
+                                          Handle<PlainObject*> templateObj) {
   RootedObject proto(cx, templateObj->staticPrototype());
   return ObjectCreateImpl(cx, proto, GenericObject);
 }
@@ -1278,7 +1278,7 @@ bool js::obj_create(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   RootedObject proto(cx, args[0].toObjectOrNull());
-  RootedPlainObject obj(cx, ObjectCreateImpl(cx, proto));
+  Rooted<PlainObject*> obj(cx, ObjectCreateImpl(cx, proto));
   if (!obj) {
     return false;
   }
@@ -2230,7 +2230,7 @@ static JSObject* CreateObjectPrototype(JSContext* cx, JSProtoKey key) {
    * Create |Object.prototype| first, mirroring CreateBlankProto but for the
    * prototype of the created object.
    */
-  RootedPlainObject objectProto(
+  Rooted<PlainObject*> objectProto(
       cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
   if (!objectProto) {
     return nullptr;

@@ -1374,7 +1374,7 @@ struct DebuggerObject::PromiseReactionRecordBuilder
 
   bool then(JSContext* cx, HandleObject resolve, HandleObject reject,
             HandleObject result) override {
-    RootedPlainObject record(cx, NewPlainObject(cx));
+    Rooted<PlainObject*> record(cx, NewPlainObject(cx));
     if (!record) {
       return false;
     }
@@ -1421,7 +1421,7 @@ struct DebuggerObject::PromiseReactionRecordBuilder
     return dbg->getFrame(cx, unwrappedGenerator, &frame) && push(cx, frame);
   }
 
-  bool setIfNotNull(JSContext* cx, HandlePlainObject obj,
+  bool setIfNotNull(JSContext* cx, Handle<PlainObject*> obj,
                     Handle<PropertyName*> name, HandleObject prop) {
     if (!prop) {
       return true;

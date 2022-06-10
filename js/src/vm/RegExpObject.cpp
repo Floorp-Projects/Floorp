@@ -747,7 +747,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
   uint32_t numNamedCaptures = namedCaptures->getDenseInitializedLength() / 2;
 
   // Create a plain template object.
-  RootedPlainObject templateObject(
+  Rooted<PlainObject*> templateObject(
       cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
   if (!templateObject) {
     return false;

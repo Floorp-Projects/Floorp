@@ -359,7 +359,7 @@ void* GetContextSensitiveInterpreterStub();
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 
-[[nodiscard]] bool MutatePrototype(JSContext* cx, HandlePlainObject obj,
+[[nodiscard]] bool MutatePrototype(JSContext* cx, Handle<PlainObject*> obj,
                                    HandleValue value);
 
 enum class EqualityKind : bool { NotEqual, Equal };

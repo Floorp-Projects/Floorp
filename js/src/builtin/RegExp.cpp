@@ -42,7 +42,7 @@ using JS::RegExpFlags;
 // Allocate an object for the |.groups| or |.indices.groups| property
 // of a regexp match result.
 static PlainObject* CreateGroupsObject(JSContext* cx,
-                                       HandlePlainObject groupsTemplate) {
+                                       Handle<PlainObject*> groupsTemplate) {
   if (groupsTemplate->inDictionaryMode()) {
     return NewPlainObjectWithProto(cx, nullptr);
   }
@@ -128,7 +128,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   // This is an inlined implementation of MakeIndicesArray:
   // https://tc39.es/ecma262/#sec-makeindicesarray
   RootedArrayObject indices(cx);
-  RootedPlainObject indicesGroups(cx);
+  Rooted<PlainObject*> indicesGroups(cx);
   if (hasIndices) {
     // MakeIndicesArray: step 8
     ArrayObject* indicesTemplate =
@@ -142,7 +142,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
 
     // MakeIndicesArray: steps 10-12
     if (re->numNamedCaptures() > 0) {
-      RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
+      Rooted<PlainObject*> groupsTemplate(cx, re->getGroupsTemplate());
       indicesGroups = CreateGroupsObject(cx, groupsTemplate);
       if (!indicesGroups) {
         return false;
@@ -178,10 +178,10 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   }
 
   // Steps 30-31 (reordered): Allocate the groups object (if needed).
-  RootedPlainObject groups(cx);
+  Rooted<PlainObject*> groups(cx);
   bool groupsInDictionaryMode = false;
   if (re->numNamedCaptures() > 0) {
-    RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
+    Rooted<PlainObject*> groupsTemplate(cx, re->getGroupsTemplate());
     groupsInDictionaryMode = groupsTemplate->inDictionaryMode();
     groups = CreateGroupsObject(cx, groupsTemplate);
     if (!groups) {
@@ -198,7 +198,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   // the correct values.
   if (groupsInDictionaryMode) {
     RootedIdVector keys(cx);
-    RootedPlainObject groupsTemplate(cx, re->getGroupsTemplate());
+    Rooted<PlainObject*> groupsTemplate(cx, re->getGroupsTemplate());
     if (!GetPropertyKeys(cx, groupsTemplate, 0, &keys)) {
       return false;
     }

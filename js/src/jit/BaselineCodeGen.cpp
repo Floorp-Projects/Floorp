@@ -3031,7 +3031,7 @@ bool BaselineCodeGen<Handler>::emit_MutateProto() {
   pushArg(R1);
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, HandlePlainObject, HandleValue);
+  using Fn = bool (*)(JSContext*, Handle<PlainObject*>, HandleValue);
   if (!callVM<Fn, MutatePrototype>()) {
     return false;
   }

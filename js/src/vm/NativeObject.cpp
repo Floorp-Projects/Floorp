@@ -2657,7 +2657,7 @@ bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
   return SuppressDeletedProperty(cx, obj, id);
 }
 
-bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
+bool js::CopyDataPropertiesNative(JSContext* cx, Handle<PlainObject*> target,
                                   HandleNativeObject from,
                                   Handle<PlainObject*> excludedItems,
                                   bool* optimized) {

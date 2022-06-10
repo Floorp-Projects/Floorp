@@ -89,7 +89,7 @@ void PlainObject::assertHasNoNonWritableOrAccessorPropExclProto() const {
 
 // static
 PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
-    JSContext* cx, HandlePlainObject templateObject) {
+    JSContext* cx, Handle<PlainObject*> templateObject) {
   MOZ_ASSERT(cx->realm() != templateObject->realm(),
              "Use createWithTemplate() for same-realm objects");
 
@@ -114,7 +114,7 @@ PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
   return createWithShape(cx, shape);
 }
 
-static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
+static bool AddPlainObjectProperties(JSContext* cx, Handle<PlainObject*> obj,
                                      IdValuePair* properties,
                                      size_t nproperties) {
   RootedId propid(cx);
@@ -218,8 +218,8 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
                                               size_t nproperties,
                                               NewObjectKind newKind) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  RootedPlainObject obj(cx,
-                        NewPlainObjectWithAllocKind(cx, allocKind, newKind));
+  Rooted<PlainObject*> obj(cx,
+                           NewPlainObjectWithAllocKind(cx, allocKind, newKind));
   if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
     return nullptr;
   }
