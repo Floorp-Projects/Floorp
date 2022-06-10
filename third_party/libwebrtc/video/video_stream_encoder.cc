@@ -848,6 +848,9 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
       });
 }
 
+// We should reduce the number of 'full' ReconfigureEncoder(). If only need
+// subset of it at runtime, consider handle it in
+// VideoStreamEncoder::EncodeVideoFrame() when encoder_info_ != info.
 void VideoStreamEncoder::ReconfigureEncoder() {
   // Running on the encoder queue.
   RTC_DCHECK(pending_encoder_reconfiguration_);
@@ -1668,8 +1671,18 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   if (encoder_info_ != info) {
     OnEncoderSettingsChanged();
     stream_resource_manager_.ConfigureEncodeUsageResource();
-    RTC_LOG(LS_INFO) << "Encoder settings changed from "
-                     << encoder_info_.ToString() << " to " << info.ToString();
+    // Re-configure scalers when encoder info changed. Consider two cases:
+    // 1. When the status of the scaler changes from enabled to disabled, if we
+    // don't do this CL, scaler will adapt up/down to trigger an unnecessary
+    // full ReconfigureEncoder() when the scaler should be banned.
+    // 2. When the status of the scaler changes from disabled to enabled, if we
+    // don't do this CL, scaler will not work until some code trigger
+    // ReconfigureEncoder(). In extreme cases, the scaler doesn't even work for
+    // a long time when we expect that the scaler should work.
+    stream_resource_manager_.ConfigureQualityScaler(info);
+    stream_resource_manager_.ConfigureBandwidthQualityScaler(info);
+
+    RTC_LOG(LS_INFO) << "Encoder info changed to " << info.ToString();
   }
 
   if (bitrate_adjuster_) {
