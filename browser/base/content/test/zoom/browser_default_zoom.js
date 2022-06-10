@@ -55,7 +55,6 @@ add_task(async function test_set_default_zoom() {
   );
   info("Removing tab");
   await FullZoomHelper.removeTabAndWaitForLocationChange();
-  await FullZoomHelper.changeDefaultZoom(100);
 });
 
 add_task(async function test_enlarge_reduce_reset_local_zoom() {

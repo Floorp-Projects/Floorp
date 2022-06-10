@@ -33,11 +33,7 @@ var FullZoomHelper = {
 
     let parsedZoomValue = parseFloat((parseInt(newZoom) / 100).toFixed(2));
 
-    let commandsUpdated = BrowserTestUtils.waitForEvent(
-      window,
-      "ZoomCommandsUpdated"
-    );
-    let completion = new Promise(resolve => {
+    await new Promise(resolve => {
       gContentPrefs.setGlobal(
         FullZoom.name,
         parsedZoomValue,
@@ -49,7 +45,6 @@ var FullZoomHelper = {
         }
       );
     });
-    await Promise.all([commandsUpdated, completion]);
   },
 
   async getGlobalValue() {
