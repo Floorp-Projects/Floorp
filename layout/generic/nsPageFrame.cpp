@@ -499,31 +499,11 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
 
   // Variables that we use in our transform (initialized with reasonable
   // defaults that work for the regular one-page-per-sheet scenario):
-  float scale = 1.0f;
+  const nsSize contentPageSize = pageFrame->ComputePageSize();
+  float scale = pageFrame->ComputePageSizeScale(contentPageSize);
   nsPoint gridOrigin;
   uint32_t rowIdx = 0;
   uint32_t colIdx = 0;
-
-  // Compute scaling due to a possible mismatch in the paper size we are
-  // printing to (from the pres context) and the specified page size when the
-  // content uses "@page {size: ...}" to specify a page size for the content.
-  const nsSize actualPaperSize = pageFrame->PresContext()->GetPageSize();
-  const nsSize contentPageSize = pageFrame->ComputePageSize();
-  {
-    nscoord contentPageHeight = contentPageSize.height;
-    // Scale down if the target is too wide.
-    if (contentPageSize.width > actualPaperSize.width) {
-      scale *= float(actualPaperSize.width) / float(contentPageSize.width);
-      contentPageHeight = NSToCoordRound(contentPageHeight * scale);
-    }
-    // Scale down if the target is too tall.
-    if (contentPageHeight > actualPaperSize.height) {
-      scale *= float(actualPaperSize.height) / float(contentPageHeight);
-    }
-  }
-  MOZ_ASSERT(
-      scale <= 1.0f,
-      "Page-size mismatches should only have caused us to scale down, not up.");
 
   if (nsSharedPageData* pd = pageFrame->GetSharedPageData()) {
     const auto* ppsInfo = pd->PagesPerSheetInfo();
@@ -597,6 +577,37 @@ nsSize nsPageFrame::ComputePageSize() const {
     MOZ_ASSERT(pageSize.IsAuto(), "Impossible page-size value?");
   }
   return size;
+}
+
+float nsPageFrame::ComputePageSizeScale(const nsSize aContentPageSize) const {
+  MOZ_ASSERT(aContentPageSize == ComputePageSize(),
+             "Incorrect content page size");
+
+  // Check for the simplest case first, an auto page-size which requires no
+  // scaling at all.
+  if (PageContentFrame()->StylePage()->mSize.IsAuto()) {
+    return 1.0f;
+  }
+
+  // Compute scaling due to a possible mismatch in the paper size we are
+  // printing to (from the pres context) and the specified page size when the
+  // content uses "@page {size: ...}" to specify a page size for the content.
+  float scale = 1.0f;
+  const nsSize actualPaperSize = PresContext()->GetPageSize();
+  nscoord contentPageHeight = aContentPageSize.height;
+  // Scale down if the target is too wide.
+  if (aContentPageSize.width > actualPaperSize.width) {
+    scale *= float(actualPaperSize.width) / float(aContentPageSize.width);
+    contentPageHeight = NSToCoordRound(contentPageHeight * scale);
+  }
+  // Scale down if the target is too tall.
+  if (contentPageHeight > actualPaperSize.height) {
+    scale *= float(actualPaperSize.height) / float(contentPageHeight);
+  }
+  MOZ_ASSERT(
+      scale <= 1.0f,
+      "Page-size mismatches should only have caused us to scale down, not up.");
+  return scale;
 }
 
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
