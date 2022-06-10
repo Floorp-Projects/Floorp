@@ -817,8 +817,9 @@ void BaseCapturerPipeWire::OnSessionRequestResponseSignal(
   Scoped<GVariant> response_data;
   g_variant_get(parameters, "(u@a{sv})", &portal_response,
                 response_data.receive());
-  g_variant_lookup(response_data.get(), "session_handle", "s",
-                   &that->session_handle_);
+  Scoped<GVariant> session_handle(
+      g_variant_lookup_value(response_data.get(), "session_handle", nullptr));
+  that->session_handle_ = g_variant_dup_string(session_handle.get(), nullptr);
 
   if (!that->session_handle_ || portal_response) {
     RTC_LOG(LS_ERROR)
