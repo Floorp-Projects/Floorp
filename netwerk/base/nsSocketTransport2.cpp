@@ -1080,6 +1080,10 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
   }
 
+  if (mConnectionFlags & nsISocketTransport::DONT_TRY_ECH) {
+    controlFlags |= nsISocketProvider::DONT_TRY_ECH;
+  }
+
   if (mConnectionFlags &
       nsISocketTransport::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT) {
     controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
