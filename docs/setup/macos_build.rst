@@ -142,25 +142,25 @@ macOS SDK is unsupported
 
 If the SDK included with your Xcode installation is not supported by Firefox,
 you'll need to manually install one that is compatible.
-We're currently using the 10.12 SDK on our build servers, so that's the one that you
+We're currently using the 11 SDK on our build servers, so that's the one that you
 should install:
 
 1. Go to the `More Downloads for Apple Developers <https://developer.apple.com/download/more/>`_ page
-   and download Xcode 8.2.
-2. Once downloaded, extract ``Xcode_8.2.xip``.
+   and download Xcode 12.5.1.
+2. Once downloaded, extract ``Xcode_12.5.1.xip``.
 3. In your terminal, copy the SDK from the installer:
 
 .. code-block:: shell
 
     mkdir -p ~/.mozbuild/macos-sdk
     # This assumes that Xcode is in your "Downloads" folder
-    cp -aH ~/Downloads/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk ~/.mozbuild/macos-sdk/
+    cp -aH ~/Downloads/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk ~/.mozbuild/macos-sdk/
 
 4. Finally, inform the Firefox build about this SDK by creating (or editing) a file called ``mozconfig`` file
    in the Firefox source code directory. Add the following line:
 
 .. code-block::
 
-    ac_add_options --with-macos-sdk=$HOME/.mozbuild/macos-sdk/MacOSX10.12.sdk
+    ac_add_options --with-macos-sdk=$HOME/.mozbuild/macos-sdk/MacOSX11.3.sdk
 
 5. Now, you should be able to successfully run ``./mach build``.
