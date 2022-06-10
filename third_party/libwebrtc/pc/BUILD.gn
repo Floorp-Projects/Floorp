@@ -226,6 +226,7 @@ rtc_library("media_protocol_names") {
     "media_protocol_names.cc",
     "media_protocol_names.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("peerconnection") {
