@@ -96,7 +96,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   DesktopCaptureOptions options_ = {};
 
   webrtc::Mutex current_frame_lock_;
-  std::unique_ptr<uint8_t[]> current_frame_;
+  std::unique_ptr<BasicDesktopFrame> current_frame_;
   Callback* callback_ = nullptr;
 
   bool portal_init_failed_ = false;
