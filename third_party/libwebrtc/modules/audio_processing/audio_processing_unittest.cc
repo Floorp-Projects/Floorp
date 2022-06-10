@@ -3137,18 +3137,6 @@ TEST(AudioProcessing, GainController2ConfigEqual) {
   b_adaptive.max_output_noise_level_dbfs =
       a_adaptive.max_output_noise_level_dbfs;
   EXPECT_EQ(a, b);
-
-  Toggle(a_adaptive.sse2_allowed);
-  b_adaptive.sse2_allowed = a_adaptive.sse2_allowed;
-  EXPECT_EQ(a, b);
-
-  Toggle(a_adaptive.avx2_allowed);
-  b_adaptive.avx2_allowed = a_adaptive.avx2_allowed;
-  EXPECT_EQ(a, b);
-
-  Toggle(a_adaptive.neon_allowed);
-  b_adaptive.neon_allowed = a_adaptive.neon_allowed;
-  EXPECT_EQ(a, b);
 }
 
 // Checks that one differing parameter is sufficient to make two configs
@@ -3201,18 +3189,6 @@ TEST(AudioProcessing, GainController2ConfigNotEqual) {
   a_adaptive = b_adaptive;
 
   a_adaptive.max_output_noise_level_dbfs += 1.0f;
-  EXPECT_NE(a, b);
-  a_adaptive = b_adaptive;
-
-  Toggle(a_adaptive.sse2_allowed);
-  EXPECT_NE(a, b);
-  a_adaptive = b_adaptive;
-
-  Toggle(a_adaptive.avx2_allowed);
-  EXPECT_NE(a, b);
-  a_adaptive = b_adaptive;
-
-  Toggle(a_adaptive.neon_allowed);
   EXPECT_NE(a, b);
   a_adaptive = b_adaptive;
 }

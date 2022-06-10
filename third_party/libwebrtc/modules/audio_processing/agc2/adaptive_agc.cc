@@ -16,24 +16,21 @@
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
 
-using AdaptiveDigitalConfig =
-    AudioProcessing::Config::GainController2::AdaptiveDigital;
-
 // Detects the available CPU features and applies any kill-switches.
-AvailableCpuFeatures GetAllowedCpuFeatures(
-    const AdaptiveDigitalConfig& config) {
+AvailableCpuFeatures GetAllowedCpuFeatures() {
   AvailableCpuFeatures features = GetAvailableCpuFeatures();
-  if (!config.sse2_allowed) {
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdSse2KillSwitch")) {
     features.sse2 = false;
   }
-  if (!config.avx2_allowed) {
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdAvx2KillSwitch")) {
     features.avx2 = false;
   }
-  if (!config.neon_allowed) {
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdNeonKillSwitch")) {
     features.neon = false;
   }
   return features;
@@ -41,10 +38,11 @@ AvailableCpuFeatures GetAllowedCpuFeatures(
 
 }  // namespace
 
-AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
-                         const AdaptiveDigitalConfig& config)
+AdaptiveAgc::AdaptiveAgc(
+    ApmDataDumper* apm_data_dumper,
+    const AudioProcessing::Config::GainController2::AdaptiveDigital& config)
     : speech_level_estimator_(apm_data_dumper, config),
-      vad_(config.vad_reset_period_ms, GetAllowedCpuFeatures(config)),
+      vad_(config.vad_reset_period_ms, GetAllowedCpuFeatures()),
       gain_controller_(apm_data_dumper, config),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
