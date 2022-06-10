@@ -1071,6 +1071,15 @@ panelview .toolbarbutton-1,
   stroke: var(--panel-item-active-bgcolor);
 }
 
+/**
+ * When the Zoom Reset button is disabled, we don't want the zoom-level
+ * indicator to be so hard to read, so we override the disabled text
+ * style on it.
+ */
+#appMenu-zoomReset-button2[disabled] {
+  opacity: 1;
+}
+
 /* We don't always display: none this item, and if it has forced width (like above)
  * or margin, that impacts the position of the label. Fix:
  */
