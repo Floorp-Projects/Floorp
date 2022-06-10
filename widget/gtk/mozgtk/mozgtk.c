@@ -6,6 +6,13 @@
 
 #include "mozilla/Types.h"
 
+#include <gdk/gdk.h>
+
+// Dummy call to gtk3 library to prevent the linker from removing
+// the gtk3 dependency with --as-needed.
+// see toolkit/library/moz.build for details.
+MOZ_EXPORT void mozgtk_linker_holder() { gdk_display_get_default(); }
+
 #ifdef MOZ_X11
 #  include <X11/Xlib.h>
 // Bug 1271100
