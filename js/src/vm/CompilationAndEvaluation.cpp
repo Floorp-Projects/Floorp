@@ -368,7 +368,7 @@ class FunctionCompiler {
     FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
     RootedFunction fun(cx_);
     if (kind == ScopeKind::NonSyntactic) {
-      RootedScope enclosingScope(
+      Rooted<Scope*> enclosingScope(
           cx_, GlobalScope::createEmpty(cx_, ScopeKind::NonSyntactic));
       if (!enclosingScope) {
         return nullptr;

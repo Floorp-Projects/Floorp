@@ -130,7 +130,8 @@ bool RematerializedFrame::initFunctionEnvironmentObjects(JSContext* cx) {
   return js::InitFunctionEnvironmentObjects(cx, this);
 }
 
-bool RematerializedFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
+bool RematerializedFrame::pushVarEnvironment(JSContext* cx,
+                                             Handle<Scope*> scope) {
   return js::PushVarEnvironmentObject(cx, scope, this);
 }
 

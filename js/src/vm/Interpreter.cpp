@@ -1036,7 +1036,7 @@ void js::UnwindEnvironment(JSContext* cx, EnvironmentIter& ei, jsbytecode* pc) {
     return;
   }
 
-  RootedScope scope(cx, ei.initialFrame().script()->innermostScope(pc));
+  Rooted<Scope*> scope(cx, ei.initialFrame().script()->innermostScope(pc));
 
 #ifdef DEBUG
   // A frame's environment chain cannot be unwound to anything enclosing the

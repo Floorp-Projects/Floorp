@@ -24,7 +24,6 @@
 #include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
-#include "gc/Rooting.h"            // HandleScope
 #include "js/GCPolicyAPI.h"        // GCPolicy, IgnoreGCPolicy
 #include "js/HeapAPI.h"            // CellFlagBitsReservedForGC
 #include "js/RootingAPI.h"         // Handle, MutableHandle
@@ -324,7 +323,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
         environmentShape_(environmentShape),
         enclosingScope_(enclosing) {}
 
-  static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
+  static Scope* create(JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
                        Handle<Shape*> envShape);
 
   template <typename ConcreteScope>
@@ -340,7 +339,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
  public:
   template <typename ConcreteScope>
   static ConcreteScope* create(
-      JSContext* cx, ScopeKind kind, HandleScope enclosing,
+      JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
       Handle<Shape*> envShape,
       MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
 
@@ -873,7 +872,7 @@ class WithScope : public Scope {
   static const ScopeKind classScopeKind_ = ScopeKind::With;
 
  public:
-  static WithScope* create(JSContext* cx, HandleScope enclosing);
+  static WithScope* create(JSContext* cx, Handle<Scope*> enclosing);
 };
 
 //
@@ -1112,7 +1111,7 @@ class WasmFunctionScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  static WasmFunctionScope* create(JSContext* cx, HandleScope enclosing,
+  static WasmFunctionScope* create(JSContext* cx, Handle<Scope*> enclosing,
                                    uint32_t funcIndex);
 
  private:

@@ -975,8 +975,8 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
 
   if (frame) {
     MOZ_ASSERT(scopeKind == ScopeKind::NonSyntactic);
-    RootedScope scope(cx,
-                      GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
+    Rooted<Scope*> scope(cx,
+                         GlobalScope::createEmpty(cx, ScopeKind::NonSyntactic));
     if (!scope) {
       return false;
     }

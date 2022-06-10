@@ -1408,7 +1408,7 @@ static JSFunction* CompileStandaloneFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, const Maybe<uint32_t>& parameterListEnd,
     FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, HandleScope enclosingScope = nullptr) {
+    FunctionAsyncKind asyncKind, Handle<Scope*> enclosingScope = nullptr) {
   AutoAssertReportedException assertException(cx);
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
@@ -1521,7 +1521,7 @@ JSFunction* frontend::CompileStandaloneAsyncGenerator(
 JSFunction* frontend::CompileStandaloneFunctionInNonSyntacticScope(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, const Maybe<uint32_t>& parameterListEnd,
-    FunctionSyntaxKind syntaxKind, HandleScope enclosingScope) {
+    FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope) {
   MOZ_ASSERT(enclosingScope);
   return CompileStandaloneFunction(cx, options, srcBuf, parameterListEnd,
                                    syntaxKind, GeneratorKind::NotGenerator,
