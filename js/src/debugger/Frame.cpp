@@ -1713,7 +1713,8 @@ bool DebuggerFrame::CallData::getScript() {
     AbstractFramePtr framePtr = iter.abstractFramePtr();
 
     if (framePtr.isWasmDebugFrame()) {
-      RootedWasmInstanceObject instance(cx, framePtr.wasmInstance()->object());
+      Rooted<WasmInstanceObject*> instance(cx,
+                                           framePtr.wasmInstance()->object());
       scriptObject = debug->wrapWasmScript(cx, instance);
     } else {
       RootedScript script(cx, framePtr.script());

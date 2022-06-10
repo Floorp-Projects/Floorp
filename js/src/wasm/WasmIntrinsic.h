@@ -52,7 +52,7 @@ struct Intrinsic {
 // Compile and return the intrinsic module for a given set of operations.
 bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicId> ids,
                             Shareable sharedMemory,
-                            MutableHandleWasmModuleObject result);
+                            MutableHandle<WasmModuleObject*> result);
 
 }  // namespace wasm
 }  // namespace js

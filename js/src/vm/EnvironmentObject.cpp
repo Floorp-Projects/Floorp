@@ -3983,7 +3983,7 @@ bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
   env.set(frame.environmentChain());
 
   if (frame.isWasmDebugFrame()) {
-    RootedWasmInstanceObject instance(cx, frame.wasmInstance()->object());
+    Rooted<WasmInstanceObject*> instance(cx, frame.wasmInstance()->object());
     uint32_t funcIndex = frame.asWasmDebugFrame()->funcIndex();
     scope.set(WasmInstanceObject::getFunctionScope(cx, instance, funcIndex));
     if (!scope) {

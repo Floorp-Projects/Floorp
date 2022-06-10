@@ -33,7 +33,7 @@
 #include "wasm/WasmDebug.h"       // for DebugState
 #include "wasm/WasmInstance.h"    // for Instance
 #include "wasm/WasmJS.h"          // for WasmInstanceObject
-#include "wasm/WasmTypeDecls.h"   // for Bytes, RootedWasmInstanceObject
+#include "wasm/WasmTypeDecls.h"   // for Bytes, Rooted<WasmInstanceObject*>
 
 #include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
 #include "vm/JSObject-inl.h"        // for InitClass
@@ -263,7 +263,8 @@ bool DebuggerSource::CallData::getBinary() {
     return false;
   }
 
-  RootedWasmInstanceObject instanceObj(cx, referent.as<WasmInstanceObject*>());
+  Rooted<WasmInstanceObject*> instanceObj(cx,
+                                          referent.as<WasmInstanceObject*>());
   wasm::Instance& instance = instanceObj->instance();
 
   if (!instance.debugEnabled()) {

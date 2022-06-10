@@ -8734,7 +8734,7 @@ static bool WasmLoop(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     Rooted<TypedArrayObject*> typedArray(cx, &ret->as<TypedArrayObject>());
-    RootedWasmInstanceObject instanceObj(cx);
+    Rooted<WasmInstanceObject*> instanceObj(cx);
     // No additional compile options here, we don't need them for this use case.
     RootedValue maybeOptions(cx);
     if (!wasm::Eval(cx, typedArray, importObj, maybeOptions, &instanceObj)) {

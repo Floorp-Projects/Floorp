@@ -1126,7 +1126,7 @@ static bool WasmGlobalFromArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   if (!proto) {
     return false;
   }
-  RootedWasmGlobalObject result(
+  Rooted<WasmGlobalObject*> result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
   if (!result) {
     return false;
@@ -1205,8 +1205,8 @@ static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
 
   // Check that we have a v128 value
   if (global->type().kind() != wasm::ValType::V128) {
@@ -1253,7 +1253,7 @@ static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject proto(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
-  RootedWasmGlobalObject result(
+  Rooted<WasmGlobalObject*> result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
   args.rval().setObject(*result.get());
   return true;
@@ -1279,8 +1279,10 @@ static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedWasmGlobalObject a(cx, &args.get(0).toObject().as<WasmGlobalObject>());
-  RootedWasmGlobalObject b(cx, &args.get(1).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> a(cx,
+                              &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> b(cx,
+                              &args.get(1).toObject().as<WasmGlobalObject>());
 
   if (a->type() != b->type()) {
     JS_ReportErrorASCII(cx, "globals are of different type");
@@ -1416,8 +1418,8 @@ static bool WasmGlobalIsNaN(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
 
   NaNFlavor flavor;
   if (!ToNaNFlavor(cx, args.get(1), &flavor)) {
@@ -1459,8 +1461,8 @@ static bool WasmGlobalToString(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "argument is not wasm value");
     return false;
   }
-  RootedWasmGlobalObject global(cx,
-                                &args.get(0).toObject().as<WasmGlobalObject>());
+  Rooted<WasmGlobalObject*> global(
+      cx, &args.get(0).toObject().as<WasmGlobalObject>());
   const wasm::Val& globalVal = global->val().get();
 
   UniqueChars result;
@@ -2007,7 +2009,7 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   wasm::IntrinsicId ids[] = {wasm::IntrinsicId::I8VecMul};
-  RootedWasmModuleObject module(cx);
+  Rooted<WasmModuleObject*> module(cx);
   if (!wasm::CompileIntrinsicModule(cx, ids, wasm::Shareable::False, &module)) {
     return false;
   }

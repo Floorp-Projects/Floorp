@@ -41,13 +41,12 @@ STATIC_ASSERT_ANYREF_IS_JSOBJECT;
 using TableAnyRefVector = GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy>;
 
 class Table : public ShareableBase<Table> {
-  using InstanceSet =
-      JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
-                              MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
-                              SystemAllocPolicy>>;
+  using InstanceSet = JS::WeakCache<GCHashSet<
+      WeakHeapPtr<WasmInstanceObject*>,
+      MovableCellHasher<WeakHeapPtr<WasmInstanceObject*>>, SystemAllocPolicy>>;
   using UniqueFuncRefArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
-  WeakHeapPtrWasmTableObject maybeObject_;
+  WeakHeapPtr<WasmTableObject*> maybeObject_;
   InstanceSet observers_;
   UniqueFuncRefArray functions_;  // either functions_ has data
   TableAnyRefVector objects_;     //   or objects_, but not both
@@ -58,17 +57,17 @@ class Table : public ShareableBase<Table> {
 
   template <class>
   friend struct js::MallocProvider;
-  Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-        UniqueFuncRefArray functions);
-  Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-        TableAnyRefVector&& objects);
+  Table(JSContext* cx, const TableDesc& desc,
+        Handle<WasmTableObject*> maybeObject, UniqueFuncRefArray functions);
+  Table(JSContext* cx, const TableDesc& desc,
+        Handle<WasmTableObject*> maybeObject, TableAnyRefVector&& objects);
 
   void tracePrivate(JSTracer* trc);
   friend class js::WasmTableObject;
 
  public:
   static RefPtr<Table> create(JSContext* cx, const TableDesc& desc,
-                              HandleWasmTableObject maybeObject);
+                              Handle<WasmTableObject*> maybeObject);
   void trace(JSTracer* trc);
 
   RefType elemType() const { return elemType_; }
