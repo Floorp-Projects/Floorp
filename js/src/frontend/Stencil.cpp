@@ -795,7 +795,7 @@ bool CompilationInput::initScriptSource(JSContext* cx) {
 }
 
 bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
-    JSContext* cx, HandleScope functionEnclosingScope) {
+    JSContext* cx, Handle<Scope*> functionEnclosingScope) {
   MOZ_ASSERT(!functionEnclosingScope->as<GlobalScope>().isSyntactic());
 
   target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
@@ -1192,12 +1192,12 @@ Scope* ScopeStencil::enclosingExistingScope(
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput,
                                  BaseParserScopeData* baseScopeData) const {
-  RootedScope enclosingScope(cx, enclosingExistingScope(input, gcOutput));
+  Rooted<Scope*> enclosingScope(cx, enclosingExistingScope(input, gcOutput));
   return createScope(cx, input.atomCache, enclosingScope, baseScopeData);
 }
 
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
-                                 HandleScope enclosingScope,
+                                 Handle<Scope*> enclosingScope,
                                  BaseParserScopeData* baseScopeData) const {
   switch (kind()) {
     case ScopeKind::Function: {
@@ -2166,7 +2166,7 @@ bool CompilationStencil::delazifySelfHostedFunction(
   //       the CompilationInput between different realms.
   for (size_t i = scopeIndex; i < scopeLimit; i++) {
     ScopeStencil& data = scopeData[i];
-    RootedScope enclosingScope(
+    Rooted<Scope*> enclosingScope(
         cx, data.hasEnclosing() ? gcOutput.get().getScope(data.enclosing())
                                 : &cx->global()->emptyGlobalScope());
 

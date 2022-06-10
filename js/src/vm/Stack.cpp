@@ -255,7 +255,7 @@ bool InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv,
   return true;
 }
 
-bool InterpreterFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
+bool InterpreterFrame::pushVarEnvironment(JSContext* cx, Handle<Scope*> scope) {
   return js::PushVarEnvironmentObject(cx, scope, this);
 }
 

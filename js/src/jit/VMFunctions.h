@@ -494,7 +494,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                                         const jsbytecode* pc);
 
 [[nodiscard]] bool PushVarEnv(JSContext* cx, BaselineFrame* frame,
-                              HandleScope scope);
+                              Handle<Scope*> scope);
 
 [[nodiscard]] bool InitBaselineFrameForOsr(BaselineFrame* frame,
                                            InterpreterFrame* interpFrame,

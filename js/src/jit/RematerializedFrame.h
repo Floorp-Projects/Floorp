@@ -142,7 +142,7 @@ class RematerializedFrame {
   }
 
   [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
-  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);
+  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, Handle<Scope*> scope);
 
   bool hasInitialEnvironment() const { return hasInitialEnv_; }
   CallObject& callObj() const;

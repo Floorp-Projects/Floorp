@@ -396,9 +396,10 @@ class VarEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t RESERVED_SLOTS = 2;
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
-  static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
+  static VarEnvironmentObject* create(JSContext* cx, Handle<Scope*> scope,
                                       HandleObject enclosing);
-  static VarEnvironmentObject* createForFrame(JSContext* cx, HandleScope scope,
+  static VarEnvironmentObject* createForFrame(JSContext* cx,
+                                              Handle<Scope*> scope,
                                               AbstractFramePtr frame);
   static VarEnvironmentObject* createHollowForDebug(JSContext* cx,
                                                     Handle<Scope*> scope);
@@ -1324,19 +1325,19 @@ ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 [[nodiscard]] bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                   AbstractFramePtr frame);
 
-[[nodiscard]] bool PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
+[[nodiscard]] bool PushVarEnvironmentObject(JSContext* cx, Handle<Scope*> scope,
                                             AbstractFramePtr frame);
 
 [[nodiscard]] bool GetFrameEnvironmentAndScope(JSContext* cx,
                                                AbstractFramePtr frame,
                                                const jsbytecode* pc,
                                                MutableHandleObject env,
-                                               MutableHandleScope scope);
+                                               MutableHandle<Scope*> scope);
 
 void GetSuspendedGeneratorEnvironmentAndScope(AbstractGeneratorObject& genObj,
                                               JSScript* script,
                                               MutableHandleObject env,
-                                              MutableHandleScope scope);
+                                              MutableHandle<Scope*> scope);
 
 #ifdef DEBUG
 bool AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);

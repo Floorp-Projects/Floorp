@@ -4057,7 +4057,8 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(lir->mir()->scope()));
 
-  using Fn = VarEnvironmentObject* (*)(JSContext*, HandleScope, HandleObject);
+  using Fn =
+      VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject);
   callVM<Fn, VarEnvironmentObject::create>(lir);
 }
 

@@ -1294,7 +1294,7 @@ bool PushClassBodyEnv(JSContext* cx, BaselineFrame* frame,
   return frame->pushClassBodyEnvironment(cx, scope);
 }
 
-bool PushVarEnv(JSContext* cx, BaselineFrame* frame, HandleScope scope) {
+bool PushVarEnv(JSContext* cx, BaselineFrame* frame, Handle<Scope*> scope) {
   return frame->pushVarEnvironment(cx, scope);
 }
 

@@ -4790,7 +4790,7 @@ bool BaselineCodeGen<Handler>::emit_PushVarEnv() {
                        R2.scratchReg());
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, BaselineFrame*, HandleScope);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, Handle<Scope*>);
   return callVM<Fn, jit::PushVarEnv>();
 }
 

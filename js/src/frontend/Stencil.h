@@ -376,7 +376,7 @@ class ScopeStencil {
                      CompilationGCOutput& gcOutput,
                      BaseParserScopeData* baseScopeData) const;
   Scope* createScope(JSContext* cx, CompilationAtomCache& atomCache,
-                     HandleScope enclosingScope,
+                     Handle<Scope*> enclosingScope,
                      BaseParserScopeData* baseScopeData) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -401,7 +401,7 @@ class ScopeStencil {
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationAtomCache& atomCache,
-                             HandleScope enclosingScope,
+                             Handle<Scope*> enclosingScope,
                              BaseParserScopeData* baseData) const;
 
   template <typename ScopeT>

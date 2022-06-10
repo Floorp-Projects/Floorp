@@ -1238,7 +1238,6 @@ class ArrayObject;
 class DebugEnvironmentProxy;
 class GlobalObject;
 class PropertyName;
-class Scope;
 class ScriptSourceObject;
 class GetterSetter;
 class PropMap;

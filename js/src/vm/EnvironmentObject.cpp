@@ -291,7 +291,7 @@ VarEnvironmentObject* VarEnvironmentObject::createInternal(
 
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
-                                                   HandleScope scope,
+                                                   Handle<Scope*> scope,
                                                    HandleObject enclosing) {
   MOZ_ASSERT(scope->is<EvalScope>() || scope->is<VarScope>());
 
@@ -306,7 +306,7 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
 
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::createForFrame(
-    JSContext* cx, HandleScope scope, AbstractFramePtr frame) {
+    JSContext* cx, Handle<Scope*> scope, AbstractFramePtr frame) {
 #ifdef DEBUG
   if (frame.isEvalFrame()) {
     MOZ_ASSERT(scope->is<EvalScope>() && scope == frame.script()->bodyScope());
@@ -1051,7 +1051,7 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
                                              HandleObject enclosing,
                                              gc::InitialHeap heap) {
   MOZ_ASSERT(callee->isNamedLambda());
-  RootedScope scope(cx, callee->nonLazyScript()->maybeNamedLambdaScope());
+  Rooted<Scope*> scope(cx, callee->nonLazyScript()->maybeNamedLambdaScope());
   MOZ_ASSERT(scope && scope->environmentShape());
 
 #ifdef DEBUG
@@ -1656,7 +1656,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         return true;
       }
 
-      RootedScope scope(cx, getEnvironmentScope(*env));
+      Rooted<Scope*> scope(cx, getEnvironmentScope(*env));
       uint32_t firstFrameSlot = scope->firstFrameSlot();
 
       BindingIter bi(scope);
@@ -1742,7 +1742,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
     if (env->is<WasmFunctionCallObject>()) {
       if (maybeLiveEnv) {
-        RootedScope scope(cx, getEnvironmentScope(*env));
+        Rooted<Scope*> scope(cx, getEnvironmentScope(*env));
         uint32_t index = 0;
         for (BindingIter bi(scope); bi; bi++) {
           if (id.isAtom(bi.name())) {
@@ -1771,7 +1771,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     }
 
     if (env->is<WasmInstanceEnvironmentObject>()) {
-      RootedScope scope(cx, getEnvironmentScope(*env));
+      Rooted<Scope*> scope(cx, getEnvironmentScope(*env));
       MOZ_ASSERT(scope->is<WasmInstanceScope>());
       uint32_t index = 0;
       for (BindingIter bi(scope); bi; bi++) {
@@ -2949,7 +2949,7 @@ bool DebugEnvironments::updateLiveEnvironments(JSContext* cx) {
     }
 
     RootedObject env(cx);
-    RootedScope scope(cx);
+    Rooted<Scope*> scope(cx);
     if (!GetFrameEnvironmentAndScope(cx, frame, i.pc(), &env, &scope)) {
       return false;
     }
@@ -3244,7 +3244,7 @@ JSObject* js::GetDebugEnvironmentForFunction(JSContext* cx,
 JSObject* js::GetDebugEnvironmentForSuspendedGenerator(
     JSContext* cx, JSScript* script, AbstractGeneratorObject& genObj) {
   RootedObject env(cx);
-  RootedScope scope(cx);
+  Rooted<Scope*> scope(cx);
   GetSuspendedGeneratorEnvironmentAndScope(genObj, script, &env, &scope);
 
   EnvironmentIter ei(cx, env, scope);
@@ -3260,7 +3260,7 @@ JSObject* js::GetDebugEnvironmentForFrame(JSContext* cx, AbstractFramePtr frame,
   }
 
   RootedObject env(cx);
-  RootedScope scope(cx);
+  Rooted<Scope*> scope(cx);
   if (!GetFrameEnvironmentAndScope(cx, frame, pc, &env, &scope)) {
     return nullptr;
   }
@@ -3447,7 +3447,7 @@ bool js::GetThisValueForDebuggerFrameMaybeOptimizedOut(JSContext* cx,
                                                        const jsbytecode* pc,
                                                        MutableHandleValue res) {
   RootedObject scopeChain(cx);
-  RootedScope scope(cx);
+  Rooted<Scope*> scope(cx);
   if (!GetFrameEnvironmentAndScope(cx, frame, pc, &scopeChain, &scope)) {
     return false;
   }
@@ -3461,7 +3461,7 @@ bool js::GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
     JSContext* cx, AbstractGeneratorObject& genObj, JSScript* script,
     MutableHandleValue res) {
   RootedObject scopeChain(cx);
-  RootedScope scope(cx);
+  Rooted<Scope*> scope(cx);
   GetSuspendedGeneratorEnvironmentAndScope(genObj, script, &scopeChain, &scope);
 
   EnvironmentIter ei(cx, scopeChain, scope);
@@ -3966,7 +3966,7 @@ bool js::InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame) {
   return true;
 }
 
-bool js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
+bool js::PushVarEnvironmentObject(JSContext* cx, Handle<Scope*> scope,
                                   AbstractFramePtr frame) {
   auto* env = VarEnvironmentObject::createForFrame(cx, scope, frame);
   if (!env) {
@@ -3979,7 +3979,7 @@ bool js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
 bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
                                      const jsbytecode* pc,
                                      MutableHandleObject env,
-                                     MutableHandleScope scope) {
+                                     MutableHandle<Scope*> scope) {
   env.set(frame.environmentChain());
 
   if (frame.isWasmDebugFrame()) {
@@ -3997,7 +3997,7 @@ bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
 
 void js::GetSuspendedGeneratorEnvironmentAndScope(
     AbstractGeneratorObject& genObj, JSScript* script, MutableHandleObject env,
-    MutableHandleScope scope) {
+    MutableHandle<Scope*> scope) {
   env.set(&genObj.environmentChain());
 
   jsbytecode* pc =

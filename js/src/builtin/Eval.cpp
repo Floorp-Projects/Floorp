@@ -290,7 +290,7 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       introducerFilename = maybeScript->scriptSource()->introducerFilename();
     }
 
-    RootedScope enclosing(cx);
+    Rooted<Scope*> enclosing(cx);
     if (evalType == DIRECT_EVAL) {
       enclosing = callerScript->innermostScope(pc);
     } else {

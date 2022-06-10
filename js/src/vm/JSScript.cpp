@@ -2358,7 +2358,7 @@ bool JSScript::fullyInitFromStencil(
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const js::frontend::ScriptIndex scriptIndex) {
   MutableScriptFlags lazyMutableFlags;
-  RootedScope lazyEnclosingScope(cx);
+  Rooted<Scope*> lazyEnclosingScope(cx);
 
   // A holder for the lazy PrivateScriptData that we must keep around in case
   // this process fails and we must return the script to its original state.
