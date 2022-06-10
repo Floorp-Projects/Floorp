@@ -29,17 +29,6 @@
 #include <Availability.h>
 #endif  // TARGET_OS_IPHONE
 
-// Not all MAC_OS_X_VERSION_10_X macros defined in past SDKs
-#ifndef MAC_OS_X_VERSION_10_5
-  #define MAC_OS_X_VERSION_10_5 1050
-#endif
-#ifndef MAC_OS_X_VERSION_10_6
-  #define MAC_OS_X_VERSION_10_6 1060
-#endif
-#ifndef MAC_OS_X_VERSION_10_7
-  #define MAC_OS_X_VERSION_10_7 1070
-#endif
-
 // Not all __IPHONE_X macros defined in past SDKs
 #ifndef __IPHONE_3_0
   #define __IPHONE_3_0 30000
@@ -230,41 +219,6 @@
   #define GTM_SUPPORT_GC 0
 #endif
 
-// To simplify support for 64bit (and Leopard in general), we provide the type
-// defines for non Leopard SDKs
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
- // NSInteger/NSUInteger and Max/Mins
-  #ifndef NSINTEGER_DEFINED
-    #if (defined(__LP64__) && __LP64__) || NS_BUILD_32_LIKE_64
-      typedef long NSInteger;
-      typedef unsigned long NSUInteger;
-    #else
-      typedef int NSInteger;
-      typedef unsigned int NSUInteger;
-    #endif
-    #define NSIntegerMax    LONG_MAX
-    #define NSIntegerMin    LONG_MIN
-    #define NSUIntegerMax   ULONG_MAX
-    #define NSINTEGER_DEFINED 1
-  #endif  // NSINTEGER_DEFINED
-  // CGFloat
-  #ifndef CGFLOAT_DEFINED
-    #if defined(__LP64__) && __LP64__
-      // This really is an untested path (64bit on Tiger?)
-      typedef double CGFloat;
-      #define CGFLOAT_MIN DBL_MIN
-      #define CGFLOAT_MAX DBL_MAX
-      #define CGFLOAT_IS_DOUBLE 1
-    #else /* !defined(__LP64__) || !__LP64__ */
-      typedef float CGFloat;
-      #define CGFLOAT_MIN FLT_MIN
-      #define CGFLOAT_MAX FLT_MAX
-      #define CGFLOAT_IS_DOUBLE 0
-    #endif /* !defined(__LP64__) || !__LP64__ */
-    #define CGFLOAT_DEFINED 1
-  #endif // CGFLOAT_DEFINED
-#endif  // MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
-
 // Some support for advanced clang static analysis functionality
 // See http://clang-analyzer.llvm.org/annotations.html
 #ifndef __has_feature      // Optional.
@@ -406,7 +360,7 @@ GTM_EXTERN void _GTMUnitTestDevLog(NSString *format, ...) NS_FORMAT_FUNCTION(1, 
 // does keys, so pick the right thing, nothing is done on the FastEnumeration
 // side to be sure you're getting what you wanted.
 #ifndef GTM_FOREACH_OBJECT
-  #if TARGET_OS_IPHONE || !(MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5)
+  #if TARGET_OS_IPHONE
     #define GTM_FOREACH_ENUMEREE(element, enumeration) \
       for (element in enumeration)
     #define GTM_FOREACH_OBJECT(element, collection) \
@@ -425,20 +379,6 @@ GTM_EXTERN void _GTMUnitTestDevLog(NSString *format, ...) NS_FORMAT_FUNCTION(1, 
 #endif
 
 // ============================================================================
-
-// To simplify support for both Leopard and Snow Leopard we declare
-// the Snow Leopard protocols that we need here.
-#if !defined(GTM_10_6_PROTOCOLS_DEFINED) && !(MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
-#define GTM_10_6_PROTOCOLS_DEFINED 1
-@protocol NSConnectionDelegate
-@end
-@protocol NSAnimationDelegate
-@end
-@protocol NSImageDelegate
-@end
-@protocol NSTabViewDelegate
-@end
-#endif  // !defined(GTM_10_6_PROTOCOLS_DEFINED) && !(MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
 
 // GTM_SEL_STRING is for specifying selector (usually property) names to KVC
 // or KVO methods.

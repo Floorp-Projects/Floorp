@@ -1121,20 +1121,6 @@ enum GeckoAVAuthorizationStatus : NSInteger {
   GeckoAVAuthorizationStatusAuthorized = 3
 };
 
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-// Define authorizationStatusForMediaType: as returning
-// GeckoAVAuthorizationStatus instead of AVAuthorizationStatus to allow
-// compilation on pre-10.14 SDK's.
-@interface AVCaptureDevice (GeckoAVAuthorizationStatus)
-+ (GeckoAVAuthorizationStatus)authorizationStatusForMediaType:(AVMediaType)mediaType;
-@end
-
-@interface AVCaptureDevice (WithCompletionHandler)
-+ (void)requestAccessForMediaType:(AVMediaType)mediaType
-                completionHandler:(void (^)(BOOL granted))handler;
-@end
-#endif
-
 static const char* AVMediaTypeToString(AVMediaType aType) {
   if (aType == AVMediaTypeVideo) {
     return "video";
@@ -1331,22 +1317,16 @@ nsresult nsCocoaUtils::RequestCapturePermission(AVMediaType aType, RefPtr<Promis
                                                 PromiseArray& aPromiseList,
                                                 void (^aHandler)(BOOL granted)) {
   MOZ_ASSERT(aType == AVMediaTypeVideo || aType == AVMediaTypeAudio);
-#if defined(MAC_OS_X_VERSION_10_14)
-  // Ensure our enum constants match. We can only do this when
-  // compiling on 10.14+ because AVAuthorizationStatus is
-  // prohibited by preprocessor checks on earlier OS versions.
-  if (@available(macOS 10.14, *)) {
-    static_assert(
-        (int)GeckoAVAuthorizationStatusNotDetermined == (int)AVAuthorizationStatusNotDetermined,
-        "GeckoAVAuthorizationStatusNotDetermined  does not match");
-    static_assert((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted,
-                  "GeckoAVAuthorizationStatusRestricted does not match");
-    static_assert((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied,
-                  "GeckoAVAuthorizationStatusDenied does not match");
-    static_assert((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized,
-                  "GeckoAVAuthorizationStatusAuthorized does not match");
-  }
-#endif
+  // Ensure our enum constants match.
+  static_assert(
+      (int)GeckoAVAuthorizationStatusNotDetermined == (int)AVAuthorizationStatusNotDetermined,
+      "GeckoAVAuthorizationStatusNotDetermined  does not match");
+  static_assert((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted,
+                "GeckoAVAuthorizationStatusRestricted does not match");
+  static_assert((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied,
+                "GeckoAVAuthorizationStatusDenied does not match");
+  static_assert((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized,
+                "GeckoAVAuthorizationStatusAuthorized does not match");
   LOG("RequestCapturePermission(%s)", AVMediaTypeToString(aType));
 
   // Only attempt to request authorization on 10.14+.

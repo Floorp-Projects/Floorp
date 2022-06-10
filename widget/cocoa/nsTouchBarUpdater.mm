@@ -7,19 +7,12 @@
 #include "nsTouchBar.h"
 #include "nsTouchBarInput.h"
 #include "nsTouchBarUpdater.h"
-#include "nsTouchBarNativeAPIDefines.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 
 // defined in nsCocoaWindow.mm.
 extern BOOL sTouchBarIsInitialized;
-
-#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
-@interface BaseWindow (NSTouchBarProvider)
-@property(strong) NSTouchBar* touchBar;
-@end
-#endif
 
 NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 
