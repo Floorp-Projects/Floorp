@@ -624,14 +624,16 @@ const TEST_DATA = [
     inputHistory: [{ uri: "http://example.com/test", input: "http" }],
     userInput: "http",
     expected: {
-      autofilled: "http://example.com/test",
-      completed: "http://example.com/test",
       results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/test",
-            title: "example.com/test",
-            heuristic: true,
+            title: "test visit for http://example.com/test",
           }),
       ],
     },
@@ -643,14 +645,16 @@ const TEST_DATA = [
     inputHistory: [{ uri: "http://example.com/test", input: "http:" }],
     userInput: "http:",
     expected: {
-      autofilled: "http://example.com/test",
-      completed: "http://example.com/test",
       results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/test",
-            title: "example.com/test",
-            heuristic: true,
+            title: "test visit for http://example.com/test",
           }),
       ],
     },
