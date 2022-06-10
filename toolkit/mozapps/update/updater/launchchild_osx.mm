@@ -451,6 +451,14 @@ void SetGroupOwnershipAndPermissions(const char* aAppBundle) {
   }
 }
 
+#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
+@interface NSTask (NSTask10_13)
+@property(copy) NSURL* executableURL NS_AVAILABLE_MAC(10_13);
+@property(copy) NSArray<NSString*>* arguments;
+- (BOOL)launchAndReturnError:(NSError**)error NS_AVAILABLE_MAC(10_13);
+@end
+#endif
+
 /**
  * Helper to launch macOS tasks via NSTask.
  */

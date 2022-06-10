@@ -146,6 +146,14 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12OrP010Surface(
   AddDictionaryInt(props, kIOSurfaceHeight, aYSize.height);
   ::CFDictionaryAddValue(props.get(), kIOSurfaceIsGlobal, kCFBooleanTrue);
 
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   if (aColorRange == ColorRange::LIMITED) {
     if (aColorDepth == ColorDepth::COLOR_8) {
       AddDictionaryInt(
@@ -446,6 +454,14 @@ already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   switch (GetPixelFormat()) {
     case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
     case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
@@ -473,6 +489,14 @@ SurfaceFormat MacIOSurface::GetReadFormat() const {
 }
 
 ColorDepth MacIOSurface::GetColorDepth() const {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   switch (GetPixelFormat()) {
     case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
     case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
@@ -494,6 +518,14 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
 CGLError MacIOSurface::CGLTexImageIOSurface2D(
     mozilla::gl::GLContext* aGL, CGLContextObj ctx, size_t plane,
     mozilla::gfx::SurfaceFormat* aOutReadFormat) {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   MOZ_ASSERT(plane >= 0);
   bool isCompatibilityProfile = aGL->IsCompatibilityProfile();
   OSType pixelFormat = GetPixelFormat();
