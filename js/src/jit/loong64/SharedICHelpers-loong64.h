@@ -26,11 +26,6 @@ struct BaselineStubFrame {
   uintptr_t descriptor;
 };
 
-// Size of values pushed by EmitBaselineEnterStubFrame.
-static const uint32_t STUB_FRAME_SIZE = sizeof(BaselineStubFrame);
-static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET =
-    offsetof(BaselineStubFrame, savedStub);
-
 inline void EmitRestoreTailCallReg(MacroAssembler& masm) {
   // No-op on LA because ra register is always holding the return address.
 }

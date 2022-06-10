@@ -560,8 +560,8 @@ void FallbackICCodeCompiler::assumeStubFrame() {
   entersStubFrame_ = true;
 
   // |framePushed| isn't tracked precisely in ICStubs, so simply assume it to
-  // be STUB_FRAME_SIZE so that assertions don't fail in leaveStubFrame.
-  framePushedAtEnterStubFrame_ = STUB_FRAME_SIZE;
+  // be StubFrameSize so that assertions don't fail in leaveStubFrame.
+  framePushedAtEnterStubFrame_ = StubFrameSize;
 #endif
 }
 
@@ -1665,7 +1665,7 @@ void FallbackICCodeCompiler::pushCallArguments(
 
   // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
   // return address, old frame pointer and stub reg.
-  size_t valueOffset = STUB_FRAME_SIZE;
+  size_t valueOffset = StubFrameSize;
 
   // We have to push |this|, callee, new.target (if constructing) and argc
   // arguments. Handle the number of Values we know statically first.
@@ -1715,23 +1715,23 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
     // newTarget
     uint32_t valueOffset = 0;
     if (isConstructing) {
-      masm.pushValue(Address(FramePointer, STUB_FRAME_SIZE));
+      masm.pushValue(Address(FramePointer, StubFrameSizeFromFP));
       valueOffset++;
     }
 
     // array
-    masm.pushValue(
-        Address(FramePointer, valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    masm.pushValue(Address(FramePointer,
+                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
     valueOffset++;
 
     // this
-    masm.pushValue(
-        Address(FramePointer, valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    masm.pushValue(Address(FramePointer,
+                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
     valueOffset++;
 
     // callee
-    masm.pushValue(
-        Address(FramePointer, valueOffset * sizeof(Value) + STUB_FRAME_SIZE));
+    masm.pushValue(Address(FramePointer,
+                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
     valueOffset++;
 
     masm.push(masm.getStackPointer());
