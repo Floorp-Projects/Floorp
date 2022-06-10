@@ -101,8 +101,7 @@ class PacketSocketFactoryWrapper : public rtc::PacketSocketFactory {
       const rtc::PacketSocketTcpOptions& tcp_options) override {
     return nullptr;
   }
-  std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAsyncDnsResolver()
-      override {
+  rtc::AsyncResolverInterface* CreateAsyncResolver() override {
     return nullptr;
   }
 

@@ -1002,10 +1002,7 @@ class FakePacketSocketFactory : public rtc::PacketSocketFactory {
   void set_next_client_tcp_socket(AsyncPacketSocket* next_client_tcp_socket) {
     next_client_tcp_socket_ = next_client_tcp_socket;
   }
-  std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAsyncDnsResolver()
-      override {
-    return nullptr;
-  }
+  rtc::AsyncResolverInterface* CreateAsyncResolver() override { return NULL; }
 
  private:
   AsyncPacketSocket* next_udp_socket_;
