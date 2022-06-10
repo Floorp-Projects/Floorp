@@ -71,6 +71,11 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.kotlin_coroutines
     testImplementation Dependencies.testing_coroutines
+
+    androidTestImplementation project(':support-test-fakes')
+
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
 }
 
 apply from: '../../../publish.gradle'

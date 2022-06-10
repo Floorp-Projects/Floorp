@@ -7,8 +7,8 @@ package mozilla.components.feature.recentlyclosed
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.session.storage.FileEngineSessionStateStorage
 import mozilla.components.browser.state.state.TabSessionState
@@ -26,7 +26,7 @@ import mozilla.components.support.base.log.logger.Logger
  * Instances of this class are submitted via [CrashReporting]. This wrapping helps easily identify
  * exceptions related to [RecentlyClosedTabsStorage].
  */
-private class RecentlyClosedTabsStorageException(e: Exception) : Exception(e)
+private class RecentlyClosedTabsStorageException(e: Throwable) : Throwable(e)
 
 /**
  * A storage implementation that saves snapshots of recently closed tabs / sessions.
@@ -48,14 +48,19 @@ class RecentlyClosedTabsStorage(
      */
     @Suppress("TooGenericExceptionCaught")
     override suspend fun getTabs(): Flow<List<TabState>> {
-        return try {
-            database.value.recentlyClosedTabDao().getTabs().map { list ->
+        return database.value.recentlyClosedTabDao().getTabs()
+            .catch { exception ->
+                crashReporting.submitCaughtException(RecentlyClosedTabsStorageException(exception))
+                // If the database is "corrupted" then we clean the database and also the file storage
+                // to allow for a fresh set of recently closed tabs later.
+                removeAllTabs()
+                // Inform all observers of this data that recent tabs are cleared
+                // to prevent users from trying to restore nonexistent recently closed tabs.
+                emit(emptyList())
+            }
+            .map { list ->
                 list.map { it.asTabState() }
             }
-        } catch (e: Exception) {
-            crashReporting.submitCaughtException(RecentlyClosedTabsStorageException(e))
-            flowOf()
-        }
     }
 
     /**
