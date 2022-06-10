@@ -21,10 +21,10 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/async_dns_resolver.h"
 #include "p2p/base/port.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "rtc_base/async_packet_socket.h"
-#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 
@@ -392,7 +392,7 @@ class TurnPort : public Port {
 
   rtc::AsyncPacketSocket* socket_;
   SocketOptionsMap socket_options_;
-  rtc::AsyncResolverInterface* resolver_;
+  std::unique_ptr<webrtc::AsyncDnsResolverInterface> resolver_;
   int error_;
   rtc::DiffServCodePoint stun_dscp_value_;
 
