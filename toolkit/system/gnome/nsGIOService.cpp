@@ -23,7 +23,10 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #ifdef MOZ_ENABLE_DBUS
+#  include <fcntl.h>
+#  include <dlfcn.h>
 #  include "mozilla/widget/AsyncDBus.h"
+#  include "mozilla/WidgetUtilsGtk.h"
 #endif
 
 using namespace mozilla;
@@ -580,56 +583,114 @@ static nsresult RevealDirectory(nsIFile* aFile, bool aForce) {
 }
 
 #ifdef MOZ_ENABLE_DBUS
-static nsresult RevealFileViaDBusWithProxy(GDBusProxy* aProxy, nsIFile* aFile) {
+// Classic DBus
+const char kFreedesktopFileManagerName[] = "org.freedesktop.FileManager1";
+const char kFreedesktopFileManagerPath[] = "/org/freedesktop/FileManager1";
+const char kMethodShowItems[] = "ShowItems";
+
+// Portal for Snap, Flatpak
+const char kFreedesktopPortalName[] = "org.freedesktop.portal.Desktop";
+const char kFreedesktopPortalPath[] = "/org/freedesktop/portal/desktop";
+const char kFreedesktopPortalOpenURI[] = "org.freedesktop.portal.OpenURI";
+const char kMethodOpenDirectory[] = "OpenDirectory";
+
+static nsresult RevealFileViaDBusWithProxy(GDBusProxy* aProxy, nsIFile* aFile,
+                                           const char* aMethod) {
   nsAutoCString path;
   MOZ_TRY(aFile->GetNativePath(path));
 
-  GUniquePtr<gchar> uri(g_filename_to_uri(path.get(), nullptr, nullptr));
-  if (!uri) {
-    RevealDirectory(aFile, /* aForce = */ true);
-    return NS_ERROR_FAILURE;
-  }
-
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
-  g_variant_builder_add(&builder, "s", uri.get());
+  RefPtr<mozilla::widget::DBusCallPromise> dbusPromise;
+  const char* startupId = "";
 
   const int32_t timeout =
       StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();
-  const char* startupId = "";
-  widget::DBusProxyCall(aProxy, "ShowItems",
-                        g_variant_new("(ass)", &builder, startupId),
-                        G_DBUS_CALL_FLAGS_NONE, timeout)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [](RefPtr<GVariant>&& aResult) {
-            // Do nothing, file is shown, we're done.
-          },
-          [file = RefPtr{aFile}](GUniquePtr<GError>&& aError) {
-            g_printerr("Failed to query file manager: %s\n", aError->message);
-            RevealDirectory(file, /* aForce = */ true);
-          });
-  g_variant_builder_clear(&builder);
+
+  if (!(strcmp(aMethod, kMethodOpenDirectory) == 0)) {
+    GUniquePtr<gchar> uri(g_filename_to_uri(path.get(), nullptr, nullptr));
+    if (!uri) {
+      RevealDirectory(aFile, /* aForce = */ true);
+      return NS_ERROR_FAILURE;
+    }
+
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE_STRING_ARRAY);
+    g_variant_builder_add(&builder, "s", uri.get());
+
+    RefPtr<GVariant> variant = dont_AddRef(
+        g_variant_ref_sink(g_variant_new("(ass)", &builder, startupId)));
+    g_variant_builder_clear(&builder);
+
+    dbusPromise = widget::DBusProxyCall(aProxy, aMethod, variant,
+                                        G_DBUS_CALL_FLAGS_NONE, timeout);
+  } else {
+    int fd = open(path.get(), O_RDONLY | O_CLOEXEC);
+    if (fd < 0) {
+      g_printerr("Failed to open file: %s returned %d\n", path.get(), errno);
+      RevealDirectory(aFile, /* aForce = */ true);
+      return NS_ERROR_FAILURE;
+    }
+
+    GVariantBuilder options;
+    g_variant_builder_init(&options, G_VARIANT_TYPE_VARDICT);
+
+    static auto g_unix_fd_list_new_from_array =
+        (GUnixFDList * (*)(const gint* fds, gint n_fds))
+            dlsym(RTLD_DEFAULT, "g_unix_fd_list_new_from_array");
+
+    // Will take ownership of the fd, so we dont have to care about it anymore
+    RefPtr<GUnixFDList> fd_list =
+        dont_AddRef(g_unix_fd_list_new_from_array(&fd, 1));
+
+    RefPtr<GVariant> variant = dont_AddRef(
+        g_variant_ref_sink(g_variant_new("(sha{sv})", startupId, 0, &options)));
+    g_variant_builder_clear(&options);
+
+    dbusPromise = widget::DBusProxyCallWithUnixFDList(
+        aProxy, aMethod, variant, G_DBUS_CALL_FLAGS_NONE, timeout, fd_list);
+  }
+
+  dbusPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [](RefPtr<GVariant>&& aResult) {
+        // Do nothing, file is shown, we're done.
+      },
+      [file = RefPtr{aFile}, aMethod](GUniquePtr<GError>&& aError) {
+        g_printerr("Failed to query file manager via %s: %s\n", aMethod,
+                   aError->message);
+        RevealDirectory(file, /* aForce = */ true);
+      });
   return NS_OK;
 }
 
-static void RevealFileViaDBus(nsIFile* aFile) {
+static void RevealFileViaDBus(nsIFile* aFile, const char* aName,
+                              const char* aPath, const char* aCall,
+                              const char* aMethod) {
   widget::CreateDBusProxyForBus(
       G_BUS_TYPE_SESSION,
       GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
                       G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES),
-      /* aInterfaceInfo = */ nullptr, "org.freedesktop.FileManager1",
-      "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1")
+      /* aInterfaceInfo = */ nullptr, aName, aPath, aCall)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [file = RefPtr{aFile}](RefPtr<GDBusProxy>&& aProxy) {
-            RevealFileViaDBusWithProxy(aProxy.get(), file);
+          [file = RefPtr{aFile}, aMethod](RefPtr<GDBusProxy>&& aProxy) {
+            RevealFileViaDBusWithProxy(aProxy.get(), file, aMethod);
           },
-          [file = RefPtr{aFile}](GUniquePtr<GError>&& aError) {
-            g_printerr("Failed to create DBUS proxy for FileManager1: %s\n",
+          [file = RefPtr{aFile}, aName](GUniquePtr<GError>&& aError) {
+            g_printerr("Failed to create DBUS proxy for %s: %s\n", aName,
                        aError->message);
             RevealDirectory(file, /* aForce = */ true);
           });
+}
+
+static void RevealFileViaDBusClassic(nsIFile* aFile) {
+  RevealFileViaDBus(aFile, kFreedesktopFileManagerName,
+                    kFreedesktopFileManagerPath, kFreedesktopFileManagerName,
+                    kMethodShowItems);
+}
+
+static void RevealFileViaDBusPortal(nsIFile* aFile) {
+  RevealFileViaDBus(aFile, kFreedesktopPortalName, kFreedesktopPortalPath,
+                    kFreedesktopPortalOpenURI, kMethodOpenDirectory);
 }
 #endif
 
@@ -638,7 +699,11 @@ nsresult nsGIOService::RevealFile(nsIFile* aFile) {
   if (NS_SUCCEEDED(RevealDirectory(aFile, /* aForce = */ false))) {
     return NS_OK;
   }
-  RevealFileViaDBus(aFile);
+  if (ShouldUsePortal(widget::PortalKind::OpenUri)) {
+    RevealFileViaDBusPortal(aFile);
+  } else {
+    RevealFileViaDBusClassic(aFile);
+  }
   return NS_OK;
 #else
   return RevealDirectory(aFile, /* aForce = */ true);
