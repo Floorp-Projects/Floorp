@@ -3314,7 +3314,7 @@ bool BaselineCompilerCodeGen::tryOptimizeBindGlobalName() {
   JSScript* script = handler.script();
   MOZ_ASSERT(!script->hasNonSyntacticScope());
 
-  RootedGlobalObject global(cx, &script->global());
+  Rooted<GlobalObject*> global(cx, &script->global());
   RootedPropertyName name(cx, script->getName(handler.pc()));
   if (JSObject* binding = MaybeOptimizeBindGlobalName(cx, global, name)) {
     frame.push(ObjectValue(*binding));

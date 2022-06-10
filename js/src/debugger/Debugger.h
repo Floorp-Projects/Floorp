@@ -28,7 +28,7 @@
 #include "debugger/DebugAPI.h"      // for DebugAPI
 #include "debugger/Object.h"        // for DebuggerObject
 #include "ds/TraceableFifo.h"       // for TraceableFifo
-#include "gc/Barrier.h"             // for WeakHeapPtrGlobalObject, HeapPtr
+#include "gc/Barrier.h"             //
 #include "gc/Rooting.h"             // for HandleAtom
 #include "gc/Tracer.h"              // for TraceNullableEdge, TraceEdge
 #include "gc/WeakMap.h"             // for WeakMap
@@ -285,8 +285,8 @@ class Completion {
   Variant variant;
 };
 
-typedef HashSet<WeakHeapPtrGlobalObject,
-                MovableCellHasher<WeakHeapPtrGlobalObject>, ZoneAllocPolicy>
+typedef HashSet<WeakHeapPtr<GlobalObject*>,
+                MovableCellHasher<WeakHeapPtr<GlobalObject*>>, ZoneAllocPolicy>
     WeakGlobalObjectSet;
 
 #ifdef DEBUG

@@ -34,6 +34,7 @@ class AutoLockHelperThreadState;
 class FinalizationRegistryObject;
 class FinalizationRecordObject;
 class FinalizationQueueObject;
+class GlobalObject;
 class VerifyPreTracer;
 class WeakRefObject;
 class ZoneAllocator;
