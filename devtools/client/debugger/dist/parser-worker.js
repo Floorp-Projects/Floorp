@@ -47826,8 +47826,16 @@ function translateDeclarationIntoAssignment(node) {
 
 function addReturnNode(ast) {
   const statements = ast.program.body;
-  const lastStatement = statements[statements.length - 1];
-  return statements.slice(0, -1).concat(t.returnStatement(lastStatement.expression));
+  const lastStatement = statements.pop(); // if the last expression is an awaitExpression, strip the `await` part and directly
+  // return the argument to avoid calling the argument's `then` function twice when the
+  // mapped expression gets evaluated (See Bug 1771428)
+
+  if (t.isAwaitExpression(lastStatement.expression)) {
+    lastStatement.expression = lastStatement.expression.argument;
+  }
+
+  statements.push(t.returnStatement(lastStatement.expression));
+  return statements;
 }
 
 function getDeclarations(node) {

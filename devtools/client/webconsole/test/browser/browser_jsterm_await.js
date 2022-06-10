@@ -64,4 +64,21 @@ add_task(async function() {
     `Promise {`
   );
   ok(message, "Promise are displayed as expected");
+
+  info("Check that then getters aren't called twice");
+  message = await executeAndWaitForResultMessage(
+    hud,
+    // It's important to keep the last statement of the expression as it covers the original issue.
+    // We could execute another expression to get `object.called`, but since we get a preview
+    // of the object with an accurate `called` value, this is enough.
+    `
+    var obj = {
+      called: 0,
+      get then(){
+        this.called++
+      }
+    };
+    await obj`,
+    `Object { called: 1, then: Getter }`
+  );
 });
