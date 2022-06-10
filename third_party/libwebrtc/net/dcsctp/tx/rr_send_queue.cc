@@ -27,6 +27,19 @@
 
 namespace dcsctp {
 
+RRSendQueue::RRSendQueue(absl::string_view log_prefix,
+                         size_t buffer_size,
+                         std::function<void(StreamID)> on_buffered_amount_low,
+                         size_t total_buffered_amount_low_threshold,
+                         std::function<void()> on_total_buffered_amount_low,
+                         const DcSctpSocketHandoverState* handover_state)
+    : log_prefix_(std::string(log_prefix) + "fcfs: "),
+      buffer_size_(buffer_size),
+      on_buffered_amount_low_(std::move(on_buffered_amount_low)),
+      total_buffered_amount_(std::move(on_total_buffered_amount_low)) {
+  total_buffered_amount_.SetLowThreshold(total_buffered_amount_low_threshold);
+}
+
 bool RRSendQueue::OutgoingStream::HasDataToSend(TimeMs now) {
   while (!items_.empty()) {
     RRSendQueue::OutgoingStream::Item& item = items_.front();
@@ -51,6 +64,13 @@ bool RRSendQueue::OutgoingStream::HasDataToSend(TimeMs now) {
     return true;
   }
   return false;
+}
+
+void RRSendQueue::OutgoingStream::AddHandoverState(
+    DcSctpSocketHandoverState::OutgoingStream& state) const {
+  state.next_ssn = next_ssn_.value();
+  state.next_ordered_mid = next_ordered_mid_.value();
+  state.next_unordered_mid = next_unordered_mid_.value();
 }
 
 bool RRSendQueue::IsConsistent() const {
@@ -432,5 +452,34 @@ RRSendQueue::OutgoingStream& RRSendQueue::GetOrCreateStreamInfo(
                    [this, stream_id]() { on_buffered_amount_low_(stream_id); },
                    total_buffered_amount_))
       .first->second;
+}
+
+HandoverReadinessStatus RRSendQueue::GetHandoverReadiness() const {
+  HandoverReadinessStatus status;
+  if (!IsEmpty()) {
+    status.Add(HandoverUnreadinessReason::kSendQueueNotEmpty);
+  }
+  return status;
+}
+
+void RRSendQueue::AddHandoverState(DcSctpSocketHandoverState& state) {
+  for (const auto& entry : streams_) {
+    DcSctpSocketHandoverState::OutgoingStream state_stream;
+    state_stream.id = entry.first.value();
+    entry.second.AddHandoverState(state_stream);
+    state.tx.streams.push_back(std::move(state_stream));
+  }
+}
+
+void RRSendQueue::RestoreFromState(const DcSctpSocketHandoverState& state) {
+  for (const DcSctpSocketHandoverState::OutgoingStream& state_stream :
+       state.tx.streams) {
+    StreamID stream_id(state_stream.id);
+    streams_.emplace(stream_id, OutgoingStream(
+                                    [this, stream_id]() {
+                                      on_buffered_amount_low_(stream_id);
+                                    },
+                                    total_buffered_amount_, &state_stream));
+  }
 }
 }  // namespace dcsctp

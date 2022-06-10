@@ -302,6 +302,8 @@ void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
           state.capabilities.message_interleaving;
       capabilities.reconfig = state.capabilities.reconfig;
 
+      send_queue_.RestoreFromState(state);
+
       tcb_ = std::make_unique<TransmissionControlBlock>(
           timer_manager_, log_prefix_, options_, capabilities, callbacks_,
           send_queue_, my_verification_tag, TSN(state.my_initial_tsn),
@@ -1619,9 +1621,7 @@ HandoverReadinessStatus DcSctpSocket::GetHandoverReadiness() const {
   if (state_ != State::kClosed && state_ != State::kEstablished) {
     status.Add(HandoverUnreadinessReason::kWrongConnectionState);
   }
-  if (!send_queue_.IsEmpty()) {
-    status.Add(HandoverUnreadinessReason::kSendQueueNotEmpty);
-  }
+  status.Add(send_queue_.GetHandoverReadiness());
   if (tcb_) {
     status.Add(tcb_->GetHandoverReadiness());
   }
@@ -1641,6 +1641,7 @@ DcSctpSocket::GetHandoverStateAndClose() {
   } else if (state_ == State::kEstablished) {
     state.socket_state = DcSctpSocketHandoverState::SocketState::kConnected;
     tcb_->AddHandoverState(state);
+    send_queue_.AddHandoverState(state);
     InternalClose(ErrorKind::kNoError, "handover");
     callbacks_.TriggerDeferred();
   }
