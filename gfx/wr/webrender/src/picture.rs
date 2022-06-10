@@ -2055,13 +2055,6 @@ impl TileCacheInstance {
         // Since the slice flags may have changed, ensure we re-evaluate the
         // appropriate tile size for this cache next update.
         self.frames_until_size_eval = 0;
-        
-        // Forget about any backdrop we've been tracking.
-        self.found_prims_after_backdrop = false;
-        if let Some(backdrop_surface) = &self.backdrop_surface {
-            resource_cache.destroy_compositor_surface(backdrop_surface.id);
-            self.backdrop_surface = None;
-        }
     }
 
     /// Destroy any manually managed resources before this picture cache is
