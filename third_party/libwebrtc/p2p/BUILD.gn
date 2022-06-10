@@ -91,6 +91,7 @@ rtc_library("rtc_p2p") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api:wrapping_async_dns_resolver",
     "../api/crypto:options",
     "../api/rtc_event_log",
     "../api/task_queue",

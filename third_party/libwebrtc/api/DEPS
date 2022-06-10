@@ -305,6 +305,14 @@ specific_include_rules = {
     "+rtc_base/thread_annotations.h",
   ],
 
+  "wrapping_async_dns_resolver\.h": [
+    "+rtc_base/async_resolver.h",
+    "+rtc_base/async_resolver_interface.h",
+    "+rtc_base/socket_address.h",
+    "+rtc_base/third_party/sigslot/sigslot.h",
+    "+rtc_base/thread_annotations.h",
+  ],
+
   # .cc files in api/ should not be restricted in what they can #include,
   # so we re-add all the top-level directories here. (That's because .h
   # files leak their #includes to whoever's #including them, but .cc files
