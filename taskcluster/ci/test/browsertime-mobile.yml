@@ -110,6 +110,32 @@ browsertime-tp6m:
                     default: []
             default: []
 
+browsertime-tp6m-a51:
+    <<: *tp6m-defaults
+    raptor:
+        apps: [geckoview, fenix, chrome-m, refbrow]
+        run-visual-metrics: true
+        test: tp6m
+        subtests:
+            - amazon
+            - bing
+            - [bing-search-restaurants, bing-s-r]
+            - booking
+            - cnn
+            - [cnn-ampstories, cnn-amp]
+            - dailymail
+            - [ebay-kleinanzeigen, ebay-k]
+            - [ebay-kleinanzeigen-search, ebay-k-s]
+            - [facebook-cristiano, fb-cris]
+    run-on-projects:
+        by-app:
+            geckoview:
+                by-test-platform:
+                    android-hw-(g5|a51).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                    default: []
+            default: []
+
 browsertime-tp6m-essential:
     <<: *tp6m-defaults
     raptor:
