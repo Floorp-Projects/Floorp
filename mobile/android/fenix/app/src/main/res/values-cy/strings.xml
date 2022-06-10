@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">Analluogi pori preifat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Chwilio neu gyfeiriad gwe</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Rhowch dermau chwilio</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Bydd eich tabiau agored i’w gweld yma.</string>
 
@@ -39,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nodau tudalen diweddar</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Nodau tudalen wedi’u cadw’n ddiweddar</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Dangos y cyfan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -237,8 +237,6 @@
     <string name="search_suggestions_onboarding_title">Caniatáu awgrymiadau chwilio mewn sesiynau preifat?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">Bydd %s yn rhannu popeth rydych chi’n ei deipio yn y bar cyfeiriad â’ch peiriant chwilio rhagosodedig.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Dysgu rhagor</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Chwilio %s</string>
@@ -726,7 +724,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Cadw tabiau i Gasgliad</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Dewislen tabiau</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Dewislen tabiau</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Dileu casgliad</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1170,41 +1168,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Dilëwyd y grŵp</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview yw Firefox Nightly nawr</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Mae Firefox Nightly yn cael ei ddiweddaru bob nos ac mae ganddo nodweddion newydd arbrofol.
-Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad mwy cadarn.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Estyn Firefox Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Mae Firefox Nightly wedi symud</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ni fydd yr ap hwn yn derbyn diweddariadau diogelwch mwyach. Peidiwch â defnyddio’r ap hwn a newidiwch i’r Nightly newydd.
-        \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Newid i’r Nightly newydd</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Mae Firefox Nightly wedi symud</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ni fydd yr ap hwn yn derbyn diweddariadau diogelwch bellach. Estynnwch y Nightly newydd a pheidio â defnyddio’r ap hwn bellach.
-        \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Estyn y Nightly newydd</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Croeso i %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Cydweddu Firefox rhwng dyfeisiau</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Cydweddu %1$s rhwng dyfeisiau</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Dewch â nodau tudalen, hanes, a chyfrineiriau i %1$s ar y ddyfais hon.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1619,8 +1588,10 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="addresses_street_address">Cyfeiriad Stryd</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Tref/Dinas</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Sir/Talaith</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Ardal/Talaith</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Cod Post/Zip</string>
     <!-- The header for the country or region of an address -->
@@ -1686,19 +1657,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="search_edit_custom_engine_success_message">Cadwyd %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Dilëwyd %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Croeso i’r %s newydd sbon</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Mae porwr wedi’i ailgynllunio’n llwyr yn eich disgwyl, gyda gwell perfformiad a nodweddion i’ch helpu chi i wneud mwy ar-lein.\n\n Arhoswch wrth i ni ddiweddaru %s gyda’ch</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Diweddaru %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Cychwyn %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Mudo wedi’i gwblhau</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Cyfrineiriau</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">I’w ganiatáu:</string>
@@ -1793,8 +1751,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Nid oes gennych unrhyw dabiau ar agor yn Firefox ar eich dyfeisiau eraill.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Nid oes gennych unrhyw dabiau ar agor yn %1$s ar eich dyfeisiau eraill.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Gweld rhestr o dabiau o’ch dyfeisiau eraill.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1845,6 +1801,11 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="inactive_tabs_title">Tabiau anweithredol</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Caewch bob tab anweithredol</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Ehangu tabiau anweithredol</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Lleihau tabiau anweithredol</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

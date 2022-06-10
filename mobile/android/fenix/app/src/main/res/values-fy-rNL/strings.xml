@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">Priveenavigaasje útskeakelje</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Fier sykterm of adres yn</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Fier syktermen yn</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Jo iepene ljepblêden wurde hjir werjûn.</string>
 
@@ -38,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Resinte blêdwizers</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Resint bewarre blêdwizers</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Alles toane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -239,8 +239,6 @@
     <string name="search_suggestions_onboarding_title">Syksuggestjes tastean yn priveefinsters?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%1$s sil alles wat jo yn de adresbalke yntype mei jo standert sykmasine diele.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Mear ynfo</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s trochsykje</string>
@@ -725,7 +723,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Ljepblêden yn kolleksje bewarje</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Ljepblêdmenu</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Ljepblêdmenu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Kolleksje fuortsmite</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1169,40 +1167,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Groep fuortsmiten</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview is no Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly wurdt elke nacht bywurke en hat eksperimintele nije funksjes.
-        It kin lykwols minder stabyl wêze. Download ús bètabrowser foar in stabiler ûnderfining.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Download Firefox foar Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly is ferpleatst</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Dizze app sil gjin befeiligingsupdates mear ûntfange. Stopje mei dizze app en wikselje nei de nije Nightly.
-        \n\nMeitsje in Firefox-account oan as jo jo blêdwizers, oanmeldingen en skiednis nei in oare app oerbringe wolle.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Skeakelje oer nei de nije Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly is ferpleatst</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Dizze app sil gjin befeiligingsupdates mear ûntfange. Stopje mei dizze app en wikselje nei de nije Nightly.
-        \n\nMeitsje in Firefox-account oan as jo jo blêdwizers, oanmeldingen en skiednis nei in oare app oerbringe wolle.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Download de nije Nightly</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Wolkom by %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Syngronisearje Firefox tusken apparaten</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Syngronisearje %1$s tusken apparaten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Bring blêdwizers, skiednis en wachtwurden nei %1$s op dit apparaat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1619,8 +1589,10 @@
     <string name="addresses_street_address">Adres</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Plak</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Steat</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Provinsje</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postkoade</string>
     <!-- The header for the country or region of an address -->
@@ -1686,19 +1658,6 @@
     <string name="search_edit_custom_engine_success_message">%s bewarre</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s fuortsmiten</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Wolkom by in folslein nij %s</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">In folslein opnij ûntwurpen browser wachtet op jo, mei ferbettere prestaasjes en funksjes dy’t jo helpe mear online te dwaan.\n\nIn amerijke, wy wurkje %s by mei jo</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s bywurkje…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s starte</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migraasje foltôge</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Wachtwurden</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Tastean:</string>
@@ -1793,8 +1752,6 @@
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Jo hawwe gjin ljepblêden iepene yn Firefox op jo oare apparaten.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Jo hawwe gjin ljepblêden iepene yn %1$s op jo oare apparaten.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Besjoch in list mei ljepblêden fan jo oare apparaten.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1846,6 +1803,11 @@
     <string name="inactive_tabs_title">Ynaktive ljepblêden</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Alle ynaktive ljepblêden slute</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Ynaktive ljepblêden útklappe</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Ynaktive ljepblêden ynklappe</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
