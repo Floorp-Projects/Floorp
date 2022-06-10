@@ -30,7 +30,7 @@ class AsyncStunTCPSocket : public rtc::AsyncTCPSocketBase {
                                     const rtc::SocketAddress& bind_address,
                                     const rtc::SocketAddress& remote_address);
 
-  AsyncStunTCPSocket(rtc::Socket* socket, bool listen);
+  explicit AsyncStunTCPSocket(rtc::Socket* socket);
 
   int Send(const void* pv,
            size_t cb,

@@ -183,7 +183,7 @@ void TurnServer::AcceptConnection(rtc::Socket* server_socket) {
   if (accepted_socket != NULL) {
     ProtocolType proto = server_listen_sockets_[server_socket];
     cricket::AsyncStunTCPSocket* tcp_socket =
-        new cricket::AsyncStunTCPSocket(accepted_socket, false);
+        new cricket::AsyncStunTCPSocket(accepted_socket);
 
     tcp_socket->SignalClose.connect(this, &TurnServer::OnInternalSocketClose);
     // Finally add the socket so it can start communicating with the client.
