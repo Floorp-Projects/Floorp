@@ -130,13 +130,14 @@ TEST(ReceiverTimingTest, TimestampWrapAround) {
 
 TEST(ReceiverTimingTest, MaxWaitingTimeIsZeroForZeroRenderTime) {
   // This is the default path when the RTP playout delay header extension is set
-  // to min==0.
+  // to min==0 and max==0.
   constexpr int64_t kStartTimeUs = 3.15e13;  // About one year in us.
   constexpr int64_t kTimeDeltaMs = 1000.0 / 60.0;
   constexpr int64_t kZeroRenderTimeMs = 0;
   SimulatedClock clock(kStartTimeUs);
   VCMTiming timing(&clock);
   timing.Reset();
+  timing.set_max_playout_delay(0);
   for (int i = 0; i < 10; ++i) {
     clock.AdvanceTimeMilliseconds(kTimeDeltaMs);
     int64_t now_ms = clock.TimeInMilliseconds();

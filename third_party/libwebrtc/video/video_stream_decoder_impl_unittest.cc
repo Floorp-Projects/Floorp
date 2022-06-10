@@ -164,6 +164,9 @@ class VideoStreamDecoderImplTest : public ::testing::Test {
                               time_controller_.GetTaskQueueFactory(),
                               {{1, std::make_pair(SdpVideoFormat("VP8"), 1)},
                                {2, std::make_pair(SdpVideoFormat("AV1"), 1)}}) {
+    // Set the min playout delay to a value greater than zero to not activate
+    // the low-latency renderer.
+    video_stream_decoder_.SetMinPlayoutDelay(TimeDelta::Millis(10));
   }
 
   NiceMock<MockVideoStreamDecoderCallbacks> callbacks_;
@@ -217,17 +220,18 @@ TEST_F(VideoStreamDecoderImplTest, FailToDecodeFrame) {
 }
 
 TEST_F(VideoStreamDecoderImplTest, ChangeFramePayloadType) {
+  constexpr TimeDelta kFrameInterval = TimeDelta::Millis(1000 / 60);
   video_stream_decoder_.OnFrame(
       FrameBuilder().WithPayloadType(1).WithPictureId(0).Build());
   EXPECT_CALL(decoder_factory_.Vp8Decoder(), DecodeCall);
   EXPECT_CALL(callbacks_, OnDecodedFrame);
-  time_controller_.AdvanceTime(TimeDelta::Millis(1));
+  time_controller_.AdvanceTime(kFrameInterval);
 
   video_stream_decoder_.OnFrame(
       FrameBuilder().WithPayloadType(2).WithPictureId(1).Build());
   EXPECT_CALL(decoder_factory_.Av1Decoder(), DecodeCall);
   EXPECT_CALL(callbacks_, OnDecodedFrame);
-  time_controller_.AdvanceTime(TimeDelta::Millis(1));
+  time_controller_.AdvanceTime(kFrameInterval);
 }
 
 }  // namespace
