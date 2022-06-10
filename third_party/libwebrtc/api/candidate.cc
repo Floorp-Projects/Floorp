@@ -101,7 +101,9 @@ uint32_t Candidate::GetPriority(uint32_t type_preference,
   //      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   // NIC Type - Type of the network adapter e.g. 3G/Wifi/Wired.
   // Addr Pref - Address preference value as per RFC 3484.
-  // local preference =  (NIC Type << 8 | Addr_Pref) - relay preference.
+  // local preference =  (NIC Type << 8 | Addr_Pref) + relay preference.
+  // The relay preference is based on the number of TURN servers, the
+  // first TURN server gets the highest preference.
 
   int addr_pref = IPAddressPrecedence(address_.ipaddr());
   int local_preference =
