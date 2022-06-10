@@ -39,7 +39,7 @@ describe("mapExpression", () => {
     {
       name: "await",
       expression: "await a()",
-      newExpression: formatAwait("return await a()"),
+      newExpression: formatAwait("return a()"),
       bindings: [],
       mappings: {},
       shouldMapBindings: true,
@@ -78,7 +78,7 @@ describe("mapExpression", () => {
     {
       name: "await (multiple awaits)",
       expression: "const x = await a(); await b(x)",
-      newExpression: formatAwait("self.x = await a(); return await b(x);"),
+      newExpression: formatAwait("self.x = await a(); return b(x);"),
       bindings: [],
       mappings: {},
       shouldMapBindings: true,

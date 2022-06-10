@@ -92,7 +92,7 @@ bool EncodeIntrinsicBody(const Intrinsic& intrinsic, IntrinsicId id,
 bool wasm::CompileIntrinsicModule(JSContext* cx,
                                   const mozilla::Span<IntrinsicId> ids,
                                   Shareable sharedMemory,
-                                  MutableHandleWasmModuleObject result) {
+                                  MutableHandle<WasmModuleObject*> result) {
   // Create the options manually, enabling intrinsics
   FeatureOptions featureOptions;
   featureOptions.intrinsics = true;

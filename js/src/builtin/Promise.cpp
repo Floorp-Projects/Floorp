@@ -282,8 +282,8 @@ class WrappedPtrOperations<PromiseCombinatorElements, Wrapper> {
     return HandleValue::fromMarkedLocation(&elements().value);
   }
 
-  HandleArrayObject unwrappedArray() const {
-    return HandleArrayObject::fromMarkedLocation(&elements().unwrappedArray);
+  Handle<ArrayObject*> unwrappedArray() const {
+    return Handle<ArrayObject*>::fromMarkedLocation(&elements().unwrappedArray);
   }
 };
 
@@ -325,7 +325,7 @@ class MutableWrappedPtrOperations<PromiseCombinatorElements, Wrapper>
     // compartment proxy instead...
     AutoRealm ar(cx, unwrappedArray());
 
-    HandleArrayObject arrayObj = unwrappedArray();
+    Handle<ArrayObject*> arrayObj = unwrappedArray();
     return js::NewbornArrayPush(cx, arrayObj, UndefinedValue());
   }
 
@@ -1977,7 +1977,7 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
     return f(&reactions);
   }
 
-  HandleNativeObject reactionsList = reactions.as<NativeObject>();
+  Handle<NativeObject*> reactionsList = reactions.as<NativeObject>();
   uint32_t reactionsCount = reactionsList->getDenseInitializedLength();
   MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
 
@@ -2285,9 +2285,10 @@ static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
   RootedFunction job(cx, &args.callee().as<JSFunction>());
   RootedValue then(cx, job->getExtendedSlot(ThenableJobSlot_Handler));
   MOZ_ASSERT(then.isObject());
-  RootedNativeObject jobArgs(cx, &job->getExtendedSlot(ThenableJobSlot_JobData)
-                                      .toObject()
-                                      .as<NativeObject>());
+  Rooted<NativeObject*> jobArgs(cx,
+                                &job->getExtendedSlot(ThenableJobSlot_JobData)
+                                     .toObject()
+                                     .as<NativeObject>());
 
   RootedObject promise(
       cx, &jobArgs->getDenseElement(ThenableJobDataIndex_Promise).toObject());
@@ -2484,7 +2485,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   // Create a dense array to hold the data needed for the reaction job to
   // work.
   // The layout is described in the ThenableJobDataIndices enum.
-  RootedArrayObject data(
+  Rooted<ArrayObject*> data(
       cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataLength));
   if (!data) {
     return false;
@@ -4314,7 +4315,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   }
 
   // Step 9. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
-  RootedPlainObject obj(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
   if (!obj) {
     return false;
   }
@@ -6096,7 +6097,7 @@ bool js::Promise_then(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     // Otherwise, just store the new reaction.
     MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
-    HandleNativeObject reactions = reactionsObj.as<NativeObject>();
+    Handle<NativeObject*> reactions = reactionsObj.as<NativeObject>();
     uint32_t len = reactions->getDenseInitializedLength();
     DenseElementResult result = reactions->ensureDenseElements(cx, len, 1);
     if (result != DenseElementResult::Success) {

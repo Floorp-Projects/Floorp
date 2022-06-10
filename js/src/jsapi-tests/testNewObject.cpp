@@ -232,7 +232,7 @@ END_TEST(testNewObject_Subclassing)
 static const JSClass TestClass = {"TestObject", JSCLASS_HAS_RESERVED_SLOTS(0)};
 
 BEGIN_TEST(testNewObject_elements) {
-  RootedNativeObject obj(
+  Rooted<NativeObject*> obj(
       cx, NewBuiltinClassInstance(cx, &TestClass, GenericObject));
   CHECK(obj);
   CHECK(!obj->isTenured());

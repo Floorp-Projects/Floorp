@@ -43,10 +43,9 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
                                                   Register reg,
                                                   uint32_t headerSize) {
-  // Compute stub frame size. We have to add two pointers: the stub reg and
-  // previous frame pointer pushed by EmitEnterStubFrame.
+  // Compute stub frame size.
   masm.movl(FramePointer, reg);
-  masm.addl(Imm32(sizeof(void*) * 2), reg);
+  masm.addl(Imm32(BaselineStubFrameLayout::FramePointerOffset), reg);
   masm.subl(BaselineStackReg, reg);
 
   masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
@@ -57,10 +56,6 @@ inline void EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm) {
   masm.push(eax);
   masm.call(target);
 }
-
-// Size of values pushed by EmitBaselineEnterStubFrame.
-static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void*);
-static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void*);
 
 inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // Compute frame size. Because the return address is still on the stack,
@@ -87,7 +82,7 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.store32(scratch, frameSizeAddr);
 #endif
 
-  // Note: when making changes here,  don't forget to update STUB_FRAME_SIZE
+  // Note: when making changes here,  don't forget to update StubFrameSize
   // if needed.
 
   // Push the return address that's currently on top of the stack.
@@ -99,9 +94,10 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.storePtr(scratch, Address(BaselineStackReg, sizeof(uintptr_t)));
 
   // Save old frame pointer, stack pointer and stub reg.
-  masm.Push(ICStubReg);
   masm.Push(FramePointer);
   masm.mov(BaselineStackReg, FramePointer);
+
+  masm.Push(ICStubReg);
 }
 
 }  // namespace jit

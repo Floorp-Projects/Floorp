@@ -52,10 +52,9 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
                                                   Register reg,
                                                   uint32_t headerSize) {
-  // Compute stub frame size. We have to add two pointers: the stub reg and
-  // previous frame pointer pushed by EmitEnterStubFrame.
+  // Compute stub frame size.
   masm.movePtr(FramePointer, reg);
-  masm.addPtr(Imm32(sizeof(intptr_t) * 2), reg);
+  masm.addPtr(Imm32(BaselineStubFrameLayout::FramePointerOffset), reg);
   masm.subPtr(BaselineStackReg, reg);
 
   masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);

@@ -20,7 +20,7 @@ Running tests
 -------------
 
 The Firefox build process will build GTest on supported platforms as
-long as you don't disable test in your mozconfig. However xul-gtest will
+long as you don't disable tests in your mozconfig. However xul-gtest will
 only be built when tests are required to save an expensive second
 linking process.
 
@@ -161,7 +161,7 @@ is a recommended read.
    tear down any dependencies you have in your test fixtures. Avoid
    writing integration tests and focus on testing individual units.
 
-See https://hg.mozilla.org/mozilla-central/rev/351462147f91 for an
+See https://hg.mozilla.org/mozilla-central/rev/ed612eec41a44867a for an
 example of how to add a simple test.
 
 If you're converting an existing C++ unit test to a GTest, `this
@@ -225,8 +225,9 @@ subdirectory in:
 
 .. code-block:: python
 
-   if CONFIG['ENABLE_TESTS']:
-       DIRS += ['tests/gtest']
+   TEST_DIRS += [
+       "gtest",
+   ]
 
 When adding tests to an existing moz.build file (it has FINAL_LIBRARY =
 'xul-gtest'), add the following. That's it--there is no test manifest

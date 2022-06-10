@@ -56,6 +56,7 @@ struct CompilationAtomCache;
 
 }  // namespace frontend
 
+class ArrayObject;
 class PropertyName;
 
 /* The buffer length required to contain any unsigned 32-bit integer. */
@@ -565,7 +566,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   // Fills |array| with various strings that represent the different string
   // kinds and character encodings.
   static bool fillWithRepresentatives(JSContext* cx,
-                                      js::HandleArrayObject array);
+                                      JS::Handle<js::ArrayObject*> array);
 
   /* Only called by the GC for dependent strings. */
 

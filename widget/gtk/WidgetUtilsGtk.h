@@ -45,6 +45,7 @@ enum class PortalKind {
   MimeHandler,
   Settings,
   Location,
+  OpenUri,
 };
 bool ShouldUsePortal(PortalKind);
 

@@ -232,7 +232,7 @@ bool GlobalObject::initMapIteratorProto(JSContext* cx,
   if (!base) {
     return false;
   }
-  RootedPlainObject proto(
+  Rooted<PlainObject*> proto(
       cx, GlobalObject::createBlankPrototypeInheriting<PlainObject>(cx, base));
   if (!proto) {
     return false;
@@ -408,7 +408,7 @@ bool MapIteratorObject::next(MapIteratorObject* mapIterator,
 
 /* static */
 JSObject* MapIteratorObject::createResultPair(JSContext* cx) {
-  RootedArrayObject resultPairObj(
+  Rooted<ArrayObject*> resultPairObj(
       cx, NewDenseFullyAllocatedArray(cx, 2, TenuredObject));
   if (!resultPairObj) {
     return nullptr;
@@ -484,7 +484,7 @@ const JSPropertySpec MapObject::staticProperties[] = {
 
 /* static */ bool MapObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   RootedValue entriesFn(cx);
   RootedId entriesId(cx, NameToId(cx->names().entries));
@@ -1043,7 +1043,7 @@ bool GlobalObject::initSetIteratorProto(JSContext* cx,
   if (!base) {
     return false;
   }
-  RootedPlainObject proto(
+  Rooted<PlainObject*> proto(
       cx, GlobalObject::createBlankPrototypeInheriting<PlainObject>(cx, base));
   if (!proto) {
     return false;
@@ -1189,7 +1189,7 @@ bool SetIteratorObject::next(SetIteratorObject* setIterator,
 
 /* static */
 JSObject* SetIteratorObject::createResult(JSContext* cx) {
-  RootedArrayObject resultObj(
+  Rooted<ArrayObject*> resultObj(
       cx, NewDenseFullyAllocatedArray(cx, 1, TenuredObject));
   if (!resultObj) {
     return nullptr;
@@ -1274,7 +1274,7 @@ const JSPropertySpec SetObject::staticProperties[] = {
 
 /* static */ bool SetObject::finishInit(JSContext* cx, HandleObject ctor,
                                         HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   RootedValue valuesFn(cx);
   RootedId valuesId(cx, NameToId(cx->names().values));
@@ -1439,7 +1439,7 @@ bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       RootedValue keyVal(cx);
       Rooted<HashableValue> key(cx);
       ValueSet* set = obj->getData();
-      RootedArrayObject array(cx, &iterable.toObject().as<ArrayObject>());
+      Rooted<ArrayObject*> array(cx, &iterable.toObject().as<ArrayObject>());
       for (uint32_t index = 0; index < array->getDenseInitializedLength();
            ++index) {
         keyVal.set(array->getDenseElement(index));

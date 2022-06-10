@@ -274,7 +274,7 @@ TupleType* TupleType::create(JSContext* cx, uint32_t length,
 }
 
 static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
-  RootedShape shape(cx, TupleType::getInitialShape(cx));
+  Rooted<Shape*> shape(cx, TupleType::getInitialShape(cx));
   if (!shape) {
     return nullptr;
   }
@@ -517,7 +517,7 @@ bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp) {
 \*===========================================================================*/
 
 static bool ArrayToTuple(JSContext* cx, const CallArgs& args) {
-  RootedArrayObject aObj(cx, &args.rval().toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> aObj(cx, &args.rval().toObject().as<ArrayObject>());
   TupleType* tup = TupleType::createUnchecked(cx, aObj);
 
   if (!tup) {
@@ -549,7 +549,8 @@ bool js::tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp) {
   return IsTupleUnchecked(cx, args);
 }
 
-TupleType* TupleType::createUnchecked(JSContext* cx, HandleArrayObject aObj) {
+TupleType* TupleType::createUnchecked(JSContext* cx,
+                                      Handle<ArrayObject*> aObj) {
   size_t len = aObj->getDenseInitializedLength();
   MOZ_ASSERT(aObj->getElementsHeader()->numShiftedElements() == 0);
   TupleType* tup = createUninitialized(cx, len);

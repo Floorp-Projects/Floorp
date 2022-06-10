@@ -4057,7 +4057,8 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(lir->mir()->scope()));
 
-  using Fn = VarEnvironmentObject* (*)(JSContext*, HandleScope, HandleObject);
+  using Fn =
+      VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject);
   callVM<Fn, VarEnvironmentObject::create>(lir);
 }
 
@@ -6751,7 +6752,7 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
     pushArg(ImmGCPtr(templateObject->shape()));
     pushArg(Imm32(lir->mir()->length()));
 
-    using Fn = ArrayObject* (*)(JSContext*, uint32_t, HandleShape);
+    using Fn = ArrayObject* (*)(JSContext*, uint32_t, Handle<Shape*>);
     callVM<Fn, NewArrayWithShape>(lir);
   } else {
     pushArg(Imm32(GenericObject));
@@ -6852,7 +6853,7 @@ void CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
   gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
-  using Fn = ArrayObject* (*)(JSContext*, HandleArrayObject, int32_t length);
+  using Fn = ArrayObject* (*)(JSContext*, Handle<ArrayObject*>, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, ArrayConstructorOneArg>(
       lir, ArgList(ImmGCPtr(templateObject), lengthReg),
       StoreRegisterTo(objReg));
@@ -7040,7 +7041,7 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
     case MNewObject::ObjectCreate: {
       pushArg(ImmGCPtr(templateObject));
 
-      using Fn = PlainObject* (*)(JSContext*, HandlePlainObject);
+      using Fn = PlainObject* (*)(JSContext*, Handle<PlainObject*>);
       callVM<Fn, ObjectCreateWithTemplate>(lir);
       break;
     }
@@ -7183,7 +7184,7 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
   gc::AllocKind allocKind = mir->allocKind();
 
   using Fn =
-      JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
+      JSObject* (*)(JSContext*, Handle<Shape*>, gc::AllocKind, gc::InitialHeap);
   OutOfLineCode* ool = oolCallVM<Fn, NewPlainObjectOptimizedFallback>(
       lir,
       ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
@@ -7261,7 +7262,7 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
 
   CallObject* templateObj = lir->mir()->templateObject();
 
-  using Fn = JSObject* (*)(JSContext*, HandleShape);
+  using Fn = JSObject* (*)(JSContext*, Handle<Shape*>);
   OutOfLineCode* ool = oolCallVM<Fn, NewCallObject>(
       lir, ArgList(ImmGCPtr(templateObj->shape())), StoreRegisterTo(objReg));
 
@@ -7319,7 +7320,8 @@ void CodeGenerator::visitMutateProto(LMutateProto* lir) {
   pushArg(ToValue(lir, LMutateProto::ValueIndex));
   pushArg(objReg);
 
-  using Fn = bool (*)(JSContext * cx, HandlePlainObject obj, HandleValue value);
+  using Fn =
+      bool (*)(JSContext * cx, Handle<PlainObject*> obj, HandleValue value);
   callVM<Fn, MutatePrototype>(lir);
 }
 
@@ -11520,7 +11522,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   }
   pushArg(object);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, int32_t, HandleValue,
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue,
                       bool strict);
   callVM<Fn, jit::SetDenseElement>(ins);
 
@@ -11552,7 +11554,7 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   ValueOperand value = ToValue(lir, LArrayPush::ValueIndex);
   Register spectreTemp = ToTempRegisterOrInvalid(lir->temp1());
 
-  using Fn = bool (*)(JSContext*, HandleArrayObject, HandleValue, uint32_t*);
+  using Fn = bool (*)(JSContext*, Handle<ArrayObject*>, HandleValue, uint32_t*);
   OutOfLineCode* ool = oolCallVM<Fn, jit::ArrayPushDense>(
       lir, ArgList(obj, value), StoreRegisterTo(length));
 
@@ -13203,7 +13205,8 @@ void CodeGenerator::visitAddSlotAndCallAddPropHook(
   pushArg(value);
   pushArg(obj);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, HandleShape);
+  using Fn =
+      bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, Handle<Shape*>);
   callVM<Fn, AddSlotAndCallAddPropHook>(ins);
 }
 
@@ -16478,7 +16481,7 @@ void CodeGenerator::visitCallAddOrUpdateSparseElement(
   pushArg(object);
 
   using Fn =
-      bool (*)(JSContext*, HandleArrayObject, int32_t, HandleValue, bool);
+      bool (*)(JSContext*, Handle<ArrayObject*>, int32_t, HandleValue, bool);
   callVM<Fn, js::AddOrUpdateSparseElementHelper>(lir);
 }
 
@@ -16490,7 +16493,7 @@ void CodeGenerator::visitCallGetSparseElement(LCallGetSparseElement* lir) {
   pushArg(object);
 
   using Fn =
-      bool (*)(JSContext*, HandleArrayObject, int32_t, MutableHandleValue);
+      bool (*)(JSContext*, Handle<ArrayObject*>, int32_t, MutableHandleValue);
   callVM<Fn, js::GetSparseElementHelper>(lir);
 }
 
@@ -16502,7 +16505,7 @@ void CodeGenerator::visitCallNativeGetElement(LCallNativeGetElement* lir) {
   pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(object)));
   pushArg(object);
 
-  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, int32_t,
                       MutableHandleValue);
   callVM<Fn, js::NativeGetElement>(lir);
 }

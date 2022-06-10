@@ -183,7 +183,17 @@ const AVAILABLE_SHIMS = [
     name: "Ads by Google",
     bug: "1713726",
     file: "google-ads.js",
-    matches: ["*://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"],
+    matches: [
+      "*://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      {
+        patterns: [
+          "*://pagead2.googlesyndication.com/pagead/*.js*fcd=true",
+          "*://pagead2.googlesyndication.com/pagead/js/*.js*fcd=true",
+        ],
+        target: "empty-script.js",
+        types: ["xmlhttprequest"],
+      },
+    ],
     onlyIfBlockedByETP: true,
   },
   {

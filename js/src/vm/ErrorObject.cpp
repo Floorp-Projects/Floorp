@@ -319,7 +319,7 @@ static ArrayObject* IterableToArray(JSContext* cx, HandleValue iterable) {
     return nullptr;
   }
 
-  RootedArrayObject array(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> array(cx, NewDenseEmptyArray(cx));
   if (!array) {
     return nullptr;
   }
@@ -371,7 +371,7 @@ static bool AggregateError(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 4.
 
-  RootedArrayObject errorsList(cx, IterableToArray(cx, args.get(0)));
+  Rooted<ArrayObject*> errorsList(cx, IterableToArray(cx, args.get(0)));
   if (!errorsList) {
     return false;
   }

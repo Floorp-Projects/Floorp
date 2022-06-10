@@ -71,11 +71,12 @@ bool Shape::replaceShape(JSContext* cx, HandleObject obj,
 }
 
 /* static */
-bool js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj) {
+bool js::NativeObject::toDictionaryMode(JSContext* cx,
+                                        Handle<NativeObject*> obj) {
   MOZ_ASSERT(!obj->inDictionaryMode());
   MOZ_ASSERT(cx->isInsideCurrentCompartment(obj));
 
-  RootedShape shape(cx, obj->shape());
+  Rooted<Shape*> shape(cx, obj->shape());
   uint32_t span = obj->slotSpan();
 
   uint32_t mapLength = shape->propMapLength();
@@ -108,11 +109,11 @@ namespace js {
 
 class MOZ_RAII AutoCheckShapeConsistency {
 #ifdef DEBUG
-  HandleNativeObject obj_;
+  Handle<NativeObject*> obj_;
 #endif
 
  public:
-  explicit AutoCheckShapeConsistency(HandleNativeObject obj)
+  explicit AutoCheckShapeConsistency(Handle<NativeObject*> obj)
 #ifdef DEBUG
       : obj_(obj)
 #endif
@@ -128,7 +129,7 @@ class MOZ_RAII AutoCheckShapeConsistency {
 
 /* static */ MOZ_ALWAYS_INLINE bool
 NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
-                                             HandleNativeObject obj) {
+                                             Handle<NativeObject*> obj) {
   if (obj->inDictionaryMode()) {
     return true;
   }
@@ -151,8 +152,9 @@ static void AssertValidCustomDataProp(NativeObject* obj, PropertyFlags flags) {
 }
 
 /* static */
-bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id, PropertyFlags flags) {
+bool NativeObject::addCustomDataProperty(JSContext* cx,
+                                         Handle<NativeObject*> obj, HandleId id,
+                                         PropertyFlags flags) {
   MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
@@ -267,7 +269,7 @@ static bool RegisterShapeCache(JSContext* cx, Shape* shape) {
 }
 
 /* static */
-bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
+bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
                                HandleId id, PropertyFlags flags,
                                uint32_t* slot) {
   AutoCheckShapeConsistency check(obj);
@@ -380,7 +382,7 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
-                                             HandleNativeObject obj,
+                                             Handle<NativeObject*> obj,
                                              HandleId id, uint32_t slot,
                                              PropertyFlags flags) {
   AutoCheckShapeConsistency check(obj);
@@ -461,7 +463,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
 }
 
 /* static */
-bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
+bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
                                   HandleId id, PropertyFlags flags,
                                   uint32_t* slotOut) {
   MOZ_ASSERT(!id.isVoid());
@@ -581,7 +583,7 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
-                                                  HandleNativeObject obj,
+                                                  Handle<NativeObject*> obj,
                                                   HandleId id,
                                                   PropertyFlags flags) {
   MOZ_ASSERT(!id.isVoid());
@@ -666,7 +668,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
 }
 
 /* static */
-bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
+bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
                                   HandleId id) {
   AutoCheckShapeConsistency check(obj);
 
@@ -776,7 +778,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::densifySparseElements(JSContext* cx,
-                                         HandleNativeObject obj) {
+                                         Handle<NativeObject*> obj) {
   AutoCheckShapeConsistency check(obj);
   MOZ_ASSERT(obj->inDictionaryMode());
 
@@ -802,7 +804,8 @@ bool NativeObject::densifySparseElements(JSContext* cx,
 }
 
 // static
-bool NativeObject::freezeOrSealProperties(JSContext* cx, HandleNativeObject obj,
+bool NativeObject::freezeOrSealProperties(JSContext* cx,
+                                          Handle<NativeObject*> obj,
                                           IntegrityLevel level) {
   AutoCheckShapeConsistency check(obj);
 
@@ -848,7 +851,7 @@ bool NativeObject::freezeOrSealProperties(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 bool NativeObject::generateNewDictionaryShape(JSContext* cx,
-                                              HandleNativeObject obj) {
+                                              Handle<NativeObject*> obj) {
   // Clone the current dictionary shape to a new shape. This ensures ICs and
   // other shape guards are properly invalidated before we start mutating the
   // map or new shape.
@@ -915,7 +918,7 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
   }
 
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
-    HandleNativeObject nobj = obj.as<NativeObject>();
+    Handle<NativeObject*> nobj = obj.as<NativeObject>();
     Rooted<BaseShape*> nbase(
         cx, BaseShape::get(cx, nobj->getClass(), nobj->realm(), proto));
     if (!nbase) {
@@ -936,7 +939,7 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
 
 /* static */
 bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
-                                                HandleNativeObject obj,
+                                                Handle<NativeObject*> obj,
                                                 uint32_t nfixed) {
   MOZ_ASSERT(nfixed != obj->shape()->numFixedSlots());
 
@@ -1124,7 +1127,7 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
     return nullptr;
   }
 
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::new_(cx, nbase, objectFlags, nfixed, nullptr, 0));
   if (!shape) {
     return nullptr;
@@ -1173,7 +1176,7 @@ Shape* SharedShape::getPropMapShape(JSContext* cx, BaseShape* base,
   }
 
   Rooted<BaseShape*> baseRoot(cx, base);
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::new_(cx, baseRoot, objectFlags, nfixed, map, mapLength));
   if (!shape) {
     return nullptr;
@@ -1211,7 +1214,7 @@ Shape* SharedShape::getInitialOrPropMapShape(
 }
 
 /* static */
-void SharedShape::insertInitialShape(JSContext* cx, HandleShape shape) {
+void SharedShape::insertInitialShape(JSContext* cx, Handle<Shape*> shape) {
   using Lookup = InitialShapeHasher::Lookup;
   Lookup lookup(shape->getObjectClass(), shape->realm(), shape->proto(),
                 shape->numFixedSlots(), shape->objectFlags());

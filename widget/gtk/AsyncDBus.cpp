@@ -60,4 +60,33 @@ RefPtr<DBusCallPromise> DBusProxyCall(GDBusProxy* aProxy, const char* aMethod,
   return promise.forget();
 }
 
+static void ProxyCallWithUnixFDListCallback(GObject* aSourceObject,
+                                            GAsyncResult* aResult,
+                                            gpointer aUserData) {
+  RefPtr<DBusCallPromise::Private> promise =
+      dont_AddRef(static_cast<DBusCallPromise::Private*>(aUserData));
+  GUniquePtr<GError> error;
+  GUnixFDList** aFDList = nullptr;
+  RefPtr<GVariant> result =
+      dont_AddRef(g_dbus_proxy_call_with_unix_fd_list_finish(
+          G_DBUS_PROXY(aSourceObject), aFDList, aResult,
+          getter_Transfers(error)));
+  if (result) {
+    promise->Resolve(std::move(result), __func__);
+  } else {
+    promise->Reject(std::move(error), __func__);
+  }
+}
+
+RefPtr<DBusCallPromise> DBusProxyCallWithUnixFDList(
+    GDBusProxy* aProxy, const char* aMethod, GVariant* aArgs,
+    GDBusCallFlags aFlags, gint aTimeout, GUnixFDList* aFDList,
+    GCancellable* aCancellable) {
+  auto promise = MakeRefPtr<DBusCallPromise::Private>(__func__);
+  g_dbus_proxy_call_with_unix_fd_list(
+      aProxy, aMethod, aArgs, aFlags, aTimeout, aFDList, aCancellable,
+      ProxyCallWithUnixFDListCallback, do_AddRef(promise).take());
+  return promise.forget();
+}
+
 }  // namespace mozilla::widget

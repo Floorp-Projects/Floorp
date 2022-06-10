@@ -168,12 +168,10 @@ add_task(async function localOneOff_withVisit() {
     actionHistory,
     actionTabs,
     actionBookmarks,
-    actionVisit,
   ] = await document.l10n.formatValues([
     { id: "urlbar-result-action-search-history" },
     { id: "urlbar-result-action-search-tabs" },
     { id: "urlbar-result-action-search-bookmarks" },
-    { id: "urlbar-result-action-visit" },
   ]);
 
   info("Alt UP to select the history one-off.");
@@ -284,8 +282,8 @@ add_task(async function localOneOff_withVisit() {
   );
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL);
   Assert.equal(
-    result.displayed.action,
-    actionVisit,
+    result.displayed.url,
+    result.result.payload.displayUrl,
     "Check the heuristic action"
   );
   Assert.notEqual(
@@ -296,7 +294,7 @@ add_task(async function localOneOff_withVisit() {
   row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   Assert.equal(
     row.querySelector(".urlbarView-title").textContent,
-    `https://${searchString}`,
+    result.result.payload.title || `https://${searchString}`,
     "Check that the result title has been restored to the fixed-up URI."
   );
 

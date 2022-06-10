@@ -3,7 +3,7 @@
 // <http://opensource.org/licenses/MIT>, at your option.
 
 pub use itoa::*;
-use std::{io, fmt};
+use std::{fmt, io};
 
 // APIs that were in itoa 0.4 but aren't in 1.0.
 

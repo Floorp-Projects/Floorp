@@ -15,7 +15,7 @@
 
 #include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
 #include "gc/Barrier.h"                  // HeapPtr, PreBarrieredId
-#include "gc/Rooting.h"                  // HandleAtom, HandleArrayObject
+#include "gc/Rooting.h"                  // HandleAtom
 #include "gc/ZoneAllocator.h"            // CellAllocPolicy
 #include "js/Class.h"                    // JSClass, ObjectOpResult
 #include "js/GCVector.h"                 // GCVector
@@ -54,7 +54,8 @@ class ModuleRequestObject : public NativeObject {
   static const JSClass class_;
   static bool isInstance(HandleValue value);
   [[nodiscard]] static ModuleRequestObject* create(
-      JSContext* cx, HandleAtom specifier, HandleArrayObject maybeAssertions);
+      JSContext* cx, HandleAtom specifier,
+      Handle<ArrayObject*> maybeAssertions);
 
   JSAtom* specifier() const;
 };
@@ -175,7 +176,7 @@ class ModuleNamespaceObject : public ProxyObject {
   static bool isInstance(HandleValue value);
   static ModuleNamespaceObject* create(JSContext* cx,
                                        Handle<ModuleObject*> module,
-                                       HandleArrayObject exports,
+                                       Handle<ArrayObject*> exports,
                                        UniquePtr<IndirectBindingMap> bindings);
 
   ModuleObject& module();
@@ -296,11 +297,11 @@ class ModuleObject : public NativeObject {
       Handle<ModuleEnvironmentObject*> initialEnvironment);
 
   void initStatusSlot();
-  void initImportExportData(HandleArrayObject requestedModules,
-                            HandleArrayObject importEntries,
-                            HandleArrayObject localExportEntries,
-                            HandleArrayObject indirectExportEntries,
-                            HandleArrayObject starExportEntries);
+  void initImportExportData(Handle<ArrayObject*> requestedModules,
+                            Handle<ArrayObject*> importEntries,
+                            Handle<ArrayObject*> localExportEntries,
+                            Handle<ArrayObject*> indirectExportEntries,
+                            Handle<ArrayObject*> starExportEntries);
   static bool Freeze(JSContext* cx, Handle<ModuleObject*> self);
 #ifdef DEBUG
   static bool AssertFrozen(JSContext* cx, Handle<ModuleObject*> self);
@@ -382,9 +383,9 @@ class ModuleObject : public NativeObject {
 
   bool initAsyncEvaluatingSlot();
 
-  static bool GatherAsyncParentCompletions(JSContext* cx,
-                                           Handle<ModuleObject*> module,
-                                           MutableHandleArrayObject execList);
+  static bool GatherAsyncParentCompletions(
+      JSContext* cx, Handle<ModuleObject*> module,
+      MutableHandle<ArrayObject*> execList);
   // NOTE: accessor for FunctionDeclarationsSlot is defined inside
   // ModuleObject.cpp as static function.
 

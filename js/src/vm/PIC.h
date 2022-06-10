@@ -147,18 +147,18 @@ struct ForOfPIC {
     const GCPtrObject picObject_;
 
     // Pointer to canonical Array.prototype and ArrayIterator.prototype
-    GCPtrNativeObject arrayProto_;
-    GCPtrNativeObject arrayIteratorProto_;
+    GCPtr<NativeObject*> arrayProto_;
+    GCPtr<NativeObject*> arrayIteratorProto_;
 
     // Shape of matching Array.prototype object, and slot containing
     // the @@iterator for it, and the canonical value.
-    GCPtrShape arrayProtoShape_;
+    GCPtr<Shape*> arrayProtoShape_;
     uint32_t arrayProtoIteratorSlot_;
     GCPtrValue canonicalIteratorFunc_;
 
     // Shape of matching ArrayIteratorProto, and slot containing
     // the 'next' property, and the canonical value.
-    GCPtrShape arrayIteratorProtoShape_;
+    GCPtr<Shape*> arrayIteratorProtoShape_;
     uint32_t arrayIteratorProtoNextSlot_;
     GCPtrValue canonicalNextFunc_;
 
@@ -189,7 +189,7 @@ struct ForOfPIC {
     bool initialize(JSContext* cx);
 
     // Try to optimize this chain for an object.
-    bool tryOptimizeArray(JSContext* cx, HandleArrayObject array,
+    bool tryOptimizeArray(JSContext* cx, Handle<ArrayObject*> array,
                           bool* optimized);
 
     // Check if %ArrayIteratorPrototype% still uses the default "next" method.

@@ -42,7 +42,7 @@ class Realm {
   // After a successful registration, an Instance must call
   // unregisterInstance() before being destroyed.
 
-  bool registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj);
+  bool registerInstance(JSContext* cx, Handle<WasmInstanceObject*> instanceObj);
   void unregisterInstance(Instance& instance);
 
   // Return a vector of all live instances in the realm. The lifetime of

@@ -129,6 +129,10 @@ function karma() {
 
   logErrors("karma", errors);
 
+  console.log("-----karma stdout below this line---");
+  console.log(out);
+  console.log("-----karma stdout above this line---");
+
   // Pass if there's no detected errors and nothing unexpected.
   return errors.length === 0 && !exitCode;
 }

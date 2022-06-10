@@ -26,7 +26,7 @@
 #  include <android/log.h>
 #endif
 
-#include "ds/SplayTree.h"
+#include "ds/AvlTree.h"
 
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
@@ -69,7 +69,7 @@ class ProtectedRegionTree {
 
   Mutex lock MOZ_UNANNOTATED;
   LifoAlloc alloc;
-  SplayTree<Region, Region> tree;
+  AvlTree<Region, Region> tree;
 
  public:
   ProtectedRegionTree()

@@ -294,7 +294,7 @@ class BaselineFrame {
   [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
   [[nodiscard]] bool pushClassBodyEnvironment(JSContext* cx,
                                               Handle<ClassBodyScope*> scope);
-  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);
+  [[nodiscard]] bool pushVarEnvironment(JSContext* cx, Handle<Scope*> scope);
 
   void initArgsObjUnchecked(ArgumentsObject& argsobj) {
     flags_ |= HAS_ARGS_OBJ;

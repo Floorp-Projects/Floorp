@@ -1234,18 +1234,10 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 namespace js {
 
-class ArrayObject;
 class DebugEnvironmentProxy;
-class GlobalObject;
 class PropertyName;
-class Scope;
-class ScriptSourceObject;
-class Shape;
-class BaseShape;
 class GetterSetter;
 class PropMap;
-class WasmInstanceObject;
-class WasmTableObject;
 
 namespace jit {
 class JitCode;
@@ -1255,8 +1247,6 @@ using PreBarrieredId = PreBarriered<jsid>;
 using PreBarrieredObject = PreBarriered<JSObject*>;
 using PreBarrieredValue = PreBarriered<Value>;
 
-using GCPtrNativeObject = GCPtr<NativeObject*>;
-using GCPtrArrayObject = GCPtr<ArrayObject*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
 using GCPtrFunction = GCPtr<JSFunction*>;
@@ -1264,7 +1254,6 @@ using GCPtrLinearString = GCPtr<JSLinearString*>;
 using GCPtrObject = GCPtr<JSObject*>;
 using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;
-using GCPtrShape = GCPtr<Shape*>;
 using GCPtrGetterSetter = GCPtr<GetterSetter*>;
 using GCPtrPropMap = GCPtr<PropMap*>;
 using GCPtrValue = GCPtr<Value>;
@@ -1275,18 +1264,12 @@ using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
 using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
 using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
-using WeakHeapPtrGlobalObject = WeakHeapPtr<GlobalObject*>;
 using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;
 using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
-using WeakHeapPtrScriptSourceObject = WeakHeapPtr<ScriptSourceObject*>;
-using WeakHeapPtrShape = WeakHeapPtr<Shape*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
-using WeakHeapPtrWasmInstanceObject = WeakHeapPtr<WasmInstanceObject*>;
-using WeakHeapPtrWasmTableObject = WeakHeapPtr<WasmTableObject*>;
 
 using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
-using HeapPtrNativeObject = HeapPtr<NativeObject*>;
 using HeapPtrObject = HeapPtr<JSObject*>;
 using HeapPtrRegExpShared = HeapPtr<RegExpShared*>;
 using HeapPtrValue = HeapPtr<Value>;

@@ -1200,7 +1200,7 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
   return QuoteString(cx, str);
 }
 
-static bool ToDisassemblySource(JSContext* cx, HandleScope scope,
+static bool ToDisassemblySource(JSContext* cx, Handle<Scope*> scope,
                                 UniqueChars* bytes) {
   UniqueChars source = JS_smprintf("%s {", ScopeKindString(scope->kind()));
   if (!source) {
@@ -1476,7 +1476,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_SCOPE: {
-      RootedScope scope(cx, script->getScope(pc));
+      Rooted<Scope*> scope(cx, script->getScope(pc));
       UniqueChars bytes;
       if (!ToDisassemblySource(cx, scope, &bytes)) {
         return 0;

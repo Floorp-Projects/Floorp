@@ -5,7 +5,7 @@
 import {
   recordTelemetryEvent,
   setKeyboardAccessForNonDialogElements,
-} from "./aboutLoginsUtils.js";
+} from "./aboutLoginsUtils.mjs";
 
 // The init code isn't wrapped in a DOMContentLoaded/load event listener so the
 // page works properly when restored from session restore.

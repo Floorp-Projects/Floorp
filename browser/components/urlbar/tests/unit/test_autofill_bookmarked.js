@@ -54,10 +54,11 @@ add_task(async function() {
       context,
       autofilled: `${host}/`,
       completed: `https://${host}/`,
+      hasAutofillTitle: true,
       matches: [
         makeVisitResult(context, {
           uri: `https://${host}/`,
-          title: `https://${host}`,
+          title: `test visit for https://${host}/`,
           heuristic: true,
         }),
         makeVisitResult(context, {
@@ -109,6 +110,7 @@ add_task(async function test_www() {
     context,
     autofilled: `www.${host}/`,
     completed: `http://www.${host}/`,
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,
@@ -123,6 +125,7 @@ add_task(async function test_www() {
     context,
     autofilled: `www.${host}/`,
     completed: `http://www.${host}/`,
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,
@@ -137,6 +140,7 @@ add_task(async function test_www() {
     context,
     autofilled: `${host}/`,
     completed: `http://www.${host}/`,
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,

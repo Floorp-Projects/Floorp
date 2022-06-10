@@ -733,8 +733,8 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
 }
 
 /* static */
-bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
-                                           HandleNativeObject namedCaptures) {
+bool RegExpShared::initializeNamedCaptures(
+    JSContext* cx, HandleRegExpShared re, Handle<NativeObject*> namedCaptures) {
   MOZ_ASSERT(!re->groupsTemplate_);
   MOZ_ASSERT(!re->namedCaptureIndices_);
 
@@ -747,7 +747,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
   uint32_t numNamedCaptures = namedCaptures->getDenseInitializedLength() / 2;
 
   // Create a plain template object.
-  RootedPlainObject templateObject(
+  Rooted<PlainObject*> templateObject(
       cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
   if (!templateObject) {
     return false;
@@ -881,7 +881,7 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(
   MOZ_ASSERT(!matchResultTemplateObjects_[kind]);
 
   /* Create template array object */
-  RootedArrayObject templateObject(
+  Rooted<ArrayObject*> templateObject(
       cx,
       NewDenseUnallocatedArray(cx, RegExpObject::MaxPairCount, TenuredObject));
   if (!templateObject) {

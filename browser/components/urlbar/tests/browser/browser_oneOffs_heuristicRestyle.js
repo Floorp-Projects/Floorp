@@ -80,11 +80,23 @@ async function heuristicIsNotRestyled(expectedType, resultDetails) {
   let [actionText] = data.actionL10n
     ? await document.l10n.formatValues([data.actionL10n])
     : [""];
-  Assert.equal(
-    resultDetails.displayed.action,
-    actionText,
-    "The result has the expected non-styled action text."
-  );
+
+  if (
+    expectedType === UrlbarUtils.RESULT_TYPE.URL &&
+    resultDetails.result.heuristic &&
+    resultDetails.result.autofill?.hasTitle
+  ) {
+    Assert.equal(
+      resultDetails.displayed.url,
+      resultDetails.result.payload.displayUrl
+    );
+  } else {
+    Assert.equal(
+      resultDetails.displayed.action,
+      actionText,
+      "The result has the expected non-styled action text."
+    );
+  }
 
   Assert.equal(
     BrowserTestUtils.is_visible(resultDetails.element.separator),

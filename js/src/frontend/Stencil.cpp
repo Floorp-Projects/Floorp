@@ -795,7 +795,7 @@ bool CompilationInput::initScriptSource(JSContext* cx) {
 }
 
 bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
-    JSContext* cx, HandleScope functionEnclosingScope) {
+    JSContext* cx, Handle<Scope*> functionEnclosingScope) {
   MOZ_ASSERT(!functionEnclosingScope->as<GlobalScope>().isSyntactic());
 
   target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
@@ -1192,12 +1192,12 @@ Scope* ScopeStencil::enclosingExistingScope(
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput,
                                  BaseParserScopeData* baseScopeData) const {
-  RootedScope enclosingScope(cx, enclosingExistingScope(input, gcOutput));
+  Rooted<Scope*> enclosingScope(cx, enclosingExistingScope(input, gcOutput));
   return createScope(cx, input.atomCache, enclosingScope, baseScopeData);
 }
 
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
-                                 HandleScope enclosingScope,
+                                 Handle<Scope*> enclosingScope,
                                  BaseParserScopeData* baseScopeData) const {
   switch (kind()) {
     case ScopeKind::Function: {
@@ -1317,7 +1317,7 @@ static bool CreateLazyScript(JSContext* cx,
 // NOTE: Keep this in sync with `js::NewFunctionWithProto`.
 static JSFunction* CreateFunctionFast(JSContext* cx,
                                       CompilationAtomCache& atomCache,
-                                      HandleShape shape,
+                                      Handle<Shape*> shape,
                                       const ScriptStencil& script,
                                       const ScriptStencilExtra& scriptExtra) {
   MOZ_ASSERT(
@@ -1465,14 +1465,16 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
   // Most JSFunctions will be have the same Shape so we can compute it now to
   // allow fast object creation. Generators / Async will use the slow path
   // instead.
-  RootedShape functionShape(cx, GlobalObject::getFunctionShapeWithDefaultProto(
-                                    cx, /* extended = */ false));
+  Rooted<Shape*> functionShape(cx,
+                               GlobalObject::getFunctionShapeWithDefaultProto(
+                                   cx, /* extended = */ false));
   if (!functionShape) {
     return false;
   }
 
-  RootedShape extendedShape(cx, GlobalObject::getFunctionShapeWithDefaultProto(
-                                    cx, /* extended = */ true));
+  Rooted<Shape*> extendedShape(cx,
+                               GlobalObject::getFunctionShapeWithDefaultProto(
+                                   cx, /* extended = */ true));
   if (!extendedShape) {
     return false;
   }
@@ -1493,9 +1495,9 @@ static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
 
     JSFunction* fun;
     if (useFastPath) {
-      HandleShape shape = scriptStencil.functionFlags.isExtended()
-                              ? extendedShape
-                              : functionShape;
+      Handle<Shape*> shape = scriptStencil.functionFlags.isExtended()
+                                 ? extendedShape
+                                 : functionShape;
       fun =
           CreateFunctionFast(cx, atomCache, shape, scriptStencil, scriptExtra);
     } else {
@@ -2164,7 +2166,7 @@ bool CompilationStencil::delazifySelfHostedFunction(
   //       the CompilationInput between different realms.
   for (size_t i = scopeIndex; i < scopeLimit; i++) {
     ScopeStencil& data = scopeData[i];
-    RootedScope enclosingScope(
+    Rooted<Scope*> enclosingScope(
         cx, data.hasEnclosing() ? gcOutput.get().getScope(data.enclosing())
                                 : &cx->global()->emptyGlobalScope());
 

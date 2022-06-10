@@ -360,7 +360,7 @@ bool GlobalObject::initModuleRequestProto(JSContext* cx,
 
 /* static */
 ModuleRequestObject* ModuleRequestObject::create(
-    JSContext* cx, HandleAtom specifier, HandleArrayObject maybeAssertions) {
+    JSContext* cx, HandleAtom specifier, Handle<ArrayObject*> maybeAssertions) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateModuleRequestPrototype(cx, cx->global()));
   if (!proto) {
@@ -457,7 +457,7 @@ bool ModuleNamespaceObject::isInstance(HandleValue value) {
 
 /* static */
 ModuleNamespaceObject* ModuleNamespaceObject::create(
-    JSContext* cx, Handle<ModuleObject*> module, HandleArrayObject exports,
+    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports,
     UniquePtr<IndirectBindingMap> bindings) {
   RootedValue priv(cx, ObjectValue(*module));
   ProxyOptions options;
@@ -949,11 +949,11 @@ void ModuleObject::initStatusSlot() {
   initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNLINKED));
 }
 
-void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
-                                        HandleArrayObject importEntries,
-                                        HandleArrayObject localExportEntries,
-                                        HandleArrayObject indirectExportEntries,
-                                        HandleArrayObject starExportEntries) {
+void ModuleObject::initImportExportData(
+    Handle<ArrayObject*> requestedModules, Handle<ArrayObject*> importEntries,
+    Handle<ArrayObject*> localExportEntries,
+    Handle<ArrayObject*> indirectExportEntries,
+    Handle<ArrayObject*> starExportEntries) {
   initReservedSlot(RequestedModulesSlot, ObjectValue(*requestedModules));
   initReservedSlot(ImportEntriesSlot, ObjectValue(*importEntries));
   initReservedSlot(LocalExportEntriesSlot, ObjectValue(*localExportEntries));
@@ -962,7 +962,7 @@ void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
   initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
 }
 
-static bool FreezeObjectProperty(JSContext* cx, HandleNativeObject obj,
+static bool FreezeObjectProperty(JSContext* cx, Handle<NativeObject*> obj,
                                  uint32_t slot) {
   RootedObject property(cx, &obj->getSlot(slot).toObject());
   return FreezeObject(cx, property);
@@ -986,7 +986,7 @@ static inline bool CheckObjectFrozen(JSContext* cx, HandleObject obj,
 }
 
 static inline bool CheckObjectPropertyFrozen(JSContext* cx,
-                                             HandleNativeObject obj,
+                                             Handle<NativeObject*> obj,
                                              uint32_t slot, bool* result) {
   RootedObject property(cx, &obj->getSlot(slot).toObject());
   return CheckObjectFrozen(cx, property, result);
@@ -1502,7 +1502,7 @@ static ArrayObject* ModuleBuilderInitArray(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     ModuleArrayType arrayType,
     const frontend::StencilModuleMetadata::EntryVector& vector) {
-  RootedArrayObject resultArray(
+  Rooted<ArrayObject*> resultArray(
       cx, NewDenseFullyAllocatedArray(cx, vector.length()));
   if (!resultArray) {
     return nullptr;
@@ -1516,8 +1516,8 @@ static ArrayObject* ModuleBuilderInitArray(
   RootedAtom exportName(cx);
   RootedObject req(cx);
   RootedObject moduleRequest(cx);
-  RootedArrayObject assertionArray(cx);
-  RootedPlainObject assertionObject(cx);
+  Rooted<ArrayObject*> assertionArray(cx);
+  Rooted<PlainObject*> assertionObject(cx);
   RootedId assertionKey(cx);
   RootedValue assertionValue(cx);
 
@@ -1622,7 +1622,7 @@ static ArrayObject* ModuleBuilderInitArray(
 bool frontend::StencilModuleMetadata::initModule(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     JS::Handle<ModuleObject*> module) const {
-  RootedArrayObject requestedModulesObject(
+  Rooted<ArrayObject*> requestedModulesObject(
       cx, ModuleBuilderInitArray(cx, atomCache,
                                  ModuleArrayType::RequestedModuleObject,
                                  requestedModules));
@@ -1630,7 +1630,7 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  RootedArrayObject importEntriesObject(
+  Rooted<ArrayObject*> importEntriesObject(
       cx,
       ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ImportEntryObject,
                              importEntries));
@@ -1638,7 +1638,7 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  RootedArrayObject localExportEntriesObject(
+  Rooted<ArrayObject*> localExportEntriesObject(
       cx,
       ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
                              localExportEntries));
@@ -1646,7 +1646,7 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  RootedArrayObject indirectExportEntriesObject(
+  Rooted<ArrayObject*> indirectExportEntriesObject(
       cx,
       ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
                              indirectExportEntries));
@@ -1654,7 +1654,7 @@ bool frontend::StencilModuleMetadata::initModule(
     return false;
   }
 
-  RootedArrayObject starExportEntriesObject(
+  Rooted<ArrayObject*> starExportEntriesObject(
       cx,
       ModuleBuilderInitArray(cx, atomCache, ModuleArrayType::ExportEntryObject,
                              starExportEntries));
@@ -2138,7 +2138,7 @@ template <typename T>
 ArrayObject* js::CreateArray(JSContext* cx,
                              const JS::Rooted<GCVector<T>>& vector) {
   uint32_t length = vector.length();
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!array) {
     return nullptr;
   }
@@ -2233,7 +2233,7 @@ bool js::AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 // https://tc39.es/proposal-top-level-await/#sec-gather-async-parent-completions
 bool ModuleObject::GatherAsyncParentCompletions(
     JSContext* cx, Handle<ModuleObject*> module,
-    MutableHandleArrayObject execList) {
+    MutableHandle<ArrayObject*> execList) {
   FixedInvokeArgs<1> args(cx);
   args[0].setObject(*module);
 
@@ -2269,7 +2269,7 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
     }
   }
 
-  RootedArrayObject sortedList(cx);
+  Rooted<ArrayObject*> sortedList(cx);
   if (!ModuleObject::GatherAsyncParentCompletions(cx, module, &sortedList)) {
     // We have OOM'd -- all bets are off, reject the promise. Not much more we
     // can do.
@@ -2396,7 +2396,7 @@ bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
 // NOTE: The caller needs to handle the promise.
 static bool EvaluateDynamicImportOptions(
     JSContext* cx, HandleValue optionsArg,
-    MutableHandleArrayObject assertionArrayArg) {
+    MutableHandle<ArrayObject*> assertionArrayArg) {
   // Step 10. If options is not undefined, then.
   if (optionsArg.isUndefined()) {
     return true;
@@ -2446,7 +2446,7 @@ static bool EvaluateDynamicImportOptions(
   }
 
   // Step 9 (reordered). Let assertions be a new empty List.
-  RootedArrayObject assertionArray(
+  Rooted<ArrayObject*> assertionArray(
       cx, NewDenseFullyAllocatedArray(cx, numberOfAssertions));
   if (!assertionArray) {
     return false;
@@ -2493,7 +2493,7 @@ static bool EvaluateDynamicImportOptions(
       }
 
       if (supported) {
-        RootedPlainObject assertionObj(cx, NewPlainObject(cx));
+        Rooted<PlainObject*> assertionObj(cx, NewPlainObject(cx));
         if (!assertionObj) {
           return false;
         }
@@ -2569,7 +2569,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  RootedArrayObject assertionArray(cx);
+  Rooted<ArrayObject*> assertionArray(cx);
   if (!EvaluateDynamicImportOptions(cx, optionsArg, &assertionArray)) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;

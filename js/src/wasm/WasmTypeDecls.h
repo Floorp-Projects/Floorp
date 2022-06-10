@@ -33,45 +33,19 @@ namespace js {
 using JSFunctionVector = GCVector<JSFunction*, 0, SystemAllocPolicy>;
 
 class WasmMemoryObject;
-using GCPtrWasmMemoryObject = GCPtr<WasmMemoryObject*>;
-using RootedWasmMemoryObject = Rooted<WasmMemoryObject*>;
-using HandleWasmMemoryObject = Handle<WasmMemoryObject*>;
-using MutableHandleWasmMemoryObject = MutableHandle<WasmMemoryObject*>;
-
 class WasmModuleObject;
-using RootedWasmModuleObject = Rooted<WasmModuleObject*>;
-using HandleWasmModuleObject = Handle<WasmModuleObject*>;
-using MutableHandleWasmModuleObject = MutableHandle<WasmModuleObject*>;
-
 class WasmInstanceObject;
-using WasmInstanceObjectVector = GCVector<WasmInstanceObject*>;
-using RootedWasmInstanceObject = Rooted<WasmInstanceObject*>;
-using HandleWasmInstanceObject = Handle<WasmInstanceObject*>;
-using MutableHandleWasmInstanceObject = MutableHandle<WasmInstanceObject*>;
-
 class WasmTableObject;
-using WasmTableObjectVector = GCVector<WasmTableObject*, 0, SystemAllocPolicy>;
-using RootedWasmTableObject = Rooted<WasmTableObject*>;
-using HandleWasmTableObject = Handle<WasmTableObject*>;
-using MutableHandleWasmTableObject = MutableHandle<WasmTableObject*>;
-
 class WasmGlobalObject;
+class WasmTagObject;
+class WasmExceptionObject;
+class RttValue;
+
+using WasmInstanceObjectVector = GCVector<WasmInstanceObject*>;
+using WasmTableObjectVector = GCVector<WasmTableObject*, 0, SystemAllocPolicy>;
 using WasmGlobalObjectVector =
     GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>;
-using RootedWasmGlobalObject = Rooted<WasmGlobalObject*>;
-
-class WasmTagObject;
-using GCPtrWasmTagObject = GCPtr<WasmTagObject*>;
 using WasmTagObjectVector = GCVector<WasmTagObject*, 0, SystemAllocPolicy>;
-using RootedWasmTagObject = Rooted<WasmTagObject*>;
-using HandleWasmTagObject = Handle<WasmTagObject*>;
-
-class WasmExceptionObject;
-using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
-
-class RttValue;
-using HandleRttValue = Handle<RttValue*>;
-using MutableHandleRttValue = MutableHandle<RttValue*>;
 
 namespace wasm {
 

@@ -30,6 +30,7 @@ add_task(async function() {
     context,
     autofilled: `${host}/`,
     completed: `https://www.${host}/`,
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: `https://www.${host}/`,
@@ -59,6 +60,7 @@ add_task(async function() {
     context,
     autofilled: `${host}/`,
     completed: `https://${host}/`,
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: `https://${host}/`,

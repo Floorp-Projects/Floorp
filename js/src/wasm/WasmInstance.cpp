@@ -146,8 +146,8 @@ TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
   return *(TableInstanceData*)(globalData() + td.globalDataOffset);
 }
 
-GCPtrWasmTagObject& Instance::tagInstanceData(const TagDesc& td) const {
-  return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
+GCPtr<WasmTagObject*>& Instance::tagInstanceData(const TagDesc& td) const {
+  return *(GCPtr<WasmTagObject*>*)(globalData() + td.globalDataOffset);
 }
 
 // TODO(1626251): Consolidate definitions into Iterable.h
@@ -194,7 +194,7 @@ static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
   }
 
   MOZ_ASSERT(stackResultsArea.isSome());
-  RootedArrayObject array(cx);
+  Rooted<ArrayObject*> array(cx);
   if (!IterableToArray(cx, rval, &array)) {
     return false;
   }
@@ -481,7 +481,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  RootedWasmMemoryObject memory(cx, instance->memory_);
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory_);
 
   // It is safe to cast to uint32_t, as all limits have been checked inside
   // grow() and will not have been exceeded for a 32-bit memory.
@@ -500,7 +500,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  RootedWasmMemoryObject memory(cx, instance->memory_);
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory_);
 
   uint64_t ret = WasmMemoryObject::grow(memory, delta, cx);
 
@@ -1104,7 +1104,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   }
 
   RootedFunction fun(cx);
-  RootedWasmInstanceObject instanceObj(cx, instance->object());
+  Rooted<WasmInstanceObject*> instanceObj(cx, instance->object());
   if (!WasmInstanceObject::getExportedFunction(cx, instanceObj, funcIndex,
                                                &fun)) {
     // Validation ensures that we always have a valid funcIndex, so we must
@@ -1227,7 +1227,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-  RootedWasmTagObject tagObj(cx, &tag->as<WasmTagObject>());
+  Rooted<WasmTagObject*> tagObj(cx, &tag->as<WasmTagObject>());
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmException));
   RootedObject stack(cx, nullptr);
   return AnyRef::fromJSObject(
@@ -1259,9 +1259,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = instance->cx();
 
   ASSERT_ANYREF_IS_JSOBJECT;
-  RootedTypedObject ref(
+  Rooted<TypedObject*> ref(
       cx, (TypedObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
-  RootedRttValue rtt(
+  Rooted<RttValue*> rtt(
       cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
   return int32_t(ref->isRuntimeSubtype(rtt));
 }
@@ -1272,13 +1272,13 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = instance->cx();
 
   ASSERT_ANYREF_IS_JSOBJECT;
-  RootedRttValue parentRtt(
+  Rooted<RttValue*> parentRtt(
       cx, &AnyRef::fromCompiledCode(rttParentPtr).asJSObject()->as<RttValue>());
-  RootedRttValue subCanonRtt(
+  Rooted<RttValue*> subCanonRtt(
       cx,
       &AnyRef::fromCompiledCode(rttSubCanonPtr).asJSObject()->as<RttValue>());
 
-  RootedRttValue subRtt(cx, RttValue::rttSub(cx, parentRtt, subCanonRtt));
+  Rooted<RttValue*> subRtt(cx, RttValue::rttSub(cx, parentRtt, subCanonRtt));
   return AnyRef::fromJSObject(subRtt.get()).forCompiledCode();
 }
 
@@ -1321,7 +1321,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-                   SharedCode code, HandleWasmMemoryObject memory,
+                   SharedCode code, Handle<WasmMemoryObject*> memory,
                    SharedTableVector&& tables, UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       jsJitArgsRectifier_(
@@ -1343,9 +1343,9 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 {
 }
 
-Instance* Instance::create(JSContext* cx, HandleWasmInstanceObject object,
+Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
                            SharedCode code, uint32_t globalDataLength,
-                           HandleWasmMemoryObject memory,
+                           Handle<WasmMemoryObject*> memory,
                            SharedTableVector&& tables,
                            UniqueDebugState maybeDebug) {
   void* base = js_calloc(alignof(Instance) + offsetof(Instance, globalArea_) +
@@ -1552,7 +1552,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       case GlobalKind::Variable: {
         RootedVal val(cx);
         const InitExpr& init = global.initExpr();
-        RootedWasmInstanceObject instanceObj(cx, object());
+        Rooted<WasmInstanceObject*> instanceObj(cx, object());
         if (!init.evaluate(cx, globalImportValues, instanceObj, &val)) {
           return false;
         }
@@ -2249,7 +2249,7 @@ bool Instance::constantRefFunc(uint32_t funcIndex,
 }
 
 bool Instance::constantRttCanon(JSContext* cx, uint32_t sourceTypeIndex,
-                                MutableHandleRttValue result) {
+                                MutableHandle<RttValue*> result) {
   // Get the renumbered type index from the source type index
   uint32_t renumberedTypeIndex = metadata().typesRenumbering[sourceTypeIndex];
   // The original type definition cannot have been a function type, so it
@@ -2263,10 +2263,10 @@ bool Instance::constantRttCanon(JSContext* cx, uint32_t sourceTypeIndex,
   return true;
 }
 
-bool Instance::constantRttSub(JSContext* cx, HandleRttValue parentRtt,
+bool Instance::constantRttSub(JSContext* cx, Handle<RttValue*> parentRtt,
                               uint32_t sourceChildTypeIndex,
-                              MutableHandleRttValue result) {
-  RootedRttValue subCanonRtt(cx, nullptr);
+                              MutableHandle<RttValue*> result) {
+  Rooted<RttValue*> subCanonRtt(cx, nullptr);
   // Get the canonical rtt value from the child type index, this is used to
   // memoize results of rtt.sub
   if (!constantRttCanon(cx, sourceChildTypeIndex, &subCanonRtt)) {

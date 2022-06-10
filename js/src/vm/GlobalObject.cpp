@@ -939,7 +939,7 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
                                      Handle<GlobalObject*> global,
                                      HandlePropertyName name,
                                      HandleValue value) {
-  RootedNativeObject holder(cx, &global->getIntrinsicsHolder());
+  Rooted<NativeObject*> holder(cx, &global->getIntrinsicsHolder());
 
   RootedId id(cx, NameToId(name));
   MOZ_ASSERT(!holder->containsPure(id));

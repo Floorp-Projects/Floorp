@@ -408,7 +408,7 @@ class NodeBuilder {
   }
 
   [[nodiscard]] bool newObject(MutableHandleObject dst) {
-    RootedPlainObject nobj(cx, NewPlainObject(cx));
+    Rooted<PlainObject*> nobj(cx, NewPlainObject(cx));
     if (!nobj) {
       return false;
     }
@@ -766,7 +766,7 @@ bool NodeBuilder::createNode(ASTType type, TokenPos* pos,
   MOZ_ASSERT(type > AST_ERROR && type < AST_LIMIT);
 
   RootedValue tv(cx);
-  RootedPlainObject node(cx, NewPlainObject(cx));
+  Rooted<PlainObject*> node(cx, NewPlainObject(cx));
   if (!node || !setNodeLoc(node, pos) || !atomValue(nodeTypeNames[type], &tv) ||
       !defineProperty(node, "type", tv)) {
     return false;

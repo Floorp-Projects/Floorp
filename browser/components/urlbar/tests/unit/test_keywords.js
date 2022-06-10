@@ -19,6 +19,7 @@ add_task(async function test_non_keyword() {
     context,
     autofilled: "mozilla.org/",
     completed: "http://mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
@@ -72,6 +73,7 @@ add_task(async function test_more_than_keyword() {
     context,
     autofilled: "mozilla.org/",
     completed: "http://mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
@@ -102,6 +104,7 @@ add_task(async function test_less_than_keyword() {
     search: "mo",
     autofilled: "mozilla.org/",
     completed: "http://mozilla.org/",
+    hasAutofillTitle: false,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.org/",
@@ -158,10 +161,11 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     search: "mo",
     autofilled: "mozilla.com/",
     completed: "http://mozilla.com/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.com/",
-        title: "mozilla.com",
+        title: "test visit for http://mozilla.com/",
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -197,10 +201,11 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     context,
     autofilled: "mozilla.com/",
     completed: "http://mozilla.com/",
+    hasAutofillTitle: true,
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.com/",
-        title: "mozilla.com",
+        title: "A bookmark",
         heuristic: true,
       }),
       makeVisitResult(context, {

@@ -32,14 +32,14 @@ struct NativeIterator {
   // Internal iterator object.
   const GCPtrObject iterObj_ = {};
 
-  // The end of GCPtrShapes that appear directly after |this|, as part of an
+  // The end of GCPtr<Shape*>s that appear directly after |this|, as part of an
   // overall allocation that stores |*this|, shapes, and iterated strings.
   // Once this has been fully initialized, it also equals the start of iterated
   // strings.
-  GCPtrShape* shapesEnd_;  // initialized by constructor
+  GCPtr<Shape*>* shapesEnd_;  // initialized by constructor
 
   // The next property, pointing into an array of strings directly after any
-  // GCPtrShapes that appear directly after |*this|, as part of an overall
+  // GCPtr<Shape*>s that appear directly after |*this|, as part of an overall
   // allocation that stores |*this|, shapes, and iterated strings.
   GCPtrLinearString* propertyCursor_;  // initialized by constructor
 
@@ -135,31 +135,34 @@ struct NativeIterator {
 
   void changeObjectBeingIterated(JSObject& obj) { objectBeingIterated_ = &obj; }
 
-  GCPtrShape* shapesBegin() const {
-    static_assert(alignof(GCPtrShape) <= alignof(NativeIterator),
-                  "NativeIterator must be aligned to begin storing "
-                  "GCPtrShapes immediately after it with no required padding");
+  GCPtr<Shape*>* shapesBegin() const {
+    static_assert(
+        alignof(GCPtr<Shape*>) <= alignof(NativeIterator),
+        "NativeIterator must be aligned to begin storing "
+        "GCPtr<Shape*>s immediately after it with no required padding");
     const NativeIterator* immediatelyAfter = this + 1;
     auto* afterNonConst = const_cast<NativeIterator*>(immediatelyAfter);
-    return reinterpret_cast<GCPtrShape*>(afterNonConst);
+    return reinterpret_cast<GCPtr<Shape*>*>(afterNonConst);
   }
 
-  GCPtrShape* shapesEnd() const { return shapesEnd_; }
+  GCPtr<Shape*>* shapesEnd() const { return shapesEnd_; }
 
   uint32_t shapeCount() const {
     return mozilla::PointerRangeSize(shapesBegin(), shapesEnd());
   }
 
   GCPtrLinearString* propertiesBegin() const {
-    static_assert(alignof(GCPtrShape) >= alignof(GCPtrLinearString),
-                  "GCPtrLinearStrings for properties must be able to appear "
-                  "directly after any GCPtrShapes after this NativeIterator, "
-                  "with no padding space required for correct alignment");
-    static_assert(alignof(NativeIterator) >= alignof(GCPtrLinearString),
-                  "GCPtrLinearStrings for properties must be able to appear "
-                  "directly after this NativeIterator when no GCPtrShapes are "
-                  "present, with no padding space required for correct "
-                  "alignment");
+    static_assert(
+        alignof(GCPtr<Shape*>) >= alignof(GCPtrLinearString),
+        "GCPtrLinearStrings for properties must be able to appear "
+        "directly after any GCPtr<Shape*>s after this NativeIterator, "
+        "with no padding space required for correct alignment");
+    static_assert(
+        alignof(NativeIterator) >= alignof(GCPtrLinearString),
+        "GCPtrLinearStrings for properties must be able to appear "
+        "directly after this NativeIterator when no GCPtr<Shape*>s are "
+        "present, with no padding space required for correct "
+        "alignment");
 
     // We *could* just check the assertion below if we wanted, but the
     // incompletely-initialized NativeIterator case matters for so little

@@ -5626,7 +5626,7 @@ static bool GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp) {
   ids.eraseIfEqual(NameToId(cx->names().starNamespaceStar));
 
   uint32_t length = ids.length();
-  RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!array) {
     return false;
   }
@@ -7902,7 +7902,7 @@ class StreamCacheEntryObject : public NativeObject {
       return false;
     }
 
-    RootedNativeObject obj(
+    Rooted<NativeObject*> obj(
         cx, NewObjectWithGivenProto<StreamCacheEntryObject>(cx, nullptr));
     if (!obj) {
       return false;
@@ -8734,7 +8734,7 @@ static bool WasmLoop(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     Rooted<TypedArrayObject*> typedArray(cx, &ret->as<TypedArrayObject>());
-    RootedWasmInstanceObject instanceObj(cx);
+    Rooted<WasmInstanceObject*> instanceObj(cx);
     // No additional compile options here, we don't need them for this use case.
     RootedValue maybeOptions(cx);
     if (!wasm::Eval(cx, typedArray, importObj, maybeOptions, &instanceObj)) {
@@ -11570,7 +11570,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
     return false;
   }
 
-  RootedArrayObject resultObj(cx, &obj->as<ArrayObject>());
+  Rooted<ArrayObject*> resultObj(cx, &obj->as<ArrayObject>());
   while (true) {
     bool done = SetIteratorObject::next(iterObj, resultObj);
     if (done) {

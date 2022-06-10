@@ -3628,21 +3628,6 @@ void BacktrackingAllocator::dumpLiveRangesByBundle(const char* who) {
   }
 }
 
-struct BacktrackingAllocator::PrintLiveRange {
-  bool& first_;
-
-  explicit PrintLiveRange(bool& first) : first_(first) {}
-
-  void operator()(const LiveRange* range) {
-    if (first_) {
-      first_ = false;
-    } else {
-      fprintf(stderr, " /");
-    }
-    fprintf(stderr, " %s", range->toString().get());
-  }
-};
-
 void BacktrackingAllocator::dumpAllocations() {
   JitSpew(JitSpew_RegAlloc, "Allocations:");
 
@@ -3656,7 +3641,16 @@ void BacktrackingAllocator::dumpAllocations() {
       JitSpewHeader(JitSpew_RegAlloc);
       JitSpewCont(JitSpew_RegAlloc, "  %s:", AnyRegister::FromCode(i).name());
       bool first = true;
-      registers[i].allocations.forEach(PrintLiveRange(first));
+      LiveRangeSet::Iter lrIter(&registers[i].allocations);
+      while (lrIter.hasMore()) {
+        LiveRange* range = lrIter.next();
+        if (first) {
+          first = false;
+        } else {
+          fprintf(stderr, " /");
+        }
+        fprintf(stderr, " %s", range->toString().get());
+      }
       JitSpewCont(JitSpew_RegAlloc, "\n");
     }
   }

@@ -390,8 +390,8 @@ static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
     return false;
   }
 
-  RootedPlainObject proto(cx,
-                          NewPlainObjectWithProto(cx, objProto, TenuredObject));
+  Rooted<PlainObject*> proto(
+      cx, NewPlainObjectWithProto(cx, objProto, TenuredObject));
   if (!proto) {
     return false;
   }
@@ -1866,7 +1866,7 @@ JSFunction* js::NewFunctionWithProto(
 
   const JSClass* clasp = FunctionClassForAllocKind(allocKind);
 
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (!proto) {
     bool extended = (allocKind == gc::AllocKind::FUNCTION_EXTENDED);
     shape = GlobalObject::getFunctionShapeWithDefaultProto(cx, extended);
@@ -1968,7 +1968,7 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
 
   // If |fun| also has |proto| as prototype (the common case) we can reuse its
   // shape for the clone. This works because |fun| isn't exposed to script.
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (fun->staticPrototype() == proto) {
     MOZ_ASSERT(fun->shape()->propMapLength() == 0);
     MOZ_ASSERT(fun->shape()->objectFlags().isEmpty());

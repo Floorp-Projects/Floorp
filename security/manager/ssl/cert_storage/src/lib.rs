@@ -30,8 +30,8 @@ use crossbeam_utils::atomic::AtomicCell;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use moz_task::{create_background_task_queue, is_main_thread, Task, TaskRunnable};
 use nserror::{
-    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD,
-    NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
+    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NULL_POINTER,
+    NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsCStr, nsCString, nsString};
 use rkv::backend::{BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment};

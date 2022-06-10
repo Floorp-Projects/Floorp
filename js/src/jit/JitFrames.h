@@ -689,67 +689,41 @@ class DirectWasmJitCallFrameLayout {
 
 class ICStub;
 
-class JitStubFrameLayout : public CommonFrameLayout {
-  /* clang-format off */
-    // Info on the stack
-    //
-    // --------------------
-    // |JitStubFrameLayout|
-    // +------------------+
-    // | - Descriptor     | => Marks end of FrameType::IonJS
-    // | - returnaddres   |
-    // +------------------+
-    // | - StubPtr        | => First thing pushed in a stub only when the stub will do
-    // --------------------    a vmcall. Else we cannot have JitStubFrame. But technically
-    //                         not a member of the layout.
-  /* clang-format on */
+class BaselineStubFrameLayout : public CommonFrameLayout {
+  // Info on the stack
+  //
+  // +-----------------------+
+  // |BaselineStubFrameLayout|
+  // +-----------------------+
+  // | - Descriptor          | => Marks end of FrameType::BaselineJS
+  // | - Return address      |
+  // +-----------------------+
+  // | - FramePtr            | Technically these last two fields are not part
+  // | - StubPtr             | of the frame layout.
+  // +-----------------------+
 
  public:
-  static size_t Size() { return sizeof(JitStubFrameLayout); }
+  // The caller frame pointer should be pushed after the return address, to help
+  // external stack unwinders.
+  static constexpr size_t FramePointerOffset = sizeof(void*);
+  static constexpr size_t ICStubOffset = 2 * sizeof(void*);
+  static constexpr int ICStubOffsetFromFP = -int(sizeof(void*));
 
-  static inline int reverseOffsetOfStubPtr() { return -int(sizeof(void*)); }
+  static inline size_t Size() { return sizeof(BaselineStubFrameLayout); }
 
   inline ICStub* maybeStubPtr() {
     uint8_t* fp = reinterpret_cast<uint8_t*>(this);
-    return *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr());
+    return *reinterpret_cast<ICStub**>(fp - ICStubOffset);
   }
 };
 
-class BaselineStubFrameLayout : public JitStubFrameLayout {
-  /* clang-format off */
-    // Info on the stack
-    //
-    // -------------------------
-    // |BaselineStubFrameLayout|
-    // +-----------------------+
-    // | - Descriptor          | => Marks end of FrameType::BaselineJS
-    // | - returnaddres        |
-    // +-----------------------+
-    // | - StubPtr             | => First thing pushed in a stub only when the stub will do
-    // +-----------------------+    a vmcall. Else we cannot have BaselineStubFrame.
-    // | - FramePtr            | => Baseline stubs also need to push the frame ptr when doing
-    // -------------------------    a vmcall.
-    //                              Technically these last two variables are not part of the
-    //                              layout.
-  /* clang-format on */
-
- public:
-  static inline size_t Size() { return sizeof(BaselineStubFrameLayout); }
-
-  static inline int reverseOffsetOfSavedFramePtr() {
-    return -int(2 * sizeof(void*));
-  }
-
-  void* reverseSavedFramePtr() {
-    uint8_t* addr = ((uint8_t*)this) + reverseOffsetOfSavedFramePtr();
-    return *(void**)addr;
-  }
-
-  inline void setStubPtr(ICStub* stub) {
-    uint8_t* fp = reinterpret_cast<uint8_t*>(this);
-    *reinterpret_cast<ICStub**>(fp + reverseOffsetOfStubPtr()) = stub;
-  }
-};
+// Size of the the stub frame described above. This can be used to skip over the
+// stub frame on the stack, to access values in the parent frame.
+static constexpr size_t StubFrameSize = 4 * sizeof(uintptr_t);
+// Size of the stub frame fields on the stack when using the frame pointer. Does
+// not include the stub pointer because that's pushed after setting the frame
+// pointer.
+static constexpr size_t StubFrameSizeFromFP = 3 * sizeof(uintptr_t);
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
 class InvalidationBailoutStack {

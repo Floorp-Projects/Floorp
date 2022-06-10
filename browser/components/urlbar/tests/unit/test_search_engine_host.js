@@ -66,6 +66,7 @@ add_task(async function test_searchEngine_noautoFill() {
     context,
     autofilled: "my.search.com/",
     completed: "http://my.search.com/",
+    hasAutofillTitle: false,
     matches: [
       // Note this result is a normal Autofill result and not a priority engine.
       makeVisitResult(context, {

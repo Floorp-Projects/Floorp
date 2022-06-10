@@ -3359,7 +3359,7 @@ static ArrayObject* CharSplitHelper(JSContext* cx, HandleLinearString str,
              "Neither limit nor strLength is zero, so resultlen is greater "
              "than zero.");
 
-  RootedArrayObject splits(cx, NewDenseFullyAllocatedArray(cx, resultlen));
+  Rooted<ArrayObject*> splits(cx, NewDenseFullyAllocatedArray(cx, resultlen));
   if (!splits) {
     return nullptr;
   }
@@ -3407,7 +3407,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* SplitSingleCharHelper(
   }
 
   // Create the result array for the substring values.
-  RootedArrayObject splits(cx, NewDenseFullyAllocatedArray(cx, count + 1));
+  Rooted<ArrayObject*> splits(cx, NewDenseFullyAllocatedArray(cx, count + 1));
   if (!splits) {
     return nullptr;
   }
@@ -3835,7 +3835,7 @@ JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
 
 static bool StringClassFinish(JSContext* cx, HandleObject ctor,
                               HandleObject proto) {
-  HandleNativeObject nativeProto = proto.as<NativeObject>();
+  Handle<NativeObject*> nativeProto = proto.as<NativeObject>();
 
   // Create "trimLeft" as an alias for "trimStart".
   RootedValue trimFn(cx);
@@ -4346,7 +4346,7 @@ static bool BuildFlatMatchArray(JSContext* cx, HandleString str,
     return false;
   }
 
-  RootedArrayObject arr(
+  Rooted<ArrayObject*> arr(
       cx, NewDenseFullyAllocatedArrayWithTemplate(cx, 1, templateObject));
   if (!arr) {
     return false;

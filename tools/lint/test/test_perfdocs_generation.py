@@ -90,6 +90,7 @@ def test_perfdocs_generator_needed_regeneration(
     assert args[0] == expected
 
 
+@mock.patch("perfdocs.generator.ON_TRY", new=True)
 @mock.patch("perfdocs.logger.PerfDocLogger")
 def test_perfdocs_generator_needed_update(logger, structured_logger, perfdocs_sample):
     top_dir = perfdocs_sample["top_dir"]
@@ -118,7 +119,9 @@ def test_perfdocs_generator_needed_update(logger, structured_logger, perfdocs_sa
         generator.generate_perfdocs()
 
     expected = (
-        "PerfDocs are outdated, run ./mach lint -l perfdocs --fix .` to update them."
+        "PerfDocs are outdated, run ./mach lint -l perfdocs --fix .` to update them. "
+        "You can also apply the perfdocs.diff patch file produced from this "
+        "reviewbot test to fix the issue."
     )
     args, _ = logger.warning.call_args
 

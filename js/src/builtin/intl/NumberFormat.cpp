@@ -883,8 +883,8 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
   RootedObject singlePart(cx);
   RootedValue propVal(cx);
 
-  RootedArrayObject partsArray(cx,
-                               NewDenseFullyAllocatedArray(cx, parts.length()));
+  Rooted<ArrayObject*> partsArray(
+      cx, NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }

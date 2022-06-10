@@ -226,7 +226,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               HandleValue idVal, HandleValue rhs) {
   using DeferType = SetPropIRGenerator::DeferType;
 
-  RootedShape oldShape(cx);
+  Rooted<Shape*> oldShape(cx);
   IonScript* ionScript = outerScript->ionScript();
 
   bool attached = false;
