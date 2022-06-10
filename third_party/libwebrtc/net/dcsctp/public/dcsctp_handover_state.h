@@ -43,6 +43,12 @@ struct DcSctpSocketHandoverState {
   };
   Capabilities capabilities;
 
+  struct OutgoingStream {
+    uint32_t id = 0;
+    uint32_t next_ssn = 0;
+    uint32_t next_unordered_mid = 0;
+    uint32_t next_ordered_mid = 0;
+  };
   struct Transmission {
     uint32_t next_tsn = 0;
     uint32_t next_reset_req_sn = 0;
@@ -50,6 +56,7 @@ struct DcSctpSocketHandoverState {
     uint32_t rwnd = 0;
     uint32_t ssthresh = 0;
     uint32_t partial_bytes_acked = 0;
+    std::vector<OutgoingStream> streams;
   };
   Transmission tx;
 
