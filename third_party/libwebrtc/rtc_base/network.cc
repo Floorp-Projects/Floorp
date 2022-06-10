@@ -508,11 +508,18 @@ bool NetworkManagerBase::IsVpnMacAddress(
   return false;
 }
 
-BasicNetworkManager::BasicNetworkManager() : BasicNetworkManager(nullptr) {}
+BasicNetworkManager::BasicNetworkManager()
+    : BasicNetworkManager(nullptr, nullptr) {}
 
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory)
+    : BasicNetworkManager(network_monitor_factory, nullptr) {}
+
+BasicNetworkManager::BasicNetworkManager(
+    NetworkMonitorFactory* network_monitor_factory,
+    SocketFactory* socket_factory)
     : network_monitor_factory_(network_monitor_factory),
+      socket_factory_(socket_factory),
       allow_mac_based_ipv6_(
           webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")),
       bind_using_ifname_(
@@ -963,11 +970,18 @@ void BasicNetworkManager::OnMessage(Message* msg) {
 }
 
 IPAddress BasicNetworkManager::QueryDefaultLocalAddress(int family) const {
-  RTC_DCHECK(thread_->socketserver() != nullptr);
   RTC_DCHECK(family == AF_INET || family == AF_INET6);
 
+  // TODO(bugs.webrtc.org/13145): Delete support for null `socket_factory_`,
+  // require socket factory to be provided to constructor.
+  SocketFactory* socket_factory = socket_factory_;
+  if (!socket_factory) {
+    socket_factory = thread_->socketserver();
+  }
+  RTC_DCHECK(socket_factory);
+
   std::unique_ptr<Socket> socket(
-      thread_->socketserver()->CreateSocket(family, SOCK_DGRAM));
+      socket_factory->CreateSocket(family, SOCK_DGRAM));
   if (!socket) {
     RTC_LOG_ERR(LERROR) << "Socket creation failed";
     return IPAddress();

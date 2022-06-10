@@ -26,6 +26,7 @@
 #include "rtc_base/message_handler.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
+#include "rtc_base/socket_factory.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
@@ -255,7 +256,12 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
                                        public sigslot::has_slots<> {
  public:
   BasicNetworkManager();
+
+  ABSL_DEPRECATED(
+      "Use the version with socket_factory, see bugs.webrtc.org/13145")
   explicit BasicNetworkManager(NetworkMonitorFactory* network_monitor_factory);
+  BasicNetworkManager(NetworkMonitorFactory* network_monitor_factory,
+                      SocketFactory* socket_factory);
   ~BasicNetworkManager() override;
 
   void StartUpdating() override;
@@ -331,8 +337,8 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
   bool sent_first_update_ = true;
   int start_count_ = 0;
   std::vector<std::string> network_ignore_list_;
-  NetworkMonitorFactory* network_monitor_factory_ RTC_GUARDED_BY(thread_) =
-      nullptr;
+  NetworkMonitorFactory* const network_monitor_factory_;
+  SocketFactory* const socket_factory_;
   std::unique_ptr<NetworkMonitorInterface> network_monitor_
       RTC_GUARDED_BY(thread_);
   bool allow_mac_based_ipv6_ RTC_GUARDED_BY(thread_) = false;

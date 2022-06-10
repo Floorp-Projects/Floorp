@@ -22,6 +22,7 @@
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
+#include "rtc_base/physical_socket_server.h"
 #if defined(WEBRTC_POSIX)
 #include <net/if.h>
 #include <sys/types.h>
@@ -313,8 +314,9 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
 
 class TestBasicNetworkManager : public BasicNetworkManager {
  public:
-  TestBasicNetworkManager(NetworkMonitorFactory* network_monitor_factory)
-      : BasicNetworkManager(network_monitor_factory) {}
+  TestBasicNetworkManager(NetworkMonitorFactory* network_monitor_factory,
+                          SocketFactory* socket_factory)
+      : BasicNetworkManager(network_monitor_factory, socket_factory) {}
   using BasicNetworkManager::QueryDefaultLocalAddress;
   using BasicNetworkManager::set_default_local_addresses;
 };
@@ -398,7 +400,8 @@ TEST_F(NetworkTest, DISABLED_TestCreateNetworks) {
 // Test StartUpdating() and StopUpdating(). network_permission_state starts with
 // ALLOWED.
 TEST_F(NetworkTest, TestUpdateNetworks) {
-  BasicNetworkManager manager;
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager(nullptr, &socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   EXPECT_EQ(NetworkManager::ENUMERATION_ALLOWED,
@@ -875,7 +878,8 @@ TEST_F(NetworkTest, TestGetAdapterTypeFromNetworkMonitor) {
   char if_name[20] = "wifi0";
   std::string ipv6_address = "1000:2000:3000:4000:0:0:0:1";
   std::string ipv6_mask = "FFFF:FFFF:FFFF:FFFF::";
-  BasicNetworkManager manager_without_monitor;
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager_without_monitor(nullptr, &socket_server);
   manager_without_monitor.StartUpdating();
   // A network created without a network monitor will get UNKNOWN type.
   ifaddrs* addr_list = InstallIpv6Network(if_name, ipv6_address, ipv6_mask,
@@ -885,7 +889,7 @@ TEST_F(NetworkTest, TestGetAdapterTypeFromNetworkMonitor) {
 
   // With the fake network monitor the type should be correctly determined.
   FakeNetworkMonitorFactory factory;
-  BasicNetworkManager manager_with_monitor(&factory);
+  BasicNetworkManager manager_with_monitor(&factory, &socket_server);
   manager_with_monitor.StartUpdating();
   // Add the same ipv6 address as before but it has the right network type
   // detected by the network monitor now.
@@ -981,7 +985,8 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
 
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
-  BasicNetworkManager manager(&factory);
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager(&factory, &socket_server);
   manager.StartUpdating();
   CallConvertIfAddrs(manager, list, /*include_ignored=*/false, &result);
   EXPECT_EQ(2u, result.size());
@@ -1125,7 +1130,8 @@ TEST_F(NetworkTest, TestIPv6Selection) {
 
 TEST_F(NetworkTest, TestNetworkMonitoring) {
   FakeNetworkMonitorFactory factory;
-  BasicNetworkManager manager(&factory);
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager(&factory, &socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   manager.StartUpdating();
@@ -1155,7 +1161,8 @@ TEST_F(NetworkTest, TestNetworkMonitoring) {
 TEST_F(NetworkTest, MAYBE_DefaultLocalAddress) {
   IPAddress ip;
   FakeNetworkMonitorFactory factory;
-  TestBasicNetworkManager manager(&factory);
+  PhysicalSocketServer socket_server;
+  TestBasicNetworkManager manager(&factory, &socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   manager.StartUpdating();
@@ -1327,7 +1334,8 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
 
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
-  BasicNetworkManager manager(&factory);
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager(&factory, &socket_server);
   manager.StartUpdating();
   CallConvertIfAddrs(manager, list, /*include_ignored=*/false, &result);
   EXPECT_EQ(2u, result.size());
