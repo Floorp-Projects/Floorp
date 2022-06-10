@@ -400,7 +400,6 @@
     ],
     'ios_debug_bot_x64': [
       'ios', 'debug_bot', 'x64', 'ios_use_goma_rbe', 'xctest',
-      'ios_old_os_support',
     ],
 
     # More configs
@@ -498,11 +497,6 @@
 
     'ios': {
       'gn_args': 'target_os="ios"',
-    },
-
-    # TODO(crbug.com/1249456): Remove use_lld=false
-    'ios_old_os_support' :{
-      'gn_args': 'use_lld=false',
     },
 
     'no_goma': {
