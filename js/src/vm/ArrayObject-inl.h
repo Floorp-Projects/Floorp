@@ -19,9 +19,9 @@
 namespace js {
 
 /* static */ MOZ_ALWAYS_INLINE ArrayObject* ArrayObject::create(
-    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
-    uint32_t length, uint32_t slotSpan, AutoSetNewObjectMetadata& metadata,
-    gc::AllocSite* site) {
+    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+    Handle<Shape*> shape, uint32_t length, uint32_t slotSpan,
+    AutoSetNewObjectMetadata& metadata, gc::AllocSite* site) {
   debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = &ArrayObject::class_;

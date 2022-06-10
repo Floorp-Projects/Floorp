@@ -152,13 +152,13 @@ struct ForOfPIC {
 
     // Shape of matching Array.prototype object, and slot containing
     // the @@iterator for it, and the canonical value.
-    GCPtrShape arrayProtoShape_;
+    GCPtr<Shape*> arrayProtoShape_;
     uint32_t arrayProtoIteratorSlot_;
     GCPtrValue canonicalIteratorFunc_;
 
     // Shape of matching ArrayIteratorProto, and slot containing
     // the 'next' property, and the canonical value.
-    GCPtrShape arrayIteratorProtoShape_;
+    GCPtr<Shape*> arrayIteratorProtoShape_;
     uint32_t arrayIteratorProtoNextSlot_;
     GCPtrValue canonicalNextFunc_;
 

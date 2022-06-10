@@ -429,7 +429,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
 /* static */
 inline NativeObject* NativeObject::create(
     JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-    js::HandleShape shape, js::gc::AllocSite* site /* = nullptr */) {
+    js::Handle<Shape*> shape, js::gc::AllocSite* site /* = nullptr */) {
   debugCheckNewObject(shape, kind, heap);
 
   const JSClass* clasp = shape->getObjectClass();

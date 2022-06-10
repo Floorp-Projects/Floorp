@@ -397,7 +397,7 @@ class ScopeStencil {
   template <typename SpecificEnvironmentType>
   [[nodiscard]] bool createSpecificShape(JSContext* cx, ScopeKind kind,
                                          BaseScopeData* scopeData,
-                                         MutableHandleShape shape) const;
+                                         MutableHandle<Shape*> shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationAtomCache& atomCache,

@@ -885,7 +885,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
 #ifdef DEBUG
-  RootedShape fromShape(cx, fromPlain->shape());
+  Rooted<Shape*> fromShape(cx, fromPlain->shape());
 #endif
 
   bool hasPropsWithNonDefaultAttrs = false;
@@ -994,7 +994,7 @@ static bool TryAssignNative(JSContext* cx, HandleObject to, HandleObject from,
 
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
-  RootedShape fromShape(cx, fromNative->shape());
+  Rooted<Shape*> fromShape(cx, fromNative->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
     // Symbol properties need to be assigned last. For now fall back to the
     // slow path if we see a symbol property.
@@ -1683,7 +1683,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
     // Collect all non-symbol properties.
-    RootedShape objShape(cx, nobj->shape());
+    Rooted<Shape*> objShape(cx, nobj->shape());
     for (ShapePropertyIter<NoGC> iter(objShape); !iter.done(); iter++) {
       if (iter->key().isSymbol()) {
         continue;
@@ -1793,7 +1793,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
   RootedId id(cx);
   RootedValue key(cx);
   RootedValue value(cx);
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   Rooted<Maybe<PropertyDescriptor>> desc(cx);
   // Step 4.
   size_t out = 0;

@@ -270,7 +270,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 
 /* static */
 Scope* Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
-                     HandleShape envShape) {
+                     Handle<Shape*> envShape) {
   Scope* scope = Allocate<Scope>(cx);
   if (scope) {
     new (scope) Scope(kind, enclosing, envShape);
@@ -281,7 +281,8 @@ Scope* Scope::create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
 template <typename ConcreteScope>
 /* static */
 ConcreteScope* Scope::create(
-    JSContext* cx, ScopeKind kind, HandleScope enclosing, HandleShape envShape,
+    JSContext* cx, ScopeKind kind, HandleScope enclosing,
+    Handle<Shape*> envShape,
     MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data) {
   Scope* scope = create(cx, kind, enclosing, envShape);
   if (!scope) {
@@ -1586,7 +1587,7 @@ bool ScopeStencil::createForModuleScope(
 template <typename SpecificEnvironmentT>
 bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
                                        BaseScopeData* scopeData,
-                                       MutableHandleShape shape) const {
+                                       MutableHandle<Shape*> shape) const {
   const JSClass* cls = &SpecificEnvironmentT::class_;
   constexpr ObjectFlags objectFlags = SpecificEnvironmentT::OBJECT_FLAGS;
 
@@ -1695,7 +1696,7 @@ Scope* ScopeStencil::createSpecificScope(JSContext* cx,
     return nullptr;
   }
 
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (!createSpecificShape<SpecificEnvironmentT>(
           cx, kind(), rootedData.get().get(), &shape)) {
     return nullptr;

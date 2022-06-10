@@ -770,7 +770,7 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
     kind = ForegroundToBackgroundAllocKind(kind);
   }
 
-  RootedShape shape(
+  Rooted<Shape*> shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
                                        ObjectFlags()));
   if (!shape) {
@@ -995,7 +995,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     return true;
   }
 
-  RootedShape shape(cx);
+  Rooted<Shape*> shape(cx);
   if (src->staticPrototype() == dst->staticPrototype()) {
     shape = src->shape();
   } else {

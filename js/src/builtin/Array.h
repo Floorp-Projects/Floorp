@@ -85,7 +85,7 @@ extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
     JSContext* cx, uint32_t length, ArrayObject* templateObject);
 
 extern ArrayObject* NewArrayWithShape(JSContext* cx, uint32_t length,
-                                      HandleShape shape);
+                                      Handle<Shape*> shape);
 
 extern bool ToLength(JSContext* cx, HandleValue v, uint64_t* out);
 

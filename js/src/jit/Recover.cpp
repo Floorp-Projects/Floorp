@@ -1543,7 +1543,7 @@ RNewPlainObject::RNewPlainObject(CompactBufferReader& reader) {
 }
 
 bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedShape shape(cx, &iter.read().toGCCellPtr().as<Shape>());
+  Rooted<Shape*> shape(cx, &iter.read().toGCCellPtr().as<Shape>());
 
   // See CodeGenerator::visitNewPlainObject.
   JSObject* resultObject =
@@ -1632,7 +1632,7 @@ RNewArray::RNewArray(CompactBufferReader& reader) {
 bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
   RootedValue result(cx);
-  RootedShape shape(cx, templateObject->shape());
+  Rooted<Shape*> shape(cx, templateObject->shape());
 
   ArrayObject* resultObject = NewArrayWithShape(cx, count_, shape);
   if (!resultObject) {
@@ -1740,7 +1740,7 @@ RNewCallObject::RNewCallObject(CompactBufferReader& reader) {}
 bool RNewCallObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   Rooted<CallObject*> templateObj(cx, &iter.read().toObject().as<CallObject>());
 
-  RootedShape shape(cx, templateObj->shape());
+  Rooted<Shape*> shape(cx, templateObj->shape());
 
   JSObject* resultObject = NewCallObject(cx, shape);
   if (!resultObject) {

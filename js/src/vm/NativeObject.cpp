@@ -1290,7 +1290,7 @@ static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
 }
 
 bool js::AddSlotAndCallAddPropHook(JSContext* cx, HandleNativeObject obj,
-                                   HandleValue v, HandleShape newShape) {
+                                   HandleValue v, Handle<Shape*> newShape) {
   MOZ_ASSERT(obj->getClass()->getAddProperty());
   MOZ_ASSERT(newShape->lastProperty().isDataProperty());
 
@@ -2680,7 +2680,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
   // Collect all enumerable data properties.
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
-  RootedShape fromShape(cx, from->shape());
+  Rooted<Shape*> fromShape(cx, from->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
     jsid id = iter->key();
     MOZ_ASSERT(!id.isInt());

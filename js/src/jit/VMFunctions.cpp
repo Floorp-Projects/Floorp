@@ -781,7 +781,7 @@ bool InterruptCheck(JSContext* cx) {
   return CheckForInterrupt(cx);
 }
 
-JSObject* NewCallObject(JSContext* cx, HandleShape shape) {
+JSObject* NewCallObject(JSContext* cx, Handle<Shape*> shape) {
   JSObject* obj = CallObject::create(cx, shape);
   if (!obj) {
     return nullptr;
