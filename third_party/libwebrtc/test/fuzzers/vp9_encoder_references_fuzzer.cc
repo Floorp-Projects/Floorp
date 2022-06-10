@@ -247,6 +247,46 @@ VideoEncoder::Settings EncoderSettings() {
                                 /*max_payload_size=*/0);
 }
 
+bool IsSupported(int num_spatial_layers,
+                 int num_temporal_layers,
+                 const VideoBitrateAllocation& allocation) {
+  // VP9 encoder doesn't support certain configurations.
+  // BitrateAllocator shouldn't produce them.
+  if (allocation.get_sum_bps() == 0) {
+    // Ignore allocation that turns off all the layers.
+    // In such a case it is up to upper layer code not to call Encode.
+    return false;
+  }
+
+  for (int tid = 0; tid < num_temporal_layers; ++tid) {
+    int min_enabled_spatial_id = -1;
+    int max_enabled_spatial_id = -1;
+    int num_enabled_spatial_layers = 0;
+    for (int sid = 0; sid < num_spatial_layers; ++sid) {
+      if (allocation.GetBitrate(sid, tid) > 0) {
+        if (min_enabled_spatial_id == -1) {
+          min_enabled_spatial_id = sid;
+        }
+        max_enabled_spatial_id = sid;
+        ++num_enabled_spatial_layers;
+      }
+    }
+    if (num_enabled_spatial_layers == 0) {
+      // Each temporal layer should be enabled because skipping a full frame is
+      // not supported in non-flexible mode.
+      return false;
+    }
+    if (max_enabled_spatial_id - min_enabled_spatial_id + 1 !=
+        num_enabled_spatial_layers) {
+      // To avoid odd spatial dependencies, there should be no gaps in active
+      // spatial layers.
+      return false;
+    }
+  }
+
+  return true;
+}
+
 struct LibvpxState {
   LibvpxState() {
     pkt.kind = VPX_CODEC_CX_FRAME_PKT;
@@ -492,9 +532,9 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
             parameters.bitrate.SetBitrate(sid, tid, kBitrateEnabledBps);
           }
         }
-        // Ignore allocation that turns off all the layers. in such case
-        // it is up to upper-layer code not to call Encode.
-        if (parameters.bitrate.get_sum_bps() > 0) {
+        if (IsSupported(codec.VP9()->numberOfSpatialLayers,
+                        codec.VP9()->numberOfTemporalLayers,
+                        parameters.bitrate)) {
           encoder.SetRates(parameters);
         }
       } break;
