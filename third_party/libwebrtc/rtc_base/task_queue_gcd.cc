@@ -145,10 +145,24 @@ class TaskQueueGcdFactory final : public TaskQueueFactory {
   }
 };
 
+// static
+void GlobalGcdRunTask(void* context) {
+  std::unique_ptr<QueuedTask> task(static_cast<QueuedTask*>(context));
+  task->Run();
+}
+
 }  // namespace
 
 std::unique_ptr<TaskQueueFactory> CreateTaskQueueGcdFactory() {
   return std::make_unique<TaskQueueGcdFactory>();
+}
+
+void PostTaskToGlobalQueue(std::unique_ptr<QueuedTask> task,
+                           TaskQueueFactory::Priority priority) {
+  dispatch_queue_global_t global_queue =
+      dispatch_get_global_queue(TaskQueuePriorityToGCD(priority), 0);
+  QueuedTask* context = task.release();
+  dispatch_async_f(global_queue, context, &GlobalGcdRunTask);
 }
 
 }  // namespace webrtc
