@@ -76,6 +76,11 @@ const INITIAL_STATE = {
       blocked: [],
       placements: [],
     },
+    experimentData: {
+      utmSource: "pocket-newtab",
+      utmCampaign: undefined,
+      utmContent: undefined,
+    },
   },
   Personalization: {
     lastUpdated: null,
@@ -621,6 +626,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     // Fall through to a separate action is so it doesn't trigger a listener update on init
     case at.DISCOVERY_STREAM_CONFIG_SETUP:
       return { ...prevState, config: action.data || {} };
+    case at.DISCOVERY_STREAM_EXPERIMENT_DATA:
+      return { ...prevState, experimentData: action.data || {} };
     case at.DISCOVERY_STREAM_LAYOUT_UPDATE:
       return {
         ...prevState,
