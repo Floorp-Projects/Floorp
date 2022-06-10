@@ -20,7 +20,6 @@ import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.IOException
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
@@ -243,6 +242,7 @@ private suspend fun loadSearchEnginesFromList(
     return deferredSearchEngines.mapNotNull { it.await() }
 }
 
+@Suppress("TooGenericExceptionCaught")
 private fun loadSearchEngine(
     assets: AssetManager,
     reader: SearchEngineReader,
@@ -251,7 +251,14 @@ private fun loadSearchEngine(
     assets.open("searchplugins/$identifier.xml").use { stream ->
         reader.loadStream(identifier, stream)
     }
-} catch (e: IOException) {
+} catch (e: Exception) {
+    // Handling all exceptions here (instead of just IOExceptions) as we're
+    // seeing crashes we can't explain currently. Letting the app launch
+    // will eventually help us understand the root cause:
+    // https://github.com/mozilla-mobile/android-components/issues/12304
+
+    // We should also consider logging these errors to Sentry:
+    // https://github.com/mozilla-mobile/android-components/issues/12313
     logger.error("Could not load additional search engine with ID $identifier", e)
     null
 }
