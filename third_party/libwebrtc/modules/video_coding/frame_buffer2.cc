@@ -38,6 +38,10 @@ namespace {
 // Max number of frames the buffer will hold.
 constexpr size_t kMaxFramesBuffered = 800;
 
+// Default value for the maximum decode queue size that is used when the
+// low-latency renderer is used.
+constexpr size_t kZeroPlayoutDelayDefaultMaxDecodeQueueSize = 8;
+
 // Max number of decoded frame info that will be saved.
 constexpr int kMaxFramesHistory = 1 << 13;
 
@@ -64,8 +68,9 @@ FrameBuffer::FrameBuffer(Clock* clock,
       add_rtt_to_playout_delay_(
           webrtc::field_trial::IsEnabled("WebRTC-AddRttToPlayoutDelay")),
       rtt_mult_settings_(RttMultExperiment::GetRttMultValue()),
-      zero_playout_delay_max_decode_queue_size_("max_decode_queue_size",
-                                                kMaxFramesBuffered) {
+      zero_playout_delay_max_decode_queue_size_(
+          "max_decode_queue_size",
+          kZeroPlayoutDelayDefaultMaxDecodeQueueSize) {
   ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
                   field_trial::FindFullName("WebRTC-ZeroPlayoutDelay"));
   callback_checker_.Detach();

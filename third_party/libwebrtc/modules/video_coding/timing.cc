@@ -19,6 +19,10 @@
 #include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
+namespace {
+// Default pacing that is used for the low-latency renderer path.
+constexpr TimeDelta kZeroPlayoutDelayDefaultMinPacing = TimeDelta::Millis(8);
+}  // namespace
 
 VCMTiming::VCMTiming(Clock* clock)
     : clock_(clock),
@@ -34,7 +38,8 @@ VCMTiming::VCMTiming(Clock* clock)
       timing_frame_info_(),
       num_decoded_frames_(0),
       low_latency_renderer_enabled_("enabled", true),
-      zero_playout_delay_min_pacing_("min_pacing", TimeDelta::Millis(0)),
+      zero_playout_delay_min_pacing_("min_pacing",
+                                     kZeroPlayoutDelayDefaultMinPacing),
       last_decode_scheduled_ts_(0) {
   ParseFieldTrial({&low_latency_renderer_enabled_},
                   field_trial::FindFullName("WebRTC-LowLatencyRenderer"));
