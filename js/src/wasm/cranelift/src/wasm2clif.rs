@@ -530,9 +530,12 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
     fn switch_to_indirect_callee_realm(&mut self, pos: &mut FuncCursor, vmctx: ir::Value) {
         let ptr = POINTER_TYPE;
         let flags = ir::MemFlags::trusted();
-        let cx = pos
-            .ins()
-            .load(ptr, flags, vmctx, offset32(self.static_env.cx_instance_offset));
+        let cx = pos.ins().load(
+            ptr,
+            flags,
+            vmctx,
+            offset32(self.static_env.cx_instance_offset),
+        );
         let realm = pos.ins().load(
             ptr,
             flags,
@@ -553,9 +556,12 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
     ) {
         let ptr = POINTER_TYPE;
         let flags = ir::MemFlags::trusted();
-        let cx = pos
-            .ins()
-            .load(ptr, flags, vmctx, offset32(self.static_env.cx_instance_offset));
+        let cx = pos.ins().load(
+            ptr,
+            flags,
+            vmctx,
+            offset32(self.static_env.cx_instance_offset),
+        );
         let realm = pos.ins().load(
             ptr,
             flags,
