@@ -285,8 +285,7 @@ TEST_P(AdaptiveDigitalGainApplierTest, IncreaseGainWithEnoughSpeechFrames) {
 
 INSTANTIATE_TEST_SUITE_P(GainController2,
                          AdaptiveDigitalGainApplierTest,
-                         ::testing::Values(1000));
-// ::testing::Values(1, 7, 31));
+                         ::testing::Values(1, 7, 31));
 
 // Checks that the input is never modified when running in dry run mode.
 TEST(GainController2GainApplier, DryRunDoesNotChangeInput) {
