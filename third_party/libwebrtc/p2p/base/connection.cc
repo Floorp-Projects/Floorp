@@ -1374,6 +1374,7 @@ int ProxyConnection::Send(const void* data,
     RTC_DCHECK(sent < 0);
     error_ = port_->GetError();
     stats_.sent_discarded_packets++;
+    stats_.sent_discarded_bytes += size;
   } else {
     send_rate_tracker_.AddSamplesAtTime(now, sent);
   }

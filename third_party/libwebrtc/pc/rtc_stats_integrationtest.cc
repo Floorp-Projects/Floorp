@@ -489,7 +489,13 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsDefined(candidate_pair.nominated);
     verifier.TestMemberIsDefined(candidate_pair.writable);
     verifier.TestMemberIsUndefined(candidate_pair.readable);
+    verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.packets_sent);
+    verifier.TestMemberIsNonNegative<uint64_t>(
+        candidate_pair.packets_discarded_on_send);
+    verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.packets_received);
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.bytes_sent);
+    verifier.TestMemberIsNonNegative<uint64_t>(
+        candidate_pair.bytes_discarded_on_send);
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.bytes_received);
     verifier.TestMemberIsNonNegative<double>(
         candidate_pair.total_round_trip_time);

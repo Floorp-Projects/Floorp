@@ -1421,6 +1421,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   connection_info.local_candidate = *local_candidate.get();
   connection_info.remote_candidate = *remote_candidate.get();
   connection_info.writable = true;
+  connection_info.sent_discarded_packets = 3;
+  connection_info.sent_total_packets = 10;
+  connection_info.packets_received = 51;
+  connection_info.sent_discarded_bytes = 7;
   connection_info.sent_total_bytes = 42;
   connection_info.recv_total_bytes = 1234;
   connection_info.total_round_trip_time_ms = 0;
@@ -1458,8 +1462,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_pair.priority = 5555;
   expected_pair.nominated = false;
   expected_pair.writable = true;
+  expected_pair.packets_sent = 7;
+  expected_pair.packets_received = 51;
+  expected_pair.packets_discarded_on_send = 3;
   expected_pair.bytes_sent = 42;
   expected_pair.bytes_received = 1234;
+  expected_pair.bytes_discarded_on_send = 7;
   expected_pair.total_round_trip_time = 0.0;
   expected_pair.requests_received = 2020;
   expected_pair.requests_sent = 2000;
