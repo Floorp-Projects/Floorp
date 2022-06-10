@@ -10,8 +10,8 @@ use std::{
 };
 
 use golden_gate::{ApplyResults, BridgedEngine, Guid, IncomingEnvelope};
-use once_cell::sync::OnceCell;
 use interrupt_support::SqlInterruptHandle;
+use once_cell::sync::OnceCell;
 use webext_storage::store::Store;
 
 use crate::error::{Error, Result};
