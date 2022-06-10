@@ -213,7 +213,10 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
       best_candidate = candidate;
     }
   }
-
+  if (best_candidate.loss_limited_bandwidth <
+      current_estimate_.loss_limited_bandwidth) {
+    last_time_estimate_reduced_ = last_send_time_most_recent_observation_;
+  }
   current_estimate_ = best_candidate;
 }
 
@@ -224,6 +227,10 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<bool> enabled("Enabled", false);
   FieldTrialParameter<double> bandwidth_rampup_upper_bound_factor(
       "BwRampupUpperBoundFactor", 1.1);
+  FieldTrialParameter<double> rampup_acceleration_max_factor(
+      "BwRampupAccelMaxFactor", 0.0);
+  FieldTrialParameter<TimeDelta> rampup_acceleration_maxout_time(
+      "BwRampupAccelMaxoutTime", TimeDelta::Seconds(60));
   FieldTrialList<double> candidate_factors("CandidateFactors",
                                            {1.05, 1.0, 0.95});
   FieldTrialParameter<double> higher_bandwidth_bias_factor("HigherBwBiasFactor",
@@ -261,6 +268,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
+                     &rampup_acceleration_max_factor,
+                     &rampup_acceleration_maxout_time,
                      &candidate_factors,
                      &higher_bandwidth_bias_factor,
                      &higher_log_bandwidth_bias_factor,
@@ -289,6 +298,9 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config.emplace(Config());
   config->bandwidth_rampup_upper_bound_factor =
       bandwidth_rampup_upper_bound_factor.Get();
+  config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
+  config->rampup_acceleration_maxout_time =
+      rampup_acceleration_maxout_time.Get();
   config->candidate_factors = candidate_factors.Get();
   config->higher_bandwidth_bias_factor = higher_bandwidth_bias_factor.Get();
   config->higher_log_bandwidth_bias_factor =
@@ -330,6 +342,18 @@ bool LossBasedBweV2::IsConfigValid() const {
     RTC_LOG(LS_WARNING)
         << "The bandwidth rampup upper bound factor must be greater than 1: "
         << config_->bandwidth_rampup_upper_bound_factor;
+    valid = false;
+  }
+  if (config_->rampup_acceleration_max_factor < 0.0) {
+    RTC_LOG(LS_WARNING)
+        << "The rampup acceleration max factor must be non-negative.: "
+        << config_->rampup_acceleration_max_factor;
+    valid = false;
+  }
+  if (config_->rampup_acceleration_maxout_time <= TimeDelta::Zero()) {
+    RTC_LOG(LS_WARNING)
+        << "The rampup acceleration maxout time must be above zero: "
+        << config_->rampup_acceleration_maxout_time.seconds();
     valid = false;
   }
   if (config_->higher_bandwidth_bias_factor < 0.0) {
@@ -450,6 +474,28 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
   return static_cast<double>(num_lost_packets) / num_packets;
 }
 
+DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound() const {
+  if (!acknowledged_bitrate_.has_value())
+    return DataRate::PlusInfinity();
+
+  DataRate candidate_bandwidth_upper_bound =
+      config_->bandwidth_rampup_upper_bound_factor * (*acknowledged_bitrate_);
+
+  if (config_->rampup_acceleration_max_factor > 0.0) {
+    const TimeDelta time_since_bandwidth_reduced = std::min(
+        config_->rampup_acceleration_maxout_time,
+        std::max(TimeDelta::Zero(), last_send_time_most_recent_observation_ -
+                                        last_time_estimate_reduced_));
+    const double rampup_acceleration = config_->rampup_acceleration_max_factor *
+                                       time_since_bandwidth_reduced /
+                                       config_->rampup_acceleration_maxout_time;
+
+    candidate_bandwidth_upper_bound +=
+        rampup_acceleration * (*acknowledged_bitrate_);
+  }
+  return candidate_bandwidth_upper_bound;
+}
+
 std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
     DataRate delay_based_estimate) const {
   std::vector<DataRate> bandwidths;
@@ -469,10 +515,7 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
   }
 
   const DataRate candidate_bandwidth_upper_bound =
-      acknowledged_bitrate_.has_value()
-          ? config_->bandwidth_rampup_upper_bound_factor *
-                (*acknowledged_bitrate_)
-          : DataRate::PlusInfinity();
+      GetCandidateBandwidthUpperBound();
 
   std::vector<ChannelParameters> candidates;
   candidates.resize(bandwidths.size());
