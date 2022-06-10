@@ -2833,7 +2833,7 @@ void DestroyContext(Context* c) {
   delete c;
 }
 
-size_t ReportMemory(Context* ctx, size_t (*size_of_op)(void*)) {
+size_t ReportMemory(Context* ctx, size_t (*size_of_op)(const void*)) {
   size_t size = 0;
   if (ctx) {
     for (auto& t : ctx->textures) {
