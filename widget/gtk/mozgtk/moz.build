@@ -11,6 +11,7 @@ SOURCES += [
 ]
 
 CFLAGS += CONFIG["MOZ_X11_CFLAGS"]
+CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 # If LDFLAGS contains -Wl,--as-needed or if it's the default for the toolchain,
 # we need to add -Wl,--no-as-needed before the gtk libraries, otherwise the
