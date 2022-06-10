@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'cb9ab6b9e1d987f8f56c8e422622f7228dba8cac',
+  'chromium_revision': '232a45ecaf2f83ad3ad2e49d712015320c2407f5',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,9 +20,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@4fe659e875d67f668c223efdca144cd33b2160b8',
+    'https://chromium.googlesource.com/chromium/src/base@860dc04ec70f6ee1aa0d3b1b6fbe73cf554c4665',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@a76920d402f851f8293e76510860631607075276',
+    'https://chromium.googlesource.com/chromium/src/build@b471b61fd6aa28d16bf250cfc2498e9fb2c3d2d3',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@a9bc3e283182a586998338a665c7eae17406ec54',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -31,13 +31,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@fc7f0a187efbaa8619a1142c74fb945962ec0b53',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@87a107937cc0fe5460163428827f1a2f868620d5',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@7c7b5a928330c43bc083dc70628477788de065a4',
+    'https://chromium.googlesource.com/chromium/src/testing@178d9e0060e955ab5945f0293b2d4281dceb4942',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@dc943a63d664ece021814b6f944b5c391539a0a9',
+    'https://chromium.googlesource.com/chromium/src/third_party@9624dc533822c420d1dee5b1cf8d9c898168f996',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -137,7 +137,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@ce514ad38e0f8077d92704d2300f6ab0a1d263ad',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@45ca14d5ec897a98e458abbdc1123633222c5fbb',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@731bf2abeb9e5d4fd02f6c7b8c743961130de5b0',
   'src/third_party/findbugs': {
@@ -271,7 +271,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@bcc8151d091461c5d03092563dedb898eff45d47',
+    'https://chromium.googlesource.com/chromium/src/tools@b91099db5f087d78b4e8809b9fad5d3fd10fcfa4',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -475,15 +475,15 @@ deps = {
       'packages': [
         {
           'package': 'infra/tools/luci/isolate/${{platform}}',
-          'version': 'git_revision:e9585787c808e21d6eaa2c7d7a928dbc19999172',
+          'version': 'git_revision:a373a19da0fbbbe81b2b684e3797260294393e40',
         },
         {
           'package': 'infra/tools/luci/isolated/${{platform}}',
-          'version': 'git_revision:e9585787c808e21d6eaa2c7d7a928dbc19999172',
+          'version': 'git_revision:a373a19da0fbbbe81b2b684e3797260294393e40',
         },
         {
           'package': 'infra/tools/luci/swarming/${{platform}}',
-          'version': 'git_revision:e9585787c808e21d6eaa2c7d7a928dbc19999172',
+          'version': 'git_revision:a373a19da0fbbbe81b2b684e3797260294393e40',
         },
       ],
       'dep_type': 'cipd',
