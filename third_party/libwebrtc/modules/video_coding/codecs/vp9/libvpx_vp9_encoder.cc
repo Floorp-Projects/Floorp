@@ -531,9 +531,11 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
   }
   if (encoder_ == nullptr) {
     encoder_ = new vpx_codec_ctx_t;
+    memset(encoder_, 0, sizeof(*encoder_));
   }
   if (config_ == nullptr) {
     config_ = new vpx_codec_enc_cfg_t;
+    memset(config_, 0, sizeof(*config_));
   }
   timestamp_ = 0;
   if (&codec_ != inst) {
