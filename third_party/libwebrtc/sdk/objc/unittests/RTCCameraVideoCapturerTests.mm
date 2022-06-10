@@ -20,6 +20,7 @@
 #import "components/capturer/RTCCameraVideoCapturer.h"
 #import "helpers/AVCaptureSession+DevicePosition.h"
 #import "helpers/RTCDispatcher.h"
+#import "helpers/scoped_cftyperef.h"
 
 #if TARGET_OS_IPHONE
 // Helper method.
@@ -281,9 +282,10 @@ CMSampleBufferRef createTestSampleBufferRef() {
 }
 
 - (void)setExif:(CMSampleBufferRef)sampleBuffer {
-  CFMutableDictionaryRef exif = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
-  CFDictionarySetValue(exif, CFSTR("LensModel"), CFSTR("iPhone SE back camera 4.15mm f/2.2"));
-  CMSetAttachment(sampleBuffer, CFSTR("{Exif}"), exif, kCMAttachmentMode_ShouldPropagate);
+  rtc::ScopedCFTypeRef<CFMutableDictionaryRef> exif(CFDictionaryCreateMutable(
+      kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+  CFDictionarySetValue(exif.get(), CFSTR("LensModel"), CFSTR("iPhone SE back camera 4.15mm f/2.2"));
+  CMSetAttachment(sampleBuffer, CFSTR("{Exif}"), exif.get(), kCMAttachmentMode_ShouldPropagate);
 }
 
 - (void)testRotationFrame {
@@ -307,8 +309,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
   [[self.delegateMock expect] capturer:self.capturer
                   didCaptureVideoFrame:[OCMArg checkWithBlock:^BOOL(RTC_OBJC_TYPE(RTCVideoFrame) *
                                                                     expectedFrame) {
-                    // Front camera and landscape left should return 180. But the frame says its
-                    // from the back camera, so rotation should be 0.
+                    // Front camera and landscape left should return 180. But the frame's exif
+                    // we add below says its from the back camera, so rotation should be 0.
                     EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
                     return YES;
                   }]];
