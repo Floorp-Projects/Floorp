@@ -321,7 +321,7 @@ class MozbuildObject(ProcessExecutionMixin):
         sandbox = ReducedConfigureSandbox(
             {},
             environ=env,
-            argv=["mach", "--help"],
+            argv=["mach"],
             logger=logger,
         )
         base_dir = os.path.join(topsrcdir, "build", "moz.configure")
@@ -332,6 +332,10 @@ class MozbuildObject(ProcessExecutionMixin):
             return {
                 "mozconfig": sandbox._value_for(sandbox["mozconfig"]),
                 "target": sandbox._value_for(sandbox["real_target"]),
+                "project": sandbox._value_for(sandbox._options["project"]),
+                "artifact-builds": sandbox._value_for(
+                    sandbox._options["artifact-builds"]
+                ),
             }
         except SystemExit:
             print(out.getvalue())
