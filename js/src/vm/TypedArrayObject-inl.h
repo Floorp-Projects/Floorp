@@ -485,7 +485,7 @@ class ElementSpecific {
    */
   static bool initFromIterablePackedArray(JSContext* cx,
                                           Handle<TypedArrayObject*> target,
-                                          HandleArrayObject source) {
+                                          Handle<ArrayObject*> source) {
     MOZ_ASSERT(target->type() == TypeIDOfType<T>::id,
                "target type and NativeType must match");
     MOZ_ASSERT(!target->hasDetachedBuffer(), "target isn't detached");

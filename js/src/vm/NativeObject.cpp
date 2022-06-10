@@ -1807,7 +1807,7 @@ static bool DefineNonexistentProperty(JSContext* cx, Handle<NativeObject*> obj,
   return result.succeed();
 }
 
-bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
+bool js::AddOrUpdateSparseElementHelper(JSContext* cx, Handle<ArrayObject*> obj,
                                         int32_t int_id, HandleValue v,
                                         bool strict) {
   MOZ_ASSERT(PropertyKey::fitsInInt(int_id));
@@ -2089,7 +2089,7 @@ static inline bool GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id,
   return GetPropertyNoGC(cx, obj, receiver, id, vp.address());
 }
 
-bool js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
+bool js::GetSparseElementHelper(JSContext* cx, Handle<ArrayObject*> obj,
                                 int32_t int_id, MutableHandleValue result) {
   // Indexed properties can not exist on the prototype chain.
   MOZ_ASSERT(!PrototypeMayHaveIndexedProperties(obj));

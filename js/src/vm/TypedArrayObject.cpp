@@ -1361,7 +1361,7 @@ template <typename T>
   // Fast path when iterable is a packed array using the default iterator.
   if (optimized) {
     // Step 6.a (We don't need to call IterableToList for the fast path).
-    HandleArrayObject array = other.as<ArrayObject>();
+    Handle<ArrayObject*> array = other.as<ArrayObject>();
 
     // Step 6.b.
     size_t len = array->getDenseInitializedLength();

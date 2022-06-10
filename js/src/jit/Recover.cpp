@@ -1833,7 +1833,7 @@ RSetArrayLength::RSetArrayLength(CompactBufferReader& reader) {}
 
 bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue result(cx);
-  RootedArrayObject obj(cx, &iter.read().toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> obj(cx, &iter.read().toObject().as<ArrayObject>());
   RootedValue len(cx, iter.read());
 
   RootedId id(cx, NameToId(cx->names().length));

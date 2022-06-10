@@ -202,7 +202,7 @@ bool DebuggerMemory::CallData::drainAllocationsLog() {
 
   size_t length = dbg->allocationsLog.length();
 
-  RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> result(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!result) {
     return false;
   }

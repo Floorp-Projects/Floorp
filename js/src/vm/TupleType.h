@@ -26,7 +26,8 @@ class TupleType final : public js::NativeObject {
 
   static TupleType* createUninitialized(JSContext* cx, uint32_t initialLength);
 
-  static TupleType* createUnchecked(JSContext* cx, js::HandleArrayObject aObj);
+  static TupleType* createUnchecked(JSContext* cx,
+                                    Handle<js::ArrayObject*> aObj);
 
   bool initializeNextElement(JSContext* cx, HandleValue elt);
   void finishInitialization(JSContext* cx);

@@ -98,8 +98,8 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   MOZ_ASSERT(numPairs > 0);
 
   // Steps 20-21: Allocate the match result object.
-  RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(
-                                cx, numPairs, templateObject));
+  Rooted<ArrayObject*> arr(cx, NewDenseFullyAllocatedArrayWithTemplate(
+                                   cx, numPairs, templateObject));
   if (!arr) {
     return false;
   }
@@ -127,7 +127,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   // Step 34a (reordered): Allocate and initialize the indices object if needed.
   // This is an inlined implementation of MakeIndicesArray:
   // https://tc39.es/ecma262/#sec-makeindicesarray
-  RootedArrayObject indices(cx);
+  Rooted<ArrayObject*> indices(cx);
   Rooted<PlainObject*> indicesGroups(cx);
   if (hasIndices) {
     // MakeIndicesArray: step 8
@@ -163,7 +163,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
         indices->setDenseInitializedLength(i + 1);
         indices->initDenseElement(i, UndefinedValue());
       } else {
-        RootedArrayObject indexPair(cx, NewDenseFullyAllocatedArray(cx, 2));
+        Rooted<ArrayObject*> indexPair(cx, NewDenseFullyAllocatedArray(cx, 2));
         if (!indexPair) {
           return false;
         }
@@ -1714,7 +1714,7 @@ static bool NeedTwoBytes(HandleLinearString string,
 
 /* ES 2021 21.1.3.17.1 */
 // https://tc39.es/ecma262/#sec-getsubstitution
-bool js::RegExpGetSubstitution(JSContext* cx, HandleArrayObject matchResult,
+bool js::RegExpGetSubstitution(JSContext* cx, Handle<ArrayObject*> matchResult,
                                HandleLinearString string, size_t position,
                                HandleLinearString replacement,
                                size_t firstDollarIndex, HandleValue groups,

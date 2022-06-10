@@ -408,7 +408,7 @@ bool MapIteratorObject::next(MapIteratorObject* mapIterator,
 
 /* static */
 JSObject* MapIteratorObject::createResultPair(JSContext* cx) {
-  RootedArrayObject resultPairObj(
+  Rooted<ArrayObject*> resultPairObj(
       cx, NewDenseFullyAllocatedArray(cx, 2, TenuredObject));
   if (!resultPairObj) {
     return nullptr;
@@ -1189,7 +1189,7 @@ bool SetIteratorObject::next(SetIteratorObject* setIterator,
 
 /* static */
 JSObject* SetIteratorObject::createResult(JSContext* cx) {
-  RootedArrayObject resultObj(
+  Rooted<ArrayObject*> resultObj(
       cx, NewDenseFullyAllocatedArray(cx, 1, TenuredObject));
   if (!resultObj) {
     return nullptr;
@@ -1439,7 +1439,7 @@ bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       RootedValue keyVal(cx);
       Rooted<HashableValue> key(cx);
       ValueSet* set = obj->getData();
-      RootedArrayObject array(cx, &iterable.toObject().as<ArrayObject>());
+      Rooted<ArrayObject*> array(cx, &iterable.toObject().as<ArrayObject>());
       for (uint32_t index = 0; index < array->getDenseInitializedLength();
            ++index) {
         keyVal.set(array->getDenseElement(index));

@@ -1131,7 +1131,7 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
 [[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
                                                const ValTypeVector& valTypes) {
-  RootedArrayObject arrayObj(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> arrayObj(cx, NewDenseEmptyArray(cx));
   for (ValType valType : valTypes) {
     RootedString type(cx, UTF8CharsToString(cx, ToJSAPIString(valType).get()));
     if (!type) {

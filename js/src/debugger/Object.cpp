@@ -724,7 +724,7 @@ bool DebuggerObject::CallData::promiseDependentPromisesGetter() {
       return false;
     }
   }
-  RootedArrayObject promises(cx);
+  Rooted<ArrayObject*> promises(cx);
   if (values.length() == 0) {
     promises = NewDenseEmptyArray(cx);
   } else {
@@ -1367,9 +1367,9 @@ bool DebuggerObject::CallData::unwrapMethod() {
 struct DebuggerObject::PromiseReactionRecordBuilder
     : js::PromiseReactionRecordBuilder {
   Debugger* dbg;
-  HandleArrayObject records;
+  Handle<ArrayObject*> records;
 
-  PromiseReactionRecordBuilder(Debugger* dbg, HandleArrayObject records)
+  PromiseReactionRecordBuilder(Debugger* dbg, Handle<ArrayObject*> records)
       : dbg(dbg), records(records) {}
 
   bool then(JSContext* cx, HandleObject resolve, HandleObject reject,
@@ -1445,7 +1445,7 @@ bool DebuggerObject::CallData::getPromiseReactionsMethod() {
     return false;
   }
 
-  RootedArrayObject holder(cx, NewDenseEmptyArray(cx));
+  Rooted<ArrayObject*> holder(cx, NewDenseEmptyArray(cx));
   if (!holder) {
     return false;
   }

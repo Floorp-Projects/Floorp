@@ -255,7 +255,7 @@ static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
     else {
       Rooted<RecordType*> rec(cx);
       if (RecordObject::maybeUnbox(pobj, &rec)) {
-        RootedArrayObject keys(cx, rec->keys());
+        Rooted<ArrayObject*> keys(cx, rec->keys());
         RootedId id(cx);
         RootedString key(cx);
 

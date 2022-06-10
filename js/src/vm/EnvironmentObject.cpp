@@ -2784,7 +2784,7 @@ void DebugEnvironments::takeFrameSnapshot(
    * Use a dense array as storage (since proxies do not have trace
    * hooks). This array must not escape into the wild.
    */
-  RootedArrayObject snapshot(
+  Rooted<ArrayObject*> snapshot(
       cx, NewDenseCopiedArray(cx, vec.length(), vec.begin()));
   if (!snapshot) {
     MOZ_ASSERT(cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed());

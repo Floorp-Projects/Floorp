@@ -282,8 +282,8 @@ class WrappedPtrOperations<PromiseCombinatorElements, Wrapper> {
     return HandleValue::fromMarkedLocation(&elements().value);
   }
 
-  HandleArrayObject unwrappedArray() const {
-    return HandleArrayObject::fromMarkedLocation(&elements().unwrappedArray);
+  Handle<ArrayObject*> unwrappedArray() const {
+    return Handle<ArrayObject*>::fromMarkedLocation(&elements().unwrappedArray);
   }
 };
 
@@ -325,7 +325,7 @@ class MutableWrappedPtrOperations<PromiseCombinatorElements, Wrapper>
     // compartment proxy instead...
     AutoRealm ar(cx, unwrappedArray());
 
-    HandleArrayObject arrayObj = unwrappedArray();
+    Handle<ArrayObject*> arrayObj = unwrappedArray();
     return js::NewbornArrayPush(cx, arrayObj, UndefinedValue());
   }
 
@@ -2485,7 +2485,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   // Create a dense array to hold the data needed for the reaction job to
   // work.
   // The layout is described in the ThenableJobDataIndices enum.
-  RootedArrayObject data(
+  Rooted<ArrayObject*> data(
       cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataLength));
   if (!data) {
     return false;

@@ -189,7 +189,7 @@ struct ForOfPIC {
     bool initialize(JSContext* cx);
 
     // Try to optimize this chain for an object.
-    bool tryOptimizeArray(JSContext* cx, HandleArrayObject array,
+    bool tryOptimizeArray(JSContext* cx, Handle<ArrayObject*> array,
                           bool* optimized);
 
     // Check if %ArrayIteratorPrototype% still uses the default "next" method.

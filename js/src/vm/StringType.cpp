@@ -1933,11 +1933,11 @@ struct RepresentativeExternalString : public JSExternalStringCallbacks {
 static const RepresentativeExternalString RepresentativeExternalStringCallbacks;
 
 template <typename CheckString, typename CharT>
-static bool FillWithRepresentatives(JSContext* cx, HandleArrayObject array,
+static bool FillWithRepresentatives(JSContext* cx, Handle<ArrayObject*> array,
                                     uint32_t* index, const CharT* chars,
                                     size_t len, size_t fatInlineMaxLength,
                                     const CheckString& check) {
-  auto AppendString = [&check](JSContext* cx, HandleArrayObject array,
+  auto AppendString = [&check](JSContext* cx, Handle<ArrayObject*> array,
                                uint32_t* index, HandleString s) {
     MOZ_ASSERT(check(s));
     (void)check;  // silence clang -Wunused-lambda-capture in opt builds
@@ -2064,7 +2064,8 @@ static bool FillWithRepresentatives(JSContext* cx, HandleArrayObject array,
 }
 
 /* static */
-bool JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array) {
+bool JSString::fillWithRepresentatives(JSContext* cx,
+                                       Handle<ArrayObject*> array) {
   uint32_t index = 0;
 
   auto CheckTwoByte = [](JSString* str) { return str->hasTwoByteChars(); };

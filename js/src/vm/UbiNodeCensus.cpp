@@ -156,7 +156,7 @@ bool BucketCount::report(JSContext* cx, CountBase& countBase,
   Count& count = static_cast<Count&>(countBase);
 
   size_t length = count.ids_.length();
-  RootedArrayObject arr(cx, NewDenseFullyAllocatedArray(cx, length));
+  Rooted<ArrayObject*> arr(cx, NewDenseFullyAllocatedArray(cx, length));
   if (!arr) {
     return false;
   }

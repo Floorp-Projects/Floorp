@@ -642,7 +642,7 @@ template bool StringsCompare<ComparisonKind::LessThan>(JSContext* cx,
 template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
     JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
-bool ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v,
+bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
                     uint32_t* length) {
   *length = arr->length();
   DenseElementResult result =

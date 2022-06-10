@@ -193,7 +193,7 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     if (optimized) {
       RootedValue keyVal(cx);
       RootedObject keyObject(cx);
-      RootedArrayObject array(cx, &iterable.toObject().as<ArrayObject>());
+      Rooted<ArrayObject*> array(cx, &iterable.toObject().as<ArrayObject>());
       for (uint32_t index = 0; index < array->getDenseInitializedLength();
            ++index) {
         keyVal.set(array->getDenseElement(index));

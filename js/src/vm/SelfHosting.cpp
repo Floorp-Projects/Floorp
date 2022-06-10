@@ -1414,7 +1414,7 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   MOZ_ASSERT(!target->hasDetachedBuffer());
   MOZ_ASSERT(!target->isSharedMemory());
 
-  RootedArrayObject source(cx, &args[1].toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> source(cx, &args[1].toObject().as<ArrayObject>());
   MOZ_ASSERT(IsPackedArray(source));
   MOZ_ASSERT(source->length() == target->length());
 
@@ -1455,7 +1455,7 @@ static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 6);
 
-  RootedArrayObject matchResult(cx, &args[0].toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> matchResult(cx, &args[0].toObject().as<ArrayObject>());
 
   RootedLinearString string(cx, args[1].toString()->ensureLinear(cx));
   if (!string) {
@@ -1751,7 +1751,7 @@ static bool intrinsic_ConstructFunction(JSContext* cx, unsigned argc,
   MOZ_ASSERT(IsConstructor(args[1]));
   MOZ_ASSERT(args[2].toObject().is<ArrayObject>());
 
-  RootedArrayObject argsList(cx, &args[2].toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> argsList(cx, &args[2].toObject().as<ArrayObject>());
   uint32_t len = argsList->length();
   ConstructArgs constructArgs(cx);
   if (!constructArgs.init(cx, len)) {
