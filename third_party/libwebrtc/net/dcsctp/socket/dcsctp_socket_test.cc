@@ -1294,6 +1294,8 @@ TEST_P(DcSctpSocketParametrizedTest, SendManyFragmentedMessagesWithLimitedRtx) {
   EXPECT_EQ(msg1->ppid(), PPID(54));
 
   ASSERT_FALSE(cb_z_.ConsumeReceivedMessage().has_value());
+
+  MaybeHandoverSocketZAndSendMessage();
 }
 
 struct FakeChunkConfig : ChunkConfig {
