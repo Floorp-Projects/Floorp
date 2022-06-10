@@ -117,8 +117,7 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
 
   // Emitted after address for the socket is allocated, i.e. binding
   // is finished. State of the socket is changed from BINDING to BOUND
-  // (for UDP and server TCP sockets) or CONNECTING (for client TCP
-  // sockets).
+  // (for UDP sockets).
   sigslot::signal2<AsyncPacketSocket*, const SocketAddress&> SignalAddressReady;
 
   // Emitted for client TCP sockets when state is changed from
