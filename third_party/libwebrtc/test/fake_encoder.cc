@@ -50,6 +50,7 @@ void WriteCounter(unsigned char* payload, uint32_t counter) {
 
 FakeEncoder::FakeEncoder(Clock* clock)
     : clock_(clock),
+      num_initializations_(0),
       callback_(nullptr),
       max_target_bitrate_kbps_(-1),
       pending_keyframe_(true),
@@ -81,6 +82,7 @@ int32_t FakeEncoder::InitEncode(const VideoCodec* config,
                                 const Settings& settings) {
   MutexLock lock(&mutex_);
   config_ = *config;
+  ++num_initializations_;
   current_rate_settings_.bitrate.SetBitrate(0, 0, config_.startBitrate * 1000);
   current_rate_settings_.framerate_fps = config_.maxFramerate;
   pending_keyframe_ = true;
@@ -291,6 +293,16 @@ VideoEncoder::EncoderInfo FakeEncoder::GetEncoderInfo() const {
 int FakeEncoder::GetConfiguredInputFramerate() const {
   MutexLock lock(&mutex_);
   return static_cast<int>(current_rate_settings_.framerate_fps + 0.5);
+}
+
+int FakeEncoder::GetNumInitializations() const {
+  MutexLock lock(&mutex_);
+  return num_initializations_;
+}
+
+const VideoCodec& FakeEncoder::config() const {
+  MutexLock lock(&mutex_);
+  return config_;
 }
 
 FakeH264Encoder::FakeH264Encoder(Clock* clock)

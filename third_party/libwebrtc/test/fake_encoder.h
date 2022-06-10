@@ -55,8 +55,11 @@ class FakeEncoder : public VideoEncoder {
   int32_t Release() override;
   void SetRates(const RateControlParameters& parameters)
       RTC_LOCKS_EXCLUDED(mutex_) override;
-  int GetConfiguredInputFramerate() const RTC_LOCKS_EXCLUDED(mutex_);
   EncoderInfo GetEncoderInfo() const override;
+
+  int GetConfiguredInputFramerate() const RTC_LOCKS_EXCLUDED(mutex_);
+  int GetNumInitializations() const RTC_LOCKS_EXCLUDED(mutex_);
+  const VideoCodec& config() const RTC_LOCKS_EXCLUDED(mutex_);
 
   static const char* kImplementationName;
 
@@ -96,6 +99,7 @@ class FakeEncoder : public VideoEncoder {
   Clock* const clock_;
 
   VideoCodec config_ RTC_GUARDED_BY(mutex_);
+  int num_initializations_ RTC_GUARDED_BY(mutex_);
   EncodedImageCallback* callback_ RTC_GUARDED_BY(mutex_);
   RateControlParameters current_rate_settings_ RTC_GUARDED_BY(mutex_);
   int max_target_bitrate_kbps_ RTC_GUARDED_BY(mutex_);
