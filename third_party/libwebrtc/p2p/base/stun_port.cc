@@ -120,29 +120,23 @@ UDPPort::AddressResolver::AddressResolver(
     std::function<void(const rtc::SocketAddress&, int)> done_callback)
     : socket_factory_(factory), done_(std::move(done_callback)) {}
 
-UDPPort::AddressResolver::~AddressResolver() {
-  for (ResolverMap::iterator it = resolvers_.begin(); it != resolvers_.end();
-       ++it) {
-    // TODO(guoweis): Change to asynchronous DNS resolution to prevent the hang
-    // when passing true to the Destroy() which is a safer way to avoid the code
-    // unloaded before the thread exits. Please see webrtc bug 5139.
-    it->second->Destroy(false);
-  }
-}
-
 void UDPPort::AddressResolver::Resolve(const rtc::SocketAddress& address) {
   if (resolvers_.find(address) != resolvers_.end())
     return;
 
-  rtc::AsyncResolverInterface* resolver =
-      socket_factory_->CreateAsyncResolver();
-  resolvers_.insert(std::pair<rtc::SocketAddress, rtc::AsyncResolverInterface*>(
-      address, resolver));
+  auto resolver = socket_factory_->CreateAsyncDnsResolver();
+  auto resolver_ptr = resolver.get();
+  std::pair<rtc::SocketAddress,
+            std::unique_ptr<webrtc::AsyncDnsResolverInterface>>
+      pair = std::make_pair(address, std::move(resolver));
 
-  resolver->SignalDone.connect(this,
-                               &UDPPort::AddressResolver::OnResolveResult);
-
-  resolver->Start(address);
+  resolvers_.insert(std::move(pair));
+  resolver_ptr->Start(address, [this, address] {
+    ResolverMap::const_iterator it = resolvers_.find(address);
+    if (it != resolvers_.end()) {
+      done_(it->first, it->second->result().GetError());
+    }
+  });
 }
 
 bool UDPPort::AddressResolver::GetResolvedAddress(
@@ -153,18 +147,7 @@ bool UDPPort::AddressResolver::GetResolvedAddress(
   if (it == resolvers_.end())
     return false;
 
-  return it->second->GetResolvedAddress(family, output);
-}
-
-void UDPPort::AddressResolver::OnResolveResult(
-    rtc::AsyncResolverInterface* resolver) {
-  for (ResolverMap::iterator it = resolvers_.begin(); it != resolvers_.end();
-       ++it) {
-    if (it->second == resolver) {
-      done_(it->first, resolver->GetError());
-      return;
-    }
-  }
+  return it->second->result().GetResolvedAddress(family, output);
 }
 
 UDPPort::UDPPort(rtc::Thread* thread,

@@ -20,6 +20,7 @@
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace cricket {
 
@@ -178,14 +179,13 @@ class UDPPort : public Port {
 
  private:
   // A helper class which can be called repeatedly to resolve multiple
-  // addresses, as opposed to rtc::AsyncResolverInterface, which can only
+  // addresses, as opposed to rtc::AsyncDnsResolverInterface, which can only
   // resolve one address per instance.
-  class AddressResolver : public sigslot::has_slots<> {
+  class AddressResolver {
    public:
     explicit AddressResolver(
         rtc::PacketSocketFactory* factory,
         std::function<void(const rtc::SocketAddress&, int)> done_callback);
-    ~AddressResolver() override;
 
     void Resolve(const rtc::SocketAddress& address);
     bool GetResolvedAddress(const rtc::SocketAddress& input,
@@ -193,17 +193,18 @@ class UDPPort : public Port {
                             rtc::SocketAddress* output) const;
 
    private:
-    typedef std::map<rtc::SocketAddress, rtc::AsyncResolverInterface*>
+    typedef std::map<rtc::SocketAddress,
+                     std::unique_ptr<webrtc::AsyncDnsResolverInterface>>
         ResolverMap;
 
-    void OnResolveResult(rtc::AsyncResolverInterface* resolver);
-
     rtc::PacketSocketFactory* socket_factory_;
-    ResolverMap resolvers_;
     // The function is called when resolving the specified address is finished.
     // The first argument is the input address, the second argument is the error
     // or 0 if it succeeded.
     std::function<void(const rtc::SocketAddress&, int)> done_;
+    // Resolver may fire callbacks that refer to done_, so ensure
+    // that all resolvers are destroyed first.
+    ResolverMap resolvers_;
   };
 
   // DNS resolution of the STUN server.
