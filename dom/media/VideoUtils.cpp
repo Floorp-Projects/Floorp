@@ -610,8 +610,8 @@ bool ExtractAV1CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   }
 
   // Valid profiles are: Main (0), High (1), Professional (2).
-  // Levels range from 0 to 23.
-  if (aProfile > 2 || aLevel > 23) {
+  // Levels range from 0 to 23, or 31 to remove level restrictions.
+  if (aProfile > 2 || (aLevel > 23 && aLevel != 31)) {
     return false;
   }
 
