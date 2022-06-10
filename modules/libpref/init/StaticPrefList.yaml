@@ -4529,7 +4529,7 @@
 # none of its methods available).
 - name: extensions.InstallTriggerImpl.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the InstallTrigger implementation should be enabled (or completely
@@ -4537,7 +4537,7 @@
 # used also for UA detection.
 - name: extensions.InstallTrigger.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 
