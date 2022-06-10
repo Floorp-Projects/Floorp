@@ -990,7 +990,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   for (size_t i = 0; i < codec.numberOfSimulcastStreams; ++i) {
     log_stream << i << ": " << codec.simulcastStream[i].width << "x"
                << codec.simulcastStream[i].height
-               << " fps: " << codec.simulcastStream[i].maxFramerate
                << " min_kbps: " << codec.simulcastStream[i].minBitrate
                << " target_kbps: " << codec.simulcastStream[i].targetBitrate
                << " max_kbps: " << codec.simulcastStream[i].maxBitrate
@@ -1006,10 +1005,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     for (size_t i = 0; i < num_spatial_layers; ++i) {
       log_stream << i << ": " << codec.spatialLayers[i].width << "x"
                  << codec.spatialLayers[i].height
-                 << " fps: " << codec.spatialLayers[i].maxFramerate
                  << " min_kbps: " << codec.spatialLayers[i].minBitrate
                  << " target_kbps: " << codec.spatialLayers[i].targetBitrate
                  << " max_kbps: " << codec.spatialLayers[i].maxBitrate
+                 << " max_fps: " << codec.spatialLayers[i].maxFramerate
                  << " max_qp: " << codec.spatialLayers[i].qpMax
                  << " num_tl: " << codec.spatialLayers[i].numberOfTemporalLayers
                  << " active: "
@@ -1058,23 +1057,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
           video_source_sink_controller_.PushSourceSinkSettings();
         }
       }));
-
-  if (codec.maxBitrate == 0) {
-    // max is one bit per pixel
-    codec.maxBitrate =
-        (static_cast<int>(codec.height) * static_cast<int>(codec.width) *
-         static_cast<int>(codec.maxFramerate)) /
-        1000;
-    if (codec.startBitrate > codec.maxBitrate) {
-      // But if the user tries to set a higher start bit rate we will
-      // increase the max accordingly.
-      codec.maxBitrate = codec.startBitrate;
-    }
-  }
-
-  if (codec.startBitrate > codec.maxBitrate) {
-    codec.startBitrate = codec.maxBitrate;
-  }
 
   rate_allocator_ =
       settings_.bitrate_allocator_factory->CreateVideoBitrateAllocator(codec);
