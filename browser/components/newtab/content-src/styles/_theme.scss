@@ -29,6 +29,8 @@ body {
   --newtab-background-color-secondary: #{$newtab-background-secondary};
   --newtab-text-primary-color: #{$in-content-page-color};
   --newtab-primary-action-background: #{$primary-blue};
+  // A button colour closer to the Pocket brand for usage in the Pocket section.
+  --newtab-primary-action-background-pocket: #{$primary-green};
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
 
   // --newtab-element-*-color is used when an element needs to be set off from
@@ -43,10 +45,12 @@ body {
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
 
   --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 90%, #{$black});
+  --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 90%, #{$black});
   --newtab-primary-element-active-color: color-mix(in srgb, var(--newtab-primary-action-background) 80%, #{$black});
   --newtab-primary-element-text-color: #{$white};
   // --newtab-primary-action-background-dimmed is used for soft focus borders.
   --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 25%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #{$black});
   --newtab-wordmark-color: #{$newtab-wordmark-default-color};
   --newtab-status-success: #{$status-green};
@@ -66,7 +70,13 @@ body {
     --newtab-background-color: #{$in-content-page-background-dark};
     --newtab-background-color-secondary: #{$newtab-background-secondary-dark};
     --newtab-text-primary-color: #{$in-content-page-color-dark};
+
     --newtab-primary-action-background: #{$primary-blue-dark};
+    --newtab-primary-action-background-pocket: #{$primary-blue-dark};
+    --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+
+    --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #{$white});
+    --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #{$white});
 
     --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$white});
     --newtab-element-active-color:  color-mix(in srgb, var(--newtab-background-color) 90%, #{$white});

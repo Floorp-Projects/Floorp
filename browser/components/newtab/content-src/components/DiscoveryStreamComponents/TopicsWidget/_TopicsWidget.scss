@@ -1,0 +1,88 @@
+.ds-topics-widget {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+
+  .ds-topics-widget-header {
+    font-size: 18px;
+    line-height: 20px;
+  }
+
+  hr {
+    background-color: color-mix(in srgb, var(--newtab-border-color) 52%, transparent);
+    height: 1px;
+    border: 0;
+    margin: 10px 0 0;
+  }
+
+  .ds-topics-widget-list-container {
+    flex-grow: 1;
+
+    ul {
+      margin: 14px 0 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      grid-gap: 10px;
+      flex-wrap: wrap;
+
+      li {
+        display: flex;
+
+        a {
+          font-size: 14px;
+          line-height: 16px;
+          text-decoration: none;
+          padding: 8px 15px;
+          background: var(--newtab-background-color-secondary);
+          border: 1px solid color-mix(in srgb, var(--newtab-border-color) 52%, transparent);
+          color: var(--newtab-text-primary-color);
+          border-radius: 8px;
+
+          &:hover {
+            background: var(--newtab-element-hover-color);
+          }
+
+          &:focus {
+            outline: 0;
+            box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
+            transition: box-shadow 150ms;
+          }
+        }
+      }
+
+      .ds-topics-widget-list-overflow-item {
+        display: flex;
+
+        @media (min-width: $break-point-medium) {
+          display: none;
+        }
+
+        @media (min-width: $break-point-widest) {
+          display: flex;
+        }
+      }
+    }
+  }
+
+  .ds-topics-widget-button {
+    margin: 14px 0 0;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: var(--newtab-primary-action-background-pocket);
+    border: 0;
+
+    &:hover {
+      background: var(--newtab-primary-element-hover-pocket-color);
+    }
+
+    &:focus {
+      outline: 0;
+      box-shadow: 0 0 0 3px var(--newtab-primary-action-background-pocket-dimmed), 0 0 0 1px var(--newtab-primary-action-background-pocket);
+      transition: box-shadow 150ms;
+    }
+  }
+}

@@ -12,6 +12,9 @@ import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
+const WIDGET_IDS = {
+  TOPICS: 1,
+};
 
 export class CardGrid extends React.PureComponent {
   constructor(props) {
@@ -152,6 +155,7 @@ export class CardGrid extends React.PureComponent {
 
     if (widgets?.positions?.length && widgets?.data?.length) {
       let positionIndex = 0;
+      const source = "CARDGRID_WIDGET";
 
       for (const widget of widgets.data) {
         let widgetComponent = null;
@@ -164,7 +168,14 @@ export class CardGrid extends React.PureComponent {
 
         switch (widget?.type) {
           case "TopicsWidget":
-            widgetComponent = <TopicsWidget />;
+            widgetComponent = (
+              <TopicsWidget
+                position={position.index}
+                dispatch={this.props.dispatch}
+                source={source}
+                id={WIDGET_IDS.TOPICS}
+              />
+            );
             break;
         }
 
