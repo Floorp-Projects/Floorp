@@ -107,13 +107,13 @@ rtc::CopyOnWriteBuffer FixVideoPayload(rtc::ArrayView<const uint8_t> payload,
       if (IsFirstPacketOfFragment(h264_header)) {
         result.AppendData(kStartCode);
       }
-      result.AppendData(payload.data(), payload.size());
+      result.AppendData(payload);
       return result;
     }
 
     case kH264SingleNalu: {
       result.AppendData(kStartCode);
-      result.AppendData(payload.data(), payload.size());
+      result.AppendData(payload);
       return result;
     }
   }
