@@ -340,8 +340,7 @@ void MediaPipeline::UpdateTransport_s(
 
   if (mFilter) {
     for (const auto& extension : mFilter->GetExtmap()) {
-      mRtpHeaderExtensionMap->Deregister(
-          mRtpHeaderExtensionMap->GetType(extension.id));
+      mRtpHeaderExtensionMap->Deregister(extension.uri);
     }
   }
   if (mFilter && aFilter) {
