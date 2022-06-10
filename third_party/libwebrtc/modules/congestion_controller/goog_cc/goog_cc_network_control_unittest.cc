@@ -879,16 +879,16 @@ TEST_F(GoogCcNetworkControllerTest, IsFairToTCP) {
   EXPECT_LT(client->send_bandwidth().kbps(), 750);
 }
 
-TEST(GoogCcScenario, FastRampupOnRembCapLiftedWithFieldTrial) {
-  ScopedFieldTrials trial("WebRTC-Bwe-ReceiverLimitCapsOnly/Enabled/");
+TEST(GoogCcScenario, FastRampupOnRembCapLifted) {
   DataRate final_estimate =
-      RunRembDipScenario("googcc_unit/fast_rampup_on_remb_cap_lifted");
+      RunRembDipScenario("googcc_unit/default_fast_rampup_on_remb_cap_lifted");
   EXPECT_GT(final_estimate.kbps(), 1500);
 }
 
-TEST(GoogCcScenario, SlowRampupOnRembCapLifted) {
+TEST(GoogCcScenario, SlowRampupOnRembCapLiftedWithFieldTrial) {
+  ScopedFieldTrials trial("WebRTC-Bwe-ReceiverLimitCapsOnly/Disabled/");
   DataRate final_estimate =
-      RunRembDipScenario("googcc_unit/default_slow_rampup_on_remb_cap_lifted");
+      RunRembDipScenario("googcc_unit/legacy_slow_rampup_on_remb_cap_lifted");
   EXPECT_LT(final_estimate.kbps(), 1000);
 }
 

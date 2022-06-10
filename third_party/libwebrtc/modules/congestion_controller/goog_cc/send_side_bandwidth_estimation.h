@@ -198,7 +198,7 @@ class SendSideBandwidthEstimation {
   DataRate bitrate_threshold_;
   LossBasedBandwidthEstimation loss_based_bandwidth_estimator_v1_;
   LossBasedBweV2 loss_based_bandwidth_estimator_v2_;
-  FieldTrialFlag receiver_limit_caps_only_;
+  FieldTrialFlag disable_receiver_limit_caps_only_;
 };
 }  // namespace webrtc
 #endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
