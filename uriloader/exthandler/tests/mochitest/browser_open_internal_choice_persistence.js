@@ -33,13 +33,11 @@ function waitForAcceptButtonToGetEnabled(doc) {
 }
 
 add_setup(async function() {
+  // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
     set: [
-      // Remove the security delay for the dialog during the test.
       ["security.dialog_enable_delay", 0],
       ["browser.helperApps.showOpenOptionForViewableInternally", true],
-      // Make sure we don't open a file picker dialog somehow.
-      ["browser.download.useDownloadDir", true],
     ],
   });
 
