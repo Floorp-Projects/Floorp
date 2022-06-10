@@ -142,9 +142,25 @@ void LogClippingPredictorMetrics(const ClippingPredictorEvaluator& evaluator) {
                      << metrics->f1_score;
     RTC_DCHECK_GE(metrics->f1_score, 0.0f);
     RTC_DCHECK_LE(metrics->f1_score, 1.0f);
+    RTC_DCHECK_GE(metrics->precision, 0.0f);
+    RTC_DCHECK_LE(metrics->precision, 1.0f);
+    RTC_DCHECK_GE(metrics->recall, 0.0f);
+    RTC_DCHECK_LE(metrics->recall, 1.0f);
     RTC_HISTOGRAM_COUNTS_LINEAR(
         /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.F1Score",
         /*sample=*/std::round(metrics->f1_score * 100.0f),
+        /*min=*/0,
+        /*max=*/100,
+        /*bucket_count=*/50);
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.Precision",
+        /*sample=*/std::round(metrics->precision * 100.0f),
+        /*min=*/0,
+        /*max=*/100,
+        /*bucket_count=*/50);
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        /*name=*/"WebRTC.Audio.Agc.ClippingPredictor.Recall",
+        /*sample=*/std::round(metrics->recall * 100.0f),
         /*min=*/0,
         /*max=*/100,
         /*bucket_count=*/50);
