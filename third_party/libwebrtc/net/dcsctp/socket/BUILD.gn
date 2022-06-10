@@ -222,9 +222,17 @@ if (rtc_include_tests) {
       ":packet_sender",
       ":stream_reset_handler",
       "../../../api:array_view",
+      "../../../api:create_network_emulation_manager",
+      "../../../api:network_emulation_manager_api",
+      "../../../api/units:time_delta",
+      "../../../call:simulated_network",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:rtc_base",
       "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:rtc_base_tests_utils",
+      "../../../rtc_base:socket_address",
+      "../../../rtc_base/task_utils:to_queued_task",
       "../../../test:test_support",
       "../common:handover_testing",
       "../common:internal_types",
@@ -241,6 +249,7 @@ if (rtc_include_tests) {
       "../testing:data_generator",
       "../testing:testing_macros",
       "../timer",
+      "../timer:task_queue_timeout",
       "../tx:mock_send_queue",
       "../tx:retransmission_queue",
     ]
@@ -251,6 +260,7 @@ if (rtc_include_tests) {
       "//third_party/abseil-cpp/absl/types:optional",
     ]
     sources = [
+      "dcsctp_socket_network_test.cc",
       "dcsctp_socket_test.cc",
       "heartbeat_handler_test.cc",
       "packet_sender_test.cc",
