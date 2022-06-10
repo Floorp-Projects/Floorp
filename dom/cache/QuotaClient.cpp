@@ -281,7 +281,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
                 // Ignore transient sqlite files and marker files
                 if (leafName.EqualsLiteral("caches.sqlite-journal") ||
                     leafName.EqualsLiteral("caches.sqlite-shm") ||
-                    leafName.Find("caches.sqlite-mj"_ns, false, 0, 0) == 0 ||
+                    StringBeginsWith(leafName, u"caches.sqlite-mj"_ns) ||
                     leafName.EqualsLiteral("context_open.marker")) {
                   break;
                 }

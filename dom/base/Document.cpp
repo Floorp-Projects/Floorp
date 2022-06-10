@@ -10456,8 +10456,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
         if (RefPtr<DocumentType> docType = GetDoctype()) {
           nsAutoString docId;
           docType->GetPublicId(docId);
-          if ((docId.Find("WAP") != -1) || (docId.Find("Mobile") != -1) ||
-              (docId.Find("WML") != -1)) {
+          if ((docId.Find(u"WAP") != -1) || (docId.Find(u"Mobile") != -1) ||
+              (docId.Find(u"WML") != -1)) {
             // We're making an assumption that the docType can't change here
             mViewportType = DisplayWidthHeight;
             return nsViewportInfo(aDisplaySize, defaultScale,

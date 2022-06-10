@@ -300,13 +300,13 @@ static nsresult GetKeyValues(const WCHAR* keyLocation, const WCHAR* keyName,
 
 // The device ID is a string like PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD
 // this function is used to extract the id's out of it
-uint32_t ParseIDFromDeviceID(const nsAString& key, const char* prefix,
+uint32_t ParseIDFromDeviceID(const nsAString& key, const nsAString& prefix,
                              int length) {
   nsAutoString id(key);
   ToUpperCase(id);
   int32_t start = id.Find(prefix);
   if (start != -1) {
-    id.Cut(0, start + strlen(prefix));
+    id.Cut(0, start + prefix.Length());
     id.Truncate(length);
   }
   if (id.Equals(L"QCOM", nsCaseInsensitiveStringComparator)) {
@@ -605,9 +605,9 @@ nsresult GfxInfo::Init() {
   uint32_t adapterDeviceID[2] = {0, 0};
   uint32_t adapterSubsysID[2] = {0, 0};
 
-  adapterVendorID[0] = ParseIDFromDeviceID(mDeviceID[0], "VEN_", 4);
-  adapterDeviceID[0] = ParseIDFromDeviceID(mDeviceID[0], "&DEV_", 4);
-  adapterSubsysID[0] = ParseIDFromDeviceID(mDeviceID[0], "&SUBSYS_", 8);
+  adapterVendorID[0] = ParseIDFromDeviceID(mDeviceID[0], u"VEN_"_ns, 4);
+  adapterDeviceID[0] = ParseIDFromDeviceID(mDeviceID[0], u"&DEV_"_ns, 4);
+  adapterSubsysID[0] = ParseIDFromDeviceID(mDeviceID[0], u"&SUBSYS_"_ns, 8);
 
   // Sometimes we don't get the valid device using this method.  For now,
   // allow zero vendor or device as valid, as long as the other value is
@@ -660,8 +660,8 @@ nsresult GfxInfo::Init() {
               continue;
             }
             deviceID2 = value;
-            adapterVendorID[1] = ParseIDFromDeviceID(deviceID2, "VEN_", 4);
-            adapterDeviceID[1] = ParseIDFromDeviceID(deviceID2, "&DEV_", 4);
+            adapterVendorID[1] = ParseIDFromDeviceID(deviceID2, u"VEN_"_ns, 4);
+            adapterDeviceID[1] = ParseIDFromDeviceID(deviceID2, u"&DEV_"_ns, 4);
             // Skip the devices we already considered, as well as any
             // "zero" ones.
             if ((adapterVendorID[0] == adapterVendorID[1] &&
@@ -717,7 +717,7 @@ nsresult GfxInfo::Init() {
                 mDriverVersion[0] = driverVersion2;
                 mDriverDate[0] = driverDate2;
                 adapterSubsysID[0] =
-                    ParseIDFromDeviceID(mDeviceID[0], "&SUBSYS_", 8);
+                    ParseIDFromDeviceID(mDeviceID[0], u"&SUBSYS_"_ns, 8);
                 continue;
               }
 
@@ -728,7 +728,7 @@ nsresult GfxInfo::Init() {
               mDriverVersion[1] = driverVersion2;
               mDriverDate[1] = driverDate2;
               adapterSubsysID[1] =
-                  ParseIDFromDeviceID(mDeviceID[1], "&SUBSYS_", 8);
+                  ParseIDFromDeviceID(mDeviceID[1], u"&SUBSYS_"_ns, 8);
               mAdapterVendorID[1].AppendPrintf("0x%04x", adapterVendorID[1]);
               mAdapterDeviceID[1].AppendPrintf("0x%04x", adapterDeviceID[1]);
               mAdapterSubsysID[1].AppendPrintf("%08x", adapterSubsysID[1]);

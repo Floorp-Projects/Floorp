@@ -458,7 +458,7 @@ nsBaseWinFilePicker::SetDefaultString(const nsAString& aString) {
 
   // First, make sure the file name is not too long.
   int32_t nameLength;
-  int32_t nameIndex = mDefaultFilePath.RFind("\\");
+  int32_t nameIndex = mDefaultFilePath.RFind(u"\\");
   if (nameIndex == kNotFound)
     nameIndex = 0;
   else
@@ -467,7 +467,7 @@ nsBaseWinFilePicker::SetDefaultString(const nsAString& aString) {
   mDefaultFilename.Assign(Substring(mDefaultFilePath, nameIndex));
 
   if (nameLength > MAX_PATH) {
-    int32_t extIndex = mDefaultFilePath.RFind(".");
+    int32_t extIndex = mDefaultFilePath.RFind(u".");
     if (extIndex == kNotFound) extIndex = mDefaultFilePath.Length();
 
     // Let's try to shave the needed characters from the name part.
@@ -479,8 +479,8 @@ nsBaseWinFilePicker::SetDefaultString(const nsAString& aString) {
 
   // Then, we need to replace illegal characters. At this stage, we cannot
   // replace the backslash as the string might represent a file path.
-  mDefaultFilePath.ReplaceChar(FILE_ILLEGAL_CHARACTERS, '-');
-  mDefaultFilename.ReplaceChar(FILE_ILLEGAL_CHARACTERS, '-');
+  mDefaultFilePath.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, u'-');
+  mDefaultFilename.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, u'-');
 
   return NS_OK;
 }
@@ -568,7 +568,7 @@ bool nsFilePicker::IsDefaultPathLink() {
 }
 
 bool nsFilePicker::IsDefaultPathHtml() {
-  int32_t extIndex = mDefaultFilePath.RFind(".");
+  int32_t extIndex = mDefaultFilePath.RFind(u".");
   if (extIndex >= 0) {
     nsAutoString ext;
     mDefaultFilePath.Right(ext, mDefaultFilePath.Length() - extIndex);

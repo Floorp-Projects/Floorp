@@ -140,7 +140,7 @@ static bool IsMatchWildcard(const nsACString& aHost,
       }
       nsAutoCString token(
           Substring(override, tokenStart, tokenEnd - tokenStart));
-      offset = host.Find(token, /* aIgnoreCase = */ false, offset);
+      offset = host.Find(token, offset);
       if (offset == -1 || (!star && offset)) {
         return false;
       }

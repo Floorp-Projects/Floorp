@@ -242,7 +242,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition, bool aPersistSize,
   int32_t index;
 
   // Set X
-  index = persistString.Find("screenX");
+  index = persistString.Find(u"screenX");
   if (!aPersistPosition && index >= 0) {
     persistString.Cut(index, 7);
     saveString = true;
@@ -251,7 +251,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition, bool aPersistSize,
     saveString = true;
   }
   // Set Y
-  index = persistString.Find("screenY");
+  index = persistString.Find(u"screenY");
   if (!aPersistPosition && index >= 0) {
     persistString.Cut(index, 7);
     saveString = true;
@@ -260,7 +260,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition, bool aPersistSize,
     saveString = true;
   }
   // Set CX
-  index = persistString.Find("width");
+  index = persistString.Find(u"width");
   if (!aPersistSize && index >= 0) {
     persistString.Cut(index, 5);
     saveString = true;
@@ -269,7 +269,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition, bool aPersistSize,
     saveString = true;
   }
   // Set CY
-  index = persistString.Find("height");
+  index = persistString.Find(u"height");
   if (!aPersistSize && index >= 0) {
     persistString.Cut(index, 6);
     saveString = true;
@@ -278,7 +278,7 @@ nsContentTreeOwner::SetPersistence(bool aPersistPosition, bool aPersistSize,
     saveString = true;
   }
   // Set SizeMode
-  index = persistString.Find("sizemode");
+  index = persistString.Find(u"sizemode");
   if (!aPersistSizeMode && (index >= 0)) {
     persistString.Cut(index, 8);
     saveString = true;
@@ -307,18 +307,17 @@ nsContentTreeOwner::GetPersistence(bool* aPersistPosition, bool* aPersistSize,
 
   // data structure doesn't quite match the question, but it's close enough
   // for what we want (since this method is never actually called...)
-  if (aPersistPosition)
-    *aPersistPosition =
-        persistString.Find("screenX") >= 0 || persistString.Find("screenY") >= 0
-            ? true
-            : false;
-  if (aPersistSize)
+  if (aPersistPosition) {
+    *aPersistPosition = persistString.Find(u"screenX") >= 0 ||
+                        persistString.Find(u"screenY") >= 0;
+  }
+  if (aPersistSize) {
     *aPersistSize =
-        persistString.Find("width") >= 0 || persistString.Find("height") >= 0
-            ? true
-            : false;
-  if (aPersistSizeMode)
-    *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? true : false;
+        persistString.Find(u"width") >= 0 || persistString.Find(u"height") >= 0;
+  }
+  if (aPersistSizeMode) {
+    *aPersistSizeMode = persistString.Find(u"sizemode") >= 0;
+  }
 
   return NS_OK;
 }

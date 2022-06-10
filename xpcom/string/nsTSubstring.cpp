@@ -983,38 +983,6 @@ void nsTSubstring<T>::SetIsVoid(bool aVal) {
   }
 }
 
-namespace mozilla {
-namespace detail {
-
-template <typename T>
-typename nsTStringRepr<T>::size_type nsTStringRepr<T>::CountChar(
-    char_type aChar) const {
-  const char_type* start = this->mData;
-  const char_type* end = this->mData + this->mLength;
-
-  return NS_COUNT(start, end, aChar);
-}
-
-template <typename T>
-int32_t nsTStringRepr<T>::FindChar(char_type aChar, index_type aOffset) const {
-  if (aOffset < this->mLength) {
-    const char_type* result = char_traits::find(this->mData + aOffset,
-                                                this->mLength - aOffset, aChar);
-    if (result) {
-      return result - this->mData;
-    }
-  }
-  return -1;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Contains(char_type aChar) const {
-  return FindChar(aChar) != kNotFound;
-}
-
-}  // namespace detail
-}  // namespace mozilla
-
 template <typename T>
 void nsTSubstring<T>::StripChar(char_type aChar) {
   if (this->mLength == 0) {

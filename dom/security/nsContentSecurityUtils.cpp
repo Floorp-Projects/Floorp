@@ -1122,26 +1122,26 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
     nsAutoString parsedPolicyStr;
     for (uint32_t i = 0; i < policyCount; ++i) {
       csp->GetPolicyString(i, parsedPolicyStr);
-      if (parsedPolicyStr.Find("default-src") >= 0) {
+      if (parsedPolicyStr.Find(u"default-src") >= 0) {
         foundDefaultSrc = true;
       }
-      if (parsedPolicyStr.Find("object-src 'none'") >= 0) {
+      if (parsedPolicyStr.Find(u"object-src 'none'") >= 0) {
         foundObjectSrc = true;
       }
-      if (parsedPolicyStr.Find("'unsafe-eval'") >= 0) {
+      if (parsedPolicyStr.Find(u"'unsafe-eval'") >= 0) {
         foundUnsafeEval = true;
       }
-      if (parsedPolicyStr.Find("'unsafe-inline'") >= 0) {
+      if (parsedPolicyStr.Find(u"'unsafe-inline'") >= 0) {
         foundUnsafeInline = true;
       }
-      if (parsedPolicyStr.Find("script-src") >= 0) {
+      if (parsedPolicyStr.Find(u"script-src") >= 0) {
         foundScriptSrc = true;
       }
-      if (parsedPolicyStr.Find("worker-src") >= 0) {
+      if (parsedPolicyStr.Find(u"worker-src") >= 0) {
         foundWorkerSrc = true;
       }
-      if (parsedPolicyStr.Find("http:") >= 0 ||
-          parsedPolicyStr.Find("https:") >= 0) {
+      if (parsedPolicyStr.Find(u"http:") >= 0 ||
+          parsedPolicyStr.Find(u"https:") >= 0) {
         foundWebScheme = true;
       }
     }

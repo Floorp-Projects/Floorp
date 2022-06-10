@@ -1105,9 +1105,9 @@ static void CleanupHandlerPath(nsString& aPath) {
   aPath.Append(' ');
 
   // case insensitive
-  int32_t index = aPath.Find(".exe ", true);
-  if (index == kNotFound) index = aPath.Find(".dll ", true);
-  if (index == kNotFound) index = aPath.Find(".cpl ", true);
+  int32_t index = aPath.LowerCaseFindASCII(".exe ");
+  if (index == kNotFound) index = aPath.LowerCaseFindASCII(".dll ");
+  if (index == kNotFound) index = aPath.LowerCaseFindASCII(".cpl ");
 
   if (index != kNotFound) aPath.Truncate(index + 4);
   aPath.Trim(" ", true, true);
@@ -1122,15 +1122,15 @@ static void StripRundll32(nsString& aCommandString) {
   // C:\Windows\System32\rundll32.exe "path to dll", var var
   // rundll32.exe "path to dll", var var
 
-  constexpr auto rundllSegment = u"rundll32.exe "_ns;
-  constexpr auto rundllSegmentShort = u"rundll32 "_ns;
+  constexpr auto rundllSegment = "rundll32.exe "_ns;
+  constexpr auto rundllSegmentShort = "rundll32 "_ns;
 
   // case insensitive
   int32_t strLen = rundllSegment.Length();
-  int32_t index = aCommandString.Find(rundllSegment, true);
+  int32_t index = aCommandString.LowerCaseFindASCII(rundllSegment);
   if (index == kNotFound) {
     strLen = rundllSegmentShort.Length();
-    index = aCommandString.Find(rundllSegmentShort, true);
+    index = aCommandString.LowerCaseFindASCII(rundllSegmentShort);
   }
 
   if (index != kNotFound) {

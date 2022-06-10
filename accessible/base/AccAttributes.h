@@ -214,7 +214,7 @@ class AccAttributes {
 
     void NameAsString(nsString& aName) {
       mName->ToString(aName);
-      if (aName.Find("aria-", false, 0, 1) == 0) {
+      if (StringBeginsWith(aName, u"aria-"_ns)) {
         // Found 'aria-'
         aName.ReplaceLiteral(0, 5, u"");
       }

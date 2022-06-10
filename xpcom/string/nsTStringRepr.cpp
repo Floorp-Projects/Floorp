@@ -108,6 +108,71 @@ bool nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData) const {
 }
 
 template <typename T>
+int32_t nsTStringRepr<T>::Find(const string_view& aString,
+                               index_type aOffset) const {
+  auto idx = View().find(aString, aOffset);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::LowerCaseFindASCII(const std::string_view& aString,
+                                             index_type aOffset) const {
+  if (aOffset > Length()) {
+    return kNotFound;
+  }
+  auto begin = BeginReading();
+  auto end = EndReading();
+  auto it =
+      std::search(begin + aOffset, end, aString.begin(), aString.end(),
+                  [](char_type l, char r) {
+                    MOZ_ASSERT(!(r & ~0x7F), "Unexpected non-ASCII character");
+                    MOZ_ASSERT(char_traits::ASCIIToLower(r) == char_type(r),
+                               "Search string must be ASCII lowercase");
+                    return char_traits::ASCIIToLower(l) == char_type(r);
+                  });
+  return it == end ? kNotFound : std::distance(begin, it);
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::RFind(const string_view& aString) const {
+  auto idx = View().rfind(aString);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
+typename nsTStringRepr<T>::size_type nsTStringRepr<T>::CountChar(
+    char_type aChar) const {
+  return std::count(BeginReading(), EndReading(), aChar);
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::FindChar(char_type aChar, index_type aOffset) const {
+  auto idx = View().find(aChar, aOffset);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::RFindChar(char_type aChar, int32_t aOffset) const {
+  auto idx = View().rfind(aChar, aOffset != -1 ? aOffset : string_view::npos);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::FindCharInSet(const string_view& aSet,
+                                        index_type aOffset) const {
+  auto idx = View().find_first_of(aSet, aOffset);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
+int32_t nsTStringRepr<T>::RFindCharInSet(const string_view& aSet,
+                                         int32_t aOffset) const {
+  auto idx =
+      View().find_last_of(aSet, aOffset != -1 ? aOffset : string_view::npos);
+  return idx == string_view::npos ? kNotFound : idx;
+}
+
+template <typename T>
 int32_t nsTStringRepr<T>::Compare(const string_view& aString) const {
   return View().compare(aString);
 }
