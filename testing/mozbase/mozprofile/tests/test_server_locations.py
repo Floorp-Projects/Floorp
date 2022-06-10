@@ -117,5 +117,35 @@ def test_server_locations(create_temp_file):
     assert exc.lineno == 4
 
 
+def test_server_locations_callback(create_temp_file):
+    class CallbackTest(object):
+        last_locations = None
+
+        def callback(self, locations):
+            self.last_locations = locations
+
+    c = CallbackTest()
+    f = create_temp_file(LOCATIONS)
+    locations = ServerLocations(f, c.callback)
+
+    # callback should be for all locations in file
+    assert len(c.last_locations) == 6
+
+    # validate arbitrary one
+    compare_location(c.last_locations[2], "http", "127.0.0.1", "8888", ["privileged"])
+
+    locations.add_host("a.b.c")
+
+    # callback should be just for one location
+    assert len(c.last_locations) == 1
+    compare_location(c.last_locations[0], "http", "a.b.c", "80", ["privileged"])
+
+    # read a second file, which should generate a callback with both
+    # locations.
+    f = create_temp_file(LOCATIONS_NO_PRIMARY)
+    locations.read(f)
+    assert len(c.last_locations) == 2
+
+
 if __name__ == "__main__":
     mozunit.main()
