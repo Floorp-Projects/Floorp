@@ -87,6 +87,8 @@ class VideoEncoderWrapper : public VideoEncoder {
   std::vector<ResolutionBitrateLimits> GetResolutionBitrateLimits(
       JNIEnv* jni) const;
 
+  VideoEncoder::EncoderInfo GetEncoderInfoInternal(JNIEnv* jni) const;
+
   const ScopedJavaGlobalRef<jobject> encoder_;
   const ScopedJavaGlobalRef<jclass> int_array_class_;
 

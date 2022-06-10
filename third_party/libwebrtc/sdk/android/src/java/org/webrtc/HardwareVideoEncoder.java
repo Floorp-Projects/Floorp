@@ -54,6 +54,9 @@ class HardwareVideoEncoder implements VideoEncoder {
   private static final int MEDIA_CODEC_RELEASE_TIMEOUT_MS = 5000;
   private static final int DEQUEUE_OUTPUT_BUFFER_TIMEOUT_US = 100000;
 
+  // Size of the input frames should be multiple of 16 for the H/W encoder.
+  private static final int REQUIRED_RESOLUTION_ALIGNMENT = 16;
+
   /**
    * Keeps track of the number of output buffers that have been passed down the pipeline and not yet
    * released. We need to wait for this to go down to zero before operations invalidating the output
@@ -207,6 +210,12 @@ class HardwareVideoEncoder implements VideoEncoder {
 
     this.callback = callback;
     automaticResizeOn = settings.automaticResizeOn;
+
+    if (settings.width % REQUIRED_RESOLUTION_ALIGNMENT != 0
+        || settings.height % REQUIRED_RESOLUTION_ALIGNMENT != 0) {
+      Logging.e(TAG, "MediaCodec is only tested with resolutions that are 16x16 aligned.");
+      return VideoCodecStatus.ERR_SIZE;
+    }
     this.width = settings.width;
     this.height = settings.height;
     useSurfaceMode = canUseSurface();
@@ -498,11 +507,27 @@ class HardwareVideoEncoder implements VideoEncoder {
     return "HWEncoder";
   }
 
+  @Override
+  public EncoderInfo getEncoderInfo() {
+    // Since our MediaCodec is guaranteed to encode 16-pixel-aligned frames only, we set alignment
+    // value to be 16. Additionally, this encoder produces a single stream. So it should not require
+    // alignment for all layers.
+    return new EncoderInfo(
+        /* requestedResolutionAlignment= */ REQUIRED_RESOLUTION_ALIGNMENT,
+        /* applyAlignmentToAllSimulcastLayers= */ false);
+  }
+
   private VideoCodecStatus resetCodec(int newWidth, int newHeight, boolean newUseSurfaceMode) {
     encodeThreadChecker.checkIsOnValidThread();
     VideoCodecStatus status = release();
     if (status != VideoCodecStatus.OK) {
       return status;
+    }
+
+    if (newWidth % REQUIRED_RESOLUTION_ALIGNMENT != 0
+        || newHeight % REQUIRED_RESOLUTION_ALIGNMENT != 0) {
+      Logging.e(TAG, "MediaCodec is only tested with resolutions that are 16x16 aligned.");
+      return VideoCodecStatus.ERR_SIZE;
     }
     width = newWidth;
     height = newHeight;

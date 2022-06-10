@@ -120,7 +120,7 @@ TEST(VideoCodecTestMediaCodec, ForemanMixedRes100kbpsVp8H264) {
   const std::vector<std::string> codecs = {cricket::kVp8CodecName,
                                            cricket::kH264CodecName};
   const std::vector<std::tuple<int, int>> resolutions = {
-      {128, 96}, {160, 120}, {176, 144}, {240, 136}, {320, 240}, {480, 272}};
+      {128, 96}, {176, 144}, {320, 240}, {480, 272}};
   const std::vector<RateProfile> rate_profiles = {
       {100, kForemanFramerateFps, 0}};
   const std::vector<QualityThresholds> quality_thresholds = {

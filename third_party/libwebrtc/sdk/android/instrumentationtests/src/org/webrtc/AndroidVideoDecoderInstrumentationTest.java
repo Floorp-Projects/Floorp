@@ -73,14 +73,17 @@ public final class AndroidVideoDecoderInstrumentationTest {
 
   private static final boolean ENABLE_INTEL_VP8_ENCODER = true;
   private static final boolean ENABLE_H264_HIGH_PROFILE = true;
-  private static final VideoEncoder.Settings ENCODER_SETTINGS =
-      new VideoEncoder.Settings(1 /* core */, TEST_FRAME_WIDTH, TEST_FRAME_HEIGHT, 300 /* kbps */,
-          30 /* fps */, 1 /* numberOfSimulcastStreams */, true /* automaticResizeOn */,
-          /* capabilities= */ new VideoEncoder.Capabilities(false /* lossNotification */));
+  private static final VideoEncoder.Settings ENCODER_SETTINGS = new VideoEncoder.Settings(
+      1 /* core */,
+      getAlignedNumber(TEST_FRAME_WIDTH, HardwareVideoEncoderTest.getPixelAlignmentRequired()),
+      getAlignedNumber(TEST_FRAME_HEIGHT, HardwareVideoEncoderTest.getPixelAlignmentRequired()),
+      300 /* kbps */, 30 /* fps */, 1 /* numberOfSimulcastStreams */, true /* automaticResizeOn */,
+      /* capabilities= */ new VideoEncoder.Capabilities(false /* lossNotification */));
 
   private static final int DECODE_TIMEOUT_MS = 1000;
-  private static final VideoDecoder.Settings SETTINGS =
-      new VideoDecoder.Settings(1 /* core */, TEST_FRAME_WIDTH, TEST_FRAME_HEIGHT);
+  private static final VideoDecoder.Settings SETTINGS = new VideoDecoder.Settings(1 /* core */,
+      getAlignedNumber(TEST_FRAME_WIDTH, HardwareVideoEncoderTest.getPixelAlignmentRequired()),
+      getAlignedNumber(TEST_FRAME_HEIGHT, HardwareVideoEncoderTest.getPixelAlignmentRequired()));
 
   private static class MockDecodeCallback implements VideoDecoder.Callback {
     private BlockingQueue<VideoFrame> frameQueue = new LinkedBlockingQueue<>();
@@ -116,7 +119,10 @@ public final class AndroidVideoDecoderInstrumentationTest {
   private static VideoFrame.I420Buffer[] generateTestFrames() {
     VideoFrame.I420Buffer[] result = new VideoFrame.I420Buffer[TEST_FRAME_COUNT];
     for (int i = 0; i < TEST_FRAME_COUNT; i++) {
-      result[i] = JavaI420Buffer.allocate(TEST_FRAME_WIDTH, TEST_FRAME_HEIGHT);
+      result[i] = JavaI420Buffer.allocate(
+          getAlignedNumber(TEST_FRAME_WIDTH, HardwareVideoEncoderTest.getPixelAlignmentRequired()),
+          getAlignedNumber(
+              TEST_FRAME_HEIGHT, HardwareVideoEncoderTest.getPixelAlignmentRequired()));
       // TODO(sakal): Generate content for the test frames.
     }
     return result;
@@ -154,6 +160,10 @@ public final class AndroidVideoDecoderInstrumentationTest {
     }
 
     assertEquals(VideoCodecStatus.OK, encoder.release());
+  }
+
+  private static int getAlignedNumber(int number, int alignment) {
+    return (number / alignment) * alignment;
   }
 
   @Before
