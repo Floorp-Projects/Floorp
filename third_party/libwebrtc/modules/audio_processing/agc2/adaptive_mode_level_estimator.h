@@ -47,14 +47,13 @@ class AdaptiveModeLevelEstimator {
     inline bool operator!=(const LevelEstimatorState& s) const {
       return !(*this == s);
     }
+    // TODO(bugs.webrtc.org/7494): Remove `time_to_confidence_ms` if redundant.
+    int time_to_confidence_ms;
     struct Ratio {
       float numerator;
       float denominator;
       float GetRatio() const;
-    };
-    // TODO(crbug.com/webrtc/7494): Remove time_to_confidence_ms if redundant.
-    int time_to_confidence_ms;
-    Ratio level_dbfs;
+    } level_dbfs;
   };
   static_assert(std::is_trivially_copyable<LevelEstimatorState>::value, "");
 

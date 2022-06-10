@@ -129,64 +129,6 @@ TEST(GainController2, CheckFixedDigitalConfig) {
   EXPECT_TRUE(GainController2::Validate(config));
 }
 
-TEST(GainController2, CheckAdaptiveDigitalVadProbabilityAttackConfig) {
-  AudioProcessing::Config::GainController2 config;
-  // Reject invalid attack.
-  config.adaptive_digital.vad_probability_attack = -123.f;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.vad_probability_attack = 0.f;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.vad_probability_attack = 42.f;
-  EXPECT_FALSE(GainController2::Validate(config));
-  // Accept valid attack.
-  config.adaptive_digital.vad_probability_attack = 0.1f;
-  EXPECT_TRUE(GainController2::Validate(config));
-  config.adaptive_digital.vad_probability_attack = 1.f;
-  EXPECT_TRUE(GainController2::Validate(config));
-}
-
-TEST(GainController2,
-     CheckAdaptiveDigitalLevelEstimatorSpeechFramesThresholdConfig) {
-  AudioProcessing::Config::GainController2 config;
-  config.adaptive_digital.level_estimator_adjacent_speech_frames_threshold = 0;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.level_estimator_adjacent_speech_frames_threshold = 1;
-  EXPECT_TRUE(GainController2::Validate(config));
-  config.adaptive_digital.level_estimator_adjacent_speech_frames_threshold = 7;
-  EXPECT_TRUE(GainController2::Validate(config));
-}
-
-TEST(GainController2, CheckAdaptiveDigitalInitialSaturationMarginConfig) {
-  AudioProcessing::Config::GainController2 config;
-  config.adaptive_digital.initial_saturation_margin_db = -1.f;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.initial_saturation_margin_db = 0.f;
-  EXPECT_TRUE(GainController2::Validate(config));
-  config.adaptive_digital.initial_saturation_margin_db = 50.f;
-  EXPECT_TRUE(GainController2::Validate(config));
-}
-
-TEST(GainController2, CheckAdaptiveDigitalExtraSaturationMarginConfig) {
-  AudioProcessing::Config::GainController2 config;
-  config.adaptive_digital.extra_saturation_margin_db = -1.f;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.extra_saturation_margin_db = 0.f;
-  EXPECT_TRUE(GainController2::Validate(config));
-  config.adaptive_digital.extra_saturation_margin_db = 50.f;
-  EXPECT_TRUE(GainController2::Validate(config));
-}
-
-TEST(GainController2,
-     CheckAdaptiveDigitalGainApplierSpeechFramesThresholdConfig) {
-  AudioProcessing::Config::GainController2 config;
-  config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold = 0;
-  EXPECT_FALSE(GainController2::Validate(config));
-  config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold = 1;
-  EXPECT_TRUE(GainController2::Validate(config));
-  config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold = 7;
-  EXPECT_TRUE(GainController2::Validate(config));
-}
-
 TEST(GainController2, CheckAdaptiveDigitalMaxGainChangeSpeedConfig) {
   AudioProcessing::Config::GainController2 config;
   config.adaptive_digital.max_gain_change_db_per_second = -1.f;

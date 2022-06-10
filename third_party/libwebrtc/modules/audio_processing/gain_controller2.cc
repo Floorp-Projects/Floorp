@@ -106,16 +106,8 @@ bool GainController2::Validate(
   const auto& fixed = config.fixed_digital;
   const auto& adaptive = config.adaptive_digital;
   return fixed.gain_db >= 0.f && fixed.gain_db < 50.f &&
-         adaptive.vad_probability_attack > 0.f &&
-         adaptive.vad_probability_attack <= 1.f &&
-         adaptive.level_estimator_adjacent_speech_frames_threshold >= 1 &&
-         adaptive.initial_saturation_margin_db >= 0.f &&
-         adaptive.initial_saturation_margin_db <= 100.f &&
-         adaptive.extra_saturation_margin_db >= 0.f &&
-         adaptive.extra_saturation_margin_db <= 100.f &&
-         adaptive.gain_applier_adjacent_speech_frames_threshold >= 1 &&
-         adaptive.max_gain_change_db_per_second > 0.f &&
-         adaptive.max_output_noise_level_dbfs <= 0.f;
+         adaptive.max_gain_change_db_per_second > 0.0f &&
+         adaptive.max_output_noise_level_dbfs <= 0.0f;
 }
 
 }  // namespace webrtc
