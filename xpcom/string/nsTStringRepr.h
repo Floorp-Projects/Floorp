@@ -8,6 +8,7 @@
 #define nsTStringRepr_h
 
 #include <limits>
+#include <string_view>
 #include <type_traits>  // std::enable_if
 
 #include "mozilla/Char16.h"
@@ -131,6 +132,8 @@ class nsTStringRepr {
 
   typedef const char_type* const_char_iterator;
 
+  typedef std::basic_string_view<char_type> string_view;
+
   typedef size_t index_type;
   typedef size_t size_type;
 
@@ -179,9 +182,13 @@ class nsTStringRepr {
 #endif
 
   // Returns pointer to string data (not necessarily null-terminated)
-  constexpr const typename raw_type<T, int>::type Data() const { return mData; }
+  constexpr typename raw_type<T, int>::type Data() const { return mData; }
 
   constexpr size_type Length() const { return static_cast<size_type>(mLength); }
+
+  constexpr string_view View() const { return string_view(Data(), Length()); }
+
+  constexpr operator string_view() const { return View(); }
 
   constexpr DataFlags GetDataFlags() const { return mDataFlags; }
 
