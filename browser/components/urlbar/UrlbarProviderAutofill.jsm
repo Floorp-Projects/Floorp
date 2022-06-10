@@ -577,6 +577,21 @@ class ProviderAutofill extends UrlbarProvider {
       return [];
     }
 
+    // Change the search target dependent on user's input contains URI scheme.
+    let selectFixedURL;
+    let urlCondition;
+    if (this._strippedPrefix) {
+      selectFixedURL = "NULL AS fixed_url_match";
+      urlCondition =
+        "(h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')";
+    } else {
+      selectFixedURL = `
+        fixup_url(h.url) AS fixed_url,
+        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
+      `;
+      urlCondition = "fixed_url_match";
+    }
+
     const params = {
       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
       searchString: queryContext.searchString.toLowerCase(),
@@ -591,14 +606,11 @@ class ProviderAutofill extends UrlbarProvider {
         :searchString AS search_string,
         i.input AS input,
         h.url AS url,
-        fixup_url(h.url) AS fixed_url,
-        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
+        ${selectFixedURL}
       FROM moz_places h
       JOIN moz_inputhistory i ON i.place_id = h.id
       WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
-      AND (
-        fixed_url_match OR (h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')
-      )
+      AND ${urlCondition}
       AND i.use_count >= :useCountThreshold
       ${additionalCondition ? `AND ${additionalCondition}` : ""}
       ORDER BY i.use_count DESC, fixed_url_match DESC, h.frecency DESC, h.id DESC
