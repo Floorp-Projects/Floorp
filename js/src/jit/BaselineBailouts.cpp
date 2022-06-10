@@ -873,9 +873,9 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
                                           HandleValueVector savedCallerArgs) {
   // Build baseline stub frame:
   // +===============+
-  // |    StubPtr    |
-  // +---------------+
   // |   FramePtr    |
+  // +---------------+
+  // |    StubPtr    |
   // +---------------+
   // |   Padding?    |
   // +---------------+
@@ -900,6 +900,12 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
 
   size_t startOfBaselineStubFrame = framePushed();
 
+  // Write previous frame pointer (saved earlier).
+  if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
+    return false;
+  }
+  prevFramePtr_ = virtualPointerAtStackOffset(0);
+
   // Write stub pointer.
   uint32_t pcOff = script_->pcToOffset(pc_);
   JitScript* jitScript = script_->jitScript();
@@ -908,12 +914,6 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   if (!writePtr(fallback, "StubPtr")) {
     return false;
   }
-
-  // Write previous frame pointer (saved earlier).
-  if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
-    return false;
-  }
-  prevFramePtr_ = virtualPointerAtStackOffset(0);
 
   // Write out the arguments, copied from the baseline frame. The order
   // of the arguments is reversed relative to the baseline frame's stack
