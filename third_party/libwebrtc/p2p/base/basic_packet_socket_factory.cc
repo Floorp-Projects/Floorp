@@ -92,8 +92,7 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
     socket = new AsyncSSLSocket(socket);
   }
 
-  if (opts & PacketSocketFactory::OPT_STUN)
-    return new cricket::AsyncStunTCPSocket(socket, true);
+  RTC_CHECK(!(opts & PacketSocketFactory::OPT_STUN));
 
   return new AsyncTCPSocket(socket, true);
 }
@@ -187,7 +186,7 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
   // Finally, wrap that socket in a TCP or STUN TCP packet socket.
   AsyncPacketSocket* tcp_socket;
   if (tcp_options.opts & PacketSocketFactory::OPT_STUN) {
-    tcp_socket = new cricket::AsyncStunTCPSocket(socket, false);
+    tcp_socket = new cricket::AsyncStunTCPSocket(socket);
   } else {
     tcp_socket = new AsyncTCPSocket(socket, false);
   }

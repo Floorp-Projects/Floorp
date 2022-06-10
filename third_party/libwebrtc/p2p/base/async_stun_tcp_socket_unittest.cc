@@ -58,6 +58,15 @@ static unsigned char kTurnChannelDataMessageWithOddLength[] = {
 static const rtc::SocketAddress kClientAddr("11.11.11.11", 0);
 static const rtc::SocketAddress kServerAddr("22.22.22.22", 0);
 
+class AsyncStunServerTCPSocket : public rtc::AsyncTCPSocket {
+ public:
+  explicit AsyncStunServerTCPSocket(rtc::Socket* socket)
+      : AsyncTCPSocket(socket, true) {}
+  void HandleIncomingConnection(rtc::Socket* socket) override {
+    SignalNewConnection(this, new AsyncStunTCPSocket(socket));
+  }
+};
+
 class AsyncStunTCPSocketTest : public ::testing::Test,
                                public sigslot::has_slots<> {
  protected:
@@ -69,7 +78,7 @@ class AsyncStunTCPSocketTest : public ::testing::Test,
   void CreateSockets() {
     rtc::Socket* server = vss_->CreateSocket(kServerAddr.family(), SOCK_STREAM);
     server->Bind(kServerAddr);
-    recv_socket_.reset(new AsyncStunTCPSocket(server, true));
+    recv_socket_.reset(new AsyncStunServerTCPSocket(server));
     recv_socket_->SignalNewConnection.connect(
         this, &AsyncStunTCPSocketTest::OnNewConnection);
 
@@ -95,7 +104,7 @@ class AsyncStunTCPSocketTest : public ::testing::Test,
     ++sent_packets_;
   }
 
-  void OnNewConnection(rtc::AsyncPacketSocket* server,
+  void OnNewConnection(rtc::AsyncPacketSocket* /*server*/,
                        rtc::AsyncPacketSocket* new_socket) {
     listen_socket_.reset(new_socket);
     new_socket->SignalReadPacket.connect(this,
@@ -123,7 +132,7 @@ class AsyncStunTCPSocketTest : public ::testing::Test,
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread thread_;
   std::unique_ptr<AsyncStunTCPSocket> send_socket_;
-  std::unique_ptr<AsyncStunTCPSocket> recv_socket_;
+  std::unique_ptr<rtc::AsyncPacketSocket> recv_socket_;
   std::unique_ptr<rtc::AsyncPacketSocket> listen_socket_;
   std::list<std::string> recv_packets_;
   int sent_packets_ = 0;
