@@ -40,6 +40,10 @@ XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
   return ExtensionParent.extensionStylesheets;
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "manifestV3enabled",
@@ -3737,6 +3741,9 @@ class ColorwayClosetCard extends HTMLElement {
     colorwayExpiryDateSpan.textContent = "Expires June 2";
     let colorwaysButton = card.querySelector("[action='open-colorways']");
     colorwaysButton.hidden = false;
+    colorwaysButton.onclick = () => {
+      ColorwayClosetOpener.openModal();
+    };
   }
 }
 customElements.define("colorways-card", ColorwayClosetCard);
