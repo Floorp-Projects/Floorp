@@ -90,20 +90,14 @@ class RTPSenderVideo {
 
   // expected_retransmission_time_ms.has_value() -> retransmission allowed.
   // `capture_time_ms` and `clock::CurrentTime` should be using the same epoch.
-  // Calls to this method is assumed to be externally serialized.
-  // `estimated_capture_clock_offset_ms` is an estimated clock offset between
-  // this sender and the original capturer, for this video packet. See
-  // http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time for more
-  // details. If the sender and the capture has the same clock, it is supposed
-  // to be zero valued, which is given as the default.
+  // Calls to this method are assumed to be externally serialized.
   bool SendVideo(int payload_type,
                  absl::optional<VideoCodecType> codec_type,
                  uint32_t rtp_timestamp,
                  int64_t capture_time_ms,
                  rtc::ArrayView<const uint8_t> payload,
                  RTPVideoHeader video_header,
-                 absl::optional<int64_t> expected_retransmission_time_ms,
-                 absl::optional<int64_t> estimated_capture_clock_offset_ms = 0);
+                 absl::optional<int64_t> expected_retransmission_time_ms);
 
   bool SendEncodedImage(
       int payload_type,
@@ -170,12 +164,10 @@ class RTPSenderVideo {
       const FrameDependencyStructure* video_structure);
   void SetVideoLayersAllocationInternal(VideoLayersAllocation allocation);
 
-  void AddRtpHeaderExtensions(
-      const RTPVideoHeader& video_header,
-      const absl::optional<AbsoluteCaptureTime>& absolute_capture_time,
-      bool first_packet,
-      bool last_packet,
-      RtpPacketToSend* packet) const
+  void AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
+                              bool first_packet,
+                              bool last_packet,
+                              RtpPacketToSend* packet) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(send_checker_);
 
   size_t FecPacketOverhead() const RTC_EXCLUSIVE_LOCKS_REQUIRED(send_checker_);
