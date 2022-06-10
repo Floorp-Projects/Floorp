@@ -378,10 +378,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         int adjacent_speech_frames_threshold = 12;
         float max_gain_change_db_per_second = 3.0f;
         float max_output_noise_level_dbfs = -50.0f;
-        // TODO(bugs.webrtc.org/7494): Replace with field trials.
-        bool sse2_allowed = true;
-        bool avx2_allowed = true;
-        bool neon_allowed = true;
       } adaptive_digital;
     } gain_controller2;
 
