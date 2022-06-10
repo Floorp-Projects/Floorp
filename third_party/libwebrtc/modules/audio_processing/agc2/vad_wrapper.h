@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC2_VAD_WITH_LEVEL_H_
-#define MODULES_AUDIO_PROCESSING_AGC2_VAD_WITH_LEVEL_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_VAD_WRAPPER_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_VAD_WRAPPER_H_
 
 #include <memory>
 
@@ -61,4 +61,4 @@ class VadLevelAnalyzer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_VAD_WITH_LEVEL_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_VAD_WRAPPER_H_

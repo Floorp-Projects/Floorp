@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc2/vad_with_level.h"
+#include "modules/audio_processing/agc2/vad_wrapper.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <utility>
 
 #include "api/array_view.h"
 #include "common_audio/include/audio_util.h"

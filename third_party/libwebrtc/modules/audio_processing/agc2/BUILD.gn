@@ -36,7 +36,7 @@ rtc_library("adaptive_digital") {
     ":cpu_features",
     ":gain_applier",
     ":noise_level_estimator",
-    ":rnn_vad_with_level",
+    ":vad_wrapper",
     "..:api",
     "..:apm_logging",
     "..:audio_frame_view",
@@ -127,10 +127,10 @@ rtc_library("noise_level_estimator") {
   configs += [ "..:apm_debug_dump" ]
 }
 
-rtc_library("rnn_vad_with_level") {
+rtc_library("vad_wrapper") {
   sources = [
-    "vad_with_level.cc",
-    "vad_with_level.h",
+    "vad_wrapper.cc",
+    "vad_wrapper.h",
   ]
 
   defines = []
@@ -250,12 +250,12 @@ rtc_library("noise_estimator_unittests") {
   ]
 }
 
-rtc_library("rnn_vad_with_level_unittests") {
+rtc_library("vad_wrapper_unittests") {
   testonly = true
-  sources = [ "vad_with_level_unittest.cc" ]
+  sources = [ "vad_wrapper_unittest.cc" ]
   deps = [
     ":common",
-    ":rnn_vad_with_level",
+    ":vad_wrapper",
     "..:audio_frame_view",
     "../../../rtc_base:gunit_helpers",
     "../../../rtc_base:safe_compare",
