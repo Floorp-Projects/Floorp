@@ -10,7 +10,7 @@ import("../../../webrtc.gni")
 
 rtc_source_set("internal_types") {
   deps = [
-    "../public:strong_alias",
+    "../../../rtc_base:rtc_base_approved",
     "../public:types",
   ]
   sources = [ "internal_types.h" ]

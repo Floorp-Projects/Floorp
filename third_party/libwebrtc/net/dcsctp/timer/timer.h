@@ -21,13 +21,13 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "net/dcsctp/public/strong_alias.h"
 #include "net/dcsctp/public/timeout.h"
+#include "rtc_base/strong_alias.h"
 
 namespace dcsctp {
 
-using TimerID = StrongAlias<class TimerIDTag, uint32_t>;
-using TimerGeneration = StrongAlias<class TimerGenerationTag, uint32_t>;
+using TimerID = webrtc::StrongAlias<class TimerIDTag, uint32_t>;
+using TimerGeneration = webrtc::StrongAlias<class TimerGenerationTag, uint32_t>;
 
 enum class TimerBackoffAlgorithm {
   // The base duration will be used for any restart.
