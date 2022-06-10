@@ -8,10 +8,10 @@
   </head>
 <body>
   <script type="module">
-    import "chrome://global/content/certviewer/pvutils_bundle.js";
-    import "chrome://global/content/certviewer/asn1js_bundle.js";
-    import "chrome://global/content/certviewer/pkijs_bundle.js";
-    import "chrome://global/content/certviewer/certDecoder.js";
+    import "chrome://global/content/certviewer/pvutils_bundle.jsm";
+    import "chrome://global/content/certviewer/asn1js_bundle.jsm";
+    import "chrome://global/content/certviewer/pkijs_bundle.jsm";
+    import "chrome://global/content/certviewer/certDecoder.jsm";
 
     const { Integer, fromBER } = globalThis.asn1js.asn1js;
     const { Certificate } = globalThis.pkijs.pkijs;
