@@ -932,6 +932,11 @@ RemoteAccessible* RemoteAccessible::FocusedChild() {
 
 Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::ChildAtPoint(aX, aY,
+                                                                aWhichChild);
+  }
+
   RemoteAccessible* target = this;
   do {
     if (target->IsOuterDoc()) {

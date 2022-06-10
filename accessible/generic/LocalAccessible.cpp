@@ -3209,6 +3209,57 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  if (aCacheDomain & CacheDomain::Viewport && IsDoc()) {
+    // Construct the viewport cache for this document. This cache domain will
+    // only be requested after we finish painting.
+    DocAccessible* doc = AsDoc();
+    PresShell* presShell = doc->PresShellPtr();
+
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      nsTArray<nsIFrame*> frames;
+      nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+      nsRect scrollPort = sf ? sf->GetScrollPortRect() : rootFrame->GetRect();
+
+      nsLayoutUtils::GetFramesForArea(
+          RelativeTo{rootFrame}, scrollPort, frames,
+          {{// We only care about visible content for hittesting.
+            nsLayoutUtils::FrameForPointOption::OnlyVisible,
+            // This flag ensures the display lists are built, even if
+            // the page hasn't finished loading.
+            nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
+            // Each doc should have its own viewport cache, so we can
+            // ignore cross-doc content as an optimization.
+            nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc}});
+
+      nsTHashSet<LocalAccessible*> inViewAccs;
+      nsTArray<uint64_t> viewportCache;
+      for (nsIFrame* frame : frames) {
+        nsIContent* content = frame->GetContent();
+        if (!content) {
+          continue;
+        }
+
+        LocalAccessible* acc = doc->GetAccessibleOrContainer(content);
+        if (!acc) {
+          continue;
+        }
+
+        if (acc->IsTextLeaf() && nsAccUtils::MustPrune(acc->LocalParent())) {
+          acc = acc->LocalParent();
+        }
+
+        if (inViewAccs.EnsureInserted(acc)) {
+          viewportCache.AppendElement(
+              acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()));
+        }
+      }
+
+      if (viewportCache.Length()) {
+        fields->SetAttribute(nsGkAtoms::viewport, std::move(viewportCache));
+      }
+    }
+  }
+
   bool boundsChanged = false;
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
@@ -3519,6 +3570,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                              appUnitsPerDevPixel);
       }
     }
+  }
+
+  if ((aCacheDomain & (CacheDomain::Text | CacheDomain::ScrollPosition) ||
+       boundsChanged) &&
+      mDoc) {
+    mDoc->SetViewportCacheDirty(true);
   }
 
   return fields.forget();
