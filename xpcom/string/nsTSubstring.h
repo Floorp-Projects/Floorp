@@ -312,6 +312,8 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 
   typedef typename base_string_type::const_char_iterator const_char_iterator;
 
+  typedef typename base_string_type::string_view string_view;
+
   typedef typename base_string_type::index_type index_type;
   typedef typename base_string_type::size_type size_type;
 

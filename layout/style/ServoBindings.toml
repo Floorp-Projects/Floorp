@@ -47,6 +47,7 @@ raw-lines = [
 hide-types = [
     ".*char_traits",
     ".*incompatible_char_type",
+    ".*string_view",
     # https://github.com/rust-lang/rust-bindgen/issues/1503
     "mozilla::StyleTimingFunction.*",
     # https://github.com/rust-lang/rust-bindgen/issues/1559
