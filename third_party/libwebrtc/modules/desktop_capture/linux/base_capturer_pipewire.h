@@ -19,7 +19,9 @@
 #include "absl/types/optional.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#if !defined(WEBRTC_MOZILLA_BUILD)
 #include "modules/desktop_capture/linux/egl_dmabuf.h"
+#endif
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
@@ -99,7 +101,9 @@ class BaseCapturerPipeWire : public DesktopCapturer {
 
   bool portal_init_failed_ = false;
 
+#if !defined(WEBRTC_MOZILLA_BUILD)
   std::unique_ptr<EglDmaBuf> egl_dmabuf_;
+#endif
 
   void Init();
   void InitPortal();
