@@ -310,7 +310,7 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
       nsAutoString userDir;
       userDir.AssignLiteral("mozilla_");
       userDir.AppendASCII(userName);
-      userDir.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+      userDir.ReplaceChar(u"" FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
 
       int counter = 0;
       bool pathExists;
@@ -3478,8 +3478,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   nsAutoString fileName(aFileName);
 
   // Replace characters
-  fileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
-  fileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
+  fileName.ReplaceChar(u"" KNOWN_PATH_SEPARATORS, u'_');
+  fileName.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, u' ');
   fileName.StripChar(char16_t(0));
 
   const char16_t *startStr, *endStr;
