@@ -1331,6 +1331,7 @@ class UrlbarView {
     item.appendChild(button);
   }
 
+  // eslint-disable-next-line complexity
   _updateRow(item, result) {
     let oldResult = item.result;
     let oldResultType = item.result && item.result.type;
@@ -1521,7 +1522,7 @@ class UrlbarView {
         };
         break;
       default:
-        if (result.heuristic) {
+        if (result.heuristic && !result.autofill?.hasTitle) {
           isVisitAction = true;
         } else if (result.providerName != "UrlbarProviderQuickSuggest") {
           setURL = true;
