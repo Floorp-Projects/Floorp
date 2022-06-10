@@ -1338,6 +1338,13 @@ TEST_F(P2PTransportChannelTest, GetStats) {
                              kMediumTimeout, clock);
   // Sends and receives 10 packets.
   TestSendRecv(&clock);
+
+  // Try sending a packet which is discarded due to the socket being blocked.
+  virtual_socket_server()->SetSendingBlocked(true);
+  const char* data = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  int len = static_cast<int>(strlen(data));
+  EXPECT_EQ(-1, SendData(ep1_ch1(), data, len));
+
   IceTransportStats ice_transport_stats;
   ASSERT_TRUE(ep1_ch1()->GetStats(&ice_transport_stats));
   ASSERT_GE(ice_transport_stats.connection_infos.size(), 1u);
@@ -1355,9 +1362,12 @@ TEST_F(P2PTransportChannelTest, GetStats) {
   EXPECT_TRUE(best_conn_info->receiving);
   EXPECT_TRUE(best_conn_info->writable);
   EXPECT_FALSE(best_conn_info->timeout);
-  EXPECT_EQ(10U, best_conn_info->sent_total_packets);
-  EXPECT_EQ(0U, best_conn_info->sent_discarded_packets);
+  // Note that discarded packets are counted in sent_total_packets but not
+  // sent_total_bytes.
+  EXPECT_EQ(11U, best_conn_info->sent_total_packets);
+  EXPECT_EQ(1U, best_conn_info->sent_discarded_packets);
   EXPECT_EQ(10 * 36U, best_conn_info->sent_total_bytes);
+  EXPECT_EQ(36U, best_conn_info->sent_discarded_bytes);
   EXPECT_EQ(10 * 36U, best_conn_info->recv_total_bytes);
   EXPECT_EQ(10U, best_conn_info->packets_received);
   DestroyChannels();

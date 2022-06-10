@@ -173,6 +173,8 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidatePairStats, RTCStats, "candidate-pair",
     &nominated,
     &writable,
     &readable,
+    &packets_sent,
+    &packets_received,
     &bytes_sent,
     &bytes_received,
     &total_round_trip_time,
@@ -188,7 +190,9 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidatePairStats, RTCStats, "candidate-pair",
     &consent_requests_received,
     &consent_requests_sent,
     &consent_responses_received,
-    &consent_responses_sent)
+    &consent_responses_sent,
+    &packets_discarded_on_send,
+    &bytes_discarded_on_send)
 // clang-format on
 
 RTCIceCandidatePairStats::RTCIceCandidatePairStats(const std::string& id,
@@ -206,6 +210,8 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(std::string&& id,
       nominated("nominated"),
       writable("writable"),
       readable("readable"),
+      packets_sent("packetsSent"),
+      packets_received("packetsReceived"),
       bytes_sent("bytesSent"),
       bytes_received("bytesReceived"),
       total_round_trip_time("totalRoundTripTime"),
@@ -221,7 +227,9 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(std::string&& id,
       consent_requests_received("consentRequestsReceived"),
       consent_requests_sent("consentRequestsSent"),
       consent_responses_received("consentResponsesReceived"),
-      consent_responses_sent("consentResponsesSent") {}
+      consent_responses_sent("consentResponsesSent"),
+      packets_discarded_on_send("packetsDiscardedOnSend"),
+      bytes_discarded_on_send("bytesDiscardedOnSend") {}
 
 RTCIceCandidatePairStats::RTCIceCandidatePairStats(
     const RTCIceCandidatePairStats& other)
@@ -234,6 +242,8 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(
       nominated(other.nominated),
       writable(other.writable),
       readable(other.readable),
+      packets_sent(other.packets_sent),
+      packets_received(other.packets_received),
       bytes_sent(other.bytes_sent),
       bytes_received(other.bytes_received),
       total_round_trip_time(other.total_round_trip_time),
@@ -249,7 +259,9 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(
       consent_requests_received(other.consent_requests_received),
       consent_requests_sent(other.consent_requests_sent),
       consent_responses_received(other.consent_responses_received),
-      consent_responses_sent(other.consent_responses_sent) {}
+      consent_responses_sent(other.consent_responses_sent),
+      packets_discarded_on_send(other.packets_discarded_on_send),
+      bytes_discarded_on_send(other.bytes_discarded_on_send) {}
 
 RTCIceCandidatePairStats::~RTCIceCandidatePairStats() {}
 
