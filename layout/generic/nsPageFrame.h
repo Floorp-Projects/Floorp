@@ -121,6 +121,26 @@ class nsPageFrame final : public nsContainerFrame {
   // nsPageSequenceFrame, which outlives us.
   nsSharedPageData* mPD = nullptr;
 
+  // Computed page content margins.
+  //
+  // This is the amount of space from the edges of the content to the edges,
+  // measured in the content coordinate space. This is as opposed to the
+  // coordinate space of the physical paper. This might be different due to
+  // a CSS page-size that is too large to fit on the paper, causing content to
+  // be scaled to fit.
+  //
+  // These margins take into account:
+  //    * CSS-defined margins (content units)
+  //    * User-supplied margins (physical units)
+  //    * Unwriteable-supplied margins (physical units)
+  //
+  // When computing these margins, all physical units have the inverse of the
+  // scaling factor caused by CSS page-size downscaling applied. This ensures
+  // that even if the content will be downscaled, it will respect the (now
+  // upscaled) physical unwriteable margins required by the printer.
+  // For user-supplied margins, it isn't immediately obvious to the user what
+  // the intended page-size of the document is, so we consider these margins to
+  // be in the physical space of the paper.
   nsMargin mPageContentMargin;
 };
 
