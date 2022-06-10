@@ -16,18 +16,43 @@ const privilegedGlobals = Object.keys(
 // Rule Definition
 // -----------------------------------------------------------------------------
 
+function isOSFile(expr) {
+  if (expr.type !== "MemberExpression") {
+    return false;
+  }
+
+  if (expr.property.type !== "Identifier" || expr.property.name !== "File") {
+    return isOSFile(expr.object);
+  }
+
+  if (expr.object.type === "Identifier" && expr.object.name === "OS") {
+    return true;
+  }
+
+  if (
+    expr.object.type === "MemberExpression" &&
+    expr.object.object.type === "Identifier" &&
+    expr.object.object.name === "lazy" &&
+    expr.object.property.type === "Identifier" &&
+    expr.object.property.name === "OS"
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function pointsToDOMInterface(expression) {
-  let object;
+  if (isOSFile(expression)) {
+    // OS.File is an exception that is not a DOM interface
+    return false;
+  }
+
   let referee = expression;
   while (referee.type === "MemberExpression") {
-    object = referee.object;
     referee = referee.property;
   }
   if (referee.type === "Identifier") {
-    if (referee.name === "File" && object.name === "OS") {
-      // OS.File is an exception that is not a DOM interface
-      return false;
-    }
     return privilegedGlobals.includes(referee.name);
   }
   return false;
