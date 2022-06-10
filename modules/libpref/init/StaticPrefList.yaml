@@ -1979,6 +1979,8 @@
   value: true
   mirror: always
 
+# Exposes window.caches and skips SecureContext check.
+# dom.serviceWorkers.testing.enabled also includes the same effect.
 - name: dom.caches.testing.enabled
   type: RelaxedAtomicBool
   value: false

@@ -3246,6 +3246,18 @@ bool nsGlobalWindowInner::ContentPropertyEnabled(JSContext* aCx, JSObject*) {
          nsContentUtils::IsSystemCaller(aCx);
 }
 
+/* static */
+bool nsGlobalWindowInner::CachesEnabled(JSContext* aCx, JSObject*) {
+  if (!StaticPrefs::dom_caches_enabled()) {
+    return false;
+  }
+  if (!JS::GetIsSecureContext(js::GetContextRealm(aCx))) {
+    return StaticPrefs::dom_caches_testing_enabled() ||
+           StaticPrefs::dom_serviceWorkers_testing_enabled();
+  }
+  return true;
+}
+
 nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(
     ErrorResult& aError) {
   if (!mApplicationCache) {
