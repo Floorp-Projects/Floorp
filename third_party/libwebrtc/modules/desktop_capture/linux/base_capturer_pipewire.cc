@@ -551,8 +551,6 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
     return;
   }
 
-  std::function<void()> cleanup;
-  const int32_t src_stride = spa_buffer->datas[0].chunk->stride;
   if (spa_buffer->datas[0].type == SPA_DATA_MemFd) {
     map.initialize(
         static_cast<uint8_t*>(
@@ -624,7 +622,6 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
     video_metadata_use = true;
   }
 
-  DesktopSize video_size_prev = video_size_;
   if (video_metadata_use) {
     video_size_ =
         DesktopSize(video_metadata_size->width, video_metadata_size->height);
@@ -632,54 +629,41 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
     video_size_ = desktop_size_;
   }
 
+  uint32_t y_offset = video_metadata_use && (video_metadata->region.position.y +
+                                                 video_size_.height() <=
+                                             desktop_size_.height())
+                          ? video_metadata->region.position.y
+                          : 0;
+  uint32_t x_offset = video_metadata_use && (video_metadata->region.position.x +
+                                                 video_size_.width() <=
+                                             desktop_size_.width())
+                          ? video_metadata->region.position.x
+                          : 0;
+
   webrtc::MutexLock lock(&current_frame_lock_);
-  if (!current_frame_ || !video_size_.equals(video_size_prev)) {
-    current_frame_ = std::make_unique<uint8_t[]>(
-        video_size_.width() * video_size_.height() * BasicDesktopFrame::kBytesPerPixel);
-  }
 
-  const int32_t dst_stride = video_size_.width() * BasicDesktopFrame::kBytesPerPixel;
+  uint8_t* updated_src = src + (spa_buffer->datas[0].chunk->stride * y_offset) +
+                         (BasicDesktopFrame::kBytesPerPixel * x_offset);
+  current_frame_ = std::make_unique<BasicDesktopFrame>(
+      DesktopSize(video_size_.width(), video_size_.height()));
+  current_frame_->CopyPixelsFrom(
+      updated_src,
+      (spa_buffer->datas[0].chunk->stride - (BasicDesktopFrame::kBytesPerPixel * x_offset)),
+      DesktopRect::MakeWH(video_size_.width(), video_size_.height()));
 
-  if (src_stride != (desktop_size_.width() * BasicDesktopFrame::kBytesPerPixel)) {
-    RTC_LOG(LS_ERROR) << "Got buffer with stride different from screen stride: "
-                      << src_stride
-                      << " != " << (desktop_size_.width() * BasicDesktopFrame::kBytesPerPixel);
-    portal_init_failed_ = true;
-
-    return;
-  }
-
-  // Adjust source content based on metadata video position
-  if (video_metadata_use &&
-      (video_metadata->region.position.y + video_size_.height() <=
-       desktop_size_.height())) {
-    src += src_stride * video_metadata->region.position.y;
-  }
-  const int x_offset =
-      video_metadata_use &&
-              (video_metadata->region.position.x + video_size_.width() <=
-               desktop_size_.width())
-          ? video_metadata->region.position.x * BasicDesktopFrame::kBytesPerPixel
-          : 0;
-
-  uint8_t* dst = current_frame_.get();
-  for (int i = 0; i < video_size_.height(); ++i) {
-    // Adjust source content based on crop video position if needed
-    src += x_offset;
-    std::memcpy(dst, src, dst_stride);
-    // If both sides decided to go with the RGBx format we need to convert it to
-    // BGRx to match color format expected by WebRTC.
-    if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
-        spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
-      ConvertRGBxToBGRx(dst, dst_stride);
+  if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
+      spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
+    uint8_t* tmp_src = current_frame_->data();
+    for (int i = 0; i < video_size_.height(); ++i) {
+      // If both sides decided to go with the RGBx format we need to convert it
+      // to BGRx to match color format expected by WebRTC.
+      ConvertRGBxToBGRx(tmp_src, current_frame_->stride());
+      tmp_src += current_frame_->stride();
     }
-    src += src_stride - x_offset;
-    dst += dst_stride;
   }
 }
 
 void BaseCapturerPipeWire::ConvertRGBxToBGRx(uint8_t* frame, uint32_t size) {
-  // Change color format for KDE KWin which uses RGBx and not BGRx
   for (uint32_t i = 0; i < size; i += 4) {
     uint8_t tempR = frame[i];
     uint8_t tempB = frame[i + 2];
@@ -1119,18 +1103,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
   }
 
   webrtc::MutexLock lock(&current_frame_lock_);
-  if (!current_frame_) {
-    callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
-    return;
-  }
-
-  DesktopSize frame_size = video_size_;
-
-  std::unique_ptr<DesktopFrame> result(new BasicDesktopFrame(frame_size));
-  result->CopyPixelsFrom(
-      current_frame_.get(), (frame_size.width() * BasicDesktopFrame::kBytesPerPixel),
-      DesktopRect::MakeWH(frame_size.width(), frame_size.height()));
-  if (!result) {
+  if (!current_frame_ || !current_frame_->data()) {
     callback_->OnCaptureResult(Result::ERROR_TEMPORARY, nullptr);
     return;
   }
@@ -1138,7 +1111,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
   // TODO(julien.isorce): http://crbug.com/945468. Set the icc profile on the
   // frame, see ScreenCapturerX11::CaptureFrame.
 
-  callback_->OnCaptureResult(Result::SUCCESS, std::move(result));
+  callback_->OnCaptureResult(Result::SUCCESS, std::move(current_frame_));
 }
 
 // Keep in sync with defines at browser/actors/WebRTCParent.jsm
