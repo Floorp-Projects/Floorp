@@ -345,49 +345,6 @@ static int GetMaxDefaultVideoBitrateKbps(int width,
   return max_bitrate;
 }
 
-bool GetVp9LayersFromFieldTrialGroup(
-    size_t* num_spatial_layers,
-    size_t* num_temporal_layers,
-    const webrtc::WebRtcKeyValueConfig& trials) {
-  std::string group = trials.Lookup("WebRTC-SupportVP9SVC");
-  if (group.empty())
-    return false;
-
-  if (sscanf(group.c_str(), "EnabledByFlag_%zuSL%zuTL", num_spatial_layers,
-             num_temporal_layers) != 2) {
-    return false;
-  }
-  if (*num_spatial_layers > webrtc::kMaxSpatialLayers ||
-      *num_spatial_layers < 1)
-    return false;
-
-  const size_t kMaxTemporalLayers = 3;
-  if (*num_temporal_layers > kMaxTemporalLayers || *num_temporal_layers < 1)
-    return false;
-
-  return true;
-}
-
-absl::optional<size_t> GetVp9SpatialLayersFromFieldTrial(
-    const webrtc::WebRtcKeyValueConfig& trials) {
-  size_t num_sl;
-  size_t num_tl;
-  if (GetVp9LayersFromFieldTrialGroup(&num_sl, &num_tl, trials)) {
-    return num_sl;
-  }
-  return absl::nullopt;
-}
-
-absl::optional<size_t> GetVp9TemporalLayersFromFieldTrial(
-    const webrtc::WebRtcKeyValueConfig& trials) {
-  size_t num_sl;
-  size_t num_tl;
-  if (GetVp9LayersFromFieldTrialGroup(&num_sl, &num_tl, trials)) {
-    return num_tl;
-  }
-  return absl::nullopt;
-}
-
 // Returns its smallest positive argument. If neither argument is positive,
 // returns an arbitrary nonpositive value.
 int MinPositive(int a, int b) {
@@ -541,22 +498,14 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
   if (absl::EqualsIgnoreCase(codec.name, kVp9CodecName)) {
     webrtc::VideoCodecVP9 vp9_settings =
         webrtc::VideoEncoder::GetDefaultVp9Settings();
-    const size_t default_num_spatial_layers =
-        parameters_.config.rtp.ssrcs.size();
-    const size_t num_spatial_layers =
-        GetVp9SpatialLayersFromFieldTrial(call_->trials())
-            .value_or(default_num_spatial_layers);
-
-    const size_t default_num_temporal_layers =
-        num_spatial_layers > 1 ? kConferenceDefaultNumTemporalLayers : 1;
-    const size_t num_temporal_layers =
-        GetVp9TemporalLayersFromFieldTrial(call_->trials())
-            .value_or(default_num_temporal_layers);
 
     vp9_settings.numberOfSpatialLayers = std::min<unsigned char>(
-        num_spatial_layers, kConferenceMaxNumSpatialLayers);
-    vp9_settings.numberOfTemporalLayers = std::min<unsigned char>(
-        num_temporal_layers, kConferenceMaxNumTemporalLayers);
+        parameters_.config.rtp.ssrcs.size(), kConferenceMaxNumSpatialLayers);
+    vp9_settings.numberOfTemporalLayers =
+        std::min<unsigned char>(parameters_.config.rtp.ssrcs.size() > 1
+                                    ? kConferenceDefaultNumTemporalLayers
+                                    : 1,
+                                kConferenceMaxNumTemporalLayers);
 
     // VP9 denoising is disabled by default.
     vp9_settings.denoisingOn = codec_default_denoising ? true : denoising;
