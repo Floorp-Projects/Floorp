@@ -216,7 +216,8 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   MOZ_RELEASE_ASSERT(!rval.isMagic());
 
   rfe->kind = ExceptionResumeKind::ForcedReturnIon;
-  rfe->framePointer = frame.frame().fp();
+  rfe->framePointer = frame.frame().jsFrame()->callerFramePtr();
+  rfe->stackPointer = frame.frame().fp();
   rfe->exception = rval;
 
   act->removeIonFrameRecovery(frame.frame().jsFrame());
