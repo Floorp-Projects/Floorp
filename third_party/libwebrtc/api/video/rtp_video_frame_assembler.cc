@@ -92,16 +92,16 @@ RtpVideoFrameAssembler::Impl::Impl(
 
 RtpVideoFrameAssembler::FrameVector RtpVideoFrameAssembler::Impl::InsertPacket(
     const RtpPacketReceived& rtp_packet) {
+  if (rtp_packet.payload_size() == 0) {
+    ClearOldData(rtp_packet.SequenceNumber());
+    return UpdateWithPadding(rtp_packet.SequenceNumber());
+  }
+
   absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> parsed_payload =
       depacketizer_->Parse(rtp_packet.PayloadBuffer());
 
   if (parsed_payload == absl::nullopt) {
     return {};
-  }
-
-  if (parsed_payload->video_payload.size() == 0) {
-    ClearOldData(rtp_packet.SequenceNumber());
-    return UpdateWithPadding(rtp_packet.SequenceNumber());
   }
 
   if (rtp_packet.HasExtension<RtpDependencyDescriptorExtension>()) {
