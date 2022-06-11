@@ -25,9 +25,9 @@ AudioProcessingBuilderForTesting::~AudioProcessingBuilderForTesting() = default;
 
 rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilderForTesting::Create() {
   return rtc::make_ref_counted<AudioProcessingImpl>(
-      std::move(capture_post_processing_), std::move(render_pre_processing_),
-      std::move(echo_control_factory_), std::move(echo_detector_),
-      std::move(capture_analyzer_));
+      config_, std::move(capture_post_processing_),
+      std::move(render_pre_processing_), std::move(echo_control_factory_),
+      std::move(echo_detector_), std::move(capture_analyzer_));
 }
 
 #else
@@ -35,7 +35,7 @@ rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilderForTesting::Create() {
 rtc::scoped_refptr<AudioProcessing> AudioProcessingBuilderForTesting::Create() {
   AudioProcessingBuilder builder;
   TransferOwnershipsToBuilder(&builder);
-  return builder.Create();
+  return builder.SetConfig(config_).Create();
 }
 
 #endif
@@ -44,9 +44,9 @@ void AudioProcessingBuilderForTesting::TransferOwnershipsToBuilder(
     AudioProcessingBuilder* builder) {
   builder->SetCapturePostProcessing(std::move(capture_post_processing_));
   builder->SetRenderPreProcessing(std::move(render_pre_processing_));
-  builder->SetCaptureAnalyzer(std::move(capture_analyzer_));
   builder->SetEchoControlFactory(std::move(echo_control_factory_));
   builder->SetEchoDetector(std::move(echo_detector_));
+  builder->SetCaptureAnalyzer(std::move(capture_analyzer_));
 }
 
 }  // namespace webrtc
