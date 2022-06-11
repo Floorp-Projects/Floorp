@@ -89,7 +89,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       bitrate_configurator_(bitrate_config),
       pacer_started_(false),
       process_thread_(std::move(process_thread)),
-      use_task_queue_pacer_(IsEnabled(trials, "WebRTC-TaskQueuePacer")),
+      use_task_queue_pacer_(!IsDisabled(trials, "WebRTC-TaskQueuePacer")),
       process_thread_pacer_(use_task_queue_pacer_
                                 ? nullptr
                                 : new PacedSender(clock,
