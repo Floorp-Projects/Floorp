@@ -103,7 +103,7 @@ class LockRunner : public rtc::MessageHandlerAutoCleanup {
     locker_.Lock();
     shared_value = shared_value_;
     locker_.Unlock();
-    return shared_value_;
+    return shared_value;
   }
 
   void OnMessage(Message* msg) override {
