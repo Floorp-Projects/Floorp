@@ -153,7 +153,6 @@ class LibvpxVp9Encoder : public VP9Encoder {
   VideoBitrateAllocation current_bitrate_allocation_;
   bool ss_info_needed_;
   bool force_all_active_layers_;
-  const bool use_svc_controller_;
   uint8_t num_cores_;
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
