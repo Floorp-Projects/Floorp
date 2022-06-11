@@ -38,9 +38,6 @@ class RemoteBitrateObserver {
   virtual ~RemoteBitrateObserver() {}
 };
 
-// TODO(holmer): Remove when all implementations have been updated.
-struct ReceiveBandwidthEstimatorStats {};
-
 class RemoteBitrateEstimator : public CallStatsObserver, public Module {
  public:
   ~RemoteBitrateEstimator() override {}
@@ -63,20 +60,12 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
   virtual bool LatestEstimate(std::vector<uint32_t>* ssrcs,
                               uint32_t* bitrate_bps) const = 0;
 
-  // TODO(holmer): Remove when all implementations have been updated.
-  virtual bool GetStats(ReceiveBandwidthEstimatorStats* output) const;
-
   virtual void SetMinBitrate(int min_bitrate_bps) = 0;
 
  protected:
   static const int64_t kProcessIntervalMs = 500;
   static const int64_t kStreamTimeOutMs = 2000;
 };
-
-inline bool RemoteBitrateEstimator::GetStats(
-    ReceiveBandwidthEstimatorStats* output) const {
-  return false;
-}
 
 }  // namespace webrtc
 
