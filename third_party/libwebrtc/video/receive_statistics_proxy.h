@@ -42,10 +42,6 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                public RtcpPacketTypeCounterObserver,
                                public CallStatsObserver {
  public:
-  // TODO(tommi): Remove when downstream callers have been fixed.
-  // DEPRECATED ctor.
-  ReceiveStatisticsProxy(const VideoReceiveStream::Config* config, Clock* clock)
-      : ReceiveStatisticsProxy(config->rtp.remote_ssrc, clock) {}
   ReceiveStatisticsProxy(uint32_t remote_ssrc, Clock* clock);
   ~ReceiveStatisticsProxy() = default;
 
