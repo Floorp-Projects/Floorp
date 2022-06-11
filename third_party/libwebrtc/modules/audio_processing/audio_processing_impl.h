@@ -267,7 +267,7 @@ class AudioProcessingImpl : public AudioProcessing {
   void InitializeEchoController()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_render_, mutex_capture_);
 
-  // Initializations of capture-only submodules, requiring the capture lock
+  // Initializations of capture-only sub-modules, requiring the capture lock
   // already acquired.
   void InitializeHighPassFilter(bool forced_reset)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
@@ -275,7 +275,10 @@ class AudioProcessingImpl : public AudioProcessing {
   void InitializeGainController1() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeTransientSuppressor()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  void InitializeGainController2() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+  // Initializes the `GainController2` sub-module. If the sub-module is enabled
+  // and `config_has_changed` is true, recreates the sub-module.
+  void InitializeGainController2(bool config_has_changed)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeNoiseSuppressor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeCaptureLevelsAdjuster()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
