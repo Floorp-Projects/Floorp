@@ -67,8 +67,36 @@ rtc_library("retransmission_timeout") {
   ]
 }
 
+rtc_library("outstanding_data") {
+  deps = [
+    ":retransmission_timeout",
+    ":send_queue",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+    "../common:math",
+    "../common:sequence_numbers",
+    "../common:str_join",
+    "../packet:chunk",
+    "../packet:data",
+    "../public:socket",
+    "../public:types",
+    "../timer",
+  ]
+  sources = [
+    "outstanding_data.cc",
+    "outstanding_data.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("retransmission_queue") {
   deps = [
+    ":outstanding_data",
     ":retransmission_timeout",
     ":send_queue",
     "../../../api:array_view",
@@ -111,6 +139,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":mock_send_queue",
+      ":outstanding_data",
       ":retransmission_error_counter",
       ":retransmission_queue",
       ":retransmission_timeout",
@@ -123,6 +152,7 @@ if (rtc_include_tests) {
       "../../../test:test_support",
       "../common:handover_testing",
       "../common:math",
+      "../common:sequence_numbers",
       "../packet:chunk",
       "../packet:data",
       "../public:socket",
@@ -133,6 +163,7 @@ if (rtc_include_tests) {
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     sources = [
+      "outstanding_data_test.cc",
       "retransmission_error_counter_test.cc",
       "retransmission_queue_test.cc",
       "retransmission_timeout_test.cc",
