@@ -42,6 +42,8 @@
 #[cfg(windows)] extern crate winapi;
 #[cfg(feature = "rustc-serialize")] extern crate rustc_serialize;
 
+#[cfg(target_os = "wasi")] extern crate wasi;
+
 #[cfg(test)] #[macro_use] extern crate log;
 
 use std::cmp::Ordering;

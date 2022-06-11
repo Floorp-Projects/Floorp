@@ -1442,7 +1442,7 @@ version = "0.1.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.time]]
-version = "0.1.43"
+version = "0.1.44"
 criteria = "safe-to-deploy"
 
 [[unaudited.time]]
@@ -1618,7 +1618,7 @@ version = "0.3.2"
 criteria = "safe-to-run"
 
 [[unaudited.wasi]]
-version = "0.10.2+wasi-snapshot-preview1"
+version = "0.10.0+wasi-snapshot-preview1"
 criteria = "safe-to-deploy"
 
 [[unaudited.wasm-encoder]]

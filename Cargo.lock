@@ -690,7 +690,7 @@ dependencies = [
  "storage_variant",
  "tempfile",
  "thin-vec",
- "time 0.1.43",
+ "time 0.1.44",
  "wr_malloc_size_of",
  "xpcom",
 ]
@@ -751,7 +751,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "serde",
- "time 0.1.43",
+ "time 0.1.44",
  "winapi",
 ]
 
@@ -2269,7 +2269,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time 0.1.43",
+ "time 0.1.44",
  "uuid",
  "whatsys",
 ]
@@ -2294,7 +2294,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "time 0.1.43",
+ "time 0.1.44",
  "uniffi",
  "uniffi_build",
  "uniffi_macros",
@@ -5045,7 +5045,7 @@ dependencies = [
  "static_prefs",
  "style_derive",
  "style_traits",
- "time 0.1.43",
+ "time 0.1.44",
  "to_shmem",
  "to_shmem_derive",
  "toml 0.4.999",
@@ -5246,11 +5246,12 @@ checksum = "ef6645e1b5481da27f21f74e1b360b83215f5765420881e3d2eefdcd3d1a6de3"
 
 [[package]]
 name = "time"
-version = "0.1.43"
+version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
+checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
 dependencies = [
  "libc",
+ "wasi",
  "winapi",
 ]
 
@@ -5832,9 +5833,9 @@ dependencies = [
 
 [[package]]
 name = "wasi"
-version = "0.10.2+wasi-snapshot-preview1"
+version = "0.10.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd6fbd9a79829dd1ad0cc20627bf1ed606756a7f77edff7b66b7064f9cb327c6"
+checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasm-bindgen"
@@ -5979,7 +5980,7 @@ dependencies = [
  "smallvec",
  "svg_fmt",
  "swgl",
- "time 0.1.43",
+ "time 0.1.44",
  "topological-sort",
  "tracy-rs",
  "webrender_api",
@@ -6001,7 +6002,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_derive",
- "time 0.1.43",
+ "time 0.1.44",
  "wr_malloc_size_of",
 ]
 
