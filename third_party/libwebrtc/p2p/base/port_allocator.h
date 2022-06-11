@@ -581,17 +581,6 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
     return turn_port_prune_policy_;
   }
 
-  // Gets/Sets the Origin value used for WebRTC STUN requests.
-  const std::string& origin() const {
-    CheckRunOnValidThreadIfInitialized();
-    return origin_;
-  }
-
-  void set_origin(const std::string& origin) {
-    CheckRunOnValidThreadIfInitialized();
-    origin_ = origin;
-  }
-
   webrtc::TurnCustomizer* turn_customizer() {
     CheckRunOnValidThreadIfInitialized();
     return turn_customizer_;

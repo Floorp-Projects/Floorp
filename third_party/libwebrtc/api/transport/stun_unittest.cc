@@ -199,20 +199,6 @@ static const unsigned char kStunMessageWithErrorAttribute[] = {
   0x69, 0x7a, 0x65, 0x64
 };
 
-static const unsigned char kStunMessageWithOriginAttribute[] = {
-  0x00, 0x01, 0x00, 0x18,  // message header (binding request), length 24
-  0x21, 0x12, 0xA4, 0x42,  // magic cookie
-  0x29, 0x1f, 0xcd, 0x7c,  // transaction id
-  0xba, 0x58, 0xab, 0xd7,
-  0xf2, 0x41, 0x01, 0x00,
-  0x80, 0x2f, 0x00, 0x12,  // origin attribute (length 18)
-  0x68, 0x74, 0x74, 0x70,  // http://example.com
-  0x3A, 0x2F, 0x2F, 0x65,
-  0x78, 0x61, 0x6d, 0x70,
-  0x6c, 0x65, 0x2e, 0x63,
-  0x6f, 0x6d, 0x00, 0x00,
-};
-
 // Sample messages with an invalid length Field
 
 // The actual length in bytes of the invalid messages (including STUN header)
@@ -551,7 +537,6 @@ const in_addr kIPv4TestAddress1 = {{{0x0ac, 0x017, 0x044, 0x0e6}}};
 const char kTestUserName1[] = "abcdefgh";
 const char kTestUserName2[] = "abc";
 const char kTestErrorReason[] = "Unauthorized";
-const char kTestOrigin[] = "http://example.com";
 const int kTestErrorClass = 4;
 const int kTestErrorNumber = 1;
 const int kTestErrorCode = 401;
@@ -1097,15 +1082,6 @@ TEST_F(StunTest, ReadMessageWithAnUnknownAttribute) {
   EXPECT_EQ(kTestUserName2, username->GetString());
 }
 
-TEST_F(StunTest, ReadMessageWithOriginAttribute) {
-  StunMessage msg;
-  size_t size = ReadStunMessage(&msg, kStunMessageWithOriginAttribute);
-  CheckStunHeader(msg, STUN_BINDING_REQUEST, size);
-  const StunByteStringAttribute* origin = msg.GetByteString(STUN_ATTR_ORIGIN);
-  ASSERT_TRUE(origin != NULL);
-  EXPECT_EQ(kTestOrigin, origin->GetString());
-}
-
 TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
   StunMessage msg;
   size_t size = sizeof(kStunMessageWithErrorAttribute);
@@ -1150,25 +1126,6 @@ TEST_F(StunTest, WriteMessageWithAUInt16ListAttribute) {
   // Check everything up to the padding.
   ASSERT_EQ(0,
             memcmp(out.Data(), kStunMessageWithUInt16ListAttribute, size - 2));
-}
-
-TEST_F(StunTest, WriteMessageWithOriginAttribute) {
-  StunMessage msg;
-  size_t size = sizeof(kStunMessageWithOriginAttribute);
-
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID(
-      std::string(reinterpret_cast<const char*>(kTestTransactionId1),
-                  kStunTransactionIdLength));
-  auto origin =
-      std::make_unique<StunByteStringAttribute>(STUN_ATTR_ORIGIN, kTestOrigin);
-  msg.AddAttribute(std::move(origin));
-
-  rtc::ByteBufferWriter out;
-  EXPECT_TRUE(msg.Write(&out));
-  ASSERT_EQ(size, out.Length());
-  // Check everything up to the padding
-  ASSERT_EQ(0, memcmp(out.Data(), kStunMessageWithOriginAttribute, size - 2));
 }
 
 // Test that we fail to read messages with invalid lengths.
