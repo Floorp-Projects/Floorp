@@ -156,8 +156,6 @@ class MediaSessionDescriptionFactory {
                         const VideoCodecs& recv_codecs);
   RtpHeaderExtensions filtered_rtp_header_extensions(
       RtpHeaderExtensions extensions) const;
-  SecurePolicy secure() const { return secure_; }
-  void set_secure(SecurePolicy s) { secure_ = s; }
 
   void set_enable_encrypted_rtp_header_extensions(bool enable) {
     enable_encrypted_rtp_header_extensions_ = enable;
@@ -274,6 +272,7 @@ class MediaSessionDescriptionFactory {
       const ContentInfo* current_content,
       const SessionDescription* current_description,
       const TransportInfo* bundle_transport,
+      bool require_transport_attributes,
       const AudioCodecs& audio_codecs,
       const RtpHeaderExtensions& default_audio_rtp_header_extensions,
       StreamParamsVec* current_streams,
@@ -288,6 +287,7 @@ class MediaSessionDescriptionFactory {
       const ContentInfo* current_content,
       const SessionDescription* current_description,
       const TransportInfo* bundle_transport,
+      bool require_transport_attributes,
       const VideoCodecs& video_codecs,
       const RtpHeaderExtensions& default_video_rtp_header_extensions,
       StreamParamsVec* current_streams,
@@ -302,6 +302,7 @@ class MediaSessionDescriptionFactory {
       const ContentInfo* current_content,
       const SessionDescription* current_description,
       const TransportInfo* bundle_transport,
+      bool require_transport_attributes,
       StreamParamsVec* current_streams,
       SessionDescription* answer,
       IceCredentialsIterator* ice_credentials) const;
@@ -314,6 +315,7 @@ class MediaSessionDescriptionFactory {
       const ContentInfo* current_content,
       const SessionDescription* current_description,
       const TransportInfo* bundle_transport,
+      bool require_transport_attributes,
       SessionDescription* answer,
       IceCredentialsIterator* ice_credentials) const;
 
@@ -337,9 +339,6 @@ class MediaSessionDescriptionFactory {
   // This object is not owned by the channel so it must outlive it.
   rtc::UniqueRandomIdGenerator* const ssrc_generator_;
   bool enable_encrypted_rtp_header_extensions_ = false;
-  // TODO(zhihuang): Rename secure_ to sdec_policy_; rename the related getter
-  // and setter.
-  SecurePolicy secure_ = SEC_DISABLED;
   const TransportDescriptionFactory* transport_desc_factory_;
 };
 
@@ -382,26 +381,6 @@ VideoContentDescription* GetFirstVideoContentDescription(
     SessionDescription* sdesc);
 SctpDataContentDescription* GetFirstSctpDataContentDescription(
     SessionDescription* sdesc);
-
-// Helper functions to return crypto suites used for SDES.
-void GetSupportedAudioSdesCryptoSuites(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<int>* crypto_suites);
-void GetSupportedVideoSdesCryptoSuites(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<int>* crypto_suites);
-void GetSupportedDataSdesCryptoSuites(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<int>* crypto_suites);
-void GetSupportedAudioSdesCryptoSuiteNames(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* crypto_suite_names);
-void GetSupportedVideoSdesCryptoSuiteNames(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* crypto_suite_names);
-void GetSupportedDataSdesCryptoSuiteNames(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* crypto_suite_names);
 
 }  // namespace cricket
 

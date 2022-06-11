@@ -104,9 +104,6 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
   void CreateAnswer(CreateSessionDescriptionObserver* observer,
                     const cricket::MediaSessionOptions& session_options);
 
-  void SetSdesPolicy(cricket::SecurePolicy secure_policy);
-  cricket::SecurePolicy SdesPolicy() const;
-
   void set_enable_encrypted_rtp_header_extensions(bool enable) {
     session_desc_factory_.set_enable_encrypted_rtp_header_extensions(enable);
   }

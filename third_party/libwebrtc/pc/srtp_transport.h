@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/crypto_params.h"
 #include "api/rtc_error.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "pc/rtp_transport.h"
@@ -39,10 +38,6 @@ class SrtpTransport : public RtpTransport {
   explicit SrtpTransport(bool rtcp_mux_enabled);
 
   virtual ~SrtpTransport() = default;
-
-  // SrtpTransportInterface specific implementation.
-  virtual RTCError SetSrtpSendKey(const cricket::CryptoParams& params);
-  virtual RTCError SetSrtpReceiveKey(const cricket::CryptoParams& params);
 
   bool SendRtpPacket(rtc::CopyOnWriteBuffer* packet,
                      const rtc::PacketOptions& options,
@@ -153,8 +148,6 @@ class SrtpTransport : public RtpTransport {
   std::unique_ptr<cricket::SrtpSession> send_rtcp_session_;
   std::unique_ptr<cricket::SrtpSession> recv_rtcp_session_;
 
-  absl::optional<cricket::CryptoParams> send_params_;
-  absl::optional<cricket::CryptoParams> recv_params_;
   absl::optional<int> send_cipher_suite_;
   absl::optional<int> recv_cipher_suite_;
   rtc::ZeroOnFreeBuffer<uint8_t> send_key_;

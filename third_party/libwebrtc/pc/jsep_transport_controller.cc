@@ -918,8 +918,8 @@ JsepTransportController::CreateJsepTransportDescription(
                               : content_desc->rtcp_mux();
 
   return cricket::JsepTransportDescription(
-      rtcp_mux_enabled, content_desc->cryptos(), encrypted_extension_ids,
-      rtp_abs_sendtime_extn_id, transport_info.description);
+      rtcp_mux_enabled, encrypted_extension_ids, rtp_abs_sendtime_extn_id,
+      transport_info.description);
 }
 
 std::vector<int> JsepTransportController::GetEncryptedHeaderExtensionIds(
@@ -1017,12 +1017,6 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   if (transport) {
     return RTCError::OK();
   }
-  const cricket::MediaContentDescription* content_desc =
-      content_info.media_description();
-  if (certificate_ && !content_desc->cryptos().empty()) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "SDES and DTLS-SRTP cannot be enabled at the same time.");
-  }
 
   rtc::scoped_refptr<webrtc::IceTransportInterface> ice =
       CreateIceTransport(content_info.name, /*rtcp=*/false);
@@ -1050,10 +1044,6 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
         << "Creating UnencryptedRtpTransport, becayse encryption is disabled.";
     unencrypted_rtp_transport = CreateUnencryptedRtpTransport(
         content_info.name, rtp_dtls_transport.get(), rtcp_dtls_transport.get());
-  } else if (!content_desc->cryptos().empty()) {
-    sdes_transport = CreateSdesTransport(
-        content_info.name, rtp_dtls_transport.get(), rtcp_dtls_transport.get());
-    RTC_LOG(LS_INFO) << "Creating SdesTransport.";
   } else {
     RTC_LOG(LS_INFO) << "Creating DtlsSrtpTransport.";
     dtls_srtp_transport = CreateDtlsSrtpTransport(

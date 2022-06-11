@@ -40,19 +40,19 @@ class TransportDescriptionFactory {
   TransportDescriptionFactory();
   ~TransportDescriptionFactory();
 
-  SecurePolicy secure() const { return secure_; }
   // The certificate to use when setting up DTLS.
   const rtc::scoped_refptr<rtc::RTCCertificate>& certificate() const {
     return certificate_;
   }
 
-  // Specifies the transport security policy to use.
-  void set_secure(SecurePolicy s) { secure_ = s; }
-  // Specifies the certificate to use (only used when secure != SEC_DISABLED).
+  // Specifies the certificate to use.
+  // When a certificate is set, transport will be encrypted.
   void set_certificate(
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
     certificate_ = certificate;
   }
+
+  bool IsEncrypted() const { return certificate_ != nullptr; }
 
   // Creates a transport description suitable for use in an offer.
   std::unique_ptr<TransportDescription> CreateOffer(
@@ -77,7 +77,6 @@ class TransportDescriptionFactory {
   bool SetSecurityInfo(TransportDescription* description,
                        ConnectionRole role) const;
 
-  SecurePolicy secure_;
   rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
 };
 

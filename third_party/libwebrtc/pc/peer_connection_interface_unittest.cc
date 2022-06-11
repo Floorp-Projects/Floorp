@@ -2077,10 +2077,13 @@ TEST_P(PeerConnectionInterfaceTest, ReceiveFireFoxOffer) {
 #endif
 }
 
-// Test that fallback from DTLS to SDES is not supported.
-// The fallback was previously supported but was removed to simplify the code
-// and because it's non-standard.
-TEST_P(PeerConnectionInterfaceTest, DtlsSdesFallbackNotSupported) {
+// Test that SDP containing both a=fingerprint and a=crypto is handled
+// by ignoring the a=crypto part.
+// Prior to 2017, such an SDP would be accepted with SDES crypto, but
+// the fallback was removed.
+// Prior to 2021, such an SDP would be rejected because of the mixture.
+// Post 2021, a=crypto lines are totally ignored by the SDP parser.
+TEST_P(PeerConnectionInterfaceTest, SdesIgnored) {
   RTCConfiguration rtc_config;
   CreatePeerConnection(rtc_config);
   // Wait for fake certificate to be generated. Previously, this is what caused
@@ -2093,7 +2096,7 @@ TEST_P(PeerConnectionInterfaceTest, DtlsSdesFallbackNotSupported) {
   std::unique_ptr<SessionDescriptionInterface> desc(
       webrtc::CreateSessionDescription(SdpType::kOffer, kDtlsSdesFallbackSdp,
                                        nullptr));
-  EXPECT_FALSE(DoSetSessionDescription(std::move(desc), /*local=*/false));
+  EXPECT_TRUE(DoSetSessionDescription(std::move(desc), /*local=*/false));
 }
 
 // Test that we can create an audio only offer and receive an answer with a
