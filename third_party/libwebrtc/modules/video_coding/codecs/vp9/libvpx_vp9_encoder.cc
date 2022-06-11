@@ -227,9 +227,6 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
       first_frame_in_picture_(true),
       ss_info_needed_(false),
       force_all_active_layers_(false),
-      use_svc_controller_(
-          !absl::StartsWith(trials.Lookup("WebRTC-Vp9DependencyDescriptor"),
-                            "Disabled")),
       num_cores_(0),
       is_flexible_mode_(false),
       variable_framerate_experiment_(ParseVariableFramerateConfig(trials)),
@@ -553,9 +550,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
     num_temporal_layers_ = 1;
   }
 
-  if (use_svc_controller_) {
-    svc_controller_ = CreateVp9ScalabilityStructure(*inst);
-  }
+  svc_controller_ = CreateVp9ScalabilityStructure(*inst);
   framerate_controller_ = std::vector<FramerateControllerDeprecated>(
       num_spatial_layers_, FramerateControllerDeprecated(codec_.maxFramerate));
 

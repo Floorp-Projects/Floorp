@@ -131,10 +131,7 @@ RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
     : ssrc_(ssrc),
       generic_picture_id_experiment_(
           absl::StartsWith(trials.Lookup("WebRTC-GenericPictureId"),
-                           "Enabled")),
-      simulate_generic_vp9_(
-          !absl::StartsWith(trials.Lookup("WebRTC-Vp9DependencyDescriptor"),
-                            "Disabled")) {
+                           "Enabled")) {
   for (auto& spatial_layer : last_shared_frame_id_)
     spatial_layer.fill(-1);
 
@@ -281,7 +278,7 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
       }
       return;
     case VideoCodecType::kVideoCodecVP9:
-      if (simulate_generic_vp9_ && codec_specific_info != nullptr) {
+      if (codec_specific_info != nullptr) {
         Vp9ToGeneric(codec_specific_info->codecSpecific.VP9, frame_id,
                      *rtp_video_header);
       }

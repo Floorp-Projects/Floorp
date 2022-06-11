@@ -367,9 +367,6 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      simulate_vp9_structure_(!absl::StartsWith(
-          field_trials_.Lookup("WebRTC-Vp9DependencyDescriptor"),
-          "Disabled")),
       simulate_generic_structure_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-GenericCodecDependencyDescriptor"),
           "Enabled")),
@@ -576,7 +573,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
     if (codec_specific_info && codec_specific_info->template_structure) {
       sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
-    } else if (simulate_vp9_structure_ && codec_specific_info &&
+    } else if (codec_specific_info &&
                codec_specific_info->codecType == kVideoCodecVP9) {
       const CodecSpecificInfoVP9& vp9 = codec_specific_info->codecSpecific.VP9;
 

@@ -176,7 +176,6 @@ class FieldTrials : public WebRtcKeyValueConfig {
   ~FieldTrials() override = default;
   std::string Lookup(absl::string_view key) const override {
     static constexpr absl::string_view kBinaryFieldTrials[] = {
-        "WebRTC-Vp9DependencyDescriptor",
         "WebRTC-Vp9ExternalRefCtrl",
         "WebRTC-Vp9IssueKeyFrameOnLayerDeactivation",
     };
