@@ -86,12 +86,21 @@ TEST(LibaomAv1EncoderTest, NoBitrateOnTopLayerRefecltedInActiveDecodeTargets) {
 }
 
 TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
+  VideoBitrateAllocation allocation;
+  allocation.SetBitrate(0, 0, 30000);
+  allocation.SetBitrate(1, 0, 40000);
+  allocation.SetBitrate(2, 0, 30000);
+
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
   // Configure encoder with 3 spatial layers.
   codec_settings.SetScalabilityMode("L3T1");
+  codec_settings.maxBitrate = allocation.get_sum_kbps();
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
+
+  encoder->SetRates(VideoEncoder::RateControlParameters(
+      allocation, codec_settings.maxFramerate));
 
   std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
       EncodedVideoFrameProducer(*encoder).SetNumInputFrames(2).Encode();
@@ -105,6 +114,10 @@ TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
 }
 
 TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
+  VideoBitrateAllocation allocation;
+  allocation.SetBitrate(0, 0, 30000);
+  allocation.SetBitrate(1, 0, 40000);
+  allocation.SetBitrate(2, 0, 30000);
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
   // Configure encoder with 3 spatial layers.
@@ -112,8 +125,11 @@ TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
   // Odd width and height values should not make encoder crash.
   codec_settings.width = 623;
   codec_settings.height = 405;
+  codec_settings.maxBitrate = allocation.get_sum_kbps();
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
+  encoder->SetRates(VideoEncoder::RateControlParameters(
+      allocation, codec_settings.maxFramerate));
   EncodedVideoFrameProducer evfp(*encoder);
   evfp.SetResolution(RenderResolution{623, 405});
   std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
@@ -137,14 +153,20 @@ TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {
 }
 
 TEST(LibaomAv1EncoderTest, PopulatesEncodedFrameSize) {
+  VideoBitrateAllocation allocation;
+  allocation.SetBitrate(0, 0, 30000);
+  allocation.SetBitrate(1, 0, 40000);
+  allocation.SetBitrate(2, 0, 30000);
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.maxBitrate = allocation.get_sum_kbps();
   ASSERT_GT(codec_settings.width, 4);
   // Configure encoder with 3 spatial layers.
   codec_settings.SetScalabilityMode("L3T1");
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
-
+  encoder->SetRates(VideoEncoder::RateControlParameters(
+      allocation, codec_settings.maxFramerate));
   using Frame = EncodedVideoFrameProducer::EncodedFrame;
   std::vector<Frame> encoded_frames =
       EncodedVideoFrameProducer(*encoder).SetNumInputFrames(1).Encode();
