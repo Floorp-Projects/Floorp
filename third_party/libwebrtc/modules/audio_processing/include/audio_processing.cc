@@ -60,8 +60,6 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
          target_level_dbfs == rhs.target_level_dbfs &&
          compression_gain_db == rhs.compression_gain_db &&
          enable_limiter == rhs.enable_limiter &&
-         analog_level_minimum == rhs.analog_level_minimum &&
-         analog_level_maximum == rhs.analog_level_maximum &&
          analog_lhs.enabled == analog_rhs.enabled &&
          analog_lhs.startup_min_volume == analog_rhs.startup_min_volume &&
          analog_lhs.clipped_level_min == analog_rhs.clipped_level_min &&
@@ -153,8 +151,6 @@ std::string AudioProcessing::Config::ToString() const {
           << ", target_level_dbfs: " << gain_controller1.target_level_dbfs
           << ", compression_gain_db: " << gain_controller1.compression_gain_db
           << ", enable_limiter: " << gain_controller1.enable_limiter
-          << ", analog_level_minimum: " << gain_controller1.analog_level_minimum
-          << ", analog_level_maximum: " << gain_controller1.analog_level_maximum
           << ", analog_gain_controller { enabled: "
           << gain_controller1.analog_gain_controller.enabled
           << ", startup_min_volume: "

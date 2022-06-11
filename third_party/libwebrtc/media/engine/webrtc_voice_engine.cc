@@ -609,10 +609,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
     apm_config.gain_controller1.mode =
         apm_config.gain_controller1.kAdaptiveAnalog;
 #endif
-    constexpr int kMinVolumeLevel = 0;
-    constexpr int kMaxVolumeLevel = 255;
-    apm_config.gain_controller1.analog_level_minimum = kMinVolumeLevel;
-    apm_config.gain_controller1.analog_level_maximum = kMaxVolumeLevel;
   }
   if (options.tx_agc_target_dbov) {
     apm_config.gain_controller1.target_level_dbfs = *options.tx_agc_target_dbov;
