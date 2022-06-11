@@ -111,6 +111,7 @@ rtc_library("rtc_p2p") {
     "../rtc_base:socket_factory",
     "../rtc_base:socket_server",
     "../rtc_base:threading",
+    "../rtc_base/containers:flat_map",
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/system:no_unique_address",
 

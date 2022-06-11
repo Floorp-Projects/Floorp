@@ -332,14 +332,6 @@ SocketAddress AsyncTcpListenSocket::GetLocalAddress() const {
   return socket_->GetLocalAddress();
 }
 
-int AsyncTcpListenSocket::GetOption(Socket::Option opt, int* value) {
-  return socket_->GetOption(opt, value);
-}
-
-int AsyncTcpListenSocket::SetOption(Socket::Option opt, int value) {
-  return socket_->SetOption(opt, value);
-}
-
 void AsyncTcpListenSocket::OnReadEvent(Socket* socket) {
   RTC_DCHECK(socket_.get() == socket);
 

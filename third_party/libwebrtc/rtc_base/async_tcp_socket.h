@@ -109,9 +109,6 @@ class AsyncTcpListenSocket : public AsyncListenSocket {
   State GetState() const override;
   SocketAddress GetLocalAddress() const override;
 
-  int GetOption(Socket::Option opt, int* value) override;
-  int SetOption(Socket::Option opt, int value) override;
-
   virtual void HandleIncomingConnection(rtc::Socket* socket);
 
  private:

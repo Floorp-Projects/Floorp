@@ -1499,12 +1499,51 @@ TEST_F(PortTest, TestIceRoleConflict) {
 }
 
 TEST_F(PortTest, TestTcpNoDelay) {
+  rtc::ScopedFakeClock clock;
   auto port1 = CreateTcpPort(kLocalAddr1);
   port1->SetIceRole(cricket::ICEROLE_CONTROLLING);
   int option_value = -1;
   int success = port1->GetOption(rtc::Socket::OPT_NODELAY, &option_value);
   ASSERT_EQ(0, success);  // GetOption() should complete successfully w/ 0
-  ASSERT_EQ(1, option_value);
+  EXPECT_EQ(1, option_value);
+
+  auto port2 = CreateTcpPort(kLocalAddr2);
+  port2->SetIceRole(cricket::ICEROLE_CONTROLLED);
+
+  // Set up a connection, and verify that option is set on connected sockets at
+  // both ends.
+  TestChannel ch1(std::move(port1));
+  TestChannel ch2(std::move(port2));
+  // Acquire addresses.
+  ch1.Start();
+  ch2.Start();
+  ASSERT_EQ_SIMULATED_WAIT(1, ch1.complete_count(), kDefaultTimeout, clock);
+  ASSERT_EQ_SIMULATED_WAIT(1, ch2.complete_count(), kDefaultTimeout, clock);
+  // Connect and send a ping from src to dst.
+  ch1.CreateConnection(GetCandidate(ch2.port()));
+  ASSERT_TRUE(ch1.conn() != NULL);
+  EXPECT_TRUE_SIMULATED_WAIT(ch1.conn()->connected(), kDefaultTimeout,
+                             clock);  // for TCP connect
+  ch1.Ping();
+  SIMULATED_WAIT(!ch2.remote_address().IsNil(), kShortTimeout, clock);
+
+  // Accept the connection.
+  ch2.AcceptConnection(GetCandidate(ch1.port()));
+  ASSERT_TRUE(ch2.conn() != NULL);
+
+  option_value = -1;
+  success = static_cast<TCPConnection*>(ch1.conn())
+                ->socket()
+                ->GetOption(rtc::Socket::OPT_NODELAY, &option_value);
+  ASSERT_EQ(0, success);
+  EXPECT_EQ(1, option_value);
+
+  option_value = -1;
+  success = static_cast<TCPConnection*>(ch2.conn())
+                ->socket()
+                ->GetOption(rtc::Socket::OPT_NODELAY, &option_value);
+  ASSERT_EQ(0, success);
+  EXPECT_EQ(1, option_value);
 }
 
 TEST_F(PortTest, TestDelayedBindingUdp) {
