@@ -241,9 +241,6 @@ class RetransmissionQueue {
     explicit AckInfo(UnwrappedTSN cumulative_tsn_ack)
         : highest_tsn_acked(cumulative_tsn_ack) {}
 
-    // All TSNs that have been acked (for the first time) in this SACK.
-    std::vector<TSN> acked_tsns;
-
     // Bytes acked by increasing cumulative_tsn_ack and gap_ack_blocks.
     size_t bytes_acked = 0;
 

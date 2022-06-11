@@ -160,7 +160,6 @@ void RetransmissionQueue::AckChunk(
   if (!iter->second.is_acked()) {
     size_t serialized_size = GetSerializedChunkSize(iter->second.data());
     ack_info.bytes_acked += serialized_size;
-    ack_info.acked_tsns.push_back(iter->first.Wrap());
     if (iter->second.is_outstanding()) {
       outstanding_bytes_ -= serialized_size;
       --outstanding_items_;
@@ -410,12 +409,8 @@ bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
   // Update of outstanding_data_ is now done. Congestion control remains.
   UpdateReceiverWindow(sack.a_rwnd());
 
-  RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Received SACK. Acked TSN: "
-                       << StrJoin(ack_info.acked_tsns, ",",
-                                  [](rtc::StringBuilder& sb, TSN tsn) {
-                                    sb << *tsn;
-                                  })
-                       << ", cum_tsn_ack=" << *cumulative_tsn_ack.Wrap() << " ("
+  RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Received SACK. cum_tsn_ack="
+                       << *cumulative_tsn_ack.Wrap() << " ("
                        << *last_cumulative_tsn_ack_.Wrap()
                        << "), outstanding_bytes=" << outstanding_bytes_ << " ("
                        << old_outstanding_bytes << "), rwnd=" << rwnd_ << " ("
