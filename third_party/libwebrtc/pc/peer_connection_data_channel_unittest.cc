@@ -280,15 +280,6 @@ TEST_P(PeerConnectionDataChannelTest,
       answer->description()->GetTransportInfoByName(data_content->name));
 }
 
-TEST_P(PeerConnectionDataChannelTest,
-       CreateDataChannelWithDtlsDisabledSucceeds) {
-  RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(false);
-  auto caller = CreatePeerConnection();
-
-  EXPECT_TRUE(caller->pc()->CreateDataChannel("dc", nullptr));
-}
-
 TEST_P(PeerConnectionDataChannelTest, SctpPortPropagatedFromSdpToTransport) {
   constexpr int kNewSendPort = 9998;
   constexpr int kNewRecvPort = 7775;

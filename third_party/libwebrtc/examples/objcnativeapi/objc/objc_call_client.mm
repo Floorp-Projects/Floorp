@@ -141,8 +141,10 @@ void ObjCCallClient::CreatePeerConnection() {
   webrtc::MutexLock lock(&pc_mutex_);
   webrtc::PeerConnectionInterface::RTCConfiguration config;
   config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-  // DTLS SRTP has to be disabled for loopback to work.
-  config.enable_dtls_srtp = false;
+  // Encryption has to be disabled for loopback to work.
+  webrtc::PeerConnectionFactoryInterface::Options options;
+  options.disable_encryption = true;
+  pcf_->SetOptions(options);
   webrtc::PeerConnectionDependencies pc_dependencies(pc_observer_.get());
   pc_ = pcf_->CreatePeerConnectionOrError(config, std::move(pc_dependencies)).MoveValue();
   RTC_LOG(LS_INFO) << "PeerConnection created: " << pc_;

@@ -677,7 +677,6 @@ public class PeerConnectionEndToEndTest {
                        .createIceServer());
 
     PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(iceServers);
-    rtcConfig.enableDtlsSrtp = true;
 
     ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
     PeerConnection offeringPC = factory.createPeerConnection(rtcConfig, offeringExpectations);
@@ -944,7 +943,6 @@ public class PeerConnectionEndToEndTest {
                        .createIceServer());
 
     PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(iceServers);
-    rtcConfig.enableDtlsSrtp = true;
 
     ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
     PeerConnection offeringPC = factory.createPeerConnection(rtcConfig, offeringExpectations);
@@ -1172,7 +1170,6 @@ public class PeerConnectionEndToEndTest {
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer());
 
     PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(iceServers);
-    rtcConfig.enableDtlsSrtp = true;
 
     ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
     PeerConnection offeringPC = factory.createPeerConnection(rtcConfig, offeringExpectations);

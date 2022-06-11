@@ -117,7 +117,6 @@ const char MediaConstraints::kIceRestart[] = "IceRestart";
 const char MediaConstraints::kUseRtpMux[] = "googUseRtpMUX";
 
 // Below constraints should be used during PeerConnection construction.
-const char MediaConstraints::kEnableDtlsSrtp[] = "DtlsSrtpKeyAgreement";
 // Google-specific constraint keys.
 const char MediaConstraints::kEnableDscp[] = "googDscp";
 const char MediaConstraints::kEnableIPv6[] = "googIPv6";
@@ -176,8 +175,6 @@ void CopyConstraintsIntoRtcConfiguration(
   ConstraintToOptional<bool>(constraints,
                              MediaConstraints::kCombinedAudioVideoBwe,
                              &configuration->combined_audio_video_bwe);
-  ConstraintToOptional<bool>(constraints, MediaConstraints::kEnableDtlsSrtp,
-                             &configuration->enable_dtls_srtp);
 }
 
 void CopyConstraintsIntoAudioOptions(const MediaConstraints* constraints,

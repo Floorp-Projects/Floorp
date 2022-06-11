@@ -366,15 +366,6 @@ TEST_P(PeerConnectionEndToEndTest, Call) {
   WaitForCallEstablished();
 }
 
-TEST_P(PeerConnectionEndToEndTest, CallWithSdesKeyNegotiation) {
-  config_.enable_dtls_srtp = false;
-  CreatePcs(webrtc::CreateOpusAudioEncoderFactory(),
-            webrtc::CreateOpusAudioDecoderFactory());
-  GetAndAddUserMedia();
-  Negotiate();
-  WaitForCallEstablished();
-}
-
 TEST_P(PeerConnectionEndToEndTest, CallWithCustomCodec) {
   class IdLoggingAudioEncoderFactory : public webrtc::AudioEncoderFactory {
    public:
