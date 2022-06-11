@@ -32,22 +32,6 @@ static const int HIGH_COST_PORT_KEEPALIVE_LIFETIME = 2 * 60 * 1000;
 // Communicates using the address on the outside of a NAT.
 class UDPPort : public Port {
  public:
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  static std::unique_ptr<UDPPort> Create(
-      rtc::Thread* thread,
-      rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
-      rtc::AsyncPacketSocket* socket,
-      const std::string& username,
-      const std::string& password,
-      const std::string& /*unused, was origin*/,
-      bool emit_local_for_anyaddress,
-      absl::optional<int> stun_keepalive_interval) {
-    return Create(thread, factory, network, socket, username, password,
-                  emit_local_for_anyaddress, stun_keepalive_interval);
-  }
-
   static std::unique_ptr<UDPPort> Create(
       rtc::Thread* thread,
       rtc::PacketSocketFactory* factory,
@@ -66,23 +50,6 @@ class UDPPort : public Port {
       return nullptr;
     }
     return port;
-  }
-
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  static std::unique_ptr<UDPPort> Create(
-      rtc::Thread* thread,
-      rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
-      uint16_t min_port,
-      uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
-      const std::string& /*unused, was origin*/,
-      bool emit_local_for_anyaddress,
-      absl::optional<int> stun_keepalive_interval) {
-    return Create(thread, factory, network, min_port, max_port, username,
-                  password, emit_local_for_anyaddress, stun_keepalive_interval);
   }
 
   static std::unique_ptr<UDPPort> Create(

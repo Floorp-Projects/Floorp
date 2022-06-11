@@ -52,24 +52,6 @@ class TurnPort : public Port {
                          // packets.
   };
 
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  static std::unique_ptr<TurnPort> Create(
-      rtc::Thread* thread,
-      rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
-      rtc::AsyncPacketSocket* socket,
-      const std::string& username,  // ice username.
-      const std::string& password,  // ice password.
-      const ProtocolAddress& server_address,
-      const RelayCredentials& credentials,
-      int server_priority,
-      const std::string& /*unused, was origin*/,
-      webrtc::TurnCustomizer* customizer) {
-    return Create(thread, factory, network, socket, username, password,
-                  server_address, credentials, server_priority, customizer);
-  }
-
   // Create a TURN port using the shared UDP socket, `socket`.
   static std::unique_ptr<TurnPort> Create(
       rtc::Thread* thread,
@@ -114,30 +96,6 @@ class TurnPort : public Port {
       webrtc::TurnCustomizer* customizer) {
     return Create(thread, factory, network, socket, username, password,
                   server_address, credentials, server_priority, customizer);
-  }
-
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  static std::unique_ptr<TurnPort> Create(
-      rtc::Thread* thread,
-      rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
-      uint16_t min_port,
-      uint16_t max_port,
-      const std::string& username,  // ice username.
-      const std::string& password,  // ice password.
-      const ProtocolAddress& server_address,
-      const RelayCredentials& credentials,
-      int server_priority,
-      const std::string& /*unused, was origin*/,
-      const std::vector<std::string>& tls_alpn_protocols,
-      const std::vector<std::string>& tls_elliptic_curves,
-      webrtc::TurnCustomizer* customizer,
-      rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr) {
-    return Create(thread, factory, network, min_port, max_port, username,
-                  password, server_address, credentials, server_priority,
-                  tls_alpn_protocols, tls_elliptic_curves, customizer,
-                  tls_cert_verifier);
   }
 
   // Create a TURN port that will use a new socket, bound to `network` and
@@ -297,30 +255,6 @@ class TurnPort : public Port {
   void HandleConnectionDestroyed(Connection* conn) override;
 
  protected:
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  TurnPort(rtc::Thread* thread,
-           rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
-           rtc::AsyncPacketSocket* socket,
-           const std::string& username,
-           const std::string& password,
-           const ProtocolAddress& server_address,
-           const RelayCredentials& credentials,
-           int server_priority,
-           const std::string& /*unused, was origin*/,
-           webrtc::TurnCustomizer* customizer)
-      : TurnPort(thread,
-                 factory,
-                 network,
-                 socket,
-                 username,
-                 password,
-                 server_address,
-                 credentials,
-                 server_priority,
-                 customizer) {}
-
   TurnPort(rtc::Thread* thread,
            rtc::PacketSocketFactory* factory,
            rtc::Network* network,
@@ -331,38 +265,6 @@ class TurnPort : public Port {
            const RelayCredentials& credentials,
            int server_priority,
            webrtc::TurnCustomizer* customizer);
-
-  // TODO(bugs.webrtc.org/12132) remove once downstream tests are fixed.
-  ABSL_DEPRECATED("Use variant without origin attribute below")
-  TurnPort(rtc::Thread* thread,
-           rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
-           uint16_t min_port,
-           uint16_t max_port,
-           const std::string& username,
-           const std::string& password,
-           const ProtocolAddress& server_address,
-           const RelayCredentials& credentials,
-           int server_priority,
-           const std::string& /*unused, was origin*/,
-           const std::vector<std::string>& tls_alpn_protocols,
-           const std::vector<std::string>& tls_elliptic_curves,
-           webrtc::TurnCustomizer* customizer,
-           rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr)
-      : TurnPort(thread,
-                 factory,
-                 network,
-                 min_port,
-                 max_port,
-                 username,
-                 password,
-                 server_address,
-                 credentials,
-                 server_priority,
-                 tls_alpn_protocols,
-                 tls_elliptic_curves,
-                 customizer,
-                 tls_cert_verifier) {}
 
   TurnPort(rtc::Thread* thread,
            rtc::PacketSocketFactory* factory,
