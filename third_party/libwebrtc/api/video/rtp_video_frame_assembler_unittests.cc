@@ -162,13 +162,15 @@ TEST(RtpVideoFrameAssembler, Vp8Packetization) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(10));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kKeyframePayload));
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(10));
+  EXPECT_THAT(References(first_frame), IsEmpty());
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kKeyframePayload));
 
-  EXPECT_THAT(frames[1]->Id(), Eq(11));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(10));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kDeltaframePayload));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(11));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(10));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kDeltaframePayload));
 }
 
 TEST(RtpVideoFrameAssembler, Vp9Packetization) {
@@ -201,13 +203,15 @@ TEST(RtpVideoFrameAssembler, Vp9Packetization) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(10));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(10));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
-  EXPECT_THAT(frames[1]->Id(), Eq(11));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(10));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(11));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(10));
 }
 
 TEST(RtpVideoFrameAssembler, Av1Packetization) {
@@ -239,13 +243,15 @@ TEST(RtpVideoFrameAssembler, Av1Packetization) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(20));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kKeyframePayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(20));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kKeyframePayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
-  EXPECT_THAT(frames[1]->Id(), Eq(21));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kDeltaframePayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(20));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(21));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kDeltaframePayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(20));
 }
 
 TEST(RtpVideoFrameAssembler, RawPacketizationDependencyDescriptorExtension) {
@@ -290,13 +296,15 @@ TEST(RtpVideoFrameAssembler, RawPacketizationDependencyDescriptorExtension) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(10));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(10));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
-  EXPECT_THAT(frames[1]->Id(), Eq(20));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(10));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(20));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(10));
 }
 
 TEST(RtpVideoFrameAssembler, RawPacketizationGenericDescriptor00Extension) {
@@ -329,13 +337,15 @@ TEST(RtpVideoFrameAssembler, RawPacketizationGenericDescriptor00Extension) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(100));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(100));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
-  EXPECT_THAT(frames[1]->Id(), Eq(102));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(100));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(102));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(100));
 }
 
 TEST(RtpVideoFrameAssembler, RawPacketizationGenericPayloadDescriptor) {
@@ -363,13 +373,15 @@ TEST(RtpVideoFrameAssembler, RawPacketizationGenericPayloadDescriptor) {
 
   ASSERT_THAT(frames, SizeIs(2));
 
-  EXPECT_THAT(frames[0]->Id(), Eq(123));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(123));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
-  EXPECT_THAT(frames[1]->Id(), Eq(124));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(123));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(124));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(123));
 }
 
 TEST(RtpVideoFrameAssembler, Padding) {
@@ -396,16 +408,18 @@ TEST(RtpVideoFrameAssembler, Padding) {
                frames);
 
   ASSERT_THAT(frames, SizeIs(1));
-  EXPECT_THAT(frames[0]->Id(), Eq(123));
-  EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[0]), IsEmpty());
+  auto first_frame = frames[0].ExtractFrame();
+  EXPECT_THAT(first_frame->Id(), Eq(123));
+  EXPECT_THAT(Payload(first_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(first_frame), IsEmpty());
 
   AppendFrames(assembler.InsertPacket(PaddingPacket(/*seq_num=*/124)), frames);
 
   ASSERT_THAT(frames, SizeIs(2));
-  EXPECT_THAT(frames[1]->Id(), Eq(125));
-  EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
-  EXPECT_THAT(References(frames[1]), UnorderedElementsAre(123));
+  auto second_frame = frames[1].ExtractFrame();
+  EXPECT_THAT(second_frame->Id(), Eq(125));
+  EXPECT_THAT(Payload(second_frame), ElementsAreArray(kPayload));
+  EXPECT_THAT(References(second_frame), UnorderedElementsAre(123));
 }
 
 TEST(RtpVideoFrameAssembler, ClearOldPackets) {
@@ -474,6 +488,95 @@ TEST(RtpVideoFrameAssembler, ClearOldPacketsWithPadding) {
                                          .WithSeqNum(1)
                                          .Build()),
               SizeIs(1));
+}
+
+TEST(RtpVideoFrameAssembler, SeqNumStartAndSeqNumEndSet) {
+  RtpVideoFrameAssembler assembler(RtpVideoFrameAssembler::kGeneric);
+  RtpVideoFrameAssembler::FrameVector frames;
+  uint8_t kPayload[] =
+      "Some payload that will get split into two when packetized.";
+
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  RtpPacketizer::PayloadSizeLimits limits;
+  limits.max_payload_len = sizeof(kPayload) - 1;
+
+  auto packetizer =
+      RtpPacketizer::Create(kVideoCodecGeneric, kPayload, limits, video_header);
+  ASSERT_THAT(packetizer->NumPackets(), Eq(2U));
+
+  RtpPacketReceived::ExtensionManager extension_manager;
+  {
+    RtpPacketToSend send_packet(&extension_manager);
+    packetizer->NextPacket(&send_packet);
+    send_packet.SetSequenceNumber(123);
+    RtpPacketReceived received_packet(&extension_manager);
+    received_packet.Parse(send_packet.Buffer());
+    assembler.InsertPacket(received_packet);
+  }
+
+  {
+    RtpPacketToSend send_packet(&extension_manager);
+    packetizer->NextPacket(&send_packet);
+    send_packet.SetSequenceNumber(124);
+    RtpPacketReceived received_packet(&extension_manager);
+    received_packet.Parse(send_packet.Buffer());
+    AppendFrames(assembler.InsertPacket(received_packet), frames);
+  }
+
+  ASSERT_THAT(frames, SizeIs(1));
+  EXPECT_THAT(frames[0].RtpSeqNumStart(), Eq(123));
+  EXPECT_THAT(frames[0].RtpSeqNumEnd(), Eq(124));
+}
+
+TEST(RtpVideoFrameAssembler, SeqNumStartAndSeqNumEndSetWhenPaddingReceived) {
+  RtpVideoFrameAssembler assembler(RtpVideoFrameAssembler::kGeneric);
+  RtpVideoFrameAssembler::FrameVector frames;
+  uint8_t kPayload[] =
+      "Some payload that will get split into two when packetized.";
+
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+
+  EXPECT_THAT(assembler.InsertPacket(PacketBuilder(PayloadFormat::kGeneric)
+                                         .WithPayload(kPayload)
+                                         .WithVideoHeader(video_header)
+                                         .WithSeqNum(121)
+                                         .Build()),
+              SizeIs(1));
+
+  video_header.frame_type = VideoFrameType::kVideoFrameDelta;
+  RtpPacketReceived::ExtensionManager extension_manager;
+  RtpPacketizer::PayloadSizeLimits limits;
+  limits.max_payload_len = sizeof(kPayload) - 1;
+
+  auto packetizer =
+      RtpPacketizer::Create(kVideoCodecGeneric, kPayload, limits, video_header);
+  ASSERT_THAT(packetizer->NumPackets(), Eq(2U));
+
+  {
+    RtpPacketToSend send_packet(&extension_manager);
+    packetizer->NextPacket(&send_packet);
+    send_packet.SetSequenceNumber(123);
+    RtpPacketReceived received_packet(&extension_manager);
+    received_packet.Parse(send_packet.Buffer());
+    assembler.InsertPacket(received_packet);
+  }
+
+  {
+    RtpPacketToSend send_packet(&extension_manager);
+    packetizer->NextPacket(&send_packet);
+    send_packet.SetSequenceNumber(124);
+    RtpPacketReceived received_packet(&extension_manager);
+    received_packet.Parse(send_packet.Buffer());
+    assembler.InsertPacket(received_packet);
+  }
+
+  AppendFrames(assembler.InsertPacket(PaddingPacket(/*seq_num=*/122)), frames);
+
+  ASSERT_THAT(frames, SizeIs(1));
+  EXPECT_THAT(frames[0].RtpSeqNumStart(), Eq(123));
+  EXPECT_THAT(frames[0].RtpSeqNumEnd(), Eq(124));
 }
 
 }  // namespace
