@@ -984,7 +984,6 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     offset += SprintfBuf(msg + offset, sizeof(msg) - offset,             \
                          #member ":" format ", ", stats.member.value()); \
   }
-      AddIfValue("%d", output_rms_dbfs);
       AddIfValue("%d", voice_detected);
       AddIfValue("%lf", echo_return_loss);
       AddIfValue("%lf", echo_return_loss_enhancement);
