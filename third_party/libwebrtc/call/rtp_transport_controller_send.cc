@@ -75,6 +75,15 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 
 }  // namespace
 
+RtpTransportControllerSend::PacerSettings::PacerSettings(
+    const WebRtcKeyValueConfig* trials)
+    : tq_disabled("Disabled"),
+      holdback_window("holdback_window", PacingController::kMinSleepTime),
+      holdback_packets("holdback_packets", -1) {
+  ParseFieldTrial({&tq_disabled, &holdback_window, &holdback_packets},
+                  trials->Lookup("WebRTC-TaskQueuePacer"));
+}
+
 RtpTransportControllerSend::RtpTransportControllerSend(
     Clock* clock,
     webrtc::RtcEventLog* event_log,
@@ -89,8 +98,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       bitrate_configurator_(bitrate_config),
       pacer_started_(false),
       process_thread_(std::move(process_thread)),
-      use_task_queue_pacer_(!IsDisabled(trials, "WebRTC-TaskQueuePacer")),
-      process_thread_pacer_(use_task_queue_pacer_
+      pacer_settings_(trials),
+      process_thread_pacer_(pacer_settings_.use_task_queue_pacer()
                                 ? nullptr
                                 : new PacedSender(clock,
                                                   &packet_router_,
@@ -98,14 +107,14 @@ RtpTransportControllerSend::RtpTransportControllerSend(
                                                   trials,
                                                   process_thread_.get())),
       task_queue_pacer_(
-          use_task_queue_pacer_
-              ? new TaskQueuePacedSender(
-                    clock,
-                    &packet_router_,
-                    event_log,
-                    trials,
-                    task_queue_factory,
-                    /*hold_back_window = */ PacingController::kMinSleepTime)
+          pacer_settings_.use_task_queue_pacer()
+              ? new TaskQueuePacedSender(clock,
+                                         &packet_router_,
+                                         event_log,
+                                         trials,
+                                         task_queue_factory,
+                                         pacer_settings_.holdback_window.Get(),
+                                         pacer_settings_.holdback_packets.Get())
               : nullptr),
       observer_(nullptr),
       controller_factory_override_(controller_factory),
@@ -194,14 +203,14 @@ void RtpTransportControllerSend::UpdateControlState() {
 }
 
 RtpPacketPacer* RtpTransportControllerSend::pacer() {
-  if (use_task_queue_pacer_) {
+  if (pacer_settings_.use_task_queue_pacer()) {
     return task_queue_pacer_.get();
   }
   return process_thread_pacer_.get();
 }
 
 const RtpPacketPacer* RtpTransportControllerSend::pacer() const {
-  if (use_task_queue_pacer_) {
+  if (pacer_settings_.use_task_queue_pacer()) {
     return task_queue_pacer_.get();
   }
   return process_thread_pacer_.get();
@@ -226,7 +235,7 @@ RtpTransportControllerSend::transport_feedback_observer() {
 }
 
 RtpPacketSender* RtpTransportControllerSend::packet_sender() {
-  if (use_task_queue_pacer_) {
+  if (pacer_settings_.use_task_queue_pacer()) {
     return task_queue_pacer_.get();
   }
   return process_thread_pacer_.get();
@@ -504,7 +513,7 @@ void RtpTransportControllerSend::IncludeOverheadInPacedSender() {
 void RtpTransportControllerSend::EnsureStarted() {
   if (!pacer_started_) {
     pacer_started_ = true;
-    if (use_task_queue_pacer_) {
+    if (pacer_settings_.use_task_queue_pacer()) {
       task_queue_pacer_->EnsureStarted();
     } else {
       process_thread_->Start();
