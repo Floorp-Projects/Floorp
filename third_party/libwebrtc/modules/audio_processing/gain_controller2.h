@@ -19,7 +19,6 @@
 #include "modules/audio_processing/agc2/limiter.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
