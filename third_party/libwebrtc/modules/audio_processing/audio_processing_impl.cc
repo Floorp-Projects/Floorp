@@ -1149,6 +1149,7 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
       capture_.prev_analog_mic_level != analog_mic_level &&
       capture_.prev_analog_mic_level != -1;
   capture_.prev_analog_mic_level = analog_mic_level;
+  analog_gain_stats_reporter_.UpdateStatistics(analog_mic_level);
 
   if (submodules_.echo_controller) {
     capture_.echo_path_gain_change = analog_mic_level_changed;

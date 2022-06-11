@@ -21,6 +21,7 @@
 #include "api/function_view.h"
 #include "modules/audio_processing/aec3/echo_canceller3.h"
 #include "modules/audio_processing/agc/agc_manager_direct.h"
+#include "modules/audio_processing/agc/analog_gain_stats_reporter.h"
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/capture_levels_adjuster/capture_levels_adjuster.h"
@@ -530,6 +531,9 @@ class AudioProcessingImpl : public AudioProcessing {
   RmsLevel capture_input_rms_ RTC_GUARDED_BY(mutex_capture_);
   RmsLevel capture_output_rms_ RTC_GUARDED_BY(mutex_capture_);
   int capture_rms_interval_counter_ RTC_GUARDED_BY(mutex_capture_) = 0;
+
+  AnalogGainStatsReporter analog_gain_stats_reporter_
+      RTC_GUARDED_BY(mutex_capture_);
 
   // Lock protection not needed.
   std::unique_ptr<

@@ -41,6 +41,20 @@ rtc_library("agc") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("analog_gain_stats_reporter") {
+  sources = [
+    "analog_gain_stats_reporter.cc",
+    "analog_gain_stats_reporter.h",
+  ]
+  deps = [
+    "../../../rtc_base:gtest_prod",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:safe_minmax",
+    "../../../system_wrappers:metrics",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("clipping_predictor") {
   sources = [
     "clipping_predictor.cc",
@@ -142,6 +156,7 @@ if (rtc_include_tests) {
     testonly = true
     sources = [
       "agc_manager_direct_unittest.cc",
+      "analog_gain_stats_reporter_unittest.cc",
       "clipping_predictor_evaluator_unittest.cc",
       "clipping_predictor_level_buffer_unittest.cc",
       "clipping_predictor_unittest.cc",
@@ -152,6 +167,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":agc",
+      ":analog_gain_stats_reporter",
       ":clipping_predictor",
       ":clipping_predictor_evaluator",
       ":clipping_predictor_level_buffer",
@@ -161,6 +177,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:checks",
       "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_conversions",
+      "../../../system_wrappers:metrics",
       "../../../test:field_trial",
       "../../../test:fileutils",
       "../../../test:test_support",
