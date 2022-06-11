@@ -82,7 +82,15 @@ in the (slow) process of being removed from the codebase.
 
 * RecursiveCriticalSection. Try to use [webrtc::Mutex][6] instead, and don't recurse.
 
+## Enum-To-String functions
+If there is a need to convert an enum to a string representation, such as for
+enums exposed at the Javascript API interface, the recommended way is to write
+a function named AsString, declared "static constexpr" and returning an
+absl::string_view. The declaration should be right after the enum declaration,
+in the same scope; the implementation (which must be marked "inline") should
+be at the end of the same header file.
 
+If the enum is not defined within a class, the "static" keyword is not needed.
 
 [1]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/units/timestamp.h;drc=b95d90b78a3491ef8e8aa0640dd521515ec881ca;l=29
 [2]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/rtc_base/thread.h;drc=1107751b6f11c35259a1c5c8a0f716e227b7e3b4;l=194

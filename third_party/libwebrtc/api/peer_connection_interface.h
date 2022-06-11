@@ -76,6 +76,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/adaptation/resource.h"
 #include "api/async_dns_resolver.h"
@@ -180,6 +181,7 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     kHaveRemotePrAnswer,
     kClosed,
   };
+  static constexpr absl::string_view AsString(SignalingState);
 
   // See https://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate
   enum IceGatheringState {
@@ -187,6 +189,7 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     kIceGatheringGathering,
     kIceGatheringComplete
   };
+  static constexpr absl::string_view AsString(IceGatheringState state);
 
   // See https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate
   enum class PeerConnectionState {
@@ -197,6 +200,7 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     kFailed,
     kClosed,
   };
+  static constexpr absl::string_view AsString(PeerConnectionState state);
 
   // See https://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate
   enum IceConnectionState {
@@ -209,6 +213,7 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     kIceConnectionClosed,
     kIceConnectionMax,
   };
+  static constexpr absl::string_view AsString(IceConnectionState state);
 
   // TLS certificate policy.
   enum TlsCertPolicy {
@@ -1562,6 +1567,88 @@ class RTC_EXPORT PeerConnectionFactoryInterface
 RTC_EXPORT rtc::scoped_refptr<PeerConnectionFactoryInterface>
 CreateModularPeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies);
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate
+inline constexpr absl::string_view PeerConnectionInterface::AsString(
+    SignalingState state) {
+  switch (state) {
+    case SignalingState::kStable:
+      return "stable";
+    case SignalingState::kHaveLocalOffer:
+      return "have-local-offer";
+    case SignalingState::kHaveLocalPrAnswer:
+      return "have-local-pranswer";
+    case SignalingState::kHaveRemoteOffer:
+      return "have-remote-offer";
+    case SignalingState::kHaveRemotePrAnswer:
+      return "have-remote-pranswer";
+    case SignalingState::kClosed:
+      return "closed";
+  }
+  RTC_CHECK_NOTREACHED();
+  return "";
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate
+inline constexpr absl::string_view PeerConnectionInterface::AsString(
+    IceGatheringState state) {
+  switch (state) {
+    case IceGatheringState::kIceGatheringNew:
+      return "new";
+    case IceGatheringState::kIceGatheringGathering:
+      return "gathering";
+    case IceGatheringState::kIceGatheringComplete:
+      return "complete";
+  }
+  RTC_CHECK_NOTREACHED();
+  return "";
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate
+inline constexpr absl::string_view PeerConnectionInterface::AsString(
+    PeerConnectionState state) {
+  switch (state) {
+    case PeerConnectionState::kNew:
+      return "new";
+    case PeerConnectionState::kConnecting:
+      return "connecting";
+    case PeerConnectionState::kConnected:
+      return "connected";
+    case PeerConnectionState::kDisconnected:
+      return "disconnected";
+    case PeerConnectionState::kFailed:
+      return "failed";
+    case PeerConnectionState::kClosed:
+      return "closed";
+  }
+  RTC_CHECK_NOTREACHED();
+  return "";
+}
+
+inline constexpr absl::string_view PeerConnectionInterface::AsString(
+    IceConnectionState state) {
+  switch (state) {
+    case kIceConnectionNew:
+      return "new";
+    case kIceConnectionChecking:
+      return "checking";
+    case kIceConnectionConnected:
+      return "connected";
+    case kIceConnectionCompleted:
+      return "completed";
+    case kIceConnectionFailed:
+      return "failed";
+    case kIceConnectionDisconnected:
+      return "disconnected";
+    case kIceConnectionClosed:
+      return "closed";
+    case kIceConnectionMax:
+      RTC_CHECK_NOTREACHED();
+      return "";
+  }
+  RTC_CHECK_NOTREACHED();
+  return "";
+}
 
 }  // namespace webrtc
 
