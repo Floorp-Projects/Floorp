@@ -232,6 +232,7 @@ void VideoEncoderSoftwareFallbackWrapper::PrimeEncoder(
   if (packet_loss_.has_value()) {
     encoder->OnPacketLossRateUpdate(packet_loss_.value());
   }
+
   if (loss_notification_.has_value()) {
     encoder->OnLossNotification(loss_notification_.value());
   }
