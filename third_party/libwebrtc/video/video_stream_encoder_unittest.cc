@@ -356,6 +356,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
                                overuse_detector_proxy_ =
                                    new CpuOveruseDetectorProxy(stats_proxy)),
                            task_queue_factory,
+                           TaskQueueBase::Current(),
                            allocation_callback_type),
         time_controller_(time_controller),
         fake_cpu_resource_(FakeResource::Create("FakeResource[CPU]")),

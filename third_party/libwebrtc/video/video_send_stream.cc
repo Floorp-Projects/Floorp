@@ -113,6 +113,7 @@ VideoSendStream::VideoSendStream(
     Clock* clock,
     int num_cpu_cores,
     TaskQueueFactory* task_queue_factory,
+    TaskQueueBase* network_queue,
     RtcpRttStats* call_stats,
     RtpTransportControllerSendInterface* transport,
     BitrateAllocatorInterface* bitrate_allocator,
@@ -135,6 +136,7 @@ VideoSendStream::VideoSendStream(
           config_.encoder_settings,
           std::make_unique<OveruseFrameDetector>(&stats_proxy_),
           task_queue_factory,
+          network_queue,
           GetBitrateAllocationCallbackType(config_))),
       encoder_feedback_(
           clock,

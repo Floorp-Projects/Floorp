@@ -593,8 +593,10 @@ VideoStreamEncoder::VideoStreamEncoder(
     const VideoStreamEncoderSettings& settings,
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
     TaskQueueFactory* task_queue_factory,
+    TaskQueueBase* network_queue,
     BitrateAllocationCallbackType allocation_cb_type)
-    : main_queue_(TaskQueueBase::Current()),
+    : worker_queue_(TaskQueueBase::Current()),
+      network_queue_(network_queue),
       number_of_cores_(number_of_cores),
       sink_(nullptr),
       settings_(settings),
@@ -665,7 +667,7 @@ VideoStreamEncoder::VideoStreamEncoder(
           "EncoderQueue",
           TaskQueueFactory::Priority::NORMAL)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
-  RTC_DCHECK(main_queue_);
+  RTC_DCHECK(worker_queue_);
   RTC_DCHECK(encoder_stats_observer);
   RTC_DCHECK_GE(number_of_cores, 1);
 
@@ -694,13 +696,13 @@ VideoStreamEncoder::VideoStreamEncoder(
 }
 
 VideoStreamEncoder::~VideoStreamEncoder() {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_DCHECK(!video_source_sink_controller_.HasSource())
       << "Must call ::Stop() before destruction.";
 }
 
 void VideoStreamEncoder::Stop() {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   video_source_sink_controller_.SetSource(nullptr);
 
   rtc::Event shutdown_event;
@@ -746,7 +748,7 @@ void VideoStreamEncoder::SetFecControllerOverride(
 
 void VideoStreamEncoder::AddAdaptationResource(
     rtc::scoped_refptr<Resource> resource) {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::AddAdaptationResource");
   // Map any externally added resources as kCpu for the sake of stats reporting.
   // TODO(hbos): Make the manager map any unknown resources to kCpu and get rid
@@ -767,14 +769,14 @@ void VideoStreamEncoder::AddAdaptationResource(
 
 std::vector<rtc::scoped_refptr<Resource>>
 VideoStreamEncoder::GetAdaptationResources() {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   return resource_adaptation_processor_->GetResources();
 }
 
 void VideoStreamEncoder::SetSource(
     rtc::VideoSourceInterface<VideoFrame>* source,
     const DegradationPreference& degradation_preference) {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   video_source_sink_controller_.SetSource(source);
   input_state_provider_.OnHasInputChanged(source);
 
@@ -794,7 +796,7 @@ void VideoStreamEncoder::SetSource(
 }
 
 void VideoStreamEncoder::SetSink(EncoderSink* sink, bool rotation_applied) {
-  RTC_DCHECK_RUN_ON(main_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   video_source_sink_controller_.SetRotationApplied(rotation_applied);
   video_source_sink_controller_.PushSourceSinkSettings();
 
@@ -818,6 +820,7 @@ void VideoStreamEncoder::SetStartBitrate(int start_bitrate_bps) {
 
 void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
                                           size_t max_data_payload_length) {
+  RTC_DCHECK_RUN_ON(worker_queue_);
   encoder_queue_.PostTask(
       [this, config = std::move(config), max_data_payload_length]() mutable {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
@@ -1099,10 +1102,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_resolutions.emplace_back(simulcastStream.width,
                                      simulcastStream.height);
   }
-  main_queue_->PostTask(ToQueuedTask(
+  worker_queue_->PostTask(ToQueuedTask(
       task_safety_, [this, max_framerate, alignment,
                      encoder_resolutions = std::move(encoder_resolutions)]() {
-        RTC_DCHECK_RUN_ON(main_queue_);
+        RTC_DCHECK_RUN_ON(worker_queue_);
         if (max_framerate !=
                 video_source_sink_controller_.frame_rate_upper_limit() ||
             alignment != video_source_sink_controller_.resolution_alignment() ||
@@ -1269,6 +1272,8 @@ void VideoStreamEncoder::OnEncoderSettingsChanged() {
 }
 
 void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
+  // Threading context here under Chromium is the network thread. Test
+  // environments may currently call in from other alien contexts.
   RTC_DCHECK_RUNS_SERIALIZED(&incoming_frame_race_checker_);
   VideoFrame incoming_frame = video_frame;
 
@@ -1379,12 +1384,12 @@ void VideoStreamEncoder::OnDiscardedFrame() {
 
 void VideoStreamEncoder::OnConstraintsChanged(
     const webrtc::VideoTrackSourceConstraints& constraints) {
-  // This method is called on the network thread.
+  RTC_DCHECK_RUN_ON(network_queue_);
   RTC_LOG(LS_INFO) << __func__ << " min_fps "
                    << constraints.min_fps.value_or(-1) << " max_fps "
                    << constraints.max_fps.value_or(-1);
-  main_queue_->PostTask(ToQueuedTask(task_safety_, [this, constraints] {
-    RTC_DCHECK_RUN_ON(main_queue_);
+  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this, constraints] {
+    RTC_DCHECK_RUN_ON(worker_queue_);
     source_constraints_ = constraints;
   }));
 }
@@ -1809,8 +1814,8 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
           }
         } else {
           encoder_failed_ = true;
-          main_queue_->PostTask(ToQueuedTask(task_safety_, [this]() {
-            RTC_DCHECK_RUN_ON(main_queue_);
+          worker_queue_->PostTask(ToQueuedTask(task_safety_, [this]() {
+            RTC_DCHECK_RUN_ON(worker_queue_);
             settings_.encoder_switch_request_callback->RequestEncoderFallback();
           }));
         }
@@ -2171,9 +2176,9 @@ void VideoStreamEncoder::OnVideoSourceRestrictionsUpdated(
   RTC_LOG(INFO) << "Updating sink restrictions from "
                 << (reason ? reason->Name() : std::string("<null>")) << " to "
                 << restrictions.ToString();
-  main_queue_->PostTask(ToQueuedTask(
+  worker_queue_->PostTask(ToQueuedTask(
       task_safety_, [this, restrictions = std::move(restrictions)]() {
-        RTC_DCHECK_RUN_ON(main_queue_);
+        RTC_DCHECK_RUN_ON(worker_queue_);
         video_source_sink_controller_.SetRestrictions(std::move(restrictions));
         video_source_sink_controller_.PushSourceSinkSettings();
       }));
@@ -2329,22 +2334,23 @@ void VideoStreamEncoder::CheckForAnimatedContent(
       RTC_LOG(LS_INFO) << "Removing resolution cap due to no consistent "
                           "animation detection.";
     }
-    main_queue_->PostTask(ToQueuedTask(task_safety_, [this,
-                                                      should_cap_resolution]() {
-      RTC_DCHECK_RUN_ON(main_queue_);
-      video_source_sink_controller_.SetPixelsPerFrameUpperLimit(
-          should_cap_resolution ? absl::optional<size_t>(kMaxAnimationPixels)
-                                : absl::nullopt);
-      video_source_sink_controller_.PushSourceSinkSettings();
-    }));
+    worker_queue_->PostTask(
+        ToQueuedTask(task_safety_, [this, should_cap_resolution]() {
+          RTC_DCHECK_RUN_ON(worker_queue_);
+          video_source_sink_controller_.SetPixelsPerFrameUpperLimit(
+              should_cap_resolution
+                  ? absl::optional<size_t>(kMaxAnimationPixels)
+                  : absl::nullopt);
+          video_source_sink_controller_.PushSourceSinkSettings();
+        }));
   }
 }
 
 // RTC_RUN_ON(&encoder_queue_)
 void VideoStreamEncoder::QueueRequestEncoderSwitch(
     const EncoderSwitchRequestCallback::Config& conf) {
-  main_queue_->PostTask(ToQueuedTask(task_safety_, [this, conf]() {
-    RTC_DCHECK_RUN_ON(main_queue_);
+  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this, conf]() {
+    RTC_DCHECK_RUN_ON(worker_queue_);
     settings_.encoder_switch_request_callback->RequestEncoderSwitch(conf);
   }));
 }
@@ -2352,8 +2358,8 @@ void VideoStreamEncoder::QueueRequestEncoderSwitch(
 // RTC_RUN_ON(&encoder_queue_)
 void VideoStreamEncoder::QueueRequestEncoderSwitch(
     const webrtc::SdpVideoFormat& format) {
-  main_queue_->PostTask(ToQueuedTask(task_safety_, [this, format]() {
-    RTC_DCHECK_RUN_ON(main_queue_);
+  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this, format]() {
+    RTC_DCHECK_RUN_ON(worker_queue_);
     settings_.encoder_switch_request_callback->RequestEncoderSwitch(format);
   }));
 }
@@ -2367,8 +2373,8 @@ void VideoStreamEncoder::MaybeReportFrameRateConstraintUmas() {
       encoder_config_.content_type == VideoEncoderConfig::ContentType::kScreen;
   if (!is_screenshare)
     return;
-  main_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
-    RTC_DCHECK_RUN_ON(main_queue_);
+  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
+    RTC_DCHECK_RUN_ON(worker_queue_);
     RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.FrameRateConstraints.Exists",
                           source_constraints_.has_value());
     if (source_constraints_.has_value()) {

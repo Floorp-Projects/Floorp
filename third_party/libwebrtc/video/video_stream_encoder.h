@@ -75,6 +75,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
                      const VideoStreamEncoderSettings& settings,
                      std::unique_ptr<OveruseFrameDetector> overuse_detector,
                      TaskQueueFactory* task_queue_factory,
+                     TaskQueueBase* network_queue,
                      BitrateAllocationCallbackType allocation_cb_type);
   ~VideoStreamEncoder() override;
 
@@ -231,7 +232,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   // Reports UMAs on frame rate constraints usage on the first call.
   void MaybeReportFrameRateConstraintUmas() RTC_RUN_ON(&encoder_queue_);
 
-  TaskQueueBase* const main_queue_;
+  TaskQueueBase* const worker_queue_;
+  TaskQueueBase* const network_queue_;
 
   const uint32_t number_of_cores_;
 
@@ -246,7 +248,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   // The source's constraints.
   absl::optional<VideoTrackSourceConstraints> source_constraints_
-      RTC_GUARDED_BY(main_queue_);
+      RTC_GUARDED_BY(worker_queue_);
   bool has_reported_screenshare_frame_rate_umas_
       RTC_GUARDED_BY(&encoder_queue_) = false;
 
@@ -410,7 +412,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   // to provide us with different resolution or frame rate.
   // This class is thread-safe.
   VideoSourceSinkController video_source_sink_controller_
-      RTC_GUARDED_BY(main_queue_);
+      RTC_GUARDED_BY(worker_queue_);
 
   // Default bitrate limits in EncoderInfoSettings allowed.
   const bool default_limits_allowed_;
@@ -424,7 +426,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   // first to make sure no tasks run that use other members.
   rtc::TaskQueue encoder_queue_;
 
-  // Used to cancel any potentially pending tasks to the main thread.
+  // Used to cancel any potentially pending tasks to the worker thread.
   ScopedTaskSafety task_safety_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(VideoStreamEncoder);
