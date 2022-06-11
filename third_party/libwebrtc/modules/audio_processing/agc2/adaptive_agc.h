@@ -47,7 +47,7 @@ class AdaptiveAgc {
 
  private:
   AdaptiveModeLevelEstimator speech_level_estimator_;
-  VadLevelAnalyzer vad_;
+  VoiceActivityDetectorWrapper vad_;
   AdaptiveDigitalGainApplier gain_controller_;
   ApmDataDumper* const apm_data_dumper_;
   std::unique_ptr<NoiseLevelEstimator> noise_level_estimator_;

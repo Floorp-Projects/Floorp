@@ -281,6 +281,7 @@ rtc_library("vad_wrapper_unittests") {
     ":common",
     ":vad_wrapper",
     "..:audio_frame_view",
+    "../../../rtc_base:checks",
     "../../../rtc_base:gunit_helpers",
     "../../../rtc_base:safe_compare",
     "../../../test:test_support",

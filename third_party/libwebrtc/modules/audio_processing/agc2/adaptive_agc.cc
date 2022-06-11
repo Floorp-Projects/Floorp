@@ -36,6 +36,24 @@ AvailableCpuFeatures GetAllowedCpuFeatures() {
   return features;
 }
 
+// Peak and RMS audio levels in dBFS.
+struct AudioLevels {
+  float peak_dbfs;
+  float rms_dbfs;
+};
+
+// Computes the audio levels for the first channel in `frame`.
+AudioLevels ComputeAudioLevels(AudioFrameView<float> frame) {
+  float peak = 0.0f;
+  float rms = 0.0f;
+  for (const auto& x : frame.channel(0)) {
+    peak = std::max(std::fabs(x), peak);
+    rms += x * x;
+  }
+  return {FloatS16ToDbfs(peak),
+          FloatS16ToDbfs(std::sqrt(rms / frame.samples_per_channel()))};
+}
+
 }  // namespace
 
 AdaptiveAgc::AdaptiveAgc(
@@ -62,16 +80,17 @@ void AdaptiveAgc::Initialize(int sample_rate_hz, int num_channels) {
 }
 
 void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
+  AudioLevels levels = ComputeAudioLevels(frame);
+
   AdaptiveDigitalGainApplier::FrameInfo info;
 
-  VadLevelAnalyzer::Result vad_result = vad_.AnalyzeFrame(frame);
-  info.speech_probability = vad_result.speech_probability;
-  apm_data_dumper_->DumpRaw("agc2_speech_probability",
-                            vad_result.speech_probability);
-  apm_data_dumper_->DumpRaw("agc2_input_rms_dbfs", vad_result.rms_dbfs);
-  apm_data_dumper_->DumpRaw("agc2_input_peak_dbfs", vad_result.peak_dbfs);
+  info.speech_probability = vad_.Analyze(frame);
+  apm_data_dumper_->DumpRaw("agc2_speech_probability", info.speech_probability);
+  apm_data_dumper_->DumpRaw("agc2_input_rms_dbfs", levels.rms_dbfs);
+  apm_data_dumper_->DumpRaw("agc2_input_peak_dbfs", levels.peak_dbfs);
 
-  speech_level_estimator_.Update(vad_result);
+  speech_level_estimator_.Update(levels.rms_dbfs, levels.peak_dbfs,
+                                 info.speech_probability);
   info.speech_level_dbfs = speech_level_estimator_.level_dbfs();
   info.speech_level_reliable = speech_level_estimator_.IsConfident();
   apm_data_dumper_->DumpRaw("agc2_speech_level_dbfs", info.speech_level_dbfs);
@@ -81,7 +100,7 @@ void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
   info.noise_rms_dbfs = noise_level_estimator_->Analyze(frame);
   apm_data_dumper_->DumpRaw("agc2_noise_rms_dbfs", info.noise_rms_dbfs);
 
-  saturation_protector_->Analyze(info.speech_probability, vad_result.peak_dbfs,
+  saturation_protector_->Analyze(info.speech_probability, levels.peak_dbfs,
                                  info.speech_level_dbfs);
   info.headroom_db = saturation_protector_->HeadroomDb();
   apm_data_dumper_->DumpRaw("agc2_headroom_db", info.headroom_db);
