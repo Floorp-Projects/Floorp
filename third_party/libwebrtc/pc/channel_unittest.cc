@@ -626,13 +626,11 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // SdpType::kOffer / SdpType::kAnswer.
   void TestChangeStreamParamsInContent() {
     cricket::StreamParams stream1;
-    stream1.groupid = "group1";
     stream1.id = "stream1";
     stream1.ssrcs.push_back(kSsrc1);
     stream1.cname = "stream1_cname";
 
     cricket::StreamParams stream2;
-    stream2.groupid = "group1";
     stream2.id = "stream2";
     stream2.ssrcs.push_back(kSsrc2);
     stream2.cname = "stream2_cname";
