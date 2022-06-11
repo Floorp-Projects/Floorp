@@ -309,12 +309,8 @@ bool SctpDataChannel::Send(const DataBuffer& buffer) {
   // so just add to the end of the queue and keep waiting.
   if (!queued_send_data_.Empty()) {
     if (!QueueSendDataMessage(buffer)) {
-      RTC_LOG(LS_ERROR) << "Closing the DataChannel due to a failure to queue "
-                           "additional data.";
-      // https://w3c.github.io/webrtc-pc/#dom-rtcdatachannel-send step 5
-      // Note that the spec doesn't explicitly say to close in this situation.
-      CloseAbruptlyWithError(RTCError(RTCErrorType::RESOURCE_EXHAUSTED,
-                                      "Unable to queue data for sending"));
+      // Queue is full
+      return false;
     }
     return true;
   }

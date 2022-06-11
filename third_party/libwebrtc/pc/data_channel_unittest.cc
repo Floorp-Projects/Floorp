@@ -544,23 +544,29 @@ TEST_F(SctpDataChannelTest, OpenAckRoleInitialization) {
   EXPECT_EQ(webrtc::InternalDataChannelInit::kNone, init2.open_handshake_role);
 }
 
-// Tests that the DataChannel is closed if the sending buffer is full.
-TEST_F(SctpDataChannelTest, ClosedWhenSendBufferFull) {
+// Tests that that Send() returns false if the sending buffer is full
+// and the channel stays open.
+TEST_F(SctpDataChannelTest, OpenWhenSendBufferFull) {
   SetChannelReady();
 
-  rtc::CopyOnWriteBuffer buffer(1024);
+  const size_t packetSize = 1024;
+
+  rtc::CopyOnWriteBuffer buffer(packetSize);
   memset(buffer.MutableData(), 0, buffer.size());
 
   webrtc::DataBuffer packet(buffer, true);
   provider_->set_send_blocked(true);
 
-  for (size_t i = 0; i < 16 * 1024 + 1; ++i) {
+  for (size_t i = 0;
+       i < webrtc::DataChannelInterface::MaxSendQueueSize() / packetSize; ++i) {
     EXPECT_TRUE(webrtc_data_channel_->Send(packet));
   }
 
-  EXPECT_TRUE(
-      webrtc::DataChannelInterface::kClosed == webrtc_data_channel_->state() ||
-      webrtc::DataChannelInterface::kClosing == webrtc_data_channel_->state());
+  // The sending buffer shoul be full, send returns false.
+  EXPECT_FALSE(webrtc_data_channel_->Send(packet));
+
+  EXPECT_TRUE(webrtc::DataChannelInterface::kOpen ==
+              webrtc_data_channel_->state());
 }
 
 // Tests that the DataChannel is closed on transport errors.
