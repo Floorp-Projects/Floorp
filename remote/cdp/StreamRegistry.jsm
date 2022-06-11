@@ -45,7 +45,6 @@ class StreamRegistry {
   }
 
   async _discard(stream) {
-    // eslint-disable-next-line mozilla/use-isInstance
     if (stream instanceof lazy.OS.File) {
       let fileInfo;
 
@@ -73,7 +72,6 @@ class StreamRegistry {
   add(stream) {
     let handle;
 
-    // eslint-disable-next-line mozilla/use-isInstance
     if (stream instanceof lazy.OS.File) {
       handle = Services.uuid
         .generateUUID()

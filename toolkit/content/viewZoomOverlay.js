@@ -13,10 +13,6 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var ZoomManager = {
-  get useFullZoom() {
-    return Services.prefs.getBoolPref("browser.zoom.full");
-  },
-
   set useFullZoom(aVal) {
     Services.prefs.setBoolPref("browser.zoom.full", aVal);
   },
@@ -138,4 +134,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
     return zoomValues;
   }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ZoomManager,
+  "useFullZoom",
+  "browser.zoom.full"
 );

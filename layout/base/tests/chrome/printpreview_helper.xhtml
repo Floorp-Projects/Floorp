@@ -1364,6 +1364,137 @@ async function runTest47() {
       },
     },
   });
+  requestAnimationFrame(() => setTimeout(runTest48));
+}
+
+// Test that even when downscaling happens due to CSS page-size, the
+// unwriteable margins are in units applicable to the resulting page as it is
+// actually printed.
+// https://bugzilla.mozilla.org/1769161
+async function runTest48() {
+  if (navigator.platform.includes("Win")) {
+    var fuzz = { maxDifferent: 816, maxDifference: 255 }; // Bug 1680838
+  } else {
+    var fuzz = { maxDifferent: 16, maxDifference: 255 };
+  }
+  let test = "bug1769161_1.html";
+  let ref = "bug1769161_1_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    settings: {
+      paperWidth: 5,
+      paperHeight: 5,
+      paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+      unwriteableMarginLeft: 1,
+      unwriteableMarginRight: 1,
+      unwriteableMarginTop: 1,
+      unwriteableMarginBottom: 1,
+    },
+  });
+  requestAnimationFrame(() => setTimeout(runTest49));
+}
+
+// Same as runTest48, but uses different scaling factors.
+async function runTest49() {
+  if (navigator.platform.includes("Win")) {
+    var fuzz = { maxDifferent: 6472, maxDifference: 255 }; // Bug 1680838
+  } else {
+    var fuzz = { maxDifferent: 24, maxDifference: 255 };
+  }
+  let test = "bug1769161_2.html";
+  let ref = "bug1769161_2_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    settings: {
+      paperWidth: 5,
+      paperHeight: 5,
+      paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+      unwriteableMarginLeft: 1,
+      unwriteableMarginRight: 1,
+      unwriteableMarginTop: 1,
+      unwriteableMarginBottom: 1,
+    },
+  });
+  requestAnimationFrame(() => setTimeout(runTest50));
+}
+
+// Test that when downscaling happens due to CSS page-size, the unwriteable
+// margins are equivalent to the @page margins after those margins are scaled.
+// https://bugzilla.mozilla.org/1769161
+async function runTest50() {
+  if (navigator.platform.includes("Win")) {
+    var fuzz = { maxDifferent: 816, maxDifference: 255 }; // Bug 1680838
+  } else {
+    var fuzz = { maxDifferent: 16, maxDifference: 255 };
+  }
+  let test = "bug1769161_3.html";
+  let ref = "bug1769161_3_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 1,
+        unwriteableMarginRight: 1,
+        unwriteableMarginTop: 1,
+        unwriteableMarginBottom: 1,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginBottom: 0,
+      },
+    },
+  });
+  requestAnimationFrame(() => setTimeout(runTest51));
+}
+
+// Same as runTest50, but uses different scaling factors.
+async function runTest51() {
+  if (navigator.platform.includes("Win")) {
+    var fuzz = { maxDifferent: 11764, maxDifference: 255 }; // Bug 1680838
+  } else {
+    var fuzz = { maxDifferent: 24, maxDifference: 255 };
+  }
+  let test = "bug1769161_4.html";
+  let ref = "bug1769161_4_ref.html";
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 1,
+        unwriteableMarginRight: 1,
+        unwriteableMarginTop: 1,
+        unwriteableMarginBottom: 1,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 5,
+        paperHeight: 5,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        unwriteableMarginLeft: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginBottom: 0,
+      },
+    },
+  });
   finish();
 }
 

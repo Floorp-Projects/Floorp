@@ -1028,7 +1028,9 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   }
 
   // If we should continue to delazify even more functions, then re-add this
-  // task to the vector of delazification tasks.
+  // task to the vector of delazification tasks. This might happen when the
+  // DelazifyTask is interrupted by a higher priority task. (see
+  // mozilla::TaskController & mozilla::Task)
   if (!strategy->done()) {
     HelperThreadState().submitTask(this, lock);
   } else {
@@ -1045,50 +1047,52 @@ bool DelazifyTask::runTask(JSContext* cx) {
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   using namespace js::frontend;
-  RefPtr<CompilationStencil> innerStencil;
-  ScriptIndex scriptIndex = strategy->next();
-  {
-    BorrowingCompilationStencil borrow(merger.getResult());
+  while (!strategy->done() || isInterrupted()) {
+    RefPtr<CompilationStencil> innerStencil;
+    ScriptIndex scriptIndex = strategy->next();
+    {
+      BorrowingCompilationStencil borrow(merger.getResult());
 
-    // Take the next inner function to be delazified.
-    ScriptStencilRef scriptRef{borrow, scriptIndex};
-    MOZ_ASSERT(!scriptRef.scriptData().isGhost());
-    MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
+      // Take the next inner function to be delazified.
+      ScriptStencilRef scriptRef{borrow, scriptIndex};
+      MOZ_ASSERT(!scriptRef.scriptData().isGhost());
+      MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
-    // Parse and generate bytecode for the inner function.
-    innerStencil = DelazifyCanonicalScriptedFunction(cx, borrow, scriptIndex);
-    if (!innerStencil) {
-      return false;
-    }
-
-    // Add the generated stencil to the cache, to be consumed by the main
-    // thread.
-    StencilCache& cache = runtime->caches().delazificationCache;
-    StencilContext key(borrow.source, scriptRef.scriptExtra().extent);
-    if (auto guard = cache.isSourceCached(borrow.source)) {
-      if (!cache.putNew(guard, key, innerStencil.get())) {
-        ReportOutOfMemory(cx);
+      // Parse and generate bytecode for the inner function.
+      innerStencil = DelazifyCanonicalScriptedFunction(cx, borrow, scriptIndex);
+      if (!innerStencil) {
         return false;
       }
-    } else {
-      // Stencils for this source are not longer accepted in the cache, thus
-      // there is no reason to keep our eager delazification going.
-      strategy->clear();
-      return true;
+
+      // Add the generated stencil to the cache, to be consumed by the main
+      // thread.
+      StencilCache& cache = runtime->caches().delazificationCache;
+      StencilContext key(borrow.source, scriptRef.scriptExtra().extent);
+      if (auto guard = cache.isSourceCached(borrow.source)) {
+        if (!cache.putNew(guard, key, innerStencil.get())) {
+          ReportOutOfMemory(cx);
+          return false;
+        }
+      } else {
+        // Stencils for this source are no longer accepted in the cache, thus
+        // there is no reason to keep our eager delazification going.
+        strategy->clear();
+        return true;
+      }
     }
-  }
 
-  // We are merging the delazification now, while this could be post-poned until
-  // we have to look at inner functions, this is simpler to do it now than
-  // querying the cache for every enclosing script.
-  if (!merger.addDelazification(cx, *innerStencil)) {
-    return false;
-  }
-
-  {
-    BorrowingCompilationStencil borrow(merger.getResult());
-    if (!strategy->add(cx, borrow, scriptIndex)) {
+    // We are merging the delazification now, while this could be post-poned
+    // until we have to look at inner functions, this is simpler to do it now
+    // than querying the cache for every enclosing script.
+    if (!merger.addDelazification(cx, *innerStencil)) {
       return false;
+    }
+
+    {
+      BorrowingCompilationStencil borrow(merger.getResult());
+      if (!strategy->add(cx, borrow, scriptIndex)) {
+        return false;
+      }
     }
   }
 

@@ -76,7 +76,7 @@ partial interface mixin WindowOrWorkerGlobalScope {
 
 // https://w3c.github.io/ServiceWorker/#self-caches
 partial interface mixin WindowOrWorkerGlobalScope {
-  [Throws, Pref="dom.caches.enabled", SameObject]
+  [Throws, Func="nsGlobalWindowInner::CachesEnabled", SameObject]
   readonly attribute CacheStorage caches;
 };
 

@@ -189,6 +189,8 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
     }
     urlbarZoomButton.setAttribute("label", label);
   }
+
+  win.FullZoom.updateCommands();
 }
 
 const { CustomizableUI } = ChromeUtils.import(

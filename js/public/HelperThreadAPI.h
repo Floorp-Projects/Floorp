@@ -12,6 +12,10 @@
 #ifndef js_HelperThreadAPI_h
 #define js_HelperThreadAPI_h
 
+#include <stddef.h>  // size_t
+
+#include "jstypes.h"  // JS_PUBLIC_API
+
 namespace JS {
 
 // Argument passed to the task callback to indicate whether we're invoking it

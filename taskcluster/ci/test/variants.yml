@@ -115,6 +115,15 @@ fission-xorigin:
             extra-options:
                 - "--enable-xorigin-tests"
 
+conditioned_profile:
+    description: "{description} with conditioned profile"
+    component: "Testing::General"
+    suffix: "condprof"
+    merge:
+        mozharness:
+            extra-options:
+                - "--conditioned-profile"
+
 socketprocess:
     description: "{description} with socket process enabled"
     component: "Core::Networking"

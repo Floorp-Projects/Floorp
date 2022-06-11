@@ -18,8 +18,10 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
@@ -113,10 +115,10 @@ class CustomizableUITestUtils {
    * @rejects If search bar is not found, or overflows.
    */
   async addSearchBar() {
-    CustomizableUI.addWidgetToArea(
+    lazy.CustomizableUI.addWidgetToArea(
       "search-container",
-      CustomizableUI.AREA_NAVBAR,
-      CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
+      lazy.CustomizableUI.AREA_NAVBAR,
+      lazy.CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
     );
 
     // addWidgetToArea adds the search bar into the nav bar first.  If the
@@ -131,7 +133,7 @@ class CustomizableUITestUtils {
 
     // Check if the OverflowableToolbar is handling the overflow event.
     let navbar = this.window.document.getElementById(
-      CustomizableUI.AREA_NAVBAR
+      lazy.CustomizableUI.AREA_NAVBAR
     );
     await TestUtils.waitForCondition(() => {
       return !navbar.overflowable.isHandlingOverflow();
@@ -158,6 +160,6 @@ class CustomizableUITestUtils {
   }
 
   removeSearchBar() {
-    CustomizableUI.removeWidgetFromArea("search-container");
+    lazy.CustomizableUI.removeWidgetFromArea("search-container");
   }
 }

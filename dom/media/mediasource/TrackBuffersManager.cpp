@@ -113,7 +113,8 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
           "media.mediasource.eviction_threshold.audio", 20 * 1024 * 1024)),
       mEvictionState(EvictionState::NO_EVICTION_NEEDED),
       mMutex("TrackBuffersManager"),
-      mTaskQueue(aParentDecoder->GetDemuxer()->GetTaskQueue()) {
+      mTaskQueue(aParentDecoder->GetDemuxer()->GetTaskQueue()),
+      mTaskQueueCapability(Some(EventTargetCapability{mTaskQueue.get()})) {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
   DDLINKCHILD("parser", mParser.get());
 }
@@ -193,7 +194,7 @@ void TrackBuffersManager::ProcessTasks() {
     return;
   }
 
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   typedef SourceBufferTask::Type Type;
 
   if (mCurrentTask) {
@@ -449,7 +450,7 @@ void TrackBuffersManager::Detach() {
 }
 
 void TrackBuffersManager::CompleteResetParserState() {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   AUTO_PROFILER_LABEL("TrackBuffersManager::CompleteResetParserState",
                       MEDIA_PLAYBACK);
   MSE_DEBUG("");
@@ -511,7 +512,7 @@ int64_t TrackBuffersManager::EvictionThreshold() const {
 
 void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
                                       int64_t aSizeToEvict) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   AUTO_PROFILER_LABEL("TrackBuffersManager::DoEvictData", MEDIA_PLAYBACK);
 
   mEvictionState = EvictionState::EVICTION_COMPLETED;
@@ -612,7 +613,7 @@ void TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
 
 RefPtr<TrackBuffersManager::RangeRemovalPromise>
 TrackBuffersManager::CodedFrameRemovalWithPromise(TimeInterval aInterval) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
 
   RefPtr<RangeRemovalTask> task = new RangeRemovalTask(aInterval);
   RefPtr<RangeRemovalPromise> p = task->mPromise.Ensure(__func__);
@@ -955,6 +956,7 @@ void TrackBuffersManager::SegmentParserLoop() {
           ->Then(
               TaskQueueFromTaskQueue(), __func__,
               [self](bool aNeedMoreData) {
+                self->mTaskQueueCapability->AssertOnCurrentThread();
                 self->mProcessingRequest.Complete();
                 if (aNeedMoreData) {
                   self->NeedMoreData();
@@ -963,6 +965,7 @@ void TrackBuffersManager::SegmentParserLoop() {
                 }
               },
               [self](const MediaResult& aRejectValue) {
+                self->mTaskQueueCapability->AssertOnCurrentThread();
                 self->mProcessingRequest.Complete();
                 self->RejectAppend(aRejectValue, __func__);
               })
@@ -1025,7 +1028,7 @@ void TrackBuffersManager::ShutdownDemuxers() {
 }
 
 void TrackBuffersManager::CreateDemuxerforMIMEType() {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("mType.OriginalString=%s", mType.OriginalString().get());
   ShutdownDemuxers();
 
@@ -1233,7 +1236,7 @@ bool TrackBuffersManager::IsRepeatInitData(
 }
 
 void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer, "mInputDemuxer has been destroyed");
   AUTO_PROFILER_LABEL("TrackBuffersManager::OnDemuxerInitDone", MEDIA_PLAYBACK);
 
@@ -1521,6 +1524,7 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
 }
 
 void TrackBuffersManager::OnDemuxerInitFailed(const MediaResult& aError) {
+  mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("");
   MOZ_ASSERT(aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
   mDemuxerInitRequest.Complete();
@@ -1619,7 +1623,7 @@ void TrackBuffersManager::MaybeDispatchEncryptedEvent(
 
 void TrackBuffersManager::OnVideoDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("%zu video samples demuxed", aSamples->GetSamples().Length());
   mVideoTracks.mDemuxRequest.Complete();
   mVideoTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
@@ -1643,7 +1647,7 @@ void TrackBuffersManager::DoDemuxAudio() {
 
 void TrackBuffersManager::OnAudioDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("%zu audio samples demuxed", aSamples->GetSamples().Length());
   mAudioTracks.mDemuxRequest.Complete();
   mAudioTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
@@ -2671,7 +2675,7 @@ TimeUnit TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
 uint32_t TrackBuffersManager::SkipToNextRandomAccessPoint(
     TrackInfo::TrackType aTrack, const TimeUnit& aTimeThreadshold,
     const media::TimeUnit& aFuzz, bool& aFound) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   AUTO_PROFILER_LABEL("TrackBuffersManager::SkipToNextRandomAccessPoint",
                       MEDIA_PLAYBACK);
   uint32_t parsed = 0;
@@ -2772,7 +2776,7 @@ const MediaRawData* TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
 already_AddRefed<MediaRawData> TrackBuffersManager::GetSample(
     TrackInfo::TrackType aTrack, const TimeUnit& aFuzz, MediaResult& aResult) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
   AUTO_PROFILER_LABEL("TrackBuffersManager::GetSample", MEDIA_PLAYBACK);
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
@@ -2907,7 +2911,7 @@ uint32_t TrackBuffersManager::Evictable(TrackInfo::TrackType aTrack) const {
 
 TimeUnit TrackBuffersManager::GetNextRandomAccessPoint(
     TrackInfo::TrackType aTrack, const TimeUnit& aFuzz) {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
 
   // So first determine the current position in the track buffer if necessary.
   if (NS_FAILED(SetNextGetSampleIndexIfNeeded(aTrack, aFuzz))) {
@@ -2938,6 +2942,7 @@ TimeUnit TrackBuffersManager::GetNextRandomAccessPoint(
 
 nsresult TrackBuffersManager::SetNextGetSampleIndexIfNeeded(
     TrackInfo::TrackType aTrack, const TimeUnit& aFuzz) {
+  MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
@@ -2997,6 +3002,7 @@ RefPtr<GenericPromise> TrackBuffersManager::RequestDebugInfo(
                          return RequestDebugInfo(aInfo);
                        });
   }
+  mTaskQueueCapability->AssertOnCurrentThread();
   GetDebugInfo(aInfo);
   return GenericPromise::CreateAndResolve(true, __func__);
 }
@@ -3051,7 +3057,7 @@ void TrackBuffersManager::GetDebugInfo(
 
 void TrackBuffersManager::AddSizeOfResources(
     MediaSourceDecoder::ResourceSizes* aSizes) const {
-  MOZ_ASSERT(OnTaskQueue());
+  mTaskQueueCapability->AssertOnCurrentThread();
 
   if (mInputBuffer.isSome() && mInputBuffer->Buffer()) {
     // mInputBuffer should be the sole owner of the underlying buffer, so this

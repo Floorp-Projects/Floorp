@@ -166,8 +166,9 @@ def set_worker_type(config, tasks):
         # during the taskcluster migration, this is a bit tortured, but it
         # will get simpler eventually!
         test_platform = task["test-platform"]
-        if task.get("worker-type"):
+        if task.get("worker-type") and task.get("worker-type") != "default":
             # This test already has its worker type defined, so just use that (yields below)
+            # Unless the value is set to "default", in that case ignore it.
             pass
         elif test_platform.startswith("macosx1014-64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1014-64"]

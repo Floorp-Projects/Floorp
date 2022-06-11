@@ -38,6 +38,7 @@ body {
   --newtab-background-color-secondary: #FFF;
   --newtab-text-primary-color: #15141a;
   --newtab-primary-action-background: #0061e0;
+  --newtab-primary-action-background-pocket: #008078;
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
@@ -45,9 +46,11 @@ body {
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
   --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 90%, #000);
+  --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 90%, #000);
   --newtab-primary-element-active-color: color-mix(in srgb, var(--newtab-primary-action-background) 80%, #000);
   --newtab-primary-element-text-color: #FFF;
   --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 25%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #000);
   --newtab-wordmark-color: #20123A;
   --newtab-status-success: #058B00;
@@ -65,6 +68,10 @@ body[lwt-newtab-brighttext] {
   --newtab-background-color-secondary: #42414d;
   --newtab-text-primary-color: #fbfbfe;
   --newtab-primary-action-background: #00ddff;
+  --newtab-primary-action-background-pocket: #00ddff;
+  --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #FFF);
+  --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #FFF);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #FFF);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #FFF);
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
@@ -4043,6 +4050,85 @@ main.has-snippet {
 }
 .ds-privacy-link a:hover {
   text-decoration: underline;
+}
+
+.ds-topics-widget {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+}
+.ds-topics-widget .ds-topics-widget-header {
+  font-size: 18px;
+  line-height: 20px;
+}
+.ds-topics-widget hr {
+  background-color: color-mix(in srgb, var(--newtab-border-color) 52%, transparent);
+  height: 1px;
+  border: 0;
+  margin: 10px 0 0;
+}
+.ds-topics-widget .ds-topics-widget-list-container {
+  flex-grow: 1;
+}
+.ds-topics-widget .ds-topics-widget-list-container ul {
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  grid-gap: 10px;
+  flex-wrap: wrap;
+}
+.ds-topics-widget .ds-topics-widget-list-container ul li {
+  display: flex;
+}
+.ds-topics-widget .ds-topics-widget-list-container ul li a {
+  font-size: 14px;
+  line-height: 16px;
+  text-decoration: none;
+  padding: 8px 15px;
+  background: var(--newtab-background-color-secondary);
+  border: 1px solid color-mix(in srgb, var(--newtab-border-color) 52%, transparent);
+  color: var(--newtab-text-primary-color);
+  border-radius: 8px;
+}
+.ds-topics-widget .ds-topics-widget-list-container ul li a:hover {
+  background: var(--newtab-element-hover-color);
+}
+.ds-topics-widget .ds-topics-widget-list-container ul li a:focus {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
+  transition: box-shadow 150ms;
+}
+.ds-topics-widget .ds-topics-widget-list-container ul .ds-topics-widget-list-overflow-item {
+  display: flex;
+}
+@media (min-width: 610px) {
+  .ds-topics-widget .ds-topics-widget-list-container ul .ds-topics-widget-list-overflow-item {
+    display: none;
+  }
+}
+@media (min-width: 1122px) {
+  .ds-topics-widget .ds-topics-widget-list-container ul .ds-topics-widget-list-overflow-item {
+    display: flex;
+  }
+}
+.ds-topics-widget .ds-topics-widget-button {
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: var(--newtab-primary-action-background-pocket);
+  border: 0;
+}
+.ds-topics-widget .ds-topics-widget-button:hover {
+  background: var(--newtab-primary-element-hover-pocket-color);
+}
+.ds-topics-widget .ds-topics-widget-button:focus {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--newtab-primary-action-background-pocket-dimmed), 0 0 0 1px var(--newtab-primary-action-background-pocket);
+  transition: box-shadow 150ms;
 }
 
 .ASRouterButton {

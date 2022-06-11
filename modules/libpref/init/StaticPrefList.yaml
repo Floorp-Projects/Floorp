@@ -1979,6 +1979,8 @@
   value: true
   mirror: always
 
+# Exposes window.caches and skips SecureContext check.
+# dom.serviceWorkers.testing.enabled also includes the same effect.
 - name: dom.caches.testing.enabled
   type: RelaxedAtomicBool
   value: false
@@ -5130,8 +5132,8 @@
 
 - name: gfx.canvas.accelerated
   type: RelaxedAtomicBool
-#if defined(XP_LINUX) && !defined(ANDROID) && defined(NIGHTLY_BUILD)
-  value: true
+#if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
+  value: @IS_NIGHTLY_BUILD@
 #else
   value: false
 #endif
@@ -9397,6 +9399,11 @@
 - name: media.av1.new-thread-count-strategy
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: media.av1.force-thread-count
+  type: RelaxedAtomicInt32
+  value: 0
   mirror: always
 
 - name: media.flac.enabled

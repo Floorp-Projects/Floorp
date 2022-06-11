@@ -55,17 +55,32 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   //
   // Reflow our ::-moz-page-content frame, allowing it only to be as big as we
   // are (minus margins).
-  nsSize maxSize = ComputePageSize();
+  const nsSize pageSize = ComputePageSize();
+  // Scaling applied to the page after rendering, used for down-scaling when a
+  // CSS-specified page-size is too large to fit on the paper we are printing
+  // on. This is needed for scaling margins that are applied as physical sizes,
+  // in this case the user-provided margins from the print UI and the printer-
+  // provided unwriteable margins.
+  const float pageSizeScale = ComputePageSizeScale(pageSize);
+  // Scaling applied to content, as given by the print UI.
+  // This is an additional scale factor that is applied to the content in the
+  // nsPageContentFrame.
+  const float extraContentScale = aPresContext->GetPageScale();
+  // Size for the page content. This will be scaled by extraContentScale, and
+  // is used to calculate the computed size of the nsPageContentFrame content
+  // by subtracting margins.
+  nsSize availableSpace = pageSize;
 
-  float scale = aPresContext->GetPageScale();
   // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
   // a single page to print selection. So this means we want to use
   // NS_UNCONSTRAINEDSIZE without altering it.
   //
   // FIXME(emilio): Is this still true?
-  maxSize.width = NSToCoordCeil(maxSize.width / scale);
-  if (maxSize.height != NS_UNCONSTRAINEDSIZE) {
-    maxSize.height = NSToCoordCeil(maxSize.height / scale);
+  availableSpace.width =
+      NSToCoordCeil(availableSpace.width / extraContentScale);
+  if (availableSpace.height != NS_UNCONSTRAINEDSIZE) {
+    availableSpace.height =
+        NSToCoordCeil(availableSpace.height / extraContentScale);
   }
 
   // Get the number of Twips per pixel from the PresContext
@@ -74,17 +89,26 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   // insurance against infinite reflow, when reflowing less than a pixel
   // XXX Shouldn't we do something more friendly when invalid margins
   //     are set?
-  if (maxSize.width < onePixel || maxSize.height < onePixel) {
+  if (availableSpace.width < onePixel || availableSpace.height < onePixel) {
     NS_WARNING("Reflow aborted; no space for content");
     return {};
   }
 
-  ReflowInput kidReflowInput(aPresContext, aPageReflowInput, frame,
-                             LogicalSize(frame->GetWritingMode(), maxSize));
+  ReflowInput kidReflowInput(
+      aPresContext, aPageReflowInput, frame,
+      LogicalSize(frame->GetWritingMode(), availableSpace));
   kidReflowInput.mFlags.mIsTopOfPage = true;
   kidReflowInput.mFlags.mTableIsSplittable = true;
 
-  mPageContentMargin = aPresContext->GetDefaultPageMargin();
+  nsMargin defaultMargins = aPresContext->GetDefaultPageMargin();
+  // The default margins are in the coordinate space of the physical paper.
+  // Scale them by the pageSizeScale to convert them to the content coordinate
+  // space.
+  for (const auto side : mozilla::AllPhysicalSides()) {
+    defaultMargins.Side(side) =
+        NSToCoordRound((float)defaultMargins.Side(side) / pageSizeScale);
+  }
+  mPageContentMargin = defaultMargins;
 
   // Use the margins given in the @page rule if told to do so.
   // We clamp to the paper's unwriteable margins to avoid clipping, *except*
@@ -95,14 +119,22 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
     const auto& margin = kidReflowInput.mStyleMargin->mMargin;
     for (const auto side : mozilla::AllPhysicalSides()) {
       if (!margin.Get(side).IsAuto()) {
-        nscoord computed = kidReflowInput.ComputedPhysicalMargin().Side(side);
+        // Computed margins are already in the coordinate space of the content,
+        // do not scale.
+        const nscoord computed =
+            kidReflowInput.ComputedPhysicalMargin().Side(side);
         // Respecting a zero margin is particularly important when the client
         // is PDF.js where the PDF already contains the margins.
         if (computed == 0) {
           mPageContentMargin.Side(side) = 0;
         } else {
-          nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
-              mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side));
+          // Unwriteable margins are in the coordinate space of the physical
+          // paper. Scale them by the pageSizeScale to convert them to the
+          // content coordinate space.
+          const int32_t unwriteableTwips =
+              mPD->mPrintSettings->GetUnwriteableMarginInTwips().Side(side);
+          const nscoord unwriteable = nsPresContext::CSSTwipsToAppUnits(
+              (float)unwriteableTwips / pageSizeScale);
           mPageContentMargin.Side(side) = std::max(
               kidReflowInput.ComputedPhysicalMargin().Side(side), unwriteable);
         }
@@ -110,36 +142,43 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
     }
   }
 
-  nscoord maxWidth = maxSize.width - mPageContentMargin.LeftRight() / scale;
-  nscoord maxHeight;
-  if (maxSize.height == NS_UNCONSTRAINEDSIZE) {
-    maxHeight = NS_UNCONSTRAINEDSIZE;
+  // TODO: This seems odd that we need to scale the margins by the extra
+  // scale factor, but this is needed for correct margins.
+  // Why are the margins already scaled? Shouldn't they be stored so that this
+  // scaling factor would be redundant?
+  nscoord computedWidth =
+      availableSpace.width - mPageContentMargin.LeftRight() / extraContentScale;
+  nscoord computedHeight;
+  if (availableSpace.height == NS_UNCONSTRAINEDSIZE) {
+    computedHeight = NS_UNCONSTRAINEDSIZE;
   } else {
-    maxHeight = maxSize.height - mPageContentMargin.TopBottom() / scale;
+    computedHeight = availableSpace.height -
+                     mPageContentMargin.TopBottom() / extraContentScale;
   }
 
   // Check the width and height, if they're too small we reset the margins
   // back to the default.
-  if (maxWidth < onePixel || maxHeight < onePixel) {
-    mPageContentMargin = aPresContext->GetDefaultPageMargin();
-    maxWidth = maxSize.width - mPageContentMargin.LeftRight() / scale;
-    if (maxHeight != NS_UNCONSTRAINEDSIZE) {
-      maxHeight = maxSize.height - mPageContentMargin.TopBottom() / scale;
+  if (computedWidth < onePixel || computedHeight < onePixel) {
+    mPageContentMargin = defaultMargins;
+    computedWidth = availableSpace.width -
+                    mPageContentMargin.LeftRight() / extraContentScale;
+    if (computedHeight != NS_UNCONSTRAINEDSIZE) {
+      computedHeight = availableSpace.height -
+                       mPageContentMargin.TopBottom() / extraContentScale;
+    }
+    // And if they're still too small, we give up.
+    if (computedWidth < onePixel || computedHeight < onePixel) {
+      NS_WARNING("Reflow aborted; no space for content");
+      return {};
     }
   }
 
-  // And if they're still too small, we give up.
-  if (maxWidth < onePixel || maxHeight < onePixel) {
-    NS_WARNING("Reflow aborted; no space for content");
-    return {};
-  }
-
-  kidReflowInput.SetComputedWidth(maxWidth);
-  kidReflowInput.SetComputedHeight(maxHeight);
+  kidReflowInput.SetComputedWidth(computedWidth);
+  kidReflowInput.SetComputedHeight(computedHeight);
 
   // calc location of frame
-  nscoord xc = mPageContentMargin.left;
-  nscoord yc = mPageContentMargin.top;
+  const nscoord xc = mPageContentMargin.left;
+  const nscoord yc = mPageContentMargin.top;
 
   // Get the child's desired size
   ReflowOutput kidOutput(kidReflowInput);
@@ -499,31 +538,11 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
 
   // Variables that we use in our transform (initialized with reasonable
   // defaults that work for the regular one-page-per-sheet scenario):
-  float scale = 1.0f;
+  const nsSize contentPageSize = pageFrame->ComputePageSize();
+  float scale = pageFrame->ComputePageSizeScale(contentPageSize);
   nsPoint gridOrigin;
   uint32_t rowIdx = 0;
   uint32_t colIdx = 0;
-
-  // Compute scaling due to a possible mismatch in the paper size we are
-  // printing to (from the pres context) and the specified page size when the
-  // content uses "@page {size: ...}" to specify a page size for the content.
-  const nsSize actualPaperSize = pageFrame->PresContext()->GetPageSize();
-  const nsSize contentPageSize = pageFrame->ComputePageSize();
-  {
-    nscoord contentPageHeight = contentPageSize.height;
-    // Scale down if the target is too wide.
-    if (contentPageSize.width > actualPaperSize.width) {
-      scale *= float(actualPaperSize.width) / float(contentPageSize.width);
-      contentPageHeight = NSToCoordRound(contentPageHeight * scale);
-    }
-    // Scale down if the target is too tall.
-    if (contentPageHeight > actualPaperSize.height) {
-      scale *= float(actualPaperSize.height) / float(contentPageHeight);
-    }
-  }
-  MOZ_ASSERT(
-      scale <= 1.0f,
-      "Page-size mismatches should only have caused us to scale down, not up.");
 
   if (nsSharedPageData* pd = pageFrame->GetSharedPageData()) {
     const auto* ppsInfo = pd->PagesPerSheetInfo();
@@ -597,6 +616,37 @@ nsSize nsPageFrame::ComputePageSize() const {
     MOZ_ASSERT(pageSize.IsAuto(), "Impossible page-size value?");
   }
   return size;
+}
+
+float nsPageFrame::ComputePageSizeScale(const nsSize aContentPageSize) const {
+  MOZ_ASSERT(aContentPageSize == ComputePageSize(),
+             "Incorrect content page size");
+
+  // Check for the simplest case first, an auto page-size which requires no
+  // scaling at all.
+  if (PageContentFrame()->StylePage()->mSize.IsAuto()) {
+    return 1.0f;
+  }
+
+  // Compute scaling due to a possible mismatch in the paper size we are
+  // printing to (from the pres context) and the specified page size when the
+  // content uses "@page {size: ...}" to specify a page size for the content.
+  float scale = 1.0f;
+  const nsSize actualPaperSize = PresContext()->GetPageSize();
+  nscoord contentPageHeight = aContentPageSize.height;
+  // Scale down if the target is too wide.
+  if (aContentPageSize.width > actualPaperSize.width) {
+    scale *= float(actualPaperSize.width) / float(aContentPageSize.width);
+    contentPageHeight = NSToCoordRound(contentPageHeight * scale);
+  }
+  // Scale down if the target is too tall.
+  if (contentPageHeight > actualPaperSize.height) {
+    scale *= float(actualPaperSize.height) / float(contentPageHeight);
+  }
+  MOZ_ASSERT(
+      scale <= 1.0f,
+      "Page-size mismatches should only have caused us to scale down, not up.");
+  return scale;
 }
 
 void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

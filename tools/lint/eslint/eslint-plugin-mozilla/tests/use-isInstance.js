@@ -31,6 +31,9 @@ ruleTester.run("use-isInstance", rule, {
     "({}) instanceof Object;",
     "Node instanceof Object;",
     "file instanceof OS.File;",
+    "file instanceof OS.File.Error;",
+    "file instanceof lazy.OS.File;",
+    "file instanceof lazy.OS.File.Error;",
   ],
   invalid: [
     {
