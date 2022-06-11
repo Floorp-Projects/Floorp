@@ -426,7 +426,7 @@ version = "0.99.17"
 criteria = "safe-to-deploy"
 
 [[unaudited.devd-rs]]
-version = "0.3.2"
+version = "0.3.4"
 criteria = "safe-to-deploy"
 
 [[unaudited.digest]]
@@ -1631,10 +1631,6 @@ criteria = "safe-to-deploy"
 
 [[unaudited.wast]]
 version = "41.0.0"
-criteria = "safe-to-deploy"
-
-[[unaudited.wat]]
-version = "1.0.43"
 criteria = "safe-to-deploy"
 
 [[unaudited.webrtc-sdp]]
