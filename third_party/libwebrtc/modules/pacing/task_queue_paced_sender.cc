@@ -36,9 +36,11 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     RtcEventLog* event_log,
     const WebRtcKeyValueConfig* field_trials,
     TaskQueueFactory* task_queue_factory,
-    TimeDelta hold_back_window)
+    TimeDelta max_hold_back_window,
+    int max_hold_back_window_in_packets)
     : clock_(clock),
-      hold_back_window_(hold_back_window),
+      max_hold_back_window_(max_hold_back_window),
+      max_hold_back_window_in_packets_(max_hold_back_window_in_packets),
       pacing_controller_(clock,
                          packet_sender,
                          event_log,
@@ -48,9 +50,12 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       stats_update_scheduled_(false),
       last_stats_time_(Timestamp::MinusInfinity()),
       is_shutdown_(false),
+      packet_size_(/*alpha=*/0.95),
       task_queue_(task_queue_factory->CreateTaskQueue(
           "TaskQueuePacedSender",
-          TaskQueueFactory::Priority::NORMAL)) {}
+          TaskQueueFactory::Priority::NORMAL)) {
+  packet_size_.Apply(1, 0);
+}
 
 TaskQueuePacedSender::~TaskQueuePacedSender() {
   // Post an immediate task to mark the queue as shutting down.
@@ -144,6 +149,7 @@ void TaskQueuePacedSender::EnqueuePackets(
   task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
     for (auto& packet : packets_) {
+      packet_size_.Apply(1, packet->size());
       RTC_DCHECK_GE(packet->capture_time_ms(), 0);
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
@@ -227,6 +233,17 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     next_process_time = pacing_controller_.NextSendTime();
   }
 
+  TimeDelta hold_back_window = max_hold_back_window_;
+  DataRate pacing_rate = pacing_controller_.pacing_rate();
+  DataSize avg_packet_size = DataSize::Bytes(packet_size_.filtered());
+  if (max_hold_back_window_in_packets_ > 0 && !pacing_rate.IsZero() &&
+      !avg_packet_size.IsZero()) {
+    TimeDelta avg_packet_send_time = avg_packet_size / pacing_rate;
+    hold_back_window =
+        std::min(hold_back_window,
+                 avg_packet_send_time * max_hold_back_window_in_packets_);
+  }
+
   absl::optional<TimeDelta> time_to_next_process;
   if (pacing_controller_.IsProbing() &&
       next_process_time != next_process_time_) {
@@ -241,11 +258,11 @@ void TaskQueuePacedSender::MaybeProcessPackets(
                    (next_process_time - now).RoundDownTo(TimeDelta::Millis(1)));
     }
   } else if (next_process_time_.IsMinusInfinity() ||
-             next_process_time <= next_process_time_ - hold_back_window_) {
+             next_process_time <= next_process_time_ - hold_back_window) {
     // Schedule a new task since there is none currently scheduled
     // (`next_process_time_` is infinite), or the new process time is at least
     // one holdback window earlier than whatever is currently scheduled.
-    time_to_next_process = std::max(next_process_time - now, hold_back_window_);
+    time_to_next_process = std::max(next_process_time - now, hold_back_window);
   }
 
   if (time_to_next_process) {
