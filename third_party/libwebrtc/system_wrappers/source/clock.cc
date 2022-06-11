@@ -248,10 +248,7 @@ class UnixRealTimeClock : public RealTimeClock {
  protected:
   timeval CurrentTimeVal() override {
     struct timeval tv;
-    struct timezone tz;
-    tz.tz_minuteswest = 0;
-    tz.tz_dsttime = 0;
-    gettimeofday(&tv, &tz);
+    gettimeofday(&tv, nullptr);
     return tv;
   }
 };
