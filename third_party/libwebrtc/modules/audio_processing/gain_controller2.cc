@@ -76,8 +76,9 @@ GainController2::GainController2(const Agc2Config& config,
                                  int num_channels)
     : cpu_features_(GetAllowedCpuFeatures()),
       data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
-      fixed_gain_applier_(/*hard_clip_samples=*/false,
-                          /*initial_gain_factor=*/0.0f),
+      fixed_gain_applier_(
+          /*hard_clip_samples=*/false,
+          /*initial_gain_factor=*/DbToRatio(config.fixed_digital.gain_db)),
       adaptive_digital_controller_(
           CreateAdaptiveDigitalController(config.adaptive_digital,
                                           sample_rate_hz,
@@ -88,8 +89,6 @@ GainController2::GainController2(const Agc2Config& config,
       analog_level_(kUnspecifiedAnalogLevel) {
   RTC_DCHECK(Validate(config));
   data_dumper_.InitiateNewSetOfRecordings();
-  // TODO(bugs.webrtc.org/7494): Set gain when `fixed_gain_applier_` is init'd.
-  fixed_gain_applier_.SetGainFactor(DbToRatio(config.fixed_digital.gain_db));
   const bool use_vad = config.adaptive_digital.enabled;
   if (use_vad) {
     // TODO(bugs.webrtc.org/7494): Move `vad_reset_period_ms` from adaptive
@@ -135,12 +134,11 @@ void GainController2::Process(AudioBuffer* audio) {
   AudioFrameView<float> float_frame(audio->channels(), audio->num_channels(),
                                     audio->num_frames());
   absl::optional<float> speech_probability;
-  // TODO(bugs.webrtc.org/7494): Apply fixed digital gain after VAD.
-  fixed_gain_applier_.ApplyGain(float_frame);
   if (vad_) {
     speech_probability = vad_->Analyze(float_frame);
     data_dumper_.DumpRaw("agc2_speech_probability", speech_probability.value());
   }
+  fixed_gain_applier_.ApplyGain(float_frame);
   if (adaptive_digital_controller_) {
     RTC_DCHECK(speech_probability.has_value());
     adaptive_digital_controller_->Process(
