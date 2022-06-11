@@ -25,6 +25,7 @@ namespace webrtc {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::Eq;
 using ::testing::Field;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
@@ -83,6 +84,51 @@ TEST(LibaomAv1EncoderTest, NoBitrateOnTopLayerRefecltedInActiveDecodeTargets) {
   EXPECT_EQ(encoded_frames[0]
                 .codec_specific_info.generic_frame_info->active_decode_targets,
             0b01);
+}
+
+TEST(LibaomAv1EncoderTest,
+     SpatialScalabilityInTemporalUnitReportedAsDeltaFrame) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode("L2T1");
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  VideoEncoder::RateControlParameters rate_parameters;
+  rate_parameters.framerate_fps = 30;
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, 0, 300'000);
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/1, 0, 300'000);
+  encoder->SetRates(rate_parameters);
+
+  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
+      EncodedVideoFrameProducer(*encoder).SetNumInputFrames(1).Encode();
+  ASSERT_THAT(encoded_frames, SizeIs(2));
+  EXPECT_THAT(encoded_frames[0].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameKey));
+  EXPECT_THAT(encoded_frames[1].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameDelta));
+}
+
+TEST(LibaomAv1EncoderTest, NoBitrateOnTopSpatialLayerProduceDeltaFrames) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode("L2T1");
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  VideoEncoder::RateControlParameters rate_parameters;
+  rate_parameters.framerate_fps = 30;
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, 0, 300'000);
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/1, 0, 0);
+  encoder->SetRates(rate_parameters);
+
+  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
+      EncodedVideoFrameProducer(*encoder).SetNumInputFrames(2).Encode();
+  ASSERT_THAT(encoded_frames, SizeIs(2));
+  EXPECT_THAT(encoded_frames[0].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameKey));
+  EXPECT_THAT(encoded_frames[1].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameDelta));
 }
 
 TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
