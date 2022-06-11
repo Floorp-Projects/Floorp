@@ -32,7 +32,6 @@
 #include "modules/audio_processing/include/audio_frame_proxies.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
-#include "modules/audio_processing/level_estimator.h"
 #include "modules/audio_processing/ns/noise_suppressor.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
 #include "modules/audio_processing/render_queue_item_verifier.h"
@@ -284,7 +283,6 @@ class AudioProcessingImpl : public AudioProcessing {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializePostProcessor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeAnalyzer() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  void InitializeLevelEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
 
   // Initializations of render-only submodules, requiring the render lock
   // already acquired.
@@ -405,7 +403,6 @@ class AudioProcessingImpl : public AudioProcessing {
     std::unique_ptr<CustomProcessing> capture_post_processor;
     std::unique_ptr<CustomProcessing> render_pre_processor;
     std::unique_ptr<CustomAudioAnalyzer> capture_analyzer;
-    std::unique_ptr<LevelEstimator> output_level_estimator;
     std::unique_ptr<VoiceDetection> voice_detector;
     std::unique_ptr<CaptureLevelsAdjuster> capture_levels_adjuster;
   } submodules_;

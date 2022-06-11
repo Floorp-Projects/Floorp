@@ -418,7 +418,6 @@ void AudioProcessingImpl::InitializeLocked() {
   InitializePostProcessor();
   InitializePreProcessor();
   InitializeCaptureLevelsAdjuster();
-  InitializeLevelEstimator();
 
   if (aec_dump_) {
     aec_dump_->WriteInitMessage(formats_.api_format, rtc::TimeUTCMillis());
@@ -595,8 +594,6 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
   if (pre_amplifier_config_changed || gain_adjustment_config_changed) {
     InitializeCaptureLevelsAdjuster();
   }
-
-  InitializeLevelEstimator();
 
   if (voice_detection_config_changed) {
     InitializeVoiceDetector();
@@ -1279,7 +1276,6 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     capture_buffer->MergeFrequencyBands();
   }
 
-  capture_.stats.output_rms_dbfs = absl::nullopt;
   if (capture_.capture_output_used) {
     if (capture_.capture_fullband_audio) {
       const auto& ec = submodules_.echo_controller;
@@ -1330,13 +1326,6 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
 
     if (submodules_.capture_post_processor) {
       submodules_.capture_post_processor->Process(capture_buffer);
-    }
-
-    if (submodules_.output_level_estimator) {
-      // The level estimator operates on the recombined data.
-      submodules_.output_level_estimator->ProcessStream(*capture_buffer);
-      capture_.stats.output_rms_dbfs =
-          submodules_.output_level_estimator->RMS();
     }
 
     capture_output_rms_.Analyze(rtc::ArrayView<const float>(
@@ -2011,16 +2000,6 @@ void AudioProcessingImpl::InitializeAnalyzer() {
   if (submodules_.capture_analyzer) {
     submodules_.capture_analyzer->Initialize(proc_fullband_sample_rate_hz(),
                                              num_proc_channels());
-  }
-}
-
-void AudioProcessingImpl::InitializeLevelEstimator() {
-  if (!config_.level_estimation.enabled) {
-    submodules_.output_level_estimator.reset();
-    return;
-  }
-  if (!submodules_.output_level_estimator) {
-    submodules_.output_level_estimator = std::make_unique<LevelEstimator>();
   }
 }
 

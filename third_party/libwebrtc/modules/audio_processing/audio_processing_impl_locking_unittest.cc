@@ -522,7 +522,6 @@ void AudioProcessingImplLockTest::SetUp() {
       AudioProcessing::Config::GainController1::kAdaptiveDigital;
   apm_config.noise_suppression.enabled = true;
   apm_config.voice_detection.enabled = true;
-  apm_config.level_estimation.enabled = true;
   apm_->ApplyConfig(apm_config);
 }
 
