@@ -36,10 +36,11 @@ class TestUDPPort : public UDPPort {
                              uint16_t max_port,
                              const std::string& username,
                              const std::string& password,
+                             const std::string& origin,
                              bool emit_localhost_for_anyaddress) {
     TestUDPPort* port =
         new TestUDPPort(thread, factory, network, min_port, max_port, username,
-                        password, emit_localhost_for_anyaddress);
+                        password, origin, emit_localhost_for_anyaddress);
     if (!port->Init()) {
       delete port;
       port = nullptr;
@@ -55,6 +56,7 @@ class TestUDPPort : public UDPPort {
               uint16_t max_port,
               const std::string& username,
               const std::string& password,
+              const std::string& origin,
               bool emit_localhost_for_anyaddress)
       : UDPPort(thread,
                 factory,
@@ -63,6 +65,7 @@ class TestUDPPort : public UDPPort {
                 max_port,
                 username,
                 password,
+                origin,
                 emit_localhost_for_anyaddress) {}
 };
 
@@ -112,7 +115,8 @@ class FakePortAllocatorSession : public PortAllocatorSession {
               ? ipv6_network_
               : ipv4_network_;
       port_.reset(TestUDPPort::Create(network_thread_, factory_, &network, 0, 0,
-                                      username(), password(), false));
+                                      username(), password(), std::string(),
+                                      false));
       RTC_DCHECK(port_);
       port_->SubscribePortDestroyed(
           [this](PortInterface* port) { OnPortDestroyed(port); });
