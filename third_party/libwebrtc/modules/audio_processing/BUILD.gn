@@ -204,6 +204,7 @@ rtc_library("audio_processing") {
     "aec_dump:aec_dump",
     "aecm:aecm_core",
     "agc",
+    "agc:analog_gain_stats_reporter",
     "agc:gain_control_interface",
     "agc:legacy_agc",
     "capture_levels_adjuster",
