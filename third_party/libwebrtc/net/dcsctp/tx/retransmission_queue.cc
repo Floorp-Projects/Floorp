@@ -852,6 +852,15 @@ void RetransmissionQueue::AbandonAllFor(
 
 size_t RetransmissionQueue::max_bytes_to_send() const {
   size_t left = outstanding_bytes_ >= cwnd_ ? 0 : cwnd_ - outstanding_bytes_;
+
+  if (outstanding_bytes_ == 0) {
+    // https://datatracker.ietf.org/doc/html/rfc4960#section-6.1
+    // ... However, regardless of the value of rwnd (including if it is 0), the
+    // data sender can always have one DATA chunk in flight to the receiver if
+    // allowed by cwnd (see rule B, below).
+    return left;
+  }
+
   return std::min(rwnd(), left);
 }
 

@@ -122,6 +122,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
       "../common:handover_testing",
+      "../common:math",
       "../packet:chunk",
       "../packet:data",
       "../public:socket",

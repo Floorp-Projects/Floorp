@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "net/dcsctp/common/handover_testing.h"
+#include "net/dcsctp/common/math.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/forward_tsn_common.h"
@@ -1406,6 +1407,85 @@ TEST_F(RetransmissionQueueTest, HandoverTest) {
   EXPECT_THAT(handedover_queue.GetChunkStatesForTesting(),
               ElementsAre(Pair(TSN(13), State::kAcked),  //
                           Pair(TSN(14), State::kInFlight)));
+}
+
+TEST_F(RetransmissionQueueTest, CanAlwaysSendOnePacket) {
+  RetransmissionQueue queue = CreateQueue();
+
+  // A large payload - enough to not fit two DATA in same packet.
+  size_t mtu = RoundDownTo4(options_.mtu);
+  std::vector<uint8_t> payload(mtu - 100);
+
+  EXPECT_CALL(producer_, Produce)
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, "B"));
+      })
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, ""));
+      })
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, ""));
+      })
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, ""));
+      })
+      .WillOnce([this, payload](TimeMs, size_t) {
+        return SendQueue::DataToSend(gen_.Ordered(payload, "E"));
+      })
+      .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
+
+  // Produce all chunks and put them in the retransmission queue.
+  std::vector<std::pair<TSN, Data>> chunks_to_send =
+      queue.GetChunksToSend(now_, 5 * mtu);
+  EXPECT_THAT(chunks_to_send,
+              ElementsAre(Pair(TSN(10), _), Pair(TSN(11), _), Pair(TSN(12), _),
+                          Pair(TSN(13), _), Pair(TSN(14), _)));
+  EXPECT_THAT(queue.GetChunkStatesForTesting(),
+              ElementsAre(Pair(TSN(9), State::kAcked),      //
+                          Pair(TSN(10), State::kInFlight),  //
+                          Pair(TSN(11), State::kInFlight),  //
+                          Pair(TSN(12), State::kInFlight),
+                          Pair(TSN(13), State::kInFlight),
+                          Pair(TSN(14), State::kInFlight)));
+
+  // Ack 12, and report an empty receiver window (the peer obviously has a
+  // tiny receive window).
+  queue.HandleSack(
+      now_, SackChunk(TSN(9), /*rwnd=*/0, {SackChunk::GapAckBlock(3, 3)}, {}));
+
+  // Force TSN 10 to be retransmitted.
+  queue.HandleT3RtxTimerExpiry();
+
+  // Even if the receiver window is empty, it will allow TSN 10 to be sent.
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), ElementsAre(Pair(TSN(10), _)));
+
+  // But not more than that, as there now is outstanding data.
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), IsEmpty());
+
+  // Don't ack any new data, and still have receiver window zero.
+  queue.HandleSack(
+      now_, SackChunk(TSN(9), /*rwnd=*/0, {SackChunk::GapAckBlock(3, 3)}, {}));
+
+  // There is in-flight data, so new data should not be allowed to be send since
+  // the receiver window is full.
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), IsEmpty());
+
+  // Ack that packet (no more in-flight data), but still report an empty
+  // receiver window.
+  queue.HandleSack(
+      now_, SackChunk(TSN(10), /*rwnd=*/0, {SackChunk::GapAckBlock(2, 2)}, {}));
+
+  // Then TSN 11 can be sent, as there is no in-flight data.
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), ElementsAre(Pair(TSN(11), _)));
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), IsEmpty());
+
+  // Ack and recover the receiver window
+  queue.HandleSack(now_, SackChunk(TSN(12), /*rwnd=*/5 * mtu, {}, {}));
+
+  // That will unblock sending remaining chunks.
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), ElementsAre(Pair(TSN(13), _)));
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), ElementsAre(Pair(TSN(14), _)));
+  EXPECT_THAT(queue.GetChunksToSend(now_, mtu), IsEmpty());
 }
 
 }  // namespace
