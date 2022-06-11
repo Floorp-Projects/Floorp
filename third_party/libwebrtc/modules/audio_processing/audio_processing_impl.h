@@ -284,6 +284,7 @@ class AudioProcessingImpl : public AudioProcessing {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializePostProcessor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeAnalyzer() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+  void InitializeLevelEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
 
   // Initializations of render-only submodules, requiring the render lock
   // already acquired.
