@@ -31,7 +31,6 @@ namespace webrtc {
 namespace {
 
 static size_t kMaxQueuedReceivedDataBytes = 16 * 1024 * 1024;
-static size_t kMaxQueuedSendDataBytes = 16 * 1024 * 1024;
 
 static std::atomic<int> g_unique_id{0};
 
@@ -671,7 +670,8 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
 bool SctpDataChannel::QueueSendDataMessage(const DataBuffer& buffer) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   size_t start_buffered_amount = queued_send_data_.byte_count();
-  if (start_buffered_amount + buffer.size() > kMaxQueuedSendDataBytes) {
+  if (start_buffered_amount + buffer.size() >
+      DataChannelInterface::MaxSendQueueSize()) {
     RTC_LOG(LS_ERROR) << "Can't buffer any more data for the data channel.";
     return false;
   }
