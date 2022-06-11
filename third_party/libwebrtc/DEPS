@@ -416,8 +416,8 @@ deps = {
               'version': 'lL3IGexKjYlwjO_1Ga-xwxgwbE_w-lmi2Zi1uOlWUIAC',
           },
           {
-              'package': 'chromium/third_party/android_sdk/public/sources/android-30',
-              'version': 'n7svc8KYah-i4s8zwkVa85SI3_H0WFOniP0mpwNdFO0C',
+              'package': 'chromium/third_party/android_sdk/public/sources/android-31',
+              'version': '_a_BcnANjPYw5mSKlNHa7GFY8yc1kdqj2rmQgac7yUcC',
           },
           {
               'package': 'chromium/third_party/android_sdk/public/cmdline-tools',
