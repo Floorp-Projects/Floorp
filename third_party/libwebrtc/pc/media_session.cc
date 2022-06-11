@@ -116,33 +116,6 @@ cricket::RtpHeaderExtensions UnstoppedOrPresentRtpHeaderExtensions(
 
 namespace cricket {
 
-// RTP Profile names
-// http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xml
-// RFC4585
-const char kMediaProtocolAvpf[] = "RTP/AVPF";
-// RFC5124
-const char kMediaProtocolDtlsSavpf[] = "UDP/TLS/RTP/SAVPF";
-
-// We always generate offers with "UDP/TLS/RTP/SAVPF" when using DTLS-SRTP,
-// but we tolerate "RTP/SAVPF" in offers we receive, for compatibility.
-const char kMediaProtocolSavpf[] = "RTP/SAVPF";
-
-// Note that the below functions support some protocol strings purely for
-// legacy compatibility, as required by JSEP in Section 5.1.2, Profile Names
-// and Interoperability.
-
-static bool IsDtlsRtp(const std::string& protocol) {
-  // Most-likely values first.
-  return protocol == "UDP/TLS/RTP/SAVPF" || protocol == "TCP/TLS/RTP/SAVPF" ||
-         protocol == "UDP/TLS/RTP/SAVP" || protocol == "TCP/TLS/RTP/SAVP";
-}
-
-static bool IsPlainRtp(const std::string& protocol) {
-  // Most-likely values first.
-  return protocol == "RTP/SAVPF" || protocol == "RTP/AVPF" ||
-         protocol == "RTP/SAVP" || protocol == "RTP/AVP";
-}
-
 static RtpTransceiverDirection NegotiateRtpTransceiverDirection(
     RtpTransceiverDirection offer,
     RtpTransceiverDirection wants) {
@@ -1436,14 +1409,12 @@ static bool IsMediaProtocolSupported(MediaType type,
   }
 
   if (type == MEDIA_TYPE_DATA) {
-    // Check for SCTP, but also for RTP for RTP-based data channels.
-    // TODO(pthatcher): Remove RTP once RTP-based data channels are gone.
+    // Check for SCTP
     if (secure_transport) {
       // Most likely scenarios first.
-      return IsDtlsSctp(protocol) || IsDtlsRtp(protocol) ||
-             IsPlainRtp(protocol);
+      return IsDtlsSctp(protocol);
     } else {
-      return IsPlainSctp(protocol) || IsPlainRtp(protocol);
+      return IsPlainSctp(protocol);
     }
   }
 

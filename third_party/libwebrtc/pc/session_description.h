@@ -47,13 +47,6 @@ typedef std::vector<VideoCodec> VideoCodecs;
 typedef std::vector<CryptoParams> CryptoParamsVec;
 typedef std::vector<webrtc::RtpExtension> RtpHeaderExtensions;
 
-// RTC4585 RTP/AVPF
-extern const char kMediaProtocolAvpf[];
-// RFC5124 RTP/SAVPF
-extern const char kMediaProtocolSavpf[];
-
-extern const char kMediaProtocolDtlsSavpf[];
-
 // Options to control how session descriptions are generated.
 const int kAutoBandwidth = -1;
 
