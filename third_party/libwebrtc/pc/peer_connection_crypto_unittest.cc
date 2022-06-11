@@ -128,33 +128,10 @@ SdpContentPredicate HaveDtlsFingerprint() {
   };
 }
 
-SdpContentPredicate HaveSdesCryptos() {
-  return [](const cricket::ContentInfo* content,
-            const cricket::TransportInfo* transport) {
-    return !content->media_description()->cryptos().empty();
-  };
-}
-
 SdpContentPredicate HaveProtocol(const std::string& protocol) {
   return [protocol](const cricket::ContentInfo* content,
                     const cricket::TransportInfo* transport) {
     return content->media_description()->protocol() == protocol;
-  };
-}
-
-SdpContentPredicate HaveSdesGcmCryptos(size_t num_crypto_suites) {
-  return [num_crypto_suites](const cricket::ContentInfo* content,
-                             const cricket::TransportInfo* transport) {
-    const auto& cryptos = content->media_description()->cryptos();
-    if (cryptos.size() != num_crypto_suites) {
-      return false;
-    }
-    for (size_t i = 0; i < cryptos.size(); ++i) {
-      if (cryptos[i].key_params.size() == 67U &&
-          cryptos[i].cipher_suite == "AEAD_AES_256_GCM")
-        return true;
-    }
-    return false;
   };
 }
 
@@ -165,20 +142,13 @@ class PeerConnectionCryptoTest
   PeerConnectionCryptoTest() : PeerConnectionCryptoBaseTest(GetParam()) {}
 };
 
-SdpContentMutator RemoveSdesCryptos() {
-  return [](cricket::ContentInfo* content, cricket::TransportInfo* transport) {
-    content->media_description()->set_cryptos({});
-  };
-}
-
 SdpContentMutator RemoveDtlsFingerprint() {
   return [](cricket::ContentInfo* content, cricket::TransportInfo* transport) {
     transport->description.identity_fingerprint.reset();
   };
 }
 
-// When DTLS is enabled, the SDP offer/answer should have a DTLS fingerprint and
-// no SDES cryptos.
+// When DTLS is enabled, the SDP offer/answer should have a DTLS fingerprint.
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsEnabled) {
   RTCConfiguration config;
   auto caller = CreatePeerConnectionWithAudioVideo(config);
@@ -188,7 +158,6 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsEnabled) {
 
   ASSERT_FALSE(offer->description()->contents().empty());
   EXPECT_TRUE(SdpContentsAll(HaveDtlsFingerprint(), offer->description()));
-  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), offer->description()));
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolDtlsSavpf),
                              offer->description()));
 }
@@ -203,7 +172,6 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsEnabled) {
 
   ASSERT_FALSE(answer->description()->contents().empty());
   EXPECT_TRUE(SdpContentsAll(HaveDtlsFingerprint(), answer->description()));
-  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), answer->description()));
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolDtlsSavpf),
                              answer->description()));
 }
@@ -222,7 +190,6 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenEncryptionDisabled) {
   ASSERT_TRUE(offer);
 
   ASSERT_FALSE(offer->description()->contents().empty());
-  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), offer->description()));
   EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), offer->description()));
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolAvpf),
                              offer->description()));
@@ -241,7 +208,6 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenEncryptionDisabled) {
   ASSERT_TRUE(answer);
 
   ASSERT_FALSE(answer->description()->contents().empty());
-  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), answer->description()));
   EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), answer->description()));
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolAvpf),
                              answer->description()));

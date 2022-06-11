@@ -26,7 +26,6 @@
 
 #include "absl/algorithm/container.h"
 #include "api/candidate.h"
-#include "api/crypto_params.h"
 #include "api/jsep_ice_candidate.h"
 #include "api/jsep_session_description.h"
 #include "api/media_types.h"
@@ -70,7 +69,6 @@ using cricket::AudioContentDescription;
 using cricket::Candidate;
 using cricket::Candidates;
 using cricket::ContentInfo;
-using cricket::CryptoParams;
 using cricket::ICE_CANDIDATE_COMPONENT_RTCP;
 using cricket::ICE_CANDIDATE_COMPONENT_RTP;
 using cricket::kApplicationSpecificBandwidth;
@@ -154,7 +152,6 @@ static const char kNoStreamMsid[] = "-";
 static const char kSsrcAttributeMslabel[] = "mslabel";
 static const char kSSrcAttributeLabel[] = "label";
 static const char kAttributeSsrcGroup[] = "ssrc-group";
-static const char kAttributeCrypto[] = "crypto";
 static const char kAttributeCandidate[] = "candidate";
 static const char kAttributeCandidateTyp[] = "typ";
 static const char kAttributeCandidateRaddr[] = "raddr";
@@ -332,9 +329,6 @@ static bool ParseSsrcAttribute(const std::string& line,
 static bool ParseSsrcGroupAttribute(const std::string& line,
                                     SsrcGroupVec* ssrc_groups,
                                     SdpParseError* error);
-static bool ParseCryptoAttribute(const std::string& line,
-                                 MediaContentDescription* media_desc,
-                                 SdpParseError* error);
 static bool ParseRtpmapAttribute(const std::string& line,
                                  const cricket::MediaType media_type,
                                  const std::vector<int>& payload_types,
@@ -1674,18 +1668,6 @@ void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
 
   if (media_desc->remote_estimate()) {
     InitAttrLine(kAttributeRtcpRemoteEstimate, &os);
-    AddLine(os.str(), message);
-  }
-
-  // RFC 4568
-  // a=crypto:<tag> <crypto-suite> <key-params> [<session-params>]
-  for (const CryptoParams& crypto_params : media_desc->cryptos()) {
-    InitAttrLine(kAttributeCrypto, &os);
-    os << kSdpDelimiterColon << crypto_params.tag << " "
-       << crypto_params.cipher_suite << " " << crypto_params.key_params;
-    if (!crypto_params.session_params.empty()) {
-      os << " " << crypto_params.session_params;
-    }
     AddLine(os.str(), message);
   }
 
@@ -3170,10 +3152,6 @@ bool ParseContent(const std::string& message,
         if (!ParseSsrcAttribute(line, &ssrc_infos, msid_signaling, error)) {
           return false;
         }
-      } else if (HasAttribute(line, kAttributeCrypto)) {
-        if (!ParseCryptoAttribute(line, media_desc, error)) {
-          return false;
-        }
       } else if (HasAttribute(line, kAttributeRtpmap)) {
         if (!ParseRtpmapAttribute(line, media_type, payload_types, media_desc,
                                   error)) {
@@ -3500,36 +3478,6 @@ bool ParseSsrcGroupAttribute(const std::string& line,
     ssrcs.push_back(ssrc);
   }
   ssrc_groups->push_back(SsrcGroup(semantics, ssrcs));
-  return true;
-}
-
-bool ParseCryptoAttribute(const std::string& line,
-                          MediaContentDescription* media_desc,
-                          SdpParseError* error) {
-  std::vector<std::string> fields;
-  rtc::split(line.substr(kLinePrefixLength), kSdpDelimiterSpaceChar, &fields);
-  // RFC 4568
-  // a=crypto:<tag> <crypto-suite> <key-params> [<session-params>]
-  const size_t expected_min_fields = 3;
-  if (fields.size() < expected_min_fields) {
-    return ParseFailedExpectMinFieldNum(line, expected_min_fields, error);
-  }
-  std::string tag_value;
-  if (!GetValue(fields[0], kAttributeCrypto, &tag_value, error)) {
-    return false;
-  }
-  int tag = 0;
-  if (!GetValueFromString(line, tag_value, &tag, error)) {
-    return false;
-  }
-  const std::string& crypto_suite = fields[1];
-  const std::string& key_params = fields[2];
-  std::string session_params;
-  if (fields.size() > 3) {
-    session_params = fields[3];
-  }
-  media_desc->AddCrypto(
-      CryptoParams(tag, crypto_suite, key_params, session_params));
   return true;
 }
 

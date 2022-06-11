@@ -852,6 +852,9 @@ TEST_P(PeerConnectionSignalingTest, UnsupportedContentType) {
       "s=-\r\n"
       "t=0 0\r\n"
       "m=bogus 9 FOO 0 8\r\n"
+      "a=fingerprint:sha-256 "
+      "D8:6C:3D:FA:23:E2:2C:63:11:2D:D0:86:BE:C4:D0:65:F9:42:F7:1C:06:04:27:E6:"
+      "1C:2C:74:01:8D:50:67:23\r\n"
       "c=IN IP4 0.0.0.0\r\n"
       "a=mid:bogusmid\r\n";
   std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
@@ -861,6 +864,7 @@ TEST_P(PeerConnectionSignalingTest, UnsupportedContentType) {
 
   // Assert we respond back with something meaningful.
   auto answer = caller->CreateAnswer();
+  ASSERT_TRUE(answer);
   ASSERT_EQ(answer->description()->contents().size(), 1u);
   EXPECT_NE(answer->description()
                 ->contents()[0]
