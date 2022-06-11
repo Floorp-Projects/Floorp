@@ -105,6 +105,13 @@ class PacketBuilder {
   RtpPacketToSend packet_to_send_;
 };
 
+RtpPacketReceived PaddingPacket(uint16_t seq_num) {
+  RtpPacketReceived padding_packet;
+  padding_packet.SetSequenceNumber(seq_num);
+  padding_packet.SetPadding(224);
+  return padding_packet;
+}
+
 void AppendFrames(RtpVideoFrameAssembler::FrameVector from,
                   RtpVideoFrameAssembler::FrameVector& to) {
   to.insert(to.end(), std::make_move_iterator(from.begin()),
@@ -389,26 +396,13 @@ TEST(RtpVideoFrameAssembler, Padding) {
                frames);
 
   ASSERT_THAT(frames, SizeIs(1));
-
   EXPECT_THAT(frames[0]->Id(), Eq(123));
   EXPECT_THAT(Payload(frames[0]), ElementsAreArray(kPayload));
   EXPECT_THAT(References(frames[0]), IsEmpty());
 
-  // Padding packets have no bitstream data. An easy way to generate one is to
-  // build a normal packet and then simply remove the bitstream portion of the
-  // payload.
-  RtpPacketReceived padding_packet = PacketBuilder(PayloadFormat::kGeneric)
-                                         .WithPayload(kPayload)
-                                         .WithVideoHeader(video_header)
-                                         .WithSeqNum(124)
-                                         .Build();
-  // The payload descriptor is one byte, keep it.
-  padding_packet.SetPayloadSize(1);
-
-  AppendFrames(assembler.InsertPacket(padding_packet), frames);
+  AppendFrames(assembler.InsertPacket(PaddingPacket(/*seq_num=*/124)), frames);
 
   ASSERT_THAT(frames, SizeIs(2));
-
   EXPECT_THAT(frames[1]->Id(), Eq(125));
   EXPECT_THAT(Payload(frames[1]), ElementsAreArray(kPayload));
   EXPECT_THAT(References(frames[1]), UnorderedElementsAre(123));
@@ -464,17 +458,8 @@ TEST(RtpVideoFrameAssembler, ClearOldPacketsWithPadding) {
                                          .Build()),
               SizeIs(1));
 
-  // Padding packets have no bitstream data. An easy way to generate one is to
-  // build a normal packet and then simply remove the bitstream portion of the
-  // payload.
-  RtpPacketReceived padding_packet = PacketBuilder(PayloadFormat::kGeneric)
-                                         .WithPayload(kPayload)
-                                         .WithVideoHeader(video_header)
-                                         .WithSeqNum(2000)
-                                         .Build();
-  // The payload descriptor is one byte, keep it.
-  padding_packet.SetPayloadSize(1);
-  EXPECT_THAT(assembler.InsertPacket(padding_packet), SizeIs(0));
+  EXPECT_THAT(assembler.InsertPacket(PaddingPacket(/*seq_num=*/2000)),
+              SizeIs(0));
 
   EXPECT_THAT(assembler.InsertPacket(PacketBuilder(PayloadFormat::kGeneric)
                                          .WithPayload(kPayload)
