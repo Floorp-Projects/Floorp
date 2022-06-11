@@ -158,6 +158,7 @@ static void CloseLibrary(void* library) {
 
 static void* g_lib_egl = nullptr;
 
+RTC_NO_SANITIZE("cfi-icall")
 static bool OpenEGL() {
   g_lib_egl = dlopen("libEGL.so.1", RTLD_NOW | RTLD_GLOBAL);
   if (g_lib_egl) {
@@ -169,6 +170,7 @@ static bool OpenEGL() {
   return false;
 }
 
+RTC_NO_SANITIZE("cfi-icall")
 static bool LoadEGL() {
   if (OpenEGL()) {
     EglBindAPI = (eglBindAPI_func)EglGetProcAddress("eglBindAPI");
@@ -199,6 +201,7 @@ static bool LoadEGL() {
 
 static void* g_lib_gl = nullptr;
 
+RTC_NO_SANITIZE("cfi-icall")
 static bool OpenGL() {
   std::vector<std::string> names = {"libGL.so.1", "libGL.so"};
   for (const std::string& name : names) {
@@ -213,6 +216,7 @@ static bool OpenGL() {
   return false;
 }
 
+RTC_NO_SANITIZE("cfi-icall")
 static bool LoadGL() {
   if (OpenGL()) {
     GlGetString = (glGetString_func)GlXGetProcAddressARB("glGetString");
