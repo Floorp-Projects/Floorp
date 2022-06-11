@@ -506,7 +506,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<UDPPort> CreateUdpPort(const SocketAddress& addr,
                                          PacketSocketFactory* socket_factory) {
     return UDPPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
-                           username_, password_, true, absl::nullopt);
+                           username_, password_, std::string(), true,
+                           absl::nullopt);
   }
   std::unique_ptr<TCPPort> CreateTcpPort(const SocketAddress& addr) {
     return CreateTcpPort(addr, &socket_factory_);
@@ -521,7 +522,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     ServerAddresses stun_servers;
     stun_servers.insert(kStunAddr);
     return StunPort::Create(&main_, factory, MakeNetwork(addr), 0, 0, username_,
-                            password_, stun_servers, absl::nullopt);
+                            password_, stun_servers, std::string(),
+                            absl::nullopt);
   }
   std::unique_ptr<Port> CreateRelayPort(const SocketAddress& addr,
                                         ProtocolType int_proto,
@@ -546,7 +548,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return TurnPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
                             username_, password_,
                             ProtocolAddress(server_addr, int_proto),
-                            kRelayCredentials, 0, {}, {}, nullptr, nullptr);
+                            kRelayCredentials, 0, "", {}, {}, nullptr, nullptr);
   }
   std::unique_ptr<rtc::NATServer> CreateNatServer(const SocketAddress& addr,
                                                   rtc::NATType type) {

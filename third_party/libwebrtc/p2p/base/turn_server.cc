@@ -655,6 +655,11 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
       msg->GetByteString(STUN_ATTR_USERNAME);
   RTC_DCHECK(username_attr != NULL);
   username_ = username_attr->GetString();
+  const StunByteStringAttribute* origin_attr =
+      msg->GetByteString(STUN_ATTR_ORIGIN);
+  if (origin_attr) {
+    origin_ = origin_attr->GetString();
+  }
 
   // Figure out the lifetime and start the allocation timer.
   int lifetime_secs = ComputeLifetime(msg);
