@@ -45,8 +45,9 @@ ComputedTimingFunction::Function ComputedTimingFunction::ConstructFunction(
       return AsVariant(
           StepFunc{static_cast<uint32_t>(timing.steps._0), timing.steps._1});
     case StyleComputedTimingFunction::Tag::LinearFunction: {
-      // TODO(dshin): To be implemented (bug 1764126)
-      return ConstructFunction(nsTimingFunction{StyleTimingKeyword::Linear});
+      StylePiecewiseLinearFunction result;
+      Servo_CreatePiecewiseLinearFunction(&timing.linear_function._0, &result);
+      return AsVariant(result);
     }
   }
   MOZ_ASSERT_UNREACHABLE("Unknown timing function.");
@@ -175,6 +176,10 @@ double ComputedTimingFunction::GetValue(
       },
       [aPortion, aBeforeFlag](const StepFunc& aFunction) {
         return StepTiming(aFunction, aPortion, aBeforeFlag);
+      },
+      [aPortion](const StylePiecewiseLinearFunction& aFunction) {
+        return static_cast<double>(Servo_PiecewiseLinearFunctionAt(
+            &aFunction, static_cast<float>(aPortion)));
       });
 }
 
@@ -194,6 +199,19 @@ void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
       [](const StepFunc& aFunction) {
         return StyleComputedTimingFunction::Steps(
             static_cast<int>(aFunction.mSteps), aFunction.mPos);
+      },
+      [](const StylePiecewiseLinearFunction& aFunction) {
+        // TODO(dshin, bug 1773493): Having to go back and forth isn't ideal.
+        Vector<StyleComputedLinearStop> stops;
+        bool reserved = stops.initCapacity(aFunction.entries.Length());
+        MOZ_RELEASE_ASSERT(reserved, "Failed to reserve memory");
+        for (const auto& e : aFunction.entries.AsSpan()) {
+          stops.infallibleAppend(StyleComputedLinearStop{
+              e.y, StyleOptional<StylePercentage>::Some(StylePercentage{e.x}),
+              StyleOptional<StylePercentage>::None()});
+        }
+        return StyleComputedTimingFunction::LinearFunction(
+            StyleOwnedSlice<StyleComputedLinearStop>{std::move(stops)});
       })};
   Servo_SerializeEasing(&timing, &aResult);
 }
@@ -212,6 +230,18 @@ Maybe<ComputedTimingFunction> ComputedTimingFunction::FromLayersTimingFunction(
       auto sf = aTimingFunction.get_StepFunction();
       StyleStepPosition pos = static_cast<StyleStepPosition>(sf.type());
       return Some(ComputedTimingFunction::Steps(sf.steps(), pos));
+    }
+    case layers::TimingFunction::TLinearFunction: {
+      auto lf = aTimingFunction.get_LinearFunction();
+      Vector<StylePiecewiseLinearFunctionEntry> stops;
+      bool reserved = stops.initCapacity(lf.stops().Length());
+      MOZ_RELEASE_ASSERT(reserved, "Failed to reserve memory");
+      for (const auto& e : lf.stops()) {
+        stops.infallibleAppend(
+            StylePiecewiseLinearFunctionEntry{e.input(), e.output()});
+      }
+      StylePiecewiseLinearFunction result;
+      return Some(ComputedTimingFunction{result});
     }
     case layers::TimingFunction::T__None:
       break;
@@ -244,6 +274,13 @@ layers::TimingFunction ComputedTimingFunction::ToLayersTimingFunction(
         return layers::TimingFunction{
             layers::StepFunction{static_cast<int>(aFunction.mSteps),
                                  static_cast<uint8_t>(aFunction.mPos)}};
+      },
+      [](const StylePiecewiseLinearFunction& aFunction) {
+        nsTArray<layers::LinearStop> stops{aFunction.entries.Length()};
+        for (const auto& e : aFunction.entries.AsSpan()) {
+          stops.AppendElement(layers::LinearStop{e.x, e.y});
+        }
+        return layers::TimingFunction{layers::LinearFunction{stops}};
       });
 }
 
