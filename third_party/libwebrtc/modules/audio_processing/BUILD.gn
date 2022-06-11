@@ -112,6 +112,31 @@ rtc_source_set("aec_dump_interface") {
   absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
 }
 
+rtc_library("gain_controller2") {
+  configs += [ ":apm_debug_dump" ]
+  sources = [
+    "gain_controller2.cc",
+    "gain_controller2.h",
+  ]
+  defines = []
+  deps = [
+    ":aec_dump_interface",
+    ":api",
+    ":apm_logging",
+    ":audio_buffer",
+    ":audio_frame_view",
+    "../../common_audio",
+    "../../rtc_base:atomicops",
+    "../../rtc_base:checks",
+    "../../rtc_base:logging",
+    "../../rtc_base:stringutils",
+    "../../system_wrappers:field_trial",
+    "agc2:adaptive_digital",
+    "agc2:fixed_digital",
+    "agc2:gain_applier",
+  ]
+}
+
 rtc_library("audio_processing") {
   visibility = [ "*" ]
   configs += [ ":apm_debug_dump" ]
@@ -132,8 +157,6 @@ rtc_library("audio_processing") {
     "echo_detector/normalized_covariance_estimator.h",
     "gain_control_impl.cc",
     "gain_control_impl.h",
-    "gain_controller2.cc",
-    "gain_controller2.h",
     "level_estimator.cc",
     "level_estimator.h",
     "render_queue_item_verifier.h",
@@ -152,6 +175,7 @@ rtc_library("audio_processing") {
     ":audio_frame_proxies",
     ":audio_frame_view",
     ":audio_processing_statistics",
+    ":gain_controller2",
     ":high_pass_filter",
     ":optionally_built_submodule_creators",
     ":rms_level",
@@ -182,9 +206,6 @@ rtc_library("audio_processing") {
     "agc",
     "agc:gain_control_interface",
     "agc:legacy_agc",
-    "agc2:adaptive_digital",
-    "agc2:fixed_digital",
-    "agc2:gain_applier",
     "capture_levels_adjuster",
     "ns",
     "transient:transient_suppressor_api",
@@ -338,6 +359,7 @@ if (rtc_include_tests) {
         ":audio_frame_view",
         ":audio_processing",
         ":audioproc_test_utils",
+        ":gain_controller2",
         ":high_pass_filter",
         ":mocks",
         ":voice_detection",
