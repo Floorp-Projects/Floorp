@@ -2557,7 +2557,6 @@ dependencies = [
  "bitflags",
  "byteorder",
  "crossbeam-channel",
- "derive_more",
  "euclid",
  "malloc_size_of_derive",
  "peek-poke",

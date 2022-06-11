@@ -17,7 +17,6 @@ display_list_stats = []
 app_units = "0.7"
 bitflags = "1.2"
 byteorder = "1.2.1"
-derive_more = "0.99"
 euclid = { version = "0.22.6", features = ["serde"] }
 malloc_size_of_derive = "0.1"
 serde = { version = "1.0", features = ["rc"] }

@@ -24,7 +24,6 @@ extern crate bitflags;
 extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
-extern crate derive_more;
 #[macro_use]
 extern crate malloc_size_of_derive;
 extern crate serde;

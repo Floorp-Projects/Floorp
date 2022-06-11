@@ -422,7 +422,7 @@ version = "1.1.0"
 criteria = "safe-to-run"
 
 [[unaudited.derive_more]]
-version = "0.99.11"
+version = "0.99.17"
 criteria = "safe-to-deploy"
 
 [[unaudited.devd-rs]]
