@@ -290,10 +290,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       // target level. Otherwise, the signal will be compressed but not limited
       // above the target level.
       bool enable_limiter = true;
-      // Sets the minimum and maximum analog levels of the audio capture device.
-      // Must be set if an analog mode is used. Limited to [0, 65535].
-      int analog_level_minimum = 0;
-      int analog_level_maximum = 255;
 
       // Enables the analog gain controller functionality.
       struct AnalogGainController {
@@ -620,7 +616,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
 
   // This must be called prior to ProcessStream() if and only if adaptive analog
   // gain control is enabled, to pass the current analog level from the audio
-  // HAL. Must be within the range provided in Config::GainController1.
+  // HAL. Must be within the range [0, 255].
   virtual void set_stream_analog_level(int level) = 0;
 
   // When an analog mode is set, this should be called after ProcessStream()

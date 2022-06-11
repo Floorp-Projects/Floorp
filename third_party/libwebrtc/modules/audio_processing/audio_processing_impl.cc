@@ -1867,7 +1867,6 @@ void AudioProcessingImpl::InitializeGainController1() {
 
   submodules_.gain_control->Initialize(num_proc_channels(),
                                        proc_sample_rate_hz());
-
   if (!config_.gain_controller1.analog_gain_controller.enabled) {
     int error = submodules_.gain_control->set_mode(
         Agc1ConfigModeToInterfaceMode(config_.gain_controller1.mode));
@@ -1881,9 +1880,10 @@ void AudioProcessingImpl::InitializeGainController1() {
     error = submodules_.gain_control->enable_limiter(
         config_.gain_controller1.enable_limiter);
     RTC_DCHECK_EQ(kNoError, error);
+    constexpr int kAnalogLevelMinimum = 0;
+    constexpr int kAnalogLevelMaximum = 255;
     error = submodules_.gain_control->set_analog_level_limits(
-        config_.gain_controller1.analog_level_minimum,
-        config_.gain_controller1.analog_level_maximum);
+        kAnalogLevelMinimum, kAnalogLevelMaximum);
     RTC_DCHECK_EQ(kNoError, error);
 
     submodules_.agc_manager.reset();

@@ -760,8 +760,6 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   void VerifyGainControlEnabledCorrectly() {
     EXPECT_TRUE(apm_config_.gain_controller1.enabled);
     EXPECT_EQ(kDefaultAgcMode, apm_config_.gain_controller1.mode);
-    EXPECT_EQ(0, apm_config_.gain_controller1.analog_level_minimum);
-    EXPECT_EQ(255, apm_config_.gain_controller1.analog_level_maximum);
   }
 
   void VerifyGainControlDefaultSettings() {

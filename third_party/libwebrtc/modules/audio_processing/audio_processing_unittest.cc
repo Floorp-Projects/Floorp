@@ -200,8 +200,6 @@ void EnableAllAPComponents(AudioProcessing* ap) {
   apm_config.gain_controller1.enabled = true;
   apm_config.gain_controller1.mode =
       AudioProcessing::Config::GainController1::kAdaptiveAnalog;
-  apm_config.gain_controller1.analog_level_minimum = 0;
-  apm_config.gain_controller1.analog_level_maximum = 255;
 #endif
 
   apm_config.noise_suppression.enabled = true;
@@ -1079,18 +1077,15 @@ TEST_F(ApmTest, GainControl) {
     EXPECT_EQ(apm_->kNoError, ProcessStreamChooser(kFloatFormat));
   }
 
-  // Testing level limits
-  std::array<int, 4> kMinLevels = {0, 0, 255, 65000};
-  std::array<int, 4> kMaxLevels = {255, 1024, 65535, 65535};
-  for (size_t i = 0; i < kMinLevels.size(); ++i) {
-    int min_level = kMinLevels[i];
-    int max_level = kMaxLevels[i];
-    config.gain_controller1.analog_level_minimum = min_level;
-    config.gain_controller1.analog_level_maximum = max_level;
-    apm_->ApplyConfig(config);
-    apm_->set_stream_analog_level((min_level + max_level) / 2);
-    EXPECT_EQ(apm_->kNoError, ProcessStreamChooser(kFloatFormat));
-  }
+  // Testing level limits.
+  constexpr int kMinLevel = 0;
+  constexpr int kMaxLevel = 255;
+  apm_->set_stream_analog_level(kMinLevel);
+  EXPECT_EQ(apm_->kNoError, ProcessStreamChooser(kFloatFormat));
+  apm_->set_stream_analog_level((kMinLevel + kMaxLevel) / 2);
+  EXPECT_EQ(apm_->kNoError, ProcessStreamChooser(kFloatFormat));
+  apm_->set_stream_analog_level(kMaxLevel);
+  EXPECT_EQ(apm_->kNoError, ProcessStreamChooser(kFloatFormat));
 }
 
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
@@ -1124,44 +1119,18 @@ TEST_F(ApmDeathTest, GainControlDiesOnTooHighCompressionGainDb) {
   EXPECT_DEATH(apm_->ApplyConfig(config), "");
 }
 
-TEST_F(ApmDeathTest, GainControlDiesOnTooLowAnalogLevelLowerLimit) {
-  auto config = apm_->GetConfig();
-  config.gain_controller1.enabled = true;
-  config.gain_controller1.analog_level_minimum = -1;
-  EXPECT_DEATH(apm_->ApplyConfig(config), "");
-}
-
-TEST_F(ApmDeathTest, GainControlDiesOnTooHighAnalogLevelUpperLimit) {
-  auto config = apm_->GetConfig();
-  config.gain_controller1.enabled = true;
-  config.gain_controller1.analog_level_maximum = 65536;
-  EXPECT_DEATH(apm_->ApplyConfig(config), "");
-}
-
-TEST_F(ApmDeathTest, GainControlDiesOnInvertedAnalogLevelLimits) {
-  auto config = apm_->GetConfig();
-  config.gain_controller1.enabled = true;
-  config.gain_controller1.analog_level_minimum = 512;
-  config.gain_controller1.analog_level_maximum = 255;
-  EXPECT_DEATH(apm_->ApplyConfig(config), "");
-}
-
 TEST_F(ApmDeathTest, ApmDiesOnTooLowAnalogLevel) {
   auto config = apm_->GetConfig();
   config.gain_controller1.enabled = true;
-  config.gain_controller1.analog_level_minimum = 255;
-  config.gain_controller1.analog_level_maximum = 512;
   apm_->ApplyConfig(config);
-  EXPECT_DEATH(apm_->set_stream_analog_level(254), "");
+  EXPECT_DEATH(apm_->set_stream_analog_level(-1), "");
 }
 
 TEST_F(ApmDeathTest, ApmDiesOnTooHighAnalogLevel) {
   auto config = apm_->GetConfig();
   config.gain_controller1.enabled = true;
-  config.gain_controller1.analog_level_minimum = 255;
-  config.gain_controller1.analog_level_maximum = 512;
   apm_->ApplyConfig(config);
-  EXPECT_DEATH(apm_->set_stream_analog_level(513), "");
+  EXPECT_DEATH(apm_->set_stream_analog_level(256), "");
 }
 #endif
 
@@ -2928,14 +2897,6 @@ TEST(AudioProcessing, GainController1ConfigEqual) {
   b.enable_limiter = a.enable_limiter;
   EXPECT_EQ(a, b);
 
-  a.analog_level_minimum++;
-  b.analog_level_minimum = a.analog_level_minimum;
-  EXPECT_EQ(a, b);
-
-  a.analog_level_maximum--;
-  b.analog_level_maximum = a.analog_level_maximum;
-  EXPECT_EQ(a, b);
-
   auto& a_analog = a.analog_gain_controller;
   auto& b_analog = b.analog_gain_controller;
 
@@ -2979,14 +2940,6 @@ TEST(AudioProcessing, GainController1ConfigNotEqual) {
   a = b;
 
   Toggle(a.enable_limiter);
-  EXPECT_NE(a, b);
-  a = b;
-
-  a.analog_level_minimum++;
-  EXPECT_NE(a, b);
-  a = b;
-
-  a.analog_level_maximum--;
   EXPECT_NE(a, b);
   a = b;
 
