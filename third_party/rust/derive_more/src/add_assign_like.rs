@@ -23,10 +23,10 @@ pub fn expand(input: &DeriveInput, trait_name: &str) -> TokenStream {
             Fields::Named(ref fields) => {
                 struct_exprs(&named_to_vec(fields), &method_ident)
             }
-            _ => panic!(format!("Unit structs cannot use derive({})", trait_name)),
+            _ => panic!("Unit structs cannot use derive({})", trait_name),
         },
 
-        _ => panic!(format!("Only structs can use derive({})", trait_name)),
+        _ => panic!("Only structs can use derive({})", trait_name),
     };
 
     quote!(

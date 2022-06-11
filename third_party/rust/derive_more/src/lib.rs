@@ -102,8 +102,7 @@
 //! 1. [`Index`]
 //! 2. [`Deref`]
 //! 3. [`Not`-like], contains `Not` and `Neg`
-//! 4. [`Add`-like], contains `Add`, `Sub`, `BitAnd`, `BitOr`, `BitXor`, `MulSelf`,
-//!    `DivSelf`, `RemSelf`, `ShrSelf` and `ShlSelf`
+//! 4. [`Add`-like], contains `Add`, `Sub`, `BitAnd`, `BitOr`, `BitXor`
 //! 5. [`Mul`-like], contains `Mul`, `Div`, `Rem`, `Shr` and `Shl`
 //! 3. [`Sum`-like], contains `Sum` and `Product`
 //! 6. [`IndexMut`]
@@ -120,6 +119,8 @@
 //! 1. [`Constructor`], this derives a `new` method that can be used as a constructor.
 //!    This is very basic if you need more customization for your constructor, check
 //!    out the [`derive-new`] crate.
+//! 2. [`IsVariant`], for each variant `foo` of an enum type, derives a `is_foo` method.
+//! 3. [`Unwrap`], for each variant `foo` of an enum type, derives an `unwrap_foo` method.
 //!
 //! ## Generated code
 //!
@@ -179,10 +180,9 @@
 //! [`MulAssign`-like]: https://jeltef.github.io/derive_more/derive_more/mul_assign.html
 //!
 //! [`Constructor`]: https://jeltef.github.io/derive_more/derive_more/constructor.html
+//! [`IsVariant`]: https://jeltef.github.io/derive_more/derive_more/is_variant.html
+//! [`Unwrap`]: https://jeltef.github.io/derive_more/derive_more/unwrap.html
 
-// Suppress Clippy tips to use `matches!` macro, because minimal supported Rust version is 1.36.0.
-// Remove this suppression once minimal supported Rust version is bumped up to 1.42.0 or above.
-#![cfg_attr(nightly, allow(clippy::match_like_matches_macro))]
 #![recursion_limit = "128"]
 
 extern crate proc_macro;
@@ -229,6 +229,8 @@ mod index_mut;
 mod into;
 #[cfg(feature = "into_iterator")]
 mod into_iterator;
+#[cfg(feature = "is_variant")]
+mod is_variant;
 #[cfg(feature = "mul_assign")]
 mod mul_assign_like;
 #[cfg(any(feature = "mul", feature = "mul_assign"))]
@@ -245,6 +247,8 @@ mod parsing;
 mod sum_like;
 #[cfg(feature = "try_into")]
 mod try_into;
+#[cfg(feature = "unwrap")]
+mod unwrap;
 
 // This trait describes the possible return types of
 // the derives. A derive can generally be infallible and
@@ -406,3 +410,13 @@ create_derive!(
 
 create_derive!("as_ref", as_ref, AsRef, as_ref_derive, as_ref);
 create_derive!("as_mut", as_mut, AsMut, as_mut_derive, as_mut);
+
+create_derive!(
+    "is_variant",
+    is_variant,
+    IsVariant,
+    is_variant_derive,
+    is_variant
+);
+
+create_derive!("unwrap", unwrap, Unwrap, unwrap_derive, unwrap);

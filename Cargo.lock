@@ -1385,9 +1385,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.11"
+version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41cb0e6161ad61ed084a36ba71fbba9e3ac5aee3606fb607fe08da6acbcf3d8c"
+checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5983,7 +5983,6 @@ dependencies = [
  "bitflags",
  "byteorder",
  "crossbeam-channel",
- "derive_more",
  "euclid",
  "malloc_size_of_derive",
  "peek-poke",
