@@ -3907,6 +3907,12 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
                       clearance, aState.IsAdjacentWithTop(), aLine.get(),
                       *childReflowInput, frameReflowStatus, aState);
 
+      if (frameReflowStatus.IsInlineBreakBefore()) {
+        // No need to retry this loop if there is a break opportunity before the
+        // child block.
+        break;
+      }
+
       // Now the block has a height.  Using that height, get the
       // available space again and call ComputeBlockAvailSpace again.
       // If ComputeBlockAvailSpace gives a different result, we need to
