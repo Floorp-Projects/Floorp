@@ -16,7 +16,6 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "absl/memory/memory.h"
 #include "rtc_base/network/sent_packet.h"
@@ -60,10 +59,10 @@ static unsigned char kTurnChannelDataMessageWithOddLength[] = {
 static const rtc::SocketAddress kClientAddr("11.11.11.11", 0);
 static const rtc::SocketAddress kServerAddr("22.22.22.22", 0);
 
-class AsyncStunServerTCPSocket : public rtc::AsyncTcpListenSocket {
+class AsyncStunServerTCPSocket : public rtc::AsyncTCPSocket {
  public:
-  explicit AsyncStunServerTCPSocket(std::unique_ptr<rtc::Socket> socket)
-      : AsyncTcpListenSocket(std::move(socket)) {}
+  explicit AsyncStunServerTCPSocket(rtc::Socket* socket)
+      : AsyncTCPSocket(socket, true) {}
   void HandleIncomingConnection(rtc::Socket* socket) override {
     SignalNewConnection(this, new AsyncStunTCPSocket(socket));
   }
@@ -78,11 +77,9 @@ class AsyncStunTCPSocketTest : public ::testing::Test,
   virtual void SetUp() { CreateSockets(); }
 
   void CreateSockets() {
-    std::unique_ptr<rtc::Socket> server =
-        absl::WrapUnique(vss_->CreateSocket(kServerAddr.family(), SOCK_STREAM));
+    rtc::Socket* server = vss_->CreateSocket(kServerAddr.family(), SOCK_STREAM);
     server->Bind(kServerAddr);
-    listen_socket_ =
-        std::make_unique<AsyncStunServerTCPSocket>(std::move(server));
+    listen_socket_ = std::make_unique<AsyncStunServerTCPSocket>(server);
     listen_socket_->SignalNewConnection.connect(
         this, &AsyncStunTCPSocketTest::OnNewConnection);
 

@@ -1060,24 +1060,6 @@ class FakeAsyncPacketSocket : public AsyncPacketSocket {
   State state_;
 };
 
-class FakeAsyncListenSocket : public AsyncListenSocket {
- public:
-  // Returns current local address. Address may be set to NULL if the
-  // socket is not bound yet (GetState() returns STATE_BINDING).
-  virtual SocketAddress GetLocalAddress() const { return local_address_; }
-  void Bind(const SocketAddress& address) {
-    local_address_ = address;
-    state_ = State::kBound;
-  }
-  virtual int GetOption(Socket::Option opt, int* value) { return 0; }
-  virtual int SetOption(Socket::Option opt, int value) { return 0; }
-  virtual State GetState() const { return state_; }
-
- private:
-  SocketAddress local_address_;
-  State state_ = State::kClosed;
-};
-
 // Local -> XXXX
 TEST_F(PortTest, TestLocalToLocal) {
   TestLocalToLocal();
@@ -1526,8 +1508,8 @@ TEST_F(PortTest, TestDelayedBindingUdp) {
 }
 
 TEST_F(PortTest, TestDisableInterfaceOfTcpPort) {
-  FakeAsyncListenSocket* lsocket = new FakeAsyncListenSocket();
-  FakeAsyncListenSocket* rsocket = new FakeAsyncListenSocket();
+  FakeAsyncPacketSocket* lsocket = new FakeAsyncPacketSocket();
+  FakeAsyncPacketSocket* rsocket = new FakeAsyncPacketSocket();
   FakePacketSocketFactory socket_factory;
 
   socket_factory.set_next_server_tcp_socket(lsocket);
@@ -1536,8 +1518,10 @@ TEST_F(PortTest, TestDisableInterfaceOfTcpPort) {
   socket_factory.set_next_server_tcp_socket(rsocket);
   auto rport = CreateTcpPort(kLocalAddr2, &socket_factory);
 
-  lsocket->Bind(kLocalAddr1);
-  rsocket->Bind(kLocalAddr2);
+  lsocket->set_state(AsyncPacketSocket::STATE_BOUND);
+  lsocket->local_address_ = kLocalAddr1;
+  rsocket->set_state(AsyncPacketSocket::STATE_BOUND);
+  rsocket->local_address_ = kLocalAddr2;
 
   lport->SetIceRole(cricket::ICEROLE_CONTROLLING);
   lport->SetIceTiebreaker(kTiebreaker1);
@@ -1576,17 +1560,17 @@ void PortTest::TestCrossFamilyPorts(int type) {
       SocketAddress("192.168.1.3", 0), SocketAddress("192.168.1.4", 0),
       SocketAddress("2001:db8::1", 0), SocketAddress("2001:db8::2", 0)};
   for (int i = 0; i < 4; i++) {
+    FakeAsyncPacketSocket* socket = new FakeAsyncPacketSocket();
     if (type == SOCK_DGRAM) {
-      FakeAsyncPacketSocket* socket = new FakeAsyncPacketSocket();
       factory.set_next_udp_socket(socket);
       ports[i] = CreateUdpPort(addresses[i], &factory);
       socket->set_state(AsyncPacketSocket::STATE_BINDING);
       socket->SignalAddressReady(socket, addresses[i]);
     } else if (type == SOCK_STREAM) {
-      FakeAsyncListenSocket* socket = new FakeAsyncListenSocket();
       factory.set_next_server_tcp_socket(socket);
       ports[i] = CreateTcpPort(addresses[i], &factory);
-      socket->Bind(addresses[i]);
+      socket->set_state(AsyncPacketSocket::STATE_BOUND);
+      socket->local_address_ = addresses[i];
     }
     ports[i]->PrepareAddress();
   }

@@ -128,31 +128,17 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
   // CONNECTED to CLOSED.
   sigslot::signal2<AsyncPacketSocket*, int> SignalClose;
 
+  // Used only for listening TCP sockets.
+  sigslot::signal2<AsyncPacketSocket*, AsyncPacketSocket*> SignalNewConnection;
+
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(AsyncPacketSocket);
 };
 
-// Listen socket, producing an AsyncPacketSocket when a peer connects.
-class RTC_EXPORT AsyncListenSocket : public sigslot::has_slots<> {
- public:
-  enum class State {
-    kClosed,
-    kBound,
-  };
-
-  // Returns current state of the socket.
-  virtual State GetState() const = 0;
-
-  // Returns current local address. Address may be set to null if the
-  // socket is not bound yet (GetState() returns kBinding).
-  virtual SocketAddress GetLocalAddress() const = 0;
-
-  // Get/set options.
-  virtual int GetOption(Socket::Option opt, int* value) = 0;
-  virtual int SetOption(Socket::Option opt, int value) = 0;
-
-  sigslot::signal2<AsyncListenSocket*, AsyncPacketSocket*> SignalNewConnection;
-};
+// TODO(bugs.webrtc.org/13065): Intended to be broken out into a separate class,
+// after downstream has adapted the new name. The main feature to move from
+// AsyncPacketSocket to AsyncListenSocket is the SignalNewConnection.
+using AsyncListenSocket = AsyncPacketSocket;
 
 void CopySocketInformationToPacketInfo(size_t packet_size_bytes,
                                        const AsyncPacketSocket& socket_from,

@@ -28,7 +28,7 @@ namespace rtc {
 // buffer them in user space.
 class AsyncTCPSocketBase : public AsyncPacketSocket {
  public:
-  AsyncTCPSocketBase(Socket* socket, size_t max_packet_size);
+  AsyncTCPSocketBase(Socket* socket, bool listen, size_t max_packet_size);
   ~AsyncTCPSocketBase() override;
 
   // Pure virtual methods to send and recv data.
@@ -36,6 +36,8 @@ class AsyncTCPSocketBase : public AsyncPacketSocket {
            size_t cb,
            const rtc::PacketOptions& options) override = 0;
   virtual void ProcessInput(char* data, size_t* len) = 0;
+  // Signals incoming connection.
+  virtual void HandleIncomingConnection(Socket* socket) = 0;
 
   SocketAddress GetLocalAddress() const override;
   SocketAddress GetRemoteAddress() const override;
@@ -74,6 +76,7 @@ class AsyncTCPSocketBase : public AsyncPacketSocket {
   void OnCloseEvent(Socket* socket, int error);
 
   std::unique_ptr<Socket> socket_;
+  bool listen_;
   Buffer inbuf_;
   Buffer outbuf_;
   size_t max_insize_;
@@ -90,35 +93,17 @@ class AsyncTCPSocket : public AsyncTCPSocketBase {
   static AsyncTCPSocket* Create(Socket* socket,
                                 const SocketAddress& bind_address,
                                 const SocketAddress& remote_address);
-  explicit AsyncTCPSocket(Socket* socket);
+  AsyncTCPSocket(Socket* socket, bool listen);
   ~AsyncTCPSocket() override {}
 
   int Send(const void* pv,
            size_t cb,
            const rtc::PacketOptions& options) override;
   void ProcessInput(char* data, size_t* len) override;
+  void HandleIncomingConnection(Socket* socket) override;
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(AsyncTCPSocket);
-};
-
-class AsyncTcpListenSocket : public AsyncListenSocket {
- public:
-  explicit AsyncTcpListenSocket(std::unique_ptr<Socket> socket);
-
-  State GetState() const override;
-  SocketAddress GetLocalAddress() const override;
-
-  int GetOption(Socket::Option opt, int* value) override;
-  int SetOption(Socket::Option opt, int value) override;
-
-  virtual void HandleIncomingConnection(rtc::Socket* socket);
-
- private:
-  // Called by the underlying socket
-  void OnReadEvent(Socket* socket);
-
-  std::unique_ptr<Socket> socket_;
 };
 
 }  // namespace rtc
