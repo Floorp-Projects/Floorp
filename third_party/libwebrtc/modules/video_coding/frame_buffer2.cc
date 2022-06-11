@@ -251,14 +251,14 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
   RTC_DCHECK(!frames_to_decode_.empty());
   bool superframe_delayed_by_retransmission = false;
   size_t superframe_size = 0;
-  EncodedFrame* first_frame = frames_to_decode_[0]->second.frame.get();
-  int64_t render_time_ms = first_frame->RenderTime();
-  int64_t receive_time_ms = first_frame->ReceivedTime();
+  const EncodedFrame& first_frame = *frames_to_decode_[0]->second.frame;
+  int64_t render_time_ms = first_frame.RenderTime();
+  int64_t receive_time_ms = first_frame.ReceivedTime();
   // Gracefully handle bad RTP timestamps and render time issues.
-  if (HasBadRenderTiming(*first_frame, now_ms)) {
+  if (HasBadRenderTiming(first_frame, now_ms)) {
     jitter_estimator_.Reset();
     timing_->Reset();
-    render_time_ms = timing_->RenderTimeMs(first_frame->Timestamp(), now_ms);
+    render_time_ms = timing_->RenderTimeMs(first_frame.Timestamp(), now_ms);
   }
 
   for (FrameMap::iterator& frame_it : frames_to_decode_) {
@@ -313,8 +313,8 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
   if (!superframe_delayed_by_retransmission) {
     int64_t frame_delay;
 
-    if (inter_frame_delay_.CalculateDelay(first_frame->Timestamp(),
-                                          &frame_delay, receive_time_ms)) {
+    if (inter_frame_delay_.CalculateDelay(first_frame.Timestamp(), &frame_delay,
+                                          receive_time_ms)) {
       jitter_estimator_.UpdateEstimate(frame_delay, superframe_size);
     }
 
