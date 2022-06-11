@@ -62,6 +62,10 @@ AsyncListenSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
     return NULL;
   }
 
+  if (opts & PacketSocketFactory::OPT_TLS_FAKE) {
+    RTC_LOG(LS_ERROR) << "Fake TLS not supported.";
+    return NULL;
+  }
   Socket* socket =
       socket_factory_->CreateSocket(local_address.family(), SOCK_STREAM);
   if (!socket) {
@@ -80,12 +84,6 @@ AsyncListenSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
   if (socket->SetOption(Socket::OPT_NODELAY, 1) != 0) {
     RTC_LOG(LS_ERROR) << "Setting TCP_NODELAY option failed with error "
                       << socket->GetError();
-  }
-
-  // If using fake TLS, wrap the TCP socket in a pseudo-SSL socket.
-  if (opts & PacketSocketFactory::OPT_TLS_FAKE) {
-    RTC_DCHECK(!(opts & PacketSocketFactory::OPT_TLS));
-    socket = new AsyncSSLSocket(socket);
   }
 
   RTC_CHECK(!(opts & PacketSocketFactory::OPT_STUN));
