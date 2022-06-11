@@ -45,7 +45,8 @@ class ReceiveStatisticsProxyTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
     metrics::Reset();
-    statistics_proxy_.reset(new ReceiveStatisticsProxy(&config_, &fake_clock_));
+    statistics_proxy_.reset(
+        new ReceiveStatisticsProxy(config_.rtp.remote_ssrc, &fake_clock_));
   }
 
   VideoReceiveStream::Config GetTestConfig() {

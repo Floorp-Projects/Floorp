@@ -171,7 +171,7 @@ VideoReceiveStream::VideoReceiveStream(
       clock_(clock),
       call_stats_(call_stats),
       source_tracker_(clock_),
-      stats_proxy_(&config_, clock_),
+      stats_proxy_(config_.rtp.remote_ssrc, clock_),
       rtp_receive_statistics_(ReceiveStatistics::Create(clock_)),
       timing_(timing),
       video_receiver_(clock_, timing_.get()),

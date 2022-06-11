@@ -80,11 +80,9 @@ std::string UmaSuffixForContentType(VideoContentType content_type) {
 
 }  // namespace
 
-ReceiveStatisticsProxy::ReceiveStatisticsProxy(
-    const VideoReceiveStream::Config* config,
-    Clock* clock)
+ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t remote_ssrc,
+                                               Clock* clock)
     : clock_(clock),
-      config_(*config),
       start_ms_(clock->TimeInMilliseconds()),
       enable_decode_time_histograms_(
           !field_trial::IsEnabled("WebRTC-DecodeTimeHistogramsKillSwitch")),
@@ -120,7 +118,7 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(
       timing_frame_info_counter_(kMovingMaxWindowMs) {
   decode_thread_.Detach();
   network_thread_.Detach();
-  stats_.ssrc = config_.rtp.remote_ssrc;
+  stats_.ssrc = remote_ssrc;
 }
 
 void ReceiveStatisticsProxy::UpdateHistograms(
