@@ -19,11 +19,6 @@ namespace webrtc {
 
 std::unique_ptr<TaskQueueFactory> CreateTaskQueueGcdFactory();
 
-// Post a task into the system-defined global concurrent queue.
-void PostTaskToGlobalQueue(
-    std::unique_ptr<QueuedTask> task,
-    TaskQueueFactory::Priority priority = TaskQueueFactory::Priority::NORMAL);
-
 }  // namespace webrtc
 
 #endif  // RTC_BASE_TASK_QUEUE_GCD_H_

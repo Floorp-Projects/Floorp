@@ -542,10 +542,7 @@ if (rtc_enable_libevent) {
 
 if (is_mac || is_ios) {
   rtc_library("rtc_task_queue_gcd") {
-    visibility = [
-      ":threading",
-      "../api/task_queue:default_task_queue_factory",
-    ]
+    visibility = [ "../api/task_queue:default_task_queue_factory" ]
     sources = [
       "task_queue_gcd.cc",
       "task_queue_gcd.h",
@@ -837,10 +834,7 @@ rtc_library("threading") {
     deps += [ ":win32" ]
   }
   if (is_mac || is_ios) {
-    deps += [
-      ":rtc_task_queue_gcd",
-      "system:cocoa_threading",
-    ]
+    deps += [ "system:cocoa_threading" ]
   }
 }
 
