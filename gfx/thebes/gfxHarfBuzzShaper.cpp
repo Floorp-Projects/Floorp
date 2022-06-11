@@ -321,9 +321,8 @@ hb_position_t gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) {
 
   if (!mVmtxTable) {
     // Must be a "vertical" font that doesn't actually have vertical metrics;
-    // use a fixed advance.
-    return FloatToFixed(
-        mFont->GetMetrics(nsFontMetrics::eVertical).aveCharWidth);
+    // use em height as advance.
+    return FloatToFixed(mFont->GetHorizontalMetrics().emHeight);
   }
 
   NS_ASSERTION(mNumLongVMetrics > 0,
