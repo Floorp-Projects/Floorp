@@ -1155,33 +1155,6 @@ TEST(RtcpTransceiverImplTest, SendsNoXrRrtrWhenDisabled) {
   EXPECT_FALSE(rtcp_parser.xr()->rrtr());
 }
 
-TEST(RtcpTransceiverImplTest, CalculatesRoundTripTimeOnDlrr) {
-  const uint32_t kSenderSsrc = 4321;
-  SimulatedClock clock(0);
-  MockRtcpRttStats rtt_observer;
-  MockTransport null_transport;
-  RtcpTransceiverConfig config;
-  config.clock = &clock;
-  config.feedback_ssrc = kSenderSsrc;
-  config.schedule_periodic_compound_packets = false;
-  config.outgoing_transport = &null_transport;
-  config.non_sender_rtt_measurement = true;
-  config.rtt_observer = &rtt_observer;
-  RtcpTransceiverImpl rtcp_transceiver(config);
-
-  Timestamp time = Timestamp::Micros(12345678);
-  webrtc::rtcp::ReceiveTimeInfo rti;
-  rti.ssrc = kSenderSsrc;
-  rti.last_rr = CompactNtp(clock.ConvertTimestampToNtpTime(time));
-  rti.delay_since_last_rr = SaturatedUsToCompactNtp(10 * 1000);
-  webrtc::rtcp::ExtendedReports xr;
-  xr.AddDlrrItem(rti);
-  auto raw_packet = xr.Build();
-
-  EXPECT_CALL(rtt_observer, OnRttUpdate(100 /* rtt_ms */));
-  rtcp_transceiver.ReceivePacket(raw_packet, time + TimeDelta::Millis(110));
-}
-
 TEST(RtcpTransceiverImplTest, PassRttFromDlrrToLinkObserver) {
   const uint32_t kSenderSsrc = 4321;
   MockNetworkLinkRtcpObserver link_observer;
@@ -1233,7 +1206,7 @@ TEST(RtcpTransceiverImplTest, IgnoresUnknownSsrcInDlrr) {
   const uint32_t kSenderSsrc = 4321;
   const uint32_t kUnknownSsrc = 4322;
   SimulatedClock clock(0);
-  MockRtcpRttStats rtt_observer;
+  MockNetworkLinkRtcpObserver link_observer;
   MockTransport null_transport;
   RtcpTransceiverConfig config;
   config.clock = &clock;
@@ -1241,7 +1214,7 @@ TEST(RtcpTransceiverImplTest, IgnoresUnknownSsrcInDlrr) {
   config.schedule_periodic_compound_packets = false;
   config.outgoing_transport = &null_transport;
   config.non_sender_rtt_measurement = true;
-  config.rtt_observer = &rtt_observer;
+  config.network_link_observer = &link_observer;
   RtcpTransceiverImpl rtcp_transceiver(config);
 
   Timestamp time = Timestamp::Micros(12345678);
@@ -1252,7 +1225,7 @@ TEST(RtcpTransceiverImplTest, IgnoresUnknownSsrcInDlrr) {
   xr.AddDlrrItem(rti);
   auto raw_packet = xr.Build();
 
-  EXPECT_CALL(rtt_observer, OnRttUpdate(_)).Times(0);
+  EXPECT_CALL(link_observer, OnRttUpdate).Times(0);
   rtcp_transceiver.ReceivePacket(raw_packet, time + TimeDelta::Millis(100));
 }
 

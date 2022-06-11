@@ -99,12 +99,6 @@ struct RtcpTransceiverConfig {
   // Rtcp report block generator for outgoing receiver reports.
   ReceiveStatisticsProvider* receive_statistics = nullptr;
 
-  // Callback to pass result of rtt calculation. Should outlive RtcpTransceiver.
-  // Callbacks will be invoked on the `task_queue`.
-  // Deprecated, rtt_observer will be deleted in favor of more generic
-  // `network_link_observer`
-  RtcpRttStats* rtt_observer = nullptr;
-
   // Should outlive RtcpTransceiver.
   // Callbacks will be invoked on the `task_queue`.
   NetworkLinkRtcpObserver* network_link_observer = nullptr;

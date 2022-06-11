@@ -345,7 +345,8 @@ void RtcpTransceiverImpl::HandleExtendedReports(
 }
 
 void RtcpTransceiverImpl::HandleDlrr(const rtcp::Dlrr& dlrr, Timestamp now) {
-  if (!config_.non_sender_rtt_measurement) {
+  if (!config_.non_sender_rtt_measurement ||
+      config_.network_link_observer == nullptr) {
     return;
   }
 
@@ -358,13 +359,7 @@ void RtcpTransceiverImpl::HandleDlrr(const rtcp::Dlrr& dlrr, Timestamp now) {
       continue;
     uint32_t rtt_ntp = receive_time_ntp - rti.delay_since_last_rr - rti.last_rr;
     int64_t rtt_ms = CompactNtpRttToMs(rtt_ntp);
-    if (config_.rtt_observer != nullptr) {
-      config_.rtt_observer->OnRttUpdate(rtt_ms);
-    }
-    if (config_.network_link_observer != nullptr) {
-      config_.network_link_observer->OnRttUpdate(now,
-                                                 TimeDelta::Millis(rtt_ms));
-    }
+    config_.network_link_observer->OnRttUpdate(now, TimeDelta::Millis(rtt_ms));
   }
 }
 
