@@ -15,8 +15,10 @@
 #include <string>
 
 #include "modules/audio_processing/agc2/adaptive_agc.h"
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/gain_applier.h"
 #include "modules/audio_processing/agc2/limiter.h"
+#include "modules/audio_processing/agc2/vad_wrapper.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 
@@ -51,8 +53,10 @@ class GainController2 {
 
  private:
   static int instance_count_;
+  const AvailableCpuFeatures cpu_features_;
   ApmDataDumper data_dumper_;
   GainApplier fixed_gain_applier_;
+  std::unique_ptr<VoiceActivityDetectorWrapper> vad_;
   std::unique_ptr<AdaptiveAgc> adaptive_digital_controller_;
   Limiter limiter_;
   int calls_since_last_limiter_log_;

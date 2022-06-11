@@ -52,7 +52,6 @@ rtc_library("adaptive_digital") {
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_compare",
     "../../../rtc_base:safe_minmax",
-    "../../../system_wrappers:field_trial",
     "../../../system_wrappers:metrics",
   ]
 
@@ -150,7 +149,11 @@ rtc_library("vad_wrapper") {
     "vad_wrapper.cc",
     "vad_wrapper.h",
   ]
-  visibility = [ "./*" ]
+
+  visibility = [
+    "..:gain_controller2",
+    "./*",
+  ]
 
   defines = []
   if (rtc_build_with_neon && current_cpu != "arm64") {
