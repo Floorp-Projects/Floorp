@@ -788,8 +788,8 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
   if (send_res < 0) {
     if (errno == SCTP_EWOULDBLOCK) {
       ready_to_send_data_ = false;
-      RTC_LOG(LS_INFO) << debug_name_
-                       << "->SendMessageInternal(...): EWOULDBLOCK returned";
+      RTC_LOG(LS_VERBOSE) << debug_name_
+                          << "->SendMessageInternal(...): EWOULDBLOCK returned";
       return SDR_BLOCK;
     }
 
