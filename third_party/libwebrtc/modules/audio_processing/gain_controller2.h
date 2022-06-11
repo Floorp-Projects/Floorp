@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-#include "modules/audio_processing/agc2/adaptive_agc.h"
+#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/gain_applier.h"
 #include "modules/audio_processing/agc2/limiter.h"
@@ -57,7 +57,7 @@ class GainController2 {
   ApmDataDumper data_dumper_;
   GainApplier fixed_gain_applier_;
   std::unique_ptr<VoiceActivityDetectorWrapper> vad_;
-  std::unique_ptr<AdaptiveAgc> adaptive_digital_controller_;
+  std::unique_ptr<AdaptiveDigitalGainController> adaptive_digital_controller_;
   Limiter limiter_;
   int calls_since_last_limiter_log_;
   int analog_level_;

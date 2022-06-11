@@ -8,7 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc2/adaptive_agc.h"
+#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
+
+#include <algorithm>
 
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/agc2/vad_wrapper.h"
@@ -39,11 +41,13 @@ AudioLevels ComputeAudioLevels(AudioFrameView<float> frame) {
 
 }  // namespace
 
-AdaptiveAgc::AdaptiveAgc(
+AdaptiveDigitalGainController::AdaptiveDigitalGainController(
     ApmDataDumper* apm_data_dumper,
-    const AudioProcessing::Config::GainController2::AdaptiveDigital& config)
+    const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
+    int sample_rate_hz,
+    int num_channels)
     : speech_level_estimator_(apm_data_dumper, config),
-      gain_controller_(apm_data_dumper, config),
+      gain_controller_(apm_data_dumper, config, sample_rate_hz, num_channels),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
       saturation_protector_(
@@ -55,15 +59,16 @@ AdaptiveAgc::AdaptiveAgc(
   RTC_DCHECK(saturation_protector_);
 }
 
-AdaptiveAgc::~AdaptiveAgc() = default;
+AdaptiveDigitalGainController::~AdaptiveDigitalGainController() = default;
 
-void AdaptiveAgc::Initialize(int sample_rate_hz, int num_channels) {
+void AdaptiveDigitalGainController::Initialize(int sample_rate_hz,
+                                               int num_channels) {
   gain_controller_.Initialize(sample_rate_hz, num_channels);
 }
 
-void AdaptiveAgc::Process(AudioFrameView<float> frame,
-                          float speech_probability,
-                          float limiter_envelope) {
+void AdaptiveDigitalGainController::Process(AudioFrameView<float> frame,
+                                            float speech_probability,
+                                            float limiter_envelope) {
   AudioLevels levels = ComputeAudioLevels(frame);
   apm_data_dumper_->DumpRaw("agc2_input_rms_dbfs", levels.rms_dbfs);
   apm_data_dumper_->DumpRaw("agc2_input_peak_dbfs", levels.peak_dbfs);
@@ -95,7 +100,7 @@ void AdaptiveAgc::Process(AudioFrameView<float> frame,
   gain_controller_.Process(info, frame);
 }
 
-void AdaptiveAgc::HandleInputGainChange() {
+void AdaptiveDigitalGainController::HandleInputGainChange() {
   speech_level_estimator_.Reset();
   saturation_protector_->Reset();
 }
