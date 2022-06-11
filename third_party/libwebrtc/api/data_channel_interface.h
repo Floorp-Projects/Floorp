@@ -183,12 +183,10 @@ class RTC_EXPORT DataChannelInterface : public rtc::RefCountInterface {
 
   // Sends `data` to the remote peer. If the data can't be sent at the SCTP
   // level (due to congestion control), it's buffered at the data channel level,
-  // up to a maximum of MaxSendQueueSize(). If Send is called while this buffer
-  // is full, the data channel will be closed abruptly.
-  //
-  // So, it's important to use buffered_amount() and OnBufferedAmountChange to
-  // ensure the data channel is used efficiently but without filling this
-  // buffer.
+  // up to a maximum of MaxSendQueueSize().
+  // Returns false if the data channel is not in open state or if the send
+  // buffer is full.
+  // TODO(webrtc:13289): Return an RTCError with information about the failure.
   virtual bool Send(const DataBuffer& buffer) = 0;
 
   // Amount of bytes that can be queued for sending on the data channel.
