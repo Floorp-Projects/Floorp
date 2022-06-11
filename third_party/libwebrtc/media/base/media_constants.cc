@@ -103,7 +103,6 @@ const char kComfortNoiseCodecName[] = "CN";
 const char kVp8CodecName[] = "VP8";
 const char kVp9CodecName[] = "VP9";
 const char kAv1CodecName[] = "AV1";
-const char kAv1xCodecName[] = "AV1X";
 const char kH264CodecName[] = "H264";
 
 // RFC 6184 RTP Payload Format for H.264 video

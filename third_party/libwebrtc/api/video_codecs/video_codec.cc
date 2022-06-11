@@ -22,7 +22,8 @@ namespace {
 constexpr char kPayloadNameVp8[] = "VP8";
 constexpr char kPayloadNameVp9[] = "VP9";
 constexpr char kPayloadNameAv1[] = "AV1";
-// TODO(bugs.webrtc.org/13166): Delete after all dependent projects updated.
+// TODO(bugs.webrtc.org/13166): Remove AV1X when backwards compatibility is not
+// needed.
 constexpr char kPayloadNameAv1x[] = "AV1X";
 constexpr char kPayloadNameH264[] = "H264";
 constexpr char kPayloadNameGeneric[] = "Generic";
