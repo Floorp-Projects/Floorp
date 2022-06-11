@@ -481,14 +481,11 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
       // Propagate break-before from the legend to the fieldset.
       if (legend->StyleDisplay()->BreakBefore() ||
           aStatus.IsInlineBreakBefore()) {
-        // XXX(mats) setting a desired size shouldn't be necessary: bug 1599159.
-        aDesiredSize.SetSize(wm, LogicalSize(wm));
         aStatus.SetInlineLineBreakBeforeAndReset();
         return;
       }
       // Honor break-inside:avoid by breaking before instead.
       if (MOZ_UNLIKELY(avoidBreakInside) && !aStatus.IsFullyComplete()) {
-        aDesiredSize.SetSize(wm, LogicalSize(wm));
         aStatus.SetInlineLineBreakBeforeAndReset();
         return;
       }
@@ -650,7 +647,6 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
         !aReflowInput.mFlags.mIsTopOfPage &&
         availSize.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
       if (status.IsInlineBreakBefore() || !status.IsFullyComplete()) {
-        aDesiredSize.SetSize(wm, LogicalSize(wm));
         aStatus.SetInlineLineBreakBeforeAndReset();
         return;
       }
@@ -775,7 +771,6 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
       border.BEnd(wm) > 0 && aReflowInput.AvailableBSize() > border.BEnd(wm)) {
     // Our end border doesn't fit but it should fit in the next column/page.
     if (MOZ_UNLIKELY(avoidBreakInside)) {
-      aDesiredSize.SetSize(wm, LogicalSize(wm));
       aStatus.SetInlineLineBreakBeforeAndReset();
       return;
     } else {
