@@ -662,12 +662,10 @@ WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
   RTC_DCHECK(signal_thread_checker_.IsCurrent());
   std::vector<webrtc::RtpHeaderExtensionCapability> result;
   int id = 1;
-  for (const auto& uri :
-       {webrtc::RtpExtension::kAudioLevelUri,
-        webrtc::RtpExtension::kAbsSendTimeUri,
-        webrtc::RtpExtension::kTransportSequenceNumberUri,
-        webrtc::RtpExtension::kMidUri, webrtc::RtpExtension::kRidUri,
-        webrtc::RtpExtension::kRepairedRidUri}) {
+  for (const auto& uri : {webrtc::RtpExtension::kAudioLevelUri,
+                          webrtc::RtpExtension::kAbsSendTimeUri,
+                          webrtc::RtpExtension::kTransportSequenceNumberUri,
+                          webrtc::RtpExtension::kMidUri}) {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   return result;
