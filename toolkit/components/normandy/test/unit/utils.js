@@ -9,6 +9,7 @@ const { Preferences } = ChromeUtils.import(
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { NormandyApi } = ChromeUtils.import(
   "resource://normandy/lib/NormandyApi.jsm"
 );
@@ -90,7 +91,7 @@ function makeMockApiServer(directory) {
     }
 
     try {
-      const contents = await IOUtils.readUTF8(index.path);
+      const contents = await OS.File.read(index.path, { encoding: "utf-8" });
       response.write(contents);
     } catch (e) {
       response.setStatusLine("1.1", 500, "Server error");
