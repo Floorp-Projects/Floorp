@@ -137,19 +137,9 @@ static void ActivateBundledFonts() {
 // "Language Support" directory, and don't show up in the standard font
 // list returned by CTFontManagerCopyAvailableFontFamilyNames unless
 // we explicitly activate them.
-//
-// On macOS Big Sur, the various Noto fonts etc have moved to a new location
-// under /System/Fonts. Whether they're exposed in the font list by default
-// depends on the SDK used; when built with SDK 10.15, they're absent. So
-// we explicitly activate them to be sure they'll be available.
-#if __MAC_OS_X_VERSION_MAX_ALLOWED < 101500
-static const nsLiteralCString kLangFontsDirs[] = {
-    "/Library/Application Support/Apple/Fonts/Language Support"_ns};
-#else
 static const nsLiteralCString kLangFontsDirs[] = {
     "/Library/Application Support/Apple/Fonts/Language Support"_ns,
     "/System/Library/Fonts/Supplemental"_ns};
-#endif
 
 static void FontRegistrationCallback(void* aUnused) {
   AUTO_PROFILER_REGISTER_THREAD("RegisterFonts");

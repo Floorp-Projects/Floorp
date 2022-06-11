@@ -65,8 +65,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
 
 If you want to use an API that was introduced after 10.12, you now have one extra thing to worry about.
 In addition to the runtime check [described in the previous section](#using-macos-apis), you also
-have to jump through extra hoops in order to allow the build to succeed with older SDKs, because
-[we need to support building Firefox with SDK versions all the way down to the 10.12 SDK](./sdks.html#supported-sdks).
+have to jump through extra hoops in order to allow the build to succeed, because
+[our build target for Firefox has to remain at 10.12 in order for Firefox to run on macOS versions all the way down to macOS 10.12](./sdks.html#supported-sdks).
 
 In order to make the compiler accept your code, you will need to copy some amount of the API declaration
 into your own code. Copy it from the newest recent SDK you can get your hands on.
