@@ -3433,7 +3433,9 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
             JSReturnOperand);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
+           scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
 

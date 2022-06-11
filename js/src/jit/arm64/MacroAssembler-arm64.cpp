@@ -315,6 +315,9 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
       JSReturnOperand);
   loadPtr(
       Address(PseudoStackPointer, offsetof(ResumeFromException, framePointer)),
+      FramePointer);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, stackPointer)),
       PseudoStackPointer);
   syncStackPtr();
 

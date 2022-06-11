@@ -596,7 +596,8 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
   bind(&returnIon);
   loadValue(Address(esp, ResumeFromException::offsetOfException()),
             JSReturnOperand);
-  loadPtr(Address(esp, ResumeFromException::offsetOfFramePointer()), esp);
+  loadPtr(Address(esp, ResumeFromException::offsetOfFramePointer()), ebp);
+  loadPtr(Address(esp, ResumeFromException::offsetOfStackPointer()), esp);
 
   // If profiling is enabled, then update the lastProfilingFrame to refer to
   // caller frame before returning. This code is shared by ForcedReturnIon
