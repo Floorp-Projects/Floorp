@@ -412,7 +412,7 @@ void AudioProcessingImpl::InitializeLocked() {
   InitializeVoiceDetector();
   InitializeResidualEchoDetector();
   InitializeEchoController();
-  InitializeGainController2();
+  InitializeGainController2(/*config_has_changed=*/true);
   InitializeNoiseSuppressor();
   InitializeAnalyzer();
   InitializePostProcessor();
@@ -589,9 +589,7 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
     config_.gain_controller2 = AudioProcessing::Config::GainController2();
   }
 
-  if (agc2_config_changed) {
-    InitializeGainController2();
-  }
+  InitializeGainController2(agc2_config_changed);
 
   if (pre_amplifier_config_changed || gain_adjustment_config_changed) {
     InitializeCaptureLevelsAdjuster();
@@ -873,7 +871,7 @@ void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
           float value;
           setting.GetFloat(&value);
           config_.gain_controller2.fixed_digital.gain_db = value;
-          submodules_.gain_controller2->ApplyConfig(config_.gain_controller2);
+          submodules_.gain_controller2->SetFixedGainDb(value);
         }
         break;
       }
@@ -1936,19 +1934,18 @@ void AudioProcessingImpl::InitializeGainController1() {
       capture_.capture_output_used);
 }
 
-void AudioProcessingImpl::InitializeGainController2() {
-  if (config_.gain_controller2.enabled) {
-    if (!submodules_.gain_controller2) {
-      // TODO(alessiob): Move the injected gain controller once injection is
-      // implemented.
-      submodules_.gain_controller2.reset(new GainController2());
-    }
-
-    submodules_.gain_controller2->Initialize(proc_fullband_sample_rate_hz(),
-                                             num_input_channels());
-    submodules_.gain_controller2->ApplyConfig(config_.gain_controller2);
-  } else {
+void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
+  if (!config_has_changed) {
+    return;
+  }
+  if (!config_.gain_controller2.enabled) {
     submodules_.gain_controller2.reset();
+    return;
+  }
+  if (!submodules_.gain_controller2 || config_has_changed) {
+    submodules_.gain_controller2 = std::make_unique<GainController2>(
+        config_.gain_controller2, proc_fullband_sample_rate_hz(),
+        num_input_channels());
   }
 }
 
