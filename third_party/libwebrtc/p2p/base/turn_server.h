@@ -79,6 +79,7 @@ class TurnServerAllocation : public rtc::MessageHandlerAutoCleanup,
   const std::string& key() const { return key_; }
   const std::string& transaction_id() const { return transaction_id_; }
   const std::string& username() const { return username_; }
+  const std::string& origin() const { return origin_; }
   const std::string& last_nonce() const { return last_nonce_; }
   void set_last_nonce(const std::string& nonce) { last_nonce_ = nonce; }
 
@@ -134,6 +135,7 @@ class TurnServerAllocation : public rtc::MessageHandlerAutoCleanup,
   std::string key_;
   std::string transaction_id_;
   std::string username_;
+  std::string origin_;
   std::string last_nonce_;
   PermissionList perms_;
   ChannelList channels_;
