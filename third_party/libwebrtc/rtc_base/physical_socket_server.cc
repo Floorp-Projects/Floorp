@@ -722,7 +722,11 @@ bool SocketDispatcher::IsDescriptorClosed() {
   // from readability.  So test on each readable call.  Is this
   // inefficient?  Probably.
   char ch;
-  ssize_t res = ::recv(s_, &ch, 1, MSG_PEEK);
+  ssize_t res;
+  // Retry if the system call was interrupted.
+  do {
+    res = ::recv(s_, &ch, 1, MSG_PEEK);
+  } while (res < 0 && errno == EINTR);
   if (res > 0) {
     // Data available, so not closed.
     return false;
@@ -733,13 +737,20 @@ bool SocketDispatcher::IsDescriptorClosed() {
     switch (errno) {
       // Returned if we've already closed s_.
       case EBADF:
+        // This is dangerous: if we keep attempting to access a FD after close,
+        // it could be reopened by something else making us think it's still
+        // open. Note that this is only a DCHECK.
+        RTC_NOTREACHED();
+        return true;
       // Returned during ungraceful peer shutdown.
       case ECONNRESET:
         return true;
+      case ECONNABORTED:
+        return true;
+      case EPIPE:
+        return true;
       // The normal blocking error; don't log anything.
       case EWOULDBLOCK:
-      // Interrupted system call.
-      case EINTR:
         return false;
       default:
         // Assume that all other errors are just blocking errors, meaning the
@@ -1175,16 +1186,29 @@ bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
   return WaitSelect(cmsWait, process_io);
 }
 
+// `error_event` is true if we are responding to an event where we know an
+// error has occurred, which is possible with the poll/epoll implementations
+// but not the select implementation.
+//
+// `check_error` is true if there is the possibility of an error.
 static void ProcessEvents(Dispatcher* dispatcher,
                           bool readable,
                           bool writable,
+                          bool error_event,
                           bool check_error) {
+  RTC_DCHECK(!(error_event && !check_error));
   int errcode = 0;
-  // TODO(pthatcher): Should we set errcode if getsockopt fails?
   if (check_error) {
     socklen_t len = sizeof(errcode);
-    ::getsockopt(dispatcher->GetDescriptor(), SOL_SOCKET, SO_ERROR, &errcode,
-                 &len);
+    int res = ::getsockopt(dispatcher->GetDescriptor(), SOL_SOCKET, SO_ERROR,
+                           &errcode, &len);
+    if (res < 0) {
+      // If we are sure an error has occurred, or if getsockopt failed for a
+      // socket descriptor, make sure we set the error code to a nonzero value.
+      if (error_event || errno != ENOTSOCK) {
+        errcode = EBADF;
+      }
+    }
   }
 
   // Most often the socket is writable or readable or both, so make a single
@@ -1197,10 +1221,10 @@ static void ProcessEvents(Dispatcher* dispatcher,
   // readable or really closed.
   // TODO(pthatcher): Only peek at TCP descriptors.
   if (readable) {
-    if (requested_events & DE_ACCEPT) {
-      ff |= DE_ACCEPT;
-    } else if (errcode || dispatcher->IsDescriptorClosed()) {
+    if (errcode || dispatcher->IsDescriptorClosed()) {
       ff |= DE_CLOSE;
+    } else if (requested_events & DE_ACCEPT) {
+      ff |= DE_ACCEPT;
     } else {
       ff |= DE_READ;
     }
@@ -1212,12 +1236,15 @@ static void ProcessEvents(Dispatcher* dispatcher,
     if (requested_events & DE_CONNECT) {
       if (!errcode) {
         ff |= DE_CONNECT;
-      } else {
-        ff |= DE_CLOSE;
       }
     } else {
       ff |= DE_WRITE;
     }
+  }
+
+  // Make sure we report any errors regardless of whether readable or writable.
+  if (errcode) {
+    ff |= DE_CLOSE;
   }
 
   // Tell the descriptor about the event.
@@ -1330,7 +1357,8 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
         }
 
         // The error code can be signaled through reads or writes.
-        ProcessEvents(pdispatcher, readable, writable, readable || writable);
+        ProcessEvents(pdispatcher, readable, writable, /*error_event=*/false,
+                      readable || writable);
       }
     }
 
@@ -1362,6 +1390,11 @@ void PhysicalSocketServer::AddEpoll(Dispatcher* pdispatcher, uint64_t key) {
 
   struct epoll_event event = {0};
   event.events = GetEpollEvents(pdispatcher->GetRequestedEvents());
+  if (event.events == 0u) {
+    // Don't add at all if we don't have any requested events. Could indicate a
+    // closed socket.
+    return;
+  }
   event.data.u64 = key;
   int err = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event);
   RTC_DCHECK_EQ(err, 0);
@@ -1381,13 +1414,10 @@ void PhysicalSocketServer::RemoveEpoll(Dispatcher* pdispatcher) {
   struct epoll_event event = {0};
   int err = epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, &event);
   RTC_DCHECK(err == 0 || errno == ENOENT);
-  if (err == -1) {
-    if (errno == ENOENT) {
-      // Socket has already been closed.
-      RTC_LOG_E(LS_VERBOSE, EN, errno) << "epoll_ctl EPOLL_CTL_DEL";
-    } else {
-      RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_DEL";
-    }
+  // Ignore ENOENT, which could occur if this descriptor wasn't added due to
+  // having no requested events.
+  if (err == -1 && errno != ENOENT) {
+    RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_DEL";
   }
 }
 
@@ -1402,10 +1432,24 @@ void PhysicalSocketServer::UpdateEpoll(Dispatcher* pdispatcher, uint64_t key) {
   struct epoll_event event = {0};
   event.events = GetEpollEvents(pdispatcher->GetRequestedEvents());
   event.data.u64 = key;
-  int err = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &event);
-  RTC_DCHECK_EQ(err, 0);
-  if (err == -1) {
-    RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_MOD";
+  // Remove if we don't have any requested events. Could indicate a closed
+  // socket.
+  if (event.events == 0u) {
+    epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, &event);
+  } else {
+    int err = epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &event);
+    RTC_DCHECK(err == 0 || errno == ENOENT);
+    if (err == -1) {
+      // Could have been removed earlier due to no requested events.
+      if (errno == ENOENT) {
+        err = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event);
+        if (err == -1) {
+          RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_ADD";
+        }
+      } else {
+        RTC_LOG_E(LS_ERROR, EN, errno) << "epoll_ctl EPOLL_CTL_MOD";
+      }
+    }
   }
 }
 
@@ -1452,9 +1496,9 @@ bool PhysicalSocketServer::WaitEpoll(int cmsWait) {
 
         bool readable = (event.events & (EPOLLIN | EPOLLPRI));
         bool writable = (event.events & EPOLLOUT);
-        bool check_error = (event.events & (EPOLLRDHUP | EPOLLERR | EPOLLHUP));
+        bool error = (event.events & (EPOLLRDHUP | EPOLLERR | EPOLLHUP));
 
-        ProcessEvents(pdispatcher, readable, writable, check_error);
+        ProcessEvents(pdispatcher, readable, writable, error, error);
       }
     }
 
@@ -1520,9 +1564,9 @@ bool PhysicalSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
 
       bool readable = (fds.revents & (POLLIN | POLLPRI));
       bool writable = (fds.revents & POLLOUT);
-      bool check_error = (fds.revents & (POLLRDHUP | POLLERR | POLLHUP));
+      bool error = (fds.revents & (POLLRDHUP | POLLERR | POLLHUP));
 
-      ProcessEvents(dispatcher, readable, writable, check_error);
+      ProcessEvents(dispatcher, readable, writable, error, error);
     }
 
     if (cmsWait != kForever) {
