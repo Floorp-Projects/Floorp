@@ -1018,7 +1018,7 @@ webrtc::VideoSendStream* Call::CreateVideoSendStream(
   std::vector<uint32_t> ssrcs = config.rtp.ssrcs;
 
   VideoSendStream* send_stream = new VideoSendStream(
-      clock_, num_cpu_cores_, task_queue_factory_,
+      clock_, num_cpu_cores_, task_queue_factory_, network_thread_,
       call_stats_->AsRtcpRttStats(), transport_send_.get(),
       bitrate_allocator_.get(), video_send_delay_stats_.get(), event_log_,
       std::move(config), std::move(encoder_config), suspended_video_send_ssrcs_,
