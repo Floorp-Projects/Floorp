@@ -56,7 +56,7 @@ TestClient* CreateTestClient(SocketFactory* factory,
 }
 
 TestClient* CreateTCPTestClient(Socket* socket) {
-  return new TestClient(std::make_unique<AsyncTCPSocket>(socket, false));
+  return new TestClient(std::make_unique<AsyncTCPSocket>(socket));
 }
 
 // Tests that when sending from internal_addr to external_addrs through the

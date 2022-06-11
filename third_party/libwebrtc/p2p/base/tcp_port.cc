@@ -169,13 +169,11 @@ void TCPPort::PrepareAddress() {
     // Socket may be in the CLOSED state if Listen()
     // failed, we still want to add the socket address.
     RTC_LOG(LS_VERBOSE) << "Preparing TCP address, current state: "
-                        << listen_socket_->GetState();
-    if (listen_socket_->GetState() == rtc::AsyncPacketSocket::STATE_BOUND ||
-        listen_socket_->GetState() == rtc::AsyncPacketSocket::STATE_CLOSED)
-      AddAddress(listen_socket_->GetLocalAddress(),
-                 listen_socket_->GetLocalAddress(), rtc::SocketAddress(),
-                 TCP_PROTOCOL_NAME, "", TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE,
-                 ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
+                        << static_cast<int>(listen_socket_->GetState());
+    AddAddress(listen_socket_->GetLocalAddress(),
+               listen_socket_->GetLocalAddress(), rtc::SocketAddress(),
+               TCP_PROTOCOL_NAME, "", TCPTYPE_PASSIVE_STR, LOCAL_PORT_TYPE,
+               ICE_TYPE_PREFERENCE_HOST_TCP, 0, "", true);
   } else {
     RTC_LOG(LS_INFO) << ToString()
                      << ": Not listening due to firewall restrictions.";
