@@ -29,7 +29,7 @@ impl fmt::Display for Error {
         write!(
             f,
             "{} (error {})",
-            super::errno_name(self.code.get()),
+            super::strerror(self.code.get()),
             self.code
         )?;
         Ok(())
@@ -40,8 +40,7 @@ impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Error")
             .field("code", &self.code)
-            .field("name", &super::errno_name(self.code.get()))
-            .field("message", &super::errno_docs(self.code.get()))
+            .field("message", &super::strerror(self.code.get()))
             .finish()
     }
 }

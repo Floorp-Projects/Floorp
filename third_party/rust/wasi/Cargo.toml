@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "wasi"
-version = "0.10.2+wasi-snapshot-preview1"
+version = "0.10.0+wasi-snapshot-preview1"
 authors = ["The Cranelift Project Developers"]
 description = "Experimental WASI API bindings for Rust"
 documentation = "https://docs.rs/wasi"

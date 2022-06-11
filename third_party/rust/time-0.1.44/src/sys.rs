@@ -69,7 +69,7 @@ mod common {
     }
 }
 
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+#[cfg(all(target_arch = "wasm32", not(any(target_os = "emscripten", target_os = "wasi"))))]
 mod inner {
     use std::ops::{Add, Sub};
     use Tm;
@@ -121,7 +121,7 @@ mod inner {
     impl Sub<Duration> for SteadyTime {
         type Output = SteadyTime;
         fn sub(self, _other: Duration) -> SteadyTime {
-            unimplemented!()
+          unimplemented!()
         }
     }
 
@@ -129,6 +129,84 @@ mod inner {
         type Output = SteadyTime;
         fn add(self, _other: Duration) -> SteadyTime {
             unimplemented!()
+        }
+    }
+}
+
+#[cfg(target_os = "wasi")]
+mod inner {
+    use std::ops::{Add, Sub};
+    use Tm;
+    use Duration;
+    use super::common::{time_to_tm, tm_to_time};
+    use wasi::{clock_time_get, CLOCKID_MONOTONIC, CLOCKID_REALTIME};
+
+    #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
+    pub struct SteadyTime {
+        t: u64
+    }
+
+    pub fn time_to_utc_tm(sec: i64, tm: &mut Tm) {
+        time_to_tm(sec, tm);
+    }
+
+    pub fn time_to_local_tm(sec: i64, tm: &mut Tm) {
+        // FIXME: Add timezone logic
+        time_to_tm(sec, tm);
+    }
+
+    pub fn utc_tm_to_time(tm: &Tm) -> i64 {
+        tm_to_time(tm)
+    }
+
+    pub fn local_tm_to_time(tm: &Tm) -> i64 {
+        // FIXME: Add timezone logic
+        tm_to_time(tm)
+    }
+
+    pub fn get_time() -> (i64, i32) {
+        let ts = get_precise_ns();
+        (
+            ts as i64 / 1_000_000_000,
+            (ts as i64 % 1_000_000_000) as i32,
+        )
+    }
+
+    pub fn get_precise_ns() -> u64 {
+        unsafe { clock_time_get(CLOCKID_REALTIME, 1_000_000_000) }
+            .expect("Host doesn't implement a real-time clock")
+    }
+
+    impl SteadyTime {
+        pub fn now() -> SteadyTime {
+            SteadyTime {
+                t: unsafe { clock_time_get(CLOCKID_MONOTONIC, 1_000_000_000) }
+                    .expect("Host doesn't implement a monotonic clock"),
+            }
+        }
+    }
+
+    impl Sub for SteadyTime {
+        type Output = Duration;
+        fn sub(self, other: SteadyTime) -> Duration {
+            Duration::nanoseconds(self.t as i64 - other.t as i64)
+        }
+    }
+
+    impl Sub<Duration> for SteadyTime {
+        type Output = SteadyTime;
+        fn sub(self, other: Duration) -> SteadyTime {
+            self + -other
+        }
+    }
+
+    impl Add<Duration> for SteadyTime {
+        type Output = SteadyTime;
+        fn add(self, other: Duration) -> SteadyTime {
+            let delta = other.num_nanoseconds().unwrap();
+            SteadyTime {
+                t: (self.t as i64 + delta) as u64,
+            }
         }
     }
 }
