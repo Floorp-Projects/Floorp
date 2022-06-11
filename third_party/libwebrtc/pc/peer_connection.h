@@ -288,6 +288,7 @@ class PeerConnection : public PeerConnectionInternal,
   }
 
   sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
+    RTC_DCHECK_RUN_ON(signaling_thread());
     return data_channel_controller_.SignalSctpDataChannelCreated();
   }
 
@@ -676,7 +677,7 @@ class PeerConnection : public PeerConnectionInternal,
 
   // The machinery for handling offers and answers. Const after initialization.
   std::unique_ptr<SdpOfferAnswerHandler> sdp_handler_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread()) RTC_PT_GUARDED_BY(signaling_thread());
 
   const bool dtls_enabled_;
 
@@ -684,20 +685,24 @@ class PeerConnection : public PeerConnectionInternal,
   bool return_histogram_very_quickly_ RTC_GUARDED_BY(signaling_thread()) =
       false;
 
+  // The DataChannelController is accessed from both the signaling thread
+  // and networking thread. It is a thread-aware object.
   DataChannelController data_channel_controller_;
 
   // Machinery for handling messages posted to oneself
-  PeerConnectionMessageHandler message_handler_;
+  PeerConnectionMessageHandler message_handler_
+      RTC_GUARDED_BY(signaling_thread());
 
   // Administration of senders, receivers and transceivers
   // Accessed on both signaling and network thread. Const after Initialize().
   std::unique_ptr<RtpTransmissionManager> rtp_manager_;
 
-  rtc::WeakPtrFactory<PeerConnection> weak_factory_;
-
   // Did the connectionState ever change to `connected`?
   // Used to gather metrics only the first such state change.
   bool was_ever_connected_ RTC_GUARDED_BY(signaling_thread()) = false;
+
+  // This variable needs to be the last one in the class.
+  rtc::WeakPtrFactory<PeerConnection> weak_factory_;
 };
 
 }  // namespace webrtc
