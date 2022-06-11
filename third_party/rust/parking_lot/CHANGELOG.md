@@ -1,3 +1,31 @@
+## parking_lot 0.11.2, parking_lot_core 0.8.4, lock_api 0.4.5 (2021-08-28)
+
+- Fixed incorrect memory orderings on `RwLock` and `WordLock`. (#294, #292)
+- Added `Arc`-based lock guards. (#291)
+- Added workaround for TSan's lack of support for `fence`. (#292)
+
+## lock_api 0.4.4 (2021-05-01)
+
+- Update for latest nightly. (#281)
+
+## lock_api 0.4.3 (2021-04-03)
+
+- Added `[Raw]ReentrantMutex::is_owned`. (#280)
+
+## parking_lot_core 0.8.3 (2021-02-12)
+
+- Updated smallvec to 1.6. (#276)
+
+## parking_lot_core 0.8.2 (2020-12-21)
+
+- Fixed assertion failure on OpenBSD. (#270)
+
+## parking_lot_core 0.8.1 (2020-12-04)
+
+- Removed deprecated CloudABI support. (#263)
+- Fixed build on wasm32-unknown-unknown. (#265)
+- Relaxed dependency on `smallvec`. (#266)
+
 ## parking_lot 0.11.1, lock_api 0.4.2 (2020-11-18)
 
 - Fix bounds on Send and Sync impls for lock guards. (#262)

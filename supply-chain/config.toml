@@ -513,6 +513,10 @@ criteria = "safe-to-deploy"
 version = "0.4.4"
 criteria = "safe-to-deploy"
 
+[[unaudited.fastrand]]
+version = "1.7.0"
+criteria = "safe-to-deploy"
+
 [[unaudited.ffi-support]]
 version = "0.4.4"
 criteria = "safe-to-deploy"
@@ -1030,11 +1034,11 @@ version = "0.4.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.parking_lot]]
-version = "0.11.1"
+version = "0.11.2"
 criteria = "safe-to-deploy"
 
 [[unaudited.parking_lot_core]]
-version = "0.8.1"
+version = "0.8.5"
 criteria = "safe-to-deploy"
 
 [[unaudited.paste]]
@@ -1186,7 +1190,7 @@ version = "1.9.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.redox_syscall]]
-version = "0.1.57"
+version = "0.2.13"
 criteria = "safe-to-deploy"
 
 [[unaudited.regalloc]]
@@ -1410,7 +1414,7 @@ version = "0.12.4"
 criteria = "safe-to-deploy"
 
 [[unaudited.tempfile]]
-version = "3.1.0"
+version = "3.3.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.termcolor]]

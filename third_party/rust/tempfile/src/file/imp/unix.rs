@@ -2,10 +2,18 @@ use std::env;
 use std::ffi::{CString, OsStr};
 use std::fs::{self, File, OpenOptions};
 use std::io;
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
-use std::path::Path;
+cfg_if::cfg_if! {
+    if #[cfg(not(target_os = "wasi"))] {
+        use std::os::unix::ffi::OsStrExt;
+        use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
+    } else {
+        use std::os::wasi::ffi::OsStrExt;
+        #[cfg(feature = "nightly")]
+        use std::os::wasi::fs::MetadataExt;
+    }
+}
 use crate::util;
+use std::path::Path;
 
 #[cfg(not(target_os = "redox"))]
 use libc::{c_char, c_int, link, rename, unlink};
@@ -33,12 +41,14 @@ pub fn cstr(path: &Path) -> io::Result<CString> {
 }
 
 pub fn create_named(path: &Path, open_options: &mut OpenOptions) -> io::Result<File> {
-    open_options
-        .read(true)
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .open(path)
+    open_options.read(true).write(true).create_new(true);
+
+    #[cfg(not(target_os = "wasi"))]
+    {
+        open_options.mode(0o600);
+    }
+
+    open_options.open(path)
 }
 
 fn create_unlinked(path: &Path) -> io::Result<File> {
@@ -60,11 +70,11 @@ fn create_unlinked(path: &Path) -> io::Result<File> {
 
 #[cfg(target_os = "linux")]
 pub fn create(dir: &Path) -> io::Result<File> {
-    use libc::{EISDIR, ENOENT, EOPNOTSUPP, O_EXCL, O_TMPFILE};
+    use libc::{EISDIR, ENOENT, EOPNOTSUPP, O_TMPFILE};
     OpenOptions::new()
         .read(true)
         .write(true)
-        .custom_flags(O_TMPFILE | O_EXCL) // do not mix with `create_new(true)`
+        .custom_flags(O_TMPFILE) // do not mix with `create_new(true)`
         .open(dir)
         .or_else(|e| {
             match e.raw_os_error() {
@@ -90,6 +100,7 @@ fn create_unix(dir: &Path) -> io::Result<File> {
     )
 }
 
+#[cfg(any(not(target_os = "wasi"), feature = "nightly"))]
 pub fn reopen(file: &File, path: &Path) -> io::Result<File> {
     let new_file = OpenOptions::new().read(true).write(true).open(path)?;
     let old_meta = file.metadata()?;
@@ -101,6 +112,14 @@ pub fn reopen(file: &File, path: &Path) -> io::Result<File> {
         ));
     }
     Ok(new_file)
+}
+
+#[cfg(all(target_os = "wasi", not(feature = "nightly")))]
+pub fn reopen(_file: &File, _path: &Path) -> io::Result<File> {
+    return Err(io::Error::new(
+        io::ErrorKind::Other,
+        "this operation is supported on WASI only on nightly Rust (with `nightly` feature enabled)",
+    ));
 }
 
 #[cfg(not(target_os = "redox"))]
