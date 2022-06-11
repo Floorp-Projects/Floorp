@@ -311,24 +311,6 @@ void AudioSendStream::ConfigureStream(
     rtp_rtcp_module_->SetMid(new_config.rtp.mid);
   }
 
-  // RID RTP header extension
-  if ((first_time || new_ids.rid != old_ids.rid ||
-       new_ids.repaired_rid != old_ids.repaired_rid ||
-       new_config.rtp.rid != old_config.rtp.rid)) {
-    if (new_ids.rid != 0 || new_ids.repaired_rid != 0) {
-      if (new_config.rtp.rid.empty()) {
-        rtp_rtcp_module_->DeregisterSendRtpHeaderExtension(RtpStreamId::Uri());
-      } else if (new_ids.repaired_rid != 0) {
-        rtp_rtcp_module_->RegisterRtpHeaderExtension(RtpStreamId::Uri(),
-                                                     new_ids.repaired_rid);
-      } else {
-        rtp_rtcp_module_->RegisterRtpHeaderExtension(RtpStreamId::Uri(),
-                                                     new_ids.rid);
-      }
-    }
-    rtp_rtcp_module_->SetRid(new_config.rtp.rid);
-  }
-
   if (first_time || new_ids.abs_capture_time != old_ids.abs_capture_time) {
     absl::string_view uri = AbsoluteCaptureTimeExtension::Uri();
     rtp_rtcp_module_->DeregisterSendRtpHeaderExtension(uri);

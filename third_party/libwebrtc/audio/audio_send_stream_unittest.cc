@@ -246,7 +246,6 @@ struct ConfigHelper {
           .Times(1);
     }
     EXPECT_CALL(*channel_send_, ResetSenderCongestionControlObjects()).Times(1);
-    EXPECT_CALL(rtp_rtcp_, SetRid(std::string())).Times(1);
   }
 
   void SetupMockForSetupSendCodec(bool expect_set_encoder_call) {
