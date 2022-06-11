@@ -249,19 +249,19 @@
       'openh264', 'release_bot', 'arm64'
     ],
     'asan_lsan_clang_release_bot_x64': [
-      'asan', 'lsan', 'clang', 'openh264', 'release_bot', 'x64'
+      'asan', 'lsan', 'clang', 'openh264', 'pure_release_bot', 'x64'
     ],
     'msan_clang_release_bot_x64': [
-      'msan', 'clang', 'openh264', 'release_bot', 'x64'
+      'msan', 'clang', 'openh264', 'pure_release_bot', 'x64'
     ],
     'tsan_clang_release_bot_x64': [
-      'tsan', 'clang', 'openh264', 'release_bot', 'x64'
+      'tsan', 'clang', 'openh264', 'pure_release_bot', 'x64'
     ],
     'ubsan_clang_release_bot_x64': [
-      'ubsan', 'clang', 'openh264', 'release_bot', 'x64'
+      'ubsan', 'clang', 'openh264', 'pure_release_bot', 'x64'
     ],
     'ubsan_vptr_clang_release_bot_x64': [
-      'ubsan_vptr', 'clang', 'openh264', 'release_bot', 'x64'
+      'ubsan_vptr', 'clang', 'openh264', 'pure_release_bot', 'x64'
     ],
     'debug_bot_x86': [
       'openh264', 'debug_bot', 'x86'
@@ -288,8 +288,8 @@
       'openh264', 'pure_release_bot', 'x64'
     ],
     'libfuzzer_asan_release_bot_x64': [
-      'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264', 'release_bot',
-      'x64'
+      'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
+      'pure_release_bot', 'x64'
     ],
 
     # Windows
@@ -309,13 +309,13 @@
       'clang', 'openh264', 'release_bot', 'x64',
     ],
     'win_asan_clang_release_bot_x64': [
-      'asan', 'clang',  'full_symbols', 'openh264', 'release_bot', 'x64',
+      'asan', 'clang',  'full_symbols', 'openh264', 'pure_release_bot', 'x64',
       'win_fastlink',
     ],
 
     # Mac
     'mac_asan_clang_release_bot_x64': [
-      'asan', 'clang', 'openh264', 'release_bot', 'x64',
+      'asan', 'clang', 'openh264', 'pure_release_bot', 'x64',
     ],
 
     # Android
@@ -350,7 +350,7 @@
       'android', 'release_bot', 'x64'
     ],
     'android_asan_shared_release_bot_arm': [
-      'android', 'asan', 'clang', 'release_bot', 'arm'
+      'android', 'asan', 'clang', 'pure_release_bot', 'arm'
     ],
 
     # iOS
