@@ -8828,7 +8828,6 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
     ASSERT_EQ(expected_streams.size(), video_streams.size());
 
     size_t num_streams = video_streams.size();
-    int total_max_bitrate_bps = 0;
     for (size_t i = 0; i < num_streams; ++i) {
       EXPECT_EQ(expected_streams[i].width, video_streams[i].width);
       EXPECT_EQ(expected_streams[i].height, video_streams[i].height);
@@ -8858,12 +8857,6 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
       if (conference_mode) {
         EXPECT_EQ(expected_streams[i].num_temporal_layers,
                   video_streams[i].num_temporal_layers);
-      }
-
-      if (i == num_streams - 1) {
-        total_max_bitrate_bps += video_streams[i].max_bitrate_bps;
-      } else {
-        total_max_bitrate_bps += video_streams[i].target_bitrate_bps;
       }
     }
 

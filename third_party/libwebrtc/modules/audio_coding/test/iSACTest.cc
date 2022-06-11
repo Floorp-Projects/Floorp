@@ -257,11 +257,6 @@ void ISACTest::EncodeDecode(int testNr,
                   wbISACConfig),
       kISAC16kPayloadType));
 
-  bool adaptiveMode = false;
-  if ((swbISACConfig.currentRateBitPerSec == -1) ||
-      (wbISACConfig.currentRateBitPerSec == -1)) {
-    adaptiveMode = true;
-  }
   _myTimer.Reset();
   _channel_A2B->ResetStats();
   _channel_B2A->ResetStats();

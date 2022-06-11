@@ -156,30 +156,22 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     // channels.
     RTC_DCHECK_EQ(flags1 & RAW_PACKET_TRANSPORT, flags2 & RAW_PACKET_TRANSPORT);
     rtc::Thread* worker_thread = rtc::Thread::Current();
-    rtc::PacketTransportInternal* rtp1 = nullptr;
-    rtc::PacketTransportInternal* rtcp1 = nullptr;
-    rtc::PacketTransportInternal* rtp2 = nullptr;
-    rtc::PacketTransportInternal* rtcp2 = nullptr;
     // Based on flags, create fake DTLS or raw packet transports.
     if (flags1 & RAW_PACKET_TRANSPORT) {
       fake_rtp_packet_transport1_.reset(
           new rtc::FakePacketTransport("channel1_rtp"));
-      rtp1 = fake_rtp_packet_transport1_.get();
       if (!(flags1 & RTCP_MUX)) {
         fake_rtcp_packet_transport1_.reset(
             new rtc::FakePacketTransport("channel1_rtcp"));
-        rtcp1 = fake_rtcp_packet_transport1_.get();
       }
     } else {
       // Confirmed to work with KT_RSA and KT_ECDSA.
       fake_rtp_dtls_transport1_.reset(new cricket::FakeDtlsTransport(
           "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTP, network_thread_));
-      rtp1 = fake_rtp_dtls_transport1_.get();
       if (!(flags1 & RTCP_MUX)) {
         fake_rtcp_dtls_transport1_.reset(new cricket::FakeDtlsTransport(
             "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTCP,
             network_thread_));
-        rtcp1 = fake_rtcp_dtls_transport1_.get();
       }
       if (flags1 & DTLS) {
         auto cert1 = rtc::RTCCertificate::Create(
@@ -194,22 +186,18 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     if (flags2 & RAW_PACKET_TRANSPORT) {
       fake_rtp_packet_transport2_.reset(
           new rtc::FakePacketTransport("channel2_rtp"));
-      rtp2 = fake_rtp_packet_transport2_.get();
       if (!(flags2 & RTCP_MUX)) {
         fake_rtcp_packet_transport2_.reset(
             new rtc::FakePacketTransport("channel2_rtcp"));
-        rtcp2 = fake_rtcp_packet_transport2_.get();
       }
     } else {
       // Confirmed to work with KT_RSA and KT_ECDSA.
       fake_rtp_dtls_transport2_.reset(new cricket::FakeDtlsTransport(
           "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTP, network_thread_));
-      rtp2 = fake_rtp_dtls_transport2_.get();
       if (!(flags2 & RTCP_MUX)) {
         fake_rtcp_dtls_transport2_.reset(new cricket::FakeDtlsTransport(
             "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTCP,
             network_thread_));
-        rtcp2 = fake_rtcp_dtls_transport2_.get();
       }
       if (flags2 & DTLS) {
         auto cert2 = rtc::RTCCertificate::Create(
