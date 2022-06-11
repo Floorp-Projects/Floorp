@@ -37,8 +37,9 @@ from mozboot.solus import SolusBootstrapper
 from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
-from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
+from mozboot.mozconfig import MozconfigBuilder
 from mozfile import which
+from mozbuild.base import MozbuildObject
 
 # Use distro package to retrieve linux platform information
 import distro
@@ -76,6 +77,21 @@ MOZCONFIG_SUGGESTION_TEMPLATE = """
 Paste the lines between the chevrons (>>> and <<<) into
 %s:
 
+>>>
+%s
+<<<
+"""
+
+MOZCONFIG_MISMATCH_WARNING_TEMPLATE = """
+WARNING! Mismatch detected between the selected build target and the
+mozconfig file %s:
+
+Current config
+>>>
+%s
+<<<
+
+Expected config
 >>>
 %s
 <<<
@@ -371,6 +387,8 @@ class Bootstrapper(object):
         if not self.instance.no_interactive and not settings.mach_telemetry.is_set_up:
             initialize_telemetry_setting(settings, str(checkout_root), str(state_dir))
 
+        self._output_mozconfig(application, mozconfig_builder)
+
         print(FINISHED % name)
         if not (
             which("rustc")
@@ -381,7 +399,54 @@ class Bootstrapper(object):
                 % name
             )
 
-        self._output_mozconfig(application, mozconfig_builder)
+    def _default_mozconfig_path(self):
+        return Path(self.mach_context.topdir) / "mozconfig"
+
+    def _read_default_mozconfig(self):
+        path = self._default_mozconfig_path()
+        with open(path, "r") as mozconfig_file:
+            return mozconfig_file.read()
+
+    def _write_default_mozconfig(self, raw_mozconfig):
+        path = self._default_mozconfig_path()
+        with open(path, "w") as mozconfig_file:
+            mozconfig_file.write(raw_mozconfig)
+            print(f'Your requested configuration has been written to "{path}".')
+
+    def _show_mozconfig_suggestion(self, raw_mozconfig):
+        suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (
+            self._default_mozconfig_path(),
+            raw_mozconfig,
+        )
+        print(suggestion, end="")
+
+    def _check_default_mozconfig_mismatch(
+        self, current_mozconfig_info, expected_application, expected_raw_mozconfig
+    ):
+        current_raw_mozconfig = self._read_default_mozconfig()
+        current_application = current_mozconfig_info["project"][0].replace("/", "_")
+        if current_mozconfig_info["artifact-builds"]:
+            current_application += "_artifact_mode"
+
+        if expected_application == current_application:
+            if expected_raw_mozconfig == current_raw_mozconfig:
+                return
+
+            # There's minor difference, show the suggestion.
+            self._show_mozconfig_suggestion(expected_raw_mozconfig)
+            return
+
+        warning = MOZCONFIG_MISMATCH_WARNING_TEMPLATE % (
+            self._default_mozconfig_path(),
+            current_raw_mozconfig,
+            expected_raw_mozconfig,
+        )
+        print(warning)
+
+        if not self.instance.prompt_yesno("Do you want to overwrite the config?"):
+            return
+
+        self._write_default_mozconfig(expected_raw_mozconfig)
 
     def _output_mozconfig(self, application, mozconfig_builder):
         # Like 'generate_browser_mozconfig' or 'generate_mobile_android_mozconfig'.
@@ -392,22 +457,26 @@ class Bootstrapper(object):
             mozconfig_builder.append(additional_mozconfig)
         raw_mozconfig = mozconfig_builder.generate()
 
-        if raw_mozconfig:
-            mozconfig_path = find_mozconfig(Path(self.mach_context.topdir))
-            if not mozconfig_path:
-                # No mozconfig file exists yet
-                mozconfig_path = Path(self.mach_context.topdir) / "mozconfig"
-                with open(mozconfig_path, "w") as mozconfig_file:
-                    mozconfig_file.write(raw_mozconfig)
-                print(
-                    f'Your requested configuration has been written to "{mozconfig_path}".'
+        current_mozconfig_info = MozbuildObject.get_base_mozconfig_info(
+            self.mach_context.topdir, None, ""
+        )
+        current_mozconfig_path = current_mozconfig_info["mozconfig"]["path"]
+
+        if current_mozconfig_path:
+            # mozconfig file exists
+            if Path.samefile(
+                Path(current_mozconfig_path), self._default_mozconfig_path()
+            ):
+                # This mozconfig file may be created by bootstrap.
+                self._check_default_mozconfig_mismatch(
+                    current_mozconfig_info, application, raw_mozconfig
                 )
-            else:
-                suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (
-                    mozconfig_path,
-                    raw_mozconfig,
-                )
-                print(suggestion, end="")
+            elif raw_mozconfig:
+                # The mozconfig file is created by user.
+                self._show_mozconfig_suggestion(raw_mozconfig)
+        elif raw_mozconfig:
+            # No mozconfig file exists yet
+            self._write_default_mozconfig(raw_mozconfig)
 
     def _validate_python_environment(self, topsrcdir):
         valid = True

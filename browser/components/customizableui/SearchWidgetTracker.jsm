@@ -16,13 +16,15 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
@@ -38,20 +40,20 @@ const SearchWidgetTracker = {
         this.removePersistedWidths();
       }
     };
-    CustomizableUI.addListener(this);
+    lazy.CustomizableUI.addListener(this);
     Services.prefs.addObserver(PREF_NAME, () =>
       this.syncWidgetWithPreference()
     );
   },
 
   onWidgetAdded(widgetId, area) {
-    if (widgetId == WIDGET_ID && area == CustomizableUI.AREA_NAVBAR) {
+    if (widgetId == WIDGET_ID && area == lazy.CustomizableUI.AREA_NAVBAR) {
       this.syncPreferenceWithWidget();
     }
   },
 
   onWidgetRemoved(aWidgetId, aArea) {
-    if (aWidgetId == WIDGET_ID && aArea == CustomizableUI.AREA_NAVBAR) {
+    if (aWidgetId == WIDGET_ID && aArea == lazy.CustomizableUI.AREA_NAVBAR) {
       this.syncPreferenceWithWidget();
       this.removePersistedWidths();
     }
@@ -61,7 +63,7 @@ const SearchWidgetTracker = {
     // The placement of the widget always takes priority, and the preference
     // should always match the actual placement when the browser starts up - i.e.
     // once the navigation bar has been registered.
-    if (aArea == CustomizableUI.AREA_NAVBAR) {
+    if (aArea == lazy.CustomizableUI.AREA_NAVBAR) {
       this.syncPreferenceWithWidget();
     }
   },
@@ -85,19 +87,24 @@ const SearchWidgetTracker = {
     if (newValue) {
       // The URL bar widget is always present in the navigation toolbar, so we
       // can simply read its position to place the search bar right after it.
-      CustomizableUI.addWidgetToArea(
+      lazy.CustomizableUI.addWidgetToArea(
         WIDGET_ID,
-        CustomizableUI.AREA_NAVBAR,
-        CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1
+        lazy.CustomizableUI.AREA_NAVBAR,
+        lazy.CustomizableUI.getPlacementOfWidget("urlbar-container").position +
+          1
       );
-      BrowserUsageTelemetry.recordWidgetChange(
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
         WIDGET_ID,
-        CustomizableUI.AREA_NAVBAR,
+        lazy.CustomizableUI.AREA_NAVBAR,
         "searchpref"
       );
     } else {
-      CustomizableUI.removeWidgetFromArea(WIDGET_ID);
-      BrowserUsageTelemetry.recordWidgetChange(WIDGET_ID, null, "searchpref");
+      lazy.CustomizableUI.removeWidgetFromArea(WIDGET_ID);
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
+        WIDGET_ID,
+        null,
+        "searchpref"
+      );
     }
   },
 
@@ -112,7 +119,7 @@ const SearchWidgetTracker = {
       this.WIDGET_ID,
       "width"
     );
-    for (let win of CustomizableUI.windows) {
+    for (let win of lazy.CustomizableUI.windows) {
       let urlbar = win.document.getElementById("urlbar-container");
       urlbar.removeAttribute("width");
       win.document
@@ -130,7 +137,9 @@ const SearchWidgetTracker = {
   },
 
   get widgetIsInNavBar() {
-    let placement = CustomizableUI.getPlacementOfWidget(WIDGET_ID);
-    return placement ? placement.area == CustomizableUI.AREA_NAVBAR : false;
+    let placement = lazy.CustomizableUI.getPlacementOfWidget(WIDGET_ID);
+    return placement
+      ? placement.area == lazy.CustomizableUI.AREA_NAVBAR
+      : false;
   },
 };

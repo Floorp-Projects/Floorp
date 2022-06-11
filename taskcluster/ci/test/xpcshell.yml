@@ -8,6 +8,10 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             default: null
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     mozharness:
         script:
             by-test-platform:

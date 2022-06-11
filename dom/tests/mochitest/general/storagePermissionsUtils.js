@@ -141,7 +141,7 @@ function storageAllowed() {
         },
         function() {
           ok(
-            location.protocol != "https:",
+            location.protocol !== "https:",
             "The promise should not have been rejected"
           );
           resolve();
@@ -149,7 +149,7 @@ function storageAllowed() {
       );
     });
   } catch (e) {
-    ok(false, "getting caches should not have thrown");
+    ok(location.protocol !== "https:", "getting caches should not have thrown");
     return Promise.resolve();
   }
 }
@@ -205,7 +205,7 @@ function storagePrevented() {
       );
     });
   } catch (e) {
-    ok(false, "getting caches should not have thrown");
+    ok(location.protocol !== "https:", "getting caches should not have thrown");
 
     return Promise.resolve();
   }

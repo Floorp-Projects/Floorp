@@ -17,10 +17,9 @@
 #ifndef js_TypeDecls_h
 #define js_TypeDecls_h
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdint.h>  // uint8_t
 
-#include "jstypes.h"
+#include "jstypes.h"  // JS_PUBLIC_API
 
 typedef uint8_t jsbytecode;
 

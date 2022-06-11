@@ -1757,12 +1757,8 @@ pref("media.gmp-gmpopenh264.enabled", true);
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 
-#ifdef NIGHTLY_BUILD
-  // Block WebAudio from playing automatically.
-  pref("media.autoplay.block-webaudio", true);
-#else
-  pref("media.autoplay.block-webaudio", false);
-#endif
+// Block WebAudio from playing automatically.
+pref("media.autoplay.block-webaudio", true);
 
 pref("media.videocontrols.picture-in-picture.enabled", true);
 pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", true);

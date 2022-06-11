@@ -35,6 +35,11 @@ ChromeUtils.defineModuleGetter(
   "PersistentCache",
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 const CACHE_KEY = "discovery_stream";
 const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -202,11 +207,32 @@ class DiscoveryStreamFeed {
   }
 
   setupPrefs(isStartup = false) {
+    const pocketNewtabExperiment = ExperimentAPI.getExperiment({
+      featureId: "pocketNewtab",
+    });
+
+    let utmSource = "pocket-newtab";
+    let utmCampaign = pocketNewtabExperiment?.slug;
+    let utmContent = pocketNewtabExperiment?.branch?.slug;
+
     // Send the initial state of the pref on our reducer
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_CONFIG_SETUP,
         data: this.config,
+        meta: {
+          isStartup,
+        },
+      })
+    );
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_EXPERIMENT_DATA,
+        data: {
+          utmSource,
+          utmCampaign,
+          utmContent,
+        },
         meta: {
           isStartup,
         },

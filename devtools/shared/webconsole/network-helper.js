@@ -70,13 +70,13 @@ const Services = require("Services");
 
 loader.lazyGetter(this, "certDecoder", () => {
   const { asn1js } = ChromeUtils.import(
-    "chrome://global/content/certviewer/asn1js_bundle.js"
+    "chrome://global/content/certviewer/asn1js_bundle.jsm"
   );
   const { pkijs } = ChromeUtils.import(
-    "chrome://global/content/certviewer/pkijs_bundle.js"
+    "chrome://global/content/certviewer/pkijs_bundle.jsm"
   );
   const { pvutils } = ChromeUtils.import(
-    "chrome://global/content/certviewer/pvutils_bundle.js"
+    "chrome://global/content/certviewer/pvutils_bundle.jsm"
   );
 
   const { Integer, fromBER } = asn1js.asn1js;
@@ -84,7 +84,7 @@ loader.lazyGetter(this, "certDecoder", () => {
   const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
 
   const { certDecoderInitializer } = ChromeUtils.import(
-    "chrome://global/content/certviewer/certDecoder.js"
+    "chrome://global/content/certviewer/certDecoder.jsm"
   );
   const { parse, pemToDER } = certDecoderInitializer(
     Integer,

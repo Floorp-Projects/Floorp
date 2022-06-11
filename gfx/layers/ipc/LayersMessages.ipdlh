@@ -101,10 +101,20 @@ struct StepFunction {
   uint8_t type; // Converted from StyleStepPosition.
 };
 
+struct LinearStop {
+  float input;
+  float output;
+};
+
+struct LinearFunction {
+  LinearStop[] stops;
+};
+
 union TimingFunction {
   null_t;
   CubicBezierFunction;
   StepFunction;
+  LinearFunction;
 };
 
 struct LayerColor { DeviceColor value; };

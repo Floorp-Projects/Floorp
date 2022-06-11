@@ -50,6 +50,7 @@ mochitest-plain:
     virtualization: virtual
     variants:
         - aab+no-fission
+        - conditioned_profile+fission
         - fission
         - fission-xorigin
         - no-fission
@@ -62,6 +63,11 @@ mochitest-plain:
     run-without-variant: false
     run-on-projects:
         by-variant:
+            conditioned_profile+fission:
+                by-test-platform:
+                    linux1804-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
+                    default: []
             fission:
                 by-test-platform:
                     android.*: []
@@ -110,7 +116,6 @@ mochitest-plain:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-
     chunks:
         by-test-platform:
             android-em-7.*: 4

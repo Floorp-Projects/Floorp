@@ -33,45 +33,47 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "AMTelemetry",
   "resource://gre/modules/AddonManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "DragPositionManager",
   "resource:///modules/DragPositionManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function() {
   const kUrl =
     "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "gTouchBarUpdater",
   "@mozilla.org/widget/touchbarupdater;1",
   "nsITouchBarUpdater"
 );
 
 let gDebug;
-XPCOMUtils.defineLazyGetter(this, "log", () => {
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
@@ -246,7 +248,7 @@ CustomizeMode.prototype = {
     gTab = aTab;
 
     gTab.setAttribute("customizemode", "true");
-    SessionStore.persistTabAttribute("customizemode");
+    lazy.SessionStore.persistTabAttribute("customizemode");
 
     if (gTab.linkedPanel) {
       gTab.linkedBrowser.stop();
@@ -292,7 +294,7 @@ CustomizeMode.prototype = {
 
     // Exiting; want to re-enter once we've done that.
     if (this._handler.isExitingCustomizeMode) {
-      log.debug(
+      lazy.log.debug(
         "Attempted to enter while we're in the middle of exiting. " +
           "We'll exit after we've entered"
       );
@@ -427,7 +429,7 @@ CustomizeMode.prototype = {
       }, 0);
       this._updateEmptyPaletteNotice();
 
-      AddonManager.addAddonListener(this);
+      lazy.AddonManager.addAddonListener(this);
 
       this._setupDownloadAutoHideToggle();
 
@@ -439,7 +441,7 @@ CustomizeMode.prototype = {
         this.exit();
       }
     })().catch(e => {
-      log.error("Error entering customize mode", e);
+      lazy.log.error("Error entering customize mode", e);
       this._handler.isEnteringCustomizeMode = false;
       // Exit customize mode to ensure proper clean-up when entering failed.
       this.exit();
@@ -455,7 +457,7 @@ CustomizeMode.prototype = {
 
     // Entering; want to exit once we've done that.
     if (this._handler.isEnteringCustomizeMode) {
-      log.debug(
+      lazy.log.debug(
         "Attempted to exit while we're in the middle of entering. " +
           "We'll exit after we've entered"
       );
@@ -463,7 +465,7 @@ CustomizeMode.prototype = {
     }
 
     if (this.resetting) {
-      log.debug(
+      lazy.log.debug(
         "Attempted to exit while we're resetting. " +
           "We'll exit after resetting has finished."
       );
@@ -476,7 +478,7 @@ CustomizeMode.prototype = {
 
     this._teardownDownloadAutoHideToggle();
 
-    AddonManager.removeAddonListener(this);
+    lazy.AddonManager.removeAddonListener(this);
     CustomizableUI.removeListener(this);
 
     let window = this.window;
@@ -554,7 +556,7 @@ CustomizeMode.prototype = {
         this.enter();
       }
     })().catch(e => {
-      log.error("Error exiting customize mode", e);
+      lazy.log.error("Error exiting customize mode", e);
       this._handler.isExitingCustomizeMode = false;
     });
   },
@@ -705,7 +707,7 @@ CustomizeMode.prototype = {
     }
 
     CustomizableUI.addWidgetToArea(widgetToAdd, CustomizableUI.AREA_NAVBAR);
-    BrowserUsageTelemetry.recordWidgetChange(
+    lazy.BrowserUsageTelemetry.recordWidgetChange(
       widgetToAdd,
       CustomizableUI.AREA_NAVBAR
     );
@@ -739,7 +741,7 @@ CustomizeMode.prototype = {
 
     let panel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
     CustomizableUI.addWidgetToArea(aNode.id, panel);
-    BrowserUsageTelemetry.recordWidgetChange(aNode.id, panel, aReason);
+    lazy.BrowserUsageTelemetry.recordWidgetChange(aNode.id, panel, aReason);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
@@ -781,7 +783,7 @@ CustomizeMode.prototype = {
     }
 
     CustomizableUI.removeWidgetFromArea(aNode.id);
-    BrowserUsageTelemetry.recordWidgetChange(aNode.id, null, aReason);
+    lazy.BrowserUsageTelemetry.recordWidgetChange(aNode.id, null, aReason);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
@@ -827,7 +829,7 @@ CustomizeMode.prototype = {
       // need to do/undo this when we're called from reset(), too.
       this._updateCommandsDisabledState(true);
     } catch (ex) {
-      log.error(ex);
+      lazy.log.error(ex);
     }
   },
 
@@ -838,7 +840,7 @@ CustomizeMode.prototype = {
   makePaletteItem(aWidget, aPlace) {
     let widgetNode = aWidget.forWindow(this.window).node;
     if (!widgetNode) {
-      log.error(
+      lazy.log.error(
         "Widget with id " + aWidget.id + " does not return a valid node"
       );
       return null;
@@ -1062,7 +1064,7 @@ CustomizeMode.prototype = {
     if (CustomizableUI.isSpecialWidget(aNode.id)) {
       wrapper.setAttribute(
         "title",
-        gWidgetsBundle.GetStringFromName(aNode.nodeName + ".label")
+        lazy.gWidgetsBundle.GetStringFromName(aNode.nodeName + ".label")
       );
     }
 
@@ -1094,7 +1096,7 @@ CustomizeMode.prototype = {
 
     let toolbarItem = aWrapper.firstElementChild;
     if (!toolbarItem) {
-      log.error(
+      lazy.log.error(
         "no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id
       );
       aWrapper.remove();
@@ -1151,7 +1153,7 @@ CustomizeMode.prototype = {
         await this.deferredWrapToolbarItem(
           child,
           CustomizableUI.getPlaceForItem(child)
-        ).catch(log.error);
+        ).catch(lazy.log.error);
       }
     }
     this.areas.add(target);
@@ -1175,7 +1177,7 @@ CustomizeMode.prototype = {
         }
       }
     } catch (ex) {
-      log.error(ex, ex.stack);
+      lazy.log.error(ex, ex.stack);
     }
 
     this.areas.add(target);
@@ -1240,7 +1242,7 @@ CustomizeMode.prototype = {
         this._removeDragHandlers(target);
       }
       this.areas.clear();
-    })().catch(log.error);
+    })().catch(lazy.log.error);
   },
 
   reset() {
@@ -1265,7 +1267,7 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    })().catch(log.error);
+    })().catch(lazy.log.error);
   },
 
   undoReset() {
@@ -1285,7 +1287,7 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
       this._moveDownloadsButtonToNavBar = false;
       this.resetting = false;
-    })().catch(log.error);
+    })().catch(lazy.log.error);
   },
 
   _onToolbarVisibilityChange(aEvent) {
@@ -1397,13 +1399,19 @@ CustomizeMode.prototype = {
   },
 
   openAddonsManagerThemes() {
-    AMTelemetry.recordLinkEvent({ object: "customize", value: "manageThemes" });
+    lazy.AMTelemetry.recordLinkEvent({
+      object: "customize",
+      value: "manageThemes",
+    });
     this.window.BrowserOpenAddonsMgr("addons://list/theme");
   },
 
   getMoreThemes(aEvent) {
     aEvent.target.parentNode.parentNode.hidePopup();
-    AMTelemetry.recordLinkEvent({ object: "customize", value: "getThemes" });
+    lazy.AMTelemetry.recordLinkEvent({
+      object: "customize",
+      value: "getThemes",
+    });
     let getMoreURL = Services.urlFormatter.formatURLPref(
       "lightweightThemes.getMoreURL"
     );
@@ -1570,7 +1578,7 @@ CustomizeMode.prototype = {
     let touchBarButton = this.$("customization-touchbar-button");
     let touchBarSpacer = this.$("customization-touchbar-spacer");
 
-    let isTouchBarInitialized = gTouchBarUpdater.isTouchBarInitialized();
+    let isTouchBarInitialized = lazy.gTouchBarUpdater.isTouchBarInitialized();
     touchBarButton.hidden = !isTouchBarInitialized;
     touchBarSpacer.hidden = !isTouchBarInitialized;
   },
@@ -1659,7 +1667,7 @@ CustomizeMode.prototype = {
   },
 
   _teardownPaletteDragging() {
-    DragPositionManager.stop();
+    lazy.DragPositionManager.stop();
     this._removeDragHandlers(this.visiblePalette);
 
     let contentContainer = this.$("customization-content-container");
@@ -1782,7 +1790,7 @@ CustomizeMode.prototype = {
       // we've exited. So we need to check that we are indeed customizing.
       if (this._customizing && !this._transitioning) {
         item.hidden = true;
-        DragPositionManager.start(this.window);
+        lazy.DragPositionManager.start(this.window);
         let canUsePrevSibling =
           placeForItem == "toolbar" || placeForItem == "menu-panel";
         if (item.nextElementSibling) {
@@ -2007,7 +2015,7 @@ CustomizeMode.prototype = {
         targetNode
       );
     } catch (ex) {
-      log.error(ex, ex.stack);
+      lazy.log.error(ex, ex.stack);
     }
 
     // If the user explicitly moves this item, turn off autohide.
@@ -2043,7 +2051,11 @@ CustomizeMode.prototype = {
         }
 
         CustomizableUI.removeWidgetFromArea(aDraggedItemId, "drag");
-        BrowserUsageTelemetry.recordWidgetChange(aDraggedItemId, null, "drag");
+        lazy.BrowserUsageTelemetry.recordWidgetChange(
+          aDraggedItemId,
+          null,
+          "drag"
+        );
         // Special widgets are removed outright, we can return here:
         if (CustomizableUI.isSpecialWidget(aDraggedItemId)) {
           return;
@@ -2102,7 +2114,7 @@ CustomizeMode.prototype = {
     // widget to the end of the area.
     if (aTargetNode == areaCustomizationTarget) {
       CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id);
-      BrowserUsageTelemetry.recordWidgetChange(
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
         aDraggedItemId,
         aTargetArea.id,
         "drag"
@@ -2139,7 +2151,7 @@ CustomizeMode.prototype = {
       placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
     if (!placement) {
-      log.debug(
+      lazy.log.debug(
         "Could not get a position for " +
           aTargetNode.nodeName +
           "#" +
@@ -2155,14 +2167,14 @@ CustomizeMode.prototype = {
     // that the widget is moving within a customizable area.
     if (aTargetArea == aOriginArea) {
       CustomizableUI.moveWidgetWithinArea(aDraggedItemId, position);
-      BrowserUsageTelemetry.recordWidgetChange(
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
         aDraggedItemId,
         aTargetArea.id,
         "drag"
       );
     } else {
       CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id, position);
-      BrowserUsageTelemetry.recordWidgetChange(
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
         aDraggedItemId,
         aTargetArea.id,
         "drag"
@@ -2241,7 +2253,7 @@ CustomizeMode.prototype = {
       this._cancelDragActive(this._dragOverItem);
       this._dragOverItem = null;
     }
-    DragPositionManager.stop();
+    lazy.DragPositionManager.stop();
   },
 
   _isUnwantedDragDrop(aEvent) {
@@ -2346,7 +2358,9 @@ CustomizeMode.prototype = {
         }
       }
       // Otherwise, clear everything out:
-      let positionManager = DragPositionManager.getManagerForArea(currentArea);
+      let positionManager = lazy.DragPositionManager.getManagerForArea(
+        currentArea
+      );
       positionManager.clearPlaceholders(currentArea, aNoTransition);
     }
   },
@@ -2355,7 +2369,9 @@ CustomizeMode.prototype = {
     let targetArea = this._getCustomizableParent(aDragOverNode);
     let draggedWrapper = this.$("wrapper-" + aDraggedItem.id);
     let originArea = this._getCustomizableParent(draggedWrapper);
-    let positionManager = DragPositionManager.getManagerForArea(targetArea);
+    let positionManager = lazy.DragPositionManager.getManagerForArea(
+      targetArea
+    );
     let draggedSize = this._getDragItemSize(aDragOverNode, aDraggedItem);
     positionManager.insertPlaceholder(
       targetArea,
@@ -2473,7 +2489,9 @@ CustomizeMode.prototype = {
         targetNode = targetNode.parentNode;
       }
     } else {
-      let positionManager = DragPositionManager.getManagerForArea(aAreaElement);
+      let positionManager = lazy.DragPositionManager.getManagerForArea(
+        aAreaElement
+      );
       // Make it relative to the container:
       dragX -= bounds.left;
       dragY -= bounds.top;
@@ -2484,7 +2502,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseDown(aEvent) {
-    log.debug("_onMouseDown");
+    lazy.log.debug("_onMouseDown");
     if (aEvent.button != 0) {
       return;
     }
@@ -2497,7 +2515,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseUp(aEvent) {
-    log.debug("_onMouseUp");
+    lazy.log.debug("_onMouseUp");
     if (aEvent.button != 0) {
       return;
     }
@@ -2608,7 +2626,7 @@ CustomizeMode.prototype = {
         "nav-bar",
         insertionPoint
       );
-      BrowserUsageTelemetry.recordWidgetChange(
+      lazy.BrowserUsageTelemetry.recordWidgetChange(
         "downloads-button",
         "nav-bar",
         "move-downloads"
@@ -2986,7 +3004,7 @@ function __dumpDragData(aEvent, caller) {
     }
   }
   str += "}";
-  log.debug(str);
+  lazy.log.debug(str);
 }
 
 function dispatchFunction(aFunc) {

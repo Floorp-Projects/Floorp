@@ -82,6 +82,9 @@ RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   // best performance.
   settings.n_threads =
       static_cast<int>(std::min(decoder_threads, GetNumberOfProcessors()));
+  if (int32_t count = StaticPrefs::media_av1_force_thread_count(); count > 0) {
+    settings.n_threads = count;
+  }
 
   int res = dav1d_open(&mContext, &settings);
   if (res < 0) {
