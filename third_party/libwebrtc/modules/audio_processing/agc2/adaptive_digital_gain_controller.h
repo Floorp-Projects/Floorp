@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
-#define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_
 
 #include <memory>
 
@@ -23,22 +23,26 @@
 namespace webrtc {
 class ApmDataDumper;
 
-// Adaptive digital gain controller.
-// TODO(crbug.com/webrtc/7494): Rename to `AdaptiveDigitalGainController`.
-class AdaptiveAgc {
+// Gain controller that adapts and applies a variable digital gain to meet the
+// target level, which is determined by the given configuration.
+class AdaptiveDigitalGainController {
  public:
-  AdaptiveAgc(
+  AdaptiveDigitalGainController(
       ApmDataDumper* apm_data_dumper,
-      const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
-  ~AdaptiveAgc();
+      const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
+      int sample_rate_hz,
+      int num_channels);
+  AdaptiveDigitalGainController(const AdaptiveDigitalGainController&) = delete;
+  AdaptiveDigitalGainController& operator=(
+      const AdaptiveDigitalGainController&) = delete;
+  ~AdaptiveDigitalGainController();
 
+  // Detects and handles changes of sample rate and or number of channels.
   void Initialize(int sample_rate_hz, int num_channels);
 
-  // TODO(crbug.com/webrtc/7494): Add `SetLimiterEnvelope()`.
-
-  // Analyzes `frame` and applies a digital adaptive gain to it. Takes into
-  // account the speech probability and the envelope measured by the limiter.
-  // TODO(crbug.com/webrtc/7494): Remove `limiter_envelope`.
+  // Analyzes `frame`, adapts the current digital gain and applies it to
+  // `frame`.
+  // TODO(bugs.webrtc.org/7494): Remove `limiter_envelope`.
   void Process(AudioFrameView<float> frame,
                float speech_probability,
                float limiter_envelope);
@@ -56,4 +60,4 @@ class AdaptiveAgc {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_
