@@ -4529,7 +4529,7 @@
 # none of its methods available).
 - name: extensions.InstallTriggerImpl.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Whether the InstallTrigger implementation should be enabled (or completely
