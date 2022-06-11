@@ -99,15 +99,6 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
     echo_control_factory.reset(new EchoCanceller3Factory());
   }
 
-  rtc::scoped_refptr<AudioProcessing> apm =
-      AudioProcessingBuilderForTesting()
-          .SetEchoControlFactory(std::move(echo_control_factory))
-          .Create();
-
-#ifdef WEBRTC_LINUX
-  apm->AttachAecDump(AecDumpFactory::Create("/dev/null", -1, worker_queue));
-#endif
-
   webrtc::AudioProcessing::Config apm_config;
   apm_config.pipeline.multi_channel_render = true;
   apm_config.pipeline.multi_channel_capture = true;
@@ -125,7 +116,16 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   apm_config.transient_suppression.enabled = use_ts;
   apm_config.voice_detection.enabled = use_vad;
   apm_config.level_estimation.enabled = use_le;
-  apm->ApplyConfig(apm_config);
+
+  rtc::scoped_refptr<AudioProcessing> apm =
+      AudioProcessingBuilderForTesting()
+          .SetEchoControlFactory(std::move(echo_control_factory))
+          .SetConfig(apm_config)
+          .Create();
+
+#ifdef WEBRTC_LINUX
+  apm->AttachAecDump(AecDumpFactory::Create("/dev/null", -1, worker_queue));
+#endif
 
   return apm;
 }
