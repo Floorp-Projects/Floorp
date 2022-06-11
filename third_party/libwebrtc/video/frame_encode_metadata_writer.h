@@ -28,7 +28,7 @@ class FrameEncodeMetadataWriter {
   explicit FrameEncodeMetadataWriter(EncodedImageCallback* frame_drop_callback);
   ~FrameEncodeMetadataWriter();
 
-  void OnEncoderInit(const VideoCodec& codec, bool internal_source);
+  void OnEncoderInit(const VideoCodec& codec, bool internal_source = false);
   void OnSetRates(const VideoBitrateAllocation& bitrate_allocation,
                   uint32_t framerate_fps);
 
