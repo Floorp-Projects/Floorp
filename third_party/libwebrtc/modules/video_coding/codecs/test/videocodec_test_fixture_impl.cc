@@ -697,15 +697,6 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
     return false;
   }
 
-  task_queue->SendTask(
-      [this]() {
-        processor_ = std::make_unique<VideoProcessor>(
-            encoder_.get(), &decoders_, source_frame_reader_.get(), config_,
-            &stats_, &encoded_frame_writers_,
-            decoded_frame_writers_.empty() ? nullptr : &decoded_frame_writers_);
-      },
-      RTC_FROM_HERE);
-
   if (config_.visualization_params.save_encoded_ivf ||
       config_.visualization_params.save_decoded_y4m) {
     std::string encoder_name = GetCodecName(task_queue, /*is_encoder=*/true);
@@ -748,6 +739,14 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
     }
   }
 
+  task_queue->SendTask(
+      [this]() {
+        processor_ = std::make_unique<VideoProcessor>(
+            encoder_.get(), &decoders_, source_frame_reader_.get(), config_,
+            &stats_, &encoded_frame_writers_,
+            decoded_frame_writers_.empty() ? nullptr : &decoded_frame_writers_);
+      },
+      RTC_FROM_HERE);
   return true;
 }
 
