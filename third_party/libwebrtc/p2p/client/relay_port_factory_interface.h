@@ -43,6 +43,7 @@ struct CreateRelayPortArgs {
   const RelayServerConfig* config;
   std::string username;
   std::string password;
+  std::string origin;
   webrtc::TurnCustomizer* turn_customizer;
 };
 
