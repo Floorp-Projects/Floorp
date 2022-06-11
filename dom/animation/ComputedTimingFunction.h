@@ -81,6 +81,17 @@ class ComputedTimingFunction {
                      StyleComputedTimingFunction::Tag::Steps &&
                  aFunction.mSteps == uint32_t(aOther.mTiming.steps._0) &&
                  aFunction.mPos == aOther.mTiming.steps._1;
+        },
+        [&aOther](const StylePiecewiseLinearFunction& aFunction) {
+          if (aOther.mTiming.tag !=
+              StyleComputedTimingFunction::Tag::LinearFunction) {
+            return false;
+          }
+          StylePiecewiseLinearFunction other;
+          // TODO(dshin, bug 1773493): Having to go back and forth isn't ideal.
+          Servo_CreatePiecewiseLinearFunction(
+              &aOther.mTiming.linear_function._0, &other);
+          return aFunction.entries == other.entries;
         });
   }
   bool operator!=(const nsTimingFunction& aOther) const {
@@ -105,13 +116,17 @@ class ComputedTimingFunction {
     mozilla::StyleTimingKeyword mKeyword;
     SMILKeySpline mFunction;
   };
-  using Function = mozilla::Variant<KeywordFunction, SMILKeySpline, StepFunc>;
+
+  using Function = mozilla::Variant<KeywordFunction, SMILKeySpline, StepFunc,
+                                    StylePiecewiseLinearFunction>;
 
   static Function ConstructFunction(const nsTimingFunction& aFunction);
   ComputedTimingFunction(double x1, double y1, double x2, double y2)
       : mFunction{AsVariant(SMILKeySpline{x1, y1, x2, y2})} {}
   ComputedTimingFunction(uint32_t aSteps, StyleStepPosition aPos)
       : mFunction{AsVariant(StepFunc{aSteps, aPos})} {}
+  explicit ComputedTimingFunction(StylePiecewiseLinearFunction aFunction)
+      : mFunction{AsVariant(std::move(aFunction))} {}
 
   Function mFunction;
 };
