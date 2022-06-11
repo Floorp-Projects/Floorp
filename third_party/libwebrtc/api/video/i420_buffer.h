@@ -98,12 +98,6 @@ class RTC_EXPORT I420Buffer : public I420BufferInterface {
   // Scale all of `src` to the size of `this` buffer, with no cropping.
   void ScaleFrom(const I420BufferInterface& src);
 
-  // Pastes whole picture to canvas at (offset_row, offset_col).
-  // Offsets and picture dimensions must be even.
-  void PasteFrom(const I420BufferInterface& picture,
-                 int offset_col,
-                 int offset_row);
-
  protected:
   I420Buffer(int width, int height);
   I420Buffer(int width, int height, int stride_y, int stride_u, int stride_v);
