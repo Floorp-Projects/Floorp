@@ -207,7 +207,6 @@ void EnableAllAPComponents(AudioProcessing* ap) {
   apm_config.noise_suppression.enabled = true;
 
   apm_config.high_pass_filter.enabled = true;
-  apm_config.level_estimation.enabled = true;
   apm_config.voice_detection.enabled = true;
   apm_config.pipeline.maximum_internal_processing_rate = 48000;
   ap->ApplyConfig(apm_config);
@@ -1272,7 +1271,6 @@ TEST_F(ApmTest, AllProcessingDisabledByDefault) {
   EXPECT_FALSE(config.echo_canceller.enabled);
   EXPECT_FALSE(config.high_pass_filter.enabled);
   EXPECT_FALSE(config.gain_controller1.enabled);
-  EXPECT_FALSE(config.level_estimation.enabled);
   EXPECT_FALSE(config.noise_suppression.enabled);
   EXPECT_FALSE(config.voice_detection.enabled);
 }
@@ -1399,7 +1397,6 @@ TEST_F(ApmTest, SplittingFilter) {
   auto apm_config = apm_->GetConfig();
   SetFrameTo(&frame_, 1000);
   frame_copy.CopyFrom(frame_);
-  apm_config.level_estimation.enabled = true;
   apm_->ApplyConfig(apm_config);
   EXPECT_EQ(apm_->kNoError,
             apm_->ProcessStream(
@@ -1414,7 +1411,6 @@ TEST_F(ApmTest, SplittingFilter) {
                 StreamConfig(frame_.sample_rate_hz, frame_.num_channels),
                 frame_.data.data()));
   EXPECT_TRUE(FrameDataAreEqual(frame_, frame_copy));
-  apm_config.level_estimation.enabled = false;
   apm_->ApplyConfig(apm_config);
 
   // 3. Only GetStatistics-reporting VAD is enabled...
@@ -1438,11 +1434,10 @@ TEST_F(ApmTest, SplittingFilter) {
   apm_config.voice_detection.enabled = false;
   apm_->ApplyConfig(apm_config);
 
-  // 4. Both the VAD and the level estimator are enabled...
+  // 4. The VAD is enabled...
   SetFrameTo(&frame_, 1000);
   frame_copy.CopyFrom(frame_);
   apm_config.voice_detection.enabled = true;
-  apm_config.level_estimation.enabled = true;
   apm_->ApplyConfig(apm_config);
   EXPECT_EQ(apm_->kNoError,
             apm_->ProcessStream(
@@ -1458,7 +1453,6 @@ TEST_F(ApmTest, SplittingFilter) {
                 frame_.data.data()));
   EXPECT_TRUE(FrameDataAreEqual(frame_, frame_copy));
   apm_config.voice_detection.enabled = false;
-  apm_config.level_estimation.enabled = false;
   apm_->ApplyConfig(apm_config);
 
   // Check the test is valid. We should have distortion from the filter
@@ -1790,7 +1784,6 @@ TEST_F(ApmTest, Process) {
     int analog_level = 127;
     int analog_level_average = 0;
     int max_output_average = 0;
-    float rms_dbfs_average = 0.0f;
 #if defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
     int stats_index = 0;
 #endif
@@ -1824,9 +1817,7 @@ TEST_F(ApmTest, Process) {
       analog_level_average += analog_level;
       AudioProcessingStats stats = apm_->GetStatistics();
       EXPECT_TRUE(stats.voice_detected);
-      EXPECT_TRUE(stats.output_rms_dbfs);
       has_voice_count += *stats.voice_detected ? 1 : 0;
-      rms_dbfs_average += *stats.output_rms_dbfs;
 
       size_t frame_size = frame_.samples_per_channel * frame_.num_channels;
       size_t write_count =
@@ -1879,7 +1870,6 @@ TEST_F(ApmTest, Process) {
     }
     max_output_average /= frame_count;
     analog_level_average /= frame_count;
-    rms_dbfs_average /= frame_count;
 
     if (!absl::GetFlag(FLAGS_write_apm_ref_data)) {
       const int kIntNear = 1;
@@ -1907,19 +1897,11 @@ TEST_F(ApmTest, Process) {
       EXPECT_NEAR(test->max_output_average(),
                   max_output_average - kMaxOutputAverageOffset,
                   kMaxOutputAverageNear);
-#if defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
-      const double kFloatNear = 0.002;
-      EXPECT_NEAR(test->rms_dbfs_average(), rms_dbfs_average, kFloatNear);
-#endif
     } else {
       test->set_has_voice_count(has_voice_count);
 
       test->set_analog_level_average(analog_level_average);
       test->set_max_output_average(max_output_average);
-
-#if defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
-      test->set_rms_dbfs_average(rms_dbfs_average);
-#endif
     }
 
     rewind(far_file_);
@@ -2721,7 +2703,6 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(bool mobile_aec) {
   apm_config.echo_canceller.enabled = true;
   apm_config.echo_canceller.mobile_mode = mobile_aec;
   apm_config.noise_suppression.enabled = false;
-  apm_config.level_estimation.enabled = false;
   apm_config.voice_detection.enabled = false;
   apm->ApplyConfig(apm_config);
   return apm;
@@ -2833,60 +2814,6 @@ TEST(MAYBE_ApmStatistics, AECMEnabledTest) {
   }
   EXPECT_FALSE(stats.echo_return_loss);
   EXPECT_FALSE(stats.echo_return_loss_enhancement);
-}
-
-TEST(ApmStatistics, ReportOutputRmsDbfs) {
-  ProcessingConfig processing_config = {
-      {{32000, 1}, {32000, 1}, {32000, 1}, {32000, 1}}};
-  AudioProcessing::Config config;
-
-  // Set up an audioframe.
-  Int16FrameData frame;
-  frame.num_channels = 1;
-  SetFrameSampleRate(&frame, AudioProcessing::NativeRate::kSampleRate32kHz);
-
-  // Fill the audio frame with a sawtooth pattern.
-  int16_t* ptr = frame.data.data();
-  for (size_t i = 0; i < frame.kMaxDataSizeSamples; i++) {
-    ptr[i] = 10000 * ((i % 3) - 1);
-  }
-
-  rtc::scoped_refptr<AudioProcessing> apm =
-      AudioProcessingBuilderForTesting().Create();
-  apm->Initialize(processing_config);
-
-  // If not enabled, no metric should be reported.
-  EXPECT_EQ(
-      apm->ProcessStream(frame.data.data(),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         frame.data.data()),
-      0);
-  EXPECT_FALSE(apm->GetStatistics().output_rms_dbfs);
-
-  // If enabled, metrics should be reported.
-  config.level_estimation.enabled = true;
-  apm->ApplyConfig(config);
-  EXPECT_EQ(
-      apm->ProcessStream(frame.data.data(),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         frame.data.data()),
-      0);
-  auto stats = apm->GetStatistics();
-  EXPECT_TRUE(stats.output_rms_dbfs);
-  EXPECT_GE(*stats.output_rms_dbfs, 0);
-
-  // If re-disabled, the value is again not reported.
-  config.level_estimation.enabled = false;
-  apm->ApplyConfig(config);
-  EXPECT_EQ(
-      apm->ProcessStream(frame.data.data(),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         StreamConfig(frame.sample_rate_hz, frame.num_channels),
-                         frame.data.data()),
-      0);
-  EXPECT_FALSE(apm->GetStatistics().output_rms_dbfs);
 }
 
 TEST(ApmStatistics, ReportHasVoice) {

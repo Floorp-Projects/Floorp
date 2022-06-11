@@ -210,9 +210,7 @@ std::string AudioProcessing::Config::ToString() const {
           << ", max_output_noise_level_dbfs: "
           << gain_controller2.adaptive_digital.max_output_noise_level_dbfs
           << "}}, residual_echo_detector: { enabled: "
-          << residual_echo_detector.enabled
-          << " }, level_estimation: { enabled: " << level_estimation.enabled
-          << " }}";
+          << residual_echo_detector.enabled << " }}";
   return builder.str();
 }
 

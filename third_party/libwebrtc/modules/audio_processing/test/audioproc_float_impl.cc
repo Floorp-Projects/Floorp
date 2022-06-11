@@ -121,10 +121,6 @@ ABSL_FLAG(int,
           vad,
           kParameterNotSpecifiedValue,
           "Activate (1) or deactivate (0) the voice activity detector");
-ABSL_FLAG(int,
-          le,
-          kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate (0) the level estimator");
 ABSL_FLAG(bool,
           all_default,
           false,
@@ -369,7 +365,6 @@ void SetSettingIfFlagSet(int32_t flag, absl::optional<bool>* parameter) {
 SimulationSettings CreateSettings() {
   SimulationSettings settings;
   if (absl::GetFlag(FLAGS_all_default)) {
-    settings.use_le = true;
     settings.use_vad = true;
     settings.use_ts = true;
     settings.use_analog_agc = true;
@@ -423,7 +418,6 @@ SimulationSettings CreateSettings() {
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_analog_agc),
                       &settings.use_analog_agc);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_vad), &settings.use_vad);
-  SetSettingIfFlagSet(absl::GetFlag(FLAGS_le), &settings.use_le);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_analog_agc_disable_digital_adaptive),
                       &settings.analog_agc_disable_digital_adaptive);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_agc_mode), &settings.agc_mode);
