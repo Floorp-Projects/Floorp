@@ -14,6 +14,9 @@ vars = {
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
+
+  # ResultDB version
+  'resultdb_version': 'git_revision:735a8a662d3874d8b1d795a40e46ea0f57b52758',
 }
 
 deps = {
@@ -99,6 +102,14 @@ deps = {
       ],
       'condition': 'checkout_android',
       'dep_type': 'cipd',
+  },
+  'src/tools/resultdb': {
+    'packages': [
+      {
+        'package': 'infra/tools/result_adapter/${{platform}}',
+        'version': Var('resultdb_version'),
+      },
+    ],
   },
 
   'src/third_party/android_build_tools/aapt2': {
