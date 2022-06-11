@@ -77,6 +77,7 @@ AdaptiveAgc::~AdaptiveAgc() = default;
 
 void AdaptiveAgc::Initialize(int sample_rate_hz, int num_channels) {
   gain_controller_.Initialize(sample_rate_hz, num_channels);
+  vad_.Initialize(sample_rate_hz);
 }
 
 void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {

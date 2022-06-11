@@ -64,6 +64,8 @@ VoiceActivityDetectorWrapper::VoiceActivityDetectorWrapper(
     std::unique_ptr<MonoVad> vad)
     : vad_reset_period_frames_(
           rtc::CheckedDivExact(vad_reset_period_ms, kFrameDurationMs)),
+      initialized_(false),
+      frame_size_(0),
       time_to_vad_reset_(vad_reset_period_frames_),
       vad_(std::move(vad)) {
   RTC_DCHECK(vad_);
@@ -74,19 +76,29 @@ VoiceActivityDetectorWrapper::VoiceActivityDetectorWrapper(
 
 VoiceActivityDetectorWrapper::~VoiceActivityDetectorWrapper() = default;
 
+void VoiceActivityDetectorWrapper::Initialize(int sample_rate_hz) {
+  RTC_DCHECK_GT(sample_rate_hz, 0);
+  frame_size_ = rtc::CheckedDivExact(sample_rate_hz, kNumFramesPerSecond);
+  int status =
+      resampler_.InitializeIfNeeded(sample_rate_hz, vad_->SampleRateHz(),
+                                    /*num_channels=*/1);
+  constexpr int kStatusOk = 0;
+  RTC_DCHECK_EQ(status, kStatusOk);
+  vad_->Reset();
+  initialized_ = true;
+}
+
 float VoiceActivityDetectorWrapper::Analyze(AudioFrameView<const float> frame) {
+  RTC_DCHECK(initialized_);
   // Periodically reset the VAD.
   time_to_vad_reset_--;
   if (time_to_vad_reset_ <= 0) {
     vad_->Reset();
     time_to_vad_reset_ = vad_reset_period_frames_;
   }
-
   // Resample the first channel of `frame`.
-  resampler_.InitializeIfNeeded(
-      /*sample_rate_hz=*/frame.samples_per_channel() * kNumFramesPerSecond,
-      vad_->SampleRateHz(), /*num_channels=*/1);
-  resampler_.Resample(frame.channel(0).data(), frame.samples_per_channel(),
+  RTC_DCHECK_EQ(frame.samples_per_channel(), frame_size_);
+  resampler_.Resample(frame.channel(0).data(), frame_size_,
                       resampled_buffer_.data(), resampled_buffer_.size());
 
   return vad_->Analyze(resampled_buffer_);

@@ -43,6 +43,7 @@ class VoiceActivityDetectorWrapper {
   // Ctor. `vad_reset_period_ms` indicates the period in milliseconds to call
   // `MonoVad::Reset()`; it must be equal to or greater than the duration of two
   // frames. Uses `cpu_features` to instantiate the default VAD.
+  // TODO(bugs.webrtc.org/7494): Pass sample rate.
   VoiceActivityDetectorWrapper(int vad_reset_period_ms,
                                const AvailableCpuFeatures& cpu_features);
   // Ctor. Uses a custom `vad`.
@@ -54,11 +55,20 @@ class VoiceActivityDetectorWrapper {
       delete;
   ~VoiceActivityDetectorWrapper();
 
+  // TODO(bugs.webrtc.org/7494): Call initialize in the ctor.
+  // Initializes the VAD wrapper. Must be called before `Analyze()`.
+  void Initialize(int sample_rate_hz);
+
   // Analyzes the first channel of `frame` and returns the speech probability.
+  // `frame` must be a 10 ms frame with the sample rate specified in the last
+  // `Initialize()` call.
   float Analyze(AudioFrameView<const float> frame);
 
  private:
   const int vad_reset_period_frames_;
+  // TODO(bugs.webrtc.org/7494): Remove `initialized_`.
+  bool initialized_;
+  int frame_size_;
   int time_to_vad_reset_;
   PushResampler<float> resampler_;
   std::unique_ptr<MonoVad> vad_;
