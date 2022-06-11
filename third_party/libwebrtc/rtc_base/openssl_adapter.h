@@ -60,7 +60,6 @@ class OpenSSLAdapter final : public SSLAdapter,
   void SetCertVerifier(SSLCertificateVerifier* ssl_cert_verifier) override;
   void SetIdentity(std::unique_ptr<SSLIdentity> identity) override;
   void SetRole(SSLRole role) override;
-  Socket* Accept(SocketAddress* paddr) override;
   int StartSSL(const char* hostname) override;
   int Send(const void* pv, size_t cb) override;
   int SendTo(const void* pv, size_t cb, const SocketAddress& addr) override;
@@ -191,10 +190,21 @@ class OpenSSLAdapterFactory : public SSLAdapterFactory {
   // the first adapter is created with the factory. If it is called after it
   // will DCHECK.
   void SetMode(SSLMode mode) override;
+
   // Set a custom certificate verifier to be passed down to each instance
   // created with this factory. This should only ever be set before the first
   // call to the factory and cannot be changed after the fact.
   void SetCertVerifier(SSLCertificateVerifier* ssl_cert_verifier) override;
+
+  void SetIdentity(std::unique_ptr<SSLIdentity> identity) override;
+
+  // Choose whether the socket acts as a server socket or client socket.
+  void SetRole(SSLRole role) override;
+
+  // Methods that control server certificate verification, used in unit tests.
+  // Do not call these methods in production code.
+  void SetIgnoreBadCert(bool ignore) override;
+
   // Constructs a new socket using the shared OpenSSLSessionCache. This means
   // existing SSLSessions already in the cache will be reused instead of
   // re-created for improved performance.
@@ -203,6 +213,11 @@ class OpenSSLAdapterFactory : public SSLAdapterFactory {
  private:
   // Holds the SSLMode (DTLS,TLS) that will be used to set the session cache.
   SSLMode ssl_mode_ = SSL_MODE_TLS;
+  SSLRole ssl_role_ = SSL_CLIENT;
+  bool ignore_bad_cert_ = false;
+
+  std::unique_ptr<SSLIdentity> identity_;
+
   // Holds a cache of existing SSL Sessions.
   std::unique_ptr<OpenSSLSessionCache> ssl_session_cache_;
   // Provides an optional custom callback for verifying SSL certificates, this

@@ -23,6 +23,7 @@
 #include "p2p/base/port_interface.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/ssl_adapter.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 
@@ -237,7 +238,10 @@ class TurnServer : public sigslot::has_slots<> {
   // Starts listening for the connections on this socket. When someone tries
   // to connect, the connection will be accepted and a new internal socket
   // will be added.
-  void AddInternalServerSocket(rtc::Socket* socket, ProtocolType proto);
+  void AddInternalServerSocket(
+      rtc::Socket* socket,
+      ProtocolType proto,
+      std::unique_ptr<rtc::SSLAdapterFactory> ssl_adapter_factory = nullptr);
   // Specifies the factory to use for creating external sockets.
   void SetExternalSocketFactory(rtc::PacketSocketFactory* factory,
                                 const rtc::SocketAddress& address);
@@ -320,7 +324,12 @@ class TurnServer : public sigslot::has_slots<> {
       RTC_RUN_ON(thread_);
 
   typedef std::map<rtc::AsyncPacketSocket*, ProtocolType> InternalSocketMap;
-  typedef std::map<rtc::Socket*, ProtocolType> ServerSocketMap;
+  struct ServerSocketInfo {
+    ProtocolType proto;
+    // If non-null, used to wrap accepted sockets.
+    std::unique_ptr<rtc::SSLAdapterFactory> ssl_adapter_factory;
+  };
+  typedef std::map<rtc::Socket*, ServerSocketInfo> ServerSocketMap;
 
   rtc::Thread* const thread_;
   const std::string nonce_key_;

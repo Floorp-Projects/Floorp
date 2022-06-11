@@ -39,10 +39,21 @@ class SSLAdapterFactory {
   // Specify a custom certificate verifier for SSL.
   virtual void SetCertVerifier(SSLCertificateVerifier* ssl_cert_verifier) = 0;
 
+  // Set the certificate this socket will present to incoming clients.
+  // Takes ownership of `identity`.
+  virtual void SetIdentity(std::unique_ptr<SSLIdentity> identity) = 0;
+
+  // Choose whether the socket acts as a server socket or client socket.
+  virtual void SetRole(SSLRole role) = 0;
+
+  // Methods that control server certificate verification, used in unit tests.
+  // Do not call these methods in production code.
+  virtual void SetIgnoreBadCert(bool ignore) = 0;
+
   // Creates a new SSL adapter, but from a shared context.
   virtual SSLAdapter* CreateAdapter(Socket* socket) = 0;
 
-  static SSLAdapterFactory* Create();
+  static std::unique_ptr<SSLAdapterFactory> Create();
 };
 
 // Class that abstracts a client-to-server SSL session. It can be created
@@ -91,6 +102,11 @@ class SSLAdapter : public AsyncSocketAdapter {
   // and deletes `socket`. Otherwise, the returned SSLAdapter takes ownership
   // of `socket`.
   static SSLAdapter* Create(Socket* socket);
+
+ private:
+  // Not supported.
+  int Listen(int backlog) override { RTC_CHECK(false); }
+  Socket* Accept(SocketAddress* paddr) override { RTC_CHECK(false); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
