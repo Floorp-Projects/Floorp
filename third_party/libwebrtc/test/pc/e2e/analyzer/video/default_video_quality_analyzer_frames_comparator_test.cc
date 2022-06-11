@@ -117,7 +117,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                            /*captured=*/absl::nullopt,
                            /*rendered=*/absl::nullopt,
                            FrameComparisonType::kRegular, frame_stats);
-  comparator.Stop({});
+  comparator.Stop(/*last_rendered_frame_times=*/{});
 
   std::map<InternalStatsKey, StreamStats> stats = comparator.stream_stats();
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.at(stats_key).transport_time_ms), 20.0);
@@ -161,7 +161,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                            /*captured=*/absl::nullopt,
                            /*rendered=*/absl::nullopt,
                            FrameComparisonType::kRegular, frame_stats2);
-  comparator.Stop({});
+  comparator.Stop(/*last_rendered_frame_times=*/{});
 
   std::map<InternalStatsKey, StreamStats> stats = comparator.stream_stats();
   EXPECT_DOUBLE_EQ(
@@ -244,7 +244,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
                            /*rendered=*/absl::nullopt,
                            FrameComparisonType::kRegular,
                            stats[stats.size() - 1]);
-  comparator.Stop({});
+  comparator.Stop(/*last_rendered_frame_times=*/{});
 
   EXPECT_EQ(comparator.stream_stats().size(), 1lu);
   StreamStats result_stats = comparator.stream_stats().at(stats_key);
