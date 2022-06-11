@@ -1450,7 +1450,6 @@ void EventLogAnalyzer::CreateNetworkDelayFeedbackGraph(Plot* plot) {
   int64_t min_send_receive_diff_ms = std::numeric_limits<int64_t>::max();
   int64_t min_rtt_ms = std::numeric_limits<int64_t>::max();
 
-  int64_t prev_y = 0;
   std::vector<MatchedSendArrivalTimes> matched_rtp_rtcp =
       GetNetworkTrace(parsed_log_);
   absl::c_stable_sort(matched_rtp_rtcp, [](const MatchedSendArrivalTimes& a,
@@ -1464,7 +1463,6 @@ void EventLogAnalyzer::CreateNetworkDelayFeedbackGraph(Plot* plot) {
       continue;
     float x = config_.GetCallTimeSec(1000 * packet.feedback_arrival_time_ms);
     int64_t y = packet.arrival_time_ms - packet.send_time_ms;
-    prev_y = y;
     int64_t rtt_ms = packet.feedback_arrival_time_ms - packet.send_time_ms;
     min_rtt_ms = std::min(rtt_ms, min_rtt_ms);
     min_send_receive_diff_ms = std::min(y, min_send_receive_diff_ms);

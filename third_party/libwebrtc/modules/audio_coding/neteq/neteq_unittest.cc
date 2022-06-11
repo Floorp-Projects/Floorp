@@ -372,7 +372,6 @@ class NetEqBgnTest : public NetEqDecodingTest {
     PopulateRtpInfo(0, 0, &rtp_info);
     rtp_info.payloadType = payload_type;
 
-    uint32_t receive_timestamp = 0;
     bool muted;
     for (int n = 0; n < 10; ++n) {  // Insert few packets and get audio.
       auto block = input.GetNextBlock();
@@ -393,8 +392,6 @@ class NetEqBgnTest : public NetEqDecodingTest {
       rtp_info.timestamp +=
           rtc::checked_cast<uint32_t>(expected_samples_per_channel);
       rtp_info.sequenceNumber++;
-      receive_timestamp +=
-          rtc::checked_cast<uint32_t>(expected_samples_per_channel);
     }
 
     output.Reset();
