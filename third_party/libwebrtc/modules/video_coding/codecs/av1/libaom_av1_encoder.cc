@@ -616,20 +616,38 @@ int32_t LibaomAv1Encoder::Encode(
   const uint32_t duration =
       kRtpTicksPerSecond / static_cast<float>(encoder_settings_.maxFramerate);
 
-  for (size_t i = 0; i < layer_frames.size(); ++i) {
-    ScalableVideoController::LayerFrameConfig& layer_frame = layer_frames[i];
-    const bool end_of_picture = i == layer_frames.size() - 1;
+  const size_t num_spatial_layers =
+      svc_params_ ? svc_params_->number_spatial_layers : 1;
+  size_t next_layer_frame_index = 0;
+  for (size_t i = 0; i < num_spatial_layers; ++i) {
+    // The libaom AV1 encoder requires that `aom_codec_encode` is called for
+    // every spatial layer, even if the configured bitrate for that layer is
+    // zero. For zero bitrate spatial layers no frames will be produced.
+    absl::optional<ScalableVideoController::LayerFrameConfig>
+        non_encoded_layer_frame;
+    ScalableVideoController::LayerFrameConfig* layer_frame;
+    if (next_layer_frame_index < layer_frames.size() &&
+        layer_frames[next_layer_frame_index].SpatialId() ==
+            static_cast<int>(i)) {
+      layer_frame = &layer_frames[next_layer_frame_index];
+      next_layer_frame_index++;
+    } else {
+      // For layers that are not encoded only the spatial id matters.
+      non_encoded_layer_frame.emplace().S(i);
+      layer_frame = &*non_encoded_layer_frame;
+    }
+    const bool end_of_picture = (next_layer_frame_index == layer_frames.size());
 
     aom_enc_frame_flags_t flags =
-        layer_frame.IsKeyframe() ? AOM_EFLAG_FORCE_KF : 0;
+        layer_frame->IsKeyframe() ? AOM_EFLAG_FORCE_KF : 0;
 
     if (SvcEnabled()) {
-      SetSvcLayerId(layer_frame);
-      SetSvcRefFrameConfig(layer_frame);
+      SetSvcLayerId(*layer_frame);
+      SetSvcRefFrameConfig(*layer_frame);
 
       aom_codec_err_t ret =
           aom_codec_control(&ctx_, AV1E_SET_ERROR_RESILIENT_MODE,
-                            layer_frame.TemporalId() > 0 ? 1 : 0);
+                            layer_frame->TemporalId() > 0 ? 1 : 0);
       if (ret != AOM_CODEC_OK) {
         RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::Encode returned " << ret
                             << " on control AV1E_SET_ERROR_RESILIENT_MODE.";
@@ -644,6 +662,10 @@ int32_t LibaomAv1Encoder::Encode(
       RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::Encode returned " << ret
                           << " on aom_codec_encode.";
       return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    if (non_encoded_layer_frame) {
+      continue;
     }
 
     // Get encoded image data.
@@ -663,9 +685,10 @@ int32_t LibaomAv1Encoder::Encode(
             /*size=*/pkt->data.frame.sz));
 
         if ((pkt->data.frame.flags & AOM_EFLAG_FORCE_KF) != 0) {
-          layer_frame.Keyframe();
+          layer_frame->Keyframe();
         }
-        encoded_image._frameType = layer_frame.IsKeyframe()
+
+        encoded_image._frameType = layer_frame->IsKeyframe()
                                        ? VideoFrameType::kVideoFrameKey
                                        : VideoFrameType::kVideoFrameDelta;
         encoded_image.SetTimestamp(frame.timestamp());
@@ -675,8 +698,8 @@ int32_t LibaomAv1Encoder::Encode(
         // If encoded image width/height info are added to aom_codec_cx_pkt_t,
         // use those values in lieu of the values in frame.
         if (svc_params_) {
-          int n = svc_params_->scaling_factor_num[layer_frame.SpatialId()];
-          int d = svc_params_->scaling_factor_den[layer_frame.SpatialId()];
+          int n = svc_params_->scaling_factor_num[layer_frame->SpatialId()];
+          int d = svc_params_->scaling_factor_den[layer_frame->SpatialId()];
           encoded_image._encodedWidth = cfg_.g_w * n / d;
           encoded_image._encodedHeight = cfg_.g_h * n / d;
         } else {
@@ -702,9 +725,9 @@ int32_t LibaomAv1Encoder::Encode(
       CodecSpecificInfo codec_specific_info;
       codec_specific_info.codecType = kVideoCodecAV1;
       codec_specific_info.end_of_picture = end_of_picture;
-      bool is_keyframe = layer_frame.IsKeyframe();
+      bool is_keyframe = layer_frame->IsKeyframe();
       codec_specific_info.generic_frame_info =
-          svc_controller_->OnEncodeDone(std::move(layer_frame));
+          svc_controller_->OnEncodeDone(std::move(*layer_frame));
       if (is_keyframe && codec_specific_info.generic_frame_info) {
         codec_specific_info.template_structure =
             svc_controller_->DependencyStructure();
@@ -747,6 +770,7 @@ void LibaomAv1Encoder::SetRates(const RateControlParameters& parameters) {
 
   svc_controller_->OnRatesUpdated(parameters.bitrate);
   cfg_.rc_target_bitrate = parameters.bitrate.get_sum_kbps();
+  aom_codec_err_t error_code = aom_codec_enc_config_set(&ctx_, &cfg_);
 
   if (SvcEnabled()) {
     for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
@@ -769,9 +793,6 @@ void LibaomAv1Encoder::SetRates(const RateControlParameters& parameters) {
   // Set frame rate to closest integer value.
   encoder_settings_.maxFramerate =
       static_cast<uint32_t>(parameters.framerate_fps + 0.5);
-
-  // Update encoder context.
-  aom_codec_err_t error_code = aom_codec_enc_config_set(&ctx_, &cfg_);
   if (error_code != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "Error configuring encoder, error code: "
                         << error_code;
