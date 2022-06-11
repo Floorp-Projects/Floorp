@@ -11,30 +11,13 @@
 #include "modules/audio_processing/agc2/adaptive_agc.h"
 
 #include "common_audio/include/audio_util.h"
-#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/vad_wrapper.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
-
-// Detects the available CPU features and applies any kill-switches.
-AvailableCpuFeatures GetAllowedCpuFeatures() {
-  AvailableCpuFeatures features = GetAvailableCpuFeatures();
-  if (field_trial::IsEnabled("WebRTC-Agc2SimdSse2KillSwitch")) {
-    features.sse2 = false;
-  }
-  if (field_trial::IsEnabled("WebRTC-Agc2SimdAvx2KillSwitch")) {
-    features.avx2 = false;
-  }
-  if (field_trial::IsEnabled("WebRTC-Agc2SimdNeonKillSwitch")) {
-    features.neon = false;
-  }
-  return features;
-}
 
 // Peak and RMS audio levels in dBFS.
 struct AudioLevels {
@@ -60,7 +43,6 @@ AdaptiveAgc::AdaptiveAgc(
     ApmDataDumper* apm_data_dumper,
     const AudioProcessing::Config::GainController2::AdaptiveDigital& config)
     : speech_level_estimator_(apm_data_dumper, config),
-      vad_(config.vad_reset_period_ms, GetAllowedCpuFeatures()),
       gain_controller_(apm_data_dumper, config),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(CreateNoiseFloorEstimator(apm_data_dumper)),
@@ -77,18 +59,18 @@ AdaptiveAgc::~AdaptiveAgc() = default;
 
 void AdaptiveAgc::Initialize(int sample_rate_hz, int num_channels) {
   gain_controller_.Initialize(sample_rate_hz, num_channels);
-  vad_.Initialize(sample_rate_hz);
 }
 
-void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
+void AdaptiveAgc::Process(AudioFrameView<float> frame,
+                          float speech_probability,
+                          float limiter_envelope) {
   AudioLevels levels = ComputeAudioLevels(frame);
+  apm_data_dumper_->DumpRaw("agc2_input_rms_dbfs", levels.rms_dbfs);
+  apm_data_dumper_->DumpRaw("agc2_input_peak_dbfs", levels.peak_dbfs);
 
   AdaptiveDigitalGainApplier::FrameInfo info;
 
-  info.speech_probability = vad_.Analyze(frame);
-  apm_data_dumper_->DumpRaw("agc2_speech_probability", info.speech_probability);
-  apm_data_dumper_->DumpRaw("agc2_input_rms_dbfs", levels.rms_dbfs);
-  apm_data_dumper_->DumpRaw("agc2_input_peak_dbfs", levels.peak_dbfs);
+  info.speech_probability = speech_probability;
 
   speech_level_estimator_.Update(levels.rms_dbfs, levels.peak_dbfs,
                                  info.speech_probability);

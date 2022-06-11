@@ -54,24 +54,25 @@ class MonoVadImpl : public VoiceActivityDetectorWrapper::MonoVad {
 
 VoiceActivityDetectorWrapper::VoiceActivityDetectorWrapper(
     int vad_reset_period_ms,
-    const AvailableCpuFeatures& cpu_features)
-    : VoiceActivityDetectorWrapper(
-          vad_reset_period_ms,
-          std::make_unique<MonoVadImpl>(cpu_features)) {}
+    const AvailableCpuFeatures& cpu_features,
+    int sample_rate_hz)
+    : VoiceActivityDetectorWrapper(vad_reset_period_ms,
+                                   std::make_unique<MonoVadImpl>(cpu_features),
+                                   sample_rate_hz) {}
 
 VoiceActivityDetectorWrapper::VoiceActivityDetectorWrapper(
     int vad_reset_period_ms,
-    std::unique_ptr<MonoVad> vad)
+    std::unique_ptr<MonoVad> vad,
+    int sample_rate_hz)
     : vad_reset_period_frames_(
           rtc::CheckedDivExact(vad_reset_period_ms, kFrameDurationMs)),
-      initialized_(false),
-      frame_size_(0),
       time_to_vad_reset_(vad_reset_period_frames_),
       vad_(std::move(vad)) {
   RTC_DCHECK(vad_);
   RTC_DCHECK_GT(vad_reset_period_frames_, 1);
   resampled_buffer_.resize(
       rtc::CheckedDivExact(vad_->SampleRateHz(), kNumFramesPerSecond));
+  Initialize(sample_rate_hz);
 }
 
 VoiceActivityDetectorWrapper::~VoiceActivityDetectorWrapper() = default;
@@ -85,11 +86,9 @@ void VoiceActivityDetectorWrapper::Initialize(int sample_rate_hz) {
   constexpr int kStatusOk = 0;
   RTC_DCHECK_EQ(status, kStatusOk);
   vad_->Reset();
-  initialized_ = true;
 }
 
 float VoiceActivityDetectorWrapper::Analyze(AudioFrameView<const float> frame) {
-  RTC_DCHECK(initialized_);
   // Periodically reset the VAD.
   time_to_vad_reset_--;
   if (time_to_vad_reset_ <= 0) {

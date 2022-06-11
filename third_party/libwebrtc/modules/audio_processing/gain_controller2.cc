@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "common_audio/include/audio_util.h"
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
@@ -21,6 +22,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -33,6 +35,21 @@ constexpr int kFrameLengthMs = 10;
 constexpr int kLogLimiterStatsPeriodNumFrames =
     kLogLimiterStatsPeriodMs / kFrameLengthMs;
 
+// Detects the available CPU features and applies any kill-switches.
+AvailableCpuFeatures GetAllowedCpuFeatures() {
+  AvailableCpuFeatures features = GetAvailableCpuFeatures();
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdSse2KillSwitch")) {
+    features.sse2 = false;
+  }
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdAvx2KillSwitch")) {
+    features.avx2 = false;
+  }
+  if (field_trial::IsEnabled("WebRTC-Agc2SimdNeonKillSwitch")) {
+    features.neon = false;
+  }
+  return features;
+}
+
 // Creates an adaptive digital gain controller if enabled.
 std::unique_ptr<AdaptiveAgc> CreateAdaptiveDigitalController(
     const Agc2Config::AdaptiveDigital& config,
@@ -40,7 +57,8 @@ std::unique_ptr<AdaptiveAgc> CreateAdaptiveDigitalController(
     int num_channels,
     ApmDataDumper* data_dumper) {
   if (config.enabled) {
-    // TODO(bugs.webrtc.org/7494): Also init with sample rate and num channels.
+    // TODO(bugs.webrtc.org/7494): Also init with sample rate and num
+    // channels.
     auto controller = std::make_unique<AdaptiveAgc>(data_dumper, config);
     // TODO(bugs.webrtc.org/7494): Remove once passed to the ctor.
     controller->Initialize(sample_rate_hz, num_channels);
@@ -56,7 +74,8 @@ int GainController2::instance_count_ = 0;
 GainController2::GainController2(const Agc2Config& config,
                                  int sample_rate_hz,
                                  int num_channels)
-    : data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
+    : cpu_features_(GetAllowedCpuFeatures()),
+      data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
       fixed_gain_applier_(/*hard_clip_samples=*/false,
                           /*initial_gain_factor=*/0.0f),
       adaptive_digital_controller_(
@@ -71,6 +90,14 @@ GainController2::GainController2(const Agc2Config& config,
   data_dumper_.InitiateNewSetOfRecordings();
   // TODO(bugs.webrtc.org/7494): Set gain when `fixed_gain_applier_` is init'd.
   fixed_gain_applier_.SetGainFactor(DbToRatio(config.fixed_digital.gain_db));
+  const bool use_vad = config.adaptive_digital.enabled;
+  if (use_vad) {
+    // TODO(bugs.webrtc.org/7494): Move `vad_reset_period_ms` from adaptive
+    // digital to gain controller 2 config.
+    vad_ = std::make_unique<VoiceActivityDetectorWrapper>(
+        config.adaptive_digital.vad_reset_period_ms, cpu_features_,
+        sample_rate_hz);
+  }
 }
 
 GainController2::~GainController2() = default;
@@ -82,6 +109,9 @@ void GainController2::Initialize(int sample_rate_hz, int num_channels) {
              sample_rate_hz == AudioProcessing::kSampleRate48kHz);
   // TODO(bugs.webrtc.org/7494): Initialize `fixed_gain_applier_`.
   limiter_.SetSampleRate(sample_rate_hz);
+  if (vad_) {
+    vad_->Initialize(sample_rate_hz);
+  }
   if (adaptive_digital_controller_) {
     adaptive_digital_controller_->Initialize(sample_rate_hz, num_channels);
   }
@@ -104,10 +134,17 @@ void GainController2::Process(AudioBuffer* audio) {
   data_dumper_.DumpRaw("agc2_notified_analog_level", analog_level_);
   AudioFrameView<float> float_frame(audio->channels(), audio->num_channels(),
                                     audio->num_frames());
+  absl::optional<float> speech_probability;
+  // TODO(bugs.webrtc.org/7494): Apply fixed digital gain after VAD.
   fixed_gain_applier_.ApplyGain(float_frame);
+  if (vad_) {
+    speech_probability = vad_->Analyze(float_frame);
+    data_dumper_.DumpRaw("agc2_speech_probability", speech_probability.value());
+  }
   if (adaptive_digital_controller_) {
-    adaptive_digital_controller_->Process(float_frame,
-                                          limiter_.LastAudioLevel());
+    RTC_DCHECK(speech_probability.has_value());
+    adaptive_digital_controller_->Process(
+        float_frame, speech_probability.value(), limiter_.LastAudioLevel());
   }
   limiter_.Process(float_frame);
 

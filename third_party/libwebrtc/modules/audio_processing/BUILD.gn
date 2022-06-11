@@ -132,8 +132,10 @@ rtc_library("gain_controller2") {
     "../../rtc_base:stringutils",
     "../../system_wrappers:field_trial",
     "agc2:adaptive_digital",
+    "agc2:cpu_features",
     "agc2:fixed_digital",
     "agc2:gain_applier",
+    "agc2:vad_wrapper",
   ]
 }
 
