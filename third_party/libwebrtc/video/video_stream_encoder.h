@@ -228,6 +228,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   void QueueRequestEncoderSwitch(const webrtc::SdpVideoFormat& format)
       RTC_RUN_ON(&encoder_queue_);
 
+  // Reports UMAs on frame rate constraints usage on the first call.
+  void MaybeReportFrameRateConstraintUmas() RTC_RUN_ON(&encoder_queue_);
+
   TaskQueueBase* const main_queue_;
 
   const uint32_t number_of_cores_;
@@ -244,6 +247,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   // The source's constraints.
   absl::optional<VideoTrackSourceConstraints> source_constraints_
       RTC_GUARDED_BY(main_queue_);
+  bool has_reported_screenshare_frame_rate_umas_
+      RTC_GUARDED_BY(&encoder_queue_) = false;
 
   VideoEncoderConfig encoder_config_ RTC_GUARDED_BY(&encoder_queue_);
   std::unique_ptr<VideoEncoder> encoder_ RTC_GUARDED_BY(&encoder_queue_)
