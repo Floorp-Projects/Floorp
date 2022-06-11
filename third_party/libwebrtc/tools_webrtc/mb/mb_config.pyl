@@ -80,10 +80,6 @@
       },
 
       # Windows
-      'Win32 Debug': 'win_msvc_debug_bot_x86',
-      'Win32 Release': 'win_msvc_release_bot_x86',
-      'Win64 Debug': 'win_msvc_debug_bot_x64',
-      'Win64 Release': 'win_msvc_release_bot_x64',
       'Win32 Debug (Clang)': 'win_clang_debug_bot_x86',
       'Win32 Release (Clang)': 'win_clang_release_bot_x86',
       'Win32 Builder (Clang)': 'win_clang_pure_release_bot_x86',
@@ -211,18 +207,10 @@
       },
 
       # Windows
-      'win_compile_x86_msvc_dbg': 'win_msvc_debug_bot_x86',
-      'win_compile_x86_msvc_rel': 'win_msvc_release_bot_x86',
-      'win_compile_x64_msvc_dbg': 'win_msvc_debug_bot_x64',
-      'win_compile_x64_msvc_rel': 'win_msvc_release_bot_x64',
       'win_compile_x86_clang_dbg': 'win_clang_debug_bot_x86',
       'win_compile_x86_clang_rel': 'win_clang_release_bot_x86',
       'win_compile_x64_clang_dbg': 'win_clang_debug_bot_x64',
       'win_compile_x64_clang_rel': 'win_clang_release_bot_x64',
-      'win_x86_msvc_dbg': 'win_msvc_debug_bot_x86',
-      'win_x86_msvc_rel': 'win_msvc_release_bot_x86',
-      'win_x64_msvc_dbg': 'win_msvc_debug_bot_x64',
-      'win_x64_msvc_rel': 'win_msvc_release_bot_x64',
       'win_x86_clang_dbg': 'win_clang_debug_bot_x86',
       'win_x86_clang_rel': 'win_clang_release_bot_x86',
       'win_x64_clang_dbg': 'win_clang_debug_bot_x64',
@@ -319,18 +307,6 @@
     ],
     'win_clang_release_bot_x64': [
       'clang', 'openh264', 'release_bot', 'x64',
-    ],
-    'win_msvc_debug_bot_x86': [
-      'no_clang', 'debug_bot_no_goma', 'x86', 'no_lld', 'minimal_symbols',
-    ],
-    'win_msvc_release_bot_x86': [
-      'no_clang', 'release_bot_no_goma', 'x86', 'no_lld', 'minimal_symbols',
-    ],
-    'win_msvc_debug_bot_x64': [
-      'no_clang', 'debug_bot_no_goma', 'x64', 'no_lld', 'minimal_symbols',
-    ],
-    'win_msvc_release_bot_x64': [
-      'no_clang', 'release_bot_no_goma', 'x64', 'no_lld', 'minimal_symbols',
     ],
     'win_asan_clang_release_bot_x64': [
       'asan', 'clang',  'full_symbols', 'openh264', 'release_bot', 'x64',
@@ -471,10 +447,6 @@
       'mixins': ['debug', 'goma'],
     },
 
-    'debug_bot_no_goma': {
-      'mixins': ['debug', 'no_goma'],
-    },
-
     'debug_static_bot': {
       'mixins': ['debug', 'minimal_symbols', 'goma'],
     },
@@ -499,10 +471,6 @@
       'gn_args': 'target_os="ios"',
     },
 
-    'no_goma': {
-      'gn_args': 'use_goma=false',
-    },
-
     'libfuzzer': {
       'gn_args': 'use_libfuzzer=true',
     },
@@ -519,16 +487,8 @@
       'gn_args': 'is_msan=true msan_track_origins=2',
     },
 
-    'no_clang': {
-      'gn_args': 'is_clang=false',
-    },
-
     'no_ios_code_signing': {
       'gn_args': 'ios_enable_code_signing=false',
-    },
-
-    'no_lld': {
-      'gn_args': 'use_lld=false',
     },
 
     'openh264': {
@@ -551,10 +511,6 @@
     },
     'release_bot': {
       'mixins': ['pure_release_bot', 'dcheck_always_on'],
-    },
-
-    'release_bot_no_goma': {
-      'mixins': ['release', 'no_goma', 'dcheck_always_on'],
     },
 
     'tsan': {
