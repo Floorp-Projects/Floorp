@@ -555,6 +555,15 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       const std::map<std::string, const cricket::ContentGroup*>&
           bundle_groups_by_mid);
 
+  // Updates the error state, signaling if necessary.
+  void SetSessionError(SessionError error, const std::string& error_desc);
+
+  // Implements AddIceCandidate without reporting usage, but returns the
+  // particular success/error value that should be reported (and can be utilized
+  // for other purposes).
+  AddIceCandidateResult AddIceCandidateInternal(
+      const IceCandidateInterface* candidate);
+
   // ==================================================================
   // Access to pc_ variables
   cricket::ChannelManager* channel_manager() const;
@@ -627,14 +636,16 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
 
   bool remote_peer_supports_msid_ RTC_GUARDED_BY(signaling_thread()) = false;
   bool is_negotiation_needed_ RTC_GUARDED_BY(signaling_thread()) = false;
-  uint32_t negotiation_needed_event_id_ = 0;
+  uint32_t negotiation_needed_event_id_ RTC_GUARDED_BY(signaling_thread()) = 0;
   bool update_negotiation_needed_on_empty_chain_
       RTC_GUARDED_BY(signaling_thread()) = false;
   // If PT demuxing is successfully negotiated one time we will allow PT
   // demuxing for the rest of the session so that PT-based apps default to PT
   // demuxing in follow-up O/A exchanges.
-  bool pt_demuxing_has_been_used_audio_ = false;
-  bool pt_demuxing_has_been_used_video_ = false;
+  bool pt_demuxing_has_been_used_audio_ RTC_GUARDED_BY(signaling_thread()) =
+      false;
+  bool pt_demuxing_has_been_used_video_ RTC_GUARDED_BY(signaling_thread()) =
+      false;
 
   // In Unified Plan, if we encounter remote SDP that does not contain an a=msid
   // line we create and use a stream with a random ID for our receivers. This is
@@ -642,15 +653,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // opposed to streamless tracks with "a=msid:-").
   rtc::scoped_refptr<MediaStreamInterface> missing_msid_default_stream_
       RTC_GUARDED_BY(signaling_thread());
-
-  // Updates the error state, signaling if necessary.
-  void SetSessionError(SessionError error, const std::string& error_desc);
-
-  // Implements AddIceCandidate without reporting usage, but returns the
-  // particular success/error value that should be reported (and can be utilized
-  // for other purposes).
-  AddIceCandidateResult AddIceCandidateInternal(
-      const IceCandidateInterface* candidate);
 
   SessionError session_error_ RTC_GUARDED_BY(signaling_thread()) =
       SessionError::kNone;
@@ -674,7 +676,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // Note that one can still choose to override this in a MediaEngine
   // if one wants too.
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
-      video_bitrate_allocator_factory_;
+      video_bitrate_allocator_factory_ RTC_GUARDED_BY(signaling_thread());
 
   rtc::WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());
