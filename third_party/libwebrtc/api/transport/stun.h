@@ -62,7 +62,6 @@ enum StunAttributeType {
   STUN_ATTR_SOFTWARE = 0x8022,            // ByteString
   STUN_ATTR_ALTERNATE_SERVER = 0x8023,    // Address
   STUN_ATTR_FINGERPRINT = 0x8028,         // UInt32
-  STUN_ATTR_ORIGIN = 0x802F,              // ByteString
   STUN_ATTR_RETRANSMIT_COUNT = 0xFF00     // UInt32
 };
 

@@ -67,9 +67,6 @@ class StunRequestManager {
 
   bool empty() { return requests_.empty(); }
 
-  // Set the Origin header for outgoing stun messages.
-  void set_origin(const std::string& origin) { origin_ = origin; }
-
   // Raised when there are bytes to be sent.
   sigslot::signal3<const void*, size_t, StunRequest*> SignalSendPacket;
 
@@ -78,7 +75,6 @@ class StunRequestManager {
 
   rtc::Thread* const thread_;
   RequestMap requests_;
-  std::string origin_;
 
   friend class StunRequest;
 };
@@ -105,10 +101,6 @@ class StunRequest : public rtc::MessageHandler {
     return msg_->reduced_transaction_id();
   }
 
-  // the origin value
-  const std::string& origin() const { return origin_; }
-  void set_origin(const std::string& origin) { origin_ = origin; }
-
   // Returns the STUN type of the request message.
   int type();
 
@@ -124,7 +116,6 @@ class StunRequest : public rtc::MessageHandler {
  protected:
   int count_;
   bool timeout_;
-  std::string origin_;
 
   // Fills in a request object to be sent.  Note that request's transaction ID
   // will already be set and cannot be changed.
