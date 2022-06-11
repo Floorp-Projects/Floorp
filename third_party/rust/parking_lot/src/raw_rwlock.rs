@@ -362,7 +362,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
     unsafe fn upgrade(&self) {
         let state = self.state.fetch_sub(
             (ONE_READER | UPGRADABLE_BIT) - WRITER_BIT,
-            Ordering::Relaxed,
+            Ordering::Acquire,
         );
         if state & READERS_MASK != ONE_READER {
             let result = self.upgrade_slow(None);
@@ -377,7 +377,7 @@ unsafe impl lock_api::RawRwLockUpgrade for RawRwLock {
             .compare_exchange_weak(
                 ONE_READER | UPGRADABLE_BIT,
                 WRITER_BIT,
-                Ordering::Relaxed,
+                Ordering::Acquire,
                 Ordering::Relaxed,
             )
             .is_ok()
