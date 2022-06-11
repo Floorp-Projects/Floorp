@@ -113,4 +113,11 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Posodobi datum poteka veljavnosti kartice?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Številka kartice bo šifrirana. Varnostna koda ne bo shranjena.</string>
+
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Razširi predlagane naslove</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Strni predlagane naslove</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Upravljanje naslovov</string>
 </resources>
