@@ -2130,6 +2130,11 @@ TEST_F(VideoSendStreamTest, CanReconfigureToUseStartBitrateAbovePreviousMax) {
   CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
                                kDefaultHeight);
   frame_generator_capturer_->Start();
+  // TODO(crbug/1255737): Added manual current thread message processing because
+  // the test code context is interpreted as the worker thread and we assume
+  // progress on it. The test should probably be ported to use simulated time
+  // instead (ported to a scenario test perhaps?).
+  rtc::Thread::Current()->ProcessMessages(5000);
 
   EXPECT_TRUE(encoder.WaitForStartBitrate());
   EXPECT_EQ(GetVideoEncoderConfig()->max_bitrate_bps / 1000,
@@ -2139,6 +2144,11 @@ TEST_F(VideoSendStreamTest, CanReconfigureToUseStartBitrateAbovePreviousMax) {
       2 * bitrate_config.start_bitrate_bps;
   GetVideoSendStream()->ReconfigureVideoEncoder(
       GetVideoEncoderConfig()->Copy());
+  // TODO(crbug/1255737): Added manual current thread message processing because
+  // the test code context is interpreted as the worker thread and we assume
+  // progress on it. The test should probably be ported to use simulated time
+  // instead (ported to a scenario test perhaps?).
+  rtc::Thread::Current()->ProcessMessages(5000);
 
   // New bitrate should be reconfigured above the previous max. As there's no
   // network connection this shouldn't be flaky, as no bitrate should've been

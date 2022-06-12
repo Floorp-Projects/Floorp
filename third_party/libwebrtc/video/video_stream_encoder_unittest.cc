@@ -352,17 +352,18 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
                               const VideoStreamEncoderSettings& settings,
                               VideoStreamEncoder::BitrateAllocationCallbackType
                                   allocation_callback_type)
-      : VideoStreamEncoder(time_controller->GetClock(),
-                           1 /* number_of_cores */,
-                           stats_proxy,
-                           settings,
-                           std::unique_ptr<OveruseFrameDetector>(
-                               overuse_detector_proxy_ =
-                                   new CpuOveruseDetectorProxy(stats_proxy)),
-                           FrameCadenceAdapterInterface::Create(),
-                           task_queue_factory,
-                           TaskQueueBase::Current(),
-                           allocation_callback_type),
+      : VideoStreamEncoder(
+            time_controller->GetClock(),
+            1 /* number_of_cores */,
+            stats_proxy,
+            settings,
+            std::unique_ptr<OveruseFrameDetector>(
+                overuse_detector_proxy_ =
+                    new CpuOveruseDetectorProxy(stats_proxy)),
+            FrameCadenceAdapterInterface::Create(TaskQueueBase::Current()),
+            task_queue_factory,
+            TaskQueueBase::Current(),
+            allocation_callback_type),
         time_controller_(time_controller),
         fake_cpu_resource_(FakeResource::Create("FakeResource[CPU]")),
         fake_quality_resource_(FakeResource::Create("FakeResource[QP]")),
@@ -407,9 +408,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
   // This is used as a synchronisation mechanism, to make sure that the
   // encoder queue is not blocked before we start sending it frames.
   void WaitUntilTaskQueueIsIdle() {
-    rtc::Event event;
-    encoder_queue()->PostTask([&event] { event.Set(); });
-    ASSERT_TRUE(event.Wait(5000));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
   }
 
   // Triggers resource usage measurements on the fake CPU resource.
@@ -420,7 +419,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
       event.Set();
     });
     ASSERT_TRUE(event.Wait(5000));
-    time_controller_->AdvanceTime(TimeDelta::Millis(0));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
   }
 
   void TriggerCpuUnderuse() {
@@ -430,7 +429,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
       event.Set();
     });
     ASSERT_TRUE(event.Wait(5000));
-    time_controller_->AdvanceTime(TimeDelta::Millis(0));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
   }
 
   // Triggers resource usage measurements on the fake quality resource.
@@ -441,7 +440,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
       event.Set();
     });
     ASSERT_TRUE(event.Wait(5000));
-    time_controller_->AdvanceTime(TimeDelta::Millis(0));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
   }
   void TriggerQualityHigh() {
     rtc::Event event;
@@ -450,7 +449,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
       event.Set();
     });
     ASSERT_TRUE(event.Wait(5000));
-    time_controller_->AdvanceTime(TimeDelta::Millis(0));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
   }
 
   TimeController* const time_controller_;
@@ -508,7 +507,7 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
 
   void IncomingCapturedFrame(const VideoFrame& video_frame) override {
     RTC_DCHECK(time_controller_->GetMainThread()->IsCurrent());
-    time_controller_->AdvanceTime(TimeDelta::Millis(0));
+    time_controller_->AdvanceTime(TimeDelta::Zero());
 
     int cropped_width = 0;
     int cropped_height = 0;
@@ -1310,8 +1309,9 @@ class VideoStreamEncoderTest : public ::testing::Test {
 
     bool WaitForFrame(int64_t timeout_ms) {
       RTC_DCHECK(time_controller_->GetMainThread()->IsCurrent());
+      time_controller_->AdvanceTime(TimeDelta::Zero());
       bool ret = encoded_frame_event_.Wait(timeout_ms);
-      time_controller_->AdvanceTime(TimeDelta::Millis(0));
+      time_controller_->AdvanceTime(TimeDelta::Zero());
       return ret;
     }
 
@@ -1527,6 +1527,7 @@ TEST_F(VideoStreamEncoderTest, DropsFramesBeforeFirstOnBitrateUpdated) {
   video_source_.IncomingCapturedFrame(CreateFrame(1, &frame_destroyed_event));
   AdvanceTime(TimeDelta::Millis(10));
   video_source_.IncomingCapturedFrame(CreateFrame(2, nullptr));
+  AdvanceTime(TimeDelta::Zero());
   EXPECT_TRUE(frame_destroyed_event.Wait(kDefaultTimeoutMs));
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
@@ -6143,7 +6144,7 @@ TEST_F(VideoStreamEncoderTest,
   video_stream_encoder_->ConfigureEncoder(video_encoder_config_.Copy(),
                                           kMaxPayloadLength);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
-  AdvanceTime(TimeDelta::Millis(0));
+  AdvanceTime(TimeDelta::Zero());
   // Since we turned off the quality scaler, the adaptations made by it are
   // removed.
   EXPECT_THAT(source.sink_wants(), ResolutionMax());
@@ -7495,6 +7496,7 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorCurrentEncoderIsSignaled) {
 
   video_source_.IncomingCapturedFrame(
       CreateFrame(kDontCare, kDontCare, kDontCare));
+  AdvanceTime(TimeDelta::Zero());
   video_stream_encoder_->Stop();
 
   // The encoders produces by the VideoEncoderProxyFactory have a pointer back
@@ -7531,7 +7533,7 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBitrateSwitch) {
       /*fraction_lost=*/0,
       /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
-  AdvanceTime(TimeDelta::Millis(0));
+  AdvanceTime(TimeDelta::Zero());
 
   video_stream_encoder_->Stop();
 }
@@ -7580,7 +7582,7 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBrokenEncoderSwitch) {
   video_source_.IncomingCapturedFrame(CreateFrame(1, kDontCare, kDontCare));
   encode_attempted.Wait(3000);
 
-  AdvanceTime(TimeDelta::Millis(0));
+  AdvanceTime(TimeDelta::Zero());
 
   video_stream_encoder_->Stop();
 

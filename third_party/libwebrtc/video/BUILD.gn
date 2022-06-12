@@ -267,11 +267,14 @@ rtc_library("frame_cadence_adapter") {
 
   deps = [
     "../api:sequence_checker",
+    "../api/task_queue",
     "../api/video:video_frame",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/synchronization:mutex",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
   ]

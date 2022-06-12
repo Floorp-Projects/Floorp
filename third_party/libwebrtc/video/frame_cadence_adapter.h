@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -41,7 +42,8 @@ class FrameCadenceAdapterInterface
 
   // Factory function creating a production instance. Deletion of the returned
   // instance needs to happen on the same sequence that Create() was called on.
-  static std::unique_ptr<FrameCadenceAdapterInterface> Create();
+  static std::unique_ptr<FrameCadenceAdapterInterface> Create(
+      TaskQueueBase* worker_queue);
 
   // Call before using the rest of the API.
   virtual void Initialize(Callback* callback) = 0;
