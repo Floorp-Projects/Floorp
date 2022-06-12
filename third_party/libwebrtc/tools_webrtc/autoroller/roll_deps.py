@@ -646,7 +646,7 @@ def _UploadCL(commit_queue_mode):
         cmd.extend(['--send-mail', '--cc', NOTIFY_EMAIL])
     elif commit_queue_mode >= 1:
         logging.info('Starting CQ dry run...')
-        cmd.extend(['--cq-dry-run'])
+        cmd.extend(['-o', 'label=Commit-Queue+1'])
     extra_env = {
         'EDITOR': 'true',
         'SKIP_GCE_AUTH_FOR_GIT': '1',
