@@ -701,6 +701,7 @@ int32_t LibaomAv1Encoder::Encode(
           int d = svc_params_->scaling_factor_den[layer_frame->SpatialId()];
           encoded_image._encodedWidth = cfg_.g_w * n / d;
           encoded_image._encodedHeight = cfg_.g_h * n / d;
+          encoded_image.SetSpatialIndex(layer_frame->SpatialId());
         } else {
           encoded_image._encodedWidth = cfg_.g_w;
           encoded_image._encodedHeight = cfg_.g_h;
