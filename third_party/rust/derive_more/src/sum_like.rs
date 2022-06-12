@@ -26,18 +26,14 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
     let op_path = quote!(::core::ops::#op_trait_ident);
     let op_method_ident =
         Ident::new(&(op_trait_name.to_lowercase()), Span::call_site());
-    let type_params: Vec<_> = input
-        .generics
-        .type_params()
-        .map(|t| t.ident.clone())
-        .collect();
-    let generics = if type_params.is_empty() {
+    let has_type_params = input.generics.type_params().next().is_none();
+    let generics = if has_type_params {
         input.generics.clone()
     } else {
-        let generic_type = quote!(<#(#type_params),*>);
-        let generics = add_extra_ty_param_bound(&input.generics, &trait_path);
+        let (_, ty_generics, _) = input.generics.split_for_impl();
+        let generics = add_extra_ty_param_bound(&input.generics, trait_path);
         let operator_where_clause = quote! {
-            where #input_type#generic_type: #op_path<Output=#input_type#generic_type>
+            where #input_type#ty_generics: #op_path<Output=#input_type#ty_generics>
         };
         add_extra_where_clauses(&generics, operator_where_clause)
     };

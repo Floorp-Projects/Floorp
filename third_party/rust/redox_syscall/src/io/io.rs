@@ -22,17 +22,19 @@ pub trait Io {
     }
 }
 
-pub struct ReadOnly<I: Io> {
+pub struct ReadOnly<I> {
     inner: I
 }
 
-impl<I: Io> ReadOnly<I> {
+impl<I> ReadOnly<I> {
     pub const fn new(inner: I) -> ReadOnly<I> {
         ReadOnly {
             inner: inner
         }
     }
+}
 
+impl<I: Io> ReadOnly<I> {
     #[inline(always)]
     pub fn read(&self) -> I::Value {
         self.inner.read()
@@ -44,17 +46,19 @@ impl<I: Io> ReadOnly<I> {
     }
 }
 
-pub struct WriteOnly<I: Io> {
+pub struct WriteOnly<I> {
     inner: I
 }
 
-impl<I: Io> WriteOnly<I> {
+impl<I> WriteOnly<I> {
     pub const fn new(inner: I) -> WriteOnly<I> {
         WriteOnly {
             inner: inner
         }
     }
+}
 
+impl<I: Io> WriteOnly<I> {
     #[inline(always)]
     pub fn write(&mut self, value: I::Value) {
         self.inner.write(value)

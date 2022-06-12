@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "derive_more"
-version = "0.99.11"
+version = "0.99.17"
 authors = ["Jelte Fennema <github-tech@jeltef.nl>"]
 include = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md", "CHANGELOG.md", "tests/**/*.rs"]
 autotests = true
@@ -32,7 +31,7 @@ proc-macro = true
 [[example]]
 name = "deny_missing_docs"
 path = "examples/deny_missing_docs.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into"]
+required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
 
 [[test]]
 name = "add_assign"
@@ -140,33 +139,47 @@ path = "tests/try_into.rs"
 required-features = ["try_into"]
 
 [[test]]
+name = "is_variant"
+path = "tests/is_variant.rs"
+required-features = ["is_variant"]
+
+[[test]]
+name = "unwrap"
+path = "tests/unwrap.rs"
+required-features = ["unwrap"]
+
+[[test]]
 name = "no_std"
 path = "tests/no_std.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "sum", "try_into"]
+required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "sum", "try_into", "is_variant"]
 
 [[test]]
 name = "generics"
 path = "tests/generics.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into"]
+required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
 
 [[test]]
 name = "lib"
 path = "tests/lib.rs"
-required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into"]
+required-features = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "mul_assign", "mul", "not", "try_into", "is_variant"]
+[dependencies.convert_case]
+version = "0.4"
+optional = true
+
 [dependencies.proc-macro2]
-version = "1"
+version = "1.0"
 
 [dependencies.quote]
-version = "1"
+version = "1.0"
 
 [dependencies.syn]
-version = "1"
+version = "1.0.3"
 [build-dependencies.peg]
 version = "0.5"
 optional = true
 
 [build-dependencies.rustc_version]
-version = "0.2"
+version = "0.4"
 optional = true
 
 [features]
@@ -175,7 +188,7 @@ add_assign = []
 as_mut = []
 as_ref = []
 constructor = []
-default = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "error", "from", "from_str", "index", "index_mut", "into", "into_iterator", "iterator", "mul_assign", "mul", "not", "sum", "try_into"]
+default = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "error", "from", "from_str", "index", "index_mut", "into", "into_iterator", "iterator", "mul_assign", "mul", "not", "sum", "try_into", "is_variant", "unwrap"]
 deref = []
 deref_mut = []
 display = ["syn/extra-traits"]
@@ -187,6 +200,7 @@ index = []
 index_mut = []
 into = ["syn/extra-traits"]
 into_iterator = []
+is_variant = ["convert_case"]
 iterator = []
 mul = ["syn/extra-traits"]
 mul_assign = ["syn/extra-traits"]
@@ -194,7 +208,9 @@ nightly = []
 not = ["syn/extra-traits"]
 sum = []
 testing-helpers = ["rustc_version"]
+track-caller = []
 try_into = ["syn/extra-traits"]
+unwrap = ["convert_case", "rustc_version"]
 [badges.github]
 repository = "JelteF/derive_more"
 workflow = "CI"

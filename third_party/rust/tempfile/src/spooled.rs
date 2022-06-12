@@ -2,8 +2,9 @@ use crate::file::tempfile;
 use std::fs::File;
 use std::io::{self, Cursor, Read, Seek, SeekFrom, Write};
 
+/// A wrapper for the two states of a `SpooledTempFile`.
 #[derive(Debug)]
-enum SpooledInner {
+pub enum SpooledData {
     InMemory(Cursor<Vec<u8>>),
     OnDisk(File),
 }
@@ -15,7 +16,7 @@ enum SpooledInner {
 #[derive(Debug)]
 pub struct SpooledTempFile {
     max_size: usize,
-    inner: SpooledInner,
+    inner: SpooledData,
 }
 
 /// Create a new spooled temporary file.
@@ -66,15 +67,15 @@ impl SpooledTempFile {
     pub fn new(max_size: usize) -> SpooledTempFile {
         SpooledTempFile {
             max_size: max_size,
-            inner: SpooledInner::InMemory(Cursor::new(Vec::new())),
+            inner: SpooledData::InMemory(Cursor::new(Vec::new())),
         }
     }
 
     /// Returns true if the file has been rolled over to disk.
     pub fn is_rolled(&self) -> bool {
         match self.inner {
-            SpooledInner::InMemory(_) => false,
-            SpooledInner::OnDisk(_) => true,
+            SpooledData::InMemory(_) => false,
+            SpooledData::OnDisk(_) => true,
         }
     }
 
@@ -83,11 +84,11 @@ impl SpooledTempFile {
     pub fn roll(&mut self) -> io::Result<()> {
         if !self.is_rolled() {
             let mut file = tempfile()?;
-            if let SpooledInner::InMemory(ref mut cursor) = self.inner {
+            if let SpooledData::InMemory(ref mut cursor) = self.inner {
                 file.write_all(cursor.get_ref())?;
                 file.seek(SeekFrom::Start(cursor.position()))?;
             }
-            self.inner = SpooledInner::OnDisk(file);
+            self.inner = SpooledData::OnDisk(file);
         }
         Ok(())
     }
@@ -97,20 +98,25 @@ impl SpooledTempFile {
             self.roll()?; // does nothing if already rolled over
         }
         match self.inner {
-            SpooledInner::InMemory(ref mut cursor) => {
+            SpooledData::InMemory(ref mut cursor) => {
                 cursor.get_mut().resize(size as usize, 0);
                 Ok(())
             }
-            SpooledInner::OnDisk(ref mut file) => file.set_len(size),
+            SpooledData::OnDisk(ref mut file) => file.set_len(size),
         }
+    }
+
+    /// Consumes and returns the inner `SpooledData` type.
+    pub fn into_inner(self) -> SpooledData {
+        self.inner
     }
 }
 
 impl Read for SpooledTempFile {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self.inner {
-            SpooledInner::InMemory(ref mut cursor) => cursor.read(buf),
-            SpooledInner::OnDisk(ref mut file) => file.read(buf),
+            SpooledData::InMemory(ref mut cursor) => cursor.read(buf),
+            SpooledData::OnDisk(ref mut file) => file.read(buf),
         }
     }
 }
@@ -119,7 +125,7 @@ impl Write for SpooledTempFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         // roll over to file if necessary
         let mut rolling = false;
-        if let SpooledInner::InMemory(ref mut cursor) = self.inner {
+        if let SpooledData::InMemory(ref mut cursor) = self.inner {
             rolling = cursor.position() as usize + buf.len() > self.max_size;
         }
         if rolling {
@@ -128,16 +134,16 @@ impl Write for SpooledTempFile {
 
         // write the bytes
         match self.inner {
-            SpooledInner::InMemory(ref mut cursor) => cursor.write(buf),
-            SpooledInner::OnDisk(ref mut file) => file.write(buf),
+            SpooledData::InMemory(ref mut cursor) => cursor.write(buf),
+            SpooledData::OnDisk(ref mut file) => file.write(buf),
         }
     }
 
     #[inline]
     fn flush(&mut self) -> io::Result<()> {
         match self.inner {
-            SpooledInner::InMemory(ref mut cursor) => cursor.flush(),
-            SpooledInner::OnDisk(ref mut file) => file.flush(),
+            SpooledData::InMemory(ref mut cursor) => cursor.flush(),
+            SpooledData::OnDisk(ref mut file) => file.flush(),
         }
     }
 }
@@ -145,8 +151,8 @@ impl Write for SpooledTempFile {
 impl Seek for SpooledTempFile {
     fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
         match self.inner {
-            SpooledInner::InMemory(ref mut cursor) => cursor.seek(pos),
-            SpooledInner::OnDisk(ref mut file) => file.seek(pos),
+            SpooledData::InMemory(ref mut cursor) => cursor.seek(pos),
+            SpooledData::OnDisk(ref mut file) => file.seek(pos),
         }
     }
 }

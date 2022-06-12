@@ -1,10 +1,11 @@
 #![deny(rust_2018_idioms)]
 
 use std::env;
+use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::path::Path;
-use tempfile::{Builder, NamedTempFile};
+use std::path::{Path, PathBuf};
+use tempfile::{tempdir, Builder, NamedTempFile, TempPath};
 
 fn exists<P: AsRef<Path>>(path: P) -> bool {
     std::fs::metadata(path.as_ref()).is_ok()
@@ -214,6 +215,50 @@ fn test_temppath_persist_noclobber() {
     f.read_to_string(&mut buf).unwrap();
     assert_eq!("abcde", buf);
     std::fs::remove_file(&persist_path).unwrap();
+}
+
+#[test]
+fn temp_path_from_existing() {
+    let tmp_dir = tempdir().unwrap();
+    let tmp_file_path_1 = tmp_dir.path().join("testfile1");
+    let tmp_file_path_2 = tmp_dir.path().join("testfile2");
+
+    File::create(&tmp_file_path_1).unwrap();
+    assert!(tmp_file_path_1.exists(), "Test file 1 hasn't been created");
+
+    File::create(&tmp_file_path_2).unwrap();
+    assert!(tmp_file_path_2.exists(), "Test file 2 hasn't been created");
+
+    let tmp_path = TempPath::from_path(&tmp_file_path_1);
+    assert!(
+        tmp_file_path_1.exists(),
+        "Test file has been deleted before dropping TempPath"
+    );
+
+    drop(tmp_path);
+    assert!(
+        !tmp_file_path_1.exists(),
+        "Test file exists after dropping TempPath"
+    );
+    assert!(
+        tmp_file_path_2.exists(),
+        "Test file 2 has been deleted before dropping TempDir"
+    );
+}
+
+#[test]
+#[allow(unreachable_code)]
+fn temp_path_from_argument_types() {
+    // This just has to compile
+    return;
+
+    TempPath::from_path("");
+    TempPath::from_path(String::new());
+    TempPath::from_path(OsStr::new(""));
+    TempPath::from_path(OsString::new());
+    TempPath::from_path(Path::new(""));
+    TempPath::from_path(PathBuf::new());
+    TempPath::from_path(PathBuf::new().into_boxed_path());
 }
 
 #[test]

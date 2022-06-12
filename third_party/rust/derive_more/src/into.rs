@@ -72,7 +72,7 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
                     (#(#into_types),*) #where_clause {
 
                     #[inline]
-                    fn from(original: #reference_with_lifetime #input_type#ty_generics) -> (#(#into_types),*) {
+                    fn from(original: #reference_with_lifetime #input_type#ty_generics) -> Self {
                         (#(#initializers),*)
                     }
                 }

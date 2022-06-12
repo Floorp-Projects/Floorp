@@ -45,8 +45,5 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
 }
 
 fn panic_one_field(trait_name: &str) -> ! {
-    panic!(format!(
-        "Only structs with one field can derive({})",
-        trait_name
-    ))
+    panic!("Only structs with one field can derive({})", trait_name)
 }

@@ -8806,6 +8806,8 @@
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_FREEBSD)
+  value: true
 #elif defined(XP_OPENBSD)
   value: true
 #else
@@ -8846,6 +8848,8 @@
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_FREEBSD)
+  value: true
 #elif defined(XP_OPENBSD)
   value: true
 #else
@@ -8876,6 +8880,8 @@
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_FREEBSD)
+  value: true
 #elif defined(XP_OPENBSD)
   value: true
 #else
@@ -8890,6 +8896,8 @@
 #elif defined(XP_MACOSX)
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
   value: true
@@ -8906,6 +8914,8 @@
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_FREEBSD)
+  value: true
 #elif defined(XP_OPENBSD)
   value: true
 #else
@@ -8921,6 +8931,8 @@
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
   value: true
+#elif defined(XP_FREEBSD)
+  value: true
 #elif defined(XP_OPENBSD)
   value: true
 #else
@@ -8935,6 +8947,8 @@
 #elif defined(XP_MACOSX)
   value: true
 #elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_FREEBSD)
   value: true
 #elif defined(XP_OPENBSD)
   value: true

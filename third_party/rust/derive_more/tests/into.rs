@@ -2,6 +2,8 @@
 #[macro_use]
 extern crate derive_more;
 
+use std::borrow::Cow;
+
 #[derive(Into)]
 #[into(owned, ref, ref_mut)]
 struct EmptyTuple();
@@ -123,4 +125,17 @@ fn explicit_types_point_2d() {
         <(&mut i32, &mut i32)>::from(&mut input),
         (&mut 42i32, &mut 42i32)
     );
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Into)]
+#[into(owned(types("Cow<'_, str>")))]
+struct Name(String);
+
+#[test]
+fn explicit_complex_types_name() {
+    let name = "Ñolofinwë";
+    let input = Name(name.to_owned());
+    assert_eq!(String::from(input.clone()), name.to_owned());
+    assert_eq!(Cow::from(input.clone()), Cow::Borrowed(name));
 }

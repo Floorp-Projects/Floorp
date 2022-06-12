@@ -1,4 +1,4 @@
-use std::{fmt::Display, iter::FromIterator as _, str::FromStr as _};
+use std::{fmt::Display, str::FromStr as _};
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
@@ -115,7 +115,7 @@ fn trait_name_to_trait_bound(trait_name: &str) -> syn::TraitBound {
         paren_token: None,
         path: syn::Path {
             leading_colon: Some(syn::Token![::](Span::call_site())),
-            segments: syn::punctuated::Punctuated::from_iter(path_segments_iterator),
+            segments: path_segments_iterator.collect(),
         },
     }
 }
@@ -221,34 +221,44 @@ impl<'a, 'b> State<'a, 'b> {
         attrs: &[syn::Attribute],
         meta_key: &str,
     ) -> Result<Option<syn::Meta>> {
-        let mut iterator = attrs
-            .iter()
-            .filter_map(|attr| attr.parse_meta().ok())
-            .filter(|meta| {
-                let meta = match meta {
-                    syn::Meta::List(meta) => meta,
-                    _ => return false,
-                };
+        let mut metas = Vec::new();
+        for meta in attrs.iter().filter_map(|attr| attr.parse_meta().ok()) {
+            let meta_list = match &meta {
+                syn::Meta::List(meta) => meta,
+                _ => continue,
+            };
 
-                if !meta.path.is_ident(self.trait_attr) || meta.nested.is_empty() {
-                    return false;
+            if !meta_list.path.is_ident(self.trait_attr) {
+                continue;
+            }
+
+            use syn::{Meta, NestedMeta};
+            let meta_nv = match meta_list.nested.first() {
+                Some(NestedMeta::Meta(Meta::NameValue(meta_nv))) => meta_nv,
+                _ => {
+                    // If the given attribute is not MetaNameValue, it most likely implies that the
+                    // user is writing an incorrect format. For example:
+                    // - `#[display()]`
+                    // - `#[display("foo")]`
+                    // - `#[display(foo)]`
+                    return Err(Error::new(
+                        meta.span(),
+                        format!(
+                            r#"The format for this attribute cannot be parsed. Correct format: `#[{}({} = "...")]`"#,
+                            self.trait_attr, meta_key
+                        ),
+                    ));
                 }
+            };
 
-                let meta = match &meta.nested[0] {
-                    syn::NestedMeta::Meta(meta) => meta,
-                    _ => return false,
-                };
+            if meta_nv.path.is_ident(meta_key) {
+                metas.push(meta);
+            }
+        }
 
-                let meta = match meta {
-                    syn::Meta::NameValue(meta) => meta,
-                    _ => return false,
-                };
-
-                meta.path.is_ident(meta_key)
-            });
-
-        let meta = iterator.next();
-        if iterator.next().is_none() {
+        let mut iter = metas.into_iter();
+        let meta = iter.next();
+        if iter.next().is_none() {
             Ok(meta)
         } else {
             Err(Error::new(meta.span(), "Too many attributes specified"))
@@ -775,7 +785,7 @@ mod regex_maybe_placeholder_spec {
         let fmt_string = "{}, {:?}, {{}}, {{{1:0$}}}";
         let placeholders: Vec<_> = crate::parsing::all_placeholders(&fmt_string)
             .into_iter()
-            .flat_map(|x| x)
+            .flatten()
             .collect();
         assert_eq!(placeholders, vec!["{}", "{:?}", "{1:0$}"]);
     }

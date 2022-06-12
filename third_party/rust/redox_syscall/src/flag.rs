@@ -1,17 +1,59 @@
-pub const CLONE_VM: usize = 0x100;
-pub const CLONE_FS: usize = 0x200;
-pub const CLONE_FILES: usize = 0x400;
-pub const CLONE_SIGHAND: usize = 0x800;
-pub const CLONE_VFORK: usize = 0x4000;
-pub const CLONE_THREAD: usize = 0x10000;
-pub const CLONE_STACK: usize = 0x1000_0000;
+use bitflags::bitflags as inner_bitflags;
+use core::{mem, ops::Deref, slice};
+
+macro_rules! bitflags {
+    (
+        $(#[$outer:meta])*
+        pub struct $BitFlags:ident: $T:ty {
+            $(
+                $(#[$inner:ident $($args:tt)*])*
+                const $Flag:ident = $value:expr;
+            )+
+        }
+    ) => {
+        // First, use the inner bitflags
+        inner_bitflags! {
+            #[derive(Default)]
+            $(#[$outer])*
+            pub struct $BitFlags: $T {
+                $(
+                    $(#[$inner $($args)*])*
+                    const $Flag = $value;
+                )+
+            }
+        }
+
+        // Secondly, re-export all inner constants
+        // (`pub use self::Struct::*` doesn't work)
+        $(
+            $(#[$inner $($args)*])*
+            pub const $Flag: $BitFlags = $BitFlags::$Flag;
+        )+
+    }
+}
+
+bitflags! {
+    pub struct CloneFlags: usize {
+        const CLONE_VM = 0x100;
+        const CLONE_FS = 0x200;
+        const CLONE_FILES = 0x400;
+        const CLONE_SIGHAND = 0x800;
+        const CLONE_VFORK = 0x4000;
+        const CLONE_THREAD = 0x10000;
+        const CLONE_STACK = 0x1000_0000;
+    }
+}
 
 pub const CLOCK_REALTIME: usize = 1;
 pub const CLOCK_MONOTONIC: usize = 4;
 
-pub const EVENT_NONE: usize = 0;
-pub const EVENT_READ: usize = 1;
-pub const EVENT_WRITE: usize = 2;
+bitflags! {
+    pub struct EventFlags: usize {
+        const EVENT_NONE = 0;
+        const EVENT_READ = 1;
+        const EVENT_WRITE = 2;
+    }
+}
 
 pub const F_DUPFD: usize = 0;
 pub const F_GETFD: usize = 1;
@@ -22,9 +64,23 @@ pub const F_SETFL: usize = 4;
 pub const FUTEX_WAIT: usize = 0;
 pub const FUTEX_WAKE: usize = 1;
 pub const FUTEX_REQUEUE: usize = 2;
+pub const FUTEX_WAIT64: usize = 3;
 
-pub const MAP_SHARED: usize = 0x0001;
-pub const MAP_PRIVATE: usize = 0x0002;
+bitflags! {
+    pub struct MapFlags: usize {
+        const PROT_NONE = 0x0000_0000;
+        const PROT_EXEC = 0x0001_0000;
+        const PROT_WRITE = 0x0002_0000;
+        const PROT_READ = 0x0004_0000;
+
+        const MAP_SHARED = 0x0001;
+        const MAP_PRIVATE = 0x0002;
+
+        /// Only accepted for mmap2(2).
+        const MAP_FIXED = 0x0004;
+        const MAP_FIXED_NOREPLACE = 0x000C;
+    }
+}
 
 pub const MODE_TYPE: u16 = 0xF000;
 pub const MODE_DIR: u16 = 0x4000;
@@ -56,21 +112,129 @@ pub const O_SYMLINK: usize =    0x4000_0000;
 pub const O_NOFOLLOW: usize =   0x8000_0000;
 pub const O_ACCMODE: usize =    O_RDONLY | O_WRONLY | O_RDWR;
 
-pub const PHYSMAP_WRITE: usize = 0x0000_0001;
-pub const PHYSMAP_WRITE_COMBINE: usize = 0x0000_0002;
-pub const PHYSMAP_NO_CACHE: usize = 0x0000_0004;
+bitflags! {
+    pub struct PhysmapFlags: usize {
+        const PHYSMAP_WRITE = 0x0000_0001;
+        const PHYSMAP_WRITE_COMBINE = 0x0000_0002;
+        const PHYSMAP_NO_CACHE = 0x0000_0004;
+    }
+}
+bitflags! {
+    /// Extra flags for [`physalloc2`] or [`physalloc3`].
+    ///
+    /// [`physalloc2`]: ../call/fn.physalloc2.html
+    /// [`physalloc3`]: ../call/fn.physalloc3.html
+    pub struct PhysallocFlags: usize {
+        /// Only allocate memory within the 32-bit physical memory space. This is necessary for
+        /// some devices may not support 64-bit memory.
+        const SPACE_32 =        0x0000_0001;
 
-pub const PROT_NONE: usize = 0x0000_0000;
-pub const PROT_EXEC: usize = 0x0001_0000;
-pub const PROT_WRITE: usize = 0x0002_0000;
-pub const PROT_READ: usize = 0x0004_0000;
+        /// The frame that will be allocated, is going to reside anywhere in 64-bit space. This
+        /// flag is redundant for the most part, except when overriding some other default.
+        const SPACE_64 =        0x0000_0002;
 
-pub const PTRACE_CONT: u8 = 0b0000_0001;
-pub const PTRACE_SINGLESTEP: u8 = 0b0000_0010;
-pub const PTRACE_SYSCALL: u8 = 0b0000_0011;
-pub const PTRACE_WAIT: u8 = 0b0000_0100;
-pub const PTRACE_OPERATIONMASK: u8 = 0b0000_1111;
-pub const PTRACE_SYSEMU: u8 = 0b0001_0000;
+        /// Do a "partial allocation", which means that not all of the frames specified in the
+        /// frame count `size` actually have to be allocated. This means that if the allocator was
+        /// unable to find a physical memory range large enough, it can instead return whatever
+        /// range it decides is optimal. Thus, instead of letting one driver get an expensive
+        /// 128MiB physical memory range when the physical memory has become fragmented, and
+        /// failing, it can instead be given a more optimal range. If the device supports
+        /// scatter-gather lists, then the driver only has to allocate more ranges, and the device
+        /// will do vectored I/O.
+        ///
+        /// PARTIAL_ALLOC supports different allocation strategies, refer to
+        /// [`Optimal`], [`GreatestRange`].
+        ///
+        /// [`Optimal`]: ./enum.PartialAllocStrategy.html
+        /// [`GreatestRange`]: ./enum.PartialAllocStrategy.html
+        const PARTIAL_ALLOC =   0x0000_0004;
+    }
+}
+
+/// The bitmask of the partial allocation strategy. Currently four different strategies are
+/// supported. If [`PARTIAL_ALLOC`] is not set, this bitmask is no longer reserved.
+pub const PARTIAL_ALLOC_STRATEGY_MASK: usize = 0x0003_0000;
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[repr(usize)]
+pub enum PartialAllocStrategy {
+    /// The allocator decides itself the size of the memory range, based on e.g. free memory ranges
+    /// and other processes which require large physical memory chunks.
+    Optimal = 0x0001_0000,
+
+    /// The allocator returns the absolute greatest range it can find.
+    GreatestRange = 0x0002_0000,
+
+    /// The allocator returns the first range that fits the minimum count, without searching extra.
+    Greedy = 0x0003_0000,
+}
+impl Default for PartialAllocStrategy {
+    fn default() -> Self {
+        Self::Optimal
+    }
+}
+
+impl PartialAllocStrategy {
+    pub fn from_raw(raw: usize) -> Option<Self> {
+        match raw {
+            0x0001_0000 => Some(Self::Optimal),
+            0x0002_0000 => Some(Self::GreatestRange),
+            0x0003_0000 => Some(Self::Greedy),
+            _ => None,
+        }
+    }
+}
+
+// The top 48 bits of PTRACE_* are reserved, for now
+
+bitflags! {
+    pub struct PtraceFlags: u64 {
+        /// Stop before a syscall is handled. Send PTRACE_FLAG_IGNORE to not
+        /// handle the syscall.
+        const PTRACE_STOP_PRE_SYSCALL = 0x0000_0000_0000_0001;
+        /// Stop after a syscall is handled.
+        const PTRACE_STOP_POST_SYSCALL = 0x0000_0000_0000_0002;
+        /// Stop after exactly one instruction. TODO: This may not handle
+        /// fexec/signal boundaries. Should it?
+        const PTRACE_STOP_SINGLESTEP = 0x0000_0000_0000_0004;
+        /// Stop before a signal is handled. Send PTRACE_FLAG_IGNORE to not
+        /// handle signal.
+        const PTRACE_STOP_SIGNAL = 0x0000_0000_0000_0008;
+        /// Stop on a software breakpoint, such as the int3 instruction for
+        /// x86_64.
+        const PTRACE_STOP_BREAKPOINT = 0x0000_0000_0000_0010;
+        /// Stop just before exiting for good.
+        const PTRACE_STOP_EXIT = 0x0000_0000_0000_0020;
+
+        const PTRACE_STOP_MASK = 0x0000_0000_0000_00FF;
+
+
+        /// Sent when a child is cloned, giving you the opportunity to trace it.
+        /// If you don't catch this, the child is started as normal.
+        const PTRACE_EVENT_CLONE = 0x0000_0000_0000_0100;
+
+        const PTRACE_EVENT_MASK = 0x0000_0000_0000_0F00;
+
+
+        /// Special meaning, depending on the event. Usually, when fired before
+        /// an action, it will skip performing that action.
+        const PTRACE_FLAG_IGNORE = 0x0000_0000_0000_1000;
+
+        const PTRACE_FLAG_MASK = 0x0000_0000_0000_F000;
+    }
+}
+impl Deref for PtraceFlags {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        // Same as to_ne_bytes but in-place
+        unsafe {
+            slice::from_raw_parts(
+                &self.bits as *const _ as *const u8,
+                mem::size_of::<u64>()
+            )
+        }
+    }
+}
 
 pub const SEEK_SET: usize = 0;
 pub const SEEK_CUR: usize = 1;
@@ -115,18 +279,33 @@ pub const SIG_BLOCK: usize = 0;
 pub const SIG_UNBLOCK: usize = 1;
 pub const SIG_SETMASK: usize = 2;
 
-pub const SA_NOCLDSTOP: usize = 0x00000001;
-pub const SA_NOCLDWAIT: usize = 0x00000002;
-pub const SA_SIGINFO: usize =   0x00000004;
-pub const SA_RESTORER: usize =  0x04000000;
-pub const SA_ONSTACK: usize =   0x08000000;
-pub const SA_RESTART: usize =   0x10000000;
-pub const SA_NODEFER: usize =   0x40000000;
-pub const SA_RESETHAND: usize = 0x80000000;
+bitflags! {
+    pub struct SigActionFlags: usize {
+        const SA_NOCLDSTOP = 0x00000001;
+        const SA_NOCLDWAIT = 0x00000002;
+        const SA_SIGINFO =   0x00000004;
+        const SA_RESTORER =  0x04000000;
+        const SA_ONSTACK =   0x08000000;
+        const SA_RESTART =   0x10000000;
+        const SA_NODEFER =   0x40000000;
+        const SA_RESETHAND = 0x80000000;
+    }
+}
 
-pub const WNOHANG: usize =    0x01;
-pub const WUNTRACED: usize =  0x02;
-pub const WCONTINUED: usize = 0x08;
+// Auxiliery vector types
+pub const AT_NULL: usize = 0;
+pub const AT_PHDR: usize = 3;
+pub const AT_PHENT: usize = 4;
+pub const AT_PHNUM: usize = 5;
+pub const AT_ENTRY: usize = 9;
+
+bitflags! {
+    pub struct WaitFlags: usize {
+        const WNOHANG =    0x01;
+        const WUNTRACED =  0x02;
+        const WCONTINUED = 0x08;
+    }
+}
 
 /// True if status indicates the child is stopped.
 pub fn wifstopped(status: usize) -> bool {

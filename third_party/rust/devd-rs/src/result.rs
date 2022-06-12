@@ -7,9 +7,9 @@ pub enum Error {
     Parse,
 }
 
-impl Into<io::Error> for Error {
-    fn into(self) -> io::Error {
-        match self {
+impl From<Error> for io::Error {
+    fn from(val: Error) -> Self {
+        match val {
             Error::IoError(e) => e,
             Error::Timeout => io::Error::new(io::ErrorKind::Other, "devd poll timeout"),
             Error::Parse => io::Error::new(io::ErrorKind::Other, "devd parse error"),

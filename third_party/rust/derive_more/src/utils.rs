@@ -1,4 +1,4 @@
-#![cfg_attr(not(feature = "default"), allow(dead_code))]
+#![cfg_attr(not(feature = "default"), allow(dead_code), allow(unused_mut))]
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
@@ -182,6 +182,27 @@ pub fn add_extra_generic_param(
     generics
 }
 
+pub fn add_extra_generic_type_param(
+    generics: &Generics,
+    generic_param: TokenStream,
+) -> Generics {
+    let generic_param: GenericParam = parse_quote! { #generic_param };
+    let lifetimes: Vec<GenericParam> =
+        generics.lifetimes().map(|x| x.clone().into()).collect();
+    let type_params: Vec<GenericParam> =
+        generics.type_params().map(|x| x.clone().into()).collect();
+    let const_params: Vec<GenericParam> =
+        generics.const_params().map(|x| x.clone().into()).collect();
+    let mut generics = generics.clone();
+    generics.params = Default::default();
+    generics.params.extend(lifetimes);
+    generics.params.extend(type_params);
+    generics.params.push(generic_param);
+    generics.params.extend(const_params);
+
+    generics
+}
+
 pub fn add_extra_where_clauses(
     generics: &Generics,
     type_where_clauses: TokenStream,
@@ -212,7 +233,7 @@ pub fn add_where_clauses_for_new_ident<'a>(
     };
 
     let generics = add_extra_where_clauses(generics, type_where_clauses);
-    add_extra_generic_param(&generics, generic_param)
+    add_extra_generic_type_param(&generics, generic_param)
 }
 
 pub fn unnamed_to_vec(fields: &FieldsUnnamed) -> Vec<&Field> {
@@ -224,10 +245,10 @@ pub fn named_to_vec(fields: &FieldsNamed) -> Vec<&Field> {
 }
 
 fn panic_one_field(trait_name: &str, trait_attr: &str) -> ! {
-    panic!(format!(
+    panic!(
         "derive({}) only works when forwarding to a single field. Try putting #[{}] or #[{}(ignore)] on the fields in the struct",
         trait_name, trait_attr, trait_attr,
-    ))
+    )
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -416,7 +437,7 @@ impl<'input> State<'input> {
                 data_enum.variants.iter().collect(),
             ),
             Data::Union(_) => {
-                panic!(format!("cannot derive({}) for union", trait_name))
+                panic!("cannot derive({}) for union", trait_name)
             }
         };
         let attrs: Vec<_> = if derive_type == DeriveType::Enum {
@@ -620,7 +641,7 @@ impl<'input> State<'input> {
 
     pub fn enabled_fields_data<'state>(&'state self) -> MultiFieldData<'input, 'state> {
         if self.derive_type == DeriveType::Enum {
-            panic!(format!("cannot derive({}) for enum", self.trait_name))
+            panic!("cannot derive({}) for enum", self.trait_name)
         }
         let fields = self.enabled_fields();
         let field_idents = self.enabled_fields_idents();
@@ -677,7 +698,7 @@ impl<'input> State<'input> {
         &'state self,
     ) -> MultiVariantData<'input, 'state> {
         if self.derive_type != DeriveType::Enum {
-            panic!(format!("can only derive({}) for enum", self.trait_name))
+            panic!("can only derive({}) for enum", self.trait_name)
         }
         let variants = self.enabled_variants();
         let trait_path = &self.trait_path;
@@ -984,7 +1005,7 @@ fn parse_punctuated_nested_meta(
                     | (Some("ref_mut"), "types") => {
                         parse_nested = false;
                         for meta in &list.nested {
-                            match meta {
+                            let typ: syn::Type = match meta {
                                 NestedMeta::Meta(meta) => {
                                     let path = if let Meta::Path(p) = meta {
                                         p
@@ -997,38 +1018,40 @@ fn parse_punctuated_nested_meta(
                                             ),
                                         ));
                                     };
-
-                                    for ref_type in wrapper_name
-                                        .map(|n| vec![RefType::from_attr_name(n)])
-                                        .unwrap_or_else(|| {
-                                            vec![
-                                                RefType::No,
-                                                RefType::Ref,
-                                                RefType::Mut,
-                                            ]
-                                        })
-                                    {
-                                        if info
-                                            .types
-                                            .entry(ref_type)
-                                            .or_default()
-                                            .replace(path.clone())
-                                            .is_some()
-                                        {
-                                            return Err(Error::new(
-                                                path.span(),
-                                                format!(
-                                                    "Duplicate type `{}` specified",
-                                                    quote! { #path },
-                                                ),
-                                            ));
-                                        }
+                                    syn::TypePath {
+                                        qself: None,
+                                        path: path.clone(),
                                     }
+                                    .into()
                                 }
+                                NestedMeta::Lit(syn::Lit::Str(s)) => s.parse()?,
                                 NestedMeta::Lit(lit) => return Err(Error::new(
                                     lit.span(),
                                     "Attribute doesn't support nested literals here",
                                 )),
+                            };
+
+                            for ref_type in wrapper_name
+                                .map(|n| vec![RefType::from_attr_name(n)])
+                                .unwrap_or_else(|| {
+                                    vec![RefType::No, RefType::Ref, RefType::Mut]
+                                })
+                            {
+                                if info
+                                    .types
+                                    .entry(ref_type)
+                                    .or_default()
+                                    .replace(typ.clone())
+                                    .is_some()
+                                {
+                                    return Err(Error::new(
+                                        typ.span(),
+                                        format!(
+                                            "Duplicate type `{}` specified",
+                                            quote! { #path },
+                                        ),
+                                    ));
+                                }
                             }
                         }
                     }
@@ -1122,7 +1145,7 @@ pub struct MetaInfo {
     pub source: Option<bool>,
     pub backtrace: Option<bool>,
     #[cfg(any(feature = "from", feature = "into"))]
-    pub types: HashMap<RefType, HashSet<syn::Path>>,
+    pub types: HashMap<RefType, HashSet<syn::Type>>,
 }
 
 impl MetaInfo {
@@ -1154,7 +1177,7 @@ impl FullMetaInfo {
     }
 
     #[cfg(any(feature = "from", feature = "into"))]
-    pub fn additional_types(&self, ref_type: RefType) -> HashSet<syn::Path> {
+    pub fn additional_types(&self, ref_type: RefType) -> HashSet<syn::Type> {
         self.info.types.get(&ref_type).cloned().unwrap_or_default()
     }
 }
