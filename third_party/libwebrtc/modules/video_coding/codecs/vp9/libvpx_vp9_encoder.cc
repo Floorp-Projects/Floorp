@@ -1786,7 +1786,6 @@ VideoEncoder::EncoderInfo LibvpxVp9Encoder::GetEncoderInfo() const {
   }
   info.has_trusted_rate_controller = trusted_rate_controller_;
   info.is_hardware_accelerated = false;
-  info.has_internal_source = false;
   if (inited_) {
     // Find the max configured fps of any active spatial layer.
     float max_fps = 0.0;

@@ -228,7 +228,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
                      int64_t time_sent_us,
                      int temporal_index,
                      DataSize frame_size);
-  bool HasInternalSource() const RTC_RUN_ON(&encoder_queue_);
   void ReleaseEncoder() RTC_RUN_ON(&encoder_queue_);
   // After calling this function `resource_adaptation_processor_` will be null.
   void ShutdownResourceAdaptationQueue();
@@ -334,7 +333,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   absl::optional<int64_t> last_encode_info_ms_ RTC_GUARDED_BY(&encoder_queue_);
 
   VideoEncoder::EncoderInfo encoder_info_ RTC_GUARDED_BY(&encoder_queue_);
-  VideoEncoderFactory::CodecInfo codec_info_ RTC_GUARDED_BY(&encoder_queue_);
   VideoCodec send_codec_ RTC_GUARDED_BY(&encoder_queue_);
 
   FrameDropper frame_dropper_ RTC_GUARDED_BY(&encoder_queue_);
