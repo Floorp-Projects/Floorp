@@ -49,7 +49,7 @@ absl::optional<int> RelativeArrivalDelayTracker::Update(uint32_t timestamp,
 
 void RelativeArrivalDelayTracker::Reset() {
   delay_history_.clear();
-  packet_iat_stopwatch_.reset();
+  packet_iat_stopwatch_ = tick_timer_->GetNewStopwatch();
   newest_timestamp_ = absl::nullopt;
   last_timestamp_ = absl::nullopt;
 }
