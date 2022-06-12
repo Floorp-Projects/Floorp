@@ -1459,6 +1459,11 @@ TEST(DefaultVideoQualityAnalyzerTest, GetStreamFrames) {
                             VideoQualityAnalyzerInterface::EncoderStats());
   }
   // We don't need to receive frames for stats to be gathered correctly.
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
   analyzer.Stop();
 
   EXPECT_EQ(analyzer.GetStreamFrames(), stream_to_frame_ids);
