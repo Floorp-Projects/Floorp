@@ -187,6 +187,9 @@ TEST(UniqueNumberGeneratorDeathTest, FailsWhenUsedInWrongContext) {
   // thread/sequence checkers will pick up a different thread environment than
   // `fake_task_queue` will represent.
   UniqueNumberGenerator<uint32_t> generator;
+
+  // Instantiate a fake task queue that will register itself as the current tq.
+  FakeTaskQueue initial_fake_task_queue;
   // Generate an ID on the current thread. This causes the generator to attach
   // to the current thread context.
   generator.GenerateNumber();
