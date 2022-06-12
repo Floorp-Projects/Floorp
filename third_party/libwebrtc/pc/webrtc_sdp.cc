@@ -107,14 +107,15 @@ namespace webrtc {
 // <type>=<value>
 // where <type> MUST be exactly one case-significant character.
 
-// Legal characters in a <token> value (RFC 4566 section 9):
+// Check if passed character is a "token-char" from RFC 4566.
+// https://datatracker.ietf.org/doc/html/rfc4566#section-9
 //    token-char =          %x21 / %x23-27 / %x2A-2B / %x2D-2E / %x30-39
 //                         / %x41-5A / %x5E-7E
-static const char kLegalTokenCharacters[] =
-    "!#$%&'*+-."                          // %x21, %x23-27, %x2A-2B, %x2D-2E
-    "0123456789"                          // %x30-39
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"          // %x41-5A
-    "^_`abcdefghijklmnopqrstuvwxyz{|}~";  // %x5E-7E
+bool IsTokenChar(char ch) {
+  return ch == 0x21 || (ch >= 0x23 && ch <= 0x27) || ch == 0x2a || ch == 0x2b ||
+         ch == 0x2d || ch == 0x2e || (ch >= 0x30 && ch <= 0x39) ||
+         (ch >= 0x41 && ch <= 0x5a) || (ch >= 0x5e && ch <= 0x7e);
+}
 static const int kLinePrefixLength = 2;  // Length of <type>=
 static const char kLineTypeVersion = 'v';
 static const char kLineTypeOrigin = 'o';
@@ -637,7 +638,7 @@ static bool GetSingleTokenValue(const std::string& message,
   if (!GetValue(message, attribute, value, error)) {
     return false;
   }
-  if (strspn(value->c_str(), kLegalTokenCharacters) != value->size()) {
+  if (!absl::c_all_of(absl::string_view(*value), IsTokenChar)) {
     rtc::StringBuilder description;
     description << "Illegal character found in the value of " << attribute;
     return ParseFailed(message, description.Release(), error);
