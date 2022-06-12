@@ -594,10 +594,9 @@ VideoStreamEncoder::VideoStreamEncoder(
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
     std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
     TaskQueueFactory* task_queue_factory,
-    TaskQueueBase* network_queue,
+    TaskQueueBase* worker_queue,
     BitrateAllocationCallbackType allocation_cb_type)
     : worker_queue_(TaskQueueBase::Current()),
-      network_queue_(network_queue),
       number_of_cores_(number_of_cores),
       sink_(nullptr),
       settings_(settings),
@@ -670,7 +669,7 @@ VideoStreamEncoder::VideoStreamEncoder(
           "EncoderQueue",
           TaskQueueFactory::Priority::NORMAL)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
-  RTC_DCHECK(worker_queue_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_DCHECK(encoder_stats_observer);
   RTC_DCHECK_GE(number_of_cores, 1);
 
@@ -1276,9 +1275,7 @@ void VideoStreamEncoder::OnEncoderSettingsChanged() {
 }
 
 void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
-  // Threading context here under Chromium is the network thread. Test
-  // environments may currently call in from other alien contexts.
-  RTC_DCHECK_RUNS_SERIALIZED(&incoming_frame_race_checker_);
+  RTC_DCHECK_RUN_ON(worker_queue_);
   VideoFrame incoming_frame = video_frame;
 
   // Local time in webrtc time base.

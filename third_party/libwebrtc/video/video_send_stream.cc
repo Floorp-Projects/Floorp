@@ -136,9 +136,10 @@ VideoSendStream::VideoSendStream(
           &stats_proxy_,
           config_.encoder_settings,
           std::make_unique<OveruseFrameDetector>(&stats_proxy_),
-          FrameCadenceAdapterInterface::Create(),
+          FrameCadenceAdapterInterface::Create(
+              /*worker_queue=*/TaskQueueBase::Current()),
           task_queue_factory,
-          network_queue,
+          /*worker_queue=*/TaskQueueBase::Current(),
           GetBitrateAllocationCallbackType(config_))),
       encoder_feedback_(
           clock,

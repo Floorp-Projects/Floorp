@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
 #include "rtc_base/ref_counted_object.h"
@@ -20,6 +21,7 @@
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 namespace {
@@ -37,6 +39,10 @@ VideoFrame CreateFrame() {
       .build();
 }
 
+std::unique_ptr<FrameCadenceAdapterInterface> CreateAdapter() {
+  return FrameCadenceAdapterInterface::Create(TaskQueueBase::Current());
+}
+
 class MockCallback : public FrameCadenceAdapterInterface::Callback {
  public:
   MOCK_METHOD(void, OnFrame, (const VideoFrame&), (override));
@@ -51,14 +57,16 @@ class ZeroHertzFieldTrialDisabler : public test::ScopedFieldTrials {
 
 TEST(FrameCadenceAdapterTest,
      ForwardsFramesOnConstructionAndUnderDisabledFieldTrial) {
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(1));
   auto disabler = std::make_unique<ZeroHertzFieldTrialDisabler>();
   for (int i = 0; i != 2; i++) {
     MockCallback callback;
-    auto adapter = FrameCadenceAdapterInterface::Create();
+    auto adapter = CreateAdapter();
     adapter->Initialize(&callback);
     VideoFrame frame = CreateFrame();
-    EXPECT_CALL(callback, OnFrame(Ref(frame))).Times(1);
+    EXPECT_CALL(callback, OnFrame).Times(1);
     adapter->OnFrame(frame);
+    time_controller.AdvanceTime(TimeDelta::Zero());
     Mock::VerifyAndClearExpectations(&callback);
     EXPECT_CALL(callback, OnDiscardedFrame).Times(1);
     adapter->OnDiscardedFrame();
@@ -70,12 +78,18 @@ TEST(FrameCadenceAdapterTest,
 
 class FrameCadenceAdapterMetricsTest : public ::testing::Test {
  public:
-  FrameCadenceAdapterMetricsTest() { metrics::Reset(); }
+  FrameCadenceAdapterMetricsTest() : time_controller_(Timestamp::Millis(1)) {
+    metrics::Reset();
+  }
+  void DepleteTaskQueues() { time_controller_.AdvanceTime(TimeDelta::Zero()); }
+
+ private:
+  GlobalSimulatedTimeController time_controller_;
 };
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithNoFrameTransfer) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->OnConstraintsChanged(
       VideoTrackSourceConstraints{absl::nullopt, absl::nullopt});
@@ -83,6 +97,7 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithNoFrameTransfer) {
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{2, 3});
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{4, 4});
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{5, absl::nullopt});
+  DepleteTaskQueues();
   EXPECT_TRUE(metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Exists")
                   .empty());
   EXPECT_TRUE(
@@ -114,7 +129,7 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithNoFrameTransfer) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithoutEnabledContentType) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->OnFrame(CreateFrame());
   adapter->OnConstraintsChanged(
@@ -123,6 +138,7 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithoutEnabledContentType) {
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{2, 3});
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{4, 4});
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{5, absl::nullopt});
+  DepleteTaskQueues();
   EXPECT_TRUE(metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Exists")
                   .empty());
   EXPECT_TRUE(
@@ -154,10 +170,11 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoUmasWithoutEnabledContentType) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoConstraintsIfUnsetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(
       metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Exists"),
       ElementsAre(Pair(false, 1)));
@@ -165,12 +182,13 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsNoConstraintsIfUnsetOnFrame) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsEmptyConstraintsIfSetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnConstraintsChanged(
       VideoTrackSourceConstraints{absl::nullopt, absl::nullopt});
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(
       metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Exists"),
       ElementsAre(Pair(true, 1)));
@@ -203,12 +221,13 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsEmptyConstraintsIfSetOnFrame) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsMaxConstraintIfSetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnConstraintsChanged(
       VideoTrackSourceConstraints{absl::nullopt, 2.0});
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(
       metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Min.Exists"),
       ElementsAre(Pair(false, 1)));
@@ -238,12 +257,13 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsMaxConstraintIfSetOnFrame) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinConstraintIfSetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnConstraintsChanged(
       VideoTrackSourceConstraints{3.0, absl::nullopt});
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(
       metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Min.Exists"),
       ElementsAre(Pair(true, 1)));
@@ -273,11 +293,12 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinConstraintIfSetOnFrame) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinGtMaxConstraintIfSetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{5.0, 4.0});
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(
       metrics::Samples("WebRTC.Screenshare.FrameRateConstraints.Min.Exists"),
       ElementsAre(Pair(true, 1)));
@@ -307,11 +328,12 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinGtMaxConstraintIfSetOnFrame) {
 
 TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinLtMaxConstraintIfSetOnFrame) {
   MockCallback callback;
-  auto adapter = FrameCadenceAdapterInterface::Create();
+  auto adapter = CreateAdapter();
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(true);
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{4.0, 5.0});
   adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
   EXPECT_THAT(metrics::Samples(
                   "WebRTC.Screenshare.FrameRateConstraints.MinLessThanMax.Min"),
               ElementsAre(Pair(4.0, 1)));
