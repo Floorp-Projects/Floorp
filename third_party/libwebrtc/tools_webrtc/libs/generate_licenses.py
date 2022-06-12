@@ -61,6 +61,7 @@ LIB_TO_LICENSES_DICT = {
     'libevent': ['base/third_party/libevent/LICENSE'],
     'libjpeg_turbo': ['third_party/libjpeg_turbo/LICENSE.md'],
     'libsrtp': ['third_party/libsrtp/LICENSE'],
+    'libunwind': ['buildtools/third_party/libunwind/trunk/LICENSE.TXT'],
     'libvpx': ['third_party/libvpx/source/libvpx/LICENSE'],
     'libyuv': ['third_party/libyuv/LICENSE'],
     'nasm': ['third_party/nasm/LICENSE'],
