@@ -1294,16 +1294,12 @@ impl ClipStore {
         world_rect: &WorldRect,
         clip_data_store: &mut ClipDataStore,
         request_resources: bool,
-        is_chased: bool,
     ) -> Option<ClipChainInstance> {
         let local_clip_rect = match self.active_local_clip_rect {
             Some(rect) => rect,
             None => return None,
         };
         profile_scope!("build_clip_chain_instance");
-        if is_chased {
-            info!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
-        }
 
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
         let mut pic_coverage_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
@@ -1340,11 +1336,6 @@ impl ClipStore {
                     )
                 }
             };
-
-            if is_chased {
-                info!("\t\tclip {:?}", node.item);
-                info!("\t\tflags {:?}, resulted in {:?}", node_info.conversion.to_flags(), clip_result);
-            }
 
             match clip_result {
                 ClipResult::Accept => {

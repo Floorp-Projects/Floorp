@@ -207,8 +207,6 @@ pub use crate::composite::{MappableCompositor, MappedTileInfo, SWGLCompositeSurf
 pub use crate::device::{UploadMethod, VertexUsageHint, get_gl_target, get_unoptimized_shader_source};
 pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver, FormatDesc};
 pub use crate::device::Device;
-pub use crate::frame_builder::ChasePrimitive;
-pub use crate::prim_store::PrimitiveDebugId;
 pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, GpuProfile, GraphicsApi,
