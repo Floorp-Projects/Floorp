@@ -108,6 +108,7 @@ const char kSdpWithoutIceUfragPwd[] =
     "Called with SDP without ice-ufrag and ice-pwd.";
 const char kSdpWithoutDtlsFingerprint[] =
     "Called with SDP without DTLS fingerprint.";
+const char kSdpWithoutSdesCrypto[] = "Called with SDP without SDES crypto.";
 
 const char kSessionError[] = "Session error code: ";
 const char kSessionErrorDesc[] = "Session error description: ";
@@ -345,13 +346,14 @@ bool MediaSectionsHaveSameCount(const SessionDescription& desc1,
                                 const SessionDescription& desc2) {
   return desc1.contents().size() == desc2.contents().size();
 }
-// Checks that each non-rejected content has a DTLS
+// Checks that each non-rejected content has SDES crypto keys or a DTLS
 // fingerprint, unless it's in a BUNDLE group, in which case only the
 // BUNDLE-tag section (first media section/description in the BUNDLE group)
 // needs a ufrag and pwd. Mismatches, such as replying with a DTLS fingerprint
 // to SDES keys, will be caught in JsepTransport negotiation, and backstopped
 // by Channel's `srtp_required` check.
 RTCError VerifyCrypto(const SessionDescription* desc,
+                      bool dtls_enabled,
                       const std::map<std::string, const cricket::ContentGroup*>&
                           bundle_groups_by_mid) {
   for (const cricket::ContentInfo& content_info : desc->contents()) {
@@ -359,8 +361,8 @@ RTCError VerifyCrypto(const SessionDescription* desc,
       continue;
     }
     // Note what media is used with each crypto protocol, for all sections.
-    // We now support only DTLS, so this metric can be retired when expiring.
-    NoteKeyProtocolAndMedia(webrtc::kEnumCounterKeyProtocolDtls,
+    NoteKeyProtocolAndMedia(dtls_enabled ? webrtc::kEnumCounterKeyProtocolDtls
+                                         : webrtc::kEnumCounterKeyProtocolSdes,
                             content_info.media_description()->type());
     const std::string& mid = content_info.name;
     auto it = bundle_groups_by_mid.find(mid);
@@ -381,10 +383,20 @@ RTCError VerifyCrypto(const SessionDescription* desc,
       // Something is not right.
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, kInvalidSdp);
     }
-    if (!tinfo->description.identity_fingerprint) {
-      RTC_LOG(LS_WARNING) << "Session description must have DTLS fingerprint";
-      return RTCError(RTCErrorType::INVALID_PARAMETER,
-                      kSdpWithoutDtlsFingerprint);
+    if (dtls_enabled) {
+      if (!tinfo->description.identity_fingerprint) {
+        RTC_LOG(LS_WARNING)
+            << "Session description must have DTLS fingerprint if "
+               "DTLS enabled.";
+        return RTCError(RTCErrorType::INVALID_PARAMETER,
+                        kSdpWithoutDtlsFingerprint);
+      }
+    } else {
+      if (media->cryptos().empty()) {
+        RTC_LOG(LS_WARNING)
+            << "Session description must have SDES when DTLS disabled.";
+        return RTCError(RTCErrorType::INVALID_PARAMETER, kSdpWithoutSdesCrypto);
+      }
     }
   }
   return RTCError::OK();
@@ -987,6 +999,10 @@ void SdpOfferAnswerHandler::Initialize(
           [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
             transport_controller()->SetLocalCertificate(certificate);
           });
+
+  if (pc_->options()->disable_encryption) {
+    webrtc_session_desc_factory_->SetSdesPolicy(cricket::SEC_DISABLED);
+  }
 
   webrtc_session_desc_factory_->set_enable_encrypted_rtp_header_extensions(
       pc_->GetCryptoOptions().srtp.enable_encrypted_rtp_header_extensions);
@@ -3025,9 +3041,10 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
 
   // Verify crypto settings.
   std::string crypto_error;
-  if (pc_->dtls_enabled()) {
-    RTCError crypto_error =
-        VerifyCrypto(sdesc->description(), bundle_groups_by_mid);
+  if (webrtc_session_desc_factory_->SdesPolicy() == cricket::SEC_REQUIRED ||
+      pc_->dtls_enabled()) {
+    RTCError crypto_error = VerifyCrypto(
+        sdesc->description(), pc_->dtls_enabled(), bundle_groups_by_mid);
     if (!crypto_error.ok()) {
       return crypto_error;
     }
