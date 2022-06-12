@@ -41,7 +41,7 @@ eMathMLFrameType nsMathMLTokenFrame::GetMathMLFrameType() {
 
   StyleMathVariant mathVariant = StyleFont()->mMathVariant;
   if ((mathVariant == StyleMathVariant::None &&
-       (StyleFont()->mFont.style == FontSlantStyle::Italic() ||
+       (StyleFont()->mFont.style.IsItalic() ||
         HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI))) ||
       mathVariant == StyleMathVariant::Italic ||
       mathVariant == StyleMathVariant::BoldItalic ||

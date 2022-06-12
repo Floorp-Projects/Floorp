@@ -1789,11 +1789,11 @@ void gfxTextRun::Dump(FILE* out) {
   for (uint32_t i = 0; i < numGlyphRuns; ++i) {
     gfxFont* font = glyphRuns[i].mFont;
     const gfxFontStyle* style = font->GetStyle();
-    nsAutoString styleString;
-    nsStyleUtil::AppendFontSlantStyle(style->style, styleString);
+    nsAutoCString styleString;
+    style->style.ToString(styleString);
     fprintf(out, "    [%d] offset=%d %s %f/%g/%s\n", i,
             glyphRuns[i].mCharacterOffset, font->GetName().get(), style->size,
-            style->weight.ToFloat(), NS_ConvertUTF16toUTF8(styleString).get());
+            style->weight.ToFloat(), styleString.get());
   }
 
   fprintf(out, "  Glyphs:\n");
@@ -2580,8 +2580,8 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         nsAutoCString lang;
         mLanguage->ToUTF8String(lang);
         nsAutoCString str((const char*)aString, aLength);
-        nsAutoString styleString;
-        nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
+        nsAutoCString styleString;
+        mStyle.style.ToString(styleString);
         auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
         MOZ_LOG(
             log, LogLevel::Warning,
@@ -2596,8 +2596,8 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                          ? "sans-serif"
                          : "none")),
              lang.get(), static_cast<int>(Script::LATIN), aLength,
-             mStyle.weight.ToFloat(), mStyle.stretch.Percentage(),
-             NS_ConvertUTF16toUTF8(styleString).get(), mStyle.size, sizeof(T),
+             mStyle.weight.ToFloat(), mStyle.stretch.ToFloat(),
+             styleString.get(), mStyle.size, sizeof(T),
              str.get()));
       }
 
@@ -2625,8 +2625,8 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
           nsAutoCString lang;
           mLanguage->ToUTF8String(lang);
-          nsAutoString styleString;
-          nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
+          nsAutoCString styleString;
+          mStyle.style.ToString(styleString);
           auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
           uint32_t runLen = runLimit - runStart;
           MOZ_LOG(
@@ -2643,8 +2643,8 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                            ? "sans-serif"
                            : "none")),
                lang.get(), static_cast<int>(runScript), runLen,
-               mStyle.weight.ToFloat(), mStyle.stretch.Percentage(),
-               NS_ConvertUTF16toUTF8(styleString).get(), mStyle.size, sizeof(T),
+               mStyle.weight.ToFloat(), mStyle.stretch.ToFloat(),
+               styleString.get(), mStyle.size, sizeof(T),
                NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
         }
 

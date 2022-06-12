@@ -418,9 +418,9 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
 bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
                                   gfxFontStyle& aFontStyle) {
   aFontName.AssignLiteral("Roboto");
-  aFontStyle.style = FontSlantStyle::Normal();
-  aFontStyle.weight = FontWeight::Normal();
-  aFontStyle.stretch = FontStretch::Normal();
+  aFontStyle.style = FontSlantStyle::NORMAL;
+  aFontStyle.weight = FontWeight::NORMAL;
+  aFontStyle.stretch = FontStretch::NORMAL;
   aFontStyle.size = 9.0 * 96.0f / 72.0f;
   aFontStyle.systemFont = true;
   return true;
