@@ -204,12 +204,7 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
           retransmission_rate_limiter_(clock_, 1000),
           task_queue_(task_queue) {}
 
-    ~BweObserver() override {
-      // Block until all already posted tasks run to avoid races when such task
-      // accesses `this`. Also make sure we free `rtp_rtcp_` on the correct
-      // thread/task queue.
-      SendTask(RTC_FROM_HERE, task_queue_, [this]() { rtp_rtcp_ = nullptr; });
-    }
+    void OnStreamsStopped() override { rtp_rtcp_ = nullptr; }
 
     std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
         TaskQueueBase* task_queue) override {
