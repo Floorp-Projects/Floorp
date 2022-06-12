@@ -309,7 +309,7 @@ def main():
                 'PlistBuddy', '-c', 'Print :CFBundleShortVersionString',
                 infoplist_path
             ]
-            major_minor = subprocess.check_output(cmd).strip()
+            major_minor = subprocess.check_output(cmd).decode('utf-8').strip()
             version_number = '%s.%s' % (major_minor, args.revision)
             logging.info('Substituting revision number: %s', version_number)
             cmd = [
