@@ -626,8 +626,8 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
   result.size() = pixelHeight;
   result.italic() = !!aLogFont.lfItalic;
   // FIXME: Other weights?
-  result.weight() = ((aLogFont.lfWeight == FW_BOLD) ? FontWeight::BOLD
-                                                    : FontWeight::NORMAL)
+  result.weight() = ((aLogFont.lfWeight == FW_BOLD) ? FontWeight::Bold()
+                                                    : FontWeight::Normal())
                         .ToFloat();
 
   return result;

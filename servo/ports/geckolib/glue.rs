@@ -28,7 +28,7 @@ use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
 use style::error_reporting::{ContextualParseError, ParseErrorReporter};
-use style::font_face::{self, FontFaceSourceListComponent, Source};
+use style::font_face::{self, ComputedFontStyleDescriptor, FontFaceSourceListComponent, Source};
 use style::font_metrics::{get_metrics_provider_for_product, FontMetricsProvider};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
@@ -137,7 +137,7 @@ use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::easing::ComputedLinearStop;
-use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily, FontWeight, FontStyle, FontStretch};
+use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
@@ -5139,12 +5139,14 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
         },
         FontStyle => {
-            style::values::specified::FontStyle::Specified(if value == structs::NS_FONT_STYLE_ITALIC {
+            let val = if value == structs::NS_FONT_STYLE_ITALIC {
                 FontStyle::Italic
             } else {
                 debug_assert_eq!(value, structs::NS_FONT_STYLE_NORMAL);
                 FontStyle::Normal
-            })
+            };
+
+            ToComputedValue::from_computed_value(&val)
         },
         FontWeight => longhands::font_weight::SpecifiedValue::from_gecko_keyword(value),
         ListStyleType => Box::new(longhands::list_style_type::SpecifiedValue::from_gecko_keyword(value)),
@@ -7015,14 +7017,17 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
     value: &nsACString,
     data: *mut URLExtraData,
     family: &mut FontFamilyList,
-    style: &mut FontStyle,
-    stretch: &mut FontStretch,
-    weight: &mut FontWeight,
+    style: &mut ComputedFontStyleDescriptor,
+    stretch: &mut f32,
+    weight: &mut f32,
     size: Option<&mut f32>,
 ) -> bool {
     use style::properties::shorthands::font;
-    use style::values::specified::font as specified;
+    use style::values::computed::font::FontWeight as ComputedFontWeight;
     use style::values::generics::font::FontStyle as GenericFontStyle;
+    use style::values::specified::font::{
+        FontFamily, FontSize, FontStretch, FontStyle, FontWeight, SpecifiedFontStyle,
+    };
 
     let string = value.as_str_unchecked();
     let mut input = ParserInput::new(&string);
@@ -7045,41 +7050,44 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
 
     // The system font is not acceptable, so we return false.
     match font.font_family {
-        specified::FontFamily::Values(list) => *family = list,
-        specified::FontFamily::System(_) => return false,
+        FontFamily::Values(list) => *family = list,
+        FontFamily::System(_) => return false,
     }
 
     let specified_font_style = match font.font_style {
-        specified::FontStyle::Specified(ref s) => s,
-        specified::FontStyle::System(_) => return false,
+        FontStyle::Specified(ref s) => s,
+        FontStyle::System(_) => return false,
     };
 
     *style = match *specified_font_style {
-        GenericFontStyle::Normal => FontStyle::NORMAL,
-        GenericFontStyle::Italic => FontStyle::ITALIC,
-        GenericFontStyle::Oblique(ref angle) => FontStyle::oblique(angle.degrees()),
+        GenericFontStyle::Normal => ComputedFontStyleDescriptor::Normal,
+        GenericFontStyle::Italic => ComputedFontStyleDescriptor::Italic,
+        GenericFontStyle::Oblique(ref angle) => {
+            let angle = SpecifiedFontStyle::compute_angle_degrees(angle);
+            ComputedFontStyleDescriptor::Oblique(angle, angle)
+        },
     };
 
     *stretch = match font.font_stretch {
-        specified::FontStretch::Keyword(ref k) => k.compute(),
-        specified::FontStretch::Stretch(ref p) => FontStretch::from_percentage(p.0.get()),
-        specified::FontStretch::System(_) => return false,
+        FontStretch::Keyword(ref k) => k.compute().0,
+        FontStretch::Stretch(ref p) => p.0.get(),
+        FontStretch::System(_) => return false,
     };
 
     *weight = match font.font_weight {
-        specified::FontWeight::Absolute(w) => w.compute(),
+        FontWeight::Absolute(w) => w.compute().0,
         // Resolve relative font weights against the initial of font-weight
         // (normal, which is equivalent to 400).
-        specified::FontWeight::Bolder => FontWeight::normal().bolder(),
-        specified::FontWeight::Lighter => FontWeight::normal().lighter(),
-        specified::FontWeight::System(_) => return false,
+        FontWeight::Bolder => ComputedFontWeight::normal().bolder().0,
+        FontWeight::Lighter => ComputedFontWeight::normal().lighter().0,
+        FontWeight::System(_) => return false,
     };
 
     // XXX This is unfinished; see values::specified::FontSize::ToComputedValue
     // for a more complete implementation (but we can't use it as-is).
     if let Some(size) = size {
         *size = match font.font_size {
-            specified::FontSize::Length(lp) => {
+            FontSize::Length(lp) => {
                 use style::values::generics::transform::ToAbsoluteLength;
                 match lp.to_pixel_length(None) {
                     Ok(len) => len,
@@ -7087,7 +7095,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
                 }
             },
             // Map absolute-size keywords to sizes.
-            specified::FontSize::Keyword(info) => {
+            FontSize::Keyword(info) => {
                 let metrics = get_metrics_provider_for_product();
                 // TODO: Maybe get a meaningful language / quirks-mode from the
                 // caller?
@@ -7096,7 +7104,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
                 info.kw.to_length_without_context(quirks_mode, &metrics, &language, family).0.px()
             }
             // smaller, larger not currently supported
-            specified::FontSize::Smaller | specified::FontSize::Larger | specified::FontSize::System(_) => {
+            FontSize::Smaller | FontSize::Larger | FontSize::System(_) => {
                 return false;
             }
         };
@@ -7338,31 +7346,6 @@ pub extern "C" fn Servo_LengthPercentage_ToCss(
     result: &mut nsACString,
 ) {
     lp.to_css(&mut CssWriter::new(result)).unwrap();
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontStyle_ToCss(s: &FontStyle, result: &mut nsACString) {
-    s.to_css(&mut CssWriter::new(result)).unwrap()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontWeight_ToCss(w: &FontWeight, result: &mut nsACString) {
-    w.to_css(&mut CssWriter::new(result)).unwrap()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontStretch_ToCss(s: &FontStretch, result: &mut nsACString) {
-    s.to_css(&mut CssWriter::new(result)).unwrap()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontStretch_SerializeKeyword(s: &FontStretch, result: &mut nsACString) -> bool {
-    let kw = match s.as_keyword() {
-        Some(kw) => kw,
-        None => return false,
-    };
-    kw.to_css(&mut CssWriter::new(result)).unwrap();
-    true
 }
 
 #[no_mangle]

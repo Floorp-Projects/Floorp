@@ -1017,7 +1017,7 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
 
 static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
                               gfxFontStyle* aFontStyle) {
-  aFontStyle->style = FontSlantStyle::NORMAL;
+  aFontStyle->style = FontSlantStyle::Normal();
 
   // As in
   // https://git.gnome.org/browse/gtk+/tree/gtk/gtkwidget.c?h=3.22.19#n10333
@@ -1031,11 +1031,10 @@ static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
   NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
   *aFontName = quote + family + quote;
 
-  aFontStyle->weight =
-      FontWeight::FromInt(pango_font_description_get_weight(desc));
+  aFontStyle->weight = FontWeight(pango_font_description_get_weight(desc));
 
   // FIXME: Set aFontStyle->stretch correctly!
-  aFontStyle->stretch = FontStretch::NORMAL;
+  aFontStyle->stretch = FontStretch::Normal();
 
   float size = float(pango_font_description_get_size(desc)) / PANGO_SCALE;
 

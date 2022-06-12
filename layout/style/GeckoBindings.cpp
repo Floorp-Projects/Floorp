@@ -996,6 +996,47 @@ nsTArray<uint32_t>* Gecko_AppendFeatureValueHashEntry(
                                                          aName, aAlternate);
 }
 
+float Gecko_FontStretch_ToFloat(FontStretch aStretch) {
+  // Servo represents percentages with 1. being 100%.
+  return aStretch.Percentage() / 100.0f;
+}
+
+void Gecko_FontStretch_SetFloat(FontStretch* aStretch, float aFloat) {
+  // Servo represents percentages with 1. being 100%.
+  //
+  // Also, the font code assumes a given maximum that style doesn't really need
+  // to know about. So clamp here at the boundary.
+  *aStretch = FontStretch(std::min(aFloat * 100.0f, float(FontStretch::kMax)));
+}
+
+void Gecko_FontSlantStyle_SetNormal(FontSlantStyle* aStyle) {
+  *aStyle = FontSlantStyle::Normal();
+}
+
+void Gecko_FontSlantStyle_SetItalic(FontSlantStyle* aStyle) {
+  *aStyle = FontSlantStyle::Italic();
+}
+
+void Gecko_FontSlantStyle_SetOblique(FontSlantStyle* aStyle,
+                                     float aAngleInDegrees) {
+  *aStyle = FontSlantStyle::Oblique(aAngleInDegrees);
+}
+
+void Gecko_FontSlantStyle_Get(FontSlantStyle aStyle, bool* aNormal,
+                              bool* aItalic, float* aObliqueAngle) {
+  *aNormal = aStyle.IsNormal();
+  *aItalic = aStyle.IsItalic();
+  if (aStyle.IsOblique()) {
+    *aObliqueAngle = aStyle.ObliqueAngle();
+  }
+}
+
+float Gecko_FontWeight_ToFloat(FontWeight aWeight) { return aWeight.ToFloat(); }
+
+void Gecko_FontWeight_SetFloat(FontWeight* aWeight, float aFloat) {
+  *aWeight = FontWeight(aFloat);
+}
+
 void Gecko_CounterStyle_ToPtr(const StyleCounterStyle* aStyle,
                               CounterStylePtr* aPtr) {
   *aPtr = CounterStylePtr::FromStyle(*aStyle);

@@ -811,7 +811,7 @@ void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
 float gfxFont::AngleForSyntheticOblique() const {
   // If the style doesn't call for italic/oblique, or if the face already
   // provides it, no synthetic style should be added.
-  if (mStyle.style == FontSlantStyle::NORMAL || !mStyle.allowSyntheticStyle ||
+  if (mStyle.style == FontSlantStyle::Normal() || !mStyle.allowSyntheticStyle ||
       !mFontEntry->IsUpright()) {
     return 0.0f;
   }
@@ -819,9 +819,7 @@ float gfxFont::AngleForSyntheticOblique() const {
   // If style calls for italic, and face doesn't support it, use default
   // oblique angle as a simulation.
   if (mStyle.style.IsItalic()) {
-    return mFontEntry->SupportsItalic()
-               ? 0.0f
-               : FontSlantStyle::DEFAULT_OBLIQUE_DEGREES;
+    return mFontEntry->SupportsItalic() ? 0.0f : FontSlantStyle::kDefaultAngle;
   }
 
   // Default or custom oblique angle
@@ -832,12 +830,12 @@ float gfxFont::SkewForSyntheticOblique() const {
   // Precomputed value of tan(kDefaultAngle), the default italic/oblique slant;
   // avoids calling tan() at runtime except for custom oblique values.
   static const float kTanDefaultAngle =
-      tan(FontSlantStyle::DEFAULT_OBLIQUE_DEGREES * (M_PI / 180.0));
+      tan(FontSlantStyle::kDefaultAngle * (M_PI / 180.0));
 
   float angle = AngleForSyntheticOblique();
   if (angle == 0.0f) {
     return 0.0f;
-  } else if (angle == FontSlantStyle::DEFAULT_OBLIQUE_DEGREES) {
+  } else if (angle == FontSlantStyle::kDefaultAngle) {
     return kTanDefaultAngle;
   } else {
     return tan(angle * (M_PI / 180.0));
@@ -4161,9 +4159,9 @@ gfxFontStyle::gfxFontStyle()
       baselineOffset(0.0f),
       languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
       fontSmoothingBackgroundColor(NS_RGBA(0, 0, 0, 0)),
-      weight(FontWeight::NORMAL),
-      stretch(FontStretch::NORMAL),
-      style(FontSlantStyle::NORMAL),
+      weight(FontWeight::Normal()),
+      stretch(FontStretch::Normal()),
+      style(FontSlantStyle::Normal()),
       variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
       variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
       sizeAdjustBasis(uint8_t(FontSizeAdjust::Tag::None)),
@@ -4228,11 +4226,11 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
   MOZ_ASSERT(FontSizeAdjust::Tag(sizeAdjustBasis) == aSizeAdjust.tag,
              "gfxFontStyle.sizeAdjustBasis too small?");
 
-  if (weight > FontWeight::FromInt(1000)) {
-    weight = FontWeight::FromInt(1000);
+  if (weight > FontWeight(1000)) {
+    weight = FontWeight(1000);
   }
-  if (weight < FontWeight::FromInt(1)) {
-    weight = FontWeight::FromInt(1);
+  if (weight < FontWeight(1)) {
+    weight = FontWeight(1);
   }
 
   if (size >= FONT_MAX_SIZE) {
@@ -4251,8 +4249,9 @@ PLDHashNumber gfxFontStyle::Hash() const {
                       : mozilla::HashBytes(variationSettings.Elements(),
                                            variationSettings.Length() *
                                                sizeof(gfxFontVariation));
-  return mozilla::AddToHash(hash, systemFont, style.Raw(), stretch.Raw(),
-                            weight.Raw(), size, int32_t(sizeAdjust * 1000.0f));
+  return mozilla::AddToHash(hash, systemFont, style.ForHash(),
+                            stretch.ForHash(), weight.ForHash(), size,
+                            int32_t(sizeAdjust * 1000.0f));
 }
 
 void gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel) {

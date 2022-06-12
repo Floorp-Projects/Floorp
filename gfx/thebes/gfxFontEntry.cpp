@@ -53,6 +53,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
+using mozilla::services::GetObserverService;
 
 void gfxCharacterMap::NotifyReleased() {
   if (mShared) {
@@ -1229,13 +1230,12 @@ void gfxFontEntry::SetupVariationRanges() {
             // If axis.mMaxValue is less than the default weight we already
             // set up, assume the axis has a non-standard range (like Skia)
             // and don't try to map it.
-            Weight().Min() <= FontWeight::FromFloat(axis.mMaxValue)) {
-          if (FontWeight::FromFloat(axis.mDefaultValue) != Weight().Min()) {
+            Weight().Min() <= FontWeight(axis.mMaxValue)) {
+          if (FontWeight(axis.mDefaultValue) != Weight().Min()) {
             mStandardFace = false;
           }
-          mWeightRange =
-              WeightRange(FontWeight::FromFloat(std::max(1.0f, axis.mMinValue)),
-                          FontWeight::FromFloat(axis.mMaxValue));
+          mWeightRange = WeightRange(FontWeight(std::max(1.0f, axis.mMinValue)),
+                                     FontWeight(axis.mMaxValue));
         } else {
           mRangeFlags |= RangeFlags::eNonCSSWeight;
         }
@@ -1243,12 +1243,12 @@ void gfxFontEntry::SetupVariationRanges() {
 
       case HB_TAG('w', 'd', 't', 'h'):
         if (axis.mMinValue >= 0.0f && axis.mMaxValue <= 1000.0f &&
-            Stretch().Min() <= FontStretch::FromFloat(axis.mMaxValue)) {
-          if (FontStretch::FromFloat(axis.mDefaultValue) != Stretch().Min()) {
+            Stretch().Min() <= FontStretch(axis.mMaxValue)) {
+          if (FontStretch(axis.mDefaultValue) != Stretch().Min()) {
             mStandardFace = false;
           }
-          mStretchRange = StretchRange(FontStretch::FromFloat(axis.mMinValue),
-                                       FontStretch::FromFloat(axis.mMaxValue));
+          mStretchRange = StretchRange(FontStretch(axis.mMinValue),
+                                       FontStretch(axis.mMaxValue));
         } else {
           mRangeFlags |= RangeFlags::eNonCSSStretch;
         }
@@ -1256,7 +1256,7 @@ void gfxFontEntry::SetupVariationRanges() {
 
       case HB_TAG('s', 'l', 'n', 't'):
         if (axis.mMinValue >= -90.0f && axis.mMaxValue <= 90.0f) {
-          if (FontSlantStyle::FromFloat(axis.mDefaultValue) !=
+          if (FontSlantStyle::Oblique(axis.mDefaultValue) !=
               SlantStyle().Min()) {
             mStandardFace = false;
           }
@@ -1264,8 +1264,8 @@ void gfxFontEntry::SetupVariationRanges() {
           // have to flip signs and swap min/max when setting up the CSS
           // font-style range here.
           mStyleRange =
-              SlantStyleRange(FontSlantStyle::FromFloat(-axis.mMaxValue),
-                              FontSlantStyle::FromFloat(-axis.mMinValue));
+              SlantStyleRange(FontSlantStyle::Oblique(-axis.mMaxValue),
+                              FontSlantStyle::Oblique(-axis.mMinValue));
         }
         break;
 
@@ -1274,8 +1274,8 @@ void gfxFontEntry::SetupVariationRanges() {
           if (axis.mDefaultValue != 0.0f) {
             mStandardFace = false;
           }
-          mStyleRange =
-              SlantStyleRange(FontSlantStyle::NORMAL, FontSlantStyle::ITALIC);
+          mStyleRange = SlantStyleRange(FontSlantStyle::Normal(),
+                                        FontSlantStyle::Italic());
         }
         break;
 
@@ -1358,8 +1358,8 @@ void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
 
   if (!(mRangeFlags & RangeFlags::eNonCSSStretch)) {
     float stretch = (IsUserFont() && (mRangeFlags & RangeFlags::eAutoStretch))
-                        ? aStyle.stretch.ToFloat()
-                        : Stretch().Clamp(aStyle.stretch).ToFloat();
+                        ? aStyle.stretch.Percentage()
+                        : Stretch().Clamp(aStyle.stretch).Percentage();
     aResult.AppendElement(
         gfxFontVariation{HB_TAG('w', 'd', 't', 'h'), stretch});
   }
@@ -1373,13 +1373,12 @@ void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
     // requested style.
     float angle = aStyle.style.IsNormal() ? 0.0f
                   : aStyle.style.IsItalic()
-                      ? FontSlantStyle::DEFAULT_OBLIQUE_DEGREES
+                      ? FontSlantStyle::Oblique().ObliqueAngle()
                       : aStyle.style.ObliqueAngle();
     // Clamp to the available range, unless the face is a user font
     // with no explicit descriptor.
     if (!(IsUserFont() && (mRangeFlags & RangeFlags::eAutoSlantStyle))) {
-      angle =
-          SlantStyle().Clamp(FontSlantStyle::FromFloat(angle)).ObliqueAngle();
+      angle = SlantStyle().Clamp(FontSlantStyle::Oblique(angle)).ObliqueAngle();
     }
     // OpenType and CSS measure angles in opposite directions, so we have to
     // invert the sign of the CSS oblique value when setting OpenType 'slnt'.
@@ -1627,7 +1626,7 @@ void gfxFontFamily::FindAllFontsForStyle(
     // calculate which one we want.
     // Note that we cannot simply return it as not all 4 faces are necessarily
     // present.
-    bool wantBold = aFontStyle.weight >= FontWeight::FromInt(600);
+    bool wantBold = aFontStyle.weight >= FontWeight(600);
     bool wantItalic = !aFontStyle.style.IsNormal();
     uint8_t faceIndex =
         (wantItalic ? kItalicMask : 0) | (wantBold ? kBoldMask : 0);

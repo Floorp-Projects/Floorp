@@ -101,9 +101,15 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
   // Re-serialize the font shorthand as required by the canvas spec.
   aUsedFont.Truncate();
 
-  if (!aStyle.style.IsNormal()) {
-    aStyle.style.ToString(aUsedFont);
-    aUsedFont.Append(" ");
+  if (aStyle.style.IsItalic()) {
+    aUsedFont.Append("italic ");
+  } else if (aStyle.style.IsOblique()) {
+    aUsedFont.Append("oblique ");
+    // Include the angle if it is not the default font-style:oblique value.
+    if (aStyle.style != FontSlantStyle::Oblique()) {
+      aUsedFont.AppendFloat(aStyle.style.ObliqueAngle());
+      aUsedFont.Append("deg ");
+    }
   }
 
   // font-weight is serialized as a number
@@ -112,9 +118,24 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
   }
 
   // font-stretch is serialized using CSS Fonts 3 keywords, not percentages.
-  if (!aStyle.stretch.IsNormal() &&
-      Servo_FontStretch_SerializeKeyword(&aStyle.stretch, &aUsedFont)) {
-    aUsedFont.Append(" ");
+  if (!aStyle.stretch.IsNormal()) {
+    if (aStyle.stretch == FontStretch::UltraCondensed()) {
+      aUsedFont.Append("ultra-condensed ");
+    } else if (aStyle.stretch == FontStretch::ExtraCondensed()) {
+      aUsedFont.Append("extra-condensed ");
+    } else if (aStyle.stretch == FontStretch::Condensed()) {
+      aUsedFont.Append("condensed ");
+    } else if (aStyle.stretch == FontStretch::SemiCondensed()) {
+      aUsedFont.Append("semi-condensed ");
+    } else if (aStyle.stretch == FontStretch::SemiExpanded()) {
+      aUsedFont.Append("semi-expanded ");
+    } else if (aStyle.stretch == FontStretch::Expanded()) {
+      aUsedFont.Append("expanded ");
+    } else if (aStyle.stretch == FontStretch::ExtraExpanded()) {
+      aUsedFont.Append("extra-expanded ");
+    } else if (aStyle.stretch == FontStretch::UltraExpanded()) {
+      aUsedFont.Append("ultra-expanded ");
+    }
   }
 
   // Serialize the computed (not specified) size, and the family name(s).
@@ -128,18 +149,31 @@ bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   // In the OffscreenCanvas case we don't have the context necessary to call
   // GetFontStyleForServo(), as we do in the main-thread canvas context, so
   // instead we borrow ParseFontShorthandForMatching to parse the attribute.
+  float stretch = FontStretch::Normal().Percentage(),
+        weight = FontWeight::Normal().ToFloat(), size = 10.0;
   StyleComputedFontStyleDescriptor style(
       StyleComputedFontStyleDescriptor::Normal());
   StyleFontFamilyList list;
-  gfxFontStyle fontStyle;
-  float size = 0.0f;
   if (!ServoCSSParser::ParseFontShorthandForMatching(
-          aFont, nullptr, list, fontStyle.style, fontStyle.stretch,
-          fontStyle.weight, &size)) {
+          aFont, nullptr, list, style, stretch, weight, &size)) {
     return false;
   }
 
+  gfxFontStyle fontStyle;
   fontStyle.size = size;
+  fontStyle.weight = FontWeight(weight);
+  fontStyle.stretch = FontStretch::FromStyle(stretch);
+  switch (style.tag) {
+    case StyleComputedFontStyleDescriptor::Tag::Normal:
+      fontStyle.style = FontSlantStyle::Normal();
+      break;
+    case StyleComputedFontStyleDescriptor::Tag::Italic:
+      fontStyle.style = FontSlantStyle::Italic();
+      break;
+    case StyleComputedFontStyleDescriptor::Tag::Oblique:
+      fontStyle.style = FontSlantStyle::Oblique(style.AsOblique()._0);
+      break;
+  }
 
   // TODO: Get a userFontSet from the Worker and pass to the fontGroup
   // TODO: Should we be passing a language? Where from?
@@ -155,8 +189,9 @@ bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
                                                   1.0);     // aDevToCssSize
   CurrentState().fontGroup = fontGroup;
   SerializeFontForCanvas(list, fontStyle, CurrentState().font);
-  CurrentState().fontFont = nsFont(StyleFontFamily{list, false, false},
-                                   StyleCSSPixelLength::FromPixels(size));
+  CurrentState().fontFont =
+      nsFont(StyleFontFamily{list, false, false},
+             StyleCSSPixelLength::FromPixels(float(fontStyle.size)));
   CurrentState().fontLanguage = nullptr;
   CurrentState().fontExplicitLanguage = false;
   return true;

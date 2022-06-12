@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/ExpandedPrincipal.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "nsIContent.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
@@ -325,4 +326,21 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
   NS_ENSURE_SUCCESS(rv, false);
 
   return allowInlineStyle;
+}
+
+void nsStyleUtil::AppendFontSlantStyle(const FontSlantStyle& aStyle,
+                                       nsAString& aOut) {
+  if (aStyle.IsNormal()) {
+    aOut.AppendLiteral("normal");
+  } else if (aStyle.IsItalic()) {
+    aOut.AppendLiteral("italic");
+  } else {
+    aOut.AppendLiteral("oblique");
+    auto angle = aStyle.ObliqueAngle();
+    if (angle != FontSlantStyle::kDefaultAngle) {
+      aOut.AppendLiteral(" ");
+      AppendCSSNumber(angle, aOut);
+      aOut.AppendLiteral("deg");
+    }
+  }
 }
