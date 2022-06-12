@@ -7,6 +7,8 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+from __future__ import absolute_import
+
 import glob
 import os
 import shutil
@@ -17,13 +19,19 @@ import unittest
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.join(SCRIPT_DIR, os.pardir)
 sys.path.append(PARENT_DIR)
+# Workaround for the presubmit, plan only to run in py3 now.
+# TODO(webrtc:13418) Remove when py2 presubmit is gone.
+if sys.version_info >= (3, 3):
+    from unittest import mock
+else:
+    import mock
+
 import roll_deps
 from roll_deps import CalculateChangedDeps, FindAddedDeps, \
   FindRemovedDeps, ChooseCQMode, GenerateCommitMessage, \
   GetMatchingDepsEntries, ParseDepsDict, ParseLocalDepsFile, UpdateDepsFile, \
   ChromiumRevisionUpdate
 
-import mock
 
 TEST_DATA_VARS = {
     'chromium_git': 'https://chromium.googlesource.com',
@@ -100,7 +108,7 @@ class TestRollChromiumRevision(unittest.TestCase):
     def testVarLookup(self):
         local_scope = {'foo': 'wrong', 'vars': {'foo': 'bar'}}
         lookup = roll_deps.VarLookup(local_scope)
-        self.assertEquals(lookup('foo'), 'bar')
+        self.assertEqual(lookup('foo'), 'bar')
 
     def testUpdateDepsFile(self):
         new_rev = 'aaaaabbbbbcccccdddddeeeeefffff0000011111'
@@ -166,26 +174,26 @@ class TestRollChromiumRevision(unittest.TestCase):
         vars_dict = local_scope['vars']
 
         def AssertVar(variable_name):
-            self.assertEquals(vars_dict[variable_name],
+            self.assertEqual(vars_dict[variable_name],
                               TEST_DATA_VARS[variable_name])
 
         AssertVar('chromium_git')
         AssertVar('chromium_revision')
-        self.assertEquals(len(local_scope['deps']), 3)
-        self.assertEquals(len(local_scope['deps_os']), 1)
+        self.assertEqual(len(local_scope['deps']), 3)
+        self.assertEqual(len(local_scope['deps_os']), 1)
 
     def testGetMatchingDepsEntriesReturnsPathInSimpleCase(self):
         entries = GetMatchingDepsEntries(DEPS_ENTRIES, 'src/testing/gtest')
-        self.assertEquals(len(entries), 1)
-        self.assertEquals(entries[0], DEPS_ENTRIES['src/testing/gtest'])
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0], DEPS_ENTRIES['src/testing/gtest'])
 
     def testGetMatchingDepsEntriesHandlesSimilarStartingPaths(self):
         entries = GetMatchingDepsEntries(DEPS_ENTRIES, 'src/testing')
-        self.assertEquals(len(entries), 2)
+        self.assertEqual(len(entries), 2)
 
     def testGetMatchingDepsEntriesHandlesTwoPathsWithIdenticalFirstParts(self):
         entries = GetMatchingDepsEntries(DEPS_ENTRIES, 'src/build')
-        self.assertEquals(len(entries), 1)
+        self.assertEqual(len(entries), 1)
 
     def testCalculateChangedDeps(self):
         webrtc_deps = ParseLocalDepsFile(self._webrtc_depsfile)
@@ -197,66 +205,66 @@ class TestRollChromiumRevision(unittest.TestCase):
                 BUILD_NEW_REV)
             changed_deps = CalculateChangedDeps(webrtc_deps, new_cr_deps)
 
-        self.assertEquals(len(changed_deps), 3)
-        self.assertEquals(changed_deps[0].path, 'src/build')
-        self.assertEquals(changed_deps[0].current_rev, BUILD_OLD_REV)
-        self.assertEquals(changed_deps[0].new_rev, BUILD_NEW_REV)
+        self.assertEqual(len(changed_deps), 3)
+        self.assertEqual(changed_deps[0].path, 'src/build')
+        self.assertEqual(changed_deps[0].current_rev, BUILD_OLD_REV)
+        self.assertEqual(changed_deps[0].new_rev, BUILD_NEW_REV)
 
-        self.assertEquals(changed_deps[1].path, 'src/buildtools/linux64')
-        self.assertEquals(changed_deps[1].package, 'gn/gn/linux-amd64')
-        self.assertEquals(changed_deps[1].current_version,
+        self.assertEqual(changed_deps[1].path, 'src/buildtools/linux64')
+        self.assertEqual(changed_deps[1].package, 'gn/gn/linux-amd64')
+        self.assertEqual(changed_deps[1].current_version,
             'git_revision:69ec4fca1fa69ddadae13f9e6b7507efa0675263')
-        self.assertEquals(changed_deps[1].new_version,
+        self.assertEqual(changed_deps[1].new_version,
             'git_revision:new-revision')
 
-        self.assertEquals(changed_deps[2].path, 'src/third_party/depot_tools')
-        self.assertEquals(changed_deps[2].current_rev, DEPOTTOOLS_OLD_REV)
-        self.assertEquals(changed_deps[2].new_rev, DEPOTTOOLS_NEW_REV)
+        self.assertEqual(changed_deps[2].path, 'src/third_party/depot_tools')
+        self.assertEqual(changed_deps[2].current_rev, DEPOTTOOLS_OLD_REV)
+        self.assertEqual(changed_deps[2].new_rev, DEPOTTOOLS_NEW_REV)
 
     def testWithDistinctDeps(self):
-        """Check CalculateChangedDeps still works when deps are added/removed. """
+        """Check CalculateChangedDeps works when deps are added/removed."""
         webrtc_deps = ParseLocalDepsFile(self._webrtc_depsfile_android)
         new_cr_deps = ParseLocalDepsFile(self._new_cr_depsfile_android)
         changed_deps = CalculateChangedDeps(webrtc_deps, new_cr_deps)
-        self.assertEquals(len(changed_deps), 1)
-        self.assertEquals(
+        self.assertEqual(len(changed_deps), 1)
+        self.assertEqual(
             changed_deps[0].path,
             'src/third_party/android_deps/libs/android_arch_core_common')
-        self.assertEquals(
+        self.assertEqual(
             changed_deps[0].package,
             'chromium/third_party/android_deps/libs/android_arch_core_common')
-        self.assertEquals(changed_deps[0].current_version, 'version:0.9.0')
-        self.assertEquals(changed_deps[0].new_version, 'version:1.0.0-cr0')
+        self.assertEqual(changed_deps[0].current_version, 'version:0.9.0')
+        self.assertEqual(changed_deps[0].new_version, 'version:1.0.0-cr0')
 
     def testFindAddedDeps(self):
         webrtc_deps = ParseLocalDepsFile(self._webrtc_depsfile_android)
         new_cr_deps = ParseLocalDepsFile(self._new_cr_depsfile_android)
         added_android_paths, other_paths = FindAddedDeps(
             webrtc_deps, new_cr_deps)
-        self.assertEquals(added_android_paths, [
+        self.assertEqual(added_android_paths, [
             'src/third_party/android_deps/libs/android_arch_lifecycle_common'
         ])
-        self.assertEquals(other_paths, [])
+        self.assertEqual(other_paths, [])
 
     def testFindRemovedDeps(self):
         webrtc_deps = ParseLocalDepsFile(self._webrtc_depsfile_android)
         new_cr_deps = ParseLocalDepsFile(self._new_cr_depsfile_android)
         removed_android_paths, other_paths = FindRemovedDeps(
             webrtc_deps, new_cr_deps)
-        self.assertEquals(removed_android_paths, [
+        self.assertEqual(removed_android_paths, [
             'src/third_party/android_deps/libs/android_arch_lifecycle_runtime'
         ])
-        self.assertEquals(other_paths, [])
+        self.assertEqual(other_paths, [])
 
     def testMissingDepsIsDetected(self):
-        """Check an error is reported when deps cannot be automatically removed."""
+        """Check error is reported when deps cannot be automatically removed."""
         # The situation at test is the following:
         #   * A WebRTC DEPS entry is missing from Chromium.
         #   * The dependency isn't an android_deps (those are supported).
         webrtc_deps = ParseLocalDepsFile(self._webrtc_depsfile)
         new_cr_deps = ParseLocalDepsFile(self._new_cr_depsfile_android)
         _, other_paths = FindRemovedDeps(webrtc_deps, new_cr_deps)
-        self.assertEquals(
+        self.assertEqual(
             other_paths,
             ['src/buildtools/linux64', 'src/third_party/depot_tools'])
 
@@ -320,13 +328,13 @@ class TestRollChromiumRevision(unittest.TestCase):
 
 class TestChooseCQMode(unittest.TestCase):
     def testSkip(self):
-        self.assertEquals(ChooseCQMode(True, 99, 500000, 500100), 0)
+        self.assertEqual(ChooseCQMode(True, 99, 500000, 500100), 0)
 
     def testDryRun(self):
-        self.assertEquals(ChooseCQMode(False, 101, 500000, 500100), 1)
+        self.assertEqual(ChooseCQMode(False, 101, 500000, 500100), 1)
 
     def testSubmit(self):
-        self.assertEquals(ChooseCQMode(False, 100, 500000, 500100), 2)
+        self.assertEqual(ChooseCQMode(False, 100, 500000, 500100), 2)
 
 
 def _SetupGitLsRemoteCall(cmd_fake, url, revision):
