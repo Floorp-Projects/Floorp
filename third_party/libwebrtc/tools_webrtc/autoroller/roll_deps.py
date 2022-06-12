@@ -641,11 +641,9 @@ def _UploadCL(commit_queue_mode):
     cmd = ['git', 'cl', 'upload', '--force', '--bypass-hooks']
     if commit_queue_mode >= 2:
         logging.info('Sending the CL to the CQ...')
-        # Sets Commit-Queue+2.
-        cmd.extend(['--use-commit-queue'])
-        cmd.extend(['--send-mail', '--cc', NOTIFY_EMAIL])
-        # Sets Bot-Commit+1.
         cmd.extend(['-o', 'label=Bot-Commit+1'])
+        cmd.extend(['-o', 'label=Commit-Queue+2'])
+        cmd.extend(['--send-mail', '--cc', NOTIFY_EMAIL])
     elif commit_queue_mode >= 1:
         logging.info('Starting CQ dry run...')
         cmd.extend(['--cq-dry-run'])
