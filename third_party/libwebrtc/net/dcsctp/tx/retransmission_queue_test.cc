@@ -354,7 +354,7 @@ TEST_F(RetransmissionQueueTest, LimitedRetransmissionOnlyWithRfc3758Support) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "BE"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -384,7 +384,7 @@ TEST_F(RetransmissionQueueTest, LimitsRetransmissionsAsUdp) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "BE"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -426,7 +426,7 @@ TEST_F(RetransmissionQueueTest, LimitsRetransmissionsToThreeSends) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "BE"));
-        dts.max_retransmissions = 3;
+        dts.max_retransmissions = MaxRetransmits(3);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -517,17 +517,17 @@ TEST_F(RetransmissionQueueTest, ProducesValidForwardTsn) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({5, 6, 7, 8}, ""));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({9, 10, 11, 12}, ""));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -572,17 +572,17 @@ TEST_F(RetransmissionQueueTest, ProducesValidForwardTsnWhenFullySent) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({5, 6, 7, 8}, ""));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({9, 10, 11, 12}, "E"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -627,28 +627,28 @@ TEST_F(RetransmissionQueueTest, ProducesValidIForwardTsn) {
         DataGeneratorOptions opts;
         opts.stream_id = StreamID(1);
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B", opts));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         DataGeneratorOptions opts;
         opts.stream_id = StreamID(2);
         SendQueue::DataToSend dts(gen_.Unordered({1, 2, 3, 4}, "B", opts));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         DataGeneratorOptions opts;
         opts.stream_id = StreamID(3);
         SendQueue::DataToSend dts(gen_.Ordered({9, 10, 11, 12}, "B", opts));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         DataGeneratorOptions opts;
         opts.stream_id = StreamID(4);
         SendQueue::DataToSend dts(gen_.Ordered({13, 14, 15, 16}, "B", opts));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -742,7 +742,7 @@ TEST_F(RetransmissionQueueTest, MeasureRTT) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -907,17 +907,17 @@ TEST_F(RetransmissionQueueTest, AccountsNackedAbandonedChunksAsNotOutstanding) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "B"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({5, 6, 7, 8}, ""));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({9, 10, 11, 12}, ""));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillRepeatedly([](TimeMs, size_t) { return absl::nullopt; });
@@ -1006,7 +1006,7 @@ TEST_F(RetransmissionQueueTest, LimitsRetransmissionsOnlyWhenNackedThreeTimes) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "BE"));
-        dts.max_retransmissions = 0;
+        dts.max_retransmissions = MaxRetransmits(0);
         return dts;
       })
       .WillOnce(CreateChunk())
@@ -1077,7 +1077,7 @@ TEST_F(RetransmissionQueueTest, AbandonsRtxLimit2WhenNackedNineTimes) {
   EXPECT_CALL(producer_, Produce)
       .WillOnce([this](TimeMs, size_t) {
         SendQueue::DataToSend dts(gen_.Ordered({1, 2, 3, 4}, "BE"));
-        dts.max_retransmissions = 2;
+        dts.max_retransmissions = MaxRetransmits(2);
         return dts;
       })
       .WillOnce(CreateChunk())

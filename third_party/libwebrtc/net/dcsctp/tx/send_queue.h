@@ -32,8 +32,8 @@ class SendQueue {
     Data data;
 
     // Partial reliability - RFC3758
-    absl::optional<int> max_retransmissions;
-    absl::optional<TimeMs> expires_at;
+    MaxRetransmits max_retransmissions = MaxRetransmits::NoLimit();
+    TimeMs expires_at = TimeMs::InfiniteFuture();
   };
 
   virtual ~SendQueue() = default;
