@@ -440,8 +440,11 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
 
       absl::optional<UnwrappedTSN> tsn = outstanding_data_.Insert(
           chunk_opt->data,
-          partial_reliability_ ? chunk_opt->max_retransmissions : absl::nullopt,
-          now, partial_reliability_ ? chunk_opt->expires_at : absl::nullopt);
+          partial_reliability_ ? chunk_opt->max_retransmissions
+                               : MaxRetransmits::NoLimit(),
+          now,
+          partial_reliability_ ? chunk_opt->expires_at
+                               : TimeMs::InfiniteFuture());
 
       if (tsn.has_value()) {
         to_be_sent.emplace_back(tsn->Wrap(), std::move(chunk_opt->data));

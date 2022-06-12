@@ -124,7 +124,7 @@ class RRSendQueue : public SendQueue {
 
     // Enqueues a message to this stream.
     void Add(DcSctpMessage message,
-             absl::optional<TimeMs> expires_at,
+             TimeMs expires_at,
              const SendOptions& send_options);
 
     // Possibly produces a data chunk to send.
@@ -161,7 +161,7 @@ class RRSendQueue : public SendQueue {
     // An enqueued message and metadata.
     struct Item {
       explicit Item(DcSctpMessage msg,
-                    absl::optional<TimeMs> expires_at,
+                    TimeMs expires_at,
                     const SendOptions& send_options)
           : message(std::move(msg)),
             expires_at(expires_at),
@@ -169,7 +169,7 @@ class RRSendQueue : public SendQueue {
             remaining_offset(0),
             remaining_size(message.payload().size()) {}
       DcSctpMessage message;
-      absl::optional<TimeMs> expires_at;
+      TimeMs expires_at;
       SendOptions send_options;
       // The remaining payload (offset and size) to be sent, when it has been
       // fragmented.

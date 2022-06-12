@@ -15,13 +15,15 @@
 #include <vector>
 
 #include "net/dcsctp/common/math.h"
+#include "net/dcsctp/common/sequence_numbers.h"
+#include "net/dcsctp/public/types.h"
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
 
 // The number of times a packet must be NACKed before it's retransmitted.
 // See https://tools.ietf.org/html/rfc4960#section-7.2.4
-constexpr size_t kNumberOfNacksForRetransmission = 3;
+constexpr uint8_t kNumberOfNacksForRetransmission = 3;
 
 // Returns how large a chunk will be, serialized, carrying the data
 size_t OutstandingData::GetSerializedChunkSize(const Data& data) const {
@@ -40,8 +42,7 @@ OutstandingData::Item::NackAction OutstandingData::Item::Nack(
   if ((retransmit_now || nack_count_ >= kNumberOfNacksForRetransmission) &&
       !is_abandoned_) {
     // Nacked enough times - it's considered lost.
-    if (!max_retransmissions_.has_value() ||
-        num_retransmissions_ < max_retransmissions_) {
+    if (num_retransmissions_ < *max_retransmissions_) {
       should_be_retransmitted_ = true;
       return NackAction::kRetransmit;
     }
@@ -65,7 +66,7 @@ void OutstandingData::Item::Abandon() {
 }
 
 bool OutstandingData::Item::has_expired(TimeMs now) const {
-  return expires_at_.has_value() && *expires_at_ <= now;
+  return expires_at_ <= now;
 }
 
 bool OutstandingData::IsConsistent() const {
@@ -251,8 +252,9 @@ void OutstandingData::AbandonAllFor(const Item& item) {
                      Data::IsEnd(true), item.data().is_unordered);
     Item& added_item =
         outstanding_data_
-            .emplace(tsn, Item(std::move(message_end), absl::nullopt, TimeMs(0),
-                               absl::nullopt))
+            .emplace(tsn,
+                     Item(std::move(message_end), MaxRetransmits::NoLimit(),
+                          TimeMs(0), TimeMs::InfiniteFuture()))
             .first->second;
     // The added chunk shouldn't be included in `outstanding_bytes`, so set it
     // as acked.
@@ -345,9 +347,9 @@ UnwrappedTSN OutstandingData::highest_outstanding_tsn() const {
 
 absl::optional<UnwrappedTSN> OutstandingData::Insert(
     const Data& data,
-    absl::optional<size_t> max_retransmissions,
+    MaxRetransmits max_retransmissions,
     TimeMs time_sent,
-    absl::optional<TimeMs> expires_at) {
+    TimeMs expires_at) {
   UnwrappedTSN tsn = next_tsn_;
   next_tsn_.Increment();
 

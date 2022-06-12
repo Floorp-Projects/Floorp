@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <limits>
 #include <map>
 #include <utility>
 #include <vector>
@@ -49,7 +50,7 @@ bool RRSendQueue::OutgoingStream::HasDataToSend(TimeMs now) {
     }
 
     // Message has expired. Remove it and inspect the next one.
-    if (item.expires_at.has_value() && *item.expires_at <= now) {
+    if (item.expires_at <= now) {
       buffered_amount_.Decrease(item.remaining_size);
       total_buffered_amount_.Decrease(item.remaining_size);
       items_.pop_front();
@@ -125,7 +126,7 @@ void RRSendQueue::ThresholdWatcher::SetLowThreshold(size_t low_threshold) {
 }
 
 void RRSendQueue::OutgoingStream::Add(DcSctpMessage message,
-                                      absl::optional<TimeMs> expires_at,
+                                      TimeMs expires_at,
                                       const SendOptions& send_options) {
   buffered_amount_.Increase(message.payload().size());
   total_buffered_amount_.Increase(message.payload().size());
@@ -186,7 +187,14 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
                                    item->message_id.value(), fsn, ppid,
                                    std::move(payload), is_beginning, is_end,
                                    item->send_options.unordered));
-  chunk.max_retransmissions = item->send_options.max_retransmissions;
+  if (item->send_options.max_retransmissions.has_value() &&
+      *item->send_options.max_retransmissions >=
+          std::numeric_limits<MaxRetransmits::UnderlyingType>::min() &&
+      *item->send_options.max_retransmissions <=
+          std::numeric_limits<MaxRetransmits::UnderlyingType>::max()) {
+    chunk.max_retransmissions =
+        MaxRetransmits(*item->send_options.max_retransmissions);
+  }
   chunk.expires_at = item->expires_at;
 
   if (is_end) {
@@ -278,7 +286,7 @@ void RRSendQueue::Add(TimeMs now,
   RTC_DCHECK(!message.payload().empty());
   // Any limited lifetime should start counting from now - when the message
   // has been added to the queue.
-  absl::optional<TimeMs> expires_at = absl::nullopt;
+  TimeMs expires_at = TimeMs::InfiniteFuture();
   if (send_options.lifetime.has_value()) {
     // `expires_at` is the time when it expires. Which is slightly larger than
     // the message's lifetime, as the message is alive during its entire
