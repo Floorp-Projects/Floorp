@@ -676,6 +676,40 @@ std::set<StatsKey> DefaultVideoQualityAnalyzer::GetKnownVideoStreams() const {
   return out;
 }
 
+VideoStreamsInfo DefaultVideoQualityAnalyzer::GetKnownStreams() const {
+  MutexLock lock(&mutex_);
+  std::map<std::string, std::string> stream_to_sender;
+  std::map<std::string, std::set<std::string>> sender_to_streams;
+  std::map<std::string, std::set<std::string>> stream_to_receivers;
+
+  for (auto& item : frames_comparator_.stream_stats()) {
+    const std::string& stream_label = streams_.name(item.first.stream);
+    const std::string& sender = peers_->name(item.first.sender);
+    const std::string& receiver = peers_->name(item.first.receiver);
+    RTC_LOG(LS_INFO) << item.first.ToString() << " ==> "
+                     << "stream=" << stream_label << "; sender=" << sender
+                     << "; receiver=" << receiver;
+    stream_to_sender.emplace(stream_label, sender);
+    auto streams_it = sender_to_streams.find(sender);
+    if (streams_it != sender_to_streams.end()) {
+      streams_it->second.emplace(stream_label);
+    } else {
+      sender_to_streams.emplace(sender, std::set<std::string>{stream_label});
+    }
+    auto receivers_it = stream_to_receivers.find(stream_label);
+    if (receivers_it != stream_to_receivers.end()) {
+      receivers_it->second.emplace(receiver);
+    } else {
+      stream_to_receivers.emplace(stream_label,
+                                  std::set<std::string>{receiver});
+    }
+  }
+
+  return VideoStreamsInfo(std::move(stream_to_sender),
+                          std::move(sender_to_streams),
+                          std::move(stream_to_receivers));
+}
+
 const FrameCounters& DefaultVideoQualityAnalyzer::GetGlobalCounters() const {
   MutexLock lock(&mutex_);
   return frame_counters_;
@@ -710,8 +744,8 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
 
   MutexLock lock(&mutex_);
   for (auto& item : frames_comparator_.stream_stats()) {
-    ReportResults(GetTestCaseName(StatsKeyToMetricName(ToStatsKey(item.first))),
-                  item.second, stream_frame_counters_.at(item.first));
+    ReportResults(GetTestCaseName(ToMetricName(item.first)), item.second,
+                  stream_frame_counters_.at(item.first));
   }
   test::PrintResult("cpu_usage", "", test_label_.c_str(), GetCpuUsagePercent(),
                     "%", false, ImproveDirection::kSmallerIsBetter);
@@ -855,16 +889,19 @@ Timestamp DefaultVideoQualityAnalyzer::Now() {
 
 StatsKey DefaultVideoQualityAnalyzer::ToStatsKey(
     const InternalStatsKey& key) const {
-  return StatsKey(streams_.name(key.stream), peers_->name(key.sender),
-                  peers_->name(key.receiver));
+  return StatsKey(streams_.name(key.stream), peers_->name(key.receiver));
 }
 
-std::string DefaultVideoQualityAnalyzer::StatsKeyToMetricName(
-    const StatsKey& key) const {
+std::string DefaultVideoQualityAnalyzer::ToMetricName(
+    const InternalStatsKey& key) const {
+  const std::string& stream_label = streams_.name(key.stream);
   if (peers_->size() <= 2 && key.sender != key.receiver) {
-    return key.stream_label;
+    return stream_label;
   }
-  return key.ToString();
+  rtc::StringBuilder out;
+  out << stream_label << "_" << peers_->name(key.sender) << "_"
+      << peers_->name(key.receiver);
+  return out.str();
 }
 
 double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {

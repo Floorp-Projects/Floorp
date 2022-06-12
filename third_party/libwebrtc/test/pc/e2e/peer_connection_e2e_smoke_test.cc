@@ -93,7 +93,8 @@ class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
     fixture_->Run(run_params);
 
     EXPECT_GE(fixture_->GetRealTestDuration(), run_params.run_duration);
-    for (auto stream_key : video_quality_analyzer_->GetKnownVideoStreams()) {
+    VideoStreamsInfo known_streams = video_quality_analyzer_->GetKnownStreams();
+    for (const StatsKey& stream_key : known_streams.GetStatsKeys()) {
       FrameCounters stream_conters =
           video_quality_analyzer_->GetPerStreamCounters().at(stream_key);
       // On some devices the pipeline can be too slow, so we actually can't

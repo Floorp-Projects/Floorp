@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -156,17 +157,19 @@ struct AnalyzerStats {
 };
 
 struct StatsKey {
-  StatsKey(std::string stream_label, std::string sender, std::string receiver)
-      : stream_label(std::move(stream_label)),
-        sender(std::move(sender)),
-        receiver(std::move(receiver)) {}
+  // Keep this constructor for temporary backward compatibility.
+  StatsKey(std::string stream_label,
+           std::string /*sender*/,
+           std::string receiver)
+      : stream_label(std::move(stream_label)), receiver(std::move(receiver)) {}
+
+  StatsKey(std::string stream_label, std::string receiver)
+      : stream_label(std::move(stream_label)), receiver(std::move(receiver)) {}
 
   std::string ToString() const;
 
   // Label of video stream to which stats belongs to.
   std::string stream_label;
-  // Name of the peer which send this stream.
-  std::string sender;
   // Name of the peer on which stream was received.
   std::string receiver;
 };
@@ -174,6 +177,42 @@ struct StatsKey {
 // Required to use StatsKey as std::map key.
 bool operator<(const StatsKey& a, const StatsKey& b);
 bool operator==(const StatsKey& a, const StatsKey& b);
+
+// Contains all metadata related to the video streams that were seen by the
+// video analyzer.
+class VideoStreamsInfo {
+ public:
+  std::set<StatsKey> GetStatsKeys() const;
+
+  // Returns all stream labels that are known to the video analyzer.
+  std::set<std::string> GetStreams() const;
+
+  // Returns set of the stream for specified `sender_name`. If sender didn't
+  // send any streams or `sender_name` isn't known to the video analyzer
+  // empty set will be returned.
+  std::set<std::string> GetStreams(absl::string_view sender_name) const;
+
+  // Returns sender name for specified `stream_label`. Returns `absl::nullopt`
+  // if provided `stream_label` isn't known to the video analyzer.
+  absl::optional<std::string> GetSender(absl::string_view stream_label) const;
+
+  // Returns set of the receivers for specified `stream_label`. If stream wasn't
+  // received by any peer or `stream_label` isn't known to the video analyzer
+  // empty set will be returned.
+  std::set<std::string> GetReceivers(absl::string_view stream_label) const;
+
+ protected:
+  friend class DefaultVideoQualityAnalyzer;
+  VideoStreamsInfo(
+      std::map<std::string, std::string> stream_to_sender,
+      std::map<std::string, std::set<std::string>> sender_to_streams,
+      std::map<std::string, std::set<std::string>> stream_to_receivers);
+
+ private:
+  std::map<std::string, std::string> stream_to_sender_;
+  std::map<std::string, std::set<std::string>> sender_to_streams_;
+  std::map<std::string, std::set<std::string>> stream_to_receivers_;
+};
 
 struct DefaultVideoQualityAnalyzerOptions {
   // Tells DefaultVideoQualityAnalyzer if heavy metrics like PSNR and SSIM have
