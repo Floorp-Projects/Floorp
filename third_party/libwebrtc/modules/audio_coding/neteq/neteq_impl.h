@@ -399,22 +399,6 @@ class NetEqImpl : public webrtc::NetEq {
   ExpandUmaLogger speech_expand_uma_logger_ RTC_GUARDED_BY(mutex_);
   bool no_time_stretching_ RTC_GUARDED_BY(mutex_);  // Only used for test.
   rtc::BufferT<int16_t> concealment_audio_ RTC_GUARDED_BY(mutex_);
-  // Data members used for adding extra delay to the output of NetEq.
-  // The delay in ms (which is 10 times the number of elements in
-  // output_delay_chain_).
-  const int output_delay_chain_ms_ RTC_GUARDED_BY(mutex_);
-  // Vector of AudioFrames which contains the delayed audio. Accessed as a
-  // circular buffer.
-  std::vector<AudioFrame> output_delay_chain_ RTC_GUARDED_BY(mutex_);
-  // Index into output_delay_chain_.
-  size_t output_delay_chain_ix_ RTC_GUARDED_BY(mutex_) = 0;
-  // Did output_delay_chain_ get populated yet?
-  bool output_delay_chain_empty_ RTC_GUARDED_BY(mutex_) = true;
-  // Contains the sample rate of the AudioFrame last emitted from the delay
-  // chain. If the extra output delay chain is not used, or if no audio has been
-  // emitted yet, the variable is empty.
-  absl::optional<int> delayed_last_output_sample_rate_hz_
-      RTC_GUARDED_BY(mutex_);
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(NetEqImpl);
