@@ -7,7 +7,6 @@
 #define COMPONENTS_JSINSPECTOR_H
 
 #include "nsIJSInspector.h"
-#include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "js/Value.h"
