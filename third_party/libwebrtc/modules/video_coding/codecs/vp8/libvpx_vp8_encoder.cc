@@ -205,7 +205,7 @@ void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
       break;
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
 }
 
@@ -1357,7 +1357,7 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
       MaybeUpdatePixelFormat(VPX_IMG_FMT_NV12);
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
 
   // Prepare `raw_images_` from `mapped_buffer` and, if simulcast, scaled
@@ -1399,10 +1399,11 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
                         << " instead of "
                         << VideoFrameBufferTypeToString(mapped_buffer->type())
                         << ". Can't encode frame.";
-      RTC_NOTREACHED() << "Scaled buffer type "
-                       << VideoFrameBufferTypeToString(scaled_buffer->type())
-                       << " is not compatible with mapped buffer type "
-                       << VideoFrameBufferTypeToString(mapped_buffer->type());
+      RTC_DCHECK_NOTREACHED()
+          << "Scaled buffer type "
+          << VideoFrameBufferTypeToString(scaled_buffer->type())
+          << " is not compatible with mapped buffer type "
+          << VideoFrameBufferTypeToString(mapped_buffer->type());
       return {};
     }
     SetRawImagePlanes(&raw_images_[i], scaled_buffer);

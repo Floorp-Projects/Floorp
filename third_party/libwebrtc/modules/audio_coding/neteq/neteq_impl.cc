@@ -221,7 +221,7 @@ void SetAudioFrameActivityAndType(bool vad_enabled,
       break;
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   if (!vad_enabled) {
     // Always set kVadUnknown when receive VAD is inactive.
@@ -894,7 +894,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
     }
     case Operation::kUndefined: {
       RTC_LOG(LS_ERROR) << "Invalid operation kUndefined.";
-      RTC_NOTREACHED();  // This should not happen.
+      RTC_DCHECK_NOTREACHED();  // This should not happen.
       last_mode_ = Mode::kError;
       return kInvalidOperation;
     }
@@ -1057,7 +1057,7 @@ int NetEqImpl::GetDecision(Operation* operation,
       // Don't use this packet, discard it.
       if (packet_buffer_->DiscardNextPacket(stats_.get()) !=
           PacketBuffer::kOK) {
-        RTC_NOTREACHED();  // Must be ok by design.
+        RTC_DCHECK_NOTREACHED();  // Must be ok by design.
       }
       // Check buffer again.
       if (!new_codec_) {
@@ -1877,7 +1877,7 @@ int NetEqImpl::DoDtmf(const DtmfEvent& dtmf_event, bool* play_dtmf) {
   //    // it must be copied to the speech buffer.
   //    // TODO(hlundin): This code seems incorrect. (Legacy.) Write test and
   //    // verify correct operation.
-  //    RTC_NOTREACHED();
+  //    RTC_DCHECK_NOTREACHED();
   //    // Must generate enough data to replace all of the `sync_buffer_`
   //    // "future".
   //    int required_length = sync_buffer_->FutureLength();
@@ -1967,7 +1967,8 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
     next_packet = nullptr;
     if (!packet) {
       RTC_LOG(LS_ERROR) << "Should always be able to extract a packet here";
-      RTC_NOTREACHED();  // Should always be able to extract a packet here.
+      RTC_DCHECK_NOTREACHED();  // Should always be able to extract a packet
+                                // here.
       return -1;
     }
     const uint64_t waiting_time_ms = packet->waiting_time->ElapsedMs();
@@ -2001,7 +2002,7 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
     } else if (!has_cng_packet) {
       RTC_LOG(LS_WARNING) << "Unknown payload type "
                           << static_cast<int>(packet->payload_type);
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
 
     if (packet_duration == 0) {

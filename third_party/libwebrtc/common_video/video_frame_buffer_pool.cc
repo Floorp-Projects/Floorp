@@ -31,7 +31,7 @@ bool HasOneRef(const rtc::scoped_refptr<VideoFrameBuffer>& buffer) {
           ->HasOneRef();
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   return false;
 }

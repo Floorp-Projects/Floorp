@@ -130,7 +130,7 @@ class LambdaCreateSessionDescriptionObserver
     on_success_(absl::WrapUnique(desc));
   }
   void OnFailure(RTCError error) override {
-    RTC_NOTREACHED() << error.message();
+    RTC_DCHECK_NOTREACHED() << error.message();
   }
 
  private:

@@ -116,7 +116,7 @@ ThreadManager* ThreadManager::Instance() {
 
 ThreadManager::~ThreadManager() {
   // By above RTC_DEFINE_STATIC_LOCAL.
-  RTC_NOTREACHED() << "ThreadManager should never be destructed.";
+  RTC_DCHECK_NOTREACHED() << "ThreadManager should never be destructed.";
 }
 
 // static

@@ -54,7 +54,7 @@ class AudioPacketizationCallback {
                            uint32_t timestamp,
                            const uint8_t* payload_data,
                            size_t payload_len_bytes) {
-    RTC_NOTREACHED() << "This method must be overridden, or not used.";
+    RTC_DCHECK_NOTREACHED() << "This method must be overridden, or not used.";
     return -1;
   }
 };

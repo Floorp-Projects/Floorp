@@ -82,7 +82,7 @@ class ExecuteFunctionOnCreateSessionDescriptionObserver
     function_(desc);
   }
 
-  void OnFailure(RTCError error) override { RTC_NOTREACHED(); }
+  void OnFailure(RTCError error) override { RTC_DCHECK_NOTREACHED(); }
 
  private:
   bool was_called_ = false;
@@ -273,9 +273,10 @@ class PeerConnectionSignalingStateTest
         break;
       }
       case SignalingState::kClosed: {
-        RTC_NOTREACHED() << "Set the second member of the tuple to true to "
-                            "achieve a closed state from an existing, valid "
-                            "state.";
+        RTC_DCHECK_NOTREACHED()
+            << "Set the second member of the tuple to true to "
+               "achieve a closed state from an existing, valid "
+               "state.";
       }
     }
 

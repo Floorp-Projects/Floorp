@@ -117,7 +117,7 @@ rtc::scoped_refptr<I010Buffer> I010Buffer::Rotate(
       switch (rotation) {
         // This case is covered by the early return.
         case webrtc::kVideoRotation_0:
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
           break;
         case webrtc::kVideoRotation_90:
           dest_x = src.height() - y - 1;

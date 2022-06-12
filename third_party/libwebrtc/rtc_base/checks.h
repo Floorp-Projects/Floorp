@@ -444,6 +444,8 @@ RTC_NORETURN RTC_EXPORT void UnreachableCodeReached();
 #endif
 
 #define RTC_UNREACHABLE_CODE_HIT false
+#define RTC_DCHECK_NOTREACHED() RTC_DCHECK(RTC_UNREACHABLE_CODE_HIT)
+// Deprecated. Use RTC_DCHECK_NOTREACHED instead
 #define RTC_NOTREACHED() RTC_DCHECK(RTC_UNREACHABLE_CODE_HIT)
 
 // Kills the process with an error message. Never returns. Use when you wish to

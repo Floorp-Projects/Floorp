@@ -566,7 +566,7 @@ int Win32Socket::TranslateOption(Option opt, int* slevel, int* sopt) {
       RTC_LOG(LS_WARNING) << "Socket::OPT_DSCP not supported.";
       return -1;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return -1;
   }
   return 0;

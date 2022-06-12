@@ -203,7 +203,7 @@ class AudioTrackSinkInterface {
                       int sample_rate,
                       size_t number_of_channels,
                       size_t number_of_frames) {
-    RTC_NOTREACHED() << "This method must be overridden, or not used.";
+    RTC_DCHECK_NOTREACHED() << "This method must be overridden, or not used.";
   }
 
   // In this method, `absolute_capture_timestamp_ms`, when available, is

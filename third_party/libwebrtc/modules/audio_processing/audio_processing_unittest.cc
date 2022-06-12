@@ -105,7 +105,7 @@ size_t TotalChannelsFromLayout(AudioProcessing::ChannelLayout layout) {
     case AudioProcessing::kStereoAndKeyboard:
       return 3;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
@@ -272,7 +272,7 @@ std::string OutputFilePath(const std::string& name,
   } else if (num_output_channels == 2) {
     ss << "stereo";
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
   ss << output_rate / 1000;
   if (num_reverse_output_channels == 1) {
@@ -280,7 +280,7 @@ std::string OutputFilePath(const std::string& name,
   } else if (num_reverse_output_channels == 2) {
     ss << "_rstereo";
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
   ss << reverse_output_rate / 1000;
   ss << "_d" << file_direction << "_pcm";

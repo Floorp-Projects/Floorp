@@ -93,7 +93,7 @@ class PacketBuilder {
         return kVideoCodecGeneric;
       }
     }
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return absl::nullopt;
   }
 

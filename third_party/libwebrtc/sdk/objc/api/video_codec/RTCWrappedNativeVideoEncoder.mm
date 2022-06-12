@@ -33,54 +33,54 @@
 #pragma mark - RTC_OBJC_TYPE(RTCVideoEncoder)
 
 - (void)setCallback:(RTCVideoEncoderCallback)callback {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 - (NSInteger)startEncodeWithSettings:(RTC_OBJC_TYPE(RTCVideoEncoderSettings) *)settings
                        numberOfCores:(int)numberOfCores {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 - (NSInteger)releaseEncoder {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 - (NSInteger)encode:(RTC_OBJC_TYPE(RTCVideoFrame) *)frame
     codecSpecificInfo:(nullable id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)>)info
            frameTypes:(NSArray<NSNumber *> *)frameTypes {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 - (int)setBitrate:(uint32_t)bitrateKbit framerate:(uint32_t)framerate {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 - (NSString *)implementationName {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nil;
 }
 
 - (nullable RTC_OBJC_TYPE(RTCVideoEncoderQpThresholds) *)scalingSettings {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nil;
 }
 
 - (NSInteger)resolutionAlignment {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 1;
 }
 
 - (BOOL)applyAlignmentToAllSimulcastLayers {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return NO;
 }
 
 - (BOOL)supportsNativeHandle {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return NO;
 }
 @end

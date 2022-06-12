@@ -102,7 +102,7 @@ std::unique_ptr<H264Encoder> H264Encoder::Create(
   RTC_LOG(LS_INFO) << "Creating H264EncoderImpl.";
   return std::make_unique<H264EncoderImpl>(codec);
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }
@@ -127,7 +127,7 @@ std::unique_ptr<H264Decoder> H264Decoder::Create() {
   RTC_LOG(LS_INFO) << "Creating H264DecoderImpl.";
   return std::make_unique<H264DecoderImpl>();
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }

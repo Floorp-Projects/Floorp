@@ -82,7 +82,7 @@ void RtpRtcpEndToEndTest::RespectsRtcpMode(RtcpMode rtcp_mode) {
             observation_complete_.Set();
           break;
         case RtcpMode::kOff:
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
           break;
       }
 

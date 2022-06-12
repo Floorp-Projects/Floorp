@@ -742,8 +742,8 @@ absl::optional<int32_t> RTCPSender::ComputeCompoundRTCPPacket(
     }
     auto builder_it = builders_.find(rtcp_packet_type);
     if (builder_it == builders_.end()) {
-      RTC_NOTREACHED() << "Could not find builder for packet type "
-                       << rtcp_packet_type;
+      RTC_DCHECK_NOTREACHED()
+          << "Could not find builder for packet type " << rtcp_packet_type;
     } else {
       BuilderFunc func = builder_it->second;
       (this->*func)(context, sender);

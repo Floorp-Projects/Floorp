@@ -413,7 +413,7 @@ webrtc::FlexfecReceiveStream::Stats FakeFlexfecReceiveStream::GetStats() const {
 }
 
 void FakeFlexfecReceiveStream::OnRtpPacket(const webrtc::RtpPacketReceived&) {
-  RTC_NOTREACHED() << "Not implemented.";
+  RTC_DCHECK_NOTREACHED() << "Not implemented.";
 }
 
 FakeCall::FakeCall()

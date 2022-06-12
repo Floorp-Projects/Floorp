@@ -102,7 +102,7 @@ int TransientSuppressorImpl::Initialize(int sample_rate_hz,
   detector_.reset(new TransientDetector(detection_rate_hz));
   data_length_ = sample_rate_hz * ts::kChunkSizeMs / 1000;
   if (data_length_ > analysis_length_) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return -1;
   }
   buffer_delay_ = analysis_length_ - data_length_;

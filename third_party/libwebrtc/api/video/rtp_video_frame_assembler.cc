@@ -51,7 +51,7 @@ std::unique_ptr<VideoRtpDepacketizer> CreateDepacketizer(
     case RtpVideoFrameAssembler::kGeneric:
       return std::make_unique<VideoRtpDepacketizerGeneric>();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 }  // namespace

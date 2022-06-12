@@ -921,7 +921,7 @@ void ChannelReceive::SetDepacketizerToDecoderFrameTransformer(
   // Depending on when the channel is created, the transformer might be set
   // twice. Don't replace the delegate if it was already initialized.
   if (!frame_transformer || frame_transformer_delegate_) {
-    RTC_NOTREACHED() << "Not setting the transformer?";
+    RTC_DCHECK_NOTREACHED() << "Not setting the transformer?";
     return;
   }
 

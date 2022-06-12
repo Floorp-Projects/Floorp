@@ -109,11 +109,11 @@ uint64_t EventParser::ReadSingleValue(FieldType field_type) {
     case FieldType::kVarInt:
       return ReadVarInt();
     case FieldType::kString:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       SetError();
       return 0;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   SetError();
   return 0;
 }

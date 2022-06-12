@@ -131,7 +131,7 @@ struct GofInfoVP9 {
         pid_diff[7][1] = 2;
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
   }
 

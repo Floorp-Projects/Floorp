@@ -3009,7 +3009,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
       if (FAILED(hr)) {
         _TraceCOMError(hr);
         keepRecording = false;
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       }
 
@@ -3021,7 +3021,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
       if (FAILED(hr)) {
         _TraceCOMError(hr);
         keepRecording = false;
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       }
 
@@ -3046,7 +3046,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
       if (FAILED(hr)) {
         _TraceCOMError(hr);
         keepRecording = false;
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       }
 

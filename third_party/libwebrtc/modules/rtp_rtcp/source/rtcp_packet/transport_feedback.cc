@@ -484,7 +484,7 @@ bool TransportFeedback::Parse(const CommonHeader& packet) {
 
           return false;
         default:
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
           break;
       }
       ++seq_no;

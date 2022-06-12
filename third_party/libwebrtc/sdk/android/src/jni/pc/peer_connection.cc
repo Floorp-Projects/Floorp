@@ -117,7 +117,7 @@ SdpSemantics JavaToNativeSdpSemantics(JNIEnv* jni,
   if (enum_name == "UNIFIED_PLAN")
     return SdpSemantics::kUnifiedPlan;
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return SdpSemantics::kPlanB;
 }
 

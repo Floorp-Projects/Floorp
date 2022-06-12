@@ -37,7 +37,7 @@ class PlanarYuvBufferFactory {
       case VideoFrameBuffer::Type::kI010:
         return I010Buffer::Create(width, height);
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }
@@ -49,7 +49,7 @@ class PlanarYuvBufferFactory {
       case VideoFrameBuffer::Type::kI010:
         return I010Buffer::Copy(*src.GetI010());
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }
@@ -62,7 +62,7 @@ class PlanarYuvBufferFactory {
       case VideoFrameBuffer::Type::kI010:
         return I010Buffer::Rotate(*src.GetI010(), rotation);
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }
@@ -89,7 +89,7 @@ class PlanarYuvBufferFactory {
         return buffer;
       }
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }
@@ -123,7 +123,7 @@ class PlanarYuvBufferFactory {
         return buffer;
       }
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }
@@ -367,7 +367,7 @@ TEST_P(TestPlanarYuvBuffer, Copy) {
       break;
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
 
   rtc::scoped_refptr<PlanarYuvBuffer> buf2 =

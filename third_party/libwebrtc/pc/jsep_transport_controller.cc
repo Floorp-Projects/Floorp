@@ -1167,7 +1167,7 @@ void JsepTransportController::OnTransportCandidateGathered_n(
     const cricket::Candidate& candidate) {
   // We should never signal peer-reflexive candidates.
   if (candidate.type() == cricket::PRFLX_PORT_TYPE) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return;
   }
 
@@ -1311,7 +1311,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
     // "connected", "completed" or "closed" state.
     new_ice_connection_state = PeerConnectionInterface::kIceConnectionConnected;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   if (standardized_ice_connection_state_ != new_ice_connection_state) {
@@ -1369,7 +1369,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
     new_combined_state =
         PeerConnectionInterface::PeerConnectionState::kConnected;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   if (combined_connection_state_ != new_combined_state) {

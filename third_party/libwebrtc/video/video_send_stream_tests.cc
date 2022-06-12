@@ -3227,7 +3227,7 @@ class Vp9HeaderObserver : public test::SendTest {
         VerifyTemporalLayerStructure3(vp9);
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
   }
 
@@ -3945,7 +3945,7 @@ class ContentSwitchTest : public test::SendTest {
             state_ = StreamState::kAfterSwitchBack;
             break;
           case StreamState::kAfterSwitchBack:
-            RTC_NOTREACHED();
+            RTC_DCHECK_NOTREACHED();
             break;
         }
         content_switch_event_.Set();
@@ -4095,7 +4095,7 @@ void VideoSendStreamTest::TestTemporalLayers(
               &parsed_payload->video_header.video_type_header)) {
         parsed.temporal_idx = vp8_header->temporalIdx;
       } else {
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
       }
       return true;
     }

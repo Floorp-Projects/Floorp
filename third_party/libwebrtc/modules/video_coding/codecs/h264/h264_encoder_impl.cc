@@ -81,7 +81,7 @@ VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
     case videoFrameTypeInvalid:
       break;
   }
-  RTC_NOTREACHED() << "Unexpected/invalid frame type: " << type;
+  RTC_DCHECK_NOTREACHED() << "Unexpected/invalid frame type: " << type;
   return VideoFrameType::kEmptyFrame;
 }
 
@@ -537,7 +537,7 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   } else if (codec_.mode == VideoCodecMode::kScreensharing) {
     encoder_params.iUsageType = SCREEN_CONTENT_REAL_TIME;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
   encoder_params.iPicWidth = configurations_[i].width;
   encoder_params.iPicHeight = configurations_[i].height;

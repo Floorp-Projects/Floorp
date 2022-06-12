@@ -43,7 +43,7 @@ class VideoEncoderProxyFactory final : public VideoEncoderFactory {
 
   // Unused by tests.
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return {};
   }
 

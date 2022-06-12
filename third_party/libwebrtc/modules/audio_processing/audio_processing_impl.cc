@@ -61,7 +61,7 @@ static bool LayoutHasKeyboard(AudioProcessing::ChannelLayout layout) {
       return true;
   }
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return false;
 }
 
@@ -97,7 +97,7 @@ int SuitableProcessRate(int minimum_rate,
       return rate;
     }
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return uppermost_native_rate;
 }
 
@@ -702,12 +702,12 @@ bool AudioProcessingImpl::PostRuntimeSetting(RuntimeSetting setting) {
       return enqueueing_successful;
     }
     case RuntimeSetting::Type::kNotSpecified:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return true;
   }
   // The language allows the enum to have a non-enumerator
   // value. Check that this doesn't happen.
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return true;
 }
 
@@ -878,13 +878,13 @@ void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
         break;
       }
       case RuntimeSetting::Type::kPlayoutAudioDeviceChange:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       case RuntimeSetting::Type::kCustomRenderProcessingRuntimeSetting:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       case RuntimeSetting::Type::kNotSpecified:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
       case RuntimeSetting::Type::kCaptureOutputUsed:
         bool value;
@@ -928,7 +928,7 @@ void AudioProcessingImpl::HandleRenderRuntimeSettings() {
       case RuntimeSetting::Type::kCaptureFixedPostGain:    // fall-through
       case RuntimeSetting::Type::kCaptureOutputUsed:       // fall-through
       case RuntimeSetting::Type::kNotSpecified:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
     }
   }
@@ -1592,7 +1592,7 @@ bool AudioProcessingImpl::GetLinearAecOutput(
     return true;
   }
   RTC_LOG(LS_ERROR) << "No linear AEC output available";
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return false;
 }
 

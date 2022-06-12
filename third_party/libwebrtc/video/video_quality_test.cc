@@ -888,9 +888,9 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
         // aom_codec_enc_cfg_t::rc_resize_mode in Av1 encoder wrapper.
         // Until then do nothing, specially do not crash.
       } else {
-        RTC_NOTREACHED() << "Automatic scaling not supported for codec "
-                         << params_.video[video_idx].codec << ", stream "
-                         << video_idx;
+        RTC_DCHECK_NOTREACHED()
+            << "Automatic scaling not supported for codec "
+            << params_.video[video_idx].codec << ", stream " << video_idx;
       }
     } else {
       // Default mode. Single SL, no automatic_scaling,

@@ -56,7 +56,7 @@ class TestNackRequester : public ::testing::TestWithParam<bool>,
 
   bool WaitForSendNack() {
     if (timed_out_) {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return false;
     }
 

@@ -372,7 +372,7 @@ void VirtualSocket::OnMessage(Message* pmsg) {
     } else if (pmsg->message_id == MSG_ID_SIGNALREADEVENT) {
       signal_read_event = !recv_buffer_.empty();
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
   }
   // Signal events without holding `mutex_`, to avoid recursive locking, as well

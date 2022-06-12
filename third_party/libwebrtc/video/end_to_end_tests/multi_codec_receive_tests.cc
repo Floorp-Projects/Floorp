@@ -42,7 +42,7 @@ uint8_t PayloadNameToPayloadType(const std::string& payload_name) {
   } else if (payload_name == "H264") {
     return test::CallTest::kPayloadTypeH264;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return 0;
   }
 }
@@ -223,7 +223,7 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
         if (format.name == "H264") {
           return H264Encoder::Create(cricket::VideoCodec("H264"));
         }
-        RTC_NOTREACHED() << format.name;
+        RTC_DCHECK_NOTREACHED() << format.name;
         return nullptr;
       });
   test::FunctionVideoDecoderFactory decoder_factory(
@@ -237,7 +237,7 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
         if (format.name == "H264") {
           return H264Decoder::Create();
         }
-        RTC_NOTREACHED() << format.name;
+        RTC_DCHECK_NOTREACHED() << format.name;
         return nullptr;
       });
   // Create and start call.

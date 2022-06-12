@@ -54,7 +54,7 @@ std::string ParamsToString(const TestParamInfo<webrtc::TimeMode>& param) {
     case webrtc::TimeMode::kSimulated:
       return "SimulatedTime";
     default:
-      RTC_NOTREACHED() << "Time mode not supported";
+      RTC_DCHECK_NOTREACHED() << "Time mode not supported";
   }
 }
 

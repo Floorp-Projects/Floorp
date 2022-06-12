@@ -75,7 +75,7 @@ class YuvFileGenerator : public FrameGeneratorInterface {
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
  private:
@@ -104,7 +104,7 @@ class SlideGenerator : public FrameGeneratorInterface {
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
  private:
@@ -134,7 +134,7 @@ class ScrollingImageFrameGenerator : public FrameGeneratorInterface {
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
  private:

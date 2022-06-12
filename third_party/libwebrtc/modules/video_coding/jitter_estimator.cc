@@ -246,7 +246,7 @@ void VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
   hMh_sigma = deltaFSBytes * Mh[0] + Mh[1] + sigma;
   if ((hMh_sigma < 1e-9 && hMh_sigma >= 0) ||
       (hMh_sigma > -1e-9 && hMh_sigma <= 0)) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return;
   }
   kalmanGain[0] = Mh[0] / hMh_sigma;
@@ -301,7 +301,7 @@ void VCMJitterEstimator::EstimateRandomJitter(double d_dT,
   _lastUpdateT = now;
 
   if (_alphaCount == 0) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return;
   }
   double alpha =

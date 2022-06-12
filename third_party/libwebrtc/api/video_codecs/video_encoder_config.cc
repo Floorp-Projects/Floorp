@@ -97,23 +97,24 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
   } else if (codec->codecType == kVideoCodecVP9) {
     FillVideoCodecVp9(codec->VP9());
   } else {
-    RTC_NOTREACHED() << "Encoder specifics set/used for unknown codec type.";
+    RTC_DCHECK_NOTREACHED()
+        << "Encoder specifics set/used for unknown codec type.";
   }
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH264(
     VideoCodecH264* h264_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
     VideoCodecVP8* vp8_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
     VideoCodecVP9* vp9_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 VideoEncoderConfig::H264EncoderSpecificSettings::H264EncoderSpecificSettings(

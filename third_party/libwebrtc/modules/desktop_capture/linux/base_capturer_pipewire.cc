@@ -175,7 +175,7 @@ class Scoped {
  public:
   Scoped() {}
   explicit Scoped(T* val) { ptr_ = val; }
-  ~Scoped() { RTC_NOTREACHED(); }
+  ~Scoped() { RTC_DCHECK_NOTREACHED(); }
 
   T* operator->() { return ptr_; }
 

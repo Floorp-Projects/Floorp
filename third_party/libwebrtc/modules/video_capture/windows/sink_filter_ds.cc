@@ -58,7 +58,7 @@ class EnumPins : public IEnumPins {
   }
 
   STDMETHOD(Clone)(IEnumPins** pins) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return E_NOTIMPL;
   }
 
@@ -83,7 +83,7 @@ class EnumPins : public IEnumPins {
   }
 
   STDMETHOD(Skip)(ULONG count) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return E_NOTIMPL;
   }
 
@@ -274,7 +274,7 @@ class MediaTypesEnum : public IEnumMediaTypes {
 
   // IEnumMediaTypes
   STDMETHOD(Clone)(IEnumMediaTypes** pins) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return E_NOTIMPL;
   }
 
@@ -359,12 +359,12 @@ class MediaTypesEnum : public IEnumMediaTypes {
         media_type->subtype = MEDIASUBTYPE_MJPG;
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
   }
 
   STDMETHOD(Skip)(ULONG count) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return E_NOTIMPL;
   }
 
@@ -538,7 +538,7 @@ STDMETHODIMP CaptureInputPin::Connect(IPin* receive_pin,
     return VFW_E_NOT_STOPPED;
 
   if (receive_pin_) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return VFW_E_ALREADY_CONNECTED;
   }
 
@@ -564,7 +564,7 @@ STDMETHODIMP CaptureInputPin::ReceiveConnection(
   RTC_DCHECK(Filter()->IsStopped());
 
   if (receive_pin_) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return VFW_E_ALREADY_CONNECTED;
   }
 
