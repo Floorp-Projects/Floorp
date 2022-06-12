@@ -38,9 +38,9 @@ namespace webrtc {
 
 // This class implements a leaky-bucket packet pacing algorithm. It handles the
 // logic of determining which packets to send when, but the actual timing of
-// the processing is done externally (e.g. PacedSender). Furthermore, the
+// the processing is done externally (e.g. RtpPacketPacer). Furthermore, the
 // forwarding of packets when they are ready to be sent is also handled
-// externally, via the PacedSendingController::PacketSender interface.
+// externally, via the PacingController::PacketSender interface.
 //
 class PacingController {
  public:
