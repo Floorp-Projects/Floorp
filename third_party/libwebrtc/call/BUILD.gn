@@ -362,6 +362,7 @@ rtc_library("video_stream_api") {
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

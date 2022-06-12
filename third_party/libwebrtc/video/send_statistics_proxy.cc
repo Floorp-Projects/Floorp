@@ -737,7 +737,7 @@ VideoSendStream::Stats SendStatisticsProxy::GetStats() {
   MutexLock lock(&mutex_);
   PurgeOldStats();
   stats_.input_frame_rate =
-      round(uma_container_->input_frame_rate_tracker_.ComputeRate());
+      uma_container_->input_frame_rate_tracker_.ComputeRate();
   stats_.frames =
       uma_container_->input_frame_rate_tracker_.TotalSampleCount();
   stats_.content_type =

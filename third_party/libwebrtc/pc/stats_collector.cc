@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <cmath>
 #include <memory>
 #include <set>
 #include <utility>
@@ -385,7 +386,7 @@ void ExtractStats(const cricket::VideoSenderInfo& info,
        info.encode_usage_percent},
       {StatsReport::kStatsValueNameFirsReceived, info.firs_rcvd},
       {StatsReport::kStatsValueNameFrameHeightSent, info.send_frame_height},
-      {StatsReport::kStatsValueNameFrameRateInput, info.framerate_input},
+      {StatsReport::kStatsValueNameFrameRateInput, round(info.framerate_input)},
       {StatsReport::kStatsValueNameFrameRateSent, info.framerate_sent},
       {StatsReport::kStatsValueNameFrameWidthSent, info.send_frame_width},
       {StatsReport::kStatsValueNameNacksReceived, info.nacks_rcvd},

@@ -649,7 +649,7 @@ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
   RTCStatsMember<uint32_t> width;
   RTCStatsMember<uint32_t> height;
   RTCStatsMember<uint32_t> frames;
-  RTCStatsMember<uint32_t> frames_per_second;
+  RTCStatsMember<double> frames_per_second;
 };
 
 // https://w3c.github.io/webrtc-stats/#transportstats-dict*
