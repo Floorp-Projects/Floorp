@@ -850,9 +850,6 @@ impl BatchBuilder {
             }
         };
 
-        #[cfg(debug_assertions)] //TODO: why is this needed?
-        debug_assert_eq!(prim_instance.prepared_frame_id, render_tasks.frame_id());
-
         let transform_id = transforms
             .get_id(
                 prim_spatial_node_index,

@@ -25,12 +25,8 @@ use crate::render_task_graph::RenderTaskId;
 use crate::resource_cache::ImageProperties;
 use crate::scene::SceneProperties;
 use std::{hash, ops, u32, usize};
-#[cfg(debug_assertions)]
-use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::util::Recycler;
 use crate::internal_types::{FastHashSet, LayoutPrimitiveInfo};
-#[cfg(debug_assertions)]
-use crate::internal_types::FrameId;
 use crate::visibility::PrimitiveVisibility;
 
 pub mod backdrop;
@@ -53,22 +49,6 @@ use picture::PictureDataHandle;
 use text_run::{TextRunDataHandle, TextRunPrimitive};
 
 pub const VECS_PER_SEGMENT: usize = 2;
-
-/// Counter for unique primitive IDs for debug tracing.
-#[cfg(debug_assertions)]
-static NEXT_PRIM_ID: AtomicUsize = AtomicUsize::new(0);
-
-#[cfg(debug_assertions)]
-static PRIM_CHASE_ID: AtomicUsize = AtomicUsize::new(usize::MAX);
-
-#[cfg(debug_assertions)]
-pub fn register_prim_chase_id(id: PrimitiveDebugId) {
-    PRIM_CHASE_ID.store(id.0, Ordering::SeqCst);
-}
-
-#[cfg(not(debug_assertions))]
-pub fn register_prim_chase_id(_: PrimitiveDebugId) {
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -970,11 +950,6 @@ impl CreateShadow for PrimitiveKeyKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveDebugId(pub usize);
-
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PrimitiveInstanceKind {
@@ -1096,14 +1071,6 @@ pub struct PrimitiveInstance {
     /// can be found.
     pub kind: PrimitiveInstanceKind,
 
-    #[cfg(debug_assertions)]
-    pub id: PrimitiveDebugId,
-
-    /// The last frame ID (of the `RenderTaskGraph`) this primitive
-    /// was prepared for rendering in.
-    #[cfg(debug_assertions)]
-    pub prepared_frame_id: FrameId,
-
     /// All information and state related to clip(s) for this primitive
     pub clip_set: ClipSet,
 
@@ -1122,10 +1089,6 @@ impl PrimitiveInstance {
     ) -> Self {
         PrimitiveInstance {
             kind,
-            #[cfg(debug_assertions)]
-            prepared_frame_id: FrameId::INVALID,
-            #[cfg(debug_assertions)]
-            id: PrimitiveDebugId(NEXT_PRIM_ID.fetch_add(1, Ordering::Relaxed)),
             vis: PrimitiveVisibility::new(),
             clip_set: ClipSet {
                 local_clip_rect,
@@ -1137,26 +1100,10 @@ impl PrimitiveInstance {
     // Reset any pre-frame state for this primitive.
     pub fn reset(&mut self) {
         self.vis.reset();
-
-        if self.is_chased() {
-            #[cfg(debug_assertions)] // needed for ".id" part
-            info!("\tpreparing {:?}", self.id);
-            info!("\t{:?}", self.kind);
-        }
     }
 
     pub fn clear_visibility(&mut self) {
         self.vis.reset();
-    }
-
-    #[cfg(debug_assertions)]
-    pub fn is_chased(&self) -> bool {
-        PRIM_CHASE_ID.load(Ordering::SeqCst) == self.id.0
-    }
-
-    #[cfg(not(debug_assertions))]
-    pub fn is_chased(&self) -> bool {
-        false
     }
 
     pub fn uid(&self) -> intern::ItemUid {
@@ -1497,7 +1444,7 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveInstance>(), 152, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 136, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 24, "PrimitiveInstanceKind size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplate>(), 56, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 28, "PrimitiveTemplateKind size changed");
