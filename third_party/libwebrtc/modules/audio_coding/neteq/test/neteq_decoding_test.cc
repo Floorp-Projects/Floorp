@@ -245,15 +245,9 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
       NetEqNetworkStatistics network_stats;
       ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
 
-      // Due to internal NetEq logic, preferred buffer-size is about 4 times the
-      // packet size for first few packets. Therefore we refrain from checking
-      // the criteria.
-      if (packets_inserted > 4) {
-        // Expect preferred and actual buffer size to be no more than 2 frames.
-        EXPECT_LE(network_stats.preferred_buffer_size_ms, kFrameSizeMs * 2);
-        EXPECT_LE(network_stats.current_buffer_size_ms,
-                  kFrameSizeMs * 2 + algorithmic_delay_ms_);
-      }
+      EXPECT_LE(network_stats.preferred_buffer_size_ms, 80);
+      EXPECT_LE(network_stats.current_buffer_size_ms,
+                80 + algorithmic_delay_ms_);
       last_seq_no = seq_no;
       last_timestamp = timestamp;
 
