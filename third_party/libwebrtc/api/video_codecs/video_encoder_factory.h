@@ -27,10 +27,6 @@ class VideoEncoder;
 // NOTE: This class is still under development and may change without notice.
 class VideoEncoderFactory {
  public:
-  // TODO(magjed): Try to get rid of this struct.
-  struct CodecInfo {
-  };
-
   struct CodecSupport {
     bool is_supported = false;
     bool is_power_efficient = false;
@@ -66,16 +62,6 @@ class VideoEncoderFactory {
   // called.
   virtual std::vector<SdpVideoFormat> GetImplementations() const {
     return GetSupportedFormats();
-  }
-
-  // Returns information about how this format will be encoded. The specified
-  // format must be one of the supported formats by this factory.
-
-  // TODO(magjed): Try to get rid of this method. Since is_hardware_accelerated
-  // is unused, only factories producing internal source encoders (in itself a
-  // deprecated feature) needs to override this method.
-  virtual CodecInfo QueryVideoEncoder(const SdpVideoFormat& format) const {
-    return CodecInfo();
   }
 
   // Query whether the specifed format is supported or not and if it will be
