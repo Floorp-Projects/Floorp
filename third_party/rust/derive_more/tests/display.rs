@@ -25,6 +25,22 @@ struct Point2D {
 }
 
 #[derive(Display)]
+#[display(fmt = "{}", "self.sign()")]
+struct PositiveOrNegative {
+    x: i32,
+}
+
+impl PositiveOrNegative {
+    fn sign(&self) -> &str {
+        if self.x >= 0 {
+            "Positive"
+        } else {
+            "Negative"
+        }
+    }
+}
+
+#[derive(Display)]
 #[display(fmt = "{}", message)]
 struct Error {
     message: &'static str,
@@ -100,6 +116,10 @@ enum Affix {
     },
 }
 
+#[derive(Debug, Display)]
+#[display(fmt = "{:?}", self)]
+struct DebugStructAsDisplay;
+
 #[test]
 fn check_display() {
     assert_eq!(MyInt(-2).to_string(), "-2");
@@ -109,6 +129,9 @@ fn check_display() {
     assert_eq!(format!("{:X}", IntEnum::I8(-1)), "FF");
     assert_eq!(format!("{:#X}", IntEnum::U8(255)), "0xFF");
     assert_eq!(Point2D { x: 3, y: 4 }.to_string(), "(3, 4)");
+    assert_eq!(PositiveOrNegative { x: 123 }.to_string(), "Positive");
+    assert_eq!(PositiveOrNegative { x: 0 }.to_string(), "Positive");
+    assert_eq!(PositiveOrNegative { x: -465 }.to_string(), "Negative");
     assert_eq!(Error::new("Error").to_string(), "Error");
     assert_eq!(E::Uint(2).to_string(), "2");
     assert_eq!(E::Binary { i: -2 }.to_string(), "I am B 11111110");
@@ -134,6 +157,7 @@ fn check_display() {
         .to_string(),
         "Here's a prefix for things -- false and a suffix"
     );
+    assert_eq!(DebugStructAsDisplay.to_string(), "DebugStructAsDisplay");
 }
 
 mod generic {

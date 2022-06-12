@@ -319,6 +319,11 @@ class ChromeActions {
     }
   }
 
+  dispatchAsyncEventInSandbox(event, sendResponse) {
+    this.dispatchEventInSandbox(event);
+    sendResponse();
+  }
+
   destroySandbox() {
     if (this.sandbox) {
       this.domWindow.removeEventListener("unload", this.unloadListener);

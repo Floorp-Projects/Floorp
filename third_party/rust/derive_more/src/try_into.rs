@@ -23,9 +23,10 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
             field: vec!["ignore"],
         },
     )?;
-    if state.derive_type != DeriveType::Enum {
-        panic!("Only enums can derive TryInto");
-    }
+    assert!(
+        state.derive_type == DeriveType::Enum,
+        "Only enums can derive TryInto"
+    );
 
     let mut variants_per_types = HashMap::default();
 

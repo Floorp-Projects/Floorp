@@ -9,6 +9,7 @@
 // except according to those terms.
 
 use remove_dir_all::remove_dir_all;
+use std::mem;
 use std::path::{self, Path, PathBuf};
 use std::{fmt, fs, io};
 
@@ -20,7 +21,7 @@ use crate::Builder;
 /// The `tempdir` function creates a directory in the file system
 /// and returns a [`TempDir`].
 /// The directory will be automatically deleted when the `TempDir`s
-/// desctructor is run.
+/// destructor is run.
 ///
 /// # Resource Leaking
 ///
@@ -69,7 +70,7 @@ pub fn tempdir() -> io::Result<TempDir> {
 /// The `tempdir` function creates a directory in the file system
 /// and returns a [`TempDir`].
 /// The directory will be automatically deleted when the `TempDir`s
-/// desctructor is run.
+/// destructor is run.
 ///
 /// # Resource Leaking
 ///
@@ -192,7 +193,7 @@ pub fn tempdir_in<P: AsRef<Path>>(dir: P) -> io::Result<TempDir> {
 /// [`std::fs`]: http://doc.rust-lang.org/std/fs/index.html
 /// [`std::process::exit()`]: http://doc.rust-lang.org/std/process/fn.exit.html
 pub struct TempDir {
-    path: Option<PathBuf>,
+    path: Box<Path>,
 }
 
 impl TempDir {
@@ -292,7 +293,7 @@ impl TempDir {
     /// # }
     /// ```
     pub fn path(&self) -> &path::Path {
-        self.path.as_ref().unwrap()
+        self.path.as_ref()
     }
 
     /// Persist the temporary directory to disk, returning the [`PathBuf`] where it is located.
@@ -322,11 +323,16 @@ impl TempDir {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn into_path(mut self) -> PathBuf {
-        self.path.take().unwrap()
+    pub fn into_path(self) -> PathBuf {
+        // Prevent the Drop impl from being called.
+        let mut this = mem::ManuallyDrop::new(self);
+
+        // replace this.path with an empty Box, since an empty Box does not
+        // allocate any heap memory.
+        mem::replace(&mut this.path, PathBuf::new().into_boxed_path()).into()
     }
 
-    /// Closes and removes the temporary directory, returing a `Result`.
+    /// Closes and removes the temporary directory, returning a `Result`.
     ///
     /// Although `TempDir` removes the directory on drop, in the destructor
     /// any errors are ignored. To detect errors cleaning up the temporary
@@ -369,8 +375,12 @@ impl TempDir {
     pub fn close(mut self) -> io::Result<()> {
         let result = remove_dir_all(self.path()).with_err_path(|| self.path());
 
-        // Prevent the Drop impl from removing the dir a second time.
-        self.path = None;
+        // Set self.path to empty Box to release the memory, since an empty
+        // Box does not allocate any heap memory.
+        self.path = PathBuf::new().into_boxed_path();
+
+        // Prevent the Drop impl from being called.
+        mem::forget(self);
 
         result
     }
@@ -392,15 +402,14 @@ impl fmt::Debug for TempDir {
 
 impl Drop for TempDir {
     fn drop(&mut self) {
-        // Path is `None` if `close()` or `into_path()` has been called.
-        if let Some(ref p) = self.path {
-            let _ = remove_dir_all(p);
-        }
+        let _ = remove_dir_all(self.path());
     }
 }
 
 pub(crate) fn create(path: PathBuf) -> io::Result<TempDir> {
     fs::create_dir(&path)
         .with_err_path(|| &path)
-        .map(|_| TempDir { path: Some(path) })
+        .map(|_| TempDir {
+            path: path.into_boxed_path(),
+        })
 }

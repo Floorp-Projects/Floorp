@@ -2,8 +2,7 @@ tempfile
 ========
 
 [![Crate](https://img.shields.io/crates/v/tempfile.svg)](https://crates.io/crates/tempfile)
-[![Build Status](https://travis-ci.org/Stebalien/tempfile.svg?branch=master)](https://travis-ci.org/Stebalien/tempfile)
-[![Build status](https://ci.appveyor.com/api/projects/status/5q00b8rvvg46i5tf/branch/master?svg=true)](https://ci.appveyor.com/project/Stebalien/tempfile/branch/master)
+[![Build Status](https://github.com/Stebalien/tempfile/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Stebalien/tempfile/actions/workflows/ci.yml?query=branch%3Amaster)
 
 A secure, cross-platform, temporary file library for Rust. In addition to creating
 temporary files, this library also allows users to securely open multiple
@@ -15,7 +14,7 @@ patterns and surprisingly difficult to implement securely).
 Usage
 -----
 
-Minimum required Rust version: 1.32.0
+Minimum required Rust version: 1.40.0
 
 Add this to your `Cargo.toml`:
 ```toml

@@ -156,17 +156,9 @@ impl Drop for ThreadParker {
         // this behaviour no longer occurs. The same applies to condvars.
         unsafe {
             let r = libc::pthread_mutex_destroy(self.mutex.get());
-            if cfg!(target_os = "dragonfly") {
-                debug_assert!(r == 0 || r == libc::EINVAL);
-            } else {
-                debug_assert_eq!(r, 0);
-            }
+            debug_assert!(r == 0 || r == libc::EINVAL);
             let r = libc::pthread_cond_destroy(self.condvar.get());
-            if cfg!(target_os = "dragonfly") {
-                debug_assert!(r == 0 || r == libc::EINVAL);
-            } else {
-                debug_assert_eq!(r, 0);
-            }
+            debug_assert!(r == 0 || r == libc::EINVAL);
         }
     }
 }

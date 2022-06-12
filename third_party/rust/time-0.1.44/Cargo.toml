@@ -12,7 +12,7 @@
 
 [package]
 name = "time"
-version = "0.1.43"
+version = "0.1.44"
 authors = ["The Rust Project Developers"]
 exclude = [".github", "benches"]
 description = "Utilities for working with time-related functions in Rust.\n"
@@ -33,6 +33,8 @@ version = "0.4"
 [dev-dependencies.winapi]
 version = "0.3.0"
 features = ["std", "processthreadsapi", "winbase"]
+[target."cfg(target_os = \"wasi\")".dependencies.wasi]
+version = "=0.10.0"
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.0"
 features = ["std", "minwinbase", "minwindef", "ntdef", "profileapi", "sysinfoapi", "timezoneapi"]

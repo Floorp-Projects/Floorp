@@ -1,6 +1,7 @@
 use super::arch::*;
 use super::data::{Map, SigAction, Stat, StatVfs, TimeSpec};
 use super::error::Result;
+use super::flag::*;
 use super::number::*;
 
 use core::{mem, ptr};
@@ -9,20 +10,6 @@ use core::{mem, ptr};
 extern "C" fn restorer() -> ! {
     sigreturn().unwrap();
     unreachable!();
-}
-
-/// Set the end of the process's heap
-///
-/// When `addr` is `0`, this function will return the current break.
-///
-/// When `addr` is nonzero, this function will attempt to set the end of the process's
-/// heap to `addr` and return the new program break. The new program break should be
-/// checked by the allocator, it may not be exactly `addr`, as it may be aligned to a page
-/// boundary.
-///
-/// On error, `Err(ENOMEM)` will be returned indicating that no memory is available
-pub unsafe fn brk(addr: usize) -> Result<usize> {
-    syscall1(SYS_BRK, addr)
 }
 
 /// Change the process's working directory
@@ -39,7 +26,7 @@ pub unsafe fn brk(addr: usize) -> Result<usize> {
 /// * `EIO` - an I/O error occurred
 /// * `ENOENT` - `path` does not exit
 /// * `ENOTDIR` - `path` is not a directory
-pub fn chdir<T: AsRef<[u8]>>(path: T) -> Result<usize> {
+pub fn chdir<T: AsRef<str>>(path: T) -> Result<usize> {
     unsafe { syscall2(SYS_CHDIR, path.as_ref().as_ptr() as usize, path.as_ref().len()) }
 }
 
@@ -47,13 +34,13 @@ pub fn chdir<T: AsRef<[u8]>>(path: T) -> Result<usize> {
     since = "0.1.55",
     note = "use fchmod instead"
 )]
-pub fn chmod<T: AsRef<[u8]>>(path: T, mode: usize) -> Result<usize> {
+pub fn chmod<T: AsRef<str>>(path: T, mode: usize) -> Result<usize> {
     unsafe { syscall3(SYS_CHMOD, path.as_ref().as_ptr() as usize, path.as_ref().len(), mode) }
 }
 
 /// Produce a fork of the current process, or a new process thread
-pub unsafe fn clone(flags: usize) -> Result<usize> {
-    syscall1_clobber(SYS_CLONE, flags)
+pub unsafe fn clone(flags: CloneFlags) -> Result<usize> {
+    syscall1(SYS_CLONE, flags.bits())
 }
 
 /// Close a file
@@ -103,14 +90,23 @@ pub fn fexec(fd: usize, args: &[[usize; 2]], vars: &[[usize; 2]]) -> Result<usiz
     unsafe { syscall5(SYS_FEXEC, fd, args.as_ptr() as usize, args.len(), vars.as_ptr() as usize, vars.len()) }
 }
 
-/// Map a file into memory
+/// Map a file into memory, but with the ability to set the address to map into, either as a hint
+/// or as a requirement of the map.
+///
+/// # Errors
+/// `EACCES` - the file descriptor was not open for reading
+/// `EBADF` - if the file descriptor was invalid
+/// `ENODEV` - mmapping was not supported
+/// `EINVAL` - invalid combination of flags
+/// `EEXIST` - if [`MapFlags::MAP_FIXED`] was set, and the address specified was already in use.
+///
 pub unsafe fn fmap(fd: usize, map: &Map) -> Result<usize> {
     syscall3(SYS_FMAP, fd, map as *const Map as usize, mem::size_of::<Map>())
 }
 
-/// Unmap a memory-mapped file
-pub unsafe fn funmap(addr: usize) -> Result<usize> {
-    syscall1(SYS_FUNMAP, addr)
+/// Unmap whole (or partial) continous memory-mapped files
+pub unsafe fn funmap(addr: usize, len: usize) -> Result<usize> {
+    syscall2(SYS_FUNMAP, addr, len)
 }
 
 /// Retrieve the canonical path of a file
@@ -119,7 +115,7 @@ pub fn fpath(fd: usize, buf: &mut [u8]) -> Result<usize> {
 }
 
 /// Rename a file
-pub fn frename<T: AsRef<[u8]>>(fd: usize, path: T) -> Result<usize> {
+pub fn frename<T: AsRef<str>>(fd: usize, path: T) -> Result<usize> {
     unsafe { syscall3(SYS_FRENAME, fd, path.as_ref().as_ptr() as usize, path.as_ref().len()) }
 }
 
@@ -235,8 +231,8 @@ pub fn mkns(schemes: &[[usize; 2]]) -> Result<usize> {
 }
 
 /// Change mapping flags
-pub unsafe fn mprotect(addr: usize, size: usize, flags: usize) -> Result<usize> {
-    syscall3(SYS_MPROTECT, addr, size, flags)
+pub unsafe fn mprotect(addr: usize, size: usize, flags: MapFlags) -> Result<usize> {
+    syscall3(SYS_MPROTECT, addr, size, flags.bits())
 }
 
 /// Sleep for the time specified in `req`
@@ -246,11 +242,11 @@ pub fn nanosleep(req: &TimeSpec, rem: &mut TimeSpec) -> Result<usize> {
 }
 
 /// Open a file
-pub fn open<T: AsRef<[u8]>>(path: T, flags: usize) -> Result<usize> {
+pub fn open<T: AsRef<str>>(path: T, flags: usize) -> Result<usize> {
     unsafe { syscall3(SYS_OPEN, path.as_ref().as_ptr() as usize, path.as_ref().len(), flags) }
 }
 
-/// Allocate pages, linearly in physical memory
+/// Allocate frames, linearly in physical memory.
 ///
 /// # Errors
 ///
@@ -258,6 +254,37 @@ pub fn open<T: AsRef<[u8]>>(path: T, flags: usize) -> Result<usize> {
 /// * `ENOMEM` - the system has run out of available memory
 pub unsafe fn physalloc(size: usize) -> Result<usize> {
     syscall1(SYS_PHYSALLOC, size)
+}
+
+/// Allocate frames, linearly in physical memory, with an extra set of flags. If the flags contain
+/// [`PARTIAL_ALLOC`], this will result in `physalloc3` with `min = 1`.
+///
+/// Refer to the simpler [`physalloc`] and the more complex [`physalloc3`], that this convenience
+/// function is based on.
+///
+/// # Errors
+///
+/// * `EPERM` - `uid != 0`
+/// * `ENOMEM` - the system has run out of available memory
+pub unsafe fn physalloc2(size: usize, flags: usize) -> Result<usize> {
+    let mut ret = 1usize;
+    physalloc3(size, flags, &mut ret)
+}
+
+/// Allocate frames, linearly in physical memory, with an extra set of flags. If the flags contain
+/// [`PARTIAL_ALLOC`], the `min` parameter specifies the number of frames that have to be allocated
+/// for this operation to succeed. The return value is the offset of the first frame, and `min` is
+/// overwritten with the number of frames actually allocated.
+///
+/// Refer to the simpler [`physalloc`] and the simpler library function [`physalloc2`].
+///
+/// # Errors
+///
+/// * `EPERM` - `uid != 0`
+/// * `ENOMEM` - the system has run out of available memory
+/// * `EINVAL` - `min = 0`
+pub unsafe fn physalloc3(size: usize, flags: usize, min: &mut usize) -> Result<usize> {
+    syscall3(SYS_PHYSALLOC3, size, flags, min as *mut usize as usize)
 }
 
 /// Free physically allocated pages
@@ -274,8 +301,8 @@ pub unsafe fn physfree(physical_address: usize, size: usize) -> Result<usize> {
 /// # Errors
 ///
 /// * `EPERM` - `uid != 0`
-pub unsafe fn physmap(physical_address: usize, size: usize, flags: usize) -> Result<usize> {
-    syscall3(SYS_PHYSMAP, physical_address, size, flags)
+pub unsafe fn physmap(physical_address: usize, size: usize, flags: PhysmapFlags) -> Result<usize> {
+    syscall3(SYS_PHYSMAP, physical_address, size, flags.bits())
 }
 
 /// Unmap previously mapped physical memory
@@ -299,7 +326,7 @@ pub fn read(fd: usize, buf: &mut [u8]) -> Result<usize> {
 }
 
 /// Remove a directory
-pub fn rmdir<T: AsRef<[u8]>>(path: T) -> Result<usize> {
+pub fn rmdir<T: AsRef<str>>(path: T) -> Result<usize> {
     unsafe { syscall2(SYS_RMDIR, path.as_ref().as_ptr() as usize, path.as_ref().len()) }
 }
 
@@ -349,7 +376,7 @@ pub fn umask(mask: usize) -> Result<usize> {
 }
 
 /// Remove a file
-pub fn unlink<T: AsRef<[u8]>>(path: T) -> Result<usize> {
+pub fn unlink<T: AsRef<str>>(path: T) -> Result<usize> {
     unsafe { syscall2(SYS_UNLINK, path.as_ref().as_ptr() as usize, path.as_ref().len()) }
 }
 
@@ -363,8 +390,8 @@ pub unsafe fn virttophys(virtual_address: usize) -> Result<usize> {
 }
 
 /// Check if a child process has exited or received a signal
-pub fn waitpid(pid: usize, status: &mut usize, options: usize) -> Result<usize> {
-    unsafe { syscall3(SYS_WAITPID, pid, status as *mut usize as usize, options) }
+pub fn waitpid(pid: usize, status: &mut usize, options: WaitFlags) -> Result<usize> {
+    unsafe { syscall3(SYS_WAITPID, pid, status as *mut usize as usize, options.bits()) }
 }
 
 /// Write a buffer to a file descriptor

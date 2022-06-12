@@ -1,23 +1,16 @@
-use rand::distributions::Alphanumeric;
-use rand::{self, Rng};
+use fastrand;
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
-use std::{io, str};
+use std::{io, iter::repeat_with};
 
 use crate::error::IoResultExt;
 
 fn tmpname(prefix: &OsStr, suffix: &OsStr, rand_len: usize) -> OsString {
     let mut buf = OsString::with_capacity(prefix.len() + suffix.len() + rand_len);
     buf.push(prefix);
-
-    // Push each character in one-by-one. Unfortunately, this is the only
-    // safe(ish) simple way to do this without allocating a temporary
-    // String/Vec.
-    unsafe {
-        rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(rand_len)
-            .for_each(|b| buf.push(str::from_utf8_unchecked(&[b as u8])))
+    let mut char_buf = [0u8; 4];
+    for c in repeat_with(fastrand::alphanumeric).take(rand_len) {
+        buf.push(c.encode_utf8(&mut char_buf));
     }
     buf.push(suffix);
     buf
@@ -33,7 +26,11 @@ pub fn create_helper<F, R>(
 where
     F: Fn(PathBuf) -> io::Result<R>,
 {
-    let num_retries = if random_len != 0 { crate::NUM_RETRIES } else { 1 };
+    let num_retries = if random_len != 0 {
+        crate::NUM_RETRIES
+    } else {
+        1
+    };
 
     for _ in 0..num_retries {
         let path = base.join(tmpname(prefix, suffix, random_len));

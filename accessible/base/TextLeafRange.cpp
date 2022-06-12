@@ -55,7 +55,12 @@ namespace mozilla::a11y {
 static int32_t RenderedToContentOffset(LocalAccessible* aAcc,
                                        uint32_t aRenderedOffset) {
   nsTextFrame* frame = do_QueryFrame(aAcc->GetFrame());
-  MOZ_ASSERT(frame);
+  if (!frame) {
+    MOZ_ASSERT(!aAcc->HasOwnContent(),
+               "No text frame because this is a XUL label[value] text leaf.");
+    return static_cast<int32_t>(aRenderedOffset);
+  }
+
   if (frame->StyleText()->WhiteSpaceIsSignificant() &&
       frame->StyleText()->NewlineIsSignificant(frame)) {
     // Spaces and new lines aren't altered, so the content and rendered offsets
@@ -73,7 +78,12 @@ static int32_t RenderedToContentOffset(LocalAccessible* aAcc,
 static uint32_t ContentToRenderedOffset(LocalAccessible* aAcc,
                                         int32_t aContentOffset) {
   nsTextFrame* frame = do_QueryFrame(aAcc->GetFrame());
-  MOZ_ASSERT(frame);
+  if (!frame) {
+    MOZ_ASSERT(!aAcc->HasOwnContent(),
+               "No text frame because this is a XUL label[value] text leaf.");
+    return aContentOffset;
+  }
+
   if (frame->StyleText()->WhiteSpaceIsSignificant() &&
       frame->StyleText()->NewlineIsSignificant(frame)) {
     // Spaces and new lines aren't altered, so the content and rendered offsets
@@ -405,7 +415,7 @@ static nsTArray<nsRange*> FindDOMSpellingErrors(LocalAccessible* aAcc,
                                                 int32_t aRenderedStart,
                                                 int32_t aRenderedEnd,
                                                 bool aAllowAdjacent = false) {
-  if (!aAcc->IsTextLeaf()) {
+  if (!aAcc->IsTextLeaf() || !aAcc->HasOwnContent()) {
     return {};
   }
   nsIFrame* frame = aAcc->GetFrame();
