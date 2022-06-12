@@ -472,8 +472,17 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
   EXPECT_EQ(frame_counters.decoded, kMaxFramesInFlightPerStream);
   EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream);
   EXPECT_EQ(frame_counters.dropped, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(analyzer.GetKnownVideoStreams().size(), 2lu);
-  for (auto stream_key : analyzer.GetKnownVideoStreams()) {
+
+  VideoStreamsInfo streams_info = analyzer.GetKnownStreams();
+  EXPECT_EQ(streams_info.GetStreams(), std::set<std::string>{kStreamLabel});
+  EXPECT_EQ(streams_info.GetStreams(kAlice),
+            std::set<std::string>{kStreamLabel});
+  EXPECT_EQ(streams_info.GetSender(kStreamLabel), kAlice);
+  EXPECT_EQ(streams_info.GetReceivers(kStreamLabel),
+            (std::set<std::string>{kBob, kCharlie}));
+
+  EXPECT_EQ(streams_info.GetStatsKeys().size(), 2lu);
+  for (auto stream_key : streams_info.GetStatsKeys()) {
     FrameCounters stream_conters =
         analyzer.GetPerStreamCounters().at(stream_key);
     // On some devices the pipeline can be too slow, so we actually can't
@@ -489,8 +498,8 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
   }
 
   std::map<StatsKey, StreamStats> stats = analyzer.GetStats();
-  const StatsKey kAliceBobStats(kStreamLabel, kAlice, kBob);
-  const StatsKey kAliceCharlieStats(kStreamLabel, kAlice, kCharlie);
+  const StatsKey kAliceBobStats(kStreamLabel, kBob);
+  const StatsKey kAliceCharlieStats(kStreamLabel, kCharlie);
   EXPECT_EQ(stats.size(), 2lu);
   {
     auto it = stats.find(kAliceBobStats);
@@ -629,8 +638,7 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
       << ToString(frames_in_flight_sizes);
 
   std::map<StatsKey, StreamStats> stream_stats = analyzer.GetStats();
-  const StatsKey kAliceBobStats(kStreamLabel, kSenderPeerName,
-                                kReceiverPeerName);
+  const StatsKey kAliceBobStats(kStreamLabel, kReceiverPeerName);
   EXPECT_EQ(stream_stats.size(), 1lu);
 
   auto it = stream_stats.find(kAliceBobStats);
@@ -694,8 +702,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
       << ToString(frames_in_flight_sizes);
 
   std::map<StatsKey, StreamStats> stream_stats = analyzer.GetStats();
-  const StatsKey kAliceBobStats(kStreamLabel, kSenderPeerName,
-                                kReceiverPeerName);
+  const StatsKey kAliceBobStats(kStreamLabel, kReceiverPeerName);
   EXPECT_EQ(stream_stats.size(), 1lu);
 
   auto it = stream_stats.find(kAliceBobStats);
@@ -872,10 +879,12 @@ TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
   EXPECT_EQ(frame_counters.rendered, 2 * kFramesCount);
   EXPECT_EQ(frame_counters.dropped, kOneThirdFrames);
 
-  EXPECT_EQ(analyzer.GetKnownVideoStreams().size(), 3lu);
-  const StatsKey kAliceBobStats(kStreamLabel, kAlice, kBob);
-  const StatsKey kAliceCharlieStats(kStreamLabel, kAlice, kCharlie);
-  const StatsKey kAliceKatieStats(kStreamLabel, kAlice, kKatie);
+  const StatsKey kAliceBobStats(kStreamLabel, kBob);
+  const StatsKey kAliceCharlieStats(kStreamLabel, kCharlie);
+  const StatsKey kAliceKatieStats(kStreamLabel, kKatie);
+  EXPECT_EQ(analyzer.GetKnownStreams().GetStatsKeys(),
+            (std::set<StatsKey>{kAliceBobStats, kAliceCharlieStats,
+                                kAliceKatieStats}));
   {
     FrameCounters stream_conters =
         analyzer.GetPerStreamCounters().at(kAliceBobStats);
@@ -1044,7 +1053,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_EQ(analyzer.GetStats().size(), 2lu);
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+        StatsKey(kStreamLabel, kReceiverPeerName));
     EXPECT_EQ(stream_conters.captured, 3);
     EXPECT_EQ(stream_conters.pre_encoded, 3);
     EXPECT_EQ(stream_conters.encoded, 3);
@@ -1054,7 +1063,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   }
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kSenderPeerName));
+        StatsKey(kStreamLabel, kSenderPeerName));
     EXPECT_EQ(stream_conters.captured, 3);
     EXPECT_EQ(stream_conters.pre_encoded, 3);
     EXPECT_EQ(stream_conters.encoded, 3);
@@ -1139,7 +1148,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_EQ(analyzer.GetStats().size(), 2lu);
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+        StatsKey(kStreamLabel, kReceiverPeerName));
     EXPECT_EQ(stream_conters.captured, 3);
     EXPECT_EQ(stream_conters.pre_encoded, 3);
     EXPECT_EQ(stream_conters.encoded, 3);
@@ -1149,7 +1158,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   }
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kSenderPeerName));
+        StatsKey(kStreamLabel, kSenderPeerName));
     EXPECT_EQ(stream_conters.captured, 3);
     EXPECT_EQ(stream_conters.pre_encoded, 3);
     EXPECT_EQ(stream_conters.encoded, 3);
@@ -1210,7 +1219,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CodecTrackedCorrectly) {
   std::map<StatsKey, StreamStats> stats = analyzer.GetStats();
   ASSERT_EQ(stats.size(), 1lu);
   const StreamStats& stream_stats =
-      stats.at(StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+      stats.at(StatsKey(kStreamLabel, kReceiverPeerName));
   ASSERT_EQ(stream_stats.encoders.size(), 2lu);
   EXPECT_EQ(stream_stats.encoders[0].codec_name, codec_names[0]);
   EXPECT_EQ(stream_stats.encoders[0].first_frame_id, frames[0].id());
@@ -1308,7 +1317,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_EQ(analyzer.GetStats().size(), 1lu);
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+        StatsKey(kStreamLabel, kReceiverPeerName));
     EXPECT_EQ(stream_conters.captured, 6);
     EXPECT_EQ(stream_conters.pre_encoded, 5);
     EXPECT_EQ(stream_conters.encoded, 4);
@@ -1405,7 +1414,7 @@ TEST(
   EXPECT_EQ(analyzer.GetStats().size(), 2lu);
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kReceiverPeerName));
+        StatsKey(kStreamLabel, kReceiverPeerName));
     EXPECT_EQ(stream_conters.captured, 6);
     EXPECT_EQ(stream_conters.pre_encoded, 5);
     EXPECT_EQ(stream_conters.encoded, 4);
@@ -1415,7 +1424,7 @@ TEST(
   }
   {
     FrameCounters stream_conters = analyzer.GetPerStreamCounters().at(
-        StatsKey(kStreamLabel, kSenderPeerName, kSenderPeerName));
+        StatsKey(kStreamLabel, kSenderPeerName));
     EXPECT_EQ(stream_conters.captured, 6);
     EXPECT_EQ(stream_conters.pre_encoded, 5);
     EXPECT_EQ(stream_conters.encoded, 4);

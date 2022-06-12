@@ -82,6 +82,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   // Returns set of stream labels, that were met during test call.
   std::set<StatsKey> GetKnownVideoStreams() const;
+  VideoStreamsInfo GetKnownStreams() const;
   const FrameCounters& GetGlobalCounters() const;
   // Returns frame counter per stream label. Valid stream labels can be obtained
   // by calling GetKnownVideoStreams()
@@ -322,7 +323,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Returns string representation of stats key for metrics naming. Used for
   // backward compatibility by metrics naming for 2 peers cases.
-  std::string StatsKeyToMetricName(const StatsKey& key) const
+  std::string ToMetricName(const InternalStatsKey& key) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   const DefaultVideoQualityAnalyzerOptions options_;
