@@ -13,11 +13,11 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
+#include <memory>
 #include <queue>
 #include <utility>
 #include <vector>
 
-#include "absl/memory/memory.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -116,7 +116,7 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
           MutexLock lock(&mutex_);
           if (!frames_to_decode_.empty()) {
             // We have frames, deliver!
-            frame = absl::WrapUnique(GetNextFrame());
+            frame = GetNextFrame();
             timing_->SetLastDecodeScheduledTimestamp(
                 clock_->TimeInMilliseconds());
           } else if (clock_->TimeInMilliseconds() < latest_return_time_ms_) {
@@ -242,11 +242,11 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
   return wait_ms;
 }
 
-EncodedFrame* FrameBuffer::GetNextFrame() {
+std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
   RTC_DCHECK_RUN_ON(&callback_checker_);
   int64_t now_ms = clock_->TimeInMilliseconds();
   // TODO(ilnik): remove `frames_out` use frames_to_decode_ directly.
-  std::vector<EncodedFrame*> frames_out;
+  std::vector<std::unique_ptr<EncodedFrame>> frames_out;
 
   RTC_DCHECK(!frames_to_decode_.empty());
   bool superframe_delayed_by_retransmission = false;
@@ -263,7 +263,7 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
 
   for (FrameMap::iterator& frame_it : frames_to_decode_) {
     RTC_DCHECK(frame_it != frames_.end());
-    EncodedFrame* frame = frame_it->second.frame.release();
+    std::unique_ptr<EncodedFrame> frame = std::move(frame_it->second.frame);
 
     frame->SetRenderTime(render_time_ms);
 
@@ -307,7 +307,7 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
 
     frames_.erase(frames_.begin(), ++frame_it);
 
-    frames_out.push_back(frame);
+    frames_out.emplace_back(std::move(frame));
   }
 
   if (!superframe_delayed_by_retransmission) {
@@ -336,9 +336,9 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
   UpdateTimingFrameInfo();
 
   if (frames_out.size() == 1) {
-    return frames_out[0];
+    return std::move(frames_out[0]);
   } else {
-    return CombineAndDeleteFrames(frames_out);
+    return CombineAndDeleteFrames(std::move(frames_out));
   }
 }
 
@@ -716,15 +716,15 @@ void FrameBuffer::ClearFramesAndHistory() {
 
 // TODO(philipel): Avoid the concatenation of frames here, by replacing
 // NextFrame and GetNextFrame with methods returning multiple frames.
-EncodedFrame* FrameBuffer::CombineAndDeleteFrames(
-    const std::vector<EncodedFrame*>& frames) const {
+std::unique_ptr<EncodedFrame> FrameBuffer::CombineAndDeleteFrames(
+    std::vector<std::unique_ptr<EncodedFrame>> frames) const {
   RTC_DCHECK(!frames.empty());
-  EncodedFrame* first_frame = frames[0];
-  EncodedFrame* last_frame = frames.back();
   size_t total_length = 0;
-  for (size_t i = 0; i < frames.size(); ++i) {
-    total_length += frames[i]->size();
+  for (const auto& frame : frames) {
+    total_length += frame->size();
   }
+  const EncodedFrame& last_frame = *frames.back();
+  std::unique_ptr<EncodedFrame> first_frame = std::move(frames[0]);
   auto encoded_image_buffer = EncodedImageBuffer::Create(total_length);
   uint8_t* buffer = encoded_image_buffer->data();
   first_frame->SetSpatialLayerFrameSize(first_frame->SpatialIndex().value_or(0),
@@ -734,21 +734,21 @@ EncodedFrame* FrameBuffer::CombineAndDeleteFrames(
 
   // Spatial index of combined frame is set equal to spatial index of its top
   // spatial layer.
-  first_frame->SetSpatialIndex(last_frame->SpatialIndex().value_or(0));
+  first_frame->SetSpatialIndex(last_frame.SpatialIndex().value_or(0));
 
   first_frame->video_timing_mutable()->network2_timestamp_ms =
-      last_frame->video_timing().network2_timestamp_ms;
+      last_frame.video_timing().network2_timestamp_ms;
   first_frame->video_timing_mutable()->receive_finish_ms =
-      last_frame->video_timing().receive_finish_ms;
+      last_frame.video_timing().receive_finish_ms;
 
   // Append all remaining frames to the first one.
   for (size_t i = 1; i < frames.size(); ++i) {
-    EncodedFrame* next_frame = frames[i];
+    // Let |next_frame| fall out of scope so it is deleted after copying.
+    std::unique_ptr<EncodedFrame> next_frame = std::move(frames[i]);
     first_frame->SetSpatialLayerFrameSize(
         next_frame->SpatialIndex().value_or(0), next_frame->size());
     memcpy(buffer, next_frame->data(), next_frame->size());
     buffer += next_frame->size();
-    delete next_frame;
   }
   first_frame->SetEncodedData(encoded_image_buffer);
   return first_frame;
