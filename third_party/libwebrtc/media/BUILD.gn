@@ -597,6 +597,7 @@ if (rtc_include_tests) {
         "../api/test/video:function_video_factory",
         "../api/transport:field_trial_based_config",
         "../api/units:time_delta",
+        "../api/units:timestamp",
         "../api/video:builtin_video_bitrate_allocator_factory",
         "../api/video:video_bitrate_allocation",
         "../api/video:video_codec_constants",
@@ -640,6 +641,7 @@ if (rtc_include_tests) {
         "../test:test_main",
         "../test:test_support",
         "../test:video_test_common",
+        "../test/time_controller",
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
