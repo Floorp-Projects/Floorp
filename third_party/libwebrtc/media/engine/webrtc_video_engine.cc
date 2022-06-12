@@ -868,6 +868,12 @@ bool WebRtcVideoChannel::SetSendParameters(const VideoSendParameters& params) {
 }
 
 void WebRtcVideoChannel::RequestEncoderFallback() {
+  if (!worker_thread_->IsCurrent()) {
+    worker_thread_->PostTask(
+        ToQueuedTask(task_safety_, [this] { RequestEncoderFallback(); }));
+    return;
+  }
+
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (negotiated_codecs_.size() <= 1) {
     RTC_LOG(LS_WARNING) << "Encoder failed but no fallback codec is available";
@@ -883,6 +889,12 @@ void WebRtcVideoChannel::RequestEncoderFallback() {
 
 void WebRtcVideoChannel::RequestEncoderSwitch(
     const EncoderSwitchRequestCallback::Config& conf) {
+  if (!worker_thread_->IsCurrent()) {
+    worker_thread_->PostTask(ToQueuedTask(
+        task_safety_, [this, conf] { RequestEncoderSwitch(conf); }));
+    return;
+  }
+
   RTC_DCHECK_RUN_ON(&thread_checker_);
 
   if (!allow_codec_switching_) {
@@ -923,6 +935,12 @@ void WebRtcVideoChannel::RequestEncoderSwitch(
 
 void WebRtcVideoChannel::RequestEncoderSwitch(
     const webrtc::SdpVideoFormat& format) {
+  if (!worker_thread_->IsCurrent()) {
+    worker_thread_->PostTask(ToQueuedTask(
+        task_safety_, [this, format] { RequestEncoderSwitch(format); }));
+    return;
+  }
+
   RTC_DCHECK_RUN_ON(&thread_checker_);
 
   for (const VideoCodecSettings& codec_setting : negotiated_codecs_) {

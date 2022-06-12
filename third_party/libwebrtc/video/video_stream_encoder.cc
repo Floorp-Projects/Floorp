@@ -1768,14 +1768,12 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
       if (settings_.encoder_switch_request_callback) {
         if (encoder_selector_) {
           if (auto encoder = encoder_selector_->OnEncoderBroken()) {
-            QueueRequestEncoderSwitch(*encoder);
+            settings_.encoder_switch_request_callback->RequestEncoderSwitch(
+                *encoder);
           }
         } else {
           encoder_failed_ = true;
-          worker_queue_->PostTask(ToQueuedTask(task_safety_, [this]() {
-            RTC_DCHECK_RUN_ON(worker_queue_);
-            settings_.encoder_switch_request_callback->RequestEncoderFallback();
-          }));
+          settings_.encoder_switch_request_callback->RequestEncoderFallback();
         }
       } else {
         RTC_LOG(LS_ERROR)
@@ -2014,7 +2012,7 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   if (!video_is_suspended && settings_.encoder_switch_request_callback &&
       encoder_selector_) {
     if (auto encoder = encoder_selector_->OnAvailableBitrate(link_allocation)) {
-      QueueRequestEncoderSwitch(*encoder);
+      settings_.encoder_switch_request_callback->RequestEncoderSwitch(*encoder);
     }
   }
 
@@ -2263,24 +2261,6 @@ void VideoStreamEncoder::CheckForAnimatedContent(
           video_source_sink_controller_.PushSourceSinkSettings();
         }));
   }
-}
-
-// RTC_RUN_ON(&encoder_queue_)
-void VideoStreamEncoder::QueueRequestEncoderSwitch(
-    const EncoderSwitchRequestCallback::Config& conf) {
-  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this, conf]() {
-    RTC_DCHECK_RUN_ON(worker_queue_);
-    settings_.encoder_switch_request_callback->RequestEncoderSwitch(conf);
-  }));
-}
-
-// RTC_RUN_ON(&encoder_queue_)
-void VideoStreamEncoder::QueueRequestEncoderSwitch(
-    const webrtc::SdpVideoFormat& format) {
-  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this, format]() {
-    RTC_DCHECK_RUN_ON(worker_queue_);
-    settings_.encoder_switch_request_callback->RequestEncoderSwitch(format);
-  }));
 }
 
 void VideoStreamEncoder::InjectAdaptationResource(

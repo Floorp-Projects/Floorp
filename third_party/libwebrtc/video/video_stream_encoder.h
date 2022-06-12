@@ -241,13 +241,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
                                int64_t time_when_posted_in_ms)
       RTC_RUN_ON(&encoder_queue_);
 
-  // TODO(bugs.webrtc.org/11341) : Remove this version of RequestEncoderSwitch.
-  void QueueRequestEncoderSwitch(
-      const EncoderSwitchRequestCallback::Config& conf)
-      RTC_RUN_ON(&encoder_queue_);
-  void QueueRequestEncoderSwitch(const webrtc::SdpVideoFormat& format)
-      RTC_RUN_ON(&encoder_queue_);
-
   TaskQueueBase* const worker_queue_;
 
   const uint32_t number_of_cores_;
