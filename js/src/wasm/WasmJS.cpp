@@ -1098,10 +1098,6 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
   return proto;
 }
 
-static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
-  return NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
-}
-
 [[nodiscard]] static bool ParseValTypes(JSContext* cx, HandleValue src,
                                         ValTypeVector& dest) {
   JS::ForOfIterator iterator(cx);
@@ -1129,6 +1125,10 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
 }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
+static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
+  return NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
+}
+
 [[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
                                                const ValTypeVector& valTypes) {
   Rooted<ArrayObject*> arrayObj(cx, NewDenseEmptyArray(cx));
