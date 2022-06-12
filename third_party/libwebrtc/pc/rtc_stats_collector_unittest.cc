@@ -1302,9 +1302,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       cricket::RELAY_PORT_TYPE, 1);
   a_local_relay->set_relay_protocol("tcp");
 
-  RTCRemoteIceCandidateStats expected_a_local_relay(
+  RTCLocalIceCandidateStats expected_a_local_relay(
       "RTCIceCandidate_" + a_local_relay->id(), 0);
   expected_a_local_relay.transport_id = "RTCTransport_a_0";
+  expected_a_local_relay.network_type = "unknown";
   expected_a_local_relay.ip = "16.17.18.19";
   expected_a_local_relay.address = "16.17.18.19";
   expected_a_local_relay.port = 21;
@@ -1312,7 +1313,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay.relay_protocol = "tcp";
   expected_a_local_relay.candidate_type = "relay";
   expected_a_local_relay.priority = 1;
-  EXPECT_TRUE(*expected_a_local_relay.is_remote);
+  EXPECT_FALSE(*expected_a_local_relay.is_remote);
 
   // Candidates in the second transport stats.
   std::unique_ptr<cricket::Candidate> b_local =
@@ -1395,6 +1396,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   EXPECT_EQ(expected_a_remote_relay,
             report->Get(expected_a_remote_relay.id())
                 ->cast_to<RTCRemoteIceCandidateStats>());
+  ASSERT_TRUE(report->Get(expected_a_local_relay.id()));
+  EXPECT_EQ(expected_a_local_relay, report->Get(expected_a_local_relay.id())
+                                        ->cast_to<RTCLocalIceCandidateStats>());
   ASSERT_TRUE(report->Get(expected_b_local.id()));
   EXPECT_EQ(
       expected_b_local,
