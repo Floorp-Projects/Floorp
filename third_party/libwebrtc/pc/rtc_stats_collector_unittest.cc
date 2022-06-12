@@ -1315,6 +1315,24 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay.priority = 1;
   EXPECT_FALSE(*expected_a_local_relay.is_remote);
 
+  std::unique_ptr<cricket::Candidate> a_local_relay_prflx = CreateFakeCandidate(
+      "11.12.13.20", 22, "a_local_relay_prflx's protocol",
+      rtc::ADAPTER_TYPE_UNKNOWN, cricket::PRFLX_PORT_TYPE, 1);
+  a_local_relay_prflx->set_relay_protocol("udp");
+
+  RTCLocalIceCandidateStats expected_a_local_relay_prflx(
+      "RTCIceCandidate_" + a_local_relay_prflx->id(), 0);
+  expected_a_local_relay_prflx.transport_id = "RTCTransport_a_0";
+  expected_a_local_relay_prflx.network_type = "unknown";
+  expected_a_local_relay_prflx.ip = "11.12.13.20";
+  expected_a_local_relay_prflx.address = "11.12.13.20";
+  expected_a_local_relay_prflx.port = 22;
+  expected_a_local_relay_prflx.protocol = "a_local_relay_prflx's protocol";
+  expected_a_local_relay_prflx.relay_protocol = "udp";
+  expected_a_local_relay_prflx.candidate_type = "prflx";
+  expected_a_local_relay_prflx.priority = 1;
+  EXPECT_FALSE(*expected_a_local_relay.is_remote);
+
   // Candidates in the second transport stats.
   std::unique_ptr<cricket::Candidate> b_local =
       CreateFakeCandidate("42.42.42.42", 42, "b_local's protocol",
@@ -1365,6 +1383,12 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       .local_candidate = *a_local_relay.get();
   a_transport_channel_stats.ice_transport_stats.connection_infos[2]
       .remote_candidate = *a_remote_relay.get();
+  a_transport_channel_stats.ice_transport_stats.connection_infos.push_back(
+      cricket::ConnectionInfo());
+  a_transport_channel_stats.ice_transport_stats.connection_infos[3]
+      .local_candidate = *a_local_relay_prflx.get();
+  a_transport_channel_stats.ice_transport_stats.connection_infos[3]
+      .remote_candidate = *a_remote_relay.get();
 
   pc_->AddVoiceChannel("audio", "a");
   pc_->SetTransportStats("a", a_transport_channel_stats);
@@ -1399,6 +1423,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   ASSERT_TRUE(report->Get(expected_a_local_relay.id()));
   EXPECT_EQ(expected_a_local_relay, report->Get(expected_a_local_relay.id())
                                         ->cast_to<RTCLocalIceCandidateStats>());
+  ASSERT_TRUE(report->Get(expected_a_local_relay_prflx.id()));
+  EXPECT_EQ(expected_a_local_relay_prflx,
+            report->Get(expected_a_local_relay_prflx.id())
+                ->cast_to<RTCLocalIceCandidateStats>());
   ASSERT_TRUE(report->Get(expected_b_local.id()));
   EXPECT_EQ(
       expected_b_local,

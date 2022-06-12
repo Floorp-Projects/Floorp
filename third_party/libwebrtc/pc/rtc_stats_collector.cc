@@ -728,8 +728,11 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
     if (is_local) {
       candidate_stats->network_type =
           NetworkAdapterTypeToStatsType(candidate.network_type());
-      if (candidate.type() == cricket::RELAY_PORT_TYPE) {
-        std::string relay_protocol = candidate.relay_protocol();
+      const std::string& candidate_type = candidate.type();
+      const std::string& relay_protocol = candidate.relay_protocol();
+      if (candidate_type == cricket::RELAY_PORT_TYPE ||
+          (candidate_type == cricket::PRFLX_PORT_TYPE &&
+           !relay_protocol.empty())) {
         RTC_DCHECK(relay_protocol.compare("udp") == 0 ||
                    relay_protocol.compare("tcp") == 0 ||
                    relay_protocol.compare("tls") == 0);
