@@ -355,20 +355,9 @@ config("common_config") {
         "-Wundef",
       ]
 
-      # use_xcode_clang only refers to the iOS toolchain, host binaries use
-      # chromium's clang always.
-      if (!is_nacl &&
-          (!use_xcode_clang || current_toolchain == host_toolchain)) {
-        # Flags NaCl (Clang 3.7) and Xcode 7.3 (Clang clang-703.0.31) do not
-        # recognize.
+      if (!is_nacl) {
+        # Flags NaCl (Clang 3.7) do not recognize.
         cflags += [ "-Wunused-lambda-capture" ]
-      }
-
-      if (use_xcode_clang) {
-        # This may be removed if the clang version in xcode > 12.4 includes the
-        # fix https://reviews.llvm.org/D73007.
-        # https://bugs.llvm.org/show_bug.cgi?id=44556
-        cflags += [ "-Wno-range-loop-analysis" ]
       }
     }
 
