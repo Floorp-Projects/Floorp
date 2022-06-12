@@ -80,8 +80,9 @@ class nsDOMTokenList : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~nsDOMTokenList();
 
-  nsresult CheckToken(const nsAString& aStr);
-  nsresult CheckTokens(const nsTArray<nsString>& aStr);
+  void CheckToken(const nsAString& aToken, mozilla::ErrorResult& aRv);
+  void CheckTokens(const nsTArray<nsString>& aTokens,
+                   mozilla::ErrorResult& aRv);
   void AddInternal(const nsAttrValue* aAttr, const nsTArray<nsString>& aTokens);
   void RemoveInternal(const nsAttrValue* aAttr,
                       const nsTArray<nsString>& aTokens);
