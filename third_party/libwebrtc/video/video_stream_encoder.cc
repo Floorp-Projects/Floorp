@@ -839,21 +839,12 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
         max_data_payload_length_ = max_data_payload_length;
         pending_encoder_reconfiguration_ = true;
 
-        // Reconfigure the encoder now if the encoder has an internal source or
-        // if the frame resolution is known. Otherwise, the reconfiguration is
-        // deferred until the next frame to minimize the number of
-        // reconfigurations. The codec configuration depends on incoming video
-        // frame size.
+        // Reconfigure the encoder now if the frame resolution is known.
+        // Otherwise, the reconfiguration is deferred until the next frame to
+        // minimize the number of reconfigurations. The codec configuration
+        // depends on incoming video frame size.
         if (last_frame_info_) {
           ReconfigureEncoder();
-        } else {
-          codec_info_ = settings_.encoder_factory->QueryVideoEncoder(
-              encoder_config_.video_format);
-          if (HasInternalSource()) {
-            last_frame_info_ = VideoFrameInfo(kDefaultInputPixelsWidth,
-                                              kDefaultInputPixelsHeight, false);
-            ReconfigureEncoder();
-          }
         }
       });
 }
@@ -883,9 +874,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     }
 
     encoder_->SetFecControllerOverride(fec_controller_override_);
-
-    codec_info_ = settings_.encoder_factory->QueryVideoEncoder(
-        encoder_config_.video_format);
 
     encoder_reset_required = true;
   }
@@ -1158,8 +1146,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     } else {
       encoder_initialized_ = true;
       encoder_->RegisterEncodeCompleteCallback(this);
-      frame_encode_metadata_writer_.OnEncoderInit(send_codec_,
-                                                  HasInternalSource());
+      frame_encode_metadata_writer_.OnEncoderInit(send_codec_);
       next_frame_types_.clear();
       next_frame_types_.resize(
           std::max(static_cast<int>(codec.numberOfSimulcastStreams), 1),
@@ -1481,15 +1468,12 @@ void VideoStreamEncoder::SetEncoderRates(
   }
 
   // `bitrate_allocation` is 0 it means that the network is down or the send
-  // pacer is full. We currently only report this if the encoder has an internal
-  // source. If the encoder does not have an internal source, higher levels
-  // are expected to not call AddVideoFrame. We do this since it is unclear
-  // how current encoder implementations behave when given a zero target
+  // pacer is full. We currently don't pass this on to the encoder since it is
+  // unclear how current encoder implementations behave when given a zero target
   // bitrate.
   // TODO(perkj): Make sure all known encoder implementations handle zero
   // target bitrate and remove this check.
-  if (!HasInternalSource() &&
-      rate_settings.rate_control.bitrate.get_sum_bps() == 0) {
+  if (rate_settings.rate_control.bitrate.get_sum_bps() == 0) {
     return;
   }
 
@@ -1839,29 +1823,6 @@ void VideoStreamEncoder::SendKeyFrame() {
   // TODO(webrtc:10615): Map keyframe request to spatial layer.
   std::fill(next_frame_types_.begin(), next_frame_types_.end(),
             VideoFrameType::kVideoFrameKey);
-
-  if (HasInternalSource()) {
-    // Try to request the frame if we have an external encoder with
-    // internal source since AddVideoFrame never will be called.
-
-    // TODO(nisse): Used only with internal source. Delete as soon as
-    // that feature is removed. The only implementation I've been able
-    // to find ignores what's in the frame. With one exception: It seems
-    // a few test cases, e.g.,
-    // VideoSendStreamTest.VideoSendStreamStopSetEncoderRateToZero, set
-    // internal_source to true and use FakeEncoder. And the latter will
-    // happily encode this 1x1 frame and pass it on down the pipeline.
-    if (encoder_->Encode(VideoFrame::Builder()
-                             .set_video_frame_buffer(I420Buffer::Create(1, 1))
-                             .set_rotation(kVideoRotation_0)
-                             .set_timestamp_us(0)
-                             .build(),
-                         &next_frame_types_) == WEBRTC_VIDEO_CODEC_OK) {
-      // Try to remove just-performed keyframe request, if stream still exists.
-      std::fill(next_frame_types_.begin(), next_frame_types_.end(),
-                VideoFrameType::kVideoFrameDelta);
-    }
-  }
 }
 
 void VideoStreamEncoder::OnLossNotification(
@@ -2204,28 +2165,12 @@ void VideoStreamEncoder::RunPostEncode(const EncodedImage& encoded_image,
     frame_dropper_.Fill(frame_size.bytes(), !keyframe);
   }
 
-  if (HasInternalSource()) {
-    // Update frame dropper after the fact for internal sources.
-    input_framerate_.Update(1u, clock_->TimeInMilliseconds());
-    frame_dropper_.Leak(GetInputFramerateFps());
-    // Signal to encoder to drop next frame.
-    if (frame_dropper_.DropFrame()) {
-      pending_frame_drops_.fetch_add(1);
-    }
-  }
-
   stream_resource_manager_.OnEncodeCompleted(encoded_image, time_sent_us,
                                              encode_duration_us, frame_size);
   if (bitrate_adjuster_) {
     bitrate_adjuster_->OnEncodedFrame(
         frame_size, encoded_image.SpatialIndex().value_or(0), temporal_index);
   }
-}
-
-bool VideoStreamEncoder::HasInternalSource() const {
-  // TODO(sprang): Checking both info from encoder and from encoder factory
-  // until we have deprecated and removed the encoder factory info.
-  return codec_info_.has_internal_source || encoder_info_.has_internal_source;
 }
 
 void VideoStreamEncoder::ReleaseEncoder() {

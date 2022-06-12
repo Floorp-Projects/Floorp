@@ -207,13 +207,6 @@ class RTC_EXPORT VideoEncoder {
     // thresholds will be used in CPU adaptation.
     bool is_hardware_accelerated;
 
-    // If this field is true, the encoder uses internal camera sources, meaning
-    // that it does not require/expect frames to be delivered via
-    // webrtc::VideoEncoder::Encode.
-    // Internal source encoders are deprecated and support for them will be
-    // phased out.
-    bool has_internal_source;
-
     // For each spatial layer (simulcast stream or SVC layer), represented as an
     // element in `fps_allocation` a vector indicates how many temporal layers
     // the encoder is using for that spatial layer.

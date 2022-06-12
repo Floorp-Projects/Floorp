@@ -29,12 +29,6 @@ class VideoEncoderFactory {
  public:
   // TODO(magjed): Try to get rid of this struct.
   struct CodecInfo {
-    // `has_internal_source` is true if encoders created by this factory of the
-    // given codec will use internal camera sources, meaning that they don't
-    // require/expect frames to be delivered via webrtc::VideoEncoder::Encode.
-    // This flag is used as the internal_source parameter to
-    // webrtc::ViEExternalCodec::RegisterExternalSendCodec.
-    bool has_internal_source = false;
   };
 
   struct CodecSupport {

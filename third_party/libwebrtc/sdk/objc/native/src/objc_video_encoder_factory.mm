@@ -101,7 +101,6 @@ class ObjCVideoEncoder : public VideoEncoder {
     info.apply_alignment_to_all_simulcast_layers = encoder_.applyAlignmentToAllSimulcastLayers;
     info.supports_native_handle = encoder_.supportsNativeHandle;
     info.is_hardware_accelerated = true;
-    info.has_internal_source = false;
     return info;
   }
 

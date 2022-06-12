@@ -1215,7 +1215,6 @@ VideoEncoder::EncoderInfo LibvpxVp8Encoder::GetEncoderInfo() const {
   info.has_trusted_rate_controller =
       rate_control_settings_.LibvpxVp8TrustedRateController();
   info.is_hardware_accelerated = false;
-  info.has_internal_source = false;
   info.supports_simulcast = true;
   if (!resolution_bitrate_limits_.empty()) {
     info.resolution_bitrate_limits = resolution_bitrate_limits_;

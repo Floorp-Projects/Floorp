@@ -71,13 +71,6 @@ VideoEncoder::EncoderInfo GetEncoderInfoWithHardwareAccelerated(
   return info;
 }
 
-VideoEncoder::EncoderInfo GetEncoderInfoWithInternalSource(
-    bool internal_source) {
-  VideoEncoder::EncoderInfo info;
-  info.has_internal_source = internal_source;
-  return info;
-}
-
 class FakeEncodedImageCallback : public EncodedImageCallback {
  public:
   Result OnEncodedImage(const EncodedImage& encoded_image,
@@ -801,35 +794,6 @@ TEST(SoftwareFallbackEncoderTest, ReportsHardwareAccelerated) {
                          .build();
   wrapper->Encode(frame, nullptr);
   EXPECT_FALSE(wrapper->GetEncoderInfo().is_hardware_accelerated);
-}
-
-TEST(SoftwareFallbackEncoderTest, ReportsInternalSource) {
-  auto* sw_encoder = new ::testing::NiceMock<MockVideoEncoder>();
-  auto* hw_encoder = new ::testing::NiceMock<MockVideoEncoder>();
-  EXPECT_CALL(*sw_encoder, GetEncoderInfo())
-      .WillRepeatedly(Return(GetEncoderInfoWithInternalSource(false)));
-  EXPECT_CALL(*hw_encoder, GetEncoderInfo())
-      .WillRepeatedly(Return(GetEncoderInfoWithInternalSource(true)));
-
-  std::unique_ptr<VideoEncoder> wrapper =
-      CreateVideoEncoderSoftwareFallbackWrapper(
-          std::unique_ptr<VideoEncoder>(sw_encoder),
-          std::unique_ptr<VideoEncoder>(hw_encoder));
-  EXPECT_TRUE(wrapper->GetEncoderInfo().has_internal_source);
-
-  VideoCodec codec_ = {};
-  codec_.width = 100;
-  codec_.height = 100;
-  wrapper->InitEncode(&codec_, kSettings);
-
-  // Trigger fallback to software.
-  EXPECT_CALL(*hw_encoder, Encode)
-      .WillOnce(Return(WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE));
-  VideoFrame frame = VideoFrame::Builder()
-                         .set_video_frame_buffer(I420Buffer::Create(100, 100))
-                         .build();
-  wrapper->Encode(frame, nullptr);
-  EXPECT_FALSE(wrapper->GetEncoderInfo().has_internal_source);
 }
 
 class PreferTemporalLayersFallbackTest : public ::testing::Test {
