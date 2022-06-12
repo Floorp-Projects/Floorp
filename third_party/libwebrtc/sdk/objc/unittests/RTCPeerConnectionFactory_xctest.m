@@ -21,6 +21,7 @@
 #import "api/peerconnection/RTCRtpTransceiver.h"
 #import "api/peerconnection/RTCSessionDescription.h"
 #import "api/peerconnection/RTCVideoSource.h"
+#import "rtc_base/system/unused.h"
 
 #import <XCTest/XCTest.h>
 
@@ -64,6 +65,7 @@
       factory = nil;
     }
     mediaStream = nil;
+    RTC_UNUSED(mediaStream);
   }
 
   XCTAssertTrue(true, "Expect test does not crash");
