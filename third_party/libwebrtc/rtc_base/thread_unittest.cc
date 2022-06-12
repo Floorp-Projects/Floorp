@@ -851,44 +851,6 @@ TEST_F(DEPRECATED_AsyncInvokeTest,
   EXPECT_FALSE(reentrant_functor_run);
 }
 
-TEST_F(DEPRECATED_AsyncInvokeTest, Flush) {
-  DEPRECATED_AsyncInvoker invoker;
-  AtomicBool flag1;
-  AtomicBool flag2;
-  // Queue two async calls to the current thread.
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, Thread::Current(), FunctorB(&flag1));
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, Thread::Current(), FunctorB(&flag2));
-  // Because we haven't pumped messages, these should not have run yet.
-  EXPECT_FALSE(flag1.get());
-  EXPECT_FALSE(flag2.get());
-  // Force them to run now.
-  invoker.Flush(Thread::Current());
-  EXPECT_TRUE(flag1.get());
-  EXPECT_TRUE(flag2.get());
-}
-
-TEST_F(DEPRECATED_AsyncInvokeTest, FlushWithIds) {
-  DEPRECATED_AsyncInvoker invoker;
-  AtomicBool flag1;
-  AtomicBool flag2;
-  // Queue two async calls to the current thread, one with a message id.
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, Thread::Current(), FunctorB(&flag1),
-                            5);
-  invoker.AsyncInvoke<void>(RTC_FROM_HERE, Thread::Current(), FunctorB(&flag2));
-  // Because we haven't pumped messages, these should not have run yet.
-  EXPECT_FALSE(flag1.get());
-  EXPECT_FALSE(flag2.get());
-  // Execute pending calls with id == 5.
-  invoker.Flush(Thread::Current(), 5);
-  EXPECT_TRUE(flag1.get());
-  EXPECT_FALSE(flag2.get());
-  flag1 = false;
-  // Execute all pending calls. The id == 5 call should not execute again.
-  invoker.Flush(Thread::Current());
-  EXPECT_FALSE(flag1.get());
-  EXPECT_TRUE(flag2.get());
-}
-
 void WaitAndSetEvent(Event* wait_event, Event* set_event) {
   wait_event->Wait(Event::kForever);
   set_event->Set();
