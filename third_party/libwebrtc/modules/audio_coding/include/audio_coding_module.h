@@ -248,6 +248,8 @@ class AudioCodingModule {
       NetworkStatistics* network_statistics) = 0;
 
   virtual ANAStats GetANAStats() const = 0;
+
+  virtual int GetTargetBitrate() const = 0;
 };
 
 }  // namespace webrtc

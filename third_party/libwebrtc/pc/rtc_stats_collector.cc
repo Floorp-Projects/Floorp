@@ -536,6 +536,9 @@ void SetOutboundRTPStreamStatsFromVoiceSenderInfo(
                                                outbound_audio);
   outbound_audio->media_type = "audio";
   outbound_audio->kind = "audio";
+  if (voice_sender_info.target_bitrate > 0) {
+    outbound_audio->target_bitrate = voice_sender_info.target_bitrate;
+  }
   if (voice_sender_info.codec_payload_type) {
     outbound_audio->codec_id = RTCCodecStatsIDFromMidDirectionAndPayload(
         mid, /*inbound=*/false, *voice_sender_info.codec_payload_type);

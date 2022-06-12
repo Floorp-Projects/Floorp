@@ -427,7 +427,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   webrtc::AudioSendStream::Stats stats;
   stats.local_ssrc = config_.rtp.ssrc;
-  stats.target_bitrate_bps = channel_send_->GetBitrate();
+  stats.target_bitrate_bps = channel_send_->GetTargetBitrate();
 
   webrtc::CallSendStatistics call_stats = channel_send_->GetRTCPStatistics();
   stats.rtcp_packet_type_counts = call_stats.rtcp_packet_type_counts;
