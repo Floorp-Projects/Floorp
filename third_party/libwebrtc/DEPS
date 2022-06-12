@@ -490,10 +490,6 @@ deps = {
           'version': 'git_revision:d1c03082ecda0148d8096f1fd8bf5491eafc7323',
         },
         {
-          'package': 'infra/tools/luci/isolated/${{platform}}',
-          'version': 'git_revision:d1c03082ecda0148d8096f1fd8bf5491eafc7323',
-        },
-        {
           'package': 'infra/tools/luci/swarming/${{platform}}',
           'version': 'git_revision:d1c03082ecda0148d8096f1fd8bf5491eafc7323',
         },
