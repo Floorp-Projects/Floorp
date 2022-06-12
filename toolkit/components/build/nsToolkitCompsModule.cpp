@@ -5,7 +5,6 @@
 #include "nsToolkitCompsModule.h"
 
 #include "nsUrlClassifierDBService.h"
-#include "nsISupports.h"
 
 using namespace mozilla;
 
