@@ -1112,7 +1112,6 @@ pub struct PrimitiveInstance {
     // TODO(gw): Currently built each frame, but can be retained.
     // TODO(gw): Remove clipped_world_rect (use tile bounds to determine vis flags)
     pub vis: PrimitiveVisibility,
-    pub anti_aliased: bool,
 }
 
 impl PrimitiveInstance {
@@ -1132,7 +1131,6 @@ impl PrimitiveInstance {
                 local_clip_rect,
                 clip_chain_id,
             },
-            anti_aliased: false,
         }
     }
 

@@ -1969,15 +1969,12 @@ impl<'a> SceneBuilder<'a> {
         P: InternablePrimitive,
         Interners: AsMut<Interner<P>>,
     {
-        let mut prim_instance = self.create_primitive(
+        let prim_instance = self.create_primitive(
             info,
             spatial_node_index,
             clip_chain_id,
             prim,
         );
-        if info.flags.contains(PrimitiveFlags::ANTIALISED) {
-            prim_instance.anti_aliased = true;
-        }
         self.register_chase_primitive_by_rect(
             &info.rect,
             &prim_instance,
