@@ -1850,10 +1850,11 @@ TEST_F(WebRtcVideoChannelBaseTest, InvalidRecvBufferSize) {
     // This particular hack, pauses the transport controller TQ while we
     // change the field trial.
     rtc::TaskQueue* tq = call_->GetTransportControllerSend()->GetWorkerQueue();
-    rtc::Event waiting, resume;
-    tq->PostTask([&waiting, &resume]() {
+    rtc::Event waiting, resume, conclude;
+    tq->PostTask([&waiting, &resume, &conclude]() {
       waiting.Set();
       resume.Wait(rtc::Event::kForever);
+      conclude.Set();
     });
 
     waiting.Wait(rtc::Event::kForever);
@@ -1862,6 +1863,8 @@ TEST_F(WebRtcVideoChannelBaseTest, InvalidRecvBufferSize) {
 
     SetUp();
     resume.Set();
+    // Ensure we don't cause a UAF as the test scope exits.
+    conclude.Wait(rtc::Event::kForever);
 
     // OK, now the test can carry on.
 
