@@ -23,6 +23,7 @@
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/field_trial.h"
 #include "video/adaptation/overuse_frame_detector.h"
+#include "video/frame_cadence_adapter.h"
 #include "video/video_stream_encoder.h"
 
 namespace webrtc {
@@ -135,6 +136,7 @@ VideoSendStream::VideoSendStream(
           &stats_proxy_,
           config_.encoder_settings,
           std::make_unique<OveruseFrameDetector>(&stats_proxy_),
+          FrameCadenceAdapterInterface::Create(),
           task_queue_factory,
           network_queue,
           GetBitrateAllocationCallbackType(config_))),

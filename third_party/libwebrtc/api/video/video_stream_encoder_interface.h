@@ -39,7 +39,7 @@ namespace webrtc {
 //
 // 2. Moving responsibility for simulcast and for software fallback into this
 //    class.
-class VideoStreamEncoderInterface : public rtc::VideoSinkInterface<VideoFrame> {
+class VideoStreamEncoderInterface {
  public:
   // Interface for receiving encoded video frames and notifications about
   // configuration changes.
@@ -57,6 +57,8 @@ class VideoStreamEncoderInterface : public rtc::VideoSinkInterface<VideoFrame> {
     virtual void OnVideoLayersAllocationUpdated(
         VideoLayersAllocation allocation) = 0;
   };
+
+  virtual ~VideoStreamEncoderInterface() = default;
 
   // If the resource is overusing, the VideoStreamEncoder will try to reduce
   // resolution or frame rate until no resource is overusing.
