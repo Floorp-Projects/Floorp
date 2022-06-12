@@ -82,9 +82,10 @@ const char* FilenameFromPath(const char* file) {
 }
 
 // Global lock for log subsystem, only needed to serialize access to streams_.
-// TODO(bugs.webrtc.org/11665): this is not currently constant initialized and
-// trivially destructible.
-webrtc::Mutex g_log_mutex_;
+webrtc::Mutex& GetLoggingLock() {
+  static webrtc::Mutex& mutex = *new webrtc::Mutex();
+  return mutex;
+}
 
 }  // namespace
 
@@ -98,7 +99,7 @@ bool LogMessage::log_to_stderr_ = false;
 // Note: we explicitly do not clean this up, because of the uncertain ordering
 // of destructors at program exit.  Let the person who sets the stream trigger
 // cleanup by setting to null, or let it leak (safe at program exit).
-ABSL_CONST_INIT LogSink* LogMessage::streams_ RTC_GUARDED_BY(g_log_mutex_) =
+ABSL_CONST_INIT LogSink* LogMessage::streams_ RTC_GUARDED_BY(GetLoggingLock()) =
     nullptr;
 ABSL_CONST_INIT std::atomic<bool> LogMessage::streams_empty_ = {true};
 
@@ -211,7 +212,7 @@ LogMessage::~LogMessage() {
 #endif
   }
 
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   for (LogSink* entry = streams_; entry != nullptr; entry = entry->next_) {
     if (severity_ >= entry->min_severity_) {
 #if defined(WEBRTC_ANDROID)
@@ -259,9 +260,7 @@ void LogMessage::LogTimestamps(bool on) {
 }
 
 void LogMessage::LogToDebug(LoggingSeverity min_sev) {
-  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   g_dbg_sev = min_sev;
   UpdateMinLogSeverity();
 }
@@ -271,7 +270,7 @@ void LogMessage::SetLogToStderr(bool log_to_stderr) {
 }
 
 int LogMessage::GetLogToStream(LogSink* stream) {
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   LoggingSeverity sev = LS_NONE;
   for (LogSink* entry = streams_; entry != nullptr; entry = entry->next_) {
     if (stream == nullptr || stream == entry) {
@@ -282,7 +281,7 @@ int LogMessage::GetLogToStream(LogSink* stream) {
 }
 
 void LogMessage::AddLogToStream(LogSink* stream, LoggingSeverity min_sev) {
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   stream->min_severity_ = min_sev;
   stream->next_ = streams_;
   streams_ = stream;
@@ -291,7 +290,7 @@ void LogMessage::AddLogToStream(LogSink* stream, LoggingSeverity min_sev) {
 }
 
 void LogMessage::RemoveLogToStream(LogSink* stream) {
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   for (LogSink** entry = &streams_; *entry != nullptr;
        entry = &(*entry)->next_) {
     if (*entry == stream) {
@@ -353,7 +352,7 @@ void LogMessage::ConfigureLogging(const char* params) {
 }
 
 void LogMessage::UpdateMinLogSeverity()
-    RTC_EXCLUSIVE_LOCKS_REQUIRED(g_log_mutex_) {
+    RTC_EXCLUSIVE_LOCKS_REQUIRED(GetLoggingLock()) {
   LoggingSeverity min_sev = g_dbg_sev;
   for (LogSink* entry = streams_; entry != nullptr; entry = entry->next_) {
     min_sev = std::min(min_sev, entry->min_severity_);
@@ -457,7 +456,7 @@ void LogMessage::OutputToDebug(const std::string& str,
 bool LogMessage::IsNoop(LoggingSeverity severity) {
   // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
   // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-  webrtc::MutexLock lock(&g_log_mutex_);
+  webrtc::MutexLock lock(&GetLoggingLock());
   if (severity >= g_dbg_sev || severity >= g_min_sev)
     return false;
   return streams_empty_.load(std::memory_order_relaxed);

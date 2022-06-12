@@ -862,10 +862,7 @@ if (is_ios || is_mac) {
         "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
         "default_task_queue",
       ]
-      configs += [
-        "..:no_exit_time_destructors",
-        "..:no_global_constructors",
-      ]
+      configs += [ "..:no_global_constructors" ]
       sources = [
         "objc/api/peerconnection/RTCAudioSource+Private.h",
         "objc/api/peerconnection/RTCAudioSource.h",
