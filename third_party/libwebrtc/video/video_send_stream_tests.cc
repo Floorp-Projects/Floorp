@@ -1470,7 +1470,8 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
           task_queue_(task_queue),
           retranmission_rate_limiter_(Clock::GetRealTimeClock(), 1000),
           stream_(nullptr),
-          bitrate_capped_(false) {}
+          bitrate_capped_(false),
+          task_safety_flag_(PendingTaskSafetyFlag::CreateDetached()) {}
 
     ~BitrateObserver() override {
       // Make sure we free `rtp_rtcp_` in the same context as we constructed it.
@@ -1487,7 +1488,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
       const uint32_t ssrc = rtp_packet.Ssrc();
       RTC_DCHECK(stream_);
 
-      task_queue_->PostTask(ToQueuedTask([this, ssrc]() {
+      task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this, ssrc]() {
         VideoSendStream::Stats stats = stream_->GetStats();
         if (!stats.substreams.empty()) {
           EXPECT_EQ(1u, stats.substreams.size());
@@ -1532,6 +1533,8 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
       encoder_config->min_transmit_bitrate_bps = kMinTransmitBitrateBps;
     }
 
+    void OnStreamsStopped() override { task_safety_flag_->SetNotAlive(); }
+
     void PerformTest() override {
       EXPECT_TRUE(Wait())
           << "Timeout while waiting for low bitrate stats after REMB.";
@@ -1543,6 +1546,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
     RateLimiter retranmission_rate_limiter_;
     VideoSendStream* stream_;
     bool bitrate_capped_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_;
   } test(task_queue());
 
   RunBaseTest(&test);
