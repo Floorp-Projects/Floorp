@@ -275,6 +275,7 @@ rtc_library("frame_cadence_adapter") {
     "../rtc_base/synchronization:mutex",
     "../rtc_base/task_utils:pending_task_safety_flag",
     "../rtc_base/task_utils:to_queued_task",
+    "../system_wrappers",
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
   ]

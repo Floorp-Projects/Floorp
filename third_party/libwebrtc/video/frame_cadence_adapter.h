@@ -18,13 +18,14 @@
 #include "api/video/video_sink_interface.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
 // A sink adapter implementing mutations to the received frame cadence.
-// With the exception of construction & destruction which has to happen on the
-// same sequence, this class is thread-safe because three different execution
-// contexts call into it.
+// With the exception of the constructor and the methods overridden in
+// VideoSinkInterface, the rest of the interface to this class (including dtor)
+// needs to happen on the queue passed in Create.
 class FrameCadenceAdapterInterface
     : public rtc::VideoSinkInterface<VideoFrame> {
  public:
@@ -33,8 +34,20 @@ class FrameCadenceAdapterInterface
    public:
     virtual ~Callback() = default;
 
-    // Called when a frame arrives.
-    virtual void OnFrame(const VideoFrame& frame) = 0;
+    // Called when a frame arrives on the |queue| specified in Create.
+    //
+    // The |post_time| parameter indicates the current time sampled when
+    // FrameCadenceAdapterInterface::OnFrame was called.
+    //
+    // |frames_scheduled_for_processing| indicates how many frames that have
+    // been scheduled for processing. During sequential conditions where
+    // FrameCadenceAdapterInterface::OnFrame is invoked and subsequently ending
+    // up in this callback, this value will read 1. Otherwise if the
+    // |queue| gets stalled for some reason, the value will increase
+    // beyond 1.
+    virtual void OnFrame(Timestamp post_time,
+                         int frames_scheduled_for_processing,
+                         const VideoFrame& frame) = 0;
 
     // Called when the source has discarded a frame.
     virtual void OnDiscardedFrame() = 0;
@@ -42,8 +55,11 @@ class FrameCadenceAdapterInterface
 
   // Factory function creating a production instance. Deletion of the returned
   // instance needs to happen on the same sequence that Create() was called on.
+  // Frames arriving in FrameCadenceAdapterInterface::OnFrame are posted to
+  // Callback::OnFrame on the |queue|.
   static std::unique_ptr<FrameCadenceAdapterInterface> Create(
-      TaskQueueBase* worker_queue);
+      Clock* clock,
+      TaskQueueBase* queue);
 
   // Call before using the rest of the API.
   virtual void Initialize(Callback* callback) = 0;

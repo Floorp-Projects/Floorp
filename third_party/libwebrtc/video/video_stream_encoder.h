@@ -77,8 +77,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       const VideoStreamEncoderSettings& settings,
       std::unique_ptr<OveruseFrameDetector> overuse_detector,
       std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
-      TaskQueueFactory* task_queue_factory,
-      TaskQueueBase* worker_queue,
+      std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+          encoder_queue,
       BitrateAllocationCallbackType allocation_cb_type);
   ~VideoStreamEncoder() override;
 
@@ -146,8 +146,11 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
     explicit CadenceCallback(VideoStreamEncoder& video_stream_encoder)
         : video_stream_encoder_(video_stream_encoder) {}
     // FrameCadenceAdapterInterface::Callback overrides.
-    void OnFrame(const VideoFrame& frame) override {
-      video_stream_encoder_.OnFrame(frame);
+    void OnFrame(Timestamp post_time,
+                 int frames_scheduled_for_processing,
+                 const VideoFrame& frame) override {
+      video_stream_encoder_.OnFrame(post_time, frames_scheduled_for_processing,
+                                    frame);
     }
     void OnDiscardedFrame() override {
       video_stream_encoder_.OnDiscardedFrame();
@@ -192,7 +195,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   void ReconfigureEncoder() RTC_RUN_ON(&encoder_queue_);
   void OnEncoderSettingsChanged() RTC_RUN_ON(&encoder_queue_);
-  void OnFrame(const VideoFrame& video_frame);
+  void OnFrame(Timestamp post_time,
+               int frames_scheduled_for_processing,
+               const VideoFrame& video_frame);
   void OnDiscardedFrame();
 
   void MaybeEncodeVideoFrame(const VideoFrame& frame,
@@ -260,7 +265,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   CadenceCallback cadence_callback_;
   // Frame cadence encoder adapter. Frames enter this adapter first, and it then
   // forwards them to our OnFrame method.
-  const std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter_;
+  std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter_
+      RTC_GUARDED_BY(&encoder_queue_) RTC_PT_GUARDED_BY(&encoder_queue_);
 
   VideoEncoderConfig encoder_config_ RTC_GUARDED_BY(&encoder_queue_);
   std::unique_ptr<VideoEncoder> encoder_ RTC_GUARDED_BY(&encoder_queue_)
@@ -296,13 +302,12 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   bool encoder_failed_ RTC_GUARDED_BY(&encoder_queue_);
   Clock* const clock_;
 
-  std::atomic<int> posted_frames_waiting_for_encode_;
   // Used to make sure incoming time stamp is increasing for every frame.
-  int64_t last_captured_timestamp_ RTC_GUARDED_BY(worker_queue_);
+  int64_t last_captured_timestamp_ RTC_GUARDED_BY(&encoder_queue_);
   // Delta used for translating between NTP and internal timestamps.
-  const int64_t delta_ntp_internal_ms_ RTC_GUARDED_BY(worker_queue_);
+  const int64_t delta_ntp_internal_ms_ RTC_GUARDED_BY(&encoder_queue_);
 
-  int64_t last_frame_log_ms_ RTC_GUARDED_BY(worker_queue_);
+  int64_t last_frame_log_ms_ RTC_GUARDED_BY(&encoder_queue_);
   int captured_frame_count_ RTC_GUARDED_BY(&encoder_queue_);
   int dropped_frame_cwnd_pushback_count_ RTC_GUARDED_BY(&encoder_queue_);
   int dropped_frame_encoder_block_count_ RTC_GUARDED_BY(&encoder_queue_);
