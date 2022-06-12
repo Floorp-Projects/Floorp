@@ -29,7 +29,9 @@
 #include "test/time_controller/simulated_time_controller.h"
 
 using ::testing::_;
+using ::testing::IsEmpty;
 using ::testing::Return;
+using ::testing::SizeIs;
 
 namespace webrtc {
 namespace video_coding {
@@ -257,6 +259,29 @@ TEST_F(TestFrameBuffer2, WaitForFrame) {
   InsertFrame(pid, 0, ts, true, kFrameSize);
   time_controller_.AdvanceTime(TimeDelta::Millis(50));
   CheckFrame(0, pid, 0);
+}
+
+TEST_F(TestFrameBuffer2, ClearWhileWaitingForFrame) {
+  const uint16_t pid = Rand();
+
+  // Insert a frame and wait for it for max 100ms.
+  InsertFrame(pid, 0, 25, true, kFrameSize);
+  ExtractFrame(100);
+  // After 10ms, clear the buffer.
+  time_controller_.AdvanceTime(TimeDelta::Millis(10));
+  buffer_->Clear();
+  // Confirm that the frame was not sent for rendering.
+  time_controller_.AdvanceTime(TimeDelta::Millis(15));
+  EXPECT_THAT(frames_, IsEmpty());
+
+  // We are still waiting for a frame, since 100ms has not passed. Insert a new
+  // frame. This new frame should be the one that is returned as the old frame
+  // was cleared.
+  const uint16_t new_pid = pid + 1;
+  InsertFrame(new_pid, 0, 50, true, kFrameSize);
+  time_controller_.AdvanceTime(TimeDelta::Millis(25));
+  ASSERT_THAT(frames_, SizeIs(1));
+  CheckFrame(0, new_pid, 0);
 }
 
 TEST_F(TestFrameBuffer2, OneSuperFrame) {
@@ -661,6 +686,21 @@ TEST_F(TestFrameBuffer2, HigherSpatialLayerNonDecodable) {
   ExtractFrame();
   CheckFrame(1, pid + 3, 1);
   CheckFrame(2, pid + 4, 1);
+}
+
+TEST_F(TestFrameBuffer2, StopWhileWaitingForFrame) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  InsertFrame(pid, 0, ts, true, kFrameSize);
+  ExtractFrame(10);
+  buffer_->Stop();
+  time_controller_.AdvanceTime(TimeDelta::Millis(10));
+  EXPECT_THAT(frames_, IsEmpty());
+
+  // A new frame request should exit immediately and return no new frame.
+  ExtractFrame(0);
+  EXPECT_THAT(frames_, IsEmpty());
 }
 
 }  // namespace video_coding
