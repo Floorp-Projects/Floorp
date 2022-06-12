@@ -280,16 +280,10 @@ class TestRollChromiumRevision(unittest.TestCase):
         current_commit_pos = 'cafe'
         new_commit_pos = 'f00d'
 
-        with mock.patch('roll_deps._RunCommand', self.fake):
-            # We don't really care, but it's needed to construct the message.
-            self.fake.AddExpectation(['git', 'config', 'user.email'],
-                                     _returns=('nobody@nowhere.no', None),
-                                     _ignores=['working_dir'])
-
-            commit_msg = GenerateCommitMessage(NO_CHROMIUM_REVISION_UPDATE,
-                                               current_commit_pos,
-                                               new_commit_pos, changed_deps,
-                                               added_paths, removed_paths)
+        commit_msg = GenerateCommitMessage(NO_CHROMIUM_REVISION_UPDATE,
+                                           current_commit_pos,
+                                           new_commit_pos, changed_deps,
+                                           added_paths, removed_paths)
 
         return [l.strip() for l in commit_msg.split('\n')]
 

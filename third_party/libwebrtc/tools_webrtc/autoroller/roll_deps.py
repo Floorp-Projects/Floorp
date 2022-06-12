@@ -524,12 +524,8 @@ def GenerateCommitMessage(
     else:
         commit_msg.append('No update to Clang.\n')
 
-    # TBR needs to be non-empty for Gerrit to process it.
-    git_author = _RunCommand(['git', 'config', 'user.email'],
-                             working_dir=CHECKOUT_SRC_DIR)[0].splitlines()[0]
-    tbr_authors = git_author + ',' + tbr_authors
-
-    commit_msg.append('TBR=%s' % tbr_authors)
+    if tbr_authors:
+      commit_msg.append('TBR=%s' % tbr_authors)
     commit_msg.append('BUG=None')
     return '\n'.join(commit_msg)
 
