@@ -829,7 +829,9 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
-        let brush_flags = if prim_instance.anti_aliased {
+        let is_anti_aliased = ctx.data_stores.prim_has_anti_aliasing(prim_instance);
+
+        let brush_flags = if is_anti_aliased {
             BrushFlags::FORCE_AA
         } else {
             BrushFlags::empty()
@@ -888,7 +890,7 @@ impl BatchBuilder {
             batch_features |= BatchFeatures::REPETITION;
         }
 
-        if transform_kind != TransformedRectKind::AxisAligned || prim_instance.anti_aliased {
+        if transform_kind != TransformedRectKind::AxisAligned || is_anti_aliased {
             batch_features |= BatchFeatures::ANTIALIASING;
         }
 
@@ -976,7 +978,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     specified_blend_mode
                 } else {
@@ -1312,7 +1314,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -1409,7 +1411,7 @@ impl BatchBuilder {
                         let mut is_opaque = prim_info.clip_task_index == ClipTaskIndex::INVALID
                             && surface.is_opaque
                             && transform_kind == TransformedRectKind::AxisAligned
-                            && !prim_instance.anti_aliased;
+                            && !is_anti_aliased;
 
                         let pic_task_id = picture.primary_render_task_id.unwrap();
 
@@ -2122,7 +2124,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2177,7 +2179,7 @@ impl BatchBuilder {
                 let blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2288,7 +2290,7 @@ impl BatchBuilder {
                 let blend_mode = if !prim_common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2350,7 +2352,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     match image_data.alpha_type {
                         AlphaType::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
@@ -2502,7 +2504,7 @@ impl BatchBuilder {
                 let blend_mode = if !prim_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2614,7 +2616,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2732,7 +2734,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {
@@ -2851,7 +2853,7 @@ impl BatchBuilder {
                 let blend_mode = if !common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
                     transform_kind == TransformedRectKind::Complex ||
-                    prim_instance.anti_aliased
+                    is_anti_aliased
                 {
                     BlendMode::PremultipliedAlpha
                 } else {

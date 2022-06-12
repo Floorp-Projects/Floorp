@@ -8,7 +8,7 @@
 //! See the comment at the top of the `renderer` module for a description of
 //! how these two pieces interact.
 
-use api::{DebugFlags, Parameter, BoolParameter};
+use api::{DebugFlags, Parameter, BoolParameter, PrimitiveFlags};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, SampledScrollOffset};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
@@ -204,6 +204,21 @@ impl DataStores {
             }
             _ => {
                 self.as_common_data(prim_instance).may_need_repetition
+            }
+        }
+    }
+
+    /// Returns true if this primitive has anti-aliasing enabled.
+    pub fn prim_has_anti_aliasing(
+        &self,
+        prim_instance: &PrimitiveInstance,
+    ) -> bool {
+        match prim_instance.kind {
+            PrimitiveInstanceKind::Picture { .. } => {
+                false
+            }
+            _ => {
+                self.as_common_data(prim_instance).flags.contains(PrimitiveFlags::ANTIALISED)
             }
         }
     }
