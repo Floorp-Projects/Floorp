@@ -47,6 +47,7 @@
 #include "pc/rtp_transport.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
+#include "pc/srtp_filter.h"
 #include "pc/srtp_transport.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_udp_socket.h"

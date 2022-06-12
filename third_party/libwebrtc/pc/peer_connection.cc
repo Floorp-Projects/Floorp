@@ -2634,7 +2634,9 @@ void PeerConnection::ReportRemoteIceCandidateAdded(
 
 bool PeerConnection::SrtpRequired() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return dtls_enabled_;
+  return (dtls_enabled_ ||
+          sdp_handler_->webrtc_session_desc_factory()->SdesPolicy() ==
+              cricket::SEC_REQUIRED);
 }
 
 void PeerConnection::OnTransportControllerGatheringState(

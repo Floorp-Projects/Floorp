@@ -134,6 +134,7 @@ rtc_library("libjingle_peerconnection_api") {
   sources = [
     "candidate.cc",
     "candidate.h",
+    "crypto_params.h",
     "data_channel_interface.cc",
     "data_channel_interface.h",
     "dtls_transport_interface.cc",

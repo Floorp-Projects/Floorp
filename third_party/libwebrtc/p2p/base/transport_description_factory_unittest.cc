@@ -144,19 +144,17 @@ class TransportDescriptionFactoryTest : public ::testing::Test {
   }
 
  protected:
-  void SetDtls(bool f1_dtls, bool f2_dtls) {
-    if (f1_dtls) {
+  void SetDtls(bool dtls) {
+    if (dtls) {
+      f1_.set_secure(cricket::SEC_ENABLED);
+      f2_.set_secure(cricket::SEC_ENABLED);
       f1_.set_certificate(cert1_);
-    } else {
-      f1_.set_certificate(nullptr);
-    }
-    if (f2_dtls) {
       f2_.set_certificate(cert2_);
     } else {
-      f2_.set_certificate(nullptr);
+      f1_.set_secure(cricket::SEC_DISABLED);
+      f2_.set_secure(cricket::SEC_DISABLED);
     }
   }
-  void SetDtls(bool dtls) { SetDtls(dtls, dtls); }
 
   cricket::IceCredentialsIterator ice_credentials_;
   TransportDescriptionFactory f1_;
@@ -173,19 +171,33 @@ TEST_F(TransportDescriptionFactoryTest, TestOfferDefault) {
 }
 
 TEST_F(TransportDescriptionFactoryTest, TestOfferDtls) {
-  SetDtls(true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
   std::string digest_alg;
   ASSERT_TRUE(
       cert1_->GetSSLCertificate().GetSignatureDigestAlgorithm(&digest_alg));
   std::unique_ptr<TransportDescription> desc =
       f1_.CreateOffer(TransportOptions(), NULL, &ice_credentials_);
   CheckDesc(desc.get(), "", "", "", digest_alg);
+  // Ensure it also works with SEC_REQUIRED.
+  f1_.set_secure(cricket::SEC_REQUIRED);
+  desc = f1_.CreateOffer(TransportOptions(), NULL, &ice_credentials_);
+  CheckDesc(desc.get(), "", "", "", digest_alg);
+}
+
+// Test generating an offer with DTLS fails with no identity.
+TEST_F(TransportDescriptionFactoryTest, TestOfferDtlsWithNoIdentity) {
+  f1_.set_secure(cricket::SEC_ENABLED);
+  std::unique_ptr<TransportDescription> desc =
+      f1_.CreateOffer(TransportOptions(), NULL, &ice_credentials_);
+  ASSERT_TRUE(desc.get() == NULL);
 }
 
 // Test updating an offer with DTLS to pick ICE.
 // The ICE credentials should stay the same in the new offer.
 TEST_F(TransportDescriptionFactoryTest, TestOfferDtlsReofferDtls) {
-  SetDtls(true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
   std::string digest_alg;
   ASSERT_TRUE(
       cert1_->GetSSLCertificate().GetSignatureDigestAlgorithm(&digest_alg));
@@ -225,7 +237,8 @@ TEST_F(TransportDescriptionFactoryTest, TestReanswer) {
 
 // Test that we handle answering an offer with DTLS with no DTLS.
 TEST_F(TransportDescriptionFactoryTest, TestAnswerDtlsToNoDtls) {
-  SetDtls(true, false);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
   std::unique_ptr<TransportDescription> offer =
       f1_.CreateOffer(TransportOptions(), NULL, &ice_credentials_);
   ASSERT_TRUE(offer.get() != NULL);
@@ -234,20 +247,31 @@ TEST_F(TransportDescriptionFactoryTest, TestAnswerDtlsToNoDtls) {
   CheckDesc(desc.get(), "", "", "", "");
 }
 
-// Test that we reject answering an offer without DTLS if we have DTLS enabled.
+// Test that we handle answering an offer without DTLS if we have DTLS enabled,
+// but fail if we require DTLS.
 TEST_F(TransportDescriptionFactoryTest, TestAnswerNoDtlsToDtls) {
-  SetDtls(false, true);
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
   std::unique_ptr<TransportDescription> offer =
       f1_.CreateOffer(TransportOptions(), NULL, &ice_credentials_);
   ASSERT_TRUE(offer.get() != NULL);
   std::unique_ptr<TransportDescription> desc = f2_.CreateAnswer(
       offer.get(), TransportOptions(), true, NULL, &ice_credentials_);
-  ASSERT_FALSE(desc);
+  CheckDesc(desc.get(), "", "", "", "");
+  f2_.set_secure(cricket::SEC_REQUIRED);
+  desc = f2_.CreateAnswer(offer.get(), TransportOptions(), true, NULL,
+                          &ice_credentials_);
+  ASSERT_TRUE(desc.get() == NULL);
 }
 
-// Test that we handle answering an DTLS offer with DTLS.
+// Test that we handle answering an DTLS offer with DTLS, both if we have
+// DTLS enabled and required.
 TEST_F(TransportDescriptionFactoryTest, TestAnswerDtlsToDtls) {
-  SetDtls(true, true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
   // f2_ produces the answer that is being checked in this test, so the
   // answer must contain fingerprint lines with cert2_'s digest algorithm.
   std::string digest_alg2;
@@ -259,6 +283,10 @@ TEST_F(TransportDescriptionFactoryTest, TestAnswerDtlsToDtls) {
   ASSERT_TRUE(offer.get() != NULL);
   std::unique_ptr<TransportDescription> desc = f2_.CreateAnswer(
       offer.get(), TransportOptions(), true, NULL, &ice_credentials_);
+  CheckDesc(desc.get(), "", "", "", digest_alg2);
+  f2_.set_secure(cricket::SEC_REQUIRED);
+  desc = f2_.CreateAnswer(offer.get(), TransportOptions(), true, NULL,
+                          &ice_credentials_);
   CheckDesc(desc.get(), "", "", "", digest_alg2);
 }
 
@@ -326,7 +354,11 @@ TEST_F(TransportDescriptionFactoryTest, CreateAnswerIceCredentialsIterator) {
 }
 
 TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActpassOffer) {
-  SetDtls(true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
   cricket::TransportOptions options;
   std::unique_ptr<TransportDescription> offer =
       f1_.CreateOffer(options, nullptr, &ice_credentials_);
@@ -337,7 +369,11 @@ TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActpassOffer) {
 }
 
 TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActiveOffer) {
-  SetDtls(true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
   cricket::TransportOptions options;
   std::unique_ptr<TransportDescription> offer =
       f1_.CreateOffer(options, nullptr, &ice_credentials_);
@@ -349,7 +385,11 @@ TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsActiveOffer) {
 }
 
 TEST_F(TransportDescriptionFactoryTest, CreateAnswerToDtlsPassiveOffer) {
-  SetDtls(true);
+  f1_.set_secure(cricket::SEC_ENABLED);
+  f1_.set_certificate(cert1_);
+
+  f2_.set_secure(cricket::SEC_ENABLED);
+  f2_.set_certificate(cert2_);
   cricket::TransportOptions options;
   std::unique_ptr<TransportDescription> offer =
       f1_.CreateOffer(options, nullptr, &ice_credentials_);

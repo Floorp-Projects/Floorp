@@ -21,7 +21,8 @@
 
 namespace cricket {
 
-TransportDescriptionFactory::TransportDescriptionFactory() {}
+TransportDescriptionFactory::TransportDescriptionFactory()
+    : secure_(SEC_DISABLED) {}
 
 TransportDescriptionFactory::~TransportDescriptionFactory() = default;
 
@@ -46,7 +47,7 @@ std::unique_ptr<TransportDescription> TransportDescriptionFactory::CreateOffer(
   }
 
   // If we are trying to establish a secure transport, add a fingerprint.
-  if (IsEncrypted()) {
+  if (secure_ == SEC_ENABLED || secure_ == SEC_REQUIRED) {
     // Fail if we can't create the fingerprint.
     // If we are the initiator set role to "actpass".
     if (!SetSecurityInfo(desc.get(), CONNECTIONROLE_ACTPASS)) {
@@ -89,7 +90,7 @@ std::unique_ptr<TransportDescription> TransportDescriptionFactory::CreateAnswer(
   // Negotiate security params.
   if (offer && offer->identity_fingerprint.get()) {
     // The offer supports DTLS, so answer with DTLS, as long as we support it.
-    if (IsEncrypted()) {
+    if (secure_ == SEC_ENABLED || secure_ == SEC_REQUIRED) {
       ConnectionRole role = CONNECTIONROLE_NONE;
       // If the offer does not constrain the role, go with preference.
       if (offer->connection_role == CONNECTIONROLE_ACTPASS) {
@@ -115,7 +116,7 @@ std::unique_ptr<TransportDescription> TransportDescriptionFactory::CreateAnswer(
         return NULL;
       }
     }
-  } else if (require_transport_attributes && IsEncrypted()) {
+  } else if (require_transport_attributes && secure_ == SEC_REQUIRED) {
     // We require DTLS, but the other side didn't offer it. Fail.
     RTC_LOG(LS_WARNING) << "Failed to create TransportDescription answer "
                            "because of incompatible security settings";
