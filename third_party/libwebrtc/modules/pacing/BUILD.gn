@@ -55,7 +55,6 @@ rtc_library("pacing") {
     "../../rtc_base/task_utils:to_queued_task",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
-    "../remote_bitrate_estimator",
     "../rtp_rtcp",
     "../rtp_rtcp:rtp_rtcp_format",
     "../utility",
