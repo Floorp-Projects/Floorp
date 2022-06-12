@@ -411,27 +411,29 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
 
 TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
   static const size_t kNumRtpPacketsToSend = 5;
-  class ReceivedRtpStatsObserver : public test::EndToEndTest,
-                                   public QueuedTask {
+  class ReceivedRtpStatsObserver : public test::EndToEndTest {
    public:
-    ReceivedRtpStatsObserver()
-        : EndToEndTest(kDefaultTimeoutMs),
-          receive_stream_(nullptr),
-          sent_rtp_(0) {}
+    explicit ReceivedRtpStatsObserver(TaskQueueBase* task_queue)
+        : EndToEndTest(kDefaultTimeoutMs), task_queue_(task_queue) {}
 
    private:
     void OnVideoStreamsCreated(
         VideoSendStream* send_stream,
         const std::vector<VideoReceiveStream*>& receive_streams) override {
       receive_stream_ = receive_streams[0];
-      task_queue_ = TaskQueueBase::Current();
-      EXPECT_TRUE(task_queue_ != nullptr);
     }
+
+    void OnStreamsStopped() override { task_safety_flag_->SetNotAlive(); }
 
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       if (sent_rtp_ >= kNumRtpPacketsToSend) {
         // Need to check the stats on the correct thread.
-        task_queue_->PostTask(std::unique_ptr<QueuedTask>(this));
+        task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this]() {
+          VideoReceiveStream::Stats stats = receive_stream_->GetStats();
+          if (kNumRtpPacketsToSend == stats.rtp_stats.packet_counter.packets) {
+            observation_complete_.Set();
+          }
+        }));
         return DROP_PACKET;
       }
       ++sent_rtp_;
@@ -443,18 +445,12 @@ TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
           << "Timed out while verifying number of received RTP packets.";
     }
 
-    bool Run() override {
-      VideoReceiveStream::Stats stats = receive_stream_->GetStats();
-      if (kNumRtpPacketsToSend == stats.rtp_stats.packet_counter.packets) {
-        observation_complete_.Set();
-      }
-      return false;
-    }
-
-    VideoReceiveStream* receive_stream_;
-    uint32_t sent_rtp_;
-    TaskQueueBase* task_queue_ = nullptr;
-  } test;
+    VideoReceiveStream* receive_stream_ = nullptr;
+    uint32_t sent_rtp_ = 0;
+    TaskQueueBase* const task_queue_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_ =
+        PendingTaskSafetyFlag::CreateDetached();
+  } test(task_queue());
 
   RunBaseTest(&test);
 }
