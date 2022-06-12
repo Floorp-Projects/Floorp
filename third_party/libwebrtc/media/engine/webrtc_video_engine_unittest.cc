@@ -5479,7 +5479,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsReportsPerLayerQpSum) {
 webrtc::VideoSendStream::Stats GetInitialisedStats() {
   webrtc::VideoSendStream::Stats stats;
   stats.encoder_implementation_name = "vp";
-  stats.input_frame_rate = 1;
+  stats.input_frame_rate = 1.0;
   stats.encode_frame_rate = 2;
   stats.avg_encode_time_ms = 3;
   stats.encode_usage_percent = 4;

@@ -1112,7 +1112,7 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsUndefined(video_source.width);
     verifier.TestMemberIsUndefined(video_source.height);
     verifier.TestMemberIsNonNegative<uint32_t>(video_source.frames);
-    verifier.TestMemberIsNonNegative<uint32_t>(video_source.frames_per_second);
+    verifier.TestMemberIsNonNegative<double>(video_source.frames_per_second);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
