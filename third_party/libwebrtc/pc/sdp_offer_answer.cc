@@ -123,6 +123,9 @@ const char kSimulcastDisabled[] = "WebRTC.PeerConnection.Simulcast.Disabled";
 // The length of RTCP CNAMEs.
 static const int kRtcpCnameLength = 16;
 
+// The maximum length of the MID attribute.
+static constexpr size_t kMidMaxSize = 16;
+
 const char kDefaultStreamId[] = "default";
 // NOTE: Duplicated in peer_connection.cc:
 static const char kDefaultAudioSenderId[] = "defaulta0";
@@ -447,6 +450,11 @@ RTCError ValidateMids(const cricket::SessionDescription& description) {
     if (content.name.empty()) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "A media section is missing a MID attribute.");
+    }
+    if (content.name.size() > kMidMaxSize) {
+      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                           "The MID attribute exceeds the maximum supported "
+                           "length of 16 characters.");
     }
     if (!mids.insert(content.name).second) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
