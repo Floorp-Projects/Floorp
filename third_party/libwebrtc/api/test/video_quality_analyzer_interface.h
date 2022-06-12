@@ -147,6 +147,9 @@ class VideoQualityAnalyzerInterface
   // statistics.
   virtual void Stop() {}
 
+  // Returns the last stream where this frame was captured. It means that if
+  // frame ids space wraps around, then stream label for frame id may change.
+  // It will crash, if the specified `frame_id` wasn't captured.
   virtual std::string GetStreamLabel(uint16_t frame_id) = 0;
 };
 
