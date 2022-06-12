@@ -1084,6 +1084,9 @@ static Codecs MatchCodecPreference(
                 break;
               }
             } else if (IsRedCodec(codec)) {
+              // For RED, do not insert the codec again if it was already
+              // inserted. audio/red for opus gets enabled by having RED before
+              // the primary codec.
               const auto fmtp =
                   codec.params.find(cricket::kCodecParamNotInNameValueFormat);
               if (fmtp != codec.params.end()) {
@@ -1091,7 +1094,10 @@ static Codecs MatchCodecPreference(
                 rtc::split(fmtp->second, '/', &redundant_payloads);
                 if (redundant_payloads.size() > 0 &&
                     redundant_payloads[0] == id) {
-                  filtered_codecs.push_back(codec);
+                  if (std::find(filtered_codecs.begin(), filtered_codecs.end(),
+                                codec) == filtered_codecs.end()) {
+                    filtered_codecs.push_back(codec);
+                  }
                   break;
                 }
               }
