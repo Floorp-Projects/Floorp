@@ -706,14 +706,14 @@ absl::optional<Syncable::Info> VideoReceiveStream2::GetInfo() const {
 
 bool VideoReceiveStream2::GetPlayoutRtpTimestamp(uint32_t* rtp_timestamp,
                                                  int64_t* time_ms) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 void VideoReceiveStream2::SetEstimatedPlayoutNtpTimestampMs(
     int64_t ntp_timestamp_ms,
     int64_t time_ms) {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 bool VideoReceiveStream2::SetMinimumPlayoutDelay(int delay_ms) {

@@ -52,7 +52,7 @@ size_t ExpectedBaseValueSize(const FieldParameters& params, T value) {
     default:
       break;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 

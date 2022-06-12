@@ -58,7 +58,7 @@ const char* InternalTypeToString(StatsReport::StatsType type) {
     case StatsReport::kStatsReportTypeDataChannel:
       return "datachannel";
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 
@@ -291,7 +291,7 @@ bool StatsReport::Value::Equals(const Value& other) const {
     case kId:
       return (*value_.id_)->Equals(*other.value_.id_);
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return false;
 }
 
@@ -676,7 +676,7 @@ std::string StatsReport::Value::ToString() const {
     case kId:
       return (*value_.id_)->ToString();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return std::string();
 }
 

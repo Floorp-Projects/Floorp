@@ -126,7 +126,7 @@ static NSString *const shaderSource = MTL_STRINGIFY(
     mtlPixelFormat = MTLPixelFormatRGBA8Unorm;
     isARGB = true;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return NO;
   }
 

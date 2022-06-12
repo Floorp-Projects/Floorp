@@ -101,7 +101,7 @@ class SrtpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
         EXPECT_EQ(80 / 8, overhead);  // 80-bit tag.
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
     }
 

@@ -82,7 +82,7 @@ class ScalingObserver : public test::SendTest {
                 return VP9Encoder::Create();
               if (format.name == "H264")
                 return H264Encoder::Create(cricket::VideoCodec("H264"));
-              RTC_NOTREACHED() << format.name;
+              RTC_DCHECK_NOTREACHED() << format.name;
               return nullptr;
             }),
         payload_name_(payload_name),

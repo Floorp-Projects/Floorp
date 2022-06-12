@@ -77,7 +77,7 @@ std::unique_ptr<VP9Encoder> VP9Encoder::Create() {
                                             LibvpxInterface::Create(),
                                             FieldTrialBasedConfig());
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }
@@ -88,7 +88,7 @@ std::unique_ptr<VP9Encoder> VP9Encoder::Create(
   return std::make_unique<LibvpxVp9Encoder>(codec, LibvpxInterface::Create(),
                                             FieldTrialBasedConfig());
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }
@@ -106,7 +106,7 @@ std::unique_ptr<VP9Decoder> VP9Decoder::Create() {
 #ifdef RTC_ENABLE_VP9
   return std::make_unique<LibvpxVp9Decoder>();
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif
 }

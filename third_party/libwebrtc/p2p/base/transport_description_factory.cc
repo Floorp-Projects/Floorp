@@ -109,7 +109,7 @@ std::unique_ptr<TransportDescription> TransportDescriptionFactory::CreateAnswer(
       } else {
         RTC_LOG(LS_ERROR) << "Remote offer connection role is " << role
                           << " which is a protocol violation";
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
       }
 
       if (!SetSecurityInfo(desc.get(), role)) {

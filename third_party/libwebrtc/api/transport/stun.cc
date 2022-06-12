@@ -76,7 +76,7 @@ bool LengthValid(int type, int length) {
       // Return an arbitrary restriction for all other types.
       return length <= kTheoreticalMaximumAttributeLength;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return true;
 }
 

@@ -107,7 +107,7 @@ const char* FrameTypeToString(VideoFrameType frame_type) {
     case VideoFrameType::kVideoFrameDelta:
       return "video_delta";
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return "";
   }
 }

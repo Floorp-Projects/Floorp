@@ -574,7 +574,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
     case VP9Profile::kProfile1:
       // Encoding of profile 1 is not implemented. It would require extended
       // support for I444, I422, and I440 buffers.
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       break;
     case VP9Profile::kProfile2:
       img_fmt = VPX_IMG_FMT_I42016;
@@ -834,7 +834,7 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
         libvpx_->codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 2);
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
 
     memset(&svc_drop_frame_, 0, sizeof(svc_drop_frame_));
@@ -1120,7 +1120,7 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
       break;
     }
     case VP9Profile::kProfile1: {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       break;
     }
     case VP9Profile::kProfile2: {
@@ -2052,7 +2052,7 @@ rtc::scoped_refptr<VideoFrameBuffer> LibvpxVp9Encoder::PrepareBufferForProfile0(
       break;
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   return mapped_buffer;
 }

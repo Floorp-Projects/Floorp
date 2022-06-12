@@ -91,7 +91,7 @@ absl::optional<std::string> ProjectRootPath() {
   char buf[PATH_MAX];
   ssize_t count = ::readlink("/proc/self/exe", buf, arraysize(buf));
   if (count <= 0) {
-    RTC_NOTREACHED() << "Unable to resolve /proc/self/exe.";
+    RTC_DCHECK_NOTREACHED() << "Unable to resolve /proc/self/exe.";
     return absl::nullopt;
   }
   // On POSIX, tests execute in out/Whatever, so src is two levels up.

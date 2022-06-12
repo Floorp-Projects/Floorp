@@ -228,7 +228,7 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
         return dtls_transport->ice_transport()->internal()->GetIceRole();
       }
     }
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return cricket::ICEROLE_UNKNOWN;
   }
 

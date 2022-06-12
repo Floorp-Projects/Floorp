@@ -275,7 +275,7 @@ static RTCErrorType ParseIceServerUrl(
     default:
       // We shouldn't get to this point with an invalid service_type, we should
       // have returned an error already.
-      RTC_NOTREACHED() << "Unexpected service type";
+      RTC_DCHECK_NOTREACHED() << "Unexpected service type";
       return RTCErrorType::INTERNAL_ERROR;
   }
   return RTCErrorType::NONE;

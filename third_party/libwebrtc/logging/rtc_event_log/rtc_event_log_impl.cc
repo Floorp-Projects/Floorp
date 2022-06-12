@@ -48,7 +48,7 @@ std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
     default:
       RTC_LOG(LS_ERROR) << "Unknown RtcEventLog encoder type (" << int(type)
                         << ")";
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return std::unique_ptr<RtcEventLogEncoder>(nullptr);
   }
 }

@@ -966,7 +966,7 @@ static void ReplaceDirection(RtpTransceiverDirection direction,
       break;
     case RtpTransceiverDirection::kStopped:
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       new_direction = "a=sendrecv";
       break;
   }
@@ -1602,7 +1602,7 @@ class WebRtcSdpTest : public ::testing::Test {
     } else if (mline_index == 1) {
       content_name = kVideoContentName;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
     TransportInfo transport_info(content_name,
                                  TransportDescription(ufrag, pwd));

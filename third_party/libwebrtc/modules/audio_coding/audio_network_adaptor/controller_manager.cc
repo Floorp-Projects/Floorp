@@ -265,7 +265,7 @@ std::unique_ptr<ControllerManager> ControllerManagerImpl::Create(
         break;
       case audio_network_adaptor::config::Controller::kFecControllerRplrBased:
         // FecControllerRplrBased has been removed and can't be used anymore.
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         continue;
       case audio_network_adaptor::config::Controller::kFrameLengthController:
         controller = CreateFrameLengthController(
@@ -293,7 +293,7 @@ std::unique_ptr<ControllerManager> ControllerManagerImpl::Create(
             encoder_frame_lengths_ms);
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     if (controller_config.has_scoring_point()) {
       auto& scoring_point = controller_config.scoring_point();
@@ -321,7 +321,7 @@ std::unique_ptr<ControllerManager> ControllerManagerImpl::Create(
   }
 
 #else
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 #endif  // WEBRTC_ENABLE_PROTOBUF
 }

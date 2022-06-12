@@ -173,7 +173,7 @@ MappableNativeBuffer::GetOrCreateMappedBuffer(int width, int height) {
       break;
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   mapped_buffers_.push_back(mapped_buffer);
   return mapped_buffer;

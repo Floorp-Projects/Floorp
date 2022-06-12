@@ -992,7 +992,7 @@ class FakeNativeBufferI420 : public VideoFrameBuffer {
     if (allow_to_i420_) {
       return I420Buffer::Create(width_, height_);
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
     return nullptr;
   }

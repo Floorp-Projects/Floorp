@@ -546,7 +546,7 @@ void RtcEventLogSession::WriteLog(EventCounts count,
     }
     selection -= count.generic_acks_received;
 
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   event_log->StopLogging();

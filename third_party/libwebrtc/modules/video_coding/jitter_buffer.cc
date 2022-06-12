@@ -497,7 +497,7 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
       RecycleFrameBuffer(frame);
       return kFlushIndicator;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   return buffer_state;
 }

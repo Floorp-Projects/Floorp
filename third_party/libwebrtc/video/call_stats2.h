@@ -93,7 +93,7 @@ class CallStats {
       // propagating the rtt from the RtpRtcp module, which does not call
       // LastProcessedRtt(). Down the line we should consider removing
       // LastProcessedRtt() and use the interface for event notifications only.
-      RTC_NOTREACHED() << "Legacy call path";
+      RTC_DCHECK_NOTREACHED() << "Legacy call path";
       return 0;
     }
 

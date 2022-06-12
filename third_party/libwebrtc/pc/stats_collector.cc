@@ -505,7 +505,7 @@ const char* IceCandidateTypeToStatsType(const std::string& candidate_type) {
   if (candidate_type == cricket::RELAY_PORT_TYPE) {
     return STATSREPORT_RELAY_PORT_TYPE;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return "unknown";
 }
 
@@ -530,7 +530,7 @@ const char* AdapterTypeToStatsType(rtc::AdapterType type) {
     case rtc::ADAPTER_TYPE_ANY:
       return STATSREPORT_ADAPTER_TYPE_WILDCARD;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return "";
   }
 }
@@ -572,7 +572,7 @@ void StatsCollector::AddTrack(MediaStreamTrackInterface* track) {
     CreateTrackReport(static_cast<VideoTrackInterface*>(track), &reports_,
                       &track_ids_);
   } else {
-    RTC_NOTREACHED() << "Illegal track kind";
+    RTC_DCHECK_NOTREACHED() << "Illegal track kind";
   }
 }
 

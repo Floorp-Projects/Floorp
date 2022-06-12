@@ -350,7 +350,7 @@ void VideoCodecTestFixtureImpl::H264KeyframeChecker::CheckEncodedFrame(
     EXPECT_FALSE(contains_pps) << "Delta frame should not contain PPS.";
     EXPECT_FALSE(contains_idr) << "Delta frame should not contain IDR.";
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 }
 

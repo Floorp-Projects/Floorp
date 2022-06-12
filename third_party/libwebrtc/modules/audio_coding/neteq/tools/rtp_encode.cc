@@ -191,7 +191,7 @@ AudioEncoderL16::Config Pcm16bConfig(CodecType codec_type) {
       config.sample_rate_hz = 48000;
       return config;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return config;
   }
 }
@@ -242,7 +242,7 @@ std::unique_ptr<AudioEncoder> CreateEncoder(CodecType codec_type,
           GetCodecConfig<AudioEncoderIsac>(), payload_type);
     }
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 
@@ -259,7 +259,7 @@ AudioEncoderCngConfig GetCngConfig(int sample_rate_hz) {
       case 48000:
         return 100;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     return 0;
   };

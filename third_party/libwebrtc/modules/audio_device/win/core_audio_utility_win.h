@@ -244,7 +244,7 @@ class ScopedHandle {
   void Close() {
     if (handle_) {
       if (!::CloseHandle(handle_)) {
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
       }
       handle_ = nullptr;
     }

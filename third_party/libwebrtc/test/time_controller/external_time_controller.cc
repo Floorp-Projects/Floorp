@@ -109,7 +109,7 @@ class ExternalTimeController::ProcessThreadWrapper : public ProcessThread {
 
   void Delete() override {
     // ProcessThread shouldn't be deleted as a TaskQueue.
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   ModuleWrapper* GetWrapper(Module* module) {
@@ -200,12 +200,12 @@ void ExternalTimeController::AdvanceTime(TimeDelta duration) {
 std::unique_ptr<rtc::Thread> ExternalTimeController::CreateThread(
     const std::string& name,
     std::unique_ptr<rtc::SocketServer> socket_server) {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 
 rtc::Thread* ExternalTimeController::GetMainThread() {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 

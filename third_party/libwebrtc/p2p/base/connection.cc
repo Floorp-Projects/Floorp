@@ -216,7 +216,7 @@ void ConnectionRequest::Prepare(StunMessage* request) {
     request->AddAttribute(std::make_unique<StunUInt64Attribute>(
         STUN_ATTR_ICE_CONTROLLED, connection_->port()->IceTiebreaker()));
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   // Adding PRIORITY Attribute.
@@ -528,7 +528,7 @@ void Connection::OnReadPacket(const char* data,
         }
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
         break;
     }
   }

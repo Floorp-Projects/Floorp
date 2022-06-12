@@ -288,7 +288,7 @@ void PseudoTcp::NotifyClock(uint32_t now) {
   // Check if it's time to retransmit a segment
   if (m_rto_base && (rtc::TimeDiff32(m_rto_base + m_rx_rto, now) <= 0)) {
     if (m_slist.empty()) {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     } else {
 // Note: (m_slist.front().xmit == 0)) {
 // retransmit segments
@@ -375,7 +375,7 @@ void PseudoTcp::GetOption(Option opt, int* value) {
   } else if (opt == OPT_RCVBUF) {
     *value = m_rbuf_len;
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 }
 void PseudoTcp::SetOption(Option opt, int value) {
@@ -390,7 +390,7 @@ void PseudoTcp::SetOption(Option opt, int value) {
     RTC_DCHECK(m_state == TCP_LISTEN);
     resizeReceiveBuffer(value);
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 }
 

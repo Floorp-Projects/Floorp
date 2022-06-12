@@ -127,7 +127,7 @@ bool IsNonVolatile(RTPExtensionType type) {
       return false;
     case kRtpExtensionNone:
     case kRtpExtensionNumberOfExtensions:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return false;
 #if defined(WEBRTC_MOZILLA_BUILD)
     case kRtpExtensionCsrcAudioLevel:

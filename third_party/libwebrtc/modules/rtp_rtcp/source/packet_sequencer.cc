@@ -66,7 +66,7 @@ void PacketSequencer::Sequence(RtpPacketToSend& packet) {
     }
     packet.SetSequenceNumber(rtx_sequence_number_++);
   } else {
-    RTC_NOTREACHED() << "Unexpected ssrc " << packet.Ssrc();
+    RTC_DCHECK_NOTREACHED() << "Unexpected ssrc " << packet.Ssrc();
   }
 }
 

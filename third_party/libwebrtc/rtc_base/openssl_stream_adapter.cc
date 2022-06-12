@@ -842,7 +842,7 @@ void OpenSSLStreamAdapter::SetTimeout(int delay_ms) {
           }
           ContinueSSL();
         } else {
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
         }
         // This callback will never run again (stopped above).
         return webrtc::TimeDelta::PlusInfinity();

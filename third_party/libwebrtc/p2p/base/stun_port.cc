@@ -248,7 +248,7 @@ Connection* UDPPort::CreateConnection(const Candidate& address,
   // it would lead to a crash when accessing the local candidate of the
   // connection that would be created below.
   if (Candidates().empty()) {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return nullptr;
   }
   // When the socket is shared, the srflx candidate is gathered by the UDPPort.

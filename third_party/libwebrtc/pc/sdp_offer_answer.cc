@@ -578,7 +578,7 @@ absl::string_view GetDefaultMidForPlanB(cricket::MediaType media_type) {
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return "not supported";
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return "";
 }
 
@@ -695,7 +695,7 @@ std::string GenerateRtcpCname() {
   std::string cname;
   if (!rtc::CreateRandomString(kRtcpCnameLength, &cname)) {
     RTC_LOG(LS_ERROR) << "Failed to generate CNAME.";
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
   return cname;
 }
@@ -3915,7 +3915,7 @@ const char* SdpOfferAnswerHandler::SessionErrorToString(
     case SessionError::kTransport:
       return "ERROR_TRANSPORT";
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return "";
 }
 
@@ -4409,7 +4409,7 @@ void SdpOfferAnswerHandler::ReportNegotiatedSdpSemantics(
       semantics_negotiated = kSdpSemanticNegotiatedMixed;
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpSemanticNegotiated",
                             semantics_negotiated, kSdpSemanticNegotiatedMax);
@@ -4721,11 +4721,12 @@ void SdpOfferAnswerHandler::DestroyChannelInterface(
           static_cast<cricket::VideoChannel*>(channel));
       break;
     case cricket::MEDIA_TYPE_DATA:
-      RTC_NOTREACHED()
+      RTC_DCHECK_NOTREACHED()
           << "Trying to destroy datachannel through DestroyChannelInterface";
       break;
     default:
-      RTC_NOTREACHED() << "Unknown media type: " << channel->media_type();
+      RTC_DCHECK_NOTREACHED()
+          << "Unknown media type: " << channel->media_type();
       break;
   }
 

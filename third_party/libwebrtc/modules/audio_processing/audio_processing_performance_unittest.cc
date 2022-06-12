@@ -367,7 +367,7 @@ class TimedThreadApiProcessor {
 
     // Should not be reached, but the return statement is needed for the code to
     // build successfully on Android.
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return false;
   }
 

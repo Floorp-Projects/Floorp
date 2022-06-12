@@ -471,7 +471,7 @@ void VideoReceiveStream::RemoveSecondarySink(
 void VideoReceiveStream::SetRtpExtensions(
     std::vector<RtpExtension> extensions) {
   // VideoReceiveStream is deprecated and this function not supported.
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 bool VideoReceiveStream::SetBaseMinimumPlayoutDelayMs(int delay_ms) {
@@ -596,14 +596,14 @@ absl::optional<Syncable::Info> VideoReceiveStream::GetInfo() const {
 
 bool VideoReceiveStream::GetPlayoutRtpTimestamp(uint32_t* rtp_timestamp,
                                                 int64_t* time_ms) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return 0;
 }
 
 void VideoReceiveStream::SetEstimatedPlayoutNtpTimestampMs(
     int64_t ntp_timestamp_ms,
     int64_t time_ms) {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 bool VideoReceiveStream::SetMinimumPlayoutDelay(int delay_ms) {

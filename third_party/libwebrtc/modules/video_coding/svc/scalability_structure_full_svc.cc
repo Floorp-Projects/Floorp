@@ -123,7 +123,7 @@ ScalabilityStructureFullSvc::NextPattern() const {
       }
       return kDeltaT0;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return kNone;
 }
 
@@ -227,7 +227,7 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
       }
       break;
     case kNone:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       break;
   }
 

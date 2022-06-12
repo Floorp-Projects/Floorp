@@ -460,7 +460,7 @@ bool JsepTransport::SetRtcpMux(bool enable,
       }
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
 
   if (!ret) {
@@ -670,7 +670,7 @@ webrtc::RTCError JsepTransport::NegotiateDtlsRole(
             }
             break;
           default:
-            RTC_NOTREACHED();
+            RTC_DCHECK_NOTREACHED();
             break;
         }
       } else {

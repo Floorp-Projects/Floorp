@@ -106,7 +106,7 @@ bool AddSHA256SignatureAlgorithm(CBB* cbb, KeyType key_type) {
       }
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return false;
   }
   if (!CBB_flush(cbb)) {

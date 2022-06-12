@@ -76,10 +76,10 @@ std::string EncodeSingleValue(uint64_t value, FieldType field_type) {
     case FieldType::kVarInt:
       return EncodeVarInt(value);
     case FieldType::kString:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       return std::string();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return std::string();
 }
 

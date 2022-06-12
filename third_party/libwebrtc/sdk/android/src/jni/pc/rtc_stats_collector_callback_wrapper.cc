@@ -112,7 +112,7 @@ ScopedJavaLocalRef<jobject> MemberToJava(
                                   NativeToJavaDouble(env, entry.second));
           });
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 

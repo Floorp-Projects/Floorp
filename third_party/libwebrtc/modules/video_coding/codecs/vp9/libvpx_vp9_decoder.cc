@@ -64,7 +64,7 @@ ColorSpace ExtractVP9ColorSpace(vpx_color_space_t space_t,
           transfer = ColorSpace::TransferID::kBT2020_10;
           break;
         default:
-          RTC_NOTREACHED();
+          RTC_DCHECK_NOTREACHED();
           break;
       }
       matrix = ColorSpace::MatrixID::kBT2020_NCL;

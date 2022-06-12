@@ -112,7 +112,7 @@ int GetPayloadType(const std::string& codec_name) {
     return static_cast<int>(PayloadType::kIlbc);
   }
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return -1;
 }
 

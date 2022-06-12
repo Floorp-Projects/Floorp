@@ -143,7 +143,7 @@ class SimulcastTestFixtureImpl::TestDecodedImageCallback
     return 0;
   }
   int32_t Decoded(VideoFrame& decoded_image, int64_t decode_time_ms) override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return -1;
   }
   void Decoded(VideoFrame& decoded_image,

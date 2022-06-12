@@ -509,7 +509,7 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::DecreaseFramerate(
     max_frame_rate = balanced_settings_.MinFps(input_state.video_codec_type(),
                                                frame_size_pixels);
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     max_frame_rate = GetLowerFrameRateThan(input_state.frames_per_second());
   }
   if (!CanDecreaseFrameRateTo(max_frame_rate,
@@ -584,7 +584,7 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::IncreaseFramerate(
       return Adaptation::Status::kLimitReached;
     }
   } else {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     max_frame_rate = GetHigherFrameRateThan(input_state.frames_per_second());
   }
   if (current_restrictions.counters.fps_adaptations == 1) {

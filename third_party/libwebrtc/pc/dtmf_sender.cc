@@ -194,7 +194,7 @@ void DtmfSender::DoInsertDtmf() {
     if (!GetDtmfCode(tone, &code)) {
       // The find_first_of(kDtmfValidTones) should have guarantee `tone` is
       // a valid DTMF tone.
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
   }
 

@@ -295,7 +295,7 @@ void RtpPayloadParams::SetGeneric(const CodecSpecificInfo* codec_specific_info,
     case VideoCodecType::kVideoCodecMultiplex:
       return;
   }
-  RTC_NOTREACHED() << "Unsupported codec.";
+  RTC_DCHECK_NOTREACHED() << "Unsupported codec.";
 }
 
 void RtpPayloadParams::GenericToGeneric(int64_t shared_frame_id,

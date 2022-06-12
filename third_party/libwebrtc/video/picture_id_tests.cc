@@ -111,7 +111,7 @@ class PictureIdObserver : public test::RtpRtcpObserver {
       parsed->tl0_pic_idx = vp9_header->tl0_pic_idx;
       parsed->temporal_idx = vp9_header->temporal_idx;
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
 
     parsed->frame_type = parsed_payload->video_header.frame_type;

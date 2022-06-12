@@ -266,7 +266,7 @@ class ReplacementAudioDecoderFactory : public AudioDecoderFactory {
         file_sample_rate_hz_(file_sample_rate_hz) {}
 
   std::vector<AudioCodecSpec> GetSupportedDecoders() override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
     return {};
   }
 

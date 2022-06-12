@@ -8382,7 +8382,7 @@ class VideoStreamEncoderWithRealEncoderTest
             false);
         break;
       default:
-        RTC_NOTREACHED();
+        RTC_DCHECK_NOTREACHED();
     }
     ConfigureEncoderAndBitrate(codec_type_, std::move(encoder));
   }
@@ -8609,7 +8609,7 @@ std::string TestParametersVideoCodecAndAllowI420ConversionToString(
       str = "Multiplex";
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
   str += allow_i420_conversion ? "_AllowToI420" : "_DisallowToI420";
   return str;
