@@ -3377,11 +3377,14 @@ class Vp9HeaderObserver : public test::SendTest {
     const auto& vp9_header =
         absl::get<RTPVideoHeaderVP9>(video.video_type_header);
 
-    bool new_frame =
+    const bool new_temporal_unit =
         packets_sent_ == 0 ||
         IsNewerTimestamp(rtp_packet.Timestamp(), last_packet_timestamp_);
+    const bool new_frame =
+        new_temporal_unit || last_vp9_.spatial_idx != vp9_header.spatial_idx;
+
     EXPECT_EQ(new_frame, video.is_first_packet_in_frame);
-    if (!new_frame) {
+    if (!new_temporal_unit) {
       EXPECT_FALSE(last_packet_marker_);
       EXPECT_EQ(last_packet_timestamp_, rtp_packet.Timestamp());
       EXPECT_EQ(last_vp9_.picture_id, vp9_header.picture_id);
