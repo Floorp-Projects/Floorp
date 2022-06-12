@@ -274,7 +274,7 @@ class NetEqNetworkStatsTest {
 
     // Next we introduce packet losses.
     SetPacketLossRate(0.1);
-    expects.stats_ref.expand_rate = expects.stats_ref.speech_expand_rate = 1065;
+    expects.stats_ref.expand_rate = expects.stats_ref.speech_expand_rate = 898;
     RunTest(50, expects);
 
     // Next we enable FEC.

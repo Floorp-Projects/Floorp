@@ -20,6 +20,7 @@
 
 #include "modules/include/module_common_types_public.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/numerics/safe_minmax.h"
@@ -45,9 +46,17 @@ std::unique_ptr<ReorderOptimizer> MaybeCreateReorderOptimizer(
 }  // namespace
 
 DelayManager::Config::Config() {
-  Parser()->Parse(webrtc::field_trial::FindFullName(
-      "WebRTC-Audio-NetEqDelayManagerConfig"));
-  MaybeUpdateFromLegacyFieldTrial();
+  StructParametersParser::Create(                       //
+      "quantile", &quantile,                            //
+      "forget_factor", &forget_factor,                  //
+      "start_forget_weight", &start_forget_weight,      //
+      "resample_interval_ms", &resample_interval_ms,    //
+      "max_history_ms", &max_history_ms,                //
+      "use_reorder_optimizer", &use_reorder_optimizer,  //
+      "reorder_forget_factor", &reorder_forget_factor,  //
+      "ms_per_loss_percent", &ms_per_loss_percent)
+      ->Parse(webrtc::field_trial::FindFullName(
+          "WebRTC-Audio-NetEqDelayManagerConfig"));
 }
 
 void DelayManager::Config::Log() {
@@ -61,42 +70,6 @@ void DelayManager::Config::Log() {
                    << " use_reorder_optimizer=" << use_reorder_optimizer
                    << " reorder_forget_factor=" << reorder_forget_factor
                    << " ms_per_loss_percent=" << ms_per_loss_percent;
-}
-
-std::unique_ptr<StructParametersParser> DelayManager::Config::Parser() {
-  return StructParametersParser::Create(                //
-      "quantile", &quantile,                            //
-      "forget_factor", &forget_factor,                  //
-      "start_forget_weight", &start_forget_weight,      //
-      "resample_interval_ms", &resample_interval_ms,    //
-      "max_history_ms", &max_history_ms,                //
-      "use_reorder_optimizer", &use_reorder_optimizer,  //
-      "reorder_forget_factor", &reorder_forget_factor,  //
-      "ms_per_loss_percent", &ms_per_loss_percent);
-}
-
-// TODO(jakobi): remove legacy field trial.
-void DelayManager::Config::MaybeUpdateFromLegacyFieldTrial() {
-  constexpr char kDelayHistogramFieldTrial[] =
-      "WebRTC-Audio-NetEqDelayHistogram";
-  if (!webrtc::field_trial::IsEnabled(kDelayHistogramFieldTrial)) {
-    return;
-  }
-  const auto field_trial_string =
-      webrtc::field_trial::FindFullName(kDelayHistogramFieldTrial);
-  double percentile = -1.0;
-  double forget_factor = -1.0;
-  double start_forget_weight = -1.0;
-  if (sscanf(field_trial_string.c_str(), "Enabled-%lf-%lf-%lf", &percentile,
-             &forget_factor, &start_forget_weight) >= 2 &&
-      percentile >= 0.0 && percentile <= 100.0 && forget_factor >= 0.0 &&
-      forget_factor <= 1.0) {
-    this->quantile = percentile / 100;
-    this->forget_factor = forget_factor;
-    this->start_forget_weight = start_forget_weight >= 1
-                                    ? absl::make_optional(start_forget_weight)
-                                    : absl::nullopt;
-  }
 }
 
 DelayManager::DelayManager(const Config& config, const TickTimer* tick_timer)
