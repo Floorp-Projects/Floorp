@@ -45,6 +45,7 @@
 #include "system_wrappers/include/clock.h"
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
 #include "video/encoder_bitrate_adjuster.h"
+#include "video/frame_cadence_adapter.h"
 #include "video/frame_encode_metadata_writer.h"
 #include "video/video_source_sink_controller.h"
 
@@ -69,14 +70,16 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
     kVideoBitrateAllocationWhenScreenSharing,
     kVideoLayersAllocation
   };
-  VideoStreamEncoder(Clock* clock,
-                     uint32_t number_of_cores,
-                     VideoStreamEncoderObserver* encoder_stats_observer,
-                     const VideoStreamEncoderSettings& settings,
-                     std::unique_ptr<OveruseFrameDetector> overuse_detector,
-                     TaskQueueFactory* task_queue_factory,
-                     TaskQueueBase* network_queue,
-                     BitrateAllocationCallbackType allocation_cb_type);
+  VideoStreamEncoder(
+      Clock* clock,
+      uint32_t number_of_cores,
+      VideoStreamEncoderObserver* encoder_stats_observer,
+      const VideoStreamEncoderSettings& settings,
+      std::unique_ptr<OveruseFrameDetector> overuse_detector,
+      std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
+      TaskQueueFactory* task_queue_factory,
+      TaskQueueBase* network_queue,
+      BitrateAllocationCallbackType allocation_cb_type);
   ~VideoStreamEncoder() override;
 
   void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override;
@@ -138,6 +141,22 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       VideoSourceRestrictionsListener* restrictions_listener);
 
  private:
+  class CadenceCallback : public FrameCadenceAdapterInterface::Callback {
+   public:
+    explicit CadenceCallback(VideoStreamEncoder& video_stream_encoder)
+        : video_stream_encoder_(video_stream_encoder) {}
+    // FrameCadenceAdapterInterface::Callback overrides.
+    void OnFrame(const VideoFrame& frame) override {
+      video_stream_encoder_.OnFrame(frame);
+    }
+    void OnDiscardedFrame() override {
+      video_stream_encoder_.OnDiscardedFrame();
+    }
+
+   private:
+    VideoStreamEncoder& video_stream_encoder_;
+  };
+
   class VideoFrameInfo {
    public:
     VideoFrameInfo(int width, int height, bool is_texture)
@@ -173,12 +192,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   void ReconfigureEncoder() RTC_RUN_ON(&encoder_queue_);
   void OnEncoderSettingsChanged() RTC_RUN_ON(&encoder_queue_);
-
-  // Implements VideoSinkInterface.
-  void OnFrame(const VideoFrame& video_frame) override;
-  void OnDiscardedFrame() override;
-  void OnConstraintsChanged(
-      const webrtc::VideoTrackSourceConstraints& constraints) override;
+  void OnFrame(const VideoFrame& video_frame);
+  void OnDiscardedFrame();
 
   void MaybeEncodeVideoFrame(const VideoFrame& frame,
                              int64_t time_when_posted_in_ms);
@@ -229,9 +244,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   void QueueRequestEncoderSwitch(const webrtc::SdpVideoFormat& format)
       RTC_RUN_ON(&encoder_queue_);
 
-  // Reports UMAs on frame rate constraints usage on the first call.
-  void MaybeReportFrameRateConstraintUmas() RTC_RUN_ON(&encoder_queue_);
-
   TaskQueueBase* const worker_queue_;
   TaskQueueBase* const network_queue_;
 
@@ -245,12 +257,12 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface> const
       encoder_selector_;
   VideoStreamEncoderObserver* const encoder_stats_observer_;
-
-  // The source's constraints.
-  absl::optional<VideoTrackSourceConstraints> source_constraints_
-      RTC_GUARDED_BY(worker_queue_);
-  bool has_reported_screenshare_frame_rate_umas_
-      RTC_GUARDED_BY(&encoder_queue_) = false;
+  // Adapter that avoids public inheritance of the cadence adapter's callback
+  // interface.
+  CadenceCallback cadence_callback_;
+  // Frame cadence encoder adapter. Frames enter this adapter first, and it then
+  // forwards them to our OnFrame method.
+  const std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter_;
 
   VideoEncoderConfig encoder_config_ RTC_GUARDED_BY(&encoder_queue_);
   std::unique_ptr<VideoEncoder> encoder_ RTC_GUARDED_BY(&encoder_queue_)
