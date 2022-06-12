@@ -5,7 +5,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
-#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "mozilla/dom/ContentChild.h"
@@ -304,9 +303,9 @@ static void SetPropertiesFromFace(gfxFontEntry* aFontEntry,
   hb_blob_destroy(blob);
 
   aFontEntry->mStyleRange = SlantStyleRange(
-      (style & 2) ? FontSlantStyle::Italic() : FontSlantStyle::Normal());
-  aFontEntry->mWeightRange = WeightRange(FontWeight(int(os2weight)));
-  aFontEntry->mStretchRange = StretchRange(FontStretch(stretch));
+      (style & 2) ? FontSlantStyle::ITALIC : FontSlantStyle::NORMAL);
+  aFontEntry->mWeightRange = WeightRange(FontWeight::FromInt(int(os2weight)));
+  aFontEntry->mStretchRange = StretchRange(FontStretch::FromFloat(stretch));
 
   // For variable fonts, update the style/weight/stretch attributes if the
   // corresponding variation axes are present.
@@ -331,9 +330,9 @@ FT2FontEntry* FT2FontEntry::CreateFontEntry(const nsACString& aName,
   } else {
     // If nullptr is passed for aFace, the caller is intending to override
     // these attributes anyway. We just set defaults here to be safe.
-    fe->mStyleRange = SlantStyleRange(FontSlantStyle::Normal());
-    fe->mWeightRange = WeightRange(FontWeight::Normal());
-    fe->mStretchRange = StretchRange(FontStretch::Normal());
+    fe->mStyleRange = SlantStyleRange(FontSlantStyle::NORMAL);
+    fe->mWeightRange = WeightRange(FontWeight::NORMAL);
+    fe->mStretchRange = StretchRange(FontStretch::NORMAL);
   }
 
   return fe;
@@ -996,36 +995,31 @@ bool gfxFT2FontList::AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
     if (!nextField(start, end)) {
       break;
     }
-    nsAutoCString minStyle(start, end - start);
-    nsAutoCString maxStyle(minStyle);
-    int32_t colon = minStyle.FindChar(FontNameCache::kRangeSep);
-    if (colon > 0) {
-      maxStyle.Assign(minStyle.BeginReading() + colon + 1);
-      minStyle.Truncate(colon);
-    }
+
+    auto readIntPair = [&](int32_t& aStart, int32_t& aEnd) {
+      char* limit = nullptr;
+      aStart = strtol(start, &limit, 10);
+      if (*limit == FontNameCache::kRangeSep && limit + 1 < end) {
+        aEnd = strtof(limit + 1, nullptr);
+      }
+    };
+
+    int32_t minStyle, maxStyle;
+    readIntPair(minStyle, maxStyle);
 
     if (!nextField(start, end)) {
       break;
     }
-    char* limit;
-    float minWeight = strtof(start, &limit);
-    float maxWeight;
-    if (*limit == FontNameCache::kRangeSep && limit + 1 < end) {
-      maxWeight = strtof(limit + 1, nullptr);
-    } else {
-      maxWeight = minWeight;
-    }
+
+    int32_t minWeight, maxWeight;
+    readIntPair(minWeight, maxWeight);
 
     if (!nextField(start, end)) {
       break;
     }
-    float minStretch = strtof(start, &limit);
-    float maxStretch;
-    if (*limit == FontNameCache::kRangeSep && limit + 1 < end) {
-      maxStretch = strtof(limit + 1, nullptr);
-    } else {
-      maxStretch = minStretch;
-    }
+
+    int32_t minStretch, maxStretch;
+    readIntPair(minStretch, maxStretch);
 
     if (!nextField(start, end)) {
       break;
@@ -1042,15 +1036,17 @@ bool gfxFT2FontList::AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
     }
     FontVisibility visibility = FontVisibility(strtoul(start, nullptr, 10));
 
-    FontListEntry fle(
-        familyName, faceName, aFileName,
-        WeightRange(FontWeight(minWeight), FontWeight(maxWeight)).AsScalar(),
-        StretchRange(FontStretch(minStretch), FontStretch(maxStretch))
-            .AsScalar(),
-        SlantStyleRange(FontSlantStyle::FromString(minStyle.get()),
-                        FontSlantStyle::FromString(maxStyle.get()))
-            .AsScalar(),
-        index, visibility);
+    FontListEntry fle(familyName, faceName, aFileName,
+                      WeightRange(FontWeight::FromRaw(minWeight),
+                                  FontWeight::FromRaw(maxWeight))
+                          .AsScalar(),
+                      StretchRange(FontStretch::FromRaw(minStretch),
+                                   FontStretch::FromRaw(maxStretch))
+                          .AsScalar(),
+                      SlantStyleRange(FontSlantStyle::FromRaw(minStyle),
+                                      FontSlantStyle::FromRaw(maxStyle))
+                          .AsScalar(),
+                      index, visibility);
 
     aCollectFace(fle, psname, fullname, aStdFile);
     count++;
@@ -1072,19 +1068,17 @@ void FT2FontEntry::AppendToFaceList(nsCString& aFaceList,
   aFaceList.Append(FontNameCache::kFieldSep);
   aFaceList.AppendInt(mFTFontIndex);
   aFaceList.Append(FontNameCache::kFieldSep);
-  // Note that ToString() appends to the destination string without
-  // replacing existing contents (see FontPropertyTypes.h)
-  SlantStyle().Min().ToString(aFaceList);
+  aFaceList.AppendInt(SlantStyle().Min().Raw());
   aFaceList.Append(FontNameCache::kRangeSep);
-  SlantStyle().Max().ToString(aFaceList);
+  aFaceList.AppendInt(SlantStyle().Max().Raw());
   aFaceList.Append(FontNameCache::kFieldSep);
-  aFaceList.AppendFloat(Weight().Min().ToFloat());
+  aFaceList.AppendInt(Weight().Min().Raw());
   aFaceList.Append(FontNameCache::kRangeSep);
-  aFaceList.AppendFloat(Weight().Max().ToFloat());
+  aFaceList.AppendInt(Weight().Max().Raw());
   aFaceList.Append(FontNameCache::kFieldSep);
-  aFaceList.AppendFloat(Stretch().Min().Percentage());
+  aFaceList.AppendInt(Stretch().Min().Raw());
   aFaceList.Append(FontNameCache::kRangeSep);
-  aFaceList.AppendFloat(Stretch().Max().Percentage());
+  aFaceList.AppendInt(Stretch().Max().Raw());
   aFaceList.Append(FontNameCache::kFieldSep);
   aFaceList.Append(aPSName);
   aFaceList.Append(FontNameCache::kFieldSep);

@@ -548,9 +548,9 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
 
   // hack for now
   if (aID == FontID::MozWindow || aID == FontID::MozDocument) {
-    aFontStyle.style = mozilla::FontSlantStyle::Normal();
-    aFontStyle.weight = mozilla::FontWeight::Normal();
-    aFontStyle.stretch = mozilla::FontStretch::Normal();
+    aFontStyle.style = mozilla::FontSlantStyle::NORMAL;
+    aFontStyle.weight = mozilla::FontWeight::NORMAL;
+    aFontStyle.stretch = mozilla::FontStretch::NORMAL;
     aFontStyle.size = 14;
     aFontStyle.systemFont = true;
 
