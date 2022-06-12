@@ -960,9 +960,9 @@ bool nsXPLookAndFeel::LookAndFeelFontToStyle(const LookAndFeelFont& aFont,
   aName = aFont.name();
   aStyle = gfxFontStyle();
   aStyle.size = aFont.size();
-  aStyle.weight = FontWeight::FromInt(aFont.weight());
+  aStyle.weight = FontWeight(aFont.weight());
   aStyle.style =
-      aFont.italic() ? FontSlantStyle::ITALIC : FontSlantStyle::NORMAL;
+      aFont.italic() ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
   aStyle.systemFont = true;
   return true;
 }

@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/ServoStyleConstsInlines.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
@@ -1251,7 +1251,8 @@ static inline double StyleDistance(const mozilla::SlantStyleRange& aRange,
     return kReverse;
   }
 
-  const double kDefaultAngle = mozilla::FontSlantStyle::OBLIQUE.ObliqueAngle();
+  const double kDefaultAngle =
+      mozilla::FontSlantStyle::Oblique().ObliqueAngle();
 
   if (aTargetStyle.IsItalic()) {
     if (minStyle.IsOblique()) {
@@ -1382,16 +1383,16 @@ static inline double StretchDistance(const mozilla::StretchRange& aRange,
   // If aTargetStretch is >100, we prefer larger values if available;
   // if <=100, we prefer smaller values if available.
   if (aTargetStretch < minStretch) {
-    if (aTargetStretch > mozilla::FontStretch::NORMAL) {
-      return minStretch.ToFloat() - aTargetStretch.ToFloat();
+    if (aTargetStretch > mozilla::FontStretch::Normal()) {
+      return minStretch - aTargetStretch;
     }
-    return (minStretch.ToFloat() - aTargetStretch.ToFloat()) + kReverseDistance;
+    return (minStretch - aTargetStretch) + kReverseDistance;
   }
   if (aTargetStretch > maxStretch) {
-    if (aTargetStretch <= mozilla::FontStretch::NORMAL) {
-      return aTargetStretch.ToFloat() - maxStretch.ToFloat();
+    if (aTargetStretch <= mozilla::FontStretch::Normal()) {
+      return aTargetStretch - maxStretch;
     }
-    return (aTargetStretch.ToFloat() - maxStretch.ToFloat()) + kReverseDistance;
+    return (aTargetStretch - maxStretch) + kReverseDistance;
   }
   return 0.0;
 }
@@ -1421,36 +1422,35 @@ static inline double WeightDistance(const mozilla::WeightRange& aRange,
     return 0.0;
   }
 
-  if (aTargetWeight < mozilla::FontWeight::NORMAL) {
+  if (aTargetWeight < mozilla::FontWeight(400)) {
     // Requested a lighter-than-400 weight
     if (maxWeight < aTargetWeight) {
-      return aTargetWeight.ToFloat() - maxWeight.ToFloat();
+      return aTargetWeight - maxWeight;
     }
     // Add reverse-search penalty for bolder faces
-    return (minWeight.ToFloat() - aTargetWeight.ToFloat()) + kReverseDistance;
+    return (minWeight - aTargetWeight) + kReverseDistance;
   }
 
-  if (aTargetWeight > mozilla::FontWeight::FromInt(500)) {
+  if (aTargetWeight > mozilla::FontWeight(500)) {
     // Requested a bolder-than-500 weight
     if (minWeight > aTargetWeight) {
-      return minWeight.ToFloat() - aTargetWeight.ToFloat();
+      return minWeight - aTargetWeight;
     }
     // Add reverse-search penalty for lighter faces
-    return (aTargetWeight.ToFloat() - maxWeight.ToFloat()) + kReverseDistance;
+    return (aTargetWeight - maxWeight) + kReverseDistance;
   }
 
   // Special case for requested weight in the [400..500] range
   if (minWeight > aTargetWeight) {
-    if (minWeight <= mozilla::FontWeight::FromInt(500)) {
+    if (minWeight <= mozilla::FontWeight(500)) {
       // Bolder weight up to 500 is first choice
-      return minWeight.ToFloat() - aTargetWeight.ToFloat();
+      return minWeight - aTargetWeight;
     }
     // Other bolder weights get a reverse-search penalty
-    return (minWeight.ToFloat() - aTargetWeight.ToFloat()) + kReverseDistance;
+    return (minWeight - aTargetWeight) + kReverseDistance;
   }
   // Lighter weights are not as good as bolder ones within [400..500]
-  return (aTargetWeight.ToFloat() - maxWeight.ToFloat()) +
-         kNotWithinCentralRange;
+  return (aTargetWeight - maxWeight) + kNotWithinCentralRange;
 }
 
 #endif /* GFX_FONT_UTILS_H */

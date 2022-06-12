@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "gfxFontConstants.h"  // for NS_FONT_KERNING_AUTO, etc
 #include "gfxFontVariations.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/StyleColorInlines.h"  // for StyleRGBA
 #include "nsTArray.h"                   // for nsTArray
@@ -53,9 +54,9 @@ struct nsFont final {
 
   // Font-selection/rendering properties corresponding to CSS font-style,
   // font-weight, font-stretch. These are all 16-bit types.
-  FontSlantStyle style = FontSlantStyle::NORMAL;
-  FontWeight weight = FontWeight::NORMAL;
-  FontStretch stretch = FontStretch::NORMAL;
+  FontSlantStyle style = FontSlantStyle::Normal();
+  FontWeight weight = FontWeight::Normal();
+  FontStretch stretch = FontStretch::Normal();
 
   // Some font-variant-alternates property values require
   // font-specific settings defined via @font-feature-values rules.

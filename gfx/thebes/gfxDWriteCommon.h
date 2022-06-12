@@ -35,34 +35,33 @@
 
 #define ENHANCED_CONTRAST_VALUE_NAME L"EnhancedContrastLevel"
 
-// FIXME: This shouldn't look at constants probably.
 static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
     mozilla::FontStretch aStretch) {
-  if (aStretch == mozilla::FontStretch::ULTRA_CONDENSED) {
+  if (aStretch == mozilla::FontStretch::UltraCondensed()) {
     return DWRITE_FONT_STRETCH_ULTRA_CONDENSED;
   }
-  if (aStretch == mozilla::FontStretch::EXTRA_CONDENSED) {
+  if (aStretch == mozilla::FontStretch::ExtraCondensed()) {
     return DWRITE_FONT_STRETCH_EXTRA_CONDENSED;
   }
-  if (aStretch == mozilla::FontStretch::CONDENSED) {
+  if (aStretch == mozilla::FontStretch::Condensed()) {
     return DWRITE_FONT_STRETCH_CONDENSED;
   }
-  if (aStretch == mozilla::FontStretch::SEMI_CONDENSED) {
+  if (aStretch == mozilla::FontStretch::SemiCondensed()) {
     return DWRITE_FONT_STRETCH_SEMI_CONDENSED;
   }
-  if (aStretch == mozilla::FontStretch::NORMAL) {
+  if (aStretch == mozilla::FontStretch::Normal()) {
     return DWRITE_FONT_STRETCH_NORMAL;
   }
-  if (aStretch == mozilla::FontStretch::SEMI_EXPANDED) {
+  if (aStretch == mozilla::FontStretch::SemiExpanded()) {
     return DWRITE_FONT_STRETCH_SEMI_EXPANDED;
   }
-  if (aStretch == mozilla::FontStretch::EXPANDED) {
+  if (aStretch == mozilla::FontStretch::Expanded()) {
     return DWRITE_FONT_STRETCH_EXPANDED;
   }
-  if (aStretch == mozilla::FontStretch::EXTRA_EXPANDED) {
+  if (aStretch == mozilla::FontStretch::ExtraExpanded()) {
     return DWRITE_FONT_STRETCH_EXTRA_EXPANDED;
   }
-  if (aStretch == mozilla::FontStretch::ULTRA_EXPANDED) {
+  if (aStretch == mozilla::FontStretch::UltraExpanded()) {
     return DWRITE_FONT_STRETCH_ULTRA_EXPANDED;
   }
   return DWRITE_FONT_STRETCH_UNDEFINED;
@@ -72,25 +71,25 @@ static inline mozilla::FontStretch FontStretchFromDWriteStretch(
     DWRITE_FONT_STRETCH aStretch) {
   switch (aStretch) {
     case DWRITE_FONT_STRETCH_ULTRA_CONDENSED:
-      return mozilla::FontStretch::ULTRA_CONDENSED;
+      return mozilla::FontStretch::UltraCondensed();
     case DWRITE_FONT_STRETCH_EXTRA_CONDENSED:
-      return mozilla::FontStretch::EXTRA_CONDENSED;
+      return mozilla::FontStretch::ExtraCondensed();
     case DWRITE_FONT_STRETCH_CONDENSED:
-      return mozilla::FontStretch::CONDENSED;
+      return mozilla::FontStretch::Condensed();
     case DWRITE_FONT_STRETCH_SEMI_CONDENSED:
-      return mozilla::FontStretch::SEMI_CONDENSED;
+      return mozilla::FontStretch::SemiCondensed();
     case DWRITE_FONT_STRETCH_NORMAL:
-      return mozilla::FontStretch::NORMAL;
+      return mozilla::FontStretch::Normal();
     case DWRITE_FONT_STRETCH_SEMI_EXPANDED:
-      return mozilla::FontStretch::SEMI_EXPANDED;
+      return mozilla::FontStretch::SemiExpanded();
     case DWRITE_FONT_STRETCH_EXPANDED:
-      return mozilla::FontStretch::EXPANDED;
+      return mozilla::FontStretch::Expanded();
     case DWRITE_FONT_STRETCH_EXTRA_EXPANDED:
-      return mozilla::FontStretch::EXTRA_EXPANDED;
+      return mozilla::FontStretch::ExtraExpanded();
     case DWRITE_FONT_STRETCH_ULTRA_EXPANDED:
-      return mozilla::FontStretch::ULTRA_EXPANDED;
+      return mozilla::FontStretch::UltraExpanded();
     default:
-      return mozilla::FontStretch::NORMAL;
+      return mozilla::FontStretch::Normal();
   }
 }
 

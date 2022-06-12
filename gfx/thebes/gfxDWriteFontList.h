@@ -116,10 +116,10 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
         mHasVariationsInitialized(false) {
     DWRITE_FONT_STYLE dwriteStyle = aFont->GetStyle();
     FontSlantStyle style = (dwriteStyle == DWRITE_FONT_STYLE_ITALIC
-                                ? FontSlantStyle::ITALIC
+                                ? FontSlantStyle::Italic()
                                 : (dwriteStyle == DWRITE_FONT_STYLE_OBLIQUE
-                                       ? FontSlantStyle::OBLIQUE
-                                       : FontSlantStyle::NORMAL));
+                                       ? FontSlantStyle::Oblique()
+                                       : FontSlantStyle::Normal()));
     mStyleRange = SlantStyleRange(style);
 
     mStretchRange =
@@ -127,7 +127,7 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
 
     int weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
     weight = mozilla::Clamp(weight, 100, 900);
-    mWeightRange = WeightRange(FontWeight::FromInt(weight));
+    mWeightRange = WeightRange(FontWeight(weight));
 
     mIsCJK = UNINITIALIZED_VALUE;
   }

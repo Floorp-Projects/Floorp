@@ -201,12 +201,34 @@ void FontFaceSet::ParseFontShorthandForMatching(
     const nsACString& aFont, StyleFontFamilyList& aFamilyList,
     FontWeight& aWeight, FontStretch& aStretch, FontSlantStyle& aStyle,
     ErrorResult& aRv) {
+  auto style = StyleComputedFontStyleDescriptor::Normal();
+  float stretch;
+  float weight;
+
   RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(mDocument);
-  if (!ServoCSSParser::ParseFontShorthandForMatching(
-          aFont, url, aFamilyList, aStyle, aStretch, aWeight)) {
+  if (!ServoCSSParser::ParseFontShorthandForMatching(aFont, url, aFamilyList,
+                                                     style, stretch, weight)) {
     aRv.ThrowSyntaxError("Invalid font shorthand");
     return;
   }
+
+  switch (style.tag) {
+    case StyleComputedFontStyleDescriptor::Tag::Normal:
+      aStyle = FontSlantStyle::Normal();
+      break;
+    case StyleComputedFontStyleDescriptor::Tag::Italic:
+      aStyle = FontSlantStyle::Italic();
+      break;
+    case StyleComputedFontStyleDescriptor::Tag::Oblique:
+      MOZ_ASSERT(style.AsOblique()._0 == style.AsOblique()._1,
+                 "We use ComputedFontStyleDescriptor just for convenience, "
+                 "the two values should always match");
+      aStyle = FontSlantStyle::Oblique(style.AsOblique()._0);
+      break;
+  }
+
+  aWeight = FontWeight(weight);
+  aStretch = FontStretch::FromStyle(stretch);
 }
 
 static bool HasAnyCharacterInUnicodeRange(gfxUserFontEntry* aEntry,
@@ -915,10 +937,9 @@ static WeightRange GetWeightRangeForDescriptor(
     gfxFontEntry::RangeFlags& aRangeFlags) {
   if (!aVal) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoWeight;
-    return WeightRange(FontWeight::NORMAL);
+    return WeightRange(FontWeight::Normal());
   }
-  return WeightRange(FontWeight::FromFloat(aVal->_0),
-                     FontWeight::FromFloat(aVal->_1));
+  return WeightRange(FontWeight(aVal->_0), FontWeight(aVal->_1));
 }
 
 static SlantStyleRange GetStyleRangeForDescriptor(
@@ -926,20 +947,20 @@ static SlantStyleRange GetStyleRangeForDescriptor(
     gfxFontEntry::RangeFlags& aRangeFlags) {
   if (!aVal) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoSlantStyle;
-    return SlantStyleRange(FontSlantStyle::NORMAL);
+    return SlantStyleRange(FontSlantStyle::Normal());
   }
   auto& val = *aVal;
   switch (val.tag) {
     case StyleComputedFontStyleDescriptor::Tag::Normal:
-      return SlantStyleRange(FontSlantStyle::NORMAL);
+      return SlantStyleRange(FontSlantStyle::Normal());
     case StyleComputedFontStyleDescriptor::Tag::Italic:
-      return SlantStyleRange(FontSlantStyle::ITALIC);
+      return SlantStyleRange(FontSlantStyle::Italic());
     case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      return SlantStyleRange(FontSlantStyle::FromFloat(val.AsOblique()._0),
-                             FontSlantStyle::FromFloat(val.AsOblique()._1));
+      return SlantStyleRange(FontSlantStyle::Oblique(val.AsOblique()._0),
+                             FontSlantStyle::Oblique(val.AsOblique()._1));
   }
   MOZ_ASSERT_UNREACHABLE("How?");
-  return SlantStyleRange(FontSlantStyle::NORMAL);
+  return SlantStyleRange(FontSlantStyle::Normal());
 }
 
 static StretchRange GetStretchRangeForDescriptor(
@@ -947,9 +968,10 @@ static StretchRange GetStretchRangeForDescriptor(
     gfxFontEntry::RangeFlags& aRangeFlags) {
   if (!aVal) {
     aRangeFlags |= gfxFontEntry::RangeFlags::eAutoStretch;
-    return StretchRange(FontStretch::NORMAL);
+    return StretchRange(FontStretch::Normal());
   }
-  return StretchRange(aVal->_0, aVal->_1);
+  return StretchRange(FontStretch::FromStyle(aVal->_0),
+                      FontStretch::FromStyle(aVal->_1));
 }
 
 // TODO(emilio): Should this take an nsAtom* aFamilyName instead?

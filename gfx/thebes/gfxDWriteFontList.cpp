@@ -1284,7 +1284,7 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
         aFamily->Key().AsString(SharedFontList()).EqualsLiteral("meiryo")) {
       continue;
     }
-    WeightRange weight(FontWeight::FromInt(dwFont->GetWeight()));
+    WeightRange weight(FontWeight(dwFont->GetWeight()));
     StretchRange stretch(FontStretchFromDWriteStretch(dwFont->GetStretch()));
     // Try to read PSName as a unique face identifier; if this fails we'll get
     // it directly from the 'name' table, and if that also fails we consider
@@ -1324,9 +1324,9 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
         continue;
       }
       SlantStyleRange slant(
-          dwstyle == DWRITE_FONT_STYLE_NORMAL   ? FontSlantStyle::NORMAL
-          : dwstyle == DWRITE_FONT_STYLE_ITALIC ? FontSlantStyle::ITALIC
-                                                : FontSlantStyle::OBLIQUE);
+          dwstyle == DWRITE_FONT_STYLE_NORMAL   ? FontSlantStyle::Normal()
+          : dwstyle == DWRITE_FONT_STYLE_ITALIC ? FontSlantStyle::Italic()
+                                                : FontSlantStyle::Oblique());
       aFaces.AppendElement(fontlist::Face::InitData{
           name, uint16_t(i), false, weight, stretch, slant, charmap});
     }

@@ -145,65 +145,65 @@ static void GetFaceNames(FcPattern* aFont, const nsACString& aFamilyName,
 
 static FontWeight MapFcWeight(int aFcWeight) {
   if (aFcWeight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2) {
-    return FontWeight::FromInt(100);
+    return FontWeight(100);
   }
   if (aFcWeight <= (FC_WEIGHT_EXTRALIGHT + FC_WEIGHT_LIGHT) / 2) {
-    return FontWeight::FromInt(200);
+    return FontWeight(200);
   }
   if (aFcWeight <= (FC_WEIGHT_LIGHT + FC_WEIGHT_BOOK) / 2) {
-    return FontWeight::FromInt(300);
+    return FontWeight(300);
   }
   if (aFcWeight <= (FC_WEIGHT_REGULAR + FC_WEIGHT_MEDIUM) / 2) {
     // This includes FC_WEIGHT_BOOK
-    return FontWeight::FromInt(400);
+    return FontWeight(400);
   }
   if (aFcWeight <= (FC_WEIGHT_MEDIUM + FC_WEIGHT_DEMIBOLD) / 2) {
-    return FontWeight::FromInt(500);
+    return FontWeight(500);
   }
   if (aFcWeight <= (FC_WEIGHT_DEMIBOLD + FC_WEIGHT_BOLD) / 2) {
-    return FontWeight::FromInt(600);
+    return FontWeight(600);
   }
   if (aFcWeight <= (FC_WEIGHT_BOLD + FC_WEIGHT_EXTRABOLD) / 2) {
-    return FontWeight::FromInt(700);
+    return FontWeight(700);
   }
   if (aFcWeight <= (FC_WEIGHT_EXTRABOLD + FC_WEIGHT_BLACK) / 2) {
-    return FontWeight::FromInt(800);
+    return FontWeight(800);
   }
   if (aFcWeight <= FC_WEIGHT_BLACK) {
-    return FontWeight::FromInt(900);
+    return FontWeight(900);
   }
 
   // including FC_WEIGHT_EXTRABLACK
-  return FontWeight::FromInt(901);
+  return FontWeight(901);
 }
 
 // TODO(emilio, jfkthame): I think this can now be more fine-grained.
 static FontStretch MapFcWidth(int aFcWidth) {
   if (aFcWidth <= (FC_WIDTH_ULTRACONDENSED + FC_WIDTH_EXTRACONDENSED) / 2) {
-    return FontStretch::ULTRA_CONDENSED;
+    return FontStretch::UltraCondensed();
   }
   if (aFcWidth <= (FC_WIDTH_EXTRACONDENSED + FC_WIDTH_CONDENSED) / 2) {
-    return FontStretch::EXTRA_CONDENSED;
+    return FontStretch::ExtraCondensed();
   }
   if (aFcWidth <= (FC_WIDTH_CONDENSED + FC_WIDTH_SEMICONDENSED) / 2) {
-    return FontStretch::CONDENSED;
+    return FontStretch::Condensed();
   }
   if (aFcWidth <= (FC_WIDTH_SEMICONDENSED + FC_WIDTH_NORMAL) / 2) {
-    return FontStretch::SEMI_CONDENSED;
+    return FontStretch::SemiCondensed();
   }
   if (aFcWidth <= (FC_WIDTH_NORMAL + FC_WIDTH_SEMIEXPANDED) / 2) {
-    return FontStretch::NORMAL;
+    return FontStretch::Normal();
   }
   if (aFcWidth <= (FC_WIDTH_SEMIEXPANDED + FC_WIDTH_EXPANDED) / 2) {
-    return FontStretch::SEMI_EXPANDED;
+    return FontStretch::SemiExpanded();
   }
   if (aFcWidth <= (FC_WIDTH_EXPANDED + FC_WIDTH_EXTRAEXPANDED) / 2) {
-    return FontStretch::EXPANDED;
+    return FontStretch::Expanded();
   }
   if (aFcWidth <= (FC_WIDTH_EXTRAEXPANDED + FC_WIDTH_ULTRAEXPANDED) / 2) {
-    return FontStretch::EXTRA_EXPANDED;
+    return FontStretch::ExtraExpanded();
   }
-  return FontStretch::ULTRA_EXPANDED;
+  return FontStretch::UltraExpanded();
 }
 
 static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
@@ -231,9 +231,9 @@ static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
     slant = FC_SLANT_ROMAN;
   }
   if (slant == FC_SLANT_OBLIQUE) {
-    *aSlantStyle = SlantStyleRange(FontSlantStyle::OBLIQUE);
+    *aSlantStyle = SlantStyleRange(FontSlantStyle::Oblique());
   } else if (slant > 0) {
-    *aSlantStyle = SlantStyleRange(FontSlantStyle::ITALIC);
+    *aSlantStyle = SlantStyleRange(FontSlantStyle::Italic());
   }
 
   if (aSize) {
@@ -888,7 +888,7 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
   }
 
   // will synthetic oblique be applied using a transform?
-  if (IsUpright() && !aFontStyle->style.IsNormal() &&
+  if (IsUpright() && aFontStyle->style != FontSlantStyle::Normal() &&
       aFontStyle->allowSyntheticStyle) {
     // disable embedded bitmaps (mimics behavior in 90-synthetic.conf)
     FcPatternDel(renderPattern, FC_EMBEDDED_BITMAP);
@@ -1752,9 +1752,9 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       }
     }
 
-    WeightRange weight(FontWeight::NORMAL);
-    StretchRange stretch(FontStretch::NORMAL);
-    SlantStyleRange style(FontSlantStyle::NORMAL);
+    WeightRange weight(FontWeight::Normal());
+    StretchRange stretch(FontStretch::Normal());
+    SlantStyleRange style(FontSlantStyle::Normal());
     uint16_t size;
     GetFontProperties(aPattern, &weight, &stretch, &style, &size);
 

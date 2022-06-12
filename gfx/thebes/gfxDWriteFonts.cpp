@@ -289,7 +289,7 @@ gfxFont* gfxDWriteFont::CopyWithAntialiasOption(
 bool gfxDWriteFont::GetFakeMetricsForArialBlack(
     DWRITE_FONT_METRICS* aFontMetrics) {
   gfxFontStyle style(mStyle);
-  style.weight = FontWeight::FromInt(700);
+  style.weight = FontWeight(700);
 
   gfxFontEntry* fe = gfxPlatformFontList::PlatformFontList()->FindFontForFamily(
       nullptr, "Arial"_ns, &style);
@@ -306,8 +306,8 @@ bool gfxDWriteFont::GetFakeMetricsForArialBlack(
 
 void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
   DWRITE_FONT_METRICS fontMetrics;
-  if (!(mFontEntry->Weight().Min() == FontWeight::FromInt(900) &&
-        mFontEntry->Weight().Max() == FontWeight::FromInt(900) &&
+  if (!(mFontEntry->Weight().Min() == FontWeight(900) &&
+        mFontEntry->Weight().Max() == FontWeight(900) &&
         !mFontEntry->IsUserFont() &&
         mFontEntry->Name().EqualsLiteral("Arial Black") &&
         GetFakeMetricsForArialBlack(&fontMetrics))) {

@@ -28,9 +28,6 @@ namespace mozilla {
 class ServoStyleSet;
 struct URLExtraData;
 struct StyleFontFamilyList;
-struct StyleFontStretch;
-struct StyleFontWeight;
-struct StyleFontStyle;
 union StyleComputedFontStyleDescriptor;
 
 namespace css {
@@ -127,8 +124,8 @@ class ServoCSSParser {
    */
   static bool ParseFontShorthandForMatching(
       const nsACString& aValue, URLExtraData* aUrl, StyleFontFamilyList& aList,
-      StyleFontStyle& aStyle, StyleFontStretch& aStretch,
-      StyleFontWeight& aWeight, float* aSize = nullptr);
+      StyleComputedFontStyleDescriptor& aStyle, float& aStretch, float& aWeight,
+      float* aSize = nullptr);
 
   /**
    * Get a URLExtraData from a document.

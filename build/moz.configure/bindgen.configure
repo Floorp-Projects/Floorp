@@ -22,7 +22,7 @@ option(env="CBINDGEN", nargs=1, when=cbindgen_is_needed, help="Path to cbindgen"
 def check_cbindgen_version(cbindgen, fatal=False):
     log.debug("trying cbindgen: %s" % cbindgen)
 
-    cbindgen_min_version = Version("0.24.3")
+    cbindgen_min_version = Version("0.24.2")
 
     # cbindgen x.y.z
     version = Version(check_cmd_output(cbindgen, "--version").strip().split(" ")[1])

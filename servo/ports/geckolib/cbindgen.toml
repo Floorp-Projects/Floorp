@@ -898,21 +898,3 @@ renaming_overrides_prefixing = true
  public:
   inline nsAtom* AsAtom() const;
 """
-
-"FontWeight" = """
- SERVO_FIXED_POINT_HELPERS(StyleFontWeight, uint16_t, StyleFONT_WEIGHT_FRACTION_BITS);
-
- inline bool IsBold() const;
-"""
-
-"FontStyle" = """
- SERVO_FIXED_POINT_HELPERS(StyleFontStyle, int16_t, StyleFONT_STYLE_FRACTION_BITS);
-
- inline bool IsItalic() const;
- inline bool IsOblique() const;
- inline float ObliqueAngle() const;
-"""
-
-"FontStretch" = """
- SERVO_FIXED_POINT_HELPERS(StyleFontStretch, uint16_t, StyleFONT_STRETCH_FRACTION_BITS);
-"""
