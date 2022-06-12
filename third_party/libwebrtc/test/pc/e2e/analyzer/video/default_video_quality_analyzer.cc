@@ -237,6 +237,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
       it->second.erase(frame_id);
     }
     stream_to_frame_id_history_[stream_index].insert(frame_id);
+    stream_to_frame_id_full_history_[stream_index].push_back(frame_id);
 
     // If state has too many frames that are in flight => remove the oldest
     // queued frame in order to avoid to use too much memory.
@@ -868,6 +869,16 @@ std::string DefaultVideoQualityAnalyzer::StatsKeyToMetricName(
 
 double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {
   return cpu_measurer_.GetCpuUsagePercent();
+}
+
+std::map<std::string, std::vector<uint16_t>>
+DefaultVideoQualityAnalyzer::GetStreamFrames() const {
+  MutexLock lock(&mutex_);
+  std::map<std::string, std::vector<uint16_t>> out;
+  for (auto entry_it : stream_to_frame_id_full_history_) {
+    out.insert({streams_.name(entry_it.first), entry_it.second});
+  }
+  return out;
 }
 
 uint16_t DefaultVideoQualityAnalyzer::StreamState::PopFront(size_t peer) {

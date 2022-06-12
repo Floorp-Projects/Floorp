@@ -1425,5 +1425,44 @@ TEST(
   }
 }
 
+TEST(DefaultVideoQualityAnalyzerTest, GetStreamFrames) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  // The order in which peers captured frames and passed them to analyzer.
+  std::vector<std::string> frame_capturers_sequence{
+      "alice", "alice", "bob",   "bob",   "bob",
+      "bob",   "bob",   "alice", "alice", "alice",
+  };
+
+  std::map<std::string, std::vector<uint16_t>> stream_to_frame_ids;
+  stream_to_frame_ids.emplace("alice_video", std::vector<uint16_t>{});
+  stream_to_frame_ids.emplace("bob_video", std::vector<uint16_t>{});
+
+  std::vector<VideoFrame> frames;
+  for (const std::string& sender : frame_capturers_sequence) {
+    VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+    uint16_t frame_id =
+        analyzer.OnFrameCaptured(sender, sender + "_video", frame);
+    frame.set_id(frame_id);
+    stream_to_frame_ids.find(sender + "_video")->second.push_back(frame_id);
+    frames.push_back(frame);
+    analyzer.OnFramePreEncode(sender, frame);
+    analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats());
+  }
+  // We don't need to receive frames for stats to be gathered correctly.
+  analyzer.Stop();
+
+  EXPECT_EQ(analyzer.GetStreamFrames(), stream_to_frame_ids);
+}
+
 }  // namespace
 }  // namespace webrtc

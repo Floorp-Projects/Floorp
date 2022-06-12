@@ -92,6 +92,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   AnalyzerStats GetAnalyzerStats() const;
   double GetCpuUsagePercent();
 
+  // Returns mapping from the stream label to the history of frames that were
+  // met in this stream in the order as they were captured.
+  std::map<std::string, std::vector<uint16_t>> GetStreamFrames() const;
+
  private:
   // Represents a current state of video stream.
   class StreamState {
@@ -362,6 +366,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // after 1st frame from simulcast streams was already rendered and last is
   // still encoding.
   std::map<size_t, std::set<uint16_t>> stream_to_frame_id_history_
+      RTC_GUARDED_BY(mutex_);
+  // Map from stream index to the list of frames as they were met in the stream.
+  std::map<size_t, std::vector<uint16_t>> stream_to_frame_id_full_history_
       RTC_GUARDED_BY(mutex_);
   AnalyzerStats analyzer_stats_ RTC_GUARDED_BY(mutex_);
 
