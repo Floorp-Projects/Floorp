@@ -219,8 +219,6 @@ deps = {
     'https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git@49836d72bd22c7a78bc0250483f04162278cdc6a',
   'src/third_party/libsrtp':
     'https://chromium.googlesource.com/chromium/deps/libsrtp.git@5b7c744eb8310250ccc534f3f86a2015b3887a0a',
-  'src/third_party/dav1d/libdav1d':
-    'https://chromium.googlesource.com/external/github.com/videolan/dav1d.git@692c0ce873d7d823f2255968e32b233d71d88b43',
   'src/third_party/libaom/source/libaom':
     'https://aomedia.googlesource.com/aom.git@b5719d38f3eb67e405b9fd7c90945f0a7ece10c0',
   'src/third_party/libunwindstack': {

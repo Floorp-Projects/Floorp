@@ -210,13 +210,11 @@ rtc_library("rtc_internal_video_codecs") {
     "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
-    "../modules/video_coding/codecs/av1:dav1d_decoder",
     "../modules/video_coding/codecs/av1:libaom_av1_decoder",
     "../modules/video_coding/codecs/av1:libaom_av1_encoder",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
-    "../system_wrappers:field_trial",
     #"../test:fake_video_codecs",
   ]
   absl_deps = [

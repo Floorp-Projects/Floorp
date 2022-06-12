@@ -935,7 +935,6 @@ if (rtc_include_tests) {
       "codecs/h264/test/h264_impl_unittest.cc",
       "codecs/multiplex/test/multiplex_adapter_unittest.cc",
       "codecs/test/video_encoder_decoder_instantiation_tests.cc",
-      "codecs/test/videocodec_test_av1.cc",
       "codecs/test/videocodec_test_libvpx.cc",
       "codecs/vp8/test/vp8_impl_unittest.cc",
     ]
@@ -944,6 +943,10 @@ if (rtc_include_tests) {
       sources += [ "codecs/vp9/test/vp9_impl_unittest.cc" ]
     }
 
+    # TODO(jianj): Fix crash on iOS and re-enable
+    if (enable_libaom && !is_ios) {
+      sources += [ "codecs/test/videocodec_test_libaom.cc" ]
+    }
     if (rtc_use_h264) {
       sources += [ "codecs/test/videocodec_test_openh264.cc" ]
     }
@@ -987,7 +990,6 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "../../test:video_test_common",
       "../rtp_rtcp:rtp_rtcp_format",
-      "codecs/av1:libaom_av1_decoder",
       #"//third_party/libyuv",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
