@@ -593,8 +593,8 @@ VideoStreamEncoder::VideoStreamEncoder(
     const VideoStreamEncoderSettings& settings,
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
     std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
-    TaskQueueFactory* task_queue_factory,
-    TaskQueueBase* worker_queue,
+    std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+        encoder_queue,
     BitrateAllocationCallbackType allocation_cb_type)
     : worker_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
@@ -618,7 +618,6 @@ VideoStreamEncoder::VideoStreamEncoder(
       was_encode_called_since_last_initialization_(false),
       encoder_failed_(false),
       clock_(clock),
-      posted_frames_waiting_for_encode_(0),
       last_captured_timestamp_(0),
       delta_ntp_internal_ms_(clock_->CurrentNtpInMilliseconds() -
                              clock_->TimeInMilliseconds()),
@@ -665,9 +664,7 @@ VideoStreamEncoder::VideoStreamEncoder(
           !field_trial::IsEnabled("WebRTC-DefaultBitrateLimitsKillSwitch")),
       qp_parsing_allowed_(
           !field_trial::IsEnabled("WebRTC-QpParsingKillSwitch")),
-      encoder_queue_(task_queue_factory->CreateTaskQueue(
-          "EncoderQueue",
-          TaskQueueFactory::Priority::NORMAL)) {
+      encoder_queue_(std::move(encoder_queue)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
   RTC_DCHECK_RUN_ON(worker_queue_);
   RTC_DCHECK(encoder_stats_observer);
@@ -732,6 +729,7 @@ void VideoStreamEncoder::Stop() {
     rate_allocator_ = nullptr;
     ReleaseEncoder();
     encoder_ = nullptr;
+    frame_cadence_adapter_ = nullptr;
     shutdown_event.Set();
   });
   shutdown_event.Wait(rtc::Event::kForever);
@@ -824,14 +822,14 @@ void VideoStreamEncoder::SetStartBitrate(int start_bitrate_bps) {
 void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
                                           size_t max_data_payload_length) {
   RTC_DCHECK_RUN_ON(worker_queue_);
-  frame_cadence_adapter_->SetZeroHertzModeEnabled(
-      config.content_type == VideoEncoderConfig::ContentType::kScreen);
   encoder_queue_.PostTask(
       [this, config = std::move(config), max_data_payload_length]() mutable {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
         RTC_DCHECK(sink_);
         RTC_LOG(LS_INFO) << "ConfigureEncoder requested.";
 
+        frame_cadence_adapter_->SetZeroHertzModeEnabled(
+            config.content_type == VideoEncoderConfig::ContentType::kScreen);
         pending_encoder_creation_ =
             (!encoder_ || encoder_config_.video_format != config.video_format ||
              max_data_payload_length_ != max_data_payload_length);
@@ -1261,19 +1259,18 @@ void VideoStreamEncoder::OnEncoderSettingsChanged() {
   degradation_preference_manager_->SetIsScreenshare(is_screenshare);
 }
 
-void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
-  RTC_DCHECK_RUN_ON(worker_queue_);
+void VideoStreamEncoder::OnFrame(Timestamp post_time,
+                                 int frames_scheduled_for_processing,
+                                 const VideoFrame& video_frame) {
+  RTC_DCHECK_RUN_ON(&encoder_queue_);
   VideoFrame incoming_frame = video_frame;
-
-  // Local time in webrtc time base.
-  Timestamp now = clock_->CurrentTime();
 
   // In some cases, e.g., when the frame from decoder is fed to encoder,
   // the timestamp may be set to the future. As the encoding pipeline assumes
   // capture time to be less than present time, we should reset the capture
   // timestamps here. Otherwise there may be issues with RTP send stream.
-  if (incoming_frame.timestamp_us() > now.us())
-    incoming_frame.set_timestamp_us(now.us());
+  if (incoming_frame.timestamp_us() > post_time.us())
+    incoming_frame.set_timestamp_us(post_time.us());
 
   // Capture time may come from clock with an offset and drift from clock_.
   int64_t capture_ntp_time_ms;
@@ -1282,7 +1279,7 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
   } else if (video_frame.render_time_ms() != 0) {
     capture_ntp_time_ms = video_frame.render_time_ms() + delta_ntp_internal_ms_;
   } else {
-    capture_ntp_time_ms = now.ms() + delta_ntp_internal_ms_;
+    capture_ntp_time_ms = post_time.ms() + delta_ntp_internal_ms_;
   }
   incoming_frame.set_ntp_time_ms(capture_ntp_time_ms);
 
@@ -1306,62 +1303,51 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
   }
 
   bool log_stats = false;
-  if (now.ms() - last_frame_log_ms_ > kFrameLogIntervalMs) {
-    last_frame_log_ms_ = now.ms();
+  if (post_time.ms() - last_frame_log_ms_ > kFrameLogIntervalMs) {
+    last_frame_log_ms_ = post_time.ms();
     log_stats = true;
   }
 
   last_captured_timestamp_ = incoming_frame.ntp_time_ms();
 
-  int64_t post_time_us = clock_->CurrentTime().us();
-  ++posted_frames_waiting_for_encode_;
-
-  encoder_queue_.PostTask(
-      [this, incoming_frame, post_time_us, log_stats]() {
-        RTC_DCHECK_RUN_ON(&encoder_queue_);
-        encoder_stats_observer_->OnIncomingFrame(incoming_frame.width(),
-                                                 incoming_frame.height());
-        ++captured_frame_count_;
-        const int posted_frames_waiting_for_encode =
-            posted_frames_waiting_for_encode_.fetch_sub(1);
-        RTC_DCHECK_GT(posted_frames_waiting_for_encode, 0);
-        CheckForAnimatedContent(incoming_frame, post_time_us);
-        bool cwnd_frame_drop =
-            cwnd_frame_drop_interval_ &&
-            (cwnd_frame_counter_++ % cwnd_frame_drop_interval_.value() == 0);
-        if (posted_frames_waiting_for_encode == 1 && !cwnd_frame_drop) {
-          MaybeEncodeVideoFrame(incoming_frame, post_time_us);
-        } else {
-          if (cwnd_frame_drop) {
-            // Frame drop by congestion window pushback. Do not encode this
-            // frame.
-            ++dropped_frame_cwnd_pushback_count_;
-            encoder_stats_observer_->OnFrameDropped(
-                VideoStreamEncoderObserver::DropReason::kCongestionWindow);
-          } else {
-            // There is a newer frame in flight. Do not encode this frame.
-            RTC_LOG(LS_VERBOSE)
-                << "Incoming frame dropped due to that the encoder is blocked.";
-            ++dropped_frame_encoder_block_count_;
-            encoder_stats_observer_->OnFrameDropped(
-                VideoStreamEncoderObserver::DropReason::kEncoderQueue);
-          }
-          accumulated_update_rect_.Union(incoming_frame.update_rect());
-          accumulated_update_rect_is_valid_ &= incoming_frame.has_update_rect();
-        }
-        if (log_stats) {
-          RTC_LOG(LS_INFO) << "Number of frames: captured "
-                           << captured_frame_count_
-                           << ", dropped (due to congestion window pushback) "
-                           << dropped_frame_cwnd_pushback_count_
-                           << ", dropped (due to encoder blocked) "
-                           << dropped_frame_encoder_block_count_
-                           << ", interval_ms " << kFrameLogIntervalMs;
-          captured_frame_count_ = 0;
-          dropped_frame_cwnd_pushback_count_ = 0;
-          dropped_frame_encoder_block_count_ = 0;
-        }
-      });
+  encoder_stats_observer_->OnIncomingFrame(incoming_frame.width(),
+                                           incoming_frame.height());
+  ++captured_frame_count_;
+  CheckForAnimatedContent(incoming_frame, post_time.us());
+  bool cwnd_frame_drop =
+      cwnd_frame_drop_interval_ &&
+      (cwnd_frame_counter_++ % cwnd_frame_drop_interval_.value() == 0);
+  if (frames_scheduled_for_processing == 1 && !cwnd_frame_drop) {
+    MaybeEncodeVideoFrame(incoming_frame, post_time.us());
+  } else {
+    if (cwnd_frame_drop) {
+      // Frame drop by congestion window pushback. Do not encode this
+      // frame.
+      ++dropped_frame_cwnd_pushback_count_;
+      encoder_stats_observer_->OnFrameDropped(
+          VideoStreamEncoderObserver::DropReason::kCongestionWindow);
+    } else {
+      // There is a newer frame in flight. Do not encode this frame.
+      RTC_LOG(LS_VERBOSE)
+          << "Incoming frame dropped due to that the encoder is blocked.";
+      ++dropped_frame_encoder_block_count_;
+      encoder_stats_observer_->OnFrameDropped(
+          VideoStreamEncoderObserver::DropReason::kEncoderQueue);
+    }
+    accumulated_update_rect_.Union(incoming_frame.update_rect());
+    accumulated_update_rect_is_valid_ &= incoming_frame.has_update_rect();
+  }
+  if (log_stats) {
+    RTC_LOG(LS_INFO) << "Number of frames: captured " << captured_frame_count_
+                     << ", dropped (due to congestion window pushback) "
+                     << dropped_frame_cwnd_pushback_count_
+                     << ", dropped (due to encoder blocked) "
+                     << dropped_frame_encoder_block_count_ << ", interval_ms "
+                     << kFrameLogIntervalMs;
+    captured_frame_count_ = 0;
+    dropped_frame_cwnd_pushback_count_ = 0;
+    dropped_frame_encoder_block_count_ = 0;
+  }
 }
 
 void VideoStreamEncoder::OnDiscardedFrame() {

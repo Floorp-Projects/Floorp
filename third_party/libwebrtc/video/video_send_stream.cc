@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "api/array_view.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/video/video_stream_encoder_settings.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extension_size.h"
@@ -106,6 +107,25 @@ RtpSenderObservers CreateObservers(RtcpRttStats* call_stats,
   return observers;
 }
 
+std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
+    Clock* clock,
+    int num_cpu_cores,
+    TaskQueueFactory* task_queue_factory,
+    SendStatisticsProxy* stats_proxy,
+    const VideoStreamEncoderSettings& encoder_settings,
+    VideoStreamEncoder::BitrateAllocationCallbackType
+        bitrate_allocation_callback_type) {
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue =
+      task_queue_factory->CreateTaskQueue("EncoderQueue",
+                                          TaskQueueFactory::Priority::NORMAL);
+  TaskQueueBase* encoder_queue_ptr = encoder_queue.get();
+  return std::make_unique<VideoStreamEncoder>(
+      clock, num_cpu_cores, stats_proxy, encoder_settings,
+      std::make_unique<OveruseFrameDetector>(stats_proxy),
+      FrameCadenceAdapterInterface::Create(clock, encoder_queue_ptr),
+      std::move(encoder_queue), bitrate_allocation_callback_type);
+}
+
 }  // namespace
 
 namespace internal {
@@ -130,17 +150,13 @@ VideoSendStream::VideoSendStream(
       stats_proxy_(clock, config, encoder_config.content_type),
       config_(std::move(config)),
       content_type_(encoder_config.content_type),
-      video_stream_encoder_(std::make_unique<VideoStreamEncoder>(
-          clock,
-          num_cpu_cores,
-          &stats_proxy_,
-          config_.encoder_settings,
-          std::make_unique<OveruseFrameDetector>(&stats_proxy_),
-          FrameCadenceAdapterInterface::Create(
-              /*worker_queue=*/TaskQueueBase::Current()),
-          task_queue_factory,
-          /*worker_queue=*/TaskQueueBase::Current(),
-          GetBitrateAllocationCallbackType(config_))),
+      video_stream_encoder_(
+          CreateVideoStreamEncoder(clock,
+                                   num_cpu_cores,
+                                   task_queue_factory,
+                                   &stats_proxy_,
+                                   config_.encoder_settings,
+                                   GetBitrateAllocationCallbackType(config_))),
       encoder_feedback_(
           clock,
           config_.rtp.ssrcs,
