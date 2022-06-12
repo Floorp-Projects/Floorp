@@ -595,25 +595,24 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
 
 TEST_F(StatsEndToEndTest, VerifyNackStats) {
   static const int kPacketNumberToDrop = 200;
-  class NackObserver : public test::EndToEndTest, public QueuedTask {
+  class NackObserver : public test::EndToEndTest {
    public:
-    NackObserver()
-        : EndToEndTest(kLongTimeoutMs),
-          sent_rtp_packets_(0),
-          dropped_rtp_packet_(0),
-          dropped_rtp_packet_requested_(false),
-          send_stream_(nullptr) {}
+    explicit NackObserver(TaskQueueBase* task_queue)
+        : EndToEndTest(kLongTimeoutMs), task_queue_(task_queue) {}
 
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
-      MutexLock lock(&mutex_);
-      if (++sent_rtp_packets_ == kPacketNumberToDrop) {
-        RtpPacket header;
-        EXPECT_TRUE(header.Parse(packet, length));
-        dropped_rtp_packet_ = header.SequenceNumber();
-        return DROP_PACKET;
+      {
+        MutexLock lock(&mutex_);
+        if (++sent_rtp_packets_ == kPacketNumberToDrop) {
+          RtpPacket header;
+          EXPECT_TRUE(header.Parse(packet, length));
+          dropped_rtp_packet_ = header.SequenceNumber();
+          return DROP_PACKET;
+        }
       }
-      task_queue_->PostTask(std::unique_ptr<QueuedTask>(this));
+      task_queue_->PostTask(
+          ToQueuedTask(task_safety_flag_, [this]() { VerifyStats(); }));
       return SEND_PACKET;
     }
 
@@ -628,7 +627,8 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
       return SEND_PACKET;
     }
 
-    void VerifyStats() RTC_EXCLUSIVE_LOCKS_REQUIRED(&mutex_) {
+    void VerifyStats() {
+      MutexLock lock(&mutex_);
       if (!dropped_rtp_packet_requested_)
         return;
       int send_stream_nack_packets = 0;
@@ -674,15 +674,9 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
         const std::vector<VideoReceiveStream*>& receive_streams) override {
       send_stream_ = send_stream;
       receive_streams_ = receive_streams;
-      task_queue_ = TaskQueueBase::Current();
-      EXPECT_TRUE(task_queue_ != nullptr);
     }
 
-    bool Run() override {
-      MutexLock lock(&mutex_);
-      VerifyStats();
-      return false;
-    }
+    void OnStreamsStopped() override { task_safety_flag_->SetNotAlive(); }
 
     void PerformTest() override {
       EXPECT_TRUE(Wait()) << "Timed out waiting for packet to be NACKed.";
@@ -690,14 +684,16 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
 
     test::FakeVideoRenderer fake_renderer_;
     Mutex mutex_;
-    uint64_t sent_rtp_packets_;
-    uint16_t dropped_rtp_packet_ RTC_GUARDED_BY(&mutex_);
-    bool dropped_rtp_packet_requested_ RTC_GUARDED_BY(&mutex_);
+    uint64_t sent_rtp_packets_ RTC_GUARDED_BY(&mutex_) = 0;
+    uint16_t dropped_rtp_packet_ RTC_GUARDED_BY(&mutex_) = 0;
+    bool dropped_rtp_packet_requested_ RTC_GUARDED_BY(&mutex_) = false;
     std::vector<VideoReceiveStream*> receive_streams_;
-    VideoSendStream* send_stream_;
+    VideoSendStream* send_stream_ = nullptr;
     absl::optional<int64_t> start_runtime_ms_;
-    TaskQueueBase* task_queue_ = nullptr;
-  } test;
+    TaskQueueBase* const task_queue_;
+    rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_ =
+        PendingTaskSafetyFlag::CreateDetached();
+  } test(task_queue());
 
   metrics::Reset();
   RunBaseTest(&test);
