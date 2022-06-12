@@ -316,10 +316,6 @@ rtc_library("logging") {
       "../../webrtc_overrides/rtc_base/logging.h",
     ]
   } else {
-    configs += [
-      "..:no_exit_time_destructors",
-      "..:no_global_constructors",
-    ]
     sources = [
       "logging.cc",
       "logging.h",

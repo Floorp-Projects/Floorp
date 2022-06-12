@@ -28,7 +28,9 @@ NSString * const kRTCFieldTrialMinimizeResamplingOnMobileKey =
 NSString *const kRTCFieldTrialUseNWPathMonitor = @"WebRTC-Network-UseNWPathMonitor";
 NSString * const kRTCFieldTrialEnabledValue = @"Enabled";
 
-static std::unique_ptr<char[]> gFieldTrialInitString;
+// InitFieldTrialsFromString stores the char*, so the char array must outlive
+// the application.
+static char *gFieldTrialInitString = nullptr;
 
 void RTCInitFieldTrialDictionary(NSDictionary<NSString *, NSString *> *fieldTrials) {
   if (!fieldTrials) {
@@ -43,12 +45,15 @@ void RTCInitFieldTrialDictionary(NSDictionary<NSString *, NSString *> *fieldTria
     [fieldTrialInitString appendString:fieldTrialEntry];
   }
   size_t len = fieldTrialInitString.length + 1;
-  gFieldTrialInitString.reset(new char[len]);
-  if (![fieldTrialInitString getCString:gFieldTrialInitString.get()
+  if (gFieldTrialInitString != nullptr) {
+    delete[] gFieldTrialInitString;
+  }
+  gFieldTrialInitString = new char[len];
+  if (![fieldTrialInitString getCString:gFieldTrialInitString
                               maxLength:len
                                encoding:NSUTF8StringEncoding]) {
     RTCLogError(@"Failed to convert field trial string.");
     return;
   }
-  webrtc::field_trial::InitFieldTrialsFromString(gFieldTrialInitString.get());
+  webrtc::field_trial::InitFieldTrialsFromString(gFieldTrialInitString);
 }

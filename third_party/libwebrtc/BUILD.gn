@@ -230,14 +230,6 @@ config("common_inherited_config") {
 
 # TODO(bugs.webrtc.org/9693): Remove the possibility to suppress this warning
 # as soon as WebRTC compiles without it.
-config("no_exit_time_destructors") {
-  if (is_clang) {
-    cflags = [ "-Wno-exit-time-destructors" ]
-  }
-}
-
-# TODO(bugs.webrtc.org/9693): Remove the possibility to suppress this warning
-# as soon as WebRTC compiles without it.
 config("no_global_constructors") {
   if (is_clang) {
     cflags = [ "-Wno-global-constructors" ]
