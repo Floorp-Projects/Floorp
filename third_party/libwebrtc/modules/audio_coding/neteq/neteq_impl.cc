@@ -1370,7 +1370,7 @@ int NetEqImpl::GetDecision(Operation* operation,
     }
   }
 
-  timestamp_ = sync_buffer_->end_timestamp();
+  timestamp_ = end_timestamp;
   return 0;
 }
 

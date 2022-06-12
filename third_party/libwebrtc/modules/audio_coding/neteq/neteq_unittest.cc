@@ -82,17 +82,17 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
-  const std::string output_checksum =
-      PlatformChecksum("ba4fae83a52f5e9d95b0910f05d540114285697b",
-                       "aa557f30f7fdcebbbbf99d7f235ccba3a1c98983", "not used",
-                       "ba4fae83a52f5e9d95b0910f05d540114285697b",
-                       "64b46bb3c1165537a880ae8404afce2efba456c0");
+  const std::string output_checksum = PlatformChecksum(
+      "6c35140ce4d75874bdd60aa1872400b05fd05ca2",
+      "ab451bb8301d9a92fbf4de91556b56f1ea38b4ce", "not used",
+      "6c35140ce4d75874bdd60aa1872400b05fd05ca2",
+      "64b46bb3c1165537a880ae8404afce2efba456c0");
 
-  const std::string network_stats_checksum =
-      PlatformChecksum("fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4",
-                       "300ccc2aaee7ed1971afb2f9a20247ed8760441d", "not used",
-                       "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4",
-                       "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4");
+  const std::string network_stats_checksum = PlatformChecksum(
+      "90594d85fa31d3d9584d79293bf7aa4ee55ed751",
+      "77b9c3640b81aff6a38d69d07dd782d39c15321d", "not used",
+      "90594d85fa31d3d9584d79293bf7aa4ee55ed751",
+      "90594d85fa31d3d9584d79293bf7aa4ee55ed751");
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
@@ -531,16 +531,11 @@ TEST_F(NetEqDecodingTest, DiscardDuplicateCng) {
               out_frame_.timestamp_ + out_frame_.samples_per_channel_);
   }
 
+  // Insert speech again.
   ++seq_no;
   timestamp += kCngPeriodSamples;
-  uint32_t first_speech_timestamp = timestamp;
-  // Insert speech again.
-  for (int i = 0; i < 3; ++i) {
-    PopulateRtpInfo(seq_no, timestamp, &rtp_info);
-    ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
-    ++seq_no;
-    timestamp += kSamples;
-  }
+  PopulateRtpInfo(seq_no, timestamp, &rtp_info);
+  ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
 
   // Pull audio once and verify that the output is speech again.
   ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
@@ -548,7 +543,7 @@ TEST_F(NetEqDecodingTest, DiscardDuplicateCng) {
   EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
   absl::optional<uint32_t> playout_timestamp = neteq_->GetPlayoutTimestamp();
   ASSERT_TRUE(playout_timestamp);
-  EXPECT_EQ(first_speech_timestamp + kSamples - algorithmic_delay_samples,
+  EXPECT_EQ(timestamp + kSamples - algorithmic_delay_samples,
             *playout_timestamp);
 }
 
@@ -1268,7 +1263,7 @@ TEST(NetEqOutputDelayTest, RunTestWithFieldTrial) {
   // The base delay values are taken from the resuts of the non-delayed case in
   // NetEqOutputDelayTest.RunTest above.
   EXPECT_EQ(20 + kExpectedDelayMs, result.target_delay_ms);
-  EXPECT_EQ(60 + kExpectedDelayMs, result.filtered_current_delay_ms);
+  EXPECT_EQ(24 + kExpectedDelayMs, result.filtered_current_delay_ms);
 }
 
 // Set a non-multiple-of-10 value in the field trial, and verify that we don't
@@ -1283,7 +1278,7 @@ TEST(NetEqOutputDelayTest, RunTestWithFieldTrialOddValue) {
   // The base delay values are taken from the resuts of the non-delayed case in
   // NetEqOutputDelayTest.RunTest above.
   EXPECT_EQ(20 + kRoundedDelayMs, result.target_delay_ms);
-  EXPECT_EQ(60 + kRoundedDelayMs, result.filtered_current_delay_ms);
+  EXPECT_EQ(24 + kRoundedDelayMs, result.filtered_current_delay_ms);
 }
 
 }  // namespace test
