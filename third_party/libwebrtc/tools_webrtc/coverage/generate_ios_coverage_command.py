@@ -61,7 +61,6 @@ TESTS = [
     'rtc_pc_unittests',
     'rtc_stats_unittests',
     'rtc_unittests',
-    'slow_tests',
     'system_wrappers_unittests',
     'test_support_unittests',
     'tools_unittests',

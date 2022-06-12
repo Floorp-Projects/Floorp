@@ -39,7 +39,6 @@ if (!build_with_chromium && !build_with_mozilla) {
     if (rtc_include_tests) {
       deps += [
         ":rtc_unittests",
-        ":slow_tests",
         ":video_engine_tests",
         ":voip_unittests",
         ":webrtc_nonparallel_tests",
@@ -583,6 +582,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtc_base/experiments:experiments_unittests",
       "rtc_base/system:file_wrapper_unittests",
       "rtc_base/task_utils:pending_task_safety_flag_unittests",
+      "rtc_base/task_utils:repeating_task_unittests",
       "rtc_base/task_utils:to_queued_task_unittests",
       "sdk:sdk_tests",
       "test:rtp_test_utils",
@@ -619,17 +619,6 @@ if (rtc_include_tests && !build_with_chromium) {
         "test:benchmark_main",
       ]
     }
-  }
-
-  # This runs tests that must run in real time and therefore can take some
-  # time to execute. They are in a separate executable to avoid making the
-  # regular unittest suite too slow to run frequently.
-  rtc_test("slow_tests") {
-    testonly = true
-    deps = [
-      "rtc_base/task_utils:repeating_task_unittests",
-      "test:test_main",
-    ]
   }
 
   # TODO(pbos): Rename test suite, this is no longer "just" for video targets.
