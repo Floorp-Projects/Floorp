@@ -109,12 +109,10 @@ def _LocalCommit():
 
     git_author = subprocess.check_output(['git', 'config',
                                           'user.email']).strip()
-    tbr_authors = git_author + ',' + 'mbonadei@webrtc.org'
-    tbr = 'TBR=%s' % tbr_authors
     commit_msg = ('Update WebRTC code version (%02d-%02d-%02dT%02d:%02d:%02d).'
-                  '\n\nTBR=%s\nBug: None')
+                  '\n\nBug: None')
     commit_msg = commit_msg % (d.year, d.month, d.day, d.hour, d.minute,
-                               d.second, tbr_authors)
+                               d.second)
     subprocess.check_call(['git', 'add', '--update', '.'])
     subprocess.check_call(['git', 'commit', '-m', commit_msg])
 
