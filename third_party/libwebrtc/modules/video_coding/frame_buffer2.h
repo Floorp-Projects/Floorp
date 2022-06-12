@@ -125,7 +125,8 @@ class FrameBuffer {
   bool ValidReferences(const EncodedFrame& frame) const;
 
   int64_t FindNextFrame(int64_t now_ms) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  EncodedFrame* GetNextFrame() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  std::unique_ptr<EncodedFrame> GetNextFrame()
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void StartWaitForNextFrameOnQueue() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void CancelCallback() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -159,8 +160,8 @@ class FrameBuffer {
   // vector of frames, but until the decoding pipeline can support decoding
   // multiple frames at the same time we combine all frames to one frame and
   // return it. See bugs.webrtc.org/10064
-  EncodedFrame* CombineAndDeleteFrames(
-      const std::vector<EncodedFrame*>& frames) const;
+  std::unique_ptr<EncodedFrame> CombineAndDeleteFrames(
+      std::vector<std::unique_ptr<EncodedFrame>> frames) const;
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker construction_checker_;
   RTC_NO_UNIQUE_ADDRESS SequenceChecker callback_checker_;
