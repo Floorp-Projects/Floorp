@@ -2369,6 +2369,7 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
     sinfo.packets_lost = stats.packets_lost;
     sinfo.fraction_lost = stats.fraction_lost;
     sinfo.nacks_rcvd = stats.nacks_rcvd;
+    sinfo.target_bitrate = stats.target_bitrate_bps;
     sinfo.codec_name = stats.codec_name;
     sinfo.codec_payload_type = stats.codec_payload_type;
     sinfo.jitter_ms = stats.jitter_ms;

@@ -94,6 +94,8 @@ class AudioCodingModuleImpl final : public AudioCodingModule {
 
   ANAStats GetANAStats() const override;
 
+  int GetTargetBitrate() const override;
+
  private:
   struct InputData {
     InputData() : buffer(kInitialInputDataBufferSize) {}
@@ -607,6 +609,14 @@ ANAStats AudioCodingModuleImpl::GetANAStats() const {
     return encoder_stack_->GetANAStats();
   // If no encoder is set, return default stats.
   return ANAStats();
+}
+
+int AudioCodingModuleImpl::GetTargetBitrate() const {
+  MutexLock lock(&acm_mutex_);
+  if (!encoder_stack_) {
+    return -1;
+  }
+  return encoder_stack_->GetTargetBitrate();
 }
 
 }  // namespace
