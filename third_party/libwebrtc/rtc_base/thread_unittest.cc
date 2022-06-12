@@ -742,7 +742,7 @@ TEST(ThreadManager, ClearReentrant) {
           new ScopedRefMessageData<RefCountedHandler>(inner_handler));
 }
 
-class AsyncInvokeTest : public ::testing::Test {
+class DEPRECATED_AsyncInvokeTest : public ::testing::Test {
  public:
   void IntCallback(int value) {
     EXPECT_EQ(expected_thread_, Thread::Current());
@@ -754,13 +754,13 @@ class AsyncInvokeTest : public ::testing::Test {
 
  protected:
   enum { kWaitTimeout = 1000 };
-  AsyncInvokeTest() : int_value_(0), expected_thread_(nullptr) {}
+  DEPRECATED_AsyncInvokeTest() : int_value_(0), expected_thread_(nullptr) {}
 
   int int_value_;
   Thread* expected_thread_;
 };
 
-TEST_F(AsyncInvokeTest, FireAndForget) {
+TEST_F(DEPRECATED_AsyncInvokeTest, FireAndForget) {
   DEPRECATED_AsyncInvoker invoker;
   // Create and start the thread.
   auto thread = Thread::CreateWithSocketServer();
@@ -772,7 +772,7 @@ TEST_F(AsyncInvokeTest, FireAndForget) {
   thread->Stop();
 }
 
-TEST_F(AsyncInvokeTest, NonCopyableFunctor) {
+TEST_F(DEPRECATED_AsyncInvokeTest, NonCopyableFunctor) {
   DEPRECATED_AsyncInvoker invoker;
   // Create and start the thread.
   auto thread = Thread::CreateWithSocketServer();
@@ -784,7 +784,7 @@ TEST_F(AsyncInvokeTest, NonCopyableFunctor) {
   thread->Stop();
 }
 
-TEST_F(AsyncInvokeTest, KillInvokerDuringExecute) {
+TEST_F(DEPRECATED_AsyncInvokeTest, KillInvokerDuringExecute) {
   // Use these events to get in a state where the functor is in the middle of
   // executing, and then to wait for it to finish, ensuring the "EXPECT_FALSE"
   // is run.
@@ -821,10 +821,10 @@ TEST_F(AsyncInvokeTest, KillInvokerDuringExecute) {
 }
 
 // Variant of the above test where the async-invoked task calls AsyncInvoke
-// *again*, for the thread on which the AsyncInvoker is currently being
-// destroyed. This shouldn't deadlock or crash; this second invocation should
-// just be ignored.
-TEST_F(AsyncInvokeTest, KillInvokerDuringExecuteWithReentrantInvoke) {
+// *again*, for the thread on which the invoker is currently being destroyed.
+// This shouldn't deadlock or crash. The second invocation should be ignored.
+TEST_F(DEPRECATED_AsyncInvokeTest,
+       KillInvokerDuringExecuteWithReentrantInvoke) {
   Event functor_started;
   // Flag used to verify that the recursively invoked task never actually runs.
   bool reentrant_functor_run = false;
@@ -851,7 +851,7 @@ TEST_F(AsyncInvokeTest, KillInvokerDuringExecuteWithReentrantInvoke) {
   EXPECT_FALSE(reentrant_functor_run);
 }
 
-TEST_F(AsyncInvokeTest, Flush) {
+TEST_F(DEPRECATED_AsyncInvokeTest, Flush) {
   DEPRECATED_AsyncInvoker invoker;
   AtomicBool flag1;
   AtomicBool flag2;
@@ -867,7 +867,7 @@ TEST_F(AsyncInvokeTest, Flush) {
   EXPECT_TRUE(flag2.get());
 }
 
-TEST_F(AsyncInvokeTest, FlushWithIds) {
+TEST_F(DEPRECATED_AsyncInvokeTest, FlushWithIds) {
   DEPRECATED_AsyncInvoker invoker;
   AtomicBool flag1;
   AtomicBool flag2;
