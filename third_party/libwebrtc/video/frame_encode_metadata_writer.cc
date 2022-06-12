@@ -11,11 +11,13 @@
 #include "video/frame_encode_metadata_writer.h"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 #include "common_video/h264/sps_vui_rewriter.h"
 #include "modules/include/module_common_types_public.h"
 #include "modules/video_coding/include/video_coding_defines.h"
+#include "modules/video_coding/svc/create_scalability_structure.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/time_utils.h"
@@ -62,6 +64,20 @@ void FrameEncodeMetadataWriter::OnEncoderInit(const VideoCodec& codec,
   MutexLock lock(&lock_);
   codec_settings_ = codec;
   internal_source_ = internal_source;
+
+  size_t num_spatial_layers = codec_settings_.numberOfSimulcastStreams;
+  if (codec_settings_.codecType == kVideoCodecVP9) {
+    num_spatial_layers = std::max(
+        num_spatial_layers,
+        static_cast<size_t>(codec_settings_.VP9()->numberOfSpatialLayers));
+  } else if (codec_settings_.codecType == kVideoCodecAV1 &&
+             codec_settings_.ScalabilityMode() != "") {
+    std::unique_ptr<ScalableVideoController> structure =
+        CreateScalabilityStructure(codec_settings_.ScalabilityMode());
+    RTC_DCHECK(structure);
+    num_spatial_layers = structure->StreamConfig().num_spatial_layers;
+  }
+  num_spatial_layers_ = std::max(num_spatial_layers, size_t{1});
 }
 
 void FrameEncodeMetadataWriter::OnSetRates(
@@ -69,11 +85,10 @@ void FrameEncodeMetadataWriter::OnSetRates(
     uint32_t framerate_fps) {
   MutexLock lock(&lock_);
   framerate_fps_ = framerate_fps;
-  const size_t num_spatial_layers = NumSpatialLayers();
-  if (timing_frames_info_.size() < num_spatial_layers) {
-    timing_frames_info_.resize(num_spatial_layers);
+  if (timing_frames_info_.size() < num_spatial_layers_) {
+    timing_frames_info_.resize(num_spatial_layers_);
   }
-  for (size_t i = 0; i < num_spatial_layers; ++i) {
+  for (size_t i = 0; i < num_spatial_layers_; ++i) {
     timing_frames_info_[i].target_bitrate_bytes_per_sec =
         bitrate_allocation.GetSpatialLayerSum(i) / 8;
   }
@@ -85,8 +100,7 @@ void FrameEncodeMetadataWriter::OnEncodeStarted(const VideoFrame& frame) {
     return;
   }
 
-  const size_t num_spatial_layers = NumSpatialLayers();
-  timing_frames_info_.resize(num_spatial_layers);
+  timing_frames_info_.resize(num_spatial_layers_);
   FrameMetadata metadata;
   metadata.rtp_timestamp = frame.timestamp();
   metadata.encode_start_time_ms = rtc::TimeMillis();
@@ -95,7 +109,7 @@ void FrameEncodeMetadataWriter::OnEncodeStarted(const VideoFrame& frame) {
   metadata.rotation = frame.rotation();
   metadata.color_space = frame.color_space();
   metadata.packet_infos = frame.packet_infos();
-  for (size_t si = 0; si < num_spatial_layers; ++si) {
+  for (size_t si = 0; si < num_spatial_layers_; ++si) {
     RTC_DCHECK(timing_frames_info_[si].frames.empty() ||
                rtc::TimeDiff(
                    frame.render_time_ms(),
@@ -281,16 +295,6 @@ FrameEncodeMetadataWriter::ExtractEncodeStartTimeAndFillMetadata(
     }
   }
   return result;
-}
-
-size_t FrameEncodeMetadataWriter::NumSpatialLayers() const {
-  size_t num_spatial_layers = codec_settings_.numberOfSimulcastStreams;
-  if (codec_settings_.codecType == kVideoCodecVP9) {
-    num_spatial_layers = std::max(
-        num_spatial_layers,
-        static_cast<size_t>(codec_settings_.VP9().numberOfSpatialLayers));
-  }
-  return std::max(num_spatial_layers, size_t{1});
 }
 
 }  // namespace webrtc
