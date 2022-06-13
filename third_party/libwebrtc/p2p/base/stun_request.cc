@@ -147,9 +147,9 @@ bool StunRequestManager::CheckResponse(StunMessage* msg) {
   } else if (msg->type() == GetStunErrorResponseType(request->type())) {
     request->OnErrorResponse(msg);
   } else {
-    RTC_LOG(LERROR) << "Received response with wrong type: " << msg->type()
-                    << " (expecting "
-                    << GetStunSuccessResponseType(request->type()) << ")";
+    RTC_LOG(LS_ERROR) << "Received response with wrong type: " << msg->type()
+                      << " (expecting "
+                      << GetStunSuccessResponseType(request->type()) << ")";
     return false;
   }
 

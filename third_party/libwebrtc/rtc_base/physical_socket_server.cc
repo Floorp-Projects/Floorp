@@ -942,7 +942,7 @@ class Signaler : public Dispatcher {
           std::array<int, 2> afd = {-1, -1};
 
           if (pipe(afd.data()) < 0) {
-            RTC_LOG(LERROR) << "pipe failed";
+            RTC_LOG(LS_ERROR) << "pipe failed";
           }
           return afd;
         }()),

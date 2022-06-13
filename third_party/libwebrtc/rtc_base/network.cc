@@ -652,8 +652,8 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   struct ifaddrs* interfaces;
   int error = getifaddrs(&interfaces);
   if (error != 0) {
-    RTC_LOG_ERR(LERROR) << "getifaddrs failed to gather interface data: "
-                        << error;
+    RTC_LOG_ERR(LS_ERROR) << "getifaddrs failed to gather interface data: "
+                          << error;
     return false;
   }
 
@@ -983,7 +983,7 @@ IPAddress BasicNetworkManager::QueryDefaultLocalAddress(int family) const {
   std::unique_ptr<Socket> socket(
       socket_factory->CreateSocket(family, SOCK_DGRAM));
   if (!socket) {
-    RTC_LOG_ERR(LERROR) << "Socket creation failed";
+    RTC_LOG_ERR(LS_ERROR) << "Socket creation failed";
     return IPAddress();
   }
 
