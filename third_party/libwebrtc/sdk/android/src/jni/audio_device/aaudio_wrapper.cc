@@ -92,8 +92,8 @@ void ErrorCallback(AAudioStream* stream,
                    aaudio_result_t error) {
   RTC_DCHECK(user_data);
   AAudioWrapper* aaudio_wrapper = reinterpret_cast<AAudioWrapper*>(user_data);
-  RTC_LOG(WARNING) << "ErrorCallback: "
-                   << DirectionToString(aaudio_wrapper->direction());
+  RTC_LOG(LS_WARNING) << "ErrorCallback: "
+                      << DirectionToString(aaudio_wrapper->direction());
   RTC_DCHECK(aaudio_wrapper->observer());
   aaudio_wrapper->observer()->OnErrorCallback(error);
 }

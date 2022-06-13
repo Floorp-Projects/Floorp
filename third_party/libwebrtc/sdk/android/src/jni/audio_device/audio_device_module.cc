@@ -454,7 +454,7 @@ class AndroidAudioDeviceModule : public AudioDeviceModule {
     // to call this method if that same state is not modified.
     bool available = is_stereo_playout_supported_;
     if (enable != available) {
-      RTC_LOG(WARNING) << "changing stereo playout not supported";
+      RTC_LOG(LS_WARNING) << "changing stereo playout not supported";
       return -1;
     }
     return 0;
@@ -481,7 +481,7 @@ class AndroidAudioDeviceModule : public AudioDeviceModule {
     // to call this method if that same state is not modified.
     bool available = is_stereo_record_supported_;
     if (enable != available) {
-      RTC_LOG(WARNING) << "changing stereo recording not supported";
+      RTC_LOG(LS_WARNING) << "changing stereo recording not supported";
       return -1;
     }
     return 0;

@@ -49,7 +49,7 @@ void ScopedCOMInitializer::Initialize(COINIT init) {
     RTC_DLOG(LS_INFO)
         << "The COM library was initialized successfully on this thread";
   } else if (hr_ == S_FALSE) {
-    RTC_DLOG(WARNING)
+    RTC_DLOG(LS_WARNING)
         << "The COM library is already initialized on this thread";
   }
 }

@@ -53,9 +53,9 @@ double ReadBackoffFactor(const WebRtcKeyValueConfig& key_value_config) {
       sscanf(experiment_string.c_str(), "Enabled-%lf", &backoff_factor);
   if (parsed_values == 1) {
     if (backoff_factor >= 1.0) {
-      RTC_LOG(WARNING) << "Back-off factor must be less than 1.";
+      RTC_LOG(LS_WARNING) << "Back-off factor must be less than 1.";
     } else if (backoff_factor <= 0.0) {
-      RTC_LOG(WARNING) << "Back-off factor must be greater than 0.";
+      RTC_LOG(LS_WARNING) << "Back-off factor must be greater than 0.";
     } else {
       return backoff_factor;
     }

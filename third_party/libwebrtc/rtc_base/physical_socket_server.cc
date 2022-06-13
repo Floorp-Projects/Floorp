@@ -1689,31 +1689,31 @@ bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
             {
               if ((wsaEvents.lNetworkEvents & FD_READ) &&
                   wsaEvents.iErrorCode[FD_READ_BIT] != 0) {
-                RTC_LOG(WARNING)
+                RTC_LOG(LS_WARNING)
                     << "PhysicalSocketServer got FD_READ_BIT error "
                     << wsaEvents.iErrorCode[FD_READ_BIT];
               }
               if ((wsaEvents.lNetworkEvents & FD_WRITE) &&
                   wsaEvents.iErrorCode[FD_WRITE_BIT] != 0) {
-                RTC_LOG(WARNING)
+                RTC_LOG(LS_WARNING)
                     << "PhysicalSocketServer got FD_WRITE_BIT error "
                     << wsaEvents.iErrorCode[FD_WRITE_BIT];
               }
               if ((wsaEvents.lNetworkEvents & FD_CONNECT) &&
                   wsaEvents.iErrorCode[FD_CONNECT_BIT] != 0) {
-                RTC_LOG(WARNING)
+                RTC_LOG(LS_WARNING)
                     << "PhysicalSocketServer got FD_CONNECT_BIT error "
                     << wsaEvents.iErrorCode[FD_CONNECT_BIT];
               }
               if ((wsaEvents.lNetworkEvents & FD_ACCEPT) &&
                   wsaEvents.iErrorCode[FD_ACCEPT_BIT] != 0) {
-                RTC_LOG(WARNING)
+                RTC_LOG(LS_WARNING)
                     << "PhysicalSocketServer got FD_ACCEPT_BIT error "
                     << wsaEvents.iErrorCode[FD_ACCEPT_BIT];
               }
               if ((wsaEvents.lNetworkEvents & FD_CLOSE) &&
                   wsaEvents.iErrorCode[FD_CLOSE_BIT] != 0) {
-                RTC_LOG(WARNING)
+                RTC_LOG(LS_WARNING)
                     << "PhysicalSocketServer got FD_CLOSE_BIT error "
                     << wsaEvents.iErrorCode[FD_CLOSE_BIT];
               }

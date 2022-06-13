@@ -211,19 +211,19 @@ static RTCErrorType ParseIceServerUrl(
   }
 
   if (hoststring.find('@') != std::string::npos) {
-    RTC_LOG(WARNING) << "Invalid url: " << uri_without_transport;
-    RTC_LOG(WARNING)
+    RTC_LOG(LS_WARNING) << "Invalid url: " << uri_without_transport;
+    RTC_LOG(LS_WARNING)
         << "Note that user-info@ in turn:-urls is long-deprecated.";
     return RTCErrorType::SYNTAX_ERROR;
   }
   std::string address;
   if (!ParseHostnameAndPortFromString(hoststring, &address, &port)) {
-    RTC_LOG(WARNING) << "Invalid hostname format: " << uri_without_transport;
+    RTC_LOG(LS_WARNING) << "Invalid hostname format: " << uri_without_transport;
     return RTCErrorType::SYNTAX_ERROR;
   }
 
   if (port <= 0 || port > 0xffff) {
-    RTC_LOG(WARNING) << "Invalid port: " << port;
+    RTC_LOG(LS_WARNING) << "Invalid port: " << port;
     return RTCErrorType::SYNTAX_ERROR;
   }
 
