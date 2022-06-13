@@ -3316,8 +3316,8 @@ void VideoSendStreamTest::TestVp9NonFlexMode(uint8_t num_temporal_layers,
   // structures to verify temporal id reset on key frame.
   static const int kKeyFrameInterval = 31;
 
-  static const int kWidth = kMinVp9SpatialLayerWidth;
-  static const int kHeight = kMinVp9SpatialLayerHeight;
+  static const int kWidth = kMinVp9SpatialLayerLongSideLength;
+  static const int kHeight = kMinVp9SpatialLayerShortSideLength;
   static const float kGoodBitsPerPixel = 0.1f;
   class NonFlexibleMode : public Vp9HeaderObserver {
    public:

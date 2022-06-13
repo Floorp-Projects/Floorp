@@ -302,8 +302,8 @@ TEST_F(VideoCodecInitializerTest, Vp9SvcAdjustedLayering) {
   VideoStream stream = DefaultStream();
   stream.num_temporal_layers = 3;
   // Set resolution which is only enough to produce 2 spatial layers.
-  stream.width = kMinVp9SpatialLayerWidth * 2;
-  stream.height = kMinVp9SpatialLayerHeight * 2;
+  stream.width = kMinVp9SpatialLayerLongSideLength * 2;
+  stream.height = kMinVp9SpatialLayerShortSideLength * 2;
 
   streams_.push_back(stream);
 
