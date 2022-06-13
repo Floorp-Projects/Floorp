@@ -124,7 +124,8 @@ const char kSimulcastDisabled[] = "WebRTC.PeerConnection.Simulcast.Disabled";
 static const int kRtcpCnameLength = 16;
 
 // The maximum length of the MID attribute.
-static constexpr size_t kMidMaxSize = 16;
+// TODO(bugs.webrtc.org/12517) - reduce to 16 again.
+static constexpr size_t kMidMaxSize = 32;
 
 const char kDefaultStreamId[] = "default";
 // NOTE: Duplicated in peer_connection.cc:
@@ -446,21 +447,25 @@ bool VerifyIceUfragPwdPresent(
 
 RTCError ValidateMids(const cricket::SessionDescription& description) {
   std::set<std::string> mids;
+  size_t max_length = 0;
   for (const cricket::ContentInfo& content : description.contents()) {
     if (content.name.empty()) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "A media section is missing a MID attribute.");
     }
+    max_length = std::max(max_length, content.name.size());
     if (content.name.size() > kMidMaxSize) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "The MID attribute exceeds the maximum supported "
-                           "length of 16 characters.");
+                           "length of 32 characters.");
     }
     if (!mids.insert(content.name).second) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "Duplicate a=mid value '" + content.name + "'.");
     }
   }
+  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.Mid.Size", max_length, 0,
+                              31, 32);
   return RTCError::OK();
 }
 

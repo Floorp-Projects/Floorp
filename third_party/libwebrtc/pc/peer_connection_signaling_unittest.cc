@@ -1051,7 +1051,7 @@ TEST_P(PeerConnectionSignalingTest, MidAttributeMaxLength) {
       "1C:2C:74:01:8D:50:67:23\r\n"
       "a=setup:actpass\r\n"
       // Too long mid attribute.
-      "a=mid:01234567890123456\r\n"
+      "a=mid:0123456789012345678901234567890123\r\n"
       "a=sendrecv\r\n"
       "a=msid:stream track\r\n"
       "a=rtcp-mux\r\n"
