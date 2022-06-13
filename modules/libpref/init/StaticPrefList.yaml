@@ -1122,20 +1122,6 @@
   value: "#FBFBFE"
   mirror: never
 
-# Determines the behavior of OS zoom settings.
-#
-#   0: doesn't affect rendering at all
-#   1: affects full zoom (dpi, effectively).
-#   2: affects text zoom.
-#
-# Default is (1): Historical behavior on Linux, matches other browsers on
-# Windows, and generally creates more consistent rendering.
-- name: browser.display.os-zoom-behavior
-  type: RelaxedAtomicInt32
-  value: 1
-  mirror: always
-  rust: true
-
 # Whether focus rings are always shown by default.
 #
 # This is the initial value of nsWindowRoot::mShowFocusRings, but it can be

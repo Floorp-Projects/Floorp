@@ -322,22 +322,6 @@ bool nsXPLookAndFeel::sInitialized = false;
 nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
 
-auto LookAndFeel::SystemZoomSettings() -> ZoomSettings {
-  ZoomSettings settings;
-  switch (StaticPrefs::browser_display_os_zoom_behavior()) {
-    case 0:
-    default:
-      break;
-    case 1:
-      settings.mFullZoom = GetTextScaleFactor();
-      break;
-    case 2:
-      settings.mTextZoom = GetTextScaleFactor();
-      break;
-  }
-  return settings;
-}
-
 // static
 nsXPLookAndFeel* nsXPLookAndFeel::GetInstance() {
   if (sInstance) {
@@ -401,13 +385,10 @@ static void IntPrefChanged(const nsACString& aPref) {
   LookAndFeel::NotifyChangedAllWindows(changeKind);
 }
 
-static void FloatPrefChanged(const nsACString& aPref) {
-  // Most float prefs can't change our system colors or fonts, but
-  // textScaleFactor affects layout.
-  auto changeKind = aPref.EqualsLiteral("ui.textScaleFactor")
-                        ? widget::ThemeChangeKind::StyleAndLayout
-                        : widget::ThemeChangeKind::MediaQueriesOnly;
-  LookAndFeel::NotifyChangedAllWindows(changeKind);
+static void FloatPrefChanged() {
+  // Float prefs can't change our system colors or fonts.
+  LookAndFeel::NotifyChangedAllWindows(
+      widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
 static void ColorPrefChanged() {
@@ -427,7 +408,7 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
 
   for (const char* pref : sFloatPrefs) {
     if (prefName.Equals(pref)) {
-      FloatPrefChanged(prefName);
+      FloatPrefChanged();
       return;
     }
   }
@@ -452,9 +433,6 @@ static constexpr struct {
      widget::ThemeChangeKind::Style},
     // Affects media queries and scrollbar sizes, so gotta relayout.
     {"widget.gtk.overlay-scrollbars.enabled"_ns,
-     widget::ThemeChangeKind::StyleAndLayout},
-    // Affects zoom settings which includes text and full zoom.
-    {"browser.display.os-zoom-behavior"_ns,
      widget::ThemeChangeKind::StyleAndLayout},
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
