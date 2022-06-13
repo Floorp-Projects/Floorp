@@ -200,7 +200,7 @@ WindowsLocationProvider::Startup() {
   }
 
   RefPtr<ILocation> location;
-  if (FAILED(::CoCreateInstance(CLSID_Location, nullptr, CLSCTX_ALL,
+  if (FAILED(::CoCreateInstance(CLSID_Location, nullptr, CLSCTX_INPROC_SERVER,
                                 IID_ILocation, getter_AddRefs(location)))) {
     // We will use MLS provider
     return NS_OK;
