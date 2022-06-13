@@ -168,7 +168,11 @@ class StatsObserver : public rtc::RefCountInterface {
   ~StatsObserver() override = default;
 };
 
-enum class SdpSemantics { kPlanB, kUnifiedPlan };
+enum class SdpSemantics {
+  kPlanB_DEPRECATED,
+  kPlanB [[deprecated]] = kPlanB_DEPRECATED,
+  kUnifiedPlan
+};
 
 class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
  public:
@@ -622,24 +626,23 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // WebRTC 1.0 specification requires kUnifiedPlan semantics. The
     // RtpTransceiver API is only available with kUnifiedPlan semantics.
     //
-    // kPlanB will cause PeerConnection to create offers and answers with at
-    // most one audio and one video m= section with multiple RtpSenders and
-    // RtpReceivers specified as multiple a=ssrc lines within the section. This
-    // will also cause PeerConnection to ignore all but the first m= section of
-    // the same media type.
-    //
     // kUnifiedPlan will cause PeerConnection to create offers and answers with
     // multiple m= sections where each m= section maps to one RtpSender and one
     // RtpReceiver (an RtpTransceiver), either both audio or both video. This
     // will also cause PeerConnection to ignore all but the first a=ssrc lines
     // that form a Plan B stream.
     //
-    // For users who wish to send multiple audio/video streams and need to stay
-    // interoperable with legacy WebRTC implementations or use legacy APIs,
-    // specify kPlanB.
+    // kPlanB will cause PeerConnection to create offers and answers with at
+    // most one audio and one video m= section with multiple RtpSenders and
+    // RtpReceivers specified as multiple a=ssrc lines within the section. This
+    // will also cause PeerConnection to ignore all but the first m= section of
+    // the same media type.
+    //
+    // For users who have to interwork with legacy WebRTC implementations,
+    // it is possible to specify kPlanB until the code is finally removed.
     //
     // For all other users, specify kUnifiedPlan.
-    SdpSemantics sdp_semantics = SdpSemantics::kPlanB;
+    SdpSemantics sdp_semantics = SdpSemantics::kPlanB_DEPRECATED;
 
     // TODO(bugs.webrtc.org/9891) - Move to crypto_options or remove.
     // Actively reset the SRTP parameters whenever the DTLS transports
