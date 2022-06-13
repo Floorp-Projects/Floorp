@@ -83,7 +83,8 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(NotificationController, Release)
 
 void NotificationController::Shutdown() {
   if (mObservingState != eNotObservingRefresh &&
-      mPresShell->RemoveRefreshObserver(this, FlushType::Display)) {
+      mPresShell->RemoveRefreshObserver(this, FlushType::Display) &&
+      mPresShell->RemovePostRefreshObserver(this)) {
     mObservingState = eNotObservingRefresh;
   }
 
@@ -453,7 +454,8 @@ void NotificationController::ScheduleProcessing() {
   // asynchronously (after style and layout).
   if (mObservingState == eNotObservingRefresh) {
     if (mPresShell->AddRefreshObserver(this, FlushType::Display,
-                                       "Accessibility notifications")) {
+                                       "Accessibility notifications") &&
+        mPresShell->AddPostRefreshObserver(this)) {
       mObservingState = eRefreshObserving;
     }
   }
@@ -981,8 +983,27 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       !mFocusEvent && mEvents.IsEmpty() && mTextHash.Count() == 0 &&
       mHangingChildDocuments.IsEmpty() &&
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
-      mPresShell->RemoveRefreshObserver(this, FlushType::Display)) {
+      mPresShell->RemoveRefreshObserver(this, FlushType::Display) &&
+      mPresShell->RemovePostRefreshObserver(this)) {
     mObservingState = eNotObservingRefresh;
+  }
+}
+
+void NotificationController::DidRefresh() {
+  if (IPCAccessibilityActive() && mDocument->IsViewportCacheDirty()) {
+    // It is now safe to send the viewport cache, because
+    // we know painting has finished.
+    RefPtr<AccAttributes> fields = mDocument->BundleFieldsForCache(
+        CacheDomain::Viewport, CacheUpdateType::Update);
+
+    if (fields->Count()) {
+      nsTArray<CacheData> data(1);
+      data.AppendElement(CacheData(0, fields));
+      MOZ_ASSERT(mDocument->IPCDoc());
+      mDocument->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+    }
+
+    mDocument->SetViewportCacheDirty(false);
   }
 }
 

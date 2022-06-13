@@ -820,6 +820,11 @@ void RemoteAccessible::TakeFocus() const {
 
 Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::ChildAtPoint(aX, aY,
+                                                                aWhichChild);
+  }
+
   RefPtr<IAccessible2_2> target = QueryInterface<IAccessible2_2>(this);
   if (!target) {
     return nullptr;
