@@ -906,14 +906,22 @@ class MetaBuildWrapper(object):
         extra_files = [
             '../../.vpython',
             '../../testing/test_env.py',
+            '../../third_party/gtest-parallel/gtest-parallel',
+            '../../third_party/gtest-parallel/gtest_parallel.py',
+            '../../tools_webrtc/gtest-parallel-wrapper.py',
         ]
         vpython_exe = 'vpython'
+        #TODO(crbug.com/webrtc/13475) : use os.path module instead of 'sep'.
+        sep = '\\' if self.platform == 'win32' else '/'
+        output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
+        test_results = '${ISOLATED_OUTDIR}' + sep + 'gtest_output.json'
 
         must_retry = False
         if test_type == 'script':
             cmdline += [vpython_exe,
                         '../../' +
-                        self.ToSrcRelPath(isolate_map[target]['script'])]
+                        self.ToSrcRelPath(isolate_map[target]['script']),
+                        '--dump_json_test_results=%s' % test_results]
         elif is_android:
             cmdline += [vpython_exe,
                         '../../build/android/test_wrapper/logdog_wrapper.py',
@@ -922,11 +930,6 @@ class MetaBuildWrapper(object):
                         '--logcat-output-file', '${ISOLATED_OUTDIR}/logcats',
                         '--store-tombstones']
         else:
-            if test_type == 'raw':
-                cmdline += [vpython_exe,
-                            '../../tools_webrtc/flags_compatibility.py']
-                extra_files.append('../../tools_webrtc/flags_compatibility.py')
-
             if isolate_map[target].get('use_webcam', False):
                 cmdline += [vpython_exe,
                             '../../tools_webrtc/ensure_webcam_is_running.py']
@@ -943,33 +946,25 @@ class MetaBuildWrapper(object):
             else:
                 cmdline += [vpython_exe, '../../testing/test_env.py']
 
+            cmdline += [
+                '../../tools_webrtc/gtest-parallel-wrapper.py',
+                '--output_dir=%s' % output_dir,
+                '--dump_json_test_results=%s' % test_results,
+                '--gtest_color=no',
+            ]
             if test_type != 'raw':
-                extra_files += [
-                    '../../third_party/gtest-parallel/gtest-parallel',
-                    '../../third_party/gtest-parallel/gtest_parallel.py',
-                    '../../tools_webrtc/gtest-parallel-wrapper.py',
-                ]
-                sep = '\\' if self.platform == 'win32' else '/'
-                output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
-                test_results = '${ISOLATED_OUTDIR}' + sep + 'gtest_output.json'
+                # We tell gtest-parallel to interrupt the test after 900
+                # seconds, so it can exit cleanly and report results,
+                # instead of being interrupted by swarming and not
+                # reporting anything.
                 timeout = isolate_map[target].get('timeout', 900)
-                cmdline += [
-                    '../../tools_webrtc/gtest-parallel-wrapper.py',
-                    '--output_dir=%s' % output_dir,
-                    '--dump_json_test_results=%s' % test_results,
-                    '--gtest_color=no',
-                    # We tell gtest-parallel to interrupt the test after 900
-                    # seconds, so it can exit cleanly and report results,
-                    # instead of being interrupted by swarming and not
-                    # reporting anything.
-                    '--timeout=%s' % timeout,
-                ]
-                if test_type == 'non_parallel_console_test_launcher':
-                    # Still use the gtest-parallel-wrapper.py script since we
-                    # need it to run tests on swarming, but don't execute tests
-                    # in parallel.
-                    cmdline.append('--workers=1')
+                cmdline.append('--timeout=%s' % timeout)
                 must_retry = True
+            if test_type in ('raw', 'non_parallel_console_test_launcher'):
+                # Still use the gtest-parallel-wrapper.py script since we
+                # need it to run tests on swarming, but don't execute tests
+                # in parallel.
+                cmdline.append('--workers=1')
 
             asan = 'is_asan=true' in vals['gn_args']
             lsan = 'is_lsan=true' in vals['gn_args']
