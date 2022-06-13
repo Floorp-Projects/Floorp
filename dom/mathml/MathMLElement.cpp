@@ -591,10 +591,10 @@ void MathMLElement::MapMathMLAttributesInto(
       str.CompressWhitespace();
       if (str.EqualsASCII("normal")) {
         aDecls.SetKeywordValue(eCSSProperty_font_weight,
-                               FontWeight::Normal().ToFloat());
+                               FontWeight::NORMAL.ToFloat());
       } else if (str.EqualsASCII("bold")) {
         aDecls.SetKeywordValue(eCSSProperty_font_weight,
-                               FontWeight::Bold().ToFloat());
+                               FontWeight::BOLD.ToFloat());
       }
     }
   }
