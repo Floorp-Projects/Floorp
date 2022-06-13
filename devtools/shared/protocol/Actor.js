@@ -6,6 +6,8 @@
 
 const { extend } = require("devtools/shared/extend");
 var { Pool } = require("devtools/shared/protocol/Pool");
+const { Cu } = require("chrome");
+const ChromeUtils = require("ChromeUtils");
 
 /**
  * Keep track of which actorSpecs have been created. If a replica of a spec
@@ -61,6 +63,7 @@ class Actor extends Pool {
       );
       return;
     }
+    const startTime = isWorker ? null : Cu.now();
     let packet;
     try {
       packet = request.write(args, this);
@@ -70,6 +73,12 @@ class Actor extends Pool {
     }
     packet.from = packet.from || this.actorID;
     this.conn.send(packet);
+
+    ChromeUtils.addProfilerMarker(
+      "DevTools:RDP Actor",
+      startTime,
+      `${this.typeName}.${name}`
+    );
   }
 
   destroy() {
@@ -158,6 +167,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
   actorSpec.methods.forEach(spec => {
     const handler = function(packet, conn) {
       try {
+        const startTime = isWorker ? null : Cu.now();
         let args;
         try {
           args = spec.request.read(packet, this);
@@ -206,6 +216,12 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           }
 
           conn.send(response);
+
+          ChromeUtils.addProfilerMarker(
+            "DevTools:RDP Actor",
+            startTime,
+            `${actorSpec.typeName}:${spec.name}()`
+          );
         };
 
         this._queueResponse(p => {
