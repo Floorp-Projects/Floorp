@@ -41,7 +41,6 @@ namespace webrtc {
 // the processing is done externally (e.g. RtpPacketPacer). Furthermore, the
 // forwarding of packets when they are ready to be sent is also handled
 // externally, via the PacingController::PacketSender interface.
-//
 class PacingController {
  public:
   // Periodic mode uses the IntervalBudget class for tracking bitrate
@@ -114,8 +113,8 @@ class PacingController {
 
   void SetTransportOverhead(DataSize overhead_per_packet);
 
-  // Returns the time since the oldest queued packet was enqueued.
-  TimeDelta OldestPacketWaitTime() const;
+  // Returns the time when the oldest packet was queued.
+  Timestamp OldestPacketEnqueueTime() const;
 
   // Number of packets in the pacer queue.
   size_t QueueSizePackets() const;
@@ -125,7 +124,7 @@ class PacingController {
   // Current buffer level, i.e. max of media and padding debt.
   DataSize CurrentBufferLevel() const;
 
-  // Returns the time when the first packet was sent;
+  // Returns the time when the first packet was sent.
   absl::optional<Timestamp> FirstSentPacketTime() const;
 
   // Returns the number of milliseconds it will take to send the current
@@ -197,9 +196,10 @@ class PacingController {
   mutable Timestamp last_timestamp_;
   bool paused_;
 
-  // If `use_interval_budget_` is true, `media_budget_` and `padding_budget_`
-  // will be used to track when packets can be sent. Otherwise the media and
-  // padding debt counters will be used together with the target rates.
+  // In dynamic mode, `media_budget_` and `padding_budget_` will be used to
+  // track when packets can be sent.
+  // In periodic mode, `media_debt_` and `padding_debt_` will be used together
+  // with the target rates.
 
   // This is the media budget, keeping track of how many bits of media
   // we can pace out during the current interval.

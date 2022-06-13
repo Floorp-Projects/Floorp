@@ -66,7 +66,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   void EnqueuePackets(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override;
 
-  // Methods implementing RtpPacketPacer:
+  // Methods implementing RtpPacketPacer.
 
   void CreateProbeCluster(DataRate bitrate, int cluster_id) override;
 
@@ -112,15 +112,15 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // Exposed as protected for test.
   struct Stats {
     Stats()
-        : oldest_packet_wait_time(TimeDelta::Zero()),
+        : oldest_packet_enqueue_time(Timestamp::MinusInfinity()),
           queue_size(DataSize::Zero()),
           expected_queue_time(TimeDelta::Zero()) {}
-    TimeDelta oldest_packet_wait_time;
+    Timestamp oldest_packet_enqueue_time;
     DataSize queue_size;
     TimeDelta expected_queue_time;
     absl::optional<Timestamp> first_sent_packet_time;
   };
-  virtual void OnStatsUpdated(const Stats& stats);
+  void OnStatsUpdated(const Stats& stats);
 
  private:
   // Check if it is time to send packets, or schedule a delayed task if not.
@@ -130,7 +130,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // method again with desired (finite) scheduled process time.
   void MaybeProcessPackets(Timestamp scheduled_process_time);
 
-  void MaybeUpdateStats(bool is_scheduled_call) RTC_RUN_ON(task_queue_);
+  void UpdateStats() RTC_RUN_ON(task_queue_);
   Stats GetStats() const;
 
   Clock* const clock_;
@@ -146,19 +146,9 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // Timestamp::MinusInfinity() indicates no valid pending task.
   Timestamp next_process_time_ RTC_GUARDED_BY(task_queue_);
 
-  // Since we don't want to support synchronous calls that wait for a
-  // task execution, we poll the stats at some interval and update
-  // `current_stats_`, which can in turn be polled at any time.
-
-  // True iff there is delayed task in flight that that will call
-  // UdpateStats().
-  bool stats_update_scheduled_ RTC_GUARDED_BY(task_queue_);
-  // Last time stats were updated.
-  Timestamp last_stats_time_ RTC_GUARDED_BY(task_queue_);
-
   // Indicates if this task queue is started. If not, don't allow
   // posting delayed tasks yet.
-  bool is_started_ RTC_GUARDED_BY(task_queue_) = false;
+  bool is_started_ RTC_GUARDED_BY(task_queue_);
 
   // Indicates if this task queue is shutting down. If so, don't allow
   // posting any more delayed tasks as that can cause the task queue to

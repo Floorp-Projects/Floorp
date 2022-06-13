@@ -296,7 +296,7 @@ class PacingControllerTest
     int64_t capture_time_ms = clock_.TimeInMilliseconds();
     const size_t kPacketSize = 250;
 
-    EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+    EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 
     // Due to the multiplicative factor we can send 5 packets during a send
     // interval. (network capacity * multiplier / (8 bits per byte *
@@ -1193,7 +1193,7 @@ TEST_P(PacingControllerTest, Pause) {
   uint32_t ssrc_high_priority = 12347;
   uint16_t sequence_number = 1234;
 
-  EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+  EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 
   ConsumeInitialBudget();
 
@@ -1222,8 +1222,7 @@ TEST_P(PacingControllerTest, Pause) {
   }
 
   // Expect everything to be queued.
-  EXPECT_EQ(TimeDelta::Millis(second_capture_time_ms - capture_time_ms),
-            pacer_->OldestPacketWaitTime());
+  EXPECT_EQ(capture_time_ms, pacer_->OldestPacketEnqueueTime().ms());
 
   // Process triggers keep-alive packet.
   EXPECT_CALL(callback_, SendPadding).WillOnce([](size_t padding) {
@@ -1299,7 +1298,7 @@ TEST_P(PacingControllerTest, Pause) {
     }
   }
 
-  EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+  EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 }
 
 TEST_P(PacingControllerTest, InactiveFromStart) {
@@ -1349,7 +1348,7 @@ TEST_P(PacingControllerTest, ExpectedQueueTimeMs) {
   const size_t kNumPackets = 60;
   const size_t kPacketSize = 1200;
   const int32_t kMaxBitrate = kPaceMultiplier * 30000;
-  EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+  EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 
   pacer_->SetPacingRates(DataRate::BitsPerSec(30000 * kPaceMultiplier),
                          DataRate::Zero());
@@ -1382,7 +1381,7 @@ TEST_P(PacingControllerTest, ExpectedQueueTimeMs) {
 TEST_P(PacingControllerTest, QueueTimeGrowsOverTime) {
   uint32_t ssrc = 12346;
   uint16_t sequence_number = 1234;
-  EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+  EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 
   pacer_->SetPacingRates(DataRate::BitsPerSec(30000 * kPaceMultiplier),
                          DataRate::Zero());
@@ -1390,9 +1389,10 @@ TEST_P(PacingControllerTest, QueueTimeGrowsOverTime) {
                       clock_.TimeInMilliseconds(), 1200);
 
   clock_.AdvanceTimeMilliseconds(500);
-  EXPECT_EQ(TimeDelta::Millis(500), pacer_->OldestPacketWaitTime());
+  EXPECT_EQ(clock_.TimeInMilliseconds() - 500,
+            pacer_->OldestPacketEnqueueTime().ms());
   pacer_->ProcessPackets();
-  EXPECT_EQ(TimeDelta::Zero(), pacer_->OldestPacketWaitTime());
+  EXPECT_TRUE(pacer_->OldestPacketEnqueueTime().IsInfinite());
 }
 
 TEST_P(PacingControllerTest, ProbingWithInsertedPackets) {
