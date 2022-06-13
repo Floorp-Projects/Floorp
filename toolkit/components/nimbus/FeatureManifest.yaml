@@ -13,9 +13,6 @@ testFeature:
   hasExposure: false
   isEarlyStartup: true
   variables:
-    enabled:
-      type: boolean
-      description: Whether or not this feature is enabled
     testInt:
       type: int
       fallbackPref: nimbus.testing.testInt
