@@ -3,6 +3,13 @@
 
 "use strict";
 
+class MockDate extends Date {}
+
+// Mock `toString` to avoid timezone differences.
+MockDate.prototype.toString = function() {
+  return "Tue May 31 2022 15:47:29 GMT+0200 (Central European Summer Time)";
+};
+
 const PRIMITIVE_TYPES = [
   { value: undefined, serialized: { type: "undefined" } },
   { value: null, serialized: { type: "null" } },
@@ -20,6 +27,186 @@ const PRIMITIVE_TYPES = [
   { value: 42, serialized: { type: "number", value: 42 } },
   { value: false, serialized: { type: "boolean", value: false } },
   { value: 42n, serialized: { type: "bigint", value: "42" } },
+];
+
+const REMOTE_SIMPLE_VALUES = [
+  {
+    value: new RegExp(/foo/g),
+    serialized: {
+      type: "regexp",
+      value: {
+        pattern: "foo",
+        flags: "g",
+      },
+    },
+  },
+  {
+    value: new MockDate(1654004849000),
+    serialized: {
+      type: "date",
+      value: "Tue May 31 2022 15:47:29 GMT+0200 (Central European Summer Time)",
+    },
+  },
+];
+
+const REMOTE_COMPLEX_VALUES = [
+  {
+    value: [1],
+    serialized: {
+      type: "array",
+    },
+  },
+  {
+    value: [1],
+    maxDepth: 0,
+    serialized: {
+      type: "array",
+    },
+  },
+  {
+    value: [1, "2", true, new RegExp(/foo/g)],
+    maxDepth: 1,
+    serialized: {
+      type: "array",
+      value: [
+        { type: "number", value: 1 },
+        { type: "string", value: "2" },
+        { type: "boolean", value: true },
+        {
+          type: "regexp",
+          value: {
+            pattern: "foo",
+            flags: "g",
+          },
+        },
+      ],
+    },
+  },
+  {
+    value: [1, [3, "4"]],
+    maxDepth: 1,
+    serialized: {
+      type: "array",
+      value: [{ type: "number", value: 1 }, { type: "array" }],
+    },
+  },
+  {
+    value: [1, [3, "4"]],
+    maxDepth: 2,
+    serialized: {
+      type: "array",
+      value: [
+        { type: "number", value: 1 },
+        {
+          type: "array",
+          value: [
+            { type: "number", value: 3 },
+            { type: "string", value: "4" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    value: new Map(),
+    maxDepth: 1,
+    serialized: {
+      type: "map",
+      value: [],
+    },
+  },
+  {
+    value: new Map([]),
+    maxDepth: 1,
+    serialized: {
+      type: "map",
+      value: [],
+    },
+  },
+  {
+    value: new Map([
+      [1, 2],
+      ["2", "3"],
+      [true, false],
+    ]),
+    serialized: {
+      type: "map",
+    },
+  },
+  {
+    value: new Map([
+      [1, 2],
+      ["2", "3"],
+      [true, false],
+    ]),
+    maxDepth: 0,
+    serialized: {
+      type: "map",
+    },
+  },
+  {
+    value: new Map([
+      [1, 2],
+      ["2", "3"],
+      [true, false],
+    ]),
+    maxDepth: 1,
+    serialized: {
+      type: "map",
+      value: [
+        [
+          { type: "number", value: 1 },
+          { type: "number", value: 2 },
+        ],
+        ["2", { type: "string", value: "3" }],
+        [
+          { type: "boolean", value: true },
+          { type: "boolean", value: false },
+        ],
+      ],
+    },
+  },
+  {
+    value: new Set(),
+    maxDepth: 1,
+    serialized: {
+      type: "set",
+      value: [],
+    },
+  },
+  {
+    value: new Set([]),
+    maxDepth: 1,
+    serialized: {
+      type: "set",
+      value: [],
+    },
+  },
+  {
+    value: new Set([1, "2", true]),
+    serialized: {
+      type: "set",
+    },
+  },
+  {
+    value: new Set([1, "2", true]),
+    maxDepth: 0,
+    serialized: {
+      type: "set",
+    },
+  },
+  {
+    value: new Set([1, "2", true]),
+    maxDepth: 1,
+    serialized: {
+      type: "set",
+      value: [
+        { type: "number", value: 1 },
+        { type: "string", value: "2" },
+        { type: "boolean", value: true },
+      ],
+    },
+  },
 ];
 
 const { deserialize, serialize } = ChromeUtils.import(
@@ -89,6 +276,32 @@ add_test(function test_serializePrimitiveTypes() {
         `Got expected value for property ${prop}`
       );
     }
+  }
+
+  run_next_test();
+});
+
+add_test(function test_serializeRemoteSimpleValues() {
+  for (const type of REMOTE_SIMPLE_VALUES) {
+    const { value, serialized } = type;
+
+    info(`Checking '${serialized.type}'`);
+    const serializedValue = serialize(value);
+
+    Assert.deepEqual(serialized, serializedValue, "Got expected structure");
+  }
+
+  run_next_test();
+});
+
+add_test(function test_serializeRemoteComplexValues() {
+  for (const type of REMOTE_COMPLEX_VALUES) {
+    const { value, serialized, maxDepth } = type;
+
+    info(`Checking '${serialized.type}'`);
+    const serializedValue = serialize(value, maxDepth);
+
+    Assert.deepEqual(serialized, serializedValue, "Got expected structure");
   }
 
   run_next_test();
