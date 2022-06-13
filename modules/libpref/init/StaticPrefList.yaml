@@ -12348,6 +12348,12 @@
   value: 0
   mirror: always
 
+# Whether to retry connections without ECH Grease
+- name: security.tls.ech.disable_grease_on_fallback
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # ECH GREASE Padding target (1-255)
 - name: security.tls.ech.grease_size
   type: RelaxedAtomicUint32
