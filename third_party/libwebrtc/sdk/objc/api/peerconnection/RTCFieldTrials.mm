@@ -16,7 +16,6 @@
 
 #include "system_wrappers/include/field_trial.h"
 
-NSString * const kRTCFieldTrialAudioSendSideBweKey = @"WebRTC-Audio-SendSideBwe";
 NSString * const kRTCFieldTrialAudioForceNoTWCCKey = @"WebRTC-Audio-ForceNoTWCC";
 NSString * const kRTCFieldTrialAudioForceABWENoTWCCKey = @"WebRTC-Audio-ABWENoTWCC";
 NSString * const kRTCFieldTrialSendSideBweWithOverheadKey = @"WebRTC-SendSideBwe-WithOverhead";
