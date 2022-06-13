@@ -58,8 +58,6 @@ constexpr int VideoReceiveStream2::kMaxWaitForKeyFrameMs;
 
 namespace {
 
-using ReturnReason = video_coding::FrameBuffer::ReturnReason;
-
 constexpr int kMinBaseMinimumDelayMs = 0;
 constexpr int kMaxBaseMinimumDelayMs = 10000;
 
@@ -734,9 +732,7 @@ void VideoReceiveStream2::StartNextDecode() {
   frame_buffer_->NextFrame(
       GetMaxWaitMs(), keyframe_required_, &decode_queue_,
       /* encoded frame handler */
-      [this](std::unique_ptr<EncodedFrame> frame, ReturnReason res) {
-        RTC_DCHECK_EQ(frame == nullptr, res == ReturnReason::kTimeout);
-        RTC_DCHECK_EQ(frame != nullptr, res == ReturnReason::kFrameFound);
+      [this](std::unique_ptr<EncodedFrame> frame) {
         RTC_DCHECK_RUN_ON(&decode_queue_);
         if (decoder_stopped_)
           return;

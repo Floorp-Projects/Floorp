@@ -97,9 +97,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
                              max_wait_time_ms] {
           frame_buffer.NextFrame(
               max_wait_time_ms, keyframe_required, &task_queue,
-              [&next_frame_task_running](
-                  std::unique_ptr<EncodedFrame> frame,
-                  video_coding::FrameBuffer::ReturnReason res) {
+              [&next_frame_task_running](std::unique_ptr<EncodedFrame> frame) {
                 next_frame_task_running = false;
               });
         });

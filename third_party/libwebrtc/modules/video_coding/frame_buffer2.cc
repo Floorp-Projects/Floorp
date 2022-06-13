@@ -78,11 +78,10 @@ FrameBuffer::~FrameBuffer() {
   RTC_DCHECK_RUN_ON(&construction_checker_);
 }
 
-void FrameBuffer::NextFrame(
-    int64_t max_wait_time_ms,
-    bool keyframe_required,
-    rtc::TaskQueue* callback_queue,
-    std::function<void(std::unique_ptr<EncodedFrame>, ReturnReason)> handler) {
+void FrameBuffer::NextFrame(int64_t max_wait_time_ms,
+                            bool keyframe_required,
+                            rtc::TaskQueue* callback_queue,
+                            NextFrameCallback handler) {
   RTC_DCHECK_RUN_ON(&callback_checker_);
   RTC_DCHECK(callback_queue->IsCurrent());
   TRACE_EVENT0("webrtc", "FrameBuffer::NextFrame");
@@ -110,8 +109,7 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
         // If this task has not been cancelled, we did not get any new frames
         // while waiting. Continue with frame delivery.
         std::unique_ptr<EncodedFrame> frame;
-        std::function<void(std::unique_ptr<EncodedFrame>, ReturnReason)>
-            frame_handler;
+        NextFrameCallback frame_handler;
         {
           MutexLock lock(&mutex_);
           if (!frames_to_decode_.empty()) {
@@ -130,8 +128,7 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
           CancelCallback();
         }
         // Deliver frame, if any. Otherwise signal timeout.
-        ReturnReason reason = frame ? kFrameFound : kTimeout;
-        frame_handler(std::move(frame), reason);
+        frame_handler(std::move(frame));
         return TimeDelta::Zero();  // Ignored.
       });
 }
