@@ -1665,7 +1665,8 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
 
 // Test that if specified, relay cap is lifted on transition to direct
 // connection.
-TEST_F(VideoSendStreamTest, RelayToDirectRoute) {
+// TODO(https://bugs.webrtc.org/13353): Test disabled  due to flakiness.
+TEST_F(VideoSendStreamTest, DISABLED_RelayToDirectRoute) {
   static const int kStartBitrateBps = 300000;
   static const int kRelayBandwidthCapBps = 800000;
   static const int kMinPacketsToSend = 100;
