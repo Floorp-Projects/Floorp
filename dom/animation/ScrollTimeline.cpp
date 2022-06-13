@@ -70,10 +70,11 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::GetOrCreateScrollTimeline(
   RefPtr<ScrollTimeline> timeline;
   auto* set =
       ScrollTimelineSet::GetOrCreateScrollTimelineSet(aScroller.mElement);
-  auto p = set->LookupForAdd(aAxis);
+  auto key = ScrollTimelineSet::Key{aScroller.mType, aAxis};
+  auto p = set->LookupForAdd(key);
   if (!p) {
     timeline = new ScrollTimeline(aDocument, aScroller, aAxis);
-    set->Add(p, aAxis, timeline);
+    set->Add(p, key, timeline);
   } else {
     timeline = p->value();
   }
@@ -286,7 +287,7 @@ void ScrollTimeline::UnregisterFromScrollSource() {
 
   if (ScrollTimelineSet* scrollTimelineSet =
           ScrollTimelineSet::GetScrollTimelineSet(mSource.mElement)) {
-    scrollTimelineSet->Remove(mAxis);
+    scrollTimelineSet->Remove(ScrollTimelineSet::Key{mSource.mType, mAxis});
     if (scrollTimelineSet->IsEmpty()) {
       ScrollTimelineSet::DestroyScrollTimelineSet(mSource.mElement);
     }

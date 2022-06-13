@@ -10,6 +10,7 @@
 #include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/HashTable.h"
+#include "mozilla/PairHash.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
@@ -68,7 +69,7 @@ class ScrollTimeline final : public AnimationTimeline {
     // FIXME: Once we support <custom-ident> for <scroller>, we can use
     // StyleScroller here.
     // https://drafts.csswg.org/scroll-animations-1/rewrite#typedef-scroller
-    enum class Type {
+    enum class Type : uint8_t {
       Root,
       Nearest,
       Name,
@@ -215,7 +216,6 @@ class ScrollTimeline final : public AnimationTimeline {
 };
 
 /**
- *
  * A wrapper around a hashset of ScrollTimeline objects to handle
  * storing the set as a property of an element (i.e. source).
  * This makes use easier to look up a ScrollTimeline from the element.
@@ -230,15 +230,12 @@ class ScrollTimeline final : public AnimationTimeline {
  */
 class ScrollTimelineSet {
  public:
-  // Use StyleScrollAxis as the key, so we reuse the ScrollTimeline with the
-  // same source and the same direction.
-  // Note: the drawback of using the direction as the key is that we have to
-  // update this once we support more descriptors. This implementation assumes
-  // scroll-offsets will be obsolute. However, I'm pretty sure @scroll-timeline
-  // will be obsolute, based on the spec issue. We may have to do a lot of
-  // updates after the spec updates, so this tentative implmentation should be
-  // enough for now.
-  using NonOwningScrollTimelineMap = HashMap<StyleScrollAxis, ScrollTimeline*>;
+  // In order to reuse the ScrollTimeline with the same scroller and the same
+  // axis, we define a special key for it.
+  using Key = std::pair<ScrollTimeline::Scroller::Type, StyleScrollAxis>;
+  using NonOwningScrollTimelineMap =
+      HashMap<Key, ScrollTimeline*,
+              PairHasher<ScrollTimeline::Scroller::Type, StyleScrollAxis>>;
 
   ~ScrollTimelineSet() = default;
 
@@ -246,14 +243,14 @@ class ScrollTimelineSet {
   static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
   static void DestroyScrollTimelineSet(Element* aElement);
 
-  NonOwningScrollTimelineMap::AddPtr LookupForAdd(StyleScrollAxis aKey) {
+  NonOwningScrollTimelineMap::AddPtr LookupForAdd(Key aKey) {
     return mScrollTimelines.lookupForAdd(aKey);
   }
-  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, StyleScrollAxis aKey,
+  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, Key aKey,
            ScrollTimeline* aScrollTimeline) {
     Unused << mScrollTimelines.add(aPtr, aKey, aScrollTimeline);
   }
-  void Remove(StyleScrollAxis aKey) { mScrollTimelines.remove(aKey); }
+  void Remove(const Key aKey) { mScrollTimelines.remove(aKey); }
 
   bool IsEmpty() const { return mScrollTimelines.empty(); }
 
