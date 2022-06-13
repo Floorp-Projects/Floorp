@@ -15,37 +15,16 @@ ChromeUtils.defineModuleGetter(
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch
- * and can collect results for a given search by using this._suggestionController.
+ * and can collect results for a given search by using this.#suggestionController.
  * We do it this way since the AutoCompleteController in Mozilla requires a
  * unique XPCOM Service for every search provider, even if the logic for two
  * providers is identical.
  * @constructor
  */
-function SuggestAutoComplete() {
-  this._init();
-}
-SuggestAutoComplete.prototype = {
-  _init() {
-    this._suggestionController = new lazy.SearchSuggestionController(obj =>
-      this.onResultsReturned(obj)
-    );
-    this._suggestionController.maxLocalResults = this._historyLimit;
-  },
-
-  /**
-   * The object implementing nsIAutoCompleteObserver that we notify when
-   * we have found results
-   * @private
-   */
-  _listener: null,
-
-  /**
-   * Maximum number of history items displayed. This is capped at 7
-   * because the primary consumer (Firefox search bar) displays 10 rows
-   * by default, and so we want to leave some space for suggestions
-   * to be visible.
-   */
-  _historyLimit: 7,
+class SuggestAutoComplete {
+  constructor() {
+    this.#init();
+  }
 
   /**
    * Callback for handling results from SearchSuggestionController.jsm
@@ -74,7 +53,7 @@ SuggestAutoComplete.prototype = {
 
     // Notify the FE of our new results
     this.onResultsReady(results.term, finalResults, results.formHistoryResult);
-  },
+  }
 
   /**
    * Notifies the front end of new results.
@@ -88,7 +67,7 @@ SuggestAutoComplete.prototype = {
    * @private
    */
   onResultsReady(searchString, results, formHistoryResult) {
-    if (this._listener) {
+    if (this.#listener) {
       let result = new FormAutoCompleteResult(
         searchString,
         Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
@@ -106,12 +85,12 @@ SuggestAutoComplete.prototype = {
         formHistoryResult
       );
 
-      this._listener.onSearchResult(this, result);
+      this.#listener.onSearchResult(this, result);
 
       // Null out listener to make sure we don't notify it twice
-      this._listener = null;
+      this.#listener = null;
     }
-  },
+  }
 
   /**
    * Initiates the search result gathering process. Part of
@@ -133,7 +112,7 @@ SuggestAutoComplete.prototype = {
   startSearch(searchString, searchParam, previousResult, listener) {
     // Don't reuse a previous form history result when it no longer applies.
     if (!previousResult) {
-      this._formHistoryResult = null;
+      this.#formHistoryResult = null;
     }
 
     var formHistorySearchParam = searchParam.split("|")[0];
@@ -150,7 +129,7 @@ SuggestAutoComplete.prototype = {
     // Start search immediately if possible, otherwise once the search
     // service is initialized
     if (Services.search.isInitialized) {
-      this._triggerSearch(
+      this.#triggerSearch(
         searchString,
         formHistorySearchParam,
         listener,
@@ -162,7 +141,7 @@ SuggestAutoComplete.prototype = {
     Services.search
       .init()
       .then(() => {
-        this._triggerSearch(
+        this.#triggerSearch(
           searchString,
           formHistorySearchParam,
           listener,
@@ -174,7 +153,43 @@ SuggestAutoComplete.prototype = {
           "Could not initialize search service, bailing out: " + result
         )
       );
-  },
+  }
+
+  /**
+   * Ends the search result gathering process. Part of nsIAutoCompleteSearch
+   * implementation.
+   */
+  stopSearch() {
+    this.#suggestionController.stop();
+  }
+
+  #suggestionController;
+  #formHistoryResult;
+
+  /**
+   * Maximum number of history items displayed. This is capped at 7
+   * because the primary consumer (Firefox search bar) displays 10 rows
+   * by default, and so we want to leave some space for suggestions
+   * to be visible.
+   *
+   * @type {number}
+   */
+  #historyLimit = 7;
+
+  /**
+   * The object implementing nsIAutoCompleteObserver that we notify when
+   * we have found results.
+   *
+   *  @type {object|null}
+   */
+  #listener = null;
+
+  #init() {
+    this.#suggestionController = new lazy.SearchSuggestionController(obj =>
+      this.onResultsReturned(obj)
+    );
+    this.#suggestionController.maxLocalResults = this.#historyLimit;
+  }
 
   /**
    * Actual implementation of search.
@@ -189,44 +204,29 @@ SuggestAutoComplete.prototype = {
    * @param {boolean} privacyMode
    *   True if the search was made from a private browsing mode context.
    */
-  _triggerSearch(searchString, searchParam, listener, privacyMode) {
-    this._listener = listener;
-    this._suggestionController.fetch(
+  #triggerSearch(searchString, searchParam, listener, privacyMode) {
+    this.#listener = listener;
+    this.#suggestionController.fetch(
       searchString,
       privacyMode,
       Services.search.defaultEngine
     );
-  },
+  }
 
-  /**
-   * Ends the search result gathering process. Part of nsIAutoCompleteSearch
-   * implementation.
-   */
-  stopSearch() {
-    this._suggestionController.stop();
-  },
-
-  // nsISupports
-  QueryInterface: ChromeUtils.generateQI([
+  QueryInterface = ChromeUtils.generateQI([
     "nsIAutoCompleteSearch",
     "nsIAutoCompleteObserver",
-  ]),
-};
+  ]);
+}
 
 /**
  * SearchSuggestAutoComplete is a service implementation that handles suggest
  * results specific to web searches.
  * @constructor
  */
-function SearchSuggestAutoComplete() {
-  // This calls _init() in the parent class (SuggestAutoComplete) via the
-  // prototype, below.
-  this._init();
+class SearchSuggestAutoComplete extends SuggestAutoComplete {
+  classID = Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}");
+  serviceURL = "";
 }
-SearchSuggestAutoComplete.prototype = {
-  classID: Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}"),
-  __proto__: SuggestAutoComplete.prototype,
-  serviceURL: "",
-};
 
 var EXPORTED_SYMBOLS = ["SearchSuggestAutoComplete"];
