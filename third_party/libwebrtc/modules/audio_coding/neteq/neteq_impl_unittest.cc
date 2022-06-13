@@ -18,6 +18,7 @@
 #include "api/neteq/default_neteq_controller_factory.h"
 #include "api/neteq/neteq.h"
 #include "api/neteq/neteq_controller.h"
+#include "modules/audio_coding/codecs/g711/audio_decoder_pcm.h"
 #include "modules/audio_coding/neteq/accelerate.h"
 #include "modules/audio_coding/neteq/decision_logic.h"
 #include "modules/audio_coding/neteq/default_neteq_factory.h"
@@ -75,6 +76,7 @@ class NetEqImplTest : public ::testing::Test {
   void CreateInstance(
       const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory) {
     ASSERT_TRUE(decoder_factory);
+    config_.enable_muted_state = enable_muted_state_;
     NetEqImpl::Dependencies deps(config_, &clock_, decoder_factory,
                                  DefaultNetEqControllerFactory());
 
@@ -245,6 +247,7 @@ class NetEqImplTest : public ::testing::Test {
   MockRedPayloadSplitter* mock_payload_splitter_ = nullptr;
   RedPayloadSplitter* red_payload_splitter_ = nullptr;
   bool use_mock_payload_splitter_ = true;
+  bool enable_muted_state_ = false;
 };
 
 // This tests the interface class NetEq.
@@ -1599,6 +1602,69 @@ TEST_F(NetEqImplTest, NotifyControllerOfReorderedPacket) {
                     rtp_header.timestamp))));
 
   EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
+}
+
+// When using a codec with 1000 channels, there should be no crashes.
+TEST_F(NetEqImplTest, NoCrashWith1000Channels) {
+  using ::testing::AllOf;
+  using ::testing::Field;
+  UseNoMocks();
+  use_mock_decoder_database_ = true;
+  enable_muted_state_ = true;
+  CreateInstance();
+  const size_t kPayloadLength = 100;
+  const uint8_t kPayloadType = 0;
+  const uint16_t kFirstSequenceNumber = 0x1234;
+  const uint32_t kFirstTimestamp = 0x12345678;
+  const uint32_t kSsrc = 0x87654321;
+  uint8_t payload[kPayloadLength] = {0};
+  RTPHeader rtp_header;
+  rtp_header.payloadType = kPayloadType;
+  rtp_header.sequenceNumber = kFirstSequenceNumber;
+  rtp_header.timestamp = kFirstTimestamp;
+  rtp_header.ssrc = kSsrc;
+  Packet fake_packet;
+  fake_packet.payload_type = kPayloadType;
+  fake_packet.sequence_number = kFirstSequenceNumber;
+  fake_packet.timestamp = kFirstTimestamp;
+
+  AudioDecoder* decoder = nullptr;
+
+  auto mock_decoder_factory = rtc::make_ref_counted<MockAudioDecoderFactory>();
+  EXPECT_CALL(*mock_decoder_factory, MakeAudioDecoderMock(_, _, _))
+      .WillOnce(Invoke([&](const SdpAudioFormat& format,
+                           absl::optional<AudioCodecPairId> codec_pair_id,
+                           std::unique_ptr<AudioDecoder>* dec) {
+        EXPECT_EQ("pcmu", format.name);
+        *dec = std::make_unique<AudioDecoderPcmU>(1000);
+        decoder = dec->get();
+      }));
+  DecoderDatabase::DecoderInfo info(SdpAudioFormat("pcmu", 8000, 1),
+                                    absl::nullopt, mock_decoder_factory);
+  // Expectations for decoder database.
+  EXPECT_CALL(*mock_decoder_database_, GetDecoderInfo(kPayloadType))
+      .WillRepeatedly(Return(&info));
+  EXPECT_CALL(*mock_decoder_database_, GetActiveCngDecoder())
+      .WillRepeatedly(ReturnNull());
+  EXPECT_CALL(*mock_decoder_database_, GetActiveDecoder())
+      .WillRepeatedly(Return(decoder));
+  EXPECT_CALL(*mock_decoder_database_, SetActiveDecoder(_, _))
+      .WillOnce(Invoke([](uint8_t rtp_payload_type, bool* new_decoder) {
+        *new_decoder = true;
+        return 0;
+      }));
+
+  // Insert first packet.
+  neteq_->InsertPacket(rtp_header, payload);
+
+  AudioFrame audio_frame;
+  bool muted;
+
+  // Repeat 40 times to ensure we enter muted state.
+  for (int i = 0; i < 40; i++) {
+    // GetAudio should return an error, and not crash, even in muted state.
+    EXPECT_NE(0, neteq_->GetAudio(&audio_frame, &muted));
+  }
 }
 
 class Decoder120ms : public AudioDecoder {
