@@ -1877,7 +1877,7 @@ nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
   LayoutDeviceToCSSScale scale = [&] {
     float auPerDev =
         presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-    auPerDev /= LookAndFeel::SystemZoomSettings().mFullZoom;
+    auPerDev /= LookAndFeel::GetTextScaleFactor();
     return LayoutDeviceToCSSScale(auPerDev / AppUnitsPerCSSPixel());
   }();
 

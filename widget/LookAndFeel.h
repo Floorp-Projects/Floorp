@@ -446,19 +446,8 @@ class LookAndFeel {
   }
 
   static float GetTextScaleFactor() {
-    float f = GetFloat(FloatID::TextScaleFactor, 1.0f);
-    if (MOZ_UNLIKELY(f <= 0.0f)) {
-      return 1.0f;
-    }
-    return f;
+    return GetFloat(FloatID::TextScaleFactor, 1.0f);
   }
-
-  struct ZoomSettings {
-    float mFullZoom = 1.0f;
-    float mTextZoom = 1.0f;
-  };
-
-  static ZoomSettings SystemZoomSettings();
 
   /**
    * GetInt() and GetFloat() return a int or float value for aID.  The result
