@@ -12,7 +12,6 @@
 #include "nsString.h"
 #include "nsError.h"
 #include "nsTArray.h"
-#include "mozilla/OriginAttributes.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
@@ -411,18 +410,6 @@ static inline bool AllowedErrorForHTTPSRRFallback(nsresult aError) {
 }
 
 bool SecurityErrorThatMayNeedRestart(nsresult aReason);
-
-[[nodiscard]] nsresult MakeOriginURL(const nsACString& origin,
-                                     nsCOMPtr<nsIURI>& url);
-
-[[nodiscard]] nsresult MakeOriginURL(const nsACString& scheme,
-                                     const nsACString& origin,
-                                     nsCOMPtr<nsIURI>& url);
-
-void CreatePushHashKey(const nsCString& scheme, const nsCString& hostHeader,
-                       const mozilla::OriginAttributes& originAttributes,
-                       uint64_t serial, const nsACString& pathInfo,
-                       nsCString& outOrigin, nsCString& outKey);
 
 }  // namespace net
 }  // namespace mozilla

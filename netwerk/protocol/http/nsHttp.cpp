@@ -12,7 +12,6 @@
 #include "PLDHashTable.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsCRT.h"
@@ -22,9 +21,7 @@
 #include "nsHttpHandler.h"
 #include "nsICacheEntry.h"
 #include "nsIRequest.h"
-#include "nsIStandardURL.h"
 #include "nsJSUtils.h"
-#include "nsStandardURL.h"
 #include "sslerr.h"
 #include <errno.h>
 #include <functional>
@@ -1029,56 +1026,6 @@ bool SecurityErrorThatMayNeedRestart(nsresult aReason) {
   return (aReason ==
           psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT)) ||
          (aReason == psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_MAC_ALERT));
-}
-
-nsresult MakeOriginURL(const nsACString& origin, nsCOMPtr<nsIURI>& url) {
-  nsAutoCString scheme;
-  nsresult rv = net_ExtractURLScheme(origin, scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return MakeOriginURL(scheme, origin, url);
-}
-
-nsresult MakeOriginURL(const nsACString& scheme, const nsACString& origin,
-                       nsCOMPtr<nsIURI>& url) {
-  return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY,
-             scheme.EqualsLiteral("http") ? NS_HTTP_DEFAULT_PORT
-                                          : NS_HTTPS_DEFAULT_PORT,
-             origin, nullptr, nullptr, nullptr)
-      .Finalize(url);
-}
-
-void CreatePushHashKey(const nsCString& scheme, const nsCString& hostHeader,
-                       const mozilla::OriginAttributes& originAttributes,
-                       uint64_t serial, const nsACString& pathInfo,
-                       nsCString& outOrigin, nsCString& outKey) {
-  nsCString fullOrigin = scheme;
-  fullOrigin.AppendLiteral("://");
-  fullOrigin.Append(hostHeader);
-
-  nsCOMPtr<nsIURI> origin;
-  nsresult rv = MakeOriginURL(scheme, fullOrigin, origin);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = origin->GetAsciiSpec(outOrigin);
-    outOrigin.Trim("/", false, true, false);
-  }
-
-  if (NS_FAILED(rv)) {
-    // Fallback to plain text copy - this may end up behaving poorly
-    outOrigin = fullOrigin;
-  }
-
-  outKey = outOrigin;
-  outKey.AppendLiteral("/[");
-  nsAutoCString suffix;
-  originAttributes.CreateSuffix(suffix);
-  outKey.Append(suffix);
-  outKey.Append(']');
-  outKey.AppendLiteral("/[http2.");
-  outKey.AppendInt(serial);
-  outKey.Append(']');
-  outKey.Append(pathInfo);
 }
 
 }  // namespace net
