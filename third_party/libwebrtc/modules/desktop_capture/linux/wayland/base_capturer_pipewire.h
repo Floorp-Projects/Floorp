@@ -8,19 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_BASE_CAPTURER_PIPEWIRE_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_BASE_CAPTURER_PIPEWIRE_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_BASE_CAPTURER_PIPEWIRE_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_BASE_CAPTURER_PIPEWIRE_H_
 #include <gio/gio.h>
 #define typeof __typeof__
 #include <pipewire/pipewire.h>
 #include <spa/param/video/format-utils.h>
 #include <spa/utils/result.h>
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #if !defined(WEBRTC_MOZILLA_BUILD)
-#include "modules/desktop_capture/linux/egl_dmabuf.h"
+#include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
 #endif
 #include "rtc_base/synchronization/mutex.h"
 
@@ -81,7 +83,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
 
   GDBusConnection* connection_ = nullptr;
   GDBusProxy* proxy_ = nullptr;
-  GCancellable *cancellable_ = nullptr;
+  GCancellable* cancellable_ = nullptr;
   gchar* portal_handle_ = nullptr;
   gchar* session_handle_ = nullptr;
   gchar* sources_handle_ = nullptr;
@@ -141,7 +143,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                                     const gchar* token);
 
   void SessionRequest();
-  static void OnSessionRequested(GDBusProxy *proxy,
+  static void OnSessionRequested(GDBusProxy* proxy,
                                  GAsyncResult* result,
                                  gpointer user_data);
   static void OnSessionRequestResponseSignal(GDBusConnection* connection,
@@ -153,7 +155,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                                              gpointer user_data);
 
   void SourcesRequest();
-  static void OnSourcesRequested(GDBusProxy *proxy,
+  static void OnSourcesRequested(GDBusProxy* proxy,
                                  GAsyncResult* result,
                                  gpointer user_data);
   static void OnSourcesRequestResponseSignal(GDBusConnection* connection,
@@ -165,7 +167,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                                              gpointer user_data);
 
   void StartRequest();
-  static void OnStartRequested(GDBusProxy *proxy,
+  static void OnStartRequested(GDBusProxy* proxy,
                                GAsyncResult* result,
                                gpointer user_data);
   static void OnStartRequestResponseSignal(GDBusConnection* connection,
@@ -177,7 +179,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                                            gpointer user_data);
 
   void OpenPipeWireRemote();
-  static void OnOpenPipeWireRemoteRequested(GDBusProxy *proxy,
+  static void OnOpenPipeWireRemoteRequested(GDBusProxy* proxy,
                                             GAsyncResult* result,
                                             gpointer user_data);
 
@@ -186,4 +188,4 @@ class BaseCapturerPipeWire : public DesktopCapturer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_BASE_CAPTURER_PIPEWIRE_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_BASE_CAPTURER_PIPEWIRE_H_

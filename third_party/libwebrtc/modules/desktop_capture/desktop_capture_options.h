@@ -14,7 +14,7 @@
 #include "rtc_base/system/rtc_export.h"
 
 #if defined(WEBRTC_USE_X11)
-#include "modules/desktop_capture/linux/shared_x_display.h"
+#include "modules/desktop_capture/linux/x11/shared_x_display.h"
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)

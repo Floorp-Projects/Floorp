@@ -9,7 +9,7 @@
  */
 #if !defined(WEBRTC_MOZILLA_BUILD)
 
-#include "modules/desktop_capture/linux/egl_dmabuf.h"
+#include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
 
 #include <asm/ioctl.h>
 #include <dlfcn.h>

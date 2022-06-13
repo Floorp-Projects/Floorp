@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/linux/mouse_cursor_monitor_x11.h"
+#include "modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
@@ -23,7 +23,7 @@
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_geometry.h"
-#include "modules/desktop_capture/linux/x_error_trap.h"
+#include "modules/desktop_capture/linux/x11/x_error_trap.h"
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 #include "rtc_base/checks.h"
@@ -210,7 +210,7 @@ void MouseCursorMonitorX11::CaptureCursor() {
       new BasicDesktopFrame(DesktopSize(img->width, img->height)));
 
   // Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-  unsigned long* src = img->pixels;
+  unsigned long* src = img->pixels;  // NOLINT(runtime/int)
   uint32_t* dst = reinterpret_cast<uint32_t*>(image->data());
   uint32_t* dst_end = dst + (img->width * img->height);
   while (dst < dst_end) {

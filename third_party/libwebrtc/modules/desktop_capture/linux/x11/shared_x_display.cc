@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/linux/shared_x_display.h"
+#include "modules/desktop_capture/linux/x11/shared_x_display.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>

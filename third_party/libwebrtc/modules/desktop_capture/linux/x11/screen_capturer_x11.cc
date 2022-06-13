@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/linux/screen_capturer_x11.h"
+#include "modules/desktop_capture/linux/x11/screen_capturer_x11.h"
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xdamage.h>
@@ -25,7 +25,7 @@
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_geometry.h"
-#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"

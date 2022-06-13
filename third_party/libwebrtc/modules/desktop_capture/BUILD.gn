@@ -256,14 +256,14 @@ if (!build_with_mozilla) {
       #    ":libdrm",
       #  ]
       #  deps = [ "../../rtc_base" ]
-      #  extra_header = "linux/pipewire_stub_header.fragment"
+      #  extra_header = "linux/wayland/pipewire_stub_header.fragment"
       #  logging_function = "RTC_LOG(LS_VERBOSE)"
       #  logging_include = "rtc_base/logging.h"
-      #  output_name = "linux/pipewire_stubs"
-      #  path_from_source = "modules/desktop_capture/linux"
+      #  output_name = "linux/wayland/pipewire_stubs"
+      #  path_from_source = "modules/desktop_capture/linux/wayland"
       #  sigs = [
-      #    "linux/pipewire.sigs",
-      #    "linux/drm.sigs",
+      #    "linux/wayland/pipewire.sigs",
+      #    "linux/wayland/drm.sigs",
       #  ]
       #}
     }
@@ -403,26 +403,27 @@ rtc_library("desktop_capture_generic") {
 
   if (rtc_use_x11_extensions) {
     sources += [
-      "linux/mouse_cursor_monitor_x11.cc",
-      "linux/mouse_cursor_monitor_x11.h",
-      "linux/screen_capturer_x11.cc",
-      "linux/screen_capturer_x11.h",
-      "linux/shared_x_display.cc",
       "linux/shared_x_display.h",
-      "linux/window_capturer_x11.cc",
-      "linux/window_capturer_x11.h",
-      "linux/window_finder_x11.cc",
-      "linux/window_finder_x11.h",
-      "linux/window_list_utils.cc",
-      "linux/window_list_utils.h",
-      "linux/x_atom_cache.cc",
-      "linux/x_atom_cache.h",
-      "linux/x_error_trap.cc",
-      "linux/x_error_trap.h",
-      "linux/x_server_pixel_buffer.cc",
-      "linux/x_server_pixel_buffer.h",
-      "linux/x_window_property.cc",
-      "linux/x_window_property.h",
+      "linux/x11/mouse_cursor_monitor_x11.cc",
+      "linux/x11/mouse_cursor_monitor_x11.h",
+      "linux/x11/screen_capturer_x11.cc",
+      "linux/x11/screen_capturer_x11.h",
+      "linux/x11/shared_x_display.cc",
+      "linux/x11/shared_x_display.h",
+      "linux/x11/window_capturer_x11.cc",
+      "linux/x11/window_capturer_x11.h",
+      "linux/x11/window_finder_x11.cc",
+      "linux/x11/window_finder_x11.h",
+      "linux/x11/window_list_utils.cc",
+      "linux/x11/window_list_utils.h",
+      "linux/x11/x_atom_cache.cc",
+      "linux/x11/x_atom_cache.h",
+      "linux/x11/x_error_trap.cc",
+      "linux/x11/x_error_trap.h",
+      "linux/x11/x_server_pixel_buffer.cc",
+      "linux/x11/x_server_pixel_buffer.h",
+      "linux/x11/x_window_property.cc",
+      "linux/x11/x_window_property.h",
     ]
     libs = [
       "X11",
@@ -552,10 +553,10 @@ rtc_library("desktop_capture_generic") {
 
   if (rtc_use_pipewire) {
     sources += [
-      "linux/base_capturer_pipewire.cc",
-      "linux/base_capturer_pipewire.h",
-      "linux/egl_dmabuf.cc",
-      "linux/egl_dmabuf.h",
+      "linux/wayland/base_capturer_pipewire.cc",
+      "linux/wayland/base_capturer_pipewire.h",
+      "linux/wayland/egl_dmabuf.cc",
+      "linux/wayland/egl_dmabuf.h",
     ]
 
     configs += [
