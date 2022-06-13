@@ -11844,6 +11844,10 @@ exports.PREFERENCES = [
     "layout.css.zoom-transform-hack.enabled"
   ],
   [
+    "scroll-timeline",
+    "layout.css.scroll-linked-animations.enabled"
+  ],
+  [
     "-moz-transform",
     "layout.css.prefixes.transforms"
   ],
