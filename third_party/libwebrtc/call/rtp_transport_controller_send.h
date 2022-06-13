@@ -65,7 +65,7 @@ class RtpTransportControllerSend final
 
   // TODO(tommi): Change to std::unique_ptr<>.
   RtpVideoSenderInterface* CreateRtpVideoSender(
-      std::map<uint32_t, RtpState> suspended_ssrcs,
+      const std::map<uint32_t, RtpState>& suspended_ssrcs,
       const std::map<uint32_t, RtpPayloadState>&
           states,  // move states into RtpTransportControllerSend
       const RtpConfig& rtp_config,
