@@ -47908,7 +47908,7 @@ function translateDeclarationsIntoAssignment(ast) {
   t.traverse(ast, (node, ancestors) => {
     const parent = ancestors[ancestors.length - 1];
 
-    if (t.isWithStatement(node) || !(0, _helpers.isTopLevel)(ancestors) || t.isAssignmentExpression(node) || !t.isVariableDeclaration(node) || t.isForStatement(parent.node) || !Array.isArray(node.declarations) || node.declarations.length === 0) {
+    if (t.isWithStatement(node) || !(0, _helpers.isTopLevel)(ancestors) || t.isAssignmentExpression(node) || !t.isVariableDeclaration(node) || t.isForStatement(parent.node) || t.isForXStatement(parent.node) || !Array.isArray(node.declarations) || node.declarations.length === 0) {
       return;
     }
 
