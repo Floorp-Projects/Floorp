@@ -21,6 +21,7 @@
 #include "media/sctp/sctp_transport_internal.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/physical_socket_server.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -54,9 +55,9 @@ class PeerConnectionEndToEndBaseTest : public sigslot::has_slots<>,
  public:
   typedef std::vector<rtc::scoped_refptr<DataChannelInterface>> DataChannelList;
 
-  explicit PeerConnectionEndToEndBaseTest(SdpSemantics sdp_semantics) {
-    network_thread_ = rtc::Thread::CreateWithSocketServer();
-    worker_thread_ = rtc::Thread::Create();
+  explicit PeerConnectionEndToEndBaseTest(SdpSemantics sdp_semantics)
+      : network_thread_(std::make_unique<rtc::Thread>(&pss_)),
+        worker_thread_(rtc::Thread::Create()) {
     RTC_CHECK(network_thread_->Start());
     RTC_CHECK(worker_thread_->Start());
     caller_ = new rtc::RefCountedObject<PeerConnectionTestWrapper>(
@@ -191,6 +192,7 @@ class PeerConnectionEndToEndBaseTest : public sigslot::has_slots<>,
   }
 
  protected:
+  rtc::PhysicalSocketServer pss_;
   std::unique_ptr<rtc::Thread> network_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
   rtc::scoped_refptr<PeerConnectionTestWrapper> caller_;
