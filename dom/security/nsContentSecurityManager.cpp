@@ -1285,12 +1285,11 @@ static nsresult CheckAllowFileProtocolScriptLoad(nsIChannel* aChannel) {
   nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // GetTypeFromURI fails for missing or unknown file-extensions.
   nsAutoCString contentType;
   rv = mime->GetTypeFromURI(uri, contentType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!nsContentUtils::IsJavascriptMIMEType(
-          NS_ConvertUTF8toUTF16(contentType))) {
+  if (NS_FAILED(rv) || !nsContentUtils::IsJavascriptMIMEType(
+                           NS_ConvertUTF8toUTF16(contentType))) {
     Telemetry::Accumulate(Telemetry::SCRIPT_FILE_PROTOCOL_CORRECT_MIME, false);
     return NS_ERROR_CONTENT_BLOCKED;
   }
@@ -1328,9 +1327,6 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   nsresult rv = CheckAllowLoadInSystemPrivilegedContext(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = CheckAllowFileProtocolScriptLoad(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = CheckAllowLoadInPrivilegedAboutContext(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1363,6 +1359,9 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
 
   // Apply this after CSP to match Chrome.
   rv = CheckFTPSubresourceLoad(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CheckAllowFileProtocolScriptLoad(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now lets set the initialSecurityFlag for subsequent calls
