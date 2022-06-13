@@ -5377,7 +5377,7 @@
 
 - name: gfx.direct3d11.reuse-decoder-device
   type: RelaxedAtomicInt32
-#ifdef NIGHTLY_BUILD
+#if defined(EARLY_BETA_OR_EARLIER)
   value: 1
 #else
   value: -1
