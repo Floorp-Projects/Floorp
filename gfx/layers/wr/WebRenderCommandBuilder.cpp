@@ -59,9 +59,11 @@ static void GP(const char* fmt, ...) {
 }
 
 bool FitsInt32(const float aVal) {
-  const int64_t v = static_cast<int64_t>(aVal);
-  return std::numeric_limits<int32_t>::max() > v &&
-         v > std::numeric_limits<int32_t>::min();
+  // Although int32_t min and max can't be represented exactly with floats, the
+  // cast truncates towards zero which is what we want here.
+  const float min = static_cast<float>(std::numeric_limits<int32_t>::min());
+  const float max = static_cast<float>(std::numeric_limits<int32_t>::max());
+  return aVal > min && aVal < max;
 }
 
 // XXX: problems:
