@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => lazy.Log.get());
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const MAX_RETRY_ATTEMPTS = 10;
 
@@ -132,14 +132,14 @@ class FrameTransport {
         }
 
         if (++attempts > MAX_RETRY_ATTEMPTS) {
-          logger.trace(
+          lazy.logger.trace(
             `FrameTransport reached the limit of retry attempts (${MAX_RETRY_ATTEMPTS})` +
               ` for command ${name} and browsing context ${webProgress.browsingContext.id}.`
           );
           throw e;
         }
 
-        logger.trace(
+        lazy.logger.trace(
           `FrameTransport retrying command ${name} for ` +
             `browsing context ${webProgress.browsingContext.id}, attempt: ${attempts}.`
         );
