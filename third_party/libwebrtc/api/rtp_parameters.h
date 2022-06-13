@@ -277,11 +277,6 @@ struct RTC_EXPORT RtpExtension {
       const std::vector<RtpExtension>& extensions,
       absl::string_view uri,
       Filter filter);
-  ABSL_DEPRECATED(
-      "Use RtpExtension::FindHeaderExtensionByUri with filter argument")
-  static const RtpExtension* FindHeaderExtensionByUri(
-      const std::vector<RtpExtension>& extensions,
-      absl::string_view uri);
 
   // Returns the header extension with the given URI and encrypt parameter,
   // if found, otherwise nullptr.
