@@ -352,7 +352,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
       return false;
     }
 
-    RootedLinearString valstr(cx, valsource->ensureLinear(cx));
+    Rooted<JSLinearString*> valstr(cx, valsource->ensureLinear(cx));
     if (!valstr) {
       return false;
     }
@@ -2213,7 +2213,7 @@ static JSObject* CreateObjectConstructor(JSContext* cx, JSProtoKey key) {
 
   /* Create the Object function now that we have a [[Prototype]] for it. */
   JSFunction* fun = NewNativeConstructor(
-      cx, obj_construct, 1, HandlePropertyName(cx->names().Object),
+      cx, obj_construct, 1, Handle<PropertyName*>(cx->names().Object),
       gc::AllocKind::FUNCTION, TenuredObject);
   if (!fun) {
     return nullptr;

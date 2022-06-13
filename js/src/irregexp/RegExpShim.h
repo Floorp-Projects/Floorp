@@ -906,7 +906,7 @@ inline Vector<const uc16> String::GetCharVector(
 // string independent of the character width of the string.
 class MOZ_STACK_CLASS FlatStringReader {
  public:
-  FlatStringReader(JSContext* cx, js::HandleLinearString string)
+  FlatStringReader(JSContext* cx, JS::Handle<JSLinearString*> string)
       : string_(string), length_(string->length()) {}
 
   FlatStringReader(const mozilla::Range<const char16_t> range)
@@ -923,7 +923,7 @@ class MOZ_STACK_CLASS FlatStringReader {
   }
 
  private:
-  js::HandleLinearString string_;
+  JS::Handle<JSLinearString*> string_;
   const mozilla::Range<const char16_t> range_;
   size_t length_;
 };

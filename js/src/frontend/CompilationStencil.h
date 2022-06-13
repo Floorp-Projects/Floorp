@@ -1127,7 +1127,7 @@ struct CompilationStencil {
       JSContext* cx, CompilationInput& input);
   [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(
       JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
-      HandleAtom name);
+      Handle<JSAtom*> name);
   [[nodiscard]] bool delazifySelfHostedFunction(JSContext* cx,
                                                 CompilationAtomCache& atomCache,
                                                 ScriptIndexRange range,

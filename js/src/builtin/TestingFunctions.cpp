@@ -864,7 +864,7 @@ static bool WasmMaxMemoryPages(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   RootedString s(cx, args.get(0).toString());
-  RootedLinearString ls(cx, s->ensureLinear(cx));
+  Rooted<JSLinearString*> ls(cx, s->ensureLinear(cx));
   if (!ls) {
     return false;
   }
@@ -1164,7 +1164,7 @@ static bool ToLaneInterp(JSContext* cx, HandleValue v, LaneInterp* out) {
   if (!interpStr) {
     return false;
   }
-  RootedLinearString interpLinearStr(cx, interpStr->ensureLinear(cx));
+  Rooted<JSLinearString*> interpLinearStr(cx, interpStr->ensureLinear(cx));
   if (!interpLinearStr) {
     return false;
   }
@@ -1384,7 +1384,7 @@ static bool ToNaNFlavor(JSContext* cx, HandleValue v, NaNFlavor* out) {
   if (!flavorStr) {
     return false;
   }
-  RootedLinearString flavorLinearStr(cx, flavorStr->ensureLinear(cx));
+  Rooted<JSLinearString*> flavorLinearStr(cx, flavorStr->ensureLinear(cx));
   if (!flavorLinearStr) {
     return false;
   }
@@ -2944,7 +2944,7 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
 
   auto addPropHook = [](JSContext* cx, HandleObject obj, HandleId id,
                         HandleValue v) -> bool {
-    RootedAtom propName(cx, GetPropertiesAddedName(cx));
+    Rooted<JSAtom*> propName(cx, GetPropertiesAddedName(cx));
     if (!propName) {
       return false;
     }
@@ -2989,7 +2989,7 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
   }
 
   // Initialize _propertiesAdded to 0.
-  RootedAtom propName(cx, GetPropertiesAddedName(cx));
+  Rooted<JSAtom*> propName(cx, GetPropertiesAddedName(cx));
   if (!propName) {
     return false;
   }
@@ -6661,7 +6661,7 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
   if (!str) {
     return false;
   }
-  RootedLinearString action(cx, str->ensureLinear(cx));
+  Rooted<JSLinearString*> action(cx, str->ensureLinear(cx));
   if (!action) {
     return false;
   }
@@ -6980,7 +6980,7 @@ static bool SetTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   };
 
   if (args[0].isString() && !args[0].toString()->empty()) {
-    RootedLinearString str(cx, args[0].toString()->ensureLinear(cx));
+    Rooted<JSLinearString*> str(cx, args[0].toString()->ensureLinear(cx));
     if (!str) {
       return false;
     }
@@ -7068,7 +7068,7 @@ static bool SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (args[0].isString() && !args[0].toString()->empty()) {
-    RootedLinearString str(cx, args[0].toString()->ensureLinear(cx));
+    Rooted<JSLinearString*> str(cx, args[0].toString()->ensureLinear(cx));
     if (!str) {
       return false;
     }
@@ -7432,8 +7432,8 @@ JSScript* js::TestingFunctionArgumentToScript(
     JSContext* cx, HandleValue v, JSFunction** funp /* = nullptr */) {
   if (v.isString()) {
     // To convert a string to a script, compile it. Parse it as an ES6 Program.
-    RootedLinearString linearStr(cx,
-                                 JS::StringToLinearString(cx, v.toString()));
+    Rooted<JSLinearString*> linearStr(
+        cx, JS::StringToLinearString(cx, v.toString()));
     if (!linearStr) {
       return nullptr;
     }

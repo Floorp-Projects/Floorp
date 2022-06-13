@@ -15,7 +15,7 @@
 #include "vm/ObjectOperations-inl.h"  // js::SetProperty
 
 /* static */ inline bool js::GlobalObject::setIntrinsicValue(
-    JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName name,
+    JSContext* cx, Handle<GlobalObject*> global, Handle<PropertyName*> name,
     HandleValue value) {
   Rooted<NativeObject*> holder(cx, global->getComputedIntrinsicsHolder());
   MOZ_ASSERT(holder->lookupPure(name).isNothing(),

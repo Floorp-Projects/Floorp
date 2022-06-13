@@ -53,7 +53,7 @@ class RegExpObject : public NativeObject {
   static_assert(RegExpObject::FLAGS_SLOT == REGEXP_FLAGS_SLOT,
                 "FLAGS_SLOT values should be in sync with self-hosted JS");
 
-  static RegExpObject* create(JSContext* cx, HandleAtom source,
+  static RegExpObject* create(JSContext* cx, Handle<JSAtom*> source,
                               NewObjectKind newKind);
 
  public:
@@ -73,11 +73,12 @@ class RegExpObject : public NativeObject {
 
   // This variant assumes that the characters have already previously been
   // syntax checked.
-  static RegExpObject* createSyntaxChecked(JSContext* cx, HandleAtom source,
+  static RegExpObject* createSyntaxChecked(JSContext* cx,
+                                           Handle<JSAtom*> source,
                                            JS::RegExpFlags flags,
                                            NewObjectKind newKind);
 
-  static RegExpObject* create(JSContext* cx, HandleAtom source,
+  static RegExpObject* create(JSContext* cx, Handle<JSAtom*> source,
                               JS::RegExpFlags flags, NewObjectKind newKind);
 
   /*
@@ -172,7 +173,7 @@ class RegExpObject : public NativeObject {
 #ifdef DEBUG
   [[nodiscard]] static bool dumpBytecode(JSContext* cx,
                                          Handle<RegExpObject*> regexp,
-                                         HandleLinearString input);
+                                         Handle<JSLinearString*> input);
 #endif
 
  private:
@@ -207,7 +208,7 @@ inline RegExpShared* RegExpToShared(JSContext* cx, HandleObject obj) {
 }
 
 /* Escape all slashes and newlines in the given string. */
-extern JSLinearString* EscapeRegExpPattern(JSContext* cx, HandleAtom src);
+extern JSLinearString* EscapeRegExpPattern(JSContext* cx, Handle<JSAtom*> src);
 
 template <typename CharT>
 extern bool HasRegExpMetaChars(const CharT* chars, size_t length);

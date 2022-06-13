@@ -64,7 +64,7 @@ static inline bool IsUninitializedLexicalSlot(HandleObject obj,
 static inline bool CheckUninitializedLexical(JSContext* cx, PropertyName* name_,
                                              HandleValue val) {
   if (IsUninitializedLexical(val)) {
-    RootedPropertyName name(cx, name_);
+    Rooted<PropertyName*> name(cx, name_);
     ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, name);
     return false;
   }
@@ -102,7 +102,7 @@ enum class GetNameMode { Normal, TypeOf };
 
 template <GetNameMode mode>
 inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
-                      HandlePropertyName name, const PropertyResult& prop,
+                      Handle<PropertyName*> name, const PropertyResult& prop,
                       MutableHandleValue vp) {
   if (prop.isNotFound()) {
     switch (mode) {
@@ -164,7 +164,8 @@ inline bool FetchNameNoGC(NativeObject* pobj, PropertyResult prop, Value* vp) {
 
 template <js::GetNameMode mode>
 inline bool GetEnvironmentName(JSContext* cx, HandleObject envChain,
-                               HandlePropertyName name, MutableHandleValue vp) {
+                               Handle<PropertyName*> name,
+                               MutableHandleValue vp) {
   {
     PropertyResult prop;
     JSObject* obj = nullptr;
@@ -220,13 +221,13 @@ inline bool HasOwnProperty(JSContext* cx, HandleValue val, HandleValue idValue,
 
 inline bool GetIntrinsicOperation(JSContext* cx, HandleScript script,
                                   jsbytecode* pc, MutableHandleValue vp) {
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   return GlobalObject::getIntrinsicValue(cx, cx->global(), name, vp);
 }
 
 inline bool SetIntrinsicOperation(JSContext* cx, JSScript* script,
                                   jsbytecode* pc, HandleValue val) {
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   return GlobalObject::setIntrinsicValue(cx, cx->global(), name, val);
 }
 
@@ -244,7 +245,7 @@ inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
 
   bool strict =
       JSOp(*pc) == JSOp::StrictSetName || JSOp(*pc) == JSOp::StrictSetGName;
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
 
   // In strict mode, assigning to an undeclared global variable is an
   // error. To detect this, we call NativeSetProperty directly and pass
@@ -285,7 +286,7 @@ inline void InitGlobalLexicalOperation(
 }
 
 inline bool InitPropertyOperation(JSContext* cx, jsbytecode* pc,
-                                  HandleObject obj, HandlePropertyName name,
+                                  HandleObject obj, Handle<PropertyName*> name,
                                   HandleValue rhs) {
   unsigned propAttrs = GetInitDataPropAttrs(JSOp(*pc));
   return DefineDataProperty(cx, obj, name, rhs, propAttrs);
@@ -584,7 +585,7 @@ static MOZ_ALWAYS_INLINE bool CheckPrivateFieldOperation(JSContext* cx,
   return false;
 }
 
-static inline JS::Symbol* NewPrivateName(JSContext* cx, HandleAtom name) {
+static inline JS::Symbol* NewPrivateName(JSContext* cx, Handle<JSAtom*> name) {
   return JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, name);
 }
 

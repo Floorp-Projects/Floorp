@@ -121,7 +121,7 @@ enum class DisplayNamesOptions {
  * function.
  */
 static bool InitializeDisplayNamesObject(JSContext* cx, HandleObject obj,
-                                         HandlePropertyName initializer,
+                                         Handle<PropertyName*> initializer,
                                          HandleValue locales,
                                          HandleValue options,
                                          DisplayNamesOptions dnoptions) {
@@ -314,12 +314,12 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedLinearString calendar(cx, args[2].toString()->ensureLinear(cx));
+  Rooted<JSLinearString*> calendar(cx, args[2].toString()->ensureLinear(cx));
   if (!calendar) {
     return false;
   }
 
-  RootedLinearString code(cx, args[7].toString()->ensureLinear(cx));
+  Rooted<JSLinearString*> code(cx, args[7].toString()->ensureLinear(cx));
   if (!code) {
     return false;
   }
@@ -374,7 +374,7 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  RootedLinearString type(cx, args[6].toString()->ensureLinear(cx));
+  Rooted<JSLinearString*> type(cx, args[6].toString()->ensureLinear(cx));
   if (!type) {
     return false;
   }

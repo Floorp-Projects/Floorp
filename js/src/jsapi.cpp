@@ -1988,7 +1988,8 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
 
   switch (u.value.type) {
     case ValueWrapper::Type::String: {
-      RootedAtom atom(cx, Atomize(cx, u.value.string, strlen(u.value.string)));
+      Rooted<JSAtom*> atom(cx,
+                           Atomize(cx, u.value.string, strlen(u.value.string)));
       if (!atom) {
         return false;
       }
@@ -2145,7 +2146,7 @@ JS_PUBLIC_API JSFunction* JS_NewFunction(JSContext* cx, JSNative native,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  RootedAtom atom(cx);
+  Rooted<JSAtom*> atom(cx);
   if (name) {
     atom = Atomize(cx, name, strlen(name));
     if (!atom) {
@@ -2167,7 +2168,7 @@ JS_PUBLIC_API JSFunction* JS::GetSelfHostedFunction(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(id);
 
-  RootedAtom name(cx, IdToFunctionName(cx, id));
+  Rooted<JSAtom*> name(cx, IdToFunctionName(cx, id));
   if (!name) {
     return nullptr;
   }
@@ -2176,7 +2177,7 @@ JS_PUBLIC_API JSFunction* JS::GetSelfHostedFunction(JSContext* cx,
   if (!shAtom) {
     return nullptr;
   }
-  RootedPropertyName shName(cx, shAtom->asPropertyName());
+  Rooted<PropertyName*> shName(cx, shAtom->asPropertyName());
   RootedValue funVal(cx);
   if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name,
                                            nargs, &funVal)) {
@@ -2213,8 +2214,8 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
     if (!shAtom) {
       return nullptr;
     }
-    RootedPropertyName shName(cx, shAtom->asPropertyName());
-    RootedAtom name(cx, IdToFunctionName(cx, id));
+    Rooted<PropertyName*> shName(cx, shAtom->asPropertyName());
+    Rooted<JSAtom*> name(cx, IdToFunctionName(cx, id));
     if (!name) {
       return nullptr;
     }
@@ -2226,7 +2227,7 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
     return &funVal.toObject().as<JSFunction>();
   }
 
-  RootedAtom atom(cx, IdToFunctionName(cx, id));
+  Rooted<JSAtom*> atom(cx, IdToFunctionName(cx, id));
   if (!atom) {
     return nullptr;
   }
@@ -4256,7 +4257,8 @@ JS_PUBLIC_API bool JS_IndexToId(JSContext* cx, uint32_t index,
 
 JS_PUBLIC_API bool JS_CharsToId(JSContext* cx, JS::TwoByteChars chars,
                                 MutableHandleId idp) {
-  RootedAtom atom(cx, AtomizeChars(cx, chars.begin().get(), chars.length()));
+  Rooted<JSAtom*> atom(cx,
+                       AtomizeChars(cx, chars.begin().get(), chars.length()));
   if (!atom) {
     return false;
   }

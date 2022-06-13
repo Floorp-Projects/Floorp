@@ -121,7 +121,8 @@ JSObject* Library::Create(JSContext* cx, HandleValue path,
   }
 
   PRLibSpec libSpec;
-  RootedLinearString pathStr(cx, JS_EnsureLinearString(cx, path.toString()));
+  Rooted<JSLinearString*> pathStr(cx,
+                                  JS_EnsureLinearString(cx, path.toString()));
   if (!pathStr) {
     return nullptr;
   }

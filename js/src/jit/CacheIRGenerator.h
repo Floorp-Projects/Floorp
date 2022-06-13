@@ -228,7 +228,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 // GetNameIRGenerator generates CacheIR for a GetName IC.
 class MOZ_RAII GetNameIRGenerator : public IRGenerator {
   HandleObject env_;
-  HandlePropertyName name_;
+  Handle<PropertyName*> name_;
 
   AttachDecision tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
   AttachDecision tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
@@ -238,7 +238,8 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
 
  public:
   GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                     ICState state, HandleObject env, HandlePropertyName name);
+                     ICState state, HandleObject env,
+                     Handle<PropertyName*> name);
 
   AttachDecision tryAttachStub();
 };
@@ -246,7 +247,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
 // BindNameIRGenerator generates CacheIR for a BindName IC.
 class MOZ_RAII BindNameIRGenerator : public IRGenerator {
   HandleObject env_;
-  HandlePropertyName name_;
+  Handle<PropertyName*> name_;
 
   AttachDecision tryAttachGlobalName(ObjOperandId objId, HandleId id);
   AttachDecision tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
@@ -255,7 +256,8 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
 
  public:
   BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                      ICState state, HandleObject env, HandlePropertyName name);
+                      ICState state, HandleObject env,
+                      Handle<PropertyName*> name);
 
   AttachDecision tryAttachStub();
 };
