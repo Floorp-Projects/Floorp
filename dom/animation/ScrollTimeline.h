@@ -186,6 +186,10 @@ class ScrollTimeline final : public AnimationTimeline {
   ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                  StyleScrollAxis aAxis);
 
+  static already_AddRefed<ScrollTimeline> GetOrCreateScrollTimeline(
+      Document* aDocument, const Scroller& aScroller,
+      const StyleScrollAxis& aAxis);
+
   // Note: This function is required to be idempotent, as it can be called from
   // both cycleCollection::Unlink() and ~ScrollTimeline(). When modifying this
   // function, be sure to preserve this property.
