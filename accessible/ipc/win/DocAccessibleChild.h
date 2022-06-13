@@ -14,10 +14,6 @@
 #include "mozilla/mscom/Ptr.h"
 
 namespace mozilla {
-namespace dom {
-class BrowsingContext;
-}
-
 namespace a11y {
 
 /*
@@ -334,7 +330,11 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
     DocAccessibleChild* mIPCDoc;
     uint64_t mUniqueID;
-    dom::BrowsingContext* mBrowsingContext;
+    // By the time we replay this, the document and its BrowsingContext might
+    // be dead, so we use MaybeDiscardedBrowsingContext here. Ideally, we just
+    // wouldn't replay this, but this is tricky because IPDL should manage the
+    // lifetime of DocAccessibleChild, which means we must send the constructor.
+    dom::MaybeDiscardedBrowsingContext mBrowsingContext;
     uint32_t mMsaaID;
   };
 
