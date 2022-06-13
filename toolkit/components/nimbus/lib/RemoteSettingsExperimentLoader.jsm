@@ -425,13 +425,9 @@ class _RemoteSettingsExperimentLoader {
       const prop = {};
       switch (desc.type) {
         case "boolean":
+        case "int":
         case "string":
           prop.type = desc.type;
-          break;
-
-        case "int":
-          // NB: This is what Experimenter maps the int type to.
-          prop.type = "number";
           break;
 
         case "json":
