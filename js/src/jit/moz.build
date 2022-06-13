@@ -82,6 +82,7 @@ UNIFIED_SOURCES += [
     "ShuffleAnalysis.cpp",
     "Sink.cpp",
     "Snapshots.cpp",
+    "Trampoline.cpp",
     "TrialInlining.cpp",
     "TypePolicy.cpp",
     "ValueNumbering.cpp",
