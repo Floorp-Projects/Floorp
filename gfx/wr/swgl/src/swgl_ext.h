@@ -552,6 +552,11 @@ static ALWAYS_INLINE int spanNeedsScale(int span, T P) {
 // without diverging too much from the linear filter.
 template <typename S, typename T>
 static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
+  // If each row is not wide enough for linear filtering, then just use nearest
+  // filtering.
+  if (sampler->width < 2) {
+    return LINEAR_FILTER_NEAREST;
+  }
   // First verify if the row Y doesn't change across samples
   if (P.y.x != P.y.y) {
     return LINEAR_FILTER_FALLBACK;
@@ -630,7 +635,7 @@ template <bool BLEND, typename S, typename C, typename P>
 static inline int blendTextureLinearR8(S sampler, vec2 uv, int span,
                                        const vec4_scalar& uv_rect, C color,
                                        P* buf) {
-  if (!swgl_isTextureR8(sampler)) {
+  if (!swgl_isTextureR8(sampler) || sampler->width < 2) {
     return 0;
   }
   LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv);
