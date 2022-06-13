@@ -808,6 +808,8 @@ StatsReport* StatsCollector::AddConnectionInfoReport(
                     info.remote_candidate.type());
   report->AddString(StatsReport::kStatsValueNameTransportType,
                     info.local_candidate.protocol());
+  report->AddString(StatsReport::kStatsValueNameLocalCandidateRelayProtocol,
+                    info.local_candidate.relay_protocol());
 
   return report;
 }
