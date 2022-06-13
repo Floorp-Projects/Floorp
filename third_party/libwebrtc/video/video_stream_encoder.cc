@@ -64,10 +64,6 @@ const int64_t kPendingFrameTimeoutMs = 1000;
 
 constexpr char kFrameDropperFieldTrial[] = "WebRTC-FrameDropper";
 
-// Averaging window spanning 90 frames at default 30fps, matching old media
-// optimization module defaults.
-const int64_t kFrameRateAvergingWindowSizeMs = (1000 / 30) * 90;
-
 const size_t kDefaultPayloadSize = 1440;
 
 const int64_t kParameterUpdateIntervalMs = 1000;
@@ -633,7 +629,6 @@ VideoStreamEncoder::VideoStreamEncoder(
       expect_resize_state_(ExpectResizeState::kNoResize),
       fec_controller_override_(nullptr),
       force_disable_frame_dropper_(false),
-      input_framerate_(kFrameRateAvergingWindowSizeMs, 1000),
       pending_frame_drops_(0),
       cwnd_frame_counter_(0),
       next_frame_types_(1, VideoFrameType::kVideoFrameDelta),
@@ -1422,8 +1417,13 @@ VideoStreamEncoder::UpdateBitrateAllocation(
 
 uint32_t VideoStreamEncoder::GetInputFramerateFps() {
   const uint32_t default_fps = max_framerate_ != -1 ? max_framerate_ : 30;
+
+  // This method may be called after we cleared out the frame_cadence_adapter_
+  // reference in Stop(). In such a situation it's probably not important with a
+  // decent estimate.
   absl::optional<uint32_t> input_fps =
-      input_framerate_.Rate(clock_->TimeInMilliseconds());
+      frame_cadence_adapter_ ? frame_cadence_adapter_->GetInputFrameRateFps()
+                             : absl::nullopt;
   if (!input_fps || *input_fps == 0) {
     return default_fps;
   }
@@ -1525,7 +1525,7 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
   // Poll the rate before updating, otherwise we risk the rate being estimated
   // a little too high at the start of the call when then window is small.
   uint32_t framerate_fps = GetInputFramerateFps();
-  input_framerate_.Update(1u, clock_->TimeInMilliseconds());
+  frame_cadence_adapter_->UpdateFrameRate();
 
   int64_t now_ms = clock_->TimeInMilliseconds();
   if (pending_encoder_reconfiguration_) {
