@@ -573,6 +573,60 @@ describe("mapExpression", () => {
       },
     },
     {
+      // check that variable declaration in for loop is not put outside of the async iife
+      name: "await (for loop)",
+      expression: "for (let i=0;i<2;i++) {}; var b = await 1;",
+      newExpression: `var b;
+
+        (async () => {
+          for (let i=0;i<2;i++) {}
+
+          return (b = await 1);
+        })()`,
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false,
+      },
+    },
+    {
+      // check that variable declaration in for-in loop is not put outside of the async iife
+      name: "await (for..in loop)",
+      expression: "for (let i in {}) {}; var b = await 1;",
+      newExpression: `var b;
+
+        (async () => {
+          for (let i in {}) {}
+
+          return (b = await 1);
+        })()`,
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false,
+      },
+    },
+    {
+      // check that variable declaration in for-of loop is not put outside of the async iife
+      name: "await (for..of loop)",
+      expression: "for (let i of []) {}; var b = await 1;",
+      newExpression: `var b;
+
+        (async () => {
+          for (let i of []) {}
+
+          return (b = await 1);
+        })()`,
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false,
+      },
+    },
+    {
       name: "simple",
       expression: "a",
       newExpression: "a",
