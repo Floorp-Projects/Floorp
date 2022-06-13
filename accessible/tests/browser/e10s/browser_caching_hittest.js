@@ -129,19 +129,16 @@ async function runTests(browser, accDoc) {
   const area = findAccessibleChildByID(accDoc, "area");
   await testChildAtPoint(dpr, 1, 1, area, area, area);
 
-  todo(
-    false,
-    "Test image maps. Their children are not in the layout tree. See bug 1772609"
+  info("Test image maps. Their children are not in the layout tree.");
+  const imgmap = findAccessibleChildByID(accDoc, "imgmap");
+  const theLetterA = imgmap.firstChild;
+  await hitTest(browser, imgmap, theLetterA, theLetterA);
+  await hitTest(
+    browser,
+    findAccessibleChildByID(accDoc, "container"),
+    imgmap,
+    theLetterA
   );
-  // const imgmap = findAccessibleChildByID(accDoc, "imgmap");
-  // const theLetterA = imgmap.firstChild;
-  // await hitTest(browser, imgmap, theLetterA, theLetterA);
-  // await hitTest(
-  //   browser,
-  //   findAccessibleChildByID(accDoc, "container"),
-  //   imgmap,
-  //   theLetterA
-  // );
 
   info("hit testing for element contained by zero-width element");
   const container2Input = findAccessibleChildByID(accDoc, "container2_input");

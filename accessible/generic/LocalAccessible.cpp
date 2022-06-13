@@ -3248,6 +3248,22 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
           acc = acc->LocalParent();
         }
 
+        if (acc->IsImageMap()) {
+          // Layout doesn't walk image maps, so we do that
+          // manually here. We do this before adding the map itself
+          // so the children come earlier in the hittesting order.
+          for (uint32_t i = 0; i < acc->ChildCount(); i++) {
+            LocalAccessible* child = acc->LocalChildAt(i);
+            MOZ_ASSERT(child);
+            if (inViewAccs.EnsureInserted(child)) {
+              viewportCache.AppendElement(
+                  child->IsDoc()
+                      ? 0
+                      : reinterpret_cast<uint64_t>(child->UniqueID()));
+            }
+          }
+        }
+
         if (inViewAccs.EnsureInserted(acc)) {
           viewportCache.AppendElement(
               acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()));
