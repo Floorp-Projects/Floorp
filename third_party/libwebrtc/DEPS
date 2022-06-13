@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'fbbdfd477bc85a24b6edbf28c6cbbfa0461dab74',
+  'chromium_revision': '80cfe1bbbef6f731a6bba541dc9f3813a067bac0',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@a82eea6df3ca89f5fa467860a2bfdbb5b204d9d7',
+    'https://chromium.googlesource.com/chromium/src/base@c62004aeb34748c503d29764761b21c2c992b234',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@2c47f6b7192b1720a883e86c15355c28d117a521',
+    'https://chromium.googlesource.com/chromium/src/build@5b077d5e33a7057482b044b749b2641ead2f627b',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@075dd7e22837a69189003e4fa84499acf63188cf',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@e89fc3f39234b30e7f525174a1b81ffb2618703d',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@2029d646ad7e572ff2c77cc0428ffe7c3fbfdfdf',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@c70310ef4a68a4e458f6b516eb67f16ce7b016b1',
+    'https://chromium.googlesource.com/chromium/src/testing@81f66eb7745a65f7f9f2f7aab46ed0e1620e8d3e',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@842ebd1e14480659a32b061e2a6c3b30de2d16e9',
+    'https://chromium.googlesource.com/chromium/src/third_party@2cb03de5b8fde4d6a43c091638eb4adf94329ed2',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -80,7 +80,7 @@ deps = {
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@89f2e82120461d34098edd216e57aa743f441107',
   'src/buildtools/third_party/libunwind/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@a281fd3d4c50174af1dd2d88bb15b168b73883d0',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@0f447a31381e0343f8b06c3f7049c076ddfbb1fc',
 
   'src/tools/clang/dsymutil': {
     'packages': [
@@ -140,7 +140,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@0ae29c99d1a0abed797ad78e5e061f4e2cb9c1cb',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@5695a8426cf0e5f0f780769fec9baee8cb1c4353',
+    'https://chromium.googlesource.com/catapult.git@fad4e048b0a489a34f444592e390b1b03b584adf',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -182,7 +182,7 @@ deps = {
       'dep_type': 'cipd',
   },
   'src/third_party/googletest/src':
-    'https://chromium.googlesource.com/external/github.com/google/googletest.git@bb9216085fbbf193408653ced9e73c61e7766e80',
+    'https://chromium.googlesource.com/external/github.com/google/googletest.git@1b2606425c4040cacadaa22689423ec0a29f316d',
   'src/third_party/icu': {
     'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@edf883ad2db9c723b058a6a17a146d68d6343143',
   },
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@903f362c7c42dd9b11c8ce8c88264eb1bb6a0269',
+    'https://chromium.googlesource.com/chromium/src/tools@e88723663fd3cf9dac2ac9f6c6687db3c7139b46',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
