@@ -203,8 +203,8 @@ impl Http3Connection {
         self.qpack_decoder.borrow_mut().send(conn)?;
         match self.qpack_encoder.borrow_mut().send_encoder_updates(conn) {
             Ok(())
-            | Err(neqo_qpack::Error::EncoderStreamBlocked)
-            | Err(neqo_qpack::Error::DynamicTableFull) => {}
+            | Err(neqo_qpack::Error::EncoderStreamBlocked | neqo_qpack::Error::DynamicTableFull) => {
+            }
             Err(e) => return Err(Error::QpackError(e)),
         }
         Ok(())
@@ -300,9 +300,9 @@ impl Http3Connection {
                 }
                 Ok(ReceiveOutput::ControlFrames(rest))
             }
-            ReceiveOutput::NewStream(NewStreamType::Push(_))
-            | ReceiveOutput::NewStream(NewStreamType::Http)
-            | ReceiveOutput::NewStream(NewStreamType::WebTransportStream(_)) => Ok(output),
+            ReceiveOutput::NewStream(
+                NewStreamType::Push(_) | NewStreamType::Http | NewStreamType::WebTransportStream(_),
+            ) => Ok(output),
             ReceiveOutput::NewStream(_) => {
                 unreachable!("NewStream should have been handled already")
             }
@@ -355,7 +355,7 @@ impl Http3Connection {
         match state {
             State::Handshaking => {
                 if self.role == Role::Server
-                    && conn.zero_rtt_state() == &ZeroRttState::AcceptedServer
+                    && conn.zero_rtt_state() == ZeroRttState::AcceptedServer
                 {
                     self.state = Http3State::ZeroRtt;
                     self.initialize_http3_connection(conn)?;
