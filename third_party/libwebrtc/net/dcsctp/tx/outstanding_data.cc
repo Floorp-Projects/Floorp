@@ -248,7 +248,7 @@ void OutstandingData::AbandonAllFor(const Item& item) {
     next_tsn_.Increment();
     Data message_end(item.data().stream_id, item.data().ssn,
                      item.data().message_id, item.data().fsn, item.data().ppid,
-                     std::vector<uint8_t>(), Data::IsBeginning(false),
+                     rtc::CopyOnWriteBuffer(), Data::IsBeginning(false),
                      Data::IsEnd(true), item.data().is_unordered);
     Item& added_item =
         outstanding_data_
@@ -357,10 +357,10 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
   size_t chunk_size = GetSerializedChunkSize(data);
   outstanding_bytes_ += chunk_size;
   ++outstanding_items_;
-  auto it = outstanding_data_
-                .emplace(tsn, Item(data.Clone(), max_retransmissions, time_sent,
-                                   expires_at))
-                .first;
+  auto it =
+      outstanding_data_
+          .emplace(tsn, Item(data, max_retransmissions, time_sent, expires_at))
+          .first;
 
   if (it->second.has_expired(time_sent)) {
     // No need to send it - it was expired when it was in the send

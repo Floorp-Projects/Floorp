@@ -1396,8 +1396,10 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   opts.is_beginning = Data::IsBeginning(true);
   sock_z2.ReceivePacket(
       SctpPacket::Builder(sock_z2.verification_tag(), options)
-          .Add(DataChunk(tsn, StreamID(1), SSN(0), PPID(53),
-                         std::vector<uint8_t>(kWatermarkLimit + 1), opts))
+          .Add(DataChunk(
+              tsn, StreamID(1), SSN(0), PPID(53),
+              rtc::CopyOnWriteBuffer(std::vector<uint8_t>(kWatermarkLimit + 1)),
+              opts))
           .Build());
 
   // First DATA will always trigger a SACK. It's not interesting.
@@ -1405,11 +1407,12 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
               AllOf(HasSackWithCumAckTsn(tsn), HasSackWithNoGapAckBlocks()));
 
   // This DATA should be accepted - it's advancing cum ack tsn.
-  sock_z2.ReceivePacket(SctpPacket::Builder(sock_z2.verification_tag(), options)
-                            .Add(DataChunk(AddTo(tsn, 1), StreamID(1), SSN(0),
-                                           PPID(53), std::vector<uint8_t>(1),
-                                           /*options=*/{}))
-                            .Build());
+  sock_z2.ReceivePacket(
+      SctpPacket::Builder(sock_z2.verification_tag(), options)
+          .Add(DataChunk(AddTo(tsn, 1), StreamID(1), SSN(0), PPID(53),
+                         rtc::CopyOnWriteBuffer(std::vector<uint8_t>(1)),
+                         /*options=*/{}))
+          .Build());
 
   // The receiver might have moved into delayed ack mode.
   cb_z2.AdvanceTime(options.rto_initial);
@@ -1420,11 +1423,12 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
       AllOf(HasSackWithCumAckTsn(AddTo(tsn, 1)), HasSackWithNoGapAckBlocks()));
 
   // This DATA will not be accepted - it's not advancing cum ack tsn.
-  sock_z2.ReceivePacket(SctpPacket::Builder(sock_z2.verification_tag(), options)
-                            .Add(DataChunk(AddTo(tsn, 3), StreamID(1), SSN(0),
-                                           PPID(53), std::vector<uint8_t>(1),
-                                           /*options=*/{}))
-                            .Build());
+  sock_z2.ReceivePacket(
+      SctpPacket::Builder(sock_z2.verification_tag(), options)
+          .Add(DataChunk(AddTo(tsn, 3), StreamID(1), SSN(0), PPID(53),
+                         rtc::CopyOnWriteBuffer(std::vector<uint8_t>(1)),
+                         /*options=*/{}))
+          .Build());
 
   // Sack will be sent in IMMEDIATE mode when this is happening.
   EXPECT_THAT(
@@ -1432,11 +1436,12 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
       AllOf(HasSackWithCumAckTsn(AddTo(tsn, 1)), HasSackWithNoGapAckBlocks()));
 
   // This DATA will not be accepted either.
-  sock_z2.ReceivePacket(SctpPacket::Builder(sock_z2.verification_tag(), options)
-                            .Add(DataChunk(AddTo(tsn, 4), StreamID(1), SSN(0),
-                                           PPID(53), std::vector<uint8_t>(1),
-                                           /*options=*/{}))
-                            .Build());
+  sock_z2.ReceivePacket(
+      SctpPacket::Builder(sock_z2.verification_tag(), options)
+          .Add(DataChunk(AddTo(tsn, 4), StreamID(1), SSN(0), PPID(53),
+                         rtc::CopyOnWriteBuffer(std::vector<uint8_t>(1)),
+                         /*options=*/{}))
+          .Build());
 
   // Sack will be sent in IMMEDIATE mode when this is happening.
   EXPECT_THAT(
@@ -1446,9 +1451,10 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   // This DATA should be accepted, and it fills the reassembly queue.
   sock_z2.ReceivePacket(
       SctpPacket::Builder(sock_z2.verification_tag(), options)
-          .Add(DataChunk(AddTo(tsn, 2), StreamID(1), SSN(0), PPID(53),
-                         std::vector<uint8_t>(kRemainingSize),
-                         /*options=*/{}))
+          .Add(DataChunk(
+              AddTo(tsn, 2), StreamID(1), SSN(0), PPID(53),
+              rtc::CopyOnWriteBuffer(std::vector<uint8_t>(kRemainingSize)),
+              /*options=*/{}))
           .Build());
 
   // The receiver might have moved into delayed ack mode.
@@ -1465,9 +1471,10 @@ TEST_F(DcSctpSocketTest, PassingHighWatermarkWillOnlyAcceptCumAckTsn) {
   // This DATA will make the connection close. It's too full now.
   sock_z2.ReceivePacket(
       SctpPacket::Builder(sock_z2.verification_tag(), options)
-          .Add(DataChunk(AddTo(tsn, 3), StreamID(1), SSN(0), PPID(53),
-                         std::vector<uint8_t>(kSmallMessageSize),
-                         /*options=*/{}))
+          .Add(DataChunk(
+              AddTo(tsn, 3), StreamID(1), SSN(0), PPID(53),
+              rtc::CopyOnWriteBuffer(std::vector<uint8_t>(kSmallMessageSize)),
+              /*options=*/{}))
           .Build());
 }
 

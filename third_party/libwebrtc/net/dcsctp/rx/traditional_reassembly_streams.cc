@@ -145,29 +145,32 @@ size_t TraditionalReassemblyStreams::StreamBase::AssembleMessage(
     const Data& data = start->second;
     size_t payload_size = start->second.size();
     UnwrappedTSN tsns[1] = {start->first};
-    DcSctpMessage message(data.stream_id, data.ppid, std::move(data.payload));
+    DcSctpMessage message(data.stream_id, data.ppid, data.payload, false);
     parent_.on_assembled_message_(tsns, std::move(message));
     return payload_size;
   }
 
   // Slow path - will need to concatenate the payload.
   std::vector<UnwrappedTSN> tsns;
-  std::vector<uint8_t> payload;
 
   size_t payload_size = std::accumulate(
       start, end, 0,
       [](size_t v, const auto& p) { return v + p.second.size(); });
 
   tsns.reserve(count);
-  payload.reserve(payload_size);
+  rtc::CopyOnWriteBuffer payload(payload_size);
+
+  size_t offset = 0;
   for (auto it = start; it != end; ++it) {
     const Data& data = it->second;
     tsns.push_back(it->first);
-    payload.insert(payload.end(), data.payload.begin(), data.payload.end());
+    memcpy(reinterpret_cast<void*>(payload.MutableData() + offset),
+           data.payload.cdata(), data.payload.size());
+    offset += data.payload.size();
   }
 
   DcSctpMessage message(start->second.stream_id, start->second.ppid,
-                        std::move(payload));
+                        std::move(payload), false);
   parent_.on_assembled_message_(tsns, std::move(message));
 
   return payload_size;

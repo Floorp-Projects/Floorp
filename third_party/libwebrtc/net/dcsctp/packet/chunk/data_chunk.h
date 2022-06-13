@@ -23,6 +23,7 @@
 #include "net/dcsctp/packet/chunk/data_common.h"
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/packet/tlv_trait.h"
+#include "rtc_base/copy_on_write_buffer.h"
 
 namespace dcsctp {
 
@@ -45,7 +46,7 @@ class DataChunk : public AnyDataChunk, public TLVTrait<DataChunkConfig> {
             StreamID stream_id,
             SSN ssn,
             PPID ppid,
-            std::vector<uint8_t> payload,
+            rtc::CopyOnWriteBuffer payload,
             const Options& options)
       : AnyDataChunk(tsn,
                      stream_id,
