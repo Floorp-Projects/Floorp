@@ -24,6 +24,7 @@
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "ARefBase.h"
 
 //-----------------------------------------------------------------------------

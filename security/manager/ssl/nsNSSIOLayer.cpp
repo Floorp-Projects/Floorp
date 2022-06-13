@@ -23,6 +23,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RandomNum.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -41,6 +43,7 @@
 #include "nsContentUtils.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsISocketProvider.h"
+#include "nsISocketTransport.h"
 #include "nsIWebProgressListener.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSComponent.h"
@@ -131,6 +134,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
       mFalseStarted(false),
       mIsFullHandshake(false),
       mNotedTimeUntilReady(false),
+      mEchExtensionStatus(EchExtensionStatus::kNotPresent),
       mIsShortWritePending(false),
       mShortWritePendingByte(0),
       mShortWriteOriginalAmount(-1),
@@ -185,9 +189,22 @@ void nsNSSSocketInfo::NoteTimeUntilReady() {
 
   mNotedTimeUntilReady = true;
 
+  Telemetry::HistogramID time_histogram;
+  switch (GetEchExtensionStatus()) {
+    case EchExtensionStatus::kNotPresent:
+      time_histogram = Telemetry::SSL_TIME_UNTIL_READY;
+      break;
+    case EchExtensionStatus::kGREASE:
+      time_histogram = Telemetry::SSL_TIME_UNTIL_READY_ECH_GREASE;
+      break;
+    case EchExtensionStatus::kReal:
+      time_histogram = Telemetry::SSL_TIME_UNTIL_READY_ECH;
+      break;
+  }
   // This will include TCP and proxy tunnel wait time
-  Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY,
-                                 mSocketCreationTimestamp, TimeStamp::Now());
+  Telemetry::AccumulateTimeDelta(time_histogram, mSocketCreationTimestamp,
+                                 TimeStamp::Now());
+
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] nsNSSSocketInfo::NoteTimeUntilReady\n", mFd));
 }
@@ -764,6 +781,7 @@ nsNSSSocketInfo::SetEchConfig(const nsACString& aEchConfig) {
                PR_ErrorToName(PR_GetError())));
       return NS_OK;
     }
+    UpdateEchExtensionStatus(EchExtensionStatus::kReal);
   }
   return NS_OK;
 }
@@ -970,6 +988,12 @@ bool retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo) {
   // be used to conclude server is TLS intolerant.
   // Note this only happens during the initial SSL handshake.
 
+  if (StaticPrefs::security_tls_ech_disable_grease_on_fallback() &&
+      socketInfo->GetEchExtensionStatus() == EchExtensionStatus::kGREASE) {
+    // Don't record any intolerances if we used ECH GREASE but force a retry.
+    return true;
+  }
+
   SSLVersionRange range = socketInfo->GetTLSVersionRange();
   nsSSLIOLayerHelpers& helpers = socketInfo->SharedState().IOLayerHelpers();
 
@@ -1065,7 +1089,8 @@ static_assert((mozilla::pkix::ERROR_BASE - mozilla::pkix::END_OF_LIST) < 31,
               "too many moz::pkix errors");
 
 static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
-                                  PRErrorCode err) {
+                                  PRErrorCode err,
+                                  EchExtensionStatus aEchExtensionStatus) {
   uint32_t bucket;
 
   // A negative bytesTransferred or a 0 read are errors.
@@ -1090,7 +1115,19 @@ static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
     bucket = 671;
   }
 
-  Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT, bucket);
+  Telemetry::HistogramID result_histogram;
+  switch (aEchExtensionStatus) {
+    case EchExtensionStatus::kNotPresent:
+      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT;
+      break;
+    case EchExtensionStatus::kGREASE:
+      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT_ECH_GREASE;
+      break;
+    case EchExtensionStatus::kReal:
+      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT_ECH;
+      break;
+  }
+  Telemetry::Accumulate(result_histogram, bucket);
 }
 
 int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
@@ -1164,7 +1201,8 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
     // Report the result once for each handshake. Note that this does not
     // get handshakes which are cancelled before any reads or writes
     // happen.
-    reportHandshakeResult(bytesTransfered, wasReading, originalError);
+    reportHandshakeResult(bytesTransfered, wasReading, originalError,
+                          socketInfo->GetEchExtensionStatus());
     socketInfo->SetHandshakeNotPending();
   }
 
@@ -2685,6 +2723,29 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     if (SECSuccess != SSL_SetDowngradeCheckVersion(fd, maxEnabledVersion)) {
       return NS_ERROR_FAILURE;
     }
+  }
+
+  // Enable ECH GREASE if suitable. Has no impact if 'real' ECH is being used.
+  if (range.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+      !(infoObject->GetProviderFlags() & (nsISocketProvider::BE_CONSERVATIVE |
+                                          nsISocketTransport::DONT_TRY_ECH)) &&
+      StaticPrefs::security_tls_ech_grease_probability()) {
+    if ((RandomUint64().valueOr(0) % 100) >=
+        100 - StaticPrefs::security_tls_ech_grease_probability()) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("[%p] nsSSLIOLayerSetOptions: enabling TLS ECH Grease\n", fd));
+      if (SECSuccess != SSL_EnableTls13GreaseEch(fd, PR_TRUE)) {
+        return NS_ERROR_FAILURE;
+      }
+      // ECH Padding can be between 1 and 255
+      if (SECSuccess !=
+          SSL_SetTls13GreaseEchSize(
+              fd, std::clamp(StaticPrefs::security_tls_ech_grease_size(), 1U,
+                             255U))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    infoObject->UpdateEchExtensionStatus(EchExtensionStatus::kGREASE);
   }
 
   // Include a modest set of named groups.

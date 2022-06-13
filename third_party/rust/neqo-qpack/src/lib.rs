@@ -39,11 +39,6 @@ pub struct QpackSettings {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-#[allow(
-    renamed_and_removed_lints,
-    clippy::pub_enum_variant_names,
-    clippy::enum_variant_names
-)]
 pub enum Error {
     DecompressionFailed,
     EncoderStream,

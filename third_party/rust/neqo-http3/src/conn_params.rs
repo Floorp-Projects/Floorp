@@ -14,7 +14,7 @@ const QPACK_MAX_BLOCKED_STREAMS_DEFAULT: u16 = 20;
 const MAX_PUSH_STREAM_DEFAULT: u64 = 0;
 const WEBTRANSPORT_DEFAULT: bool = false;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Http3Parameters {
     conn_params: ConnectionParameters,
     qpack_settings: QpackSettings,

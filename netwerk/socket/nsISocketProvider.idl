@@ -118,4 +118,11 @@ interface nsISocketProvider : nsISupports
      * on a connection for an anonymous request.
      */
     const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = 1 << 4;
+
+    /** 
+     * If set, do not send an ECH extension (whether GREASE or 'real').
+     * Currently false by default and is set when retrying failed connections.
+     */
+    const unsigned long DONT_TRY_ECH = (1 << 10);
+
 };

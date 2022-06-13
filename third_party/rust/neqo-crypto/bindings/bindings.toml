@@ -137,6 +137,7 @@ variables = [
 types = [
     "CERTCertList",
     "CERTCertListNode",
+    "CK_CHACHA20_PARAMS",
     "CK_ATTRIBUTE_TYPE",
     "CK_FLAGS",
     "CK_MECHANISM_TYPE",
@@ -150,6 +151,9 @@ functions = [
     "CERT_DestroyCertificate",
     "CERT_DestroyCertList",
     "CERT_GetCertificateDer",
+    "PK11_CipherOp",
+    "PK11_CreateContextBySymKey",
+    "PK11_DestroyContext",
     "PK11_Encrypt",
     "PK11_ExtractKeyValue",
     "PK11_FindCertFromNickname",
@@ -184,6 +188,7 @@ enums = [
 ]
 opaque = [
     "CERTCertificate",
+    "PK11Context",
     "PK11SlotInfo",
     "PK11SymKey",
     "SECKEYPrivateKey",
@@ -191,15 +196,16 @@ opaque = [
 ]
 variables = [
     "CKA_DERIVE",
+    "CKA_ENCRYPT",
     "CKA_VALUE",
     "CKF_DERIVE",
     "CKM_AES_ECB",
     "CKM_AES_GCM",
+    "CKM_CHACHA20",
+    "CKM_CHACHA20_POLY1305",
     "CKM_EC_KEY_PAIR_GEN",
     "CKM_HKDF_DERIVE",
     "CKM_INVALID_MECHANISM",
-    "CKM_NSS_CHACHA20_CTR",
-    "CKM_NSS_CHACHA20_POLY1305",
     "PK11_ATTR_INSENSITIVE",
     "PK11_ATTR_PRIVATE",
     "PK11_ATTR_PUBLIC",
