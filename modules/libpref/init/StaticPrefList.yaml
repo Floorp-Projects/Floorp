@@ -5146,8 +5146,8 @@
 
 - name: gfx.canvas.accelerated
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+#if defined(XP_LINUX) && !defined(ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
