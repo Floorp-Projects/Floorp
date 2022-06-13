@@ -266,6 +266,9 @@ void IonCacheIRCompiler::enterStubFrame(MacroAssembler& masm,
   masm.Push(Imm32(descriptor));
   masm.Push(ImmPtr(GetReturnAddressToIonCode(cx_)));
 
+  masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   enteredStubFrame_ = true;
 }
 
@@ -891,8 +894,10 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
-  uint32_t descriptor = MakeFrameDescriptor(
-      argSize + padding, FrameType::IonICCall, JitFrameLayout::Size());
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc
   masm.Push(scratch);
   masm.Push(Imm32(descriptor));
@@ -912,6 +917,9 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
   }
 
   masm.storeCallResultValue(output);
+
+  // Restore the frame pointer and stack pointer.
+  masm.loadPtr(Address(FramePointer, 0), FramePointer);
   masm.freeStack(masm.framePushed() - framePushedBefore);
   return true;
 }
@@ -1538,8 +1546,10 @@ bool IonCacheIRCompiler::emitCallScriptedSetter(ObjOperandId receiverId,
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
-  uint32_t descriptor = MakeFrameDescriptor(
-      argSize + padding, FrameType::IonICCall, JitFrameLayout::Size());
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(1));  // argc
   masm.Push(scratch);
   masm.Push(Imm32(descriptor));
@@ -1556,6 +1566,8 @@ bool IonCacheIRCompiler::emitCallScriptedSetter(ObjOperandId receiverId,
     masm.switchToRealm(cx_->realm(), ReturnReg);
   }
 
+  // Restore the frame pointer and stack pointer.
+  masm.loadPtr(Address(FramePointer, 0), FramePointer);
   masm.freeStack(masm.framePushed() - framePushedBefore);
   return true;
 }
@@ -1942,8 +1954,10 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
 
-  uint32_t descriptor = MakeFrameDescriptor(
-      padding + argSize, FrameType::IonICCall, JitFrameLayout::Size());
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc
   masm.Push(callee);
   masm.Push(Imm32(descriptor));
@@ -1969,6 +1983,8 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
     masm.setFramePushed(framePushedAfterCall);
   }
 
+  // Restore the frame pointer and stack pointer.
+  masm.loadPtr(Address(FramePointer, 0), FramePointer);
   masm.freeStack(masm.framePushed() - framePushedBefore);
   return true;
 }
