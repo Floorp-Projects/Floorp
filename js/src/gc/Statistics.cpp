@@ -1009,7 +1009,7 @@ void Statistics::endGC() {
 void Statistics::sendGCTelemetry() {
   JSRuntime* runtime = gc->rt;
   runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC,
-                        !zoneStats.isFullCollection());
+                        !runtime->gc.fullGCRequested);
   TimeDuration prepareTotal = SumPhase(PhaseKind::PREPARE, phaseTimes);
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
   TimeDuration markRootsTotal = SumPhase(PhaseKind::MARK_ROOTS, phaseTimes);
@@ -1164,10 +1164,9 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                         budgetWasIncreased);
 
   // Slice callbacks should only fire for the outermost level.
-  bool wasFullGC = zoneStats.isFullCollection();
   if (sliceCallback) {
     JSContext* cx = context();
-    JS::GCDescription desc(!wasFullGC, false, options, reason);
+    JS::GCDescription desc(!gc->fullGCRequested, false, options, reason);
     if (first) {
       (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
     }
@@ -1213,10 +1212,9 @@ void Statistics::endSlice() {
 
   // Slice callbacks should only fire for the outermost level.
   if (!aborted) {
-    bool wasFullGC = zoneStats.isFullCollection();
     if (sliceCallback) {
       JSContext* cx = context();
-      JS::GCDescription desc(!wasFullGC, last, gcOptions,
+      JS::GCDescription desc(!gc->fullGCRequested, last, gcOptions,
                              slices_.back().reason);
       (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
       if (last) {
@@ -1589,7 +1587,7 @@ void Statistics::printSliceProfile() {
   bool shrinking = gcOptions == JS::GCOptions::Shrink;
   bool reset = slice.resetReason != GCAbortReason::None;
   bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
-  bool full = zoneStats.isFullCollection();
+  bool full = gc->fullGCRequested;
   size_t sizeKB = gc->heapSize.bytes() / 1024;
 
   FILE* file = profileFile();
