@@ -2116,9 +2116,13 @@ pref(image.downscale-during-decode.enabled,true) == 1744468-1.html 1744468-1-ref
 == 1747272-1.html 1747272-1-ref.html
 == 1750146-1.html 1750146-1-ref.html
 == 1735265-1.html 1735265-1-ref.html
-test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,0) == 1773633.html 1773633.html
-test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
-test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) != 1773633.html 1773633.html
+
+# The following tests are skipped on Android since Android doesn't deal very
+# well with dynamic DPI changes and it corrupts subsequent reftests.
+# TODO(emilio): Maybe we can enable just the text-zoom ones?
+skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,0) == 1773633.html 1773633.html
+skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
+skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) != 1773633.html 1773633.html
 # TODO: This doesn't quite work because textScaleFactor also applies to the reftest window itself, ugh.
-# test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) == 1773633.html 1773633-full-zoom.html
-test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) == 1773633.html 1773633-text-zoom.html
+# skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) == 1773633.html 1773633-full-zoom.html
+skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) == 1773633.html 1773633-text-zoom.html
