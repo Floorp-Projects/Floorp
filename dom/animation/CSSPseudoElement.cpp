@@ -21,9 +21,7 @@ CSSPseudoElement::CSSPseudoElement(dom::Element* aElement,
                                    PseudoStyleType aType)
     : mOriginatingElement(aElement), mPseudoType(aType) {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aType == PseudoStyleType::after ||
-                 aType == PseudoStyleType::before ||
-                 aType == PseudoStyleType::marker,
+  MOZ_ASSERT(AnimationUtils::IsSupportedPseudoForAnimations(aType),
              "Unexpected Pseudo Type");
 }
 
