@@ -448,14 +448,10 @@ a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
     // embedded out-of-process iframe. Therefore, we use
     // IsTopLevelInContentProcess. In contrast, using IsToplevel would only
     // include documents that aren't embedded; e.g. tab documents.
-    if (doc->IsTopLevelInContentProcess()) {
+    if (doc->IsTopLevelInContentProcess() && !doc->IsShutdown()) {
       return doc;
     }
   }
-
-  MOZ_ASSERT(docs.Count() == 0,
-             "If there isn't a top level accessible doc "
-             "there shouldn't be an accessible doc at all!");
 #endif
   return nullptr;
 }
