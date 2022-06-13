@@ -909,7 +909,8 @@ class MetaBuildWrapper(object):
 
         must_retry = False
         if test_type == 'script':
-            cmdline += ['../../' +
+            cmdline += [vpython_exe,
+                        '../../' +
                         self.ToSrcRelPath(isolate_map[target]['script'])]
         elif is_android:
             cmdline += [vpython_exe,
