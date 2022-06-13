@@ -12359,7 +12359,11 @@
 # 0 means never GREASE, 100 means always GREASE
 - name: security.tls.ech.grease_probability
   type: RelaxedAtomicUint32
+#ifdef IS_NIGHTLY_BUILD
+  value: 10
+#else
   value: 0
+#endif 
   mirror: always
 
 # Whether to retry connections without ECH Grease
