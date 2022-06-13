@@ -167,8 +167,10 @@ void AudioRtpReceiver::Stop() {
 
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
     RTC_DCHECK_RUN_ON(worker_thread_);
+
     if (media_channel_)
       SetOutputVolume_w(0.0);
+
     SetMediaChannel_w(nullptr);
   });
 }
