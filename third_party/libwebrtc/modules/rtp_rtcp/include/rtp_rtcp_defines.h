@@ -242,8 +242,6 @@ struct RtpPacketSendInfo {
   RtpPacketSendInfo() = default;
 
   uint16_t transport_sequence_number = 0;
-  // TODO(bugs.webrtc.org/12713): Remove once downstream usage is gone.
-  uint32_t ssrc = 0;
   absl::optional<uint32_t> media_ssrc;
   uint16_t rtp_sequence_number = 0;  // Only valid if `media_ssrc` is set.
   uint32_t rtp_timestamp = 0;

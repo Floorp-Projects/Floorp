@@ -445,8 +445,6 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
         // or lost.
         break;
     }
-    // TODO(bugs.webrtc.org/12713): Remove once downstream usage is gone.
-    packet_info.ssrc = packet_info.media_ssrc.value_or(0);
 
     transport_feedback_observer_->OnAddPacket(packet_info);
   }
