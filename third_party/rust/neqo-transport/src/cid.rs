@@ -450,6 +450,10 @@ impl ConnectionIdManager {
         }
     }
 
+    pub fn generator(&self) -> Rc<RefCell<dyn ConnectionIdGenerator>> {
+        Rc::clone(&self.generator)
+    }
+
     pub fn decoder(&self) -> ConnectionIdDecoderRef {
         ConnectionIdDecoderRef {
             generator: self.generator.deref().borrow(),
@@ -488,6 +492,8 @@ impl ConnectionIdManager {
 
     /// During the handshake, a server needs to regard the client's choice of destination
     /// connection ID as valid.  This function saves it in the store in a special place.
+    /// Note that this is only done *after* an Initial packet from the client is
+    /// successfully processed.
     pub fn add_odcid(&mut self, cid: ConnectionId) {
         let entry = ConnectionIdEntry::new(CONNECTION_ID_SEQNO_ODCID, cid, ());
         self.connection_ids.add_local(entry);

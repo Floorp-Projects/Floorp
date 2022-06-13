@@ -17,6 +17,7 @@ macro_rules! do_log {
                 ::log::__log_format_args!($($arg)+),
                 lvl,
                 &($target, ::log::__log_module_path!(), ::log::__log_file!(), ::log::__log_line!()),
+                None,
             );
         }
     });

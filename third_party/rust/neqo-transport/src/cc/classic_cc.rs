@@ -152,7 +152,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
         let is_app_limited = self.app_limited();
         qtrace!(
             [self],
-            "app limited={}, bytes_in_flight:{}, cwnd: {}, state: {:?} pacing_burst_size: {}",
+            "limited={}, bytes_in_flight={}, cwnd={}, state={:?} pacing_burst_size={}",
             is_app_limited,
             self.bytes_in_flight,
             self.congestion_window,
@@ -413,7 +413,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
                 continue;
             }
             if let Some(t) = start {
-                if p.time_sent.duration_since(t) > pc_period {
+                if p.time_sent.checked_duration_since(t).unwrap() > pc_period {
                     qinfo!([self], "persistent congestion");
                     self.congestion_window = CWND_MIN;
                     self.acked_bytes = 0;

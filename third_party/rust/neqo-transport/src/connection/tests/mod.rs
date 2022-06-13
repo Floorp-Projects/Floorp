@@ -16,6 +16,7 @@ use crate::recovery::ACK_ONLY_SIZE_LIMIT;
 use crate::stats::{FrameStats, Stats, MAX_PTO_COUNTS};
 use crate::{
     ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamId, StreamType,
+    Version,
 };
 
 use std::cell::RefCell;
@@ -128,6 +129,9 @@ pub fn new_server(params: ConnectionParameters) -> Connection {
 pub fn default_server() -> Connection {
     new_server(ConnectionParameters::default())
 }
+pub fn resumed_server(client: &Connection) -> Connection {
+    new_server(ConnectionParameters::default().versions(client.version(), Version::all()))
+}
 
 /// If state is `AuthenticationNeeded` call `authenticated()`. This function will
 /// consume all outstanding events on the connection.
@@ -211,10 +215,10 @@ fn connect(client: &mut Connection, server: &mut Connection) {
     connect_with_rtt(client, server, now(), Duration::new(0, 0));
 }
 
-fn assert_error(c: &Connection, err: &ConnectionError) {
+fn assert_error(c: &Connection, expected: &ConnectionError) {
     match c.state() {
         State::Closing { error, .. } | State::Draining { error, .. } | State::Closed(error) => {
-            assert_eq!(*error, *err);
+            assert_eq!(*error, *expected, "{} error mismatch", c);
         }
         _ => panic!("bad state {:?}", c.state()),
     }

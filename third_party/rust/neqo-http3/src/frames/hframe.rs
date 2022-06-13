@@ -138,7 +138,7 @@ impl HFrame {
 
                 update_frame.encode(&priority_enc);
                 enc.encode_varint(update_frame.len() as u64);
-                enc.encode(&update_frame);
+                enc.encode(update_frame.as_ref());
             }
         }
     }
