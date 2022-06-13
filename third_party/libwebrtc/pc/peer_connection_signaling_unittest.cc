@@ -1266,4 +1266,60 @@ TEST_F(PeerConnectionSignalingUnifiedPlanTest,
       callee->observer()->latest_negotiation_needed_event()));
 }
 
+TEST_F(PeerConnectionSignalingUnifiedPlanTest, RtxReofferApt) {
+  auto callee = CreatePeerConnection();
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 8403615332048243445 2 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 102\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+      "a=ice-ufrag:IZeV\r\n"
+      "a=ice-pwd:uaZhQD4rYM/Tta2qWBT1Bbt4\r\n"
+      "a=ice-options:trickle\r\n"
+      "a=fingerprint:sha-256 "
+      "D8:6C:3D:FA:23:E2:2C:63:11:2D:D0:86:BE:C4:D0:65:F9:42:F7:1C:06:04:27:E6:"
+      "1C:2C:74:01:8D:50:67:23\r\n"
+      "a=setup:actpass\r\n"
+      "a=mid:0\r\n"
+      "a=sendrecv\r\n"
+      "a=msid:stream track\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtcp-rsize\r\n"
+      "a=rtpmap:102 VP8/90000\r\n"
+      "a=rtcp-fb:102 goog-remb\r\n"
+      "a=rtcp-fb:102 transport-cc\r\n"
+      "a=rtcp-fb:102 ccm fir\r\n"
+      "a=rtcp-fb:102 nack\r\n"
+      "a=rtcp-fb:102 nack pli\r\n"
+      "a=ssrc:1224551896 cname:/exJcmhSLpyu9FgV\r\n";
+  std::unique_ptr<webrtc::SessionDescriptionInterface> remote_description =
+      webrtc::CreateSessionDescription(SdpType::kOffer, sdp, nullptr);
+
+  EXPECT_TRUE(callee->SetRemoteDescription(std::move(remote_description)));
+
+  auto answer = callee->CreateAnswer(RTCOfferAnswerOptions());
+  EXPECT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
+
+  callee->pc()->GetTransceivers()[0]->Stop();
+  auto reoffer = callee->CreateOffer(RTCOfferAnswerOptions());
+  auto codecs = reoffer->description()
+                    ->contents()[0]
+                    .media_description()
+                    ->as_video()
+                    ->codecs();
+  ASSERT_GT(codecs.size(), 2u);
+  EXPECT_EQ(codecs[0].name, "VP8");
+  EXPECT_EQ(codecs[1].name, "rtx");
+  auto apt_it = codecs[1].params.find("apt");
+  ASSERT_NE(apt_it, codecs[1].params.end());
+  // The apt should match the id from the remote offer.
+  EXPECT_EQ(apt_it->second, rtc::ToString(codecs[0].id));
+  EXPECT_EQ(apt_it->second, "102");
+}
+
 }  // namespace webrtc
