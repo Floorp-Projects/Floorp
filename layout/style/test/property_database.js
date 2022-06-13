@@ -13634,6 +13634,24 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
     other_values: ["inline", "vertical", "horizontal"],
     invalid_values: ["auto", "none", "abc"],
   };
+
+  gCSSProperties["scroll-timeline"] = {
+    domProp: "scrollTimeline",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: ["scroll-timeline-name", "scroll-timeline-axis"],
+    initial_values: ["none block", "block none", "block", "none"],
+    other_values: [
+      "bounce inline",
+      "bounce vertical",
+      "horizontal bounce",
+      "inline \\32bounce",
+      "block -bounce",
+      "vertical \\32 0bounce",
+      "horizontal -\\32 0bounce",
+    ],
+    invalid_values: ["", "bounce bounce"],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {
