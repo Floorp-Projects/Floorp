@@ -3758,9 +3758,16 @@ class ContentSwitchTest : public test::SendTest {
     call_ = sender_call;
   }
 
+  void OnStreamsStopped() override {
+    MutexLock lock(&mutex_);
+    done_ = true;
+  }
+
   Action OnSendRtp(const uint8_t* packet, size_t length) override {
     task_queue_->PostTask(ToQueuedTask([this]() {
       MutexLock lock(&mutex_);
+      if (done_)
+        return;
 
       auto internal_send_peer = test::VideoSendStreamPeer(send_stream_);
       float pacing_factor =
@@ -3831,6 +3838,7 @@ class ContentSwitchTest : public test::SendTest {
   Mutex mutex_;
   rtc::Event content_switch_event_;
   Call* call_;
+  bool done_ RTC_GUARDED_BY(mutex_) = false;
   StreamState state_ RTC_GUARDED_BY(mutex_);
   VideoSendStream* send_stream_ RTC_GUARDED_BY(mutex_);
   VideoSendStream::Config send_stream_config_;
