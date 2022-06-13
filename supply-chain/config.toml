@@ -873,10 +873,6 @@ criteria = "safe-to-deploy"
 version = "0.4.7"
 criteria = "safe-to-deploy"
 
-[[unaudited.log]]
-version = "0.4.17"
-criteria = "safe-to-deploy"
-
 [[unaudited.mach]]
 version = "0.3.2"
 criteria = "safe-to-deploy"
