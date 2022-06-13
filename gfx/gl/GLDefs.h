@@ -104,9 +104,6 @@ bool CheckContextLost(const GLContext* gl);
 // EGL_ANGLE_image_d3d11_texture
 #define LOCAL_EGL_D3D11_TEXTURE_ANGLE                   0x3484
 
-// EGL_MESA_platform_surfaceless
-#define LOCAL_EGL_PLATFORM_SURFACELESS_MESA             0x31DD
-
 // clang-format on
 
 #endif
