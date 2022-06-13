@@ -491,7 +491,6 @@ def GenerateCommitMessage(
         noun = 'dependency' if len(deps) == 1 else 'dependencies'
         commit_msg.append('%s %s' % (adjective, noun))
 
-    tbr_authors = ''
     if changed_deps_list:
         Section('Changed', changed_deps_list)
 
@@ -503,8 +502,6 @@ def GenerateCommitMessage(
                 commit_msg.append(
                     '* %s: %s/+log/%s..%s' %
                     (c.path, c.url, c.current_rev[0:10], c.new_rev[0:10]))
-            if 'libvpx' in c.path or 'libaom' in c.path:
-                tbr_authors += 'marpan@webrtc.org, jianj@chromium.org, '
 
     if added_deps_paths:
         Section('Added', added_deps_paths)
@@ -529,8 +526,6 @@ def GenerateCommitMessage(
     else:
         commit_msg.append('No update to Clang.\n')
 
-    if tbr_authors:
-        commit_msg.append('TBR=%s' % tbr_authors)
     commit_msg.append('BUG=None')
     return '\n'.join(commit_msg)
 
@@ -635,20 +630,36 @@ def ChooseCQMode(skip_cq, cq_over, current_commit_pos, new_commit_pos):
     return 2
 
 
-def _UploadCL(commit_queue_mode):
+def _GetCcRecipients(changed_deps_list):
+    """Returns a list of emails to notify based on the changed deps list.
+    """
+    cc_recipients = []
+    for c in changed_deps_list:
+        if 'libvpx' in c.path or 'libaom' in c.path:
+            cc_recipients.append('marpan@webrtc.org')
+            cc_recipients.append('jianj@chromium.org')
+    return cc_recipients
+
+
+def _UploadCL(commit_queue_mode, add_cc=None):
     """Upload the committed changes as a changelist to Gerrit.
 
     commit_queue_mode:
      - 2: Submit to commit queue.
      - 1: Run trybots but do not submit to CQ.
      - 0: Skip CQ, upload only.
+
+    add_cc: A list of email addresses to add as CC recipients.
     """
+    cc_recipients = [NOTIFY_EMAIL]
+    if add_cc:
+        cc_recipients.extend(add_cc)
     cmd = ['git', 'cl', 'upload', '--force', '--bypass-hooks']
     if commit_queue_mode >= 2:
         logging.info('Sending the CL to the CQ...')
         cmd.extend(['-o', 'label=Bot-Commit+1'])
         cmd.extend(['-o', 'label=Commit-Queue+2'])
-        cmd.extend(['--send-mail', '--cc', NOTIFY_EMAIL])
+        cmd.extend(['--send-mail', '--cc', ','.join(cc_recipients)])
     elif commit_queue_mode >= 1:
         logging.info('Starting CQ dry run...')
         cmd.extend(['-o', 'label=Commit-Queue+1'])
@@ -771,7 +782,7 @@ def main():
                                          current_commit_pos, new_commit_pos)
         logging.info('Uploading CL...')
         if not opts.dry_run:
-            _UploadCL(commit_queue_mode)
+            _UploadCL(commit_queue_mode, _GetCcRecipients(changed_deps))
     return 0
 
 
