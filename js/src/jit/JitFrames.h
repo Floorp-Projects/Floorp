@@ -311,6 +311,10 @@ class IonICCallFrameLayout : public CommonFrameLayout {
   JitCode* stubCode_;
 
  public:
+  // The caller's frame pointer is pushed after the IonICCallFrameLayout is
+  // pushed on the stack.
+  static constexpr size_t FramePointerOffset = sizeof(void*);
+
   JitCode** stubCode() { return &stubCode_; }
   static size_t Size() { return sizeof(IonICCallFrameLayout); }
 };
