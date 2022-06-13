@@ -59,4 +59,37 @@ if (!window.CM_DDX) {
   w.cmSetupNormalization = noopfn;
   w.cmSetupOther = noopfn;
   w.cmStartTagSet = noopfn;
+  w.cmCreateConversionEventTag = noopfn;
+  w.cmCreateDefaultPageviewTag = noopfn;
+  w.cmCreateElementTag = noopfn;
+  w.cmCreateManualImpressionTag = noopfn;
+  w.cmCreateManualLinkClickTag = noopfn;
+  w.cmCreateManualPageviewTag = noopfn;
+  w.cmCreatePageElementTag = noopfn;
+  w.cmCreatePageviewTag = noopfn;
+  w.cmCreateProductElementTag = noopfn;
+  w.cmCreateProductviewTag = noopfn;
+  w.cmCreateTechPropsTag = noopfn;
+  w.cmLoadIOConfig = noopfn;
+  w.cmSetClientID = noopfn;
+  w.cmSetCurrencyCode = noopfn;
+  w.cmSetFirstPartyIDs = noopfn;
+  w.cmSetupCookieMigration = noopfn;
+  w.cmSetupNormalization = noopfn;
+
+  w.cmSetupOther = b => {
+    for (const a in b) {
+      window[a] = b[a];
+    }
+  };
+
+  const techProps = {};
+
+  w.coremetrics = {
+    cmLastReferencedPageID: "",
+    cmLoad: noopfn,
+    cmUpdateConfig: noopfn,
+    getTechProps: () => techProps,
+    isDef: c => typeof c !== "undefined" && c,
+  };
 }
