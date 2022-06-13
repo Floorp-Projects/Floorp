@@ -215,16 +215,18 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
         // That's how we represent `none`.
         return nullptr;
       }
-      const auto* rule =
-          aPresContext->StyleSet()->ScrollTimelineRuleForName(name);
-      if (!rule) {
-        // Unknown timeline, so treat is as no timeline. Keep nullptr.
-        return nullptr;
+      // 1. Check @scroll-timeline rule.
+      if (const auto* rule =
+              aPresContext->StyleSet()->ScrollTimelineRuleForName(name)) {
+        // We do intentionally use the pres context's document for the owner of
+        // ScrollTimeline since it's consistent with what we do for
+        // KeyframeEffect instance.
+        return ScrollTimeline::FromRule(*rule, aPresContext->Document(),
+                                        aTarget);
       }
-      // We do intentionally use the pres context's document for the owner of
-      // ScrollTimeline since it's consistent with what we do for
-      // KeyframeEffect instance.
-      return ScrollTimeline::FromRule(*rule, aPresContext->Document(), aTarget);
+      // 2. Check scroll-timeline-name property.
+      return ScrollTimeline::FromNamedScroll(aPresContext->Document(), aTarget,
+                                             name);
     }
     case StyleAnimationTimeline::Tag::Scroll: {
       const auto& scroll = aStyleTimeline.AsScroll();
