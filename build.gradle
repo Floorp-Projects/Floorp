@@ -113,7 +113,7 @@ buildscript {
     ext.kotlin_version = '1.5.31'
 
     dependencies {
-        classpath 'org.mozilla.apilint:apilint:0.5.1'
+        classpath 'org.mozilla.apilint:apilint:0.5.2'
         classpath 'com.android.tools.build:gradle:7.0.3'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
         classpath 'org.apache.commons:commons-exec:1.3'
