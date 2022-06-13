@@ -43,9 +43,12 @@ class PeerConfigurerImpl final
                     PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex>;
 
   PeerConfigurerImpl(rtc::Thread* network_thread,
-                     rtc::NetworkManager* network_manager)
-      : components_(std::make_unique<InjectableComponents>(network_thread,
-                                                           network_manager)),
+                     rtc::NetworkManager* network_manager,
+                     rtc::PacketSocketFactory* packet_socket_factory = nullptr)
+      : components_(
+            std::make_unique<InjectableComponents>(network_thread,
+                                                   network_manager,
+                                                   packet_socket_factory)),
         params_(std::make_unique<Params>()) {}
 
   PeerConfigurer* SetName(absl::string_view name) override {
