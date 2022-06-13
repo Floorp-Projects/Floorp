@@ -355,7 +355,7 @@ void PseudoTcp::NotifyClock(uint32_t now) {
 
 bool PseudoTcp::NotifyPacket(const char* buffer, size_t len) {
   if (len > MAX_PACKET) {
-    RTC_LOG_F(WARNING) << "packet too large";
+    RTC_LOG_F(LS_WARNING) << "packet too large";
     return false;
   }
   return parse(reinterpret_cast<const uint8_t*>(buffer), uint32_t(len));
@@ -1240,7 +1240,7 @@ void PseudoTcp::applyOption(char kind, const char* data, uint32_t len) {
     // Window scale factor.
     // http://www.ietf.org/rfc/rfc1323.txt
     if (len != 1) {
-      RTC_LOG_F(WARNING) << "Invalid window scale option received.";
+      RTC_LOG_F(LS_WARNING) << "Invalid window scale option received.";
       return;
     }
     applyWindowScaleOption(data[0]);

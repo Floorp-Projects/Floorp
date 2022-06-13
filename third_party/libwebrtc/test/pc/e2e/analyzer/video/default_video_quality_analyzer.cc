@@ -289,7 +289,7 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
 
   auto it = captured_frames_in_flight_.find(frame_id);
   if (it == captured_frames_in_flight_.end()) {
-    RTC_LOG(WARNING)
+    RTC_LOG(LS_WARNING)
         << "The encoding of video frame with id [" << frame_id << "] for peer ["
         << peer_name << "] finished after all receivers rendered this frame. "
         << "It can be OK for simulcast/SVC if higher quality stream is not "
@@ -427,9 +427,10 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
         reason = kSkipRenderedFrameReasonDropped;
       }
     }
-    RTC_LOG(WARNING) << "Peer " << peer_name
-                     << "; Received frame out of order: received frame with id "
-                     << frame.id() << " which was " << reason << " before";
+    RTC_LOG(LS_WARNING)
+        << "Peer " << peer_name
+        << "; Received frame out of order: received frame with id "
+        << frame.id() << " which was " << reason << " before";
     return;
   }
 

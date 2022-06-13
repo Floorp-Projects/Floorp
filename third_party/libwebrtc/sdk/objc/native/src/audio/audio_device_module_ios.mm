@@ -291,7 +291,7 @@ AudioDeviceModuleIOS::AudioDeviceModuleIOS(bool bypass_voice_processing)
     RTC_DLOG(LS_INFO) << __FUNCTION__ << "(" << enable << ")";
     CHECKinitialized_();
     if (enable) {
-      RTC_LOG(WARNING) << "recording in stereo is not supported";
+      RTC_LOG(LS_WARNING) << "recording in stereo is not supported";
     }
     return -1;
   }
@@ -328,7 +328,7 @@ AudioDeviceModuleIOS::AudioDeviceModuleIOS(bool bypass_voice_processing)
       return -1;
     }
     if (audio_device_->SetStereoPlayout(enable)) {
-      RTC_LOG(WARNING) << "stereo playout is not supported";
+      RTC_LOG(LS_WARNING) << "stereo playout is not supported";
       return -1;
     }
     int8_t nChannels(1);

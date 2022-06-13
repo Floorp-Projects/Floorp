@@ -1020,7 +1020,7 @@ HRESULT GetSharedModeMixFormat(IAudioClient* client,
   // Log a warning for the rare case where `mix_format` only contains a
   // stand-alone WAVEFORMATEX structure but don't return.
   if (!wrapped_format.IsExtensible()) {
-    RTC_DLOG(WARNING)
+    RTC_DLOG(LS_WARNING)
         << "The returned format contains no extended information. "
            "The size is "
         << wrapped_format.size() << " bytes.";

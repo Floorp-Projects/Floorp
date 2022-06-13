@@ -64,7 +64,7 @@ AudioDeviceBuffer::AudioDeviceBuffer(TaskQueueFactory* task_queue_factory)
   RTC_LOG(LS_INFO) << "AudioDeviceBuffer::ctor";
 #ifdef AUDIO_DEVICE_PLAYS_SINUS_TONE
   phase_ = 0.0;
-  RTC_LOG(WARNING) << "AUDIO_DEVICE_PLAYS_SINUS_TONE is defined!";
+  RTC_LOG(LS_WARNING) << "AUDIO_DEVICE_PLAYS_SINUS_TONE is defined!";
 #endif
 }
 

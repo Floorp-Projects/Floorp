@@ -506,9 +506,9 @@ bool CoreAudioBase::Init() {
   RTC_DLOG(LS_INFO) << "preferred_frames_per_buffer: "
                     << preferred_frames_per_buffer;
   if (preferred_frames_per_buffer % params.frames_per_buffer()) {
-    RTC_LOG(WARNING) << "Buffer size of " << params.frames_per_buffer()
-                     << " is not an even divisor of "
-                     << preferred_frames_per_buffer;
+    RTC_LOG(LS_WARNING) << "Buffer size of " << params.frames_per_buffer()
+                        << " is not an even divisor of "
+                        << preferred_frames_per_buffer;
   }
 
   // Create an AudioSessionControl interface given the initialized client.

@@ -77,7 +77,7 @@ void PeerConnectionClient::Connect(const std::string& server,
   RTC_DCHECK(!client_name.empty());
 
   if (state_ != NOT_CONNECTED) {
-    RTC_LOG(WARNING)
+    RTC_LOG(LS_WARNING)
         << "The client must not be connected before you can call Connect()";
     callback_->OnServerConnectionFailure();
     return;
@@ -479,7 +479,7 @@ void PeerConnectionClient::OnClose(rtc::Socket* socket, int err) {
     }
   } else {
     if (socket == control_socket_.get()) {
-      RTC_LOG(WARNING) << "Connection refused; retrying in 2 seconds";
+      RTC_LOG(LS_WARNING) << "Connection refused; retrying in 2 seconds";
       rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, kReconnectDelay, this,
                                           0);
     } else {

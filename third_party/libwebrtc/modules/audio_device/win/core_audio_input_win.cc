@@ -187,7 +187,7 @@ int CoreAudioInput::StopRecording() {
   // Release resources allocated in InitRecording() and then return if this
   // method is called without any active input audio.
   if (!Recording()) {
-    RTC_DLOG(WARNING) << "No input stream is active";
+    RTC_DLOG(LS_WARNING) << "No input stream is active";
     ReleaseCOMObjects();
     initialized_ = false;
     return 0;
@@ -387,7 +387,7 @@ bool CoreAudioInput::OnErrorCallback(ErrorType error) {
   if (error == CoreAudioBase::ErrorType::kStreamDisconnected) {
     HandleStreamDisconnected();
   } else {
-    RTC_DLOG(WARNING) << "Unsupported error type";
+    RTC_DLOG(LS_WARNING) << "Unsupported error type";
   }
   return true;
 }

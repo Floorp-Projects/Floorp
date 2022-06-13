@@ -188,7 +188,7 @@ int CoreAudioOutput::StopPlayout() {
   // Release resources allocated in InitPlayout() and then return if this
   // method is called without any active output audio.
   if (!Playing()) {
-    RTC_DLOG(WARNING) << "No output stream is active";
+    RTC_DLOG(LS_WARNING) << "No output stream is active";
     ReleaseCOMObjects();
     initialized_ = false;
     return 0;
@@ -273,7 +273,7 @@ bool CoreAudioOutput::OnErrorCallback(ErrorType error) {
   if (error == CoreAudioBase::ErrorType::kStreamDisconnected) {
     HandleStreamDisconnected();
   } else {
-    RTC_DLOG(WARNING) << "Unsupported error type";
+    RTC_DLOG(LS_WARNING) << "Unsupported error type";
   }
   return true;
 }

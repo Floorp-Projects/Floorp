@@ -34,8 +34,8 @@ uint16_t ExampleVideoQualityAnalyzer::OnFrameCaptured(
     frames_in_flight_.insert(frame_id);
     frames_to_stream_label_.insert({frame_id, stream_label});
   } else {
-    RTC_LOG(WARNING) << "Meet new frame with the same id: " << frame_id
-                     << ". Assumes old one as dropped";
+    RTC_LOG(LS_WARNING) << "Meet new frame with the same id: " << frame_id
+                        << ". Assumes old one as dropped";
     // We needn't insert frame to frames_in_flight_, because it is already
     // there.
     ++frames_dropped_;
