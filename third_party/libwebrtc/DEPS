@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'fe555f2e6931c46128df0f0e1122711037253ca3',
+  'chromium_revision': '0e21474081e8cace9824be4fdf44f893191e8fd3',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,7 +23,7 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@c8a98d69693baf7a7edeb741ccfa971f2bdc6c14',
+    'https://chromium.googlesource.com/chromium/src/base@1d1c400730a409331edf56a39acf6e51e58dcc9b',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@245517235e11420ad660beb134bdcf117ddf5fb6',
   'src/buildtools':
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@bc9340854dc52ea324bb9c7eced09411551a025c',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@5bea6e0b341147b285993133d28666c5c3d0c61f',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@6410d12020fba4cefc13af90dd8d1e5367d36254',
+    'https://chromium.googlesource.com/chromium/src/testing@bebfd47d77a8b2ded8298f80335a8b0943d31e75',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@51b895633df022f35f39ceee4e0bc5075c2aee8d',
+    'https://chromium.googlesource.com/chromium/src/third_party@51f3bc37e1988ade7da2de950cd67436fd80275c',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -149,7 +149,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@2ffa1bde797a8127c0f72908d0bd74051fd65d0d',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@02f4003fdbfd383192fa725886af79116b1032aa',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@731bf2abeb9e5d4fd02f6c7b8c743961130de5b0',
   'src/third_party/findbugs': {
@@ -162,7 +162,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@cff026d41599945498044d2f4dcc0e610ffb6929',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@64e26ad3a2ef2e07190b2027b113a6b3f6eb8b0d',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@64b29dbd5994a511acee69cb9b45ad650ef88359',
   'src/third_party/google_benchmark/src': {
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@7c7f2ccfb15c745b561193f545ebd650b05bec32',
+    'https://chromium.googlesource.com/chromium/src/tools@69300210d404977bc55536d373875530c9e1839d',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -384,7 +384,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'qVa1DxDFLR8hbH6wr8ziYpbEPLeUQNDBDCtZaWb0As8C',
+          'version': 'iVGn06-lNVsnXSXyo3Xe7rE4VVi_XIqRPKaXxKiUqp8C',
       },
     ],
     'condition': 'checkout_android',
@@ -489,11 +489,11 @@ deps = {
       'packages': [
         {
           'package': 'infra/tools/luci/isolate/${{platform}}',
-          'version': 'git_revision:81cc063690e374fdad0215a7565a0951e7db8a07',
+          'version': 'git_revision:7422359d33c606e8adb0e9cf461837eb9b49431f',
         },
         {
           'package': 'infra/tools/luci/swarming/${{platform}}',
-          'version': 'git_revision:81cc063690e374fdad0215a7565a0951e7db8a07',
+          'version': 'git_revision:7422359d33c606e8adb0e9cf461837eb9b49431f',
         },
       ],
       'dep_type': 'cipd',
