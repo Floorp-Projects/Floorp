@@ -402,7 +402,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
         nat_socket_factory1_(&nat_factory1_),
         nat_socket_factory2_(&nat_factory2_),
         stun_server_(TestStunServer::Create(ss_.get(), kStunAddr)),
-        turn_server_(&main_, kTurnUdpIntAddr, kTurnUdpExtAddr),
+        turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr),
         username_(rtc::CreateRandomString(ICE_UFRAG_LENGTH)),
         password_(rtc::CreateRandomString(ICE_PWD_LENGTH)),
         role_conflict_(false),
@@ -2591,7 +2591,7 @@ TEST_F(PortTest, TestCandidateFoundation) {
   // Running a second turn server, to get different base IP address.
   SocketAddress kTurnUdpIntAddr2("99.99.98.4", STUN_SERVER_PORT);
   SocketAddress kTurnUdpExtAddr2("99.99.98.5", 0);
-  TestTurnServer turn_server2(rtc::Thread::Current(), kTurnUdpIntAddr2,
+  TestTurnServer turn_server2(rtc::Thread::Current(), vss(), kTurnUdpIntAddr2,
                               kTurnUdpExtAddr2);
   auto turnport3 = CreateTurnPort(kLocalAddr1, nat_socket_factory1(), PROTO_UDP,
                                   PROTO_UDP, kTurnUdpIntAddr2);
@@ -2602,7 +2602,7 @@ TEST_F(PortTest, TestCandidateFoundation) {
 
   // Start a TCP turn server, and check that two turn candidates have
   // different foundations if their relay protocols are different.
-  TestTurnServer turn_server3(rtc::Thread::Current(), kTurnTcpIntAddr,
+  TestTurnServer turn_server3(rtc::Thread::Current(), vss(), kTurnTcpIntAddr,
                               kTurnUdpExtAddr, PROTO_TCP);
   auto turnport4 =
       CreateTurnPort(kLocalAddr1, nat_socket_factory1(), PROTO_TCP, PROTO_UDP);
