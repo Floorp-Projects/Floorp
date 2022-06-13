@@ -7,6 +7,11 @@ notes = "I maintain this crate and have reviewed every line."
 criteria = "safe-to-deploy"
 version = "0.1.8"
 
+[[audits.log]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+version = "0.4.17"
+
 [[audits.bit-set]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 notes = "Another crate I own via contain-rs that is ancient and maintenance mode, no known issues."
