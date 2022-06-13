@@ -108,7 +108,7 @@ class UrlbarInput {
     this.formHistoryName = DEFAULT_FORM_HISTORY_NAME;
     this.lastQueryContextPromise = Promise.resolve();
     this._actionOverrideKeyCount = 0;
-    this._autofillPlaceholder = "";
+    this._autofillPlaceholder = null;
     this._lastSearchString = "";
     this._lastValidURLStr = "";
     this._valueOnLastSearch = "";
@@ -1197,8 +1197,7 @@ class UrlbarInput {
     }
 
     if (result.autofill) {
-      let { value, selectionStart, selectionEnd } = result.autofill;
-      this._autofillValue(value, selectionStart, selectionEnd);
+      this._autofillValue(result.autofill);
     }
 
     if (result.payload.providesSearchMode) {
@@ -1277,9 +1276,10 @@ class UrlbarInput {
     }
 
     let isPlaceholderSelected =
-      this.selectionEnd == this._autofillPlaceholder.length &&
+      this._autofillPlaceholder &&
+      this.selectionEnd == this._autofillPlaceholder.value.length &&
       this.selectionStart == this._lastSearchString.length &&
-      this._autofillPlaceholder
+      this._autofillPlaceholder.value
         .toLocaleLowerCase()
         .startsWith(this._lastSearchString.toLocaleLowerCase());
 
@@ -1334,6 +1334,7 @@ class UrlbarInput {
       // Avoid clobbering added spaces (for token aliases, for example).
       !this.value.endsWith(" ")
     ) {
+      this._autofillPlaceholder = null;
       this._setValue(this.window.gBrowser.userTypedValue, false);
     }
 
@@ -2069,7 +2070,7 @@ class UrlbarInput {
    */
   _resetSearchState() {
     this._lastSearchString = this.value;
-    this._autofillPlaceholder = "";
+    this._autofillPlaceholder = null;
   }
 
   /**
@@ -2082,12 +2083,16 @@ class UrlbarInput {
    * @returns {boolean}
    *   Whether autofill should be allowed in the new search.
    */
-  _maybeAutofillOnInput(value) {
+  _maybeAutofillPlaceholder(value) {
     // We allow autofill in local but not remote search modes.
     let allowAutofill =
       this.selectionEnd == value.length &&
       !this.searchMode?.engineName &&
       this.searchMode?.source != UrlbarUtils.RESULT_SOURCE.SEARCH;
+    if (!allowAutofill) {
+      this._autofillPlaceholder = null;
+      return false;
+    }
 
     // Determine whether we can autofill the placeholder.  The placeholder is a
     // value that we autofill now, when the search starts and before we wait on
@@ -2096,22 +2101,42 @@ class UrlbarInput {
     // first result arrives.  Of course we can only autofill the placeholder if
     // it starts with the new search string, and we shouldn't autofill anything
     // if the caret isn't at the end of the input.
-    if (
-      !allowAutofill ||
-      !UrlbarUtils.canAutofillURL(this._autofillPlaceholder, value)
-    ) {
-      this._autofillPlaceholder = "";
+    let canAutofillPlaceholder = false;
+    if (this._autofillPlaceholder) {
+      if (this._autofillPlaceholder.type == "adaptive") {
+        canAutofillPlaceholder =
+          value.length >=
+            this._autofillPlaceholder.adaptiveHistoryInput.length &&
+          this._autofillPlaceholder.value
+            .toLocaleLowerCase()
+            .startsWith(value.toLocaleLowerCase());
+      } else {
+        canAutofillPlaceholder = UrlbarUtils.canAutofillURL(
+          this._autofillPlaceholder.value,
+          value
+        );
+      }
+    }
+
+    if (!canAutofillPlaceholder) {
+      this._autofillPlaceholder = null;
     } else if (
       this._autofillPlaceholder &&
       this.selectionEnd == this.value.length &&
       this._enableAutofillPlaceholder
     ) {
       let autofillValue =
-        value + this._autofillPlaceholder.substring(value.length);
-      this._autofillValue(autofillValue, value.length, autofillValue.length);
+        value + this._autofillPlaceholder.value.substring(value.length);
+      this._autofillValue({
+        value: autofillValue,
+        selectionStart: value.length,
+        selectionEnd: autofillValue.length,
+        type: this._autofillPlaceholder.type,
+        adaptiveHistoryInput: this._autofillPlaceholder.adaptiveHistoryInput,
+      });
     }
 
-    return allowAutofill;
+    return true;
   }
 
   _checkForRtlText(value) {
@@ -2426,14 +2451,25 @@ class UrlbarInput {
    *   The new selectionStart.
    * @param {integer} selectionEnd
    *   The new selectionEnd.
+   * @param {string} type
+   *   The autofill type, one of: "origin", "url", "adaptive"
+   * @param {string} adaptiveHistoryInput
+   *   If the autofill type is "adaptive", this is the matching `input` value
+   *   from adaptive history.
    */
-  _autofillValue(value, selectionStart, selectionEnd) {
+  _autofillValue({
+    value,
+    selectionStart,
+    selectionEnd,
+    type,
+    adaptiveHistoryInput,
+  }) {
     // The autofilled value may be a URL that includes a scheme at the
     // beginning.  Do not allow it to be trimmed.
     this._setValue(value, false);
     this.selectionStart = selectionStart;
     this.selectionEnd = selectionEnd;
-    this._autofillPlaceholder = value;
+    this._autofillPlaceholder = { value, type, adaptiveHistoryInput };
   }
 
   /**
@@ -3135,7 +3171,7 @@ class UrlbarInput {
         compositionState !== UrlbarUtils.COMPOSITION.COMPOSING) &&
       !!event.data &&
       !UrlbarUtils.isPasteEvent(event) &&
-      this._maybeAutofillOnInput(value);
+      this._maybeAutofillPlaceholder(value);
 
     this.startQuery({
       searchString: value,
