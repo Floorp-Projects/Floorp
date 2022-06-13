@@ -333,6 +333,7 @@ class UnitTest(unittest.TestCase):
     self.assertEqual(files, ['../../.vpython', '../../testing/test_env.py',
                              'base_unittests'])
     self.assertEqual(command, [
+        'vpython',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target', 'base_unittests',
         '--logdog-bin-cmd', '../../bin/logdog_butler',
@@ -367,6 +368,7 @@ class UnitTest(unittest.TestCase):
     self.assertEqual(files, ['../../.vpython', '../../testing/test_env.py',
                              'base_unittests'])
     self.assertEqual(command, [
+        'vpython',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target', 'base_unittests',
         '--logdog-bin-cmd', '../../bin/logdog_butler',
@@ -408,6 +410,7 @@ class UnitTest(unittest.TestCase):
         'base_unittests',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}/test_logs',
@@ -489,7 +492,9 @@ class UnitTest(unittest.TestCase):
         'base_unittests',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../tools_webrtc/flags_compatibility.py',
+        'vpython',
         '../../testing/test_env.py',
         './base_unittests',
         '--asan=0',
@@ -531,6 +536,7 @@ class UnitTest(unittest.TestCase):
         'base_unittests',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}/test_logs',
@@ -582,6 +588,7 @@ class UnitTest(unittest.TestCase):
         'some_resource_file',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../testing/xvfb.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}/test_logs',
@@ -634,6 +641,7 @@ class UnitTest(unittest.TestCase):
         'unittests.exe',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}\\test_logs',
@@ -681,6 +689,7 @@ class UnitTest(unittest.TestCase):
         'base_unittests',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}/test_logs',
@@ -732,7 +741,9 @@ class UnitTest(unittest.TestCase):
         'some_resource_file',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../tools_webrtc/ensure_webcam_is_running.py',
+        'vpython',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
         '--output_dir=${ISOLATED_OUTDIR}/test_logs',
