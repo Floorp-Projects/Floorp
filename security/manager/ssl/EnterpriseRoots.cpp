@@ -277,7 +277,6 @@ OSStatus GatherEnterpriseCertsMacOS(Vector<EnterpriseCert>& certs) {
     }
     bool isTrusted = false;
     bool fallBackToDeprecatedAPI = true;
-#  if defined MAC_OS_X_VERSION_10_14
     if (nsCocoaFeatures::OnMojaveOrLater()) {
       // This is an awkward way to express what we want, but the compiler
       // complains if we try to put __builtin_available in a compound logical
@@ -287,7 +286,6 @@ OSStatus GatherEnterpriseCertsMacOS(Vector<EnterpriseCert>& certs) {
         fallBackToDeprecatedAPI = false;
       }
     }
-#  endif  // MAC_OS_X_VERSION_10_14
     if (fallBackToDeprecatedAPI) {
       SecTrustResultType result;
       rv = SecTrustEvaluate(trustHandle.get(), &result);
