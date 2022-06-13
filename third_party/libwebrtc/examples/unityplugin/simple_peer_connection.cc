@@ -269,7 +269,7 @@ void SimplePeerConnection::OnSuccess(
 }
 
 void SimplePeerConnection::OnFailure(webrtc::RTCError error) {
-  RTC_LOG(LERROR) << ToString(error.type()) << ": " << error.message();
+  RTC_LOG(LS_ERROR) << ToString(error.type()) << ": " << error.message();
 
   // TODO(hta): include error.type in the message
   if (OnFailureMessage)

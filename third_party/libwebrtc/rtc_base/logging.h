@@ -102,8 +102,7 @@ enum LoggingSeverity {
   INFO [[deprecated("Use LS_INFO")]] = LS_INFO,
   // WARNING [[deprecated("Use LS_WARNING")]] = LS_WARNING,
   WARNING = LS_WARNING,
-  // LERROR [[deprecated("Use LS_ERROR")]] = LS_ERROR
-  LERROR = LS_ERROR
+  LERROR [[deprecated("Use LS_ERROR")]] = LS_ERROR
 };
 
 // LogErrorContext assists in interpreting the meaning of an error value.

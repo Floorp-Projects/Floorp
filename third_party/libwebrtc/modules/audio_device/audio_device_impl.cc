@@ -142,7 +142,7 @@ int32_t AudioDeviceModuleImpl::CheckPlatform() {
   RTC_LOG(LS_INFO) << "current platform is Mac";
 #endif
   if (platform == kPlatformNotSupported) {
-    RTC_LOG(LERROR)
+    RTC_LOG(LS_ERROR)
         << "current platform is not supported => this module will self "
            "destruct!";
     return -1;
@@ -546,7 +546,7 @@ int32_t AudioDeviceModuleImpl::SetStereoRecording(bool enable) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << "(" << enable << ")";
   CHECKinitialized_();
   if (audio_device_->RecordingIsInitialized()) {
-    RTC_LOG(LERROR)
+    RTC_LOG(LS_ERROR)
         << "unable to set stereo mode after recording is initialized";
     return -1;
   }
@@ -592,7 +592,7 @@ int32_t AudioDeviceModuleImpl::SetStereoPlayout(bool enable) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << "(" << enable << ")";
   CHECKinitialized_();
   if (audio_device_->PlayoutIsInitialized()) {
-    RTC_LOG(LERROR)
+    RTC_LOG(LS_ERROR)
         << "unable to set stereo mode while playing side is initialized";
     return -1;
   }
@@ -856,7 +856,7 @@ int32_t AudioDeviceModuleImpl::PlayoutDelay(uint16_t* delayMS) const {
   CHECKinitialized_();
   uint16_t delay = 0;
   if (audio_device_->PlayoutDelay(delay) == -1) {
-    RTC_LOG(LERROR) << "failed to retrieve the playout delay";
+    RTC_LOG(LS_ERROR) << "failed to retrieve the playout delay";
     return -1;
   }
   *delayMS = delay;
