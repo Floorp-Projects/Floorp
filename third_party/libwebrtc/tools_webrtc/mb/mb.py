@@ -28,7 +28,10 @@ import sys
 import subprocess
 import tempfile
 import traceback
-import urllib2
+try:
+  from urllib2 import urlopen # for Python2
+except ImportError:
+  from urllib.request import urlopen # for Python3
 
 from collections import OrderedDict
 
@@ -330,8 +333,7 @@ class MetaBuildWrapper(object):
         if self.args.swarmed:
             cmd, _ = self.GetSwarmingCommand(self.args.target[0], vals)
             return self._RunUnderSwarming(build_dir, target, cmd)
-        else:
-            return self._RunLocallyIsolated(build_dir, target)
+        return self._RunLocallyIsolated(build_dir, target)
 
     def _RunUnderSwarming(self, build_dir, target, isolate_cmd):
         cas_instance = 'chromium-swarm'
@@ -1222,7 +1224,7 @@ class MetaBuildWrapper(object):
 
     def Fetch(self, url):
         # This function largely exists so it can be overridden for testing.
-        f = urllib2.urlopen(url)
+        f = urlopen(url)
         contents = f.read()
         f.close()
         return contents
@@ -1230,7 +1232,7 @@ class MetaBuildWrapper(object):
     def MaybeMakeDirectory(self, path):
         try:
             os.makedirs(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 
