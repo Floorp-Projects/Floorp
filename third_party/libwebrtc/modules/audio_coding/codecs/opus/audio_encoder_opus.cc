@@ -229,7 +229,10 @@ AudioCodecInfo AudioEncoderOpusImpl::QueryAudioEncoder(
 std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
     const AudioEncoderOpusConfig& config,
     int payload_type) {
-  RTC_DCHECK(config.IsOk());
+  if (!config.IsOk()) {
+    RTC_DCHECK_NOTREACHED();
+    return nullptr;
+  }
   return std::make_unique<AudioEncoderOpusImpl>(config, payload_type);
 }
 
@@ -268,7 +271,10 @@ absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
 
   FindSupportedFrameLengths(min_frame_length_ms, max_frame_length_ms,
                             &config.supported_frame_lengths_ms);
-  RTC_DCHECK(config.IsOk());
+  if (!config.IsOk()) {
+    RTC_DCHECK_NOTREACHED();
+    return absl::nullopt;
+  }
   return config;
 }
 
