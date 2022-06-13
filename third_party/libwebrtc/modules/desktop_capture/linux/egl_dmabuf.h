@@ -32,16 +32,20 @@ class EglDmaBuf {
     EGLContext context = EGL_NO_CONTEXT;
   };
 
+  struct PlaneData {
+    int32_t fd;
+    uint32_t stride;
+    uint32_t offset;
+  };
+
   EglDmaBuf();
   ~EglDmaBuf();
 
-  std::unique_ptr<uint8_t[]> ImageFromDmaBuf(const DesktopSize& size,
-                                             uint32_t format,
-                                             uint32_t n_planes,
-                                             const int32_t* fds,
-                                             const uint32_t* strides,
-                                             const uint32_t* offsets,
-                                             uint64_t modifiers);
+  std::unique_ptr<uint8_t[]> ImageFromDmaBuf(
+      const DesktopSize& size,
+      uint32_t format,
+      const std::vector<PlaneData>& plane_datas,
+      uint64_t modifiers);
   std::vector<uint64_t> QueryDmaBufModifiers(uint32_t format);
 
   bool IsEglInitialized() const { return egl_initialized_; }

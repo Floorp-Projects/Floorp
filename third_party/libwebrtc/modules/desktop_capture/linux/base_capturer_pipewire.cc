@@ -570,19 +570,23 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   } else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf) {
 #if !defined(WEBRTC_MOZILLA_BUILD)
     const uint n_planes = spa_buffer->n_datas;
-    int fds[n_planes];
-    uint32_t offsets[n_planes];
-    uint32_t strides[n_planes];
 
-    for (uint32_t i = 0; i < n_planes; ++i) {
-      fds[i] = spa_buffer->datas[i].fd;
-      offsets[i] = spa_buffer->datas[i].chunk->offset;
-      strides[i] = spa_buffer->datas[i].chunk->stride;
+    if (!n_planes) {
+      return;
     }
 
-    src_unique_ptr = egl_dmabuf_->ImageFromDmaBuf(
-        desktop_size_, spa_video_format_.format, n_planes, fds, strides,
-        offsets, modifier_);
+    std::vector<EglDmaBuf::PlaneData> plane_datas;
+    for (uint32_t i = 0; i < n_planes; ++i) {
+      EglDmaBuf::PlaneData data = {
+          static_cast<int32_t>(spa_buffer->datas[i].fd),
+          static_cast<uint32_t>(spa_buffer->datas[i].chunk->stride),
+          static_cast<uint32_t>(spa_buffer->datas[i].chunk->offset)};
+      plane_datas.push_back(data);
+    }
+
+    src_unique_ptr =
+        egl_dmabuf_->ImageFromDmaBuf(desktop_size_, spa_video_format_.format,
+                                     plane_datas, modifier_);
     src = src_unique_ptr.get();
 #endif
   } else if (spa_buffer->datas[0].type == SPA_DATA_MemPtr) {
