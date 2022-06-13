@@ -3214,7 +3214,8 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mAnimationFillModeCount(aSource.mAnimationFillModeCount),
       mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
       mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
-      mAnimationTimelineCount(aSource.mAnimationTimelineCount) {
+      mAnimationTimelineCount(aSource.mAnimationTimelineCount),
+      mScrollTimelineName(aSource.mScrollTimelineName) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
@@ -3269,7 +3270,8 @@ nsChangeHint nsStyleUIReset::CalcDifference(
        mIMEMode != aNewData.mIMEMode ||
        mWindowOpacity != aNewData.mWindowOpacity ||
        mMozWindowInputRegionMargin != aNewData.mMozWindowInputRegionMargin ||
-       mMozWindowTransform != aNewData.mMozWindowTransform)) {
+       mMozWindowTransform != aNewData.mMozWindowTransform ||
+       mScrollTimelineName != aNewData.mScrollTimelineName)) {
     hint |= nsChangeHint_NeutralChange;
   }
 

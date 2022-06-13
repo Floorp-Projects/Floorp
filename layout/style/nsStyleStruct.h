@@ -1846,6 +1846,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mAnimationPlayStateCount;
   uint32_t mAnimationIterationCountCount;
   uint32_t mAnimationTimelineCount;
+
+  mozilla::StyleScrollTimelineName mScrollTimelineName;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
