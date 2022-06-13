@@ -458,6 +458,7 @@ class UnitTest(unittest.TestCase):
         'base_unittests', 'base_unittests_script.py',
     ])
     self.assertEqual(command, [
+        'vpython',
         '../../base/base_unittests_script.py',
     ])
 
