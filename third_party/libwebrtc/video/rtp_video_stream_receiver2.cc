@@ -746,8 +746,6 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
       max_nack_count = packet->times_nacked;
       min_recv_time = packet_info.receive_time().ms();
       max_recv_time = packet_info.receive_time().ms();
-      payloads.clear();
-      packet_infos.clear();
     } else {
       max_nack_count = std::max(max_nack_count, packet->times_nacked);
       min_recv_time = std::min(min_recv_time, packet_info.receive_time().ms());
@@ -787,6 +785,8 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
           last_packet.video_header.color_space,              //
           RtpPacketInfos(std::move(packet_infos)),           //
           std::move(bitstream)));
+      payloads.clear();
+      packet_infos.clear();
     }
   }
   RTC_DCHECK(frame_boundary);
