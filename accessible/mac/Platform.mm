@@ -211,7 +211,20 @@ void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole) {
                  [[NSWorkspace sharedWorkspace] isSwitchControlEnabled]) {
         client.Assign(u"SwitchControl"_ns);
       } else {
-        client.Assign(u"Unknown"_ns);
+        // This is more complicated than the NSWorkspace queries above
+        // because (a) there is no "full keyboard access" query for NSWorkspace
+        // and (b) the [NSApplication fullKeyboardAccessEnabled] query checks
+        // the pre-Monterey version of full keyboard access, which is not what
+        // we're looking for here. For more info, see bug 1772375 comment 7.
+        Boolean exists;
+        int val = CFPreferencesGetAppIntegerValue(
+            CFSTR("FullKeyboardAccessEnabled"),
+            CFSTR("com.apple.Accessibility"), &exists);
+        if (exists && val == 1) {
+          client.Assign(u"FullKeyboardAccess"_ns);
+        } else {
+          client.Assign(u"Unknown"_ns);
+        }
       }
 
 #if defined(MOZ_TELEMETRY_REPORTING)
