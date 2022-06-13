@@ -153,8 +153,6 @@ rtc_source_set("video_legacy") {
     "rtp_video_stream_receiver.h",
     "video_quality_observer.cc",
     "video_quality_observer.h",
-    "video_receive_stream.cc",
-    "video_receive_stream.h",
     "video_stream_decoder.cc",
     "video_stream_decoder.h",
   ]
@@ -655,7 +653,6 @@ if (rtc_include_tests) {
       "stats_counter_unittest.cc",
       "stream_synchronization_unittest.cc",
       "video_receive_stream2_unittest.cc",
-      "video_receive_stream_unittest.cc",
       "video_send_stream_impl_unittest.cc",
       "video_send_stream_tests.cc",
       "video_source_sink_controller_unittest.cc",
