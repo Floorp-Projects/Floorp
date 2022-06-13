@@ -1065,7 +1065,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetName || op == JSOp::GetGName);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
 
   TryAttachStub<GetNameIRGenerator>("GetName", cx, frame, stub, envChain, name);
 
@@ -1114,7 +1114,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::BindName || op == JSOp::BindGName);
 
-  RootedPropertyName name(cx, frame->script()->getName(pc));
+  Rooted<PropertyName*> name(cx, frame->script()->getName(pc));
 
   TryAttachStub<BindNameIRGenerator>("BindName", cx, frame, stub, envChain,
                                      name);
@@ -1195,7 +1195,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::GetBoundName);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
   TryAttachStub<GetPropIRGenerator>("GetProp", cx, frame, stub,
@@ -1227,7 +1227,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(JSOp(*pc) == JSOp::GetPropSuper);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
 
   // |val| is [[HomeObject]].[[Prototype]] which must be an Object or null.
@@ -1333,7 +1333,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
              op == JSOp::InitProp || op == JSOp::InitLockedProp ||
              op == JSOp::InitHiddenProp || op == JSOp::InitGLexical);
 
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
   int lhsIndex = -2;

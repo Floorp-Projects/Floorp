@@ -151,6 +151,7 @@ void RenderCompositorOGLSWGL::DestroyEGLSurface() {
   // Release EGLSurface of back buffer before calling ResizeBuffers().
   if (mEGLSurface) {
     gle->SetEGLSurfaceOverride(EGL_NO_SURFACE);
+    egl->fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     egl->fDestroySurface(mEGLSurface);
     mEGLSurface = EGL_NO_SURFACE;
   }

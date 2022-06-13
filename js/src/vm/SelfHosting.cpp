@@ -1457,7 +1457,7 @@ static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
 
   Rooted<ArrayObject*> matchResult(cx, &args[0].toObject().as<ArrayObject>());
 
-  RootedLinearString string(cx, args[1].toString()->ensureLinear(cx));
+  Rooted<JSLinearString*> string(cx, args[1].toString()->ensureLinear(cx));
   if (!string) {
     return false;
   }
@@ -1465,7 +1465,7 @@ static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
   int32_t position = int32_t(args[2].toNumber());
   MOZ_ASSERT(position >= 0);
 
-  RootedLinearString replacement(cx, args[3].toString()->ensureLinear(cx));
+  Rooted<JSLinearString*> replacement(cx, args[3].toString()->ensureLinear(cx));
   if (!replacement) {
     return false;
   }
@@ -1563,7 +1563,7 @@ bool CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args) {
   // arguments to pass to this function.
 
   MOZ_ASSERT(args.length() > 0);
-  RootedPropertyName name(
+  Rooted<PropertyName*> name(
       cx, args[args.length() - 1].toString()->asAtom().asPropertyName());
 
   InvokeArgs args2(cx);
@@ -1586,12 +1586,12 @@ bool js::CallSelfHostedFunction(JSContext* cx, const char* name,
   if (!funAtom) {
     return false;
   }
-  RootedPropertyName funName(cx, funAtom->asPropertyName());
+  Rooted<PropertyName*> funName(cx, funAtom->asPropertyName());
   return CallSelfHostedFunction(cx, funName, thisv, args, rval);
 }
 #endif
 
-bool js::CallSelfHostedFunction(JSContext* cx, HandlePropertyName name,
+bool js::CallSelfHostedFunction(JSContext* cx, Handle<PropertyName*> name,
                                 HandleValue thisv, const AnyInvokeArgs& args,
                                 MutableHandleValue rval) {
   RootedValue fun(cx);
@@ -1841,9 +1841,9 @@ static bool intrinsic_CreateImportBinding(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 4);
   Rooted<ModuleEnvironmentObject*> environment(
       cx, &args[0].toObject().as<ModuleEnvironmentObject>());
-  RootedAtom importedName(cx, &args[1].toString()->asAtom());
+  Rooted<JSAtom*> importedName(cx, &args[1].toString()->asAtom());
   Rooted<ModuleObject*> module(cx, &args[2].toObject().as<ModuleObject>());
-  RootedAtom localName(cx, &args[3].toString()->asAtom());
+  Rooted<JSAtom*> localName(cx, &args[3].toString()->asAtom());
   if (!environment->createImportBinding(cx, importedName, module, localName)) {
     return false;
   }
@@ -2018,10 +2018,10 @@ static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args.length() == 4);
   Rooted<ModuleNamespaceObject*> namespace_(
       cx, &args[0].toObject().as<ModuleNamespaceObject>());
-  RootedAtom exportedName(cx, &args[1].toString()->asAtom());
+  Rooted<JSAtom*> exportedName(cx, &args[1].toString()->asAtom());
   Rooted<ModuleObject*> targetModule(cx,
                                      &args[2].toObject().as<ModuleObject>());
-  RootedAtom targetName(cx, &args[3].toString()->asAtom());
+  Rooted<JSAtom*> targetName(cx, &args[3].toString()->asAtom());
   if (!namespace_->addBinding(cx, exportedName, targetModule, targetName)) {
     return false;
   }
@@ -2723,7 +2723,7 @@ class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
     // as well as the ScriptIndex of the next top-level function. Scripts
     // between these two indices are the inner functions of the first one. We
     // only record named scripts here since they are what might be looked up.
-    RootedAtom prevAtom(cx);
+    Rooted<JSAtom*> prevAtom(cx);
     frontend::ScriptIndex prevIndex;
     for (frontend::TaggedScriptThingIndex thing : topLevelThings) {
       if (!thing.isFunction()) {
@@ -2981,7 +2981,7 @@ ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
 }
 
 bool JSRuntime::delazifySelfHostedFunction(JSContext* cx,
-                                           HandlePropertyName name,
+                                           Handle<PropertyName*> name,
                                            HandleFunction targetFun) {
   MOZ_ASSERT(targetFun->isExtended());
   MOZ_ASSERT(targetFun->hasSelfHostedLazyScript());
@@ -3019,7 +3019,7 @@ JSRuntime::getSelfHostedScriptIndexRange(js::PropertyName* name) {
   return mozilla::Nothing();
 }
 
-static bool GetComputedIntrinsic(JSContext* cx, HandlePropertyName name,
+static bool GetComputedIntrinsic(JSContext* cx, Handle<PropertyName*> name,
                                  MutableHandleValue vp) {
   // If the intrinsic was not in hardcoded set, run the top-level of the
   // selfhosted script. This will generate values and call `SetIntrinsic` to
@@ -3071,7 +3071,7 @@ static bool GetComputedIntrinsic(JSContext* cx, HandlePropertyName name,
   return GlobalObject::addIntrinsicValue(cx, cx->global(), name, value);
 }
 
-bool JSRuntime::getSelfHostedValue(JSContext* cx, HandlePropertyName name,
+bool JSRuntime::getSelfHostedValue(JSContext* cx, Handle<PropertyName*> name,
                                    MutableHandleValue vp) {
   // If the self-hosted value we want is a function in the stencil, instantiate
   // a lazy self-hosted function for it. This is typical when a self-hosted
@@ -3092,7 +3092,7 @@ bool JSRuntime::getSelfHostedValue(JSContext* cx, HandlePropertyName name,
 }
 
 void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
-    HandlePropertyName name) {
+    Handle<PropertyName*> name) {
 #ifdef DEBUG
   frontend::ScriptIndex index = getSelfHostedScriptIndexRange(name)->start;
   MOZ_ASSERT(selfHostStencil().scriptData[index].hasSelfHostedCanonicalName());

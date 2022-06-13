@@ -143,16 +143,16 @@ class RegExpShared
   ~RegExpShared() = delete;
 
   static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
-                                 HandleLinearString input, CodeKind code);
+                                 Handle<JSLinearString*> input, CodeKind code);
 
   static RegExpRunStatus executeAtom(MutableHandleRegExpShared re,
-                                     HandleLinearString input, size_t start,
-                                     VectorMatchPairs* matches);
+                                     Handle<JSLinearString*> input,
+                                     size_t start, VectorMatchPairs* matches);
 
   // Execute this RegExp on input starting from searchIndex, filling in matches.
   static RegExpRunStatus execute(JSContext* cx, MutableHandleRegExpShared res,
-                                 HandleLinearString input, size_t searchIndex,
-                                 VectorMatchPairs* matches);
+                                 Handle<JSLinearString*> input,
+                                 size_t searchIndex, VectorMatchPairs* matches);
 
   // Register a table with this RegExpShared, and take ownership.
   bool addTable(JitCodeTable table) { return tables.append(std::move(table)); }
@@ -167,7 +167,7 @@ class RegExpShared
   RegExpShared::Kind kind() const { return kind_; }
 
   // Use simple string matching for this regexp.
-  void useAtomMatch(HandleAtom pattern);
+  void useAtomMatch(Handle<JSAtom*> pattern);
 
   // Use the regular expression engine for this regexp.
   void useRegExpMatch(size_t parenCount);
@@ -250,7 +250,7 @@ class RegExpShared
 
 #ifdef DEBUG
   static bool dumpBytecode(JSContext* cx, MutableHandleRegExpShared res,
-                           HandleLinearString input);
+                           Handle<JSLinearString*> input);
 #endif
 
  public:
@@ -298,7 +298,8 @@ class RegExpZone {
     return p ? *p : nullptr;
   }
 
-  RegExpShared* get(JSContext* cx, HandleAtom source, JS::RegExpFlags flags);
+  RegExpShared* get(JSContext* cx, Handle<JSAtom*> source,
+                    JS::RegExpFlags flags);
 
 #ifdef DEBUG
   void clear() { set_.clear(); }

@@ -99,6 +99,89 @@ function deserialize(serializedValue) {
 }
 
 /**
+ * Helper to serialize as a list.
+ *
+ * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-list
+ *
+ * @param {Iterable} iterable
+ *     List of values to be serialized.
+ *
+ * @param {number=} maxDepth
+ *     Depth of a serialization.
+ *
+ * @return {Array} List of serialized values.
+ */
+function serializeList(
+  iterable,
+  maxDepth /*,
+  childOwnership,
+  serializationInternalMap,
+  realm*/
+) {
+  const serialized = [];
+  const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+
+  for (const item of iterable) {
+    serialized.push(
+      serialize(
+        item,
+        childDepth /*, childOwnership, serializationInternalMap, realm*/
+      )
+    );
+  }
+
+  return serialized;
+}
+
+/**
+ * Helper to serialize as a mapping.
+ *
+ * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-mapping
+ *
+ * @param {Iterable} iterable
+ *     List of values to be serialized.
+ *
+ * @param {number=} maxDepth
+ *     Depth of a serialization.
+ *
+ * @return {Array} List of serialized values.
+ */
+function serializeMapping(
+  iterable,
+  maxDepth /*,
+  childOwnership,
+  serializationInternalMap,
+  realm*/
+) {
+  const serialized = [];
+  const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+
+  for (const [key, item] of iterable) {
+    const serializedKey =
+      typeof key == "string"
+        ? key
+        : serialize(
+            key,
+            childDepth /*,
+            childOwnership,
+            serializationInternalMap,
+            realm*/
+          );
+    const serializedValue = serialize(
+      item,
+      childDepth /*,
+      childOwnership,
+      serializationInternalMap,
+      realm*/
+    );
+
+    serialized.push([serializedKey, serializedValue]);
+  }
+
+  return serialized;
+}
+
+/**
  * Serialize a value as a remote value.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-remote-value
@@ -106,9 +189,18 @@ function deserialize(serializedValue) {
  * @param {Object} value
  *     Value of any type to be serialized.
  *
+ * @param {number=} maxDepth
+ *     Depth of a serialization.
+ *
  * @returns {Object} Serialized representation of the value.
  */
-function serialize(value /*, maxDepth, nodeDetails, knownObjects */) {
+function serialize(
+  value,
+  maxDepth /*,
+  ownershipType,
+  serializationInternalMap,
+  realm */
+) {
   const type = typeof value;
 
   // Primitive protocol values
@@ -130,6 +222,63 @@ function serialize(value /*, maxDepth, nodeDetails, knownObjects */) {
     return { type, value };
   }
 
-  lazy.logger.warn(`Unsupported type for remote value: ${value.toString()}`);
+  const className = ChromeUtils.getClassName(value);
+
+  // Remote values
+  if (className == "Array") {
+    const remoteValue = { type: "array" };
+
+    if (maxDepth !== null && maxDepth > 0) {
+      remoteValue.value = serializeList(
+        value,
+        maxDepth /*,
+        ownershipType,
+        serializationInternalMap,
+        realm */
+      );
+    }
+
+    return remoteValue;
+  } else if (className == "RegExp") {
+    return {
+      type: "regexp",
+      value: { pattern: value.source, flags: value.flags },
+    };
+  } else if (className == "Date") {
+    return { type: "date", value: value.toString() };
+  } else if (className == "Map") {
+    const remoteValue = { type: "map" };
+
+    if (maxDepth !== null && maxDepth > 0) {
+      remoteValue.value = serializeMapping(
+        value.entries(),
+        maxDepth /*,
+          ownershipType,
+          serializationInternalMap,
+          realm */
+      );
+    }
+
+    return remoteValue;
+  } else if (className == "Set") {
+    const remoteValue = { type: "set" };
+
+    if (maxDepth !== null && maxDepth > 0) {
+      remoteValue.value = serializeList(
+        value.values(),
+        maxDepth /*,
+        ownershipType,
+        serializationInternalMap,
+        realm */
+      );
+    }
+
+    return remoteValue;
+  }
+
+  lazy.logger.warn(
+    `Unsupported type: ${type} for remote value: ${value.toString()}`
+  );
+
   return undefined;
 }

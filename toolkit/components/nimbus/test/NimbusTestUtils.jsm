@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
@@ -25,9 +27,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   JsonSchema: "resource://gre/modules/JsonSchema.jsm",
 });
 
-const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
+const {
+  SYNC_DATA_PREF_BRANCH,
+  SYNC_DEFAULTS_PREF_BRANCH,
+} = lazy.ExperimentStore;
 
-const PATH = FileTestUtils.getTempFile("shared-data-map").path;
+const PATH = lazy.FileTestUtils.getTempFile("shared-data-map").path;
 
 async function fetchSchema(url) {
   const response = await fetch(url);
@@ -42,7 +47,9 @@ const EXPORTED_SYMBOLS = ["ExperimentTestUtils", "ExperimentFakes"];
 
 const ExperimentTestUtils = {
   _validateSchema(schema, value, errorMsg) {
-    const result = JsonSchema.validate(value, schema, { shortCircuit: false });
+    const result = lazy.JsonSchema.validate(value, schema, {
+      shortCircuit: false,
+    });
     if (result.errors.length) {
       throw new Error(
         `${errorMsg}: ${JSON.stringify(result.errors, undefined, 2)}`
@@ -55,10 +62,10 @@ const ExperimentTestUtils = {
     let { features } = branch;
     for (let feature of features) {
       // If we're not using a real feature skip this check
-      if (!FeatureManifest[feature.featureId]) {
+      if (!lazy.FeatureManifest[feature.featureId]) {
         return true;
       }
-      let { variables } = FeatureManifest[feature.featureId];
+      let { variables } = lazy.FeatureManifest[feature.featureId];
       for (let varName of Object.keys(variables)) {
         let varValue = feature.value[varName];
         if (
@@ -146,11 +153,11 @@ const ExperimentTestUtils = {
    */
   addTestFeatures(...features) {
     for (const feature of features) {
-      NimbusFeatures[feature.featureId] = feature;
+      lazy.NimbusFeatures[feature.featureId] = feature;
     }
     return () => {
       for (const { featureId } of features) {
-        delete NimbusFeatures[featureId];
+        delete lazy.NimbusFeatures[featureId];
       }
     };
   },
@@ -158,8 +165,8 @@ const ExperimentTestUtils = {
 
 const ExperimentFakes = {
   manager(store) {
-    let sandbox = sinon.createSandbox();
-    let manager = new _ExperimentManager({ store: store || this.store() });
+    let sandbox = lazy.sinon.createSandbox();
+    let manager = new lazy._ExperimentManager({ store: store || this.store() });
     // We want calls to `store.addEnrollment` to implicitly validate the
     // enrollment before saving to store
     let origAddExperiment = manager.store.addEnrollment.bind(manager.store);
@@ -171,7 +178,10 @@ const ExperimentFakes = {
     return manager;
   },
   store() {
-    return new ExperimentStore("FakeStore", { path: PATH, isParent: true });
+    return new lazy.ExperimentStore("FakeStore", {
+      path: PATH,
+      isParent: true,
+    });
   },
   waitForExperimentUpdate(ExperimentAPI, options) {
     if (!options) {
@@ -182,7 +192,7 @@ const ExperimentFakes = {
   },
   async enrollWithRollout(
     featureConfig,
-    { manager = ExperimentManager, source } = {}
+    { manager = lazy.ExperimentManager, source } = {}
   ) {
     await manager.store.init();
     const rollout = this.rollout(`${featureConfig.featureId}-rollout`, {
@@ -219,7 +229,7 @@ const ExperimentFakes = {
   },
   async enrollWithFeatureConfig(
     featureConfig,
-    { manager = ExperimentManager } = {}
+    { manager = lazy.ExperimentManager } = {}
   ) {
     await manager.store.ready();
     // Use id passed in featureConfig value to compute experimentId
@@ -254,7 +264,7 @@ const ExperimentFakes = {
 
     return doExperimentCleanup;
   },
-  enrollmentHelper(recipe = {}, { manager = ExperimentManager } = {}) {
+  enrollmentHelper(recipe = {}, { manager = lazy.ExperimentManager } = {}) {
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
         if (experiment.active) {
@@ -304,10 +314,10 @@ const ExperimentFakes = {
     }
   },
   childStore() {
-    return new ExperimentStore("FakeStore", { isParent: false });
+    return new lazy.ExperimentStore("FakeStore", { isParent: false });
   },
   rsLoader() {
-    const loader = new _RemoteSettingsExperimentLoader();
+    const loader = new lazy._RemoteSettingsExperimentLoader();
     // Replace RS client with a fake
     Object.defineProperty(loader, "remoteSettingsClient", {
       value: { get: () => Promise.resolve([]) },
@@ -321,7 +331,7 @@ const ExperimentFakes = {
     return {
       slug,
       active: true,
-      enrollmentId: NormandyUtils.generateUuid(),
+      enrollmentId: lazy.NormandyUtils.generateUuid(),
       branch: {
         slug: "treatment",
         features: [
@@ -348,7 +358,7 @@ const ExperimentFakes = {
     return {
       slug,
       active: true,
-      enrollmentId: NormandyUtils.generateUuid(),
+      enrollmentId: lazy.NormandyUtils.generateUuid(),
       isRollout: true,
       branch: {
         slug: "treatment",
@@ -372,10 +382,10 @@ const ExperimentFakes = {
       ...props,
     };
   },
-  recipe(slug = NormandyUtils.generateUuid(), props = {}) {
+  recipe(slug = lazy.NormandyUtils.generateUuid(), props = {}) {
     return {
       // This field is required for populating remote settings
-      id: NormandyUtils.generateUuid(),
+      id: lazy.NormandyUtils.generateUuid(),
       schemaVersion: "1.7.0",
       appName: "firefox_desktop",
       appId: "firefox-desktop",

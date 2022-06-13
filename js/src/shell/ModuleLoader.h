@@ -8,7 +8,6 @@
 #define shell_ModuleLoader_h
 
 #include "builtin/ModuleObject.h"
-#include "gc/Rooting.h"
 #include "js/RootingAPI.h"
 
 namespace js {
@@ -62,9 +61,9 @@ class ModuleLoader {
                           HandleValue referencingInfo);
   bool getScriptPath(JSContext* cx, HandleValue privateValue,
                      MutableHandle<JSLinearString*> pathOut);
-  JSLinearString* normalizePath(JSContext* cx, HandleLinearString path);
+  JSLinearString* normalizePath(JSContext* cx, Handle<JSLinearString*> path);
   JSObject* getOrCreateModuleRegistry(JSContext* cx);
-  JSString* fetchSource(JSContext* cx, HandleLinearString path);
+  JSString* fetchSource(JSContext* cx, Handle<JSLinearString*> path);
 
   // The following are used for pinned atoms which do not need rooting.
   JSAtom* loadPathStr = nullptr;

@@ -22,7 +22,6 @@
 #include "builtin/Array.h"
 #include "gc/AllocKind.h"
 #include "gc/GCContext.h"
-#include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CharacterEncoding.h"
@@ -715,7 +714,7 @@ bool js::ErrorObject::getStack_impl(JSContext* cx, const CallArgs& args) {
   if (cx->runtime()->stackFormat() == js::StackFormat::V8) {
     // When emulating V8 stack frames, we also need to prepend the
     // stringified Error to the stack string.
-    HandlePropertyName name = cx->names().ErrorToStringWithTrailingNewline;
+    Handle<PropertyName*> name = cx->names().ErrorToStringWithTrailingNewline;
     FixedInvokeArgs<0> args2(cx);
     RootedValue rval(cx);
     if (!CallSelfHostedFunction(cx, name, args.thisv(), args2, &rval)) {

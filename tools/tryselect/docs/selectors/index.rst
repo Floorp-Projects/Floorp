@@ -15,6 +15,7 @@ These are the currently implemented try selectors:
 * :doc:`syntax <syntax>`: Select tasks using classic try syntax.
 * :doc:`release <release>`: Prepare a tree for doing a staging release.
 * :doc:`scriptworker <scriptworker>`: Run scriptworker tasks against a recent release.
+* :doc:`compare <compare>`: Push two identical try jobs, one on your current commit and another of your choice
 
 You can run them with:
 

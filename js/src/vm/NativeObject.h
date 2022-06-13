@@ -960,7 +960,7 @@ class NativeObject : public JSObject {
                           PropertyFlags flags, uint32_t* slotOut);
 
   static bool addProperty(JSContext* cx, Handle<NativeObject*> obj,
-                          HandlePropertyName name, PropertyFlags flags,
+                          Handle<PropertyName*> name, PropertyFlags flags,
                           uint32_t* slotOut) {
     RootedId id(cx, NameToId(name));
     return addProperty(cx, obj, id, flags, slotOut);
@@ -971,8 +971,8 @@ class NativeObject : public JSObject {
                                         uint32_t slot, PropertyFlags flags);
   static bool addPropertyInReservedSlot(JSContext* cx,
                                         Handle<NativeObject*> obj,
-                                        HandlePropertyName name, uint32_t slot,
-                                        PropertyFlags flags) {
+                                        Handle<PropertyName*> name,
+                                        uint32_t slot, PropertyFlags flags) {
     RootedId id(cx, NameToId(name));
     return addPropertyInReservedSlot(cx, obj, id, slot, flags);
   }

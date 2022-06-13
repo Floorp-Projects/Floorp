@@ -2681,7 +2681,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
         return false;
       }
 
-      RootedAtom atom(context(), AtomizeString(context(), str));
+      Rooted<JSAtom*> atom(context(), AtomizeString(context(), str));
       if (!atom) {
         return false;
       }

@@ -4,6 +4,7 @@
 
 "use strict";
 
+const ChromeUtils = require("ChromeUtils");
 var { settleAll } = require("devtools/shared/DevToolsUtils");
 var EventEmitter = require("devtools/shared/event-emitter");
 
@@ -328,12 +329,22 @@ class Front extends Pool {
         if (result && typeof result.then == "function") {
           result.then(() => {
             super.emit(event.name, ...args);
+            ChromeUtils.addProfilerMarker(
+              "DevTools:RDP Front",
+              null,
+              `${this.typeName}.${event.name}`
+            );
           });
           return;
         }
       }
 
       super.emit(event.name, ...args);
+      ChromeUtils.addProfilerMarker(
+        "DevTools:RDP Front",
+        null,
+        `${this.typeName}.${event.name}`
+      );
       return;
     }
 

@@ -664,7 +664,7 @@ FinalizationQueueObject* FinalizationQueueObject::create(
     return nullptr;
   }
 
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction doCleanupFunction(
       cx, NewNativeFunction(cx, doCleanup, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED));

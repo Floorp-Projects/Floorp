@@ -45,7 +45,7 @@ bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
     return false;
   }
 
-  RootedLinearString typeLinearStr(cx, typeStr->ensureLinear(cx));
+  Rooted<JSLinearString*> typeLinearStr(cx, typeStr->ensureLinear(cx));
   if (!typeLinearStr) {
     return false;
   }

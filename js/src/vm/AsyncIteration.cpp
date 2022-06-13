@@ -1064,11 +1064,11 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   // Step 7. Resume the suspended evaluation of genContext using completion as
   //         the result of the operation that suspended it. Let result be the
   //         completion record returned by the resumed computation.
-  HandlePropertyName funName = completionKind == CompletionKind::Normal
-                                   ? cx->names().AsyncGeneratorNext
-                               : completionKind == CompletionKind::Throw
-                                   ? cx->names().AsyncGeneratorThrow
-                                   : cx->names().AsyncGeneratorReturn;
+  Handle<PropertyName*> funName = completionKind == CompletionKind::Normal
+                                      ? cx->names().AsyncGeneratorNext
+                                  : completionKind == CompletionKind::Throw
+                                      ? cx->names().AsyncGeneratorThrow
+                                      : cx->names().AsyncGeneratorReturn;
   FixedInvokeArgs<1> args(cx);
   args[0].set(argument);
   RootedValue thisOrRval(cx, ObjectValue(*generator));
@@ -1105,7 +1105,7 @@ static JSObject* CreateAsyncGeneratorFunction(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  HandlePropertyName name = cx->names().AsyncGeneratorFunction;
+  Handle<PropertyName*> name = cx->names().AsyncGeneratorFunction;
 
   // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
   //

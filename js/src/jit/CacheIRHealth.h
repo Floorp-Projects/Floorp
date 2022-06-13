@@ -11,8 +11,10 @@
 
 #  include "mozilla/Sprintf.h"
 
-#  include "gc/Rooting.h"
+#  include "NamespaceImports.h"
+
 #  include "jit/CacheIR.h"
+#  include "js/TypeDecls.h"
 
 enum class JSOp : uint8_t;
 

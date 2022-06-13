@@ -730,14 +730,14 @@ extern bool AsyncGeneratorConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 extern JSFunction* NewFunctionWithProto(
     JSContext* cx, JSNative native, unsigned nargs, FunctionFlags flags,
-    HandleObject enclosingEnv, HandleAtom atom, HandleObject proto,
+    HandleObject enclosingEnv, Handle<JSAtom*> atom, HandleObject proto,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
     NewObjectKind newKind = GenericObject);
 
 // Allocate a new function backed by a JSNative.  Note that by default this
 // creates a tenured object.
 inline JSFunction* NewNativeFunction(
-    JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
+    JSContext* cx, JSNative native, unsigned nargs, Handle<JSAtom*> atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
     NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_FUN) {
@@ -749,7 +749,7 @@ inline JSFunction* NewNativeFunction(
 // Allocate a new constructor backed by a JSNative.  Note that by default this
 // creates a tenured object.
 inline JSFunction* NewNativeConstructor(
-    JSContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
+    JSContext* cx, JSNative native, unsigned nargs, Handle<JSAtom*> atom,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
     NewObjectKind newKind = TenuredObject,
     FunctionFlags flags = FunctionFlags::NATIVE_CTOR) {
