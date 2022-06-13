@@ -10,8 +10,8 @@
 
 // Don't include this file in any .h files because it pulls in some X headers.
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X11_X_SERVER_PIXEL_BUFFER_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_X11_X_SERVER_PIXEL_BUFFER_H_
 
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
@@ -86,4 +86,4 @@ class XServerPixelBuffer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X11_X_SERVER_PIXEL_BUFFER_H_

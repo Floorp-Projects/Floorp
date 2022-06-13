@@ -14,7 +14,7 @@
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 
 #if defined(WEBRTC_USE_X11)
-#include "modules/desktop_capture/linux/mouse_cursor_monitor_x11.h"
+#include "modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.h"
 #endif  // defined(WEBRTC_USE_X11)
 
 namespace webrtc {

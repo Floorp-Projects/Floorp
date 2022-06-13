@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
 
 #include <X11/Xutil.h>
 #include <stdint.h>
@@ -17,9 +17,9 @@
 #include <sys/shm.h>
 
 #include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/linux/window_list_utils.h"
-#include "modules/desktop_capture/linux/x_error_trap.h"
-#include "modules/desktop_capture/linux/x_window_property.h"
+#include "modules/desktop_capture/linux/x11/window_list_utils.h"
+#include "modules/desktop_capture/linux/x11/x_error_trap.h"
+#include "modules/desktop_capture/linux/x11/x_window_property.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 

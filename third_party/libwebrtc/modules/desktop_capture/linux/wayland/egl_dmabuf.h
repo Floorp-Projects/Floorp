@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_EGL_DMABUF_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_EGL_DMABUF_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_EGL_DMABUF_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_EGL_DMABUF_H_
 
 #include <epoxy/egl.h>
 #include <epoxy/gl.h>
@@ -62,4 +62,4 @@ class EglDmaBuf {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_EGL_DMABUF_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_EGL_DMABUF_H_

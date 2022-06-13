@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_MOUSE_CURSOR_MONITOR_X11_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_MOUSE_CURSOR_MONITOR_X11_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X11_MOUSE_CURSOR_MONITOR_X11_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_X11_MOUSE_CURSOR_MONITOR_X11_H_
 
 #include <X11/X.h>
 
@@ -18,7 +18,7 @@
 #include "api/scoped_refptr.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
-#include "modules/desktop_capture/linux/shared_x_display.h"
+#include "modules/desktop_capture/linux/x11/shared_x_display.h"
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 
@@ -65,4 +65,4 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_MOUSE_CURSOR_MONITOR_X11_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X11_MOUSE_CURSOR_MONITOR_X11_H_

@@ -14,11 +14,11 @@
 #include "modules/desktop_capture/desktop_capturer.h"
 
 #if defined(WEBRTC_USE_PIPEWIRE)
-#include "modules/desktop_capture/linux/base_capturer_pipewire.h"
+#include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
 #endif  // defined(WEBRTC_USE_PIPEWIRE)
 
 #if defined(WEBRTC_USE_X11)
-#include "modules/desktop_capture/linux/screen_capturer_x11.h"
+#include "modules/desktop_capture/linux/x11/screen_capturer_x11.h"
 #endif  // defined(WEBRTC_USE_X11)
 
 namespace webrtc {

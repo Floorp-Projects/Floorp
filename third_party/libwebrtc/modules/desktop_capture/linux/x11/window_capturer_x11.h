@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_CAPTURER_X11_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_CAPTURER_X11_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X11_WINDOW_CAPTURER_X11_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_X11_WINDOW_CAPTURER_X11_H_
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -21,11 +21,11 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_geometry.h"
-#include "modules/desktop_capture/linux/shared_x_display.h"
-#include "modules/desktop_capture/linux/x_window_property.h"
-#include "modules/desktop_capture/linux/window_finder_x11.h"
-#include "modules/desktop_capture/linux/x_atom_cache.h"
-#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/x11/shared_x_display.h"
+#include "modules/desktop_capture/linux/x11/x_window_property.h"
+#include "modules/desktop_capture/linux/x11/window_finder_x11.h"
+#include "modules/desktop_capture/linux/x11/x_atom_cache.h"
+#include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
 #include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
@@ -75,4 +75,4 @@ class WindowCapturerX11 : public DesktopCapturer,
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_CAPTURER_X11_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X11_WINDOW_CAPTURER_X11_H_
