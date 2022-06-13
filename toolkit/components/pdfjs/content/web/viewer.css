@@ -100,6 +100,16 @@
   --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
 }
 
+@media (forced-colors: active) {
+  .annotationLayer .textWidgetAnnotation input:required,
+  .annotationLayer .textWidgetAnnotation textarea:required,
+  .annotationLayer .choiceWidgetAnnotation select:required,
+  .annotationLayer .buttonWidgetAnnotation.checkBox input:required,
+  .annotationLayer .buttonWidgetAnnotation.radioButton input:required {
+    outline: 1.5px solid selectedItem;
+  }
+}
+
 .annotationLayer section {
   position: absolute;
   text-align: initial;
@@ -147,6 +157,14 @@
   margin: 0;
   vertical-align: top;
   width: 100%;
+}
+
+.annotationLayer .textWidgetAnnotation input:required,
+.annotationLayer .textWidgetAnnotation textarea:required,
+.annotationLayer .choiceWidgetAnnotation select:required,
+.annotationLayer .buttonWidgetAnnotation.checkBox input:required,
+.annotationLayer .buttonWidgetAnnotation.radioButton input:required {
+  outline: 1.5px solid red;
 }
 
 .annotationLayer .choiceWidgetAnnotation select option {
@@ -199,7 +217,7 @@
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked:before,
 .annotationLayer .buttonWidgetAnnotation.checkBox input:checked:after,
 .annotationLayer .buttonWidgetAnnotation.radioButton input:checked:before {
-  background-color: rgba(0, 0, 0, 1);
+  background-color: CanvasText;
   content: "";
   display: block;
   position: absolute;
@@ -315,6 +333,12 @@
   --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
 }
 
+@media (forced-colors: active) {
+  .xfaLayer *:required {
+    outline: 1.5px solid selectedItem;
+  }
+}
+
 .xfaLayer .highlight {
   margin: -1px;
   padding: 1px;
@@ -383,6 +407,10 @@
   margin: 0;
   pointer-events: auto;
   line-height: inherit;
+}
+
+.xfaLayer *:required {
+  outline: 1.5px solid red;
 }
 
 .xfaLayer div {
@@ -629,6 +657,116 @@
   }
 }
 
+
+:root {
+  --focus-outline: solid 2px red;
+  --hover-outline: dashed 2px blue;
+  --freetext-line-height: 1.35;
+  --freetext-padding: 2px;
+}
+
+.annotationEditorLayer {
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.annotationEditorLayer .freeTextEditor {
+  position: absolute;
+  background: transparent;
+  border-radius: 3px;
+  padding: calc(var(--freetext-padding) * var(--zoom-factor));
+  resize: none;
+  width: auto;
+  height: auto;
+}
+
+.annotationEditorLayer .freeTextEditor .internal {
+  background: transparent;
+  border: none;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  white-space: nowrap;
+  resize: none;
+  font: 10px sans-serif;
+  line-height: var(--freetext-line-height);
+}
+
+.annotationEditorLayer .freeTextEditor .overlay {
+  position: absolute;
+  display: none;
+  background: transparent;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer .freeTextEditor .overlay.enabled {
+  display: block;
+}
+
+.annotationEditorLayer .freeTextEditor .internal:empty::before {
+  content: attr(default-content);
+  color: gray;
+}
+
+.annotationEditorLayer .freeTextEditor .internal:focus {
+  outline: none;
+}
+
+.annotationEditorLayer .freeTextEditor:focus-within {
+  outline: var(--focus-outline);
+}
+
+.annotationEditorLayer .inkEditor:not(:focus) {
+  resize: none;
+}
+
+.annotationEditorLayer .freeTextEditor:hover:not(:focus-within),
+.annotationEditorLayer .inkEditor:hover:not(:focus) {
+  outline: var(--hover-outline);
+}
+
+.annotationEditorLayer .inkEditor.disabled:focus {
+  resize: horizontal;
+}
+
+.annotationEditorLayer .inkEditor {
+  position: absolute;
+  background: transparent;
+  border-radius: 3px;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer .inkEditor:focus {
+  outline: var(--focus-outline);
+  resize: both;
+}
+
+.annotationEditorLayer .inkEditor.editing {
+  resize: none;
+}
+
+.annotationEditorLayer .inkEditor .inkEditorCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer .selectedEditor {
+  outline: var(--focus-outline);
+  resize: none;
+}
+
 :root {
   --viewer-container-height: 0;
   --pdfViewer-padding-bottom: 0;
@@ -825,6 +963,9 @@
   --loading-icon: url(images/loading.svg);
   --treeitem-expanded-icon: url(images/treeitem-expanded.svg);
   --treeitem-collapsed-icon: url(images/treeitem-collapsed.svg);
+  --toolbarButton-editorNone-icon: url(images/toolbarButton-editorNone.svg);
+  --toolbarButton-editorFreeText-icon: url(images/toolbarButton-editorFreeText.svg);
+  --toolbarButton-editorInk-icon: url(images/toolbarButton-editorInk.svg);
   --toolbarButton-menuArrow-icon: url(images/toolbarButton-menuArrow.svg);
   --toolbarButton-sidebarToggle-icon: url(images/toolbarButton-sidebarToggle.svg);
   --toolbarButton-secondaryToolbarToggle-icon: url(images/toolbarButton-secondaryToolbarToggle.svg);
@@ -1565,6 +1706,18 @@ select {
 #presentationMode::before,
 #secondaryPresentationMode::before {
   mask-image: var(--toolbarButton-presentationMode-icon);
+}
+
+#editorNone::before {
+  mask-image: var(--toolbarButton-editorNone-icon);
+}
+
+#editorFreeText::before {
+  mask-image: var(--toolbarButton-editorFreeText-icon);
+}
+
+#editorInk::before {
+  mask-image: var(--toolbarButton-editorInk-icon);
 }
 
 #print::before,
