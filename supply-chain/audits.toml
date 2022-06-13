@@ -3,36 +3,36 @@
 
 [[audits.atomic_refcell]]
 who = "Bobby Holley <bholley@mozilla.com>"
-notes = "I maintain this crate and have reviewed every line."
 criteria = "safe-to-deploy"
 version = "0.1.8"
+notes = "I maintain this crate and have reviewed every line."
+
+[[audits.bit-set]]
+who = "Aria Beingessner <a.beingessner@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.5.2"
+notes = "Another crate I own via contain-rs that is ancient and maintenance mode, no known issues."
+
+[[audits.bit-vec]]
+who = "Aria Beingessner <a.beingessner@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.6.3"
+notes = "Another crate I own via contain-rs that is ancient and in maintenance mode but otherwise perfectly fine."
+
+[[audits.linked-hash-map]]
+who = "Aria Beingessner <a.beingessner@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.5.4"
+notes = "I own this crate (I am contain-rs) and 0.5.4 passes miri. This code is very old and used by lots of people, so I'm pretty confident in it, even though it's in maintenance-mode and missing some nice-to-have APIs."
 
 [[audits.log]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 version = "0.4.17"
 
-[[audits.bit-set]]
-who = "Aria Beingessner <a.beingessner@gmail.com>"
-notes = "Another crate I own via contain-rs that is ancient and maintenance mode, no known issues."
-criteria = "safe-to-deploy"
-version = "0.5.2"
-
-[[audits.bit-vec]]
-who = "Aria Beingessner <a.beingessner@gmail.com>"
-notes = "Another crate I own via contain-rs that is ancient and in maintenance mode but otherwise perfectly fine."
-criteria = "safe-to-deploy"
-version = "0.6.3"
-
-[[audits.linked-hash-map]]
-who = "Aria Beingessner <a.beingessner@gmail.com>"
-notes = "I own this crate (I am contain-rs) and 0.5.4 passes miri. This code is very old and used by lots of people, so I'm pretty confident in it, even though it's in maintenance-mode and missing some nice-to-have APIs."
-criteria = "safe-to-deploy"
-version = "0.5.4"
-
 [[audits.thin-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
-notes = "I own this crate, and most of its versions were codeveloped and reviewed by Nika Layzell. This version was not explicitly reviewed by her, but it was specifically a release that made the code pass miri and was reviewed by me. Firefox uses it in the gecko-ffi configuration which is less thoroughly tested and more dangerous but we're reasonably confident in it. The real danger is from C++ code failing to use it correctly in FFI but that's just how FFI is."
 criteria = "safe-to-deploy"
 version = "0.2.5"
+notes = "I own this crate, and most of its versions were codeveloped and reviewed by Nika Layzell. This version was not explicitly reviewed by her, but it was specifically a release that made the code pass miri and was reviewed by me. Firefox uses it in the gecko-ffi configuration which is less thoroughly tested and more dangerous but we're reasonably confident in it. The real danger is from C++ code failing to use it correctly in FFI but that's just how FFI is."
 
