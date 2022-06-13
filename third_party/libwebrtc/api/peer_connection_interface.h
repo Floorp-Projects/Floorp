@@ -295,6 +295,13 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
 
   enum ContinualGatheringPolicy { GATHER_ONCE, GATHER_CONTINUALLY };
 
+  struct PortAllocatorConfig {
+    // For min_port and max_port, 0 means not specified.
+    int min_port = 0;
+    int max_port = 0;
+    uint32_t flags = 0;  // Same as kDefaultPortAllocatorFlags.
+  };
+
   enum class RTCConfigurationType {
     // A configuration that is safer to use, despite not having the best
     // performance. Currently this is the default configuration.
@@ -370,6 +377,18 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     void set_video_rtcp_report_interval_ms(int video_rtcp_report_interval_ms) {
       media_config.video.rtcp_report_interval_ms =
           video_rtcp_report_interval_ms;
+    }
+
+    // Settings for the port allcoator. Applied only if the port allocator is
+    // created by PeerConnectionFactory, not if it is injected with
+    // PeerConnectionDependencies
+    int min_port() const { return port_allocator_config.min_port; }
+    void set_min_port(int port) { port_allocator_config.min_port = port; }
+    int max_port() const { return port_allocator_config.max_port; }
+    void set_max_port(int port) { port_allocator_config.max_port = port; }
+    uint32_t port_allocator_flags() { return port_allocator_config.flags; }
+    void set_port_allocator_flags(uint32_t flags) {
+      port_allocator_config.flags = flags;
     }
 
     static const int kUndefined = -1;
@@ -669,6 +688,8 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // List of address/length subnets that should be treated like
     // VPN (in case webrtc fails to auto detect them).
     std::vector<rtc::NetworkMask> vpn_list;
+
+    PortAllocatorConfig port_allocator_config;
 
     //
     // Don't forget to update operator== if adding something.

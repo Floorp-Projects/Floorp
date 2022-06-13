@@ -218,6 +218,11 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
     dependencies.allocator = std::make_unique<cricket::BasicPortAllocator>(
         context_->default_network_manager(), packet_socket_factory,
         configuration.turn_customizer);
+    dependencies.allocator->SetPortRange(
+        configuration.port_allocator_config.min_port,
+        configuration.port_allocator_config.max_port);
+    dependencies.allocator->set_flags(
+        configuration.port_allocator_config.flags);
   }
 
   if (!dependencies.async_resolver_factory) {
