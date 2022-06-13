@@ -35,7 +35,6 @@
 #include "gc/GC.h"                         // for MemoryUse
 #include "gc/GCContext.h"                  // for JS::GCContext
 #include "gc/Marking.h"                    // for IsAboutToBeFinalized
-#include "gc/Rooting.h"                    // for RootedValue
 #include "gc/Tracer.h"                     // for TraceCrossCompartmentEdge
 #include "gc/ZoneAllocator.h"              // for AddCellMemory
 #include "jit/JSJitFrameIter.h"            // for InlineFrameIterator
@@ -1528,7 +1527,8 @@ bool DebuggerFrame::getOlderSavedFrame(JSContext* cx,
       if (iter.activation() != &activation && activation.asyncStack() &&
           (activation.asyncCallIsExplicit() || iter.done())) {
         const char* cause = activation.asyncCause();
-        RootedAtom causeAtom(cx, AtomizeUTF8Chars(cx, cause, strlen(cause)));
+        Rooted<JSAtom*> causeAtom(cx,
+                                  AtomizeUTF8Chars(cx, cause, strlen(cause)));
         if (!causeAtom) {
           return false;
         }

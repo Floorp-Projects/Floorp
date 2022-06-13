@@ -9,7 +9,6 @@
 
 #include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent
-#include "gc/Rooting.h"         //
 #include "vm/NativeObject.h"    // for NativeObject
 
 namespace js {

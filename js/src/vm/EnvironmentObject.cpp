@@ -453,9 +453,9 @@ IndirectBindingMap& ModuleEnvironmentObject::importBindings() const {
 }
 
 bool ModuleEnvironmentObject::createImportBinding(JSContext* cx,
-                                                  HandleAtom importName,
+                                                  Handle<JSAtom*> importName,
                                                   Handle<ModuleObject*> module,
-                                                  HandleAtom localName) {
+                                                  Handle<JSAtom*> localName) {
   RootedId importNameId(cx, AtomToId(importName));
   RootedId localNameId(cx, AtomToId(localName));
   Rooted<ModuleEnvironmentObject*> env(cx, &module->initialEnvironment());
@@ -466,7 +466,7 @@ bool ModuleEnvironmentObject::createImportBinding(JSContext* cx,
   return true;
 }
 
-bool ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name) {
+bool ModuleEnvironmentObject::hasImportBinding(Handle<PropertyName*> name) {
   return importBindings().has(NameToId(name));
 }
 
@@ -1228,7 +1228,7 @@ RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
 static void ReportRuntimeLexicalErrorId(JSContext* cx, unsigned errorNumber,
                                         HandleId id) {
   if (id.isAtom()) {
-    RootedPropertyName name(cx, id.toAtom()->asPropertyName());
+    Rooted<PropertyName*> name(cx, id.toAtom()->asPropertyName());
     ReportRuntimeLexicalError(cx, errorNumber, name);
     return;
   }
@@ -3471,7 +3471,7 @@ bool js::GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
 
 bool js::CheckLexicalNameConflict(
     JSContext* cx, Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
-    HandleObject varObj, HandlePropertyName name) {
+    HandleObject varObj, Handle<PropertyName*> name) {
   const char* redeclKind = nullptr;
   RootedId id(cx, NameToId(name));
   mozilla::Maybe<PropertyInfo> prop;
@@ -3510,7 +3510,7 @@ bool js::CheckLexicalNameConflict(
 
 [[nodiscard]] static bool CheckVarNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
-    HandlePropertyName name) {
+    Handle<PropertyName*> name) {
   mozilla::Maybe<PropertyInfo> prop = lexicalEnv->lookup(cx, name);
   if (prop.isSome()) {
     ReportRuntimeRedeclaration(cx, name, prop->writable() ? "let" : "const");
@@ -3520,7 +3520,7 @@ bool js::CheckLexicalNameConflict(
 }
 
 static void ReportCannotDeclareGlobalBinding(JSContext* cx,
-                                             HandlePropertyName name,
+                                             Handle<PropertyName*> name,
                                              const char* reason) {
   if (UniqueChars printable = AtomToPrintableString(cx, name)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -3531,7 +3531,7 @@ static void ReportCannotDeclareGlobalBinding(JSContext* cx,
 
 bool js::CheckCanDeclareGlobalBinding(JSContext* cx,
                                       Handle<GlobalObject*> global,
-                                      HandlePropertyName name,
+                                      Handle<PropertyName*> name,
                                       bool isFunction) {
   RootedId id(cx, NameToId(name));
   Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
@@ -3588,7 +3588,7 @@ static bool InitGlobalOrEvalDeclarations(
       continue;
     }
 
-    RootedPropertyName name(cx, bi.name()->asPropertyName());
+    Rooted<PropertyName*> name(cx, bi.name()->asPropertyName());
     unsigned attrs = script->isForEval() ? JSPROP_ENUMERATE
                                          : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
@@ -3661,7 +3661,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
     }
 
     RootedFunction fun(cx, &thing.as<JSObject>().as<JSFunction>());
-    RootedPropertyName name(cx, fun->explicitName()->asPropertyName());
+    Rooted<PropertyName*> name(cx, fun->explicitName()->asPropertyName());
 
     // Clone the function before exposing to script as a binding.
     JSObject* clone = Lambda(cx, fun, envChain);
@@ -3750,7 +3750,7 @@ bool js::CheckGlobalDeclarationConflicts(
   // In the case of non-syntactic environment chains, we are checking
   // redeclarations against the non-syntactic lexical environment and the
   // variables object that the lexical environment corresponds to.
-  RootedPropertyName name(cx);
+  Rooted<PropertyName*> name(cx);
   Rooted<BindingIter> bi(cx, BindingIter(script));
 
   // ES 15.1.11 GlobalDeclarationInstantiation
@@ -3820,7 +3820,7 @@ bool js::CheckGlobalDeclarationConflicts(
     return true;
   }
 
-  RootedPropertyName name(cx);
+  Rooted<PropertyName*> name(cx);
   for (BindingIter bi(script); bi; bi++) {
     name = bi.name()->asPropertyName();
     if (!CheckVarNameConflict(cx, env, name)) {
@@ -3898,7 +3898,7 @@ static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
   // Check that global functions may be declared.
   if (varObj->is<GlobalObject>()) {
     Handle<GlobalObject*> global = varObj.as<GlobalObject>();
-    RootedPropertyName name(cx);
+    Rooted<PropertyName*> name(cx);
     for (Rooted<BindingIter> bi(cx, BindingIter(script)); bi; bi++) {
       name = bi.name()->asPropertyName();
       if (!CheckCanDeclareGlobalBinding(cx, global, name,
@@ -4213,7 +4213,7 @@ bool js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script) {
 
 JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
                                           Handle<GlobalObject*> global,
-                                          HandlePropertyName name) {
+                                          Handle<PropertyName*> name) {
   // We can bind name to the global lexical scope if the binding already
   // exists, is initialized, and is writable (i.e., an initialized
   // 'let') at compile time.

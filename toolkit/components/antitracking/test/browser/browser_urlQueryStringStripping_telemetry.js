@@ -33,8 +33,7 @@ async function clearTelemetry() {
   Services.telemetry.getHistogramById(QUERY_STRIPPING_COUNT).clear();
   Services.telemetry.getHistogramById(QUERY_STRIPPING_PARAM_COUNT).clear();
 
-  // Ensure the data is cleared in content.
-  await TestUtils.waitForCondition(() => {
+  let isCleared = () => {
     let histograms = Services.telemetry.getSnapshotForHistograms(
       "main",
       false /* clear */
@@ -45,7 +44,16 @@ async function clearTelemetry() {
       (!histograms[QUERY_STRIPPING_COUNT] &&
         !histograms[QUERY_STRIPPING_PARAM_COUNT])
     );
-  });
+  };
+
+  // Check that the telemetry probes have been cleared properly. Do this check
+  // sync first to avoid any race conditions where telemetry arrives after
+  // clearing.
+  if (!isCleared()) {
+    await TestUtils.waitForCondition(isCleared);
+  }
+
+  ok(true, "Telemetry has been cleared.");
 }
 
 async function verifyQueryString(browser, expected) {

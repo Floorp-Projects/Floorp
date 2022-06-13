@@ -222,7 +222,7 @@ class SavedStacks {
                                   JS::StackCapture&& capture);
   [[nodiscard]] bool adoptAsyncStack(
       JSContext* cx, MutableHandle<SavedFrame*> asyncStack,
-      HandleAtom asyncCause, const mozilla::Maybe<size_t>& maxFrameCount);
+      Handle<JSAtom*> asyncCause, const mozilla::Maybe<size_t>& maxFrameCount);
   [[nodiscard]] bool checkForEvalInFramePrev(
       JSContext* cx, MutableHandle<SavedFrame::Lookup> lookup);
   SavedFrame* getOrCreateSavedFrame(JSContext* cx,

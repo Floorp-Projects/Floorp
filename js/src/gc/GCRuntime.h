@@ -953,6 +953,7 @@ class GCRuntime {
   /* GC scheduling state and parameters. */
   GCSchedulingTunables tunables;
   GCSchedulingState schedulingState;
+  MainThreadData<bool> fullGCRequested;
 
   // Helper thread configuration.
   MainThreadData<double> helperThreadRatio;

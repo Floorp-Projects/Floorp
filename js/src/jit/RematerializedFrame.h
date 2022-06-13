@@ -15,7 +15,6 @@
 
 #include "jstypes.h"
 
-#include "gc/Rooting.h"
 #include "jit/JitFrames.h"
 #include "jit/ScriptFromCalleeToken.h"
 #include "js/GCVector.h"

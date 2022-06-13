@@ -675,7 +675,7 @@ static JSObject* CreateFunctionConstructor(JSContext* cx, JSProtoKey key) {
   RootedObject functionCtor(
       cx, NewFunctionWithProto(
               cx, Function, 1, FunctionFlags::NATIVE_CTOR, nullptr,
-              HandlePropertyName(cx->names().Function), functionProto,
+              Handle<PropertyName*>(cx->names().Function), functionProto,
               gc::AllocKind::FUNCTION, TenuredObject));
   if (!functionCtor) {
     return nullptr;
@@ -697,7 +697,7 @@ static JSObject* CreateFunctionPrototype(JSContext* cx, JSProtoKey key) {
 
   return NewFunctionWithProto(
       cx, FunctionPrototype, 0, FunctionFlags::NATIVE_FUN, nullptr,
-      HandlePropertyName(cx->names().empty), objectProto,
+      Handle<PropertyName*>(cx->names().empty), objectProto,
       gc::AllocKind::FUNCTION, TenuredObject);
 }
 
@@ -1854,7 +1854,7 @@ Shape* GlobalObject::createFunctionShapeWithDefaultProto(JSContext* cx,
 
 JSFunction* js::NewFunctionWithProto(
     JSContext* cx, Native native, unsigned nargs, FunctionFlags flags,
-    HandleObject enclosingEnv, HandleAtom atom, HandleObject proto,
+    HandleObject enclosingEnv, Handle<JSAtom*> atom, HandleObject proto,
     gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
     NewObjectKind newKind /* = GenericObject */) {
   MOZ_ASSERT(allocKind == gc::AllocKind::FUNCTION ||
@@ -2194,7 +2194,7 @@ bool js::SetFunctionName(JSContext* cx, HandleFunction fun, HandleValue name,
 JSFunction* js::DefineFunction(
     JSContext* cx, HandleObject obj, HandleId id, Native native, unsigned nargs,
     unsigned flags, gc::AllocKind allocKind /* = AllocKind::FUNCTION */) {
-  RootedAtom atom(cx, IdToFunctionName(cx, id));
+  Rooted<JSAtom*> atom(cx, IdToFunctionName(cx, id));
   if (!atom) {
     return nullptr;
   }

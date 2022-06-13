@@ -24,7 +24,6 @@
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "gc/RelocationOverlay.h"
-#include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
 #include "js/shadow/String.h"  // JS::shadow::String

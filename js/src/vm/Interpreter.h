@@ -497,7 +497,7 @@ bool HandleClosingGeneratorReturn(JSContext* cx, AbstractFramePtr frame,
 
 bool ThrowOperation(JSContext* cx, HandleValue v);
 
-bool GetProperty(JSContext* cx, HandleValue value, HandlePropertyName name,
+bool GetProperty(JSContext* cx, HandleValue value, Handle<PropertyName*> name,
                  MutableHandleValue vp);
 
 JSObject* Lambda(JSContext* cx, HandleFunction fun, HandleObject parent);
@@ -562,8 +562,8 @@ bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
 bool AtomicIsLockFree(JSContext* cx, HandleValue in, int* out);
 
 template <bool strict>
-bool DelPropOperation(JSContext* cx, HandleValue val, HandlePropertyName name,
-                      bool* res);
+bool DelPropOperation(JSContext* cx, HandleValue val,
+                      Handle<PropertyName*> name, bool* res);
 
 template <bool strict>
 bool DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
@@ -582,14 +582,14 @@ bool GetAndClearException(JSContext* cx, MutableHandleValue res);
 bool GetAndClearExceptionAndStack(JSContext* cx, MutableHandleValue res,
                                   MutableHandle<SavedFrame*> stack);
 
-bool DeleteNameOperation(JSContext* cx, HandlePropertyName name,
+bool DeleteNameOperation(JSContext* cx, Handle<PropertyName*> name,
                          HandleObject scopeObj, MutableHandleValue res);
 
 bool ImplicitThisOperation(JSContext* cx, HandleObject scopeObj,
-                           HandlePropertyName name, MutableHandleValue res);
+                           Handle<PropertyName*> name, MutableHandleValue res);
 
 bool InitPropGetterSetterOperation(JSContext* cx, jsbytecode* pc,
-                                   HandleObject obj, HandlePropertyName name,
+                                   HandleObject obj, Handle<PropertyName*> name,
                                    HandleObject val);
 
 unsigned GetInitDataPropAttrs(JSOp op);
@@ -641,7 +641,7 @@ void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleId id);
 
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
-                               HandlePropertyName name);
+                               Handle<PropertyName*> name);
 
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleScript script, jsbytecode* pc);
@@ -651,7 +651,7 @@ void ReportInNotObjectError(JSContext* cx, HandleValue lref, HandleValue rref);
 // The parser only reports redeclarations that occurs within a single
 // script. Due to the extensibility of the global lexical scope, we also check
 // for redeclarations during runtime in JSOp::GlobalOrEvalDeclInstantation.
-void ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
+void ReportRuntimeRedeclaration(JSContext* cx, Handle<PropertyName*> name,
                                 const char* redeclKind);
 
 bool ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind);
@@ -674,7 +674,8 @@ JSObject* FunWithProtoOperation(JSContext* cx, HandleFunction fun,
                                 HandleObject parent, HandleObject proto);
 
 bool SetPropertySuper(JSContext* cx, HandleValue lval, HandleValue receiver,
-                      HandlePropertyName name, HandleValue rval, bool strict);
+                      Handle<PropertyName*> name, HandleValue rval,
+                      bool strict);
 
 bool SetElementSuper(JSContext* cx, HandleValue lval, HandleValue receiver,
                      HandleValue index, HandleValue rval, bool strict);

@@ -202,10 +202,19 @@ async function openIDB(allowUpgrades = true) {
   });
 }
 
+function destroyIDB() {
+  const request = indexedDB.deleteDatabase(DB_NAME);
+  return new Promise((resolve, reject) => {
+    request.onerror = event => reject(new IndexedDBError(event.target.error));
+    request.onsuccess = () => resolve();
+  });
+}
+
 var IDBHelpers = {
   bulkOperationHelper,
   executeIDB,
   openIDB,
+  destroyIDB,
   IndexedDBError,
   ShutdownError,
 };

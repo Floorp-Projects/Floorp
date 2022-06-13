@@ -95,6 +95,8 @@ using mozilla::Some;
 using mozilla::Utf8Unit;
 using mozilla::Compression::LZ4;
 
+using FunctionVector = JS::GCVector<JSFunction*>;
+
 /*****************************************************************************/
 
 // A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
@@ -6476,8 +6478,8 @@ static bool IsMaybeWrappedScriptedProxy(JSObject* obj) {
   return unwrapped && IsScriptedProxy(unwrapped);
 }
 
-static bool GetDataProperty(JSContext* cx, HandleValue objVal, HandleAtom field,
-                            MutableHandleValue v) {
+static bool GetDataProperty(JSContext* cx, HandleValue objVal,
+                            Handle<JSAtom*> field, MutableHandleValue v) {
   if (!objVal.isObject()) {
     return LinkFail(cx, "accessing property of non-object");
   }
@@ -6508,7 +6510,8 @@ static bool GetDataProperty(JSContext* cx, HandleValue objVal, HandleAtom field,
 
 static bool GetDataProperty(JSContext* cx, HandleValue objVal,
                             const char* fieldChars, MutableHandleValue v) {
-  RootedAtom field(cx, AtomizeUTF8Chars(cx, fieldChars, strlen(fieldChars)));
+  Rooted<JSAtom*> field(cx,
+                        AtomizeUTF8Chars(cx, fieldChars, strlen(fieldChars)));
   if (!field) {
     return false;
   }
@@ -6519,7 +6522,7 @@ static bool GetDataProperty(JSContext* cx, HandleValue objVal,
 static bool GetDataProperty(JSContext* cx, HandleValue objVal,
                             const ImmutablePropertyNamePtr& field,
                             MutableHandleValue v) {
-  HandlePropertyName fieldHandle = field;
+  Handle<PropertyName*> fieldHandle = field;
   return GetDataProperty(cx, objVal, fieldHandle, v);
 }
 
@@ -6946,7 +6949,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
                                        const AsmJSMetadata& metadata) {
   using js::frontend::FunctionSyntaxKind;
 
-  RootedAtom name(cx, args.callee().as<JSFunction>().explicitName());
+  Rooted<JSAtom*> name(cx, args.callee().as<JSFunction>().explicitName());
 
   if (cx->isExceptionPending()) {
     return false;

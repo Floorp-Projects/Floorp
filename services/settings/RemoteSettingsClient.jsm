@@ -112,10 +112,54 @@ class EventEmitter {
   }
 }
 
-class NetworkOfflineError extends Error {
-  constructor(cid) {
+class APIError extends Error {}
+
+class NetworkError extends APIError {
+  constructor(e) {
+    super(`Network error: ${e}`, { cause: e });
+    this.name = "NetworkError";
+  }
+}
+
+class NetworkOfflineError extends APIError {
+  constructor() {
     super("Network is offline");
     this.name = "NetworkOfflineError";
+  }
+}
+
+class ServerContentParseError extends APIError {
+  constructor(e) {
+    super(`Cannot parse server content: ${e}`, { cause: e });
+    this.name = "ServerContentParseError";
+  }
+}
+
+class BackendError extends APIError {
+  constructor(e) {
+    super(`Backend error: ${e}`, { cause: e });
+    this.name = "BackendError";
+  }
+}
+
+class BackoffError extends APIError {
+  constructor(e) {
+    super(`Server backoff: ${e}`, { cause: e });
+    this.name = "BackoffError";
+  }
+}
+
+class TimeoutError extends APIError {
+  constructor(e) {
+    super(`API timeout: ${e}`, { cause: e });
+    this.name = "TimeoutError";
+  }
+}
+
+class StorageError extends Error {
+  constructor(e) {
+    super(`Storage error: ${e}`, { cause: e });
+    this.name = "StorageError";
   }
 }
 
@@ -215,8 +259,29 @@ class AttachmentDownloader extends lazy.Downloader {
 }
 
 class RemoteSettingsClient extends EventEmitter {
+  static get APIError() {
+    return APIError;
+  }
+  static get NetworkError() {
+    return NetworkError;
+  }
   static get NetworkOfflineError() {
     return NetworkOfflineError;
+  }
+  static get ServerContentParseError() {
+    return ServerContentParseError;
+  }
+  static get BackendError() {
+    return BackendError;
+  }
+  static get BackoffError() {
+    return BackoffError;
+  }
+  static get TimeoutError() {
+    return TimeoutError;
+  }
+  static get StorageError() {
+    return StorageError;
   }
   static get InvalidSignatureError() {
     return InvalidSignatureError;
@@ -693,11 +758,13 @@ class RemoteSettingsClient extends EventEmitter {
           }
         } else {
           // The sync has thrown for other reason than signature verification.
+          // Obtain a more precise error than original one.
+          const adjustedError = this._adjustedError(e);
           // Default status for errors at this step is SYNC_ERROR.
-          reportStatus = this._telemetryFromError(e, {
+          reportStatus = this._telemetryFromError(adjustedError, {
             default: lazy.UptakeTelemetry.STATUS.SYNC_ERROR,
           });
-          throw e;
+          throw adjustedError;
         }
       }
       if (sendEvents) {
@@ -719,6 +786,8 @@ class RemoteSettingsClient extends EventEmitter {
       }
     } catch (e) {
       thrownError = e;
+      // Obtain a more precise error than original one.
+      const adjustedError = this._adjustedError(e);
       // If browser is shutting down, then we can report a specific status.
       // (eg. IndexedDB will abort transactions)
       if (Services.startup.shuttingDown) {
@@ -727,7 +796,7 @@ class RemoteSettingsClient extends EventEmitter {
       // If no Telemetry status was determined yet (ie. outside sync step),
       // then introspect error, default status at this step is UNKNOWN.
       else if (reportStatus == null) {
-        reportStatus = this._telemetryFromError(e, {
+        reportStatus = this._telemetryFromError(adjustedError, {
           default: lazy.UptakeTelemetry.STATUS.UNKNOWN_ERROR,
         });
       }
@@ -775,6 +844,39 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   /**
+   * Return a more precise error instance, based on the specified
+   * error and its message.
+   * @param {Error} e the original error
+   * @returns {Error}
+   */
+  _adjustedError(e) {
+    if (/unparseable/.test(e.message)) {
+      return new RemoteSettingsClient.ServerContentParseError(e);
+    }
+    if (/NetworkError/.test(e.message)) {
+      return new RemoteSettingsClient.NetworkError(e);
+    }
+    if (/Timeout/.test(e.message)) {
+      return new RemoteSettingsClient.TimeoutError(e);
+    }
+    if (/HTTP 5??/.test(e.message)) {
+      return new RemoteSettingsClient.BackendError(e);
+    }
+    if (/Backoff/.test(e.message)) {
+      return new RemoteSettingsClient.BackoffError(e);
+    }
+    if (
+      // Errors from kinto.js IDB adapter.
+      e instanceof lazy.IDBHelpers.IndexedDBError ||
+      // Other IndexedDB errors (eg. RemoteSettingsWorker).
+      /IndexedDB/.test(e.message)
+    ) {
+      return new RemoteSettingsClient.StorageError(e);
+    }
+    return e;
+  }
+
+  /**
    * Determine the Telemetry uptake status based on the specified
    * error.
    */
@@ -785,22 +887,17 @@ class RemoteSettingsClient extends EventEmitter {
       reportStatus = lazy.UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR;
     } else if (e instanceof lazy.IDBHelpers.ShutdownError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.SHUTDOWN_ERROR;
-    } else if (/unparseable/.test(e.message)) {
+    } else if (e instanceof RemoteSettingsClient.ServerContentParseError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.PARSE_ERROR;
-    } else if (/NetworkError/.test(e.message)) {
+    } else if (e instanceof RemoteSettingsClient.NetworkError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.NETWORK_ERROR;
-    } else if (/Timeout/.test(e.message)) {
+    } else if (e instanceof RemoteSettingsClient.TimeoutError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.TIMEOUT_ERROR;
-    } else if (/HTTP 5??/.test(e.message)) {
+    } else if (e instanceof RemoteSettingsClient.BackendError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.SERVER_ERROR;
-    } else if (/Backoff/.test(e.message)) {
+    } else if (e instanceof RemoteSettingsClient.BackoffError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.BACKOFF;
-    } else if (
-      // Errors from kinto.js IDB adapter.
-      e instanceof lazy.IDBHelpers.IndexedDBError ||
-      // Other IndexedDB errors (eg. RemoteSettingsWorker).
-      /IndexedDB/.test(e.message)
-    ) {
+    } else if (e instanceof RemoteSettingsClient.StorageError) {
       reportStatus = lazy.UptakeTelemetry.STATUS.CUSTOM_1_ERROR;
     }
 

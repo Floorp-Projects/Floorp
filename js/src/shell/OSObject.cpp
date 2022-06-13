@@ -114,7 +114,7 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
 #endif
   }
 
-  RootedLinearString str(cx, JS_EnsureLinearString(cx, filenameStr));
+  Rooted<JSLinearString*> str(cx, JS_EnsureLinearString(cx, filenameStr));
   if (!str) {
     return nullptr;
   }
@@ -794,7 +794,8 @@ static bool ospath_isAbsolute(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedLinearString str(cx, JS_EnsureLinearString(cx, args[0].toString()));
+  Rooted<JSLinearString*> str(cx,
+                              JS_EnsureLinearString(cx, args[0].toString()));
   if (!str) {
     return false;
   }
@@ -823,7 +824,8 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    RootedLinearString str(cx, JS_EnsureLinearString(cx, args[i].toString()));
+    Rooted<JSLinearString*> str(cx,
+                                JS_EnsureLinearString(cx, args[i].toString()));
     if (!str) {
       return false;
     }

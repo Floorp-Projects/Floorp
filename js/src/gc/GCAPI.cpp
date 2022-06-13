@@ -231,6 +231,7 @@ JS_PUBLIC_API void JS::PrepareForFullGC(JSContext* cx) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
+  cx->runtime()->gc.fullGCRequested = true;
   for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
     zone->scheduleGC();
   }
@@ -269,6 +270,7 @@ JS_PUBLIC_API void JS::SkipZoneForGC(JSContext* cx, Zone* zone) {
   CHECK_THREAD(cx);
   MOZ_ASSERT(cx->runtime()->gc.hasZone(zone));
 
+  cx->runtime()->gc.fullGCRequested = false;
   zone->unscheduleGC();
 }
 

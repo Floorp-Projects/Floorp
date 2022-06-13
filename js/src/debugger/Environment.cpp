@@ -17,7 +17,6 @@
 #include "debugger/Object.h"            // for DebuggerObject
 #include "debugger/Script.h"            // for DebuggerScript
 #include "frontend/BytecodeCompiler.h"  // for IsIdentifier
-#include "gc/Rooting.h"                 // for RootedValue
 #include "gc/Tracer.h"    // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CallArgs.h"  // for CallArgs
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*

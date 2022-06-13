@@ -22,7 +22,6 @@
 #include "NamespaceImports.h"
 
 #include "gc/AllocKind.h"
-#include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
@@ -711,7 +710,7 @@ class GlobalObject : public NativeObject {
  private:
   using ObjectInitOp = bool (*)(JSContext*, Handle<GlobalObject*>);
   using ObjectInitWithTagOp = bool (*)(JSContext*, Handle<GlobalObject*>,
-                                       HandleAtom);
+                                       Handle<JSAtom*>);
 
   static JSObject* getOrCreateBuiltinProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
@@ -725,7 +724,7 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateBuiltinProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
-                                           ProtoKind kind, HandleAtom tag,
+                                           ProtoKind kind, Handle<JSAtom*> tag,
                                            ObjectInitWithTagOp init) {
     if (JSObject* proto = global->maybeBuiltinProto(kind)) {
       return proto;
@@ -739,7 +738,7 @@ class GlobalObject : public NativeObject {
                                       ProtoKind kind, ObjectInitOp init);
   static JSObject* createBuiltinProto(JSContext* cx,
                                       Handle<GlobalObject*> global,
-                                      ProtoKind kind, HandleAtom tag,
+                                      ProtoKind kind, Handle<JSAtom*> tag,
                                       ObjectInitWithTagOp init);
 
   static JSObject* createIteratorPrototype(JSContext* cx,
@@ -929,7 +928,7 @@ class GlobalObject : public NativeObject {
   }
 
   static bool getIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
-                                HandlePropertyName name,
+                                Handle<PropertyName*> name,
                                 MutableHandleValue value) {
     if (global->maybeGetIntrinsicValue(name, value.address(), cx)) {
       return true;
@@ -938,20 +937,20 @@ class GlobalObject : public NativeObject {
   }
 
   static bool getIntrinsicValueSlow(JSContext* cx, Handle<GlobalObject*> global,
-                                    HandlePropertyName name,
+                                    Handle<PropertyName*> name,
                                     MutableHandleValue value);
 
   static bool addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
-                                HandlePropertyName name, HandleValue value);
+                                Handle<PropertyName*> name, HandleValue value);
 
   static inline bool setIntrinsicValue(JSContext* cx,
                                        Handle<GlobalObject*> global,
-                                       HandlePropertyName name,
+                                       Handle<PropertyName*> name,
                                        HandleValue value);
 
   static bool getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
-                                    HandlePropertyName selfHostedName,
-                                    HandleAtom name, unsigned nargs,
+                                    Handle<PropertyName*> selfHostedName,
+                                    Handle<JSAtom*> name, unsigned nargs,
                                     MutableHandleValue funVal);
 
   static RegExpStatics* getRegExpStatics(JSContext* cx,
@@ -1000,7 +999,7 @@ class GlobalObject : public NativeObject {
             const JSFunctionSpec* Methods>
   static bool initObjectIteratorProto(JSContext* cx,
                                       Handle<GlobalObject*> global,
-                                      HandleAtom tag);
+                                      Handle<JSAtom*> tag);
 
   // Implemented in vm/AsyncIteration.cpp.
   static bool initAsyncIteratorProto(JSContext* cx,

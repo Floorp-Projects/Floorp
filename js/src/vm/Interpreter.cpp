@@ -193,7 +193,8 @@ bool js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun) {
   return true;
 }
 
-static inline bool GetPropertyOperation(JSContext* cx, HandlePropertyName name,
+static inline bool GetPropertyOperation(JSContext* cx,
+                                        Handle<PropertyName*> name,
                                         HandleValue lval,
                                         MutableHandleValue vp) {
   if (name == cx->names().length && GetLengthProperty(lval, vp)) {
@@ -204,7 +205,7 @@ static inline bool GetPropertyOperation(JSContext* cx, HandlePropertyName name,
 }
 
 static inline bool GetNameOperation(JSContext* cx, HandleObject envChain,
-                                    HandlePropertyName name, JSOp nextOp,
+                                    Handle<PropertyName*> name, JSOp nextOp,
                                     MutableHandleValue vp) {
   /* Kludge to allow (typeof foo == "undefined") tests. */
   if (nextOp == JSOp::Typeof) {
@@ -217,7 +218,7 @@ bool js::GetImportOperation(JSContext* cx, HandleObject envChain,
                             HandleScript script, jsbytecode* pc,
                             MutableHandleValue vp) {
   RootedObject env(cx), pobj(cx);
-  RootedPropertyName name(cx, script->getName(pc));
+  Rooted<PropertyName*> name(cx, script->getName(pc));
   PropertyResult prop;
 
   MOZ_ALWAYS_TRUE(LookupName(cx, name, envChain, &env, &pobj, &prop));
@@ -2091,8 +2092,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   RootedValue rootValue0(cx), rootValue1(cx);
   RootedObject rootObject0(cx), rootObject1(cx);
   RootedFunction rootFunction0(cx);
-  RootedAtom rootAtom0(cx);
-  RootedPropertyName rootName0(cx);
+  Rooted<JSAtom*> rootAtom0(cx);
+  Rooted<PropertyName*> rootName0(cx);
   RootedId rootId0(cx);
   RootedScript rootScript0(cx);
   Rooted<Scope*> rootScope0(cx);
@@ -4613,7 +4614,7 @@ bool js::ThrowOperation(JSContext* cx, HandleValue v) {
   return false;
 }
 
-bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
+bool js::GetProperty(JSContext* cx, HandleValue v, Handle<PropertyName*> name,
                      MutableHandleValue vp) {
   if (name == cx->names().length) {
     // Fast path for strings, arrays and arguments.
@@ -4736,7 +4737,7 @@ bool js::GetAndClearException(JSContext* cx, MutableHandleValue res) {
 
 template <bool strict>
 bool js::DelPropOperation(JSContext* cx, HandleValue val,
-                          HandlePropertyName name, bool* res) {
+                          Handle<PropertyName*> name, bool* res) {
   const int valIndex = -1;
   RootedObject obj(cx,
                    ToObjectFromStackForPropertyAccess(cx, val, valIndex, name));
@@ -4762,9 +4763,10 @@ bool js::DelPropOperation(JSContext* cx, HandleValue val,
 }
 
 template bool js::DelPropOperation<true>(JSContext* cx, HandleValue val,
-                                         HandlePropertyName name, bool* res);
+                                         Handle<PropertyName*> name, bool* res);
 template bool js::DelPropOperation<false>(JSContext* cx, HandleValue val,
-                                          HandlePropertyName name, bool* res);
+                                          Handle<PropertyName*> name,
+                                          bool* res);
 
 template <bool strict>
 bool js::DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
@@ -4914,7 +4916,7 @@ bool js::AtomicIsLockFree(JSContext* cx, HandleValue in, int* out) {
   return true;
 }
 
-bool js::DeleteNameOperation(JSContext* cx, HandlePropertyName name,
+bool js::DeleteNameOperation(JSContext* cx, Handle<PropertyName*> name,
                              HandleObject scopeObj, MutableHandleValue res) {
   RootedObject scope(cx), pobj(cx);
   PropertyResult prop;
@@ -4948,7 +4950,7 @@ bool js::DeleteNameOperation(JSContext* cx, HandlePropertyName name,
 }
 
 bool js::ImplicitThisOperation(JSContext* cx, HandleObject scopeObj,
-                               HandlePropertyName name,
+                               Handle<PropertyName*> name,
                                MutableHandleValue res) {
   RootedObject obj(cx);
   if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj)) {
@@ -5001,7 +5003,7 @@ static bool InitGetterSetterOperation(JSContext* cx, jsbytecode* pc,
 
 bool js::InitPropGetterSetterOperation(JSContext* cx, jsbytecode* pc,
                                        HandleObject obj,
-                                       HandlePropertyName name,
+                                       Handle<PropertyName*> name,
                                        HandleObject val) {
   RootedId id(cx, NameToId(name));
   return InitGetterSetterOperation(cx, pc, obj, id, val);
@@ -5315,7 +5317,7 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
-                                   HandlePropertyName name) {
+                                   Handle<PropertyName*> name) {
   RootedId id(cx, NameToId(name));
   ReportRuntimeLexicalError(cx, errorNumber, id);
 }
@@ -5326,7 +5328,7 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
   MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::CheckAliasedLexical ||
              op == JSOp::ThrowSetConst || op == JSOp::GetImport);
 
-  RootedPropertyName name(cx);
+  Rooted<PropertyName*> name(cx);
   if (IsLocalOp(op)) {
     name = FrameSlotName(script, pc)->asPropertyName();
   } else if (IsAliasedVarOp(op)) {
@@ -5339,7 +5341,7 @@ void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
   ReportRuntimeLexicalError(cx, errorNumber, name);
 }
 
-void js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
+void js::ReportRuntimeRedeclaration(JSContext* cx, Handle<PropertyName*> name,
                                     const char* redeclKind) {
   if (UniqueChars printable = AtomToPrintableString(cx, name)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -5394,7 +5396,7 @@ bool js::ThrowObjectCoercible(JSContext* cx, HandleValue value) {
 }
 
 bool js::SetPropertySuper(JSContext* cx, HandleValue lval, HandleValue receiver,
-                          HandlePropertyName name, HandleValue rval,
+                          Handle<PropertyName*> name, HandleValue rval,
                           bool strict) {
   MOZ_ASSERT(lval.isObjectOrNull());
 

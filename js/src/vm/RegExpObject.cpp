@@ -178,7 +178,7 @@ RegExpObject* RegExpObject::create(JSContext* cx, const CharT* chars,
   static_assert(std::is_same_v<CharT, char16_t>,
                 "this code may need updating if/when CharT encodes UTF-8");
 
-  RootedAtom source(cx, AtomizeChars(cx, chars, length));
+  Rooted<JSAtom*> source(cx, AtomizeChars(cx, chars, length));
   if (!source) {
     return nullptr;
   }
@@ -192,7 +192,7 @@ template RegExpObject* RegExpObject::create(JSContext* cx,
                                             NewObjectKind newKind);
 
 RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
-                                                HandleAtom source,
+                                                Handle<JSAtom*> source,
                                                 RegExpFlags flags,
                                                 NewObjectKind newKind) {
   Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, newKind));
@@ -205,7 +205,7 @@ RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
   return regexp;
 }
 
-RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
+RegExpObject* RegExpObject::create(JSContext* cx, Handle<JSAtom*> source,
                                    RegExpFlags flags, NewObjectKind newKind) {
   CompileOptions dummyOptions(cx);
   frontend::DummyTokenStream dummyTokenStream(cx, dummyOptions);
@@ -231,7 +231,7 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
 RegExpShared* RegExpObject::createShared(JSContext* cx,
                                          Handle<RegExpObject*> regexp) {
   MOZ_ASSERT(!regexp->hasShared());
-  RootedAtom source(cx, regexp->getSource());
+  Rooted<JSAtom*> source(cx, regexp->getSource());
   RegExpShared* shared =
       cx->zone()->regExps().get(cx, source, regexp->getFlags());
   if (!shared) {
@@ -415,7 +415,7 @@ static bool EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars,
 }
 
 // ES6 draft rev32 21.2.3.2.4.
-JSLinearString* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
+JSLinearString* js::EscapeRegExpPattern(JSContext* cx, Handle<JSAtom*> src) {
   // Step 2.
   if (src->length() == 0) {
     return cx->names().emptyRegExp;
@@ -444,11 +444,11 @@ JSLinearString* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
 JSLinearString* RegExpObject::toString(JSContext* cx,
                                        Handle<RegExpObject*> obj) {
   // Steps 3-4.
-  RootedAtom src(cx, obj->getSource());
+  Rooted<JSAtom*> src(cx, obj->getSource());
   if (!src) {
     return nullptr;
   }
-  RootedLinearString escapedSrc(cx, EscapeRegExpPattern(cx, src));
+  Rooted<JSLinearString*> escapedSrc(cx, EscapeRegExpPattern(cx, src));
 
   // Step 7.
   JSStringBuilder sb(cx);
@@ -590,7 +590,7 @@ void RegExpShared::finalize(JS::GCContext* gcx) {
 /* static */
 bool RegExpShared::compileIfNecessary(JSContext* cx,
                                       MutableHandleRegExpShared re,
-                                      HandleLinearString input,
+                                      Handle<JSLinearString*> input,
                                       RegExpShared::CodeKind codeKind) {
   if (codeKind == RegExpShared::CodeKind::Any) {
     // We start by interpreting regexps, then compile them once they are
@@ -624,8 +624,8 @@ bool RegExpShared::compileIfNecessary(JSContext* cx,
 /* static */
 RegExpRunStatus RegExpShared::execute(JSContext* cx,
                                       MutableHandleRegExpShared re,
-                                      HandleLinearString input, size_t start,
-                                      VectorMatchPairs* matches) {
+                                      Handle<JSLinearString*> input,
+                                      size_t start, VectorMatchPairs* matches) {
   MOZ_ASSERT(matches);
 
   // TODO: Add tracelogger support
@@ -718,7 +718,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   MOZ_CRASH("Unreachable");
 }
 
-void RegExpShared::useAtomMatch(HandleAtom pattern) {
+void RegExpShared::useAtomMatch(Handle<JSAtom*> pattern) {
   MOZ_ASSERT(kind() == RegExpShared::Kind::Unparsed);
   kind_ = RegExpShared::Kind::Atom;
   patternAtom_ = pattern;
@@ -843,7 +843,7 @@ RegExpRunStatus js::ExecuteRegExpAtomRaw(RegExpShared* re,
 
 /* static */
 RegExpRunStatus RegExpShared::executeAtom(MutableHandleRegExpShared re,
-                                          HandleLinearString input,
+                                          Handle<JSLinearString*> input,
                                           size_t start,
                                           VectorMatchPairs* matches) {
   return ExecuteAtomImpl(re, input, start, matches);
@@ -957,7 +957,7 @@ void RegExpRealm::traceWeak(JSTracer* trc) {
                 "RegExpRealm::optimizableRegExpInstanceShape_");
 }
 
-RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom source,
+RegExpShared* RegExpZone::get(JSContext* cx, Handle<JSAtom*> source,
                               RegExpFlags flags) {
   DependentAddPtr<Set> p(cx, set_, Key(source, flags));
   if (p) {
@@ -1165,7 +1165,7 @@ JS_PUBLIC_API bool JS::ExecuteRegExp(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  RootedLinearString input(cx, NewStringCopyN<CanGC>(cx, chars, length));
+  Rooted<JSLinearString*> input(cx, NewStringCopyN<CanGC>(cx, chars, length));
   if (!input) {
     return false;
   }
@@ -1182,7 +1182,7 @@ JS_PUBLIC_API bool JS::ExecuteRegExpNoStatics(JSContext* cx, HandleObject obj,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  RootedLinearString input(cx, NewStringCopyN<CanGC>(cx, chars, length));
+  Rooted<JSLinearString*> input(cx, NewStringCopyN<CanGC>(cx, chars, length));
   if (!input) {
     return false;
   }

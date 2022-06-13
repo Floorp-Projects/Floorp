@@ -1331,7 +1331,8 @@ class ColorConverters {
   }
 
   static CMYK_HTML(components) {
-    return this.RGB_HTML(this.CMYK_RGB(components));
+    const rgb = this.CMYK_RGB(components).slice(1);
+    return this.RGB_HTML(rgb);
   }
 
   static RGB_CMYK([r, g, b]) {
@@ -5039,8 +5040,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.51';
-const pdfjsBuild = '195396768';
+const pdfjsVersion = '2.15.117';
+const pdfjsBuild = '1a6ae5f03';
 })();
 
 /******/ 	return __webpack_exports__;

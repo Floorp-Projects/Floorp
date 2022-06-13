@@ -110,6 +110,29 @@ class AvlTreeImpl {
   Node* freeList_;
   LifoAlloc* alloc_;
 
+  // As a modest but easy optimisation, ::allocateNode will allocate one node
+  // at the first call that sees an empty `freeList_`, two on the next such
+  // call and four on subsequent such calls.  This has the effect of reducing
+  // the number of calls to the underlying allocator `alloc_` by a factor of 4
+  // for all but the smallest trees.  It also helps pack more nodes into each
+  // cache line.  The limit of 4 exists for three reasons:
+  //
+  // (1) It gains the majority (75%) of the available benefit from reducing
+  // the number of calls to `alloc_`, as the allocation size tends to
+  // infinity.
+  //
+  // (2) Similarly, 4 `struct Node`s will surely be greater than 128 bytes,
+  // hence there is minimal chance to use even fewer cache lines by increasing
+  // the group size further.  In any case most machines have cache lines of
+  // size 64 bytes, not 128.
+  //
+  // (3) Most importantly, it limits the maximum potentially wasted space,
+  // which is the case where a request causes an allocation of N nodes, of
+  // which one is used immediately and the N-1 are put on the freelist, but
+  // then -- because the tree never grows larger -- are never used.  Given
+  // that N=4 here, the worst case lossage is 3 nodes, which seems tolerable.
+  uint32_t nextAllocSize_;  // 1, 2 or 4 only
+
   // The expected maximum tree depth.  See comments above.
   static const size_t MAX_TREE_DEPTH = 48;
 
@@ -119,32 +142,75 @@ class AvlTreeImpl {
   // ---- Preliminaries --------------------------------------- //
 
   explicit AvlTreeImpl(LifoAlloc* alloc = nullptr)
-      : root_(nullptr), freeList_(nullptr), alloc_(alloc) {}
+      : root_(nullptr), freeList_(nullptr), alloc_(alloc), nextAllocSize_(1) {}
 
   void setAllocator(LifoAlloc* alloc) { alloc_ = alloc; }
 
-  // Allocate a Node holding `v`, or return nullptr on OOM.  All of the fields
-  // are initialized.
-  Node* allocateNode(const T& v) {
-    Node* node = freeList_;
-    if (node) {
-      MOZ_ASSERT(node->tag == Tag::Free);
-      freeList_ = node->left;
-      new (node) Node(v);
-    } else {
-      node = alloc_->new_<Node>(v);
-      // `node` is either fully initialized, or nullptr on OOM.
-    }
-    return node;
-  }
-
   // Put `node` onto the free list, for possible later reuse.
-  void freeNode(Node* node) {
-    MOZ_ASSERT(node->tag != Tag::Free);
+  inline void addToFreeList(Node* node) {
     node->left = freeList_;
     node->right = nullptr;  // for safety
     node->tag = Tag::Free;
     freeList_ = node;
+  }
+
+  // A safer version of `addToFreeList`.
+  inline void freeNode(Node* node) {
+    MOZ_ASSERT(node->tag != Tag::Free);
+    addToFreeList(node);
+  }
+
+  // This is the slow path for ::allocateNode below.  Allocate 1, 2 or 4 nodes
+  // as a block, return the first one properly initialised, and put the rest
+  // on the freelist, in increasing order of address.
+  MOZ_NEVER_INLINE Node* allocateNodeOOL(const T& v) {
+    switch (nextAllocSize_) {
+      case 1: {
+        nextAllocSize_ = 2;
+        Node* node = alloc_->new_<Node>(v);
+        // `node` is either fully initialized, or nullptr on OOM.
+        return node;
+      }
+      case 2: {
+        nextAllocSize_ = 4;
+        Node* nodes = alloc_->newArrayUninitialized<Node>(2);
+        if (!nodes) {
+          return nullptr;
+        }
+        Node* node0 = &nodes[0];
+        addToFreeList(&nodes[1]);
+        new (node0) Node(v);
+        return node0;
+      }
+      case 4: {
+        Node* nodes = alloc_->newArrayUninitialized<Node>(4);
+        if (!nodes) {
+          return nullptr;
+        }
+        Node* node0 = &nodes[0];
+        addToFreeList(&nodes[3]);
+        addToFreeList(&nodes[2]);
+        addToFreeList(&nodes[1]);
+        new (node0) Node(v);
+        return node0;
+      }
+      default: {
+        MOZ_CRASH();
+      }
+    }
+  }
+
+  // Allocate a Node holding `v`, or return nullptr on OOM.  All of the fields
+  // are initialized.
+  inline Node* allocateNode(const T& v) {
+    Node* node = freeList_;
+    if (MOZ_LIKELY(node)) {
+      MOZ_ASSERT(node->tag == Tag::Free);
+      freeList_ = node->left;
+      new (node) Node(v);
+      return node;
+    }
+    return allocateNodeOOL(v);
   }
 
   // These exist only transiently, to aid rebalancing.  They indicate whether

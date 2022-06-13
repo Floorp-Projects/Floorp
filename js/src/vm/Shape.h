@@ -24,7 +24,7 @@
 #include "gc/Barrier.h"
 #include "gc/GCContext.h"
 #include "gc/MaybeRooted.h"
-#include "gc/Rooting.h"
+#include "gc/Policy.h"
 #include "js/HashTable.h"
 #include "js/Id.h"  // JS::PropertyKey
 #include "js/MemoryMetrics.h"
@@ -39,6 +39,7 @@
 #include "vm/PropMap.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
+#include "vm/TaggedProto.h"
 
 // [SMDOC] Shapes
 //

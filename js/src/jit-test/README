@@ -1,31 +1,58 @@
-JS Trace Test Suite
+JS Internal Test Suite
 
 * PURPOSE
 
-This is a test suite for testing the SpiderMonkey JIT. All tests are run in the JS shell
-with tracing enabled (-j).
+This is a test suite primarily for testing the SpiderMonkey JIT, GC, and any
+other internal mechanisms that are not visible to test262. All tests are run in
+the JS shell.
+
+In the future, we intend to migrate the "non262" jstests over to this framework.
+
+* CONTINUOUS INTEGRATION
+
+In CI, these tests will be run as part of the "SM(...)" set of jobs. They will
+also be packaged up and then run via mozharness as separate test jobs on some
+platforms. These will appear on treeherder as jobs starting with "Jit", eg
+"Jit", "Jit3", "Jit-1proc3", etc.
+
+Unlike jstests, we do not run jit-tests in the browser. All tests may assume
+they are running in the JS shell environment.
 
 * REQUIREMENTS
 
-Python 2.7. This is already a standard requirement for building our tree.
+Python 3.6. This is already a standard requirement for building our tree.
 
 * RUNNING THE TESTS
 
 Basic usage:
 
+    ./mach jit-test
+
+from the top of the checkout. Directly invoking
+
     python jit_test.py <path-to-js-shell>
 
-The progress bar shows [#tests passed, #tests failed, #tests run] at the left.
-If all tests pass, the output is 'PASSED ALL'. The test suite can be interrupted
-at any time with Ctrl+C and partial results will be printed.
+will also work. The progress bar shows [#tests passed, #tests failed, #tests
+run] at the left. If all tests pass, the output is 'PASSED ALL'. The test suite
+can be interrupted at any time with Ctrl+C and partial results will be printed.
 
 To run only the basic tests, not including the slow tests:
 
-    python jit_test.py <path-to-js-shell> basic
+    ./mach jit-test <path-to-js-shell> basic
 
 For more options:
 
+    ./mach jit-test -- -h
+
+or
+
     python jit_test.py -h
+
+for the jit-test harness options, or
+
+    ./mach jit-test -h
+
+for the mach driver's options (eg --cgc).
 
 * CREATING NEW TESTS
 
@@ -34,7 +61,7 @@ Simply create a JS file under the 'tests/' directory. Most tests should go in
 
 All tests are run with 'lib/prologue.js' included first on the command line. The
 command line also creates a global variable 'libdir' that is set to the path
-of the 'lib' directory. To include a file 'foo.js' from the lib directory in a 
+of the 'lib' directory. To include a file 'foo.js' from the lib directory in a
 test case:
 
     load(libdir + 'foo.js')

@@ -1072,7 +1072,7 @@ static void SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
   // Step 4. Let resolve be
   //         ! CreateBuiltinFunction(stepsResolve, lengthResolve, "",
   //                                 « [[Promise]], [[AlreadyResolved]] »).
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   resolveFn.set(NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
                                   gc::AllocKind::FUNCTION_EXTENDED,
                                   GenericObject));
@@ -1498,7 +1498,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
   //         captures reaction and argument and performs the following steps
   //         when called:
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction job(
       cx, NewNativeFunction(cx, PromiseReactionJob, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -1804,7 +1804,7 @@ CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx) {
   // Step 4. Let executorClosure be a new Abstract Closure with parameters
   //         (resolve, reject) that captures promiseCapability and performs the
   //         following steps when called:
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction executor(
       cx, NewNativeFunction(cx, GetCapabilitiesExecutor, 2, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -2471,7 +2471,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
   //         captures promiseToResolve, thenable, and then and performs the
   //         following steps when called:
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction job(
       cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
@@ -2532,7 +2532,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
   // Step 1. Let job be a new Job Abstract Closure with no parameters that
   //         captures promiseToResolve, thenable, and then and performs the
   //         following steps when called:
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction job(
       cx, NewNativeFunction(cx, PromiseResolveBuiltinThenableJob, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));

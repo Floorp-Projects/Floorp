@@ -108,7 +108,7 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringForAtom(
 // Create a thin inline string if possible, and a fat inline string if not.
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
-    JSContext* cx, HandleLinearString base, size_t start, size_t length,
+    JSContext* cx, Handle<JSLinearString*> base, size_t start, size_t length,
     js::gc::InitialHeap heap) {
   MOZ_ASSERT(JSInlineString::lengthFits<CharT>(length));
 
@@ -253,7 +253,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
                        ? JSInlineString::lengthFits<char16_t>(length)
                        : JSInlineString::lengthFits<JS::Latin1Char>(length);
   if (useInline) {
-    js::RootedLinearString base(cx, baseArg);
+    JS::Rooted<JSLinearString*> base(cx, baseArg);
     return baseArg->hasLatin1Chars()
                ? js::NewInlineString<JS::Latin1Char>(cx, base, start, length,
                                                      heap)
@@ -267,7 +267,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
     return str;
   }
 
-  js::RootedLinearString base(cx, baseArg);
+  JS::Rooted<JSLinearString*> base(cx, baseArg);
 
   str = js::AllocateString<JSDependentString>(cx, heap);
   if (!str) {

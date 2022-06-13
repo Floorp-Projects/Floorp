@@ -847,7 +847,7 @@ extern bool ReadPropertyDescriptors(
     MutableHandleIdVector ids, MutableHandle<PropertyDescriptorVector> descs);
 
 /* Read the name using a dynamic lookup on the scopeChain. */
-extern bool LookupName(JSContext* cx, HandlePropertyName name,
+extern bool LookupName(JSContext* cx, Handle<PropertyName*> name,
                        HandleObject scopeChain, MutableHandleObject objp,
                        MutableHandleObject pobjp, PropertyResult* propp);
 
@@ -862,7 +862,8 @@ extern bool LookupNameNoGC(JSContext* cx, PropertyName* name,
  * Additionally, pobjp and propp are not needed by callers so they are not
  * returned.
  */
-extern bool LookupNameWithGlobalDefault(JSContext* cx, HandlePropertyName name,
+extern bool LookupNameWithGlobalDefault(JSContext* cx,
+                                        Handle<PropertyName*> name,
                                         HandleObject scopeChain,
                                         MutableHandleObject objp);
 
@@ -874,7 +875,7 @@ extern bool LookupNameWithGlobalDefault(JSContext* cx, HandlePropertyName name,
  *
  * Additionally, pobjp is not needed by callers so it is not returned.
  */
-extern bool LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
+extern bool LookupNameUnqualified(JSContext* cx, Handle<PropertyName*> name,
                                   HandleObject scopeChain,
                                   MutableHandleObject objp);
 
@@ -932,7 +933,8 @@ namespace js {
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
                                         int valIndex, HandleId key);
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
-                                        int valIndex, HandlePropertyName key);
+                                        int valIndex,
+                                        Handle<PropertyName*> key);
 JSObject* ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val,
                                         int valIndex, HandleValue keyValue);
 
@@ -946,7 +948,7 @@ MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(JSContext* cx,
   return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
-    JSContext* cx, HandleValue vp, int vpIndex, HandlePropertyName key) {
+    JSContext* cx, HandleValue vp, int vpIndex, Handle<PropertyName*> key) {
   if (vp.isObject()) {
     return &vp.toObject();
   }

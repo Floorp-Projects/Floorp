@@ -100,7 +100,7 @@ JSObject* AbstractGeneratorObject::createModuleGenerator(
 
   // Create a handler function to wrap the module's script. This way
   // we can access it later and restore the state.
-  HandlePropertyName funName = cx->names().empty;
+  Handle<PropertyName*> funName = cx->names().empty;
   RootedFunction handlerFun(
       cx, NewFunctionWithProto(cx, nullptr, 0,
                                FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC,
@@ -369,7 +369,7 @@ static JSObject* CreateGeneratorFunction(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  HandlePropertyName name = cx->names().GeneratorFunction;
+  Handle<PropertyName*> name = cx->names().GeneratorFunction;
   return NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
                               nullptr, name, proto, gc::AllocKind::FUNCTION,
                               TenuredObject);

@@ -17,7 +17,6 @@
 #include "debugger/DebugAPI.h"  // for ResumeMode
 #include "debugger/Debugger.h"  // for ResumeMode, Handler, Debugger
 #include "gc/Barrier.h"         // for HeapPtr
-#include "gc/Rooting.h"         //
 #include "vm/FrameIter.h"       // for FrameIter
 #include "vm/JSObject.h"        // for JSObject
 #include "vm/NativeObject.h"    // for NativeObject

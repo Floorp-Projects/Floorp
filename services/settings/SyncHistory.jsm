@@ -94,6 +94,14 @@ class SyncHistory {
   }
 
   /**
+   * Return the most recent entry.
+   */
+  async last() {
+    // List is sorted from newer to older.
+    return (await this.list())[0];
+  }
+
+  /**
    * Wipe out the **whole** store.
    */
   async clear() {

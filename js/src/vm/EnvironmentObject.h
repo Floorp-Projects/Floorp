@@ -434,10 +434,11 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   ModuleObject& module() const;
   IndirectBindingMap& importBindings() const;
 
-  bool createImportBinding(JSContext* cx, HandleAtom importName,
-                           Handle<ModuleObject*> module, HandleAtom exportName);
+  bool createImportBinding(JSContext* cx, Handle<JSAtom*> importName,
+                           Handle<ModuleObject*> module,
+                           Handle<JSAtom*> exportName);
 
-  bool hasImportBinding(HandlePropertyName name);
+  bool hasImportBinding(Handle<PropertyName*> name);
 
   bool lookupImport(jsid name, ModuleEnvironmentObject** envOut,
                     mozilla::Maybe<PropertyInfo>* propOut);
@@ -1305,12 +1306,12 @@ ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
 [[nodiscard]] bool CheckCanDeclareGlobalBinding(JSContext* cx,
                                                 Handle<GlobalObject*> global,
-                                                HandlePropertyName name,
+                                                Handle<PropertyName*> name,
                                                 bool isFunction);
 
 [[nodiscard]] bool CheckLexicalNameConflict(
     JSContext* cx, Handle<ExtensibleLexicalEnvironmentObject*> lexicalEnv,
-    HandleObject varObj, HandlePropertyName name);
+    HandleObject varObj, Handle<PropertyName*> name);
 
 [[nodiscard]] bool CheckGlobalDeclarationConflicts(
     JSContext* cx, HandleScript script,
@@ -1345,7 +1346,7 @@ bool AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);
 
 extern JSObject* MaybeOptimizeBindGlobalName(JSContext* cx,
                                              Handle<GlobalObject*> global,
-                                             HandlePropertyName name);
+                                             Handle<PropertyName*> name);
 }  // namespace js
 
 #endif /* vm_EnvironmentObject_h */

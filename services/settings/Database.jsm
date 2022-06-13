@@ -26,6 +26,10 @@ var EXPORTED_SYMBOLS = ["Database"];
  * (with the objective of getting rid of kinto-offline-client)
  */
 class Database {
+  static destroy() {
+    return destroyIDB();
+  }
+
   constructor(identifier) {
     ensureShutdownBlocker();
     this.identifier = identifier;
@@ -405,6 +409,35 @@ async function executeIDB(storeNames, callback, options = {}) {
   return promise.finally(finishedFn);
 }
 
+async function destroyIDB() {
+  if (gDB) {
+    if (gShutdownStarted || Services.startup.shuttingDown) {
+      throw new lazy.IDBHelpers.ShutdownError(
+        "The application is shutting down",
+        "destroyIDB()"
+      );
+    }
+
+    // This will return immediately; the actual close will happen once
+    // there are no more running transactions.
+    gDB.close();
+    const allTransactions = new Set([
+      ...gPendingWriteOperations,
+      ...gPendingReadOnlyTransactions,
+    ]);
+    for (let transaction of Array.from(allTransactions)) {
+      try {
+        transaction.abort();
+      } catch (ex) {
+        // Ignore errors to abort transactions, we'll destroy everything.
+      }
+    }
+  }
+  gDB = null;
+  gDBPromise = null;
+  return lazy.IDBHelpers.destroyIDB();
+}
+
 function makeNestedObjectFromArr(arr, val, nestedFiltersObj) {
   const last = arr.length - 1;
   return arr.reduce((acc, cv, i) => {
@@ -449,7 +482,7 @@ Database._shutdownHandler = () => {
       // Ensure we don't throw/break, because either way we're in shutdown.
 
       // In particular, `transaction.abort` can throw if the transaction
-      // is complete, ie if we manage to get called inbetween the
+      // is complete, ie if we manage to get called in between the
       // transaction completing, and our completion handler being called
       // to remove the item from the set. We don't care about that.
       if (ex.result != NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR) {
