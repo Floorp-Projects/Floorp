@@ -242,7 +242,7 @@ void PrintPlottableResults(const std::vector<std::string>& desired_graphs) {
 bool WritePerfResults(const std::string& output_path) {
   std::string results = GetPerfResults();
   CreateDir(DirName(output_path));
-  FILE* output = fopen(output_path.c_str(), "wb");
+  FILE* output = fopen(output_path.c_str(), "ab");
   if (output == NULL) {
     printf("Failed to write to %s.\n", output_path.c_str());
     return false;

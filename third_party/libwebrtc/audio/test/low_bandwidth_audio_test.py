@@ -31,9 +31,9 @@ NO_TOOLS_ERROR_MESSAGE = (
     'To fix this run:\n'
     '  python %s %s\n'
     '\n'
-    'Note that these tools are Google-internal due to licensing, so in order to '
-    'use them you will have to get your own license and manually put them in the '
-    'right location.\n'
+    'Note that these tools are Google-internal due to licensing, so in order '
+    'to use them you will have to get your own license and manually put them '
+    'in the right location.\n'
     'See https://cs.chromium.org/chromium/src/third_party/webrtc/tools_webrtc/'
     'download_tools.py?rcl=bbceb76f540159e2dba0701ac03c514f01624130&l=13')
 
@@ -65,6 +65,9 @@ def _ParseArgs():
         '--isolated-script-test-perf-output',
         default=None,
         help='Path to store perf results in histogram proto format.')
+    parser.add_argument('--dump_json_test_results',
+                        default=None,
+                        help='Path to store json test results.')
     parser.add_argument('--extra-test-args',
                         default=[],
                         action='append',
@@ -242,14 +245,14 @@ def _ConfigurePythonPath(args):
     checkout_root = os.path.abspath(
         os.path.join(script_dir, os.pardir, os.pardir))
 
-    # TODO(https://crbug.com/1029452): Use a copy rule and add these from the out
-    # dir like for the third_party/protobuf code.
+    # TODO(https://crbug.com/1029452): Use a copy rule and add these from the
+    # out dir like for the third_party/protobuf code.
     sys.path.insert(
         0, os.path.join(checkout_root, 'third_party', 'catapult', 'tracing'))
 
-    # The low_bandwidth_audio_perf_test gn rule will build the protobuf stub for
-    # python, so put it in the path for this script before we attempt to import
-    # it.
+    # The low_bandwidth_audio_perf_test gn rule will build the protobuf stub
+    # for python, so put it in the path for this script before we attempt to
+    # import it.
     histogram_proto_path = os.path.join(os.path.abspath(args.build_dir),
                                         'pyproto', 'tracing', 'tracing',
                                         'proto')
@@ -296,7 +299,10 @@ def main():
         ]
     else:
         test_command = [
-            os.path.join(args.build_dir, 'low_bandwidth_audio_test')
+            os.path.join('..', '..', 'tools_webrtc',
+                         'gtest-parallel-wrapper.py'),
+            os.path.join(args.build_dir, 'low_bandwidth_audio_test'),
+            '--dump_json_test_results=%s' % args.dump_json_test_results,
         ]
 
     analyzers = [Analyzer('pesq', _RunPesq, pesq_path, 16000)]
