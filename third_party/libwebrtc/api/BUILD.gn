@@ -414,6 +414,16 @@ rtc_source_set("stats_observer_interface") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
+rtc_source_set("peer_network_dependencies") {
+  visibility = [ "*" ]
+  sources = [ "test/peer_network_dependencies.h" ]
+  deps = [
+    ":packet_socket_factory",
+    "../rtc_base",
+    "../rtc_base:threading",
+  ]
+}
+
 if (!build_with_mozilla) {
 rtc_source_set("peer_connection_quality_test_fixture_api") {
   visibility = [ "*" ]
@@ -430,6 +440,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
     ":media_stream_interface",
     ":network_state_predictor_api",
     ":packet_socket_factory",
+    ":peer_network_dependencies",
     ":rtp_parameters",
     ":simulated_network_api",
     ":stats_observer_interface",
@@ -662,6 +673,7 @@ rtc_source_set("network_emulation_manager_api") {
   deps = [
     ":array_view",
     ":packet_socket_factory",
+    ":peer_network_dependencies",
     ":simulated_network_api",
     ":time_controller",
     "../call:simulated_network",
