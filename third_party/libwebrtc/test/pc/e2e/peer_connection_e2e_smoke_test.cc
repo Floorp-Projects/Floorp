@@ -85,8 +85,7 @@ class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
 
   void AddPeer(EmulatedNetworkManagerInterface* network,
                rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    fixture_->AddPeer(network->network_thread(), network->network_manager(),
-                      configurer);
+    fixture_->AddPeer(network->network_dependencies(), configurer);
   }
 
   void RunAndCheckEachVideoStreamReceivedFrames(const RunParams& run_params) {

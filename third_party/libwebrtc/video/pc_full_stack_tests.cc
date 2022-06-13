@@ -85,10 +85,10 @@ CreateTestFixture(const std::string& test_case_name,
   auto fixture = webrtc_pc_e2e::CreatePeerConnectionE2EQualityTestFixture(
       test_case_name, time_controller, /*audio_quality_analyzer=*/nullptr,
       /*video_quality_analyzer=*/nullptr);
-  fixture->AddPeer(network_links.first->network_thread(),
-                   network_links.first->network_manager(), alice_configurer);
-  fixture->AddPeer(network_links.second->network_thread(),
-                   network_links.second->network_manager(), bob_configurer);
+  fixture->AddPeer(network_links.first->network_dependencies(),
+                   alice_configurer);
+  fixture->AddPeer(network_links.second->network_dependencies(),
+                   bob_configurer);
   fixture->AddQualityMetricsReporter(
       std::make_unique<webrtc_pc_e2e::NetworkQualityMetricsReporter>(
           network_links.first, network_links.second));
