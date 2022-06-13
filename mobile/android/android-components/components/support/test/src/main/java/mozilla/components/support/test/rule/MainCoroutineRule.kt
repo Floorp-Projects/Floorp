@@ -45,12 +45,12 @@ class MainCoroutineRule(val testDispatcher: TestDispatcher = UnconfinedTestDispa
     val scope by lazy { TestScope(testDispatcher) }
 
     override fun starting(description: Description) {
-        super.starting(description)
         Dispatchers.setMain(testDispatcher)
+        super.starting(description)
     }
 
     override fun finished(description: Description) {
-        super.finished(description)
         Dispatchers.resetMain()
+        super.finished(description)
     }
 }
