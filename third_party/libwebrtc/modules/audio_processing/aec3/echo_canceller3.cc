@@ -27,8 +27,8 @@ namespace {
 enum class EchoCanceller3ApiCall { kCapture, kRender };
 
 bool DetectSaturation(rtc::ArrayView<const float> y) {
-  for (auto y_k : y) {
-    if (y_k >= 32700.0f || y_k <= -32700.0f) {
+  for (size_t k = 0; k < y.size(); ++k) {
+    if (y[k] >= 32700.0f || y[k] <= -32700.0f) {
       return true;
     }
   }
