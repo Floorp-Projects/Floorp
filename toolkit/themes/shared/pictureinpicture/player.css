@@ -98,7 +98,9 @@ browser {
   border-radius: 0px;
 }
 
-body:not(:fullscreen) #controls:hover .control-item:not(:hover) {
+/* Set opacity for buttons when controls are visible on the pip window and are not hovered over. For fullscreen mode, only apply opacity if there is a showing attribute. */
+body:not(:fullscreen) #controls:hover .control-item:not(:hover),
+body:fullscreen #controls[showing]:hover .control-item:not(:hover) {
   opacity: 0.8;
 }
 
