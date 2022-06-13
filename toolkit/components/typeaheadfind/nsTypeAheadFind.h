@@ -8,7 +8,6 @@
 #include "nsISelectionController.h"
 #include "nsIDocShell.h"
 #include "nsIObserver.h"
-#include "nsUnicharUtils.h"
 #include "nsIFind.h"
 #include "nsIWebBrowserFind.h"
 #include "nsWeakReference.h"

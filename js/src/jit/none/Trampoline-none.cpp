@@ -39,9 +39,6 @@ void JitRuntime::generateExceptionTailStub(MacroAssembler&, Label*) {
 void JitRuntime::generateBailoutTailStub(MacroAssembler&, Label*) {
   MOZ_CRASH();
 }
-void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler&, Label*) {
-  MOZ_CRASH();
-}
 
 bool JitRuntime::generateVMWrapper(JSContext*, MacroAssembler&,
                                    const VMFunctionData&, DynFn, uint32_t*) {

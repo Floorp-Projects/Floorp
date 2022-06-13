@@ -17,7 +17,7 @@ use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex};
 use crate::picture::{SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
-use crate::prim_store::{PictureIndex, PrimitiveDebugId};
+use crate::prim_store::{PictureIndex};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
@@ -36,22 +36,6 @@ use crate::util::{VecHelper, Preallocator};
 use crate::visibility::{update_prim_visibility, FrameVisibilityState, FrameVisibilityContext};
 use plane_split::Splitter;
 
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum ChasePrimitive {
-    Nothing,
-    Id(PrimitiveDebugId),
-    LocalRect(LayoutRect),
-}
-
-impl Default for ChasePrimitive {
-    fn default() -> Self {
-        ChasePrimitive::Nothing
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -59,7 +43,6 @@ pub struct FrameBuilderConfig {
     pub default_font_render_mode: FontRenderMode,
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
-    pub chase_primitive: ChasePrimitive,
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
     pub gpu_supports_fast_clears: bool,

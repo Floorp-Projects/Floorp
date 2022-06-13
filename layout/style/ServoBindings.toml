@@ -598,6 +598,9 @@ cbindgen-types = [
     { gecko = "StyleScrollbarGutter", servo = "crate::values::computed::ScrollbarGutter" },
     { gecko = "StyleHyphenateCharacter", servo = "crate::values::computed::HyphenateCharacter" },
     { gecko = "StyleContentVisibility", servo = "crate::values::computed::ContentVisibility" },
+    { gecko = "StyleFontStyle", servo = "crate::values::computed::font::FontStyle" },
+    { gecko = "StyleFontWeight", servo = "crate::values::computed::font::FontWeight" },
+    { gecko = "StyleFontStretch", servo = "crate::values::computed::font::FontStretch" },
 ]
 
 mapped-generic-types = [

@@ -66,7 +66,7 @@ use crate::device::query::{GpuSampler, GpuTimer};
 #[cfg(feature = "capture")]
 use crate::device::FBOId;
 use crate::debug_item::DebugItem;
-use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
+use crate::frame_builder::{Frame, FrameBuilderConfig};
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer, SharedFontResources};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
@@ -1171,7 +1171,6 @@ impl Renderer {
             default_font_render_mode,
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: use_dual_source_blending,
-            chase_primitive: options.chase_primitive,
             testing: options.testing,
             gpu_supports_fast_clears: options.gpu_supports_fast_clears,
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
@@ -5746,7 +5745,6 @@ pub struct RendererOptions {
     pub renderer_id: Option<u64>,
     pub scene_builder_hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     pub sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
-    pub chase_primitive: ChasePrimitive,
     pub support_low_priority_transactions: bool,
     pub namespace_alloc_by_client: bool,
     /// If namespaces are allocated by the client, then the namespace for fonts
@@ -5844,7 +5842,6 @@ impl Default for RendererOptions {
             cached_programs: None,
             scene_builder_hooks: None,
             sampler: None,
-            chase_primitive: ChasePrimitive::Nothing,
             support_low_priority_transactions: false,
             namespace_alloc_by_client: false,
             shared_font_namespace: None,

@@ -24,7 +24,6 @@ struct nsCSSValueList;
 struct nsStylePosition;
 
 namespace mozilla {
-class FontSlantStyle;
 namespace dom {
 class Document;
 class Element;
@@ -54,9 +53,6 @@ class nsStyleUtil {
   // will be escaped as U+FFFD and then reparsed back to U+FFFD.
   static void AppendEscapedCSSIdent(const nsAString& aIdent,
                                     nsAString& aResult);
-
-  static void AppendFontSlantStyle(const mozilla::FontSlantStyle&,
-                                   nsAString& aResult);
 
  public:
   static void AppendCSSNumber(float aNumber, nsAString& aResult) {

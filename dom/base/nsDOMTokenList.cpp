@@ -105,33 +105,32 @@ void nsDOMTokenList::SetValue(const nsAString& aValue, ErrorResult& rv) {
   rv = mElement->SetAttr(kNameSpaceID_None, mAttrAtom, aValue, true);
 }
 
-nsresult nsDOMTokenList::CheckToken(const nsAString& aStr) {
-  if (aStr.IsEmpty()) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+void nsDOMTokenList::CheckToken(const nsAString& aToken, ErrorResult& aRv) {
+  if (aToken.IsEmpty()) {
+    return aRv.ThrowSyntaxError("The empty string is not a valid token.");
   }
 
   nsAString::const_iterator iter, end;
-  aStr.BeginReading(iter);
-  aStr.EndReading(end);
+  aToken.BeginReading(iter);
+  aToken.EndReading(end);
 
   while (iter != end) {
-    if (nsContentUtils::IsHTMLWhitespace(*iter))
-      return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+    if (nsContentUtils::IsHTMLWhitespace(*iter)) {
+      return aRv.ThrowInvalidCharacterError(
+          "The token can not contain whitespace.");
+    }
     ++iter;
   }
-
-  return NS_OK;
 }
 
-nsresult nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens) {
+void nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens,
+                                 ErrorResult& aRv) {
   for (uint32_t i = 0, l = aTokens.Length(); i < l; ++i) {
-    nsresult rv = CheckToken(aTokens[i]);
-    if (NS_FAILED(rv)) {
-      return rv;
+    CheckToken(aTokens[i], aRv);
+    if (aRv.Failed()) {
+      return;
     }
   }
-
-  return NS_OK;
 }
 
 bool nsDOMTokenList::Contains(const nsAString& aToken) {
@@ -179,7 +178,7 @@ void nsDOMTokenList::AddInternal(const nsAttrValue* aAttr,
 
 void nsDOMTokenList::Add(const nsTArray<nsString>& aTokens,
                          ErrorResult& aError) {
-  aError = CheckTokens(aTokens);
+  CheckTokens(aTokens, aError);
   if (aError.Failed()) {
     return;
   }
@@ -216,7 +215,7 @@ void nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
 
 void nsDOMTokenList::Remove(const nsTArray<nsString>& aTokens,
                             ErrorResult& aError) {
-  aError = CheckTokens(aTokens);
+  CheckTokens(aTokens, aError);
   if (aError.Failed()) {
     return;
   }
@@ -237,7 +236,7 @@ void nsDOMTokenList::Remove(const nsAString& aToken, ErrorResult& aError) {
 
 bool nsDOMTokenList::Toggle(const nsAString& aToken,
                             const Optional<bool>& aForce, ErrorResult& aError) {
-  aError = CheckToken(aToken);
+  CheckToken(aToken, aError);
   if (aError.Failed()) {
     return false;
   }
@@ -271,16 +270,16 @@ bool nsDOMTokenList::Replace(const nsAString& aToken,
   // characters, and aNewToken is empty, the returned error should be a
   // SyntaxError, not an InvalidCharacterError.
   if (aNewToken.IsEmpty()) {
-    aError.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aError.ThrowSyntaxError("The empty string is not a valid token.");
     return false;
   }
 
-  aError = CheckToken(aToken);
+  CheckToken(aToken, aError);
   if (aError.Failed()) {
     return false;
   }
 
-  aError = CheckToken(aNewToken);
+  CheckToken(aNewToken, aError);
   if (aError.Failed()) {
     return false;
   }

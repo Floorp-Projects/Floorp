@@ -276,13 +276,15 @@ class JitFrameLayout : public CommonFrameLayout {
   }
   uintptr_t numActualArgs() const { return numActualArgs_; }
 
+  // All JIT frames have the caller's frame pointer as first word (pushed after
+  // the return address).
+  static constexpr size_t FramePointerOffset = sizeof(void*);
+
   uint8_t* callerFramePtr() const {
-    // The caller's frame pointer is pushed after the JitFrameLayout.
     auto* p = reinterpret_cast<const uintptr_t*>(this) - 1;
     return reinterpret_cast<uint8_t*>(*p);
   }
 
-  // For IonJS frames: the distance from the JitFrameLayout to the first local
   // slot. The caller's frame pointer is stored in this space. 32-bit platforms
   // have 4 bytes of padding to ensure doubles are properly aligned.
   static constexpr size_t IonFirstSlotOffset = 8;
@@ -311,6 +313,10 @@ class IonICCallFrameLayout : public CommonFrameLayout {
   JitCode* stubCode_;
 
  public:
+  // The caller's frame pointer is pushed after the IonICCallFrameLayout is
+  // pushed on the stack.
+  static constexpr size_t FramePointerOffset = sizeof(void*);
+
   JitCode** stubCode() { return &stubCode_; }
   static size_t Size() { return sizeof(IonICCallFrameLayout); }
 };

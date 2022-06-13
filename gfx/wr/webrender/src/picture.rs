@@ -2171,7 +2171,6 @@ impl TileCacheInstance {
                 &frame_context.global_screen_world_rect,
                 &mut frame_state.data_stores.clip,
                 true,
-                false,
             );
 
             // Ensure that if the entire picture cache is clipped out, the local

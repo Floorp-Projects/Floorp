@@ -2097,24 +2097,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
   }
 }
 
-void MacroAssembler::assertRectifierFrameParentType(Register frameType) {
-#ifdef DEBUG
-  {
-    // Check the possible previous frame types here.
-    Label checkOk;
-    branch32(Assembler::Equal, frameType, Imm32(FrameType::IonJS), &checkOk);
-    branch32(Assembler::Equal, frameType, Imm32(FrameType::BaselineStub),
-             &checkOk);
-    branch32(Assembler::Equal, frameType, Imm32(FrameType::WasmToJSJit),
-             &checkOk);
-    branch32(Assembler::Equal, frameType, Imm32(FrameType::CppToJSJit),
-             &checkOk);
-    assumeUnreachable("Unrecognized frame type preceding RectifierFrame.");
-    bind(&checkOk);
-  }
-#endif
-}
-
 void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
   static_assert(BaseScript::offsetOfJitCodeRaw() ==
                     SelfHostedLazyScript::offsetOfJitCodeRaw(),

@@ -633,25 +633,6 @@ pub fn main() {
             DeviceIntSize::new(w, h)
         })
         .unwrap_or(DeviceIntSize::new(1920, 1080));
-    let chase_primitive = match args.value_of("chase") {
-        Some(s) => {
-            if s.contains(',') {
-                let items = s
-                    .split(',')
-                    .map(|s| s.parse::<f32>().unwrap())
-                    .collect::<Vec<_>>();
-                let rect = LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(items[0], items[1]),
-                    LayoutSize::new(items[2], items[3]),
-                );
-                webrender::ChasePrimitive::LocalRect(rect)
-            } else {
-                let id = s.parse::<usize>().unwrap();
-                webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
-            }
-        }
-        None => webrender::ChasePrimitive::Nothing,
-    };
 
     let dump_shader_source = args.value_of("dump_shader_source").map(String::from);
 
@@ -729,7 +710,6 @@ pub fn main() {
         args.is_present("no_batch"),
         args.is_present("precache"),
         args.is_present("slow_subpixel"),
-        chase_primitive,
         dump_shader_source,
         notifier,
     );

@@ -10,7 +10,7 @@ use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipStoreStats};
 use crate::spatial_tree::SpatialTree;
-use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
+use crate::frame_builder::{FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
 use crate::internal_types::{FastHashMap, PlaneSplitter};
 use crate::picture::SurfaceInfo;
@@ -314,7 +314,6 @@ impl BuiltScene {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
                 dual_source_blending_is_supported: false,
-                chase_primitive: ChasePrimitive::Nothing,
                 testing: false,
                 gpu_supports_fast_clears: false,
                 gpu_supports_advanced_blend: false,

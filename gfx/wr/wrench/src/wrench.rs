@@ -227,7 +227,6 @@ impl Wrench {
         no_batch: bool,
         precache_shaders: bool,
         disable_dual_source_blending: bool,
-        chase_primitive: webrender::ChasePrimitive,
         dump_shader_source: Option<String>,
         notifier: Option<Box<dyn RenderNotifier>>,
     ) -> Self {
@@ -252,7 +251,6 @@ impl Wrench {
             max_recorded_profiles: 16,
             precache_flags,
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
-            chase_primitive,
             testing: true,
             max_internal_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             allow_dual_source_blending: !disable_dual_source_blending,

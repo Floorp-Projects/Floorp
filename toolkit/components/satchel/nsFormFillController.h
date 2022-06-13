@@ -21,7 +21,6 @@
 #include "nsILoginAutoCompleteSearch.h"
 #include "nsIMutationObserver.h"
 #include "nsIObserver.h"
-#include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoginReputation.h"
 

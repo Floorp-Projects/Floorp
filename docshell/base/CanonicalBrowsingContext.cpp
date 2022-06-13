@@ -2866,13 +2866,12 @@ bool CanonicalBrowsingContext::StartApzAutoscroll(float aAnchorX,
     return false;
   }
 
-  // The anchor coordinates that are passed in are relative to the origin
-  // of the screen, but we are sending them to APZ which only knows about
-  // coordinates relative to the widget, so convert them accordingly.
-  CSSPoint anchorCss{aAnchorX, aAnchorY};
-  LayoutDeviceIntPoint anchor =
-      RoundedToInt(anchorCss * widget->GetDefaultScale());
-  anchor -= widget->WidgetToScreenOffset();
+  // The anchor coordinates that are passed in are relative to the origin of the
+  // screen, but we are sending them to APZ which only knows about coordinates
+  // relative to the widget, so convert them accordingly.
+  const LayoutDeviceIntPoint anchor =
+      RoundedToInt(LayoutDevicePoint(aAnchorX, aAnchorY)) -
+      widget->WidgetToScreenOffset();
 
   mozilla::layers::ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
 

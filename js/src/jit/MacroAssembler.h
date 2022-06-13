@@ -4986,8 +4986,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Generates code used to complete a bailout.
   void generateBailoutTail(Register scratch, Register bailoutInfo);
 
-  void assertRectifierFrameParentType(Register frameType);
-
  public:
 #ifndef JS_CODEGEN_ARM64
   // StackPointer manipulation functions.

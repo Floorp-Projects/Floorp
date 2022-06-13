@@ -353,15 +353,15 @@ interface CanonicalBrowsingContext : BrowsingContext {
   /**
    * Notify APZ to start autoscrolling.
    *
-   * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor, in CSS
-   *                      coordinates relative to the screen.
+   * (aAnchorX, aAnchorY) are the coordinates of the autoscroll anchor, in
+   *                      device coordinates relative to the screen.
    * aScrollId and aPresShellId identify the scroll frame that content chose to
    *                            scroll.
    *
    * Returns whether we were successfully able to notify APZ.
-   * If this function returns true, APZ (which may live in another process)
-   * may still reject the autoscroll, but it's then APZ's reponsibility
-   * to notify content via an "autoscroll-rejected-by-apz" message.
+   * If this function returns true, APZ (which may live in another process) may
+   * still reject the autoscroll, but it's then APZ's responsibility to notify
+   * content via an "autoscroll-rejected-by-apz" message.
    */
   boolean startApzAutoscroll(float aAnchorX, float aAnchorY,
                              unsigned long long aScrollId,
