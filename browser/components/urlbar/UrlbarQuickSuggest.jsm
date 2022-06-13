@@ -411,7 +411,6 @@ class QuickSuggest extends EventEmitter {
         this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
         this._rs = RemoteSettings(RS_COLLECTION);
         this._rs.on("sync", this._onSettingsSync);
-        this._queueSettingsSync();
       } else if (!enabled && this._rs) {
         this._rs.off("sync", this._onSettingsSync);
         this._rs = null;
