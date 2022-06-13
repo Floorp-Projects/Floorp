@@ -402,24 +402,6 @@ def default_project(build_env, js_package):
 option("--enable-project", nargs=1, default=default_project, help="Project to build")
 
 
-# Artifact builds
-# ==============================================================
-
-option(
-    "--enable-artifact-builds",
-    env="MOZ_ARTIFACT_BUILDS",
-    help="Download and use prebuilt binary artifacts.",
-)
-
-
-@depends("--enable-artifact-builds")
-def artifact_builds(value):
-    if value:
-        return True
-
-
-set_config("MOZ_ARTIFACT_BUILDS", artifact_builds)
-
 # Host and target systems
 # ==============================================================
 option("--host", nargs=1, help="Define the system type performing the build")

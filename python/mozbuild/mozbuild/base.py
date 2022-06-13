@@ -281,7 +281,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @staticmethod
     @memoize
-    def get_base_mozconfig_info(topsrcdir, path, env_mozconfig):
+    def get_mozconfig_and_target(topsrcdir, path, env_mozconfig):
         # env_mozconfig is only useful for unittests, which change the value of
         # the environment variable, which has an impact on autodetection (when
         # path is MozconfigLoader.AUTODETECT), and memoization wouldn't account
@@ -321,7 +321,7 @@ class MozbuildObject(ProcessExecutionMixin):
         sandbox = ReducedConfigureSandbox(
             {},
             environ=env,
-            argv=["mach"],
+            argv=["mach", "--help"],
             logger=logger,
         )
         base_dir = os.path.join(topsrcdir, "build", "moz.configure")
@@ -329,21 +329,17 @@ class MozbuildObject(ProcessExecutionMixin):
             sandbox.include_file(os.path.join(base_dir, "init.configure"))
             # Force mozconfig options injection before getting the target.
             sandbox._value_for(sandbox["mozconfig_options"])
-            return {
-                "mozconfig": sandbox._value_for(sandbox["mozconfig"]),
-                "target": sandbox._value_for(sandbox["real_target"]),
-                "project": sandbox._value_for(sandbox._options["project"]),
-                "artifact-builds": sandbox._value_for(
-                    sandbox._options["artifact-builds"]
-                ),
-            }
+            return (
+                sandbox._value_for(sandbox["mozconfig"]),
+                sandbox._value_for(sandbox["real_target"]),
+            )
         except SystemExit:
             print(out.getvalue())
             raise
 
     @property
-    def base_mozconfig_info(self):
-        return self.get_base_mozconfig_info(
+    def mozconfig_and_target(self):
+        return self.get_mozconfig_and_target(
             self.topsrcdir, self._mozconfig, os.environ.get("MOZCONFIG")
         )
 
@@ -353,7 +349,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
-        return self.base_mozconfig_info["mozconfig"]
+        return self.mozconfig_and_target[0]
 
     @property
     def config_environment(self):
@@ -573,7 +569,7 @@ class MozbuildObject(ProcessExecutionMixin):
         return path
 
     def resolve_config_guess(self):
-        return self.base_mozconfig_info["target"].alias
+        return self.mozconfig_and_target[1].alias
 
     def notify(self, msg):
         """Show a desktop notification with the supplied message
