@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,16 +52,18 @@ fun ListItemTabLarge(
     onClick: (() -> Unit)? = null
 ) {
     ListItemTabSurface(imageUrl, onClick) {
-        PrimaryText(
+        Text(
             text = title,
+            color = FirefoxTheme.colors.textPrimary,
             fontSize = 14.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 3,
         )
 
         if (caption != null) {
-            SecondaryText(
+            Text(
                 text = caption,
+                color = FirefoxTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -167,8 +170,9 @@ private fun ListItemTabSurfacePreview() {
         ListItemTabSurface(
             imageUrl = ""
         ) {
-            PrimaryText(
+            Text(
                 text = "This can be anything",
+                color = FirefoxTheme.colors.textPrimary,
                 fontSize = 22.sp
             )
         }

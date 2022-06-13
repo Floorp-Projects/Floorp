@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,8 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.PrimaryText
-import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.compose.button.Button
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
@@ -87,8 +86,9 @@ fun RecentSyncedTab(
                     if (tab == null) {
                         RecentTabTitlePlaceholder()
                     } else {
-                        PrimaryText(
+                        Text(
                             text = tab.title,
+                            color = FirefoxTheme.colors.textPrimary,
                             fontSize = 14.sp,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 2,
@@ -117,8 +117,9 @@ fun RecentSyncedTab(
                         if (tab == null) {
                             TextLinePlaceHolder()
                         } else {
-                            SecondaryText(
+                            Text(
                                 text = tab.deviceDisplayName,
+                                color = FirefoxTheme.colors.textSecondary,
                                 fontSize = 12.sp,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,

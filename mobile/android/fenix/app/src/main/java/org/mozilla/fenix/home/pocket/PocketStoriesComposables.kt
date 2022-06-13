@@ -65,9 +65,7 @@ import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
 import org.mozilla.fenix.compose.ListItemTabSurface
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
-import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
-import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -115,8 +113,9 @@ fun PocketStory(
         imageUrl = imageUrl,
         onClick = { onStoryClick(story) },
         title = {
-            PrimaryText(
+            Text(
                 text = story.title,
+                color = FirefoxTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
@@ -126,15 +125,17 @@ fun PocketStory(
             if (isValidPublisher && isValidTimeToRead) {
                 TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
             } else if (isValidPublisher) {
-                SecondaryText(
+                Text(
                     text = story.publisher,
+                    color = FirefoxTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
             } else if (isValidTimeToRead) {
-                SecondaryText(
+                Text(
                     text = "${story.timeToRead} min",
+                    color = FirefoxTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -164,8 +165,9 @@ fun PocketSponsoredStory(
     )
 
     ListItemTabSurface(imageUrl, { onStoryClick(story) }) {
-        PrimaryText(
+        Text(
             text = story.title,
+            color = FirefoxTheme.colors.textPrimary,
             fontSize = 14.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
@@ -182,8 +184,9 @@ fun PocketSponsoredStory(
 
             Spacer(Modifier.width(8.dp))
 
-            SecondaryText(
+            Text(
                 text = stringResource(R.string.pocket_stories_sponsor_indication),
+                color = FirefoxTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -192,8 +195,9 @@ fun PocketSponsoredStory(
 
         Spacer(Modifier.height(7.dp))
 
-        SecondaryText(
+        Text(
             text = story.sponsor,
+            color = FirefoxTheme.colors.textSecondary,
             fontSize = 12.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,

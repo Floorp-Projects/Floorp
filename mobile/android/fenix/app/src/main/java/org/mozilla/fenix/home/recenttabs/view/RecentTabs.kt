@@ -56,8 +56,6 @@ import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
-import org.mozilla.fenix.compose.PrimaryText
-import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -149,8 +147,9 @@ private fun RecentTabItem(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                PrimaryText(
+                Text(
                     text = tab.state.content.title.ifEmpty { tab.state.content.url },
+                    color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -165,8 +164,9 @@ private fun RecentTabItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    SecondaryText(
+                    Text(
                         text = tab.state.content.url,
+                        color = FirefoxTheme.colors.textSecondary,
                         fontSize = 12.sp,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
@@ -225,8 +225,9 @@ private fun RecentSearchGroupItem(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                PrimaryText(
+                Text(
                     text = stringResource(R.string.recent_tabs_search_term, searchTerm),
+                    color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
@@ -245,8 +246,9 @@ private fun RecentSearchGroupItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    SecondaryText(
+                    Text(
                         text = stringResource(R.string.recent_tabs_search_term_count_2, count),
+                        color = FirefoxTheme.colors.textSecondary,
                         fontSize = 12.sp,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,

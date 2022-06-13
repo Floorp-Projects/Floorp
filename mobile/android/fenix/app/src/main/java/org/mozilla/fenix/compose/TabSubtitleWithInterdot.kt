@@ -7,6 +7,7 @@ package org.mozilla.fenix.compose
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
@@ -49,20 +50,23 @@ fun TabSubtitleWithInterdot(
 
     Layout(
         content = {
-            SecondaryText(
+            Text(
                 text = firstText,
+                color = FirefoxTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
-            SecondaryText(
+            Text(
                 text = " \u00b7 ",
+                color = FirefoxTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
-            SecondaryText(
+            Text(
                 text = secondText,
+                color = FirefoxTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,

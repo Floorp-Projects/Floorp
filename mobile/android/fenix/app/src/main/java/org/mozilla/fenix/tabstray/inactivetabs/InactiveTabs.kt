@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,8 +39,6 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.PrimaryText
-import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.compose.list.FaviconListItem
@@ -186,8 +185,9 @@ private fun InactiveTabsAutoClosePrompt(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PrimaryText(
+                Text(
                     text = stringResource(R.string.tab_tray_inactive_auto_close_title),
+                    color = FirefoxTheme.colors.textPrimary,
                     modifier = Modifier.weight(1f),
                     fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
@@ -206,11 +206,12 @@ private fun InactiveTabsAutoClosePrompt(
                 }
             }
 
-            SecondaryText(
+            Text(
                 text = stringResource(
                     R.string.tab_tray_inactive_auto_close_body_2,
                     stringResource(R.string.app_name)
                 ),
+                color = FirefoxTheme.colors.textSecondary,
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 14.sp,
             )
