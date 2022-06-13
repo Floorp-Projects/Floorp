@@ -1535,6 +1535,9 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Αποθήκευση και αυτόματη συμπλήρωση διευθύνσεων</string>
 
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Συμπεριλάβετε πληροφορίες, όπως αριθμούς, email και διευθύνσεις αποστολής</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
     <!-- Title of the "Edit card" screen -->
@@ -1608,6 +1611,8 @@
     <string name="addresses_city">Πόλη</string>
     <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Νομός</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Νομός</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Ταχ. κώδικας</string>
     <!-- The header for the country or region of an address -->
@@ -1820,6 +1825,11 @@
     <string name="inactive_tabs_title">Ανενεργές καρτέλες</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Κλείσιμο όλων των ανενεργών καρτελών</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Ανάπτυξη ανενεργών καρτελών</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Σύμπτυξη ανενεργών καρτελών</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
