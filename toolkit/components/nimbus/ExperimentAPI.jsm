@@ -22,7 +22,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -35,7 +37,7 @@ const IS_MAIN_PROCESS =
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "COLLECTION_ID",
   COLLECTION_ID_PREF,
   COLLECTION_ID_FALLBACK
@@ -330,7 +332,7 @@ const ExperimentAPI = {
  * defined by the FeatureManifest
  */
 const NimbusFeatures = {};
-for (let feature in FeatureManifest) {
+for (let feature in lazy.FeatureManifest) {
   XPCOMUtils.defineLazyGetter(NimbusFeatures, feature, () => {
     return new _ExperimentFeature(feature);
   });
@@ -340,7 +342,7 @@ class _ExperimentFeature {
   constructor(featureId, manifest) {
     this.featureId = featureId;
     this.prefGetters = {};
-    this.manifest = manifest || FeatureManifest[featureId];
+    this.manifest = manifest || lazy.FeatureManifest[featureId];
     if (!this.manifest) {
       Cu.reportError(
         `No manifest entry for ${featureId}. Please add one to toolkit/components/nimbus/FeatureManifest.js`
@@ -567,9 +569,11 @@ class _ExperimentFeature {
 }
 
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
-  return IS_MAIN_PROCESS ? ExperimentManager.store : new ExperimentStore();
+  return IS_MAIN_PROCESS
+    ? lazy.ExperimentManager.store
+    : new lazy.ExperimentStore();
 });
 
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_remoteSettingsClient", function() {
-  return RemoteSettings(COLLECTION_ID);
+  return lazy.RemoteSettings(lazy.COLLECTION_ID);
 });

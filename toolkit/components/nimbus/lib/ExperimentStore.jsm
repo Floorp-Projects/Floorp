@@ -13,7 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
   PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });
@@ -32,7 +33,7 @@ let tryJSONParse = data => {
 
   return null;
 };
-XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
+XPCOMUtils.defineLazyGetter(lazy, "syncDataStore", () => {
   let experimentsPrefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
   let defaultsPrefBranch = Services.prefs.getBranch(SYNC_DEFAULTS_PREF_BRANCH);
   return {
@@ -92,9 +93,11 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
       }
       for (const childPref of prefChildList) {
         let prefName = `${prefBranch}${childPref}`;
-        let value = PrefUtils.getPref(prefName);
+        let value = lazy.PrefUtils.getPref(prefName);
         // Try to parse string values that could be stringified objects
-        if (FeatureManifest[featureId]?.variables[childPref]?.type === "json") {
+        if (
+          lazy.FeatureManifest[featureId]?.variables[childPref]?.type === "json"
+        ) {
           let parsedValue = tryJSONParse(value);
           if (parsedValue) {
             value = parsedValue;
@@ -273,7 +276,7 @@ class ExperimentStore extends SharedDataMap {
           // Supports <v1.3.0, which was when .featureIds was added
           getAllBranchFeatureIds(experiment.branch).includes(featureId)
         // Default to the pref store if data is not yet ready
-      ) || syncDataStore.get(featureId)
+      ) || lazy.syncDataStore.get(featureId)
     );
   }
 
@@ -333,7 +336,7 @@ class ExperimentStore extends SharedDataMap {
   getRolloutForFeature(featureId) {
     return (
       this.getAllRollouts().find(r => r.featureIds.includes(featureId)) ||
-      syncDataStore.getDefault(featureId)
+      lazy.syncDataStore.getDefault(featureId)
     );
   }
 
@@ -388,20 +391,20 @@ class ExperimentStore extends SharedDataMap {
     let features = featuresCompat(enrollment.branch);
     for (let feature of features) {
       if (
-        FeatureManifest[feature.featureId]?.isEarlyStartup ||
+        lazy.FeatureManifest[feature.featureId]?.isEarlyStartup ||
         feature.isEarlyStartup
       ) {
         if (!enrollment.active) {
           // Remove experiments on un-enroll, no need to check if it exists
           if (enrollment.isRollout) {
-            syncDataStore.deleteDefault(feature.featureId);
+            lazy.syncDataStore.deleteDefault(feature.featureId);
           } else {
-            syncDataStore.delete(feature.featureId);
+            lazy.syncDataStore.delete(feature.featureId);
           }
         } else {
           let updateEnrollmentSyncStore = enrollment.isRollout
-            ? syncDataStore.setDefault.bind(syncDataStore)
-            : syncDataStore.set.bind(syncDataStore);
+            ? lazy.syncDataStore.setDefault.bind(lazy.syncDataStore)
+            : lazy.syncDataStore.set.bind(lazy.syncDataStore);
           updateEnrollmentSyncStore(feature.featureId, {
             ...enrollment,
             branch: {
@@ -458,7 +461,7 @@ class ExperimentStore extends SharedDataMap {
    */
   _deleteForTests(slugOrFeatureId) {
     super._deleteForTests(slugOrFeatureId);
-    syncDataStore.deleteDefault(slugOrFeatureId);
-    syncDataStore.delete(slugOrFeatureId);
+    lazy.syncDataStore.deleteDefault(slugOrFeatureId);
+    lazy.syncDataStore.delete(slugOrFeatureId);
   }
 }
