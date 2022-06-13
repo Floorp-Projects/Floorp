@@ -929,16 +929,9 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     // matter... Medium also doesn't affect those.
     return;
   }
-  // NOTE(emilio): We use the OS "text scale factor" as an extra source for full
-  // zoom, rather than text zoom (which would seem the obvious choice at first).
-  // is for a variety of reasons:
-  //  * It generally creates more visually consistent results.
-  //  * It has always been the effective behavior on GTK.
-  //  * It matches other browsers as well.
-  float effectiveFullZoom =
-      browsingContext->FullZoom() * LookAndFeel::GetTextScaleFactor();
-  SetFullZoom(effectiveFullZoom);
-  SetTextZoom(browsingContext->TextZoom());
+  auto systemZoom = LookAndFeel::SystemZoomSettings();
+  SetFullZoom(browsingContext->FullZoom() * systemZoom.mFullZoom);
+  SetTextZoom(browsingContext->TextZoom() * systemZoom.mTextZoom);
   SetOverrideDPPX(browsingContext->OverrideDPPX());
 
   auto* top = browsingContext->Top();
