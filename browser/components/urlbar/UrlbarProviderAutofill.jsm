@@ -602,20 +602,21 @@ class ProviderAutofill extends UrlbarProvider {
   }
 
   _getAdaptiveHistoryQuery(queryContext) {
-    let additionalCondition;
+    let sourceCondition;
     if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
-      // No additional condition needed.
+      sourceCondition = "(h.foreign_count > 0 OR h.frecency > 20)";
     } else if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)
     ) {
-      additionalCondition = "(h.foreign_count = 0 OR h.visit_count > 0)";
+      sourceCondition =
+        "((h.visit_count > 0 OR h.foreign_count = 0) AND h.frecency > 20)";
     } else if (
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
     ) {
-      additionalCondition = "h.foreign_count > 0";
+      sourceCondition = "h.foreign_count > 0";
     } else {
       return [];
     }
@@ -668,9 +669,9 @@ class ProviderAutofill extends UrlbarProvider {
         FROM moz_places h
         JOIN moz_inputhistory i ON i.place_id = h.id
         WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
-        AND ${urlCondition}
-        AND i.use_count >= :useCountThreshold
-        ${additionalCondition ? `AND ${additionalCondition}` : ""}
+          AND ${sourceCondition}
+          AND i.use_count >= :useCountThreshold
+          AND ${urlCondition}
         ORDER BY is_exact_match DESC, i.use_count DESC, is_fixed_url_match DESC, h.frecency DESC, h.id DESC
         LIMIT 1
       )
