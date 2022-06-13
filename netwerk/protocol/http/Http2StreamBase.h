@@ -28,6 +28,8 @@ namespace mozilla::net {
 
 class nsStandardURL;
 class Http2Session;
+class Http2Stream;
+class Http2PushedStream;
 class Http2Decompressor;
 
 class Http2StreamBase : public nsAHttpSegmentReader,
@@ -35,7 +37,6 @@ class Http2StreamBase : public nsAHttpSegmentReader,
                         public SupportsWeakPtr {
  public:
   NS_DECL_NSAHTTPSEGMENTREADER
-  NS_DECL_NSAHTTPSEGMENTWRITER
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Http2StreamBase, override)
 
   enum stateType {
@@ -56,8 +57,6 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   Http2StreamBase(nsAHttpTransaction*, Http2Session*, int32_t, uint64_t);
 
   uint32_t StreamID() { return mStreamID; }
-  Http2PushedStream* PushSource() { return mPushSource; }
-  void ClearPushSource();
 
   stateType HTTPState() { return mState; }
   void SetHTTPState(stateType val) { mState = val; }
@@ -67,10 +66,6 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   [[nodiscard]] virtual nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,
                                                uint32_t*);
   virtual bool DeferCleanup(nsresult status);
-
-  // The consumer stream is the synthetic pull stream hooked up to this stream
-  // http2PushedStream overrides it
-  virtual Http2StreamBase* GetConsumerStream() { return nullptr; };
 
   const nsCString& Origin() const { return mOrigin; }
   const nsCString& Host() const { return mHeaderHost; }
@@ -87,7 +82,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
     return mTransaction ? mTransaction->RequestContext() : nullptr;
   }
 
-  void Close(nsresult reason);
+  virtual void Close(nsresult reason);
   void SetResponseIsComplete();
 
   void SetRecvdFin(bool aStatus);
@@ -121,8 +116,6 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // NS_ERROR_ABORT terminates stream, other failure terminates session
   [[nodiscard]] nsresult ConvertResponseHeaders(Http2Decompressor*, nsACString&,
                                                 nsACString&, int32_t&);
-  [[nodiscard]] nsresult ConvertPushHeaders(Http2Decompressor*, nsACString&,
-                                            nsACString&);
   [[nodiscard]] nsresult ConvertResponseTrailers(Http2Decompressor*,
                                                  nsACString&);
 
@@ -158,17 +151,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // once it is matched to a pull stream.
   virtual bool HasSink() { return true; }
 
-  // This is a no-op on pull streams. Pushed streams override this.
-  virtual void SetPushComplete(){};
-
   already_AddRefed<Http2Session> Session();
-
-  [[nodiscard]] static nsresult MakeOriginURL(const nsACString& origin,
-                                              nsCOMPtr<nsIURI>& url);
-
-  [[nodiscard]] static nsresult MakeOriginURL(const nsACString& scheme,
-                                              const nsACString& origin,
-                                              nsCOMPtr<nsIURI>& url);
 
   // Mirrors nsAHttpTransaction
   bool Do0RTT();
@@ -180,12 +163,20 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   void TopBrowsingContextIdChangedInternal(
       uint64_t id);  // For use by pushed streams only
 
+  virtual bool IsTunnel() { return false; }
+
+  virtual uint32_t GetWireStreamId() { return mStreamID; }
+  virtual Http2Stream* GetHttp2Stream() { return nullptr; }
+  virtual Http2PushedStream* GetHttp2PushedStream() { return nullptr; }
+
+  [[nodiscard]] virtual nsresult OnWriteSegment(char*, uint32_t,
+                                                uint32_t*) override;
+
  protected:
   virtual ~Http2StreamBase();
-  static void CreatePushHashKey(
-      const nsCString& scheme, const nsCString& hostHeader,
-      const mozilla::OriginAttributes& originAttributes, uint64_t serial,
-      const nsACString& pathInfo, nsCString& outOrigin, nsCString& outKey);
+
+  virtual void HandleResponseHeaders(nsACString& aHeadersOut,
+                                     int32_t httpResponseCode) {}
 
   // These internal states track request generation
   enum upstreamStateType {
@@ -196,7 +187,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
     UPSTREAM_COMPLETE
   };
 
-  uint32_t mStreamID;
+  uint32_t mStreamID{0};
 
   // The session that this stream is a subset of
   nsWeakPtr mSession;
@@ -205,7 +196,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // Read/WriteSegments so it can be accessed by On(read/write)segment
   // further up the stack.
   RefPtr<nsAHttpSegmentReader> mSegmentReader;
-  nsAHttpSegmentWriter* mSegmentWriter;
+  nsAHttpSegmentWriter* mSegmentWriter{nullptr};
 
   nsCString mOrigin;
   nsCString mHeaderHost;
@@ -215,10 +206,10 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // Each stream goes from generating_headers to upstream_complete, perhaps
   // looping on multiple instances of generating_body and
   // sending_body for each frame in the upload.
-  enum upstreamStateType mUpstreamState;
+  enum upstreamStateType mUpstreamState { GENERATING_HEADERS };
 
   // The HTTP/2 state for the stream from section 5.1
-  enum stateType mState;
+  enum stateType mState { IDLE };
 
   // Flag is set when all http request headers have been read ID is not stable
   uint32_t mRequestHeadersDone : 1;
@@ -245,7 +236,21 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   uint8_t mPriorityWeight = 0;       // h2 weight
   uint32_t mPriorityDependency = 0;  // h2 stream id this one depends on
   uint64_t mCurrentTopBrowsingContextId;
-  uint64_t mTransactionTabId;
+  uint64_t mTransactionTabId{0};
+
+  // The underlying HTTP transaction. This pointer is used as the key
+  // in the Http2Session mStreamTransactionHash so it is important to
+  // keep a reference to it as long as this stream is a member of that hash.
+  // (i.e. don't change it or release it after it is set in the ctor).
+  RefPtr<nsAHttpTransaction> mTransaction;
+
+  // The InlineFrame and associated data is used for composing control
+  // frames and data frame headers.
+  UniquePtr<uint8_t[]> mTxInlineFrame;
+  uint32_t mTxInlineFrameSize{0};
+  uint32_t mTxInlineFrameUsed{0};
+
+  uint32_t mPriority = 0;  // geckoish weight
 
  private:
   friend class mozilla::DefaultDelete<Http2StreamBase>;
@@ -254,16 +259,9 @@ class Http2StreamBase : public nsAHttpSegmentReader,
                                                  uint32_t*);
   [[nodiscard]] nsresult GenerateOpen();
 
-  void AdjustPushedPriority();
   void GenerateDataFrameHeader(uint32_t, bool);
 
   [[nodiscard]] nsresult BufferInput(uint32_t, uint32_t*);
-
-  // The underlying HTTP transaction. This pointer is used as the key
-  // in the Http2Session mStreamTransactionHash so it is important to
-  // keep a reference to it as long as this stream is a member of that hash.
-  // (i.e. don't change it or release it after it is set in the ctor).
-  RefPtr<nsAHttpTransaction> mTransaction;
 
   // The quanta upstream data frames are chopped into
   uint32_t mChunkSize;
@@ -303,16 +301,10 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // instead of transaction
   uint32_t mBypassInputBuffer : 1;
 
-  // The InlineFrame and associated data is used for composing control
-  // frames and data frame headers.
-  UniquePtr<uint8_t[]> mTxInlineFrame;
-  uint32_t mTxInlineFrameSize;
-  uint32_t mTxInlineFrameUsed;
-
   // mTxStreamFrameSize tracks the progress of
   // transmitting a request body data frame. The data frame itself
   // is never copied into the spdy layer.
-  uint32_t mTxStreamFrameSize;
+  uint32_t mTxStreamFrameSize{0};
 
   // Buffer for request header compression.
   nsCString mFlatHttpRequestHeaders;
@@ -323,9 +315,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // in an extra 0-length runt packet and seems to have some interop
   // problems with the google servers. Connect does rely on stream
   // close by setting this to the max value.
-  int64_t mRequestBodyLenRemaining;
-
-  uint32_t mPriority = 0;  // geckoish weight
+  int64_t mRequestBodyLenRemaining{0};
 
   // mClientReceiveWindow, mServerReceiveWindow, and mLocalUnacked are for flow
   // control. *window are signed because the race conditions in asynchronous
@@ -343,50 +333,21 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   // LocalUnacked is the number of bytes received by the client but not
   //   yet reflected in a window update. Sending that update will increment
   //   ClientReceiveWindow
-  uint64_t mLocalUnacked;
+  uint64_t mLocalUnacked{0};
 
   // True when sending is suspended becuase the server receive window is
   //   <= 0
-  bool mBlockedOnRwin;
+  bool mBlockedOnRwin{false};
 
   // For Progress Events
-  uint64_t mTotalSent;
-  uint64_t mTotalRead;
-
-  // For Http2Push
-  Http2PushedStream* mPushSource;
+  uint64_t mTotalSent{0};
+  uint64_t mTotalRead{0};
 
   // Used to store stream data when the transaction channel cannot keep up
   // and flow control has not yet kicked in.
   SimpleBuffer mSimpleBuffer;
 
-  bool mAttempting0RTT;
-
-  /// connect tunnels
- public:
-  bool IsTunnel() { return mIsTunnel; }
-  // TODO - remove as part of bug 1564120 fix?
-  // This method saves the key the tunnel was registered under, so that when the
-  // associated transaction connection info hash key changes, we still find it
-  // and decrement the correct item in the session's tunnel hash table.
-  nsCString& RegistrationKey();
-
- private:
-  void ClearTransactionsBlockedOnTunnel();
-  void MapStreamToPlainText();
-  bool MapStreamToHttpConnection(const nsACString& aFlat407Headers,
-                                 int32_t aHttpResponseCode = -1);
-
-  bool mIsTunnel;
-  bool mPlainTextTunnel;
-  nsCString mRegistrationKey;
-
-  /// websockets
- public:
-  bool IsWebsocket() { return mIsWebsocket; }
-
- private:
-  bool mIsWebsocket;
+  bool mAttempting0RTT{false};
 };
 
 }  // namespace mozilla::net

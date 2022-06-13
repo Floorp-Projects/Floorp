@@ -17,6 +17,24 @@ class Http2StreamTunnel : public Http2StreamBase {
   Http2StreamTunnel(nsAHttpTransaction* httpTransaction, Http2Session* session,
                     int32_t priority, uint64_t bcId)
       : Http2StreamBase(httpTransaction, session, priority, bcId) {}
+
+  bool IsTunnel() override { return true; }
+
+  nsCString& RegistrationKey();
+
+ protected:
+  ~Http2StreamTunnel();
+  void HandleResponseHeaders(nsACString& aHeadersOut,
+                             int32_t httpResponseCode) override;
+
+ private:
+  void ClearTransactionsBlockedOnTunnel();
+  bool MapStreamToHttpConnection(const nsACString& aFlat407Headers,
+                                 int32_t aHttpResponseCode);
+  void MapStreamToPlainText();
+
+  bool mPlainTextTunnel{false};
+  nsCString mRegistrationKey;
 };
 
 }  // namespace net

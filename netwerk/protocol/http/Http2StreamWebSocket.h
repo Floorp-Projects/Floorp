@@ -21,6 +21,13 @@ class Http2StreamWebSocket : public Http2StreamBase {
   Http2StreamWebSocket(nsAHttpTransaction* httpTransaction,
                        Http2Session* session, int32_t priority, uint64_t bcId)
       : Http2StreamBase(httpTransaction, session, priority, bcId) {}
+
+ protected:
+  void HandleResponseHeaders(nsACString& aHeadersOut,
+                             int32_t httpResponseCode) override;
+
+ private:
+  bool MapStreamToHttpConnection(const nsACString& aFlat407Headers);
 };
 
 }  // namespace net
