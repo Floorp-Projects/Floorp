@@ -8,6 +8,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import re
 import os
 import unittest
 
@@ -19,15 +20,14 @@ TESTDATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 
 class GnCheckTest(unittest.TestCase):
-    def testCircularDependencyError(self):
-        test_dir = os.path.join(TESTDATA_DIR, 'circular_dependency')
-        expected_errors = [
-            'ERROR Dependency cycle:\n'
-            '  //:bar ->\n  //:foo ->\n  //:bar'
-        ]
-        self.assertListEqual(expected_errors,
-                             build_helpers.RunGnCheck(test_dir))
+
+  def testCircularDependencyError(self):
+    test_dir = os.path.join(TESTDATA_DIR, 'circular_dependency')
+    expected_error = re.compile('ERROR Dependency cycle')
+    gn_output = build_helpers.RunGnCheck(test_dir)
+    self.assertEqual(1, len(gn_output))
+    self.assertRegexpMatches(gn_output[0], expected_error)
 
 
 if __name__ == '__main__':
-    unittest.main()
+  unittest.main()
