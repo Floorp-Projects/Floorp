@@ -1063,6 +1063,100 @@ const TEST_DATA = [
       ],
     },
   },
+  {
+    description:
+      "With history and bookmarks sources, foreign_count == 0, frecency <= 0: No adaptive history autofill",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    frecency: 0,
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      hasAutofillTitle: false,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "With history source, visit_count == 0, foreign_count != 0: No adaptive history autofill",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    bookmarks: [{ uri: "http://example.com/test", title: "test bookmark" }],
+    userInput: "exa",
+    expected: {
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "With history source, visit_count > 0, foreign_count != 0, frecency <= 20: No adaptive history autofill",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    bookmarks: [{ uri: "http://example.com/test", title: "test bookmark" }],
+    frecency: 0,
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      hasAutofillTitle: false,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "With history source, visit_count > 0, foreign_count == 0, frecency <= 20: No adaptive history autofill",
+    pref: true,
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    frecency: 0,
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      hasAutofillTitle: false,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
 ];
 
 add_task(async function inputTest() {
@@ -1075,6 +1169,7 @@ add_task(async function inputTest() {
     visitHistory,
     inputHistory,
     bookmarks,
+    frecency,
     userInput,
     expected,
   } of TEST_DATA) {
@@ -1104,6 +1199,18 @@ add_task(async function inputTest() {
     }
     for (const bookmark of bookmarks || []) {
       await PlacesTestUtils.addBookmarkWithDetails(bookmark);
+    }
+
+    if (typeof frecency == "number") {
+      await PlacesUtils.withConnectionWrapper("test::setFrecency", db =>
+        db.execute(
+          `UPDATE moz_places SET frecency = :frecency WHERE url = :url`,
+          {
+            frecency,
+            url: visitHistory[0],
+          }
+        )
+      );
     }
 
     const sources = source

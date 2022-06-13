@@ -865,22 +865,22 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     // create a font entry
     MacOSFontEntry* fontEntry =
         new MacOSFontEntry(NS_ConvertUTF16toUTF8(postscriptFontName),
-                           WeightRange(FontWeight(cssWeight)), isStandardFace, mSizeHint);
+                           WeightRange(FontWeight::FromInt(cssWeight)), isStandardFace, mSizeHint);
     if (!fontEntry) {
       break;
     }
 
     // set additional properties based on the traits reported by Cocoa
     if (macTraits & (NSCondensedFontMask | NSNarrowFontMask | NSCompressedFontMask)) {
-      fontEntry->mStretchRange = StretchRange(FontStretch::Condensed());
+      fontEntry->mStretchRange = StretchRange(FontStretch::CONDENSED);
     } else if (macTraits & NSExpandedFontMask) {
-      fontEntry->mStretchRange = StretchRange(FontStretch::Expanded());
+      fontEntry->mStretchRange = StretchRange(FontStretch::EXPANDED);
     }
     // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
     // at least (see bug 611855), so check for style name endings as well
     if ((macTraits & NSItalicFontMask) || [facename hasSuffix:@"Italic"] ||
         [facename hasSuffix:@"Oblique"]) {
-      fontEntry->mStyleRange = SlantStyleRange(FontSlantStyle::Italic());
+      fontEntry->mStyleRange = SlantStyleRange(FontSlantStyle::ITALIC);
     }
     if (macTraits & NSFixedPitchFontMask) {
       fontEntry->mFixedPitch = true;
@@ -1419,7 +1419,7 @@ static gfxFontFamily* CreateFamilyForSystemFont(NSFont* aFont, const nsACString&
   nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
   CopyUTF16toUTF8(nameUTF16, psName);
 
-  MacOSFontEntry* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::Normal()), true, 0.0);
+  MacOSFontEntry* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
   MOZ_ASSERT(gfxPlatform::GetPlatform()->HasVariationFontSupport());
   fe->SetupVariationRanges();
 
@@ -1816,12 +1816,11 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
   }
 
   NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
-  aFontStyle.style =
-      (traits & NSFontItalicTrait) ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
-  aFontStyle.weight = (traits & NSFontBoldTrait) ? FontWeight::Bold() : FontWeight::Normal();
-  aFontStyle.stretch = (traits & NSFontExpandedTrait)    ? FontStretch::Expanded()
-                       : (traits & NSFontCondensedTrait) ? FontStretch::Condensed()
-                                                         : FontStretch::Normal();
+  aFontStyle.style = (traits & NSFontItalicTrait) ? FontSlantStyle::ITALIC : FontSlantStyle::NORMAL;
+  aFontStyle.weight = (traits & NSFontBoldTrait) ? FontWeight::BOLD : FontWeight::NORMAL;
+  aFontStyle.stretch = (traits & NSFontExpandedTrait)    ? FontStretch::EXPANDED
+                       : (traits & NSFontCondensedTrait) ? FontStretch::CONDENSED
+                                                         : FontStretch::NORMAL;
   aFontStyle.size = [font pointSize];
   aFontStyle.systemFont = true;
 }
@@ -1998,18 +1997,18 @@ void gfxMacPlatformFontList::GetFacesInitDataForFamily(const fontlist::Family* a
     }
     cssWeight *= 100;  // scale up to CSS values
 
-    StretchRange stretch(FontStretch::Normal());
+    StretchRange stretch(FontStretch::NORMAL);
     if (macTraits & (NSCondensedFontMask | NSNarrowFontMask | NSCompressedFontMask)) {
-      stretch = StretchRange(FontStretch::Condensed());
+      stretch = StretchRange(FontStretch::CONDENSED);
     } else if (macTraits & NSExpandedFontMask) {
-      stretch = StretchRange(FontStretch::Expanded());
+      stretch = StretchRange(FontStretch::EXPANDED);
     }
     // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
     // at least (see bug 611855), so check for style name endings as well
-    SlantStyleRange slantStyle(FontSlantStyle::Normal());
+    SlantStyleRange slantStyle(FontSlantStyle::NORMAL);
     if ((macTraits & NSItalicFontMask) || [facename hasSuffix:@"Italic"] ||
         [facename hasSuffix:@"Oblique"]) {
-      slantStyle = SlantStyleRange(FontSlantStyle::Italic());
+      slantStyle = SlantStyleRange(FontSlantStyle::ITALIC);
     }
 
     bool fixedPitch = (macTraits & NSFixedPitchFontMask) ? true : false;
@@ -2035,7 +2034,7 @@ void gfxMacPlatformFontList::GetFacesInitDataForFamily(const fontlist::Family* a
         NS_ConvertUTF16toUTF8(postscriptFontName),
         0,
         fixedPitch,
-        WeightRange(FontWeight(cssWeight)),
+        WeightRange(FontWeight::FromInt(cssWeight)),
         stretch,
         slantStyle,
         charmap,
@@ -2072,7 +2071,7 @@ void gfxMacPlatformFontList::ReadFaceNamesForFamily(fontlist::Family* aFamily,
     // of the macOS UI font; see MacOSFontEntry::GetFontRef(). We pass 16.0 in
     // order to get a standard text-size face in this case, although it's
     // unlikely to matter for the purpose of just reading family names.
-    auto fe = MakeUnique<MacOSFontEntry>(name, WeightRange(FontWeight::Normal()), false, 16.0);
+    auto fe = MakeUnique<MacOSFontEntry>(name, WeightRange(FontWeight::NORMAL), false, 16.0);
     if (!fe) {
       continue;
     }

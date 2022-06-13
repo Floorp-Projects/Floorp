@@ -501,14 +501,11 @@ void TextAttrsMgr::FontStyleTextAttr::ExposeValue(
     RefPtr<nsAtom> atom = NS_Atomize("italic");
     aAttributes->SetAttribute(nsGkAtoms::font_style, atom);
   } else {
-    auto angle = aValue.ObliqueAngle();
-    nsString string(u"oblique"_ns);
-    if (angle != FontSlantStyle::kDefaultAngle) {
-      string.AppendLiteral(" ");
-      nsStyleUtil::AppendCSSNumber(angle, string);
-      string.AppendLiteral("deg");
-    }
-    aAttributes->SetAttribute(nsGkAtoms::font_style, std::move(string));
+    nsAutoCString s;
+    aValue.ToString(s);
+    nsString wide;
+    CopyUTF8toUTF16(s, wide);
+    aAttributes->SetAttribute(nsGkAtoms::font_style, std::move(wide));
   }
 }
 
@@ -543,7 +540,8 @@ bool TextAttrsMgr::FontWeightTextAttr::GetValueFor(LocalAccessible* aAccessible,
 
 void TextAttrsMgr::FontWeightTextAttr::ExposeValue(AccAttributes* aAttributes,
                                                    const FontWeight& aValue) {
-  aAttributes->SetAttribute(nsGkAtoms::fontWeight, aValue.ToIntRounded());
+  int value = aValue.ToIntRounded();
+  aAttributes->SetAttribute(nsGkAtoms::fontWeight, value);
 }
 
 FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
@@ -560,7 +558,7 @@ FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
   // bold font, i.e. synthetic bolding is used. (Simply returns false on any
   // platforms that don't use the multi-strike synthetic bolding.)
   if (font->ApplySyntheticBold()) {
-    return FontWeight::Bold();
+    return FontWeight::BOLD;
   }
 
   // On Windows, font->GetStyle()->weight will give the same weight as

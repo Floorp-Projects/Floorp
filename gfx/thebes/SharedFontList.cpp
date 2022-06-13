@@ -278,7 +278,7 @@ bool Family::FindAllFacesForStyleInternal(FontList* aList,
     // calculate which one we want.
     // Note that we cannot simply return it as not all 4 faces are necessarily
     // present.
-    bool wantBold = aStyle.weight >= FontWeight(600);
+    bool wantBold = aStyle.weight.IsBold();
     bool wantItalic = !aStyle.style.IsNormal();
     uint8_t faceIndex =
         (wantItalic ? kItalicMask : 0) | (wantBold ? kBoldMask : 0);

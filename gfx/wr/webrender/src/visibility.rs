@@ -312,7 +312,6 @@ pub fn update_prim_visibility(
                     &world_culling_rect,
                     &mut frame_state.data_stores.clip,
                     true,
-                    prim_instance.is_chased(),
                 );
 
             // Ensure the primitive clip is popped
@@ -321,23 +320,9 @@ pub fn update_prim_visibility(
             prim_instance.vis.clip_chain = match clip_chain {
                 Some(clip_chain) => clip_chain,
                 None => {
-                    if prim_instance.is_chased() {
-                        info!("\tunable to build the clip chain, skipping");
-                    }
                     continue;
                 }
             };
-
-            if prim_instance.is_chased() {
-                info!("\teffective clip chain from {:?} {}",
-                         prim_instance.vis.clip_chain.clips_range,
-                         if pic.apply_local_clip_rect { "(applied)" } else { "" },
-                );
-                info!("\tpicture rect {:?} @{:?}",
-                         prim_instance.vis.clip_chain.pic_coverage_rect,
-                         prim_instance.vis.clip_chain.pic_spatial_node_index,
-                );
-            }
 
             prim_instance.vis.combined_local_clip_rect = if pic.apply_local_clip_rect {
                 prim_instance.vis.clip_chain.local_clip_rect
