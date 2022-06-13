@@ -590,6 +590,16 @@ webrtc_fuzzer_test("frame_buffer2_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("frame_buffer3_fuzzer") {
+  sources = [ "frame_buffer3_fuzzer.cc" ]
+  deps = [
+    ":fuzz_data_helper",
+    "../../api:array_view",
+    "../../api/video:encoded_frame",
+    "../../modules/video_coding:frame_buffer",
+  ]
+}
+
 webrtc_fuzzer_test("field_trial_fuzzer") {
   sources = [ "field_trial_fuzzer.cc" ]
   deps = [ "../../system_wrappers:field_trial" ]

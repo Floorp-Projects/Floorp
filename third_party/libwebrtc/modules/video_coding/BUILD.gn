@@ -148,6 +148,26 @@ rtc_library("h264_packet_buffer") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("frame_buffer") {
+  sources = [
+    "frame_buffer3.cc",
+    "frame_buffer3.h",
+  ]
+  deps = [
+    ":video_coding_utility",
+    "../../api/units:timestamp",
+    "../../api/video:encoded_frame",
+    "../../rtc_base:logging",
+    "../../rtc_base:rtc_numerics",
+    "../../system_wrappers:field_trial",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("video_coding") {
   visibility = [ "*" ]
   sources = [
@@ -208,6 +228,7 @@ rtc_library("video_coding") {
   deps = [
     ":codec_globals_headers",
     ":encoded_frame",
+    ":frame_buffer",
     ":packet_buffer",
     ":video_codec_interface",
     ":video_coding_utility",
@@ -1035,6 +1056,7 @@ if (rtc_include_tests) {
       "decoding_state_unittest.cc",
       "fec_controller_unittest.cc",
       "frame_buffer2_unittest.cc",
+      "frame_buffer3_unittest.cc",
       "frame_dependencies_calculator_unittest.cc",
       "generic_decoder_unittest.cc",
       "h264_packet_buffer_unittest.cc",
@@ -1081,6 +1103,7 @@ if (rtc_include_tests) {
       ":chain_diff_calculator",
       ":codec_globals_headers",
       ":encoded_frame",
+      ":frame_buffer",
       ":frame_dependencies_calculator",
       ":h264_packet_buffer",
       ":nack_requester",
