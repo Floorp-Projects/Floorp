@@ -18,8 +18,13 @@
 #include "common_video/include/video_frame_buffer_pool.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/logging.h"
+#if defined(WEBRTC_MOZILLA_BUILD)
+#include "dav1d/dav1d.h"
+#include "libyuv/include/libyuv/convert.h"
+#else
 #include "third_party/dav1d/libdav1d/include/dav1d/dav1d.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
+#endif
 
 namespace webrtc {
 namespace {
