@@ -72,8 +72,7 @@ class VideoStreamDecoderImpl : public VideoStreamDecoderInterface {
   void SaveFrameInfo(const EncodedFrame& frame) RTC_RUN_ON(bookkeeping_queue_);
   FrameInfo* GetFrameInfo(int64_t timestamp) RTC_RUN_ON(bookkeeping_queue_);
   void StartNextDecode() RTC_RUN_ON(bookkeeping_queue_);
-  void OnNextFrameCallback(std::unique_ptr<EncodedFrame> frame,
-                           video_coding::FrameBuffer::ReturnReason res)
+  void OnNextFrameCallback(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(bookkeeping_queue_);
   void OnDecodedFrameCallback(VideoFrame& decodedImage,  // NOLINT
                               absl::optional<int32_t> decode_time_ms,

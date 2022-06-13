@@ -199,14 +199,10 @@ class TestFrameBuffer2 : public ::testing::Test {
 
   void ExtractFrame(int64_t max_wait_time = 0, bool keyframe_required = false) {
     time_task_queue_.PostTask([this, max_wait_time, keyframe_required]() {
-      buffer_->NextFrame(
-          max_wait_time, keyframe_required, &time_task_queue_,
-          [this](std::unique_ptr<EncodedFrame> frame,
-                 video_coding::FrameBuffer::ReturnReason reason) {
-            if (reason != FrameBuffer::ReturnReason::kStopped) {
-              frames_.emplace_back(std::move(frame));
-            }
-          });
+      buffer_->NextFrame(max_wait_time, keyframe_required, &time_task_queue_,
+                         [this](std::unique_ptr<EncodedFrame> frame) {
+                           frames_.emplace_back(std::move(frame));
+                         });
     });
     if (max_wait_time == 0) {
       time_controller_.AdvanceTime(TimeDelta::Millis(0));
