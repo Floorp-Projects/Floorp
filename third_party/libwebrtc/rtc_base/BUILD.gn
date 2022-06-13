@@ -1067,12 +1067,6 @@ rtc_library("rtc_base") {
 
     if (is_win) {
       sources += [ "win32_socket_init.h" ]
-      if (current_os != "winuwp") {
-        sources += [
-          "win32_socket_server.cc",
-          "win32_socket_server.h",
-        ]
-      }
     }
   }  # !build_with_chromium
 
@@ -1332,9 +1326,6 @@ if (rtc_include_tests) {
         "//testing/gtest",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
-      if (is_win) {
-        sources += [ "win32_socket_server_unittest.cc" ]
-      }
     }
 
     rtc_library("rtc_base_approved_unittests") {
