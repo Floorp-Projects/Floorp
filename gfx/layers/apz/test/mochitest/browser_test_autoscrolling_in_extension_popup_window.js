@@ -126,8 +126,8 @@ add_task(async () => {
     () => {
       const winUtils = SpecialPowers.getDOMWindowUtils(content.window);
       return {
-        screenX: content.window.mozInnerScreenX,
-        screenY: content.window.mozInnerScreenY,
+        screenX: content.window.mozInnerScreenX * content.devicePixelRatio,
+        screenY: content.window.mozInnerScreenY * content.devicePixelRatio,
         viewId: winUtils.getViewId(content.document.documentElement),
         presShellId: winUtils.getPresShellId(),
       };
