@@ -1981,8 +1981,9 @@ bool LogViolationDetailsRunnable::MainThreadRun() {
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::Run() {
-  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
-      "WorkerThreadPrimaryRunnable::Run", OTHER, mWorkerPrivate->ScriptURL());
+  NS_ConvertUTF16toUTF8 url(mWorkerPrivate->ScriptURL());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("WorkerThreadPrimaryRunnable::Run", OTHER,
+                                   url.get());
 
   using mozilla::ipc::BackgroundChild;
 
