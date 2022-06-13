@@ -153,6 +153,9 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
   bool IsHidden() const;
 
+  bool IsViewportCacheDirty() { return mViewportCacheDirty; }
+  void SetViewportCacheDirty(bool aDirty) { mViewportCacheDirty = aDirty; }
+
   /**
    * Document load states.
    */
@@ -662,7 +665,15 @@ class DocAccessible : public HyperTextAccessibleWrap,
   /**
    * Bit mask of other states and props.
    */
-  uint32_t mDocFlags : 28;
+  uint32_t mDocFlags : 27;
+
+  /**
+   * Tracks whether we have seen changes to this document's content that
+   * indicate we should re-send the viewport cache we use for hittesting.
+   * This value is set in `BundleFieldsForCache` and processed in
+   * `ProcessQueuedCacheUpdates`.
+   */
+  bool mViewportCacheDirty : 1;
 
   /**
    * Type of document load event fired after the document is loaded completely.
