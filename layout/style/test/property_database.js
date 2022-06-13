@@ -13597,6 +13597,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
       "unset, bounce",
     ],
   };
+
+  gCSSProperties["scroll-timeline-name"] = {
+    domProp: "scrollTimelineName",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: [
+      "all",
+      "ball",
+      "mall",
+      "color",
+      "foobar",
+      "\\32bounce",
+      "-bounce",
+      "-\\32bounce",
+      "\\32 0bounce",
+      "-\\32 0bounce",
+      "\\2bounce",
+      "-\\2bounce",
+    ],
+    invalid_values: [
+      "auto",
+      "bounce, abc",
+      "abc bounce",
+      "10px",
+      "rgb(1, 2, 3)",
+    ],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {

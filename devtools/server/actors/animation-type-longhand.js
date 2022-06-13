@@ -236,6 +236,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "padding-inline-start",
       "math-depth",
       "-moz-top-layer",
+      "scroll-timeline-name",
       "size",
       "transition-delay",
       "transition-duration",
