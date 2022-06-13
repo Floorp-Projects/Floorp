@@ -520,7 +520,7 @@
 + (webrtc::SdpSemantics)nativeSdpSemanticsForSdpSemantics:(RTCSdpSemantics)sdpSemantics {
   switch (sdpSemantics) {
     case RTCSdpSemanticsPlanB:
-      return webrtc::SdpSemantics::kPlanB;
+      return webrtc::SdpSemantics::kPlanB_DEPRECATED;
     case RTCSdpSemanticsUnifiedPlan:
       return webrtc::SdpSemantics::kUnifiedPlan;
   }
@@ -528,7 +528,7 @@
 
 + (RTCSdpSemantics)sdpSemanticsForNativeSdpSemantics:(webrtc::SdpSemantics)sdpSemantics {
   switch (sdpSemantics) {
-    case webrtc::SdpSemantics::kPlanB:
+    case webrtc::SdpSemantics::kPlanB_DEPRECATED:
       return RTCSdpSemanticsPlanB;
     case webrtc::SdpSemantics::kUnifiedPlan:
       return RTCSdpSemanticsUnifiedPlan;

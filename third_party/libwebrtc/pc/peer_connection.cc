@@ -2540,7 +2540,7 @@ void PeerConnection::ReportSdpBundleUsage(
     } else {
       usage = kBundleUsageEmpty;
     }
-  } else if (configuration_.sdp_semantics == SdpSemantics::kPlanB) {
+  } else if (configuration_.sdp_semantics == SdpSemantics::kPlanB_DEPRECATED) {
     // In plan-b, simple/complex usage will not show up in the number of
     // m-lines or BUNDLE.
     usage = using_bundle ? kBundleUsageBundlePlanB : kBundleUsageNoBundlePlanB;
