@@ -129,6 +129,7 @@ function translateDeclarationsIntoAssignment(ast) {
       t.isAssignmentExpression(node) ||
       !t.isVariableDeclaration(node) ||
       t.isForStatement(parent.node) ||
+      t.isForXStatement(parent.node) ||
       !Array.isArray(node.declarations) ||
       node.declarations.length === 0
     ) {

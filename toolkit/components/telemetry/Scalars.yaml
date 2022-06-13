@@ -2166,25 +2166,6 @@ preferences:
       - 'fennec'
     record_in_processes:
       - main
-  browser_home_page_count:
-    bug_numbers:
-      - 1392951
-    description: >-
-      Each key is the number of home page urls when users change their home page,
-      multiple home pages can be set (delineated with a "|"),
-      and each value is the number of times that key is recorded.
-      The telemetry data will be recorded if a user changes his/her home page successfully.
-    expires: "62"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - chsiang@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
 
 webrtc.video:
   recv_codec_used:

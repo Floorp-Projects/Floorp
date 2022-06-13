@@ -12,7 +12,7 @@ mod common;
 
 use common::{
     apply_header_protection, client_initial_aead_and_hp, connected_server, decode_initial_header,
-    default_server, get_ticket, remove_header_protection,
+    default_server, generate_ticket, remove_header_protection,
 };
 use neqo_common::{hex_with_len, qdebug, qtrace, Datagram, Encoder};
 use neqo_crypto::AuthenticationStatus;
@@ -50,6 +50,26 @@ fn retry_basic() {
     connected_server(&mut server);
 }
 
+/// Receiving a Retry is enough to infer something about the RTT.
+/// Probably.
+#[test]
+fn implicit_rtt_retry() {
+    const RTT: Duration = Duration::from_secs(2);
+    let mut server = default_server();
+    server.set_validation(ValidateAddress::Always);
+    let mut client = default_client();
+    let mut now = now();
+
+    let dgram = client.process(None, now).dgram();
+    now += RTT / 2;
+    let dgram = server.process(dgram, now).dgram();
+    assertions::assert_retry(dgram.as_ref().unwrap());
+    now += RTT / 2;
+    client.process_input(dgram.unwrap(), now);
+
+    assert_eq!(client.stats().rtt, RTT);
+}
+
 #[test]
 fn retry_expired() {
     let mut server = default_server();
@@ -76,7 +96,7 @@ fn retry_expired() {
 #[test]
 fn retry_0rtt() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
     server.set_validation(ValidateAddress::Always);
 
     let mut client = default_client();
@@ -138,7 +158,7 @@ fn retry_different_ip() {
 #[test]
 fn new_token_different_ip() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
     server.set_validation(ValidateAddress::NoToken);
 
     let mut client = default_client();
@@ -160,7 +180,7 @@ fn new_token_different_ip() {
 #[test]
 fn new_token_expired() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
     server.set_validation(ValidateAddress::NoToken);
 
     let mut client = default_client();
@@ -375,12 +395,13 @@ fn mitm_retry() {
         .encode_vvec(&[])
         .encode_varint(u64::try_from(payload.len()).unwrap());
     let pn_offset = enc.len();
-    let notoken_header = enc.encode_uint(pn_len, pn).to_vec();
+    let notoken_header = enc.encode_uint(pn_len, pn).as_ref().to_vec();
     qtrace!("notoken_header={}", hex_with_len(&notoken_header));
 
     // Encrypt.
     let mut notoken_packet = Encoder::with_capacity(1200)
         .encode(&notoken_header)
+        .as_ref()
         .to_vec();
     notoken_packet.resize_with(1200, u8::default);
     aead.encrypt(

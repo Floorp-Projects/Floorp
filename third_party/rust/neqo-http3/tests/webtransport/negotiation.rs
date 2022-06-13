@@ -139,8 +139,8 @@ fn wrong_setting_value() {
     };
     settings.encode(&mut enc);
     assert_eq!(
-        server.stream_send(control, &enc[..]).unwrap(),
-        enc[..].len()
+        server.stream_send(control, enc.as_ref()).unwrap(),
+        enc.as_ref().len()
     );
 
     exchange_packets2(&mut client, &mut server);

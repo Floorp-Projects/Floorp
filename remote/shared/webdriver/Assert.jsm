@@ -233,6 +233,29 @@ assert.positiveNumber = function(obj, msg = "") {
 };
 
 /**
+ * Asserts that <var>obj</var> is a number in the inclusive range <var>lower</var> to <var>upper</var>.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {Array<number>} Range
+ *     Array range [lower, upper]
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {number}
+ *     <var>obj</var> is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>obj</var> is not a number in the specified range.
+ */
+assert.numberInRange = function(obj, range, msg = "") {
+  const [lower, upper] = range;
+  assert.number(obj, msg);
+  msg = msg || lazy.pprint`Expected ${obj} to be >= ${lower} and <= ${upper}`;
+  return assert.that(n => n >= lower && n <= upper, msg)(obj);
+};
+
+/**
  * Asserts that <var>obj</var> is callable.
  *
  * @param {?} obj
@@ -307,6 +330,29 @@ assert.positiveInteger = function(obj, msg = "") {
   assert.integer(obj, msg);
   msg = msg || lazy.pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
+};
+
+/**
+ * Asserts that <var>obj</var> is an integer in the inclusive range <var>lower</var> to <var>upper</var>.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {Array<number>} Range
+ *     Array range [lower, upper]
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {number}
+ *     <var>obj</var> is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>obj</var> is not a number in the specified range.
+ */
+assert.integerInRange = function(obj, range, msg = "") {
+  const [lower, upper] = range;
+  assert.integer(obj, msg);
+  msg = msg || lazy.pprint`Expected ${obj} to be >= ${lower} and <= ${upper}`;
+  return assert.that(n => n >= lower && n <= upper, msg)(obj);
 };
 
 /**

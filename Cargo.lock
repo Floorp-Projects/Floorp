@@ -382,7 +382,7 @@ version = "1.1.0"
 name = "baldrdash"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
  "cranelift-codegen",
  "cranelift-wasm",
  "env_logger 0.8.999",
@@ -418,13 +418,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "bindgen"
-version = "0.56.999"
-dependencies = [
- "bindgen 0.59.2",
 ]
 
 [[package]]
@@ -910,7 +903,7 @@ version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dff444d80630d7073077d38d40b4501fd518bd2b922c2a55edcc8b0f7be57e6"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
 ]
 
 [[package]]
@@ -2033,7 +2026,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen 0.59.2",
+ "bindgen",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2543,7 +2536,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64",
- "bindgen 0.59.2",
+ "bindgen",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -3107,9 +3100,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.14"
+version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
+checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -3475,7 +3468,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
  "libc",
  "quote",
  "serde",
@@ -3594,8 +3587,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.0#c9c013390ba68b401b5205c134e69d8898c2f299"
 dependencies = [
  "chrono",
  "env_logger 0.8.999",
@@ -3607,10 +3600,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.0#c9c013390ba68b401b5205c134e69d8898c2f299"
 dependencies = [
- "bindgen 0.56.999",
+ "bindgen",
  "log",
  "mozbuild",
  "neqo-common",
@@ -3621,8 +3614,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.0#c9c013390ba68b401b5205c134e69d8898c2f299"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3639,8 +3632,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.0#c9c013390ba68b401b5205c134e69d8898c2f299"
 dependencies = [
  "lazy_static",
  "log",
@@ -3653,8 +3646,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.0#c9c013390ba68b401b5205c134e69d8898c2f299"
 dependencies = [
  "indexmap",
  "lazy_static",
@@ -5007,7 +5000,7 @@ dependencies = [
  "app_units",
  "arrayvec",
  "atomic_refcell",
- "bindgen 0.59.2",
+ "bindgen",
  "bitflags",
  "byteorder",
  "cssparser",

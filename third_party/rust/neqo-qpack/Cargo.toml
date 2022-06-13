@@ -1,8 +1,9 @@
 [package]
 name = "neqo-qpack"
-version = "0.5.7"
+version = "0.6.0"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
 edition = "2018"
+rust-version = "1.57.0"
 license = "MIT/Apache-2.0"
 
 [dependencies]

@@ -21,6 +21,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autocomplete
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -460,7 +461,10 @@ class PromptDelegateTest : BaseSessionTest() {
 
     @Test
     fun onBeforeUnloadTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf(
+    	// Bug 1763954 - disable the test on opt and isolated process builds to reduce failure rate
+    	assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
+    	assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+    	sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
         ))
         mainSession.loadTestPath(BEFORE_UNLOAD)
