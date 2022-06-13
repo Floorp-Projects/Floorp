@@ -941,34 +941,33 @@ class MetaBuildWrapper(object):
             else:
                 cmdline += [vpython_exe, '../../testing/test_env.py']
 
-            extra_files += [
-                '../../third_party/gtest-parallel/gtest-parallel',
-                '../../third_party/gtest-parallel/gtest_parallel.py',
-                '../../tools_webrtc/gtest-parallel-wrapper.py',
-            ]
-            sep = '\\' if self.platform == 'win32' else '/'
-            output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
-            test_results = '${ISOLATED_OUTDIR}' + sep + 'gtest_output.json'
-            timeout = isolate_map[target].get('timeout', 900)
-            cmdline += [
-                '../../tools_webrtc/gtest-parallel-wrapper.py',
-                '--output_dir=%s' % output_dir,
-                '--dump_json_test_results=%s' % test_results,
-                '--gtest_color=no',
-            ]
             if test_type != 'raw':
-                # We tell gtest-parallel to interrupt the test after 900
-                # seconds, so it can exit cleanly and report results,
-                # instead of being interrupted by swarming and not
-                # reporting anything.
-                cmdline.append('--timeout=%s' % timeout)
+                extra_files += [
+                    '../../third_party/gtest-parallel/gtest-parallel',
+                    '../../third_party/gtest-parallel/gtest_parallel.py',
+                    '../../tools_webrtc/gtest-parallel-wrapper.py',
+                ]
+                sep = '\\' if self.platform == 'win32' else '/'
+                output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
+                test_results = '${ISOLATED_OUTDIR}' + sep + 'gtest_output.json'
+                timeout = isolate_map[target].get('timeout', 900)
+                cmdline += [
+                    '../../tools_webrtc/gtest-parallel-wrapper.py',
+                    '--output_dir=%s' % output_dir,
+                    '--dump_json_test_results=%s' % test_results,
+                    '--gtest_color=no',
+                    # We tell gtest-parallel to interrupt the test after 900
+                    # seconds, so it can exit cleanly and report results,
+                    # instead of being interrupted by swarming and not
+                    # reporting anything.
+                    '--timeout=%s' % timeout,
+                ]
+                if test_type == 'non_parallel_console_test_launcher':
+                    # Still use the gtest-parallel-wrapper.py script since we
+                    # need it to run tests on swarming, but don't execute tests
+                    # in parallel.
+                    cmdline.append('--workers=1')
                 must_retry = True
-            if (test_type == 'raw' or
-                    test_type == 'non_parallel_console_test_launcher'):
-                # Still use the gtest-parallel-wrapper.py script since we
-                # need it to run tests on swarming, but don't execute tests
-                # in parallel.
-                cmdline.append('--workers=1')
 
             asan = 'is_asan=true' in vals['gn_args']
             lsan = 'is_lsan=true' in vals['gn_args']
