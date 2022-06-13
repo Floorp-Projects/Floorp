@@ -447,6 +447,7 @@ cbindgen-types = [
     { gecko = "StyleScrollSnapStrictness", servo = "crate::values::computed::ScrollSnapStrictness" },
     { gecko = "StyleScrollSnapType", servo = "crate::values::computed::ScrollSnapType" },
     { gecko = "StyleScrollTimelineName", servo = "crate::values::computed::ScrollTimelineName" },
+    { gecko = "StyleScrollAxis", servo = "crate::values::computed::ScrollAxis" },
     { gecko = "StyleResize", servo = "crate::values::computed::Resize" },
     { gecko = "StyleOverflowClipBox", servo = "crate::values::computed::OverflowClipBox" },
     { gecko = "StyleFloat", servo = "crate::values::computed::Float" },

@@ -3223,6 +3223,7 @@ exports.CSS_PROPERTIES = {
       "animation-delay",
       "animation-timeline",
       "scroll-timeline-name",
+      "scroll-timeline-axis",
       "-moz-box-align",
       "-moz-box-direction",
       "-moz-box-flex",
@@ -11801,6 +11802,10 @@ exports.PREFERENCES = [
   [
     "scale",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "scroll-timeline-axis",
+    "layout.css.scroll-linked-animations.enabled"
   ],
   [
     "scroll-timeline-name",

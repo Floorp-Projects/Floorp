@@ -13625,6 +13625,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
       "rgb(1, 2, 3)",
     ],
   };
+
+  gCSSProperties["scroll-timeline-axis"] = {
+    domProp: "scrollTimelineAxis",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["block"],
+    other_values: ["inline", "vertical", "horizontal"],
+    invalid_values: ["auto", "none", "abc"],
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {

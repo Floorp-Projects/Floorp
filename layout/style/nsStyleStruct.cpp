@@ -3183,7 +3183,8 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mAnimationFillModeCount(1),
       mAnimationPlayStateCount(1),
       mAnimationIterationCountCount(1),
-      mAnimationTimelineCount(1) {
+      mAnimationTimelineCount(1),
+      mScrollTimelineAxis(StyleScrollAxis::Block) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
   mTransitions[0].SetInitialValues();
   mAnimations[0].SetInitialValues();
@@ -3215,7 +3216,8 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
       mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
       mAnimationTimelineCount(aSource.mAnimationTimelineCount),
-      mScrollTimelineName(aSource.mScrollTimelineName) {
+      mScrollTimelineName(aSource.mScrollTimelineName),
+      mScrollTimelineAxis(aSource.mScrollTimelineAxis) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
@@ -3271,7 +3273,8 @@ nsChangeHint nsStyleUIReset::CalcDifference(
        mWindowOpacity != aNewData.mWindowOpacity ||
        mMozWindowInputRegionMargin != aNewData.mMozWindowInputRegionMargin ||
        mMozWindowTransform != aNewData.mMozWindowTransform ||
-       mScrollTimelineName != aNewData.mScrollTimelineName)) {
+       mScrollTimelineName != aNewData.mScrollTimelineName ||
+       mScrollTimelineAxis != aNewData.mScrollTimelineAxis)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
