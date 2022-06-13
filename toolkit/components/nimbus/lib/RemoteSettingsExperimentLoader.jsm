@@ -427,8 +427,7 @@ class _RemoteSettingsExperimentLoader {
       description: manifest.description,
       type: "object",
       properties: {},
-      additionalProperties: false,
-      required: [],
+      additionalProperties: true,
     };
 
     for (const [varName, desc] of Object.entries(manifest.variables)) {
@@ -440,12 +439,14 @@ class _RemoteSettingsExperimentLoader {
           break;
 
         case "int":
-          prop.type = "integer";
+          // NB: This is what Experimenter maps the int type to.
+          prop.type = "number";
           break;
 
         case "json":
-          // NB: Don't set a type of json fields, since they can be of any type.
-          break;
+          // NB: Experimenter presently ignores the json type, it will still be
+          // allowed under additionalProperties.
+          continue;
 
         default:
           // NB: Experimenter doesn't outright reject invalid types either.
@@ -460,7 +461,6 @@ class _RemoteSettingsExperimentLoader {
       }
 
       schema.properties[varName] = prop;
-      schema.required.push(varName);
     }
 
     return schema;
