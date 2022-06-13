@@ -594,25 +594,6 @@ var gHomePane = {
     AboutNewTab.resetNewTabURL();
   },
 
-  onCustomHomePageInput(event) {
-    if (this._telemetryHomePageTimer) {
-      clearTimeout(this._telemetryHomePageTimer);
-    }
-    let browserHomePage = event.target.value;
-    // The length of the home page URL string should be more then four,
-    // and it should contain at least one ".", for example, "https://mozilla.org".
-    if (browserHomePage.length > 4 && browserHomePage.includes(".")) {
-      this._telemetryHomePageTimer = setTimeout(() => {
-        let homePageNumber = browserHomePage.split("|").length;
-        Services.telemetry.keyedScalarAdd(
-          "preferences.browser_home_page_count",
-          homePageNumber,
-          1
-        );
-      }, 3000);
-    }
-  },
-
   onCustomHomePageChange(event) {
     const value = event.target.value || HomePage.getDefault();
     HomePage.set(value).catch(Cu.reportError);
@@ -666,9 +647,6 @@ var gHomePane = {
     document
       .getElementById("homePageUrl")
       .addEventListener("change", this.onCustomHomePageChange.bind(this));
-    document
-      .getElementById("homePageUrl")
-      .addEventListener("input", this.onCustomHomePageInput.bind(this));
     document
       .getElementById("useCurrentBtn")
       .addEventListener("command", this.setHomePageToCurrent.bind(this));
