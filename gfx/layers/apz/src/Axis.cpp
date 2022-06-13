@@ -324,7 +324,7 @@ bool Axis::CanScroll() const {
 }
 
 bool Axis::CanScroll(ParentLayerCoord aDelta) const {
-  if (!CanScroll() || mAxisLocked) {
+  if (!CanScroll()) {
     return false;
   }
 

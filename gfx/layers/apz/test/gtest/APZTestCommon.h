@@ -357,6 +357,15 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     EXPECT_EQ(PAN_MOMENTUM, mState);
   }
 
+  void SetAxisLocked(ScrollDirections aDirections, bool aLockValue) {
+    if (aDirections.contains(ScrollDirection::eVertical)) {
+      mY.SetAxisLocked(aLockValue);
+    }
+    if (aDirections.contains(ScrollDirection::eHorizontal)) {
+      mX.SetAxisLocked(aLockValue);
+    }
+  }
+
   void AssertNotAxisLocked() const {
     EXPECT_FALSE(mY.IsAxisLocked());
     EXPECT_FALSE(mX.IsAxisLocked());
