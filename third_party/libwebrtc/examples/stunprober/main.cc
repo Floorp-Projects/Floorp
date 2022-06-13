@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
   auto socket_factory =
       std::make_unique<rtc::BasicPacketSocketFactory>(&socket_server);
   std::unique_ptr<rtc::BasicNetworkManager> network_manager(
-      new rtc::BasicNetworkManager());
+      new rtc::BasicNetworkManager(&socket_server));
   rtc::NetworkManager::NetworkList networks;
   network_manager->GetNetworks(&networks);
   auto prober = std::make_unique<StunProber>(socket_factory.get(),

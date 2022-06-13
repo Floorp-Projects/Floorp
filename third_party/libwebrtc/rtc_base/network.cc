@@ -511,6 +511,9 @@ bool NetworkManagerBase::IsVpnMacAddress(
 BasicNetworkManager::BasicNetworkManager()
     : BasicNetworkManager(nullptr, nullptr) {}
 
+BasicNetworkManager::BasicNetworkManager(SocketFactory* socket_factory)
+    : BasicNetworkManager(nullptr, socket_factory) {}
+
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory)
     : BasicNetworkManager(network_monitor_factory, nullptr) {}
