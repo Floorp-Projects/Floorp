@@ -304,16 +304,6 @@ class VideoReceiveStream : public MediaReceiveStream {
   virtual ~VideoReceiveStream() {}
 };
 
-class DEPRECATED_VideoReceiveStream : public VideoReceiveStream {
- public:
-  // RtpDemuxer only forwards a given RTP packet to one sink. However, some
-  // sinks, such as FlexFEC, might wish to be informed of all of the packets
-  // a given sink receives (or any set of sinks). They may do so by registering
-  // themselves as secondary sinks.
-  virtual void AddSecondarySink(RtpPacketSinkInterface* sink) = 0;
-  virtual void RemoveSecondarySink(const RtpPacketSinkInterface* sink) = 0;
-};
-
 }  // namespace webrtc
 
 #endif  // CALL_VIDEO_RECEIVE_STREAM_H_
