@@ -16,9 +16,9 @@ notes = "Used for automation."
 [policy.gkrust-gtest]
 criteria = "safe-to-run"
 notes = "Used for testing."
-[policy.gkrust-shared.dependency-criteria]
-tokio-reactor = []
-tokio-threadpool = []
+
+[policy.gkrust-shared]
+dependency-criteria = { tokio-reactor = [], tokio-threadpool = [] }
 
 [policy.gkrust_shared]
 notes = "The dependencies on tokio-reactor and tokio-threadpools are just a hack to pin the version used by audioipc-{client,server}. Suppress vetting on those for the same reasons behind the policy entries."
@@ -32,15 +32,13 @@ criteria = "safe-to-run"
 notes = "Used for testing."
 
 [policy.l10nregistry]
+dependency-criteria = { fluent-testing = "safe-to-run", tokio = "safe-to-run" }
 notes = "This crate has two testing-only dependencies which are specified as regular-but-optional rather than a dev-dependencies, because they need to be available to both benchmarks and integration tests."
-
-[policy.l10nregistry.dependency-criteria]
-fluent-testing = "safe-to-run"
-tokio = "safe-to-run"
 
 [policy.webdriver]
 criteria = "safe-to-run"
 notes = "Used for automation."
+
 [[unaudited.adler]]
 version = "1.0.2"
 criteria = "safe-to-deploy"
