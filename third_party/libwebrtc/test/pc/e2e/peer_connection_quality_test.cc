@@ -170,11 +170,11 @@ void PeerConnectionE2EQualityTest::AddQualityMetricsReporter(
 }
 
 PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
-    rtc::Thread* network_thread,
-    rtc::NetworkManager* network_manager,
+    const PeerNetworkDependencies& network_dependencies,
     rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-  peer_configurations_.push_back(
-      std::make_unique<PeerConfigurerImpl>(network_thread, network_manager));
+  peer_configurations_.push_back(std::make_unique<PeerConfigurerImpl>(
+      network_dependencies.network_thread, network_dependencies.network_manager,
+      network_dependencies.packet_socket_factory));
   configurer(peer_configurations_.back().get());
   peer_handles_.push_back(PeerHandleImpl());
   return &peer_handles_.back();

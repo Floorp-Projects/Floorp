@@ -500,20 +500,8 @@ class PeerConnectionE2EQualityTestFixture {
   // `configurer` function will be used to configure peer in the call.
   virtual PeerHandle* AddPeer(
       const PeerNetworkDependencies& network_dependencies,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    return AddPeer(network_dependencies.network_thread,
-                   network_dependencies.network_manager, configurer);
-  }
-  // TODO(bugs.webrtc.org/13145): Delete, replaced by above overload with
-  // PeerNetworkDependencies.
-  virtual PeerHandle* AddPeer(
-      rtc::Thread* network_thread,
-      rtc::NetworkManager* network_manager,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    return AddPeer({network_thread, network_manager,
-                    /*packet_socket_factory=*/nullptr},
-                   configurer);
-  }
+      rtc::FunctionView<void(PeerConfigurer*)> configurer) = 0;
+
   // Runs the media quality test, which includes setting up the call with
   // configured participants, running it according to provided `run_params` and
   // terminating it properly at the end. During call duration media quality

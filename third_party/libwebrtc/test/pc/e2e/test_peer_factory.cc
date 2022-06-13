@@ -261,7 +261,7 @@ PeerConnectionDependencies CreatePCDependencies(
   PeerConnectionDependencies pc_deps(observer);
 
   auto port_allocator = std::make_unique<cricket::BasicPortAllocator>(
-      pc_dependencies->network_manager);
+      pc_dependencies->network_manager, pc_dependencies->packet_socket_factory);
 
   // This test does not support TCP
   int flags = cricket::PORTALLOCATOR_DISABLE_TCP;
