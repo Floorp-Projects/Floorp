@@ -1027,7 +1027,7 @@ extern void DestroyContext(JSContext* cx);
 extern void ReportUsageErrorASCII(JSContext* cx, HandleObject callee,
                                   const char* msg);
 
-extern void ReportIsNotDefined(JSContext* cx, HandlePropertyName name);
+extern void ReportIsNotDefined(JSContext* cx, Handle<PropertyName*> name);
 
 extern void ReportIsNotDefined(JSContext* cx, HandleId id);
 

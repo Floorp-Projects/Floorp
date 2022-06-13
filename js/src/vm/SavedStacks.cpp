@@ -272,7 +272,9 @@ class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
  public:
   void setParent(SavedFrame* parent) { value().parent = parent; }
 
-  void setAsyncCause(HandleAtom asyncCause) { value().asyncCause = asyncCause; }
+  void setAsyncCause(Handle<JSAtom*> asyncCause) {
+    value().asyncCause = asyncCause;
+  }
 };
 
 /* static */
@@ -995,7 +997,7 @@ static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
     asyncCause.set(cx->names().Async);
   }
 
-  js::RootedAtom name(cx, frame->getFunctionDisplayName());
+  Rooted<JSAtom*> name(cx, frame->getFunctionDisplayName());
   return (!indent || sb.appendN(' ', indent)) &&
          (!asyncCause || (sb.append(asyncCause) && sb.append('*'))) &&
          (!name || sb.append(name)) && sb.append('@') &&
@@ -1007,7 +1009,7 @@ static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
 static bool FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
                                JS::Handle<js::SavedFrame*> frame, size_t indent,
                                bool lastFrame) {
-  js::RootedAtom name(cx, frame->getFunctionDisplayName());
+  Rooted<JSAtom*> name(cx, frame->getFunctionDisplayName());
   return sb.appendN(' ', indent + 4) && sb.append('a') && sb.append('t') &&
          sb.append(' ') &&
          (!name || (sb.append(name) && sb.append(' ') && sb.append('('))) &&
@@ -1316,7 +1318,7 @@ bool SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack,
   MOZ_RELEASE_ASSERT(cx->realm());
   MOZ_DIAGNOSTIC_ASSERT(&cx->realm()->savedStacks() == this);
 
-  RootedAtom asyncCauseAtom(cx, AtomizeString(cx, asyncCause));
+  Rooted<JSAtom*> asyncCauseAtom(cx, AtomizeString(cx, asyncCause));
   if (!asyncCauseAtom) {
     return false;
   }
@@ -1498,7 +1500,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandle<SavedFrame*> frame,
       }
     }
 
-    RootedAtom displayAtom(cx, iter.maybeFunctionDisplayAtom());
+    Rooted<JSAtom*> displayAtom(cx, iter.maybeFunctionDisplayAtom());
 
     auto principals = iter.realm()->principals();
     MOZ_ASSERT_IF(framePtr && !iter.isWasm(), iter.pc());
@@ -1543,7 +1545,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandle<SavedFrame*> frame,
       // Atomize the async cause string. There should only be a few
       // different strings used.
       const char* cause = activation.asyncCause();
-      RootedAtom causeAtom(cx, AtomizeUTF8Chars(cx, cause, strlen(cause)));
+      Rooted<JSAtom*> causeAtom(cx, AtomizeUTF8Chars(cx, cause, strlen(cause)));
       if (!causeAtom) {
         return false;
       }
@@ -1623,7 +1625,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandle<SavedFrame*> frame,
 
 bool SavedStacks::adoptAsyncStack(JSContext* cx,
                                   MutableHandle<SavedFrame*> asyncStack,
-                                  HandleAtom asyncCause,
+                                  Handle<JSAtom*> asyncCause,
                                   const Maybe<size_t>& maxFrameCount) {
   MOZ_ASSERT(asyncStack);
   MOZ_ASSERT(asyncCause);
@@ -1834,7 +1836,7 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
   PCLocationMap::AddPtr p = pcLocationMap.lookupForAdd(key);
 
   if (!p) {
-    RootedAtom source(cx);
+    Rooted<JSAtom*> source(cx);
     if (const char16_t* displayURL = iter.displayURL()) {
       source = AtomizeChars(cx, displayURL, js_strlen(displayURL));
     } else {
@@ -2024,14 +2026,14 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
   while (ubiFrame.get()) {
     // Convert the source and functionDisplayName strings to atoms.
 
-    js::RootedAtom source(cx);
+    Rooted<JSAtom*> source(cx);
     AtomizingMatcher atomizer(cx, ubiFrame.get().sourceLength());
     source = ubiFrame.get().source().match(atomizer);
     if (!source) {
       return false;
     }
 
-    js::RootedAtom functionDisplayName(cx);
+    Rooted<JSAtom*> functionDisplayName(cx);
     auto nameLength = ubiFrame.get().functionDisplayNameLength();
     if (nameLength > 0) {
       AtomizingMatcher atomizer(cx, nameLength);

@@ -661,7 +661,8 @@ struct JSRuntime {
                                   js::Handle<JSFunction*> targetFun);
   bool getSelfHostedValue(JSContext* cx, js::Handle<js::PropertyName*> name,
                           js::MutableHandleValue vp);
-  void assertSelfHostedFunctionHasCanonicalName(js::HandlePropertyName name);
+  void assertSelfHostedFunctionHasCanonicalName(
+      JS::Handle<js::PropertyName*> name);
 
  private:
   void setSelfHostingStencil(

@@ -560,7 +560,7 @@ void js::ReportIsNotDefined(JSContext* cx, HandleId id) {
   }
 }
 
-void js::ReportIsNotDefined(JSContext* cx, HandlePropertyName name) {
+void js::ReportIsNotDefined(JSContext* cx, Handle<PropertyName*> name) {
   RootedId id(cx, NameToId(name));
   ReportIsNotDefined(cx, id);
 }

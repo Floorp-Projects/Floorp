@@ -479,7 +479,7 @@ JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
 
 JSObject* GlobalObject::createBuiltinProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
-                                           ProtoKind kind, HandleAtom tag,
+                                           ProtoKind kind, Handle<JSAtom*> tag,
                                            ObjectInitWithTagOp init) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   if (!init(cx, global, tag)) {
@@ -683,7 +683,7 @@ JSFunction* GlobalObject::createConstructor(JSContext* cx, Native ctor,
                                             JSAtom* nameArg, unsigned length,
                                             gc::AllocKind kind,
                                             const JSJitInfo* jitInfo) {
-  RootedAtom name(cx, nameArg);
+  Rooted<JSAtom*> name(cx, nameArg);
   JSFunction* fun = NewNativeConstructor(cx, ctor, length, name, kind);
   if (!fun) {
     return nullptr;
@@ -854,8 +854,8 @@ bool GlobalObject::createIntrinsicsHolder(JSContext* cx,
 /* static */
 bool GlobalObject::getSelfHostedFunction(JSContext* cx,
                                          Handle<GlobalObject*> global,
-                                         HandlePropertyName selfHostedName,
-                                         HandleAtom name, unsigned nargs,
+                                         Handle<PropertyName*> selfHostedName,
+                                         Handle<JSAtom*> name, unsigned nargs,
                                          MutableHandleValue funVal) {
   if (global->maybeGetIntrinsicValue(selfHostedName, funVal.address(), cx)) {
     RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
@@ -903,7 +903,7 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
 /* static */
 bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
                                          Handle<GlobalObject*> global,
-                                         HandlePropertyName name,
+                                         Handle<PropertyName*> name,
                                          MutableHandleValue value) {
   // If this is a C++ intrinsic, simply define the function on the intrinsics
   // holder.
@@ -937,7 +937,7 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
 /* static */
 bool GlobalObject::addIntrinsicValue(JSContext* cx,
                                      Handle<GlobalObject*> global,
-                                     HandlePropertyName name,
+                                     Handle<PropertyName*> name,
                                      HandleValue value) {
   Rooted<NativeObject*> holder(cx, &global->getIntrinsicsHolder());
 

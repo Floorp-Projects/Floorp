@@ -178,7 +178,7 @@ JSObject* ScriptedProxyHandler::handlerObject(const JSObject* proxy) {
 // 7.3.9 GetMethod, reimplemented for proxy handler trap-getting to produce
 // better error messages.
 static bool GetProxyTrap(JSContext* cx, HandleObject handler,
-                         HandlePropertyName name, MutableHandleValue func) {
+                         Handle<PropertyName*> name, MutableHandleValue func) {
   // Steps 2, 5.
   if (!GetProperty(cx, handler, handler, name, func)) {
     return false;

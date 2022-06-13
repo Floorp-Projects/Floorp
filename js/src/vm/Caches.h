@@ -65,7 +65,7 @@ struct EvalCacheEntry {
 
 struct EvalCacheLookup {
   explicit EvalCacheLookup(JSContext* cx) : str(cx), callerScript(cx) {}
-  RootedLinearString str;
+  Rooted<JSLinearString*> str;
   RootedScript callerScript;
   MOZ_INIT_OUTSIDE_CTOR jsbytecode* pc;
 };

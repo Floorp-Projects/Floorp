@@ -2721,7 +2721,7 @@ void SetPropIRGenerator::maybeEmitIdGuard(jsid id) {
 GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, ICState state,
                                        HandleObject env,
-                                       HandlePropertyName name)
+                                       Handle<PropertyName*> name)
     : IRGenerator(cx, script, pc, CacheKind::GetName, state),
       env_(env),
       name_(name) {}
@@ -3004,7 +3004,7 @@ void GetNameIRGenerator::trackAttached(const char* name) {
 BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script,
                                          jsbytecode* pc, ICState state,
                                          HandleObject env,
-                                         HandlePropertyName name)
+                                         Handle<PropertyName*> name)
     : IRGenerator(cx, script, pc, CacheKind::BindName, state),
       env_(env),
       name_(name) {}

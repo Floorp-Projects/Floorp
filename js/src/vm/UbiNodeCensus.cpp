@@ -1147,7 +1147,7 @@ JS_PUBLIC_API CountTypePtr ParseBreakdown(JSContext* cx,
   if (!byString) {
     return nullptr;
   }
-  RootedLinearString by(cx, byString->ensureLinear(cx));
+  Rooted<JSLinearString*> by(cx, byString->ensureLinear(cx));
   if (!by) {
     return nullptr;
   }

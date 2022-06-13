@@ -137,7 +137,7 @@ bool js::intl::SharedIntlData::ensureTimeZones(JSContext* cx) {
     return false;
   }
 
-  RootedAtom timeZone(cx);
+  Rooted<JSAtom*> timeZone(cx);
   for (auto timeZoneName : timeZones.unwrap()) {
     if (timeZoneName.isErr()) {
       ReportInternalError(cx);
@@ -187,8 +187,8 @@ bool js::intl::SharedIntlData::ensureTimeZones(JSContext* cx) {
 
   ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
 
-  RootedAtom linkName(cx);
-  RootedAtom& target = timeZone;
+  Rooted<JSAtom*> linkName(cx);
+  Rooted<JSAtom*>& target = timeZone;
   for (const auto& linkAndTarget :
        timezone::ianaLinksCanonicalizedDifferentlyByICU) {
     const char* rawLinkName = linkAndTarget.link;
@@ -226,14 +226,13 @@ bool js::intl::SharedIntlData::ensureTimeZones(JSContext* cx) {
   return true;
 }
 
-bool js::intl::SharedIntlData::validateTimeZoneName(JSContext* cx,
-                                                    HandleString timeZone,
-                                                    MutableHandleAtom result) {
+bool js::intl::SharedIntlData::validateTimeZoneName(
+    JSContext* cx, HandleString timeZone, MutableHandle<JSAtom*> result) {
   if (!ensureTimeZones(cx)) {
     return false;
   }
 
-  RootedLinearString timeZoneLinear(cx, timeZone->ensureLinear(cx));
+  Rooted<JSLinearString*> timeZoneLinear(cx, timeZone->ensureLinear(cx));
   if (!timeZoneLinear) {
     return false;
   }
@@ -247,12 +246,12 @@ bool js::intl::SharedIntlData::validateTimeZoneName(JSContext* cx,
 }
 
 bool js::intl::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(
-    JSContext* cx, HandleString timeZone, MutableHandleAtom result) {
+    JSContext* cx, HandleString timeZone, MutableHandle<JSAtom*> result) {
   if (!ensureTimeZones(cx)) {
     return false;
   }
 
-  RootedLinearString timeZoneLinear(cx, timeZone->ensureLinear(cx));
+  Rooted<JSLinearString*> timeZoneLinear(cx, timeZone->ensureLinear(cx));
   if (!timeZoneLinear) {
     return false;
   }
@@ -521,7 +520,7 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
     return false;
   }
 
-  RootedLinearString localeLinear(cx, locale->ensureLinear(cx));
+  Rooted<JSLinearString*> localeLinear(cx, locale->ensureLinear(cx));
   if (!localeLinear) {
     return false;
   }
@@ -596,7 +595,7 @@ bool js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx) {
   // complete due to OOM, clear all data and start from scratch.
   upperCaseFirstLocales.clearAndCompact();
 
-  RootedAtom locale(cx);
+  Rooted<JSAtom*> locale(cx);
   for (const char* rawLocale : mozilla::intl::Collator::GetAvailableLocales()) {
     auto collator = mozilla::intl::Collator::TryCreate(rawLocale);
     if (collator.isErr()) {
@@ -648,7 +647,7 @@ bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
   }
 #endif
 
-  RootedLinearString localeLinear(cx, locale->ensureLinear(cx));
+  Rooted<JSLinearString*> localeLinear(cx, locale->ensureLinear(cx));
   if (!localeLinear) {
     return false;
   }

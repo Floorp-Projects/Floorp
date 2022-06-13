@@ -243,7 +243,7 @@ JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  js::RootedAtom specifierAtom(cx, AtomizeString(cx, specifierArg));
+  Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifierArg));
   if (!specifierAtom) {
     return nullptr;
   }

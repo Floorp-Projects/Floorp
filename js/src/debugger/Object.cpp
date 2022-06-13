@@ -2511,7 +2511,7 @@ bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
     EnterDebuggeeObjectRealm(cx, ar, referent);
 
     unsigned nargs = fun->nargs();
-    RootedAtom name(cx, fun->displayAtom());
+    Rooted<JSAtom*> name(cx, fun->displayAtom());
     if (name) {
       cx->markAtom(name);
     }
@@ -2558,7 +2558,8 @@ bool DebuggerObject::isSameNative(JSContext* cx, Handle<DebuggerObject*> object,
 
   RootedFunction fun(cx, EnsureNativeFunction(nonCCWValue));
   if (!fun) {
-    RootedAtom selfHostedName(cx, MaybeGetSelfHostedFunctionName(nonCCWValue));
+    Rooted<JSAtom*> selfHostedName(cx,
+                                   MaybeGetSelfHostedFunctionName(nonCCWValue));
     if (!selfHostedName) {
       JS_ReportErrorASCII(cx, "Need native function");
       return false;

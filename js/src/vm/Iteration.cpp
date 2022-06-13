@@ -1754,7 +1754,7 @@ template <GlobalObject::ProtoKind Kind, const JSClass* ProtoClass,
           const JSFunctionSpec* Methods>
 bool GlobalObject::initObjectIteratorProto(JSContext* cx,
                                            Handle<GlobalObject*> global,
-                                           HandleAtom tag) {
+                                           Handle<JSAtom*> tag) {
   if (global->hasBuiltinProto(Kind)) {
     return true;
   }
@@ -1886,7 +1886,8 @@ const JSClass WrapForValidIteratorObject::class_ = {
 NativeObject* GlobalObject::getOrCreateWrapForValidIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return MaybeNativeObject(getOrCreateBuiltinProto(
-      cx, global, ProtoKind::WrapForValidIteratorProto, HandleAtom(nullptr),
+      cx, global, ProtoKind::WrapForValidIteratorProto,
+      Handle<JSAtom*>(nullptr),
       initObjectIteratorProto<ProtoKind::WrapForValidIteratorProto,
                               &WrapForValidIteratorPrototypeClass,
                               wrap_for_valid_iterator_methods>));
@@ -1918,7 +1919,7 @@ const JSClass IteratorHelperObject::class_ = {
 NativeObject* GlobalObject::getOrCreateIteratorHelperPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return MaybeNativeObject(getOrCreateBuiltinProto(
-      cx, global, ProtoKind::IteratorHelperProto, HandleAtom(nullptr),
+      cx, global, ProtoKind::IteratorHelperProto, Handle<JSAtom*>(nullptr),
       initObjectIteratorProto<ProtoKind::IteratorHelperProto,
                               &IteratorHelperPrototypeClass,
                               iterator_helper_methods>));

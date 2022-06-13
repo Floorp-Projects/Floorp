@@ -13,26 +13,9 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
-class JSLinearString;
-
 namespace js {
 
-class PropertyName;
-
-// These are internal counterparts to the public types such as HandleObject.
-
-using HandleAtom = JS::Handle<JSAtom*>;
-using HandleLinearString = JS::Handle<JSLinearString*>;
-using HandlePropertyName = JS::Handle<PropertyName*>;
-
-using MutableHandleAtom = JS::MutableHandle<JSAtom*>;
-
-using RootedAtom = JS::Rooted<JSAtom*>;
-using RootedLinearString = JS::Rooted<JSLinearString*>;
-using RootedPropertyName = JS::Rooted<PropertyName*>;
-
 using FunctionVector = JS::GCVector<JSFunction*>;
-using PropertyNameVector = JS::GCVector<PropertyName*>;
 using StringVector = JS::GCVector<JSString*>;
 
 } /* namespace js */

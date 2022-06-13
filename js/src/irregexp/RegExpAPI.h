@@ -54,17 +54,18 @@ bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
                         mozilla::Maybe<uint32_t> line = mozilla::Nothing(),
                         mozilla::Maybe<uint32_t> column = mozilla::Nothing());
 bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
-                        HandleAtom pattern, JS::RegExpFlags flags);
+                        Handle<JSAtom*> pattern, JS::RegExpFlags flags);
 
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
-                    HandleLinearString input, RegExpShared::CodeKind codeKind);
+                    Handle<JSLinearString*> input,
+                    RegExpShared::CodeKind codeKind);
 
 RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
-                        HandleLinearString input, size_t start,
+                        Handle<JSLinearString*> input, size_t start,
                         VectorMatchPairs* matches);
 
-RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
-                                  HandleLinearString input,
+RegExpRunStatus ExecuteForFuzzing(JSContext* cx, Handle<JSAtom*> pattern,
+                                  Handle<JSLinearString*> input,
                                   JS::RegExpFlags flags, size_t startIndex,
                                   VectorMatchPairs* matches,
                                   RegExpShared::CodeKind codeKind);

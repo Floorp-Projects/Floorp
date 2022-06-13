@@ -223,7 +223,7 @@ static mozilla::intl::Collator* NewIntlCollator(
 
   mozilla::intl::Locale tag;
   {
-    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
+    Rooted<JSLinearString*> locale(cx, value.toString()->ensureLinear(cx));
     if (!locale) {
       return nullptr;
     }

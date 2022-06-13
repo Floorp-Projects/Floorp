@@ -387,7 +387,7 @@ JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code);
 JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint);
 
 [[nodiscard]] bool SetProperty(JSContext* cx, HandleObject obj,
-                               HandlePropertyName name, HandleValue value,
+                               Handle<PropertyName*> name, HandleValue value,
                                bool strict, jsbytecode* pc);
 
 [[nodiscard]] bool InterruptCheck(JSContext* cx);
@@ -397,7 +397,7 @@ JSObject* NewStringObject(JSContext* cx, HandleString str);
 
 bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
 
-[[nodiscard]] bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
+[[nodiscard]] bool GetIntrinsicValue(JSContext* cx, Handle<PropertyName*> name,
                                      MutableHandleValue rval);
 
 [[nodiscard]] bool CreateThisFromIC(JSContext* cx, HandleObject callee,

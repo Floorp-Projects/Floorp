@@ -24,7 +24,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
 #include "gc/AllocKind.h"               // gc::AllocKind
-#include "gc/Rooting.h"                 // RootedAtom
+#include "gc/Rooting.h"                 //
 #include "gc/Tracer.h"                  // TraceNullableRoot
 #include "js/CallArgs.h"                // JSNative
 #include "js/CompileOptions.h"          // JS::DecodeOptions
@@ -1148,14 +1148,14 @@ void JS::InstantiationStorage::trace(JSTracer* trc) {
 
 RegExpObject* RegExpStencil::createRegExp(
     JSContext* cx, const CompilationAtomCache& atomCache) const {
-  RootedAtom atom(cx, atomCache.getExistingAtomAt(cx, atom_));
+  Rooted<JSAtom*> atom(cx, atomCache.getExistingAtomAt(cx, atom_));
   return RegExpObject::createSyntaxChecked(cx, atom, flags(), TenuredObject);
 }
 
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
     JSContext* cx, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache) const {
-  RootedAtom atom(cx, parserAtoms.toJSAtom(cx, atom_, atomCache));
+  Rooted<JSAtom*> atom(cx, parserAtoms.toJSAtom(cx, atom_, atomCache));
   if (!atom) {
     return nullptr;
   }
@@ -1380,7 +1380,7 @@ static JSFunction* CreateFunction(JSContext* cx,
 
   JSNative maybeNative = isAsmJS ? InstantiateAsmJS : nullptr;
 
-  RootedAtom displayAtom(cx);
+  Rooted<JSAtom*> displayAtom(cx);
   if (script.functionAtom) {
     displayAtom.set(atomCache.getExistingAtomAt(cx, script.functionAtom));
     MOZ_ASSERT(displayAtom);
@@ -2061,7 +2061,7 @@ JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
 
 JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
     JSContext* cx, CompilationAtomCache& atomCache, ScriptIndex index,
-    HandleAtom name) {
+    Handle<JSAtom*> name) {
   GeneratorKind generatorKind = scriptExtra[index].immutableFlags.hasFlag(
                                     ImmutableScriptFlagsEnum::IsGenerator)
                                     ? GeneratorKind::Generator
@@ -2071,7 +2071,7 @@ JSFunction* CompilationStencil::instantiateSelfHostedLazyFunction(
                                     ? FunctionAsyncKind::AsyncFunction
                                     : FunctionAsyncKind::SyncFunction;
 
-  RootedAtom funName(cx);
+  Rooted<JSAtom*> funName(cx);
   if (scriptData[index].hasSelfHostedCanonicalName()) {
     // SetCanonicalName was used to override the name.
     funName = atomCache.getExistingAtomAt(

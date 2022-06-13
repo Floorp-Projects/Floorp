@@ -45,8 +45,8 @@ namespace js {
 
 #define NAME_OFFSET(name) offsetof(JSAtomState, name)
 
-inline HandlePropertyName AtomStateOffsetToName(const JSAtomState& atomState,
-                                                size_t offset) {
+inline Handle<PropertyName*> AtomStateOffsetToName(const JSAtomState& atomState,
+                                                   size_t offset) {
   return *reinterpret_cast<js::ImmutablePropertyNamePtr*>((char*)&atomState +
                                                           offset);
 }

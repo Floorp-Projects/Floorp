@@ -145,8 +145,8 @@ bool GlobalObject::initImportEntryProto(JSContext* cx,
 
 /* static */
 ImportEntryObject* ImportEntryObject::create(
-    JSContext* cx, HandleObject moduleRequest, HandleAtom maybeImportName,
-    HandleAtom localName, uint32_t lineNumber, uint32_t columnNumber) {
+    JSContext* cx, HandleObject moduleRequest, Handle<JSAtom*> maybeImportName,
+    Handle<JSAtom*> localName, uint32_t lineNumber, uint32_t columnNumber) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateImportEntryPrototype(cx, cx->global()));
   if (!proto) {
@@ -224,9 +224,9 @@ bool GlobalObject::initExportEntryProto(JSContext* cx,
 
 /* static */
 ExportEntryObject* ExportEntryObject::create(
-    JSContext* cx, HandleAtom maybeExportName, HandleObject moduleRequest,
-    HandleAtom maybeImportName, HandleAtom maybeLocalName, uint32_t lineNumber,
-    uint32_t columnNumber) {
+    JSContext* cx, Handle<JSAtom*> maybeExportName, HandleObject moduleRequest,
+    Handle<JSAtom*> maybeImportName, Handle<JSAtom*> maybeLocalName,
+    uint32_t lineNumber, uint32_t columnNumber) {
   // Line and column numbers are optional for export entries since direct
   // entries are checked at parse time.
 
@@ -360,7 +360,8 @@ bool GlobalObject::initModuleRequestProto(JSContext* cx,
 
 /* static */
 ModuleRequestObject* ModuleRequestObject::create(
-    JSContext* cx, HandleAtom specifier, Handle<ArrayObject*> maybeAssertions) {
+    JSContext* cx, Handle<JSAtom*> specifier,
+    Handle<ArrayObject*> maybeAssertions) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateModuleRequestPrototype(cx, cx->global()));
   if (!proto) {
@@ -498,9 +499,10 @@ bool ModuleNamespaceObject::hasBindings() const {
   return !GetProxyReservedSlot(this, BindingsSlot).isUndefined();
 }
 
-bool ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
+bool ModuleNamespaceObject::addBinding(JSContext* cx,
+                                       Handle<JSAtom*> exportedName,
                                        Handle<ModuleObject*> targetModule,
-                                       HandleAtom targetName) {
+                                       Handle<JSAtom*> targetName) {
   Rooted<ModuleEnvironmentObject*> environment(
       cx, &targetModule->initialEnvironment());
   RootedId exportedNameId(cx, AtomToId(exportedName));
@@ -1195,7 +1197,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   RootedObject obj(cx);
   RootedValue value(cx);
   RootedFunction fun(cx);
-  RootedPropertyName name(cx);
+  Rooted<PropertyName*> name(cx);
 
   for (GCThingIndex funIndex : *funDecls) {
     fun.set(self->script()->getFunction(funIndex));
@@ -1294,7 +1296,7 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 }
 
 static bool InvokeSelfHostedMethod(JSContext* cx, Handle<ModuleObject*> self,
-                                   HandlePropertyName name,
+                                   Handle<PropertyName*> name,
                                    MutableHandleValue rval) {
   RootedValue thisv(cx, ObjectValue(*self));
   FixedInvokeArgs<0> args(cx);
@@ -1510,10 +1512,10 @@ static ArrayObject* ModuleBuilderInitArray(
 
   resultArray->ensureDenseInitializedLength(0, vector.length());
 
-  RootedAtom specifier(cx);
-  RootedAtom localName(cx);
-  RootedAtom importName(cx);
-  RootedAtom exportName(cx);
+  Rooted<JSAtom*> specifier(cx);
+  Rooted<JSAtom*> localName(cx);
+  Rooted<JSAtom*> importName(cx);
+  Rooted<JSAtom*> exportName(cx);
   RootedObject req(cx);
   RootedObject moduleRequest(cx);
   Rooted<ArrayObject*> assertionArray(cx);
@@ -2561,7 +2563,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
   RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
   cx->runtime()->addRefScriptPrivate(referencingPrivate);
 
-  RootedAtom specifierAtom(cx, AtomizeString(cx, specifier));
+  Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifier));
   if (!specifierAtom) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
@@ -2659,7 +2661,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(resolvedModuleParams->length() == 2);
   RootedValue referencingPrivate(cx, resolvedModuleParams->get(0));
 
-  RootedAtom specifier(
+  Rooted<JSAtom*> specifier(
       cx, AtomizeString(cx, resolvedModuleParams->get(1).toString()));
   if (!specifier) {
     return false;

@@ -20,7 +20,7 @@ using JS::Symbol;
 using namespace js;
 
 Symbol* Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash,
-                            HandleAtom description) {
+                            Handle<JSAtom*> description) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   AutoAllocInAtomsZone az(cx);
 
@@ -33,7 +33,7 @@ Symbol* Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash,
 
 Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,
                      HandleString description) {
-  RootedAtom atom(cx);
+  Rooted<JSAtom*> atom(cx);
   if (description) {
     atom = AtomizeString(cx, description);
     if (!atom) {
@@ -49,12 +49,12 @@ Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,
 }
 
 Symbol* Symbol::newWellKnown(JSContext* cx, JS::SymbolCode code,
-                             HandlePropertyName description) {
+                             Handle<PropertyName*> description) {
   return newInternal(cx, code, cx->runtime()->randomHashCode(), description);
 }
 
 Symbol* Symbol::for_(JSContext* cx, HandleString description) {
-  RootedAtom atom(cx, AtomizeString(cx, description));
+  Rooted<JSAtom*> atom(cx, AtomizeString(cx, description));
   if (!atom) {
     return nullptr;
   }

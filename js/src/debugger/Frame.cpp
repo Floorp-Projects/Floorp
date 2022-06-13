@@ -1528,7 +1528,8 @@ bool DebuggerFrame::getOlderSavedFrame(JSContext* cx,
       if (iter.activation() != &activation && activation.asyncStack() &&
           (activation.asyncCallIsExplicit() || iter.done())) {
         const char* cause = activation.asyncCause();
-        RootedAtom causeAtom(cx, AtomizeUTF8Chars(cx, cause, strlen(cause)));
+        Rooted<JSAtom*> causeAtom(cx,
+                                  AtomizeUTF8Chars(cx, cause, strlen(cause)));
         if (!causeAtom) {
           return false;
         }

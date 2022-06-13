@@ -340,7 +340,7 @@ bool js::intl_IsValidTimeZoneName(JSContext* cx, unsigned argc, Value* vp) {
   SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
 
   RootedString timeZone(cx, args[0].toString());
-  RootedAtom validatedTimeZone(cx);
+  Rooted<JSAtom*> validatedTimeZone(cx);
   if (!sharedIntlData.validateTimeZoneName(cx, timeZone, &validatedTimeZone)) {
     return false;
   }
@@ -365,7 +365,7 @@ bool js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   // Some time zone names are canonicalized differently by ICU -- handle
   // those first:
   RootedString timeZone(cx, args[0].toString());
-  RootedAtom ianaTimeZone(cx);
+  Rooted<JSAtom*> ianaTimeZone(cx);
   if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(
           cx, timeZone, &ianaTimeZone)) {
     return false;
@@ -516,7 +516,7 @@ static UniqueChars DateTimeFormatLocale(
 
   mozilla::intl::Locale tag;
   {
-    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
+    Rooted<JSLinearString*> locale(cx, value.toString()->ensureLinear(cx));
     if (!locale) {
       return nullptr;
     }
@@ -598,7 +598,7 @@ static UniqueChars DateTimeFormatLocale(
 }
 
 static bool AssignTextComponent(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::Text>* text) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -626,7 +626,7 @@ static bool AssignTextComponent(
 }
 
 static bool AssignNumericComponent(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::Numeric>* numeric) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -653,7 +653,7 @@ static bool AssignNumericComponent(
 }
 
 static bool AssignMonthComponent(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::Month>* month) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -685,7 +685,7 @@ static bool AssignMonthComponent(
 }
 
 static bool AssignTimeZoneNameComponent(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::TimeZoneName>* tzName) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -725,7 +725,7 @@ static bool AssignTimeZoneNameComponent(
 }
 
 static bool AssignHourCycleComponent(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::HourCycle>* hourCycle) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -770,7 +770,7 @@ static bool AssignHour12Component(JSContext* cx, HandleObject internals,
 }
 
 static bool AssignDateTimeLength(
-    JSContext* cx, HandleObject internals, HandlePropertyName property,
+    JSContext* cx, HandleObject internals, Handle<PropertyName*> property,
     mozilla::Maybe<mozilla::intl::DateTimeFormat::Style>* style) {
   RootedValue value(cx);
   if (!GetProperty(cx, internals, internals, property, &value)) {
@@ -1002,7 +1002,7 @@ static mozilla::intl::DateTimeFormat* GetOrCreateDateTimeFormat(
 
 template <typename T>
 static bool SetResolvedProperty(JSContext* cx, HandleObject resolved,
-                                HandlePropertyName name,
+                                Handle<PropertyName*> name,
                                 mozilla::Maybe<T> intlProp) {
   if (!intlProp) {
     return true;

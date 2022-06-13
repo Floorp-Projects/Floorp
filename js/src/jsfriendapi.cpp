@@ -180,7 +180,7 @@ JS_PUBLIC_API void JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc,
 
 static bool DefineHelpProperty(JSContext* cx, HandleObject obj,
                                const char* prop, const char* value) {
-  RootedAtom atom(cx, Atomize(cx, value, strlen(value)));
+  Rooted<JSAtom*> atom(cx, Atomize(cx, value, strlen(value)));
   if (!atom) {
     return false;
   }
@@ -374,7 +374,7 @@ JS_PUBLIC_API JSFunction* js::NewFunctionWithReserved(JSContext* cx,
 
   CHECK_THREAD(cx);
 
-  RootedAtom atom(cx);
+  Rooted<JSAtom*> atom(cx);
   if (name) {
     atom = Atomize(cx, name, strlen(name));
     if (!atom) {
@@ -396,7 +396,7 @@ JS_PUBLIC_API JSFunction* js::NewFunctionByIdWithReserved(
   CHECK_THREAD(cx);
   cx->check(id);
 
-  RootedAtom atom(cx, id.toAtom());
+  Rooted<JSAtom*> atom(cx, id.toAtom());
   return (flags & JSFUN_CONSTRUCTOR)
              ? NewNativeConstructor(cx, native, nargs, atom,
                                     gc::AllocKind::FUNCTION_EXTENDED)

@@ -252,7 +252,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
 class FunctionCompiler {
  private:
   JSContext* const cx_;
-  RootedAtom nameAtom_;
+  Rooted<JSAtom*> nameAtom_;
   StringBuffer funStr_;
 
   uint32_t parameterListEnd_ = 0;

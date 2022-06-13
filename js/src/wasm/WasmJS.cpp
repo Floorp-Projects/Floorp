@@ -1077,7 +1077,7 @@ static bool CheckLimits(JSContext* cx, uint64_t maximumField, LimitsKind kind,
 
 template <class Class, const char* name>
 static JSObject* CreateWasmConstructor(JSContext* cx, JSProtoKey key) {
-  RootedAtom className(cx, Atomize(cx, name, strlen(name)));
+  Rooted<JSAtom*> className(cx, Atomize(cx, name, strlen(name)));
   if (!className) {
     return nullptr;
   }
@@ -1372,11 +1372,11 @@ static bool GetModuleArg(JSContext* cx, CallArgs args, uint32_t numRequired,
 }
 
 struct KindNames {
-  RootedPropertyName kind;
-  RootedPropertyName table;
-  RootedPropertyName memory;
-  RootedPropertyName tag;
-  RootedPropertyName type;
+  Rooted<PropertyName*> kind;
+  Rooted<PropertyName*> table;
+  Rooted<PropertyName*> memory;
+  Rooted<PropertyName*> tag;
+  Rooted<PropertyName*> type;
 
   explicit KindNames(JSContext* cx)
       : kind(cx), table(cx), memory(cx), tag(cx), type(cx) {}
@@ -2441,7 +2441,7 @@ bool WasmInstanceObject::getExportedFunction(
   if (instance.isAsmJS()) {
     // asm.js needs to act like a normal JS function which means having the
     // name from the original source and being callable as a constructor.
-    RootedAtom name(cx, instance.getFuncDisplayAtom(cx, funcIndex));
+    Rooted<JSAtom*> name(cx, instance.getFuncDisplayAtom(cx, funcIndex));
     if (!name) {
       return false;
     }
@@ -2455,7 +2455,7 @@ bool WasmInstanceObject::getExportedFunction(
     // asm.js does not support jit entries.
     fun->setWasmFuncIndex(funcIndex);
   } else {
-    RootedAtom name(cx, NumberToAtom(cx, funcIndex));
+    Rooted<JSAtom*> name(cx, NumberToAtom(cx, funcIndex));
     if (!name) {
       return false;
     }
@@ -3145,7 +3145,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedLinearString elementLinearStr(cx, elementStr->ensureLinear(cx));
+  Rooted<JSLinearString*> elementLinearStr(cx, elementStr->ensureLinear(cx));
   if (!elementLinearStr) {
     return false;
   }
@@ -4452,8 +4452,8 @@ static JSObject* CreateWasmFunctionConstructor(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  RootedAtom className(cx,
-                       Atomize(cx, WasmFunctionName, strlen(WasmFunctionName)));
+  Rooted<JSAtom*> className(
+      cx, Atomize(cx, WasmFunctionName, strlen(WasmFunctionName)));
   if (!className) {
     return nullptr;
   }
