@@ -57,6 +57,18 @@ constexpr int64_t kUnsignaledSsrcCooldownMs = rtc::kNumMillisecsPerSec / 2;
 // needed.
 constexpr char kAv1xCodecName[] = "AV1X";
 
+int ScaleDownResolution(int resolution,
+                        double scale_down_by,
+                        int min_resolution) {
+  // Resolution is never scalied down to smaller than min_resolution.
+  // If the input resolution is already smaller than min_resolution,
+  // no scaling should be done at all.
+  if (resolution <= min_resolution)
+    return resolution;
+  return std::max(static_cast<int>(resolution / scale_down_by + 0.5),
+                  min_resolution);
+}
+
 const char* StreamTypeToString(
     webrtc::VideoSendStream::StreamStats::StreamType type) {
   switch (type) {
@@ -3584,13 +3596,13 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
   layer.max_framerate = max_framerate;
 
   if (encoder_config.simulcast_layers[0].scale_resolution_down_by > 1.) {
-    layer.width = std::max<size_t>(
-        layer.width /
-            encoder_config.simulcast_layers[0].scale_resolution_down_by,
+    layer.width = ScaleDownResolution(
+        layer.width,
+        encoder_config.simulcast_layers[0].scale_resolution_down_by,
         kMinLayerSize);
-    layer.height = std::max<size_t>(
-        layer.height /
-            encoder_config.simulcast_layers[0].scale_resolution_down_by,
+    layer.height = ScaleDownResolution(
+        layer.height,
+        encoder_config.simulcast_layers[0].scale_resolution_down_by,
         kMinLayerSize);
   }
 
@@ -3666,14 +3678,15 @@ EncoderStreamFactory::CreateSimulcastOrConferenceModeScreenshareStreams(
   const bool norm_size_configured =
       webrtc::NormalizeSimulcastSizeExperiment::GetBase2Exponent().has_value();
   const int normalized_width =
-      (default_scale_factors_used || norm_size_configured)
+      (default_scale_factors_used || norm_size_configured) &&
+              (width >= kMinLayerSize)
           ? NormalizeSimulcastSize(width, encoder_config.number_of_streams)
           : width;
   const int normalized_height =
-      (default_scale_factors_used || norm_size_configured)
+      (default_scale_factors_used || norm_size_configured) &&
+              (height >= kMinLayerSize)
           ? NormalizeSimulcastSize(height, encoder_config.number_of_streams)
           : height;
-
   for (size_t i = 0; i < layers.size(); ++i) {
     layers[i].active = encoder_config.simulcast_layers[i].active;
     layers[i].scalability_mode =
@@ -3691,12 +3704,10 @@ EncoderStreamFactory::CreateSimulcastOrConferenceModeScreenshareStreams(
     if (has_scale_resolution_down_by) {
       const double scale_resolution_down_by = std::max(
           encoder_config.simulcast_layers[i].scale_resolution_down_by, 1.0);
-      layers[i].width = std::max(
-          static_cast<int>(normalized_width / scale_resolution_down_by),
-          kMinLayerSize);
-      layers[i].height = std::max(
-          static_cast<int>(normalized_height / scale_resolution_down_by),
-          kMinLayerSize);
+      layers[i].width = ScaleDownResolution(
+          normalized_width, scale_resolution_down_by, kMinLayerSize);
+      layers[i].height = ScaleDownResolution(
+          normalized_height, scale_resolution_down_by, kMinLayerSize);
     }
     // Update simulcast bitrates with configured min and max bitrate.
     if (encoder_config.simulcast_layers[i].min_bitrate_bps > 0) {
