@@ -54,9 +54,15 @@ StaticRefPtr<GLLibraryEGL> GLLibraryEGL::sInstance;
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLLibraryExtensionNames[] = {
-    "EGL_ANDROID_get_native_client_buffer", "EGL_ANGLE_device_creation",
-    "EGL_ANGLE_device_creation_d3d11",      "EGL_ANGLE_platform_angle",
-    "EGL_ANGLE_platform_angle_d3d",         "EGL_EXT_device_query"};
+    "EGL_ANDROID_get_native_client_buffer",
+    "EGL_ANGLE_device_creation",
+    "EGL_ANGLE_device_creation_d3d11",
+    "EGL_ANGLE_platform_angle",
+    "EGL_ANGLE_platform_angle_d3d",
+    "EGL_EXT_device_enumeration",
+    "EGL_EXT_device_query",
+    "EGL_EXT_platform_device",
+    "EGL_MESA_platform_surfaceless"};
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char* sEGLExtensionNames[] = {
@@ -84,7 +90,6 @@ static const char* sEGLExtensionNames[] = {
     "EGL_EXT_buffer_age",
     "EGL_KHR_partial_update",
     "EGL_NV_robustness_video_memory_purge",
-    "EGL_MESA_platform_surfaceless",
     "EGL_EXT_image_dma_buf_import",
     "EGL_EXT_image_dma_buf_import_modifiers",
     "EGL_MESA_image_dma_buf_export"};
@@ -157,8 +162,52 @@ static std::shared_ptr<EglDisplay> GetAndInitDisplay(
 }
 
 #ifdef MOZ_WAYLAND
+static std::shared_ptr<EglDisplay> GetAndInitDeviceDisplay(
+    GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
+  nsAutoCString drmRenderDevice(gfx::gfxVars::DrmRenderDevice());
+  if (drmRenderDevice.IsEmpty() ||
+      !egl.IsExtensionSupported(EGLLibExtension::EXT_platform_device) ||
+      !egl.IsExtensionSupported(EGLLibExtension::EXT_device_enumeration)) {
+    return nullptr;
+  }
+
+  EGLint maxDevices;
+  if (!egl.fQueryDevicesEXT(0, nullptr, &maxDevices)) {
+    return nullptr;
+  }
+
+  std::vector<EGLDeviceEXT> devices(maxDevices);
+  EGLint numDevices;
+  if (!egl.fQueryDevicesEXT(devices.size(), devices.data(), &numDevices)) {
+    return nullptr;
+  }
+  devices.resize(numDevices);
+
+  EGLDisplay display = EGL_NO_DISPLAY;
+  for (const auto& device : devices) {
+    const char* renderNodeString =
+        egl.fQueryDeviceStringEXT(device, LOCAL_EGL_DRM_RENDER_NODE_FILE_EXT);
+    if (renderNodeString &&
+        strcmp(renderNodeString, drmRenderDevice.get()) == 0) {
+      const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
+      display = egl.fGetPlatformDisplay(LOCAL_EGL_PLATFORM_DEVICE_EXT, device,
+                                        attrib_list);
+      break;
+    }
+  }
+  if (!display) {
+    return nullptr;
+  }
+
+  return EglDisplay::Create(egl, display, true, aProofOfLock);
+}
+
 static std::shared_ptr<EglDisplay> GetAndInitSurfacelessDisplay(
     GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
+  if (!egl.IsExtensionSupported(EGLLibExtension::MESA_platform_surfaceless)) {
+    return nullptr;
+  }
+
   const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
   const EGLDisplay display = egl.fGetPlatformDisplay(
       LOCAL_EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, attrib_list);
@@ -611,9 +660,9 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
     (void)fnLoadSymbols(symbols);
   }
   {
-    const SymLoadStruct symbols[] = {SYMBOL(QueryDisplayAttribEXT),
-                                     SYMBOL(QueryDeviceAttribEXT),
-                                     END_OF_SYMBOLS};
+    const SymLoadStruct symbols[] = {
+        SYMBOL(QueryDisplayAttribEXT), SYMBOL(QueryDeviceAttribEXT),
+        SYMBOL(QueryDeviceStringEXT), END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
   {
@@ -656,6 +705,10 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
     const SymLoadStruct symbols[] = {SYMBOL(ExportDMABUFImageQueryMESA),
                                      SYMBOL(ExportDMABUFImageMESA),
                                      END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
+  {
+    const SymLoadStruct symbols[] = {SYMBOL(QueryDevicesEXT), END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
 
@@ -835,7 +888,10 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplayLocked(
 #ifdef MOZ_WAYLAND
     GdkDisplay* gdkDisplay = gdk_display_get_default();
     if (!gdkDisplay) {
-      ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
+      ret = GetAndInitDeviceDisplay(*this, aProofOfLock);
+      if (!ret) {
+        ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
+      }
     } else if (widget::GdkIsWaylandDisplay(gdkDisplay)) {
       // Wayland does not support EGL_DEFAULT_DISPLAY
       nativeDisplay = widget::WaylandDisplayGetWLDisplay(gdkDisplay);

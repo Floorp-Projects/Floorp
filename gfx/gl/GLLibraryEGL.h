@@ -71,7 +71,10 @@ enum class EGLLibExtension {
   ANGLE_device_creation_d3d11,
   ANGLE_platform_angle,
   ANGLE_platform_angle_d3d,
+  EXT_device_enumeration,
   EXT_device_query,
+  EXT_platform_device,
+  MESA_platform_surfaceless,
   Max
 };
 
@@ -107,7 +110,6 @@ enum class EGLExtension {
   EXT_buffer_age,
   KHR_partial_update,
   NV_robustness_video_memory_purge,
-  MESA_platform_surfaceless,
   EXT_image_dma_buf_import,
   EXT_image_dma_buf_import_modifiers,
   MESA_image_dma_buf_export,
@@ -436,6 +438,10 @@ class GLLibraryEGL final {
     WRAP(fQueryDeviceAttribEXT(device, attribute, value));
   }
 
+  const char* fQueryDeviceStringEXT(EGLDeviceEXT device, EGLint name) {
+    WRAP(fQueryDeviceStringEXT(device, name));
+  }
+
  private:
   // NV_stream_consumer_gltexture_yuv
   EGLBoolean fStreamConsumerGLTextureExternalAttribsNV(
@@ -476,6 +482,13 @@ class GLLibraryEGL final {
   EGLBoolean fExportDMABUFImage(EGLDisplay dpy, EGLImage image, int* fds,
                                 EGLint* strides, EGLint* offsets) {
     WRAP(fExportDMABUFImageMESA(dpy, image, fds, strides, offsets));
+  }
+
+ public:
+  // EGL_EXT_device_enumeration
+  EGLBoolean fQueryDevicesEXT(EGLint max_devices, EGLDeviceEXT* devices,
+                              EGLint* num_devices) {
+    WRAP(fQueryDevicesEXT(max_devices, devices, num_devices));
   }
 
 #undef WRAP
@@ -586,6 +599,9 @@ class GLLibraryEGL final {
     EGLBoolean(GLAPIENTRY* fQueryDeviceAttribEXT)(EGLDeviceEXT device,
                                                   EGLint attribute,
                                                   EGLAttrib* value);
+    const char*(GLAPIENTRY* fQueryDeviceStringEXT)(EGLDeviceEXT device,
+                                                   EGLint name);
+
     // NV_stream_consumer_gltexture_yuv
     EGLBoolean(GLAPIENTRY* fStreamConsumerGLTextureExternalAttribsNV)(
         EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list);
@@ -622,6 +638,10 @@ class GLLibraryEGL final {
                                                    EGLImage image, int* fds,
                                                    EGLint* strides,
                                                    EGLint* offsets);
+
+    EGLBoolean(GLAPIENTRY* fQueryDevicesEXT)(EGLint max_devices,
+                                             EGLDeviceEXT* devices,
+                                             EGLint* num_devices);
 
   } mSymbols = {};
 };
