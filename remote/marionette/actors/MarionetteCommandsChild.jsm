@@ -6,7 +6,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["MarionetteCommandsChild", "clearActionInputState"];
+const EXPORTED_SYMBOLS = ["MarionetteCommandsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -33,14 +33,17 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
-let inputStateIsDirty = false;
-
 class MarionetteCommandsChild extends JSWindowActorChild {
   constructor() {
     super();
 
+    // The following state is session-specific. It's assumed that we only have
+    // a single session at a time, and the actor is destroyed at the end of a session.
+
     // sandbox storage and name of the current sandbox
     this.sandboxes = new lazy.Sandboxes(() => this.document.defaultView);
+    // State of the input actions. This is specific to contexts and sessions
+    this.actionState = null;
   }
 
   get innerWindowId() {
@@ -63,8 +66,6 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       `[${this.browsingContext.id}] MarionetteCommands actor created ` +
         `for window id ${this.innerWindowId}`
     );
-
-    clearActionInputState();
   }
 
   async receiveMessage(msg) {
@@ -456,14 +457,16 @@ class MarionetteCommandsChild extends JSWindowActorChild {
    */
   async performActions(options = {}) {
     const { actions, capabilities } = options;
+    if (this.actionState === null) {
+      this.actionState = new lazy.action.State({
+        specCompatPointerOrigin: !capabilities[
+          "moz:useNonSpecCompliantPointerOrigin"
+        ],
+      });
+    }
+    let actionChain = lazy.action.Chain.fromJSON(this.actionState, actions);
 
-    await lazy.action.dispatch(
-      lazy.action.Chain.fromJSON(actions),
-      this.document.defaultView,
-      !capabilities["moz:useNonSpecCompliantPointerOrigin"]
-    );
-    inputStateIsDirty =
-      lazy.action.inputsToCancel.length || lazy.action.inputStateMap.size;
+    await actionChain.dispatch(this.actionState, this.document.defaultView);
   }
 
   /**
@@ -473,13 +476,15 @@ class MarionetteCommandsChild extends JSWindowActorChild {
    * clears all the internal state of the virtual devices.
    */
   async releaseActions() {
-    await lazy.action.dispatchTickActions(
-      lazy.action.inputsToCancel.reverse(),
-      0,
+    if (this.actionState === null) {
+      return;
+    }
+    this.actionState.inputsToCancel.reverse();
+    await this.actionState.inputsToCancel.dispatch(
+      this.actionState,
       this.document.defaultView
     );
-    clearActionInputState();
-
+    this.actionState = null;
     lazy.event.DoubleClickTracker.resetClick();
   }
 
@@ -557,17 +562,5 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     const browsingContext = this.browsingContext.parent || this.browsingContext;
 
     return { browsingContextId: browsingContext.id };
-  }
-}
-
-/**
- * Reset Action API input state
- */
-function clearActionInputState() {
-  // Avoid loading the action module before it is needed by a command
-  if (inputStateIsDirty) {
-    lazy.action.inputStateMap.clear();
-    lazy.action.inputsToCancel.length = 0;
-    inputStateIsDirty = false;
   }
 }
