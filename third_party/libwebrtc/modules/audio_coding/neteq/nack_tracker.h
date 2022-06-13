@@ -109,6 +109,10 @@ class NackTracker {
     int ms_per_loss_percent = 20;
     // If true, never nack packets more than once.
     bool never_nack_multiple_times = false;
+    // Only nack if the RTT is valid.
+    bool require_valid_rtt = false;
+    // Do not nack if the loss rate is above this value.
+    double max_loss_rate = 1.0;
   };
 
   struct NackElement {
