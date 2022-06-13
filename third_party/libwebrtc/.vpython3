@@ -27,8 +27,8 @@ python_version: "3.8"
 # Used by:
 #   third_party/catapult
 wheel: <
-  name: "infra/python/wheels/psutil/${platform}_${py_python}_${py_abi}"
-  version: "version:5.2.2"
+  name: "infra/python/wheels/psutil/${vpython_platform}"
+  version: "version:5.8.0.chromium.2"
 >
 
 # Used by tools_webrtc/perf/webrtc_dashboard_upload.py.
@@ -40,8 +40,8 @@ wheel: <
 # Used by:
 #   build/toolchain/win
 wheel: <
-  name: "infra/python/wheels/pypiwin32/${vpython_platform}"
-  version: "version:219"
+  name: "infra/python/wheels/pywin32/${vpython_platform}"
+  version: "version:300"
   match_tag: <
     platform: "win32"
   >
