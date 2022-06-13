@@ -233,15 +233,16 @@ class PeerConnectionRampUpTest : public ::testing::Test {
   void CreateTurnServer(cricket::ProtocolType type,
                         const std::string& common_name = "test turn server") {
     rtc::Thread* thread = network_thread();
+    rtc::SocketFactory* factory = firewall_socket_server_.get();
     std::unique_ptr<cricket::TestTurnServer> turn_server =
         network_thread_->Invoke<std::unique_ptr<cricket::TestTurnServer>>(
-            RTC_FROM_HERE, [thread, type, common_name] {
+            RTC_FROM_HERE, [thread, factory, type, common_name] {
               static const rtc::SocketAddress turn_server_internal_address{
                   kTurnInternalAddress, kTurnInternalPort};
               static const rtc::SocketAddress turn_server_external_address{
                   kTurnExternalAddress, kTurnExternalPort};
               return std::make_unique<cricket::TestTurnServer>(
-                  thread, turn_server_internal_address,
+                  thread, factory, turn_server_internal_address,
                   turn_server_external_address, type,
                   true /*ignore_bad_certs=*/, common_name);
             });

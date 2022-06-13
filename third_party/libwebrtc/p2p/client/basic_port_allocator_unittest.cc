@@ -153,7 +153,10 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
         nat_factory_(vss_.get(), kNatUdpAddr, kNatTcpAddr),
         nat_socket_factory_(new rtc::BasicPacketSocketFactory(&nat_factory_)),
         stun_server_(TestStunServer::Create(fss_.get(), kStunAddr)),
-        turn_server_(rtc::Thread::Current(), kTurnUdpIntAddr, kTurnUdpExtAddr),
+        turn_server_(rtc::Thread::Current(),
+                     fss_.get(),
+                     kTurnUdpIntAddr,
+                     kTurnUdpExtAddr),
         candidate_allocation_done_(false) {
     ServerAddresses stun_servers;
     stun_servers.insert(kStunAddr);

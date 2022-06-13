@@ -1548,12 +1548,14 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
       cricket::ProtocolType type = cricket::ProtocolType::PROTO_UDP,
       const std::string& common_name = "test turn server") {
     rtc::Thread* thread = network_thread();
+    rtc::SocketFactory* socket_factory = fss_.get();
     std::unique_ptr<cricket::TestTurnServer> turn_server =
         network_thread()->Invoke<std::unique_ptr<cricket::TestTurnServer>>(
-            RTC_FROM_HERE,
-            [thread, internal_address, external_address, type, common_name] {
+            RTC_FROM_HERE, [thread, socket_factory, internal_address,
+                            external_address, type, common_name] {
               return std::make_unique<cricket::TestTurnServer>(
-                  thread, internal_address, external_address, type,
+                  thread, socket_factory, internal_address, external_address,
+                  type,
                   /*ignore_bad_certs=*/true, common_name);
             });
     turn_servers_.push_back(std::move(turn_server));
