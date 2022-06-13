@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_AnimationUtils_h
 #define mozilla_dom_AnimationUtils_h
 
+#include "mozilla/PseudoStyleType.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsRFPService.h"
@@ -18,7 +19,6 @@ struct JSContext;
 
 namespace mozilla {
 
-enum class PseudoStyleType : uint8_t;
 class ComputedTimingFunction;
 class EffectSet;
 
@@ -84,6 +84,16 @@ class AnimationUtils {
    */
   static bool HasCurrentTransitions(const dom::Element* aElement,
                                     PseudoStyleType aPseudoType);
+
+  /**
+   * Returns true if this pseudo style type is supported by animations.
+   * Note: This doesn't include PseudoStyleType::NotPseudo.
+   */
+  static bool IsSupportedPseudoForAnimations(PseudoStyleType aType) {
+    // FIXME: Bug 1615469: Support first-line and first-letter for Animation.
+    return aType == PseudoStyleType::before ||
+           aType == PseudoStyleType::after || aType == PseudoStyleType::marker;
+  }
 };
 
 }  // namespace mozilla
