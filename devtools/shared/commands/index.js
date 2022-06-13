@@ -38,6 +38,8 @@ async function createCommandsDictionary(descriptorFront) {
   }
   const { client } = descriptorFront;
 
+  const allInstantiatedCommands = new Set();
+
   const dictionary = {
     // Expose both client and descriptor for legacy codebases, or tests.
     // But ideally only commands should interact with these two objects
@@ -52,6 +54,12 @@ async function createCommandsDictionary(descriptorFront) {
 
     // We want to keep destroy being defined last
     async destroy() {
+      for (const command of allInstantiatedCommands) {
+        if (typeof command.destroy == "function") {
+          command.destroy();
+        }
+      }
+      allInstantiatedCommands.clear();
       await descriptorFront.destroy();
       await client.close();
     },
@@ -60,7 +68,7 @@ async function createCommandsDictionary(descriptorFront) {
   for (const name in Commands) {
     loader.lazyGetter(dictionary, name, () => {
       const Constructor = require(Commands[name]);
-      return new Constructor({
+      const command = new Constructor({
         // Commands can use other commands
         commands: dictionary,
 
@@ -75,6 +83,8 @@ async function createCommandsDictionary(descriptorFront) {
         // so that we abstract where and how to fetch all necessary interfaces
         // and avoid having to know that you might pull the client via descriptorFront.client
       });
+      allInstantiatedCommands.add(command);
+      return command;
     });
   }
 

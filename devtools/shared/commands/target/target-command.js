@@ -553,7 +553,9 @@ class TargetCommand extends EventEmitter {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
         // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
-        if (!isTargetSwitching) {
+        // Also, TargetCommand.destroy may be called after the client is closed.
+        // So avoid calling the RDP method in that situation.
+        if (!isTargetSwitching && !this.watcherFront.isDestroyed()) {
           this.watcherFront.unwatchTargets(type);
         }
       } else if (this.legacyImplementation[type]) {
