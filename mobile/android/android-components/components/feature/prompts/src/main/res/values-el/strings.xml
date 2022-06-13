@@ -121,4 +121,6 @@
     <string name="mozac_feature_prompts_expand_address_content_description">Ανάπτυξη προτεινόμενων διευθύνσεων</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description">Σύμπτυξη προτεινόμενων διευθύνσεων</string>
-    </resources>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Διαχείριση διευθύνσεων</string>
+</resources>
