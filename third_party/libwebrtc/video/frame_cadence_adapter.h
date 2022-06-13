@@ -29,6 +29,10 @@ namespace webrtc {
 class FrameCadenceAdapterInterface
     : public rtc::VideoSinkInterface<VideoFrame> {
  public:
+  // Averaging window spanning 90 frames at default 30fps, matching old media
+  // optimization module defaults.
+  static constexpr int64_t kFrameRateAveragingWindowSizeMs = (1000 / 30) * 90;
+
   // Callback interface used to inform instance owners.
   class Callback {
    public:
@@ -66,6 +70,14 @@ class FrameCadenceAdapterInterface
 
   // Pass true in |enabled| as a prerequisite to enable zero-hertz operation.
   virtual void SetZeroHertzModeEnabled(bool enabled) = 0;
+
+  // Returns the input framerate. This is measured by RateStatistics when
+  // zero-hertz mode is off, and returns the max framerate in zero-hertz mode.
+  virtual absl::optional<uint32_t> GetInputFrameRateFps() = 0;
+
+  // Updates frame rate. This is done unconditionally irrespective of adapter
+  // mode.
+  virtual void UpdateFrameRate() = 0;
 };
 
 }  // namespace webrtc
