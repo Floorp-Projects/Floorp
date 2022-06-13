@@ -56,4 +56,19 @@ extern "C" {
 
     // Available starting macOS 10.9
     pub fn SecTrustSetNetworkFetchAllowed(trust: SecTrustRef, allowFetch: Boolean) -> OSStatus;
+
+    // Available starting macOS 10.12
+    pub fn SecKeyCreateSignature(key: SecKeyRef, algorithm: SecKeyAlgorithm, data: CFDataRef, err: *mut CFErrorRef) -> CFDataRef;
+    pub fn SecKeyCopyAttributes(key: SecKeyRef) -> CFDictionaryRef;
+    pub fn SecKeyCopyExternalRepresentation(key: SecKeyRef, err: *mut CFErrorRef) -> CFDataRef;
+    pub static kSecKeyAlgorithmECDSASignatureDigestX962SHA1: CFStringRef;
+    pub static kSecKeyAlgorithmECDSASignatureDigestX962SHA256: CFStringRef;
+    pub static kSecKeyAlgorithmECDSASignatureDigestX962SHA384: CFStringRef;
+    pub static kSecKeyAlgorithmECDSASignatureDigestX962SHA512: CFStringRef;
+    pub static kSecKeyAlgorithmRSASignatureDigestPKCS1v15Raw: CFStringRef;
+    pub static kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256: CFStringRef;
+    pub static kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384: CFStringRef;
+    pub static kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512: CFStringRef;
+    pub static kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1: CFStringRef;
+    pub static kSecAttrKeyTypeECSECPrimeRandom: CFStringRef;
 }
