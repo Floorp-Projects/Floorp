@@ -61,6 +61,25 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                          PlaybackDirection::Alternate, FillMode::Both);
 }
 
+/* static */
+already_AddRefed<ScrollTimeline> ScrollTimeline::GetOrCreateScrollTimeline(
+    Document* aDocument, const Scroller& aScroller,
+    const StyleScrollAxis& aAxis) {
+  MOZ_ASSERT(aScroller);
+
+  RefPtr<ScrollTimeline> timeline;
+  auto* set =
+      ScrollTimelineSet::GetOrCreateScrollTimelineSet(aScroller.mElement);
+  auto p = set->LookupForAdd(aAxis);
+  if (!p) {
+    timeline = new ScrollTimeline(aDocument, aScroller, aAxis);
+    set->Add(p, aAxis, timeline);
+  } else {
+    timeline = p->value();
+  }
+  return timeline.forget();
+}
+
 static StyleScrollAxis ToStyleScrollAxis(
     const StyleScrollDirection aDirection) {
   switch (aDirection) {
@@ -83,6 +102,7 @@ static StyleScrollAxis ToStyleScrollAxis(
   return StyleScrollAxis::Block;
 }
 
+/* static */
 already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
     const RawServoScrollTimelineRule& aRule, Document* aDocument,
     const NonOwningAnimationTarget& aTarget) {
@@ -96,18 +116,8 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
   StyleScrollAxis axis =
       ToStyleScrollAxis(Servo_ScrollTimelineRule_GetOrientation(&aRule));
 
-  RefPtr<ScrollTimeline> timeline;
   auto autoScroller = Scroller::Root(aTarget.mElement->OwnerDoc());
-  auto* set =
-      ScrollTimelineSet::GetOrCreateScrollTimelineSet(autoScroller.mElement);
-  auto p = set->LookupForAdd(axis);
-  if (!p) {
-    timeline = new ScrollTimeline(aDocument, autoScroller, axis);
-    set->Add(p, axis, timeline);
-  } else {
-    timeline = p->value();
-  }
-  return timeline.forget();
+  return GetOrCreateScrollTimeline(aDocument, autoScroller, axis);
 }
 
 /* static */
@@ -135,18 +145,7 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
       scroller = Scroller::Nearest(curr ? curr : root);
     }
   }
-
-  RefPtr<ScrollTimeline> timeline;
-  auto* set =
-      ScrollTimelineSet::GetOrCreateScrollTimelineSet(scroller.mElement);
-  auto p = set->LookupForAdd(aAxis);
-  if (!p) {
-    timeline = new ScrollTimeline(aDocument, scroller, aAxis);
-    set->Add(p, aAxis, timeline);
-  } else {
-    timeline = p->value();
-  }
-  return timeline.forget();
+  return GetOrCreateScrollTimeline(aDocument, scroller, aAxis);
 }
 
 /* static*/ already_AddRefed<ScrollTimeline> ScrollTimeline::FromNamedScroll(
@@ -202,18 +201,7 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
     return nullptr;
   }
   Scroller scroller = Scroller::Named(result);
-
-  RefPtr<ScrollTimeline> timeline;
-  auto* set =
-      ScrollTimelineSet::GetOrCreateScrollTimelineSet(scroller.mElement);
-  auto p = set->LookupForAdd(axis);
-  if (!p) {
-    timeline = new ScrollTimeline(aDocument, scroller, axis);
-    set->Add(p, axis, timeline);
-  } else {
-    timeline = p->value();
-  }
-  return timeline.forget();
+  return GetOrCreateScrollTimeline(aDocument, scroller, axis);
 }
 
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
