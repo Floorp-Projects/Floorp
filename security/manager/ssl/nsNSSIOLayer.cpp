@@ -134,6 +134,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
       mFalseStarted(false),
       mIsFullHandshake(false),
       mNotedTimeUntilReady(false),
+      mEchGreaseUsed(false),
       mIsShortWritePending(false),
       mShortWritePendingByte(0),
       mShortWriteOriginalAmount(-1),
@@ -972,6 +973,12 @@ bool retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo) {
   // This function is supposed to decide which error codes should
   // be used to conclude server is TLS intolerant.
   // Note this only happens during the initial SSL handshake.
+
+  if (StaticPrefs::security_tls_ech_disable_grease_on_fallback() &&
+      socketInfo->WasEchGreaseUsed()) {
+    // Don't record any intolerances if we used ECH GREASE but force a retry.
+    return true;
+  }
 
   SSLVersionRange range = socketInfo->GetTLSVersionRange();
   nsSSLIOLayerHelpers& helpers = socketInfo->SharedState().IOLayerHelpers();
@@ -2710,6 +2717,7 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
         return NS_ERROR_FAILURE;
       }
     }
+    infoObject->SetEchGreaseUsed();
   }
 
   // Include a modest set of named groups.

@@ -95,6 +95,11 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   void SetFullHandshake() { mIsFullHandshake = true; }
   bool IsFullHandshake() const { return mIsFullHandshake; }
 
+  void SetEchGreaseUsed() { mEchGreaseUsed = true; }
+
+  bool WasEchUsed() const { return mEchConfig.Length() > 0; }
+  bool WasEchGreaseUsed() const { return mEchGreaseUsed; }
+
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
 
@@ -196,6 +201,7 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   bool mFalseStarted;
   bool mIsFullHandshake;
   bool mNotedTimeUntilReady;
+  bool mEchGreaseUsed;
 
   // True when SSL layer has indicated an "SSL short write", i.e. need
   // to call on send one or more times to push all pending data to write.
