@@ -114,6 +114,7 @@ void TaskQueuePacedSender::UpdateOutstandingData(DataSize outstanding_data) {
     // Fast path since this can be called once per sent packet while on the
     // task queue.
     pacing_controller_.UpdateOutstandingData(outstanding_data);
+    MaybeProcessPackets(Timestamp::MinusInfinity());
     return;
   }
 
