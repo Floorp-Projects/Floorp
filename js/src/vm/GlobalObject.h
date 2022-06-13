@@ -22,7 +22,6 @@
 #include "NamespaceImports.h"
 
 #include "gc/AllocKind.h"
-#include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"

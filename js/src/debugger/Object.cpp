@@ -26,7 +26,6 @@
 #include "debugger/Script.h"     // for DebuggerScript
 #include "debugger/Source.h"     // for DebuggerSource
 #include "gc/Barrier.h"          // for ImmutablePropertyNamePtr
-#include "gc/Rooting.h"          // for RootedValue
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject

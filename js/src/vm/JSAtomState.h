@@ -8,7 +8,6 @@
 #define vm_JSAtomState_h
 
 #include "gc/Barrier.h"
-#include "gc/Rooting.h"
 #include "js/ProtoKey.h"
 #include "js/Symbol.h"
 #include "vm/CommonPropertyNames.h"

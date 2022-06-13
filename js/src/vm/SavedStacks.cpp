@@ -21,7 +21,6 @@
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
-#include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty

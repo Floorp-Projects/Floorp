@@ -35,7 +35,6 @@
 #include "gc/GC.h"                         // for MemoryUse
 #include "gc/GCContext.h"                  // for JS::GCContext
 #include "gc/Marking.h"                    // for IsAboutToBeFinalized
-#include "gc/Rooting.h"                    // for RootedValue
 #include "gc/Tracer.h"                     // for TraceCrossCompartmentEdge
 #include "gc/ZoneAllocator.h"              // for AddCellMemory
 #include "jit/JSJitFrameIter.h"            // for InlineFrameIterator

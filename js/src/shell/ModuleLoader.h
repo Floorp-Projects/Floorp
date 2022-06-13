@@ -8,7 +8,6 @@
 #define shell_ModuleLoader_h
 
 #include "builtin/ModuleObject.h"
-#include "gc/Rooting.h"
 #include "js/RootingAPI.h"
 
 namespace js {

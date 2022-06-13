@@ -10,7 +10,6 @@
 #include "jstypes.h"            // for JS_PUBLIC_API
 #include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
 #include "debugger/Debugger.h"  // for DebuggerScriptReferent
-#include "gc/Rooting.h"         //
 #include "js/TypeDecls.h"       // for Handle
 #include "vm/NativeObject.h"    // for NativeObject
 

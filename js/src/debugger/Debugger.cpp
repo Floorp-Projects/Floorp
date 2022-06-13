@@ -48,7 +48,6 @@
 #include "gc/HashUtil.h"                  // for DependentAddPtr
 #include "gc/Marking.h"                   // for IsAboutToBeFinalized
 #include "gc/PublicIterators.h"           // for RealmsIter, CompartmentsIter
-#include "gc/Rooting.h"                   //
 #include "gc/Statistics.h"                // for Statistics::SliceData
 #include "gc/Tracer.h"                    // for TraceEdge
 #include "gc/Zone.h"                      // for Zone

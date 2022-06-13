@@ -15,7 +15,6 @@
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
-#include "gc/Rooting.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRWriter.h"
 #include "jit/ICState.h"

@@ -28,7 +28,6 @@
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/StringAsciiChars.h"
 #include "builtin/String.h"
-#include "gc/Rooting.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/TypeDecls.h"

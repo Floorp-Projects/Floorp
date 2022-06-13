@@ -18,7 +18,6 @@
 
 #include "jstypes.h"
 
-#include "gc/Rooting.h"
 #include "irregexp/RegExpTypes.h"
 #include "vm/RegExpShared.h"
 
