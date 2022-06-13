@@ -15,6 +15,26 @@
 
 #include "Http2StreamWebSocket.h"
 
-namespace mozilla {
-namespace net {}  // namespace net
-}  // namespace mozilla
+namespace mozilla::net {
+// ConvertResponseHeaders is used to convert the response headers
+// into HTTP/1 format and report some telemetry
+void Http2StreamWebSocket::HandleResponseHeaders(nsACString& aHeadersOut,
+                                                 int32_t httpResponseCode) {
+  LOG3(("Http2StreamBase %p websocket response code %d", this,
+        httpResponseCode));
+  if (httpResponseCode == 200) {
+    MapStreamToHttpConnection(aHeadersOut);
+  }
+}
+
+bool Http2StreamWebSocket::MapStreamToHttpConnection(
+    const nsACString& aFlat407Headers) {
+  RefPtr<Http2ConnectTransaction> qiTrans(
+      mTransaction->QueryHttp2ConnectTransaction());
+  MOZ_ASSERT(qiTrans);
+
+  return qiTrans->MapStreamToHttpConnection(
+      mSocketTransport, mTransaction->ConnectionInfo(), aFlat407Headers, -1);
+}
+
+}  // namespace mozilla::net

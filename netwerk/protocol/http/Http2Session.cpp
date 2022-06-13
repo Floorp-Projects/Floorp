@@ -1229,13 +1229,17 @@ void Http2Session::CleanupStream(Http2StreamBase* aStream, nsresult aResult,
     return;
   }
 
-  Http2PushedStream* pushSource = aStream->PushSource();
-  if (pushSource) {
-    // aStream is a synthetic  attached to an even push
-    MOZ_ASSERT(pushSource->GetConsumerStream() == aStream);
-    MOZ_ASSERT(!aStream->StreamID());
-    MOZ_ASSERT(!(pushSource->StreamID() & 0x1));
-    aStream->ClearPushSource();
+  Http2PushedStream* pushSource = nullptr;
+  Http2Stream* h2Stream = aStream->GetHttp2Stream();
+  if (h2Stream) {
+    pushSource = h2Stream->PushSource();
+    if (pushSource) {
+      // aStream is a synthetic  attached to an even push
+      MOZ_ASSERT(pushSource->GetConsumerStream() == aStream);
+      MOZ_ASSERT(!aStream->StreamID());
+      MOZ_ASSERT(!(pushSource->StreamID() & 0x1));
+      h2Stream->ClearPushSource();
+    }
   }
 
   if (aStream->DeferCleanup(aResult)) {
@@ -1338,7 +1342,7 @@ void Http2Session::CloseStream(Http2StreamBase* aStream, nsresult aResult) {
   RemoveStreamFromQueues(aStream);
 
   if (aStream->IsTunnel()) {
-    UnRegisterTunnel(aStream);
+    UnRegisterTunnel(static_cast<Http2StreamTunnel*>(aStream));
   }
 
   // Send the stream the close() indication
@@ -2024,7 +2028,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   LOG3(("Http2Session::RecvPushPromise %p origin check %s", self,
         pushedWeak->Origin().get()));
   nsCOMPtr<nsIURI> pushedOrigin;
-  rv = Http2StreamBase::MakeOriginURL(pushedWeak->Origin(), pushedOrigin);
+  rv = MakeOriginURL(pushedWeak->Origin(), pushedOrigin);
   nsAutoCString pushedHostName;
   int32_t pushedPort = -1;
   if (NS_SUCCEEDED(rv)) {
@@ -2085,7 +2089,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     // generally ok off the main thread), since we're not using the protocol
     // handler to create any URIs, this will work just fine here. Don't try this
     // at home, though, kids. I'm a trained professional.
-    if (NS_SUCCEEDED(Http2StreamBase::MakeOriginURL(spec, pushedURL))) {
+    if (NS_SUCCEEDED(MakeOriginURL(spec, pushedURL))) {
       LOG3(("Http2Session::RecvPushPromise %p check disk cache for entry",
             self));
       mozilla::OriginAttributes oa;
@@ -2664,7 +2668,7 @@ nsresult Http2Session::RecvOrigin(Http2Session* self) {
         self->mInputFrameBuffer.get() + kFrameHeaderBytes + offset + 2,
         originLen);
     offset += originLen + 2;
-    if (NS_FAILED(Http2StreamBase::MakeOriginURL(originString, originURL))) {
+    if (NS_FAILED(MakeOriginURL(originString, originURL))) {
       LOG3(
           ("Http2Session::RecvOrigin %p origin frame string %s failed to "
            "parse\n",
@@ -3419,11 +3423,12 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       ResetDownstreamState();
 
       if (streamToCleanup) {
-        if (discardedPadding && !(streamToCleanup->StreamID() & 1)) {
+        Http2PushedStream* pushed = streamToCleanup->GetHttp2PushedStream();
+        if (discardedPadding && pushed) {
           // Pushed streams are special on padding-only final data frames.
           // See bug 1409570 comments 6-8 for details.
-          streamToCleanup->SetPushComplete();
-          Http2StreamBase* pushSink = streamToCleanup->GetConsumerStream();
+          pushed->SetPushComplete();
+          Http2StreamBase* pushSink = pushed->GetConsumerStream();
           if (pushSink) {
             bool enqueueSink = true;
             for (const auto& s : mPushesReadyForRead) {
@@ -3566,8 +3571,10 @@ nsresult Http2Session::ProcessConnectedPush(
 
   // The pipe in nsHttpTransaction rewrites CLOSED error codes into OK
   // so we need this check to determine the truth.
-  if (NS_SUCCEEDED(rv) && !*countWritten && pushConnectedStream->PushSource() &&
-      pushConnectedStream->PushSource()->GetPushComplete()) {
+  Http2Stream* h2Stream = pushConnectedStream->GetHttp2Stream();
+  MOZ_ASSERT(h2Stream);
+  if (NS_SUCCEEDED(rv) && !*countWritten && h2Stream &&
+      h2Stream->PushSource() && h2Stream->PushSource()->GetPushComplete()) {
     rv = NS_BASE_STREAM_CLOSED;
   }
 
@@ -4065,7 +4072,7 @@ uint32_t Http2Session::FindTunnelCount(nsCString const& aHashKey) {
   return rv;
 }
 
-void Http2Session::RegisterTunnel(Http2StreamBase* aTunnel) {
+void Http2Session::RegisterTunnel(Http2StreamTunnel* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   nsCString const& regKey = aTunnel->RegistrationKey();
   const uint32_t newcount = ++mTunnelHash.LookupOrInsert(regKey, 0);
@@ -4073,7 +4080,7 @@ void Http2Session::RegisterTunnel(Http2StreamBase* aTunnel) {
         aTunnel, newcount, regKey.get()));
 }
 
-void Http2Session::UnRegisterTunnel(Http2StreamBase* aTunnel) {
+void Http2Session::UnRegisterTunnel(Http2StreamTunnel* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   nsCString const& regKey = aTunnel->RegistrationKey();
   auto entry = mTunnelHash.Lookup(regKey);
@@ -4102,7 +4109,7 @@ void Http2Session::CreateTunnel(nsHttpTransaction* trans,
                Http2StreamBaseType::Tunnel);
   RefPtr<Http2StreamBase> tunnel = mStreamTransactionHash.Get(connectTrans);
   MOZ_ASSERT(tunnel);
-  RegisterTunnel(tunnel);
+  RegisterTunnel(static_cast<Http2StreamTunnel*>(tunnel.get()));
 }
 
 void Http2Session::DispatchOnTunnel(nsAHttpTransaction* aHttpTransaction,
