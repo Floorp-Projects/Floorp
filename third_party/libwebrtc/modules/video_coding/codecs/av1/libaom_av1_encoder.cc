@@ -108,6 +108,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
   bool inited_;
+  bool rates_configured_;
   absl::optional<aom_svc_params_t> svc_params_;
   VideoCodec encoder_settings_;
   aom_image_t* frame_for_encode_;
@@ -143,6 +144,7 @@ int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
 
 LibaomAv1Encoder::LibaomAv1Encoder()
     : inited_(false),
+      rates_configured_(false),
       frame_for_encode_(nullptr),
       encoded_image_callback_(nullptr) {}
 
@@ -283,15 +285,6 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
                         << " on control AV1E_SET_AQ_MODE.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  if (SvcEnabled()) {
-    ret = aom_codec_control(&ctx_, AV1E_SET_SVC_PARAMS, &*svc_params_);
-    if (ret != AOM_CODEC_OK) {
-      RTC_LOG(LS_WARNING) << "LibaomAV1Encoder::EncodeInit returned " << ret
-                          << " on control AV1E_SET_SVC_PARAMS.";
-      return false;
-    }
-  }
-
   ret = aom_codec_control(&ctx_, AOME_SET_MAX_INTRA_BITRATE_PCT, 300);
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
@@ -558,13 +551,14 @@ int32_t LibaomAv1Encoder::Release() {
     }
     inited_ = false;
   }
+  rates_configured_ = false;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t LibaomAv1Encoder::Encode(
     const VideoFrame& frame,
     const std::vector<VideoFrameType>* frame_types) {
-  if (!inited_ || encoded_image_callback_ == nullptr) {
+  if (!inited_ || encoded_image_callback_ == nullptr || !rates_configured_) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
@@ -796,6 +790,8 @@ void LibaomAv1Encoder::SetRates(const RateControlParameters& parameters) {
     }
     aom_codec_control(&ctx_, AV1E_SET_SVC_PARAMS, &*svc_params_);
   }
+
+  rates_configured_ = true;
 
   // Set frame rate to closest integer value.
   encoder_settings_.maxFramerate =
