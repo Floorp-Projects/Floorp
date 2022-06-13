@@ -68,9 +68,7 @@ absl::optional<IDataChunk> IDataChunk::Parse(
   return IDataChunk(tsn, stream_identifier, message_id,
                     PPID(options.is_beginning ? ppid_or_fsn : 0),
                     FSN(options.is_beginning ? 0 : ppid_or_fsn),
-                    std::vector<uint8_t>(reader->variable_data().begin(),
-                                         reader->variable_data().end()),
-                    options);
+                    rtc::CopyOnWriteBuffer(reader->variable_data()), options);
 }
 
 void IDataChunk::SerializeTo(std::vector<uint8_t>& out) const {

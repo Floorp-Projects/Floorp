@@ -20,6 +20,8 @@
 #include "net/dcsctp/packet/bounded_byte_reader.h"
 #include "net/dcsctp/packet/bounded_byte_writer.h"
 #include "net/dcsctp/packet/chunk/data_common.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace dcsctp {
@@ -64,9 +66,7 @@ absl::optional<DataChunk> DataChunk::Parse(rtc::ArrayView<const uint8_t> data) {
       ImmediateAckFlag((flags & (1 << kFlagsBitImmediateAck)) != 0);
 
   return DataChunk(tsn, stream_identifier, ssn, ppid,
-                   std::vector<uint8_t>(reader->variable_data().begin(),
-                                        reader->variable_data().end()),
-                   options);
+                   rtc::CopyOnWriteBuffer(reader->variable_data()), options);
 }
 
 void DataChunk::SerializeTo(std::vector<uint8_t>& out) const {

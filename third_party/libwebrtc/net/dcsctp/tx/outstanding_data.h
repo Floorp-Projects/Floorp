@@ -147,14 +147,14 @@ class OutstandingData {
       kAbandon,
     };
 
-    explicit Item(Data data,
+    explicit Item(const Data& data,
                   MaxRetransmits max_retransmissions,
                   TimeMs time_sent,
                   TimeMs expires_at)
         : max_retransmissions_(max_retransmissions),
           time_sent_(time_sent),
           expires_at_(expires_at),
-          data_(std::move(data)) {}
+          data_(data.Clone()) {}
 
     TimeMs time_sent() const { return time_sent_; }
 

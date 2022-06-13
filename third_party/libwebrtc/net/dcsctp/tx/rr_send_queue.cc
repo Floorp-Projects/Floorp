@@ -9,6 +9,7 @@
  */
 #include "net/dcsctp/tx/rr_send_queue.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <limits>
@@ -24,6 +25,7 @@
 #include "net/dcsctp/public/dcsctp_socket.h"
 #include "net/dcsctp/public/types.h"
 #include "net/dcsctp/tx/send_queue.h"
+#include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
@@ -96,7 +98,14 @@ bool RRSendQueue::IsConsistent() const {
     }
   }
 
-  return total_buffered_amount == total_buffered_amount_.value();
+  if (total_buffered_amount != total_buffered_amount_.value()) {
+    RTC_DLOG(LS_ERROR) << "Actual total_buffered_amount="
+                       << total_buffered_amount
+                       << " != expected total_buffered_amount="
+                       << total_buffered_amount_.value();
+    return false;
+  }
+  return true;
 }
 
 bool RRSendQueue::OutgoingStream::IsConsistent() const {
@@ -104,7 +113,13 @@ bool RRSendQueue::OutgoingStream::IsConsistent() const {
   for (const auto& item : items_) {
     bytes += item.remaining_size;
   }
-  return bytes == buffered_amount_.value();
+  if (bytes != buffered_amount_.value()) {
+    RTC_DLOG(LS_ERROR) << "Actual buffered amount=" << bytes
+                       << " != expected buffered_amount_="
+                       << buffered_amount_.value();
+    return false;
+  }
+  return true;
 }
 
 void RRSendQueue::ThresholdWatcher::Decrease(size_t bytes) {
@@ -161,22 +176,20 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
   }
 
   // Grab the next `max_size` fragment from this message and calculate flags.
-  rtc::ArrayView<const uint8_t> chunk_payload =
-      item->message.payload().subview(item->remaining_offset, max_size);
-  rtc::ArrayView<const uint8_t> message_payload = message.payload();
-  Data::IsBeginning is_beginning(chunk_payload.data() ==
-                                 message_payload.data());
-  Data::IsEnd is_end((chunk_payload.data() + chunk_payload.size()) ==
-                     (message_payload.data() + message_payload.size()));
+  size_t actual_size = std::min(max_size, item->remaining_size);
+  RTC_DCHECK(actual_size > 0);
+  Data::IsBeginning is_beginning(item->remaining_offset == 0);
+  Data::IsEnd is_end(actual_size == item->remaining_size);
 
   StreamID stream_id = message.stream_id();
   PPID ppid = message.ppid();
 
   // Zero-copy the payload if the message fits in a single chunk.
-  std::vector<uint8_t> payload =
+  rtc::CopyOnWriteBuffer payload =
       is_beginning && is_end
-          ? std::move(message).ReleasePayload()
-          : std::vector<uint8_t>(chunk_payload.begin(), chunk_payload.end());
+          ? std::move(message).ReleaseBufferPayload()
+          : message.buffer_payload().Slice(item->remaining_offset, actual_size);
+  RTC_DCHECK_EQ(payload.size(), actual_size);
 
   FSN fsn(item->current_fsn);
   item->current_fsn = FSN(*item->current_fsn + 1);
@@ -202,8 +215,8 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
     // it can safely be discarded.
     items_.pop_front();
   } else {
-    item->remaining_offset += chunk_payload.size();
-    item->remaining_size -= chunk_payload.size();
+    item->remaining_offset += actual_size;
+    item->remaining_size -= actual_size;
     RTC_DCHECK(item->remaining_offset + item->remaining_size ==
                item->message.payload().size());
     RTC_DCHECK(item->remaining_size > 0);

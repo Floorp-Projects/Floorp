@@ -99,10 +99,9 @@ TEST_F(ReassemblyQueueTest, LargeUnorderedChunkAllPermutations) {
       Data::IsBeginning is_beginning(tsns[i] == 10);
       Data::IsEnd is_end(tsns[i] == 13);
 
-      reasm.Add(TSN(tsns[i]),
-                Data(kStreamID, kSSN, kMID, kFSN, kPPID,
-                     std::vector<uint8_t>(span.begin(), span.end()),
-                     is_beginning, is_end, IsUnordered(false)));
+      reasm.Add(TSN(tsns[i]), Data(kStreamID, kSSN, kMID, kFSN, kPPID,
+                                   rtc::CopyOnWriteBuffer(span), is_beginning,
+                                   is_end, IsUnordered(false)));
       if (i < 3) {
         EXPECT_FALSE(reasm.HasMessages());
       } else {
@@ -135,10 +134,9 @@ TEST_F(ReassemblyQueueTest, ManySmallOrderedMessages) {
       Data::IsEnd is_end(true);
 
       SSN ssn(static_cast<uint16_t>(tsns[i] - 10));
-      reasm.Add(TSN(tsns[i]),
-                Data(kStreamID, ssn, kMID, kFSN, kPPID,
-                     std::vector<uint8_t>(span.begin(), span.end()),
-                     is_beginning, is_end, IsUnordered(false)));
+      reasm.Add(TSN(tsns[i]), Data(kStreamID, ssn, kMID, kFSN, kPPID,
+                                   rtc::CopyOnWriteBuffer(span), is_beginning,
+                                   is_end, IsUnordered(false)));
     }
     EXPECT_THAT(
         reasm.FlushMessages(),

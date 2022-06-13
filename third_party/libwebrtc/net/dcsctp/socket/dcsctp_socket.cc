@@ -977,7 +977,7 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
   AnyDataChunk::ImmediateAckFlag immediate_ack = chunk.options().immediate_ack;
   Data data = std::move(chunk).extract();
 
-  if (data.payload.empty()) {
+  if (data.payload.size() == 0) {
     // Empty DATA chunks are illegal.
     packet_sender_.Send(tcb_->PacketBuilder().Add(
         ErrorChunk(Parameters::Builder().Add(NoUserDataCause(tsn)).Build())));

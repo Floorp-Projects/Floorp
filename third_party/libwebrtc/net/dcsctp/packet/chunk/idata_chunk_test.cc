@@ -52,8 +52,8 @@ TEST(IDataChunkTest, AtBeginningFromCapture) {
 TEST(IDataChunkTest, AtBeginningSerializeAndDeserialize) {
   IDataChunk::Options options;
   options.is_beginning = Data::IsBeginning(true);
-  IDataChunk chunk(TSN(123), StreamID(456), MID(789), PPID(53), FSN(0), {1},
-                   options);
+  IDataChunk chunk(TSN(123), StreamID(456), MID(789), PPID(53), FSN(0),
+                   rtc::CopyOnWriteBuffer({1, 2, 4}), options);
 
   std::vector<uint8_t> serialized;
   chunk.SerializeTo(serialized);
@@ -68,7 +68,7 @@ TEST(IDataChunkTest, AtBeginningSerializeAndDeserialize) {
 
   EXPECT_EQ(deserialized.ToString(),
             "I-DATA, type=ordered::first, tsn=123, stream_id=456, "
-            "message_id=789, ppid=53, length=1");
+            "message_id=789, ppid=53, length=3");
 }
 
 TEST(IDataChunkTest, InMiddleFromCapture) {
@@ -100,7 +100,7 @@ TEST(IDataChunkTest, InMiddleFromCapture) {
 
 TEST(IDataChunkTest, InMiddleSerializeAndDeserialize) {
   IDataChunk chunk(TSN(123), StreamID(456), MID(789), PPID(0), FSN(101112),
-                   {1, 2, 3}, /*options=*/{});
+                   rtc::CopyOnWriteBuffer({1, 2, 3}), /*options=*/{});
 
   std::vector<uint8_t> serialized;
   chunk.SerializeTo(serialized);

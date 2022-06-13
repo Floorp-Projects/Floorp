@@ -29,6 +29,7 @@
 #include "net/dcsctp/public/types.h"
 #include "net/dcsctp/socket/dcsctp_socket.h"
 #include "net/dcsctp/socket/state_cookie.h"
+#include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
 
 namespace dcsctp {
@@ -167,9 +168,9 @@ void MakeDataChunk(FuzzState& state, SctpPacket::Builder& b) {
   options.is_unordered = IsUnordered(state.GetByte() != 0);
   options.is_beginning = Data::IsBeginning(state.GetByte() != 0);
   options.is_end = Data::IsEnd(state.GetByte() != 0);
+  rtc::CopyOnWriteBuffer payload(10);
   b.Add(DataChunk(state.GetNextTSN(), StreamID(state.GetByte()),
-                  SSN(state.GetByte()), PPID(53), std::vector<uint8_t>(10),
-                  options));
+                  SSN(state.GetByte()), PPID(53), payload, options));
 }
 
 void MakeInitChunk(FuzzState& state, SctpPacket::Builder& b) {
@@ -284,7 +285,7 @@ void MakeIDataChunk(FuzzState& state, SctpPacket::Builder& b) {
   options.is_end = Data::IsEnd(state.GetByte() != 0);
   b.Add(IDataChunk(state.GetNextTSN(), StreamID(state.GetByte()),
                    state.GetNextMID(), PPID(53), FSN(0),
-                   std::vector<uint8_t>(10), options));
+                   rtc::CopyOnWriteBuffer(10), options));
 }
 
 void MakeIForwardTsnChunk(FuzzState& state, SctpPacket::Builder& b) {

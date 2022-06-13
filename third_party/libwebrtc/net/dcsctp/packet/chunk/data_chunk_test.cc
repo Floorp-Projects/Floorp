@@ -15,6 +15,7 @@
 
 #include "api/array_view.h"
 #include "net/dcsctp/testing/testing_macros.h"
+#include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 
@@ -51,8 +52,9 @@ TEST(DataChunkTest, FromCapture) {
 }
 
 TEST(DataChunkTest, SerializeAndDeserialize) {
+  rtc::CopyOnWriteBuffer payload({1, 2, 3, 4, 5});
   DataChunk chunk(TSN(123), StreamID(456), SSN(789), PPID(9090),
-                  /*payload=*/{1, 2, 3, 4, 5},
+                  std::move(payload),
                   /*options=*/{});
 
   std::vector<uint8_t> serialized;

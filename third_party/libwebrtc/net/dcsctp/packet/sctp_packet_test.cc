@@ -242,10 +242,10 @@ TEST(SctpPacketTest, SerializeAndDeserializeThreeChunks) {
                   {SackChunk::GapAckBlock(2, 3)},
                   /*duplicate_tsns=*/{TSN(1), TSN(2), TSN(3)}));
   b.Add(DataChunk(TSN(123), StreamID(456), SSN(789), PPID(9090),
-                  /*payload=*/{1, 2, 3, 4, 5},
+                  /*payload=*/rtc::CopyOnWriteBuffer({1, 2, 3, 4, 5}),
                   /*options=*/{}));
   b.Add(DataChunk(TSN(124), StreamID(654), SSN(987), PPID(909),
-                  /*payload=*/{5, 4, 3, 3, 1},
+                  /*payload=*/rtc::CopyOnWriteBuffer({5, 4, 3, 3, 1}),
                   /*options=*/{}));
 
   std::vector<uint8_t> serialized = b.Build();
@@ -319,7 +319,7 @@ TEST(SctpPacketTest, ReturnsCorrectSpaceAvailableToStayWithinMTU) {
   // Add a smaller packet first.
   DataChunk::Options data_options;
 
-  std::vector<uint8_t> payload1(183);
+  rtc::CopyOnWriteBuffer payload1(183);
   builder.Add(
       DataChunk(TSN(1), StreamID(1), SSN(0), PPID(53), payload1, data_options));
 
@@ -328,7 +328,7 @@ TEST(SctpPacketTest, ReturnsCorrectSpaceAvailableToStayWithinMTU) {
             kMaxPacketSize - kSctpHeaderSize - chunk1_size);
   EXPECT_EQ(builder.bytes_remaining(), 976u);  // Hand-calculated.
 
-  std::vector<uint8_t> payload2(957);
+  rtc::CopyOnWriteBuffer payload2(957);
   builder.Add(
       DataChunk(TSN(1), StreamID(1), SSN(0), PPID(53), payload2, data_options));
 
