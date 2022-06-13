@@ -48,24 +48,13 @@ TEST_F(StatsEndToEndTest, GetStats) {
   static const int kStartBitrateBps = 3000000;
   static const int kExpectedRenderDelayMs = 20;
 
-  class ReceiveStreamRenderer : public rtc::VideoSinkInterface<VideoFrame> {
-   public:
-    ReceiveStreamRenderer() {}
-
-   private:
-    void OnFrame(const VideoFrame& video_frame) override {}
-  };
-
   class StatsObserver : public test::EndToEndTest {
    public:
     StatsObserver()
-        : EndToEndTest(kLongTimeoutMs),
-          encoder_factory_([]() {
+        : EndToEndTest(kLongTimeoutMs), encoder_factory_([]() {
             return std::make_unique<test::DelayedEncoder>(
                 Clock::GetRealTimeClock(), 10);
-          }),
-          send_stream_(nullptr),
-          expected_send_ssrcs_() {}
+          }) {}
 
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
@@ -274,7 +263,6 @@ TEST_F(StatsEndToEndTest, GetStats) {
         expected_receive_ssrcs_.push_back(
             (*receive_configs)[i].rtp.remote_ssrc);
         (*receive_configs)[i].render_delay_ms = kExpectedRenderDelayMs;
-        (*receive_configs)[i].renderer = &receive_stream_renderer_;
         (*receive_configs)[i].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
 
         (*receive_configs)[i].rtp.rtx_ssrc = kSendRtxSsrcs[i];
@@ -342,14 +330,13 @@ TEST_F(StatsEndToEndTest, GetStats) {
     std::vector<VideoReceiveStream*> receive_streams_;
     std::map<std::string, bool> receive_stats_filled_;
 
-    VideoSendStream* send_stream_;
+    VideoSendStream* send_stream_ = nullptr;
     std::map<std::string, bool> send_stats_filled_;
 
     std::vector<uint32_t> expected_receive_ssrcs_;
     std::set<uint32_t> expected_send_ssrcs_;
 
     rtc::Event check_stats_event_;
-    ReceiveStreamRenderer receive_stream_renderer_;
     TaskQueueBase* task_queue_ = nullptr;
   } test;
 
@@ -666,7 +653,6 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
-      (*receive_configs)[0].renderer = &fake_renderer_;
     }
 
     void OnVideoStreamsCreated(
@@ -682,7 +668,6 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
       EXPECT_TRUE(Wait()) << "Timed out waiting for packet to be NACKed.";
     }
 
-    test::FakeVideoRenderer fake_renderer_;
     Mutex mutex_;
     uint64_t sent_rtp_packets_ RTC_GUARDED_BY(&mutex_) = 0;
     uint16_t dropped_rtp_packet_ RTC_GUARDED_BY(&mutex_) = 0;
