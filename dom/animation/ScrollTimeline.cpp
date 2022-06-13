@@ -149,6 +149,73 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
   return timeline.forget();
 }
 
+/* static*/ already_AddRefed<ScrollTimeline> ScrollTimeline::FromNamedScroll(
+    Document* aDocument, const NonOwningAnimationTarget& aTarget,
+    const nsAtom* aName) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTarget);
+
+  // A named scroll progress timeline is referenceable in animation-timeline by:
+  // 1. the declaring element itself
+  // 2. that element’s descendants
+  // 3. that element’s following siblings and their descendants
+  // https://drafts.csswg.org/scroll-animations-1/rewrite#timeline-scope
+  //
+  // Note: It's unclear to us about the scope of scroll-timeline, so we
+  // intentionally don't let it cross the shadow dom boundary for now.
+  //
+  // FIXME: We may have to support global scope. This depends on the result of
+  // this spec issue: https://github.com/w3c/csswg-drafts/issues/7047
+  Element* result = nullptr;
+  StyleScrollAxis axis = StyleScrollAxis::Block;
+  for (Element* curr = aTarget.mElement; curr;
+       curr = curr->GetParentElement()) {
+    // If multiple elements have declared the same timeline name, the matching
+    // timeline is the one declared on the nearest element in tree order, which
+    // considers siblings closer than parents.
+    // Note: This should be fine for parallel traversal because we update
+    // animations by SequentialTask.
+    for (Element* e = curr; e; e = e->GetPreviousElementSibling()) {
+      const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(e);
+      // The elements in the shadow dom might not be in the flat tree.
+      if (!style) {
+        continue;
+      }
+
+      const nsStyleUIReset* styleUIReset = style->StyleUIReset();
+      if (styleUIReset->mScrollTimelineName._0.AsAtom() == aName) {
+        result = e;
+        axis = styleUIReset->mScrollTimelineAxis;
+        break;
+      }
+    }
+
+    if (result) {
+      break;
+    }
+  }
+
+  // If we cannot find a matched scroll-timeline-name, this animation is not
+  // associated with a timeline.
+  // https://drafts.csswg.org/css-animations-2/#typedef-timeline-name
+  if (!result) {
+    return nullptr;
+  }
+  Scroller scroller = Scroller::Named(result);
+
+  RefPtr<ScrollTimeline> timeline;
+  auto* set =
+      ScrollTimelineSet::GetOrCreateScrollTimelineSet(scroller.mElement);
+  auto p = set->LookupForAdd(axis);
+  if (!p) {
+    timeline = new ScrollTimeline(aDocument, scroller, axis);
+    set->Add(p, axis, timeline);
+  } else {
+    timeline = p->value();
+  }
+  return timeline.forget();
+}
+
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
   // If no layout box, this timeline is inactive.
   if (!mSource || !mSource.mElement->GetPrimaryFrame()) {
@@ -244,13 +311,14 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
   }
 
   switch (mSource.mType) {
-    case StyleScroller::Root:
+    case Scroller::Type::Root:
       if (const PresShell* presShell =
               mSource.mElement->OwnerDoc()->GetPresShell()) {
         return presShell->GetRootScrollFrameAsScrollable();
       }
       return nullptr;
-    case StyleScroller::Nearest:
+    case Scroller::Type::Nearest:
+    case Scroller::Type::Name:
       return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
 

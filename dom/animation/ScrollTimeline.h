@@ -65,7 +65,15 @@ class Element;
 class ScrollTimeline final : public AnimationTimeline {
  public:
   struct Scroller {
-    StyleScroller mType = StyleScroller::Root;
+    // FIXME: Once we support <custom-ident> for <scroller>, we can use
+    // StyleScroller here.
+    // https://drafts.csswg.org/scroll-animations-1/rewrite#typedef-scroller
+    enum class Type {
+      Root,
+      Nearest,
+      Name,
+    };
+    Type mType = Type::Root;
     RefPtr<Element> mElement;
 
     // We use the owner doc of the animation target. This may be different from
@@ -76,12 +84,14 @@ class ScrollTimeline final : public AnimationTimeline {
       // we always register the ScrollTimeline to the document element (i.e.
       // root element) because the content of the root scroll frame is the root
       // element.
-      return {StyleScroller::Root, aOwnerDoc->GetDocumentElement()};
+      return {Type::Root, aOwnerDoc->GetDocumentElement()};
     }
 
     static Scroller Nearest(Element* aElement) {
-      return {StyleScroller::Nearest, aElement};
+      return {Type::Nearest, aElement};
     }
+
+    static Scroller Named(Element* aElement) { return {Type::Name, aElement}; }
 
     explicit operator bool() const { return mElement; }
     bool operator==(const Scroller& aOther) const {
@@ -96,6 +106,10 @@ class ScrollTimeline final : public AnimationTimeline {
   static already_AddRefed<ScrollTimeline> FromAnonymousScroll(
       Document* aDocument, const NonOwningAnimationTarget& aTarget,
       StyleScrollAxis aAxis, StyleScroller aScroller);
+
+  static already_AddRefed<ScrollTimeline> FromNamedScroll(
+      Document* aDocument, const NonOwningAnimationTarget& aTarget,
+      const nsAtom* aName);
 
   bool operator==(const ScrollTimeline& aOther) const {
     return mDocument == aOther.mDocument && mSource == aOther.mSource &&
