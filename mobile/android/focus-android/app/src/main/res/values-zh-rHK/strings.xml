@@ -182,6 +182,9 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">加入自訂網址</string>
 
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies 同網站數據</string>
+
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">數據選擇</string>
 
@@ -295,6 +298,10 @@
 
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">揀選你鍾意嘅引擎：</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">顯示主畫面貼士</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">加入搜尋引擎</string>
@@ -458,6 +465,36 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>
 
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">自動播放</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">允許佢：</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">去設定</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">咪高風</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">位置</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">通知</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">封鎖咗嘅</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">允許咗嘅</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">由Android封鎖咗</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">推薦嘅嘢</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">使用者研究</string>
 
@@ -483,6 +520,9 @@
      %1$s is replaced with the app name -->
     <string name="biometric_auth_title">解鎖 %1$s</string>
 
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">請觸碰指紋感應器以繼續。</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">指紋圖標</string>
 
@@ -502,6 +542,9 @@
 
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">好</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">部份搜尋引擎冇建議提供。</string>
 
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">取消</string>
@@ -566,6 +609,10 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="enhanced_tracking_protection">加強追蹤保護</string>
 
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">呢個網站已關閉保護</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">呢個網站已開啟保護</string>
     <!-- Label that indicates a site is using a secure connection -->
     <string name="secure_connection">安全連線</string>
     <!-- Label that indicates a site is using a insecure connection -->

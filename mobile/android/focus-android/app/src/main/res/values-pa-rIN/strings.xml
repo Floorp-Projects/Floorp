@@ -298,8 +298,11 @@
     <string name="preference_security_biometric">ਐਪ ਅਣ-ਲਾਕ ਕਰਨ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਵਰਤੋ</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">ਜੇ URL ਪਹਿਲਾਂ ਹੀ ਐਪ ਵਿੱਚ ਖੁੱਲ੍ਹਾ ਹੈ ਤਾਂ ਤੁਹਾਡਾ ਉਂਗਲ-ਨਿਸ਼ਾਨ %1$s ਨੂੰ ਅਣ-ਲਾਕ ਕਰ ਸਕਦਾ ਹੈ। ਭੇਤੀ ਰੂਪ ਨੂੰ ਚਾਲੂ ਕੀਤਾ ਜਾਵੇਗਾ।</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">ਜੇ URL ਪਹਿਲਾਂ ਹੀ ਐਪ ਵਿੱਚ ਖੁੱਲ੍ਹਾ ਹੈ ਤਾਂ ਤੁਹਾਡਾ ਉਂਗਲ-ਨਿਸ਼ਾਨ %1$s ਨੂੰ ਅਣ-ਲਾਕ ਕਰ ਸਕਦਾ ਹੈ। ਭੇਤੀ ਰੂਪ ਨੂੰ ਚਾਲੂ ਕੀਤਾ ਜਾਵੇਗਾ।</string>
+
+    <string name="preference_security_biometric_summary2">ਜੇ ਤੁਸੀਂ ਸ਼ਾਰਟਕੱਟ ਜੋੜਿਆ ਹੈ ਜਾਂ ਜਦੋਂ ਵੈੱਬਸਾਈਟ ਪਹਿਲਾਂ ਹੀ %s ਵਿੱਚ ਖੁੱਲ੍ਹੀ ਹੈ ਤਾਂ ਫਿੰਗਰਪਰਿੰਟ ਵਰਤ ਕੇ ਅਣ-ਲਾਕ ਕਰੋ।</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
