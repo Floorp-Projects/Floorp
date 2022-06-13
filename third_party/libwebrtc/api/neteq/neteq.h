@@ -179,14 +179,6 @@ class NetEq {
     SdpAudioFormat sdp_format;
   };
 
-  // Creates a new NetEq object, with parameters set in `config`. The `config`
-  // object will only have to be valid for the duration of the call to this
-  // method.
-  static NetEq* Create(
-      const NetEq::Config& config,
-      Clock* clock,
-      const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory);
-
   virtual ~NetEq() {}
 
   // Inserts a new packet into NetEq.
