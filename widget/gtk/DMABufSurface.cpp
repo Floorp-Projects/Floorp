@@ -462,8 +462,9 @@ bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext,
     return false;
   }
 
-  LOGDMABUF(("  imported size %d x %d format %x planes %d", mWidth, mHeight,
-             mDrmFormats[0], mBufferPlaneCount));
+  LOGDMABUF(("  imported size %d x %d format %x planes %d modifiers %lx",
+             mWidth, mHeight, mDrmFormats[0], mBufferPlaneCount,
+             mBufferModifiers[0]));
   return true;
 }
 
@@ -644,12 +645,12 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
   LOGDMABUF(("DMABufSurfaceRGBA::ReleaseTextures() UID %d\n", mUID));
   FenceDelete();
 
-  if (!mTexture) {
+  if (!mTexture && !mEGLImage) {
     return;
   }
 
   if (!mGL) {
-#ifdef NIGHTLY
+#ifdef NIGHTLY_BUILD
     MOZ_DIAGNOSTIC_ASSERT(mGL, "Missing GL context!");
 #else
     NS_WARNING(
@@ -665,13 +666,13 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
   if (mTexture && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(1, &mTexture);
     mTexture = 0;
-    mGL = nullptr;
   }
 
   if (mEGLImage != LOCAL_EGL_NO_IMAGE) {
     egl->fDestroyImage(mEGLImage);
     mEGLImage = LOCAL_EGL_NO_IMAGE;
   }
+  mGL = nullptr;
 }
 
 void DMABufSurfaceRGBA::ReleaseSurface() {
@@ -1327,7 +1328,7 @@ void DMABufSurfaceYUV::ReleaseTextures() {
 
   bool textureActive = false;
   for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (mTexture[i]) {
+    if (mTexture[i] || mEGLImage[i]) {
       textureActive = true;
       break;
     }
@@ -1338,7 +1339,7 @@ void DMABufSurfaceYUV::ReleaseTextures() {
   }
 
   if (!mGL) {
-#ifdef NIGHTLY
+#ifdef NIGHTLY_BUILD
     MOZ_DIAGNOSTIC_ASSERT(mGL, "Missing GL context!");
 #else
     NS_WARNING(
@@ -1348,14 +1349,19 @@ void DMABufSurfaceYUV::ReleaseTextures() {
 #endif
   }
 
-  if (textureActive && mGL->MakeCurrent()) {
-    mGL->fDeleteTextures(DMABUF_BUFFER_PLANES, mTexture);
-    for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
-      mTexture[i] = 0;
-    }
-    ReleaseEGLImages(mGL);
-    mGL = nullptr;
+  if (!mGL->MakeCurrent()) {
+    NS_WARNING(
+        "DMABufSurfaceYUV::ReleaseTextures(): MakeCurrent failed. We're "
+        "leaking textures!");
+    return;
   }
+
+  mGL->fDeleteTextures(DMABUF_BUFFER_PLANES, mTexture);
+  for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
+    mTexture[i] = 0;
+  }
+  ReleaseEGLImages(mGL);
+  mGL = nullptr;
 }
 
 bool DMABufSurfaceYUV::VerifyTextureCreation() {
