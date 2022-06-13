@@ -239,12 +239,6 @@ const RtpExtension* RtpExtension::FindHeaderExtensionByUri(
   return fallback_extension;
 }
 
-const RtpExtension* RtpExtension::FindHeaderExtensionByUri(
-    const std::vector<RtpExtension>& extensions,
-    absl::string_view uri) {
-  return FindHeaderExtensionByUri(extensions, uri, kPreferEncryptedExtension);
-}
-
 const RtpExtension* RtpExtension::FindHeaderExtensionByUriAndEncryption(
     const std::vector<RtpExtension>& extensions,
     absl::string_view uri,
