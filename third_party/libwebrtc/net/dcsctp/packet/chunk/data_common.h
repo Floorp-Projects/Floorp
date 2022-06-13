@@ -17,7 +17,6 @@
 #include "api/array_view.h"
 #include "net/dcsctp/packet/chunk/chunk.h"
 #include "net/dcsctp/packet/data.h"
-#include "rtc_base/copy_on_write_buffer.h"
 
 namespace dcsctp {
 
@@ -63,7 +62,7 @@ class AnyDataChunk : public Chunk {
                MID message_id,
                FSN fsn,
                PPID ppid,
-               rtc::CopyOnWriteBuffer payload,
+               std::vector<uint8_t> payload,
                const Options& options)
       : tsn_(tsn),
         data_(stream_id,
