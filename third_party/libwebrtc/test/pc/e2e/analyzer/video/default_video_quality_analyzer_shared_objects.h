@@ -157,12 +157,6 @@ struct AnalyzerStats {
 };
 
 struct StatsKey {
-  // Keep this constructor for temporary backward compatibility.
-  StatsKey(std::string stream_label,
-           std::string /*sender*/,
-           std::string receiver)
-      : stream_label(std::move(stream_label)), receiver(std::move(receiver)) {}
-
   StatsKey(std::string stream_label, std::string receiver)
       : stream_label(std::move(stream_label)), receiver(std::move(receiver)) {}
 
