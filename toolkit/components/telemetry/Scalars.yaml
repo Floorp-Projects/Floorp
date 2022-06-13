@@ -2117,22 +2117,6 @@ pictureinpicture:
       - main
 
 preferences:
-  created_new_user_prefs_file:
-    bug_numbers:
-      - 1367813
-    description: >-
-      A boolean indicating that profile/prefs.js was not found and it is being
-      created for the first time in this session.
-    expires: "62"
-    kind: boolean
-    notification_emails:
-      - bsmedberg@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
   prefs_file_was_invalid:
     bug_numbers:
       - 1367813
