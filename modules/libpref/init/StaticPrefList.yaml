@@ -12193,6 +12193,7 @@
 #endif
   mirror: always
 
+
 # Whether or not OCSP is required.
 # true => hard-fail (if an OCSP request times out, stop the connection)
 # false => soft-fail (if an OCSP request times out, continue the connection)
@@ -12338,6 +12339,19 @@
 - name: security.tls.enable_post_handshake_auth
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Probability of GREASEing a TLS connection with ECH (0-100)
+# 0 means never GREASE, 100 means always GREASE
+- name: security.tls.ech.grease_probability
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
+# ECH GREASE Padding target (1-255)
+- name: security.tls.ech.grease_size
+  type: RelaxedAtomicUint32
+  value: 100
   mirror: always
 
 - name: security.tls.hello_downgrade_check
