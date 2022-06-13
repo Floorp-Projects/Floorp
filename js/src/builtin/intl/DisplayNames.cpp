@@ -27,7 +27,6 @@
 #include "builtin/String.h"
 #include "gc/AllocKind.h"
 #include "gc/GCContext.h"
-#include "gc/Rooting.h"
 #include "js/CallArgs.h"
 #include "js/Class.h"
 #include "js/experimental/Intl.h"     // JS::AddMozDisplayNamesConstructor

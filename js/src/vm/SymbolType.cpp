@@ -9,7 +9,6 @@
 #include "builtin/Symbol.h"
 #include "gc/Allocator.h"
 #include "gc/HashUtil.h"
-#include "gc/Rooting.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"

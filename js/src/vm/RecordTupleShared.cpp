@@ -12,7 +12,6 @@
 #include "NamespaceImports.h"
 #include "builtin/RecordObject.h"
 #include "builtin/TupleObject.h"
-#include "gc/Rooting.h"
 #include "js/Value.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSObject.h"

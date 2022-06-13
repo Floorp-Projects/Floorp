@@ -15,7 +15,6 @@
 
 #include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
 #include "gc/Barrier.h"                  // HeapPtr, PreBarrieredId
-#include "gc/Rooting.h"                  //
 #include "gc/ZoneAllocator.h"            // CellAllocPolicy
 #include "js/Class.h"                    // JSClass, ObjectOpResult
 #include "js/GCVector.h"                 // GCVector

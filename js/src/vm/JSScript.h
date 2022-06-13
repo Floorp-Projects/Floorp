@@ -27,7 +27,6 @@
 
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "gc/Barrier.h"
-#include "gc/Rooting.h"
 #include "js/CompileOptions.h"
 #include "js/Transcoding.h"
 #include "js/UbiNode.h"

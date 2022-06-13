@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "gc/Rooting.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"

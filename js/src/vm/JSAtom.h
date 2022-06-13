@@ -10,8 +10,9 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 
+#include "NamespaceImports.h"
+
 #include "gc/MaybeRooted.h"
-#include "gc/Rooting.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "vm/CommonPropertyNames.h"

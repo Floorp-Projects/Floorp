@@ -11,7 +11,6 @@
 #include "jsapi.h"
 
 #include "gc/Nursery.h"
-#include "gc/Rooting.h"
 #include "js/Array.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"

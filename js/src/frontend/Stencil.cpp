@@ -24,7 +24,6 @@
 #include "frontend/SharedContext.h"
 #include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
 #include "gc/AllocKind.h"               // gc::AllocKind
-#include "gc/Rooting.h"                 //
 #include "gc/Tracer.h"                  // TraceNullableRoot
 #include "js/CallArgs.h"                // JSNative
 #include "js/CompileOptions.h"          // JS::DecodeOptions

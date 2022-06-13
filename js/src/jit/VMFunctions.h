@@ -16,7 +16,7 @@
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
-#include "gc/Rooting.h"
+#include "gc/AllocKind.h"
 #include "js/ScalarType.h"
 #include "js/TypeDecls.h"
 
@@ -33,6 +33,7 @@ class LexicalScope;
 class ClassBodyScope;
 class MapObject;
 class NativeObject;
+class PlainObject;
 class PropertyName;
 class SetObject;
 class Shape;

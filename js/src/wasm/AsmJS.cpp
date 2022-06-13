@@ -95,6 +95,8 @@ using mozilla::Some;
 using mozilla::Utf8Unit;
 using mozilla::Compression::LZ4;
 
+using FunctionVector = JS::GCVector<JSFunction*>;
+
 /*****************************************************************************/
 
 // A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
