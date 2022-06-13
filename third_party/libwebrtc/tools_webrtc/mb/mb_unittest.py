@@ -11,7 +11,10 @@
 
 import ast
 import json
-import StringIO
+try:
+  from StringIO import StringIO # for Python2
+except ImportError:
+  from io import StringIO # for Python3
 import os
 import re
 import sys
@@ -96,7 +99,7 @@ class FakeMBW(mb.MetaBuildWrapper):
     self.dirs.add(tmp_dir)
     return tmp_dir
 
-  def TempFile(self, mode='w'):
+  def TempFile(self):
     return FakeFile(self.files)
 
   def RemoveFile(self, path):
@@ -116,8 +119,7 @@ class FakeMBW(mb.MetaBuildWrapper):
       path = self.PathJoin(self.cwd, path)
     if self.sep == '\\':
       return re.sub(r'\\+', r'\\', path)
-    else:
-      return re.sub('/+', '/', path)
+    return re.sub('/+', '/', path)
 
 
 class FakeFile(object):
@@ -859,7 +861,7 @@ class UnitTest(unittest.TestCase):
   def test_help(self):
     orig_stdout = sys.stdout
     try:
-      sys.stdout = StringIO.StringIO()
+      sys.stdout = StringIO()
       self.assertRaises(SystemExit, self.check, ['-h'])
       self.assertRaises(SystemExit, self.check, ['help'])
       self.assertRaises(SystemExit, self.check, ['help', 'gen'])
