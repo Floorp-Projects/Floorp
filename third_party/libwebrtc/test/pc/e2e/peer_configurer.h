@@ -44,7 +44,7 @@ class PeerConfigurerImpl final
 
   PeerConfigurerImpl(rtc::Thread* network_thread,
                      rtc::NetworkManager* network_manager,
-                     rtc::PacketSocketFactory* packet_socket_factory = nullptr)
+                     rtc::PacketSocketFactory* packet_socket_factory)
       : components_(
             std::make_unique<InjectableComponents>(network_thread,
                                                    network_manager,

@@ -69,8 +69,7 @@ class PeerConnectionE2EQualityTest
                                      quality_metrics_reporter) override;
 
   PeerHandle* AddPeer(
-      rtc::Thread* network_thread,
-      rtc::NetworkManager* network_manager,
+      const PeerNetworkDependencies& network_dependencies,
       rtc::FunctionView<void(PeerConfigurer*)> configurer) override;
   void Run(RunParams run_params) override;
 
