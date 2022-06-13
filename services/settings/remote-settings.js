@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SyncHistory: "resource://services-settings/SyncHistory.jsm",
+  Database: "resource://services-settings/Database.jsm",
   Utils: "resource://services-settings/Utils.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
@@ -71,6 +72,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "gPrefBrokenSyncThreshold",
   PREF_SETTINGS_BRANCH + PREF_SETTINGS_SYNC_HISTORY_ERROR_THRESHOLD,
   10
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gPrefDestroyBrokenEnabled",
+  PREF_SETTINGS_BRANCH + "destroy_broken_db_enabled",
+  true
 );
 
 /**
@@ -248,6 +256,38 @@ function remoteSettingsFunction() {
         );
       } else {
         lazy.gPrefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
+      }
+    }
+
+    // When triggered from the daily timer, we try to recover a broken
+    // sync state by destroying the local DB completely and retrying from scratch.
+    if (
+      lazy.gPrefDestroyBrokenEnabled &&
+      trigger == "timer" &&
+      (await isSynchronizationBroken())
+    ) {
+      // We don't want to destroy the local DB if the failures are related to
+      // network or server errors though.
+      const lastStatus = await lazy.gSyncHistory.last();
+      const lastErrorClass =
+        lazy.RemoteSettingsClient[lastStatus?.infos?.errorName] || Error;
+      const isLocalError = !(
+        lastErrorClass.prototype instanceof lazy.RemoteSettingsClient.APIError
+      );
+      if (isLocalError) {
+        console.warn(
+          "Synchronization has failed consistently. Destroy database."
+        );
+        // Clear the last ETag to refetch everything.
+        lazy.gPrefs.clearUserPref(PREF_SETTINGS_LAST_ETAG);
+        // Clear the history, to avoid re-destroying several times in a row.
+        await lazy.gSyncHistory.clear().catch(error => Cu.reportError(error));
+        // Delete the whole IndexedDB database.
+        await lazy.Database.destroy().catch(error => Cu.reportError(error));
+      } else {
+        console.warn(
+          `Synchronization is broken, but last error is ${lastStatus}`
+        );
       }
     }
 
