@@ -1104,7 +1104,10 @@ void DocumentLoadListener::Disconnect(bool aContinueNavigating) {
     httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
 
-  if (GetLoadingBrowsingContext()) {
+  // Don't cancel ongoing early hints when continuing to load the web page.
+  // Early hints are loaded earlier in the code and shouldn't get cancelled
+  // here. See also: Bug 1765652
+  if (GetLoadingBrowsingContext() && !aContinueNavigating) {
     GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
   }
 
