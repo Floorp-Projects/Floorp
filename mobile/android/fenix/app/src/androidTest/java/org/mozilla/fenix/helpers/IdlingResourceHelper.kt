@@ -29,4 +29,10 @@ object IdlingResourceHelper {
             )
         )
     }
+
+    fun unregisterAllIdlingResources() {
+        for (resource in IdlingRegistry.getInstance().resources) {
+            IdlingRegistry.getInstance().unregister(resource)
+        }
+    }
 }

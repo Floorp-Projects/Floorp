@@ -11,7 +11,7 @@ import junit.framework.AssertionFailedError
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import java.lang.AssertionError
+import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
 
 class RetryTestRule(private val retryCount: Int = 5) : TestRule {
 
@@ -23,30 +23,37 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                     base.evaluate()
                     break
                 } catch (t: AssertionError) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: AssertionFailedError) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: UiObjectNotFoundException) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: NoMatchingViewException) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: IdlingResourceTimeoutException) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: RuntimeException) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
                 } catch (t: NullPointerException) {
+                    unregisterAllIdlingResources()
                     if (i == retryCount) {
                         throw t
                     }
