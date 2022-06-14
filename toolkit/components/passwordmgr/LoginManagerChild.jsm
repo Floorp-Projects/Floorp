@@ -706,6 +706,40 @@ class LoginFormState {
       this._togglePasswordFieldMasking(passwordField, true);
     }
   }
+
+  _formHasModifiedFields(form) {
+    const doc = form.rootElement.ownerDocument;
+    let userHasInteracted;
+    const testOnlyUserHasInteracted =
+      lazy.LoginHelper.testOnlyUserHasInteractedWithDocument;
+    if (Cu.isInAutomation && testOnlyUserHasInteracted !== null) {
+      userHasInteracted = testOnlyUserHasInteracted;
+    } else {
+      userHasInteracted =
+        !lazy.LoginHelper.userInputRequiredToCapture ||
+        this.captureLoginTimeStamp != doc.lastUserGestureTimeStamp;
+    }
+
+    lazy.log("_formHasModifiedFields, userHasInteracted:", userHasInteracted);
+
+    // Skip if user didn't interact with the page since last call or ever
+    if (!userHasInteracted) {
+      return false;
+    }
+
+    // check for user inputs to the form fields
+    let fieldsModified = this.fieldModificationsByRootElement.get(
+      form.rootElement
+    );
+    // also consider a form modified if there's a difference between fields' .value and .defaultValue
+    if (!fieldsModified) {
+      fieldsModified = Array.from(form.elements).some(
+        field =>
+          field.defaultValue !== undefined && field.value !== field.defaultValue
+      );
+    }
+    return fieldsModified;
+  }
 }
 
 /**
@@ -2281,7 +2315,7 @@ class LoginManagerChild extends JSWindowActorChild {
         dismissedPrompt = true;
       }
 
-      let fieldsModified = this._formHasModifiedFields(form);
+      const fieldsModified = docState._formHasModifiedFields(form);
       if (!fieldsModified && lazy.LoginHelper.userInputRequiredToCapture) {
         if (targetField) {
           throw new Error("No user input on targetField");
@@ -3008,41 +3042,6 @@ class LoginManagerChild extends JSWindowActorChild {
         formid: form.rootElement.id,
       });
     }
-  }
-
-  _formHasModifiedFields(form) {
-    let doc = form.rootElement.ownerDocument;
-    let state = this.stateForDocument(doc);
-    let userHasInteracted;
-    let testOnlyUserHasInteracted =
-      lazy.LoginHelper.testOnlyUserHasInteractedWithDocument;
-    if (Cu.isInAutomation && testOnlyUserHasInteracted !== null) {
-      userHasInteracted = testOnlyUserHasInteracted;
-    } else {
-      userHasInteracted =
-        !lazy.LoginHelper.userInputRequiredToCapture ||
-        state.captureLoginTimeStamp != doc.lastUserGestureTimeStamp;
-    }
-
-    lazy.log("_formHasModifiedFields, userHasInteracted:", userHasInteracted);
-
-    // Skip if user didn't interact with the page since last call or ever
-    if (!userHasInteracted) {
-      return false;
-    }
-
-    // check for user inputs to the form fields
-    let fieldsModified = state.fieldModificationsByRootElement.get(
-      form.rootElement
-    );
-    // also consider a form modified if there's a difference between fields' .value and .defaultValue
-    if (!fieldsModified) {
-      fieldsModified = Array.from(form.elements).some(
-        field =>
-          field.defaultValue !== undefined && field.value !== field.defaultValue
-      );
-    }
-    return fieldsModified;
   }
 
   /**
