@@ -710,18 +710,18 @@ void MacroAssembler::fillSlotsWithConstantValue(Address base, Register temp,
   // strided writes of the tag and body.
   Address addr = base;
   move32(Imm32(v.toNunboxPayload()), temp);
-  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtrValue)) {
+  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtr<Value>)) {
     store32(temp, ToPayload(addr));
   }
 
   addr = base;
   move32(Imm32(v.toNunboxTag()), temp);
-  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtrValue)) {
+  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtr<Value>)) {
     store32(temp, ToType(addr));
   }
 #else
   moveValue(v, ValueOperand(temp));
-  for (uint32_t i = start; i < end; ++i, base.offset += sizeof(GCPtrValue)) {
+  for (uint32_t i = start; i < end; ++i, base.offset += sizeof(GCPtr<Value>)) {
     storePtr(temp, base);
   }
 #endif

@@ -200,7 +200,7 @@ void ProxyObject::nuke() {
 
 JS_PUBLIC_API void js::detail::SetValueInProxy(Value* slot,
                                                const Value& value) {
-  // Slots in proxies are not GCPtrValues, so do a cast whenever assigning
+  // Slots in proxies are not GCPtr<Value>s, so do a cast whenever assigning
   // values to them which might trigger a barrier.
-  *reinterpret_cast<GCPtrValue*>(slot) = value;
+  *reinterpret_cast<GCPtr<Value>*>(slot) = value;
 }

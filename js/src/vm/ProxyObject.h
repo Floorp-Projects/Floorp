@@ -100,18 +100,18 @@ class ProxyObject : public JSObject {
   gc::AllocKind allocKindForTenure() const;
 
  private:
-  GCPtrValue* reservedSlotPtr(size_t n) {
-    return reinterpret_cast<GCPtrValue*>(
+  GCPtr<Value>* reservedSlotPtr(size_t n) {
+    return reinterpret_cast<GCPtr<Value>*>(
         &detail::GetProxyDataLayout(this)->reservedSlots->slots[n]);
   }
 
-  GCPtrValue* slotOfPrivate() {
-    return reinterpret_cast<GCPtrValue*>(
+  GCPtr<Value>* slotOfPrivate() {
+    return reinterpret_cast<GCPtr<Value>*>(
         &detail::GetProxyDataLayout(this)->values()->privateSlot);
   }
 
-  GCPtrValue* slotOfExpando() {
-    return reinterpret_cast<GCPtrValue*>(
+  GCPtr<Value>* slotOfExpando() {
+    return reinterpret_cast<GCPtr<Value>*>(
         &detail::GetProxyDataLayout(this)->values()->expandoSlot);
   }
 
