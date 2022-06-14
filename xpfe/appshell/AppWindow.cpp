@@ -180,31 +180,22 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
 
   mIsHiddenWindow = aIsHiddenWindow;
 
-  int32_t initialX = 0, initialY = 0;
+  DesktopIntPoint initialPos;
   nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aOpener));
   if (base) {
-    int32_t x, y, width, height;
-    rv = base->GetPositionAndSize(&x, &y, &width, &height);
-    if (NS_FAILED(rv)) {
-      mOpenerScreenRect.SetEmpty();
-    } else {
-      double scale;
-      if (NS_SUCCEEDED(base->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
-        mOpenerScreenRect.SetRect(
-            NSToIntRound(x / scale), NSToIntRound(y / scale),
-            NSToIntRound(width / scale), NSToIntRound(height / scale));
-      } else {
-        mOpenerScreenRect.SetRect(x, y, width, height);
-      }
-      initialX = mOpenerScreenRect.X();
-      initialY = mOpenerScreenRect.Y();
-      ConstrainToOpenerScreen(&initialX, &initialY);
+    LayoutDeviceIntRect rect = base->GetPositionAndSize();
+    mOpenerScreenRect =
+        DesktopIntRect::Round(rect / base->DevicePixelsPerDesktopPixel());
+    if (!mOpenerScreenRect.IsEmpty()) {
+      initialPos = mOpenerScreenRect.TopLeft();
+      ConstrainToOpenerScreen(&initialPos.x, &initialPos.y);
     }
   }
 
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
-  DesktopIntRect deskRect(initialX, initialY, aInitialWidth, aInitialHeight);
+  DesktopIntRect deskRect(initialPos,
+                          DesktopIntSize(aInitialWidth, aInitialHeight));
 
   // Create top level window
   if (gfxPlatform::IsHeadless()) {
@@ -688,9 +679,8 @@ NS_IMETHODIMP AppWindow::GetDevicePixelsPerDesktopPixel(double* aScale) {
   return NS_OK;
 }
 
-NS_IMETHODIMP AppWindow::GetUnscaledDevicePixelsPerCSSPixel(double* aScale) {
-  *aScale = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
-  return NS_OK;
+double AppWindow::GetWidgetCSSToDeviceScale() {
+  return mWindow ? mWindow->GetDefaultScale().scale : 1.0;
 }
 
 NS_IMETHODIMP AppWindow::SetPositionDesktopPix(int32_t aX, int32_t aY) {
@@ -853,11 +843,7 @@ NS_IMETHODIMP AppWindow::Center(nsIAppWindow* aRelative, bool aScreen,
   }
   if (!aRelative) {
     if (!mOpenerScreenRect.IsEmpty()) {
-      // FIXME - check if these are device or display pixels
-      screenmgr->ScreenForRect(mOpenerScreenRect.X(), mOpenerScreenRect.Y(),
-                               mOpenerScreenRect.Width(),
-                               mOpenerScreenRect.Height(),
-                               getter_AddRefs(screen));
+      screen = screenmgr->ScreenForRect(mOpenerScreenRect);
     } else {
       screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
     }
@@ -1028,9 +1014,7 @@ NS_IMETHODIMP AppWindow::SetEnabled(bool aEnable) {
 
 NS_IMETHODIMP AppWindow::GetMainWidget(nsIWidget** aMainWidget) {
   NS_ENSURE_ARG_POINTER(aMainWidget);
-
-  *aMainWidget = mWindow;
-  NS_IF_ADDREF(*aMainWidget);
+  NS_IF_ADDREF(*aMainWidget = mWindow);
   return NS_OK;
 }
 
@@ -1146,9 +1130,7 @@ NS_IMETHODIMP AppWindow::ForceRoundedDimensions() {
   int32_t contentHeightCSS = 0;
   int32_t windowWidthCSS = 0;
   int32_t windowHeightCSS = 0;
-  double devicePerCSSPixels = 1.0;
-
-  GetUnscaledDevicePixelsPerCSSPixel(&devicePerCSSPixels);
+  double devicePerCSSPixels = UnscaledDevicePixelsPerCSSPixel().scale;
 
   GetAvailScreenSize(&availWidthCSS, &availHeightCSS);
 
@@ -1384,32 +1366,32 @@ bool AppWindow::LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight) {
 }
 
 void AppWindow::SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight) {
-  // constrain to screen size
-  int32_t screenWidth;
-  int32_t screenHeight;
+  // These are in CSS pixels of the main window.
+  // TODO(emilio): In my testing we usually have a pres context around, can we
+  // just use it? That'd simplify the coordinate calculations.
+  {
+    int32_t screenWidth;
+    int32_t screenHeight;
 
-  if (NS_SUCCEEDED(GetAvailScreenSize(&screenWidth, &screenHeight))) {
-    if (aSpecWidth > screenWidth) {
-      aSpecWidth = screenWidth;
-    }
-    if (aSpecHeight > screenHeight) {
-      aSpecHeight = screenHeight;
+    if (NS_SUCCEEDED(GetAvailScreenSize(&screenWidth, &screenHeight))) {
+      if (aSpecWidth > screenWidth) {
+        aSpecWidth = screenWidth;
+      }
+      if (aSpecHeight > screenHeight) {
+        aSpecHeight = screenHeight;
+      }
     }
   }
 
   NS_ASSERTION(mWindow, "we expected to have a window already");
 
-  int32_t currWidth = 0;
-  int32_t currHeight = 0;
-  GetSize(&currWidth, &currHeight);  // returns device pixels
-
-  // convert specified values to device pixels, and resize if needed
-  double cssToDevPx = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
-  aSpecWidth = NSToIntRound(aSpecWidth * cssToDevPx);
-  aSpecHeight = NSToIntRound(aSpecHeight * cssToDevPx);
   mIntrinsicallySized = false;
-  if (aSpecWidth != currWidth || aSpecHeight != currHeight) {
-    SetSize(aSpecWidth, aSpecHeight, false);
+
+  // Convert specified values to device pixels, and resize if needed
+  auto newSize = RoundedToInt(CSSIntSize(aSpecWidth, aSpecHeight) *
+                              UnscaledDevicePixelsPerCSSPixel());
+  if (newSize != nsIBaseWindow::GetSize()) {
+    SetSize(newSize.width, newSize.height, false);
   }
 }
 
@@ -1516,10 +1498,7 @@ void AppWindow::StaggerPosition(int32_t& aRequestedX, int32_t& aRequestedY,
   nsAutoString windowType;
   windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
 
-  int32_t screenTop = 0,  // it's pointless to initialize these ...
-      screenRight = 0,    // ... but to prevent oversalubrious and ...
-      screenBottom = 0,   // ... underbright compilers from ...
-      screenLeft = 0;     // ... issuing warnings.
+  DesktopIntRect screenRect;
   bool gotScreen = false;
 
   {  // fetch screen coordinates
@@ -1527,26 +1506,21 @@ void AppWindow::StaggerPosition(int32_t& aRequestedX, int32_t& aRequestedY,
         do_GetService("@mozilla.org/gfx/screenmanager;1"));
     if (screenMgr) {
       nsCOMPtr<nsIScreen> ourScreen;
-      // the coordinates here are already display pixels
+      // The coordinates here are already display pixels
+      // XXX aSpecWidth and aSpecHeight are CSS pixels!
       screenMgr->ScreenForRect(aRequestedX, aRequestedY, aSpecWidth,
                                aSpecHeight, getter_AddRefs(ourScreen));
       if (ourScreen) {
-        int32_t screenWidth, screenHeight;
-        ourScreen->GetAvailRectDisplayPix(&screenLeft, &screenTop, &screenWidth,
-                                          &screenHeight);
-        screenBottom = screenTop + screenHeight;
-        screenRight = screenLeft + screenWidth;
+        screenRect = ourScreen->GetAvailRectDisplayPix();
+
         // Get the screen's scaling factors and convert staggering constants
         // from CSS px to desktop pixel units
-        double desktopToDeviceScale = 1.0, cssToDeviceScale = 1.0;
-        ourScreen->GetContentsScaleFactor(&desktopToDeviceScale);
-        ourScreen->GetDefaultCSSScaleFactor(&cssToDeviceScale);
-        double cssToDesktopFactor = cssToDeviceScale / desktopToDeviceScale;
-        kOffset = NSToIntRound(kOffset * cssToDesktopFactor);
-        kSlop = NSToIntRound(kSlop * cssToDesktopFactor);
+        auto scale = ourScreen->GetCSSToDesktopScale();
+        kOffset = (CSSCoord(kOffset) * scale).Rounded();
+        kSlop = (CSSCoord(kSlop) * scale).Rounded();
         // Convert dimensions from CSS to desktop pixels
-        aSpecWidth = NSToIntRound(aSpecWidth * cssToDesktopFactor);
-        aSpecHeight = NSToIntRound(aSpecHeight * cssToDesktopFactor);
+        aSpecWidth = (CSSCoord(aSpecWidth) * scale).Rounded();
+        aSpecHeight = (CSSCoord(aSpecHeight) * scale).Rounded();
         gotScreen = true;
       }
     }
@@ -1595,20 +1569,20 @@ void AppWindow::StaggerPosition(int32_t& aRequestedX, int32_t& aRequestedY,
           if (gotScreen) {
             // if we're moving to the right and we need to bounce...
             if (!(bouncedX & 0x1) &&
-                ((aRequestedX + aSpecWidth) > screenRight)) {
-              aRequestedX = screenRight - aSpecWidth;
+                ((aRequestedX + aSpecWidth) > screenRect.XMost())) {
+              aRequestedX = screenRect.XMost() - aSpecWidth;
               ++bouncedX;
             }
 
             // if we're moving to the left and we need to bounce...
-            if ((bouncedX & 0x1) && aRequestedX < screenLeft) {
-              aRequestedX = screenLeft;
+            if ((bouncedX & 0x1) && aRequestedX < screenRect.X()) {
+              aRequestedX = screenRect.X();
               ++bouncedX;
             }
 
             // if we hit the bottom then bounce to the top
-            if (aRequestedY + aSpecHeight > screenBottom) {
-              aRequestedY = screenTop;
+            if (aRequestedY + aSpecHeight > screenRect.YMost()) {
+              aRequestedY = screenRect.Y();
               ++bouncedY;
             }
           }
@@ -2176,7 +2150,8 @@ NS_IMETHODIMP
 AppWindow::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
   if (mPrimaryBrowserParent) {
     return GetPrimaryRemoteTabSize(aWidth, aHeight);
-  } else if (mPrimaryContentShell) {
+  }
+  if (mPrimaryContentShell) {
     return GetPrimaryContentShellSize(aWidth, aHeight);
   }
   return NS_ERROR_UNEXPECTED;
@@ -2200,16 +2175,14 @@ nsresult AppWindow::GetPrimaryContentShellSize(int32_t* aWidth,
   nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(mPrimaryContentShell));
   NS_ENSURE_STATE(shellWindow);
 
-  int32_t devicePixelWidth, devicePixelHeight;
-  double shellScale = 1.0;
   // We want to return CSS pixels. First, we get device pixels
   // from the content area...
-  shellWindow->GetSize(&devicePixelWidth, &devicePixelHeight);
   // And then get the device pixel scaling factor. Dividing device
   // pixels by this scaling factor gives us CSS pixels.
-  shellWindow->GetUnscaledDevicePixelsPerCSSPixel(&shellScale);
-  *aWidth = NSToIntRound(devicePixelWidth / shellScale);
-  *aHeight = NSToIntRound(devicePixelHeight / shellScale);
+  CSSIntSize size = RoundedToInt(
+      shellWindow->GetSize() / shellWindow->UnscaledDevicePixelsPerCSSPixel());
+  *aWidth = size.width;
+  *aHeight = size.width;
   return NS_OK;
 }
 
@@ -2227,9 +2200,9 @@ nsresult AppWindow::SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight) {
   int32_t shellWidth, shellHeight;
   GetPrimaryRemoteTabSize(&shellWidth, &shellHeight);
 
-  double scale = 1.0;
-  GetUnscaledDevicePixelsPerCSSPixel(&scale);
-
+  // FIXME: This is wrong (pre-existing), the above call acounts for zoom and
+  // this one doesn't.
+  double scale = UnscaledDevicePixelsPerCSSPixel().scale;
   SizeShellToWithLimit(aWidth, aHeight, shellWidth * scale,
                        shellHeight * scale);
   return NS_OK;
@@ -3306,10 +3279,7 @@ void AppWindow::ConstrainToOpenerScreen(int32_t* aX, int32_t* aY) {
   nsCOMPtr<nsIScreenManager> screenmgr =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (screenmgr) {
-    nsCOMPtr<nsIScreen> screen;
-    screenmgr->ScreenForRect(
-        mOpenerScreenRect.X(), mOpenerScreenRect.Y(), mOpenerScreenRect.Width(),
-        mOpenerScreenRect.Height(), getter_AddRefs(screen));
+    nsCOMPtr<nsIScreen> screen = screenmgr->ScreenForRect(mOpenerScreenRect);
     if (screen) {
       screen->GetAvailRectDisplayPix(&left, &top, &width, &height);
       if (*aX < left || *aX > left + width) {

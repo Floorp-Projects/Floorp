@@ -81,9 +81,6 @@ NS_IMPL_ISUPPORTS_INHERITED(PuppetWidget, nsBaseWidget,
 PuppetWidget::PuppetWidget(BrowserChild* aBrowserChild)
     : mBrowserChild(aBrowserChild),
       mMemoryPressureObserver(nullptr),
-      mDPI(-1),
-      mRounding(1),
-      mDefaultScale(-1),
       mEnabled(false),
       mVisible(false),
       mSizeMode(nsSizeMode_Normal),
@@ -1008,12 +1005,6 @@ bool PuppetWidget::NeedsPaint() {
 
   return mVisible;
 }
-
-float PuppetWidget::GetDPI() { return mDPI; }
-
-double PuppetWidget::GetDefaultScaleInternal() { return mDefaultScale; }
-
-int32_t PuppetWidget::RoundsWidgetCoordinatesTo() { return mRounding; }
 
 LayoutDeviceIntPoint PuppetWidget::GetChromeOffset() {
   if (!GetOwningBrowserChild()) {
