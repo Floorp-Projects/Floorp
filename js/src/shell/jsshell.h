@@ -182,10 +182,10 @@ bool CreateAlias(JSContext* cx, const char* dstName,
 enum class OffThreadJobKind { CompileScript, CompileModule, Decode };
 
 class NonshrinkingGCObjectVector
-    : public GCVector<HeapPtrObject, 0, SystemAllocPolicy> {
+    : public GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> {
  public:
   bool traceWeak(JSTracer* trc) {
-    for (HeapPtrObject& obj : *this) {
+    for (HeapPtr<JSObject*>& obj : *this) {
       TraceWeakEdge(trc, &obj, "NonshrinkingGCObjectVector element");
     }
     return true;
