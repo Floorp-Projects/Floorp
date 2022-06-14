@@ -36,7 +36,7 @@ ChromeUtils.defineModuleGetter(
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "ExperimentAPI",
   "resource://nimbus/ExperimentAPI.jsm"
 );
@@ -207,7 +207,7 @@ class DiscoveryStreamFeed {
   }
 
   setupPrefs(isStartup = false) {
-    const pocketNewtabExperiment = ExperimentAPI.getExperiment({
+    const pocketNewtabExperiment = lazy.ExperimentAPI.getExperiment({
       featureId: "pocketNewtab",
     });
 
