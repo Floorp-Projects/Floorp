@@ -160,18 +160,18 @@ namespace js {
  * symbol is a permanent atom.
  */
 struct WellKnownSymbols {
-#define DECLARE_SYMBOL(name) js::ImmutableSymbolPtr name;
+#define DECLARE_SYMBOL(name) ImmutableTenuredPtr<JS::Symbol*> name;
   JS_FOR_EACH_WELL_KNOWN_SYMBOL(DECLARE_SYMBOL)
 #undef DECLARE_SYMBOL
 
-  const ImmutableSymbolPtr& get(size_t u) const {
+  const ImmutableTenuredPtr<JS::Symbol*>& get(size_t u) const {
     MOZ_ASSERT(u < JS::WellKnownSymbolLimit);
-    const ImmutableSymbolPtr* symbols =
-        reinterpret_cast<const ImmutableSymbolPtr*>(this);
+    const ImmutableTenuredPtr<JS::Symbol*>* symbols =
+        reinterpret_cast<const ImmutableTenuredPtr<JS::Symbol*>*>(this);
     return symbols[u];
   }
 
-  const ImmutableSymbolPtr& get(JS::SymbolCode code) const {
+  const ImmutableTenuredPtr<JS::Symbol*>& get(JS::SymbolCode code) const {
     return get(size_t(code));
   }
 

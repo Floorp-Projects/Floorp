@@ -1240,8 +1240,6 @@ namespace jit {
 class JitCode;
 }  // namespace jit
 
-using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
-
 using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
 using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
 using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
