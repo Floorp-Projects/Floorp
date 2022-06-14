@@ -435,28 +435,23 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
 
   masm.movq(rsp, rax);  // Argument to jit::InvalidationBailout.
 
-  // Make space for InvalidationBailout's frameSize outparam.
-  masm.reserveStack(sizeof(size_t));
-  masm.movq(rsp, rbx);
-
   // Make space for InvalidationBailout's bailoutInfo outparam.
   masm.reserveStack(sizeof(void*));
-  masm.movq(rsp, r9);
+  masm.movq(rsp, rbx);
 
-  using Fn = bool (*)(InvalidationBailoutStack * sp, size_t * frameSizeOut,
-                      BaselineBailoutInfo * *info);
+  using Fn =
+      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
   masm.setupUnalignedABICall(rdx);
   masm.passABIArg(rax);
   masm.passABIArg(rbx);
-  masm.passABIArg(r9);
   masm.callWithABI<Fn, InvalidationBailout>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
-  masm.pop(r9);   // Get the bailoutInfo outparam.
-  masm.pop(rbx);  // Get the frameSize outparam.
+  masm.pop(r9);  // Get the bailoutInfo outparam.
 
   // Pop the machine state and the dead frame.
-  masm.lea(Operand(rsp, rbx, TimesOne, sizeof(InvalidationBailoutStack)), rsp);
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
   masm.jmp(bailoutTail);
@@ -675,17 +670,9 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
 
   masm.pop(r9);  // Get the bailoutInfo outparam.
 
-  // Stack is:
-  //     [frame]
-  //     snapshotOffset
-  //     frameSize
-  //     [bailoutFrame]
-  //
   // Remove both the bailout frame and the topmost Ion frame's stack.
-  static constexpr uint32_t BailoutDataSize = sizeof(RegisterDump);
-  masm.addq(Imm32(BailoutDataSize), rsp);
-  masm.pop(rcx);  // frameSize
-  masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void*)), rsp);
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
   masm.jmp(bailoutTail);

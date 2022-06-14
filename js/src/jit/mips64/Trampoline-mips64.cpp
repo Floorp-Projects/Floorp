@@ -398,32 +398,25 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   // Pass pointer to InvalidationBailoutStack structure.
   masm.movePtr(StackPointer, a0);
 
-  // Reserve place for return value and BailoutInfo pointer
+  // Reserve place for BailoutInfo pointer. Two words to ensure alignment for
+  // setupAlignedABICall.
   masm.subPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
-  // Pass pointer to return value.
-  masm.ma_daddu(a1, StackPointer, Imm32(sizeof(uintptr_t)));
   // Pass pointer to BailoutInfo
-  masm.movePtr(StackPointer, a2);
+  masm.movePtr(StackPointer, a1);
 
-  using Fn = bool (*)(InvalidationBailoutStack * sp, size_t * frameSizeOut,
-                      BaselineBailoutInfo * *info);
+  using Fn =
+      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
   masm.setupAlignedABICall();
   masm.passABIArg(a0);
   masm.passABIArg(a1);
-  masm.passABIArg(a2);
   masm.callWithABI<Fn, InvalidationBailout>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.loadPtr(Address(StackPointer, 0), a2);
-  masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), a1);
-  // Remove the return address, the IonScript, the register state
-  // (InvaliationBailoutStack) and the space that was allocated for the
-  // return value.
-  masm.addPtr(Imm32(sizeof(InvalidationBailoutStack) + 2 * sizeof(uintptr_t)),
-              StackPointer);
-  // remove the space that this frame was using before the bailout
-  // (computed by InvalidationBailout)
-  masm.addPtr(a1, StackPointer);
+
+  // Pop the machine state and the dead frame.
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in r2.
   masm.jump(bailoutTail);
@@ -657,22 +650,9 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   // Get BailoutInfo pointer
   masm.loadPtr(Address(StackPointer, 0), a2);
 
-  // Stack is:
-  //     [frame]
-  //     snapshotOffset
-  //     frameSize
-  //     [bailoutFrame]
-  //     [bailoutInfo]
-  //
   // Remove both the bailout frame and the topmost Ion frame's stack.
-  // Load frameSize from stack
-  masm.loadPtr(Address(StackPointer,
-                       sizeOfBailoutInfo + BailoutStack::offsetOfFrameSize()),
-               a1);
-  // Remove complete BailoutStack class and data after it
-  masm.addPtr(Imm32(sizeof(BailoutStack) + sizeOfBailoutInfo), StackPointer);
-  // Remove frame size srom stack
-  masm.addPtr(a1, StackPointer);
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in a2.
   masm.jump(bailoutTail);
