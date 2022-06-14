@@ -1493,7 +1493,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         // We do not need to use a barrier here because RttValue is always
         // tenured
         MOZ_ASSERT(rttValue.get()->isTenured());
-        *((GCPtrObject*)addressOfTypeId(typeDef.id)) = rttValue;
+        *((GCPtr<JSObject*>*)addressOfTypeId(typeDef.id)) = rttValue;
         hasGcTypes_ = true;
       }
     }
@@ -1695,7 +1695,7 @@ void Instance::tracePrivate(JSTracer* trc) {
         global.isIndirect()) {
       continue;
     }
-    GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
+    GCPtr<JSObject*>* obj = (GCPtr<JSObject*>*)(globalData() + global.offset());
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
@@ -1710,7 +1710,7 @@ void Instance::tracePrivate(JSTracer* trc) {
       if (!typeDef.isStructType() && !typeDef.isArrayType()) {
         continue;
       }
-      TraceNullableEdge(trc, ((GCPtrObject*)addressOfTypeId(typeDef.id)),
+      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeDef.id)),
                         "wasm rtt value");
     }
   }

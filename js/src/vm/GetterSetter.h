@@ -7,7 +7,7 @@
 #ifndef vm_GetterSetter_h
 #define vm_GetterSetter_h
 
-#include "gc/Barrier.h"  // js::GCPtrObject
+#include "gc/Barrier.h"  // js::GCPtr<JSObject*>
 #include "gc/Cell.h"     // js::gc::TenuredCellWithGCPointer
 
 #include "js/TypeDecls.h"  // JS::HandleObject
@@ -59,7 +59,7 @@ class GetterSetter : public gc::TenuredCellWithGCPointer<JSObject> {
   // Getter object, stored in the cell header.
   JSObject* getter() const { return headerPtr(); }
 
-  GCPtrObject setter_;
+  GCPtr<JSObject*> setter_;
 
 #ifndef JS_64BIT
   // Ensure size >= MinCellSize on 32-bit platforms.

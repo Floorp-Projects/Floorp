@@ -144,7 +144,7 @@ struct ForOfPIC {
   class Chain : public BaseChain {
    private:
     // Pointer to owning JSObject for memory accounting purposes.
-    const GCPtrObject picObject_;
+    const GCPtr<JSObject*> picObject_;
 
     // Pointer to canonical Array.prototype and ArrayIterator.prototype
     GCPtr<NativeObject*> arrayProto_;

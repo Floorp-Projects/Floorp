@@ -283,7 +283,8 @@ class MemoryTracingVisitor {
 }  // namespace
 
 void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
-  GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(base + offset);
+  GCPtr<JSObject*>* objectPtr =
+      reinterpret_cast<GCPtr<JSObject*>*>(base + offset);
   TraceNullableEdge(trace_, objectPtr, "reference-obj");
 }
 
