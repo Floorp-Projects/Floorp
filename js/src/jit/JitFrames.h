@@ -216,6 +216,10 @@ class CommonFrameLayout {
   uintptr_t descriptor_;
 
  public:
+  // All frames have the caller's frame pointer as first word (pushed after the
+  // return address is pushed).
+  static constexpr size_t FramePointerOffset = sizeof(void*);
+
   static size_t offsetOfDescriptor() {
     return offsetof(CommonFrameLayout, descriptor_);
   }
@@ -240,6 +244,11 @@ class CommonFrameLayout {
   void clearHasCachedSavedFrame() { descriptor_ &= ~HASCACHEDSAVEDFRAME_BIT; }
   uint8_t* returnAddress() const { return returnAddress_; }
   void setReturnAddress(uint8_t* addr) { returnAddress_ = addr; }
+
+  uint8_t* callerFramePtr() const {
+    auto* p = reinterpret_cast<const uintptr_t*>(this) - 1;
+    return reinterpret_cast<uint8_t*>(*p);
+  }
 };
 
 class JitFrameLayout : public CommonFrameLayout {
@@ -276,15 +285,7 @@ class JitFrameLayout : public CommonFrameLayout {
   }
   uintptr_t numActualArgs() const { return numActualArgs_; }
 
-  // All JIT frames have the caller's frame pointer as first word (pushed after
-  // the return address).
-  static constexpr size_t FramePointerOffset = sizeof(void*);
-
-  uint8_t* callerFramePtr() const {
-    auto* p = reinterpret_cast<const uintptr_t*>(this) - 1;
-    return reinterpret_cast<uint8_t*>(*p);
-  }
-
+  // For IonJS frames: the distance from the JitFrameLayout to the first local
   // slot. The caller's frame pointer is stored in this space. 32-bit platforms
   // have 4 bytes of padding to ensure doubles are properly aligned.
   static constexpr size_t IonFirstSlotOffset = 8;
@@ -313,10 +314,6 @@ class IonICCallFrameLayout : public CommonFrameLayout {
   JitCode* stubCode_;
 
  public:
-  // The caller's frame pointer is pushed after the IonICCallFrameLayout is
-  // pushed on the stack.
-  static constexpr size_t FramePointerOffset = sizeof(void*);
-
   JitCode** stubCode() { return &stubCode_; }
   static size_t Size() { return sizeof(IonICCallFrameLayout); }
 };
@@ -342,6 +339,12 @@ class ExitFooterFrame {
   // Stores the ExitFrameType or, for ExitFrameType::VMFunction, the
   // VMFunctionData*.
   uintptr_t data_;
+
+  // Saved frame pointer. This must be the last word, so that this overlaps with
+  // CommonFrameLayout::FramePointerOffset.
+ protected:  // Silence warning about unused private field.
+  static_assert(CommonFrameLayout::FramePointerOffset == sizeof(void*));
+  uint8_t* callerFP_;
 
  public:
   static inline size_t Size() { return sizeof(ExitFooterFrame); }
@@ -709,9 +712,7 @@ class BaselineStubFrameLayout : public CommonFrameLayout {
   // +-----------------------+
 
  public:
-  // The caller frame pointer should be pushed after the return address, to help
-  // external stack unwinders.
-  static constexpr size_t FramePointerOffset = sizeof(void*);
+  static_assert(FramePointerOffset == sizeof(void*));
   static constexpr size_t ICStubOffset = 2 * sizeof(void*);
   static constexpr int ICStubOffsetFromFP = -int(sizeof(void*));
 
