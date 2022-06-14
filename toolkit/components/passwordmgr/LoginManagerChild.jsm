@@ -607,6 +607,59 @@ class LoginFormState {
 
     return result;
   }
+
+  /**
+   * Given a field, determine whether that field was last filled as a username
+   * field AND whether the username is still filled in with the username AND
+   * whether the associated password field has the matching password.
+   *
+   * @note This could possibly be unified with getFieldContext but they have
+   * slightly different use cases. getFieldContext looks up recipes whereas this
+   * method doesn't need to since it's only returning a boolean based upon the
+   * recipes used for the last fill (in _fillForm).
+   *
+   * @param {HTMLInputElement} aUsernameField element contained in a LoginForm
+   *                                          cached in LoginFormFactory.
+   * @returns {Boolean} whether the username and password fields still have the
+   *                    last-filled values, if previously filled.
+   */
+  _isLoginAlreadyFilled(aUsernameField) {
+    let formLikeRoot = lazy.FormLikeFactory.findRootForField(aUsernameField);
+    // Look for the existing LoginForm.
+    let existingLoginForm = lazy.LoginFormFactory.getForRootElement(
+      formLikeRoot
+    );
+    if (!existingLoginForm) {
+      throw new Error(
+        "_isLoginAlreadyFilled called with a username field with " +
+          "no rootElement LoginForm"
+      );
+    }
+
+    lazy.log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
+    let { login: filledLogin } =
+      this.fillsByRootElement.get(formLikeRoot) || {};
+    if (!filledLogin) {
+      return false;
+    }
+
+    // Unpack the weak references.
+    let autoFilledUsernameField = filledLogin.usernameField?.get();
+    let autoFilledPasswordField = filledLogin.passwordField?.get();
+
+    // Check username and password values match what was filled.
+    if (
+      !autoFilledUsernameField ||
+      autoFilledUsernameField != aUsernameField ||
+      autoFilledUsernameField.value != filledLogin.username ||
+      (autoFilledPasswordField &&
+        autoFilledPasswordField.value != filledLogin.password)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
 }
 
 /**
@@ -1395,7 +1448,8 @@ class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    if (this._isLoginAlreadyFilled(focusedField)) {
+    const docState = this.stateForDocument(focusedField.ownerDocument);
+    if (docState._isLoginAlreadyFilled(focusedField)) {
       lazy.log("_onUsernameFocus: Already filled");
       return;
     }
@@ -2992,61 +3046,6 @@ class LoginManagerChild extends JSWindowActorChild {
       );
     }
     return fieldsModified;
-  }
-
-  /**
-   * Given a field, determine whether that field was last filled as a username
-   * field AND whether the username is still filled in with the username AND
-   * whether the associated password field has the matching password.
-   *
-   * @note This could possibly be unified with getFieldContext but they have
-   * slightly different use cases. getFieldContext looks up recipes whereas this
-   * method doesn't need to since it's only returning a boolean based upon the
-   * recipes used for the last fill (in _fillForm).
-   *
-   * @param {HTMLInputElement} aUsernameField element contained in a LoginForm
-   *                                          cached in LoginFormFactory.
-   * @returns {Boolean} whether the username and password fields still have the
-   *                    last-filled values, if previously filled.
-   */
-  _isLoginAlreadyFilled(aUsernameField) {
-    let formLikeRoot = lazy.FormLikeFactory.findRootForField(aUsernameField);
-    // Look for the existing LoginForm.
-    let existingLoginForm = lazy.LoginFormFactory.getForRootElement(
-      formLikeRoot
-    );
-    if (!existingLoginForm) {
-      throw new Error(
-        "_isLoginAlreadyFilled called with a username field with " +
-          "no rootElement LoginForm"
-      );
-    }
-
-    lazy.log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
-    let { login: filledLogin } =
-      this.stateForDocument(
-        aUsernameField.ownerDocument
-      ).fillsByRootElement.get(formLikeRoot) || {};
-    if (!filledLogin) {
-      return false;
-    }
-
-    // Unpack the weak references.
-    let autoFilledUsernameField = filledLogin.usernameField?.get();
-    let autoFilledPasswordField = filledLogin.passwordField?.get();
-
-    // Check username and password values match what was filled.
-    if (
-      !autoFilledUsernameField ||
-      autoFilledUsernameField != aUsernameField ||
-      autoFilledUsernameField.value != filledLogin.username ||
-      (autoFilledPasswordField &&
-        autoFilledPasswordField.value != filledLogin.password)
-    ) {
-      return false;
-    }
-
-    return true;
   }
 
   /**
