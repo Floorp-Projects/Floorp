@@ -110,72 +110,6 @@ class WeakFieldSet extends WeakSet {
   }
 }
 
-class LoginFormState {
-  /**
-   * Keeps track of filled fields and values.
-   */
-  fillsByRootElement = new WeakMap();
-  /**
-   * Keeps track of fields we've filled with generated passwords
-   */
-  generatedPasswordFields = new WeakFieldSet();
-  /**
-   * Keeps track of logins that were last submitted.
-   */
-  lastSubmittedValuesByRootElement = new WeakMap();
-  fieldModificationsByRootElement = new WeakMap();
-  loginFormRootElements = new WeakSet();
-  /**
-   * Anything entered into an <input> that we think might be a username
-   */
-  possibleUsernames = new Set();
-  /**
-   * Anything entered into an <input> that we think might be a password
-   */
-  possiblePasswords = new Set();
-
-  /**
-   * Keeps track of the formLike of nodes (form or formless password field)
-   * that we are watching when they are removed from DOM.
-   */
-  formLikeByObservedNode = new WeakMap();
-
-  /**
-   * Keeps track of all formless password fields that have been
-   * updated by the user.
-   */
-  formlessModifiedPasswordFields = new WeakFieldSet();
-
-  /**
-   * Caches the results of the username heuristics
-   */
-  cachedIsInferredUsernameField = new WeakMap();
-  cachedIsInferredEmailField = new WeakMap();
-  cachedIsInferredLoginForm = new WeakMap();
-
-  /**
-   * Records the mock username field when its associated form is submitted.
-   */
-  mockUsernameOnlyField = null;
-
-  /**
-   * Records the number of possible username event received for this document.
-   */
-  numFormHasPossibleUsernameEvent = 0;
-
-  captureLoginTimeStamp = 0;
-
-  storeUserInput(field) {
-    if (field.value && lazy.LoginHelper.captureInputChanges) {
-      if (lazy.LoginHelper.isPasswordFieldType(field)) {
-        this.possiblePasswords.add(field.value);
-      } else if (lazy.LoginHelper.isUsernameFieldType(field)) {
-        this.possibleUsernames.add(field.value);
-      }
-    }
-  }
-}
-
 const observer = {
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
@@ -528,6 +462,98 @@ const observer = {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
+/**
+ * Logic of Capture and Filling.
+ *
+ * This class will be shared with Firefox iOS and should have no references to
+ * Gecko internals. See Bug 1774208.
+ */
+class LoginFormState {
+  /**
+   * Keeps track of filled fields and values.
+   */
+  fillsByRootElement = new WeakMap();
+  /**
+   * Keeps track of fields we've filled with generated passwords
+   */
+  generatedPasswordFields = new WeakFieldSet();
+  /**
+   * Keeps track of logins that were last submitted.
+   */
+  lastSubmittedValuesByRootElement = new WeakMap();
+  fieldModificationsByRootElement = new WeakMap();
+  loginFormRootElements = new WeakSet();
+  /**
+   * Anything entered into an <input> that we think might be a username
+   */
+  possibleUsernames = new Set();
+  /**
+   * Anything entered into an <input> that we think might be a password
+   */
+  possiblePasswords = new Set();
+
+  /**
+   * Keeps track of the formLike of nodes (form or formless password field)
+   * that we are watching when they are removed from DOM.
+   */
+  formLikeByObservedNode = new WeakMap();
+
+  /**
+   * Keeps track of all formless password fields that have been
+   * updated by the user.
+   */
+  formlessModifiedPasswordFields = new WeakFieldSet();
+
+  /**
+   * Caches the results of the username heuristics
+   */
+  cachedIsInferredUsernameField = new WeakMap();
+  cachedIsInferredEmailField = new WeakMap();
+  cachedIsInferredLoginForm = new WeakMap();
+
+  /**
+   * Records the mock username field when its associated form is submitted.
+   */
+  mockUsernameOnlyField = null;
+
+  /**
+   * Records the number of possible username event received for this document.
+   */
+  numFormHasPossibleUsernameEvent = 0;
+
+  captureLoginTimeStamp = 0;
+
+  storeUserInput(field) {
+    if (field.value && lazy.LoginHelper.captureInputChanges) {
+      if (lazy.LoginHelper.isPasswordFieldType(field)) {
+        this.possiblePasswords.add(field.value);
+      } else if (lazy.LoginHelper.isUsernameFieldType(field)) {
+        this.possibleUsernames.add(field.value);
+      }
+    }
+  }
+
+  /**
+   * Returns true if the input field is considered an email field by
+   * 'LoginHelper.isInferredEmailField'.
+   *
+   * @param {Element} element the field to check.
+   * @returns {boolean} True if the element is likely an email field
+   */
+  isProbablyAnEmailField(inputElement) {
+    let result = this.cachedIsInferredEmailField.get(inputElement);
+    if (result === undefined) {
+      result = lazy.LoginHelper.isInferredEmailField(inputElement);
+      this.cachedIsInferredEmailField.set(inputElement, result);
+    }
+
+    return result;
+  }
+}
+
+/**
+ * Integration with browser and IPC with LoginManagerParent.
+ */
 class LoginManagerChild extends JSWindowActorChild {
   /**
    * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
@@ -1624,6 +1650,8 @@ class LoginManagerChild extends JSWindowActorChild {
       };
     }
 
+    const docState = this.stateForDocument(form.ownerDocument);
+
     if (!usernameField) {
       // Searching backwards from the first password field until we find a field
       // that looks like a "username" field. If no "username" field is found,
@@ -1659,7 +1687,7 @@ class LoginManagerChild extends JSWindowActorChild {
           // An username field is found, we are done.
           usernameField = element;
           break;
-        } else if (this.isProbablyAnEmailField(element)) {
+        } else if (docState.isProbablyAnEmailField(element)) {
           // An email field is found, consider it a username field but continue
           // to search for an "username" field.
           // In current implementation, if another email field is found during
@@ -1685,9 +1713,8 @@ class LoginManagerChild extends JSWindowActorChild {
       );
     }
 
-    let { generatedPasswordFields } = this.stateForDocument(form.ownerDocument);
     let pwGeneratedFields = pwFields.filter(pwField =>
-      generatedPasswordFields.has(pwField.element)
+      docState.generatedPasswordFields.has(pwField.element)
     );
     if (pwGeneratedFields.length) {
       // we have at least the newPasswordField
@@ -3142,24 +3169,6 @@ class LoginManagerChild extends JSWindowActorChild {
     if (result === undefined) {
       result = lazy.LoginHelper.isInferredUsernameField(inputElement);
       docState.cachedIsInferredUsernameField.set(inputElement, result);
-    }
-
-    return result;
-  }
-
-  /**
-   * Returns true if the input field is considered an email field by
-   * 'LoginHelper.isInferredEmailField'.
-   *
-   * @param {Element} element the field to check.
-   * @returns {boolean} True if the element is likely an email field
-   */
-  isProbablyAnEmailField(inputElement) {
-    let docState = this.stateForDocument(inputElement.ownerDocument);
-    let result = docState.cachedIsInferredEmailField.get(inputElement);
-    if (result === undefined) {
-      result = lazy.LoginHelper.isInferredEmailField(inputElement);
-      docState.cachedIsInferredEmailField.set(inputElement, result);
     }
 
     return result;
