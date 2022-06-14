@@ -843,7 +843,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mSizeState == nsSizeMode_Normal &&
+  if (mSizeMode == nsSizeMode_Normal &&
       mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
     *aWidth += decorationSize.left + decorationSize.right;
@@ -853,7 +853,7 @@ void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
 
 #ifdef MOZ_WAYLAND
 bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
-  if (mSizeState == nsSizeMode_Normal &&
+  if (mSizeMode == nsSizeMode_Normal &&
       mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
     *aDx = decorationSize.left;
@@ -954,7 +954,7 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
   if (mCompositorSession &&
       !wr::WindowSizeSanityCheck(aSize.width, aSize.height)) {
     gfxCriticalNoteOnce << "Invalid aSize in ResizeInt " << aSize
-                        << " size state " << mSizeState;
+                        << " size state " << mSizeMode;
   }
 
   // Recalculate aspect ratio when resized from DOM
@@ -1027,7 +1027,7 @@ void nsWindow::Move(double aX, double aY) {
 
   LOG("nsWindow::Move to %d %d\n", x, y);
 
-  if (mSizeState != nsSizeMode_Normal && (mWindowType == eWindowType_toplevel ||
+  if (mSizeMode != nsSizeMode_Normal && (mWindowType == eWindowType_toplevel ||
                                           mWindowType == eWindowType_dialog)) {
     LOG("  size state is not normal, bailing");
     return;
@@ -1947,7 +1947,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   if (mCompositorSession &&
       !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
     gfxCriticalNoteOnce << "Invalid mBounds in PopupCallback " << mBounds
-                        << " size state " << mSizeState;
+                        << " size state " << mSizeMode;
   }
   WaylandPopupPropagateChangesToLayout(needsPositionUpdate, needsSizeUpdate);
 }
@@ -2490,24 +2490,19 @@ void nsWindow::SetZIndex(int32_t aZIndex) {
 void nsWindow::SetSizeMode(nsSizeMode aMode) {
   LOG("nsWindow::SetSizeMode %d\n", aMode);
 
-  // Save the requested state.
-  mSizeMode = aMode;
-
   // Return if there's no shell or our current state is the same as the mode we
   // were just set to.
-  if (!mShell || mSizeState == aMode) {
+  if (!mShell || mSizeMode == aMode) {
     LOG("    already set");
     return;
   }
 
-  if (mSizeState == nsSizeMode_Fullscreen) {
+  if (mSizeMode == nsSizeMode_Fullscreen) {
     LOG("    unfullscreening");
     MakeFullScreen(false);
     // NOTE: Fullscreen restoration changes mSizeMode to the state before
     // fullscreen, but we might need to still transition to aMode.
-    mSizeState = mSizeMode;
-    mSizeMode = aMode;
-    if (mSizeState == aMode) {
+    if (mSizeMode == aMode) {
       LOG("    restored to desired state");
       return;
     }
@@ -2531,14 +2526,14 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     case nsSizeMode_Normal:
       LOG("    set normal");
       // nsSizeMode_Normal, really.
-      if (mSizeState == nsSizeMode_Minimized) {
+      if (mSizeMode == nsSizeMode_Minimized) {
         gtk_window_deiconify(GTK_WINDOW(mShell));
-      } else if (mSizeState == nsSizeMode_Maximized) {
+      } else if (mSizeMode == nsSizeMode_Maximized) {
         gtk_window_unmaximize(GTK_WINDOW(mShell));
       }
       break;
   }
-  mSizeState = mSizeMode;
+  mSizeMode = aMode;
 }
 
 static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
@@ -3623,7 +3618,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   if (eTransparencyTransparent == GetTransparencyMode()) {
     auto* window = static_cast<nsWindow*>(GetTopLevelWidget());
     if (mTransparencyBitmapForTitlebar) {
-      if (mSizeState == nsSizeMode_Normal) {
+      if (mSizeMode == nsSizeMode_Normal) {
         window->UpdateTitlebarTransparencyBitmap();
       } else {
         window->ClearTransparencyBitmap();
@@ -3942,7 +3937,7 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   if (mCompositorSession &&
       !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
     gfxCriticalNoteOnce << "Invalid mBounds in OnSizeAllocate " << mBounds
-                        << " size state " << mSizeState;
+                        << " size state " << mSizeMode;
   }
 
   // Notify the GtkCompositorWidget of a ClientSizeChange
@@ -4040,7 +4035,7 @@ bool nsWindow::CheckResizerEdge(LayoutDeviceIntPoint aPoint,
   }
 
   // Don't allow resizing maximized windows.
-  if (mSizeState != nsSizeMode_Normal) {
+  if (mSizeMode != nsSizeMode_Normal) {
     return false;
   }
 
@@ -4435,9 +4430,9 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   if (!defaultPrevented && mDrawInTitlebar &&
       event.mButton == MouseButton::ePrimary && event.mClickCount == 2 &&
       mDraggableRegion.Contains(pos)) {
-    if (mSizeState == nsSizeMode_Maximized) {
+    if (mSizeMode == nsSizeMode_Maximized) {
       SetSizeMode(nsSizeMode_Normal);
-    } else if (mSizeState == nsSizeMode_Normal) {
+    } else if (mSizeMode == nsSizeMode_Normal) {
       SetSizeMode(nsSizeMode_Maximized);
     }
   }
@@ -4811,12 +4806,12 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   // window_state_event where the GDK_WINDOW_STATE_ICONIFIED is set.
   // During restore we  won't get aEvent->changed_mask with
   // the GDK_WINDOW_STATE_ICONIFIED so to detect that change we use the stored
-  // mSizeState and obtaining a focus.
+  // mSizeMode and obtaining a focus.
   bool waylandWasIconified =
       (GdkIsWaylandDisplay() &&
        aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED &&
        aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED &&
-       mSizeState == nsSizeMode_Minimized);
+       mSizeMode == nsSizeMode_Minimized);
   if (!waylandWasIconified &&
       (aEvent->changed_mask &
        (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED |
@@ -4827,22 +4822,22 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 
   if (aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
     LOG("\tIconified\n");
-    mSizeState = nsSizeMode_Minimized;
+    mSizeMode = nsSizeMode_Minimized;
 #ifdef ACCESSIBILITY
     DispatchMinimizeEventAccessible();
 #endif  // ACCESSIBILITY
   } else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
     LOG("\tFullscreen\n");
-    mSizeState = nsSizeMode_Fullscreen;
+    mSizeMode = nsSizeMode_Fullscreen;
   } else if (aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
     LOG("\tMaximized\n");
-    mSizeState = nsSizeMode_Maximized;
+    mSizeMode = nsSizeMode_Maximized;
 #ifdef ACCESSIBILITY
     DispatchMaximizeEventAccessible();
 #endif  // ACCESSIBILITY
   } else {
     LOG("\tNormal\n");
-    mSizeState = nsSizeMode_Normal;
+    mSizeMode = nsSizeMode_Normal;
 #ifdef ACCESSIBILITY
     DispatchRestoreEventAccessible();
 #endif  // ACCESSIBILITY
@@ -4857,7 +4852,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }
 
   if (mWidgetListener) {
-    mWidgetListener->SizeModeChanged(mSizeState);
+    mWidgetListener->SizeModeChanged(mSizeMode);
     if (aEvent->changed_mask & GDK_WINDOW_STATE_FULLSCREEN) {
       mWidgetListener->FullscreenChanged(aEvent->new_window_state &
                                          GDK_WINDOW_STATE_FULLSCREEN);
@@ -4865,7 +4860,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }
 
   if (mDrawInTitlebar && mTransparencyBitmapForTitlebar) {
-    if (mSizeState == nsSizeMode_Normal && !mIsTiled) {
+    if (mSizeMode == nsSizeMode_Normal && !mIsTiled) {
       UpdateTitlebarTransparencyBitmap();
     } else {
       ClearTransparencyBitmap();
@@ -6561,7 +6556,7 @@ bool nsWindow::IsChromeWindowTitlebar() {
 }
 
 bool nsWindow::DoDrawTilebarCorners() {
-  return IsChromeWindowTitlebar() && mSizeState == nsSizeMode_Normal &&
+  return IsChromeWindowTitlebar() && mSizeMode == nsSizeMode_Normal &&
          !mIsTiled;
 }
 
@@ -7103,7 +7098,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool wasFullscreen = mSizeState == nsSizeMode_Fullscreen;
+  bool wasFullscreen = mSizeMode == nsSizeMode_Fullscreen;
   if (aFullScreen != wasFullscreen && mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
@@ -8643,7 +8638,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   mDrawInTitlebar = aState;
 
   if (mTransparencyBitmapForTitlebar) {
-    if (mDrawInTitlebar && mSizeState == nsSizeMode_Normal && !mIsTiled) {
+    if (mDrawInTitlebar && mSizeMode == nsSizeMode_Normal && !mIsTiled) {
       UpdateTitlebarTransparencyBitmap();
     } else {
       ClearTransparencyBitmap();
