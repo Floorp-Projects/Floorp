@@ -426,17 +426,8 @@ const observer = {
       }
 
       case "focus": {
-        if (
-          field.hasBeenTypePassword &&
-          docState.generatedPasswordFields.has(field)
-        ) {
-          // Used to unmask fields with filled generated passwords when focused.
-          docState._togglePasswordFieldMasking(field, true);
-          break;
-        }
-
-        // Only used for username fields.
-        loginManagerChild._onUsernameFocus(aEvent);
+        //@sg see if we can drop focusedField (aEvent.target) and use field (aEvent.composedTarget)
+        docState.onFocus(field, aEvent.target);
         break;
       }
 
@@ -621,7 +612,7 @@ class LoginFormState {
    * @returns {Boolean} whether the username and password fields still have the
    *                    last-filled values, if previously filled.
    */
-  _isLoginAlreadyFilled(aUsernameField) {
+  #isLoginAlreadyFilled(aUsernameField) {
     let formLikeRoot = lazy.FormLikeFactory.findRootForField(aUsernameField);
     // Look for the existing LoginForm.
     let existingLoginForm = lazy.LoginFormFactory.getForRootElement(
@@ -629,12 +620,12 @@ class LoginFormState {
     );
     if (!existingLoginForm) {
       throw new Error(
-        "_isLoginAlreadyFilled called with a username field with " +
+        "#isLoginAlreadyFilled called with a username field with " +
           "no rootElement LoginForm"
       );
     }
 
-    lazy.log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
+    lazy.log("#isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
     let { login: filledLogin } =
       this.fillsByRootElement.get(formLikeRoot) || {};
     if (!filledLogin) {
@@ -756,6 +747,59 @@ class LoginFormState {
 
     // Mask the password field
     this._togglePasswordFieldMasking(passwordField, false);
+  }
+
+  onFocus(field, focusedField) {
+    if (field.hasBeenTypePassword && this.generatedPasswordFields.has(field)) {
+      // Used to unmask fields with filled generated passwords when focused.
+      this._togglePasswordFieldMasking(field, true);
+      return;
+    }
+
+    // Only used for username fields.
+    this.#onUsernameFocus(focusedField);
+  }
+
+  /**
+   * Focus event handler for username fields to decide whether to show autocomplete.
+   * @param {HTMLInputElement} focusedField
+   */
+  #onUsernameFocus(focusedField) {
+    if (
+      !focusedField.mozIsTextField(true) ||
+      focusedField.hasBeenTypePassword ||
+      focusedField.readOnly
+    ) {
+      return;
+    }
+
+    if (this.#isLoginAlreadyFilled(focusedField)) {
+      lazy.log("#onUsernameFocus: Already filled");
+      return;
+    }
+
+    /*
+     * A `mousedown` event is fired before the `focus` event if the user right clicks into an
+     * unfocused field. In that case we don't want to show both autocomplete and a context menu
+     * overlapping so we check against the timestamp that was set by the `mousedown` event if the
+     * button code indicated a right click.
+     * We use a timestamp instead of a bool to avoid complexity when dealing with multiple input
+     * forms and the fact that a mousedown into an already focused field does not trigger another focus.
+     * Date.now() is used instead of event.timeStamp since dom.event.highrestimestamp.enabled isn't
+     * true on all channels yet.
+     */
+    let timeDiff = Date.now() - gLastRightClickTimeStamp;
+    if (timeDiff < AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS) {
+      lazy.log(
+        "Not opening autocomplete after focus since a context menu was opened within",
+        timeDiff,
+        "ms"
+      );
+      return;
+    }
+
+    lazy.log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
+    lazy.gFormFillService.showPopup();
   }
 }
 
@@ -1529,50 +1573,6 @@ class LoginManagerChild extends JSWindowActorChild {
     lazy.LoginRecipesContent.cacheRecipes(formOrigin, doc.defaultView, recipes);
 
     this._fillForm(form, loginsFound, recipes, { autofillForm, importable });
-  }
-
-  /**
-   * Focus event handler for username fields to decide whether to show autocomplete.
-   * @param {FocusEvent} event
-   */
-  _onUsernameFocus(event) {
-    let focusedField = event.target;
-    if (
-      !focusedField.mozIsTextField(true) ||
-      focusedField.hasBeenTypePassword ||
-      focusedField.readOnly
-    ) {
-      return;
-    }
-
-    const docState = this.stateForDocument(focusedField.ownerDocument);
-    if (docState._isLoginAlreadyFilled(focusedField)) {
-      lazy.log("_onUsernameFocus: Already filled");
-      return;
-    }
-
-    /*
-     * A `mousedown` event is fired before the `focus` event if the user right clicks into an
-     * unfocused field. In that case we don't want to show both autocomplete and a context menu
-     * overlapping so we check against the timestamp that was set by the `mousedown` event if the
-     * button code indicated a right click.
-     * We use a timestamp instead of a bool to avoid complexity when dealing with multiple input
-     * forms and the fact that a mousedown into an already focused field does not trigger another focus.
-     * Date.now() is used instead of event.timeStamp since dom.event.highrestimestamp.enabled isn't
-     * true on all channels yet.
-     */
-    let timeDiff = Date.now() - gLastRightClickTimeStamp;
-    if (timeDiff < AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS) {
-      lazy.log(
-        "Not opening autocomplete after focus since a context menu was opened within",
-        timeDiff,
-        "ms"
-      );
-      return;
-    }
-
-    lazy.log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
-    lazy.gFormFillService.showPopup();
   }
 
   /**
