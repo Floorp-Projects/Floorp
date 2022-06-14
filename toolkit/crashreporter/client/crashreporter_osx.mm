@@ -169,6 +169,15 @@ static bool RestartApplication() {
   }
   [mSubmitReportButton setState:(submitChecked ? NSOnState : NSOffState)];
 
+  // load default state of include URL checkbox
+  BOOL includeChecked = YES;
+  if (nil != [userDefaults objectForKey:@"IncludeURL"]) {
+    includeChecked = [userDefaults boolForKey:@"IncludeURL"];
+  } else {
+    [userDefaults setBool:includeChecked forKey:@"IncludeURL"];
+  }
+  [mIncludeURLButton setState:(includeChecked ? NSOnState : NSOffState)];
+
   [self updateSubmit];
   [self updateURL];
   [self updateEmail];
@@ -278,6 +287,9 @@ static bool RestartApplication() {
 
 - (IBAction)includeURLClicked:(id)sender {
   [self updateURL];
+  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+  [userDefaults setBool:([mIncludeURLButton state] == NSOnState) forKey:@"IncludeURL"];
+  [userDefaults synchronize];
 }
 
 - (void)textDidChange:(NSNotification*)aNotification {
