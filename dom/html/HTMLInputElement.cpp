@@ -3490,10 +3490,14 @@ bool HTMLInputElement::ShouldPreventDOMActivateDispatch(
 nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
   // Open a file picker when we receive a click on a <input type='file'>, or
   // open a color picker when we receive a click on a <input type='color'>.
-  // A click is handled if it's the left mouse button.
+  // A click is handled in the following cases:
+  // - preventDefault() has not been called (or something similar);
+  // - it's the left mouse button.
   // We do not prevent non-trusted click because authors can already use
   // .click(). However, the pickers will follow the rules of popup-blocking.
-  MOZ_ASSERT(IsMutable());
+  if (aVisitor.mEvent->DefaultPrevented()) {
+    return NS_OK;
+  }
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (!(mouseEvent && mouseEvent->IsLeftClickEvent())) {
     return NS_OK;
@@ -4051,10 +4055,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     PostHandleEventForRangeThumb(aVisitor);
   }
 
-  if (!preventDefault) {
-    MOZ_TRY(MaybeInitPickers(aVisitor));
-  }
-  return NS_OK;
+  return MaybeInitPickers(aVisitor);
 }
 
 enum class RadioButtonMove { Back, Forward, None };
