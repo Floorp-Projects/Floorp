@@ -2467,8 +2467,7 @@ class UrlbarInput {
     // The autofilled value may be a URL that includes a scheme at the
     // beginning.  Do not allow it to be trimmed.
     this._setValue(value, false);
-    this.selectionStart = selectionStart;
-    this.selectionEnd = selectionEnd;
+    this.inputField.setSelectionRange(selectionStart, selectionEnd);
     this._autofillPlaceholder = { value, type, adaptiveHistoryInput };
   }
 
@@ -2582,7 +2581,7 @@ class UrlbarInput {
     if (!params.avoidBrowserFocus) {
       browser.focus();
       // Make sure the domain name stays visible for spoof protection and usability.
-      this.selectionStart = this.selectionEnd = 0;
+      this.inputField.setSelectionRange(0, 0);
     }
 
     if (openUILinkWhere != "current") {
@@ -3063,7 +3062,7 @@ class UrlbarInput {
         // Clear any previous selection unless we are focused, to ensure it
         // doesn't affect drag selection.
         if (this.focusedViaMousedown) {
-          this.selectionStart = this.selectionEnd = 0;
+          this.inputField.setSelectionRange(0, 0);
         }
 
         if (event.target.id == SEARCH_BUTTON_ID) {
@@ -3289,8 +3288,7 @@ class UrlbarInput {
 
       // Fix up cursor/selection:
       let newCursorPos = oldStart.length + pasteData.length;
-      this.selectionStart = newCursorPos;
-      this.selectionEnd = newCursorPos;
+      this.inputField.setSelectionRange(newCursorPos, newCursorPos);
 
       this.startQuery({
         searchString: this.inputField.value,
@@ -3363,7 +3361,7 @@ class UrlbarInput {
           if (this.window.gBrowser.selectedBrowser === loadingBrowser) {
             loadingBrowser.focus();
             // Make sure the domain name stays visible for spoof protection and usability.
-            this.selectionStart = this.selectionEnd = 0;
+            this.inputField.setSelectionRange(0, 0);
           }
         } catch (ex) {
           // Not all the Enter actions in the urlbar will cause a navigation, then it
@@ -3685,7 +3683,7 @@ class CopyCutController {
       urlbar.inputField.value =
         urlbar.inputField.value.substring(0, start) +
         urlbar.inputField.value.substring(end);
-      urlbar.selectionStart = urlbar.selectionEnd = start;
+      urlbar.inputField.setSelectionRange(start, start);
 
       let event = new UIEvent("input", {
         bubbles: true,
