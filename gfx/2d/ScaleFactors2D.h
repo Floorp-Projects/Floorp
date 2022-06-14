@@ -169,6 +169,10 @@ struct BaseScaleFactors2D {
     return BaseScaleFactors2D<Src, Dst, T>(scale.xScale, scale.yScale);
   }
 
+  BaseScaleFactors2D<UnknownUnits, UnknownUnits, T> ToUnknownScale() const {
+    return BaseScaleFactors2D<UnknownUnits, UnknownUnits, T>(xScale, yScale);
+  }
+
   friend BaseScaleFactors2D Min(const BaseScaleFactors2D& aA,
                                 const BaseScaleFactors2D& aB) {
     return BaseScaleFactors2D(std::min(aA.xScale, aB.xScale),
