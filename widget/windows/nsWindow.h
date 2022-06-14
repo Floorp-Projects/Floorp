@@ -693,6 +693,10 @@ class nsWindow final : public nsBaseWidget {
   static void OnCloakEvent(HWND aWnd, bool aCloaked);
   void OnCloakChanged(bool aCloaked);
 
+  // Get the orientation of the hidden taskbar, on the screen that this window
+  // is on, or Nothing if taskbar isn't hidden.
+  mozilla::Maybe<UINT> GetHiddenTaskbarEdge();
+
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static bool sDropShadowEnabled;

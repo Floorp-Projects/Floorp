@@ -9157,6 +9157,58 @@ bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
   return consumed;
 }
 
+mozilla::Maybe<UINT> nsWindow::GetHiddenTaskbarEdge() {
+  HMONITOR windowMonitor =
+      ::MonitorFromWindow(mWnd, MONITOR_DEFAULTTONEAREST);
+
+  if (!IsWin8OrLater()) {
+    // Per-monitor taskbar information is not available.
+    APPBARDATA appBarData;
+    appBarData.cbSize = sizeof(appBarData);
+    UINT taskbarState = SHAppBarMessage(ABM_GETSTATE, &appBarData);
+    if (ABS_AUTOHIDE & taskbarState) {
+      appBarData.hWnd = FindWindow(L"Shell_TrayWnd", nullptr);
+      if (appBarData.hWnd) {
+        HMONITOR taskbarMonitor = ::MonitorFromWindow(appBarData.hWnd,
+                                                      MONITOR_DEFAULTTOPRIMARY);
+        if (taskbarMonitor == windowMonitor) {
+          SHAppBarMessage(ABM_GETTASKBARPOS, &appBarData);
+          return Some(appBarData.uEdge);
+        }
+      }
+    }
+    return Nothing();
+  }
+
+  // Check all four sides of our monitor for an appbar.  Skip any that aren't
+  // the system taskbar.
+  MONITORINFO mi;
+  mi.cbSize = sizeof(MONITORINFO);
+  ::GetMonitorInfo(windowMonitor, &mi);
+
+  APPBARDATA appBarData;
+  appBarData.cbSize = sizeof(appBarData);
+  appBarData.rc = mi.rcMonitor;
+  const auto kEdges = { ABE_BOTTOM, ABE_TOP, ABE_LEFT, ABE_RIGHT };
+  for (auto edge : kEdges) {
+    appBarData.uEdge = edge;
+    // ABM_GETAUTOHIDEBAREX is not defined before Windows 8.
+    static constexpr DWORD ABM_GETAUTOHIDEBAREX = 0x000b;
+    HWND appBarHwnd = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAREX, &appBarData);
+    if (appBarHwnd) {
+      nsAutoString className;
+      if (WinUtils::GetClassName(appBarHwnd, className)) {
+        if (className.Equals(L"Shell_TrayWnd") ||
+            className.Equals(L"Shell_SecondaryTrayWnd")) {
+          return Some(edge);
+        }
+      }
+    }
+  }
+
+  return Nothing();
+}
+
 static nsSizeMode GetSizeModeForWindowFrame(HWND aWnd, bool aFullscreenMode) {
   WINDOWPLACEMENT pl;
   pl.length = sizeof(pl);
