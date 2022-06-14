@@ -2919,29 +2919,24 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
     mNonClientOffset.left = 0;
     mNonClientOffset.right = 0;
 
-    APPBARDATA appBarData;
-    appBarData.cbSize = sizeof(appBarData);
-    UINT taskbarState = SHAppBarMessage(ABM_GETSTATE, &appBarData);
-    if (ABS_AUTOHIDE & taskbarState) {
-      UINT edge = -1;
-      appBarData.hWnd = FindWindow(L"Shell_TrayWnd", nullptr);
-      if (appBarData.hWnd) {
-        HMONITOR taskbarMonitor =
-            ::MonitorFromWindow(appBarData.hWnd, MONITOR_DEFAULTTOPRIMARY);
-        HMONITOR windowMonitor =
-            ::MonitorFromWindow(mWnd, MONITOR_DEFAULTTONEAREST);
-        if (taskbarMonitor == windowMonitor) {
-          SHAppBarMessage(ABM_GETTASKBARPOS, &appBarData);
-          edge = appBarData.uEdge;
-        }
+    mozilla::Maybe<UINT> maybeEdge = GetHiddenTaskbarEdge();
+    if (maybeEdge) {
+      auto edge = maybeEdge.value();
+      if (ABE_LEFT == edge) {
+        mNonClientOffset.left -= kHiddenTaskbarSize;
+      } else if (ABE_RIGHT == edge) {
+        mNonClientOffset.right -= kHiddenTaskbarSize;
+      } else if (ABE_BOTTOM == edge || ABE_TOP == edge) {
+        mNonClientOffset.bottom -= kHiddenTaskbarSize;
       }
 
-      if (ABE_LEFT == edge) {
-        mNonClientOffset.left -= 1;
-      } else if (ABE_RIGHT == edge) {
-        mNonClientOffset.right -= 1;
-      } else if (ABE_BOTTOM == edge || ABE_TOP == edge) {
-        mNonClientOffset.bottom -= 1;
+      // On Windows 10+, when we are drawing the non-client region, we need
+      // to clear the portion of the NC region that is exposed by the
+      // hidden taskbar.  As above, we clear the bottom of the NC region
+      // when the taskbar is at the top of the screen.
+      if (IsWin10OrLater()) {
+        UINT clearEdge = (edge == ABE_TOP) ? ABE_BOTTOM : edge;
+        mClearNCEdge = Some(clearEdge);
       }
     }
   } else {

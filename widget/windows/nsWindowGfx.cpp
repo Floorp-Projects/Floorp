@@ -188,6 +188,37 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     ReleaseDC(mWnd, hdc);
   }
 
+  if (mClearNCEdge) {
+    // We need to clear this edge of the non-client region to black (once).
+    HDC hdc;
+    RECT rect;
+    hdc = ::GetWindowDC(mWnd);
+    ::GetWindowRect(mWnd, &rect);
+    ::MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
+    switch (mClearNCEdge.value()) {
+      case ABE_TOP:
+        rect.bottom = rect.top + kHiddenTaskbarSize;
+        break;
+      case ABE_LEFT:
+        rect.right = rect.left + kHiddenTaskbarSize;
+        break;
+      case ABE_BOTTOM:
+        rect.top = rect.bottom - kHiddenTaskbarSize;
+        break;
+      case ABE_RIGHT:
+        rect.left = rect.right - kHiddenTaskbarSize;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid edge value");
+        break;
+    }
+    ::FillRect(hdc, &rect,
+               reinterpret_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
+    ::ReleaseDC(mWnd, hdc);
+
+    mClearNCEdge.reset();
+  }
+
   if (knowsCompositor && layerManager &&
       !mBounds.IsEqualEdges(mLastPaintBounds)) {
     // Do an early async composite so that we at least have something on the
