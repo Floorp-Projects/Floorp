@@ -439,6 +439,15 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "IAM",
+    platform: "all",
+    name: "INFOnline IAM",
+    bug: "1761774",
+    file: "iam.js",
+    matches: ["*://script.ioam.de/iam.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "IASPET",
     platform: "all",
     name: "Integral Ad Science PET",
