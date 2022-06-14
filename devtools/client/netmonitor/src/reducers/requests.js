@@ -19,7 +19,7 @@ const {
   SELECT_REQUEST,
   PRESELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
-  TOGGLE_RECORDING,
+  SET_RECORDING_STATE,
   UPDATE_REQUEST,
 } = require("devtools/client/netmonitor/src/constants");
 
@@ -123,10 +123,10 @@ function requestsReducer(state = Requests(), action) {
     }
 
     // Pause/resume button clicked.
-    case TOGGLE_RECORDING: {
+    case SET_RECORDING_STATE: {
       return {
         ...state,
-        recording: !state.recording,
+        recording: action.recording,
       };
     }
 
