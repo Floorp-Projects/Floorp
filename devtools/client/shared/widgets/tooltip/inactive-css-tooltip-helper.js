@@ -55,11 +55,8 @@ class InactiveCssTooltipHelper {
    * <div class="devtools-tooltip-inactive-css">
    *   <p data-l10n-id="inactive-css-not-grid-or-flex-container"
    *      data-l10n-args="{&quot;property&quot;:&quot;align-content&quot;}">
-   *     <strong></strong>
    *   </p>
    *   <p data-l10n-id="inactive-css-not-grid-or-flex-container-fix">
-   *     <strong></strong>
-   *     <strong></strong>
    *     <span data-l10n-name="link" class="link"></span>
    *   </p>
    * </div>
@@ -70,8 +67,6 @@ class InactiveCssTooltipHelper {
    *                                                     // Inactive CSS fix.
    *          msgId: "inactive-css-not-grid-item", // Fluent id containing the
    *                                               // Inactive CSS message.
-   *          numFixProps: 2, // Number of properties in the fix section of the
-   *                          // tooltip.
    *          property: "color", // Property name
    *        }
    * @param {HTMLTooltip} tooltip
@@ -79,7 +74,7 @@ class InactiveCssTooltipHelper {
    */
   getTemplate(data, tooltip) {
     const XHTML_NS = "http://www.w3.org/1999/xhtml";
-    const { fixId, msgId, numFixProps, property, display, learnMoreURL } = data;
+    const { fixId, msgId, property, display, learnMoreURL } = data;
     const { doc } = tooltip;
 
     const documentURL =
@@ -94,10 +89,8 @@ class InactiveCssTooltipHelper {
     <div class="devtools-tooltip-inactive-css">
       <p data-l10n-id="${msgId}"
          data-l10n-args='${JSON.stringify({ property, display })}'>
-        <strong></strong>
       </p>
       <p data-l10n-id="${fixId}">
-        ${"<strong></strong>".repeat(numFixProps)}
         <span data-l10n-name="link" class="link"></span>
       </p>
     </div>`;
