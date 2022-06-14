@@ -111,9 +111,13 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
       }
     }
 
-    const [usernameField] = lazy.LoginManagerChild.forWindow(
-      window
-    ).getUserNameAndPasswordFields(passwordField || aFormLike.elements[0]);
+    const loginManagerChild = lazy.LoginManagerChild.forWindow(window);
+    const docState = loginManagerChild.stateForDocument(
+      passwordField.ownerDocument
+    );
+    const [usernameField] = docState.getUserNameAndPasswordFields(
+      passwordField || aFormLike.elements[0]
+    );
 
     const focusedElement = aFormLike.rootElement.ownerDocument.activeElement;
     let sendFocusEvent = aFormLike.rootElement === focusedElement;

@@ -1,5 +1,5 @@
 /**
- * Test for LoginManagerChild.getUserNameAndPasswordFields
+ * Test for LoginFormState.getUserNameAndPasswordFields
  */
 
 "use strict";
@@ -148,7 +148,9 @@ for (let tc of TESTCASES) {
       let formOrigin = LoginHelper.getLoginOrigin(document.documentURI);
       LoginRecipesContent.cacheRecipes(formOrigin, win, new Set());
 
-      let actual = new LoginManagerChild().getUserNameAndPasswordFields(input);
+      const loginManagerChild = new LoginManagerChild();
+      const docState = loginManagerChild.stateForDocument(document);
+      let actual = docState.getUserNameAndPasswordFields(input);
 
       Assert.strictEqual(
         testcase.returnedFieldIDs.length,

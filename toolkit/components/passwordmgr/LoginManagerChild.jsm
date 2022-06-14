@@ -393,7 +393,7 @@ const observer = {
           let [
             usernameField,
             passwordField,
-          ] = loginManagerChild.getUserNameAndPasswordFields(field);
+          ] = docState.getUserNameAndPasswordFields(field);
           if (field == usernameField && passwordField?.value) {
             loginManagerChild._passwordEditedOrGenerated(passwordField, {
               triggeredByFillingGenerated: docState.generatedPasswordFields.has(
@@ -1379,6 +1379,50 @@ class LoginFormState {
       newPasswordField,
       oldPasswordField,
     };
+  }
+
+  /**
+   * Returns the username and password fields found in the form by input
+   * element into form.
+   *
+   * @param {HTMLInputElement} aField
+   *                           A form field
+   * @return {Array} [usernameField, newPasswordField, oldPasswordField]
+   *
+   * Details of these values are the same as _getFormFields.
+   */
+  getUserNameAndPasswordFields(aField) {
+    const noResult = [null, null, null];
+    if (!HTMLInputElement.isInstance(aField)) {
+      throw new Error("getUserNameAndPasswordFields: input element required");
+    }
+
+    if (aField.nodePrincipal.isNullPrincipal || !aField.isConnected) {
+      return noResult;
+    }
+
+    // If the element is not a login form field, return all null.
+    if (
+      !aField.hasBeenTypePassword &&
+      !lazy.LoginHelper.isUsernameFieldType(aField)
+    ) {
+      return noResult;
+    }
+
+    const form = lazy.LoginFormFactory.createFromField(aField);
+    const doc = aField.ownerDocument;
+    const formOrigin = lazy.LoginHelper.getLoginOrigin(doc.documentURI);
+    const recipes = lazy.LoginRecipesContent.getRecipes(
+      formOrigin,
+      doc.defaultView
+    );
+    const {
+      usernameField,
+      newPasswordField,
+      oldPasswordField,
+    } = this._getFormFields(form, false, recipes);
+
+    return [usernameField, newPasswordField, oldPasswordField];
   }
 }
 
@@ -3110,51 +3154,6 @@ class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * Returns the username and password fields found in the form by input
-   * element into form.
-   *
-   * @param {HTMLInputElement} aField
-   *                           A form field
-   * @return {Array} [usernameField, newPasswordField, oldPasswordField]
-   *
-   * Details of these values are the same as _getFormFields.
-   */
-  getUserNameAndPasswordFields(aField) {
-    let noResult = [null, null, null];
-    if (!HTMLInputElement.isInstance(aField)) {
-      throw new Error("getUserNameAndPasswordFields: input element required");
-    }
-
-    if (aField.nodePrincipal.isNullPrincipal || !aField.isConnected) {
-      return noResult;
-    }
-
-    // If the element is not a login form field, return all null.
-    if (
-      !aField.hasBeenTypePassword &&
-      !lazy.LoginHelper.isUsernameFieldType(aField)
-    ) {
-      return noResult;
-    }
-
-    let form = lazy.LoginFormFactory.createFromField(aField);
-    let doc = aField.ownerDocument;
-    let formOrigin = lazy.LoginHelper.getLoginOrigin(doc.documentURI);
-    let recipes = lazy.LoginRecipesContent.getRecipes(
-      formOrigin,
-      doc.defaultView
-    );
-    const docState = this.stateForDocument(form.ownerDocument);
-    let {
-      usernameField,
-      newPasswordField,
-      oldPasswordField,
-    } = docState._getFormFields(form, false, recipes);
-
-    return [usernameField, newPasswordField, oldPasswordField];
-  }
-
-  /**
    * Verify if a field is a valid login form field and
    * returns some information about it's LoginForm.
    *
@@ -3182,7 +3181,10 @@ class LoginManagerChild extends JSWindowActorChild {
     // This array provides labels that correspond to the return values from
     // `getUserNameAndPasswordFields` so we can know which one aField is.
     const LOGIN_FIELD_ORDER = ["username", "new-password", "current-password"];
-    let usernameAndPasswordFields = this.getUserNameAndPasswordFields(aField);
+    const docState = this.stateForDocument(aField.ownerDocument);
+    let usernameAndPasswordFields = docState.getUserNameAndPasswordFields(
+      aField
+    );
     let fieldNameHint;
     let indexOfFieldInUsernameAndPasswordFields = usernameAndPasswordFields.indexOf(
       aField
