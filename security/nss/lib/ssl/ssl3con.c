@@ -13372,17 +13372,17 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         return SECFailure;
     }
 
-    if (plaintext->space < cTextSizeLimit) {
-        rv = sslBuffer_Grow(plaintext, cTextSizeLimit);
-        if (rv != SECSuccess) {
-            ssl_ReleaseSpecReadLock(ss); /*************************/
-            SSL_DBG(("%d: SSL3[%d]: HandleRecord, tried to get %d bytes",
-                     SSL_GETPID(), ss->fd, cTextSizeLimit));
-            /* sslBuffer_Grow has set a memory error code. */
-            /* Perhaps we should send an alert. (but we have no memory!) */
-            return SECFailure;
-        }
-    }
+#ifdef DEBUG
+    /* In debug builds the gather buffers are freed after the handling of each
+     * record for advanced ASAN coverage. Allocate the buffer again to the
+     * maximum possibly needed size as on gather initialization in
+     * ssl3gthr.c/ssl3_InitGather(). */
+    PR_ASSERT(sslBuffer_Grow(plaintext, TLS_1_2_MAX_CTEXT_LENGTH) == SECSuccess);
+#endif
+    /* This replaces a dynamic plaintext buffer size check, since the buffer is
+     * allocated to the maximum size in ssl3gthr.c/ssl3_InitGather(). The buffer
+     * was always grown to the maximum size at first record gathering before. */
+    PR_ASSERT(plaintext->space >= cTextSizeLimit);
 
     /* Most record types aside from protected TLS 1.3 records carry the content
      * type in the first octet. TLS 1.3 will override this value later. */
@@ -13390,7 +13390,6 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     /* Encrypted application data records could arrive before the handshake
      * completes in DTLS 1.3. These can look like valid TLS 1.2 application_data
      * records in epoch 0, which is never valid. Pretend they didn't decrypt. */
-
     if (spec->epoch == 0 && ((IS_DTLS(ss) &&
                               dtls_IsDtls13Ciphertext(0, rType)) ||
                              rType == ssl_ct_application_data)) {
@@ -13526,8 +13525,18 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         return SECFailure;
     }
 
-    return ssl3_HandleNonApplicationData(ss, rType, epoch, cText->seqNum,
-                                         plaintext);
+    rv = ssl3_HandleNonApplicationData(ss, rType, epoch, cText->seqNum,
+                                       plaintext);
+
+#ifdef DEBUG
+    /* In Debug builds free and zero gather plaintext buffer after its content
+     * has been used/copied for advanced ASAN coverage/utilization.
+     * This frees buffer for non application data records, for application data
+     * records it is freed in sslsecur.c/DoRecv(). */
+    sslBuffer_Clear(&ss->gs.buf);
+#endif
+
+    return rv;
 }
 
 /*

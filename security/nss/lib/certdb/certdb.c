@@ -384,9 +384,9 @@ GetKeyUsage(CERTCertificate *cert)
     rv = CERT_FindKeyUsageExtension(cert, &tmpitem);
     if (rv == SECSuccess) {
         /* remember the actual value of the extension */
-        cert->rawKeyUsage = tmpitem.data[0];
+        cert->rawKeyUsage = tmpitem.len ? tmpitem.data[0] : 0;
         cert->keyUsagePresent = PR_TRUE;
-        cert->keyUsage = tmpitem.data[0];
+        cert->keyUsage = cert->rawKeyUsage;
 
         PORT_Free(tmpitem.data);
         tmpitem.data = NULL;
@@ -506,7 +506,7 @@ cert_ComputeCertType(CERTCertificate *cert)
         isCA = basicConstraint.isCA;
     }
     if (tmpitem.data != NULL || extKeyUsage != NULL) {
-        if (tmpitem.data == NULL) {
+        if (tmpitem.data == NULL || tmpitem.len == 0) {
             nsCertType = 0;
         } else {
             nsCertType = tmpitem.data[0];

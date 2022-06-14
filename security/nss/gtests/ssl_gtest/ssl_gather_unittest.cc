@@ -126,4 +126,31 @@ TEST_F(GatherV2ClientHelloTest, GatherEmptyV2RecordShortHeader) {
   ConnectExpectMalformedClientHello(buffer);
 }
 
+/* Test correct gather buffer clearing/freeing and (re-)allocation.
+ *
+ * Freeing and (re-)allocation of the gather buffers after reception of single
+ * records is only done in DEBUG builds. Normally they are created and
+ * destroyed with the SSL socket.
+ *
+ * TLS 1.0 record splitting leads to implicit complete read of the data.
+ *
+ * The NSS DTLS impelmentation does not allow partial reads
+ * (see sslsecur.c, line 535-543). */
+TEST_P(TlsConnectStream, GatherBufferPartialReadTest) {
+  EnsureTlsSetup();
+  Connect();
+
+  client_->SendData(1000);
+
+  if (version_ > SSL_LIBRARY_VERSION_TLS_1_0) {
+    for (unsigned i = 1; i <= 20; i++) {
+      server_->ReadBytes(50);
+      ASSERT_EQ(server_->received_bytes(), 50U * i);
+    }
+  } else {
+    server_->ReadBytes(50);
+    ASSERT_EQ(server_->received_bytes(), 1000U);
+  }
+}
+
 }  // namespace nss_test
