@@ -838,8 +838,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Switch to link in new tab immediately</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing" moz:removedIn="97">Safe Browsing</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Block potentially dangerous and deceptive sites</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -847,7 +845,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS-Only Mode</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2" moz:removedIn="98" tools:ignore="UnusedResources">Automatically attempts to connect to sites using HTTPS for increased security. HTTPS connections provide a secure, encrypted connection to websites you visit.</string>
     <string name="preference_https_only_summary3">Automatically attempts to connect to sites using the HTTPS encryption protocol for increased security.</string>
 
     <!-- Preference for exceptions tracking protection -->
