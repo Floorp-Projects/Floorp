@@ -5802,8 +5802,8 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
           if (WindowContext* windowContext =
                   mBrowsingContext->GetCurrentWindowContext()) {
             SessionStoreChild::From(windowContext->GetWindowGlobalChild())
-                ->ResetSessionStore(mBrowsingContext,
-                                    mBrowsingContext->GetSessionStoreEpoch());
+                ->SendResetSessionStore(
+                    mBrowsingContext, mBrowsingContext->GetSessionStoreEpoch());
           }
         }
       }
@@ -6544,14 +6544,11 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
     if (WindowContext* windowContext =
             mBrowsingContext->GetCurrentWindowContext()) {
-      using Change = SessionStoreChangeListener::Change;
-
-      // We've finished loading the page and now we want to collect all the
-      // session store state that the page is initialized with.
-      SessionStoreChangeListener::CollectSessionStoreData(
-          windowContext,
-          EnumSet<Change>(Change::Input, Change::Scroll, Change::SessionHistory,
-                          Change::WireFrame));
+      // TODO(farre): File bug: From a user perspective this would probably be
+      // just fine to run off the change listener timer. Turns out that a flush
+      // is needed. Several tests depend on this behaviour. Could potentially be
+      // an optimization for later. See Bug 1756995.
+      SessionStoreChangeListener::FlushAllSessionStoreData(windowContext);
     }
   }
 
