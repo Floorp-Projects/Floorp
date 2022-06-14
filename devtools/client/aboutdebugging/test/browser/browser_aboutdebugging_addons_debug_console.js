@@ -293,6 +293,10 @@ add_task(async function testWebExtensionNoBgScript() {
         "popup.js": function() {
           console.log("Popup-only log");
 
+          const style = document.createElement("style");
+          style.textContent = "* { color: popup-only-error; }";
+          document.documentElement.appendChild(style);
+
           throw new Error("Popup-only exception");
         },
       },
@@ -330,6 +334,15 @@ add_task(async function testWebExtensionNoBgScript() {
     findMessagesByType(hud, "Popup-only log", ".console-api").length,
     1,
     "We get the addon's popup log"
+  );
+  is(
+    findMessagesByType(
+      hud,
+      "Expected color but found ‘popup-only-error’.  Error in parsing value for ‘color’.  Declaration dropped.",
+      ".warn"
+    ).length,
+    1,
+    "We get the addon's popup CSS error message"
   );
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
