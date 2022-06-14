@@ -14,6 +14,7 @@ use neqo_common::Encoder;
 use std::cmp::min;
 use std::collections::VecDeque;
 use std::convert::TryFrom;
+use std::ops::Deref;
 
 pub const MAX_QUIC_DATAGRAM: u64 = 65535;
 
@@ -52,9 +53,10 @@ impl QuicDatagram {
     }
 }
 
-impl AsRef<[u8]> for QuicDatagram {
+impl Deref for QuicDatagram {
+    type Target = [u8];
     #[must_use]
-    fn as_ref(&self) -> &[u8] {
+    fn deref(&self) -> &[u8] {
         &self.data[..]
     }
 }
@@ -108,17 +110,17 @@ impl QuicDatagrams {
         stats: &mut Stats,
     ) {
         while let Some(dgram) = self.datagrams.pop_front() {
-            let len = dgram.as_ref().len();
+            let len = dgram.len();
             if builder.remaining() > len {
                 // We need 1 more than `len` for the Frame type.
                 let length_len = Encoder::varint_len(u64::try_from(len).unwrap());
                 // Include a length if there is space for another frame after this one.
                 if builder.remaining() >= 1 + length_len + len + PacketBuilder::MINIMUM_FRAME_SIZE {
                     builder.encode_varint(FRAME_TYPE_DATAGRAM_WITH_LEN);
-                    builder.encode_vvec(dgram.as_ref());
+                    builder.encode_vvec(&dgram);
                 } else {
                     builder.encode_varint(FRAME_TYPE_DATAGRAM);
-                    builder.encode(dgram.as_ref());
+                    builder.encode(&dgram);
                     builder.mark_full();
                 }
                 debug_assert!(builder.len() <= builder.limit());
