@@ -83,6 +83,13 @@ module.exports = {
       },
     },
     {
+      excludedFiles: ["**/*.sys.mjs"],
+      files: ["**/*.mjs"],
+      rules: {
+        "mozilla/reject-import-system-module-from-non-system": "error",
+      },
+    },
+    {
       files: ["**/*.jsm", "**/*.jsm.js"],
       rules: {
         "mozilla/mark-exported-symbols-as-used": "error",
