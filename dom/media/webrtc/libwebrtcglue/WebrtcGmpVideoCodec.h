@@ -39,6 +39,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
 
 #include "mozIGeckoMediaPluginService.h"
 #include "MediaConduitInterface.h"
@@ -64,6 +65,7 @@ class GmpInitDoneRunnable : public Runnable {
         mPCHandle(std::move(aPCHandle)) {}
 
   NS_IMETHOD Run() override {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GMP_INIT_SUCCESS, mResult == WEBRTC_VIDEO_CODEC_OK);
     if (mResult == WEBRTC_VIDEO_CODEC_OK) {
       // Might be useful to notify the PeerConnection about successful init
       // someday.
