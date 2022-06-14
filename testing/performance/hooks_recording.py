@@ -18,6 +18,8 @@ next_site = None
 
 RECORDING_LIST = Path(Path(__file__).parent, "pageload_sites.json")
 
+SCM_1_LOGIN_SITES = ("facebook", "netflix")
+
 
 def before_iterations(kw):
 
@@ -57,6 +59,27 @@ def before_iterations(kw):
                     f"Skipping login test `{test.get('name')}` "
                     f"because login info cannot be obtained."
                 )
+
+        # When pushing to Try, only attempt login recording using the
+        # taskcluster secrets that are associated with SCM level 1 as defined
+        # in `SCM_LVL_1_SITES`.
+        if test.get("login"):
+            if "MOZ_AUTOMATION" in os.environ.keys():
+                if (
+                    os.environ.get("MOZ_SCM_LEVEL") == 1
+                    and test.get("name") not in SCM_1_LOGIN_SITES
+                ):
+                    print(
+                        f"Skipping login test `{test.get('name')}` "
+                        f"Because SCM = `{os.environ.get('MOZ_SCM_LEVEL') }`"
+                        f"and there is no secret available at this level"
+                    )
+                    return False
+                return True
+            elif "RAPTOR_LOGINS" in os.environ:
+                # Leave it to the user to have properly set up a local json file with
+                # the login websites of interest
+                return True
 
         return record
 
