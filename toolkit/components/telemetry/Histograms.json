@@ -11401,6 +11401,16 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether any kind of H264 is enabled"
   },
+  "WEBRTC_GMP_INIT_SUCCESS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1774222],
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts of GMP codec initialization success and failure"
+  },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
