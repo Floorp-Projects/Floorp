@@ -27,10 +27,10 @@ struct NativeIterator {
  private:
   // Object being iterated.  Non-null except in NativeIterator sentinels and
   // empty property iterators created when |null| or |undefined| is iterated.
-  GCPtrObject objectBeingIterated_ = {};
+  GCPtr<JSObject*> objectBeingIterated_ = {};
 
   // Internal iterator object.
-  const GCPtrObject iterObj_ = {};
+  const GCPtr<JSObject*> iterObj_ = {};
 
   // The end of GCPtr<Shape*>s that appear directly after |this|, as part of an
   // overall allocation that stores |*this|, shapes, and iterated strings.

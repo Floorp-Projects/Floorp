@@ -581,7 +581,7 @@ JS::OffThreadToken* OffThreadJob::waitUntilDone(JSContext* cx) {
 }
 
 struct ShellCompartmentPrivate {
-  GCPtrObject grayRoot;
+  GCPtr<JSObject*> grayRoot;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer
