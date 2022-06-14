@@ -67,6 +67,9 @@ class PerftestResultsHandler(object):
     def add(self, new_result_json):
         raise NotImplementedError()
 
+    def result_dir(self):
+        return None
+
     def build_extra_options(self, modifiers=None):
         extra_options = []
 

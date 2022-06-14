@@ -8,6 +8,7 @@ from __future__ import absolute_import
 
 import json
 import os
+import pathlib
 import re
 import shutil
 import subprocess
@@ -507,12 +508,29 @@ class Perftest(object):
         pass
 
     def clean_up(self):
+        # Cleanup all of our temporary directories
         for dir_to_rm in self._dirs_to_remove:
             if not os.path.exists(dir_to_rm):
                 continue
             LOG.info("Removing temporary directory: {}".format(dir_to_rm))
             shutil.rmtree(dir_to_rm, ignore_errors=True)
         self._dirs_to_remove = []
+
+        # Go through the artifact directory and ensure we
+        # don't have too many JPG/PNG files from a task failure
+        if (
+            not self.run_local
+            and self.results_handler
+            and self.results_handler.result_dir()
+        ):
+            artifact_dir = pathlib.Path(self.artifact_dir)
+            for filetype in ("*.png", "*.jpg"):
+                # Limit the number of images uploaded to the last (newest) 5
+                for file in sorted(artifact_dir.rglob(filetype))[:-5]:
+                    try:
+                        file.unlink()
+                    except FileNotFoundError:
+                        pass
 
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
