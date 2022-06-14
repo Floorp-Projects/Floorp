@@ -357,15 +357,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&oomReturnLabel);
   }
 
-  // s0 <- 8*argc (size of all arguments we pushed on the stack)
-  masm.pop(s0);
-  masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), s0);
-
-  // Discard calleeToken, numActualArgs.
-  masm.addPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
-
-  // Pop arguments off the stack.
-  masm.addPtr(s0, StackPointer);
+  // Discard arguments and padding. Set sp to the address of the EnterJITRegs
+  // on the stack.
+  masm.mov(FramePointer, StackPointer);
 
   // Store the returned value into the vp
   masm.as_ld(reg_vp, StackPointer, offsetof(EnterJITRegs, a7));
