@@ -98,6 +98,16 @@ bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
     return false;
   }
 
+  // Allow a webextension principal to register a service worker script with
+  // a moz-extension url only if 'extensions.service_worker_register.allowed'
+  // is true.
+  if (!StaticPrefs::extensions_serviceWorkerRegister_allowed()) {
+    nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+    if (principal && BasePrincipal::Cast(principal)->AddonPolicy()) {
+      return false;
+    }
+  }
+
   if (IsSecureContextOrObjectIsFromSecureContext(aCx, global)) {
     return true;
   }
@@ -253,17 +263,6 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
   // disabled by the 'extensions.background_service_worker.enabled' pref.
   if (scriptURI->SchemeIs("moz-extension") &&
       !StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
-  // Allow a webextension principal to register a service worker script with
-  // a moz-extension url only if 'extensions.service_worker_register.allowed'
-  // is true.
-  if (scriptURI->SchemeIs("moz-extension") &&
-      aCallerType == CallerType::NonSystem &&
-      (!baseURI->SchemeIs("moz-extension") ||
-       !StaticPrefs::extensions_serviceWorkerRegister_allowed())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
