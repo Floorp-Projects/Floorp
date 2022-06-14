@@ -300,7 +300,8 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
 
     ImmutableTenuredPtr<PropertyName*>* descriptions =
         commonNames->wellKnownSymbolDescriptions();
-    ImmutableSymbolPtr* symbols = reinterpret_cast<ImmutableSymbolPtr*>(wks);
+    ImmutableTenuredPtr<JS::Symbol*>* symbols =
+        reinterpret_cast<ImmutableTenuredPtr<JS::Symbol*>*>(wks);
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
       JS::Symbol* symbol =
           JS::Symbol::newWellKnown(cx, JS::SymbolCode(i), descriptions[i]);
