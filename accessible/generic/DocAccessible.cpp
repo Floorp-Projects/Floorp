@@ -359,9 +359,11 @@ void DocAccessible::DocType(nsAString& aType) const {
 
 void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
                                      uint64_t aNewDomain) {
+  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
   uint64_t& domain = mQueuedCacheUpdates.LookupOrInsert(aAcc, 0);
   domain |= aNewDomain;
-
   Controller()->ScheduleProcessing();
 }
 

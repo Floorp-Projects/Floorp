@@ -365,7 +365,8 @@ void nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
 
 void nsAccessibilityService::NotifyOfPossibleBoundsChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (IPCAccessibilityActive() &&
+      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     DocAccessible* document = GetDocAccessible(aPresShell);
     if (document) {
       LocalAccessible* accessible = document->GetAccessible(aContent);
@@ -378,7 +379,8 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
 
 void nsAccessibilityService::NotifyOfComputedStyleChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!IPCAccessibilityActive() ||
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return;
   }
 
