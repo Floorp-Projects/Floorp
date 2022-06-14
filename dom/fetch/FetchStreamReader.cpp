@@ -10,7 +10,6 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AutoEntryScript.h"
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -136,12 +135,15 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
   }
 
   RefPtr<FetchStreamReader> kungFuDeathGrip = this;
-
   if (aCx && mReader) {
-    RefPtr<DOMException> error = DOMException::Create(aStatus);
-
+    ErrorResult rv;
+    if (aStatus == NS_ERROR_DOM_WRONG_TYPE_ERR) {
+      rv.ThrowTypeError<MSG_FETCH_BODY_WRONG_TYPE>();
+    } else {
+      rv = aStatus;
+    }
     JS::Rooted<JS::Value> errorValue(aCx);
-    if (ToJSValue(aCx, error, &errorValue)) {
+    if (ToJSValue(aCx, std::move(rv), &errorValue)) {
       IgnoredErrorResult ignoredError;
       // It's currently safe to cancel an already closed reader because, per the
       // comments in ReadableStream::cancel() conveying the spec, step 2 of
@@ -274,9 +276,11 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   // This roughly implements the chunk steps from
   // https://fetch.spec.whatwg.org/#incrementally-read-loop.
 
+  // Step 2. If chunk is not a Uint8Array object, then set continueAlgorithm to
+  // this step: run processBodyError given a TypeError.
   RootedSpiderMonkeyInterface<Uint8Array> chunk(aCx);
   if (!aChunk.isObject() || !chunk.Init(&aChunk.toObject())) {
-    CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
+    CloseAndRelease(aCx, NS_ERROR_DOM_WRONG_TYPE_ERR);
     return;
   }
   chunk.ComputeState();
@@ -301,8 +305,7 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
 
   nsresult rv = WriteBuffer();
   if (NS_FAILED(rv)) {
-    // DOMException only understands errors from domerr.msg, so we normalize to
-    // identifying an abort if the write fails.
+    // Normalize to a generic DOM exception.
     CloseAndRelease(aCx, NS_ERROR_DOM_ABORT_ERR);
   }
 }
