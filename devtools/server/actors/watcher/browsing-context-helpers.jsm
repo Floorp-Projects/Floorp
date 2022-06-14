@@ -7,6 +7,7 @@
 const EXPORTED_SYMBOLS = [
   "isBrowsingContextPartOfContext",
   "isWindowGlobalPartOfContext",
+  "getAddonIdForWindowGlobal",
   "getAllBrowsingContextsForContext",
 ];
 
@@ -23,6 +24,49 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   false
 );
 
+const WEBEXTENSION_FALLBACK_DOC_URL =
+  "chrome://devtools/content/shared/webextension-fallback.html";
+
+/**
+ * Retrieve the addon id corresponding to a given window global.
+ * This is usually extracted from the principal, but in case we are dealing
+ * with a DevTools webextension fallback window, the addon id will be available
+ * in the URL.
+ *
+ * @param {WindowGlobalChild|WindowGlobalParent} windowGlobal
+ *        The WindowGlobal from which we want to extract the addonId. Either a
+ *        WindowGlobalParent or a WindowGlobalChild depending on where this
+ *        helper is used from.
+ * @return {String} Returns the addon id if any could found, null otherwise.
+ */
+function getAddonIdForWindowGlobal(windowGlobal) {
+  const browsingContext = windowGlobal.browsingContext;
+  const isParent = CanonicalBrowsingContext.isInstance(browsingContext);
+  // documentPrincipal is only exposed on WindowGlobalParent,
+  // use a fallback for WindowGlobalChild.
+  const principal = isParent
+    ? windowGlobal.documentPrincipal
+    : browsingContext.window.document.nodePrincipal;
+
+  // Most webextension documents are loaded from moz-extension://{addonId} and
+  // the principal provides the addon id.
+  if (principal.addonId) {
+    return principal.addonId;
+  }
+
+  // If no addon id was available on the principal, check if the window is the
+  // DevTools fallback window and extract the addon id from the URL.
+  const href = isParent
+    ? windowGlobal.documentURI.displaySpec
+    : browsingContext.window.document.location.href;
+
+  if (href && href.startsWith(WEBEXTENSION_FALLBACK_DOC_URL)) {
+    const [, addonId] = href.split("#");
+    return addonId;
+  }
+
+  return null;
+}
 /**
  * Helper function to know if a given BrowsingContext should be debugged by scope
  * described by the given session context.
@@ -157,6 +201,7 @@ function isBrowsingContextPartOfContext(
     }
     return true;
   }
+
   if (sessionContext.type == "webextension") {
     // Next and last check expects a WindowGlobal.
     // As we have no way to really know if this BrowsingContext is related to this add-on,
@@ -164,12 +209,8 @@ function isBrowsingContextPartOfContext(
     if (!windowGlobal) {
       return false;
     }
-    // documentPrincipal is only exposed on WindowGlobalParent,
-    // use a fallback for WindowGlobalChild.
-    const principal =
-      windowGlobal.documentPrincipal ||
-      browsingContext.window.document.nodePrincipal;
-    return principal.addonId == sessionContext.addonId;
+
+    return getAddonIdForWindowGlobal(windowGlobal) == sessionContext.addonId;
   }
   throw new Error("Unsupported session context type: " + sessionContext.type);
 }
@@ -381,6 +422,7 @@ if (typeof module == "object") {
   module.exports = {
     isBrowsingContextPartOfContext,
     isWindowGlobalPartOfContext,
+    getAddonIdForWindowGlobal,
     getAllBrowsingContextsForContext,
   };
 }

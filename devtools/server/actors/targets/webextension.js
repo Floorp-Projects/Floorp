@@ -227,7 +227,12 @@ webExtensionTargetPrototype._searchFallbackWindow = function() {
   // specifically created for the devtools server and it is never used
   // or navigated anywhere else.
   this.fallbackWindow = this.chromeGlobal.content;
-  this.fallbackWindow.document.location.href = FALLBACK_DOC_URL;
+
+  // Add the addonId in the URL to retrieve this information in other devtools
+  // helpers. The addonId is usually populated in the principal, but this will
+  // not be the case for the fallback window because it is loaded from chrome://
+  // instead of moz-extension://${addonId}
+  this.fallbackWindow.document.location.href = `${FALLBACK_DOC_URL}#${this.addonId}`;
 
   return this.fallbackWindow;
 };
