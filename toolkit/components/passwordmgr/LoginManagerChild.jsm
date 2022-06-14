@@ -236,8 +236,7 @@ const observer = {
       // Used to mask fields with filled generated passwords when blurred.
       case "blur": {
         if (docState.generatedPasswordFields.has(field)) {
-          const unmask = false;
-          loginManagerChild._togglePasswordFieldMasking(field, unmask);
+          docState._togglePasswordFieldMasking(field, false);
         }
         break;
       }
@@ -432,8 +431,7 @@ const observer = {
           docState.generatedPasswordFields.has(field)
         ) {
           // Used to unmask fields with filled generated passwords when focused.
-          const unmask = true;
-          loginManagerChild._togglePasswordFieldMasking(field, unmask);
+          docState._togglePasswordFieldMasking(field, true);
           break;
         }
 
@@ -659,6 +657,31 @@ class LoginFormState {
     }
 
     return true;
+  }
+
+  _togglePasswordFieldMasking(passwordField, unmask) {
+    let { editor } = passwordField;
+
+    if (passwordField.type != "password") {
+      // The type may have been changed by the website.
+      lazy.log("_togglePasswordFieldMasking: Field isn't type=password");
+      return;
+    }
+
+    if (!unmask && !editor) {
+      // It hasn't been created yet but the default is to be masked anyways.
+      return;
+    }
+
+    if (unmask) {
+      editor.unmask(0);
+      return;
+    }
+
+    if (editor.autoMaskingEnabled) {
+      return;
+    }
+    editor.mask();
   }
 }
 
@@ -2317,7 +2340,7 @@ class LoginManagerChild extends JSWindowActorChild {
     }
     if (passwordField.ownerDocument.activeElement == passwordField) {
       // Unmask the password field
-      this._togglePasswordFieldMasking(passwordField, true);
+      docState._togglePasswordFieldMasking(passwordField, true);
     }
   }
 
@@ -2346,9 +2369,8 @@ class LoginManagerChild extends JSWindowActorChild {
   _stopTreatingAsGeneratedPasswordField(passwordField) {
     lazy.log("_stopTreatingAsGeneratedPasswordField");
 
-    let fields = this.stateForDocument(passwordField.ownerDocument)
-      .generatedPasswordFields;
-    fields.delete(passwordField);
+    const docState = this.stateForDocument(passwordField.ownerDocument);
+    docState.generatedPasswordFields.delete(passwordField);
 
     // Remove all the event listeners added in _passwordEditedOrGenerated
     for (let eventType of ["blur", "focus"]) {
@@ -2359,7 +2381,7 @@ class LoginManagerChild extends JSWindowActorChild {
     }
 
     // Mask the password field
-    this._togglePasswordFieldMasking(passwordField, false);
+    docState._togglePasswordFieldMasking(passwordField, false);
   }
 
   /**
@@ -2494,31 +2516,6 @@ class LoginManagerChild extends JSWindowActorChild {
       confirmPasswordInput.setUserInput(passwordField.value);
       this._highlightFilledField(confirmPasswordInput);
     }
-  }
-
-  _togglePasswordFieldMasking(passwordField, unmask) {
-    let { editor } = passwordField;
-
-    if (passwordField.type != "password") {
-      // The type may have been changed by the website.
-      lazy.log("_togglePasswordFieldMasking: Field isn't type=password");
-      return;
-    }
-
-    if (!unmask && !editor) {
-      // It hasn't been created yet but the default is to be masked anyways.
-      return;
-    }
-
-    if (unmask) {
-      editor.unmask(0);
-      return;
-    }
-
-    if (editor.autoMaskingEnabled) {
-      return;
-    }
-    editor.mask();
   }
 
   /** Remove login field highlight when its value is cleared or overwritten.
