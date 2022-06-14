@@ -78,6 +78,10 @@ impl Decoder {
             ),
         };
 
+        if !base.is_ascii() {
+            return Err(());
+        }
+
         let base_len = base.len();
         let mut length = base_len as u32;
         let mut code_point = INITIAL_N;

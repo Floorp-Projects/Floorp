@@ -1,0 +1,16 @@
+[package]
+name = "tinyvec"
+version = "1.999.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+smallvec = "1"
+
+[features]
+alloc = []
+default = []
+std = ["alloc"]

@@ -768,7 +768,7 @@ version = "1.0.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.idna]]
-version = "0.2.1"
+version = "0.2.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.indexmap]]
@@ -1552,7 +1552,7 @@ version = "1.0.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.unicode-normalization]]
-version = "0.1.7"
+version = "0.1.19"
 criteria = "safe-to-deploy"
 
 [[unaudited.unicode-segmentation]]
