@@ -70,6 +70,7 @@ const CURRENT_WEBCHANNEL_VERSION = 1;
 
 // Lazily load the require function, when it's needed.
 ChromeUtils.defineModuleGetter(
+  // eslint-disable-next-line mozilla/reject-global-this
   this,
   "require",
   "resource://devtools/shared/loader/Loader.jsm"

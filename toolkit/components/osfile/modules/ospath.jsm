@@ -40,9 +40,11 @@ if (typeof Components == "undefined") {
     Path = ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm");
   }
 
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = [];
   for (let k in Path) {
     EXPORTED_SYMBOLS.push(k);
+    // eslint-disable-next-line mozilla/reject-global-this
     this[k] = Path[k];
   }
 }

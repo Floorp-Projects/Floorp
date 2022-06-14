@@ -35,8 +35,10 @@ if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
+  // eslint-disable-next-line mozilla/reject-global-this
   this.exports = {};
   ({ Services } = ChromeUtils.import("resource://gre/modules/Services.jsm"));
+  // eslint-disable-next-line mozilla/reject-global-this
   this.Services = Services;
   Meta = ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm")
     .BasePromiseWorker.Meta;
@@ -1362,8 +1364,10 @@ Object.defineProperty(exports.OS.Shared, "TEST", {
 
 // /////////////////// Permanent boilerplate
 if (typeof Components != "undefined") {
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {
+    // eslint-disable-next-line mozilla/reject-global-this
     this[symbol] = exports[symbol];
   }
 }

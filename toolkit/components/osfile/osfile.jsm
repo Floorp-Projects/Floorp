@@ -7,10 +7,12 @@
  */
 
 if (typeof Components != "undefined") {
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = ["OS"];
   const { OS } = ChromeUtils.import(
     "resource://gre/modules/osfile/osfile_async_front.jsm"
   );
+  // eslint-disable-next-line mozilla/reject-global-this
   this.OS = OS;
 } else {
   /* eslint-env worker */
