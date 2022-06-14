@@ -183,7 +183,6 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
 }
 
 bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
-                              size_t* frameSizeOut,
                               BaselineBailoutInfo** bailoutInfo) {
   sp->checkInvariants();
 
@@ -202,9 +201,6 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
 
   JitSpew(JitSpew_IonBailouts, "Took invalidation bailout! Snapshot offset: %u",
           frame.snapshotOffset());
-
-  // Note: the frame size must be computed before we return from this function.
-  *frameSizeOut = frame.frameSize();
 
   MOZ_ASSERT(IsBaselineJitEnabled(cx));
 

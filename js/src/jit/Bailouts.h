@@ -153,7 +153,6 @@ struct BaselineBailoutInfo;
 
 // Called from the invalidation thunk.
 [[nodiscard]] bool InvalidationBailout(InvalidationBailoutStack* sp,
-                                       size_t* frameSizeOut,
                                        BaselineBailoutInfo** info);
 
 class ExceptionBailoutInfo {
