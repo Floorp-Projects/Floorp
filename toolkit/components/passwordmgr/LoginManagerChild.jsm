@@ -382,8 +382,7 @@ const observer = {
           let form = lazy.LoginFormFactory.createFromField(field);
           if (
             docState.generatedPasswordFields.has(field) &&
-            loginManagerChild._getFormFields(form).confirmPasswordField ===
-              field
+            docState._getFormFields(form).confirmPasswordField === field
           ) {
             break;
           }
@@ -1100,6 +1099,286 @@ class LoginFormState {
       confirmPasswordInput.setUserInput(passwordField.value);
       LoginFormState._highlightFilledField(confirmPasswordInput);
     }
+  }
+
+  /**
+   * Returns the username and password fields found in the form.
+   * Can handle complex forms by trying to figure out what the
+   * relevant fields are.
+   *
+   * @param {LoginForm} form
+   * @param {bool} isSubmission
+   * @param {Set} recipes
+   * @param {Object} options
+   * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
+   *                                         of the element.
+   * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
+   *
+   * usernameField may be null.
+   * newPasswordField may be null. If null, this is a username-only form.
+   * oldPasswordField may be null. If null, newPasswordField is just
+   * "theLoginField". If not null, the form is apparently a
+   * change-password field, with oldPasswordField containing the password
+   * that is being changed.
+   *
+   * Note that even though we can create a LoginForm from a text field,
+   * this method will only return a non-null usernameField if the
+   * LoginForm has a password field.
+   */
+  _getFormFields(form, isSubmission, recipes, { ignoreConnect = false } = {}) {
+    let usernameField = null;
+    let newPasswordField = null;
+    let oldPasswordField = null;
+    let confirmPasswordField = null;
+    let emptyResult = {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+      confirmPasswordField: null,
+    };
+
+    let pwFields = null;
+    let fieldOverrideRecipe = lazy.LoginRecipesContent.getFieldOverrides(
+      recipes,
+      form
+    );
+    if (fieldOverrideRecipe) {
+      lazy.log("Has fieldOverrideRecipe", fieldOverrideRecipe);
+      let pwOverrideField = lazy.LoginRecipesContent.queryLoginField(
+        form,
+        fieldOverrideRecipe.passwordSelector
+      );
+      if (pwOverrideField) {
+        lazy.log("Has pwOverrideField", pwOverrideField);
+        // The field from the password override may be in a different LoginForm.
+        let formLike = lazy.LoginFormFactory.createFromField(pwOverrideField);
+        pwFields = [
+          {
+            index: [...formLike.elements].indexOf(pwOverrideField),
+            element: pwOverrideField,
+          },
+        ];
+      }
+
+      let usernameOverrideField = lazy.LoginRecipesContent.queryLoginField(
+        form,
+        fieldOverrideRecipe.usernameSelector
+      );
+      if (usernameOverrideField) {
+        usernameField = usernameOverrideField;
+      }
+    }
+
+    if (!pwFields) {
+      // Locate the password field(s) in the form. Up to 3 supported.
+      // If there's no password field, there's nothing for us to do.
+      const minSubmitPasswordLength = 2;
+      pwFields = LoginFormState._getPasswordFields(form, {
+        fieldOverrideRecipe,
+        minPasswordLength: isSubmission ? minSubmitPasswordLength : 0,
+        ignoreConnect,
+      });
+    }
+
+    // Check whether this is a username-only form when the form doesn't have
+    // a password field. Note that recipes are not supported in username-only
+    // forms currently (Bug 1708455).
+    if (!pwFields) {
+      if (!lazy.LoginHelper.usernameOnlyFormEnabled) {
+        return emptyResult;
+      }
+
+      usernameField = this.getUsernameFieldFromUsernameOnlyForm(
+        form.rootElement,
+        fieldOverrideRecipe
+      );
+
+      if (usernameField) {
+        let acFieldName = usernameField.getAutocompleteInfo().fieldName;
+        lazy.log(
+          "Username field ",
+          usernameField,
+          "has name/value/autocomplete:",
+          usernameField.name,
+          "/",
+          usernameField.value,
+          "/",
+          acFieldName
+        );
+      }
+
+      return {
+        ...emptyResult,
+        usernameField,
+      };
+    }
+
+    if (!usernameField) {
+      // Searching backwards from the first password field until we find a field
+      // that looks like a "username" field. If no "username" field is found,
+      // consider an email-like field a username field, if any.
+      // If neither a username-like or an email-like field exists, assume the
+      // first text field before the password field is the username.
+      // We might not find a username field if the user is already logged in to the site.
+      //
+      // Note: We only search fields precede the first password field because we
+      // don't see sites putting a username field after a password field. We can
+      // extend searching to all fields in the form if this turns out not to be the case.
+
+      for (let i = pwFields[0].index - 1; i >= 0; i--) {
+        let element = form.elements[i];
+        if (!lazy.LoginHelper.isUsernameFieldType(element, { ignoreConnect })) {
+          continue;
+        }
+
+        if (
+          fieldOverrideRecipe?.notUsernameSelector &&
+          element.matches(fieldOverrideRecipe.notUsernameSelector)
+        ) {
+          continue;
+        }
+
+        // Assume the first text field is the username by default.
+        // It will be replaced if we find a likely username field afterward.
+        if (!usernameField) {
+          usernameField = element;
+        }
+
+        if (this.isProbablyAUsernameField(element)) {
+          // An username field is found, we are done.
+          usernameField = element;
+          break;
+        } else if (this.isProbablyAnEmailField(element)) {
+          // An email field is found, consider it a username field but continue
+          // to search for an "username" field.
+          // In current implementation, if another email field is found during
+          // the process, we will use the new one.
+          usernameField = element;
+        }
+      }
+    }
+
+    if (!usernameField) {
+      lazy.log("(form -- no username field found)");
+    } else {
+      let acFieldName = usernameField.getAutocompleteInfo().fieldName;
+      lazy.log(
+        "Username field ",
+        usernameField,
+        "has name/value/autocomplete:",
+        usernameField.name,
+        "/",
+        usernameField.value,
+        "/",
+        acFieldName
+      );
+    }
+
+    let pwGeneratedFields = pwFields.filter(pwField =>
+      this.generatedPasswordFields.has(pwField.element)
+    );
+    if (pwGeneratedFields.length) {
+      // we have at least the newPasswordField
+      [newPasswordField, confirmPasswordField] = pwGeneratedFields.map(
+        pwField => pwField.element
+      );
+      // if the user filled a field with a generated password,
+      // a field immediately previous to that is most likely the old password field
+      let idx = pwFields.findIndex(
+        pwField => pwField.element === newPasswordField
+      );
+      if (idx > 0) {
+        oldPasswordField = pwFields[idx - 1].element;
+      }
+      return {
+        ...emptyResult,
+        usernameField,
+        newPasswordField,
+        oldPasswordField: oldPasswordField || null,
+        confirmPasswordField: confirmPasswordField || null,
+      };
+    }
+
+    // If we're not submitting a form (it's a page load), there are no
+    // password field values for us to use for identifying fields. So,
+    // just assume the first password field is the one to be filled in.
+    if (!isSubmission || pwFields.length == 1) {
+      let passwordField = pwFields[0].element;
+      lazy.log(
+        "Password field",
+        passwordField,
+        "has name: ",
+        passwordField.name
+      );
+      return {
+        ...emptyResult,
+        usernameField,
+        newPasswordField: passwordField,
+        oldPasswordField: null,
+      };
+    }
+
+    // We're looking for both new and old password field
+    // Try to figure out what is in the form based on the password values.
+    let pw1 = pwFields[0].element.value;
+    let pw2 = pwFields[1] ? pwFields[1].element.value : null;
+    let pw3 = pwFields[2] ? pwFields[2].element.value : null;
+
+    if (pwFields.length == 3) {
+      // Look for two identical passwords, that's the new password
+
+      if (pw1 == pw2 && pw2 == pw3) {
+        // All 3 passwords the same? Weird! Treat as if 1 pw field.
+        newPasswordField = pwFields[0].element;
+        oldPasswordField = null;
+      } else if (pw1 == pw2) {
+        newPasswordField = pwFields[0].element;
+        oldPasswordField = pwFields[2].element;
+      } else if (pw2 == pw3) {
+        oldPasswordField = pwFields[0].element;
+        newPasswordField = pwFields[2].element;
+      } else if (pw1 == pw3) {
+        // A bit odd, but could make sense with the right page layout.
+        newPasswordField = pwFields[0].element;
+        oldPasswordField = pwFields[1].element;
+      } else {
+        // We can't tell which of the 3 passwords should be saved.
+        lazy.log("(form ignored -- all 3 pw fields differ)");
+        return emptyResult;
+      }
+    } else if (pw1 == pw2) {
+      // pwFields.length == 2
+      // Treat as if 1 pw field
+      newPasswordField = pwFields[0].element;
+      oldPasswordField = null;
+    } else {
+      // Just assume that the 2nd password is the new password
+      oldPasswordField = pwFields[0].element;
+      newPasswordField = pwFields[1].element;
+    }
+
+    lazy.log(
+      "Password field (new) id/name is: ",
+      newPasswordField.id,
+      " / ",
+      newPasswordField.name
+    );
+    if (oldPasswordField) {
+      lazy.log(
+        "Password field (old) id/name is: ",
+        oldPasswordField.id,
+        " / ",
+        oldPasswordField.name
+      );
+    } else {
+      lazy.log("Password field (old):", oldPasswordField);
+    }
+    return {
+      ...emptyResult,
+      usernameField,
+      newPasswordField,
+      oldPasswordField,
+    };
   }
 }
 
@@ -1863,10 +2142,11 @@ class LoginManagerChild extends JSWindowActorChild {
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
+    const docState = this.stateForDocument(acInputField.ownerDocument);
     let {
       usernameField,
       newPasswordField: passwordField,
-    } = this._getFormFields(acForm, false, recipes);
+    } = docState._getFormFields(acForm, false, recipes);
     if (usernameField == acInputField) {
       // Fill the form when a password field is present.
       if (passwordField) {
@@ -1904,288 +2184,6 @@ class LoginManagerChild extends JSWindowActorChild {
     } else {
       // Ignore the event, it's for some input we don't care about.
     }
-  }
-
-  /**
-   * Returns the username and password fields found in the form.
-   * Can handle complex forms by trying to figure out what the
-   * relevant fields are.
-   *
-   * @param {LoginForm} form
-   * @param {bool} isSubmission
-   * @param {Set} recipes
-   * @param {Object} options
-   * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
-   *                                         of the element.
-   * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
-   *
-   * usernameField may be null.
-   * newPasswordField may be null. If null, this is a username-only form.
-   * oldPasswordField may be null. If null, newPasswordField is just
-   * "theLoginField". If not null, the form is apparently a
-   * change-password field, with oldPasswordField containing the password
-   * that is being changed.
-   *
-   * Note that even though we can create a LoginForm from a text field,
-   * this method will only return a non-null usernameField if the
-   * LoginForm has a password field.
-   */
-  _getFormFields(form, isSubmission, recipes, { ignoreConnect = false } = {}) {
-    let usernameField = null;
-    let newPasswordField = null;
-    let oldPasswordField = null;
-    let confirmPasswordField = null;
-    let emptyResult = {
-      usernameField: null,
-      newPasswordField: null,
-      oldPasswordField: null,
-      confirmPasswordField: null,
-    };
-
-    let pwFields = null;
-    let fieldOverrideRecipe = lazy.LoginRecipesContent.getFieldOverrides(
-      recipes,
-      form
-    );
-    if (fieldOverrideRecipe) {
-      lazy.log("Has fieldOverrideRecipe", fieldOverrideRecipe);
-      let pwOverrideField = lazy.LoginRecipesContent.queryLoginField(
-        form,
-        fieldOverrideRecipe.passwordSelector
-      );
-      if (pwOverrideField) {
-        lazy.log("Has pwOverrideField", pwOverrideField);
-        // The field from the password override may be in a different LoginForm.
-        let formLike = lazy.LoginFormFactory.createFromField(pwOverrideField);
-        pwFields = [
-          {
-            index: [...formLike.elements].indexOf(pwOverrideField),
-            element: pwOverrideField,
-          },
-        ];
-      }
-
-      let usernameOverrideField = lazy.LoginRecipesContent.queryLoginField(
-        form,
-        fieldOverrideRecipe.usernameSelector
-      );
-      if (usernameOverrideField) {
-        usernameField = usernameOverrideField;
-      }
-    }
-
-    if (!pwFields) {
-      // Locate the password field(s) in the form. Up to 3 supported.
-      // If there's no password field, there's nothing for us to do.
-      const minSubmitPasswordLength = 2;
-      pwFields = LoginFormState._getPasswordFields(form, {
-        fieldOverrideRecipe,
-        minPasswordLength: isSubmission ? minSubmitPasswordLength : 0,
-        ignoreConnect,
-      });
-    }
-
-    const docState = this.stateForDocument(form.ownerDocument);
-
-    // Check whether this is a username-only form when the form doesn't have
-    // a password field. Note that recipes are not supported in username-only
-    // forms currently (Bug 1708455).
-    if (!pwFields) {
-      if (!lazy.LoginHelper.usernameOnlyFormEnabled) {
-        return emptyResult;
-      }
-
-      usernameField = docState.getUsernameFieldFromUsernameOnlyForm(
-        form.rootElement,
-        fieldOverrideRecipe
-      );
-
-      if (usernameField) {
-        let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-        lazy.log(
-          "Username field ",
-          usernameField,
-          "has name/value/autocomplete:",
-          usernameField.name,
-          "/",
-          usernameField.value,
-          "/",
-          acFieldName
-        );
-      }
-
-      return {
-        ...emptyResult,
-        usernameField,
-      };
-    }
-
-    if (!usernameField) {
-      // Searching backwards from the first password field until we find a field
-      // that looks like a "username" field. If no "username" field is found,
-      // consider an email-like field a username field, if any.
-      // If neither a username-like or an email-like field exists, assume the
-      // first text field before the password field is the username.
-      // We might not find a username field if the user is already logged in to the site.
-      //
-      // Note: We only search fields precede the first password field because we
-      // don't see sites putting a username field after a password field. We can
-      // extend searching to all fields in the form if this turns out not to be the case.
-
-      for (let i = pwFields[0].index - 1; i >= 0; i--) {
-        let element = form.elements[i];
-        if (!lazy.LoginHelper.isUsernameFieldType(element, { ignoreConnect })) {
-          continue;
-        }
-
-        if (
-          fieldOverrideRecipe?.notUsernameSelector &&
-          element.matches(fieldOverrideRecipe.notUsernameSelector)
-        ) {
-          continue;
-        }
-
-        // Assume the first text field is the username by default.
-        // It will be replaced if we find a likely username field afterward.
-        if (!usernameField) {
-          usernameField = element;
-        }
-
-        if (docState.isProbablyAUsernameField(element)) {
-          // An username field is found, we are done.
-          usernameField = element;
-          break;
-        } else if (docState.isProbablyAnEmailField(element)) {
-          // An email field is found, consider it a username field but continue
-          // to search for an "username" field.
-          // In current implementation, if another email field is found during
-          // the process, we will use the new one.
-          usernameField = element;
-        }
-      }
-    }
-
-    if (!usernameField) {
-      lazy.log("(form -- no username field found)");
-    } else {
-      let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-      lazy.log(
-        "Username field ",
-        usernameField,
-        "has name/value/autocomplete:",
-        usernameField.name,
-        "/",
-        usernameField.value,
-        "/",
-        acFieldName
-      );
-    }
-
-    let pwGeneratedFields = pwFields.filter(pwField =>
-      docState.generatedPasswordFields.has(pwField.element)
-    );
-    if (pwGeneratedFields.length) {
-      // we have at least the newPasswordField
-      [newPasswordField, confirmPasswordField] = pwGeneratedFields.map(
-        pwField => pwField.element
-      );
-      // if the user filled a field with a generated password,
-      // a field immediately previous to that is most likely the old password field
-      let idx = pwFields.findIndex(
-        pwField => pwField.element === newPasswordField
-      );
-      if (idx > 0) {
-        oldPasswordField = pwFields[idx - 1].element;
-      }
-      return {
-        ...emptyResult,
-        usernameField,
-        newPasswordField,
-        oldPasswordField: oldPasswordField || null,
-        confirmPasswordField: confirmPasswordField || null,
-      };
-    }
-
-    // If we're not submitting a form (it's a page load), there are no
-    // password field values for us to use for identifying fields. So,
-    // just assume the first password field is the one to be filled in.
-    if (!isSubmission || pwFields.length == 1) {
-      let passwordField = pwFields[0].element;
-      lazy.log(
-        "Password field",
-        passwordField,
-        "has name: ",
-        passwordField.name
-      );
-      return {
-        ...emptyResult,
-        usernameField,
-        newPasswordField: passwordField,
-        oldPasswordField: null,
-      };
-    }
-
-    // We're looking for both new and old password field
-    // Try to figure out what is in the form based on the password values.
-    let pw1 = pwFields[0].element.value;
-    let pw2 = pwFields[1] ? pwFields[1].element.value : null;
-    let pw3 = pwFields[2] ? pwFields[2].element.value : null;
-
-    if (pwFields.length == 3) {
-      // Look for two identical passwords, that's the new password
-
-      if (pw1 == pw2 && pw2 == pw3) {
-        // All 3 passwords the same? Weird! Treat as if 1 pw field.
-        newPasswordField = pwFields[0].element;
-        oldPasswordField = null;
-      } else if (pw1 == pw2) {
-        newPasswordField = pwFields[0].element;
-        oldPasswordField = pwFields[2].element;
-      } else if (pw2 == pw3) {
-        oldPasswordField = pwFields[0].element;
-        newPasswordField = pwFields[2].element;
-      } else if (pw1 == pw3) {
-        // A bit odd, but could make sense with the right page layout.
-        newPasswordField = pwFields[0].element;
-        oldPasswordField = pwFields[1].element;
-      } else {
-        // We can't tell which of the 3 passwords should be saved.
-        lazy.log("(form ignored -- all 3 pw fields differ)");
-        return emptyResult;
-      }
-    } else if (pw1 == pw2) {
-      // pwFields.length == 2
-      // Treat as if 1 pw field
-      newPasswordField = pwFields[0].element;
-      oldPasswordField = null;
-    } else {
-      // Just assume that the 2nd password is the new password
-      oldPasswordField = pwFields[0].element;
-      newPasswordField = pwFields[1].element;
-    }
-
-    lazy.log(
-      "Password field (new) id/name is: ",
-      newPasswordField.id,
-      " / ",
-      newPasswordField.name
-    );
-    if (oldPasswordField) {
-      lazy.log(
-        "Password field (old) id/name is: ",
-        oldPasswordField.id,
-        " / ",
-        oldPasswordField.name
-      );
-    } else {
-      lazy.log("Password field (old):", oldPasswordField);
-    }
-    return {
-      ...emptyResult,
-      usernameField,
-      newPasswordField,
-      oldPasswordField,
-    };
   }
 
   /**
@@ -2331,9 +2329,10 @@ class LoginManagerChild extends JSWindowActorChild {
 
     // Get the appropriate fields from the form.
     let recipes = lazy.LoginRecipesContent.getRecipes(origin, win);
+    const docState = this.stateForDocument(form.ownerDocument);
     let fields = {
       targetField,
-      ...this._getFormFields(form, true, recipes, { ignoreConnect }),
+      ...docState._getFormFields(form, true, recipes, { ignoreConnect }),
     };
 
     // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
@@ -2751,6 +2750,7 @@ class LoginManagerChild extends JSWindowActorChild {
       FORM_IN_CROSSORIGIN_SUBFRAME: 13,
       FILLED_USERNAME_ONLY_FORM: 14,
     };
+    const docState = this.stateForDocument(form.ownerDocument);
 
     // Heuristically determine what the user/pass fields are
     // We do this before checking to see if logins are stored,
@@ -2759,7 +2759,7 @@ class LoginManagerChild extends JSWindowActorChild {
     let {
       usernameField,
       newPasswordField: passwordField,
-    } = this._getFormFields(form, false, recipes);
+    } = docState._getFormFields(form, false, recipes);
 
     try {
       // Nothing to do if we have no matching (excluding form action
@@ -2994,7 +2994,6 @@ class LoginManagerChild extends JSWindowActorChild {
 
       // Fill the form
 
-      const docState = this.stateForDocument(form.ownerDocument);
       let willAutofill =
         usernameField || passwordField.value != selectedLogin.password;
       if (willAutofill) {
@@ -3145,11 +3144,12 @@ class LoginManagerChild extends JSWindowActorChild {
       formOrigin,
       doc.defaultView
     );
+    const docState = this.stateForDocument(form.ownerDocument);
     let {
       usernameField,
       newPasswordField,
       oldPasswordField,
-    } = this._getFormFields(form, false, recipes);
+    } = docState._getFormFields(form, false, recipes);
 
     return [usernameField, newPasswordField, oldPasswordField];
   }
