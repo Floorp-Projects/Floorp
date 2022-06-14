@@ -456,6 +456,21 @@ var AppConstants = Object.freeze({
     false,
 #endif
 
+  MOZ_CAN_FOLLOW_SYSTEM_TIME:
+#ifdef XP_WIN
+    true,
+#elif XP_MACOSX
+    true,
+#elif MOZ_WIDGET_GTK
+  #ifdef MOZ_ENABLE_DBUS
+    true,
+  #else
+    false,
+  #endif
+#else
+    false,
+#endif
+
   // Returns true for CN region build when distibution id set as 'MozillaOnline'
   isChinaRepack() {
     return (

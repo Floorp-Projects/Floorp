@@ -39,6 +39,7 @@ class nsAppShell : public nsBaseAppShell {
 #ifdef MOZ_ENABLE_DBUS
   DBusGConnection* mDBusConnection = nullptr;
   DBusGProxy* mLogin1Proxy = nullptr;
+  DBusGProxy* mTimedate1Proxy = nullptr;
 #endif
 };
 

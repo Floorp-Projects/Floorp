@@ -31,6 +31,12 @@ class nsBaseAppShell : public nsIAppShell,
 
   nsBaseAppShell();
 
+  /**
+   * Called by subclasses. Reset the internal timezone when the user's system
+   * timezone changes.
+   */
+  static void OnSystemTimezoneChange();
+
  protected:
   virtual ~nsBaseAppShell();
 

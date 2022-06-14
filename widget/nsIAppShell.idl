@@ -9,6 +9,12 @@
 interface nsIRunnable;
 %{ C++
 template <class T> struct already_AddRefed;
+
+/**
+ * After the default timezone changes, this topic is notified. Some systems may
+ * not support monitoring timezone.
+ */
+#define DEFAULT_TIMEZONE_CHANGED_OBSERVER_TOPIC "default-timezone-changed"
 %}
 
 /**

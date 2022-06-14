@@ -1,4 +1,5 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
+/* -*- tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -980,6 +981,10 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
                                              selector:@selector(applicationDidBecomeActive:)
                                                  name:NSApplicationDidBecomeActiveNotification
                                                object:NSApp];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(timezoneChanged:)
+                                                 name:NSSystemTimeZoneDidChangeNotification
+                                               object:nil];
   }
 
   return self;
@@ -1028,6 +1033,14 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
   if (observerService) {
     observerService->NotifyObservers(nullptr, NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC, nullptr);
   }
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
+- (void)timezoneChanged:(NSNotification*)aNotification {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  nsBaseAppShell::OnSystemTimezoneChange();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
