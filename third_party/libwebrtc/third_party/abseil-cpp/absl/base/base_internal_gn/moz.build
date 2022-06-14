@@ -59,6 +59,7 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_X11"] = "1"
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
