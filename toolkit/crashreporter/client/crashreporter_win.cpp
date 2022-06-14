@@ -23,7 +23,9 @@
 #include "windows/sender/crash_report_sender.h"
 #include "common/windows/string_utils-inl.h"
 
+#define CRASH_REPORTER_VALUE L"Enabled"
 #define SUBMIT_REPORT_VALUE L"SubmitCrashReport"
+#define SUBMIT_REPORT_OLD L"SubmitReport"
 #define INCLUDE_URL_VALUE L"IncludeURL"
 
 #define SENDURL_ORIGINAL L"https://crash-reports.mozilla.com/submit"
@@ -174,6 +176,9 @@ static void SetBoolKey(const wchar_t* key, const wchar_t* value, bool enabled) {
    *       code in in nsExceptionHandler.cpp.
    */
   HKEY hRegKey;
+
+  // remove the old value from the registry if it exists
+  RemoveUnusedValues(key, SUBMIT_REPORT_OLD);
 
   if (RegCreateKey(HKEY_CURRENT_USER, key, &hRegKey) == ERROR_SUCCESS) {
     DWORD data = (enabled ? 1 : 0);
