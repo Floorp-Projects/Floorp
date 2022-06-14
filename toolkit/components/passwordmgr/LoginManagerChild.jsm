@@ -1424,6 +1424,65 @@ class LoginFormState {
 
     return [usernameField, newPasswordField, oldPasswordField];
   }
+
+  /**
+   * Verify if a field is a valid login form field and
+   * returns some information about it's LoginForm.
+   *
+   * @param {Element} aField
+   *                  A form field we want to verify.
+   *
+   * @returns {Object} an object with information about the
+   *                   LoginForm username and password field
+   *                   or null if the passed field is invalid.
+   */
+  getFieldContext(aField) {
+    // If the element is not a proper form field, return null.
+    if (
+      !HTMLInputElement.isInstance(aField) ||
+      (!aField.hasBeenTypePassword &&
+        !lazy.LoginHelper.isUsernameFieldType(aField)) ||
+      aField.nodePrincipal.isNullPrincipal ||
+      aField.nodePrincipal.schemeIs("about") ||
+      !aField.ownerDocument
+    ) {
+      return null;
+    }
+    let { hasBeenTypePassword } = aField;
+
+    // This array provides labels that correspond to the return values from
+    // `getUserNameAndPasswordFields` so we can know which one aField is.
+    const LOGIN_FIELD_ORDER = ["username", "new-password", "current-password"];
+    let usernameAndPasswordFields = this.getUserNameAndPasswordFields(aField);
+    let fieldNameHint;
+    let indexOfFieldInUsernameAndPasswordFields = usernameAndPasswordFields.indexOf(
+      aField
+    );
+    if (indexOfFieldInUsernameAndPasswordFields == -1) {
+      // For fields in the form that are neither username nor password,
+      // set fieldNameHint to "other". Right now, in contextmenu, we treat both
+      // "username" and "other" field as username fields.
+      fieldNameHint = hasBeenTypePassword ? "current-password" : "other";
+    } else {
+      fieldNameHint =
+        LOGIN_FIELD_ORDER[indexOfFieldInUsernameAndPasswordFields];
+    }
+    let [, newPasswordField] = usernameAndPasswordFields;
+
+    return {
+      activeField: {
+        disabled: aField.disabled || aField.readOnly,
+        fieldNameHint,
+      },
+      // `passwordField` may be the same as `activeField`.
+      passwordField: {
+        found: !!newPasswordField,
+        disabled:
+          newPasswordField &&
+          (newPasswordField.disabled || newPasswordField.readOnly),
+      },
+    };
+  }
 }
 
 /**
@@ -3151,67 +3210,5 @@ class LoginManagerChild extends JSWindowActorChild {
         formid: form.rootElement.id,
       });
     }
-  }
-
-  /**
-   * Verify if a field is a valid login form field and
-   * returns some information about it's LoginForm.
-   *
-   * @param {Element} aField
-   *                  A form field we want to verify.
-   *
-   * @returns {Object} an object with information about the
-   *                   LoginForm username and password field
-   *                   or null if the passed field is invalid.
-   */
-  getFieldContext(aField) {
-    // If the element is not a proper form field, return null.
-    if (
-      !HTMLInputElement.isInstance(aField) ||
-      (!aField.hasBeenTypePassword &&
-        !lazy.LoginHelper.isUsernameFieldType(aField)) ||
-      aField.nodePrincipal.isNullPrincipal ||
-      aField.nodePrincipal.schemeIs("about") ||
-      !aField.ownerDocument
-    ) {
-      return null;
-    }
-    let { hasBeenTypePassword } = aField;
-
-    // This array provides labels that correspond to the return values from
-    // `getUserNameAndPasswordFields` so we can know which one aField is.
-    const LOGIN_FIELD_ORDER = ["username", "new-password", "current-password"];
-    const docState = this.stateForDocument(aField.ownerDocument);
-    let usernameAndPasswordFields = docState.getUserNameAndPasswordFields(
-      aField
-    );
-    let fieldNameHint;
-    let indexOfFieldInUsernameAndPasswordFields = usernameAndPasswordFields.indexOf(
-      aField
-    );
-    if (indexOfFieldInUsernameAndPasswordFields == -1) {
-      // For fields in the form that are neither username nor password,
-      // set fieldNameHint to "other". Right now, in contextmenu, we treat both
-      // "username" and "other" field as username fields.
-      fieldNameHint = hasBeenTypePassword ? "current-password" : "other";
-    } else {
-      fieldNameHint =
-        LOGIN_FIELD_ORDER[indexOfFieldInUsernameAndPasswordFields];
-    }
-    let [, newPasswordField] = usernameAndPasswordFields;
-
-    return {
-      activeField: {
-        disabled: aField.disabled || aField.readOnly,
-        fieldNameHint,
-      },
-      // `passwordField` may be the same as `activeField`.
-      passwordField: {
-        found: !!newPasswordField,
-        disabled:
-          newPasswordField &&
-          (newPasswordField.disabled || newPasswordField.readOnly),
-      },
-    };
   }
 }

@@ -584,9 +584,9 @@ class ContextMenuChild extends JSWindowActorChild {
     docLocation = docLocation && docLocation.spec;
     let frameID = lazy.WebNavigationFrames.getFrameId(doc.defaultView);
     let frameBrowsingContextID = doc.defaultView.docShell.browsingContext.id;
-    let loginFillInfo = lazy.LoginManagerChild.forWindow(
-      doc.defaultView
-    ).getFieldContext(aEvent.composedTarget);
+    const loginManagerChild = lazy.LoginManagerChild.forWindow(doc.defaultView);
+    const docState = loginManagerChild.stateForDocument(doc);
+    const loginFillInfo = docState.getFieldContext(aEvent.composedTarget);
 
     let disableSetDesktopBackground = null;
 
