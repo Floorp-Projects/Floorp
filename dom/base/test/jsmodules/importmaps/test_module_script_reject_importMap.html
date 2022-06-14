@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+  <meta charset=utf-8>
+  <title>Test import map should be rejected.</title>
+</head>
+<body onload='testLoaded()'>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<!--There is a module load before the import map tag, so the import map cannot-->
+<!--be accepted according to the spec.-->
+<!--And because the import map is rejected, so the module specifier-->
+<!--"./module_simpleExport.js" won't be remapped to-->
+<!--"./scope1/module_simpleExport.js".-->
+
+<script src="./module_simpleExport.js" type="module">
+</script>
+
+<script type="importmap" onerror='importMapError()'>
+{
+  "imports": {
+    "./module_simpleExport.js": "./scope1/module_simpleExport.js"
+  }
+}
+</script>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let hasError = false;
+  function importMapError() {
+    hasError = true;
+  }
+
+  function testLoaded() {
+    import("./module_simpleExport.js").then((ns) => {
+      ok(ns.x == 42, 'Check simple imported value result: ' + ns.x);
+      ok(hasError, "onerror of the import map should be called.");
+    }).catch((e) => {
+      ok(false, "throws " + e);
+    }).then(() => {
+      SimpleTest.finish();
+    });
+  }
+</script>
+</body>
