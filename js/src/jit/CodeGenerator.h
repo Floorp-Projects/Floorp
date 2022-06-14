@@ -194,7 +194,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitCopyValuesForApply(Register argvSrcBase, Register argvIndex,
                               Register copyreg, size_t argvSrcOffset,
                               size_t argvDstOffset);
-  void emitPopArguments(Register extraStackSize);
+  void emitRestoreStackPointerFromFP();
   void emitPushArguments(Register argcreg, Register extraStackSpace,
                          Register copyreg, uint32_t extraFormals);
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,

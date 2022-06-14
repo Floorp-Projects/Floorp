@@ -5585,7 +5585,6 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
 
   // Push the space used by the arguments.
   masm.moveStackPtrTo(objreg);
-  masm.Push(extraStackSize);
 
   pushArg(objreg);                                     // argv.
   pushArg(ToRegister(apply->getArgc()));               // argc.
@@ -5593,12 +5592,11 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
   pushArg(Imm32(apply->mir()->isConstructing()));      // isConstructing.
   pushArg(ToRegister(apply->getFunction()));           // JSFunction*.
 
-  // This specialization of callVM restores the extraStackSize after the call.
+  // This specialization of callVM creates a frame descriptor that includes
+  // extraStackSize.
   using Fn = bool (*)(JSContext*, HandleObject, bool, bool, uint32_t, Value*,
                       MutableHandleValue);
   callVM<Fn, jit::InvokeFunction>(apply, &extraStackSize);
-
-  masm.Pop(extraStackSize);
 }
 
 // Do not bailout after the execution of this function since the stack no longer
@@ -5719,9 +5717,15 @@ void CodeGenerator::emitCopyValuesForApply(Register argvSrcBase,
   masm.decBranchPtr(Assembler::NonZero, argvIndex, Imm32(1), &loop);
 }
 
-void CodeGenerator::emitPopArguments(Register extraStackSpace) {
-  // Pop |this| and Arguments.
-  masm.freeStack(extraStackSpace);
+void CodeGenerator::emitRestoreStackPointerFromFP() {
+  // This is used to restore the stack pointer after a call with a dynamic
+  // number of arguments.
+
+  MOZ_ASSERT(masm.framePushed() == frameSize());
+
+  int32_t offset = -int32_t(frameSize() - JitFrameLayout::FramePointerOffset);
+  masm.computeEffectiveAddress(Address(FramePointer, offset),
+                               masm.getStackPointer());
 }
 
 void CodeGenerator::emitPushArguments(Register argcreg,
@@ -6003,7 +6007,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     }
 #endif
 
-    emitPopArguments(extraStackSpace);
+    emitRestoreStackPointerFromFP();
     return;
   }
 
@@ -6092,15 +6096,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
       masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
     }
 
-    // Recover the number of arguments from the frame descriptor.
-    masm.loadPtr(Address(masm.getStackPointer(), 0), stackSpace);
-    masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), stackSpace);
-    masm.subPtr(Imm32(pushed), stackSpace);
-
-    // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-    // The return address has already been removed from the Ion frame.
-    int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void*);
-    masm.adjustStack(prefixGarbage);
+    // Discard JitFrameLayout. The return address has already been removed from
+    // the Ion frame.
+    masm.freeStack(sizeof(JitFrameLayout) - sizeof(void*));
     masm.jump(&end);
   }
 
@@ -6130,7 +6128,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   }
 
   // Pop arguments and continue.
-  emitPopArguments(extraStackSpace);
+  emitRestoreStackPointerFromFP();
 }
 
 void CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply) {
