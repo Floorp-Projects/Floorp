@@ -50,6 +50,9 @@ class Screen final : public nsIScreen {
   const DesktopToLayoutDeviceScale& GetContentsScaleFactor() const {
     return mContentsScale;
   }
+  const CSSToLayoutDeviceScale& GetDefaultCSSScaleFactor() const {
+    return mDefaultCssScale;
+  }
 
  private:
   virtual ~Screen() = default;

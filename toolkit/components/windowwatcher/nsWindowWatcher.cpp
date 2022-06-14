@@ -539,7 +539,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   // get various interfaces for aDocShellItem, used throughout this method
   CSSToDesktopScale cssToDesktopScale(1.0f);
   if (nsCOMPtr<nsIBaseWindow> win = do_QueryInterface(parentTreeOwner)) {
-    cssToDesktopScale = win->GetUnscaledCSSToDesktopScale();
+    cssToDesktopScale = win->GetCSSToDesktopScale();
   }
   SizeSpec sizeSpec = CalcSizeSpec(features, false, cssToDesktopScale);
   sizeSpec.ScaleBy(aOpenerFullZoom);
@@ -723,7 +723,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   CSSToDesktopScale cssToDesktopScale(1.0);
   if (nsCOMPtr<nsIBaseWindow> win = do_QueryInterface(parentDocShell)) {
-    cssToDesktopScale = win->GetUnscaledCSSToDesktopScale();
+    cssToDesktopScale = win->GetCSSToDesktopScale();
   }
   SizeSpec sizeSpec =
       CalcSizeSpec(features, hasChromeParent, cssToDesktopScale);
@@ -2209,7 +2209,9 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
     DesktopToLayoutDeviceScale devToDesktopScale =
         treeOwnerAsWin->DevicePixelsPerDesktopPixel();
 
-    LayoutDeviceIntRect devPxRect = treeOwnerAsWin->GetPositionAndSize();
+    LayoutDeviceIntRect devPxRect;
+    treeOwnerAsWin->GetPositionAndSize(&devPxRect.x, &devPxRect.y,
+                                       &devPxRect.width, &devPxRect.height);
     width = (LayoutDeviceCoord(devPxRect.width) / cssToDevScale).Rounded();
     height = (LayoutDeviceCoord(devPxRect.height) / cssToDevScale).Rounded();
     left = (LayoutDeviceCoord(devPxRect.x) / devToDesktopScale).Rounded();
@@ -2285,8 +2287,7 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
       CSSIntCoord winWidth = width + extraWidth;
       CSSIntCoord winHeight = height + extraHeight;
 
-      auto screenCssToDesktopScale = screen->GetCSSToDesktopScale();
-
+      const auto screenCssToDesktopScale = screen->GetCSSToDesktopScale();
       const DesktopIntRect screenDesktopRect = screen->GetAvailRectDisplayPix();
       // Get screen dimensions (in CSS pixels)
       const CSSSize screenCssSize =

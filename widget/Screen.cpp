@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/Hal.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla::widget {
@@ -137,7 +136,6 @@ Screen::GetDefaultCSSScaleFactor(double* aOutScale) {
   } else {
     *aOutScale = mDefaultCssScale.scale;
   }
-  *aOutScale *= LookAndFeel::SystemZoomSettings().mFullZoom;
   return NS_OK;
 }
 

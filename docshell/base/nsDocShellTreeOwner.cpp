@@ -552,8 +552,14 @@ nsDocShellTreeOwner::Destroy() {
   return NS_ERROR_NULL_POINTER;
 }
 
-double nsDocShellTreeOwner::GetWidgetCSSToDeviceScale() {
-  return mWebBrowser ? mWebBrowser->GetWidgetCSSToDeviceScale() : 1.0;
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(double* aScale) {
+  if (mWebBrowser) {
+    return mWebBrowser->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+  }
+
+  *aScale = 1.0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

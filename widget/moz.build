@@ -225,7 +225,6 @@ UNIFIED_SOURCES += [
     "nsDragServiceProxy.cpp",
     "nsFilePickerProxy.cpp",
     "nsHTMLFormatConverter.cpp",
-    "nsIBaseWindow.cpp",
     "nsIDeviceContextSpec.cpp",
     "nsIWidgetListener.cpp",
     "nsPrimitiveHelpers.cpp",
