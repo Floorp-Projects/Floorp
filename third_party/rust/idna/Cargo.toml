@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "idna"
-version = "0.2.1"
+version = "0.2.3"
 authors = ["The rust-url developers"]
 autotests = false
 description = "IDNA (Internationalizing Domain Names in Applications) and Punycode."
@@ -40,7 +40,7 @@ version = "0.1"
 version = "0.3"
 
 [dependencies.unicode-normalization]
-version = "0.1.5"
+version = "0.1.17"
 [dev-dependencies.assert_matches]
 version = "1.3"
 

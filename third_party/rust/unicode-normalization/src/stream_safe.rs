@@ -1,8 +1,9 @@
-use normalize::{
-    hangul_decomposition_length,
-    is_hangul_syllable,
+use crate::lookups::{
+    canonical_combining_class, canonical_fully_decomposed, compatibility_fully_decomposed,
+    stream_safe_trailing_nonstarters,
 };
-use tables;
+use crate::normalize::{hangul_decomposition_length, is_hangul_syllable};
+use crate::tables::stream_safe_leading_nonstarters;
 
 pub(crate) const MAX_NONSTARTERS: usize = 30;
 const COMBINING_GRAPHEME_JOINER: char = '\u{034F}';
@@ -18,34 +19,39 @@ pub struct StreamSafe<I> {
 
 impl<I> StreamSafe<I> {
     pub(crate) fn new(iter: I) -> Self {
-        Self { iter, nonstarter_count: 0, buffer: None }
+        Self {
+            iter,
+            nonstarter_count: 0,
+            buffer: None,
+        }
     }
 }
 
-impl<I: Iterator<Item=char>> Iterator for StreamSafe<I> {
+impl<I: Iterator<Item = char>> Iterator for StreamSafe<I> {
     type Item = char;
 
     #[inline]
     fn next(&mut self) -> Option<char> {
-        if let Some(ch) = self.buffer.take() {
-            return Some(ch);
-        }
-        let next_ch = match self.iter.next() {
+        let next_ch = match self.buffer.take().or_else(|| self.iter.next()) {
             None => return None,
             Some(c) => c,
         };
         let d = classify_nonstarters(next_ch);
         if self.nonstarter_count + d.leading_nonstarters > MAX_NONSTARTERS {
-            self.buffer = Some(next_ch);
+            // Since we're emitting a CGJ, the suffix of the emitted string in NFKD has no trailing
+            // nonstarters, so we can reset the counter to zero. Put `next_ch` back into the
+            // iterator (via `self.buffer`), and we'll reclassify it next iteration.
             self.nonstarter_count = 0;
+            self.buffer = Some(next_ch);
             return Some(COMBINING_GRAPHEME_JOINER);
         }
 
-        // No starters in the decomposition, so keep accumulating
+        // Is the character all nonstarters in NFKD? If so, increment our counter of contiguous
+        // nonstarters in NKFD.
         if d.leading_nonstarters == d.decomposition_len {
             self.nonstarter_count += d.decomposition_len;
         }
-        // Otherwise, restart the nonstarter counter.
+        // Otherwise, reset the counter to the decomposition's number of trailing nonstarters.
         else {
             self.nonstarter_count = d.trailing_nonstarters;
         }
@@ -68,7 +74,7 @@ pub(crate) fn classify_nonstarters(c: char) -> Decomposition {
             leading_nonstarters: 0,
             trailing_nonstarters: 0,
             decomposition_len: 1,
-        }
+        };
     }
     // Next, special case Hangul, since it's not handled by our tables.
     if is_hangul_syllable(c) {
@@ -78,18 +84,15 @@ pub(crate) fn classify_nonstarters(c: char) -> Decomposition {
             decomposition_len: hangul_decomposition_length(c),
         };
     }
-    let decomp = tables::compatibility_fully_decomposed(c)
-        .or_else(|| tables::canonical_fully_decomposed(c));
+    let decomp = compatibility_fully_decomposed(c).or_else(|| canonical_fully_decomposed(c));
     match decomp {
-        Some(decomp) => {
-            Decomposition {
-                leading_nonstarters: tables::stream_safe_leading_nonstarters(c),
-                trailing_nonstarters: tables::stream_safe_trailing_nonstarters(c),
-                decomposition_len: decomp.len(),
-            }
+        Some(decomp) => Decomposition {
+            leading_nonstarters: stream_safe_leading_nonstarters(c),
+            trailing_nonstarters: stream_safe_trailing_nonstarters(c),
+            decomposition_len: decomp.len(),
         },
         None => {
-            let is_nonstarter = tables::canonical_combining_class(c) != 0;
+            let is_nonstarter = canonical_combining_class(c) != 0;
             let nonstarter = if is_nonstarter { 1 } else { 0 };
             Decomposition {
                 leading_nonstarters: nonstarter,
@@ -102,26 +105,17 @@ pub(crate) fn classify_nonstarters(c: char) -> Decomposition {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        StreamSafe,
-        classify_nonstarters,
-    };
-    use std::char;
-    use normalization_tests::NORMALIZATION_TESTS;
-    use normalize::decompose_compatible;
-    use tables;
+    use super::{classify_nonstarters, StreamSafe};
+    use crate::lookups::canonical_combining_class;
+    use crate::normalize::decompose_compatible;
+
+    #[cfg(not(feature = "std"))]
+    use crate::no_std_prelude::*;
+
+    use core::char;
 
     fn stream_safe(s: &str) -> String {
         StreamSafe::new(s.chars()).collect()
-    }
-
-    #[test]
-    fn test_normalization_tests_unaffected() {
-        for test in NORMALIZATION_TESTS {
-            for &s in &[test.source, test.nfc, test.nfd, test.nfkc, test.nfkd] {
-                assert_eq!(stream_safe(s), s);
-            }
-        }
     }
 
     #[test]
@@ -130,7 +124,19 @@ mod tests {
         assert_eq!(stream_safe(technically_okay), technically_okay);
 
         let too_much = "Da\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{031d}\u{032e}ngerzone";
-        assert_ne!(stream_safe(too_much), too_much);
+        let fixed_it = "Da\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{031d}\u{034f}\u{032e}ngerzone";
+        assert_eq!(stream_safe(too_much), fixed_it);
+
+        let woah_nelly = "Da\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{031d}\u{032e}\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{031d}\u{032e}ngerzone";
+        let its_cool = "Da\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{031d}\u{034f}\u{032e}\u{0300}\u{0301}\u{0302}\u{0303}\u{0304}\u{0305}\u{0306}\u{0307}\u{0308}\u{0309}\u{030a}\u{030b}\u{030c}\u{030d}\u{030e}\u{030f}\u{0310}\u{0311}\u{0312}\u{0313}\u{0314}\u{0315}\u{0316}\u{0317}\u{0318}\u{0319}\u{031a}\u{031b}\u{031c}\u{034f}\u{031d}\u{032e}ngerzone";
+        assert_eq!(stream_safe(woah_nelly), its_cool);
+    }
+
+    #[test]
+    fn test_all_nonstarters() {
+        let s = "\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}\u{0300}";
+        let expected = "\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{034F}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}\u{300}";
+        assert_eq!(stream_safe(s), expected);
     }
 
     #[test]
@@ -142,19 +148,19 @@ mod tests {
                 None => continue,
             };
             let c = classify_nonstarters(ch);
-            let mut s = vec![];
+            let mut s = Vec::new();
             decompose_compatible(ch, |c| s.push(c));
 
             assert_eq!(s.len(), c.decomposition_len);
 
             let num_leading = s
                 .iter()
-                .take_while(|&c| tables::canonical_combining_class(*c) != 0)
+                .take_while(|&c| canonical_combining_class(*c) != 0)
                 .count();
             let num_trailing = s
                 .iter()
                 .rev()
-                .take_while(|&c| tables::canonical_combining_class(*c) != 0)
+                .take_while(|&c| canonical_combining_class(*c) != 0)
                 .count();
 
             assert_eq!(num_leading, c.leading_nonstarters);

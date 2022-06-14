@@ -114,3 +114,26 @@ fn test_v8_bidi_rules() {
     // Bidi chars may be punycode-encoded
     assert!(config.to_ascii("xn--0ca24w").is_err());
 }
+
+#[test]
+fn emoji_domains() {
+    // HOT BEVERAGE is allowed here...
+    let config = idna::Config::default()
+        .verify_dns_length(true)
+        .use_std3_ascii_rules(true);
+    assert_eq!(config.to_ascii("☕.com").unwrap(), "xn--53h.com");
+
+    // ... but not here
+    let config = idna::Config::default()
+        .verify_dns_length(true)
+        .use_std3_ascii_rules(true)
+        .use_idna_2008_rules(true);
+    let error = format!("{:?}", config.to_ascii("☕.com").unwrap_err());
+    assert!(error.contains("disallowed_in_idna_2008"));
+}
+
+#[test]
+fn unicode_before_delimiter() {
+    let config = idna::Config::default();
+    assert!(config.to_ascii("xn--f\u{34a}-PTP").is_err());
+}

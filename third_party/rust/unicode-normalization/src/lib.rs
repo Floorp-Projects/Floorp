@@ -34,81 +34,103 @@
 //!
 //! ```toml
 //! [dependencies]
-//! unicode-normalization = "0.1.7"
+//! unicode-normalization = "0.1.19"
 //! ```
 
 #![deny(missing_docs, unsafe_code)]
-#![doc(html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
-       html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png")]
+#![doc(
+    html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
+    html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png"
+)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-pub use tables::UNICODE_VERSION;
-pub use decompose::Decompositions;
-pub use quick_check::{
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate core;
+
+extern crate tinyvec;
+
+pub use crate::decompose::Decompositions;
+pub use crate::quick_check::{
+    is_nfc, is_nfc_quick, is_nfc_stream_safe, is_nfc_stream_safe_quick, is_nfd, is_nfd_quick,
+    is_nfd_stream_safe, is_nfd_stream_safe_quick, is_nfkc, is_nfkc_quick, is_nfkd, is_nfkd_quick,
     IsNormalized,
-    is_nfc,
-    is_nfc_quick,
-    is_nfc_stream_safe,
-    is_nfc_stream_safe_quick,
-    is_nfd,
-    is_nfd_quick,
-    is_nfd_stream_safe,
-    is_nfd_stream_safe_quick,
 };
-pub use recompose::Recompositions;
-pub use stream_safe::StreamSafe;
-use std::str::Chars;
+pub use crate::recompose::Recompositions;
+pub use crate::replace::Replacements;
+pub use crate::stream_safe::StreamSafe;
+pub use crate::tables::UNICODE_VERSION;
+use core::str::Chars;
+
+mod no_std_prelude;
 
 mod decompose;
+mod lookups;
 mod normalize;
-mod recompose;
+mod perfect_hash;
 mod quick_check;
+mod recompose;
+mod replace;
 mod stream_safe;
+
+#[rustfmt::skip]
 mod tables;
 
+#[doc(hidden)]
+pub mod __test_api;
 #[cfg(test)]
 mod test;
-#[cfg(test)]
-mod normalization_tests;
 
 /// Methods for composing and decomposing characters.
 pub mod char {
-    pub use normalize::{decompose_canonical, decompose_compatible, compose};
+    pub use crate::normalize::{
+        compose, decompose_canonical, decompose_cjk_compat_variants, decompose_compatible,
+    };
 
-    /// Look up the canonical combining class of a character.
-    pub use tables::canonical_combining_class;
+    pub use crate::lookups::{canonical_combining_class, is_combining_mark};
 
-    /// Return whether the given character is a combining mark (`General_Category=Mark`)
-    pub use tables::is_combining_mark;
+    /// Return whether the given character is assigned (`General_Category` != `Unassigned`)
+    /// and not Private-Use (`General_Category` != `Private_Use`), in the supported version
+    /// of Unicode.
+    pub use crate::tables::is_public_assigned;
 }
-
 
 /// Methods for iterating over strings while applying Unicode normalizations
 /// as described in
 /// [Unicode Standard Annex #15](http://www.unicode.org/reports/tr15/).
-pub trait UnicodeNormalization<I: Iterator<Item=char>> {
+pub trait UnicodeNormalization<I: Iterator<Item = char>> {
     /// Returns an iterator over the string in Unicode Normalization Form D
     /// (canonical decomposition).
-    #[inline]
     fn nfd(self) -> Decompositions<I>;
 
     /// Returns an iterator over the string in Unicode Normalization Form KD
     /// (compatibility decomposition).
-    #[inline]
     fn nfkd(self) -> Decompositions<I>;
 
     /// An Iterator over the string in Unicode Normalization Form C
     /// (canonical decomposition followed by canonical composition).
-    #[inline]
     fn nfc(self) -> Recompositions<I>;
 
     /// An Iterator over the string in Unicode Normalization Form KC
     /// (compatibility decomposition followed by canonical composition).
-    #[inline]
     fn nfkc(self) -> Recompositions<I>;
+
+    /// A transformation which replaces CJK Compatibility Ideograph codepoints
+    /// with normal forms using Standardized Variation Sequences. This is not
+    /// part of the canonical or compatibility decomposition algorithms, but
+    /// performing it before those algorithms produces normalized output which
+    /// better preserves the intent of the original text.
+    ///
+    /// Note that many systems today ignore variation selectors, so these
+    /// may not immediately help text display as intended, but they at
+    /// least preserve the information in a standardized form, giving
+    /// implementations the option to recognize them.
+    fn cjk_compat_variants(self) -> Replacements<I>;
 
     /// An Iterator over the string with Conjoining Grapheme Joiner characters
     /// inserted according to the Stream-Safe Text Process (UAX15-D4)
-    #[inline]
     fn stream_safe(self) -> StreamSafe<I>;
 }
 
@@ -134,12 +156,17 @@ impl<'a> UnicodeNormalization<Chars<'a>> for &'a str {
     }
 
     #[inline]
+    fn cjk_compat_variants(self) -> Replacements<Chars<'a>> {
+        replace::new_cjk_compat_variants(self.chars())
+    }
+
+    #[inline]
     fn stream_safe(self) -> StreamSafe<Chars<'a>> {
         StreamSafe::new(self.chars())
     }
 }
 
-impl<I: Iterator<Item=char>> UnicodeNormalization<I> for I {
+impl<I: Iterator<Item = char>> UnicodeNormalization<I> for I {
     #[inline]
     fn nfd(self) -> Decompositions<I> {
         decompose::new_canonical(self)
@@ -158,6 +185,11 @@ impl<I: Iterator<Item=char>> UnicodeNormalization<I> for I {
     #[inline]
     fn nfkc(self) -> Recompositions<I> {
         recompose::new_compatible(self)
+    }
+
+    #[inline]
+    fn cjk_compat_variants(self) -> Replacements<I> {
+        replace::new_cjk_compat_variants(self)
     }
 
     #[inline]

@@ -1,8 +1,9 @@
 #![feature(test)]
-#![feature(iterator_step_by)]
-extern crate unicode_normalization;
-extern crate test;
 
+extern crate test;
+extern crate unicode_normalization;
+
+use std::fs;
 use test::Bencher;
 use unicode_normalization::UnicodeNormalization;
 
@@ -78,6 +79,40 @@ fn bench_nfc_ascii(b: &mut Bencher) {
 #[bench]
 fn bench_nfd_ascii(b: &mut Bencher) {
     b.iter(|| ASCII.nfd().count());
+}
+
+#[bench]
+fn bench_nfc_long(b: &mut Bencher) {
+    let long = fs::read_to_string("benches/long.txt").unwrap();
+    b.iter(|| long.nfc().count());
+}
+
+#[bench]
+fn bench_nfd_long(b: &mut Bencher) {
+    let long = fs::read_to_string("benches/long.txt").unwrap();
+    b.iter(|| long.nfd().count());
+}
+
+#[bench]
+fn bench_nfkc_ascii(b: &mut Bencher) {
+    b.iter(|| ASCII.nfkc().count());
+}
+
+#[bench]
+fn bench_nfkd_ascii(b: &mut Bencher) {
+    b.iter(|| ASCII.nfkd().count());
+}
+
+#[bench]
+fn bench_nfkc_long(b: &mut Bencher) {
+    let long = fs::read_to_string("benches/long.txt").unwrap();
+    b.iter(|| long.nfkc().count());
+}
+
+#[bench]
+fn bench_nfkd_long(b: &mut Bencher) {
+    let long = fs::read_to_string("benches/long.txt").unwrap();
+    b.iter(|| long.nfkd().count());
 }
 
 #[bench]

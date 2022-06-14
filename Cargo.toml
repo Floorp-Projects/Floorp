@@ -132,6 +132,9 @@ nom = { path = "build/rust/nom" }
 # dependencies on windows-sys.
 parking_lot = { path = "build/rust/parking_lot" }
 
+# Override tinyvec with smallvec
+tinyvec = { path = "build/rust/tinyvec" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
