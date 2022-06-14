@@ -16,16 +16,16 @@ add_task(async function about_firefoxview_smoke_test() {
         "tabs-pickup-container element exists"
       );
       ok(
-        document.getElementById("colorways-button"),
-        "colorways-button element exists"
+        document.getElementById("colorways-active-collection-template"),
+        "colorways-active-collection-template element exists"
       );
       ok(
         document.getElementById("recently-closed-tabs-container"),
         "recently-closed-tabs-container element exists"
       );
       ok(
-        document.getElementById("colorways-no-collection-message"),
-        "colorways-no-collection-message element exists"
+        document.getElementById("colorways-no-collection-template"),
+        "colorways-no-collection-template element exists"
       );
     }
   );

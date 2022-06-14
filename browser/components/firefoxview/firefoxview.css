@@ -108,38 +108,62 @@ body > main > aside {
 }
 
 #colorways.no-collection {
+  display: block;
   background: linear-gradient(51.95deg, #7542E5 -8.36%, #C953F2 98.73%);
   border-radius: 8px;
 }
 
+#colorways,
 #colorways.no-collection > div {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
 }
 
 #colorways.no-collection > div {
+  height: 100%;
+  justify-content: flex-end;
   background: url("chrome://browser/content/colorway-background.svg");
   background-size: 100%;
   background-position: center top;
   background-repeat: no-repeat;
 }
 
-#colorways.no-collection > div > #colorways-button {
-  display: none;
-}
-
-#colorways.no-collection > div > #colorways-no-collection-message {
-  display: block;
-}
-
-#colorways-no-collection-message {
-  display: none;
+#try-colorways-description {
   color: #FFF;
   font-size: 2em;
   text-align: center;
   margin: 0 1em 1em;
+}
+
+#colorways-collection-description,
+#colorways-button {
+  margin: 0.4em 0;
+  align-self: flex-start;
+}
+
+#colorways-collection-title {
+  margin: 0;
+  padding: 0;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+#colorways-collection-expiry-date {
+  display: inline-block;
+  background: linear-gradient(to right, purple, pink, orange);
+  background-origin: border-box;
+  border-radius: 1.5em;
+  padding: 1px;
+  margin: 0.8em 0;
+  align-self: flex-start;
+}
+
+#colorways-collection-expiry-date > span {
+  display: inline-block;
+  color: var(--in-content-page-color);
+  background: var(--in-content-page-background);
+  border-radius: 1.5em;
+  padding: .2em 1em;
 }
 
 [hidden] {
