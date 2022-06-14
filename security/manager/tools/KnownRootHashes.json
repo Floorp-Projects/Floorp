@@ -1202,7 +1202,52 @@
       "label": "GTS_Root_R4",
       "binNumber": 239,
       "sha256Fingerprint": "NJ36QFjF4mMSOzmK55VXPE4TE8g/5o+TVWzV6AMbPH0="
+    },
+    {
+      "label": "Telia_Root_CA_v2",
+      "binNumber": 240,
+      "sha256Fingerprint": "JCtpdC/LHlsqv5iJi5RXIYdUTltNmRF4ZXNiH2p0uCw="
+    },
+    {
+      "label": "D_TRUST_BR_Root_CA_1_2020",
+      "binNumber": 241,
+      "sha256Fingerprint": "5ZqqgWAJwiv/WyW6033zBvBJeXwfgdhasInmV72PAEQ="
+    },
+    {
+      "label": "D_TRUST_EV_Root_CA_1_2020",
+      "binNumber": 242,
+      "sha256Fingerprint": "CBcNGqNkU5AaL5WSReNH2wyNN6uqvFa4GqEA3JWJcNs="
+    },
+    {
+      "label": "DigiCert_TLS_ECC_P384_Root_G5",
+      "binNumber": 243,
+      "sha256Fingerprint": "AY4T8HclMs+Am9GxcoGGcoP8SMbhO+nGmBKFSkkMGwU="
+    },
+    {
+      "label": "DigiCert_TLS_RSA4096_Root_G5",
+      "binNumber": 244,
+      "sha256Fingerprint": "NxoA3AUzs3IafutA6EGecHmdKwoPLB2AaTFl987ErXU="
+    },
+    {
+      "label": "Certainly_Root_R1",
+      "binNumber": 245,
+      "sha256Fingerprint": "d7gs2GRMQwX3rMXLFWtFZ1AEAz1RxgxiAqjgwzRn06A="
+    },
+    {
+      "label": "Certainly_Root_E1",
+      "binNumber": 246,
+      "sha256Fingerprint": "tFhfIuSsdWpOhhKhNhxdnQMak/2E/rt3j6MGiw/ELcI="
+    },
+    {
+      "label": "E_Tugra_Global_Root_CA_RSA_v3",
+      "binNumber": 247,
+      "sha256Fingerprint": "72awsQo8258uNkjHa9KvGOrSv+bxF2VeKMQGDaGj9MI="
+    },
+    {
+      "label": "E_Tugra_Global_Root_CA_ECC_v3",
+      "binNumber": 248,
+      "sha256Fingerprint": "hz9Ghfp/VjYlJS5tNrzX8W/CSVHyZOR+G5VPSQjNyhM="
     }
   ],
-  "maxBin": 239
+  "maxBin": 248
 }

@@ -324,7 +324,7 @@ struct SFTKSessionStr {
  * object hash tables (sessObjHashTable[] and tokObjHashTable), and
  * sessionObjectHandleCount.
  * slotLock protects the remaining protected elements:
- * password, isLoggedIn, ssoLoggedIn, and sessionCount,
+ * password, needLogin, isLoggedIn, ssoLoggedIn, and sessionCount,
  * and pwCheckLock serializes the key database password checks in
  * NSC_SetPIN and NSC_Login.
  *
