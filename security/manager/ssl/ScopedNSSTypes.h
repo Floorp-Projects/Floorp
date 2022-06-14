@@ -144,6 +144,12 @@ class DigestBase {
       case SEC_OID_SHA256:
         mLen = SHA256_LENGTH;
         break;
+      case SEC_OID_SHA384:
+        mLen = SHA384_LENGTH;
+        break;
+      case SEC_OID_SHA512:
+        mLen = SHA512_LENGTH;
+        break;
       default:
         return NS_ERROR_INVALID_ARG;
     }
@@ -218,8 +224,16 @@ class Digest : public DigestBase {
     if (!EnsureNSSInitializedChromeOrContent()) {
       return NS_ERROR_FAILURE;
     }
-    if (hashAlg != SEC_OID_SHA1 && hashAlg != SEC_OID_SHA256) {
-      return NS_ERROR_INVALID_ARG;
+
+    switch (hashAlg) {
+      case SEC_OID_SHA1:
+      case SEC_OID_SHA256:
+      case SEC_OID_SHA384:
+      case SEC_OID_SHA512:
+        break;
+
+      default:
+        return NS_ERROR_INVALID_ARG;
     }
 
     mDigestContext = UniquePK11Context(PK11_CreateDigestContext(hashAlg));
