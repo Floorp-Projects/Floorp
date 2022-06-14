@@ -11,6 +11,7 @@
     <title data-l10n-id="firefoxview-page-title"></title>
     <link rel="localization" href="branding/brand.ftl">
     <link rel="localization" href="preview/firefoxView.ftl"/>
+    <link rel="localization" href="preview/colorwaycloset.ftl">
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/firefoxview.css">
     <script type="module" src="chrome://browser/content/tabs-pickup.js"></script>
@@ -94,12 +95,21 @@
           <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
         </header>
       </section>
-      <aside class="content-container">
-        <div id="colorways">
-          <button data-l10n-id="firefoxview-colorways-button" id="colorways-button"></button>
-          <div id="colorways-no-collection-message" data-l10n-id="firefoxview-colorways-no-collection-label"></div>
+
+      <template id="colorways-no-collection-template">
+        <div class="content-container">
+          <div id="try-colorways-description" data-l10n-id="colorway-fx-home-try-colorways-label"></div>
         </div>
-      </aside>
+      </template>
+      <template id="colorways-active-collection-template">
+        <h1 id="colorways-collection-title"></h1>
+        <span id="colorways-collection-expiry-date"><span></span></span>
+        <div id="colorways-collection-description"></div>
+        <button class="primary" id="colorways-button"></button>
+        <img id="colorways-collection-graphic">
+      </template>
+      <aside id="colorways"></aside>
+
       <section class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container">
         <header class="page-section-header">
           <h1 data-l10n-id="firefoxview-closed-tabs-title" ></h1>

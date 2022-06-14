@@ -144,7 +144,7 @@ struct ForOfPIC {
   class Chain : public BaseChain {
    private:
     // Pointer to owning JSObject for memory accounting purposes.
-    const GCPtrObject picObject_;
+    const GCPtr<JSObject*> picObject_;
 
     // Pointer to canonical Array.prototype and ArrayIterator.prototype
     GCPtr<NativeObject*> arrayProto_;
@@ -154,13 +154,13 @@ struct ForOfPIC {
     // the @@iterator for it, and the canonical value.
     GCPtr<Shape*> arrayProtoShape_;
     uint32_t arrayProtoIteratorSlot_;
-    GCPtrValue canonicalIteratorFunc_;
+    GCPtr<Value> canonicalIteratorFunc_;
 
     // Shape of matching ArrayIteratorProto, and slot containing
     // the 'next' property, and the canonical value.
     GCPtr<Shape*> arrayIteratorProtoShape_;
     uint32_t arrayIteratorProtoNextSlot_;
-    GCPtrValue canonicalNextFunc_;
+    GCPtr<Value> canonicalNextFunc_;
 
     // Initialization flag marking lazy initialization of above fields.
     bool initialized_;

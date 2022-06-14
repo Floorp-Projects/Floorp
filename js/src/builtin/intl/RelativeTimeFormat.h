@@ -75,7 +75,7 @@ class RelativeTimeFormatObject : public NativeObject {
 
 namespace intl {
 
-using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
+using FieldType = js::ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
 
 [[nodiscard]] bool FormattedRelativeTimeToParts(
     JSContext* cx, HandleString str,

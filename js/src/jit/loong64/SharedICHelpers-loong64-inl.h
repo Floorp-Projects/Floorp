@@ -87,18 +87,13 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // Push frame descriptor and return address.
   masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
                            BaselineStubFrameLayout::Size());
-  masm.subPtr(Imm32(STUB_FRAME_SIZE), StackPointer);
-  masm.storePtr(scratch,
-                Address(StackPointer, offsetof(BaselineStubFrame, descriptor)));
-  masm.storePtr(ICTailCallReg, Address(StackPointer, offsetof(BaselineStubFrame,
-                                                              returnAddress)));
+  masm.Push(scratch);
+  masm.Push(ICTailCallReg);
 
   // Save old frame pointer, stack pointer and stub reg.
-  masm.storePtr(ICStubReg,
-                Address(StackPointer, offsetof(BaselineStubFrame, savedStub)));
-  masm.storePtr(FramePointer,
-                Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)));
+  masm.Push(FramePointer);
   masm.movePtr(BaselineStackReg, FramePointer);
+  masm.Push(ICStubReg);
 
   // Stack should remain aligned.
   masm.assertStackAlignment(sizeof(Value), 0);

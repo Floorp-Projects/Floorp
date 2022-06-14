@@ -2744,8 +2744,8 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
                              255U))) {
         return NS_ERROR_FAILURE;
       }
+      infoObject->UpdateEchExtensionStatus(EchExtensionStatus::kGREASE);
     }
-    infoObject->UpdateEchExtensionStatus(EchExtensionStatus::kGREASE);
   }
 
   // Include a modest set of named groups.

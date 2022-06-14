@@ -320,15 +320,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&oomReturnLabel);
   }
 
-  // s0 <- 8*argc (size of all arguments we pushed on the stack)
-  masm.pop(s0);
-  masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), s0);
-
-  // Discard calleeToken, numActualArgs.
-  masm.addPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
-
-  // Pop arguments off the stack.
-  masm.addPtr(s0, StackPointer);
+  // Discard arguments and padding. Set sp to the address of the EnterJITRegs
+  // on the stack.
+  masm.mov(FramePointer, StackPointer);
 
   // Store the returned value into the vp
   masm.as_ld_d(reg_vp, StackPointer, offsetof(EnterJITRegs, a7));
@@ -361,32 +355,25 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   // Pass pointer to InvalidationBailoutStack structure.
   masm.movePtr(StackPointer, a0);
 
-  // Reserve place for return value and BailoutInfo pointer
+  // Reserve place for BailoutInfo pointer. Two words to ensure alignment for
+  // setupAlignedABICall.
   masm.subPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
-  // Pass pointer to return value.
-  masm.ma_add_d(a1, StackPointer, Imm32(sizeof(uintptr_t)));
   // Pass pointer to BailoutInfo
-  masm.movePtr(StackPointer, a2);
+  masm.movePtr(StackPointer, a1);
 
-  using Fn = bool (*)(InvalidationBailoutStack * sp, size_t * frameSizeOut,
-                      BaselineBailoutInfo * *info);
+  using Fn =
+      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
   masm.setupAlignedABICall();
   masm.passABIArg(a0);
   masm.passABIArg(a1);
-  masm.passABIArg(a2);
   masm.callWithABI<Fn, InvalidationBailout>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
 
   masm.loadPtr(Address(StackPointer, 0), a2);
-  masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), a1);
-  // Remove the return address, the IonScript, the register state
-  // (InvaliationBailoutStack) and the space that was allocated for the
-  // return value.
-  masm.addPtr(Imm32(sizeof(InvalidationBailoutStack) + 2 * sizeof(uintptr_t)),
-              StackPointer);
-  // remove the space that this frame was using before the bailout
-  // (computed by InvalidationBailout)
-  masm.addPtr(a1, StackPointer);
+
+  // Pop the machine state and the dead frame.
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in r2.
   masm.jump(bailoutTail);
@@ -628,22 +615,9 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   // Get the bailoutInfo outparam.
   masm.pop(a2);
 
-  // Stack is:
-  //     [frame]
-  //     snapshotOffset
-  //     frameSize
-  //     [bailoutFrame]
-  //
-  // We want to remove both the bailout frame and the topmost Ion frame's stack.
-
-  // Remove the bailoutFrame.
-  static const uint32_t BailoutDataSize = sizeof(RegisterDump);
-  masm.addPtr(Imm32(BailoutDataSize), StackPointer);
-
-  // Remove the frame, snapshotOffset, and frameSize.
-  masm.ma_ld_d(a1, Address(StackPointer, 0));
-  masm.addPtr(Imm32(2 * sizeof(void*)), a1);
-  masm.addPtr(a1, StackPointer);
+  // Remove both the bailout frame and the topmost Ion frame's stack.
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
 
   // Jump to shared bailout tail. The BailoutInfo pointer has to be in a2.
   masm.jump(bailoutTail);

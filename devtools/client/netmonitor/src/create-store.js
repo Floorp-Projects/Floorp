@@ -23,7 +23,6 @@ const {
 const batching = require("devtools/client/netmonitor/src/middleware/batching");
 const prefs = require("devtools/client/netmonitor/src/middleware/prefs");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
-const recording = require("devtools/client/netmonitor/src/middleware/recording");
 const throttling = require("devtools/client/netmonitor/src/middleware/throttling");
 const eventTelemetry = require("devtools/client/netmonitor/src/middleware/event-telemetry");
 const requestBlocking = require("devtools/client/netmonitor/src/middleware/request-blocking");
@@ -80,7 +79,6 @@ function configureStore(connector, telemetry) {
     thunk({ connector }),
     prefs,
     batching,
-    recording(connector),
     throttling(connector),
     eventTelemetry(connector, telemetry),
     waitUntilService

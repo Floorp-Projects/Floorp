@@ -25,7 +25,6 @@
 #include "debugger/NoExecute.h"  // for LeaveDebuggeeNoExecute
 #include "debugger/Script.h"     // for DebuggerScript
 #include "debugger/Source.h"     // for DebuggerSource
-#include "gc/Barrier.h"          // for ImmutablePropertyNamePtr
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject

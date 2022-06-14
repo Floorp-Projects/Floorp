@@ -26,17 +26,19 @@ namespace js {
 struct AtomHasher {
   struct Lookup;
   static inline HashNumber hash(const Lookup& l);
-  static MOZ_ALWAYS_INLINE bool match(const WeakHeapPtrAtom& entry,
+  static MOZ_ALWAYS_INLINE bool match(const WeakHeapPtr<JSAtom*>& entry,
                                       const Lookup& lookup);
-  static void rekey(WeakHeapPtrAtom& k, const WeakHeapPtrAtom& newKey) {
+  static void rekey(WeakHeapPtr<JSAtom*>& k,
+                    const WeakHeapPtr<JSAtom*>& newKey) {
     k = newKey;
   }
 };
 
 // Note: Use a 'class' here to make forward declarations easier to use.
-class AtomSet
-    : public JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy> {
-  using Base = JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy>;
+class AtomSet : public JS::GCHashSet<WeakHeapPtr<JSAtom*>, AtomHasher,
+                                     SystemAllocPolicy> {
+  using Base =
+      JS::GCHashSet<WeakHeapPtr<JSAtom*>, AtomHasher, SystemAllocPolicy>;
 
  public:
   AtomSet() = default;

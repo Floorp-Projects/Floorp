@@ -21,6 +21,9 @@ const ADDON_NAME = "test-devtools-webextension";
 const OTHER_ADDON_ID = "other-test-devtools-webextension@mozilla.org";
 const OTHER_ADDON_NAME = "other-test-devtools-webextension";
 
+const POPUPONLY_ADDON_ID = "popuponly-test-devtools-webextension@mozilla.org";
+const POPUPONLY_ADDON_NAME = "popuponly-test-devtools-webextension";
+
 /**
  * This test file ensures that the webextension addon developer toolbox:
  * - when the debug button is clicked on a webextension, the opened toolbox
@@ -258,5 +261,91 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   // from which they were installed...
   await removeTemporaryExtension(OTHER_ADDON_NAME, document);
   await removeTemporaryExtension(ADDON_NAME, document);
+  await removeTab(tab);
+});
+
+add_task(async function testWebExtensionNoBgScript() {
+  await pushPref("devtools.webconsole.filter.css", true);
+  await enableExtensionDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+
+  await installTemporaryExtensionFromXPI(
+    {
+      extraProperties: {
+        browser_action: {
+          default_title: "WebExtension Popup Only",
+          default_popup: "popup.html",
+        },
+      },
+      files: {
+        "popup.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="popup.js"></script>
+          </head>
+          <body>
+            Popup
+          </body>
+        </html>
+      `,
+        "popup.js": function() {
+          console.log("Popup-only log");
+
+          const style = document.createElement("style");
+          style.textContent = "* { color: popup-only-error; }";
+          document.documentElement.appendChild(style);
+
+          throw new Error("Popup-only exception");
+        },
+      },
+      id: POPUPONLY_ADDON_ID,
+      name: POPUPONLY_ADDON_NAME,
+    },
+    document
+  );
+
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    POPUPONLY_ADDON_NAME
+  );
+  const toolbox = getToolbox(devtoolsWindow);
+  const webconsole = await toolbox.selectTool("webconsole");
+  const { hud } = webconsole;
+
+  info("Open the add-on popup");
+  const onPopupMessage = waitUntil(() => {
+    return findMessagesByType(hud, "Popup-only exception", ".error").length > 0;
+  });
+  clickOnAddonWidget(POPUPONLY_ADDON_ID);
+  await onPopupMessage;
+
+  info("Wait a bit to catch unexpected duplicates or mixed up messages");
+  await wait(1000);
+  is(
+    findMessagesByType(hud, "Popup-only exception", ".error").length,
+    1,
+    "We get the popup exception"
+  );
+  is(
+    findMessagesByType(hud, "Popup-only log", ".console-api").length,
+    1,
+    "We get the addon's popup log"
+  );
+  is(
+    findMessagesByType(
+      hud,
+      "Expected color but found ‘popup-only-error’.  Error in parsing value for ‘color’.  Declaration dropped.",
+      ".warn"
+    ).length,
+    1,
+    "We get the addon's popup CSS error message"
+  );
+
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await removeTemporaryExtension(POPUPONLY_ADDON_NAME, document);
   await removeTab(tab);
 });

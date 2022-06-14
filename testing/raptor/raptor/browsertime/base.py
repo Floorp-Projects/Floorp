@@ -468,12 +468,79 @@ class Browsertime(Perftest):
             else:
                 continue
 
+        # Finalize the `browsertime_options` before starting pageload tests
+        if test.get("type") == "pageload":
+            self._finalize_pageload_test_setup(
+                browsertime_options=browsertime_options, test=test
+            )
+
         return (
             [self.browsertime_node, self.browsertime_browsertimejs]
             + self.driver_paths
             + [browsertime_script]
             + browsertime_options
         )
+
+    def _finalize_pageload_test_setup(self, browsertime_options, test):
+        """This function finalizes remaining configurations for browsertime pageload tests.
+
+        For pageload tests, ensure that the test name is available to the `browsertime_pageload.js`
+        script. In addition, make the `live_sites` and `login` boolean available as these will be
+        required in determining the flow of the login-logic. Finally, we disable the verbose mode
+        as a safety precaution when doing a live login site.
+        """
+        browsertime_options.extend(["--browsertime.testName", str(test.get("name"))])
+        browsertime_options.extend(
+            ["--browsertime.liveSite", str(self.config["live_sites"])]
+        )
+
+        login_required = self.is_live_login_site(test.get("name"))
+        browsertime_options.extend(["--browsertime.loginRequired", str(login_required)])
+
+        # Turn off verbose if login logic is required and we are running on CI
+        if (
+            login_required
+            and self.config.get("verbose", False)
+            and os.environ.get("MOZ_AUTOMATION")
+        ):
+            LOG.info("Turning off verbose mode for login-logic.")
+            LOG.info(
+                "Please contact the perftest team if you need verbose mode enabled."
+            )
+            self.config["verbose"] = False
+            for verbose_level in ("-v", "-vv", "-vvv", "-vvvv"):
+                try:
+                    browsertime_options.remove(verbose_level)
+                except ValueError:
+                    pass
+
+    @staticmethod
+    def is_live_login_site(test_name):
+        """This function checks the login field of a live-site in the pageload_sites.json
+
+        After reading in the json file, perform a brute force search for the matching test name
+        and return the login field boolean
+        """
+
+        # That pathing is different on CI vs locally for the pageload_sites.json file
+        if os.environ.get("MOZ_AUTOMATION"):
+            PAGELOAD_SITES = os.path.join(
+                os.getcwd(), "tests/raptor/browsertime/pageload_sites.json"
+            )
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.getcwd()))
+            pageload_subpath = "raptor/browsertime/pageload_sites.json"
+            PAGELOAD_SITES = os.path.join(base_dir, pageload_subpath)
+
+        with open(PAGELOAD_SITES, "r") as f:
+            pageload_data = json.load(f)
+
+        desktop_sites = pageload_data["desktop"]
+        for site in desktop_sites:
+            if site["name"] == test_name:
+                return site["login"]
+
+        return False
 
     def _compute_process_timeout(self, test, timeout):
         if self.debug_mode:
@@ -512,6 +579,25 @@ class Browsertime(Perftest):
         if self.config["gecko_profile"] is True:
             bt_timeout += 5 * 60
         return bt_timeout
+
+    @staticmethod
+    def _kill_browsertime_process(msg):
+        """This method determines if a browsertime process should be killed.
+
+        Examine the error message from the line handler to determine what to do by returning
+        a boolean.
+
+        In the future, we can extend this method to consider other scenarios.
+        """
+
+        # If we encounter an `xpath` & `double click` related error
+        # message, it is due to a failure in the 2FA checks during the
+        # login logic since not all websites have 2FA
+        if "xpath" in msg and "double click" in msg:
+            LOG.info("Ignoring 2FA error")
+            return False
+
+        return True
 
     def run_test(self, test, timeout):
         global BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
@@ -581,9 +667,10 @@ class Browsertime(Perftest):
                 date, level, msg = match.groups()
                 level = level.lower()
                 if "error" in level and not self.debug_mode:
-                    self.browsertime_failure = msg
-                    LOG.error("Browsertime failed to run")
-                    proc.kill()
+                    if self._kill_browsertime_process(msg):
+                        self.browsertime_failure = msg
+                        LOG.error("Browsertime failed to run")
+                        proc.kill()
                 elif "warning" in level:
                     LOG.warning(msg)
                 elif "metrics" in level:

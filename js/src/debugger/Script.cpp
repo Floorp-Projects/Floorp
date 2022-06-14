@@ -20,7 +20,6 @@
 #include "debugger/Debugger.h"     // for DebuggerScriptReferent, Debugger
 #include "debugger/DebugScript.h"  // for DebugScript
 #include "debugger/Source.h"       // for DebuggerSource
-#include "gc/Barrier.h"            // for ImmutablePropertyNamePtr
 #include "gc/GC.h"                 // for MemoryUse, MemoryUse::Breakpoint
 #include "gc/Tracer.h"         // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "gc/Zone.h"           // for Zone

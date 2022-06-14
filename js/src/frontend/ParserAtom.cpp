@@ -34,21 +34,21 @@ JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
 #define ASSERT_OFFSET_(_, NAME, _2)              \
   static_assert(offsetof(JSAtomState, NAME) ==   \
                 int32_t(WellKnownAtomId::NAME) * \
-                    sizeof(js::ImmutablePropertyNamePtr));
+                    sizeof(js::ImmutableTenuredPtr<PropertyName*>));
   FOR_EACH_COMMON_PROPERTYNAME(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 
 #define ASSERT_OFFSET_(NAME, _)                  \
   static_assert(offsetof(JSAtomState, NAME) ==   \
                 int32_t(WellKnownAtomId::NAME) * \
-                    sizeof(js::ImmutablePropertyNamePtr));
+                    sizeof(js::ImmutableTenuredPtr<PropertyName*>));
   JS_FOR_EACH_PROTOTYPE(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 
 #define ASSERT_OFFSET_(NAME)                     \
   static_assert(offsetof(JSAtomState, NAME) ==   \
                 int32_t(WellKnownAtomId::NAME) * \
-                    sizeof(js::ImmutablePropertyNamePtr));
+                    sizeof(js::ImmutableTenuredPtr<PropertyName*>));
   JS_FOR_EACH_WELL_KNOWN_SYMBOL(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 

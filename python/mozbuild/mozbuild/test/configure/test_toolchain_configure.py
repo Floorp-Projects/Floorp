@@ -833,7 +833,7 @@ def xcrun(stdin, args):
     if args == ("--show-sdk-path",):
         return (
             0,
-            os.path.join(os.path.abspath(os.path.dirname(__file__)), "fake_macos_sdk"),
+            mozpath.join(os.path.abspath(os.path.dirname(__file__)), "macos_fake_sdk"),
             "",
         )
     raise NotImplementedError()

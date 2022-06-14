@@ -37,14 +37,17 @@ function showUseFXHomeControls(fluentStrings) {
 const collection = BuiltInThemes.findActiveColorwayCollection();
 if (collection) {
   const { expiry, l10nId } = collection;
-  const formatter = new Intl.DateTimeFormat("default", {
-    month: "long",
-    day: "numeric",
-  });
   const collectionTitle = document.getElementById("collection-title");
-  document.l10n.setAttributes(collectionTitle, l10nId);
-  document.querySelector(
+  document.l10n.setAttributes(collectionTitle, l10nId.title);
+  const colorwayExpiryDateSpan = document.querySelector(
     "#collection-expiry-date > span"
-  ).innerText = formatter.format(expiry);
+  );
+  document.l10n.setAttributes(
+    colorwayExpiryDateSpan,
+    "colorway-collection-expiry-date-span",
+    {
+      expiryDate: expiry.getTime(),
+    }
+  );
   showUseFXHomeControls();
 }

@@ -135,7 +135,7 @@ struct HashSymbolsByDescription {
  * enumerating the symbol registry, querying its size, etc.
  */
 class SymbolRegistry
-    : public GCHashSet<WeakHeapPtrSymbol, HashSymbolsByDescription,
+    : public GCHashSet<WeakHeapPtr<JS::Symbol*>, HashSymbolsByDescription,
                        SystemAllocPolicy> {
  public:
   SymbolRegistry() = default;

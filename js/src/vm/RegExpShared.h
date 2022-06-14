@@ -115,7 +115,7 @@ class RegExpShared
   JS::RegExpFlags flags;
 
   RegExpShared::Kind kind_ = Kind::Unparsed;
-  GCPtrAtom patternAtom_;
+  GCPtr<JSAtom*> patternAtom_;
   uint32_t maxRegisters_ = 0;
   uint32_t ticks_ = 0;
 

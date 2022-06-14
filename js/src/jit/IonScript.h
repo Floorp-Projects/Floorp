@@ -14,7 +14,7 @@
 
 #include "jstypes.h"
 
-#include "gc/Barrier.h"          // HeapPtr{JitCode,Object}, PreBarrieredValue
+#include "gc/Barrier.h"          // HeapPtr{JitCode,Object}
 #include "jit/IonTypes.h"        // IonCompilationId
 #include "jit/JitCode.h"         // JitCode
 #include "jit/JitOptions.h"      // JitOptions
@@ -41,7 +41,7 @@ class IonIC;
 //
 //    <IonScript itself>
 //    --
-//    PreBarrieredValue[]   constantTable()
+//    PreBarriered<Value>[] constantTable()
 //    uint8_t[]             runtimeData()
 //    OsiIndex[]            osiIndex()
 //    SafepointIndex[]      safepointIndex()
@@ -73,7 +73,7 @@ class alignas(8) IonScript final : public TrailingArray {
   Offset allocBytes_ = 0;
 
   // Code pointer containing the actual method.
-  HeapPtrJitCode method_ = nullptr;
+  HeapPtr<JitCode*> method_ = nullptr;
 
   // Entrypoint for OSR, or nullptr.
   jsbytecode* osrPc_ = nullptr;
@@ -162,14 +162,14 @@ class alignas(8) IonScript final : public TrailingArray {
   //
   // Table of constants referenced in snapshots. (JS::Value alignment)
   //
-  PreBarrieredValue* constants() {
+  PreBarriered<Value>* constants() {
     // Nursery constants are manually barriered in CodeGenerator::link() so a
     // post barrier is not required..
-    return offsetToPointer<PreBarrieredValue>(constantTableOffset());
+    return offsetToPointer<PreBarriered<Value>>(constantTableOffset());
   }
   size_t numConstants() const {
-    return numElements<PreBarrieredValue>(constantTableOffset(),
-                                          runtimeDataOffset());
+    return numElements<PreBarriered<Value>>(constantTableOffset(),
+                                            runtimeDataOffset());
   }
 
   //
@@ -186,11 +186,12 @@ class alignas(8) IonScript final : public TrailingArray {
   // List of (originally) nursery-allocated objects referenced from JIT code.
   // (JSObject* alignment)
   //
-  HeapPtrObject* nurseryObjects() {
-    return offsetToPointer<HeapPtrObject>(nurseryObjectsOffset());
+  HeapPtr<JSObject*>* nurseryObjects() {
+    return offsetToPointer<HeapPtr<JSObject*>>(nurseryObjectsOffset());
   }
   size_t numNurseryObjects() const {
-    return numElements<HeapPtrObject>(nurseryObjectsOffset(), osiIndexOffset());
+    return numElements<HeapPtr<JSObject*>>(nurseryObjectsOffset(),
+                                           osiIndexOffset());
   }
   void* addressOfNurseryObject(uint32_t index) {
     MOZ_ASSERT(index < numNurseryObjects());
@@ -362,7 +363,7 @@ class alignas(8) IonScript final : public TrailingArray {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this);
   }
-  PreBarrieredValue& getConstant(size_t index) {
+  PreBarriered<Value>& getConstant(size_t index) {
     MOZ_ASSERT(index < numConstants());
     return constants()[index];
   }

@@ -551,6 +551,17 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
     PORT_Assert(ss->gs.readOffset <= ss->gs.writeOffset);
     rv = amount;
 
+#ifdef DEBUG
+    /* In Debug builds free and zero gather plaintext buffer after its content
+     * has been used/copied for advanced ASAN coverage/utilization.
+     * This frees the buffer after reception of application data,
+     * non-application data is freed at the end of
+     * ssl3con.c/ssl3_HandleRecord(). */
+    if (ss->gs.writeOffset == ss->gs.readOffset) {
+        sslBuffer_Clear(&ss->gs.buf);
+    }
+#endif
+
     SSL_TRC(30, ("%d: SSL[%d]: amount=%d available=%d",
                  SSL_GETPID(), ss->fd, amount, available));
     PRINT_BUF(4, (ss, "DoRecv receiving plaintext:", out, amount));

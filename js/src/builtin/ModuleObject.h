@@ -14,7 +14,7 @@
 #include <stdint.h>  // int32_t, uint32_t
 
 #include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
-#include "gc/Barrier.h"                  // HeapPtr, PreBarrieredId
+#include "gc/Barrier.h"                  // HeapPtr
 #include "gc/ZoneAllocator.h"            // CellAllocPolicy
 #include "js/Class.h"                    // JSClass, ObjectOpResult
 #include "js/GCVector.h"                 // GCVector
@@ -162,9 +162,9 @@ class IndirectBindingMap {
     PropertyInfo prop;
   };
 
-  using Map =
-      mozilla::HashMap<PreBarrieredId, Binding,
-                       mozilla::DefaultHasher<PreBarrieredId>, CellAllocPolicy>;
+  using Map = mozilla::HashMap<PreBarriered<jsid>, Binding,
+                               mozilla::DefaultHasher<PreBarriered<jsid>>,
+                               CellAllocPolicy>;
 
   mozilla::Maybe<Map> map_;
 };

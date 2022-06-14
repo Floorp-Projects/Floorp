@@ -100,8 +100,6 @@ class InactivePropertyHelper {
    *   msgId:
    *     A Fluent id containing an error message explaining why a property is
    *     inactive in this situation.
-   *   numFixProps:
-   *     The number of properties we suggest in the fixId string.
    * }
    *
    * If you add a new rule, also add a test for it in:
@@ -132,7 +130,6 @@ class InactivePropertyHelper {
         when: () => !this.flexContainer,
         fixId: "inactive-css-not-flex-container-fix",
         msgId: "inactive-css-not-flex-container",
-        numFixProps: 2,
       },
       // Flex item property used on non-flex item.
       {
@@ -140,7 +137,6 @@ class InactivePropertyHelper {
         when: () => !this.flexItem,
         fixId: "inactive-css-not-flex-item-fix-2",
         msgId: "inactive-css-not-flex-item",
-        numFixProps: 2,
       },
       // Grid container property used on non-grid container.
       {
@@ -157,7 +153,6 @@ class InactivePropertyHelper {
         when: () => !this.gridContainer,
         fixId: "inactive-css-not-grid-container-fix",
         msgId: "inactive-css-not-grid-container",
-        numFixProps: 2,
       },
       // Grid item property used on non-grid item.
       {
@@ -174,7 +169,6 @@ class InactivePropertyHelper {
         when: () => !this.gridItem && !this.isAbsPosGridElement(),
         fixId: "inactive-css-not-grid-item-fix-2",
         msgId: "inactive-css-not-grid-item",
-        numFixProps: 2,
       },
       // Grid and flex item properties used on non-grid or non-flex item.
       {
@@ -183,7 +177,6 @@ class InactivePropertyHelper {
           !this.gridItem && !this.flexItem && !this.isAbsPosGridElement(),
         fixId: "inactive-css-not-grid-or-flex-item-fix-3",
         msgId: "inactive-css-not-grid-or-flex-item",
-        numFixProps: 4,
       },
       // Grid and flex container properties used on non-grid or non-flex container.
       {
@@ -200,7 +193,6 @@ class InactivePropertyHelper {
         when: () => !this.gridContainer && !this.flexContainer,
         fixId: "inactive-css-not-grid-or-flex-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container",
-        numFixProps: 2,
       },
       // align-content is special as align-content:baseline does have an effect on all
       // grid items, flex items and table cells, regardless of what type of box they are.
@@ -213,7 +205,6 @@ class InactivePropertyHelper {
           !this.flexContainer,
         fixId: "inactive-css-not-grid-or-flex-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container",
-        numFixProps: 2,
       },
       // column-gap and shorthands used on non-grid or non-flex or non-multi-col container.
       {
@@ -230,7 +221,6 @@ class InactivePropertyHelper {
         fixId:
           "inactive-css-not-grid-or-flex-container-or-multicol-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container-or-multicol-container",
-        numFixProps: 3,
       },
       // Inline properties used on non-inline-level elements.
       {
@@ -247,7 +237,6 @@ class InactivePropertyHelper {
         },
         fixId: "inactive-css-not-inline-or-tablecell-fix",
         msgId: "inactive-css-not-inline-or-tablecell",
-        numFixProps: 2,
       },
       // (max-|min-)width used on inline elements, table rows, or row groups.
       {
@@ -258,7 +247,6 @@ class InactivePropertyHelper {
           this.horizontalTableTrackGroup,
         fixId: "inactive-css-non-replaced-inline-or-table-row-or-row-group-fix",
         msgId: "inactive-css-property-because-of-display",
-        numFixProps: 2,
       },
       // (max-|min-)height used on inline elements, table columns, or column groups.
       {
@@ -270,7 +258,6 @@ class InactivePropertyHelper {
         fixId:
           "inactive-css-non-replaced-inline-or-table-column-or-column-group-fix",
         msgId: "inactive-css-property-because-of-display",
-        numFixProps: 1,
       },
       {
         invalidProperties: ["display"],
@@ -293,7 +280,6 @@ class InactivePropertyHelper {
           ]),
         fixId: "inactive-css-not-display-block-on-floated-fix",
         msgId: "inactive-css-not-display-block-on-floated",
-        numFixProps: 2,
       },
       // The property is impossible to override due to :visited restriction.
       {
@@ -301,7 +287,6 @@ class InactivePropertyHelper {
         when: () => this.isVisitedRule(),
         fixId: "learn-more",
         msgId: "inactive-css-property-is-impossible-to-override-in-visited",
-        numFixProps: 1,
         learnMoreURL: VISITED_MDN_LINK,
       },
       // top, right, bottom, left properties used on non positioned boxes.
@@ -310,7 +295,6 @@ class InactivePropertyHelper {
         when: () => !this.isPositioned,
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
-        numFixProps: 1,
       },
       // z-index property used on non positioned boxes that are not grid/flex items.
       {
@@ -318,7 +302,6 @@ class InactivePropertyHelper {
         when: () => !this.isPositioned && !this.gridItem && !this.flexItem,
         fixId: "inactive-css-position-property-on-unpositioned-box-fix",
         msgId: "inactive-css-position-property-on-unpositioned-box",
-        numFixProps: 1,
       },
       // text-overflow property used on elements for which overflow is not set to hidden.
       // Note that this validator only checks if overflow:hidden is set on the element.
@@ -334,7 +317,6 @@ class InactivePropertyHelper {
         when: () => !this.hasInlineOverflow,
         fixId: "inactive-text-overflow-when-no-overflow-fix",
         msgId: "inactive-text-overflow-when-no-overflow",
-        numFixProps: 1,
       },
       // margin properties used on table internal elements.
       {
@@ -354,7 +336,6 @@ class InactivePropertyHelper {
         when: () => this.internalTableElement,
         fixId: "inactive-css-not-for-internal-table-elements-fix",
         msgId: "inactive-css-not-for-internal-table-elements",
-        numFixProps: 1,
       },
       // padding properties used on table internal elements except table cells.
       {
@@ -378,7 +359,6 @@ class InactivePropertyHelper {
           "inactive-css-not-for-internal-table-elements-except-table-cells-fix",
         msgId:
           "inactive-css-not-for-internal-table-elements-except-table-cells",
-        numFixProps: 1,
       },
       // table-layout used on non-table elements.
       {
@@ -387,7 +367,6 @@ class InactivePropertyHelper {
           !this.checkComputedStyle("display", ["table", "inline-table"]),
         fixId: "inactive-css-not-table-fix",
         msgId: "inactive-css-not-table",
-        numFixProps: 1,
       },
       // scroll-padding-* properties used on non-scrollable elements.
       {
@@ -407,7 +386,6 @@ class InactivePropertyHelper {
         when: () => !this.isScrollContainer,
         fixId: "inactive-scroll-padding-when-not-scroll-container-fix",
         msgId: "inactive-scroll-padding-when-not-scroll-container",
-        numFixProps: 1,
       },
     ];
   }
@@ -449,8 +427,6 @@ class InactivePropertyHelper {
    * @return {String} object.msgId
    *         A Fluent id containing an error message explaining why a property
    *         is inactive in this situation.
-   * @return {Integer} object.numFixProps
-   *         The number of properties we suggest in the fixId string.
    * @return {String} object.property
    *         The inactive property name.
    * @return {String} object.learnMoreURL
@@ -469,7 +445,6 @@ class InactivePropertyHelper {
 
     let fixId = "";
     let msgId = "";
-    let numFixProps = 0;
     let learnMoreURL = null;
     let used = true;
 
@@ -492,7 +467,6 @@ class InactivePropertyHelper {
       if (validator.when()) {
         fixId = validator.fixId;
         msgId = validator.msgId;
-        numFixProps = validator.numFixProps;
         learnMoreURL = validator.learnMoreURL;
         used = false;
 
@@ -515,7 +489,6 @@ class InactivePropertyHelper {
       display,
       fixId,
       msgId,
-      numFixProps,
       property,
       learnMoreURL,
       used,

@@ -296,7 +296,7 @@ static T PopNextBitmaskValue(uint32_t* bitmask) {
 void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
   while (stubsToBarrier) {
     auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
-    const WeakHeapPtrJitCode& jitCode = stubs_[stub];
+    const WeakHeapPtr<JitCode*>& jitCode = stubs_[stub];
     MOZ_ASSERT(jitCode);
     jitCode.get();
   }
@@ -414,7 +414,7 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
 
   stubCodes_->traceWeak(trc);
 
-  for (WeakHeapPtrJitCode& stub : stubs_) {
+  for (WeakHeapPtr<JitCode*>& stub : stubs_) {
     TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
   }
 }
@@ -670,7 +670,7 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   CheckedInt<Offset> allocSize = sizeof(IonScript);
   allocSize += CheckedInt<Offset>(constants) * sizeof(Value);
   allocSize += CheckedInt<Offset>(runtimeSize);
-  allocSize += CheckedInt<Offset>(nurseryObjects) * sizeof(HeapPtrObject);
+  allocSize += CheckedInt<Offset>(nurseryObjects) * sizeof(HeapPtr<JSObject*>);
   allocSize += CheckedInt<Offset>(osiIndices) * sizeof(OsiIndex);
   allocSize += CheckedInt<Offset>(safepointIndices) * sizeof(SafepointIndex);
   allocSize += CheckedInt<Offset>(icEntries) * sizeof(uint32_t);
@@ -702,10 +702,10 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   script->runtimeDataOffset_ = offsetCursor;
   offsetCursor += runtimeSize;
 
-  MOZ_ASSERT(offsetCursor % alignof(HeapPtrObject) == 0);
-  script->initElements<HeapPtrObject>(offsetCursor, nurseryObjects);
+  MOZ_ASSERT(offsetCursor % alignof(HeapPtr<JSObject*>) == 0);
+  script->initElements<HeapPtr<JSObject*>>(offsetCursor, nurseryObjects);
   script->nurseryObjectsOffset_ = offsetCursor;
-  offsetCursor += nurseryObjects * sizeof(HeapPtrObject);
+  offsetCursor += nurseryObjects * sizeof(HeapPtr<JSObject*>);
 
   MOZ_ASSERT(offsetCursor % alignof(OsiIndex) == 0);
   script->osiIndexOffset_ = offsetCursor;
@@ -910,7 +910,7 @@ void IonScript::Destroy(JS::GCContext* gcx, IonScript* script) {
     if (lock.isNothing()) {
       lock.emplace(&gcx->runtime()->gc.storeBuffer());
     }
-    script->nurseryObjects()[i] = HeapPtrObject();
+    script->nurseryObjects()[i] = HeapPtr<JSObject*>();
   }
 
   // This allocation is tracked by JSScript::setIonScriptImpl.

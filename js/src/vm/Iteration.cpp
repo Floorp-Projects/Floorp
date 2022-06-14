@@ -90,9 +90,9 @@ void NativeIterator::trace(JSTracer* trc) {
   // Note that we must trace all properties (not just those not yet visited,
   // or just visited, due to |NativeIterator::previousPropertyWas|) for
   // |NativeIterator|s to be reusable.
-  GCPtrLinearString* begin =
+  GCPtr<JSLinearString*>* begin =
       MOZ_LIKELY(isInitialized()) ? propertiesBegin() : propertyCursor_;
-  std::for_each(begin, propertiesEnd(), [trc](GCPtrLinearString& prop) {
+  std::for_each(begin, propertiesEnd(), [trc](GCPtr<JSLinearString*>& prop) {
     // Properties begin life non-null and never *become*
     // null.  (Deletion-suppression will shift trailing
     // properties over a deleted property in the properties
@@ -742,7 +742,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
 }
 
 static inline size_t NumTrailingWords(size_t propertyCount, size_t shapeCount) {
-  static_assert(sizeof(GCPtrLinearString) == sizeof(uintptr_t));
+  static_assert(sizeof(GCPtr<JSLinearString*>) == sizeof(uintptr_t));
   static_assert(sizeof(GCPtr<Shape*>) == sizeof(uintptr_t));
   return propertyCount + shapeCount;
 }
@@ -839,7 +839,7 @@ NativeIterator::NativeIterator(JSContext* cx,
       shapesEnd_(shapesBegin()),
       // ...and no properties.
       propertyCursor_(
-          reinterpret_cast<GCPtrLinearString*>(shapesBegin() + numShapes)),
+          reinterpret_cast<GCPtr<JSLinearString*>*>(shapesBegin() + numShapes)),
       propertiesEnd_(propertyCursor_),
       shapesHash_(shapesHash),
       flagsAndCount_(
@@ -902,7 +902,7 @@ NativeIterator::NativeIterator(JSContext* cx,
       *hadError = true;
       return;
     }
-    new (propertiesEnd_) GCPtrLinearString(str);
+    new (propertiesEnd_) GCPtr<JSLinearString*>(str);
     propertiesEnd_++;
   }
 
@@ -1532,9 +1532,9 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
     bool restart = false;
 
     // Check whether id is still to come.
-    GCPtrLinearString* const cursor = ni->nextProperty();
-    GCPtrLinearString* const end = ni->propertiesEnd();
-    for (GCPtrLinearString* idp = cursor; idp < end; ++idp) {
+    GCPtr<JSLinearString*>* const cursor = ni->nextProperty();
+    GCPtr<JSLinearString*>* const end = ni->propertiesEnd();
+    for (GCPtr<JSLinearString*>* idp = cursor; idp < end; ++idp) {
       // Common case: both strings are atoms.
       if ((*idp)->isAtom() && str->isAtom()) {
         if (*idp != str) {
@@ -1583,7 +1583,7 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
       if (idp == cursor) {
         ni->incCursor();
       } else {
-        for (GCPtrLinearString* p = idp; p + 1 != end; p++) {
+        for (GCPtr<JSLinearString*>* p = idp; p + 1 != end; p++) {
           *p = *(p + 1);
         }
 
@@ -1681,7 +1681,7 @@ void js::AssertDenseElementsNotIterated(NativeObject* obj) {
   while (ni != enumeratorList) {
     if (ni->objectBeingIterated() == obj &&
         !ni->maybeHasIndexedPropertiesFromProto()) {
-      for (GCPtrLinearString* idp = ni->nextProperty();
+      for (GCPtr<JSLinearString*>* idp = ni->nextProperty();
            idp < ni->propertiesEnd(); ++idp) {
         uint32_t index;
         if (idp->get()->isIndex(&index)) {

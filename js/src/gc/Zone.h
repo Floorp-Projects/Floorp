@@ -238,11 +238,12 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // This is used by the GC to trace them all first when compacting, since the
   // TypedObject trace hook may access these objects.
   //
-  // (Although this uses HeapPtrObject, the set contains only tenured objects so
-  // no post-barrier is required, and these are weak references so no
+  // (Although this uses HeapPtr<JSObject*>, the set contains only tenured
+  // objects so no post-barrier is required, and these are weak references so no
   // pre-barrier is required.)
   using RttValueObjectSet =
-      js::GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
+      js::GCHashSet<js::HeapPtr<JSObject*>,
+                    js::MovableCellHasher<js::HeapPtr<JSObject*>>,
                     js::SystemAllocPolicy>;
 
   js::ZoneData<JS::WeakCache<RttValueObjectSet>> rttValueObjects_;
@@ -286,7 +287,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   friend class js::gc::ZoneList;
 
   using KeptAliveSet =
-      JS::GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
+      JS::GCHashSet<js::HeapPtr<JSObject*>,
+                    js::MovableCellHasher<js::HeapPtr<JSObject*>>,
                     js::ZoneAllocPolicy>;
   friend class js::WeakRefObject;
   js::ZoneOrGCTaskData<KeptAliveSet> keptObjects;

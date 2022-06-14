@@ -3921,8 +3921,8 @@ void WasmExceptionObject::trace(JSTracer* trc, JSObject* obj) {
   for (size_t i = 0; i < params.length(); i++) {
     ValType paramType = params[i];
     if (paramType.isRefRepr()) {
-      GCPtrObject* objectPtr =
-          reinterpret_cast<js::GCPtrObject*>(typedMem + offsets[i]);
+      GCPtr<JSObject*>* objectPtr =
+          reinterpret_cast<GCPtr<JSObject*>*>(typedMem + offsets[i]);
       TraceNullableEdge(trc, objectPtr, "reference-obj");
     }
   }

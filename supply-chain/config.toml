@@ -35,6 +35,10 @@ notes = "Used for testing."
 dependency-criteria = { fluent-testing = "safe-to-run", tokio = "safe-to-run" }
 notes = "This crate has two testing-only dependencies which are specified as regular-but-optional rather than a dev-dependencies, because they need to be available to both benchmarks and integration tests."
 
+[policy.smoosh]
+criteria = "safe-to-run"
+notes = "We're not shipping this and have no plans to ship it."
+
 [policy.webdriver]
 criteria = "safe-to-run"
 notes = "Used for automation."
@@ -181,7 +185,7 @@ criteria = "safe-to-deploy"
 
 [[unaudited.bumpalo]]
 version = "3.10.0"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[unaudited.byteorder]]
 version = "1.4.3"

@@ -583,8 +583,14 @@ def generate_gn_config(
     gn_args = "--args=%s" % " ".join(
         ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(input_variables)]
     )
+    # Don't make use_x11 part of the string for openbsd to avoid creating
+    # new json files.
     gn_arg_string = "_".join(
-        [str(input_variables[k]) for k in sorted(input_variables.keys())]
+        [
+            str(input_variables[k])
+            for k in sorted(input_variables.keys())
+            if k != "use_x11" or input_variables["target_os"] != "openbsd"
+        ]
     )
     out_dir = mozpath.join(output, "gn-output")
     gen_args = [config.substs["GN"], "gen", out_dir, gn_args, "--ide=json"]

@@ -3429,56 +3429,20 @@ void nsGlobalWindowOuter::SetNameOuter(const nsAString& aName,
   }
 }
 
-// Helper functions used by many methods below.
-int32_t nsGlobalWindowOuter::DevToCSSIntPixelsForBaseWindow(
-    int32_t aDevicePixels, nsIBaseWindow* aWindow) {
+// NOTE: The idea of this function is that it should return the same as
+// nsPresContext::CSSToDeviceScale() if it was in aWindow synchronously. For
+// that, we use the UnscaledDevicePixelsPerCSSPixel() (which contains the device
+// scale and the OS zoom scale) and then account for the browsing context full
+// zoom. See the declaration of this function for context about why this is
+// needed.
+CSSToLayoutDeviceScale nsGlobalWindowOuter::CSSToDevScaleForBaseWindow(
+    nsIBaseWindow* aWindow) {
   MOZ_ASSERT(aWindow);
-  double scale;
-  aWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale);
-  double zoom = 1.0;
-  if (mDocShell && mDocShell->GetPresContext()) {
-    zoom = mDocShell->GetPresContext()->GetFullZoom();
+  auto scale = aWindow->UnscaledDevicePixelsPerCSSPixel();
+  if (mBrowsingContext) {
+    scale.scale *= mBrowsingContext->FullZoom();
   }
-  return std::floor(aDevicePixels / scale / zoom + 0.5);
-}
-
-nsIntSize nsGlobalWindowOuter::DevToCSSIntPixelsForBaseWindow(
-    nsIntSize aDeviceSize, nsIBaseWindow* aWindow) {
-  MOZ_ASSERT(aWindow);
-  double scale;
-  aWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale);
-  double zoom = 1.0;
-  if (mDocShell && mDocShell->GetPresContext()) {
-    zoom = mDocShell->GetPresContext()->GetFullZoom();
-  }
-  return nsIntSize::Round(
-      static_cast<float>(aDeviceSize.width / scale / zoom),
-      static_cast<float>(aDeviceSize.height / scale / zoom));
-}
-
-int32_t nsGlobalWindowOuter::CSSToDevIntPixelsForBaseWindow(
-    int32_t aCSSPixels, nsIBaseWindow* aWindow) {
-  MOZ_ASSERT(aWindow);
-  double scale;
-  aWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale);
-  double zoom = 1.0;
-  if (mDocShell && mDocShell->GetPresContext()) {
-    zoom = mDocShell->GetPresContext()->GetFullZoom();
-  }
-  return std::floor(aCSSPixels * scale * zoom + 0.5);
-}
-
-nsIntSize nsGlobalWindowOuter::CSSToDevIntPixelsForBaseWindow(
-    nsIntSize aCSSSize, nsIBaseWindow* aWindow) {
-  MOZ_ASSERT(aWindow);
-  double scale;
-  aWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale);
-  double zoom = 1.0;
-  if (mDocShell && mDocShell->GetPresContext()) {
-    zoom = mDocShell->GetPresContext()->GetFullZoom();
-  }
-  return nsIntSize::Round(static_cast<float>(aCSSSize.width * scale * zoom),
-                          static_cast<float>(aCSSSize.height * scale * zoom));
+  return scale;
 }
 
 nsresult nsGlobalWindowOuter::GetInnerSize(CSSSize& aSize) {
@@ -3556,14 +3520,12 @@ void nsGlobalWindowOuter::SetInnerWidthOuter(double aInnerWidth,
     return;
   }
 
-  // Nothing has been overriden, so change the docshell itself.
-  int32_t height = 0;
-  int32_t unused = 0;
-
+  // Nothing has been overridden, so change the docshell itself.
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  docShellAsWin->GetSize(&unused, &height);
-  aError = SetDocShellWidthAndHeight(
-      CSSToDevIntPixelsForBaseWindow(value, docShellAsWin), height);
+  LayoutDeviceIntSize size = docShellAsWin->GetSize();
+  size.width =
+      (CSSCoord(value) * CSSToDevScaleForBaseWindow(docShellAsWin)).Rounded();
+  aError = SetDocShellSize(size);
 }
 
 double nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
@@ -3603,21 +3565,19 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
   }
 
   // Nothing has been overriden, so change the docshell itself.
-  int32_t height = 0;
-  int32_t width = 0;
-
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  docShellAsWin->GetSize(&width, &height);
-  aError = SetDocShellWidthAndHeight(
-      width, CSSToDevIntPixelsForBaseWindow(value, docShellAsWin));
+  LayoutDeviceIntSize size = docShellAsWin->GetSize();
+  size.height =
+      (CSSCoord(value) * CSSToDevScaleForBaseWindow(docShellAsWin)).Rounded();
+  aError = SetDocShellSize(size);
 }
 
-nsIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
-                                            ErrorResult& aError) {
+CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
+                                             ErrorResult& aError) {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     CSSSize size;
     aError = GetInnerSize(size);
-    return nsIntSize::Round(size.width, size.height);
+    return RoundedToInt(size);
   }
 
   // Windows showing documents in RDM panes and any subframes within them
@@ -3625,24 +3585,18 @@ nsIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
   if (mDoc) {
     Maybe<CSSIntSize> deviceSize = GetRDMDeviceSize(*mDoc);
     if (deviceSize.isSome()) {
-      const CSSIntSize& size = deviceSize.value();
-      return nsIntSize(size.width, size.height);
+      return *deviceSize;
     }
   }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
-    return nsIntSize(0, 0);
+    return {};
   }
 
-  nsIntSize sizeDevPixels;
-  aError = treeOwnerAsWin->GetSize(&sizeDevPixels.width, &sizeDevPixels.height);
-  if (aError.Failed()) {
-    return nsIntSize();
-  }
-
-  return DevToCSSIntPixelsForBaseWindow(sizeDevPixels, treeOwnerAsWin);
+  return RoundedToInt(treeOwnerAsWin->GetSize() /
+                      CSSToDevScaleForBaseWindow(treeOwnerAsWin));
 }
 
 int32_t nsGlobalWindowOuter::GetOuterWidthOuter(CallerType aCallerType,
@@ -3668,20 +3622,11 @@ void nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
                               aIsWidth ? nullptr : &aLengthCSSPixels,
                               aCallerType);
 
-  int32_t width, height;
-  aError = treeOwnerAsWin->GetSize(&width, &height);
-  if (aError.Failed()) {
-    return;
-  }
-
-  int32_t lengthDevPixels =
-      CSSToDevIntPixelsForBaseWindow(aLengthCSSPixels, treeOwnerAsWin);
-  if (aIsWidth) {
-    width = lengthDevPixels;
-  } else {
-    height = lengthDevPixels;
-  }
-  aError = treeOwnerAsWin->SetSize(width, height, true);
+  LayoutDeviceIntSize size = treeOwnerAsWin->GetSize();
+  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+  (aIsWidth ? size.width : size.height) =
+      (CSSCoord(aLengthCSSPixels) * scale).Rounded();
+  aError = treeOwnerAsWin->SetSize(size.width, size.height, true);
 
   CheckForDPIChange();
 }
@@ -3821,16 +3766,14 @@ void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
     return;
   }
 
-  int32_t x, y;
-  aError = treeOwnerAsWin->GetPosition(&x, &y);
-  if (aError.Failed()) {
-    return;
-  }
+  LayoutDeviceIntPoint pos = treeOwnerAsWin->GetPosition();
 
   CheckSecurityLeftAndTop(&aScreenX, nullptr, aCallerType);
-  x = CSSToDevIntPixelsForBaseWindow(aScreenX, treeOwnerAsWin);
 
-  aError = treeOwnerAsWin->SetPosition(x, y);
+  pos.x = (CSSCoord(aScreenX) * CSSToDevScaleForBaseWindow(treeOwnerAsWin))
+              .Rounded();
+
+  aError = treeOwnerAsWin->SetPosition(pos.x, pos.y);
 
   CheckForDPIChange();
 }
@@ -3849,16 +3792,11 @@ void nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
     return;
   }
 
-  int32_t x, y;
-  aError = treeOwnerAsWin->GetPosition(&x, &y);
-  if (aError.Failed()) {
-    return;
-  }
-
+  LayoutDeviceIntPoint pos = treeOwnerAsWin->GetPosition();
   CheckSecurityLeftAndTop(nullptr, &aScreenY, aCallerType);
-  y = CSSToDevIntPixelsForBaseWindow(aScreenY, treeOwnerAsWin);
-
-  aError = treeOwnerAsWin->SetPosition(x, y);
+  pos.y = (CSSCoord(aScreenY) * CSSToDevScaleForBaseWindow(treeOwnerAsWin))
+              .Rounded();
+  aError = treeOwnerAsWin->SetPosition(pos.x, pos.y);
 
   CheckForDPIChange();
 }
@@ -3890,8 +3828,8 @@ void nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth,
 }
 
 // NOTE: Arguments to this function should have values in device pixels
-nsresult nsGlobalWindowOuter::SetDocShellWidthAndHeight(int32_t aInnerWidth,
-                                                        int32_t aInnerHeight) {
+nsresult nsGlobalWindowOuter::SetDocShellSize(
+    const LayoutDeviceIntSize& aSize) {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShell> docShell = mDocShell;
@@ -3899,7 +3837,7 @@ nsresult nsGlobalWindowOuter::SetDocShellWidthAndHeight(int32_t aInnerWidth,
   docShell->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShell, aInnerWidth, aInnerHeight),
+  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShell, aSize.width, aSize.height),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -3944,18 +3882,9 @@ void nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
     RefPtr<nsScreen> screen = GetScreen();
 
     if (treeOwnerAsWin && screen) {
-      int32_t winLeft, winTop, winWidth, winHeight;
-
-      // Get the window size
-      treeOwnerAsWin->GetPositionAndSize(&winLeft, &winTop, &winWidth,
-                                         &winHeight);
-
-      // convert those values to CSS pixels
-      // XXX four separate retrievals of the prescontext
-      winLeft = DevToCSSIntPixelsForBaseWindow(winLeft, treeOwnerAsWin);
-      winTop = DevToCSSIntPixelsForBaseWindow(winTop, treeOwnerAsWin);
-      winWidth = DevToCSSIntPixelsForBaseWindow(winWidth, treeOwnerAsWin);
-      winHeight = DevToCSSIntPixelsForBaseWindow(winHeight, treeOwnerAsWin);
+      CSSToLayoutDeviceScale scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+      CSSIntRect winRect =
+          CSSIntRect::Round(treeOwnerAsWin->GetPositionAndSize() / scale);
 
       // Get the screen dimensions
       // XXX This should use nsIScreenManager once it's fully fleshed out.
@@ -3976,13 +3905,13 @@ void nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
 #endif
 
       if (aLeft) {
-        if (screenLeft + screenWidth < *aLeft + winWidth)
-          *aLeft = screenLeft + screenWidth - winWidth;
+        if (screenLeft + screenWidth < *aLeft + winRect.width)
+          *aLeft = screenLeft + screenWidth - winRect.width;
         if (screenLeft > *aLeft) *aLeft = screenLeft;
       }
       if (aTop) {
-        if (screenTop + screenHeight < *aTop + winHeight)
-          *aTop = screenTop + screenHeight - winHeight;
+        if (screenTop + screenHeight < *aTop + winRect.height)
+          *aTop = screenTop + screenHeight - winRect.height;
         if (screenTop > *aTop) *aTop = screenTop;
       }
     } else {
@@ -5414,18 +5343,16 @@ void nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
     return;
   }
 
-  // mild abuse of a "size" object so we don't need more helper functions
-  nsIntSize cssPos(
-      DevToCSSIntPixelsForBaseWindow(nsIntSize(x, y), treeOwnerAsWin));
+  auto cssScale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+  CSSIntPoint cssPos = RoundedToInt(treeOwnerAsWin->GetPosition() / cssScale);
 
-  cssPos.width += aXDif;
-  cssPos.height += aYDif;
+  cssPos.x += aXDif;
+  cssPos.y += aYDif;
 
-  CheckSecurityLeftAndTop(&cssPos.width, &cssPos.height, aCallerType);
+  CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
 
-  nsIntSize newDevPos(CSSToDevIntPixelsForBaseWindow(cssPos, treeOwnerAsWin));
-
-  aError = treeOwnerAsWin->SetPosition(newDevPos.width, newDevPos.height);
+  LayoutDeviceIntPoint newDevPos = RoundedToInt(cssPos * cssScale);
+  aError = treeOwnerAsWin->SetPosition(newDevPos.x, newDevPos.y);
 
   CheckForDPIChange();
 }
@@ -5455,12 +5382,12 @@ void nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
     return;
   }
 
-  nsIntSize cssSize(aWidth, aHeight);
+  CSSIntSize cssSize(aWidth, aHeight);
   CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height, aCallerType);
 
-  nsIntSize devSz(CSSToDevIntPixelsForBaseWindow(cssSize, treeOwnerAsWin));
-
-  aError = treeOwnerAsWin->SetSize(devSz.width, devSz.height, true);
+  LayoutDeviceIntSize devSize =
+      RoundedToInt(cssSize * CSSToDevScaleForBaseWindow(treeOwnerAsWin));
+  aError = treeOwnerAsWin->SetSize(devSize.width, devSize.height, true);
 
   CheckForDPIChange();
 }
@@ -5483,25 +5410,21 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
     return;
   }
 
-  int32_t width, height;
-  aError = treeOwnerAsWin->GetSize(&width, &height);
-  if (aError.Failed()) {
-    return;
-  }
+  LayoutDeviceIntSize size = treeOwnerAsWin->GetSize();
 
   // To do this correctly we have to convert what we got from GetSize
   // into CSS pixels, add the arguments, do the security check, and
   // then convert back to device pixels for the call to SetSize.
 
-  nsIntSize cssSize(
-      DevToCSSIntPixelsForBaseWindow(nsIntSize(width, height), treeOwnerAsWin));
+  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
+  CSSIntSize cssSize = RoundedToInt(size / scale);
 
   cssSize.width += aWidthDif;
   cssSize.height += aHeightDif;
 
   CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height, aCallerType);
 
-  nsIntSize newDevSize(CSSToDevIntPixelsForBaseWindow(cssSize, treeOwnerAsWin));
+  LayoutDeviceIntSize newDevSize = RoundedToInt(cssSize * scale);
 
   aError = treeOwnerAsWin->SetSize(newDevSize.width, newDevSize.height, true);
 
