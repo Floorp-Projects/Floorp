@@ -14,21 +14,6 @@ include("build/moz.configure/init.configure")
 # - Spidermonkey-specific options and rules should go in js/moz.configure.
 # - etc.
 
-option(
-    "--enable-artifact-builds",
-    env="MOZ_ARTIFACT_BUILDS",
-    help="Download and use prebuilt binary artifacts.",
-)
-
-
-@depends("--enable-artifact-builds")
-def artifact_builds(value):
-    if value:
-        return True
-
-
-set_config("MOZ_ARTIFACT_BUILDS", artifact_builds)
-
 imply_option(
     "--enable-artifact-build-symbols",
     depends(artifact_builds)(lambda v: False if v is None else None),
