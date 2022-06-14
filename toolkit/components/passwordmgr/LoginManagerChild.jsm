@@ -509,7 +509,7 @@ class LoginFormState {
    */
   #cachedIsInferredUsernameField = new WeakMap();
   cachedIsInferredEmailField = new WeakMap();
-  cachedIsInferredLoginForm = new WeakMap();
+  #cachedIsInferredLoginForm = new WeakMap();
 
   /**
    * Records the mock username field when its associated form is submitted.
@@ -564,6 +564,45 @@ class LoginFormState {
     if (result === undefined) {
       result = lazy.LoginHelper.isInferredUsernameField(inputElement);
       this.#cachedIsInferredUsernameField.set(inputElement, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns true if the form is considered a username login form if
+   * 1. The input element looks like a username field or the form looks
+   *    like a login form
+   * 2. The input field doesn't match keywords that indicate the username
+   *    is not used for login (ex, search) or the login form is not use
+   *    a username to sign-in (ex, authentication code)
+   *
+   * @param {Element} element the form to check.
+   * @returns {boolean} True if the element is likely a login form
+   */
+  isProbablyAUsernameLoginForm(formElement, inputElement) {
+    let result = this.#cachedIsInferredLoginForm.get(formElement);
+    if (result === undefined) {
+      // We should revisit these rules after we collect more positive or negative
+      // cases for username-only forms. Right now, if-else-based rules are good
+      // enough to cover the sites we know, but if we find out defining "weight" for each
+      // rule is necessary to improve the heuristic, we should consider switching
+      // this with Fathom.
+
+      result = false;
+      // Check whether the input field looks like a username field or the
+      // form looks like a sign-in or sign-up form.
+      if (
+        this.isProbablyAUsernameField(inputElement) ||
+        lazy.LoginHelper.isInferredLoginForm(formElement)
+      ) {
+        // This is where we collect hints that indicate this is not a username
+        // login form.
+        if (!lazy.LoginHelper.isInferredNonUsernameField(inputElement)) {
+          result = true;
+        }
+      }
+      this.#cachedIsInferredLoginForm.set(formElement, result);
     }
 
     return result;
@@ -3163,53 +3202,14 @@ class LoginManagerChild extends JSWindowActorChild {
       candidate = element;
     }
 
+    let docState = this.stateForDocument(formElement.ownerDocument);
     if (
       candidate &&
-      this.isProbablyAUsernameLoginForm(formElement, candidate)
+      docState.isProbablyAUsernameLoginForm(formElement, candidate)
     ) {
       return candidate;
     }
 
     return null;
-  }
-
-  /**
-   * Returns true if the form is considered a username login form if
-   * 1. The input element looks like a username field or the form looks
-   *    like a login form
-   * 2. The input field doesn't match keywords that indicate the username
-   *    is not used for login (ex, search) or the login form is not use
-   *    a username to sign-in (ex, authentication code)
-   *
-   * @param {Element} element the form to check.
-   * @returns {boolean} True if the element is likely a login form
-   */
-  isProbablyAUsernameLoginForm(formElement, inputElement) {
-    let docState = this.stateForDocument(formElement.ownerDocument);
-    let result = docState.cachedIsInferredLoginForm.get(formElement);
-    if (result === undefined) {
-      // We should revisit these rules after we collect more positive or negative
-      // cases for username-only forms. Right now, if-else-based rules are good
-      // enough to cover the sites we know, but if we find out defining "weight" for each
-      // rule is necessary to improve the heuristic, we should consider switching
-      // this with Fathom.
-
-      result = false;
-      // Check whether the input field looks like a username field or the
-      // form looks like a sign-in or sign-up form.
-      if (
-        docState.isProbablyAUsernameField(inputElement) ||
-        lazy.LoginHelper.isInferredLoginForm(formElement)
-      ) {
-        // This is where we collect hints that indicate this is not a username
-        // login form.
-        if (!lazy.LoginHelper.isInferredNonUsernameField(inputElement)) {
-          result = true;
-        }
-      }
-      docState.cachedIsInferredLoginForm.set(formElement, result);
-    }
-
-    return result;
   }
 }
