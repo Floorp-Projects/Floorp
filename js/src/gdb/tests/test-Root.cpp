@@ -8,6 +8,8 @@
 #include "js/ValueArray.h"
 #include "vm/JSFunction.h"
 
+using namespace js;
+
 FRAGMENT(Root, null) {
   JS::Rooted<JSObject*> null(cx, nullptr);
 
@@ -44,14 +46,14 @@ FRAGMENT(Root, HeapSlot) {
 
 FRAGMENT(Root, barriers) {
   JSObject* obj = JS_NewPlainObject(cx);
-  js::PreBarriered<JSObject*> prebarriered(obj);
-  js::GCPtrObject heapptr(obj);
-  js::HeapPtr<JSObject*> relocatable(obj);
+  PreBarriered<JSObject*> prebarriered(obj);
+  GCPtrObject heapptr(obj);
+  HeapPtr<JSObject*> relocatable(obj);
 
   JS::Value val = JS::ObjectValue(*obj);
-  js::PreBarrieredValue prebarrieredValue(JS::ObjectValue(*obj));
-  js::GCPtrValue heapValue(JS::ObjectValue(*obj));
-  js::HeapPtr<JS::Value> relocatableValue(JS::ObjectValue(*obj));
+  PreBarriered<JS::Value> prebarrieredValue(JS::ObjectValue(*obj));
+  GCPtrValue heapValue(JS::ObjectValue(*obj));
+  HeapPtr<JS::Value> relocatableValue(JS::ObjectValue(*obj));
 
   breakpoint();
 
