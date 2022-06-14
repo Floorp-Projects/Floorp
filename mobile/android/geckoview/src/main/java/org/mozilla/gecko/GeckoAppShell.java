@@ -387,8 +387,7 @@ public class GeckoAppShell {
       float accuracy,
       float altitudeAccuracy,
       float heading,
-      float speed,
-      long time);
+      float speed);
 
   private static class AndroidListeners implements SensorEventListener, LocationListener {
     @Override
@@ -485,8 +484,7 @@ public class GeckoAppShell {
           accuracy,
           altitudeAccuracy,
           heading,
-          speed,
-          location.getTime());
+          speed);
     }
 
     @Override
