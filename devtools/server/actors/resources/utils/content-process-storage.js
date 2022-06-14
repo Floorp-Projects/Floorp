@@ -9,6 +9,13 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { Ci } = require("chrome");
 const Services = require("Services");
 
+loader.lazyRequireGetter(
+  this,
+  "getAddonIdForWindowGlobal",
+  "devtools/server/actors/watcher/browsing-context-helpers.jsm",
+  true
+);
+
 // ms of delay to throttle updates
 const BATCH_DELAY = 200;
 
@@ -218,11 +225,8 @@ class StorageActorMock extends EventEmitter {
   }
 
   isIncludedInTargetExtension(subject) {
-    const { document } = subject;
-    return (
-      document.nodePrincipal.addonId &&
-      document.nodePrincipal.addonId === this.targetActor.addonId
-    );
+    const addonId = getAddonIdForWindowGlobal(subject.windowGlobalChild);
+    return addonId && addonId === this.targetActor.addonId;
   }
 
   isIncludedInTopLevelWindow(window) {
