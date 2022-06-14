@@ -163,7 +163,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 #endif
 
   // Object that this weak map is part of, if any.
-  HeapPtrObject memberOf;
+  HeapPtr<JSObject*> memberOf;
 
   // Zone containing this weak map.
   JS::Zone* zone_;
