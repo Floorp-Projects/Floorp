@@ -2,29 +2,6 @@
 
 ## [Unreleased]
 
-## [0.4.17] - 2022-04-29
-
-* Update `kv_unstable` internal dependencies.
-
-## [0.4.16] - 2022-03-22
-
-* Fix a conflict with unqualified `Option` use in macros.
-
-## [0.4.15] - 2022-02-23
-
-* Silence a warning about the deprecated `spin_loop_hint`.
-* Relax ordering in the atomic `set_max_level` call.
-* Add thumbv4t-none-eabi to targets that don't support atomics
-* Allow levels to be iterated over.
-* Implement `Log` on some common wrapper types.
-* Improvements to test coverage.
-* Improvements to documentation.
-* Add key-value support to the `log!` macros.
-* Tighten `kv_unstable` internal dependencies so they don't bump past their current alpha.
-* Add a simple visit API to `kv_unstable`.
-* Support `NonZero*` integers as values in structured logging
-* Support static strings as keys in structured logging
-
 ## [0.4.14] - 2021-01-27
 
 * Remove the `__private_api_log_lit` special case.
@@ -219,10 +196,7 @@ version using log 0.4.x to avoid losing module and file information.
 
 Look at the [release tags] for information about older releases.
 
-[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.17...HEAD
-[0.4.17]: https://github.com/rust-lang-nursery/log/compare/0.4.16...0.4.17
-[0.4.16]: https://github.com/rust-lang-nursery/log/compare/0.4.15...0.4.16
-[0.4.15]: https://github.com/rust-lang-nursery/log/compare/0.4.13...0.4.15
+[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.14...HEAD
 [0.4.14]: https://github.com/rust-lang-nursery/log/compare/0.4.13...0.4.14
 [0.4.13]: https://github.com/rust-lang-nursery/log/compare/0.4.11...0.4.13
 [0.4.12]: https://github.com/rust-lang-nursery/log/compare/0.4.11...0.4.12

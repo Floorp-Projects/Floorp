@@ -22,7 +22,7 @@ use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, ResumptionToken,
 use neqo_qpack::Stats as QpackStats;
 use neqo_transport::{
     AppError, Connection, ConnectionEvent, ConnectionId, ConnectionIdGenerator, Output,
-    Stats as TransportStats, StreamId, StreamType, Version, ZeroRttState,
+    QuicVersion, Stats as TransportStats, StreamId, StreamType, ZeroRttState,
 };
 use std::cell::RefCell;
 use std::fmt::Debug;
@@ -49,13 +49,13 @@ where
     }
 }
 
-fn alpn_from_quic_version(version: Version) -> &'static str {
+fn alpn_from_quic_version(version: QuicVersion) -> &'static str {
     match version {
-        Version::Version2 | Version::Version1 => "h3",
-        Version::Draft29 => "h3-29",
-        Version::Draft30 => "h3-30",
-        Version::Draft31 => "h3-31",
-        Version::Draft32 => "h3-32",
+        QuicVersion::Version1 => "h3",
+        QuicVersion::Draft29 => "h3-29",
+        QuicVersion::Draft30 => "h3-30",
+        QuicVersion::Draft31 => "h3-31",
+        QuicVersion::Draft32 => "h3-32",
     }
 }
 
@@ -77,7 +77,7 @@ impl Http3Client {
     /// Making a `neqo-transport::connection` may produce an error. This can only be a crypto error if
     /// the socket can't be created or configured.
     pub fn new(
-        server_name: impl Into<String>,
+        server_name: &str,
         cid_manager: Rc<RefCell<dyn ConnectionIdGenerator>>,
         local_addr: SocketAddr,
         remote_addr: SocketAddr,
@@ -90,13 +90,12 @@ impl Http3Client {
                 &[alpn_from_quic_version(
                     http3_parameters
                         .get_connection_parameters()
-                        .get_versions()
-                        .initial(),
+                        .get_quic_version(),
                 )],
                 cid_manager,
                 local_addr,
                 remote_addr,
-                http3_parameters.get_connection_parameters().clone(),
+                *http3_parameters.get_connection_parameters(),
                 now,
             )?,
             http3_parameters,
@@ -106,16 +105,17 @@ impl Http3Client {
     #[must_use]
     pub fn new_with_conn(c: Connection, http3_parameters: Http3Parameters) -> Self {
         let events = Http3ClientEvents::default();
-        let webtransport = http3_parameters.get_webtransport();
-        let push_streams = http3_parameters.get_max_concurrent_push_streams();
         let mut base_handler = Http3Connection::new(http3_parameters, Role::Client);
-        if webtransport {
+        if http3_parameters.get_webtransport() {
             base_handler.set_features_listener(events.clone());
         }
         Self {
             conn: c,
             events: events.clone(),
-            push_handler: Rc::new(RefCell::new(PushController::new(push_streams, events))),
+            push_handler: Rc::new(RefCell::new(PushController::new(
+                http3_parameters.get_max_concurrent_push_streams(),
+                events,
+            ))),
             base_handler,
         }
     }
@@ -219,7 +219,7 @@ impl Http3Client {
             debug_assert_eq!(Ok(true), res);
             return Err(Error::FatalError);
         }
-        if self.conn.zero_rtt_state() == ZeroRttState::Sending {
+        if *self.conn.zero_rtt_state() == ZeroRttState::Sending {
             self.base_handler
                 .set_0rtt_settings(&mut self.conn, settings)?;
             self.events
@@ -834,16 +834,17 @@ mod tests {
     use neqo_common::{event::Provider, qtrace, Datagram, Decoder, Encoder};
     use neqo_crypto::{AllowZeroRtt, AntiReplay, ResumptionToken};
     use neqo_qpack::{encoder::QPackEncoder, QpackSettings};
+    use neqo_transport::tparams::{self, TransportParameter};
     use neqo_transport::{
         ConnectionError, ConnectionEvent, ConnectionParameters, Output, State, StreamId,
-        StreamType, Version, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
+        StreamType, RECV_BUFFER_SIZE, SEND_BUFFER_SIZE,
     };
     use std::convert::TryFrom;
     use std::mem;
     use std::time::Duration;
     use test_fixture::{
-        addr, anti_replay, default_server_h3, fixture_init, new_server, now,
-        CountingConnectionIdGenerator, DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
+        addr, anti_replay, default_server_h3, fixture_init, now, CountingConnectionIdGenerator,
+        DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
     };
 
     fn assert_closed(client: &Http3Client, expected: &Error) {
@@ -868,11 +869,6 @@ mod tests {
             addr(),
             addr(),
             Http3Parameters::default()
-                .connection_parameters(
-                    // Disable compatible upgrade, which complicates tests.
-                    ConnectionParameters::default()
-                        .versions(Version::default(), vec![Version::default()]),
-                )
                 .max_table_size_encoder(max_table_size)
                 .max_table_size_decoder(max_table_size)
                 .max_blocked_streams(100)
@@ -1021,9 +1017,9 @@ mod tests {
             self.settings.encode(&mut enc);
             assert_eq!(
                 self.conn
-                    .stream_send(self.control_stream_id.unwrap(), enc.as_ref())
+                    .stream_send(self.control_stream_id.unwrap(), &enc[..])
                     .unwrap(),
-                enc.len()
+                enc[..].len()
             );
         }
 
@@ -1164,9 +1160,18 @@ mod tests {
                     .borrow_mut()
                     .encode_header_block(&mut self.conn, headers, stream_id);
             let hframe = HFrame::Headers {
-                header_block: header_block.as_ref().to_vec(),
+                header_block: header_block.to_vec(),
             };
             hframe.encode(encoder);
+        }
+
+        pub fn set_max_uni_stream(&mut self, max_stream: u64) {
+            self.conn
+                .set_local_tparam(
+                    tparams::INITIAL_MAX_STREAMS_UNI,
+                    TransportParameter::Integer(max_stream),
+                )
+                .unwrap();
         }
     }
 
@@ -1419,13 +1424,10 @@ mod tests {
         client: &mut Http3Client,
         server: &mut TestServer,
         stream_id: StreamId,
-        response: impl AsRef<[u8]>,
+        response: &[u8],
         close_stream: bool,
     ) {
-        let _ = server
-            .conn
-            .stream_send(stream_id, response.as_ref())
-            .unwrap();
+        let _ = server.conn.stream_send(stream_id, response).unwrap();
         if close_stream {
             server.conn.stream_close_send(stream_id).unwrap();
         }
@@ -1457,7 +1459,7 @@ mod tests {
         };
         let mut d = Encoder::default();
         frame.encode(&mut d);
-        let _ = conn.stream_send(stream_id, d.as_ref()).unwrap();
+        let _ = conn.stream_send(stream_id, &d).unwrap();
     }
 
     fn send_push_data_and_exchange_packets(
@@ -1498,7 +1500,7 @@ mod tests {
         frame.encode(&mut d);
         server
             .conn
-            .stream_send(server.control_stream_id.unwrap(), d.as_ref())
+            .stream_send(server.control_stream_id.unwrap(), &d)
             .unwrap();
 
         let out = server.conn.process(None, now());
@@ -1534,13 +1536,13 @@ mod tests {
         conn: &mut Connection,
         push_stream_id: StreamId,
         push_id: u8,
-        data: impl AsRef<[u8]>,
+        data: &[u8],
         close_push_stream: bool,
     ) {
         // send data
         let _ = conn.stream_send(push_stream_id, PUSH_STREAM_TYPE).unwrap();
         let _ = conn.stream_send(push_stream_id, &[push_id]).unwrap();
-        let _ = conn.stream_send(push_stream_id, data.as_ref()).unwrap();
+        let _ = conn.stream_send(push_stream_id, data).unwrap();
         if close_push_stream {
             conn.stream_close_send(push_stream_id).unwrap();
         }
@@ -2410,7 +2412,7 @@ mod tests {
         let mut enc = Encoder::default();
         data_frame.encode(&mut enc);
 
-        (vec![0_u8; size], enc.as_ref().to_vec())
+        (vec![0_u8; size], enc.to_vec())
     }
 
     // Send 2 frames. For the second one we can only send 63 bytes.
@@ -3890,7 +3892,7 @@ mod tests {
         server.settings.encode(&mut enc);
         let mut sent = server.conn.stream_send(control_stream, CONTROL_STREAM_TYPE);
         assert_eq!(sent.unwrap(), CONTROL_STREAM_TYPE.len());
-        sent = server.conn.stream_send(control_stream, enc.as_ref());
+        sent = server.conn.stream_send(control_stream, &enc);
         assert_eq!(sent.unwrap(), enc.len());
 
         let out = server.conn.process(None, now());
@@ -4529,10 +4531,7 @@ mod tests {
         let d_frame = HFrame::Data { len: 3 };
         d_frame.encode(&mut d);
         d.encode(&[0x61, 0x62, 0x63]);
-        let _ = server
-            .conn
-            .stream_send(request_stream_id, d.as_ref())
-            .unwrap();
+        let _ = server.conn.stream_send(request_stream_id, &d[..]).unwrap();
         server.conn.stream_close_send(request_stream_id).unwrap();
 
         let out = server.conn.process(None, now());
@@ -6088,9 +6087,9 @@ mod tests {
         for f in H3_RESERVED_FRAME_TYPES {
             let mut enc = Encoder::default();
             enc.encode_varint(*f);
-            test_wrong_frame_on_control_stream(enc.as_ref());
-            test_wrong_frame_on_push_stream(enc.as_ref());
-            test_wrong_frame_on_request_stream(enc.as_ref());
+            test_wrong_frame_on_control_stream(&enc);
+            test_wrong_frame_on_push_stream(&enc);
+            test_wrong_frame_on_request_stream(&enc);
         }
     }
 
@@ -6111,7 +6110,7 @@ mod tests {
             // The settings frame contains a reserved settings type and some value (0x1).
             enc.encode_varint(*s);
             enc.encode_varint(1_u64);
-            let sent = server.conn.stream_send(control_stream, enc.as_ref());
+            let sent = server.conn.stream_send(control_stream, &enc);
             assert_eq!(sent, Ok(4));
             let out = server.conn.process(None, now());
             client.process(out.dgram(), now());
@@ -6370,10 +6369,8 @@ mod tests {
     #[test]
     fn client_control_stream_create_failed() {
         let mut client = default_http3_client();
-        let mut server = TestServer::new_with_conn(new_server(
-            DEFAULT_ALPN_H3,
-            ConnectionParameters::default().max_streams(StreamType::UniDi, 0),
-        ));
+        let mut server = TestServer::new();
+        server.set_max_uni_stream(0);
         handshake_client_error(&mut client, &mut server, &Error::StreamLimitError);
     }
 
@@ -6381,10 +6378,8 @@ mod tests {
     #[test]
     fn client_qpack_stream_create_failed() {
         let mut client = default_http3_client();
-        let mut server = TestServer::new_with_conn(new_server(
-            DEFAULT_ALPN_H3,
-            ConnectionParameters::default().max_streams(StreamType::UniDi, 2),
-        ));
+        let mut server = TestServer::new();
+        server.set_max_uni_stream(2);
         handshake_client_error(&mut client, &mut server, &Error::StreamLimitError);
     }
 

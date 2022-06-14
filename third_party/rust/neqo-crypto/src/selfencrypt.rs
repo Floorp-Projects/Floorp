@@ -90,7 +90,7 @@ impl SelfEncrypt {
         let offset = enc.len();
         let mut output: Vec<u8> = enc.into();
         output.resize(encoded_len, 0);
-        cipher.encrypt(0, extended_aad.as_ref(), plaintext, &mut output[offset..])?;
+        cipher.encrypt(0, &extended_aad, plaintext, &mut output[offset..])?;
         qtrace!(
             ["SelfEncrypt"],
             "seal {} {} -> {}",
@@ -139,8 +139,7 @@ impl SelfEncrypt {
         // NSS insists on having extra space available for decryption.
         let padded_len = ciphertext.len() - offset;
         let mut output = vec![0; padded_len];
-        let decrypted =
-            aead.decrypt(0, extended_aad.as_ref(), &ciphertext[offset..], &mut output)?;
+        let decrypted = aead.decrypt(0, &extended_aad, &ciphertext[offset..], &mut output)?;
         let final_len = decrypted.len();
         output.truncate(final_len);
         qtrace!(
