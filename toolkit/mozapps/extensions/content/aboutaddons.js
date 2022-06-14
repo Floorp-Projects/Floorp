@@ -3710,10 +3710,15 @@ class ColorwayClosetCard extends HTMLElement {
     let colorwayPreviewSubHeading = document.createElement("p");
     let colorwayPreviewTextContainer = document.createElement("div");
 
-    // TODO: Bug 1770465 - insert dynamic localized collection details
-    colorwayPreviewHeading.textContent = "Life in Color";
-    colorwayPreviewSubHeading.textContent =
-      "Make Firefox feel a little more you.";
+    const collection = BuiltInThemes.findActiveColorwayCollection?.();
+    if (collection) {
+      const { l10nId } = collection;
+      document.l10n.setAttributes(colorwayPreviewHeading, l10nId);
+      document.l10n.setAttributes(
+        colorwayPreviewSubHeading,
+        `${l10nId}-subheading`
+      );
+    }
 
     colorwayPreviewTextContainer.appendChild(colorwayPreviewHeading);
     colorwayPreviewTextContainer.appendChild(colorwayPreviewSubHeading);
@@ -3731,14 +3736,25 @@ class ColorwayClosetCard extends HTMLElement {
     card.querySelector(".addon-icon").hidden = true;
 
     let preview = card.querySelector(".card-heading-image");
-    // TODO: Bug 1770465 - set preview.src for colorways card preview
+    // TODO: Bug 1772855 - set preview.src for colorways card preview
     preview.hidden = false;
 
     let colorwayExpiryDateSpan = card.querySelector(
       "#colorways-expiry-date > span"
     );
-    // TODO: Bug 1770465 - set dynamic date here
-    colorwayExpiryDateSpan.textContent = "Expires June 2";
+
+    const collection = BuiltInThemes.findActiveColorwayCollection();
+    if (collection) {
+      const { expiry } = collection;
+      document.l10n.setAttributes(
+        colorwayExpiryDateSpan,
+        "colorway-collection-expiry-date-span",
+        {
+          expiryDate: expiry.getTime(),
+        }
+      );
+    }
+
     let colorwaysButton = card.querySelector("[action='open-colorways']");
     colorwaysButton.hidden = false;
     colorwaysButton.onclick = () => {
@@ -4850,6 +4866,15 @@ gViewController.defineView("list", async type => {
   if (type == "theme") {
     colorwaysThemeInstalled = await areColorwayThemesInstalled();
     if (colorwaysThemeInstalled && COLORWAY_CLOSET_ENABLED) {
+      // Avoid inserting colorway closet fluent strings in aboutaddons.html,
+      // considering that there is a dependency on a browser-only resource.
+      const fluentResourceId = "preview/colorwaycloset.ftl";
+      if (!document.head.querySelector(`link[href='${fluentResourceId}']`)) {
+        const fluentLink = document.createElement("link");
+        fluentLink.setAttribute("rel", "localization");
+        fluentLink.setAttribute("href", fluentResourceId);
+        document.head.appendChild(fluentLink);
+      }
       // Insert colorway closet card as the first element so that
       // it is positioned between the enabled and disabled sections.
       sections[1].sectionPreambleCustomElement = "colorways-list";
