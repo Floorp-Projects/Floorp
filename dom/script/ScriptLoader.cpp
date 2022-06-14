@@ -1160,6 +1160,10 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   request->mBaseURL = mDocument->GetDocBaseURI();
 
   if (request->IsModuleRequest()) {
+    // https://wicg.github.io/import-maps/#document-acquiring-import-maps
+    // Set acquiring import maps to false for inline modules.
+    mModuleLoader->SetAcquiringImportMaps(false);
+
     ModuleLoadRequest* modReq = request->AsModuleRequest();
     if (aElement->GetParserCreated() != NOT_FROM_PARSER) {
       if (aElement->GetScriptAsync()) {

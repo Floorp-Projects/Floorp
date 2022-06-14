@@ -10,9 +10,6 @@ toolbar-button-firefox-view =
 
 firefoxview-page-title = { -firefoxview-brand-name }
 
-firefoxview-colorways-button = Colorway Closet
-firefoxview-colorways-no-collection-label = New colorways are on the way
-
 # Used instead of the localized relative time when a timestamp is within a minute or so of now
 firefoxview-just-now-timestamp = Just now
 

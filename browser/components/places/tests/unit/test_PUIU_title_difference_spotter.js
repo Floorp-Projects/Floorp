@@ -7,6 +7,10 @@
 
 const TESTS = [
   {
+    title: null,
+    expected: undefined,
+  },
+  {
     title: "Short title",
     expected: undefined,
   },

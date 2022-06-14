@@ -77,10 +77,27 @@ with only_when(host_is_osx | target_is_osx):
         help="Location of platform SDK to use",
     )
 
-    @depends("--with-macos-sdk", host)
-    @imports(_from="__builtin__", _import="open")
-    @imports(_from="os.path", _import="isdir")
     @imports("plistlib")
+    @imports(_from="__builtin__", _import="open")
+    @imports(_from="__builtin__", _import="Exception")
+    def get_sdk_version(sdk):
+        with open(os.path.join(sdk, "SDKSettings.plist"), "rb") as plist:
+            obj = plistlib.load(plist)
+        if not obj:
+            raise Exception(
+                "Error parsing SDKSettings.plist in the SDK directory: %s" % sdk
+            )
+        if "Version" not in obj:
+            raise Exception(
+                "Error finding Version information in SDKSettings.plist from the SDK: %s"
+                % sdk
+            )
+        return Version(obj["Version"])
+
+    @depends("--with-macos-sdk", host)
+    @imports(_from="__builtin__", _import="Exception")
+    @imports(_from="os.path", _import="isdir")
+    @imports(_from="os", _import="listdir")
     def macos_sdk(sdk, host):
         # When we change the SDK we build with, please update the manual SDK
         # installation docs:
@@ -89,6 +106,10 @@ with only_when(host_is_osx | target_is_osx):
 
         if sdk:
             sdk = sdk[0]
+            try:
+                version = get_sdk_version(sdk)
+            except Exception as e:
+                die(e)
         elif host.os == "OSX":
             sdk = check_cmd_output(
                 "xcrun", "--show-sdk-path", onerror=lambda: ""
@@ -98,6 +119,17 @@ with only_when(host_is_osx | target_is_osx):
                     "Could not find the macOS SDK. Please use --with-macos-sdk to give "
                     "the path to a macOS SDK."
                 )
+            # Scan the parent directory xcrun returns for the most recent SDK.
+            sdk_dir = os.path.dirname(sdk)
+            versions = []
+            for d in listdir(sdk_dir):
+                if d.lower().startswith("macos"):
+                    try:
+                        sdk = os.path.join(sdk_dir, d)
+                        versions.append((get_sdk_version(sdk), sdk))
+                    except Exception:
+                        pass
+            version, sdk = max(versions)
         else:
             die(
                 "Need a macOS SDK when targeting macOS. Please use --with-macos-sdk "
@@ -111,16 +143,6 @@ with only_when(host_is_osx | target_is_osx):
                 "tools are selected during the Xcode/Developer Tools installation."
                 % sdk
             )
-        with open(os.path.join(sdk, "SDKSettings.plist"), "rb") as plist:
-            obj = plistlib.load(plist)
-        if not obj:
-            die("Error parsing SDKSettings.plist in the SDK directory: %s" % sdk)
-        if "Version" not in obj:
-            die(
-                "Error finding Version information in SDKSettings.plist from the SDK: %s"
-                % sdk
-            )
-        version = Version(obj["Version"])
         sdk_installation_docs_url = "https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported"
         if version < sdk_min_version:
             die(
@@ -1841,7 +1863,7 @@ def color_cflags(info):
     # before adding flags to return values.
     if info.type == "gcc":
         return "-fdiagnostics-color"
-    elif info.type == "clang":
+    elif info.type in ["clang", "clang-cl"]:
         return "-fcolor-diagnostics"
     else:
         return ""

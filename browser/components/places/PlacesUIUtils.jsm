@@ -1836,7 +1836,7 @@ var PlacesUIUtils = {
    *
    * @param {object[]} candidates
    *   An array of candidates to modify. The candidates should have a `title`
-   *   property.
+   *   property which should be a string or null.
    *   The order of the array does not matter. The objects are modified
    *   in-place.
    *   If a difference to other similar titles is found then a
@@ -1863,7 +1863,10 @@ var PlacesUIUtils = {
 
     for (let candidate of candidates) {
       // Title is too short for us to care about, simply continue.
-      if (candidate.title.length < this.similarTitlesMinChars) {
+      if (
+        !candidate.title ||
+        candidate.title.length < this.similarTitlesMinChars
+      ) {
         continue;
       }
       let titleBeginning = candidate.title.slice(0, this.similarTitlesMinChars);

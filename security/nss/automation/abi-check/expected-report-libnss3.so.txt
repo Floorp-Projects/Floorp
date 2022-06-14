@@ -1,5 +1,0 @@
-
-1 Added function:
-
-  'function PRBool SECMOD_LockedModuleHasRemovableSlots(SECMODModule*)'    {SECMOD_LockedModuleHasRemovableSlots@@NSS_3.79}
-

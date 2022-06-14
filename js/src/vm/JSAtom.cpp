@@ -140,7 +140,7 @@ struct js::AtomHasher::Lookup {
 
 inline HashNumber js::AtomHasher::hash(const Lookup& l) { return l.hash; }
 
-MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtrAtom& entry,
+MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
                                              const Lookup& lookup) {
   JSAtom* key = entry.unbarrieredGet();
   if (lookup.atom) {
@@ -252,8 +252,8 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     return false;
   }
 
-  ImmutablePropertyNamePtr* names =
-      reinterpret_cast<ImmutablePropertyNamePtr*>(commonNames.ref());
+  ImmutableTenuredPtr<PropertyName*>* names =
+      reinterpret_cast<ImmutableTenuredPtr<PropertyName*>*>(commonNames.ref());
   for (size_t i = 0; i < uint32_t(WellKnownAtomId::Limit); i++) {
     const auto& info = wellKnownAtomInfos[i];
     JSAtom* atom = PermanentlyAtomizeCharsValidLength(
@@ -298,9 +298,10 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     // Faster than zeroing the array and null checking during every GC.
     gc::AutoSuppressGC nogc(cx);
 
-    ImmutablePropertyNamePtr* descriptions =
+    ImmutableTenuredPtr<PropertyName*>* descriptions =
         commonNames->wellKnownSymbolDescriptions();
-    ImmutableSymbolPtr* symbols = reinterpret_cast<ImmutableSymbolPtr*>(wks);
+    ImmutableTenuredPtr<JS::Symbol*>* symbols =
+        reinterpret_cast<ImmutableTenuredPtr<JS::Symbol*>*>(wks);
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
       JS::Symbol* symbol =
           JS::Symbol::newWellKnown(cx, JS::SymbolCode(i), descriptions[i]);

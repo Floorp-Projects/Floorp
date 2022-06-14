@@ -1059,7 +1059,7 @@ class DebugEnvironments {
    * The map from live frames which have optimized-away environments to the
    * corresponding debug environments.
    */
-  typedef HashMap<MissingEnvironmentKey, WeakHeapPtrDebugEnvironmentProxy,
+  typedef HashMap<MissingEnvironmentKey, WeakHeapPtr<DebugEnvironmentProxy*>,
                   MissingEnvironmentKey, ZoneAllocPolicy>
       MissingEnvironmentMap;
   MissingEnvironmentMap missingEnvs;

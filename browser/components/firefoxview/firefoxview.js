@@ -19,18 +19,55 @@ XPCOMUtils.defineLazyModuleGetters(globalThis, {
 });
 
 window.addEventListener("load", () => {
-  document.getElementById("colorways-button").addEventListener("click", () => {
-    globalThis.ColorwayClosetOpener.openModal();
-  });
   tabsSetupFlowManager.initialize(
     document.getElementById("tabs-pickup-container")
   );
   document.getElementById("recently-closed-tabs-container").onLoad();
-  const noColorwayCollection =
-    BuiltInThemes.findActiveColorwayCollection() === null;
-  document
-    .getElementById("colorways")
-    .classList.toggle("no-collection", noColorwayCollection);
+  const colorwaysCollection = BuiltInThemes.findActiveColorwayCollection();
+  const colorwaysContainer = document.getElementById("colorways");
+  colorwaysContainer.classList.toggle("no-collection", !colorwaysCollection);
+  colorwaysContainer.classList.toggle("content-container", colorwaysCollection);
+  const templateId = colorwaysCollection
+    ? "colorways-active-collection-template"
+    : "colorways-no-collection-template";
+  if (colorwaysContainer.firstChild) {
+    colorwaysContainer.firstChild.remove();
+  }
+  colorwaysContainer.append(
+    document.importNode(document.getElementById(templateId).content, true)
+  );
+  if (colorwaysCollection) {
+    const { expiry, l10nId } = colorwaysCollection;
+    const colorwayButton = document.getElementById("colorways-button");
+    document.l10n.setAttributes(
+      colorwayButton,
+      "colorway-fx-home-try-colorways-button"
+    );
+    colorwayButton.addEventListener("click", () => {
+      globalThis.ColorwayClosetOpener.openModal();
+    });
+    const collectionTitle = document.getElementById(
+      "colorways-collection-title"
+    );
+    document.l10n.setAttributes(collectionTitle, l10nId.title);
+    const colorwayExpiryDateSpan = document.querySelector(
+      "#colorways-collection-expiry-date > span"
+    );
+    document.l10n.setAttributes(
+      colorwayExpiryDateSpan,
+      "colorway-collection-expiry-date-span",
+      {
+        expiryDate: expiry.getTime(),
+      }
+    );
+    if (l10nId.description) {
+      const message = document.getElementById(
+        "colorways-collection-description"
+      );
+      document.l10n.setAttributes(message, l10nId.description);
+    }
+    // TODO: Uncomment when graphic is finalized document.getElementById("colorways-collection-graphic").src = "chrome://browser/content/colorway-try-colorways.svg";
+  }
 });
 
 window.addEventListener("unload", () => {

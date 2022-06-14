@@ -62,8 +62,8 @@ static MOZ_ALWAYS_INLINE void Debug_SetValueRangeToCrashOnTouch(Value* vec,
 #endif
 }
 
-static MOZ_ALWAYS_INLINE void Debug_SetValueRangeToCrashOnTouch(GCPtrValue* vec,
-                                                                size_t len) {
+static MOZ_ALWAYS_INLINE void Debug_SetValueRangeToCrashOnTouch(
+    GCPtr<Value>* vec, size_t len) {
 #ifdef DEBUG
   Debug_SetValueRangeToCrashOnTouch((Value*)vec, len);
 #endif

@@ -318,6 +318,7 @@ void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
                                     const VMFunctionData* f) {
   MOZ_ASSERT(f);
   linkExitFrame(cxreg, scratch);
+  Push(FramePointer);
   // Push VMFunction pointer, to mark arguments.
   Push(ImmPtr(f));
 }
@@ -325,6 +326,7 @@ void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
 void MacroAssembler::enterFakeExitFrame(Register cxreg, Register scratch,
                                         ExitFrameType type) {
   linkExitFrame(cxreg, scratch);
+  Push(FramePointer);
   Push(Imm32(int32_t(type)));
 }
 

@@ -1232,48 +1232,4 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 }  // namespace mozilla
 
-namespace js {
-
-class DebugEnvironmentProxy;
-class PropertyName;
-class GetterSetter;
-class PropMap;
-
-namespace jit {
-class JitCode;
-}  // namespace jit
-
-using PreBarrieredId = PreBarriered<jsid>;
-using PreBarrieredObject = PreBarriered<JSObject*>;
-using PreBarrieredValue = PreBarriered<Value>;
-
-using GCPtrAtom = GCPtr<JSAtom*>;
-using GCPtrBigInt = GCPtr<BigInt*>;
-using GCPtrFunction = GCPtr<JSFunction*>;
-using GCPtrLinearString = GCPtr<JSLinearString*>;
-using GCPtrObject = GCPtr<JSObject*>;
-using GCPtrScript = GCPtr<JSScript*>;
-using GCPtrString = GCPtr<JSString*>;
-using GCPtrGetterSetter = GCPtr<GetterSetter*>;
-using GCPtrPropMap = GCPtr<PropMap*>;
-using GCPtrValue = GCPtr<Value>;
-using GCPtrId = GCPtr<jsid>;
-
-using ImmutablePropertyNamePtr = ImmutableTenuredPtr<PropertyName*>;
-using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
-
-using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
-using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
-using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;
-using WeakHeapPtrScript = WeakHeapPtr<JSScript*>;
-using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
-using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
-
-using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
-using HeapPtrObject = HeapPtr<JSObject*>;
-using HeapPtrRegExpShared = HeapPtr<RegExpShared*>;
-using HeapPtrValue = HeapPtr<Value>;
-
-} /* namespace js */
-
 #endif /* gc_Barrier_h */

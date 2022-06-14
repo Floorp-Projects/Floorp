@@ -48,17 +48,21 @@ inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
 inline void EmitReturnFromIC(MacroAssembler& masm) { masm.branch(ra); }
 
 inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
-  masm.movePtr(FramePointer, StackPointer);
-
-  // Load savedFrame, savedStub and return address, discard frame descriptor.
-  masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)),
-               FramePointer);
-  masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedStub)),
-               ICStubReg);
   masm.loadPtr(
-      Address(StackPointer, offsetof(BaselineStubFrame, returnAddress)),
-      ICTailCallReg);
-  masm.addPtr(Imm32(STUB_FRAME_SIZE), StackPointer);
+      Address(FramePointer, BaselineStubFrameLayout::ICStubOffsetFromFP),
+      ICStubReg);
+
+  masm.movePtr(FramePointer, StackPointer);
+  masm.Pop(FramePointer);
+
+  // Load the return address.
+  masm.Pop(ICTailCallReg);
+
+  // Discard the frame descriptor.
+  {
+    SecondScratchRegisterScope scratch2(masm);
+    masm.Pop(scratch2);
+  }
 
   masm.checkStackAlignment();
 }

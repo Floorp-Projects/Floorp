@@ -530,7 +530,6 @@ class nsWindow final : public nsBaseWidget {
   int mCompositorPauseTimeoutID = 0;
 
   nsSizeMode mSizeMode = nsSizeMode_Normal;
-  nsSizeMode mSizeState = nsSizeMode_Normal;
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;
   // The size requested, which might not be reflected in mBounds.  Used in

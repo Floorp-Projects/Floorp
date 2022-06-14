@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1596164
+-->
+<head>
+  <title>Test for getCurrentPosition with native location provider</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1596164">Mozilla Bug 1596164</a>
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_maximumAge() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["geo.provider.testing", false]],
+  });
+
+  await new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(() => {
+      ok(true, "can get position");
+      resolve();
+    }, () => {
+      ok(false, "error callback should not have been called");
+      resolve();
+    },
+    { maximumAge: 10000 });
+  });
+});
+</script>
+</body>
+</html>

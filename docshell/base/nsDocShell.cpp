@@ -4641,20 +4641,14 @@ nsDocShell::Destroy() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetUnscaledDevicePixelsPerCSSPixel(double* aScale) {
+double nsDocShell::GetWidgetCSSToDeviceScale() {
   if (mParentWidget) {
-    *aScale = mParentWidget->GetDefaultScale().scale;
-    return NS_OK;
+    return mParentWidget->GetDefaultScale().scale;
   }
-
-  nsCOMPtr<nsIBaseWindow> ownerWindow(do_QueryInterface(mTreeOwner));
-  if (ownerWindow) {
-    return ownerWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+  if (nsCOMPtr<nsIBaseWindow> ownerWindow = do_QueryInterface(mTreeOwner)) {
+    return ownerWindow->GetWidgetCSSToDeviceScale();
   }
-
-  *aScale = 1.0;
-  return NS_OK;
+  return 1.0;
 }
 
 NS_IMETHODIMP

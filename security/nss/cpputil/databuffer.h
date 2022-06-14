@@ -8,6 +8,7 @@
 #define databuffer_h__
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>

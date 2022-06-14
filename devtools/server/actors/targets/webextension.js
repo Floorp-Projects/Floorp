@@ -37,6 +37,14 @@ loader.lazyRequireGetter(
   "devtools/server/actors/thread",
   true
 );
+
+loader.lazyRequireGetter(
+  this,
+  "getAddonIdForWindowGlobal",
+  "devtools/server/actors/watcher/browsing-context-helpers.jsm",
+  true
+);
+
 const FALLBACK_DOC_URL =
   "chrome://devtools/content/shared/webextension-fallback.html";
 
@@ -227,7 +235,12 @@ webExtensionTargetPrototype._searchFallbackWindow = function() {
   // specifically created for the devtools server and it is never used
   // or navigated anywhere else.
   this.fallbackWindow = this.chromeGlobal.content;
-  this.fallbackWindow.document.location.href = FALLBACK_DOC_URL;
+
+  // Add the addonId in the URL to retrieve this information in other devtools
+  // helpers. The addonId is usually populated in the principal, but this will
+  // not be the case for the fallback window because it is loaded from chrome://
+  // instead of moz-extension://${addonId}
+  this.fallbackWindow.document.location.href = `${FALLBACK_DOC_URL}#${this.addonId}`;
 
   return this.fallbackWindow;
 };
@@ -291,6 +304,8 @@ webExtensionTargetPrototype._onNewExtensionWindow = function(window) {
 webExtensionTargetPrototype.isTopLevelExtensionWindow = function(window) {
   const { docShell } = window;
   const isTopLevel = docShell.sameTypeRootTreeItem == docShell;
+  // Note: We are not using getAddonIdForWindowGlobal here because the
+  // fallback window should not be considered as a top level extension window.
   return isTopLevel && window.document.nodePrincipal.addonId == this.addonId;
 };
 
@@ -298,7 +313,8 @@ webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
   // Check if the source is coming from a descendant docShell of an extension window.
   // We may have an iframe that loads http content which won't use the add-on principal.
   const rootWin = window.docShell.sameTypeRootTreeItem.domWindow;
-  return rootWin.document.nodePrincipal.addonId == this.addonId;
+  const addonId = getAddonIdForWindowGlobal(rootWin.windowGlobalChild);
+  return addonId == this.addonId;
 };
 
 /**

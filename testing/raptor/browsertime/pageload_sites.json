@@ -1,0 +1,519 @@
+{
+  "mobile": [
+    {
+      "login": false,
+      "name": "allrecipes",
+      "test_url": "https://www.allrecipes.com/"
+    },
+    {
+      "login": false,
+      "name": "amazon",
+      "test_url": "https://www.amazon.com"
+    },
+    {
+      "login": false,
+      "name": "amazon-search",
+      "test_url": "https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone"
+    },
+    {
+      "login": false,
+      "name": "bing",
+      "test_url": "https://www.bing.com/"
+    },
+    {
+      "login": false,
+      "name": "bing-search-restaurants",
+      "test_url": "https://www.bing.com/search?q=restaurants+in+exton+pa+19341"
+    },
+    {
+      "login": false,
+      "name": "booking",
+      "test_url": "https://www.booking.com/"
+    },
+    {
+      "login": false,
+      "name": "cnn",
+      "test_url": "https://cnn.com",
+      "secondary_url": "https://www.cnn.com/weather"
+    },
+    {
+      "login": false,
+      "name": "cnn-ampstories",
+      "test_url": "https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other"
+    },
+    {
+      "login": false,
+      "name": "dailymail",
+      "test_url": "https://www.dailymail.co.uk/sciencetech/article-9749081/Experts-say-Hubble-repair-despite-NASA-insisting-multiple-options-fix.html"
+    },
+    {
+      "login": false,
+      "name": "ebay-kleinanzeigen",
+      "test_url": "https://m.ebay-kleinanzeigen.de"
+    },
+    {
+      "login": false,
+      "name": "ebay-kleinanzeigen-search",
+      "test_url": "https://m.ebay-kleinanzeigen.de/s-anzeigen/auf-zeit-wg-berlin/zimmer/c199-l3331"
+    },
+    {
+      "login": false,
+      "name": "espn",
+      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words"
+    },
+    {
+      "login": true,
+      "name": "facebook",
+      "test_url": "https://m.facebook.com"
+    },
+    {
+      "login": false,
+      "name": "facebook-cristiano",
+      "test_url": "https://m.facebook.com/Cristiano"
+    },
+    {
+      "login": true,
+      "name": "google",
+      "test_url": "https://www.google.com"
+    },
+    {
+      "login": false,
+      "name": "google-maps",
+      "test_url": "https://www.google.com/maps?force=pwa"
+    },
+    {
+      "login": true,
+      "name": "google-search-restaurants",
+      "test_url": "https://www.google.com/search?q=restaurants+near+me"
+    },
+    {
+      "login": false,
+      "name": "imdb",
+      "test_url": "https://m.imdb.com/"
+    },
+    {
+      "login": true,
+      "name": "instagram",
+      "test_url": "https://www.instagram.com"
+    },
+    {
+      "login": false,
+      "name": "sina",
+      "test_url": "https://www.sina.com.cn/"
+    },
+    {
+      "login": false,
+      "name": "microsoft-support",
+      "test_url": "https://support.microsoft.com/en-us"
+    },
+    {
+      "login": false,
+      "name": "reddit",
+      "test_url": "https://www.reddit.com"
+    },
+    {
+      "login": false,
+      "name": "stackoverflow",
+      "test_url": "https://stackoverflow.com/"
+    },
+    {
+      "login": false,
+      "name": "web-de",
+      "test_url": "https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566"
+    },
+    {
+      "login": false,
+      "name": "wikipedia",
+      "test_url": "https://en.m.wikipedia.org/wiki/Main_Page"
+    },
+    {
+      "login": false,
+      "name": "youtube",
+      "test_url": "https://m.youtube.com"
+    },
+    {
+      "login": false,
+      "name": "youtube-watch",
+      "test_url": "https://www.youtube.com/watch?v=COU5T-Wafa4"
+    }
+  ],
+  "desktop": [
+    {
+      "login": false,
+      "name": "amazon",
+      "test_url": "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1",
+      "secondary_url": "https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3"
+    },
+    {
+      "login": false,
+      "name": "bing-search",
+      "test_url": "https://www.bing.com/search?q=barack+obama"
+    },
+    {
+      "login": false,
+      "name": "buzzfeed",
+      "test_url": "https://www.buzzfeed.com/",
+      "secondary_url": "https://www.buzzfeed.com/quizzes",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "cnn",
+      "test_url": "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html",
+      "secondary_url": "https://www.cnn.com/weather",
+      "preferences": {
+        "media.autoplay.default": 5,
+        "media.autoplay.ask-permission": true,
+        "media.autoplay.blocking_policy": 1,
+        "media.autoplay.block-webaudio": true,
+        "media.allowed-to-play.enabled": false,
+        "media.block-autoplay-until-in-foreground": true
+      },
+      "test_cmds":  [
+        ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
+        ["click.byXpathAndWait", "/html/body/div[13]/div[2]/div/section/div[17]/button[2]"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "ebay",
+      "test_url": "https://www.ebay.com/",
+      "secondary_url": "https://www.ebay.com/deals",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[5]/div[1]/div[2]/div[2]/div[2]/a"],
+        ["click.byXpathAndWait", "/html/body/div[4]/div/div[2]/section[3]/section/button"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "espn",
+      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
+        ["click.byXpathAndWait", "/html/body/div[10]/div[2]/div[3]/div[1]/button"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "expedia",
+      "test_url": "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2",
+      "secondary_url": "https://groups.expedia.com/Group-Rate/?locale=en_US&ol=1"
+    },
+    {
+      "login": true,
+      "name": "facebook",
+      "test_url": "https://www.facebook.com",
+      "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"],
+        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"]
+      ]
+    },
+    {
+      "login": true,
+      "login-test": true,
+      "name": "facebook-login",
+      "test_url": "https://www.facebook.com",
+      "type": "interactive",
+      "test_cmds": [
+        ["setup_login", "https://www.facebook.com"],
+        ["wait.byTime", 1000],
+        ["login", ""],
+        ["measure.start", "marketplace"],
+        ["navigate", "https://www.facebook.com/marketplace"],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "fandom",
+      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[1]"],
+        ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[2]"]
+      ]
+    },
+    {
+      "login": true,
+      "name": "google",
+      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[3]/div[3]/span/div/div/div/div[3]/button[1]/div"],
+        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "google-docs",
+      "test_url": "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing",
+      "secondary_url": "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
+    },
+    {
+      "login": false,
+      "name": "google-docs-canvas",
+      "test_url": "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
+    },
+    {
+      "login": true,
+      "name": "google-mail",
+      "test_url": "https://mail.google.com/",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div/div/span[2]/a[2]"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "google-slides",
+      "test_url": "https://docs.google.com/presentation/d/1Ici0ceWwpFvmIb3EmKeWSq_vAQdmmdFcWqaiLqUkJng/edit?usp=sharing",
+      "secondary_url": "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
+    },
+    {
+      "login": false,
+      "name": "imdb",
+      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2",
+      "secondary_url": "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
+    },
+    {
+      "login": false,
+      "name": "imgur",
+      "test_url": "https://imgur.com/gallery/m5tYJL6",
+      "inject_deterministic": false,
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      ],
+      "secondary_url": "https://imgur.com/gallery/L13Ci",
+      "preferences": {
+         "media.autoplay.default": 5,
+         "media.autoplay.ask-permission": true,
+         "media.autoplay.blocking_policy": 1,
+         "media.autoplay.block-webaudio": true,
+         "media.allowed-to-play.enabled": false,
+         "media.block-autoplay-until-in-foreground": true
+       }
+    },
+    {
+      "login": true,
+      "name": "instagram",
+      "test_url": "https://www.instagram.com/"
+    },
+    {
+      "login": true,
+      "name": "linkedin",
+      "test_url": "https://www.linkedin.com/in/thommy-harris-hk-385723106/",
+      "secondary_url": "https://www.linkedin.com/company/github?trk=affiliated-pages"
+    },
+    {
+      "login": false,
+      "name": "microsoft",
+      "test_url": "https://www.microsoft.com/en-us/",
+      "secondary_url": "https://support.microsoft.com/en-us",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div/div[2]/button[2]"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[2]/div/div/div[2]/label"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[3]/div/div/div[2]/label"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[4]/div/div/div[2]/label"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/button[1]"]
+      ]
+    },
+    {
+      "login": true,
+      "name": "netflix",
+      "test_url": "https://www.netflix.com/title/80117263",
+      "secondary_url": "https://www.netflix.com/title/699257"
+    },
+    {
+      "login": false,
+      "name": "nytimes",
+      "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html",
+      "secondary_url": "https://www.nytimes.com/section/opinion/columnists",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div/div/div[2]/div/div[2]/div/div/div[1]/div[3]/div[3]/a"],
+        ["click.byXpathAndWait", "//*[@id='opt-out-of-new-york-times-nonessential-trackers']"]
+      ]
+    },
+    {
+      "login": true,
+      "name": "office",
+      "test_url": "https://www.office.com/launch/powerpoint/",
+      "secondary_url": "https://www.office.com/"
+    },
+    {
+      "login": true,
+      "name": "outlook",
+      "test_url": "https://outlook.live.com/mail/inbox"
+    },
+    {
+      "login": true,
+      "name": "paypal",
+      "test_url": "https://www.paypal.com/myaccount/summary/"
+    },
+    {
+      "login": true,
+      "name": "pinterest",
+      "test_url": "https://pinterest.com/",
+      "secondary_url": "https://www.pinterest.com/today/best/halloween-costumes-for-your-furry-friends/75787/"
+    },
+    {
+      "login": false,
+      "name": "reddit",
+      "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/",
+      "secondary_url": "https://www.reddit.com/r/technology/",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[3]/div[1]/section/div/section/section/form[1]/button"]
+      ]
+    },
+    {
+      "login": true,
+      "name": "tumblr",
+      "test_url": "https://www.tumblr.com/dashboard",
+      "secondary_url": "https://www.tumblr.com/tagged/funny+cats?sort=top"
+    },
+    {
+      "login": false,
+      "name": "twitch",
+      "test_url": "https://www.twitch.tv/videos/894226211",
+      "secondary_url": "https://www.twitch.tv/gmashley",
+      "preferences": {
+         "media.autoplay.default": 5,
+         "media.autoplay.ask-permission": true,
+         "media.autoplay.blocking_policy": 1,
+         "media.autoplay.block-webaudio": true,
+         "media.allowed-to-play.enabled": false,
+         "media.block-autoplay-until-in-foreground": true
+       },
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[1]/div/div/div[3]/div/button/div/div/div"],
+        ["click.byXpathAndWait", "/html/body/div[3]/div/div/div/div/div/div[1]/div[2]/div/button/div/div"]
+      ]
+    },
+    {
+      "login": true,
+      "name": "twitter",
+      "test_url": "https://twitter.com/BarackObama"
+    },
+    {
+      "login": false,
+      "name": "wikia",
+      "test_url": "https://marvel.fandom.com/wiki/Black_Panther",
+      "secondary_url": "https://marvel.fandom.com/wiki/Celestials",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[6]/div/div/div[2]/div[1]"],
+        ["click.byXpathAndWait", "/html/body/div[7]/div/div/div[2]/div[2]"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "wikipedia",
+      "test_url": "https://en.wikipedia.org/wiki/Barack_Obama",
+      "secondary_url": "https://en.wikipedia.org/wiki/Joe_Biden"
+    },
+    {
+      "login": true,
+      "name": "yahoo-mail",
+      "test_url": "https://mail.yahoo.com/"
+    },
+    {
+      "login": false,
+      "name": "youtube",
+      "test_url": "https://www.youtube.com",
+      "secondary_url": "https://www.youtube.com/watch?v=JrdEMERq8MA",
+      "test_cmds ":  [
+        ["click.byXpathAndWait", "/html/body/ytd-app/ytd-consent-bump-v2-lightbox/tp-yt-paper-dialog/div[4]/div[2]/div[5]/div[2]/ytd-button-renderer[1]/a"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[3]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[4]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      ]
+    },
+    {
+      "login": false,
+      "name": "cnn-nav",
+      "test_url": "https://www.cnn.com/",
+      "type": "interactive",
+      "test_cmds":  [
+        ["measure.start", "landing"],
+        ["navigate", "https://www.cnn.com"],
+        ["wait.byTime", 4000],
+        ["measure.stop", ""],
+        ["measure.start", "world"],
+        ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"],
+        ["wait.byTime", 1000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "reddit-billgates-ama",
+      "test_url": "https://www.reddit.com/",
+      "type": "interactive",
+      "test_cmds":  [
+        ["measure.start", "billg-ama"],
+        ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "members"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"],
+        ["wait.byTime", 1000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "reddit-billgates-post",
+      "test_url": "https://www.reddit.com/user/thisisbillgates/",
+      "type": "interactive",
+      "test_cmds":  [
+        ["measure.start", "billg"],
+        ["navigate", "https://www.reddit.com/user/thisisbillgates/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "posts"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "comments"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "hot"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "top"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "facebook-nav",
+      "test_url": "https://www.facebook.com/",
+      "type": "interactive",
+      "test_cmds":  [
+        ["navigate", "https://www.facebook.com/login"],
+        ["wait.byTime", 30000],
+        ["measure.start", "landing"],
+        ["navigate", "https://www.facebook.com/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "marketplace"],
+        ["navigate", "https://www.facebook.com/marketplace"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "groups"],
+        ["navigate", "https://www.facebook.com/groups/discover/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "friends"],
+        ["navigate", "https://www.facebook.com/friends/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""]
+      ]
+    }
+  ]
+}

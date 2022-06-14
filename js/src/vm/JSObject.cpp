@@ -1156,7 +1156,7 @@ bool NativeObject::fixupAfterSwap(JSContext* cx, Handle<NativeObject*> obj,
     JSContext* cx, MutableHandleValueVector valuesOut) {
   MOZ_ASSERT(valuesOut.empty());
 
-  // Remove the GCPtrValues we're about to swap from the store buffer, to
+  // Remove the GCPtr<Value>s we're about to swap from the store buffer, to
   // ensure we don't trace bogus values.
   gc::StoreBuffer& sb = cx->runtime()->gc.storeBuffer();
 

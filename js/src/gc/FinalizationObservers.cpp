@@ -214,7 +214,7 @@ void FinalizationObservers::traceWeakFinalizationRegistryEdges(JSTracer* trc) {
 
     // Sweep finalization records, updating any pointers moved by the GC and
     // remove if necessary.
-    records.mutableEraseIf([&](HeapPtrObject& heapPtr) {
+    records.mutableEraseIf([&](HeapPtr<JSObject*>& heapPtr) {
       auto result = TraceWeakEdge(trc, &heapPtr, "FinalizationRecord");
       JSObject* obj =
           result.isLive() ? result.finalTarget() : result.initialTarget();
@@ -422,7 +422,7 @@ void FinalizationObservers::traceWeakWeakRefEdges(JSTracer* trc) {
 
 void FinalizationObservers::traceWeakWeakRefVector(
     JSTracer* trc, WeakRefHeapPtrVector& weakRefs, JSObject* target) {
-  weakRefs.mutableEraseIf([&](HeapPtrObject& obj) -> bool {
+  weakRefs.mutableEraseIf([&](HeapPtr<JSObject*>& obj) -> bool {
     auto result = TraceWeakEdge(trc, &obj, "WeakRef");
     if (result.isDead()) {
       JSObject* wrapper = result.initialTarget();

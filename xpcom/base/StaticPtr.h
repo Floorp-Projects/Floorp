@@ -161,7 +161,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
  private:
   void AssignWithAddref(T* aNewPtr) {
     if (aNewPtr) {
-      aNewPtr->AddRef();
+      RefPtrTraits<T>::AddRef(aNewPtr);
     }
     AssignAssumingAddRef(aNewPtr);
   }
@@ -170,7 +170,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
     T* oldPtr = mRawPtr;
     mRawPtr = aNewPtr;
     if (oldPtr) {
-      oldPtr->Release();
+      RefPtrTraits<T>::Release(oldPtr);
     }
   }
 

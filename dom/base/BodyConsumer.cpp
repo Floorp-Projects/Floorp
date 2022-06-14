@@ -669,6 +669,8 @@ void BodyConsumer::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength,
     // Decoding errors should reject with a TypeError
     if (aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
       localPromise->MaybeRejectWithTypeError<MSG_DOM_DECODING_FAILED>();
+    } else if (aStatus == NS_ERROR_DOM_WRONG_TYPE_ERR) {
+      localPromise->MaybeRejectWithTypeError<MSG_FETCH_BODY_WRONG_TYPE>();
     } else {
       localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }

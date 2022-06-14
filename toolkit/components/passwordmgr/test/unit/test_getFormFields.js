@@ -1,5 +1,5 @@
 /**
- * Test for LoginManagerChild._getFormFields.
+ * Test for LoginFormState._getFormFields.
  */
 
 "use strict";
@@ -510,7 +510,7 @@ for (let tc of TEST_ENVIRONMENT_CASES) {
         document
       );
 
-      let actual = lmc._getFormFields(
+      let actual = loginFormState._getFormFields(
         formLike,
         testcase.skipEmptyFields,
         new Set()

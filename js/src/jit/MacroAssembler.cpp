@@ -710,18 +710,18 @@ void MacroAssembler::fillSlotsWithConstantValue(Address base, Register temp,
   // strided writes of the tag and body.
   Address addr = base;
   move32(Imm32(v.toNunboxPayload()), temp);
-  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtrValue)) {
+  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtr<Value>)) {
     store32(temp, ToPayload(addr));
   }
 
   addr = base;
   move32(Imm32(v.toNunboxTag()), temp);
-  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtrValue)) {
+  for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtr<Value>)) {
     store32(temp, ToType(addr));
   }
 #else
   moveValue(v, ValueOperand(temp));
-  for (uint32_t i = start; i < end; ++i, base.offset += sizeof(GCPtrValue)) {
+  for (uint32_t i = start; i < end; ++i, base.offset += sizeof(GCPtr<Value>)) {
     storePtr(temp, base);
   }
 #endif
@@ -2059,6 +2059,9 @@ void MacroAssembler::generateBailoutTail(Register scratch,
       bind(&endOfCopy);
     }
 
+    loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)),
+            FramePointer);
+
     // Enter exit frame for the FinishBailoutToBaseline call.
     load32(Address(bailoutInfo,
                    offsetof(BaselineBailoutInfo, frameSizeOfInnerMostFrame)),
@@ -2071,7 +2074,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
     // Save needed values onto stack temporarily.
-    push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)));
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
 
     // Call a stub to free allocated memory and create arguments objects.
@@ -2088,7 +2090,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     Register jitcodeReg = enterRegs.takeAny();
 
     pop(jitcodeReg);
-    pop(FramePointer);
 
     // Discard exit frame.
     addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
@@ -4709,7 +4710,7 @@ void MacroAssembler::iteratorMore(Register obj, ValueOperand output,
   loadPtr(Address(temp, 0), temp);
 
   // Increase the cursor.
-  addPtr(Imm32(sizeof(GCPtrLinearString)), cursorAddr);
+  addPtr(Imm32(sizeof(GCPtr<JSLinearString*>)), cursorAddr);
 
   tagValue(JSVAL_TYPE_STRING, temp, output);
   jump(&done);

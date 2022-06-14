@@ -612,7 +612,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   WeakGlobalObjectSet
       debuggees; /* Debuggee globals. Cross-compartment weak references. */
   JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
-  HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
+  HeapPtr<JSObject*> uncaughtExceptionHook; /* Strong reference. */
   bool allowUnobservedAsmJS;
   bool allowUnobservedWasm;
 

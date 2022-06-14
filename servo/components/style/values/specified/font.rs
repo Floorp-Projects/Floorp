@@ -800,7 +800,6 @@ impl FontSizeKeyword {
         language: &Atom,
         family: &FontFamilyList,
     ) -> NonNegativeLength {
-
         // The tables in this function are originally from
         // nsRuleNode::CalcFontPointSize in Gecko:
         //
@@ -845,7 +844,9 @@ impl FontSizeKeyword {
 
         static FONT_SIZE_FACTORS: [i32; 8] = [60, 75, 89, 100, 120, 150, 200, 300];
 
-        let generic = family.single_generic().unwrap_or(computed::GenericFontFamily::None);
+        let generic = family
+            .single_generic()
+            .unwrap_or(computed::GenericFontFamily::None);
         let base_size = font_metrics_provider.get_size(language, generic);
         let base_size_px = base_size.px().round() as i32;
         let html_size = self.html_size() as usize;
@@ -896,21 +897,21 @@ impl FontSize {
         };
         let mut info = KeywordInfo::none();
         let size = match *self {
-            FontSize::Length(LengthPercentage::Length(NoCalcLength::FontRelative(value))) => {
-                if let FontRelativeLength::Em(em) = value {
-                    // If the parent font was keyword-derived, this is too.
-                    // Tack the em unit onto the factor
-                    info = compose_keyword(em);
+            FontSize::Length(LengthPercentage::Length(ref l)) => {
+                if let NoCalcLength::FontRelative(ref value) = *l {
+                    if let FontRelativeLength::Em(em) = *value {
+                        // If the parent font was keyword-derived, this is
+                        // too. Tack the em unit onto the factor
+                        info = compose_keyword(em);
+                    }
                 }
-                value.to_computed_value(context, base_size)
+                let result = l.to_computed_value_with_base_size(context, base_size);
+                if l.should_zoom_text() {
+                    context.maybe_zoom_text(result)
+                } else {
+                    result
+                }
             },
-            FontSize::Length(LengthPercentage::Length(NoCalcLength::ServoCharacterWidth(
-                value,
-            ))) => value.to_computed_value(base_size.resolve(context)),
-            FontSize::Length(LengthPercentage::Length(NoCalcLength::Absolute(ref l))) => {
-                context.maybe_zoom_text(l.to_computed_value(context))
-            },
-            FontSize::Length(LengthPercentage::Length(ref l)) => l.to_computed_value(context),
             FontSize::Length(LengthPercentage::Percentage(pc)) => {
                 // If the parent font was keyword-derived, this is too.
                 // Tack the % onto the factor

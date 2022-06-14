@@ -93,9 +93,9 @@ class alignas(16) Instance {
   //   - Set by wasm::HandleThrow, unset by Instance::consumePendingException.
   //   - If the unwind target is a `try-delegate`, it is unset by the delegated
   //     try-catch block or function body block.
-  GCPtrObject pendingException_;
+  GCPtr<JSObject*> pendingException_;
   // The tag object of the pending exception.
-  GCPtrObject pendingExceptionTag_;
+  GCPtr<JSObject*> pendingExceptionTag_;
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
   // but can be racily set to trigger immediate trap as an opportunity to

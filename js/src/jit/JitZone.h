@@ -76,7 +76,7 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
 
 struct BaselineCacheIRStubCodeMapGCPolicy {
   static bool traceWeak(JSTracer* trc, CacheIRStubKey*,
-                        WeakHeapPtrJitCode* value) {
+                        WeakHeapPtr<JitCode*>* value) {
     return TraceWeakEdge(trc, value, "traceWeak");
   }
 };
@@ -92,7 +92,7 @@ class JitZone {
 
   // Map CacheIRStubKey to shared JitCode objects.
   using BaselineCacheIRStubCodeMap =
-      GCHashMap<CacheIRStubKey, WeakHeapPtrJitCode, CacheIRStubKey,
+      GCHashMap<CacheIRStubKey, WeakHeapPtr<JitCode*>, CacheIRStubKey,
                 SystemAllocPolicy, BaselineCacheIRStubCodeMapGCPolicy>;
   BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
 

@@ -22,6 +22,32 @@ from mozperftest.utils import silence, temporary_env
 
 HERE = os.path.dirname(__file__)
 
+# Combine these dictionaries as required for mocking the
+# Browsertime installation related methods
+BTIME_PKG_DEP = {
+    "devDependencies": {"browsertime": "89771a1d6be54114db190427dbc281582cba3d47"}
+}
+BTIME_PKG_NO_INSTALL = {
+    "packages": {
+        "node_modules/browsertime": {
+            "resolved": (
+                "browsertime@https://github.com/sitespeedio/browsertime"
+                "/tarball/89771a1d6be54114db190427dbc281582cba3d47"
+            )
+        }
+    }
+}
+BTIME_PKG_REINSTALL = {
+    "packages": {
+        "node_modules/browsertime": {
+            "resolved": (
+                "browsertime@https://github.com/sitespeedio/browsertime"
+                "/tarball/98747854be54114db190427dbc281582cba3d47"
+            )
+        }
+    }
+}
+
 
 def fetch(self, url):
     return os.path.join(HERE, "fetched_artifact.zip")
@@ -127,21 +153,7 @@ def test_browsertime_no_reinstall():
 
     with mock.patch(
         "mozperftest.test.browsertime.runner.pathlib.Path.open",
-        build_mock_open(
-            [
-                {
-                    "devDependencies": {
-                        "browsertime": "89771a1d6be54114db190427dbc281582cba3d47"
-                    }
-                },
-                {
-                    "_from": (
-                        "browsertime@https://github.com/sitespeedio/browsertime"
-                        "/tarball/89771a1d6be54114db190427dbc281582cba3d47"
-                    )
-                },
-            ]
-        ),
+        build_mock_open([BTIME_PKG_DEP, BTIME_PKG_NO_INSTALL]),
     ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
         btime_layer = browser.layers[0]
@@ -163,21 +175,7 @@ def test_browsertime_should_reinstall():
 
     with mock.patch(
         "mozperftest.test.browsertime.runner.pathlib.Path.open",
-        build_mock_open(
-            [
-                {
-                    "devDependencies": {
-                        "browsertime": "89771a1d6be54114db190427dbc281582cba3d47"
-                    }
-                },
-                {
-                    "_from": (
-                        "browsertime@https://github.com/sitespeedio/browsertime"
-                        "/tarball/98747854be54114db190427dbc281582cba3d47"
-                    )
-                },
-            ]
-        ),
+        build_mock_open([BTIME_PKG_DEP, BTIME_PKG_REINSTALL]),
     ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
         btime_layer = browser.layers[0]
