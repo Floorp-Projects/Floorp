@@ -1234,7 +1234,6 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 namespace js {
 
-using HeapPtrJitCode = HeapPtr<jit::JitCode*>;
 using HeapPtrObject = HeapPtr<JSObject*>;
 using HeapPtrValue = HeapPtr<Value>;
 
