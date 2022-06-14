@@ -14,7 +14,7 @@ use neqo_common::qtrace;
 use std::convert::TryFrom;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_uint};
-use std::ptr::{addr_of_mut, null_mut};
+use std::ptr::null_mut;
 
 pub use crate::p11::{HpkeAeadId as AeadId, HpkeKdfId as KdfId, HpkeKemId as KemId};
 pub use crate::ssl::HpkeSymmetricSuite as SymmetricSuite;
@@ -98,7 +98,6 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     params.extend_from_slice(oid_slc);
 
     let mut public_ptr: *mut SECKEYPublicKey = null_mut();
-    let mut param_item = Item::wrap(&params);
 
     // If we have tracing on, try to ensure that key data can be read.
     let insensitive_secret_ptr = if log::log_enabled!(log::Level::Trace) {
@@ -106,7 +105,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
                 p11::CK_MECHANISM_TYPE::from(p11::CKM_EC_KEY_PAIR_GEN),
-                addr_of_mut!(param_item).cast(),
+                (&mut Item::wrap(&params) as *mut SECItem).cast(),
                 &mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_INSENSITIVE | p11::PK11_ATTR_PUBLIC,
                 p11::CK_FLAGS::from(p11::CKF_DERIVE),
@@ -123,7 +122,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
                 p11::CK_MECHANISM_TYPE::from(p11::CKM_EC_KEY_PAIR_GEN),
-                addr_of_mut!(param_item).cast(),
+                (&mut Item::wrap(&params) as *mut SECItem).cast(),
                 &mut public_ptr,
                 p11::PK11_ATTR_SESSION | p11::PK11_ATTR_SENSITIVE | p11::PK11_ATTR_PRIVATE,
                 p11::CK_FLAGS::from(p11::CKF_DERIVE),

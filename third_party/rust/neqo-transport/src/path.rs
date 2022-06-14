@@ -539,9 +539,6 @@ pub struct Path {
     received_bytes: usize,
     /// The number of bytes sent on this path.
     sent_bytes: usize,
-
-    /// For logging of events.
-    qlog: NeqoQlog,
 }
 
 impl Path {
@@ -555,7 +552,7 @@ impl Path {
         now: Instant,
     ) -> Self {
         let mut sender = PacketSender::new(cc, Self::mtu_by_addr(remote.ip()), now);
-        sender.set_qlog(qlog.clone());
+        sender.set_qlog(qlog);
         Self {
             local,
             remote,
@@ -569,7 +566,6 @@ impl Path {
             sender,
             received_bytes: 0,
             sent_bytes: 0,
-            qlog,
         }
     }
 
@@ -932,27 +928,7 @@ impl Path {
     }
 
     /// Discard a packet that previously might have been in-flight.
-    pub fn discard_packet(&mut self, sent: &SentPacket, now: Instant) {
-        if self.rtt.first_sample_time().is_none() {
-            // When discarding a packet there might not be a good RTT estimate.
-            // But discards only occur after receiving something, so that means
-            // that there is some RTT information, which is better than nothing.
-            // Two cases: 1. at the client when handling a Retry and
-            // 2. at the server when disposing the Initial packet number space.
-            qinfo!(
-                [self],
-                "discarding a packet without an RTT estimate; guessing RTT={:?}",
-                now - sent.time_sent
-            );
-            self.rtt.update(
-                &mut self.qlog,
-                now - sent.time_sent,
-                Duration::new(0, 0),
-                false,
-                now,
-            );
-        }
-
+    pub fn discard_packet(&mut self, sent: &SentPacket) {
         self.sender.discard(sent);
     }
 
