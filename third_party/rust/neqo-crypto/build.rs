@@ -91,12 +91,7 @@ fn setup_clang() {
 
 fn nss_dir() -> PathBuf {
     let dir = if let Ok(dir) = env::var("NSS_DIR") {
-        let path = PathBuf::from(dir.trim());
-        assert!(
-            !path.is_relative(),
-            "The NSS_DIR environment variable is expected to be an absolute path."
-        );
-        path
+        PathBuf::from(dir.trim())
     } else {
         let out_dir = env::var("OUT_DIR").unwrap();
         let dir = Path::new(&out_dir).join("nss");
@@ -261,16 +256,16 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
 
     // Apply the configuration.
     for v in &bindings.types {
-        builder = builder.allowlist_type(v);
+        builder = builder.whitelist_type(v);
     }
     for v in &bindings.functions {
-        builder = builder.allowlist_function(v);
+        builder = builder.whitelist_function(v);
     }
     for v in &bindings.variables {
-        builder = builder.allowlist_var(v);
+        builder = builder.whitelist_var(v);
     }
     for v in &bindings.exclude {
-        builder = builder.blocklist_item(v);
+        builder = builder.blacklist_item(v);
     }
     for v in &bindings.opaque {
         builder = builder.opaque_type(v);

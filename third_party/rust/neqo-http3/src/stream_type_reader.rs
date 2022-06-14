@@ -59,6 +59,7 @@ impl NewStreamType {
             }
             (_, StreamType::BiDi, Role::Server) => Err(Error::HttpFrame),
             (HTTP3_UNI_STREAM_TYPE_PUSH, StreamType::UniDi, Role::Server)
+            | (H3_FRAME_TYPE_HEADERS, StreamType::BiDi, Role::Client)
             | (_, StreamType::BiDi, Role::Client) => Err(Error::HttpStreamCreation),
             _ => Ok(Some(NewStreamType::Unknown)),
         }
@@ -196,13 +197,13 @@ impl NewStreamHeadReader {
 
     fn map_stream_fin(decoded: Option<NewStreamType>) -> Res<Option<NewStreamType>> {
         match decoded {
-            Some(NewStreamType::Control | NewStreamType::Encoder | NewStreamType::Decoder) => {
-                Err(Error::HttpClosedCriticalStream)
-            }
+            Some(NewStreamType::Control)
+            | Some(NewStreamType::Encoder)
+            | Some(NewStreamType::Decoder) => Err(Error::HttpClosedCriticalStream),
             None => Err(Error::HttpStreamCreation),
             Some(NewStreamType::Http) => Err(Error::HttpFrame),
             Some(NewStreamType::Unknown) => Ok(decoded),
-            Some(NewStreamType::Push(_) | NewStreamType::WebTransportStream(_)) => {
+            Some(NewStreamType::Push(_)) | Some(NewStreamType::WebTransportStream(_)) => {
                 unreachable!("PushStream and WebTransport are mapped to None at this stage.")
             }
         }
@@ -317,7 +318,7 @@ mod tests {
             for i in to_encode {
                 enc.encode_varint(*i);
             }
-            self.decode_buffer(enc.as_ref(), fin, outcome, done);
+            self.decode_buffer(&enc[..], fin, outcome, done);
         }
     }
 

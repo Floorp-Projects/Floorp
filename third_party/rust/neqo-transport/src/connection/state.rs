@@ -22,17 +22,8 @@ use crate::{ConnectionError, Error, Res};
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// The state of the Connection.
 pub enum State {
-    /// A newly created connection.
     Init,
-    /// Waiting for the first Initial packet.
     WaitInitial,
-    /// Waiting to confirm which version was selected.
-    /// For a client, this is confirmed when a CRYPTO frame is received;
-    /// the version of the packet determines the version.
-    /// For a server, this is confirmed when transport parameters are
-    /// received and processed.
-    WaitVersion,
-    /// Exchanging Handshake packets.
     Handshaking,
     Connected,
     Confirmed,
@@ -90,8 +81,6 @@ impl Ord for State {
             (_, Self::Init) => Ordering::Greater,
             (Self::WaitInitial, _) => Ordering::Less,
             (_, Self::WaitInitial) => Ordering::Greater,
-            (Self::WaitVersion, _) => Ordering::Less,
-            (_, Self::WaitVersion) => Ordering::Greater,
             (Self::Handshaking, _) => Ordering::Less,
             (_, Self::Handshaking) => Ordering::Greater,
             (Self::Connected, _) => Ordering::Less,

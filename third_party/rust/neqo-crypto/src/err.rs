@@ -29,10 +29,11 @@ pub mod nspr {
 pub type Res<T> = Result<T, Error>;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Eq)]
+#[allow(renamed_and_removed_lints, clippy::pub_enum_variant_names)] // rust 1.54 will require a different approach
 pub enum Error {
+    AeadInitFailure,
     AeadError,
     CertificateLoading,
-    CipherInitFailure,
     CreateSslSocket,
     EchRetry(Vec<u8>),
     HkdfError,

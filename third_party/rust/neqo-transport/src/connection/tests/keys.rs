@@ -18,19 +18,13 @@ use neqo_common::{qdebug, Datagram};
 use std::mem;
 use test_fixture::{self, now};
 
-fn check_discarded(
-    peer: &mut Connection,
-    pkt: Datagram,
-    response: bool,
-    dropped: usize,
-    dups: usize,
-) {
+fn check_discarded(peer: &mut Connection, pkt: Datagram, dropped: usize, dups: usize) {
     // Make sure to flush any saved datagrams before doing this.
     mem::drop(peer.process_output(now()));
 
     let before = peer.stats();
     let out = peer.process(Some(pkt), now());
-    assert_eq!(out.as_dgram_ref().is_some(), response);
+    assert!(out.as_dgram_ref().is_none());
     let after = peer.stats();
     assert_eq!(dropped, after.dropped_rx - before.dropped_rx);
     assert_eq!(dups, after.dups_rx - before.dups_rx);
@@ -66,12 +60,11 @@ fn discarded_initial_keys() {
     let out = client.process(init_pkt_s.clone(), now()).dgram();
     assert!(out.is_some());
 
-    // The client has received a handshake packet. It will remove the Initial keys.
+    // The client has received handshake packet. It will remove the Initial keys.
     // We will check this by processing init_pkt_s a second time.
     // The initial packet should be dropped. The packet contains a Handshake packet as well, which
     // will be marked as dup.  And it will contain padding, which will be "dropped".
-    // The client will generate a Handshake packet here to avoid stalling.
-    check_discarded(&mut client, init_pkt_s.unwrap(), true, 2, 1);
+    check_discarded(&mut client, init_pkt_s.unwrap(), 2, 1);
 
     assert!(maybe_authenticate(&mut client));
 
@@ -79,7 +72,7 @@ fn discarded_initial_keys() {
     // packet from the client.
     // We will check this by processing init_pkt_c a second time.
     // The dropped packet is padding. The Initial packet has been mark dup.
-    check_discarded(&mut server, init_pkt_c.clone().unwrap(), false, 1, 1);
+    check_discarded(&mut server, init_pkt_c.clone().unwrap(), 1, 1);
 
     qdebug!("---- client: SH..FIN -> FIN");
     let out = client.process(None, now()).dgram();
@@ -94,7 +87,7 @@ fn discarded_initial_keys() {
     // We will check this by processing init_pkt_c a third time.
     // The Initial packet has been dropped and padding that follows it.
     // There is no dups, everything has been dropped.
-    check_discarded(&mut server, init_pkt_c.unwrap(), false, 1, 0);
+    check_discarded(&mut server, init_pkt_c.unwrap(), 1, 0);
 }
 
 #[test]
@@ -207,7 +200,7 @@ fn key_update_consecutive() {
 
     // However, as the server didn't wait long enough to update again, the
     // client hasn't rotated its keys, so the packet gets dropped.
-    check_discarded(&mut client, dgram, false, 1, 0);
+    check_discarded(&mut client, dgram, 1, 0);
 }
 
 // Key updates can't be initiated too early.
