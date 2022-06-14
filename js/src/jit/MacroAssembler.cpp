@@ -2059,6 +2059,9 @@ void MacroAssembler::generateBailoutTail(Register scratch,
       bind(&endOfCopy);
     }
 
+    loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)),
+            FramePointer);
+
     // Enter exit frame for the FinishBailoutToBaseline call.
     load32(Address(bailoutInfo,
                    offsetof(BaselineBailoutInfo, frameSizeOfInnerMostFrame)),
@@ -2071,7 +2074,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
     // Save needed values onto stack temporarily.
-    push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)));
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
 
     // Call a stub to free allocated memory and create arguments objects.
@@ -2088,7 +2090,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     Register jitcodeReg = enterRegs.takeAny();
 
     pop(jitcodeReg);
-    pop(FramePointer);
 
     // Discard exit frame.
     addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
