@@ -11,7 +11,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["LoginManagerChild"];
+const EXPORTED_SYMBOLS = ["LoginManagerChild", "LoginFormState"];
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 // The amount of time a context menu event supresses showing a
@@ -887,6 +887,93 @@ class LoginFormState {
 
     return null;
   }
+
+  /**
+   * @param {LoginForm} form - the LoginForm to look for password fields in.
+   * @param {Object} options
+   * @param {bool} [options.skipEmptyFields=false] - Whether to ignore password fields with no value.
+   *                                                 Used at capture time since saving empty values isn't
+   *                                                 useful.
+   * @param {Object} [options.fieldOverrideRecipe=null] - A relevant field override recipe to use.
+   * @return {Array|null} Array of password field elements for the specified form.
+   *                      If no pw fields are found, or if more than 5 are found, then null
+   *                      is returned.
+   */
+  static _getPasswordFields(
+    form,
+    {
+      fieldOverrideRecipe = null,
+      minPasswordLength = 0,
+      ignoreConnect = false,
+    } = {}
+  ) {
+    // Locate the password fields in the form.
+    let pwFields = [];
+    for (let i = 0; i < form.elements.length; i++) {
+      let element = form.elements[i];
+      if (
+        !HTMLInputElement.isInstance(element) ||
+        !element.hasBeenTypePassword ||
+        (!element.isConnected && !ignoreConnect)
+      ) {
+        continue;
+      }
+
+      // Exclude ones matching a `notPasswordSelector`, if specified.
+      if (
+        fieldOverrideRecipe?.notPasswordSelector &&
+        element.matches(fieldOverrideRecipe.notPasswordSelector)
+      ) {
+        lazy.log(
+          "skipping password field (id/name is",
+          element.id,
+          " / ",
+          element.name + ") due to recipe:",
+          fieldOverrideRecipe
+        );
+        continue;
+      }
+
+      // XXX: Bug 780449 tracks our handling of emoji and multi-code-point characters in
+      // password fields. To avoid surprises, we should be consistent with the visual
+      // representation of the masked password
+      if (
+        minPasswordLength &&
+        element.value.trim().length < minPasswordLength
+      ) {
+        lazy.log(
+          "skipping password field (id/name is",
+          element.id,
+          " / ",
+          element.name + ") as value is too short:",
+          element.value.trim().length
+        );
+        continue; // Ignore empty or too-short passwords fields
+      }
+
+      pwFields[pwFields.length] = {
+        index: i,
+        element,
+      };
+    }
+
+    // If too few or too many fields, bail out.
+    if (!pwFields.length) {
+      lazy.log("(form ignored -- no password fields.)");
+      return null;
+    }
+
+    if (pwFields.length > 5) {
+      lazy.log(
+        "(form ignored -- too many password fields. [ got ",
+        pwFields.length,
+        "])"
+      );
+      return null;
+    }
+
+    return pwFields;
+  }
 }
 
 /**
@@ -1751,91 +1838,6 @@ class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * @param {LoginForm} form - the LoginForm to look for password fields in.
-   * @param {Object} options
-   * @param {bool} [options.skipEmptyFields=false] - Whether to ignore password fields with no value.
-   *                                                 Used at capture time since saving empty values isn't
-   *                                                 useful.
-   * @param {Object} [options.fieldOverrideRecipe=null] - A relevant field override recipe to use.
-   * @return {Array|null} Array of password field elements for the specified form.
-   *                      If no pw fields are found, or if more than 5 are found, then null
-   *                      is returned.
-   */
-  _getPasswordFields(
-    form,
-    {
-      fieldOverrideRecipe = null,
-      minPasswordLength = 0,
-      ignoreConnect = false,
-    } = {}
-  ) {
-    // Locate the password fields in the form.
-    let pwFields = [];
-    for (let i = 0; i < form.elements.length; i++) {
-      let element = form.elements[i];
-      if (
-        !HTMLInputElement.isInstance(element) ||
-        !element.hasBeenTypePassword ||
-        (!element.isConnected && !ignoreConnect)
-      ) {
-        continue;
-      }
-
-      // Exclude ones matching a `notPasswordSelector`, if specified.
-      if (
-        fieldOverrideRecipe?.notPasswordSelector &&
-        element.matches(fieldOverrideRecipe.notPasswordSelector)
-      ) {
-        lazy.log(
-          "skipping password field (id/name is",
-          element.id,
-          " / ",
-          element.name + ") due to recipe:",
-          fieldOverrideRecipe
-        );
-        continue;
-      }
-
-      // XXX: Bug 780449 tracks our handling of emoji and multi-code-point characters in
-      // password fields. To avoid surprises, we should be consistent with the visual
-      // representation of the masked password
-      if (
-        minPasswordLength &&
-        element.value.trim().length < minPasswordLength
-      ) {
-        lazy.log(
-          "skipping password field (id/name is",
-          element.id,
-          " / ",
-          element.name + ") as value is too short:",
-          element.value.trim().length
-        );
-        continue; // Ignore empty or too-short passwords fields
-      }
-
-      pwFields[pwFields.length] = {
-        index: i,
-        element,
-      };
-    }
-
-    // If too few or too many fields, bail out.
-    if (!pwFields.length) {
-      lazy.log("(form ignored -- no password fields.)");
-      return null;
-    } else if (pwFields.length > 5) {
-      lazy.log(
-        "(form ignored -- too many password fields. [ got ",
-        pwFields.length,
-        "])"
-      );
-      return null;
-    }
-
-    return pwFields;
-  }
-
-  /**
    * Returns the username and password fields found in the form.
    * Can handle complex forms by trying to figure out what the
    * relevant fields are.
@@ -1907,7 +1909,7 @@ class LoginManagerChild extends JSWindowActorChild {
       // Locate the password field(s) in the form. Up to 3 supported.
       // If there's no password field, there's nothing for us to do.
       const minSubmitPasswordLength = 2;
-      pwFields = this._getPasswordFields(form, {
+      pwFields = LoginFormState._getPasswordFields(form, {
         fieldOverrideRecipe,
         minPasswordLength: isSubmission ? minSubmitPasswordLength : 0,
         ignoreConnect,
