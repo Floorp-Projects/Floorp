@@ -397,10 +397,8 @@ NS_IMETHODIMP nsContentTreeOwner::Destroy() {
   return mAppWindow->Destroy();
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(
-    double* aScale) {
-  NS_ENSURE_STATE(mAppWindow);
-  return mAppWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+double nsContentTreeOwner::GetWidgetCSSToDeviceScale() {
+  return mAppWindow ? mAppWindow->GetWidgetCSSToDeviceScale() : 1.0;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetDevicePixelsPerDesktopPixel(

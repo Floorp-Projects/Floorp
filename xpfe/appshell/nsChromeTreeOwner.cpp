@@ -262,10 +262,8 @@ NS_IMETHODIMP nsChromeTreeOwner::Destroy() {
   return mAppWindow->Destroy();
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(
-    double* aScale) {
-  NS_ENSURE_STATE(mAppWindow);
-  return mAppWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+double nsChromeTreeOwner::GetWidgetCSSToDeviceScale() {
+  return mAppWindow ? mAppWindow->GetWidgetCSSToDeviceScale() : 1.0;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::GetDevicePixelsPerDesktopPixel(

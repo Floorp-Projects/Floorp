@@ -138,7 +138,7 @@ class PuppetWidget : public nsBaseWidget,
     return GetWindowPosition();
   }
 
-  int32_t RoundsWidgetCoordinatesTo() override;
+  int32_t RoundsWidgetCoordinatesTo() override { return mRounding; }
 
   void InitEvent(WidgetGUIEvent& aEvent,
                  LayoutDeviceIntPoint* aPoint = nullptr);
@@ -201,12 +201,8 @@ class PuppetWidget : public nsBaseWidget,
 
   virtual void SetCursor(const Cursor&) override;
 
-  // Gets the DPI of the screen corresponding to this widget.
-  // Contacts the parent process which gets the DPI from the
-  // proper widget there. TODO: Handle DPI changes that happen
-  // later on.
-  virtual float GetDPI() override;
-  virtual double GetDefaultScaleInternal() override;
+  float GetDPI() override { return mDPI; }
+  double GetDefaultScaleInternal() override { return mDefaultScale; }
 
   virtual bool NeedsPaint() override;
 
@@ -385,10 +381,10 @@ class PuppetWidget : public nsBaseWidget,
   NativeIMEContext mNativeIMEContext;
   ContentCacheInChild mContentCache;
 
-  // The DPI of the screen corresponding to this widget
-  float mDPI;
-  int32_t mRounding;
-  double mDefaultScale;
+  // The DPI of the parent widget containing this widget.
+  float mDPI = 96;
+  int32_t mRounding = 1;
+  double mDefaultScale = 1.0f;
 
   ScreenIntMargin mSafeAreaInsets;
 
