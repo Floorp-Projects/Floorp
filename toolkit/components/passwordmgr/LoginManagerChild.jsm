@@ -1487,6 +1487,9 @@ class LoginFormState {
 
 /**
  * Integration with browser and IPC with LoginManagerParent.
+ *
+ * NOTE: there are still bits of code here that needs to be moved to
+ * LoginFormState.
  */
 class LoginManagerChild extends JSWindowActorChild {
   /**
@@ -1540,37 +1543,17 @@ class LoginManagerChild extends JSWindowActorChild {
         });
         break;
       }
-
       case "PasswordManager:useGeneratedPassword": {
-        let inputElement = lazy.ContentDOMReference.resolve(
-          msg.data.inputElementIdentifier
-        );
-        if (!inputElement) {
-          lazy.log(
-            "Could not resolve inputElementIdentifier to a living element."
-          );
-          break;
-        }
-
-        if (inputElement != lazy.gFormFillService.focusedInput) {
-          lazy.log("Could not open popup on input that's no longer focused");
-          break;
-        }
-
-        this.#fieldsWithPasswordGenerationForcedOn.add(inputElement);
-        this.repopulateAutocompletePopup();
+        this.#onUseGeneratedPassword(msg.data.inputElementIdentifier);
         break;
       }
-
       case "PasswordManager:repopulateAutocompletePopup": {
         this.repopulateAutocompletePopup();
         break;
       }
-
       case "PasswordManager:formIsPending": {
         return this.#visibleTasksByDocument.has(this.document);
       }
-
       case "PasswordManager:formProcessed": {
         this.notifyObserversOfFormProcessed(msg.data.formid);
         break;
@@ -1578,6 +1561,22 @@ class LoginManagerChild extends JSWindowActorChild {
     }
 
     return undefined;
+  }
+
+  #onUseGeneratedPassword(inputElementIdentifier) {
+    let inputElement = lazy.ContentDOMReference.resolve(inputElementIdentifier);
+    if (!inputElement) {
+      lazy.log("Could not resolve inputElementIdentifier to a living element.");
+      return;
+    }
+
+    if (inputElement != lazy.gFormFillService.focusedInput) {
+      lazy.log("Could not open popup on input that's no longer focused");
+      return;
+    }
+
+    this.#fieldsWithPasswordGenerationForcedOn.add(inputElement);
+    this.repopulateAutocompletePopup();
   }
 
   repopulateAutocompletePopup() {
@@ -2454,7 +2453,7 @@ class LoginManagerChild extends JSWindowActorChild {
         lazy.log(
           "_onFormSubmit: username-only form. Record the username field but not sending prompt"
         );
-        this.stateForDocument(doc).mockUsernameOnlyField = {
+        docState.mockUsernameOnlyField = {
           name: fields.usernameField.name,
           value: fields.usernameField.value,
         };
