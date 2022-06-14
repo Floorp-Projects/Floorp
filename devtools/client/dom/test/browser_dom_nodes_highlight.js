@@ -19,15 +19,15 @@ add_task(async function() {
     {
       expected: "h1",
       getNode: async () => {
-        return getRowByIndex(panel, 2).querySelector(".objectBox-node");
+        return getRowByIndex(panel, 0).querySelector(".objectBox-node");
       },
     },
     {
       expected: "h2",
       getNode: async () => {
         info("Expand specified row and wait till children are displayed");
-        await expandRow(panel, "_b");
-        return getRowByIndex(panel, 3).querySelector(".objectBox-node");
+        await expandRow(panel, "B");
+        return getRowByIndex(panel, 1).querySelector(".objectBox-node");
       },
     },
   ];
