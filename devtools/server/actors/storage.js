@@ -20,6 +20,12 @@ loader.lazyGetter(this, "ExtensionStorageIDB", () => {
   return require("resource://gre/modules/ExtensionStorageIDB.jsm")
     .ExtensionStorageIDB;
 });
+loader.lazyRequireGetter(
+  this,
+  "getAddonIdForWindowGlobal",
+  "devtools/server/actors/watcher/browsing-context-helpers.jsm",
+  true
+);
 
 const EXTENSION_STORAGE_ENABLED_PREF =
   "devtools.storage.extensionStorage.enabled";
@@ -3619,11 +3625,8 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   },
 
   isIncludedInTargetExtension(subject) {
-    const { document } = subject;
-    return (
-      document.nodePrincipal.addonId &&
-      document.nodePrincipal.addonId === this.parentActor.addonId
-    );
+    const addonId = getAddonIdForWindowGlobal(subject.windowGlobalChild);
+    return addonId && addonId === this.parentActor.addonId;
   },
 
   isIncludedInTopLevelWindow(window) {
