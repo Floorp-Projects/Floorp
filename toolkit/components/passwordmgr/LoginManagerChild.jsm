@@ -507,7 +507,7 @@ class LoginFormState {
   /**
    * Caches the results of the username heuristics
    */
-  cachedIsInferredUsernameField = new WeakMap();
+  #cachedIsInferredUsernameField = new WeakMap();
   cachedIsInferredEmailField = new WeakMap();
   cachedIsInferredLoginForm = new WeakMap();
 
@@ -545,6 +545,25 @@ class LoginFormState {
     if (result === undefined) {
       result = lazy.LoginHelper.isInferredEmailField(inputElement);
       this.cachedIsInferredEmailField.set(inputElement, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns true if the input field is considered a username field by
+   * 'LoginHelper.isInferredUsernameField'. The main purpose of this method
+   * is to cache the result because _getFormFields has many call sites and we
+   * want to avoid applying the heuristic every time.
+   *
+   * @param {Element} element the field to check.
+   * @returns {boolean} True if the element is likely a username field
+   */
+  isProbablyAUsernameField(inputElement) {
+    let result = this.#cachedIsInferredUsernameField.get(inputElement);
+    if (result === undefined) {
+      result = lazy.LoginHelper.isInferredUsernameField(inputElement);
+      this.#cachedIsInferredUsernameField.set(inputElement, result);
     }
 
     return result;
@@ -1683,7 +1702,7 @@ class LoginManagerChild extends JSWindowActorChild {
           usernameField = element;
         }
 
-        if (this.isProbablyAUsernameField(element)) {
+        if (docState.isProbablyAUsernameField(element)) {
           // An username field is found, we are done.
           usernameField = element;
           break;
@@ -3155,26 +3174,6 @@ class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * Returns true if the input field is considered a username field by
-   * 'LoginHelper.isInferredUsernameField'. The main purpose of this method
-   * is to cache the result because _getFormFields has many call sites and we
-   * want to avoid applying the heuristic every time.
-   *
-   * @param {Element} element the field to check.
-   * @returns {boolean} True if the element is likely a username field
-   */
-  isProbablyAUsernameField(inputElement) {
-    let docState = this.stateForDocument(inputElement.ownerDocument);
-    let result = docState.cachedIsInferredUsernameField.get(inputElement);
-    if (result === undefined) {
-      result = lazy.LoginHelper.isInferredUsernameField(inputElement);
-      docState.cachedIsInferredUsernameField.set(inputElement, result);
-    }
-
-    return result;
-  }
-
-  /**
    * Returns true if the form is considered a username login form if
    * 1. The input element looks like a username field or the form looks
    *    like a login form
@@ -3199,7 +3198,7 @@ class LoginManagerChild extends JSWindowActorChild {
       // Check whether the input field looks like a username field or the
       // form looks like a sign-in or sign-up form.
       if (
-        this.isProbablyAUsernameField(inputElement) ||
+        docState.isProbablyAUsernameField(inputElement) ||
         lazy.LoginHelper.isInferredLoginForm(formElement)
       ) {
         // This is where we collect hints that indicate this is not a username
