@@ -1232,10 +1232,4 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 }  // namespace mozilla
 
-namespace js {
-
-using HeapPtrValue = HeapPtr<Value>;
-
-} /* namespace js */
-
 #endif /* gc_Barrier_h */

@@ -541,7 +541,7 @@ class GCMarker final : public JSTracer {
    * used during shutdown GCs. In either case, unmarked objects may need to be
    * discarded.
    */
-  JS::WeakCache<GCVector<HeapPtrValue, 0, SystemAllocPolicy>> markQueue;
+  JS::WeakCache<GCVector<HeapPtr<JS::Value>, 0, SystemAllocPolicy>> markQueue;
 
   /* Position within the test mark queue. */
   size_t queuePos;
