@@ -569,7 +569,7 @@ class LoginFormState {
    * @param {Element} element the form to check.
    * @returns {boolean} True if the element is likely a login form
    */
-  isProbablyAUsernameLoginForm(formElement, inputElement) {
+  #isProbablyAUsernameLoginForm(formElement, inputElement) {
     let result = this.#cachedIsInferredLoginForm.get(formElement);
     if (result === undefined) {
       // We should revisit these rules after we collect more positive or negative
@@ -826,6 +826,66 @@ class LoginFormState {
         once: true,
       }
     );
+  }
+
+  /**
+   * Returns the username field of the passed form if the form is a
+   * username-only form.
+   * A form is considered a username-only form only if it meets all the
+   * following conditions:
+   * 1. Does not have any password field,
+   * 2. Only contains one input field whose type is username compatible.
+   * 3. The username compatible input field looks like a username field
+   *    or the form itself looks like a sign-in or sign-up form.
+   *
+   * @param {Element} formElement
+   *                  the form to check.
+   * @param {Object}  recipe=null
+   *                  A relevant field override recipe to use.
+   * @returns {Element} The username field or null (if the form is not a
+   *                    username-only form).
+   */
+  getUsernameFieldFromUsernameOnlyForm(formElement, recipe = null) {
+    if (!HTMLFormElement.isInstance(formElement)) {
+      return null;
+    }
+
+    let candidate = null;
+    for (let element of formElement.elements) {
+      // We are looking for a username-only form, so if there is a password
+      // field in the form, this is NOT a username-only form.
+      if (element.hasBeenTypePassword) {
+        return null;
+      }
+
+      // Ignore input fields whose type are not username compatiable, ex, hidden.
+      if (!lazy.LoginHelper.isUsernameFieldType(element)) {
+        continue;
+      }
+
+      if (
+        recipe?.notUsernameSelector &&
+        element.matches(recipe.notUsernameSelector)
+      ) {
+        continue;
+      }
+
+      // If there are more than two input fields whose type is username
+      // compatiable, this is NOT a username-only form.
+      if (candidate) {
+        return null;
+      }
+      candidate = element;
+    }
+
+    if (
+      candidate &&
+      this.#isProbablyAUsernameLoginForm(formElement, candidate)
+    ) {
+      return candidate;
+    }
+
+    return null;
   }
 }
 
@@ -1354,7 +1414,8 @@ class LoginManagerChild extends JSWindowActorChild {
     // We specifically set the recipe to empty here to avoid loading site recipes during page loads.
     // This is okay because if we end up finding a username-only form that should be ignore by
     // the site recipe, the form will be skipped while autofilling later.
-    let usernameField = this.getUsernameFieldFromUsernameOnlyForm(form, {});
+    let docState = this.stateForDocument(form.ownerDocument);
+    let usernameField = docState.getUsernameFieldFromUsernameOnlyForm(form, {});
     if (usernameField) {
       // Autofill the username-only form.
       lazy.log(
@@ -1853,6 +1914,8 @@ class LoginManagerChild extends JSWindowActorChild {
       });
     }
 
+    const docState = this.stateForDocument(form.ownerDocument);
+
     // Check whether this is a username-only form when the form doesn't have
     // a password field. Note that recipes are not supported in username-only
     // forms currently (Bug 1708455).
@@ -1861,7 +1924,7 @@ class LoginManagerChild extends JSWindowActorChild {
         return emptyResult;
       }
 
-      usernameField = this.getUsernameFieldFromUsernameOnlyForm(
+      usernameField = docState.getUsernameFieldFromUsernameOnlyForm(
         form.rootElement,
         fieldOverrideRecipe
       );
@@ -1885,8 +1948,6 @@ class LoginManagerChild extends JSWindowActorChild {
         usernameField,
       };
     }
-
-    const docState = this.stateForDocument(form.ownerDocument);
 
     if (!usernameField) {
       // Searching backwards from the first password field until we find a field
@@ -3149,66 +3210,5 @@ class LoginManagerChild extends JSWindowActorChild {
           (newPasswordField.disabled || newPasswordField.readOnly),
       },
     };
-  }
-
-  /**
-   * Returns the username field of the passed form if the form is a
-   * username-only form.
-   * A form is considered a username-only form only if it meets all the
-   * following conditions:
-   * 1. Does not have any password field,
-   * 2. Only contains one input field whose type is username compatible.
-   * 3. The username compatible input field looks like a username field
-   *    or the form itself looks like a sign-in or sign-up form.
-   *
-   * @param {Element} formElement
-   *                  the form to check.
-   * @param {Object}  recipe=null
-   *                  A relevant field override recipe to use.
-   * @returns {Element} The username field or null (if the form is not a
-   *                    username-only form).
-   */
-  getUsernameFieldFromUsernameOnlyForm(formElement, recipe = null) {
-    if (!HTMLFormElement.isInstance(formElement)) {
-      return null;
-    }
-
-    let candidate = null;
-    for (let element of formElement.elements) {
-      // We are looking for a username-only form, so if there is a password
-      // field in the form, this is NOT a username-only form.
-      if (element.hasBeenTypePassword) {
-        return null;
-      }
-
-      // Ignore input fields whose type are not username compatiable, ex, hidden.
-      if (!lazy.LoginHelper.isUsernameFieldType(element)) {
-        continue;
-      }
-
-      if (
-        recipe?.notUsernameSelector &&
-        element.matches(recipe.notUsernameSelector)
-      ) {
-        continue;
-      }
-
-      // If there are more than two input fields whose type is username
-      // compatiable, this is NOT a username-only form.
-      if (candidate) {
-        return null;
-      }
-      candidate = element;
-    }
-
-    let docState = this.stateForDocument(formElement.ownerDocument);
-    if (
-      candidate &&
-      docState.isProbablyAUsernameLoginForm(formElement, candidate)
-    ) {
-      return candidate;
-    }
-
-    return null;
   }
 }
