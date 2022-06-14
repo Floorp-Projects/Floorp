@@ -377,7 +377,7 @@ const observer = {
         if (field.hasBeenTypePassword) {
           // When a field is filled with a generated password, we also fill a confirm password field
           // if found. To do this, _fillConfirmFieldWithGeneratedPassword calls setUserInput, which fires
-          // an "input" event on the confirm password field. _compareAndUpdatePreviouslySentValues will
+          // an "input" event on the confirm password field. compareAndUpdatePreviouslySentValues will
           // allow that message through due to triggeredByFillingGenerated, so early return here.
           let form = lazy.LoginFormFactory.createFromField(field);
           if (
@@ -974,6 +974,63 @@ class LoginFormState {
 
     return pwFields;
   }
+
+  /**
+   * Stores passed arguments, and returns whether or not they match the args given the last time
+   * this method was called with the same [formLikeRoot]. This is used to avoid sending duplicate
+   * messages to the parent.
+   *
+   * @param {Element} formLikeRoot
+   * @param {string} usernameValue
+   * @param {string} passwordValue
+   * @param {boolean?} [dismissed=false]
+   * @param {boolean?} [triggeredByFillingGenerated=false] whether or not this call was triggered by a generated
+   *        password being filled into a form-like element.
+   *
+   * @returns {boolean} true if args match the most recently passed values
+   */
+  compareAndUpdatePreviouslySentValues(
+    formLikeRoot,
+    usernameValue,
+    passwordValue,
+    dismissed = false,
+    triggeredByFillingGenerated = false
+  ) {
+    const lastSentValues = this.lastSubmittedValuesByRootElement.get(
+      formLikeRoot
+    );
+    if (lastSentValues) {
+      if (dismissed && !lastSentValues.dismissed) {
+        // preserve previous dismissed value if it was false (i.e. shown/open)
+        dismissed = false;
+      }
+      if (
+        lastSentValues.username == usernameValue &&
+        lastSentValues.password == passwordValue &&
+        lastSentValues.dismissed == dismissed &&
+        lastSentValues.triggeredByFillingGenerated ==
+          triggeredByFillingGenerated
+      ) {
+        lazy.log(
+          "compareAndUpdatePreviouslySentValues: values are equivalent, returning true"
+        );
+        return true;
+      }
+    }
+
+    // Save the last submitted values so we don't prompt twice for the same values using
+    // different capture methods e.g. a form submit event and upon navigation.
+    this.lastSubmittedValuesByRootElement.set(formLikeRoot, {
+      username: usernameValue,
+      password: passwordValue,
+      dismissed,
+      triggeredByFillingGenerated,
+    });
+    lazy.log(
+      "compareAndUpdatePreviouslySentValues: values not equivalent, returning false"
+    );
+    return false;
+  }
 }
 
 /**
@@ -1016,64 +1073,6 @@ class LoginManagerChild extends JSWindowActorChild {
 
   static forWindow(window) {
     return window.windowGlobalChild?.getActor("LoginManager");
-  }
-
-  /**
-   * Stores passed arguments, and returns whether or not they match the args given the last time
-   * this method was called with the same [formLikeRoot]. This is used to avoid sending duplicate
-   * messages to the parent.
-   *
-   * @param {Element} formLikeRoot
-   * @param {string} usernameValue
-   * @param {string} passwordValue
-   * @param {boolean?} [dismissed=false]
-   * @param {boolean?} [triggeredByFillingGenerated=false] whether or not this call was triggered by a generated
-   *        password being filled into a form-like element.
-   *
-   * @returns {boolean} true if args match the most recently passed values
-   */
-  _compareAndUpdatePreviouslySentValues(
-    formLikeRoot,
-    usernameValue,
-    passwordValue,
-    dismissed = false,
-    triggeredByFillingGenerated = false
-  ) {
-    let state = this.stateForDocument(formLikeRoot.ownerDocument);
-    const lastSentValues = state.lastSubmittedValuesByRootElement.get(
-      formLikeRoot
-    );
-    if (lastSentValues) {
-      if (dismissed && !lastSentValues.dismissed) {
-        // preserve previous dismissed value if it was false (i.e. shown/open)
-        dismissed = false;
-      }
-      if (
-        lastSentValues.username == usernameValue &&
-        lastSentValues.password == passwordValue &&
-        lastSentValues.dismissed == dismissed &&
-        lastSentValues.triggeredByFillingGenerated ==
-          triggeredByFillingGenerated
-      ) {
-        lazy.log(
-          "_compareAndUpdatePreviouslySentValues: values are equivalent, returning true"
-        );
-        return true;
-      }
-    }
-
-    // Save the last submitted values so we don't prompt twice for the same values using
-    // different capture methods e.g. a form submit event and upon navigation.
-    state.lastSubmittedValuesByRootElement.set(formLikeRoot, {
-      username: usernameValue,
-      password: passwordValue,
-      dismissed,
-      triggeredByFillingGenerated,
-    });
-    lazy.log(
-      "_compareAndUpdatePreviouslySentValues: values not equivalent, returning false"
-    );
-    return false;
   }
 
   receiveMessage(msg) {
@@ -2435,7 +2434,7 @@ class LoginManagerChild extends JSWindowActorChild {
       }
 
       if (
-        this._compareAndUpdatePreviouslySentValues(
+        docState.compareAndUpdatePreviouslySentValues(
           form.rootElement,
           usernameValue,
           newPasswordField.value,
