@@ -69,40 +69,45 @@ fieldset {
   padding: 0;
 }
 
-input[type="radio"] {
+input[type="radio"],
+input[type="radio"]:checked {
+  box-sizing: content-box;
+  padding: 2px;
+  border: 2px solid transparent;
+  height: 24px;
+  width: 24px;
   --colorway-icon: none;
   appearance: none;
   background-color: unset;
-  border-radius: 50%;
-  border: unset;
-  display: grid;
-  height: 32px;
-  place-content: center;
-  width: 32px;
-}
-
-input[type="radio"]::before {
   background-image: var(--colorway-icon);
+  background-origin: content-box;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 24px;
+  /* The icon may not be a perfect circle, so we render it bigger and clipped using background-clip and border-radius: */
+  background-clip: content-box;
+  background-size: 105%;
   border-radius: 50%;
-  content: "";
-  fill: #15141A;
-  height: 24px;
-  margin: 4px 8px;
-  width: 24px;
 }
 
 input[type="radio"].active::before {
-  background-image: url(chrome://global/skin/icons/check.svg), var(--colorway-icon);
-  background-size: 14px, 24px;
+  content: "";
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  position: relative;
+  inset-inline-start: 4px;
+  inset-block-start: 4px;
+  /* Use mask-image and filter to ensure the checkmark is visible over the icon: */
+  mask-image: url(chrome://global/skin/icons/check.svg);
+  filter: invert(1);
+  background-image: var(--colorway-icon);
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 input[type="radio"]:enabled:checked,
 input[type="radio"]:enabled:checked:hover {
-  border: 2px solid;
-  border-color: #0060DF;
+  border-color: var(--in-content-accent-color);
 }
 
 /* override common-shared.css */
