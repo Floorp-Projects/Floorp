@@ -211,6 +211,21 @@ def update_properties():
             {"os": ["version"], "processor": ["bits"]})
 
 
+def log_gecko_crashes(logger, process, test, profile_dir, symbols_path, stackwalk_binary):
+    dump_dir = os.path.join(profile_dir, "minidumps")
+
+    try:
+        return bool(mozcrash.log_crashes(logger,
+                                         dump_dir,
+                                         symbols_path=symbols_path,
+                                         stackwalk_binary=stackwalk_binary,
+                                         process=process,
+                                         test=test))
+    except OSError:
+        logger.warning("Looking for crash dump files failed")
+        return False
+
+
 def get_environ(logger, binary, debug_info, stylo_threads, headless,
                 chaos_mode_flags=None):
     env = test_environment(xrePath=os.path.abspath(os.path.dirname(binary)),
@@ -799,18 +814,12 @@ class FirefoxBrowser(Browser):
                                  "supports_devtools": True}
 
     def check_crash(self, process, test):
-        dump_dir = os.path.join(self.instance.runner.profile.profile, "minidumps")
-
-        try:
-            return bool(mozcrash.log_crashes(self.logger,
-                                             dump_dir,
-                                             symbols_path=self.symbols_path,
-                                             stackwalk_binary=self.stackwalk_binary,
-                                             process=process,
-                                             test=test))
-        except OSError:
-            self.logger.warning("Looking for crash dump files failed")
-            return False
+        return log_gecko_crashes(self.logger,
+                                 process,
+                                 test,
+                                 self.instance.runner.profile.profile,
+                                 self.symbols_path,
+                                 self.stackwalk_binary)
 
 
 class FirefoxWdSpecBrowser(WebDriverBrowser):
@@ -940,3 +949,11 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
         args["supports_devtools"] = False
         args["profile"] = self.profile.profile
         return cls, args
+
+    def check_crash(self, process, test):
+        return log_gecko_crashes(self.logger,
+                                 process,
+                                 test,
+                                 self.profile.profile,
+                                 self.symbols_path,
+                                 self.stackwalk_binary)
