@@ -116,11 +116,15 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
+  Change change = Change::None;
+
   if (eventType == kInput) {
-    RecordChange(windowContext, Change::Input);
+    change = Change::Input;
   } else if (eventType == kScroll) {
-    RecordChange(windowContext, Change::Scroll);
+    change = Change::Scroll;
   }
+
+  RecordChange(windowContext, EnumSet(change));
 
   return NS_OK;
 }
@@ -187,23 +191,9 @@ void SessionStoreChangeListener::FlushSessionStore() {
     mTimer = nullptr;
   }
 
-  bool collectSessionHistory = false;
-  bool collectWireFrame = false;
-
   for (auto& iter : mSessionStoreChanges) {
     WindowContext* windowContext = iter.GetKey();
     if (!windowContext) {
-      continue;
-    }
-
-    BrowsingContext* browsingContext = windowContext->GetBrowsingContext();
-
-    // This is a bit unfortunate, but is needed when a window context with a
-    // recorded change has become non-current before its data has been
-    // collected. This can happen either due to navigation or destruction, and
-    // in the previous case we don't want to collect, but in the latter we do.
-    // This could be cleaned up if we change. See bug 1770773.
-    if (!windowContext->IsCurrent() && !browsingContext->IsDiscarded()) {
       continue;
     }
 
@@ -225,21 +215,15 @@ void SessionStoreChangeListener::FlushSessionStore() {
       maybeScroll = Some(presShell->GetVisualViewportOffset());
     }
 
-    collectWireFrame = collectWireFrame || changes.contains(Change::WireFrame);
-
-    collectSessionHistory =
-        collectSessionHistory || changes.contains(Change::SessionHistory);
-
-    mSessionStoreChild->IncrementalSessionStoreUpdate(
-        browsingContext, maybeFormData, maybeScroll, mEpoch);
-  }
-
-  if (collectWireFrame) {
-    collectSessionHistory = CollectWireframe() || collectSessionHistory;
+    mSessionStoreChild->SendIncrementalSessionStoreUpdate(
+        windowContext->GetBrowsingContext(), maybeFormData, maybeScroll,
+        mEpoch);
   }
 
   mSessionStoreChanges.Clear();
-  mSessionStoreChild->UpdateSessionStore(collectSessionHistory);
+
+  mSessionStoreChild->UpdateSessionStore(mCollectSessionHistory);
+  mCollectSessionHistory = false;
 }
 
 /* static */
@@ -263,17 +247,28 @@ SessionStoreChangeListener* SessionStoreChangeListener::CollectSessionStoreData(
   return sessionStoreChangeListener;
 }
 
+/* static */
+void SessionStoreChangeListener::FlushAllSessionStoreData(
+    WindowContext* aWindowContext) {
+  EnumSet<Change> allChanges(Change::Input, Change::Scroll);
+  SessionStoreChangeListener* listener =
+      CollectSessionStoreData(aWindowContext, allChanges);
+  if (listener) {
+    listener->FlushSessionStore();
+  }
+}
+
 void SessionStoreChangeListener::SetActor(
     SessionStoreChild* aSessionStoreChild) {
   mSessionStoreChild = aSessionStoreChild;
 }
 
-bool SessionStoreChangeListener::CollectWireframe() {
+void SessionStoreChangeListener::CollectWireframe() {
   if (auto* docShell = nsDocShell::Cast(mBrowsingContext->GetDocShell())) {
-    return docShell->CollectWireframe();
+    if (docShell->CollectWireframe()) {
+      mCollectSessionHistory = true;
+    }
   }
-
-  return false;
 }
 
 void SessionStoreChangeListener::RecordChange(WindowContext* aWindowContext,

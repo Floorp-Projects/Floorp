@@ -107,10 +107,8 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
 
   await extension.startup();
 
-  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   // Test with a closed tab.
   BrowserTestUtils.removeTab(tab);
-  await sessionUpdatePromise;
 
   extension.sendMessage("check-sessions");
   let recentlyClosed = await extension.awaitMessage("recentlyClosed");
