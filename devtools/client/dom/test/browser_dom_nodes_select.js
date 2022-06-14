@@ -13,7 +13,7 @@ add_task(async function() {
 
   const { panel, tab } = await addTestTab(TEST_PAGE_URL);
   const toolbox = await gDevTools.getToolboxForTab(tab);
-  const node = getRowByIndex(panel, 2);
+  const node = getRowByIndex(panel, 0);
 
   // Loading the inspector panel at first, to make it possible to listen for
   // new node selections
