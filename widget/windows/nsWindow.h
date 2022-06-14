@@ -693,10 +693,6 @@ class nsWindow final : public nsBaseWidget {
   static void OnCloakEvent(HWND aWnd, bool aCloaked);
   void OnCloakChanged(bool aCloaked);
 
-  // Get the orientation of the hidden taskbar, on the screen that this window
-  // is on, or Nothing if taskbar isn't hidden.
-  mozilla::Maybe<UINT> GetHiddenTaskbarEdge();
-
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static bool sDropShadowEnabled;
@@ -887,13 +883,7 @@ class nsWindow final : public nsBaseWidget {
 
   mozilla::DataMutex<Desktop> mDesktopId;
 
-  // If set, indicates the edge of the NC region we should clear to black
-  // on next paint.  One of: ABE_TOP, ABE_BOTTOM, ABE_LEFT or ABE_RIGHT.
-  mozilla::Maybe<UINT> mClearNCEdge;
-
   friend class nsWindowGfx;
-
-  static constexpr int kHiddenTaskbarSize = 2;
 };
 
 #endif  // WIDGET_WINDOWS_NSWINDOW_H_
