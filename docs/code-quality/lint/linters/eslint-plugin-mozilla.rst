@@ -48,6 +48,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/prefer-formatValues
    eslint-plugin-mozilla/reject-addtask-only
    eslint-plugin-mozilla/reject-chromeutils-import-params
+   eslint-plugin-mozilla/reject-global-this
    eslint-plugin-mozilla/reject-importGlobalProperties
    eslint-plugin-mozilla/reject-osfile
    eslint-plugin-mozilla/reject-relative-requires

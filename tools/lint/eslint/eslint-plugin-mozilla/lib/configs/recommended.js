@@ -50,6 +50,7 @@ module.exports = {
       },
       files: ["**/*.sys.mjs", "**/*.jsm", "**/*.jsm.js"],
       rules: {
+        "mozilla/reject-global-this": "error",
         "mozilla/reject-top-level-await": "error",
         // Bug 1703953: We don't have a good way to check a file runs in a
         // privilieged context. Apply this for these files as we know those are
@@ -58,6 +59,13 @@ module.exports = {
         // TODO: Bug 1575506 turn `builtinGlobals` on here.
         // We can enable builtinGlobals for jsms due to their scopes.
         "no-redeclare": ["error", { builtinGlobals: false }],
+      },
+    },
+    {
+      // Temporarily disable until the proxy-based loader gets landed.
+      files: ["browser/components/urlbar/**"],
+      rules: {
+        "mozilla/reject-global-this": "off",
       },
     },
     {

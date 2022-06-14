@@ -42,6 +42,9 @@
 
 if (typeof Components != "undefined") {
   // Specify exported symbols for JSM module loader.
+  //
+  // (bug 1773390)
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = ["AndroidLog"];
   var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 }

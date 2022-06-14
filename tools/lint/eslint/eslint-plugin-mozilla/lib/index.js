@@ -54,6 +54,7 @@ module.exports = {
     "prefer-formatValues": require("../lib/rules/prefer-formatValues"),
     "reject-addtask-only": require("../lib/rules/reject-addtask-only"),
     "reject-chromeutils-import-params": require("../lib/rules/reject-chromeutils-import-params"),
+    "reject-global-this": require("../lib/rules/reject-global-this"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
     "reject-osfile": require("../lib/rules/reject-osfile"),
     "reject-scriptableunicodeconverter": require("../lib/rules/reject-scriptableunicodeconverter"),

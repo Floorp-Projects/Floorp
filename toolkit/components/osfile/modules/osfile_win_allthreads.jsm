@@ -25,11 +25,13 @@ var SharedAll;
 if (typeof Components != "undefined") {
   // Module is opened as a jsm module
   const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  // eslint-disable-next-line mozilla/reject-global-this
   this.ctypes = ctypes;
 
   SharedAll = ChromeUtils.import(
     "resource://gre/modules/osfile/osfile_shared_allthreads.jsm"
   );
+  // eslint-disable-next-line mozilla/reject-global-this
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
   // Module is loaded with require()
@@ -431,8 +433,10 @@ var EXPORTED_SYMBOLS = [
 
 // ////////// Boilerplate
 if (typeof Components != "undefined") {
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {
+    // eslint-disable-next-line mozilla/reject-global-this
     this[symbol] = exports[symbol];
   }
 }

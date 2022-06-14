@@ -36,6 +36,7 @@ if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
+  // eslint-disable-next-line mozilla/reject-global-this
   this.exports = {};
 } else if (typeof module == "undefined" || typeof exports == "undefined") {
   throw new Error("Please load this module using require()");
@@ -372,8 +373,10 @@ var trimBackslashes = function trimBackslashes(string) {
 
 // ////////// Boilerplate
 if (typeof Components != "undefined") {
+  // eslint-disable-next-line mozilla/reject-global-this
   this.EXPORTED_SYMBOLS = EXPORTED_SYMBOLS;
   for (let symbol of EXPORTED_SYMBOLS) {
+    // eslint-disable-next-line mozilla/reject-global-this
     this[symbol] = exports[symbol];
   }
 }
