@@ -383,6 +383,10 @@ class ExitFooterFrame {
     uint8_t* address = alignedForABI();
     return reinterpret_cast<T*>(address - sizeof(T));
   }
+
+  static constexpr size_t offsetOfCallerFP() {
+    return offsetof(ExitFooterFrame, callerFP_);
+  }
 };
 
 class NativeExitFrameLayout;
