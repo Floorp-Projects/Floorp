@@ -74,7 +74,7 @@ void nsDeviceContext::SetDPI(double* aScale) {
     mAppUnitsPerDevPixelAtUnitFullZoom =
         NS_lround((AppUnitsPerCSSPixel() * 96) / dpi);
   } else {
-    RefPtr<const widget::Screen> primaryScreen =
+    RefPtr<widget::Screen> primaryScreen =
         ScreenManager::GetSingleton().GetPrimaryScreen();
     MOZ_ASSERT(primaryScreen);
 
@@ -109,8 +109,12 @@ void nsDeviceContext::SetDPI(double* aScale) {
       // the caller to pass to child contexts if needed
       CSSToLayoutDeviceScale scale =
           mWidget ? mWidget->GetDefaultScale() : CSSToLayoutDeviceScale(1.0);
-      MOZ_ASSERT(scale.scale > 0.0);
       devPixelsPerCSSPixel = scale.scale;
+      // In case that the widget returns -1, use the primary screen's
+      // value as default.
+      if (devPixelsPerCSSPixel < 0) {
+        primaryScreen->GetDefaultCSSScaleFactor(&devPixelsPerCSSPixel);
+      }
       if (aScale) {
         *aScale = devPixelsPerCSSPixel;
       }
