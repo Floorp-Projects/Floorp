@@ -121,9 +121,6 @@ permalink: /changelog/
 * **feature-media**
   * Media playback is now paused when AudioManager.ACTION_AUDIO_BECOMING_NOISY is broadcast by the system.
 
-* **feature-media**
-  * The Play/Pause button remains displayed on the media notification.
-
 # 100.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v99.0.0...v100.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/147?closed=1)
