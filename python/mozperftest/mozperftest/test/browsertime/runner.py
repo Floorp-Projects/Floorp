@@ -137,32 +137,43 @@ class BrowsertimeRunner(NodeRunner):
             os.environ["VISUALMETRICS_PY"] = str(path)
         return path
 
+    def _get_browsertime_package(self):
+        with Path(
+            os.environ.get("BROWSERTIME", self.state_path),
+            "node_modules",
+            "browsertime",
+            "package.json",
+        ).open() as package:
+
+            return json.load(package)
+
+    def _get_browsertime_resolved(self):
+        try:
+            with Path(
+                os.environ.get("BROWSERTIME", self.state_path),
+                "node_modules",
+                ".package-lock.json",
+            ).open() as package_lock:
+                return json.load(package_lock)["packages"]["node_modules/browsertime"][
+                    "resolved"
+                ]
+
+        except FileNotFoundError:
+            # Older versions of node/npm add this metadata to package.json
+            return self._get_browsertime_package().get("_from")
+
     def _should_install(self):
         # If browsertime doesn't exist, install it
         if not self.visualmetrics_py.exists() or not self.browsertime_js.exists():
             return True
 
         # Browsertime exists, check if it's outdated
-        with Path(BROWSERTIME_SRC_ROOT, "package.json").open() as new, Path(
-            os.environ.get("BROWSERTIME", self.state_path),
-            "node_modules",
-            "browsertime",
-            "package.json",
-        ).open() as old:
-            old_pkg = json.load(old)
+        with Path(BROWSERTIME_SRC_ROOT, "package.json").open() as new:
             new_pkg = json.load(new)
 
-        # For some reason the `_from` key is not always present. In such a scenario
-        # we can `return True` to be safe. This would force a re-install of the appropriate
-        # browsertime version that is currently used for mozperftest.
-        # It is possible this is an Apple Silicon specific issue and/or related to how MacOS links
-        # to `zlib.h`. See Bug 1698970 which is related to this.
-        if "_from" in old_pkg.keys():
-            return not old_pkg["_from"].endswith(
-                new_pkg["devDependencies"]["browsertime"]
-            )
-        else:
-            return True
+        return not self._get_browsertime_resolved().endswith(
+            new_pkg["devDependencies"]["browsertime"]
+        )
 
     def setup(self):
         """Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
