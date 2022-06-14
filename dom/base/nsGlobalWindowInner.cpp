@@ -7518,53 +7518,37 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
     if (innerWidthSpecified || innerHeightSpecified || outerWidthSpecified ||
         outerHeightSpecified) {
       nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = outer->GetTreeOwnerWindow();
-      nsCOMPtr<nsIScreen> screen;
       nsCOMPtr<nsIScreenManager> screenMgr(
           do_GetService("@mozilla.org/gfx/screenmanager;1"));
-      int32_t winLeft = 0;
-      int32_t winTop = 0;
-      int32_t winWidth = 0;
-      int32_t winHeight = 0;
-      double scale = 1.0;
 
       if (treeOwnerAsWin && screenMgr) {
         // Acquire current window size.
-        treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&scale);
-        treeOwnerAsWin->GetPositionAndSize(&winLeft, &winTop, &winWidth,
-                                           &winHeight);
-        winLeft = NSToIntRound(winHeight / scale);
-        winTop = NSToIntRound(winWidth / scale);
-        winWidth = NSToIntRound(winWidth / scale);
-        winHeight = NSToIntRound(winHeight / scale);
+        //
+        // FIXME: This needs to account for full zoom like the outer window code
+        // does! Ideally move there?
+        auto cssScale = treeOwnerAsWin->UnscaledDevicePixelsPerCSSPixel();
+        LayoutDeviceIntRect devWinRect = treeOwnerAsWin->GetPositionAndSize();
+        CSSIntRect cssWinRect = RoundedToInt(devWinRect / cssScale);
 
         // Acquire content window size.
         CSSSize contentSize;
         outer->GetInnerSize(contentSize);
 
-        screenMgr->ScreenForRect(winLeft, winTop, winWidth, winHeight,
-                                 getter_AddRefs(screen));
-
+        nsCOMPtr<nsIScreen> screen = screenMgr->ScreenForRect(RoundedToInt(
+            devWinRect / treeOwnerAsWin->DevicePixelsPerDesktopPixel()));
         if (screen) {
           int32_t roundedValue = std::round(value);
           int32_t* targetContentWidth = nullptr;
           int32_t* targetContentHeight = nullptr;
-          int32_t screenWidth = 0;
-          int32_t screenHeight = 0;
-          int32_t chromeWidth = 0;
-          int32_t chromeHeight = 0;
           int32_t inputWidth = 0;
           int32_t inputHeight = 0;
           int32_t unused = 0;
 
-          // Get screen dimensions (in device pixels)
-          screen->GetAvailRect(&unused, &unused, &screenWidth, &screenHeight);
-          // Convert them to CSS pixels
-          screenWidth = NSToIntRound(screenWidth / scale);
-          screenHeight = NSToIntRound(screenHeight / scale);
+          CSSIntSize availScreenSize =
+              RoundedToInt(screen->GetAvailRect().Size() / cssScale);
 
           // Calculate the chrome UI size.
-          chromeWidth = winWidth - contentSize.width;
-          chromeHeight = winHeight - contentSize.height;
+          CSSIntSize chromeSize = cssWinRect.Size() - RoundedToInt(contentSize);
 
           if (innerWidthSpecified || outerWidthSpecified) {
             inputWidth = value;
@@ -7577,9 +7561,10 @@ void nsGlobalWindowInner::SetReplaceableWindowCoord(
           }
 
           nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
-              chromeWidth, chromeHeight, screenWidth, screenHeight, inputWidth,
-              inputHeight, outerWidthSpecified, outerHeightSpecified,
-              targetContentWidth, targetContentHeight);
+              chromeSize.width, chromeSize.height, availScreenSize.width,
+              availScreenSize.height, inputWidth, inputHeight,
+              outerWidthSpecified, outerHeightSpecified, targetContentWidth,
+              targetContentHeight);
           value = T(roundedValue);
         }
       }
