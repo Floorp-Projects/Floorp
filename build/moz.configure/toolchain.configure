@@ -1863,7 +1863,7 @@ def color_cflags(info):
     # before adding flags to return values.
     if info.type == "gcc":
         return "-fdiagnostics-color"
-    elif info.type == "clang":
+    elif info.type in ["clang", "clang-cl"]:
         return "-fcolor-diagnostics"
     else:
         return ""
