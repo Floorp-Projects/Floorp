@@ -9,17 +9,16 @@ import androidx.test.espresso.IdlingRegistry
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
-import org.mozilla.fenix.helpers.RetryTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.addonsMenu
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -35,11 +34,7 @@ class SettingsAddonsTest {
     private var addonContainerIdlingResource: ViewVisibilityIdlingResource? = null
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
-
-    @Rule
-    @JvmField
-    val retryTestRule = RetryTestRule(3)
+    val activityTestRule = HomeActivityIntentTestRule()
 
     @Before
     fun setUp() {
@@ -93,26 +88,28 @@ class SettingsAddonsTest {
                     )
                 IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
                 clickInstallAddon(addonName)
+                IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
                 verifyAddonPermissionPrompt(addonName)
                 cancelInstallAddon()
                 clickInstallAddon(addonName)
                 acceptPermissionToInstallAddon()
-                closeAddonInstallCompletePrompt(addonName, activityTestRule)
+                verifyAddonInstallCompleted(addonName, activityTestRule)
+                verifyAddonInstallCompletedPrompt(addonName)
+                closeAddonInstallCompletePrompt()
                 verifyAddonIsInstalled(addonName)
                 verifyEnabledTitleDisplayed()
             }
     }
 
     // Installs an addon, then uninstalls it
-    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/24843")
     @Test
     fun verifyAddonsCanBeUninstalled() {
         val addonName = "uBlock Origin"
 
         addonsMenu {
             installAddon(addonName)
-            closeAddonInstallCompletePrompt(addonName, activityTestRule)
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+            verifyAddonInstallCompleted(addonName, activityTestRule)
+            closeAddonInstallCompletePrompt()
         }.openDetailedMenuForAddon(addonName) {
             addonContainerIdlingResource = ViewVisibilityIdlingResource(
                 activityTestRule.activity.findViewById(R.id.addon_container),
@@ -120,6 +117,7 @@ class SettingsAddonsTest {
             )
             IdlingRegistry.getInstance().register(addonContainerIdlingResource!!)
         }.removeAddon {
+            IdlingRegistry.getInstance().unregister(addonContainerIdlingResource!!)
             verifyAddonCanBeInstalled(addonName)
         }
     }
@@ -132,57 +130,38 @@ class SettingsAddonsTest {
         activityTestRule.activity.settings().setStrictETP()
 
         val addonName = "uBlock Origin"
-        val trackingProtectionPage =
-            TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
+        val trackingProtectionPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
         addonsMenu {
             installAddon(addonName)
-            closeAddonInstallCompletePrompt(addonName, activityTestRule)
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+            verifyAddonInstallCompleted(addonName, activityTestRule)
+            closeAddonInstallCompletePrompt()
         }.goBack {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(trackingProtectionPage.url) {
-            verifyPageContent(trackingProtectionPage.content)
+            verifyUrl(trackingProtectionPage.url.toString())
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/23749")
     @SmokeTest
     @Test
     fun useAddonsInPrivateModeTest() {
         val addonName = "uBlock Origin"
-        val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
+        val genericPage = getGenericAsset(mockWebServer, 1)
 
-        homeScreen {
-        }.togglePrivateBrowsingMode()
         addonsMenu {
             installAddon(addonName)
-            selectAllowInPrivateBrowsing(activityTestRule)
-            closeAddonInstallCompletePrompt(addonName, activityTestRule)
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
-        }.goBack {}
+            verifyAddonInstallCompleted(addonName, activityTestRule)
+            selectAllowInPrivateBrowsing()
+            closeAddonInstallCompletePrompt()
+        }.goBack {
+        }.togglePrivateBrowsingMode()
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingPage.url) {
-            verifyPageContent(trackingPage.content)
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+            verifyPageContent(genericPage.content)
         }.openThreeDotMenu {
             openAddonsSubList()
             verifyAddonAvailableInMainMenu(addonName)
-        }
-    }
-
-    private fun installAddon(addonName: String) {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openAddonsManagerMenu {
-            addonsListIdlingResource =
-                RecyclerViewIdlingResource(
-                    activityTestRule.activity.findViewById(R.id.add_ons_list),
-                    1
-                )
-            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
-            clickInstallAddon(addonName)
-            verifyAddonPermissionPrompt(addonName)
-            acceptPermissionToInstallAddon()
         }
     }
 }
