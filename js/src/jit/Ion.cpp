@@ -296,7 +296,7 @@ static T PopNextBitmaskValue(uint32_t* bitmask) {
 void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
   while (stubsToBarrier) {
     auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
-    const WeakHeapPtrJitCode& jitCode = stubs_[stub];
+    const WeakHeapPtr<JitCode*>& jitCode = stubs_[stub];
     MOZ_ASSERT(jitCode);
     jitCode.get();
   }
@@ -414,7 +414,7 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
 
   stubCodes_->traceWeak(trc);
 
-  for (WeakHeapPtrJitCode& stub : stubs_) {
+  for (WeakHeapPtr<JitCode*>& stub : stubs_) {
     TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
   }
 }

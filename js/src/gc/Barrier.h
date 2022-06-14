@@ -1234,11 +1234,6 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 namespace js {
 
-namespace jit {
-class JitCode;
-}  // namespace jit
-
-using WeakHeapPtrJitCode = WeakHeapPtr<jit::JitCode*>;
 using WeakHeapPtrSymbol = WeakHeapPtr<JS::Symbol*>;
 
 using HeapPtrJitCode = HeapPtr<jit::JitCode*>;

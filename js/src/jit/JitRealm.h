@@ -31,7 +31,8 @@ namespace jit {
 class JitCode;
 
 struct IcStubCodeMapGCPolicy {
-  static bool traceWeak(JSTracer* trc, uint32_t*, WeakHeapPtrJitCode* value) {
+  static bool traceWeak(JSTracer* trc, uint32_t*,
+                        WeakHeapPtr<JitCode*>* value) {
     return TraceWeakEdge(trc, value, "traceWeak");
   }
 };
@@ -41,7 +42,7 @@ class JitRealm {
 
   // Map ICStub keys to ICStub shared code objects.
   using ICStubCodeMap =
-      GCHashMap<uint32_t, WeakHeapPtrJitCode, DefaultHasher<uint32_t>,
+      GCHashMap<uint32_t, WeakHeapPtr<JitCode*>, DefaultHasher<uint32_t>,
                 ZoneAllocPolicy, IcStubCodeMapGCPolicy>;
   ICStubCodeMap* stubCodes_;
 
@@ -63,7 +64,7 @@ class JitRealm {
     Count
   };
 
-  mozilla::EnumeratedArray<StubIndex, StubIndex::Count, WeakHeapPtrJitCode>
+  mozilla::EnumeratedArray<StubIndex, StubIndex::Count, WeakHeapPtr<JitCode*>>
       stubs_;
 
   gc::InitialHeap initialStringHeap;
@@ -115,13 +116,13 @@ class JitRealm {
   void traceWeak(JSTracer* trc, JS::Realm* realm);
 
   void discardStubs() {
-    for (WeakHeapPtrJitCode& stubRef : stubs_) {
+    for (WeakHeapPtr<JitCode*>& stubRef : stubs_) {
       stubRef = nullptr;
     }
   }
 
   bool hasStubs() const {
-    for (const WeakHeapPtrJitCode& stubRef : stubs_) {
+    for (const WeakHeapPtr<JitCode*>& stubRef : stubs_) {
       if (stubRef) {
         return true;
       }
