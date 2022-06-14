@@ -7,7 +7,9 @@
 
 #include "nsBaseAppShell.h"
 #include "nsExceptionHandler.h"
+#include "nsJSUtils.h"
 #include "nsThreadUtils.h"
+#include "nsIAppShell.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
@@ -94,6 +96,17 @@ void nsBaseAppShell::NativeEventCallback() {
   if (NS_HasPendingEvents(thread)) DoProcessMoreGeckoEvents();
 
   DecrementEventloopNestingLevel();
+}
+
+void nsBaseAppShell::OnSystemTimezoneChange() {
+  nsJSUtils::ResetTimeZone();
+
+  nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+  if (obsSvc) {
+    // Timezone changed notification
+    obsSvc->NotifyObservers(nullptr, DEFAULT_TIMEZONE_CHANGED_OBSERVER_TOPIC,
+                            nullptr);
+  }
 }
 
 // Note, this is currently overidden on windows, see comments in nsAppShell for

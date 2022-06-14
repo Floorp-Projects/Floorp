@@ -2309,5 +2309,18 @@ void WinUtils::EnableWindowOcclusion(const bool aEnable) {
                 reinterpret_cast<LPARAM>(&aEnable));
 }
 
+bool WinUtils::GetTimezoneName(wchar_t* aBuffer) {
+  DYNAMIC_TIME_ZONE_INFORMATION tzInfo;
+  DWORD tzid = GetDynamicTimeZoneInformation(&tzInfo);
+
+  if (tzid == TIME_ZONE_ID_INVALID) {
+    return false;
+  }
+
+  wcscpy_s(aBuffer, 128, tzInfo.TimeZoneKeyName);
+
+  return true;
+}
+
 }  // namespace widget
 }  // namespace mozilla

@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +10,7 @@
 #include <errno.h>
 #include <gdk/gdk.h>
 #include "nsAppShell.h"
+#include "nsBaseAppShell.h"
 #include "nsWindow.h"
 #include "mozilla/Logging.h"
 #include "prenv.h"
@@ -178,6 +178,19 @@ static void SessionSleepCallback(DBusGProxy* aProxy, gboolean aSuspend,
   }
 }
 
+static void TimedatePropertiesChangedCallback(DBusGProxy* aProxy,
+                                              char* interface,
+                                              GHashTable* aChanged,
+                                              char** aInvalidated,
+                                              gpointer aData) {
+  // dbus signals are not fine-grained enough for us to only react to timezone
+  // changes, so we need to ensure that timezone is one of the properties
+  // changed.
+  if (g_hash_table_contains(aChanged, "Timezone")) {
+    nsBaseAppShell::OnSystemTimezoneChange();
+  }
+}
+
 static DBusHandlerResult ConnectionSignalFilter(DBusConnection* aConnection,
                                                 DBusMessage* aMessage,
                                                 void* aData) {
@@ -221,7 +234,7 @@ void nsAppShell::StartDBusListening() {
       "org.freedesktop.login1.Manager");
 
   if (!mLogin1Proxy) {
-    NS_WARNING("gds: error-no dbus proxy\n");
+    NS_WARNING("gds: error creating login dbus proxy\n");
     return;
   }
 
@@ -229,6 +242,23 @@ void nsAppShell::StartDBusListening() {
                           G_TYPE_INVALID);
   dbus_g_proxy_connect_signal(mLogin1Proxy, "PrepareForSleep",
                               G_CALLBACK(SessionSleepCallback), this, nullptr);
+
+  mTimedate1Proxy = dbus_g_proxy_new_for_name(
+      mDBusConnection, "org.freedesktop.timedate1",
+      "/org/freedesktop/timedate1", "org.freedesktop.DBus.Properties");
+
+  if (!mTimedate1Proxy) {
+    NS_WARNING("gds: error creating timedate dbus proxy\n");
+    return;
+  }
+
+  dbus_g_proxy_add_signal(
+      mTimedate1Proxy, "PropertiesChanged", G_TYPE_STRING,
+      dbus_g_type_get_map("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
+      G_TYPE_STRV, G_TYPE_INVALID);
+  dbus_g_proxy_connect_signal(mTimedate1Proxy, "PropertiesChanged",
+                              G_CALLBACK(TimedatePropertiesChangedCallback),
+                              this, nullptr);
 }
 
 void nsAppShell::StopDBusListening() {
@@ -247,6 +277,15 @@ void nsAppShell::StopDBusListening() {
     g_object_unref(mLogin1Proxy);
     mLogin1Proxy = nullptr;
   }
+
+  if (mTimedate1Proxy) {
+    dbus_g_proxy_disconnect_signal(
+        mTimedate1Proxy, "PropertiesChanged",
+        G_CALLBACK(TimedatePropertiesChangedCallback), this);
+    g_object_unref(mTimedate1Proxy);
+    mTimedate1Proxy = nullptr;
+  }
+
   dbus_g_connection_unref(mDBusConnection);
   mDBusConnection = nullptr;
 }

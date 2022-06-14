@@ -56,6 +56,9 @@ class nsAppShell : public nsBaseAppShell {
   Mutex mLastNativeEventScheduledMutex MOZ_UNANNOTATED;
   TimeStamp mLastNativeEventScheduled;
   std::vector<MSG> mMsgsToRepost;
+
+ private:
+  wchar_t mTimezoneName[128];
 };
 
 #endif  // nsAppShell_h__

@@ -600,6 +600,8 @@ class WinUtils {
 
   static void EnableWindowOcclusion(const bool aEnable);
 
+  static bool GetTimezoneName(wchar_t* aBuffer);
+
  private:
   static WhitelistVec BuildWhitelist();
 
