@@ -113,6 +113,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/hamropatro.js",
     "shims/history.js",
     "shims/humblebundle.js",
+    "shims/iam.js",
     "shims/iaspet.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
