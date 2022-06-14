@@ -2116,6 +2116,7 @@ pref(image.downscale-during-decode.enabled,true) == 1744468-1.html 1744468-1-ref
 == 1747272-1.html 1747272-1-ref.html
 == 1750146-1.html 1750146-1-ref.html
 == 1735265-1.html 1735265-1-ref.html
+== 1773484.html 1773484-ref.html
 
 # The following tests are skipped on Android since Android doesn't deal very
 # well with dynamic DPI changes and it corrupts subsequent reftests.
