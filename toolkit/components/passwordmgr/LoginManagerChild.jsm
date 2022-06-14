@@ -683,6 +683,29 @@ class LoginFormState {
     }
     editor.mask();
   }
+
+  /**
+   * Track a form field as has having been filled with a generated password. This adds explicit
+   * focus & blur handling to unmask & mask the value, and enables special handling of edits to
+   * generated password values (see the observer's input event handler.)
+   *
+   * @param {HTMLInputElement} passwordField
+   */
+  _treatAsGeneratedPasswordField(passwordField) {
+    this.generatedPasswordFields.add(passwordField);
+
+    // blur/focus: listen for focus changes to we can mask/unmask generated passwords
+    for (let eventType of ["blur", "focus"]) {
+      passwordField.addEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
+    if (passwordField.ownerDocument.activeElement == passwordField) {
+      // Unmask the password field
+      this._togglePasswordFieldMasking(passwordField, true);
+    }
+  }
 }
 
 /**
@@ -2321,30 +2344,6 @@ class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * Track a form field as has having been filled with a generated password. This adds explicit
-   * focus & blur handling to unmask & mask the value, and enables special handling of edits to
-   * generated password values (see the observer's input event handler.)
-   *
-   * @param {HTMLInputElement} passwordField
-   */
-  _treatAsGeneratedPasswordField(passwordField) {
-    let docState = this.stateForDocument(passwordField.ownerDocument);
-    docState.generatedPasswordFields.add(passwordField);
-
-    // blur/focus: listen for focus changes to we can mask/unmask generated passwords
-    for (let eventType of ["blur", "focus"]) {
-      passwordField.addEventListener(eventType, observer, {
-        capture: true,
-        mozSystemGroup: true,
-      });
-    }
-    if (passwordField.ownerDocument.activeElement == passwordField) {
-      // Unmask the password field
-      docState._togglePasswordFieldMasking(passwordField, true);
-    }
-  }
-
-  /**
    * Heuristic for whether or not we should consider [field]s value to be 'new' (as opposed to
    * 'changed') after applying [event].
    *
@@ -2428,7 +2427,8 @@ class LoginManagerChild extends JSWindowActorChild {
 
     if (triggeredByFillingGenerated) {
       this._highlightFilledField(passwordField);
-      this._treatAsGeneratedPasswordField(passwordField);
+      let docState = this.stateForDocument(passwordField.ownerDocument);
+      docState._treatAsGeneratedPasswordField(passwordField);
 
       // Once the generated password was filled we no longer want to autocomplete
       // saved logins into a non-empty password field (see LoginAutoComplete.startSearch)
@@ -2512,7 +2512,7 @@ class LoginManagerChild extends JSWindowActorChild {
       }
     }
     if (confirmPasswordInput && !confirmPasswordInput.value) {
-      this._treatAsGeneratedPasswordField(confirmPasswordInput);
+      docState._treatAsGeneratedPasswordField(confirmPasswordInput);
       confirmPasswordInput.setUserInput(passwordField.value);
       this._highlightFilledField(confirmPasswordInput);
     }
