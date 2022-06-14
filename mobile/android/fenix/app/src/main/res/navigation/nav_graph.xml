@@ -185,6 +185,10 @@
             android:name="focusOnAddressBar"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="scrollToCollection"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
     <dialog
         android:id="@+id/homeOnboardingDialogFragment"

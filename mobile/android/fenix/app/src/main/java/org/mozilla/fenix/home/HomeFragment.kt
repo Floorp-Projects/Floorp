@@ -36,11 +36,16 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.RecyclerView.SmoothScroller
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.view.MenuButton
@@ -105,6 +110,7 @@ import org.mozilla.fenix.home.recentvisits.controller.DefaultRecentVisitsControl
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
+import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -552,6 +558,27 @@ class HomeFragment : Fragment() {
 
         if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
             navigateToSearch()
+        } else if (bundleArgs.getBoolean(SCROLL_TO_COLLECTION)) {
+            MainScope().launch {
+                delay(ANIM_SCROLL_DELAY)
+                val smoothScroller: SmoothScroller =
+                    object : LinearSmoothScroller(sessionControlView!!.view.context) {
+                        override fun getVerticalSnapPreference(): Int {
+                            return SNAP_TO_START
+                        }
+                    }
+                val recyclerView = sessionControlView!!.view
+                val adapter = recyclerView.adapter!!
+                val collectionPosition = IntRange(0, adapter.itemCount - 1).firstOrNull {
+                    adapter.getItemViewType(it) == CollectionHeaderViewHolder.LAYOUT_ID
+                }
+                collectionPosition?.run {
+                    appBarLayout?.setExpanded(false)
+                    val linearLayoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    smoothScroller.targetPosition = this
+                    linearLayoutManager.startSmoothScroll(smoothScroller)
+                }
+            }
         }
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
@@ -1001,6 +1028,9 @@ class HomeFragment : Fragment() {
         const val ALL_PRIVATE_TABS = "all_private"
 
         private const val FOCUS_ON_ADDRESS_BAR = "focusOnAddressBar"
+
+        private const val SCROLL_TO_COLLECTION = "scrollToCollection"
+        private const val ANIM_SCROLL_DELAY = 100L
 
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20

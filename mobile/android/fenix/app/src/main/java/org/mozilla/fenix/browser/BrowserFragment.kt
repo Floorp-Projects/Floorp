@@ -354,7 +354,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     .setText(view.context.getString(messageStringRes))
                     .setAction(requireContext().getString(R.string.create_collection_view)) {
                         findNavController().navigate(
-                            BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = false)
+                            BrowserFragmentDirections.actionGlobalHome(
+                                focusOnAddressBar = false,
+                                scrollToCollection = true
+                            )
                         )
                     }
                     .show()

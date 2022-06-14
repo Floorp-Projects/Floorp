@@ -585,6 +585,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     findNavController().navigate(
                         TabsTrayFragmentDirections.actionGlobalHome(
                             focusOnAddressBar = false,
+                            scrollToCollection = true
                         )
                     )
                     dismissTabsTray()
