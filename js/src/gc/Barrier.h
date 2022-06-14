@@ -1235,13 +1235,11 @@ struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 namespace js {
 
 class DebugEnvironmentProxy;
-class PropertyName;
 
 namespace jit {
 class JitCode;
 }  // namespace jit
 
-using ImmutablePropertyNamePtr = ImmutableTenuredPtr<PropertyName*>;
 using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
 using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;

@@ -1138,7 +1138,7 @@ static bool intl_FormatDateTime(JSContext* cx,
   return true;
 }
 
-using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
+using FieldType = js::ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
 
 static FieldType GetFieldTypeForPartType(mozilla::intl::DateTimePartType type) {
   switch (type) {
