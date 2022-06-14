@@ -277,12 +277,16 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Interpreter -> Baseline OSR will return here.
   masm.bind(&osrReturnPoint);
 
-  masm.Pop(r19);       // Pop frame descriptor.
-  masm.pop(r24, r23);  // Discard calleeToken, numActualArgs.
-
-  // Discard arguments and the stack alignment padding.
-  masm.Add(masm.GetStackPointer64(), masm.GetStackPointer64(),
-           Operand(x19, vixl::LSR, FRAMESIZE_SHIFT));
+  // Discard arguments and padding. Set sp to the address of the saved
+  // registers. In debug builds we have to include the two stack canaries
+  // checked below.
+#ifdef DEBUG
+  static constexpr size_t SavedRegSize = 22 * sizeof(void*);
+#else
+  static constexpr size_t SavedRegSize = 20 * sizeof(void*);
+#endif
+  masm.computeEffectiveAddress(Address(FramePointer, -int32_t(SavedRegSize)),
+                               masm.getStackPointer());
 
   masm.syncStackPtr();
   masm.SetStackPointer64(sp);

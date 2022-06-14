@@ -327,12 +327,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&oomReturnLabel);
   }
 
-  // Pop arguments and padding from stack.
-  masm.pop(r14);  // Pop and decode descriptor.
-  masm.shrq(Imm32(FRAMESIZE_SHIFT), r14);
-  masm.pop(r12);        // Discard calleeToken.
-  masm.pop(r12);        // Discard numActualArgs.
-  masm.addq(r14, rsp);  // Remove arguments.
+  // Discard arguments and padding. Set rsp to the address of the
+  // EnterJITStackEntry on the stack.
+  masm.lea(Operand(rbp, -int32_t(offsetof(EnterJITStackEntry, rbp))), rsp);
 
   /*****************************************************************
   Place return value where it belongs, pop all saved registers

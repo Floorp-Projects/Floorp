@@ -279,23 +279,17 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&oomReturnLabel);
   }
 
-  // Pop arguments off the stack.
-  // eax <- 8*argc (size of all arguments we pushed on the stack)
-  masm.pop(eax);
-  masm.shrl(Imm32(FRAMESIZE_SHIFT), eax);  // Unmark EntryFrame.
-  masm.pop(ebx);                           // Discard calleeToken.
-  masm.pop(ebx);                           // Discard numActualArgs.
-  masm.addl(eax, esp);
-
-  // |ebp| could have been clobbered by the inner function.
-  // Grab the address for the Value result from the argument stack.
+  // Restore the stack pointer so the stack looks like this:
   //  +20 ... arguments ...
   //  +16 <return>
-  //  +12 ebp <- original %ebp pointing here.
+  //  +12 ebp <- %ebp pointing here.
   //  +8  ebx
   //  +4  esi
-  //  +0  edi
-  masm.loadPtr(Address(esp, ARG_RESULT + 3 * sizeof(void*)), eax);
+  //  +0  edi <- %esp pointing here.
+  masm.lea(Operand(ebp, -int32_t(3 * sizeof(void*))), esp);
+
+  // Store the return value.
+  masm.loadPtr(Address(ebp, ARG_RESULT), eax);
   masm.storeValue(JSReturnOperand, Operand(eax, 0));
 
   /**************************************************************

@@ -344,25 +344,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Interpreter -> Baseline OSR will return here.
   masm.bind(&returnLabel);
 
-  // Pop descriptor.
-  masm.pop(r5);
-
-  // Discard calleeToken, numActualArgs.
-  masm.addPtr(Imm32(2 * sizeof(uintptr_t)), sp);
-
-  // Discard arguments and the stack alignment padding.
-  aasm->as_add(sp, sp, lsr(r5, FRAMESIZE_SHIFT));
+  // Discard arguments and padding. Set sp to the address of the EnterJITStack
+  // on the stack.
+  masm.mov(r11, sp);
 
   // Store the returned value into the slot_vp
   masm.loadPtr(slot_vp, r5);
   masm.storeValue(JSReturnOperand, Address(r5, 0));
-
-  // :TODO: Optimize storeValue with:
-  // We're using a load-double here. In order for that to work, the data needs
-  // to be stored in two consecutive registers, make sure this is the case
-  //   MOZ_ASSERT(JSReturnReg_Type.code() == JSReturnReg_Data.code()+1);
-  //   aasm->as_extdtr(IsStore, 64, true, Offset,
-  //                   JSReturnReg_Data, EDtrAddr(r5, EDtrOffImm(0)));
 
   // Restore non-volatile registers and return.
   GenerateReturn(masm, true);
