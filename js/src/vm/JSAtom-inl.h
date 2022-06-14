@@ -137,7 +137,7 @@ static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
 inline Handle<PropertyName*> TypeName(JSType type, const JSAtomState& names) {
   MOZ_ASSERT(type < JSTYPE_LIMIT);
   static_assert(offsetof(JSAtomState, undefined) +
-                    JSTYPE_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
+                    JSTYPE_LIMIT * sizeof(ImmutableTenuredPtr<PropertyName*>) <=
                 sizeof(JSAtomState));
   static_assert(JSTYPE_UNDEFINED == 0);
   return (&names.undefined)[type];
@@ -146,7 +146,8 @@ inline Handle<PropertyName*> TypeName(JSType type, const JSAtomState& names) {
 inline Handle<PropertyName*> ClassName(JSProtoKey key, JSAtomState& atomState) {
   MOZ_ASSERT(key < JSProto_LIMIT);
   static_assert(offsetof(JSAtomState, Null) +
-                    JSProto_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
+                    JSProto_LIMIT *
+                        sizeof(ImmutableTenuredPtr<PropertyName*>) <=
                 sizeof(JSAtomState));
   static_assert(JSProto_Null == 0);
   return (&atomState.Null)[key];
