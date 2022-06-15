@@ -4,7 +4,6 @@ set -e -v
 # This script is for building GN on Linux.
 
 WORKSPACE=$HOME/workspace
-COMPRESS_EXT=zst
 export CC=gcc
 export CXX=g++
 export LDFLAGS=-lrt
