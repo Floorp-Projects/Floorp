@@ -1,0 +1,17 @@
+[package]
+name = "wasi"
+version = "0.10.0+wasi-snapshot-preview999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.wasi]
+version = "0.11"
+default-features = false
+
+[features]
+default = ["wasi/default"]
+rustc-dep-of-std = ["wasi/rustc-dep-of-std"]
+std = ["wasi/std"]
