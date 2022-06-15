@@ -229,6 +229,12 @@ class nsThreadShutdownEvent : public Runnable {
     // broken when the thread exits.
     mThread->mShutdownContext = mShutdownContext;
     MessageLoop::current()->Quit();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    // Let's leave a trace that we passed here in the thread's name.
+    nsAutoCString threadName(PR_GetThreadName(PR_GetCurrentThread()));
+    threadName.Append(",SHDRCV"_ns);
+    NS_SetCurrentThreadName(threadName.get());
+#endif
     return NS_OK;
   }
 
@@ -436,6 +442,13 @@ void nsThread::ThreadFunc(void* aArg) {
     // crash with a hang later anyways. The best we can do is to tell
     // the world what happened right here.
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    // Let's leave a trace that we passed here in the thread's name.
+    nsAutoCString threadName(PR_GetThreadName(PR_GetCurrentThread()));
+    threadName.Append(",SHDACK"_ns);
+    NS_SetCurrentThreadName(threadName.get());
+#endif
   } else {
     NS_WARNING(
         "nsThread exiting after StopWaitingAndLeakThread was called, thread "
