@@ -236,19 +236,20 @@ impl<'a> Unstructured<'a> {
 
             // We only consume as many bytes as necessary to cover the entire
             // range of the byte string.
-            let len = if self.data.len() <= std::u8::MAX as usize + 1 {
+            // Note: We cast to u64 so we don't overflow when checking std::u32::MAX + 4 on 32-bit archs
+            let len = if self.data.len() as u64 <= std::u8::MAX as u64 + 1 {
                 let bytes = 1;
                 let max_size = self.data.len() - bytes;
                 let (rest, for_size) = self.data.split_at(max_size);
                 self.data = rest;
                 Self::int_in_range_impl(0..=max_size as u8, for_size.iter().copied())?.0 as usize
-            } else if self.data.len() <= std::u16::MAX as usize + 1 {
+            } else if self.data.len() as u64 <= std::u16::MAX as u64 + 2 {
                 let bytes = 2;
                 let max_size = self.data.len() - bytes;
                 let (rest, for_size) = self.data.split_at(max_size);
                 self.data = rest;
                 Self::int_in_range_impl(0..=max_size as u16, for_size.iter().copied())?.0 as usize
-            } else if self.data.len() <= std::u32::MAX as usize + 1 {
+            } else if self.data.len() as u64 <= std::u32::MAX as u64 + 4 {
                 let bytes = 4;
                 let max_size = self.data.len() - bytes;
                 let (rest, for_size) = self.data.split_at(max_size);
@@ -376,11 +377,53 @@ impl<'a> Unstructured<'a> {
     /// assert!(result.is_err());
     /// ```
     pub fn choose<'b, T>(&mut self, choices: &'b [T]) -> Result<&'b T> {
-        if choices.is_empty() {
+        let idx = self.choose_index(choices.len())?;
+        Ok(&choices[idx])
+    }
+
+    /// Choose a value in `0..len`.
+    ///
+    /// Returns an error if the `len` is zero.
+    ///
+    /// # Examples
+    ///
+    /// Using Fisher–Yates shuffle shuffle to gerate an arbitrary permutation.
+    ///
+    /// [Fisher–Yates shuffle]: https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
+    ///
+    /// ```
+    /// use arbitrary::Unstructured;
+    ///
+    /// let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+    /// let mut permutation = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+    /// let mut to_permute = &mut permutation[..];
+    /// while to_permute.len() > 1 {
+    ///     let idx = u.choose_index(to_permute.len()).unwrap();
+    ///     to_permute.swap(0, idx);
+    ///     to_permute = &mut to_permute[1..];
+    /// }
+    ///
+    /// println!("permutation: {:?}", permutation);
+    /// ```
+    ///
+    /// An error is returned if the length is zero:
+    ///
+    /// ```
+    /// use arbitrary::Unstructured;
+    ///
+    /// let mut u = Unstructured::new(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+    /// let array: [i32; 0] = [];
+    ///
+    /// let result = u.choose_index(array.len());
+    ///
+    /// assert!(result.is_err());
+    /// ```
+    pub fn choose_index(&mut self, len: usize) -> Result<usize> {
+        if len == 0 {
             return Err(Error::EmptyChoose);
         }
-        let idx = self.int_in_range(0..=choices.len() - 1)?;
-        Ok(&choices[idx])
+        let idx = self.int_in_range(0..=len - 1)?;
+        Ok(idx)
     }
 
     /// Generate a boolean according to the given ratio.

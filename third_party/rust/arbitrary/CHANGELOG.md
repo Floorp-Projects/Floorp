@@ -28,6 +28,17 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 1.1.1
+
+Released 2022-06-14.
+
+### Fixed
+
+* Fixed a stack overflow when using `derive(Arbitrary)` with recursive types and
+  empty inputs. [#109](https://github.com/rust-fuzz/arbitrary/pull/109)
+
+--------------------------------------------------------------------------------
+
 ## 1.1.0
 
 Released 2022-02-09.
