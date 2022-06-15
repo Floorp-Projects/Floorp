@@ -24,6 +24,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 const lazy = {};
 
@@ -31,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Async: "resource://services-common/async.js",
   AuthenticationError: "resource://services-sync/sync_auth.js",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
-  Log: "resource://gre/modules/Log.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
@@ -57,7 +57,7 @@ XPCOMUtils.defineLazyGetter(
   "WeaveService",
   () => Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
-const log = lazy.Log.repository.getLogger("Sync.Telemetry");
+const log = Log.repository.getLogger("Sync.Telemetry");
 
 const TOPICS = [
   // For tracking change to account/device identifiers.
