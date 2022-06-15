@@ -77,6 +77,8 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.prompts.address.AddressDelegate
+import mozilla.components.feature.prompts.creditcard.CreditCardDelegate
+import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.session.ScreenOrientationFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.lib.state.ext.consumeFlow
@@ -621,22 +623,28 @@ abstract class BaseBrowserFragment :
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                 },
-                loginPickerView = binding.loginSelectBar,
-                onManageLogins = {
-                    browserAnimator.captureEngineViewAndDrawStatically {
-                        val directions =
-                            NavGraphDirections.actionGlobalSavedLoginsAuthFragment()
-                        findNavController().navigate(directions)
+                loginDelegate = object : LoginDelegate {
+                    override val loginPickerView
+                        get() = binding.loginSelectBar
+                    override val onManageLogins = {
+                        browserAnimator.captureEngineViewAndDrawStatically {
+                            val directions =
+                                NavGraphDirections.actionGlobalSavedLoginsAuthFragment()
+                            findNavController().navigate(directions)
+                        }
                     }
                 },
-                creditCardPickerView = binding.creditCardSelectBar,
-                onManageCreditCards = {
-                    val directions =
-                        NavGraphDirections.actionGlobalAutofillSettingFragment()
-                    findNavController().navigate(directions)
-                },
-                onSelectCreditCard = {
-                    showBiometricPrompt(context)
+                creditCardDelegate = object : CreditCardDelegate {
+                    override val creditCardPickerView
+                        get() = binding.creditCardSelectBar
+                    override val onManageCreditCards = {
+                        val directions =
+                            NavGraphDirections.actionGlobalAutofillSettingFragment()
+                        findNavController().navigate(directions)
+                    }
+                    override val onSelectCreditCard = {
+                        showBiometricPrompt(context)
+                    }
                 },
                 addressDelegate = object : AddressDelegate {
                     override val addressPickerView
