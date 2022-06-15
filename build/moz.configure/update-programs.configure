@@ -20,16 +20,38 @@ option(
 set_config("MOZ_UPDATER", True, when="--enable-updater")
 set_define("MOZ_UPDATER", True, when="--enable-updater")
 
-# Verify MAR signatures
+# Updates that do not verify signatures
 # ==============================================================
 
-option("--disable-verify-mar", help="Disable verifying MAR signatures")
+option(
+    "--enable-unverified-updates",
+    default=False,
+    help="Enable application update without verifying MAR or updater binary signatures",
+)
+
+
+@depends("--enable-unverified-updates", "--enable-compile-environment")
+def disable_unverified_updates(unverified_updates, compile_environment):
+    if unverified_updates:
+        if not compile_environment:
+            die("--enable-unverified-updates requires --enable-compile-environment")
+    return not unverified_updates
+
 
 set_define(
-    "MOZ_VERIFY_MAR_SIGNATURE", depends_if("--enable-verify-mar")(lambda _: True)
+    "MOZ_VERIFY_MAR_SIGNATURE",
+    depends_if(disable_unverified_updates)(lambda _: True),
 )
 set_config(
-    "MOZ_VERIFY_MAR_SIGNATURE", depends_if("--enable-verify-mar")(lambda _: True)
+    "MOZ_VERIFY_MAR_SIGNATURE",
+    True,
+    depends_if(disable_unverified_updates)(lambda _: True),
+)
+
+set_config(
+    "DISABLE_UPDATER_AUTHENTICODE_CHECK",
+    True,
+    depends_if("--enable-unverified-updates")(lambda _: True),
 )
 
 # Maintenance service (Windows only)
