@@ -31,17 +31,6 @@ bug-numbers = [1539075]
 is-public = {default = false, nightly = true}
 default-value = false
 
-[css-constructable-stylesheets]
-title = "experimental-features-css-constructable-stylesheets"
-description = "experimental-features-css-constructable-stylesheets-description"
-description-links = {mdn-cssstylesheet = "https://developer.mozilla.org/docs/Web/API/CSSStyleSheet", mdn-shadowdom = "https://developer.mozilla.org/docs/Web/Web_Components/Using_shadow_DOM", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1520690"}
-restart-required = false
-preference = "layout.css.constructable-stylesheets.enabled"
-type = "boolean"
-bug-numbers = [1520690]
-is-public = {default = false, nightly = true}
-default-value = true
-
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
 description = "experimental-features-devtools-compatibility-panel-description"
