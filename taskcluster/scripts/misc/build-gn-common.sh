@@ -32,5 +32,5 @@ if test "$MAC_CROSS" = "" -a "$(uname)" = "Linux"; then
 fi
 cp out/gn $STAGE
 
-tar -c $STAGE | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > gn.tar.$COMPRESS_EXT
-cp gn.tar.$COMPRESS_EXT $UPLOAD_DIR
+tar -c $STAGE | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > gn.tar.zst
+cp gn.tar.zst $UPLOAD_DIR
