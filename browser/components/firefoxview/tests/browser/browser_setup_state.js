@@ -62,6 +62,24 @@ async function waitForVisibleStep(browser, expected) {
   }
 }
 
+async function waitForElementVisible(browser, selector, isVisible = true) {
+  const { document } = browser.contentWindow;
+  const elem = document.querySelector(selector);
+  ok(elem, `Got element with selector: ${selector}`);
+
+  await BrowserTestUtils.waitForMutationCondition(
+    elem,
+    {
+      attributeFilter: ["hidden"],
+    },
+    () => {
+      return isVisible
+        ? BrowserTestUtils.is_visible(elem)
+        : BrowserTestUtils.is_hidden(elem);
+    }
+  );
+}
+
 add_setup(async function() {
   await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
@@ -74,6 +92,7 @@ add_setup(async function() {
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
     Services.prefs.clearUserPref("services.sync.engine.tabs");
+    Services.prefs.clearUserPref("services.sync.lastTabFetch");
   });
   // set tab sync false so we don't skip setup states
   await SpecialPowers.pushPrefEnv({
@@ -220,9 +239,7 @@ add_task(async function test_tab_sync_enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["services.sync.engine.tabs", true]],
   });
-  await waitForVisibleStep(browser, {
-    expectedVisible: "#tabpickup-steps-view3",
-  });
+  await waitForElementVisible(browser, "#tabpickup-steps", false);
 
   // reset and test clicking the action button
   await SpecialPowers.popPrefEnv();
@@ -234,9 +251,9 @@ add_task(async function test_tab_sync_enabled() {
     "#tabpickup-steps-view2 button.primary"
   );
   actionButton.click();
-  await waitForVisibleStep(browser, {
-    expectedVisible: "#tabpickup-steps-view3",
-  });
+
+  await waitForElementVisible(browser, "#tabpickup-steps", false);
+
   ok(
     Services.prefs.getBoolPref("services.sync.engine.tabs", false),
     "tab sync pref should be enabled after button click"
@@ -244,4 +261,56 @@ add_task(async function test_tab_sync_enabled() {
 
   sandbox.restore();
   Services.prefs.clearUserPref("services.sync.engine.tabs");
+});
+
+add_task(async function test_tab_sync_loading() {
+  const browser = gBrowser.selectedBrowser;
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "This Device",
+        isCurrentDevice: true,
+        type: "desktop",
+      },
+      {
+        id: 2,
+        name: "Other Device",
+        type: "mobile",
+      },
+    ],
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [["services.sync.engine.tabs", true]],
+  });
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  await waitForElementVisible(browser, "#tabpickup-steps", false);
+  await waitForElementVisible(browser, "#tabpickup-tabs-container", true);
+
+  const tabsContainer = browser.contentWindow.document.querySelector(
+    "#tabpickup-tabs-container"
+  );
+  ok(
+    tabsContainer.classList.contains("loading"),
+    "Tabs container has loading class"
+  );
+
+  const recentFetchTime = Math.floor(Date.now() / 1000);
+  info("updating lastFetch:" + recentFetchTime);
+  Services.prefs.setIntPref("services.sync.lastTabFetch", recentFetchTime);
+
+  await BrowserTestUtils.waitForMutationCondition(
+    tabsContainer,
+    { attributeFilter: ["class"], attributes: true },
+    () => {
+      return !tabsContainer.classList.contains("loading");
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+
+  sandbox.restore();
+  Services.prefs.clearUserPref("services.sync.engine.tabs");
+  Services.prefs.clearUserPref("services.sync.lastTabFetch");
 });

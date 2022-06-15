@@ -29,6 +29,7 @@ import stat
 import subprocess
 import tempfile
 import zipfile
+import ctypes
 
 from pathlib import Path
 from optparse import OptionParser
@@ -254,7 +255,52 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path):
             shutil.rmtree(str(tempdir))
 
 
-def clone(vcs, no_interactive):
+def add_microsoft_defender_antivirus_exclusions(dest, no_system_changes):
+    if no_system_changes:
+        return
+
+    powershell_exe = which("powershell")
+
+    if not powershell_exe:
+        return
+
+    def print_attempt_exclusion(path):
+        print(
+            f"Attempting to add exclusion path to Microsoft Defender Antivirus for: {path}"
+        )
+
+    powershell_exe = str(powershell_exe)
+    paths = []
+
+    # mozilla-unified / clone dest
+    repo_dir = Path.cwd() / dest
+    paths.append(repo_dir)
+    print_attempt_exclusion(repo_dir)
+
+    # MOZILLABUILD
+    mozillabuild_dir = os.getenv("MOZILLABUILD")
+    if mozillabuild_dir:
+        paths.append(mozillabuild_dir)
+        print_attempt_exclusion(mozillabuild_dir)
+
+    # .mozbuild
+    mozbuild_dir = Path.home() / ".mozbuild"
+    paths.append(mozbuild_dir)
+    print_attempt_exclusion(mozbuild_dir)
+
+    args = ";".join(f"Add-MpPreference -ExclusionPath '{path}'" for path in paths)
+    command = f'-Command "{args}"'
+
+    # This will attempt to run as administrator by triggering a UAC prompt
+    # for admin credentials. If "No" is selected, no exclusions are added.
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", powershell_exe, command, None, 0)
+
+
+def clone(options):
+    vcs = options.vcs
+    no_interactive = options.no_interactive
+    no_system_changes = options.no_system_changes
+
     hg = which("hg")
     if not hg:
         print(
@@ -288,6 +334,8 @@ def clone(vcs, no_interactive):
     dest = input_clone_dest(vcs, no_interactive)
     if not dest:
         return None
+
+    add_microsoft_defender_antivirus_exclusions(dest, no_system_changes)
 
     print(f"Cloning Firefox {VCS_HUMAN_READABLE[vcs]} repository to {dest}")
     if vcs == "hg":
@@ -348,7 +396,7 @@ def main(args):
 
     options, leftover = parser.parse_args(args)
     try:
-        srcdir = clone(options.vcs, options.no_interactive)
+        srcdir = clone(options)
         if not srcdir:
             return 1
         print("Clone complete.")
