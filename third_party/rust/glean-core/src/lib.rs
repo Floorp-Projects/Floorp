@@ -59,8 +59,8 @@ pub use crate::metrics::{
     BooleanMetric, CounterMetric, CustomDistributionMetric, Datetime, DatetimeMetric,
     DenominatorMetric, DistributionData, EventMetric, MemoryDistributionMetric, MemoryUnit,
     NumeratorMetric, PingType, QuantityMetric, Rate, RateMetric, RecordedEvent, RecordedExperiment,
-    StringListMetric, StringMetric, TimeUnit, TimerId, TimespanMetric, TimingDistributionMetric,
-    UrlMetric, UuidMetric,
+    StringListMetric, StringMetric, TextMetric, TimeUnit, TimerId, TimespanMetric,
+    TimingDistributionMetric, UrlMetric, UuidMetric,
 };
 pub use crate::upload::{PingRequest, PingUploadTask, UploadResult};
 
@@ -484,26 +484,6 @@ pub fn persist_ping_lifetime_data() {
     crate::launch_with_glean(|glean| {
         let _ = glean.persist_ping_lifetime_data();
     });
-}
-
-/// Unblock the global dispatcher to start processing queued tasks.
-pub extern "C" fn rlb_flush_dispatcher() {
-    let was_initialized = was_initialize_called();
-
-    // Panic in debug mode
-    debug_assert!(!was_initialized);
-
-    // In release do a check and bail out
-    if was_initialized {
-        log::error!(
-            "Tried to flush the dispatcher from outside, but Glean was initialized in the RLB."
-        );
-        return;
-    }
-
-    if let Err(err) = dispatcher::flush_init() {
-        log::error!("Unable to flush the preinit queue: {}", err);
-    }
 }
 
 fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfoMetrics) {

@@ -128,21 +128,6 @@ pub fn shutdown() {
     glean_core::shutdown()
 }
 
-/// Unblock the global dispatcher to start processing queued tasks.
-///
-/// This should _only_ be called if it is guaranteed that `initialize` will never be called.
-///
-/// **Note**: Exported as a FFI function to be used by other language bindings (e.g. Kotlin/Swift)
-/// to unblock the RLB-internal dispatcher.
-/// This allows the usage of both the RLB and other language bindings (e.g. Kotlin/Swift)
-/// within the same application.
-#[no_mangle]
-#[inline(never)]
-pub extern "C" fn rlb_flush_dispatcher() {
-    log::trace!("FLushing RLB dispatcher through the FFI");
-    glean_core::rlb_flush_dispatcher()
-}
-
 /// Sets whether upload is enabled or not.
 ///
 /// See [`glean_core::Glean::set_upload_enabled`].

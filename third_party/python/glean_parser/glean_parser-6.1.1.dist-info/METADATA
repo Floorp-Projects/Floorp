@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 6.0.1
+Version: 6.1.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -85,6 +85,16 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 6.1.1
+
+- Rust: Use correct name for a ping in generated code.
+
+## 6.1.0
+
+- [data-review] Include extra keys' names and descriptions in data review template ([bug 1767027](https://bugzilla.mozilla.org/show_bug.cgi?id=1767027))
+- Raise limit on number of statically-defined labels to 4096. ([bug 1772163](https://bugzilla.mozilla.org/show_bug.cgi?id=1772163))
+- Fix Rust code generation for new UniFFI interface ([#491](https://github.com/mozilla/glean_parser/pull/491), [#494](https://github.com/mozilla/glean_parser/pull/494), [#495](https://github.com/mozilla/glean_parser/pull/495))
 
 ## 6.0.1
 

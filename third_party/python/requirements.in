@@ -10,7 +10,7 @@ ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.11
 fluent.syntax==0.18.1
-glean_parser==6.0.1
+glean_parser==6.1.1
 # Pin importlib-metadata to a version compatible with poetry
 importlib-metadata==1.7.0
 jsmin==2.1.0
