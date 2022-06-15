@@ -5,18 +5,31 @@
   <script src="apz_test_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <style>
-    #container {
-      transform: translate3d(0px, 0px, -1000px) perspective(496.281px);
-      width: min-content;
-    }
-    iframe {
-      border: 0;
-    }
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  #outer {
+    margin-top: 50px;
+    margin-left: 50px;
+    perspective: 500px;
+  }
+  #inner {
+    transform: translate3d(0,0,-100px);
+    transform-style: preserve-3d;
+  }
+  iframe {
+    border: 0;
+    background-color: blue;
+    transform: translate3d(0,0,100px);
+  }
   </style>
 </head>
 <body>
-  <div id="container">
-    <iframe src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+  <div id="outer">
+    <div id="inner">
+      <iframe src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+    </div>
   </div>
   <script type="application/javascript">
 async function test() {
@@ -35,16 +48,13 @@ async function test() {
   });
   await synthesizeNativeMouseEventWithAPZ({
     type: "click",
-    target: container,
+    target: outer,
     offsetX: 100,
     offsetY: 100
   });
   await childMessagePromise;
-  // Need to use fuzzy comparisons because the combination of floating-point
-  // matrix multiplication and rounding to integer coordinates can result in
-  // small discrepancies.
-  isfuzzy(clickCoordsInChild.offsetX, 100, 1, "x coordinate is correct");
-  isfuzzy(clickCoordsInChild.offsetY, 100, 1, "y coordinate is correct");
+  is(clickCoordsInChild.offsetX, 100, "x coordinate is correct");
+  is(clickCoordsInChild.offsetY, 100, "y coordinate is correct");
 }
 
 waitUntilApzStable()
