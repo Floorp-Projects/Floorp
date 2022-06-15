@@ -36,7 +36,6 @@ treeherder:
         'Fxfn': 'Firefox functional tests'
         'Fxfn-nofis': 'Firefox functional tests without fission enabled'
         'Fxfn-fis': 'Firefox functional tests with fission enabled'
-        'iris': 'Iris testing suite'
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
         'M-headless': 'Headless Mochitests'

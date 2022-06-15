@@ -1,5 +1,0 @@
-Welcome to your taskcluster interactive shell! The regularly scheduled task
-has been paused to give you a chance to set up your debugging environment.
-
-For your convenience, the exact mozharness command needed for this task can
-be invoked using the 'run-mozharness' command.
