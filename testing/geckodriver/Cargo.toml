@@ -12,7 +12,7 @@ edition = "2018"
 [dependencies]
 base64 = "0.13"
 chrono = "0.4.6"
-clap = { version = "3.1", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help"] }
+clap = { version = "~3.1", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help"] }
 hyper = "0.14"
 lazy_static = "1.0"
 log = { version = "0.4", features = ["std"] }
