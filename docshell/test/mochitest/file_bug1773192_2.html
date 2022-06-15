@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store">
+    <meta name="referrer" content="same-origin">
+  </head>
+  <body>
+    <form method="POST" action="file_bug1773192_3.sjs"></form>
+    <script>
+      history.replaceState({}, "", document.referrer);
+      document.forms[0].submit();
+    </script>
+  </body>
+</html>
