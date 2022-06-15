@@ -368,8 +368,8 @@ class nsThreadShutdownContext final : public nsIThreadShutdown {
                           nsThread* aJoiningThread)
       : mTerminatingThread(aTerminatingThread),
         mTerminatingPRThread(aTerminatingThread->GetPRThread()),
-        mJoiningThread(aJoiningThread,
-                       "nsThreadShutdownContext::mJoiningThread") {}
+        mJoiningThreadMutex("nsThreadShutdownContext::mJoiningThreadMutex"),
+        mJoiningThread(aJoiningThread) {}
 
   ~nsThreadShutdownContext() = default;
 
@@ -387,7 +387,9 @@ class nsThreadShutdownContext final : public nsIThreadShutdown {
   // The thread waiting for this thread to shut down. Will either be cleared by
   // the joining thread if `StopWaitingAndLeakThread` is called or by the
   // terminating thread upon exiting and notifying the joining thread.
-  mozilla::DataMutex<RefPtr<nsThread>> mJoiningThread;
+  mozilla::Mutex mJoiningThreadMutex;
+  RefPtr<nsThread> mJoiningThread GUARDED_BY(mJoiningThreadMutex);
+  bool mThreadLeaked GUARDED_BY(mJoiningThreadMutex) = false;
 };
 
 // This RAII class controls the duration of the associated nsThread's local
