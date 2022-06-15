@@ -28,17 +28,12 @@ macro_rules! expect {
 }
 
 #[no_mangle]
-pub extern "C" fn Rust_MeasureInitializeTime() {
-    // At this point FOG is already initialized.
-    // We still need for it to finish, as it is running in a separate thread.
-
-    let metric = &*fog::metrics::fog::initialization;
-    while metric.test_get_value("metrics").is_none() {
-        // We _know_ this value is recorded early, so let's just yield
-        // and try again quickly.
-        std::thread::yield_now();
-    }
-
-    let value = metric.test_get_value("metrics").unwrap();
-    expect!(value > 0);
+pub extern "C" fn Rust_TestRustInGTest() {
+    // Just a smoke test, we show here how tests might work that both
+    // a) Are in Rust, and
+    // b) Require Gecko
+    // This demonstration doesn't actually require Gecko. But we pretend it
+    // does so we remember how to do this rust-in-gtest pattern.
+    fog::metrics::test_only::bad_code.add(12);
+    expect!(fog::metrics::test_only::bad_code.test_get_value(None) == Some(12));
 }
