@@ -51,7 +51,8 @@ object SupportUtils {
         SYNC_SETUP("how-set-firefox-sync-firefox-android"),
         QR_CAMERA_ACCESS("qr-camera-access"),
         SMARTBLOCK("smartblock-enhanced-tracking-protection"),
-        SPONSOR_PRIVACY("sponsor-privacy")
+        SPONSOR_PRIVACY("sponsor-privacy"),
+        HTTPS_ONLY_MODE("https-only-mode-firefox-android"),
     }
 
     enum class MozillaPage(internal val path: String) {

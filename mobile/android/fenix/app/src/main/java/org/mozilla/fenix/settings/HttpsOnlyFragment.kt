@@ -23,8 +23,6 @@ import org.mozilla.fenix.databinding.SettingsHttpsOnlyBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
-private const val SUMO_URL = "https://support.mozilla.org/en-US/kb/https-only-mode-firefox-android"
-
 /**
  * Lets the user customize HTTPS-only mode.
  */
@@ -104,7 +102,9 @@ class HttpsOnlyFragment : Fragment() {
             override fun onClick(view: View) {
                 view.setOnClickListener {
                     (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SUMO_URL,
+                        searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+                            SupportUtils.SumoTopic.HTTPS_ONLY_MODE
+                        ),
                         newTab = true,
                         from = BrowserDirection.FromHttpsOnlyMode
                     )
