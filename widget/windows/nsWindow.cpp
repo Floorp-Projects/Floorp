@@ -674,8 +674,9 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
     case VK_NEXT:   // PgDn
       return false;
     default:
-      // Return true unless Ctrl is pressed
-      return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000;
+      // Return true unless Ctrl or Alt is pressed
+      return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000 &&
+             (GetKeyState(VK_MENU) & 0x8000) != 0x8000;
   }
 }
 
