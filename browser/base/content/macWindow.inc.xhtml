@@ -16,6 +16,9 @@
   <html:link rel="localization" href="browser/browserSets.ftl"/>
   <html:link rel="localization" href="browser/menubar.ftl"/>
   <html:link rel="localization" href="browser/screenshots.ftl"/>
+#ifdef NIGHTLY_BUILD
+  <link rel="localization" href="preview/firefoxView.ftl"/>
+#endif
 </linkset>
 
 # All JS files which are needed by browser.xhtml and other top level windows to

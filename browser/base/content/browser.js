@@ -565,7 +565,6 @@ var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteTabs;
 var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteSubframes;
-var gFirefoxViewTab;
 
 var gBrowserAllowScriptsToCloseInitialTabs = false;
 
@@ -1996,6 +1995,8 @@ var gBrowserInit = {
 
     ctrlTab.readPref();
     Services.prefs.addObserver(ctrlTab.prefName, ctrlTab);
+
+    FirefoxViewHandler.init();
 
     // The object handling the downloads indicator is initialized here in the
     // delayed startup function, but the actual indicator element is not loaded
@@ -10025,6 +10026,37 @@ var ConfirmationHint = {
       let wrapper = document.getElementById("confirmation-hint-wrapper");
       wrapper.replaceWith(wrapper.content);
       this.__panel = document.getElementById("confirmation-hint");
+    }
+  },
+};
+
+var FirefoxViewHandler = {
+  tab: null,
+  init() {
+    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+      document.getElementById("menu_openFirefoxView").hidden = true;
+    }
+  },
+  openTab() {
+    if (!this.tab) {
+      this.tab = gBrowser.addTrustedTab("about:firefoxview", { index: 0 });
+      this.tab.addEventListener("TabClose", this, { once: true });
+      gBrowser.tabContainer.addEventListener("TabSelect", this);
+      gBrowser.hideTab(this.tab);
+    }
+    gBrowser.selectedTab = this.tab;
+  },
+  handleEvent(e) {
+    switch (e.type) {
+      case "TabSelect":
+        document
+          .getElementById("firefox-view-button")
+          ?.toggleAttribute("open", e.target == this.tab);
+        break;
+      case "TabClose":
+        this.tab = null;
+        gBrowser.tabContainer.removeEventListener("TabSelect", this);
+        break;
     }
   },
 };
