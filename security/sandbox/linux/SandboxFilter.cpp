@@ -1769,6 +1769,16 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
             .Else(Error(ENOSYS));
       }
 
+      // The profiler will try to readlink /proc/self/exe for native
+      // stackwalking, but that's broken for several other reasons;
+      // see discussion in bug 1770905.  (That can be emulated by
+      // pre-recording the result if/when we need it.)
+#ifdef __NR_readlink
+      case __NR_readlink:
+#endif
+      case __NR_readlinkat:
+        return Error(EINVAL);
+
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }

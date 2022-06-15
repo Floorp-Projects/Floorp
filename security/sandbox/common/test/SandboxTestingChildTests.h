@@ -680,6 +680,12 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
                        return fd;
                      });
   }
+
+  child->ErrnoValueTest("readlink_exe"_ns, EINVAL, [] {
+    char pathBuf[PATH_MAX];
+    return readlink("/proc/self/exe", pathBuf, sizeof(pathBuf));
+  });
+
 #  elif XP_MACOSX  // XP_LINUX
   RunMacTestLaunchProcess(child);
   /* The Mac GMP process requires access to the window server */
