@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>CSS Positioned Layout Test: Relative positioning can increase but cannot decrease an element's contribution to scrollable overflow area</title>
+<link rel="author" title="David Shin" href="mailto:dshin@mozilla.com">
+<link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+<link rel="help" href="https://drafts.csswg.org/css-position-3/#valdef-position-relative">
+<meta name=assert content="Relative positioning can increase but cannot decrease an element's contribution to scrollable overflow area.">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/check-layout-th.js"></script>
+<style>
+.containing-block {
+  width: 100px;
+  height: 100px;
+  overflow: scroll;
+}
+
+.relpos {
+  position: relative;
+  background: rgba(0, 255, 0, 0.5);
+  width: 10px;
+  height: 10px;
+}
+</style>
+<body onload="checkLayout('.containing-block');">
+  <div id="log"></div>
+  <div class="containing-block" data-expected-scroll-width="700">
+    <div class="relpos" style="left: 200px; width: 500px;"></div>
+  </div>
+  <div class="containing-block" data-expected-scroll-width="500">
+    <div class="relpos" style="left: -500px; width: 500px;"></div>
+  </div>
+  <div class="containing-block" data-expected-scroll-height="700">
+    <div class="relpos" style="top: 200px; height: 500px;"></div>
+  </div>
+  <div class="containing-block" data-expected-scroll-height="500">
+    <div class="relpos" style="top: -500px; height: 500px;"></div>
+  </div>
+</body>
