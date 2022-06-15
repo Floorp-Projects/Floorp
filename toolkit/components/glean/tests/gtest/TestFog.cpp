@@ -32,16 +32,6 @@ void GTest_FOG_ExpectFailure(const char* aMessage) {
 }
 }
 
-// Initialize FOG exactly once.
-// This needs to be the first test to run!
-TEST(FOG, FogInitDoesntCrash)
-{
-  Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
-  const nsCString empty;
-  ASSERT_EQ(NS_OK, fog_init(&empty, &empty));
-  ASSERT_EQ(NS_OK, fog_test_reset(&empty, &empty));
-}
-
 TEST(FOG, BuiltinPingsRegistered)
 {
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
