@@ -1121,9 +1121,15 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                 unsigned(childPid), unsigned(aResult.Size<char>()),
                 unsigned(self->mPendingProfiles.length()),
                 pendingProfile ? "including" : "excluding", unsigned(childPid));
-            const nsDependentCSubstring profileString(aResult.get<char>(),
-                                                      aResult.Size<char>() - 1);
-            self->GatheredOOPProfile(childPid, profileString);
+            if (aResult.IsReadable()) {
+              const nsDependentCSubstring profileString(
+                  aResult.get<char>(), aResult.Size<char>() - 1);
+              self->GatheredOOPProfile(childPid, profileString);
+            } else {
+              // This can happen if the child failed to allocate
+              // the Shmem (or maliciously sent an invalid Shmem).
+              self->GatheredOOPProfile(childPid, ""_ns);
+            }
           },
           [self = RefPtr<nsProfiler>(this),
            childPid = profile.childPid](ipc::ResponseRejectReason&& aReason) {
