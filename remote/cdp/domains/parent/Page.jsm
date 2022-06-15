@@ -11,6 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/Domain.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -21,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
   DialogHandler:
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.jsm",
-  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
   PollPromise: "chrome://remote/content/shared/Sync.jsm",
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
@@ -42,7 +45,7 @@ const PDF_TRANSFER_MODES = {
 
 const TIMEOUT_SET_HISTORY_INDEX = 1000;
 
-class Page extends lazy.Domain {
+class Page extends Domain {
   constructor(session) {
     super(session);
 

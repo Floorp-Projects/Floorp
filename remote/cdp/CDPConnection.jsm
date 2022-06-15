@@ -11,20 +11,23 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { WebSocketConnection } = ChromeUtils.import(
+  "chrome://remote/content/shared/WebSocketConnection.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
   UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
-  WebSocketConnection: "chrome://remote/content/shared/WebSocketConnection.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.CDP)
 );
 
-class CDPConnection extends lazy.WebSocketConnection {
+class CDPConnection extends WebSocketConnection {
   /**
    * @param {WebSocket} webSocket
    *     The WebSocket server connection to wrap.
