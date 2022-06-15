@@ -20,17 +20,6 @@ else
   exit
 fi
 
-if [ "x$DEPOT_TOOLS" = "x" ]; then
-  echo "DEPOT_TOOLS is not defined, see README.md"
-  exit
-fi
-
-if [ -d $DEPOT_TOOLS ]; then
-  echo "DEPOT_TOOLS is $DEPOT_TOOLS"
-else
-  echo "Path $DEPOT_TOOLS is not found, see README.md"
-fi
-
 # After this point:
 # * eE: All commands should succede.
 # * u: All variables should be defined before use.
@@ -69,7 +58,6 @@ if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
   IS_DARWIN=1
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
-  export DEPOT_TOOLS_WIN_TOOLCHAIN=0
   unset ANSICON
   CONFIGS="x64_True_arm64_win x64_False_arm64_win"
   CONFIGS="$CONFIGS x64_True_x64_win x64_False_x64_win"
@@ -95,11 +83,6 @@ else
   CONFIGS="$CONFIGS x64_False_arm64_android x64_True_arm64_android"
   IS_LINUX=1
 fi
-
-# The path to DEPOT_TOOLS should be on our path, and make sure that it doesn't
-# auto-update.
-export PATH=$DEPOT_TOOLS:$PATH
-export DEPOT_TOOLS_UPDATE=0
 
 CONFIG_DIR=dom/media/webrtc/third_party_build/gn-configs
 echo "CONFIG_DIR is $CONFIG_DIR"

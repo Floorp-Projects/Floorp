@@ -24,20 +24,7 @@
    The aarch64 Rust target will need to be installed via:
    `rustup target add aarch64-pc-windows-msvc`
 
-3. See information in `third_party/libwebrtc/README.mozilla` for the proper
-   revision of libwebrtc
-
-        libwebrtc updated from commit https://github.com/mozilla/libwebrtc/archive/149d693483e9055f574d9d65b01fe75a186b654b.tar.gz on 2020-11-30T15:48:48.472088.
-        third_party updated from commit https://chromium.googlesource.com/chromium/src/third_party/+archive/5dc5a4a45df9592baa8e8c5f896006d9193d8e45.tar.gz on 2020-11-30T17:00:15.612630.
-
-   In our current case, the revision is `149d693483e9055f574d9d65b01fe75a186b654b`
-   which corresponds to:
-
-        mozilla-modifications-rel86
-
-   This commit was made on `Thu Nov 19 14:14:00 2020`.
-
-4. Download a version of the `gn` executable that corresponds to
+3. Download a version of the `gn` executable that corresponds to
     `Thu Nov 19 14:14:00 2020`.  In our case, that is version `1889 (8fe02009)`.
    
    - [Win](https://chrome-infra-packages.appspot.com/p/gn/gn/windows-amd64/+/e_UmTHedzuu4zJ2gdpW8jrFFNnzIhThljx3jn3RMlVsC)
@@ -65,20 +52,7 @@
 
         (cd gn && git checkout 31f2bba8)
 
-5. Clone `depot_tools` from [depot_tools](https://chromium.googlesource.com/chromium/tools/depot_tools.git)
-
-        git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-        export DEPOT_TOOLS=`pwd`/depot_tools
-
-   Now, we need to checkout a revision of `depot_tools` that corresponds to the
-   date of our libwebrtc branch.  The closest `depot_tools` commit to
-   `Thu Nov 19 14:14:00 2020` is `e7d1862b155ac3ccbef72c4d70629b5c88ffcb32`.
-   There is additional information on how to more automatically determine this
-   [here](https://chromium.googlesource.com/chromium/src/+/master/docs/building_old_revisions.md).
-
-        (cd depot_tools ; git checkout e7d1862b155ac3ccbef72c4d70629b5c88ffcb32 )
-
-6. It is time to generate the build files.  The script should be run from the
+4. It is time to generate the build files.  The script should be run from the
    top directory of our firefox tree.
 
         bash ./dom/media/webrtc/third_party_build/gn-configs/generate-gn-build-files.sh
@@ -87,7 +61,7 @@
    setting the DEBUG_GEN environment variable to a non-empty value. This will 
    print everything that the script executes.
 
-7. Checkin all the generated/modified files and try your build!
+5. Checkin all the generated/modified files and try your build!
 
 # Adding new configurations to the build
 
