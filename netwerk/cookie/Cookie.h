@@ -84,6 +84,10 @@ class Cookie final : public nsICookie {
   }
   inline int32_t SameSite() const { return mData.sameSite(); }
   inline int32_t RawSameSite() const { return mData.rawSameSite(); }
+  inline bool IsDefaultSameSite() const {
+    return SameSite() == nsICookie::SAMESITE_LAX &&
+           RawSameSite() == nsICookie::SAMESITE_NONE;
+  }
   inline uint8_t SchemeMap() const { return mData.schemeMap(); }
 
   // setters
