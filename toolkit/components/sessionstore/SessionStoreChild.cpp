@@ -170,7 +170,7 @@ void SessionStoreChild::UpdateEventTargets() {
 void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate) {
   if (!mSessionStoreListener) {
     // This is the case when we're shutting down, and expect a final update.
-    Unused << SendSessionStoreUpdate(Nothing(), Nothing(), false, 0);
+    SessionStoreUpdate(Nothing(), Nothing(), aSessionHistoryUpdate, 0);
     return;
   }
 
@@ -186,7 +186,7 @@ void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate) {
     privatedMode.emplace(store->GetPrivateModeEnabled());
   }
 
-  Unused << SendSessionStoreUpdate(
+  SessionStoreUpdate(
       docShellCaps, privatedMode,
       store->GetAndClearSHistoryChanged() || aSessionHistoryUpdate,
       mSessionStoreListener->GetEpoch());
@@ -207,13 +207,51 @@ void SessionStoreChild::UpdateSHistoryChanges() {
 mozilla::ipc::IPCResult SessionStoreChild::RecvFlushTabState(
     FlushTabStateResolver&& aResolver) {
   if (mSessionStoreChangeListener) {
-    mSessionStoreChangeListener->CollectWireframe();
-
     mSessionStoreChangeListener->FlushSessionStore();
   }
   aResolver(true);
 
   return IPC_OK();
+}
+
+void SessionStoreChild::SessionStoreUpdate(
+    const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
+    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
+  if (XRE_IsContentProcess()) {
+    Unused << SendSessionStoreUpdate(aDocShellCaps, aPrivatedMode,
+                                     aNeedCollectSHistory, aEpoch);
+  } else if (SessionStoreParent* sessionStoreParent =
+                 static_cast<SessionStoreParent*>(
+                     InProcessChild::ParentActorFor(this))) {
+    sessionStoreParent->SessionStoreUpdate(aDocShellCaps, aPrivatedMode,
+                                           aNeedCollectSHistory, aEpoch);
+  }
+}
+
+void SessionStoreChild::IncrementalSessionStoreUpdate(
+    const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
+    const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
+    uint32_t aEpoch) {
+  if (XRE_IsContentProcess()) {
+    Unused << SendIncrementalSessionStoreUpdate(aBrowsingContext, aFormData,
+                                                aScrollPosition, aEpoch);
+  } else if (SessionStoreParent* sessionStoreParent =
+                 static_cast<SessionStoreParent*>(
+                     InProcessChild::ParentActorFor(this))) {
+    sessionStoreParent->IncrementalSessionStoreUpdate(
+        aBrowsingContext, aFormData, aScrollPosition, aEpoch);
+  }
+}
+
+void SessionStoreChild::ResetSessionStore(
+    const MaybeDiscarded<BrowsingContext>& aBrowsingContext, uint32_t aEpoch) {
+  if (XRE_IsContentProcess()) {
+    Unused << SendResetSessionStore(aBrowsingContext, aEpoch);
+  } else if (SessionStoreParent* sessionStoreParent =
+                 static_cast<SessionStoreParent*>(
+                     InProcessChild::ParentActorFor(this))) {
+    sessionStoreParent->ResetSessionStore(aBrowsingContext, aEpoch);
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION(SessionStoreChild, mSessionStoreListener,

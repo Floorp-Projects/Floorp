@@ -56,12 +56,10 @@ class SessionStoreChangeListener final : public nsINamed,
 
   void FlushSessionStore();
 
-  enum class Change { None, Input, Scroll };
+  enum class Change { Input, Scroll, SessionHistory, WireFrame };
 
   static SessionStoreChangeListener* CollectSessionStoreData(
       WindowContext* aWindowContext, const EnumSet<Change>& aChanges);
-
-  static void FlushAllSessionStoreData(WindowContext* aWindowContext);
 
   void SetActor(SessionStoreChild* aSessionStoreChild);
 
@@ -69,7 +67,7 @@ class SessionStoreChangeListener final : public nsINamed,
 
   uint32_t GetEpoch() const { return mEpoch; }
 
-  void CollectWireframe();
+  bool CollectWireframe();
 
  private:
   void RecordChange(WindowContext* aWindowContext, EnumSet<Change> aChanges);
@@ -98,8 +96,6 @@ class SessionStoreChangeListener final : public nsINamed,
   nsCOMPtr<nsITimer> mTimer;
   RefPtr<SessionStoreChild> mSessionStoreChild;
   SessionStoreChangeTable mSessionStoreChanges;
-
-  bool mCollectSessionHistory = false;
 };
 
 }  // namespace mozilla::dom
