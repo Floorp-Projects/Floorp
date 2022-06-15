@@ -185,6 +185,7 @@ tasks:
                               MOBILE_HEAD_REV: '${head_sha}'
                               MOBILE_REPOSITORY_TYPE: git
                               MOBILE_PIP_REQUIREMENTS: taskcluster/requirements.txt
+                              MOZ_AUTOMATION: "1"
                               REPOSITORIES: {$json: {mobile: "Fenix"}}
                               HG_STORE_PATH: /builds/worker/checkouts/hg-store
                               ANDROID_SDK_ROOT: /builds/worker/android-sdk
