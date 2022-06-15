@@ -278,6 +278,10 @@ list of acceptable features is given below:
      - 7.0
      - 4.0
      - **No** (see notes)
+   * - Designated initializers (C++20)
+     - 8.0 (4.7)
+     - 10.0 (3.0)
+     - Yes [*sic*] (see notes)
    * - #pragma once
      - 3.4
      - Yes
@@ -323,6 +327,15 @@ Aligned allocation/deallocation: Our custom memory allocator doesn't
 have support for these functions.
 
 Thread locals: ``thread_local`` is not supported on Android.
+
+Designated initializers: Despite their late addition to C++ (and lack of
+*official* support by compilers until relatively recently), `C++20's designated
+initializers
+<https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0329r4.pdf>`__ are
+merely a subset of `a feature originally introduced in C99
+<https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html>`__ -- and this subset
+has been accepted without comment in C++ code since at least GCC 4.7 and Clang
+3.0.
 
 
 C++ and Mozilla standard libraries
