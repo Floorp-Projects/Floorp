@@ -1631,7 +1631,7 @@ void nsPresContext::UIResolutionChanged() {
 void nsPresContext::UIResolutionChangedSync() {
   if (!mPendingUIResolutionChanged) {
     mPendingUIResolutionChanged = true;
-    UIResolutionChangedInternalScale(0.0);
+    UIResolutionChangedInternal();
   }
 }
 
@@ -1649,13 +1649,9 @@ static void NotifyChildrenUIResolutionChanged(nsPIDOMWindowOuter* aWindow) {
 }
 
 void nsPresContext::UIResolutionChangedInternal() {
-  UIResolutionChangedInternalScale(0.0);
-}
-
-void nsPresContext::UIResolutionChangedInternalScale(double aScale) {
   mPendingUIResolutionChanged = false;
 
-  mDeviceContext->CheckDPIChange(&aScale);
+  mDeviceContext->CheckDPIChange();
   if (mCurAppUnitsPerDevPixel != mDeviceContext->AppUnitsPerDevPixel()) {
     AppUnitsPerDevPixelChanged();
   }
@@ -1669,13 +1665,9 @@ void nsPresContext::UIResolutionChangedInternalScale(double aScale) {
     NotifyChildrenUIResolutionChanged(window);
   }
 
-  auto recurse = [aScale](dom::Document& aSubDoc) {
+  auto recurse = [](dom::Document& aSubDoc) {
     if (nsPresContext* pc = aSubDoc.GetPresContext()) {
-      // For subdocuments, we want to apply the parent's scale, because there
-      // are cases where the subdoc's device context is connected to a widget
-      // that has an out-of-date resolution (it's on a different screen, but
-      // currently hidden, and will not be updated until shown): bug 1249279.
-      pc->UIResolutionChangedInternalScale(aScale);
+      pc->UIResolutionChangedInternal();
     }
     return CallState::Continue;
   };

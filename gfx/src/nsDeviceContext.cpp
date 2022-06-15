@@ -63,7 +63,7 @@ nsDeviceContext::nsDeviceContext()
 
 nsDeviceContext::~nsDeviceContext() = default;
 
-void nsDeviceContext::SetDPI(double* aScale) {
+void nsDeviceContext::SetDPI() {
   float dpi;
 
   // Use the printing DC to determine DPI values, if we have one.
@@ -100,24 +100,11 @@ void nsDeviceContext::SetDPI(double* aScale) {
       dpi = 96.0f;
     }
 
-    double devPixelsPerCSSPixel;
-    if (aScale && *aScale > 0.0) {
-      // if caller provided a scale, we just use it
-      devPixelsPerCSSPixel = *aScale;
-    } else {
-      // otherwise get from the widget, and return it in aScale for
-      // the caller to pass to child contexts if needed
-      CSSToLayoutDeviceScale scale =
-          mWidget ? mWidget->GetDefaultScale() : CSSToLayoutDeviceScale(1.0);
-      MOZ_ASSERT(scale.scale > 0.0);
-      devPixelsPerCSSPixel = scale.scale;
-      if (aScale) {
-        *aScale = devPixelsPerCSSPixel;
-      }
-    }
-
+    CSSToLayoutDeviceScale scale =
+        mWidget ? mWidget->GetDefaultScale() : CSSToLayoutDeviceScale(1.0);
+    MOZ_ASSERT(scale.scale > 0.0);
     mAppUnitsPerDevPixelAtUnitFullZoom =
-        std::max(1, NS_lround(AppUnitsPerCSSPixel() / devPixelsPerCSSPixel));
+        std::max(1, NS_lround(AppUnitsPerCSSPixel() / scale.scale));
   }
 
   NS_ASSERTION(dpi != -1.0, "no dpi set");
@@ -360,14 +347,8 @@ void nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect) {
   nsCOMPtr<nsIScreen> screen;
   FindScreen(getter_AddRefs(screen));
   if (screen) {
-    int32_t x, y, width, height;
-    screen->GetAvailRect(&x, &y, &width, &height);
-
-    // convert to device units
-    outRect->SetRect(NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
+    *outRect = LayoutDeviceIntRect::ToAppUnits(screen->GetAvailRect(),
+                                               AppUnitsPerDevPixel());
   }
 }
 
@@ -380,14 +361,8 @@ void nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect) {
   nsCOMPtr<nsIScreen> screen;
   FindScreen(getter_AddRefs(screen));
   if (screen) {
-    int32_t x, y, width, height;
-    screen->GetRect(&x, &y, &width, &height);
-
-    // convert to device units
-    outRect->SetRect(NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()),
-                     NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
+    *outRect = LayoutDeviceIntRect::ToAppUnits(screen->GetRect(),
+                                               AppUnitsPerDevPixel());
     mWidth = outRect->Width();
     mHeight = outRect->Height();
   }
@@ -425,11 +400,11 @@ bool nsDeviceContext::CalcPrintingSize() {
   return (mWidth > 0 && mHeight > 0);
 }
 
-bool nsDeviceContext::CheckDPIChange(double* aScale) {
+bool nsDeviceContext::CheckDPIChange() {
   int32_t oldDevPixels = mAppUnitsPerDevPixelAtUnitFullZoom;
   int32_t oldInches = mAppUnitsPerPhysicalInch;
 
-  SetDPI(aScale);
+  SetDPI();
 
   return oldDevPixels != mAppUnitsPerDevPixelAtUnitFullZoom ||
          oldInches != mAppUnitsPerPhysicalInch;
@@ -456,12 +431,8 @@ void nsDeviceContext::UpdateAppUnitsForFullZoom() {
 DesktopToLayoutDeviceScale nsDeviceContext::GetDesktopToDeviceScale() {
   nsCOMPtr<nsIScreen> screen;
   FindScreen(getter_AddRefs(screen));
-
   if (screen) {
-    double scale;
-    screen->GetContentsScaleFactor(&scale);
-    return DesktopToLayoutDeviceScale(scale);
+    return screen->GetDesktopToLayoutDeviceScale();
   }
-
   return DesktopToLayoutDeviceScale(1.0);
 }
