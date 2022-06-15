@@ -32,6 +32,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  *   The recommended snapshot.
  * @property {number} score
  *   The score for this snapshot.
+ * @property {object} [data]
+ *   An optional object containing data used to calculate the score, printed
+ *   as part of logs for debugging purposes.
  */
 
 /**
@@ -885,7 +888,7 @@ const Snapshots = new (class Snapshots {
       interactionCounts.min = Math.min(interactionCounts.min, interactions);
       return {
         snapshot: this.#translateRow(row),
-        interactions,
+        data: { interactions },
       };
     });
 
@@ -896,7 +899,7 @@ const Snapshots = new (class Snapshots {
     // For now instead we assign a score based on the number of interactions
     // with the page during `snapshot_timeofday_limit_days`.
     entries.forEach(e => {
-      e.score = this.timeOfDayScore(e.interactions, interactionCounts);
+      e.score = this.timeOfDayScore(e.data.interactions, interactionCounts);
     });
     return entries;
   }
