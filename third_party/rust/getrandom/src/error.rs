@@ -109,6 +109,10 @@ cfg_if! {
             let idx = buf.iter().position(|&b| b == 0).unwrap_or(n);
             core::str::from_utf8(&buf[..idx]).ok()
         }
+    } else if #[cfg(target_os = "wasi")] {
+        fn os_err(errno: i32, _buf: &mut [u8]) -> Option<wasi::Error> {
+            wasi::Error::from_raw_error(errno as _)
+        }
     } else {
         fn os_err(_errno: i32, _buf: &mut [u8]) -> Option<&str> {
             None

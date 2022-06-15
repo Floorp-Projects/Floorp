@@ -24,7 +24,6 @@ extern "system" {
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
     // Prevent overflow of u32
     for chunk in dest.chunks_mut(u32::max_value() as usize) {
-        // BCryptGenRandom was introduced in Windows Vista
         let ret = unsafe {
             BCryptGenRandom(
                 ptr::null_mut(),

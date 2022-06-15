@@ -1612,7 +1612,7 @@ version = "0.3.2"
 criteria = "safe-to-run"
 
 [[unaudited.wasi]]
-version = "0.11.0+wasi-snapshot-preview1"
+version = "0.10.0+wasi-snapshot-preview1"
 criteria = "safe-to-deploy"
 
 [[unaudited.wasm-encoder]]
