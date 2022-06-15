@@ -128,6 +128,9 @@ const char* const XPCJSRuntime::mStrings[] = {
     "interfaceId",      // IDX_INTERFACE_ID
     "initializer",      // IDX_INITIALIZER
     "print",            // IDX_PRINT
+    "fetch",            // IDX_FETCH
+    "crypto",           // IDX_CRYPTO
+    "indexedDB",        // IDX_INDEXEDDB
 };
 
 /***************************************************************************/
