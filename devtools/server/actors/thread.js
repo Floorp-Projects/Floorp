@@ -2057,41 +2057,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Filtering function to filter out sources for which we don't want to notify/create
-   * source actors
-   *
-   * @param {Debugger.Source} source
-   *        The source to accept or ignore
-   * @param Boolean
-   *        True, if we want to create a source actor.
-   */
-  _acceptSource(source) {
-    // We have some spurious source created by ExtensionContent.jsm when debugging tabs.
-    // These sources are internal stuff injected by WebExt codebase to implement content
-    // scripts. We can't easily ignore them from Debugger API, so ignore them
-    // when debugging a tab (i.e. browser-element). As we still want to debug them
-    // from the browser toolbox.
-    if (
-      this._parent.sessionContext.type == "browser-element" &&
-      source.url.endsWith("ExtensionContent.jsm")
-    ) {
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
    * Add the provided source to the server cache.
    *
    * @param aSource Debugger.Source
    *        The source that will be stored.
    */
   _addSource(source) {
-    if (!this._acceptSource(source)) {
-      return;
-    }
-
     // Preloaded WebExtension content scripts may be cached internally by
     // ExtensionContent.jsm and ThreadActor would ignore them on a page reload
     // because it finds them in the _debuggerSourcesSeen WeakSet,
