@@ -254,3 +254,46 @@ addAccessibleTask(
     remoteIframe: !isWinNoCache,
   }
 );
+
+// ////////////////////////////////////////////////////////////////////////
+// multiselect with coalesced selection event
+addAccessibleTask(
+  `<select id="listbox" size="4" multiple="true">
+    <option id="item1">option1</option>
+    <option id="item2">option2</option>
+    <option id="item3">option3</option>
+    <option id="item4">option4</option>
+    <option id="item5">option5</option>
+    <option id="item6">option6</option>
+    <option id="item7">option7</option>
+    <option id="item8">option8</option>
+    <option id="item9">option9</option>
+   </select>`,
+  async function(browser, docAcc) {
+    info("select@size='4' multiselect with coalesced selection event");
+    let select = findAccessibleChildByID(docAcc, "listbox", [
+      nsIAccessibleSelectable,
+    ]);
+    await testMultiSelectable(
+      select,
+      [
+        "item1",
+        "item2",
+        "item3",
+        "item4",
+        "item5",
+        "item6",
+        "item7",
+        "item8",
+        "item9",
+      ],
+      "select@size='4' multiselect with coalesced selection event "
+    );
+  },
+  {
+    chrome: false,
+    topLevel: true,
+    iframe: false,
+    remoteIframe: false,
+  }
+);
