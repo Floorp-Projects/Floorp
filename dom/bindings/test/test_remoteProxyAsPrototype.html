@@ -1,0 +1,33 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for bug 1773732</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function go() {
+  let frame = document.createElement("iframe");
+  frame.onload = () => {
+    let win = frame.contentWindow;
+    is(SpecialPowers.Cu.isRemoteProxy(win), SpecialPowers.useRemoteSubframes,
+       "win is a remote proxy if Fission is enabled");
+    let o = {};
+    Object.setPrototypeOf(o, win);
+    is(Object.getPrototypeOf(o), win, "should have expected proto");
+    SimpleTest.finish();
+  };
+  frame.src = "https://example.com";
+  document.body.appendChild(frame);
+};
+go();
+
+</script>
+</body>
+</html>
