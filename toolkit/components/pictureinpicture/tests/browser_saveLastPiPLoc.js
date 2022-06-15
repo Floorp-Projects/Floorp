@@ -9,8 +9,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * with the size. It adjusts for aspect ratio by keeping the same height and
  * adjusting the width of the PiP window.
  */
-
-add_task(async () => {
+async function doTest() {
   await BrowserTestUtils.withNewTab(
     {
       url: TEST_PAGE,
@@ -359,4 +358,13 @@ add_task(async () => {
       await ensureMessageAndClosePiP(browser, "with-controls", pipWin, true);
     }
   );
+}
+
+add_task(async function test_pip_save_last_loc() {
+  await doTest();
+});
+
+add_task(async function test_pip_save_last_loc_with_os_zoom() {
+  await SpecialPowers.pushPrefEnv({ set: [["ui.textScaleFactor", 200]] });
+  await doTest();
 });
