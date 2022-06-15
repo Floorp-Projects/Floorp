@@ -194,7 +194,6 @@ add_task(async function test_fetch_without_permissions_mv2() {
         "sec-fetch-site": "same-origin",
         "sec-fetch-mode": "cors",
         "sec-fetch-dest": "empty",
-        origin: "null",
       },
     ],
   });
@@ -243,7 +242,6 @@ add_task(async function test_fetch_with_permissions_mv2() {
         "sec-fetch-site": "same-origin",
         "sec-fetch-mode": "cors",
         "sec-fetch-dest": "empty",
-        origin: "null",
       },
     ],
   });

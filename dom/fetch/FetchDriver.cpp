@@ -1605,18 +1605,6 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
-
-  nsAutoCString method;
-  mRequest->GetMethod(method);
-  if (!method.EqualsLiteral("GET") && !method.EqualsLiteral("HEAD")) {
-    nsAutoString origin;
-    if (NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(mPrincipal, origin))) {
-      DebugOnly<nsresult> rv = aChannel->SetRequestHeader(
-          nsDependentCString(net::nsHttp::Origin),
-          NS_ConvertUTF16toUTF8(origin), false /* merge */);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
 }
 
 void FetchDriver::RunAbortAlgorithm() {

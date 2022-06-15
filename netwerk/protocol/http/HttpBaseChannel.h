@@ -527,6 +527,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // passed to mListener.
   bool HasAppliedConversion() { return LoadHasAppliedConversion(); }
 
+  // https://fetch.spec.whatwg.org/#concept-request-tainted-origin
+  bool HasRedirectTaintedOrigin() { return LoadTaintedOriginFlag(); }
+
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 
