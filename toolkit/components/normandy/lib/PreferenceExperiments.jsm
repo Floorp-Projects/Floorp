@@ -82,21 +82,18 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CleanupManager",
+const { CleanupManager } = ChromeUtils.import(
   "resource://normandy/lib/CleanupManager.jsm"
 );
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
+
+const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LogManager",
-  "resource://normandy/lib/LogManager.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -174,11 +171,11 @@ function ensureStorage() {
   return gStorePromise;
 }
 
-const log = lazy.LogManager.getLogger("preference-experiments");
+const log = LogManager.getLogger("preference-experiments");
 
 // List of active preference observers. Cleaned up on shutdown.
 let experimentObservers = new Map();
-lazy.CleanupManager.addCleanupHandler(() =>
+CleanupManager.addCleanupHandler(() =>
   PreferenceExperiments.stopAllObservers()
 );
 
@@ -220,7 +217,7 @@ var PreferenceExperiments = {
    * default preference branch.
    */
   async init() {
-    lazy.CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
+    CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
 
     for (const experiment of await this.getAllActive()) {
       // Check that the current value of the preference is still what we set it to

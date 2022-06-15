@@ -4,11 +4,7 @@
 
 "use strict";
 
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UptakeTelemetry",
+const { UptakeTelemetry } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -19,27 +15,27 @@ const COMPONENT = "normandy";
 
 var Uptake = {
   // Action uptake
-  ACTION_NETWORK_ERROR: lazy.UptakeTelemetry.STATUS.NETWORK_ERROR,
-  ACTION_PRE_EXECUTION_ERROR: lazy.UptakeTelemetry.STATUS.CUSTOM_1_ERROR,
-  ACTION_POST_EXECUTION_ERROR: lazy.UptakeTelemetry.STATUS.CUSTOM_2_ERROR,
-  ACTION_SERVER_ERROR: lazy.UptakeTelemetry.STATUS.SERVER_ERROR,
-  ACTION_SUCCESS: lazy.UptakeTelemetry.STATUS.SUCCESS,
+  ACTION_NETWORK_ERROR: UptakeTelemetry.STATUS.NETWORK_ERROR,
+  ACTION_PRE_EXECUTION_ERROR: UptakeTelemetry.STATUS.CUSTOM_1_ERROR,
+  ACTION_POST_EXECUTION_ERROR: UptakeTelemetry.STATUS.CUSTOM_2_ERROR,
+  ACTION_SERVER_ERROR: UptakeTelemetry.STATUS.SERVER_ERROR,
+  ACTION_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
 
   // Per-recipe uptake
-  RECIPE_ACTION_DISABLED: lazy.UptakeTelemetry.STATUS.CUSTOM_1_ERROR,
-  RECIPE_DIDNT_MATCH_FILTER: lazy.UptakeTelemetry.STATUS.BACKOFF,
-  RECIPE_INCOMPATIBLE_CAPABILITIES: lazy.UptakeTelemetry.STATUS.BACKOFF,
-  RECIPE_EXECUTION_ERROR: lazy.UptakeTelemetry.STATUS.APPLY_ERROR,
-  RECIPE_FILTER_BROKEN: lazy.UptakeTelemetry.STATUS.CONTENT_ERROR,
-  RECIPE_ARGUMENTS_INVALID: lazy.UptakeTelemetry.STATUS.CONTENT_ERROR,
-  RECIPE_INVALID_ACTION: lazy.UptakeTelemetry.STATUS.DOWNLOAD_ERROR,
-  RECIPE_SUCCESS: lazy.UptakeTelemetry.STATUS.SUCCESS,
-  RECIPE_INVALID_SIGNATURE: lazy.UptakeTelemetry.STATUS.SIGNATURE_ERROR,
+  RECIPE_ACTION_DISABLED: UptakeTelemetry.STATUS.CUSTOM_1_ERROR,
+  RECIPE_DIDNT_MATCH_FILTER: UptakeTelemetry.STATUS.BACKOFF,
+  RECIPE_INCOMPATIBLE_CAPABILITIES: UptakeTelemetry.STATUS.BACKOFF,
+  RECIPE_EXECUTION_ERROR: UptakeTelemetry.STATUS.APPLY_ERROR,
+  RECIPE_FILTER_BROKEN: UptakeTelemetry.STATUS.CONTENT_ERROR,
+  RECIPE_ARGUMENTS_INVALID: UptakeTelemetry.STATUS.CONTENT_ERROR,
+  RECIPE_INVALID_ACTION: UptakeTelemetry.STATUS.DOWNLOAD_ERROR,
+  RECIPE_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
+  RECIPE_INVALID_SIGNATURE: UptakeTelemetry.STATUS.SIGNATURE_ERROR,
 
   // Uptake for the runner as a whole
-  RUNNER_NETWORK_ERROR: lazy.UptakeTelemetry.STATUS.NETWORK_ERROR,
-  RUNNER_SERVER_ERROR: lazy.UptakeTelemetry.STATUS.SERVER_ERROR,
-  RUNNER_SUCCESS: lazy.UptakeTelemetry.STATUS.SUCCESS,
+  RUNNER_NETWORK_ERROR: UptakeTelemetry.STATUS.NETWORK_ERROR,
+  RUNNER_SERVER_ERROR: UptakeTelemetry.STATUS.SERVER_ERROR,
+  RUNNER_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
 
   async _report(status, source) {
     // Telemetry doesn't help us much with error detection, so do some here.
@@ -53,7 +49,7 @@ var Uptake = {
         `Uptake source is required (got "${JSON.stringify(status)}`
       );
     }
-    await lazy.UptakeTelemetry.report(COMPONENT, status, {
+    await UptakeTelemetry.report(COMPONENT, status, {
       source: `${COMPONENT}/${source}`,
     });
   },
