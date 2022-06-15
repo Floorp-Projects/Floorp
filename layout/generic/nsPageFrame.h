@@ -162,8 +162,6 @@ class nsPageBreakFrame final : public nsLeafFrame {
   nscoord GetIntrinsicISize() override;
   nscoord GetIntrinsicBSize() override;
 
-  bool mHaveReflowed;
-
   friend nsIFrame* NS_NewPageBreakFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 };
