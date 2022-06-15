@@ -173,8 +173,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     newMessage.indent = parentGroups.length;
   }
 
-  const removedIds = [];
-
   // Check if the current message could be placed in a Warning Group.
   // This needs to be done before setting the new message in mutableMessagesById so we have a
   // proper message.
@@ -361,7 +359,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     state.networkMessagesUpdateById[newMessage.actor] = newMessage;
   }
 
-  return removeMessagesFromState(state, removedIds);
+  return state;
 }
 
 // eslint-disable-next-line complexity
