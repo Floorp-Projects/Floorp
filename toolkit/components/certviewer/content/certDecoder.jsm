@@ -1297,6 +1297,8 @@ function certDecoderInitializer(
   return { parse, pemToDER };
 }
 
+// This must be removed when all consumer is converted to ES module.
+// eslint-disable-next-line mozilla/reject-globalThis-modification
 globalThis.certDecoderInitializer = certDecoderInitializer;
 /* eslint-disable-next-line no-unused-vars */
 var EXPORTED_SYMBOLS = ["certDecoderInitializer"];

@@ -55,6 +55,7 @@ module.exports = {
     "reject-addtask-only": require("../lib/rules/reject-addtask-only"),
     "reject-chromeutils-import-params": require("../lib/rules/reject-chromeutils-import-params"),
     "reject-global-this": require("../lib/rules/reject-global-this"),
+    "reject-globalThis-modification": require("../lib/rules/reject-globalThis-modification"),
     "reject-import-system-module-from-non-system": require("../lib/rules/reject-import-system-module-from-non-system"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
     "reject-osfile": require("../lib/rules/reject-osfile"),

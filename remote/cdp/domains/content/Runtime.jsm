@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
 });
 
 // Import the `Debugger` constructor in the current scope
+// eslint-disable-next-line mozilla/reject-globalThis-modification
 addDebuggerToGlobal(globalThis);
 
 const CONSOLE_API_LEVEL_MAP = {
