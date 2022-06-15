@@ -5563,6 +5563,16 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     aStatus.SetNextInFlowNeedsReflow();
   }
 
+  // If we are the first-in-flow and not fully complete (either our block-size
+  // or any of our flex items cannot fit in the available block-size), and the
+  // style requires us to avoid breaking inside, set the status to prompt our
+  // parent to push us to the next page/column.
+  if (!GetPrevInFlow() && !aStatus.IsFullyComplete() &&
+      ShouldAvoidBreakInside(aReflowInput)) {
+    aStatus.SetInlineLineBreakBeforeAndReset();
+    return;
+  }
+
   // Calculate the container baselines so that our parent can baseline-align us.
   mBaselineFromLastReflow = aFlexContainerAscent;
   mLastBaselineFromLastReflow = aLines.LastElement().LastBaselineOffset();
