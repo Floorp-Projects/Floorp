@@ -1164,6 +1164,12 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     // Used by disabled form controls.
     case ColorID::MozDisabledfield:
     case ColorID::Graytext:
+
+    // Some pages expect these to return windows-like colors, see bug 1773795.
+    // Also, per spec these should match Canvas/CanvasText, see
+    // https://drafts.csswg.org/css-color-4/#window
+    case ColorID::Window:
+    case ColorID::Windowtext:
       return true;
 
     default:
