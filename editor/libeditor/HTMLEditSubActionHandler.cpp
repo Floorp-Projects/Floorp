@@ -5305,13 +5305,25 @@ HTMLEditor::SplitRangeOffFromBlockAndRemoveMiddleContainer(
   SplitRangeOffFromNodeResult splitResult =
       SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
   if (splitResult.EditorDestroyed()) {
-    NS_WARNING(
-        "HTMLEditor::SplitRangeOffFromBlock() caused destorying the editor");
+    NS_WARNING("HTMLEditor::SplitRangeOffFromBlock() failed");
     return splitResult;
   }
-  NS_WARNING_ASSERTION(
-      splitResult.isOk(),
-      "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+  if (splitResult.isOk()) {
+    nsresult rv = splitResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitRangeOffFromNodeResult::SuggestCaretPointTo() failed");
+      return SplitRangeOffFromNodeResult(rv);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "SplitRangeOffFromNodeResult::SuggestCaretPointTo() "
+                         "failed, but ignored");
+  } else {
+    NS_WARNING(
+        "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+  }
   const Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
       RemoveBlockContainerWithTransaction(aBlockElement);
   if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
@@ -5343,7 +5355,8 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   SplitNodeResult splitAtStartResult = SplitNodeDeepWithTransaction(
       aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
       SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (MOZ_UNLIKELY(NS_WARN_IF(splitAtStartResult.EditorDestroyed()))) {
+  if (splitAtStartResult.EditorDestroyed()) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed (at left)");
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
@@ -5355,33 +5368,14 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   auto atAfterEnd = EditorDOMPoint::After(aEndOfMiddleElement);
   SplitNodeResult splitAtEndResult = SplitNodeDeepWithTransaction(
       aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (MOZ_UNLIKELY(NS_WARN_IF(splitAtEndResult.EditorDestroyed()))) {
+  if (splitAtEndResult.EditorDestroyed()) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed (at right)");
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       splitAtEndResult.isOk(),
       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
       "eDoNotCreateEmptyContainer) after end of middle element failed");
-
-  if (AllowsTransactionsToChangeSelection() &&
-      (splitAtStartResult.HasCaretPointSuggestion() ||
-       splitAtEndResult.HasCaretPointSuggestion())) {
-    const SplitNodeResult& splitNodeResultHavingLatestCaretSuggestion =
-        [&]() -> SplitNodeResult& {
-      if (splitAtEndResult.HasCaretPointSuggestion()) {
-        splitAtStartResult.IgnoreCaretPointSuggestion();
-        return splitAtEndResult;
-      }
-      return splitAtStartResult;
-    }();
-    nsresult rv =
-        splitNodeResultHavingLatestCaretSuggestion.SuggestCaretPointTo(
-            *this, {SuggestCaret::OnlyIfHasSuggestion});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-      return SplitRangeOffFromNodeResult(rv);
-    }
-  }
 
   return SplitRangeOffFromNodeResult(std::move(splitAtStartResult),
                                      std::move(splitAtEndResult));
@@ -5394,18 +5388,34 @@ SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
 
   SplitRangeOffFromNodeResult splitResult =
       SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent, aEndOfOutdent);
-  if (NS_WARN_IF(splitResult.EditorDestroyed())) {
+  if (splitResult.EditorDestroyed()) {
+    NS_WARNING("HTMLEditor::SplitRangeOffFromBlock() failed");
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
   if (!splitResult.GetMiddleContentAsElement()) {
     NS_WARNING(
         "HTMLEditor::SplitRangeOffFromBlock() didn't return middle content");
+    splitResult.IgnoreCaretPointSuggestion();
     return SplitRangeOffFromNodeResult(NS_ERROR_FAILURE);
   }
-  NS_WARNING_ASSERTION(
-      splitResult.isOk(),
-      "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+
+  if (splitResult.isOk()) {
+    nsresult rv = splitResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitRangeOffFromNodeResult::SuggestCaretPointTo() failed");
+      return SplitRangeOffFromNodeResult(rv);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "SplitRangeOffFromNodeResult::SuggestCaretPointTo() "
+                         "failed, but ignored");
+  } else {
+    NS_WARNING(
+        "HTMLEditor::SplitRangeOffFromBlock() failed, but might be ignored");
+  }
 
   if (aBlockIndentedWith == BlockIndentedWith::HTML) {
     Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
