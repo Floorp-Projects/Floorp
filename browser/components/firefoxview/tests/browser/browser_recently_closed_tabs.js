@@ -26,6 +26,21 @@ async function close_tab(tab) {
   await sessionStorePromise;
 }
 
+async function open_then_close(url) {
+  let { updatePromise } = await BrowserTestUtils.withNewTab(
+    url,
+    async browser => {
+      return {
+        updatePromise: BrowserTestUtils.waitForSessionStoreUpdate({
+          linkedBrowser: browser,
+        }),
+      };
+    }
+  );
+  await updatePromise;
+  return TestUtils.topicObserved("sessionstore-closed-objects-changed");
+}
+
 function clearHistory() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
 }
@@ -86,7 +101,12 @@ add_task(async function test_empty_list() {
 });
 
 add_task(async function test_list_ordering() {
-  const existingData = SessionStore.getClosedTabCount(window);
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
 
   await BrowserTestUtils.withNewTab(
     {
@@ -95,9 +115,8 @@ add_task(async function test_list_ordering() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      const closedObjectsChanged = TestUtils.topicObserved(
-        "sessionstore-closed-objects-changed"
-      );
+      const closedObjectsChanged = () =>
+        TestUtils.topicObserved("sessionstore-closed-objects-changed");
 
       const tab1 = await add_new_tab(URLs[0]);
       const tab2 = await add_new_tab(URLs[1]);
@@ -106,13 +125,13 @@ add_task(async function test_list_ordering() {
       gBrowser.selectedTab = tab3;
 
       await close_tab(tab3);
-      await closedObjectsChanged;
+      await closedObjectsChanged();
 
       await close_tab(tab2);
-      await closedObjectsChanged;
+      await closedObjectsChanged();
 
       await close_tab(tab1);
-      await closedObjectsChanged;
+      await closedObjectsChanged();
 
       const tabsList = document.querySelector("ol.closed-tabs-list");
       await BrowserTestUtils.waitForMutationCondition(
@@ -121,9 +140,9 @@ add_task(async function test_list_ordering() {
         () => tabsList.children.length > 1
       );
 
-      ok(
-        document.querySelector("ol.closed-tabs-list").children.length ===
-          3 + existingData,
+      is(
+        document.querySelector("ol.closed-tabs-list").children.length,
+        3,
         "recently-closed-tabs-list should have one list item"
       );
 
@@ -146,8 +165,22 @@ add_task(async function test_list_ordering() {
 });
 
 add_task(async function test_max_list_items() {
-  // the tabs opened from the previous test provide seed data
-  const mockMaxTabsLength = SessionStore.getClosedTabCount(window);
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  await open_then_close(URLs[0]);
+  await open_then_close(URLs[1]);
+  await open_then_close(URLs[2]);
+
+  // Seed the closed tabs count. We've assured that we've opened and
+  // closed at least three tabs because of the calls to open_then_close
+  // above.
+  let mockMaxTabsLength = 3;
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -175,17 +208,10 @@ add_task(async function test_max_list_items() {
         },
       });
 
-      ok(
-        document.querySelector("ol.closed-tabs-list").childNodes.length ===
-          mockMaxTabsLength,
+      is(
+        document.querySelector("ol.closed-tabs-list").childNodes.length,
+        mockMaxTabsLength,
         `recently-closed-tabs-list should have ${mockMaxTabsLength} list items`
-      );
-
-      ok(
-        document
-          .querySelector("ol.closed-tabs-list")
-          .firstChild.textContent.includes("about:firefoxview"),
-        "first list item in recently-closed-tabs-list is from previous test (session store)"
       );
 
       const closedObjectsChanged = TestUtils.topicObserved(
@@ -203,9 +229,9 @@ add_task(async function test_max_list_items() {
         "first list item in recently-closed-tabs-list should have been updated"
       );
 
-      ok(
-        document.querySelector("ol.closed-tabs-list").childNodes.length ===
-          mockMaxTabsLength,
+      is(
+        document.querySelector("ol.closed-tabs-list").childNodes.length,
+        mockMaxTabsLength,
         `recently-closed-tabs-list should still have ${mockMaxTabsLength} list items`
       );
     }
