@@ -36,7 +36,7 @@ allprojects {
         topsrcdir = gradle.mozconfig.topsrcdir
         topobjdir = gradle.mozconfig.topobjdir
 
-        gleanVersion = "50.0.1"
+        gleanVersion = "50.1.0"
         if (gleanVersion != getRustVersionFor("glean")) {
           throw new StopExecutionException("Mismatched Glean version, expected: ${gleanVersion}," +
               " found ${getRustVersionFor("glean")}")

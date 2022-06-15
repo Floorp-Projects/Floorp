@@ -196,7 +196,7 @@ def output_rust(
             template.render(
                 parser_version=__version__,
                 categories=categories,
-                extra_args=util.metric_args,
+                extra_metric_args=util.extra_metric_args,
                 common_metric_args=util.common_metric_args,
             )
         )
