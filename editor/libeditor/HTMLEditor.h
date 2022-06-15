@@ -1541,7 +1541,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
    * aStartOfMiddleElement and after aEndOfMiddleElement.  If they are very
-   * start or very end of aBlcok, this won't create empty block.
+   * start or very end of aBlockElement, this won't create empty block.
    *
    * @param aBlockElement           A block element which will be split.
    * @param aStartOfMiddleElement   Start node of middle block element.
@@ -4661,11 +4661,12 @@ class HTMLEditor final : public EditorBase,
                                   // CollectListChildren,
                                   // CollectNonEditableNodes,
                                   // CollectTableChildren
-  friend class SlurpBlobEventListener;  // BlobReader
-  friend class SplitNodeResult;         // CollapseSelectionTo
-  friend class SplitNodeTransaction;    // DoJoinNodes, DoSplitNode
-  friend class TransactionManager;      // DidDoTransaction, DidRedoTransaction,
-                                        // DidUndoTransaction
+  friend class SlurpBlobEventListener;       // BlobReader
+  friend class SplitNodeResult;              // CollapseSelectionTo
+  friend class SplitNodeTransaction;         // DoJoinNodes, DoSplitNode
+  friend class SplitRangeOffFromNodeResult;  // CollapseSelectionTo
+  friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
+                                    // DidUndoTransaction
   friend class
       WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
                                    // CanMoveOrDeleteSomethingInHardLine,
