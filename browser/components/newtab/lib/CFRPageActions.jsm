@@ -10,8 +10,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
@@ -881,7 +879,7 @@ const CFRPageActions = {
   async _fetchLatestAddonVersion(id) {
     let url = null;
     try {
-      const response = await lazy.fetch(`${ADDONS_API_URL}/${id}/`, {
+      const response = await fetch(`${ADDONS_API_URL}/${id}/`, {
         credentials: "omit",
       });
       if (response.status !== 204 && response.ok) {

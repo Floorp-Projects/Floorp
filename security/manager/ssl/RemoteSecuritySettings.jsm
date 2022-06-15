@@ -31,8 +31,6 @@ const CRLITE_FILTERS_ENABLED_PREF =
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", () => new TextDecoder());
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -593,7 +591,7 @@ class CRLiteFilters {
       try {
         // If we've already downloaded this, the backend should just grab it from its cache.
         let localURI = await this.client.attachments.downloadToDisk(filter);
-        let buffer = await (await lazy.fetch(localURI)).arrayBuffer();
+        let buffer = await (await fetch(localURI)).arrayBuffer();
         let bytes = new Uint8Array(buffer);
         lazy.log.debug(
           `Downloaded ${filter.details.name}: ${bytes.length} bytes`
