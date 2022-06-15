@@ -46,6 +46,7 @@ async function openFirefoxViewTab(w = window) {
   assertFirefoxViewTab(w);
   is(w.gBrowser.tabContainer.selectedIndex, 0, "Firefox View tab is selected");
   await BrowserTestUtils.browserLoaded(w.gFirefoxViewTab.linkedBrowser);
+  return w.gFirefoxViewTab;
 }
 
 function closeFirefoxViewTab(w = window) {
@@ -121,18 +122,21 @@ add_task(async function undo_close_tab() {
     "about:about"
   );
   await TestUtils.waitForTick();
+
+  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   gBrowser.removeTab(tab);
-  await TestUtils.waitForTick();
+  await sessionUpdatePromise;
   is(
     SessionStore.getClosedTabCount(window),
     1,
     "Closing about:about added to the closed tab count"
   );
 
-  await openFirefoxViewTab();
+  let viewTab = await openFirefoxViewTab();
   await TestUtils.waitForTick();
+  sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(viewTab);
   closeFirefoxViewTab();
-  await TestUtils.waitForTick();
+  await sessionUpdatePromise;
   is(
     SessionStore.getClosedTabCount(window),
     1,
