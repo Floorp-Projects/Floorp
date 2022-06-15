@@ -1359,6 +1359,29 @@ nsPIDOMWindowInner* WorkerPrivate::GetAncestorWindow() const {
   return nullptr;
 }
 
+class EvictFromBFCacheRunnable final : public WorkerProxyToMainThreadRunnable {
+ public:
+  void RunOnMainThread(WorkerPrivate* aWorkerPrivate) override {
+    MOZ_ASSERT(aWorkerPrivate);
+    AssertIsOnMainThread();
+    if (nsCOMPtr<nsPIDOMWindowInner> win =
+            aWorkerPrivate->GetAncestorWindow()) {
+      win->RemoveFromBFCacheSync();
+    }
+  }
+
+  void RunBackOnWorkerThreadForCleanup(WorkerPrivate* aWorkerPrivate) override {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+};
+
+void WorkerPrivate::EvictFromBFCache() {
+  AssertIsOnWorkerThread();
+  RefPtr<EvictFromBFCacheRunnable> runnable = new EvictFromBFCacheRunnable();
+  runnable->Dispatch(this);
+}
+
 void WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP) {
   AssertIsOnMainThread();
   if (!aCSP) {

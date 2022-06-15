@@ -114,6 +114,8 @@ void ServiceWorkerUnregisterJob::Unregister() {
     swm->MaybeSendUnregister(mPrincipal, mScope);
   }
 
+  swm->EvictFromBFCache(registration);
+
   // "Remove scope to registration map[job's scope url]."
   swm->RemoveRegistration(registration);
   MOZ_ASSERT(registration->IsUnregistered());
