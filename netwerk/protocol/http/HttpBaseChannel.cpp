@@ -4705,6 +4705,9 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     CallQueryInterface(newChannel, realChannel.StartAssignment());
     if (realChannel) {
       realChannel->SetTopWindowURI(mTopWindowURI);
+
+      realChannel->StoreTaintedOriginFlag(
+          ShouldTaintReplacementChannelOrigin(newURI));
     }
 
     // update the DocumentURI indicator since we are being redirected.
@@ -4781,6 +4784,38 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   // This channel has been redirected. Don't report timing info.
   StoreTimingEnabled(false);
   return NS_OK;
+}
+
+bool HttpBaseChannel::ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI) {
+  if (LoadTaintedOriginFlag()) {
+    return true;
+  }
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm) {
+    return true;
+  }
+  nsresult rv = ssm->CheckSameOriginURI(aNewURI, mURI, false, false);
+  if (NS_SUCCEEDED(rv)) {
+    return false;
+  }
+  // If aNewURI <-> mURI are not same-origin we need to taint unless
+  // mURI <-> mOriginalURI/LoadingPrincipal are same origin.
+
+  if (mLoadInfo->GetLoadingPrincipal()) {
+    bool sameOrigin = false;
+    rv = mLoadInfo->GetLoadingPrincipal()->IsSameOrigin(mURI, &sameOrigin);
+    if (NS_FAILED(rv)) {
+      return true;
+    }
+    return !sameOrigin;
+  }
+  if (!mOriginalURI) {
+    return true;
+  }
+
+  rv = ssm->CheckSameOriginURI(mOriginalURI, mURI, false, false);
+  return NS_FAILED(rv);
 }
 
 // Redirect Tracking
