@@ -272,6 +272,21 @@ body > main > aside {
   margin-top: 0;
 }
 
+.synced-tabs-container.loading > .card,
+.synced-tabs-container:not(.loading) > .loading-content {
+  display: none;
+}
+
+.synced-tabs-container > .loading-content {
+  text-align: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background: url(chrome://global/skin/icons/loading-dial.svg) no-repeat center top;
+  background-size: 32px;
+  margin-top: 32px;
+  padding: 48px 16px 16px;
+}
+
 .closed-tabs-list {
   padding-inline-start: 0;
 }
