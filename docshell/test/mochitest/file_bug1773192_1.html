@@ -1,0 +1,13 @@
+<script>
+  let bc = new BroadcastChannel("bug1743353");
+  bc.addEventListener("message", ({ data }) => {
+    if (data == "next") {
+      location = "file_bug1773192_2.html";
+    } else if (data == "close") {
+      window.close();
+    }
+  });
+  window.addEventListener("pageshow", () => {
+    bc.postMessage({ location: location.href, referrer: document.referrer });
+  });
+</script>

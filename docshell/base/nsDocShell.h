@@ -640,10 +640,10 @@ class nsDocShell final : public nsDocLoader,
 
   void UpdateActiveEntry(
       bool aReplace, const mozilla::Maybe<nsPoint>& aPreviousScrollPos,
-      nsIURI* aURI, nsIURI* aOriginalURI, nsIPrincipal* aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, const nsAString& aTitle,
-      bool aScrollRestorationIsManual, nsIStructuredCloneContainer* aData,
-      bool aURIWasModified);
+      nsIURI* aURI, nsIURI* aOriginalURI, nsIReferrerInfo* aReferrerInfo,
+      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      const nsAString& aTitle, bool aScrollRestorationIsManual,
+      nsIStructuredCloneContainer* aData, bool aURIWasModified);
 
   nsresult AddChildSHEntry(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
                            int32_t aChildOffset, uint32_t aLoadType,

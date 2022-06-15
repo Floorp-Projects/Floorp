@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test referrer with going back</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    // file_bug1773192_1.html will send a message with some data on pageshow.
+    function waitForData(bc) {
+      return new Promise(resolve => {
+        bc.addEventListener(
+          "message",
+          ({ data }) => {
+            resolve(data);
+          },
+          { once: true }
+        );
+      });
+    }
+    async function runTest() {
+      let bc = new BroadcastChannel("bug1743353");
+
+      let getData = waitForData(bc);
+
+      window.open("file_bug1773192_1.html", "", "noreferrer");
+
+      await getData.then(({ referrer }) => {
+        is(referrer, "", "Referrer should be empty at first.");
+      });
+
+      getData = waitForData(bc);
+
+      // When file_bug1773192_1.html receives this message it will navigate to
+      // file_bug1773192_2.html. file_bug1773192_2.html removes itself from
+      // history with replaceState and submits a form with the POST method to
+      // file_bug1773192_3.sjs. file_bug1773192_3.sjs goes back in history.
+      // We should end up back at file_bug1773192_1.html, which will send a
+      // message with some data on pageshow.
+      bc.postMessage("next");
+
+      await getData.then(({ location, referrer }) => {
+        let firstURL = new URL("file_bug1773192_1.html", location).toString();
+        is(location, firstURL, "Location should be the first page again.");
+        is(referrer, firstURL, "Referrer should also be the first page.");
+      });
+
+      bc.postMessage("close");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
