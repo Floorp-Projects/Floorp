@@ -11,8 +11,6 @@
 
 var EXPORTED_SYMBOLS = ["ChromeWindowsLoginCrypto"];
 
-Cu.importGlobalProperties(["atob", "crypto"]);
-
 const { ChromeMigrationUtils } = ChromeUtils.import(
   "resource:///modules/ChromeMigrationUtils.jsm"
 );

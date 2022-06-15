@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Cu.importGlobalProperties(["indexedDB"]);
-
 var EXPORTED_SYMBOLS = ["GlobalObjectsModule"];
 
 function GlobalObjectsModule() {}

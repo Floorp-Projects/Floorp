@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-Cu.importGlobalProperties(["fetch"]);
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 

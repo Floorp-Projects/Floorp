@@ -14,8 +14,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const RS_SERVER_PREF = "services.settings.server";
 
-Cu.importGlobalProperties(["fetch"]);
-
 const RemoteImagesTestUtils = {
   /**
    * Serve a mock Remote Settings server with content for Remote Images
