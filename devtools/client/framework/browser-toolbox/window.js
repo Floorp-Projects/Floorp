@@ -256,6 +256,11 @@ function installTestingServer() {
   DevToolsServer.registerAllActors();
   DevToolsServer.allowChromeProcess = true;
 
+  // Force this server to be kept alive until the browser toolbox process is closed.
+  // For some reason intermittents appears on Windows when destroying the server
+  // once the last connection drops.
+  DevToolsServer.keepAlive = true;
+
   // Use a fixed port which initBrowserToolboxTask can look for.
   const socketOptions = { portOrPath: 6001 };
   const listener = new SocketListener(DevToolsServer, socketOptions);
