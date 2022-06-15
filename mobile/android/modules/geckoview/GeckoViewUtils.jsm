@@ -7,13 +7,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AndroidLog: "resource://gre/modules/AndroidLog.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
-  Log: "resource://gre/modules/Log.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
@@ -22,7 +22,7 @@ var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
  * A formatter that does not prepend time/name/level information to messages,
  * because those fields are logged separately when using the Android logger.
  */
-class AndroidFormatter extends lazy.Log.BasicFormatter {
+class AndroidFormatter extends Log.BasicFormatter {
   format(message) {
     return this.formatText(message);
   }
@@ -32,20 +32,20 @@ class AndroidFormatter extends lazy.Log.BasicFormatter {
  * AndroidAppender
  * Logs to Android logcat using AndroidLog.jsm
  */
-class AndroidAppender extends lazy.Log.Appender {
+class AndroidAppender extends Log.Appender {
   constructor(aFormatter) {
     super(aFormatter || new AndroidFormatter());
     this._name = "AndroidAppender";
 
     // Map log level to AndroidLog.foo method.
     this._mapping = {
-      [lazy.Log.Level.Fatal]: "e",
-      [lazy.Log.Level.Error]: "e",
-      [lazy.Log.Level.Warn]: "w",
-      [lazy.Log.Level.Info]: "i",
-      [lazy.Log.Level.Config]: "d",
-      [lazy.Log.Level.Debug]: "d",
-      [lazy.Log.Level.Trace]: "v",
+      [Log.Level.Fatal]: "e",
+      [Log.Level.Error]: "e",
+      [Log.Level.Warn]: "w",
+      [Log.Level.Info]: "i",
+      [Log.Level.Config]: "d",
+      [Log.Level.Debug]: "d",
+      [Log.Level.Trace]: "v",
     };
   }
 
@@ -358,7 +358,7 @@ var GeckoViewUtils = {
         this._log(log.logger, level, strings, exprs);
 
       XPCOMUtils.defineLazyGetter(log, "logger", _ => {
-        const logger = lazy.Log.repository.getLogger(tag);
+        const logger = Log.repository.getLogger(tag);
         logger.parent = this.rootLogger;
         return logger;
       });
@@ -372,7 +372,7 @@ var GeckoViewUtils = {
 
   get rootLogger() {
     if (!this._rootLogger) {
-      this._rootLogger = lazy.Log.repository.getLogger("GeckoView");
+      this._rootLogger = Log.repository.getLogger("GeckoView");
       this._rootLogger.addAppender(new AndroidAppender());
       this._rootLogger.manageLevelFromPref("geckoview.logging");
     }
@@ -389,7 +389,7 @@ var GeckoViewUtils = {
       );
     }
 
-    if (aLogger.level > lazy.Log.Level.Numbers[aLevel]) {
+    if (aLogger.level > Log.Level.Numbers[aLevel]) {
       // Log disabled.
       return;
     }
