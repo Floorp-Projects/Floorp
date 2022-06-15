@@ -81,6 +81,13 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return nullptr; }
 
+// static
+bool SharedMemory::UsingPosixShm() {
+  // Undocumented feature of AppendPosixShmPrefix to reduce code
+  // duplication: if the string pointer is null, it's ignored.
+  return AppendPosixShmPrefix(nullptr, 0);
+}
+
 #ifdef ANDROID
 
 // Android has its own shared memory API, ashmem.  It doesn't support
@@ -88,6 +95,7 @@ SharedMemoryHandle SharedMemory::NULLHandle() { return nullptr; }
 // because its SELinux policy prevents the procfs operations we'd use
 // (see bug 1670277 for more details).
 
+// static
 bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   return false;
 }
@@ -261,6 +269,10 @@ static bool HaveMemfd() {
 bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   if (HaveMemfd()) {
     return false;
+  }
+  // See also UsingPosixShm().
+  if (!str) {
+    return true;
   }
   *str += '/';
 #  ifdef MOZ_WIDGET_GTK
