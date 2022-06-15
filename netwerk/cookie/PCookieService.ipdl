@@ -46,6 +46,7 @@ parent:
                           uint32_t rejectedReason,
                           bool isSafeTopLevelNav,
                           bool isSameSiteForeign,
+                          bool hadCrossSiteRedirects,
                           OriginAttributes attrs);
 
   async __delete__();
