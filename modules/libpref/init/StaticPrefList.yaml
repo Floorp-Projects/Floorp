@@ -11327,11 +11327,6 @@
 # Prefs starting with "plugins."
 #---------------------------------------------------------------------------
 
-- name: plugins.flashBlock.enabled
-  type: bool
-  value: false
-  mirror: always
-
 - name: plugins.http_https_only
   type: bool
   value: true

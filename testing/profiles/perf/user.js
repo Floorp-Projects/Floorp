@@ -77,7 +77,6 @@ user_pref("network.http.speculative-parallel-limit", 0);
 // tests. This, like many things, will stop working correctly in 2038.
 user_pref("places.database.lastMaintenance", 2147483647);
 user_pref("plugin.state.flash", 0);
-user_pref("plugins.flashBlock.enabled", false);
 user_pref("privacy.reduceTimerPrecision", false); // Bug 1445243 - reduces precision of tests
 user_pref("privacy.trackingprotection.annotate_channels", false);
 user_pref("privacy.trackingprotection.enabled", false);
