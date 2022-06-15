@@ -289,13 +289,11 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     // if profiler instrumentation is enabled.
     {
       Label skipProfilingInstrumentation;
-      Register realFramePtr = numStackValues;
       AbsoluteAddress addressOfEnabled(
           cx->runtime()->geckoProfiler().addressOfEnabled());
       masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
                     &skipProfilingInstrumentation);
-      masm.lea(Operand(rbp, sizeof(void*)), realFramePtr);
-      masm.profilerEnterFrame(realFramePtr, scratch);
+      masm.profilerEnterFrame(rbp, scratch);
       masm.bind(&skipProfilingInstrumentation);
     }
 

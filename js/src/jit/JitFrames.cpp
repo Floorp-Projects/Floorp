@@ -215,9 +215,12 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   Value& rval = rematFrame->returnValue();
   MOZ_RELEASE_ASSERT(!rval.isMagic());
 
+  // Set both framePointer and stackPointer to the address of the saved frame
+  // pointer. The profiler's exit frame trampoline will use this frame pointer.
   rfe->kind = ExceptionResumeKind::ForcedReturnIon;
-  rfe->framePointer = frame.frame().jsFrame()->callerFramePtr();
-  rfe->stackPointer = frame.frame().fp();
+  uint8_t* fp = frame.frame().fp() - CommonFrameLayout::FramePointerOffset;
+  rfe->framePointer = fp;
+  rfe->stackPointer = fp;
   rfe->exception = rval;
 
   act->removeIonFrameRecovery(frame.frame().jsFrame());
@@ -617,27 +620,26 @@ again:
   OnLeaveBaselineFrame(cx, frame, pc, rfe, frameOk);
 }
 
-static void* GetLastProfilingFrame(ResumeFromException* rfe) {
+static JitFrameLayout* GetLastProfilingFrame(ResumeFromException* rfe) {
   switch (rfe->kind) {
     case ExceptionResumeKind::EntryFrame:
     case ExceptionResumeKind::Wasm:
     case ExceptionResumeKind::WasmCatch:
       return nullptr;
 
-    // The following all return into baseline frames.
+    // The following all return into Baseline or Ion frames.
     case ExceptionResumeKind::Catch:
     case ExceptionResumeKind::Finally:
     case ExceptionResumeKind::ForcedReturnBaseline:
-      return rfe->framePointer + BaselineFrame::FramePointerOffset;
-
-    // The frame pointer in Ion points directly to the frame header.
-    case ExceptionResumeKind::ForcedReturnIon:
-      return rfe->framePointer;
+    case ExceptionResumeKind::ForcedReturnIon: {
+      uint8_t* fp = rfe->framePointer + CommonFrameLayout::FramePointerOffset;
+      return reinterpret_cast<JitFrameLayout*>(fp);
+    }
 
     // When resuming into a bailed-out ion frame, use the bailout info to
     // find the frame we are resuming into.
     case ExceptionResumeKind::Bailout:
-      return rfe->bailoutInfo->incomingStack;
+      return reinterpret_cast<JitFrameLayout*>(rfe->bailoutInfo->incomingStack);
   }
 
   MOZ_CRASH("Invalid ResumeFromException type!");
@@ -667,7 +669,7 @@ void HandleException(ResumeFromException* rfe) {
 
     MOZ_ASSERT(cx->jitActivation == cx->profilingActivation());
 
-    void* lastProfilingFrame = GetLastProfilingFrame(rfe);
+    auto* lastProfilingFrame = GetLastProfilingFrame(rfe);
     cx->jitActivation->setLastProfilingFrame(lastProfilingFrame);
   });
 

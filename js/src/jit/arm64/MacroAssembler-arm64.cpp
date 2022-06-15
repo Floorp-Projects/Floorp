@@ -306,9 +306,6 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   syncStackPtr();
   loadValue(Address(FramePointer, BaselineFrame::reverseOffsetOfReturnValue()),
             JSReturnOperand);
-  movePtr(FramePointer, PseudoStackPointer);
-  syncStackPtr();
-  vixl::MacroAssembler::Pop(ARMRegister(FramePointer, 64));
   jump(&profilingInstrumentation);
 
   // Return the given value to the caller.
@@ -337,6 +334,10 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
     jump(profilerExitTail);
     bind(&skipProfilingInstrumentation);
   }
+
+  movePtr(FramePointer, PseudoStackPointer);
+  syncStackPtr();
+  vixl::MacroAssembler::Pop(ARMRegister(FramePointer, 64));
 
   vixl::MacroAssembler::Pop(vixl::lr);
   syncStackPtr();
@@ -382,20 +383,10 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
 
 void MacroAssemblerCompat::profilerEnterFrame(Register framePtr,
                                               Register scratch) {
-  profilerEnterFrame(RegisterOrSP(framePtr), scratch);
-}
-
-void MacroAssemblerCompat::profilerEnterFrame(RegisterOrSP framePtr,
-                                              Register scratch) {
   asMasm().loadJSContext(scratch);
   loadPtr(Address(scratch, offsetof(JSContext, profilingActivation_)), scratch);
-  if (IsHiddenSP(framePtr)) {
-    storeStackPtr(
-        Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
-  } else {
-    storePtr(AsRegister(framePtr),
-             Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
-  }
+  storePtr(framePtr,
+           Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
   storePtr(ImmPtr(nullptr),
            Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
 }

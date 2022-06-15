@@ -52,21 +52,18 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   regs.take(JSReturnOperand);
   Register scratch = regs.takeAny();
 
-  // The code generated below expects that the current stack pointer points
+  // The code generated below expects that the current frame pointer points
   // to an Ion or Baseline frame, at the state it would be immediately before
-  // a ret(). Thus, after this stub's business is done, it executes a ret() and
+  // the frame epilogue and ret(). Thus, after this stub's business is done, it
+  // restores the frame pointer and stack pointer, then executes a ret() and
   // returns directly to the caller frame, on behalf of the callee script that
-  // jumped to this code. Note that the frame pointer has already been popped
-  // before entering this stub, so it now points to the caller frame.
+  // jumped to this code.
   //
+  // Thus the expected state is:
   //
-  // Thus the expected stack is:
-  //
-  //                                   StackPointer ----+
-  //                                                    v
-  // ..., ActualArgc, CalleeToken, Descriptor, ReturnAddr
-  // MEM-HI                                       MEM-LOW
-  //
+  //    [JitFrameLayout]
+  //    [CallerFramePtr] <-- FramePointer
+  //    [frame contents] <-- StackPointer
   //
   // The generated jitcode is responsible for overwriting the
   // jitActivation->lastProfilingFrame field with a pointer to the previous
@@ -117,19 +114,17 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.loadPtr(lastProfilingFrame, scratch);
     Label checkOk;
     masm.branchPtr(Assembler::Equal, scratch, ImmWord(0), &checkOk);
-    masm.branchStackPtr(Assembler::Equal, scratch, &checkOk);
+    masm.branchPtr(Assembler::Equal, FramePointer, scratch, &checkOk);
     masm.assumeUnreachable(
-        "Mismatch between stored lastProfilingFrame and current stack "
+        "Mismatch between stored lastProfilingFrame and current frame "
         "pointer.");
     masm.bind(&checkOk);
   }
 #endif
 
-  // Move SP/FP into scratch registers and use those scratch registers below, to
-  // allow unwrapping rectifier frames without clobbering FP/SP.
-  Register spScratch = regs.takeAny();
+  // Move FP into a scratch register and use that scratch register below, to
+  // allow unwrapping rectifier frames without clobbering FP.
   Register fpScratch = regs.takeAny();
-  masm.moveStackPtrTo(spScratch);
   masm.mov(FramePointer, fpScratch);
 
   Label again;
@@ -137,8 +132,9 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
 
   // Load the frame descriptor into |scratch|, figure out what to do depending
   // on its type.
-  masm.loadPtr(Address(spScratch, JitFrameLayout::offsetOfDescriptor()),
-               scratch);
+  masm.loadPtr(
+      Address(fpScratch, FPOffset + JitFrameLayout::offsetOfDescriptor()),
+      scratch);
   masm.and32(Imm32(FRAMETYPE_MASK), scratch);
 
   // Handling of each case is dependent on FrameDescriptor.type
@@ -173,18 +169,26 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     // Returning directly to a Baseline or Ion frame.
 
     // lastProfilingCallSite := ReturnAddress
-    masm.loadPtr(Address(spScratch, JitFrameLayout::offsetOfReturnAddress()),
-                 scratch);
+    masm.loadPtr(
+        Address(fpScratch, FPOffset + JitFrameLayout::offsetOfReturnAddress()),
+        scratch);
     masm.storePtr(scratch, lastProfilingCallSite);
 
     // lastProfilingFrame := CallerFrame
-    masm.computeEffectiveAddress(Address(fpScratch, FPOffset), scratch);
+    masm.loadPtr(Address(fpScratch, 0), scratch);
     masm.storePtr(scratch, lastProfilingFrame);
+
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
     masm.ret();
   }
 
   // Shared implementation for BaselineStub and IonICCall frames.
-  auto emitHandleStubFrame = [&]() {
+  auto emitHandleStubFrame = [&](FrameType expectedPrevType) {
+    // Load pointer to stub frame and assert type of its caller frame.
+    masm.loadPtr(Address(fpScratch, 0), fpScratch);
+    emitAssertPrevFrameType(fpScratch, scratch, {expectedPrevType});
+
     // lastProfilingCallSite := StubFrame.ReturnAddress
     masm.loadPtr(Address(fpScratch,
                          FPOffset + CommonFrameLayout::offsetOfReturnAddress()),
@@ -193,34 +197,33 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
 
     // lastProfilingFrame := StubFrame.CallerFrame
     masm.loadPtr(Address(fpScratch, 0), scratch);
-    masm.addPtr(Imm32(FPOffset), scratch);
     masm.storePtr(scratch, lastProfilingFrame);
+
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
     masm.ret();
   };
 
   masm.bind(&handle_BaselineStub);
   {
     // BaselineJS => BaselineStub frame.
-    emitAssertPrevFrameType(fpScratch, scratch, {FrameType::BaselineJS});
-    emitHandleStubFrame();
+    emitHandleStubFrame(FrameType::BaselineJS);
   }
 
   masm.bind(&handle_IonICCall);
   {
     // IonJS => IonICCall frame.
-    emitAssertPrevFrameType(fpScratch, scratch, {FrameType::IonJS});
-    emitHandleStubFrame();
+    emitHandleStubFrame(FrameType::IonJS);
   }
 
   masm.bind(&handle_Rectifier);
   {
     // There can be multiple previous frame types so just "unwrap" the arguments
     // rectifier frame and try again.
+    masm.loadPtr(Address(fpScratch, 0), fpScratch);
     emitAssertPrevFrameType(fpScratch, scratch,
                             {FrameType::IonJS, FrameType::BaselineStub,
                              FrameType::CppToJSJit, FrameType::WasmToJSJit});
-    masm.computeEffectiveAddress(Address(fpScratch, FPOffset), spScratch);
-    masm.loadPtr(Address(fpScratch, 0), fpScratch);
     masm.jump(&again);
   }
 
@@ -234,6 +237,9 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     masm.movePtr(ImmPtr(nullptr), scratch);
     masm.storePtr(scratch, lastProfilingCallSite);
     masm.storePtr(scratch, lastProfilingFrame);
+
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
     masm.ret();
   }
 }

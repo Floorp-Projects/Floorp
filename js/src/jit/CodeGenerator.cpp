@@ -3726,11 +3726,6 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   }
 #endif
 
-  // If profiling, save the current frame pointer to a per-thread global field.
-  if (isProfilerInstrumentationEnabled()) {
-    masm.profilerEnterFrame(masm.getStackPointer(), temp);
-  }
-
   // Allocate the full frame for this function
   // Note we have a new entry here. So we reset MacroAssembler::framePushed()
   // to 0, before reserving the stack.
@@ -3740,6 +3735,11 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   // Frame prologue.
   masm.Push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
+
+  // If profiling, save the current frame pointer to a per-thread global field.
+  if (isProfilerInstrumentationEnabled()) {
+    masm.profilerEnterFrame(FramePointer, temp);
+  }
 
   masm.reserveStack(frameSize() - sizeof(uintptr_t));
   MOZ_ASSERT(masm.framePushed() == frameSize());

@@ -1808,7 +1808,9 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   // frame.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
           cx->runtime())) {
-    cx->jitActivation->setLastProfilingFrame(iter.prevFp());
+    MOZ_ASSERT(iter.prevType() == FrameType::BaselineJS);
+    JitFrameLayout* fp = reinterpret_cast<JitFrameLayout*>(iter.prevFp());
+    cx->jitActivation->setLastProfilingFrame(fp);
   }
 
   uint32_t numFrames = bailoutInfo->numFrames;

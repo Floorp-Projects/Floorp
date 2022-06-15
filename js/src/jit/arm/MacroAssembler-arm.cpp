@@ -3425,8 +3425,6 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   }
   loadValue(Address(r11, BaselineFrame::reverseOffsetOfReturnValue()),
             JSReturnOperand);
-  ma_mov(r11, sp);
-  pop(r11);
   jump(&profilingInstrumentation);
 
   // Return the given value to the caller.
@@ -3456,6 +3454,8 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
     bind(&skipProfilingInstrumentation);
   }
 
+  ma_mov(r11, sp);
+  pop(r11);
   ret();
 
   // If we are bailing out to baseline to handle an exception, jump to the

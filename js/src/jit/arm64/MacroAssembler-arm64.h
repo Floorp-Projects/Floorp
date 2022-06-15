@@ -2109,7 +2109,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void handleFailureWithHandlerTail(Label* profilerExitTail);
 
   void profilerEnterFrame(Register framePtr, Register scratch);
-  void profilerEnterFrame(RegisterOrSP framePtr, Register scratch);
   void profilerExitFrame();
   Address ToPayload(Address value) { return value; }
   Address ToType(Address value) { return value; }

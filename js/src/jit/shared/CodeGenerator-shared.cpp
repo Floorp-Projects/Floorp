@@ -130,17 +130,17 @@ bool CodeGeneratorShared::generatePrologue() {
   masm.pushReturnAddress();
 #endif
 
-  // If profiling, save the current frame pointer to a per-thread global field.
-  if (isProfilerInstrumentationEnabled()) {
-    masm.profilerEnterFrame(masm.getStackPointer(), CallTempReg0);
-  }
-
   // Ensure that the Ion frame is properly aligned.
   masm.assertStackAlignment(JitStackAlignment, 0);
 
   // Frame prologue.
   masm.Push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
+
+  // If profiling, save the current frame pointer to a per-thread global field.
+  if (isProfilerInstrumentationEnabled()) {
+    masm.profilerEnterFrame(FramePointer, CallTempReg0);
+  }
 
   // Note that this automatically sets MacroAssembler::framePushed().
   masm.reserveStack(frameSize() - sizeof(uintptr_t));
@@ -162,16 +162,16 @@ bool CodeGeneratorShared::generateEpilogue() {
     emitTracelogIonStop();
   }
 
+  // If profiling, jump to a trampoline to reset the JitActivation's
+  // lastProfilingFrame to point to the previous frame and return to the caller.
+  if (isProfilerInstrumentationEnabled()) {
+    masm.profilerExitFrame();
+  }
+
   MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.moveToStackPtr(FramePointer);
   masm.pop(FramePointer);
   masm.setFramePushed(0);
-
-  // If profiling, reset the per-thread global lastJitFrame to point to
-  // the previous frame.
-  if (isProfilerInstrumentationEnabled()) {
-    masm.profilerExitFrame();
-  }
 
   masm.ret();
 
