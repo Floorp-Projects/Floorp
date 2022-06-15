@@ -769,7 +769,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
 nsPageBreakFrame::nsPageBreakFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext)
-    : nsLeafFrame(aStyle, aPresContext, kClassID), mHaveReflowed(false) {}
+    : nsLeafFrame(aStyle, aPresContext, kClassID) {}
 
 nsPageBreakFrame::~nsPageBreakFrame() = default;
 
@@ -789,7 +789,7 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
 
   // Override reflow, since we don't want to deal with what our
   // computed values are.
-  WritingMode wm = aReflowInput.GetWritingMode();
+  const WritingMode wm = aReflowInput.GetWritingMode();
   nscoord bSize = aReflowInput.AvailableBSize();
   if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
     bSize = nscoord(0);
@@ -798,12 +798,12 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
     // ignored since these frames are inserted inside the fieldset's inner
     // frame and thus "misplaced".  nsFieldSetFrame::Reflow deals with these
     // forced breaks explicitly instead.
-    nsContainerFrame* parent = GetParent();
+    const nsContainerFrame* parent = GetParent();
     if (parent &&
         parent->Style()->GetPseudoType() == PseudoStyleType::fieldsetContent) {
       while ((parent = parent->GetParent())) {
-        if (nsFieldSetFrame* fieldset = do_QueryFrame(parent)) {
-          auto* legend = fieldset->GetLegend();
+        if (const nsFieldSetFrame* const fieldset = do_QueryFrame(parent)) {
+          const auto* const legend = fieldset->GetLegend();
           if (legend && legend->GetContent() == GetContent()) {
             bSize = nscoord(0);
           }
@@ -818,10 +818,6 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
   finalSize.BSize(wm) -=
       finalSize.BSize(wm) % nsPresContext::CSSPixelsToAppUnits(1);
   aReflowOutput.SetSize(wm, finalSize);
-
-  // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
-  // DidReflow will always get called before the next Reflow() call.
-  mHaveReflowed = true;
 }
 
 #ifdef DEBUG_FRAME_DUMP
