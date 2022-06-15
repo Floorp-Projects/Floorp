@@ -544,7 +544,16 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
 template <typename ReturnType = CommonFrameLayout*>
 static inline ReturnType GetPreviousRawFrame(CommonFrameLayout* frame) {
   size_t prevSize = frame->prevFrameLocalSize() + frame->headerSize();
-  return ReturnType((uint8_t*)frame + prevSize);
+  uint8_t* res = (uint8_t*)frame + prevSize;
+#ifdef DEBUG
+  static constexpr size_t FPOffset = CommonFrameLayout::FramePointerOffset;
+  if (frame->prevType() == FrameType::WasmToJSJit) {
+    MOZ_ASSERT(frame->callerFramePtr() == res);
+  } else {
+    MOZ_ASSERT(frame->callerFramePtr() + FPOffset == res);
+  }
+#endif
+  return ReturnType(res);
 }
 
 JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(
