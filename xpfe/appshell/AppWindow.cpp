@@ -463,23 +463,25 @@ static LayoutDeviceIntSize GetOuterToInnerSizeDifference(nsIWidget* aWindow) {
   return windowSize - baseSize;
 }
 
-static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(nsIWidget* aWindow) {
-  if (!aWindow) {
-    return {};
-  }
+static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
+    nsIWidget* aWindow, CSSToLayoutDeviceScale aScale) {
   LayoutDeviceIntSize devPixelSize = GetOuterToInnerSizeDifference(aWindow);
-  return RoundedToInt(devPixelSize / aWindow->GetDefaultScale());
+  return RoundedToInt(devPixelSize / aScale);
 }
 
 NS_IMETHODIMP
 AppWindow::GetOuterToInnerHeightDifferenceInCSSPixels(uint32_t* aResult) {
-  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).height;
+  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+                 mWindow, UnscaledDevicePixelsPerCSSPixel())
+                 .height;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AppWindow::GetOuterToInnerWidthDifferenceInCSSPixels(uint32_t* aResult) {
-  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).width;
+  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+                 mWindow, UnscaledDevicePixelsPerCSSPixel())
+                 .width;
   return NS_OK;
 }
 
@@ -1253,12 +1255,12 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
 
   // Convert to global display pixels for consistent window management across
   // screens with diverse resolutions
-  double devToDesktopScale = 1.0 / mWindow->GetDesktopToDeviceScale().scale;
+  double devToDesktopScale = 1.0 / DevicePixelsPerDesktopPixel().scale;
   currX = NSToIntRound(currX * devToDesktopScale);
   currY = NSToIntRound(currY * devToDesktopScale);
 
   // For size, use specified value if > 0, else current value
-  double devToCSSScale = 1.0 / mWindow->GetDefaultScale().scale;
+  double devToCSSScale = 1.0 / UnscaledDevicePixelsPerCSSPixel().scale;
   int32_t cssWidth =
       aSpecWidth > 0 ? aSpecWidth : NSToIntRound(currWidth * devToCSSScale);
   int32_t cssHeight =
@@ -1802,7 +1804,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
   settings.height = aRect.Height();
 
   settings.maximized = mWindow->SizeMode() == nsSizeMode_Maximized;
-  settings.cssToDevPixelScaling = mWindow->GetDefaultScale().scale;
+  settings.cssToDevPixelScaling = UnscaledDevicePixelsPerCSSPixel().scale;
 
   nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   Document* doc = windowElement->GetComposedDoc();
@@ -1998,8 +2000,8 @@ NS_IMETHODIMP AppWindow::SavePersistentAttributes() {
   bool gotRestoredBounds = NS_SUCCEEDED(mWindow->GetRestoredBounds(rect));
 
   // we use CSS pixels for size, but desktop pixels for position
-  CSSToLayoutDeviceScale sizeScale = mWindow->GetDefaultScale();
-  DesktopToLayoutDeviceScale posScale = mWindow->GetDesktopToDeviceScale();
+  CSSToLayoutDeviceScale sizeScale = UnscaledDevicePixelsPerCSSPixel();
+  DesktopToLayoutDeviceScale posScale = DevicePixelsPerDesktopPixel();
 
   // make our position relative to our parent, if any
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
@@ -2622,7 +2624,8 @@ void AppWindow::SizeShell() {
     windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
   }
 
-  CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow);
+  CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(
+      mWindow, UnscaledDevicePixelsPerCSSPixel());
 
   // If we're using fingerprint resistance, we're going to resize the window
   // once we have primary content.
