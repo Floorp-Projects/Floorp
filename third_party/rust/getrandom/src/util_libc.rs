@@ -6,13 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 #![allow(dead_code)]
-use crate::Error;
-use core::{
-    num::NonZeroU32,
-    ptr::NonNull,
-    sync::atomic::{fence, AtomicPtr, Ordering},
-};
-use libc::c_void;
+use crate::{util::LazyUsize, Error};
+use core::{num::NonZeroU32, ptr::NonNull};
 
 cfg_if! {
     if #[cfg(any(target_os = "netbsd", target_os = "openbsd", target_os = "android"))] {
@@ -81,57 +76,29 @@ pub fn sys_fill_exact(
 
 // A "weak" binding to a C function that may or may not be present at runtime.
 // Used for supporting newer OS features while still building on older systems.
-// Based off of the DlsymWeak struct in libstd:
-// https://github.com/rust-lang/rust/blob/1.61.0/library/std/src/sys/unix/weak.rs#L84
-// except that the caller must manually cast self.ptr() to a function pointer.
+// F must be a function pointer of type `unsafe extern "C" fn`. Based off of the
+// weak! macro in libstd.
 pub struct Weak {
     name: &'static str,
-    addr: AtomicPtr<c_void>,
+    addr: LazyUsize,
 }
 
 impl Weak {
-    // A non-null pointer value which indicates we are uninitialized. This
-    // constant should ideally not be a valid address of a function pointer.
-    // However, if by chance libc::dlsym does return UNINIT, there will not
-    // be undefined behavior. libc::dlsym will just be called each time ptr()
-    // is called. This would be inefficient, but correct.
-    // TODO: Replace with core::ptr::invalid_mut(1) when that is stable.
-    const UNINIT: *mut c_void = 1 as *mut c_void;
-
     // Construct a binding to a C function with a given name. This function is
     // unsafe because `name` _must_ be null terminated.
     pub const unsafe fn new(name: &'static str) -> Self {
         Self {
             name,
-            addr: AtomicPtr::new(Self::UNINIT),
+            addr: LazyUsize::new(),
         }
     }
 
-    // Return the address of a function if present at runtime. Otherwise,
-    // return None. Multiple callers can call ptr() concurrently. It will
-    // always return _some_ value returned by libc::dlsym. However, the
-    // dlsym function may be called multiple times.
-    pub fn ptr(&self) -> Option<NonNull<c_void>> {
-        // Despite having only a single atomic variable (self.addr), we still
-        // cannot always use Ordering::Relaxed, as we need to make sure a
-        // successful call to dlsym() is "ordered before" any data read through
-        // the returned pointer (which occurs when the function is called).
-        // Our implementation mirrors that of the one in libstd, meaning that
-        // the use of non-Relaxed operations is probably unnecessary.
-        match self.addr.load(Ordering::Relaxed) {
-            Self::UNINIT => {
-                let symbol = self.name.as_ptr() as *const _;
-                let addr = unsafe { libc::dlsym(libc::RTLD_DEFAULT, symbol) };
-                // Synchronizes with the Acquire fence below
-                self.addr.store(addr, Ordering::Release);
-                NonNull::new(addr)
-            }
-            addr => {
-                let func = NonNull::new(addr)?;
-                fence(Ordering::Acquire);
-                Some(func)
-            }
-        }
+    // Return a function pointer if present at runtime. Otherwise, return null.
+    pub fn ptr(&self) -> Option<NonNull<libc::c_void>> {
+        let addr = self.addr.unsync_init(|| unsafe {
+            libc::dlsym(libc::RTLD_DEFAULT, self.name.as_ptr() as *const _) as usize
+        });
+        NonNull::new(addr as *mut _)
     }
 }
 
