@@ -72,7 +72,13 @@ class EarlyHintPreloader final : public nsIStreamListener,
   ~EarlyHintPreloader() = default;
 
   static Maybe<PreloadHashKey> GenerateHashKey(ASDestination aAs, nsIURI* aURI,
-                                               nsIPrincipal* aPrincipal);
+                                               nsIPrincipal* aPrincipal,
+                                               CORSMode corsMode,
+                                               const nsAString& aType);
+
+  static nsSecurityFlags ComputeSecurityFlags(CORSMode aCORSMode,
+                                              ASDestination aAs,
+                                              bool aIsModule);
 
   // call to start the preload
   nsresult OpenChannel(nsIPrincipal* aTriggeringPrincipal,
