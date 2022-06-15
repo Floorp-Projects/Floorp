@@ -122,7 +122,7 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   BailoutFrameInfo bailoutData(jitActivations, sp);
   JSJitFrameIter frame(jitActivations->asJit());
   MOZ_ASSERT(!frame.ionScript()->invalidated());
-  CommonFrameLayout* currentFramePtr = frame.current();
+  JitFrameLayout* currentFramePtr = frame.jsFrame();
 
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLogTimestamp(logger, TraceLogger_Bailout);
@@ -194,7 +194,7 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
   JitActivationIterator jitActivations(cx);
   BailoutFrameInfo bailoutData(jitActivations, sp);
   JSJitFrameIter frame(jitActivations->asJit());
-  CommonFrameLayout* currentFramePtr = frame.current();
+  JitFrameLayout* currentFramePtr = frame.jsFrame();
 
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLogTimestamp(logger, TraceLogger_Invalidation);
@@ -276,7 +276,7 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
   JitActivationIterator jitActivations(cx);
   BailoutFrameInfo bailoutData(jitActivations, frame.frame());
   JSJitFrameIter frameView(jitActivations->asJit());
-  CommonFrameLayout* currentFramePtr = frameView.current();
+  JitFrameLayout* currentFramePtr = frameView.jsFrame();
 
   BaselineBailoutInfo* bailoutInfo = nullptr;
   bool success = BailoutIonToBaseline(cx, bailoutData.activation(), frameView,

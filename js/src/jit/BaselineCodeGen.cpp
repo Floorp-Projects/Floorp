@@ -1444,11 +1444,6 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     //  +---[Saved-FramePtr]
     //      [...Baseline-Frame...]
 
-    // Restore the stack pointer so that the return address is on top of
-    // the stack.
-    masm.moveToStackPtr(FramePointer);
-    masm.pop(FramePointer);
-
 #ifdef DEBUG
     // Get a scratch register that's not osrDataReg or OsrFrameReg.
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -1477,11 +1472,16 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
       // lastProfilingFrame to be null.
       masm.branchPtr(Assembler::Equal, scratchReg, ImmWord(0), &checkOk);
 
-      masm.branchStackPtr(Assembler::Equal, scratchReg, &checkOk);
+      masm.branchPtr(Assembler::Equal, FramePointer, scratchReg, &checkOk);
       masm.assumeUnreachable("Baseline OSR lastProfilingFrame mismatch.");
       masm.bind(&checkOk);
     }
 #endif
+
+    // Restore the stack pointer so that the return address is on top of
+    // the stack.
+    masm.moveToStackPtr(FramePointer);
+    masm.pop(FramePointer);
 
     // Jump into Ion.
     masm.loadPtr(Address(osrDataReg, IonOsrTempData::offsetOfBaselineFrame()),
@@ -1683,7 +1683,7 @@ void BaselineCodeGen<Handler>::emitProfilerEnterFrame() {
   // jump. Starts off initially disabled.
   Label noInstrument;
   CodeOffset toggleOffset = masm.toggledJump(&noInstrument);
-  masm.profilerEnterFrame(masm.getStackPointer(), R0.scratchReg());
+  masm.profilerEnterFrame(FramePointer, R0.scratchReg());
   masm.bind(&noInstrument);
 
   // Store the start offset in the appropriate location.
@@ -5909,6 +5909,10 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.pushReturnAddress();
 #endif
 
+  // Construct BaselineFrame.
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   // If profiler instrumentation is on, update lastProfilingFrame on
   // current JitActivation
   {
@@ -5920,14 +5924,12 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
     masm.loadJSContext(scratchReg);
     masm.loadPtr(Address(scratchReg, JSContext::offsetOfProfilingActivation()),
                  scratchReg);
-    masm.storeStackPtr(
+    masm.storePtr(
+        FramePointer,
         Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()));
     masm.bind(&skip);
   }
 
-  // Construct BaselineFrame.
-  masm.push(FramePointer);
-  masm.moveStackPtrTo(FramePointer);
   masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
   masm.assertStackAlignment(sizeof(Value), 0);
 
@@ -6340,10 +6342,12 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   masm.pushReturnAddress();
   masm.checkStackAlignment();
 #endif
-  emitProfilerEnterFrame();
 
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
+
+  emitProfilerEnterFrame();
+
   masm.subFromStackPtr(Imm32(BaselineFrame::Size()));
 
   // Initialize BaselineFrame. Also handles env chain pre-initialization (in
@@ -6420,10 +6424,10 @@ bool BaselineCodeGen<Handler>::emitEpilogue() {
   }
 #endif
 
+  emitProfilerExitFrame();
+
   masm.moveToStackPtr(FramePointer);
   masm.pop(FramePointer);
-
-  emitProfilerExitFrame();
 
   masm.ret();
   return true;

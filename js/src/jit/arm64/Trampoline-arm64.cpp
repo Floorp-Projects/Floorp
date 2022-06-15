@@ -254,6 +254,18 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     Label error;
     masm.branchIfFalseBool(ReturnReg, &error);
 
+    // If OSR-ing, then emit instrumentation for setting lastProfilerFrame
+    // if profiler instrumentation is enabled.
+    {
+      Label skipProfilingInstrumentation;
+      AbsoluteAddress addressOfEnabled(
+          cx->runtime()->geckoProfiler().addressOfEnabled());
+      masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
+                    &skipProfilingInstrumentation);
+      masm.profilerEnterFrame(FramePointer, regs.getAny());
+      masm.bind(&skipProfilingInstrumentation);
+    }
+
     masm.jump(scratch);
 
     // OOM: frame epilogue, load error value, discard return address and return.

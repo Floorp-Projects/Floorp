@@ -23,6 +23,7 @@
 #include "vm/JSScript.h"
 
 #include "gc/Marking-inl.h"
+#include "jit/JSJitFrameIter-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;
@@ -51,7 +52,7 @@ void GeckoProfilerRuntime::setEventMarker(void (*fn)(const char*,
 }
 
 // Get a pointer to the top-most profiling frame, given the exit frame pointer.
-static void* GetTopProfilingJitFrame(Activation* act) {
+static jit::JitFrameLayout* GetTopProfilingJitFrame(Activation* act) {
   if (!act || !act->isJit()) {
     return nullptr;
   }
@@ -72,7 +73,7 @@ static void* GetTopProfilingJitFrame(Activation* act) {
   jit::JSJitProfilingFrameIterator jitIter(
       (jit::CommonFrameLayout*)iter.frame().fp());
   MOZ_ASSERT(!jitIter.done());
-  return jitIter.fp();
+  return jitIter.framePtr();
 }
 
 void GeckoProfilerRuntime::enable(bool enabled) {
@@ -122,7 +123,7 @@ void GeckoProfilerRuntime::enable(bool enabled) {
     // appropriately.
     if (enabled) {
       Activation* act = cx->activation();
-      void* lastProfilingFrame = GetTopProfilingJitFrame(act);
+      auto* lastProfilingFrame = GetTopProfilingJitFrame(act);
 
       jit::JitActivation* jitActivation = cx->jitActivation;
       while (jitActivation) {
