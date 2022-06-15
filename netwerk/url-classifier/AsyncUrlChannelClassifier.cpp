@@ -576,7 +576,7 @@ class FeatureTask {
 
 // Features are able to classify particular URIs from a channel. For instance,
 // tracking-annotation feature uses the top-level URI to entitylist the current
-// channel's URI; flash feature always uses the channel's URI.  Because of
+// channel's URI.  Because of
 // this, this function aggregates feature per URI and tables.
 /* static */
 nsresult FeatureTask::Create(nsIChannel* aChannel,
