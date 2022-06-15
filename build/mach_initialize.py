@@ -541,7 +541,8 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
         # psutil may not be available (we may not have been able to download
         # a wheel or build it from source).
         system_metrics.logical_cores.add(logical_cores)
-        system_metrics.physical_cores.add(physical_cores)
+        if physical_cores is not None:
+            system_metrics.physical_cores.add(physical_cores)
         if memory_total is not None:
             system_metrics.memory.accumulate(
                 int(math.ceil(float(memory_total) / (1024 * 1024 * 1024)))
