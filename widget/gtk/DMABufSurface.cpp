@@ -462,7 +462,7 @@ bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext,
     return false;
   }
 
-  LOGDMABUF(("  imported size %d x %d format %x planes %d modifiers %lx",
+  LOGDMABUF(("  imported size %d x %d format %x planes %d modifiers %" PRIx64,
              mWidth, mHeight, mDrmFormats[0], mBufferPlaneCount,
              mBufferModifiers[0]));
   return true;
