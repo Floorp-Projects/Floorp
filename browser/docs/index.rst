@@ -8,7 +8,6 @@ This is the nascent documentation of the Firefox front-end code.
    :maxdepth: 2
 
    urlbar/index
-   /toolkit/mozapps/update/docs/BackgroundUpdates
    BrowserUsageTelemetry
    CommandLineParameters
    components/enterprisepolicies/docs/index
