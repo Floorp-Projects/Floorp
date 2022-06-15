@@ -164,11 +164,8 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   // use the base uri
   NS_ENSURE_SUCCESS_VOID(aHeader.NewResolveHref(getter_AddRefs(uri), aBaseURI));
 
-  // Only make same origin preloads, the fromPrivateWindow is only read when
-  // reportError is enabled, so setting both to false is safe.
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          aBaseURI, uri, /* reportError */ false,
-          /* fromPrivateWindow */ false))) {
+  // only preload secure context urls
+  if (!uri->SchemeIs("https")) {
     return;
   }
 
@@ -324,12 +321,8 @@ EarlyHintPreloader::AsyncOnChannelRedirect(
     return NS_OK;
   }
 
-  // abort the request if redirecting to cross origin resource, the
-  // fromPrivateWindow is only read when reportError is enabled, so setting both
-  // to false is safe.
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          mURI, newURI, /* reportError */ false,
-          /* fromPrivateWindow */ false))) {
+  // abort the request if redirecting to insecure context
+  if (!newURI->SchemeIs("https")) {
     callback->OnRedirectVerifyCallback(NS_ERROR_ABORT);
     return NS_OK;
   }
