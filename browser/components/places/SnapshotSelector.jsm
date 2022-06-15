@@ -274,7 +274,12 @@ class SnapshotSelector extends lazy.EventEmitter {
 
           lazy.logConsole.debug(
             `Found ${key} recommendations:`,
-            recommendations.map(r => r.snapshot.url)
+            recommendations.map(
+              r =>
+                `${r.snapshot.url} (score: ${r.score}${
+                  r.data ? ", data: " + JSON.stringify(r.data) : ""
+                })`
+            )
           );
 
           return { recommendations, weight };
