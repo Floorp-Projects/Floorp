@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "rust_decimal"
-version = "1.24.0"
+version = "1.25.0"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 build = "build.rs"
 exclude = ["tests/generated/*"]
@@ -57,6 +57,11 @@ version = "0.9.3"
 optional = true
 default-features = false
 
+[dependencies.bytecheck]
+version = "0.6"
+optional = true
+default-features = false
+
 [dependencies.byteorder]
 version = "1.3"
 optional = true
@@ -84,6 +89,15 @@ default-features = false
 
 [dependencies.rand]
 version = "0.8"
+optional = true
+default-features = false
+
+[dependencies.rkyv]
+version = "0.7"
+features = [
+    "size_32",
+    "std",
+]
 optional = true
 default-features = false
 
@@ -186,6 +200,11 @@ default = [
 legacy-ops = []
 maths = []
 maths-nopanic = ["maths"]
+rkyv-safe = [
+    "bytecheck",
+    "rkyv",
+    "rkyv/validation",
+]
 rocket-traits = ["rocket"]
 rust-fuzz = ["arbitrary"]
 serde-arbitrary-precision = ["serde-with-arbitrary-precision"]

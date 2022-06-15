@@ -7,7 +7,6 @@ mod constants;
 mod decimal;
 mod error;
 mod ops;
-mod rand;
 mod str;
 
 // We purposely place this here for documentation ordering
@@ -25,6 +24,8 @@ mod mysql;
     feature = "db-diesel-postgres",
 ))]
 mod postgres;
+#[cfg(feature = "rand")]
+mod rand;
 #[cfg(feature = "rocket-traits")]
 mod rocket;
 #[cfg(all(
