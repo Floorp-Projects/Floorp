@@ -186,13 +186,13 @@ toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active)
 }
 
 /* Keyboard focus styling */
+.titlebar-button:focus-visible,
 #PersonalToolbar .toolbarbutton-1:focus-visible,
 findbar toolbarbutton.tabbable:focus-visible,
 toolbarbutton.bookmark-item:not(.subviewbutton):focus-visible,
 toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-icon,
 toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-text,
 toolbar:not(#PersonalToolbar) .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
-  color: inherit;
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
 }

@@ -176,8 +176,8 @@ panelview[mainview] > .panel-header {
 }
 
 #tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
-#tabbrowser-tabs[overflow="true"] > #tabbrowser-arrowscrollbox > #tabs-newtab-button,
-#tabbrowser-tabs:not([hasadjacentnewtabbutton]) > #tabbrowser-arrowscrollbox > #tabs-newtab-button,
+#tabbrowser-tabs[overflow="true"] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#tabbrowser-tabs:not([hasadjacentnewtabbutton]) > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
 #TabsToolbar[customizing="true"] #tabs-newtab-button {
   display: none;
 }
