@@ -13,10 +13,6 @@
  * let Log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm")
  *   .AndroidLog;
  *
- * // Or require it in a chrome worker:
- * importScripts("resource://gre/modules/workers/require.js");
- * let Log = require("resource://gre/modules/AndroidLog.jsm");
- *
  * // Use Log.i, Log.v, Log.d, Log.w, and Log.e to log verbose, debug, info,
  * // warning, and error messages, respectively.
  * Log.v("MyModule", "This is a verbose message.");
@@ -40,14 +36,8 @@
  * truncates tags longer than MAX_TAG_LENGTH characters (not including "Gecko").
  */
 
-if (typeof Components != "undefined") {
-  // Specify exported symbols for JSM module loader.
-  //
-  // (bug 1773390)
-  // eslint-disable-next-line mozilla/reject-global-this
-  this.EXPORTED_SYMBOLS = ["AndroidLog"];
-  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-}
+const EXPORTED_SYMBOLS = ["AndroidLog"];
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
 // From <https://android.googlesource.com/platform/system/core/+/master/include/android/log.h>.
 const ANDROID_LOG_VERBOSE = 2;
