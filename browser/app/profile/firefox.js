@@ -1220,8 +1220,6 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 // just save on Accept, once the project is complete.
 pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
 
-pref("dom.ipc.shims.enabledWarnings", false);
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   // This controls the strength of the Windows content process sandbox for
   // testing purposes. This will require a restart.
