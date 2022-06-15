@@ -58,6 +58,11 @@ const MessageState = overrides =>
         // List of all the messages added to the console. Unlike other properties, this Map
         // will be mutated on state changes for performance reasons.
         mutableMessagesById: new Map(),
+        // Array of message ids, in chronological order. We use a dedicated property to store
+        // the order (instead of relying on the order of insertion in mutableMessagesById)
+        // as we might receive messages that need to be inserted at a specific index. Doing
+        // so on the Map can be costly, especially when the Map holds lots of messages.
+        mutableMessagesOrder: [],
         // List of elements matching the selector of CSS Warning messages(populated
         // on-demand via the UI).
         cssMessagesMatchingElements: new Map(),
@@ -103,6 +108,7 @@ function cloneState(state) {
     warningGroupsById: new Map(state.warningGroupsById),
     // no need to mutate the properties below as they're not directly triggering re-render
     mutableMessagesById: state.mutableMessagesById,
+    mutableMessagesOrder: state.mutableMessagesOrder,
     currentGroup: state.currentGroup,
     lastMessageId: state.lastMessageId,
   };
@@ -261,21 +267,25 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   // If the new message isn't the "oldest" one, then we need to insert it at the right
   // position in the message map.
   if (isUnsorted) {
-    const entries = Array.from(state.mutableMessagesById.entries());
-    const newMessageIndex = entries.findIndex(
-      entry => entry[1].timeStamp > addedMessage.timeStamp
-    );
-    // This shouldn't happen as `isUnsorted` would only be true if the last message is
-    // younger than the added message.
-    if (newMessageIndex === -1) {
-      state.mutableMessagesById.set(addedMessage.id, addedMessage);
-    } else {
-      entries.splice(newMessageIndex, 0, [addedMessage.id, addedMessage]);
-      state.mutableMessagesById = new Map(entries);
+    let newMessageIndex = 0;
+    // This is can be on a hot path, so we're not using `findIndex`, which could be slow.
+    // Furthermore, there's a high chance the message beed to be inserted somewhere at the
+    // end of the list, so we loop through mutableMessagesOrder in reverse order.
+    for (let i = state.mutableMessagesOrder.length - 1; i >= 0; i--) {
+      const message = state.mutableMessagesById.get(
+        state.mutableMessagesOrder[i]
+      );
+      if (message.timeStamp <= addedMessage.timeStamp) {
+        newMessageIndex = i + 1;
+        break;
+      }
     }
+
+    state.mutableMessagesOrder.splice(newMessageIndex, 0, addedMessage.id);
   } else {
-    state.mutableMessagesById.set(addedMessage.id, addedMessage);
+    state.mutableMessagesOrder.push(addedMessage.id);
   }
+  state.mutableMessagesById.set(addedMessage.id, addedMessage);
 
   if (newMessage.type === "trace") {
     // We want the stacktrace to be open by default.
@@ -322,16 +332,20 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     } else if (isUnsorted) {
       // If the new message wasn't the "oldest" one, then we need to insert its id at
       // the right position in the array.
-      const index = state.visibleMessages.findIndex(
-        id => state.mutableMessagesById.get(id).timeStamp > newMessage.timeStamp
-      );
-      // If the index wasn't found, it means the new message is the oldest of the visible
-      // messages, so we can directly push it into the array.
-      if (index == -1) {
-        state.visibleMessages.push(newMessage.id);
-      } else {
-        state.visibleMessages.splice(index, 0, newMessage.id);
+      // This is can be on a hot path, so we're not using `findIndex`, which could be slow.
+      // Furthermore, there's a high chance the message beed to be inserted somewhere at the
+      // end of the list, so we loop through visibleMessages in reverse order.
+      let index = 0;
+      for (let i = state.visibleMessages.length - 1; i >= 0; i--) {
+        const id = state.visibleMessages[i];
+        if (
+          state.mutableMessagesById.get(id).timeStamp <= newMessage.timeStamp
+        ) {
+          index = i + 1;
+          break;
+        }
       }
+      state.visibleMessages.splice(index, 0, newMessage.id);
     } else {
       state.visibleMessages.push(newMessage.id);
     }
@@ -465,7 +479,8 @@ function messages(
       if (isGroupType(currMessage.type) || isWarningGroup(currMessage)) {
         // We want to make its children visible
         const messagesToShow = [];
-        for (const [id, message] of mutableMessagesById) {
+        for (const id of state.mutableMessagesOrder) {
+          const message = mutableMessagesById.get(id);
           if (
             !visibleMessages.includes(message.id) &&
             ((isWarningGroup(currMessage) && !!getWarningGroupType(message)) ||
@@ -631,7 +646,8 @@ function messages(
       }
 
       let needSort = false;
-      for (const [msgId, message] of state.mutableMessagesById) {
+      for (const msgId of state.mutableMessagesOrder) {
+        const message = state.mutableMessagesById.get(msgId);
         const warningGroupType = getWarningGroupType(message);
         if (warningGroupType) {
           const warningGroupMessageId = getParentWarningGroupMessageId(message);
@@ -714,6 +730,7 @@ function setVisibleMessages({
 }) {
   const {
     mutableMessagesById,
+    mutableMessagesOrder,
     visibleMessages,
     messagesUiById,
   } = messagesState;
@@ -722,7 +739,8 @@ function setVisibleMessages({
   const matchedGroups = new Set();
   const filtered = getDefaultFiltersCounter();
 
-  mutableMessagesById.forEach((message, msgId) => {
+  mutableMessagesOrder.forEach(msgId => {
+    const message = mutableMessagesById.get(msgId);
     const groupParentId = message.groupId;
     let hasMatchedAncestor = false;
     const ancestors = [];
@@ -877,7 +895,8 @@ function limitTopLevelMessageCount(newState, logLimit) {
   const removedMessagesId = [];
 
   let cleaningGroup = false;
-  for (const [id, message] of newState.mutableMessagesById) {
+  for (const id of newState.mutableMessagesOrder) {
+    const message = newState.mutableMessagesById.get(id);
     // If we were cleaning a group and the current message does not have
     // a groupId, we're done cleaning.
     if (cleaningGroup === true && !message.groupId) {
@@ -962,7 +981,13 @@ function removeMessagesFromState(state, removedMessagesIds) {
       return res;
     }, {});
 
-  removedMessagesIds.forEach(id => state.mutableMessagesById.delete(id));
+  removedMessagesIds.forEach(id => {
+    state.mutableMessagesById.delete(id);
+    state.mutableMessagesOrder.splice(
+      state.mutableMessagesOrder.indexOf(id),
+      1
+    );
+  });
 
   if (state.messagesUiById.find(isInRemovedId)) {
     state.messagesUiById = state.messagesUiById.filter(
