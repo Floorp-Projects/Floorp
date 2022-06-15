@@ -619,6 +619,41 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleParent::RecvSelectedAccessiblesChanged(
+    nsTArray<uint64_t>&& aSelectedIDs, nsTArray<uint64_t>&& aUnselectedIDs) {
+  ACQUIRE_ANDROID_LOCK
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
+  for (auto& id : aSelectedIDs) {
+    RemoteAccessible* remote = GetAccessible(id);
+    if (!remote) {
+      MOZ_ASSERT_UNREACHABLE("No remote found!");
+      continue;
+    }
+
+    remote->UpdateStateCache(states::SELECTED, true);
+  }
+
+  for (auto& id : aUnselectedIDs) {
+    RemoteAccessible* remote = GetAccessible(id);
+    if (!remote) {
+      MOZ_ASSERT_UNREACHABLE("No remote found!");
+      continue;
+    }
+
+    remote->UpdateStateCache(states::SELECTED, false);
+  }
+
+  if (nsCOMPtr<nsIObserverService> obsService =
+          services::GetObserverService()) {
+    obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleParent::RecvAccessiblesWillMove(
     nsTArray<uint64_t>&& aIDs) {
   for (uint64_t id : aIDs) {
