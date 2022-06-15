@@ -152,22 +152,25 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
                                             Cookie* aCookie,
                                             bool aIsSafeTopLevelNav,
                                             bool aLaxByDefault) {
-  int32_t sameSiteAttr = 0;
-  aCookie->GetSameSite(&sameSiteAttr);
-
-  // it if's a cross origin request and the cookie is same site only (strict)
-  // don't send it
-  if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
+  // If it's a cross-site request and the cookie is same site only (strict)
+  // don't send it.
+  if (aCookie->SameSite() == nsICookie::SAMESITE_STRICT) {
     return false;
+  }
+
+  // Explicit SameSite=None cookies are always processed. When laxByDefault
+  // is OFF then so are default cookies.
+  if (aCookie->SameSite() == nsICookie::SAMESITE_NONE ||
+      (!aLaxByDefault && aCookie->IsDefaultSameSite())) {
+    return true;
   }
 
   int64_t currentTimeInUsec = PR_Now();
 
   // 2 minutes of tolerance for 'SameSite=Lax by default' for cookies set
   // without a SameSite value when used for unsafe http methods.
-  if (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() > 0 &&
-      aLaxByDefault && sameSiteAttr == nsICookie::SAMESITE_LAX &&
-      aCookie->RawSameSite() == nsICookie::SAMESITE_NONE &&
+  if (aLaxByDefault && aCookie->IsDefaultSameSite() &&
+      StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() > 0 &&
       currentTimeInUsec - aCookie->CreationTime() <=
           (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() *
            PR_USEC_PER_SEC) &&
@@ -175,9 +178,11 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
     return true;
   }
 
-  // if it's a cross origin request, the cookie is same site lax, but it's not a
-  // top-level navigation, don't send it
-  return sameSiteAttr != nsICookie::SAMESITE_LAX || aIsSafeTopLevelNav;
+  MOZ_ASSERT((aLaxByDefault && aCookie->IsDefaultSameSite()) ||
+             aCookie->SameSite() == nsICookie::SAMESITE_LAX);
+  // We only have SameSite=Lax or lax-by-default cookies at this point.  These
+  // are processed only if it's a top-level navigation
+  return aIsSafeTopLevelNav;
 }
 
 }  // namespace
@@ -486,7 +491,9 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
 
   bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(aChannel, aHostURI);
+  bool hadCrossSiteRedirects = false;
+  bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(
+      aChannel, aHostURI, &hadCrossSiteRedirects);
 
   AutoTArray<Cookie*, 8> foundCookieList;
   GetCookiesForURI(
@@ -494,8 +501,8 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, true, attrs,
-      foundCookieList);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
+      hadCrossSiteRedirects, true, attrs, foundCookieList);
 
   ComposeCookieString(foundCookieList, aCookieString);
 
@@ -895,12 +902,26 @@ CookieService::RemoveNative(const nsACString& aHost, const nsACString& aName,
   return NS_OK;
 }
 
+enum class CookieProblem : uint32_t {
+  None = 0,
+  // Same-Site cookies (default or explicit) blocked due to redirect
+  RedirectDefault = 1 << 0,
+  RedirectExplicit = 1 << 1,
+  // Special case for googleads Same-Site cookies
+  RedirectGoogleAds = 1 << 2,
+  // Blocked due to other reasons
+  OtherDefault = 1 << 3,
+  OtherExplicit = 1 << 4
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CookieProblem)
+
 void CookieService::GetCookiesForURI(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
     bool aIsThirdPartyTrackingResource,
     bool aIsThirdPartySocialTrackingResource,
     bool aStorageAccessPermissionGranted, uint32_t aRejectedReason,
-    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
+    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign,
+    bool aHadCrossSiteRedirects, bool aHttpBound,
     const OriginAttributes& aOriginAttrs, nsTArray<Cookie*>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -1003,6 +1024,13 @@ void CookieService::GetCookiesForURI(
       !nsContentUtils::IsURIInPrefList(
           aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
 
+  // We are counting blocked SameSite cookies to get an idea of
+  // potential website breakage before we reintroduce "laxByDefault".
+  // Special attention is paid to redirects where our behavior
+  // differs from Chrome (bug 1763073, crbug/1221316).
+  //
+  CookieProblem sameSiteProblems = CookieProblem::None;
+
   // iterate the cookies!
   for (Cookie* cookie : *cookies) {
     // check the host, since the base domain lookup is conservative.
@@ -1012,12 +1040,6 @@ void CookieService::GetCookiesForURI(
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) {
-      continue;
-    }
-
-    if (aHttpBound && aIsSameSiteForeign &&
-        !ProcessSameSiteCookieForForeignRequest(
-            aChannel, cookie, aIsSafeTopLevelNav, laxByDefault)) {
       continue;
     }
 
@@ -1037,6 +1059,49 @@ void CookieService::GetCookiesForURI(
       continue;
     }
 
+    if (aHttpBound && aIsSameSiteForeign) {
+      bool blockCookie = !ProcessSameSiteCookieForForeignRequest(
+          aChannel, cookie, aIsSafeTopLevelNav, laxByDefault);
+
+      // Record telemetry for blocked sameSite cookies. If laxByDefault is off,
+      // re-run the check to see if we would get different results with it
+      // turned on.
+      if (blockCookie || (!laxByDefault && cookie->IsDefaultSameSite() &&
+                          !ProcessSameSiteCookieForForeignRequest(
+                              aChannel, cookie, aIsSafeTopLevelNav, true))) {
+        if (aHadCrossSiteRedirects) {
+          // Count the known problematic Google cookies from
+          // adservice.google.{com, de} etc. separately. This is not an exact
+          // domain match, but good enough for telemetry.
+          if (StringBeginsWith(hostFromURI, "adservice.google."_ns)) {
+            sameSiteProblems |= CookieProblem::RedirectGoogleAds;
+          } else {
+            if (cookie->IsDefaultSameSite()) {
+              sameSiteProblems |= CookieProblem::RedirectDefault;
+            } else {
+              sameSiteProblems |= CookieProblem::RedirectExplicit;
+            }
+          }
+        } else {
+          if (cookie->IsDefaultSameSite()) {
+            sameSiteProblems |= CookieProblem::OtherDefault;
+          } else {
+            sameSiteProblems |= CookieProblem::OtherExplicit;
+          }
+        }
+      }
+
+      if (blockCookie) {
+        CookieLogging::LogMessageToConsole(
+            crc, aHostURI, nsIScriptError::warningFlag,
+            CONSOLE_REJECTION_CATEGORY, "CookieBlockedCrossSiteRedirect"_ns,
+            AutoTArray<nsString, 1>{
+                NS_ConvertUTF8toUTF16(cookie->Name()),
+            });
+        continue;
+      }
+    }
+
     // all checks passed - add to list and check if lastAccessed stamp needs
     // updating
     aCookieList.AppendElement(cookie);
@@ -1044,6 +1109,9 @@ void CookieService::GetCookiesForURI(
       stale = true;
     }
   }
+
+  Telemetry::Accumulate(Telemetry::COOKIE_RETRIEVAL_SAMESITE_PROBLEM,
+                        static_cast<uint32_t>(sameSiteProblems));
 
   if (aCookieList.IsEmpty()) {
     return;

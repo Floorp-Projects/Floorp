@@ -56,7 +56,8 @@ class CookieServiceParent : public PCookieServiceParent {
       const bool& aIsThirdPartySocialTrackingResource,
       const bool& aStorageAccessPermissionGranted,
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
-      const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
+      const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
+      const OriginAttributes& aAttrs);
 
   static void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
                                      nsTArray<CookieStruct>& aCookiesList);
