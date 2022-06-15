@@ -135,80 +135,95 @@ class _RemoteImages {
    *         then the promise will resolve to null.
    */
   async patchMessage(message, replaceWith = "imageURL") {
-    try {
-      if (!!message && !!message.imageId) {
-        const { imageId } = message;
-        const blobURL = await this.load(imageId);
+    if (!!message && !!message.imageId) {
+      const { imageId } = message;
+      const urls = await this.load(imageId);
+
+      if (urls.size) {
+        const blobURL = urls.get(imageId);
 
         delete message.imageId;
-
         message[replaceWith] = blobURL;
 
-        return () => this.unload(blobURL);
+        return () => this.unload(urls);
       }
-      return null;
-    } catch (e) {
-      Cu.reportError(
-        `RemoteImages Could not patch message with imageId "${message.imageId}": ${e}`
-      );
-      return null;
     }
+    return null;
   }
 
   /**
-   * Load a remote image.
+   * Load remote images.
    *
-   * If the image has not been previously downloaded then the image will be
+   * If the images have not been previously downloaded, then they will be
    * downloaded from RemoteSettings.
    *
-   * @param imageId  The unique image ID.
+   * @param {...string} imageIds The image IDs to load.
    *
-   * @throws This method throws if the image cannot be loaded.
+   * @returns {object} An object mapping image Ids to blob: URLs.
+   *                   If an image could not be loaded, it will not be present
+   *                   in the returned object.
    *
-   * @returns A promise that resolves with a blob URL for the given image, or
-   *          rejects with an error.
-   *
-   *          After the caller is finished with the image, they must call
-   *         |RemoteImages.unload()| on the returned URL.
+   *                   After the caller is finished with the images, they must call
+   *                   |RemoteImages.unload()| on the object.
    */
-  load(imageId) {
+  load(...imageIds) {
     return this.withDb(async db => {
-      const recordId = this.#getRecordId(imageId);
+      // Deduplicate repeated imageIds by using a Map.
+      const urls = new Map(imageIds.map(key => [key, undefined]));
 
-      let blob;
-      if (db.data.images[recordId]) {
-        // We have previously fetched this image, we can load it from disk.
-        try {
-          blob = await this.#readFromDisk(db, recordId);
-        } catch (e) {
-          if (
-            !(
-              e instanceof Components.Exception &&
-              e.name === "NS_ERROR_FILE_NOT_FOUND"
-            )
-          ) {
-            throw e;
+      await Promise.all(
+        Array.from(urls.keys()).map(async imageId => {
+          try {
+            urls.set(imageId, await this.#loadImpl(db, imageId));
+          } catch (e) {
+            Cu.reportError(`Could not load image ID ${imageId}: ${e}`);
+            urls.delete(imageId);
           }
-        }
+        })
+      );
 
-        // Fall back to downloading if we cannot read it from disk.
-      }
-
-      if (typeof blob === "undefined") {
-        blob = await this.#download(db, recordId);
-      }
-
-      return URL.createObjectURL(blob);
+      return urls;
     });
   }
 
+  async #loadImpl(db, imageId) {
+    const recordId = this.#getRecordId(imageId);
+
+    let blob;
+    if (db.data.images[recordId]) {
+      // We have previously fetched this image, we can load it from disk.
+      try {
+        blob = await this.#readFromDisk(db, recordId);
+      } catch (e) {
+        if (
+          !(
+            e instanceof Components.Exception &&
+            e.name === "NS_ERROR_FILE_NOT_FOUND"
+          )
+        ) {
+          throw e;
+        }
+      }
+
+      // Fall back to downloading if we cannot read it from disk.
+    }
+
+    if (typeof blob === "undefined") {
+      blob = await this.#download(db, recordId);
+    }
+
+    return URL.createObjectURL(blob);
+  }
+
   /**
-   * Unload a URL returned by RemoteImages
+   * Unload URLs returned by RemoteImages
    *
-   * @param url The URL to unload.
+   * @param {Map<string, string>} urls The result of calling |RemoteImages.load()|.
    **/
-  unload(url) {
-    URL.revokeObjectURL(url);
+  unload(urls) {
+    for (const url of urls.keys()) {
+      URL.revokeObjectURL(url);
+    }
   }
 
   /**

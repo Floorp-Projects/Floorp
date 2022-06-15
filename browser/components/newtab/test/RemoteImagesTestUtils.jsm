@@ -26,70 +26,72 @@ const RemoteImagesTestUtils = {
    * @returns A promise yielding a cleanup function. This function will stop the
    *          internal HTTP server and clean up all Remote Images state.
    */
-  async serveRemoteImages(imageInfo) {
-    const { filename, recordId, mimetype, hash, url, size } = imageInfo;
-
+  async serveRemoteImages(...imageInfos) {
     const server = new HttpServer();
     server.start(-1);
 
     const baseURL = `http://localhost:${server.identity.primaryPort}/`;
 
-    const arrayBuffer = await fetch(url, { credentials: "omit" }).then(rsp =>
-      rsp.arrayBuffer()
-    );
+    for (const imageInfo of imageInfos) {
+      const { filename, recordId, mimetype, hash, url, size } = imageInfo;
 
-    server.registerPathHandler("/v1/", (request, response) => {
-      response.write(
-        JSON.stringify({
-          capabilities: {
-            attachments: {
-              base_url: `${baseURL}cdn`,
-            },
-          },
-        })
+      const arrayBuffer = await fetch(url, { credentials: "omit" }).then(rsp =>
+        rsp.arrayBuffer()
       );
 
-      response.setHeader("Content-Type", "application/json; charset=UTF-8");
-      response.setStatusLine(null, 200, "OK");
-    });
-
-    server.registerPathHandler(
-      `/v1/buckets/main/collections/ms-images/records/${recordId}`,
-      (request, response) => {
+      server.registerPathHandler("/v1/", (request, response) => {
         response.write(
           JSON.stringify({
-            data: {
-              attachment: {
-                filename,
-                location: `main/ms-images/${recordId}`,
-                hash,
-                mimetype,
-                size,
+            capabilities: {
+              attachments: {
+                base_url: `${baseURL}cdn`,
               },
             },
-            id: "image-id",
-            last_modified: Date.now(),
           })
         );
 
         response.setHeader("Content-Type", "application/json; charset=UTF-8");
         response.setStatusLine(null, 200, "OK");
-      }
-    );
+      });
 
-    server.registerPathHandler(
-      `/cdn/main/ms-images/${recordId}`,
-      async (request, response) => {
-        const stream = Cc[
-          "@mozilla.org/io/arraybuffer-input-stream;1"
-        ].createInstance(Ci.nsIArrayBufferInputStream);
-        stream.setData(arrayBuffer, 0, arrayBuffer.byteLength);
+      server.registerPathHandler(
+        `/v1/buckets/main/collections/ms-images/records/${recordId}`,
+        (request, response) => {
+          response.write(
+            JSON.stringify({
+              data: {
+                attachment: {
+                  filename,
+                  location: `main/ms-images/${recordId}`,
+                  hash,
+                  mimetype,
+                  size,
+                },
+              },
+              id: "image-id",
+              last_modified: Date.now(),
+            })
+          );
 
-        response.bodyOutputStream.writeFrom(stream, size);
-        response.setHeader("Content-Type", mimetype);
-        response.setStatusLine(null, 200, "OK");
-      }
-    );
+          response.setHeader("Content-Type", "application/json; charset=UTF-8");
+          response.setStatusLine(null, 200, "OK");
+        }
+      );
+
+      server.registerPathHandler(
+        `/cdn/main/ms-images/${recordId}`,
+        async (request, response) => {
+          const stream = Cc[
+            "@mozilla.org/io/arraybuffer-input-stream;1"
+          ].createInstance(Ci.nsIArrayBufferInputStream);
+          stream.setData(arrayBuffer, 0, arrayBuffer.byteLength);
+
+          response.bodyOutputStream.writeFrom(stream, size);
+          response.setHeader("Content-Type", mimetype);
+          response.setStatusLine(null, 200, "OK");
+        }
+      );
+    }
 
     Services.prefs.setCharPref(RS_SERVER_PREF, `${baseURL}v1`);
 
@@ -176,6 +178,16 @@ const RemoteImagesTestUtils = {
       hash: "29f1fe2cb5181152d2c01c0b2f12e5d9bb3379a61b94fb96de0f734eb360da62",
       url: "chrome://browser/content/aboutRobots-icon.png",
       size: 7599,
+    },
+
+    Mountain: {
+      filename: "mountain.svg",
+      recordId: "mountain",
+      mimetype: "image/svg+xml",
+      hash: "96902f3d784e1b5e49547c543a5c121442c64b180deb2c38246fada1d14597ac",
+      url:
+        "chrome://activity-stream/content/data/content/assets/remote/mountain.svg",
+      size: 1650,
     },
   },
 };

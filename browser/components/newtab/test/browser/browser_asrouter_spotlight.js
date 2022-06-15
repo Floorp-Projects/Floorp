@@ -214,56 +214,71 @@ add_task(async function test_remoteL10n_content() {
 
 add_task(async function test_remote_images_logo() {
   const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
-  const cleanup = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
+  const stop = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
 
-  registerCleanupFunction(cleanup);
+  try {
+    const message = await getMessage("SPOTLIGHT_MESSAGE_93");
+    message.content.logo = { imageId: imageInfo.recordId };
 
-  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
-  message.content.logo = { imageId: imageInfo.recordId };
+    const dispatchStub = sinon.stub();
+    const browser = BrowserWindowTracker.getTopWindow().gBrowser
+      .selectedBrowser;
 
-  const dispatchStub = sinon.stub();
-  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+    await showAndWaitForDialog(
+      { message, browser, dispatchStub },
+      async win => {
+        await win.document.mozSubdialogReady;
 
-  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
-    await win.document.mozSubdialogReady;
+        const logo = win.document.querySelector(".logo");
 
-    const logo = win.document.querySelector(".logo");
+        ok(
+          logo.src.startsWith("blob:"),
+          "RemoteImages loaded a blob: URL in Spotlight"
+        );
 
-    ok(
-      logo.src.startsWith("blob:"),
-      "RemoteImages loaded a blob: URL in Spotlight"
+        win.document.getElementById("secondary").click();
+      }
     );
-
-    win.document.getElementById("secondary").click();
-  });
+  } finally {
+    await stop();
+  }
 });
 
 add_task(async function test_remoteImages_fail() {
   const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
-  registerCleanupFunction(
-    await RemoteImagesTestUtils.serveRemoteImages(imageInfo)
-  );
+  const stop = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
 
-  const message = await getMessage("SPOTLIGHT_MESSAGE_93");
-  message.content.logo = { imageId: "bogus" };
+  try {
+    const message = await getMessage("SPOTLIGHT_MESSAGE_93");
+    message.content.logo = { imageId: "bogus" };
 
-  const dispatchStub = sinon.stub();
-  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+    const dispatchStub = sinon.stub();
+    const browser = BrowserWindowTracker.getTopWindow().gBrowser
+      .selectedBrowser;
 
-  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
-    await win.document.mozSubdialogReady;
+    await showAndWaitForDialog(
+      { message, browser, dispatchStub },
+      async win => {
+        await win.document.mozSubdialogReady;
 
-    const logo = win.document.querySelector(".logo");
+        const logo = win.document.querySelector(".logo");
 
-    Assert.ok(!logo.src.startsWith("blob:"), "RemoteImages did not patch URL");
-    Assert.equal(
-      logo.style.visibility,
-      "hidden",
-      "Spotlight hid image with missing URL"
+        Assert.ok(
+          !logo.src.startsWith("blob:"),
+          "RemoteImages did not patch URL"
+        );
+        Assert.equal(
+          logo.style.visibility,
+          "hidden",
+          "Spotlight hid image with missing URL"
+        );
+
+        win.document.getElementById("secondary").click();
+      }
     );
-
-    win.document.getElementById("secondary").click();
-  });
+  } finally {
+    await stop();
+  }
 });
 
 add_task(async function test_contentExpanded() {
