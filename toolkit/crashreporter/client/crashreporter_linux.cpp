@@ -39,19 +39,24 @@ static void LoadSettings() {
    *       code in in nsExceptionHandler.cpp.
    */
 
+  bool includeURL = true;
+  bool submitReport = true;
   StringTable settings;
   if (ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true)) {
-    if (settings.find("IncludeURL") != settings.end() &&
-        gIncludeURLCheck != 0) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck),
-                                   settings["IncludeURL"][0] != '0');
+    if (settings.find("IncludeURL") != settings.end()) {
+      includeURL = settings["IncludeURL"][0] != '0';
     }
-    bool enabled = true;
-    if (settings.find("SubmitReport") != settings.end())
-      enabled = settings["SubmitReport"][0] != '0';
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
-                                 enabled);
+    if (settings.find("SubmitReport") != settings.end()) {
+      submitReport = settings["SubmitReport"][0] != '0';
+    }
   }
+
+  if (gIncludeURLCheck) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck),
+                                 includeURL);
+  }
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
+                               submitReport);
 }
 
 static string Escape(const string& str) {
