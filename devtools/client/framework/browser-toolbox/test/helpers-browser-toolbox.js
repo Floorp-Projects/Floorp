@@ -86,7 +86,7 @@ async function initBrowserToolboxTask({
   }
 
   // The port of the DevToolsServer installed in the toolbox process is fixed.
-  // See browser-toolbox-window.js
+  // See browser-toolbox/window.js
   let transport;
   while (true) {
     try {
