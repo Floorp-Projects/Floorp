@@ -75,6 +75,7 @@ bool RemoteObjectProxyBase::getPrototypeIfOrdinary(
   // We nonetheless can implement it with a static [[Prototype]], because the
   // [[GetPrototypeOf]] trap should always return null.
   *aIsOrdinary = true;
+  aProtop.set(nullptr);
   return true;
 }
 
