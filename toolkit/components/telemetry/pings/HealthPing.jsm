@@ -10,6 +10,14 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryHealthPing", "Policy"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -27,18 +35,9 @@ ChromeUtils.defineModuleGetter(
   "clearTimeout",
   "resource://gre/modules/Timer.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryUtils",
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
-const Utils = lazy.TelemetryUtils;
+const Utils = TelemetryUtils;
 
 const MS_IN_A_MINUTE = 60 * 1000;
 // Send health ping every hour
@@ -285,6 +284,6 @@ var TelemetryHealthPing = {
 XPCOMUtils.defineLazyPreferenceGetter(
   TelemetryHealthPing,
   "enabled",
-  lazy.TelemetryUtils.Preferences.HealthPingEnabled,
+  TelemetryUtils.Preferences.HealthPingEnabled,
   true
 );

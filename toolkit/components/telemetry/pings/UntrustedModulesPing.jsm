@@ -13,15 +13,15 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryUntrustedModulesPing"];
 
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Log: "resource://gre/modules/Log.jsm",
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
 });
@@ -41,10 +41,7 @@ const TIMER_NAME = "telemetry_untrustedmodules_ping";
 const PING_SUBMISSION_NAME = "third-party-modules";
 
 var TelemetryUntrustedModulesPing = Object.freeze({
-  _log: lazy.Log.repository.getLoggerWithMessagePrefix(
-    LOGGER_NAME,
-    LOGGER_PREFIX
-  ),
+  _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
 
   start() {
     lazy.UpdateTimerManager.registerTimer(
