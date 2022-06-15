@@ -50,7 +50,27 @@ const TEST_DATA = [
     },
   },
   {
-    description: "Case differences for input are ignored",
+    description: "User's input starts with www",
+    pref: true,
+    visitHistory: ["http://www.example.com/test"],
+    inputHistory: [{ uri: "http://www.example.com/test", input: "www.exa" }],
+    userInput: "www.exa",
+    expected: {
+      autofilled: "www.example.com/test",
+      completed: "http://www.example.com/test",
+      hasAutofillTitle: true,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://www.example.com/test",
+            title: "test visit for http://www.example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description: "Case differences for user's input are ignored",
     pref: true,
     visitHistory: ["http://example.com/test"],
     inputHistory: [{ uri: "http://example.com/test", input: "EXA" }],
@@ -64,6 +84,27 @@ const TEST_DATA = [
           makeVisitResult(context, {
             uri: "http://example.com/test",
             title: "test visit for http://example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Case differences for user's input that starts with www are ignored",
+    pref: true,
+    visitHistory: ["http://www.example.com/test"],
+    inputHistory: [{ uri: "http://www.example.com/test", input: "www.exa" }],
+    userInput: "WWW.exa",
+    expected: {
+      autofilled: "WWW.example.com/test",
+      completed: "http://www.example.com/test",
+      hasAutofillTitle: true,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://www.example.com/test",
+            title: "test visit for http://www.example.com/test",
             heuristic: true,
           }),
       ],

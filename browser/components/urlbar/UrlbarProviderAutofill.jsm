@@ -622,21 +622,15 @@ class ProviderAutofill extends UrlbarProvider {
     }
 
     // Change the search target dependent on user's input contains URI scheme.
-    let selectFixedURL;
     let urlCondition;
     if (this._strippedPrefix) {
-      selectFixedURL = `
-        FALSE AS fixed_url,
-        NULL AS is_fixed_url_match
-      `;
       urlCondition =
         "(h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')";
     } else {
-      selectFixedURL = `
-        fixup_url(h.url) AS fixed_url,
-        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS is_fixed_url_match
+      urlCondition = `
+        ((strip_prefix_and_userinfo(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF') OR
+         (strip_prefix_and_userinfo(h.url) COLLATE NOCASE BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'))
       `;
-      urlCondition = "is_fixed_url_match";
     }
 
     let selectTitle;
@@ -658,13 +652,13 @@ class ProviderAutofill extends UrlbarProvider {
     };
 
     const query = `
-      WITH matched(input, url, title, is_exact_match, fixed_url, is_fixed_url_match, id) AS (
+      WITH matched(input, url, title, stripped_url, is_exact_match, id) AS (
         SELECT
           i.input AS input,
           h.url AS url,
           h.title AS title,
+          strip_prefix_and_userinfo(h.url) AS stripped_url,
           strip_prefix_and_userinfo(h.url) = strip_prefix_and_userinfo(:searchString) AS is_exact_match,
-          ${selectFixedURL},
           h.id AS id
         FROM moz_places h
         JOIN moz_inputhistory i ON i.place_id = h.id
@@ -672,7 +666,7 @@ class ProviderAutofill extends UrlbarProvider {
           AND ${sourceCondition}
           AND i.use_count >= :useCountThreshold
           AND ${urlCondition}
-        ORDER BY is_exact_match DESC, i.use_count DESC, is_fixed_url_match DESC, h.frecency DESC, h.id DESC
+        ORDER BY is_exact_match DESC, i.use_count DESC, h.frecency DESC, h.id DESC
         LIMIT 1
       )
       SELECT
@@ -681,8 +675,7 @@ class ProviderAutofill extends UrlbarProvider {
         input,
         url,
         ${selectTitle} AS title,
-        fixed_url,
-        is_fixed_url_match
+        stripped_url
       FROM matched
       ${joinBookmarks}
     `;
@@ -703,12 +696,13 @@ class ProviderAutofill extends UrlbarProvider {
     let autofilledValue, finalCompleteValue, autofilledType;
     let adaptiveHistoryInput;
     switch (queryType) {
-      case QUERYTYPE.AUTOFILL_ORIGIN:
+      case QUERYTYPE.AUTOFILL_ORIGIN: {
         autofilledValue = row.getResultByName("host_fixed");
         finalCompleteValue = row.getResultByName("url");
         autofilledType = "origin";
         break;
-      case QUERYTYPE.AUTOFILL_URL:
+      }
+      case QUERYTYPE.AUTOFILL_URL: {
         let url = row.getResultByName("url");
         let strippedURL = row.getResultByName("stripped_url");
 
@@ -744,15 +738,23 @@ class ProviderAutofill extends UrlbarProvider {
 
         autofilledType = "url";
         break;
-      case QUERYTYPE.AUTOFILL_ADAPTIVE:
-        finalCompleteValue = row.getResultByName("url");
-        const isFixedUrlMatched = row.getResultByName("is_fixed_url_match");
-        autofilledValue = isFixedUrlMatched
-          ? row.getResultByName("fixed_url")
-          : finalCompleteValue;
+      }
+      case QUERYTYPE.AUTOFILL_ADAPTIVE: {
         adaptiveHistoryInput = row.getResultByName("input");
+        finalCompleteValue = row.getResultByName("url");
+
+        if (this._strippedPrefix) {
+          autofilledValue = finalCompleteValue;
+        } else {
+          let strippedURL = row.getResultByName("stripped_url");
+          autofilledValue = strippedURL.substring(
+            strippedURL.toLowerCase().indexOf(adaptiveHistoryInput)
+          );
+        }
+
         autofilledType = "adaptive";
         break;
+      }
     }
 
     // `autofilledValue` is the value that will be set in the input, and it
