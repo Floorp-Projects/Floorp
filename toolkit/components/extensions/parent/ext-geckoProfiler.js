@@ -8,6 +8,9 @@
 
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
+Cu.importGlobalProperties(["IOUtils", "PathUtils"]);
+
 const PREF_ASYNC_STACK = "javascript.options.asyncstack";
 
 const ASYNC_STACKS_ENABLED = Services.prefs.getBoolPref(
@@ -133,10 +136,14 @@ this.geckoProfiler = class extends ExtensionAPI {
             throw new ExtensionError("Path cannot contain a subdirectory.");
           }
 
-          let fragments = [OS.Constants.Path.profileDir, "profiler", fileName];
-          let filePath = OS.Path.join(...fragments);
+          let dirPath = PathUtils.join(
+            OS.Constants.Path.profileDir,
+            "profiler"
+          );
+          let filePath = PathUtils.join(dirPath, fileName);
 
           try {
+            await IOUtils.makeDirectory(dirPath);
             await Services.profiler.dumpProfileToFileAsync(filePath);
           } catch (e) {
             Cu.reportError(e);

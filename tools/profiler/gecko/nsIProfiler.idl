@@ -93,11 +93,27 @@ interface nsIProfiler : nsISupports
   Promise getProfileDataAsGzippedArrayBuffer([optional] in double aSinceTime);
 
   /**
-   * Returns a promise that resolves once the file has been written.
+   * Asynchronously dump the profile collected so far to a file.
+   * Returns a promise that resolves once the file has been written, with data
+   * from all responsive Firefox processes. Note: This blocks the parent process
+   * while collecting its own data, then unblocks while child processes data is
+   * being collected.
+   * `aFilename` may be a full path, or a path relative to where Firefox was
+   * launched. The target directory must already exist.
    */
   [implicit_jscontext]
   Promise dumpProfileToFileAsync(in ACString aFilename,
                                  [optional] in double aSinceTime);
+
+  /**
+   * Synchronously dump the profile collected so far in this process to a file.
+   * This profile will only contain data from the parent process, and from child
+   * processes that have ended during the session; other currently-live
+   * processes are ignored.
+   * `aFilename` may be a full path, or a path relative to where Firefox was
+   * launched. The target directory must already exist.
+   */
+  void dumpProfileToFile(in string aFilename);
 
   boolean IsActive();
 
@@ -186,11 +202,6 @@ interface nsIProfiler : nsISupports
    */
   [implicit_jscontext]
   Promise getSymbolTable(in ACString aDebugPath, in ACString aBreakpadID);
-
-  /**
-   * Dump the collected profile to a file.
-   */
-  void dumpProfileToFile(in string aFilename);
 
   %{C++
   virtual RefPtr<mozilla::MozPromise<FallibleTArray<uint8_t>, nsresult, true>> GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) = 0;
