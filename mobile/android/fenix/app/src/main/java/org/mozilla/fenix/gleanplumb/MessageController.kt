@@ -17,9 +17,4 @@ interface MessageController {
      * Indicates the provided [message] was dismissed by a user.
      */
     fun onMessageDismissed(message: Message)
-
-    /**
-     * Indicates the provided [message] was displayed to a user.
-     */
-    fun onMessageDisplayed(message: Message)
 }

@@ -239,11 +239,6 @@ interface MessageCardInteractor {
      * Called when close button on a [Message] card.
      */
     fun onMessageClosedClicked(message: Message)
-
-    /**
-     * Called when close button on a [Message] card.
-     */
-    fun onMessageDisplayed(message: Message)
 }
 
 /**
@@ -469,9 +464,5 @@ class SessionControlInteractor(
 
     override fun onMessageClosedClicked(message: Message) {
         controller.handleMessageClosed(message)
-    }
-
-    override fun onMessageDisplayed(message: Message) {
-        controller.handleMessageDisplayed(message)
     }
 }

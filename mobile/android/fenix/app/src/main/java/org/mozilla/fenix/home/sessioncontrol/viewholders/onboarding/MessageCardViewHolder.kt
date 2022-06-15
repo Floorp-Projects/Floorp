@@ -47,7 +47,6 @@ class MessageCardViewHolder(
                 interactor.onMessageClosedClicked(message)
             }
         }
-        interactor.onMessageDisplayed(message)
     }
 
     companion object {

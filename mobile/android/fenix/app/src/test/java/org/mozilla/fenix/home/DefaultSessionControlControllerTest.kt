@@ -1228,22 +1228,18 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `WHEN handleMessageClicked,handleMessageClosed and handleMessageDisplayed are called THEN delegate to messageController`() {
+    fun `WHEN handleMessageClicked and handleMessageClosed are called THEN delegate to messageController`() {
         val controller = createController()
         val message = mockk<Message>()
 
         controller.handleMessageClicked(message)
         controller.handleMessageClosed(message)
-        controller.handleMessageDisplayed(message)
 
         verify {
             messageController.onMessagePressed(message)
         }
         verify {
             messageController.onMessageDismissed(message)
-        }
-        verify {
-            messageController.onMessageDisplayed(message)
         }
     }
 

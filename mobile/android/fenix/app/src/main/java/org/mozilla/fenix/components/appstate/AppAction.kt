@@ -137,11 +137,6 @@ sealed class AppAction : Action {
         data class MessageClicked(val message: Message) : MessagingAction()
 
         /**
-         * Indicates the given [message] was shown.
-         */
-        data class MessageDisplayed(val message: Message) : MessagingAction()
-
-        /**
          * Indicates the given [message] was dismissed.
          */
         data class MessageDismissed(val message: Message) : MessagingAction()

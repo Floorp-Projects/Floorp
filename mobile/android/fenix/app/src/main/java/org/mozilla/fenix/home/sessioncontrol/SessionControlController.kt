@@ -189,11 +189,6 @@ interface SessionControlController {
     fun handleMessageClosed(message: Message)
 
     /**
-     * @see [MessageCardInteractor.onMessageDisplayed]
-     */
-    fun handleMessageDisplayed(message: Message)
-
-    /**
      * @see [TabSessionInteractor.onPrivateModeButtonClicked]
      */
     fun handlePrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
@@ -617,10 +612,6 @@ class DefaultSessionControlController(
 
     override fun handleMessageClosed(message: Message) {
         messageController.onMessageDismissed(message)
-    }
-
-    override fun handleMessageDisplayed(message: Message) {
-        messageController.onMessageDisplayed(message)
     }
 
     override fun handlePrivateModeButtonClicked(

@@ -28,7 +28,6 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.ConsumeMe
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Evaluate
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDismissed
-import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDisplayed
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Restore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
@@ -143,7 +142,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
+    fun `GIEN a expiring message WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -161,13 +160,11 @@ class MessagingMiddlewareTest {
         every { appState.messaging } returns messagingState
         every { middlewareContext.state } returns appState
 
-        spiedMiddleware.invoke(
-            middlewareContext, {},
-            MessageDisplayed(message)
-        )
+        spiedMiddleware.onMessagedDisplayed(message, middlewareContext)
 
         coVerify { messagingStorage.updateMetadata(message.metadata.copy(displayCount = 1)) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
+        verify { spiedMiddleware.sendExpiredMessageTelemetry(message.id) }
     }
 
     @Test
@@ -340,5 +337,6 @@ class MessagingMiddlewareTest {
         verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
         verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
         coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
+        verify { spiedMiddleware.sendShownMessageTelemetry(oldMessage.id) }
     }
 }
