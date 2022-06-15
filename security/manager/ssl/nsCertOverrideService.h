@@ -150,6 +150,9 @@ class nsCertOverrideService final : public nsICertOverrideService,
                           nsCertOverride::OverrideBits ob,
                           const nsACString& dbKey,
                           const mozilla::MutexAutoLock& aProofOfLock);
+  already_AddRefed<nsCertOverride> GetOverrideFor(
+      const nsACString& aHostName, int32_t aPort,
+      const OriginAttributes& aOriginAttributes);
 
   // Set in constructor only
   RefPtr<mozilla::TaskQueue> mWriterTaskQueue;

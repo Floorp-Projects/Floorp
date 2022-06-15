@@ -596,17 +596,15 @@ nsCertOverrideService::HasMatchingOverride(
   *aRetval = false;
   *aOverrideBits = static_cast<uint32_t>(nsCertOverride::OverrideBits::None);
 
-  RefPtr<nsCertOverride> settings;
-
-  {
-    nsAutoCString keyString;
-    GetKeyString(aHostName, aPort, aOriginAttributes, keyString);
-    MutexAutoLock lock(mMutex);
-    nsCertOverrideEntry* entry = mSettingsTable.GetEntry(keyString.get());
-
-    if (!entry) return NS_OK;
-
-    settings = entry->mSettings;
+  RefPtr<nsCertOverride> settings(
+      GetOverrideFor(aHostName, aPort, aOriginAttributes));
+  // If there is no corresponding override and the given OriginAttributes isn't
+  // the default, try to look up an override using the default OriginAttributes.
+  if (!settings && aOriginAttributes != OriginAttributes()) {
+    settings = GetOverrideFor(aHostName, aPort, OriginAttributes());
+  }
+  if (!settings) {
+    return NS_OK;
   }
 
   *aOverrideBits = static_cast<uint32_t>(settings->mOverrideBits);
@@ -620,6 +618,19 @@ nsCertOverrideService::HasMatchingOverride(
 
   *aRetval = settings->mFingerprint.Equals(fpStr);
   return NS_OK;
+}
+
+already_AddRefed<nsCertOverride> nsCertOverrideService::GetOverrideFor(
+    const nsACString& aHostName, int32_t aPort,
+    const OriginAttributes& aOriginAttributes) {
+  nsAutoCString keyString;
+  GetKeyString(aHostName, aPort, aOriginAttributes, keyString);
+  MutexAutoLock lock(mMutex);
+  nsCertOverrideEntry* entry = mSettingsTable.GetEntry(keyString.get());
+  if (!entry) {
+    return nullptr;
+  }
+  return do_AddRef(entry->mSettings);
 }
 
 NS_IMETHODIMP
