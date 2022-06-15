@@ -431,12 +431,6 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
       nsIFrame::ReflowChildFlags::ApplyRelativePositioning);
 
   aOverflowAreas = mMetrics.mOverflowAreas + mFrame->GetPosition();
-  if (MOZ_UNLIKELY(mFrame->IsRelativelyOrStickyPositioned())) {
-    aOverflowAreas.ScrollableOverflow() =
-        aOverflowAreas.ScrollableOverflow().Union(
-            mMetrics.mOverflowAreas.ScrollableOverflow() +
-            mFrame->GetNormalPosition());
-  }
 
   return true;
 }
