@@ -22,7 +22,7 @@
 }
 
 .mozac-readerview-body.dark {
-  background-color: #222222;
+  background-color: #1c1b22;
   color: #eeeeee;
 }
 
@@ -172,11 +172,23 @@
   font-weight: normal;
 }
 
+.mozac-readerview-body.dark :is(
+        .mozac-readerview-content a,
+        .mozac-readerview-content a:hover,
+        .mozac-readerview-content a:active
+    ):not(.mozac-readerview-content a:visited) {
+  color: #45a1ff !important;
+}
+
 .mozac-readerview-content a,
-.mozac-readerview-content a:visited,
 .mozac-readerview-content a:hover,
-.mozac-readerview-content a:active {
-  color: #00acff !important;
+.mozac-readerview-content a:active
+:not(.mozac-readerview-content a:visited) {
+  color: #0060df !important;
+}
+
+.mozac-readerview-content a:visited {
+  color: #b5007f !important;
 }
 
 .mozac-readerview-content h1 {
