@@ -8,6 +8,7 @@
 
 #include "gfxUserFontSet.h"
 #include "mozilla/dom/Document.h"
+#include "nsContentSecurityManager.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpChannel.h"
 #include "nsISupportsPriority.h"
@@ -53,13 +54,15 @@ nsresult FontPreloader::BuildChannel(
 
   // aCORSMode is ignored.  We always load as crossorigin=anonymous, but a
   // preload started with anything other then "anonymous" will never be found.
+  nsContentSecurityManager::CORSSecurityMapping corsMapping =
+      aURI->SchemeIs("file")
+          ? nsContentSecurityManager::CORSSecurityMapping::
+                CORS_NONE_MAPS_TO_INHERITED_CONTEXT
+          : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
 
-  uint32_t securityFlags = 0;
-  if (aURI->SchemeIs("file")) {
-    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
-  } else {
-    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
-  }
+  nsSecurityFlags securityFlags =
+      nsContentSecurityManager::ComputeSecurityFlags(CORSMode::CORS_NONE,
+                                                     corsMapping);
 
   nsContentPolicyType contentPolicyType =
       aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD
