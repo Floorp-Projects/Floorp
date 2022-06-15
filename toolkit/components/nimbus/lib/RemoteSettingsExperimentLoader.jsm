@@ -16,7 +16,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
@@ -67,10 +66,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const SCHEMAS = {
   get NimbusExperiment() {
-    return lazy
-      .fetch("resource://nimbus/schemas/NimbusExperiment.schema.json", {
-        credentials: "omit",
-      })
+    return fetch("resource://nimbus/schemas/NimbusExperiment.schema.json", {
+      credentials: "omit",
+    })
       .then(rsp => rsp.json())
       .then(json => json.definitions.NimbusExperiment);
   },
@@ -375,9 +373,9 @@ class _RemoteSettingsExperimentLoader {
         } else if (lazy.NimbusFeatures[featureId].manifest.schema?.uri) {
           const uri = lazy.NimbusFeatures[featureId].manifest.schema.uri;
           try {
-            const schema = await lazy
-              .fetch(uri, { credentials: "omit" })
-              .then(rsp => rsp.json());
+            const schema = await fetch(uri, { credentials: "omit" }).then(rsp =>
+              rsp.json()
+            );
             validator = validatorCache[
               featureId
             ] = new lazy.JsonSchema.Validator(schema);
