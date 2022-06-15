@@ -256,6 +256,8 @@ function TypedArrayEvery(callbackfn/*, thisArg*/) {
     // Step 7.
     return true;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayEvery);
 
 // ES2018 draft rev ad2d1c60c5dc42a806696d4b58b4dca42d1f7dd4
 // 22.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] )
@@ -496,6 +498,8 @@ function TypedArrayForEach(callbackfn/*, thisArg*/) {
     // Step 7.
     return undefined;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayForEach);
 
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
@@ -736,6 +740,8 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
     // Step 9.
     return A;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArrayMap);
 
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
@@ -978,6 +984,8 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
     // Step 7.
     return false;
 }
+// Inlining this enables inlining of the callback function.
+SetIsInlinableLargeFunction(TypedArraySome);
 
 // ES2019 draft rev 8a16cb8d18660a1106faae693f0f39b9f1a30748
 // 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
@@ -1190,6 +1198,8 @@ function TypedArrayAt(index) {
     // Step 8.
     return obj[k];
 }
+// This function is only barely too long for normal inlining.
+SetIsInlinableLargeFunction(TypedArrayAt);
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
 //
