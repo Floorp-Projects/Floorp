@@ -6,39 +6,33 @@
 
 const EXPORTED_SYMBOLS = ["OSCrypto"];
 
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ctypes",
-  "resource://gre/modules/ctypes.jsm"
-);
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
 const FLAGS_NOT_SET = 0;
 
 const wintypes = {
-  BOOL: lazy.ctypes.bool,
-  BYTE: lazy.ctypes.uint8_t,
-  DWORD: lazy.ctypes.uint32_t,
-  PBYTE: lazy.ctypes.unsigned_char.ptr,
-  PCHAR: lazy.ctypes.char.ptr,
-  PDWORD: lazy.ctypes.uint32_t.ptr,
-  PVOID: lazy.ctypes.voidptr_t,
-  WORD: lazy.ctypes.uint16_t,
+  BOOL: ctypes.bool,
+  BYTE: ctypes.uint8_t,
+  DWORD: ctypes.uint32_t,
+  PBYTE: ctypes.unsigned_char.ptr,
+  PCHAR: ctypes.char.ptr,
+  PDWORD: ctypes.uint32_t.ptr,
+  PVOID: ctypes.voidptr_t,
+  WORD: ctypes.uint16_t,
 };
 
 function OSCrypto() {
   this._structs = {};
   this._functions = new Map();
   this._libs = new Map();
-  this._structs.DATA_BLOB = new lazy.ctypes.StructType("DATA_BLOB", [
+  this._structs.DATA_BLOB = new ctypes.StructType("DATA_BLOB", [
     { cbData: wintypes.DWORD },
     { pbData: wintypes.PVOID },
   ]);
 
   try {
-    this._libs.set("crypt32", lazy.ctypes.open("Crypt32"));
-    this._libs.set("kernel32", lazy.ctypes.open("Kernel32"));
+    this._libs.set("crypt32", ctypes.open("Crypt32"));
+    this._libs.set("kernel32", ctypes.open("Kernel32"));
 
     this._functions.set(
       "CryptProtectData",
@@ -46,7 +40,7 @@ function OSCrypto() {
         .get("crypt32")
         .declare(
           "CryptProtectData",
-          lazy.ctypes.winapi_abi,
+          ctypes.winapi_abi,
           wintypes.DWORD,
           this._structs.DATA_BLOB.ptr,
           wintypes.PVOID,
@@ -63,7 +57,7 @@ function OSCrypto() {
         .get("crypt32")
         .declare(
           "CryptUnprotectData",
-          lazy.ctypes.winapi_abi,
+          ctypes.winapi_abi,
           wintypes.DWORD,
           this._structs.DATA_BLOB.ptr,
           wintypes.PVOID,
@@ -78,12 +72,7 @@ function OSCrypto() {
       "LocalFree",
       this._libs
         .get("kernel32")
-        .declare(
-          "LocalFree",
-          lazy.ctypes.winapi_abi,
-          wintypes.DWORD,
-          wintypes.PVOID
-        )
+        .declare("LocalFree", ctypes.winapi_abi, wintypes.DWORD, wintypes.PVOID)
     );
   } catch (ex) {
     Cu.reportError(ex);
@@ -181,7 +170,7 @@ OSCrypto.prototype = {
 
   _convertWinArrayToJSArray(dataBlob) {
     // Convert DATA_BLOB to JS accessible array
-    return lazy.ctypes.cast(
+    return ctypes.cast(
       dataBlob.pbData,
       wintypes.BYTE.array(dataBlob.cbData).ptr
     ).contents;
@@ -216,7 +205,7 @@ OSCrypto.prototype = {
         outData.address()
       );
       if (status === 0) {
-        throw new Error("decryptData failed: " + lazy.ctypes.winLastError);
+        throw new Error("decryptData failed: " + ctypes.winLastError);
       }
 
       let decrypted = this._convertWinArrayToJSArray(outData);
@@ -268,7 +257,7 @@ OSCrypto.prototype = {
         outData.address()
       );
       if (status === 0) {
-        throw new Error("encryptData failed: " + lazy.ctypes.winLastError);
+        throw new Error("encryptData failed: " + ctypes.winLastError);
       }
 
       let encrypted = this._convertWinArrayToJSArray(outData);
