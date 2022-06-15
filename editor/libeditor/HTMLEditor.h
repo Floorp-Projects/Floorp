@@ -1613,9 +1613,13 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aArrayOfContents    Must be descendants of a node.
    * @param aBlockTag           The element name of new block elements.
+   * @param aEditingHost        The editing host.
+   * @return                    May suggest a point to put caret if succeeded.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CreateOrChangeBlockContainerElement(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  CreateOrChangeBlockContainerElement(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag,
+      const Element& aEditingHost);
 
   /**
    * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
