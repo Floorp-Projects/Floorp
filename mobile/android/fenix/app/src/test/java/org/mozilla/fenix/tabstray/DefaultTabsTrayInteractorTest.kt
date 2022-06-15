@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Test
 
 class DefaultTabsTrayInteractorTest {
+
     val controller: TabsTrayController = mockk(relaxed = true)
     val trayInteractor = DefaultTabsTrayInteractor(controller)
 
@@ -48,12 +49,5 @@ class DefaultTabsTrayInteractorTest {
         trayInteractor.onDeleteTabs(tabsToDelete)
 
         verifySequence { controller.handleMultipleTabsDeletion(tabsToDelete) }
-    }
-
-    @Test
-    fun `GIVEN user selecting delete all inactive tabs WHEN onDeleteTabs is called THEN the Interactor delegates the controller`() {
-        trayInteractor.onDeleteInactiveTabs()
-
-        verifySequence { controller.handleDeleteAllInactiveTabs() }
     }
 }

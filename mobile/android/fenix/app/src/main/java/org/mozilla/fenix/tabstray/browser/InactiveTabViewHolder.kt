@@ -41,7 +41,6 @@ class InactiveTabViewHolder(
     composeView: ComposeView,
     lifecycleOwner: LifecycleOwner,
     private val tabsTrayStore: TabsTrayStore,
-    private val tabsTrayInteractor: TabsTrayInteractor,
     private val inactiveTabsInteractor: InactiveTabsInteractor,
 ) : ComposeViewHolder(composeView, lifecycleOwner) {
 
@@ -65,7 +64,7 @@ class InactiveTabViewHolder(
                 expanded = expanded,
                 showAutoCloseDialog = showAutoClosePrompt,
                 onHeaderClick = { inactiveTabsInteractor.onHeaderClicked(!expanded) },
-                onDeleteAllButtonClick = tabsTrayInteractor::onDeleteInactiveTabs,
+                onDeleteAllButtonClick = inactiveTabsInteractor::onDeleteAllInactiveTabsClicked,
                 onAutoCloseDismissClick = {
                     inactiveTabsInteractor.onCloseClicked()
                     showAutoClosePrompt = !showAutoClosePrompt

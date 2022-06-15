@@ -14,13 +14,10 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.DefaultInactiveTabsInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
-import org.mozilla.fenix.tabstray.browser.InactiveTabsController
+import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.browser.TabGroupAdapter
 import org.mozilla.fenix.tabstray.browser.TitleHeaderAdapter
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
@@ -37,7 +34,8 @@ class TrayPagerAdapter(
     @VisibleForTesting internal val navInteractor: NavigationInteractor,
     @VisibleForTesting internal val tabsTrayInteractor: TabsTrayInteractor,
     @VisibleForTesting internal val browserStore: BrowserStore,
-    @VisibleForTesting internal val appStore: AppStore
+    @VisibleForTesting internal val appStore: AppStore,
+    @VisibleForTesting internal val inactiveTabsInteractor: InactiveTabsInteractor,
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
     /**
@@ -50,23 +48,12 @@ class TrayPagerAdapter(
             InactiveTabsAdapter(
                 lifecycleOwner = lifecycleOwner,
                 tabsTrayStore = tabsTrayStore,
-                tabsTrayInteractor = tabsTrayInteractor,
                 inactiveTabsInteractor = inactiveTabsInteractor,
                 featureName = INACTIVE_TABS_FEATURE_NAME,
             ),
             TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME)
-        )
-    }
-
-    private val inactiveTabsInteractor by lazy {
-        DefaultInactiveTabsInteractor(
-            InactiveTabsController(
-                appStore = context.components.appStore,
-                settings = context.settings(),
-                browserInteractor = browserInteractor,
-            )
         )
     }
 

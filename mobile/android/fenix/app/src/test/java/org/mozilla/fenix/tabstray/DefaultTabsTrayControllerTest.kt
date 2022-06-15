@@ -38,10 +38,8 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.ext.maxActiveTime
-import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.home.HomeFragment
 
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class DefaultTabsTrayControllerTest {
@@ -475,63 +473,6 @@ class DefaultTabsTrayControllerTest {
 
         assertTrue(dismissTrayInvoked)
         assertTrue(navigateToHomeAndDeleteSessionInvoked)
-    }
-
-    @Test
-    fun `WHEN deleteAllInactiveTabs is called THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
-        var showUndoSnackbarForTabInvoked = false
-        val controller = spyk(
-            createController(
-                showUndoSnackbarForTab = {
-                    showUndoSnackbarForTabInvoked = true
-                }
-            )
-        )
-        val inactiveTab: TabSessionState = mockk {
-            every { lastAccess } returns maxActiveTime
-            every { createdAt } returns 0
-            every { id } returns "24"
-            every { content } returns mockk {
-                every { private } returns false
-            }
-        }
-        every { browserStore.state } returns mockk()
-        try {
-            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
-
-            controller.handleDeleteAllInactiveTabs()
-
-            verify { tabsUseCases.removeTabs(listOf("24")) }
-            assertTrue(showUndoSnackbarForTabInvoked)
-        } finally {
-            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-        }
-    }
-
-    @Test
-    fun `WHEN handleDeleteAllInactiveTabs is called THEN Event#TabsTrayCloseAllInactiveTabs and Event#TabsTrayCloseInactiveTab are added to telemetry`() {
-        val inactiveTab: TabSessionState = mockk {
-            every { lastAccess } returns maxActiveTime
-            every { createdAt } returns 0
-            every { id } returns "24"
-            every { content } returns mockk {
-                every { private } returns false
-            }
-        }
-        every { browserStore.state } returns mockk()
-        assertNull(TabsTray.closeAllInactiveTabs.testGetValue())
-
-        try {
-            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
-
-            createController().handleDeleteAllInactiveTabs()
-
-            assertNotNull(TabsTray.closeAllInactiveTabs.testGetValue())
-        } finally {
-            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-        }
     }
 
     private fun createController(

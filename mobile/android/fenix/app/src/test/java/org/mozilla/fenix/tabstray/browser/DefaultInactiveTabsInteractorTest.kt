@@ -9,43 +9,36 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import org.junit.Test
+import org.mozilla.fenix.tabstray.TrayPagerAdapter
 
 class DefaultInactiveTabsInteractorTest {
 
-    @Test
-    fun `WHEN onHeaderClicked THEN updateCardExpansion`() {
-        val controller: InactiveTabsController = mockk(relaxed = true)
-        val interactor = DefaultInactiveTabsInteractor(controller)
+    private val controller: InactiveTabsController = mockk(relaxed = true)
+    private val browserInteractor: BrowserTrayInteractor = mockk(relaxed = true)
 
-        interactor.onHeaderClicked(true)
+    @Test
+    fun `WHEN the inactive tabs header is clicked THEN update the expansion state of the inactive tabs card`() {
+        createInteractor().onHeaderClicked(true)
 
         verify { controller.updateCardExpansion(true) }
     }
 
     @Test
-    fun `WHEN onCloseClicked THEN close`() {
-        val controller: InactiveTabsController = mockk(relaxed = true)
-        val interactor = DefaultInactiveTabsInteractor(controller)
+    fun `WHEN the inactive tabs auto close dialog's close button is clicked THEN dismiss the dialog`() {
+        createInteractor().onCloseClicked()
 
-        interactor.onCloseClicked()
-
-        verify { controller.close() }
+        verify { controller.dismissAutoCloseDialog() }
     }
 
     @Test
-    fun `WHEN onEnabledAutoCloseClicked THEN enableAutoClosed`() {
-        val controller: InactiveTabsController = mockk(relaxed = true)
-        val interactor = DefaultInactiveTabsInteractor(controller)
+    fun `WHEN the enable inactive tabs auto close button is clicked THEN turn on the auto close feature`() {
+        createInteractor().onEnabledAutoCloseClicked()
 
-        interactor.onEnabledAutoCloseClicked()
-
-        verify { controller.enableAutoClosed() }
+        verify { controller.enableInactiveTabsAutoClose() }
     }
 
     @Test
     fun `WHEN an inactive tab is clicked THEN open the tab`() {
-        val controller: InactiveTabsController = mockk(relaxed = true)
-        val interactor = DefaultInactiveTabsInteractor(controller)
         val tab = TabSessionState(
             id = "tabId",
             content = ContentState(
@@ -53,15 +46,14 @@ class DefaultInactiveTabsInteractorTest {
             )
         )
 
-        interactor.onTabClicked(tab)
+        createInteractor().onTabClicked(tab)
 
         verify { controller.openInactiveTab(tab) }
+        verify { browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
     }
 
     @Test
     fun `WHEN an inactive tab is clicked to be closed THEN close the tab`() {
-        val controller: InactiveTabsController = mockk(relaxed = true)
-        val interactor = DefaultInactiveTabsInteractor(controller)
         val tab = TabSessionState(
             id = "tabId",
             content = ContentState(
@@ -69,8 +61,23 @@ class DefaultInactiveTabsInteractorTest {
             )
         )
 
-        interactor.onTabClosed(tab)
+        createInteractor().onTabClosed(tab)
 
         verify { controller.closeInactiveTab(tab) }
+        verify { browserInteractor.onTabClosed(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
+    }
+
+    @Test
+    fun `WHEN the close all inactive tabs button is clicked THEN delete all inactive tabs`() {
+        createInteractor().onDeleteAllInactiveTabsClicked()
+
+        verify { controller.deleteAllInactiveTabs() }
+    }
+
+    private fun createInteractor(): DefaultInactiveTabsInteractor {
+        return DefaultInactiveTabsInteractor(
+            controller = controller,
+            browserInteractor = browserInteractor,
+        )
     }
 }
