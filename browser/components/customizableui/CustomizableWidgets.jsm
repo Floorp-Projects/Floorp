@@ -467,7 +467,43 @@ const CustomizableWidgets = [
       return Services.prefs.getBoolPref("browser.tabs.firefox-view");
     },
     onCommand(e) {
-      e.view.FirefoxViewHandler.openTab();
+      let button = e.target;
+      if (button.hasAttribute("open")) {
+        return;
+      }
+      let window = button.ownerGlobal;
+      let tabbrowser = window.gBrowser;
+      let tab = window.gFirefoxViewTab;
+      if (!tab) {
+        tab = tabbrowser.addTrustedTab("about:firefoxview", { index: 0 });
+        tabbrowser.hideTab(tab);
+        window.gFirefoxViewTab = tab;
+
+        let onTabSelect = event => {
+          button.toggleAttribute("open", event.target == tab);
+        };
+
+        let onTabClose = () => {
+          window.gFirefoxViewTab = null;
+          tabbrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
+        };
+
+        tabbrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
+        tab.addEventListener("TabClose", onTabClose, { once: true });
+
+        window.addEventListener(
+          "unload",
+          () => {
+            tabbrowser.tabContainer.removeEventListener(
+              "TabSelect",
+              onTabSelect
+            );
+            tab.removeEventListener("TabClose", onTabClose);
+          },
+          { once: true }
+        );
+      }
+      tabbrowser.selectedTab = tab;
     },
   },
 ];

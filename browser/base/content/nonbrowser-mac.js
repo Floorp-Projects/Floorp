@@ -46,7 +46,6 @@ function nonBrowserWindowStartup() {
     "Browser:BookmarkAllTabs",
     "View:PageInfo",
     "History:UndoCloseTab",
-    "menu_openFirefoxView",
   ];
   var element;
 
@@ -128,10 +127,6 @@ function nonBrowserWindowDelayedStartup() {
 
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
-
-  if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
-    document.getElementById("menu_openFirefoxView").hidden = true;
-  }
 }
 
 function nonBrowserWindowShutdown() {
