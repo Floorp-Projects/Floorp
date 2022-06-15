@@ -3757,10 +3757,6 @@ class Document : public nsINode,
   // determine if it belongs to a tracker.
   bool IsScriptTracking(JSContext* aCx) const;
 
-  // For more information on Flash classification, see
-  // toolkit/components/url-classifier/flash-block-lists.rst
-  FlashClassification DocumentFlashClassification();
-
   // ResizeObserver usage.
   void AddResizeObserver(ResizeObserver&);
   void RemoveResizeObserver(ResizeObserver&);
@@ -3886,11 +3882,7 @@ class Document : public nsINode,
   // stored in parent iframe or container's browsingContext (cross process)
   already_AddRefed<mozilla::dom::FeaturePolicy> GetParentFeaturePolicy();
 
-  FlashClassification DocumentFlashClassificationInternal();
-
  public:
-  bool IsThirdPartyForFlashClassifier();
-
   const OriginTrials& Trials() const { return mTrials; }
 
  private:
@@ -5088,14 +5080,6 @@ class Document : public nsINode,
 
   class HeaderData;
   UniquePtr<HeaderData> mHeaderData;
-
-  // For determining if this is a flash document which should be
-  // blocked based on its principal.
-  FlashClassification mFlashClassification;
-
-  // Do not use this value directly. Call the |IsThirdPartyForFlashClassifier()|
-  // method, which caches its result here.
-  Maybe<bool> mIsThirdPartyForFlashClassifier;
 
   nsRevocableEventPtr<nsRunnableMethod<Document, void, false>>
       mPendingTitleChangeEvent;

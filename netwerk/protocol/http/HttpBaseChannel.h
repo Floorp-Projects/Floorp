@@ -236,9 +236,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetTopBrowsingContextId(uint64_t* aId) override;
   NS_IMETHOD SetTopBrowsingContextId(uint64_t aId) override;
 
-  NS_IMETHOD GetFlashPluginState(
-      nsIHttpChannel::FlashPluginState* aState) override;
-
   using nsIClassifiedChannel::IsThirdPartyTrackingResource;
 
   virtual void SetSource(UniquePtr<ProfileChunkedBuffer> aSource) override {
@@ -455,8 +452,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void AddClassificationFlags(uint32_t aClassificationFlags,
                               bool aIsThirdParty);
 
-  void SetFlashPluginState(nsIHttpChannel::FlashPluginState aState);
-
   const uint64_t& ChannelId() const { return mChannelId; }
 
   nsresult InternalSetUploadStream(nsIInputStream* uploadStream,
@@ -531,6 +526,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // True if we've already applied content conversion to the data
   // passed to mListener.
   bool HasAppliedConversion() { return LoadHasAppliedConversion(); }
+
+  // https://fetch.spec.whatwg.org/#concept-request-tainted-origin
+  bool HasRedirectTaintedOrigin() { return LoadTaintedOriginFlag(); }
 
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
@@ -753,7 +751,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   Atomic<bool, ReleaseAcquire> mCanceled;
   Atomic<uint32_t, ReleaseAcquire> mFirstPartyClassificationFlags;
   Atomic<uint32_t, ReleaseAcquire> mThirdPartyClassificationFlags;
-  Atomic<uint32_t, ReleaseAcquire> mFlashPluginState;
 
   UniquePtr<ProfileChunkedBuffer> mSource;
 

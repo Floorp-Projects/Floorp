@@ -8,10 +8,10 @@ add_task(async function test_experiment_plain_text() {
   const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
     m => m.template === "pb_newtab"
   ).content;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       ...defaultMessageContent,
       infoTitle: "Hello world",
       infoTitleEnabled: true,
@@ -22,6 +22,10 @@ add_task(async function test_experiment_plain_text() {
       promoLinkText: "Promo link",
       promoLinkUrl: "https://test.com",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -57,53 +61,17 @@ add_task(async function test_experiment_plain_text() {
   await doExperimentCleanup();
 });
 
-add_task(async function test_experiment_fluent() {
-  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
-    m => m.template === "pb_newtab"
-  ).content;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
-      ...defaultMessageContent,
-      infoBody: "fluent:about-private-browsing-info-title",
-      promoLinkText: "fluent:about-private-browsing-prominent-cta",
-      promoLinkUrl: "https://test.com",
-    },
-  });
-
-  let { win, tab } = await openTabAndWaitForRender();
-
-  await SpecialPowers.spawn(tab, [], async function() {
-    const infoBody = content.document.getElementById("info-body");
-    const promoLink = content.document.getElementById(
-      "private-browsing-vpn-link"
-    );
-
-    // Check experiment values are rendered
-    is(
-      infoBody.textContent,
-      "You’re in a Private Window",
-      "should render infoBody with fluent"
-    );
-    is(
-      promoLink.textContent,
-      "Stay private with Mozilla VPN",
-      "should render promoLinkText with fluent"
-    );
-  });
-
-  await BrowserTestUtils.closeWindow(win);
-  await doExperimentCleanup();
-});
-
 add_task(async function test_experiment_info_disabled() {
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       infoEnabled: false,
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -121,12 +89,16 @@ add_task(async function test_experiment_info_disabled() {
 });
 
 add_task(async function test_experiment_promo_disabled() {
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       promoEnabled: false,
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -145,15 +117,19 @@ add_task(async function test_experiment_promo_disabled() {
 
 add_task(async function test_experiment_format_urls() {
   const LOCALE = Services.locale.appLocaleAsBCP47;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       infoEnabled: true,
       promoEnabled: true,
       infoLinkUrl: "http://foo.mozilla.com/%LOCALE%",
       promoLinkUrl: "http://bar.mozilla.com/%LOCALE%",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -176,13 +152,17 @@ add_task(async function test_experiment_format_urls() {
 });
 
 add_task(async function test_experiment_click_info_telemetry() {
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM_CLICK_INFO_TELEM",
+    template: "pb_newtab",
+    content: {
       infoEnabled: true,
       infoLinkUrl: "http://example.com",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   // Required for `mach test --verify`
@@ -207,13 +187,17 @@ add_task(async function test_experiment_click_info_telemetry() {
 });
 
 add_task(async function test_experiment_click_promo_telemetry() {
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    enabled: true,
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: `PB_NEWTAB_MESSAGING_SYSTEM_PROMO_TELEM_${Math.random()}`,
+    template: "pb_newtab",
+    content: {
       promoEnabled: true,
       promoLinkUrl: "http://example.com",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -240,13 +224,15 @@ add_task(async function test_experiment_bottom_promo() {
   const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
     m => m.template === "pb_newtab"
   ).content;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    value: {
+
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       ...defaultMessageContent,
-      enabled: true,
+      promoEnabled: true,
       promoLinkType: "button",
-      promoLinkUrl: "http://example.com",
+      promoLinkUrl: "http://bar.example.com/%LOCALE%",
       promoSectionStyle: "bottom",
       promoHeader: "Need more privacy?",
       infoTitleEnabled: true,
@@ -254,6 +240,10 @@ add_task(async function test_experiment_bottom_promo() {
       promoImageLarge: "",
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -277,7 +267,7 @@ add_task(async function test_experiment_bottom_promo() {
     );
     ok(
       !content.document.querySelector("#private-browsing-vpn-text"),
-      "Should not render promo title if promoTitleEnabled is true"
+      "Should not render promo title if promoTitleEnabled is false"
     );
     ok(
       content.document.querySelector("#info-title"),
@@ -297,11 +287,12 @@ add_task(async function test_experiment_below_search_promo() {
   const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
     m => m.template === "pb_newtab"
   ).content;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
       ...defaultMessageContent,
-      enabled: true,
+      promoEnabled: true,
       promoLinkType: "button",
       promoLinkUrl: "http://example.com",
       promoSectionStyle: "below-search",
@@ -312,6 +303,10 @@ add_task(async function test_experiment_below_search_promo() {
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();
@@ -356,11 +351,12 @@ add_task(async function test_experiment_top_promo() {
   const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
     m => m.template === "pb_newtab"
   ).content;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "privatebrowsing",
-    value: {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: `PB_NEWTAB_MESSAGING_SYSTEM_DISMISS_${Math.random()}`,
+    template: "pb_newtab",
+    content: {
       ...defaultMessageContent,
-      enabled: true,
+      promoEnabled: true,
       promoLinkType: "button",
       promoLinkUrl: "http://example.com",
       promoSectionStyle: "top",
@@ -371,6 +367,10 @@ add_task(async function test_experiment_top_promo() {
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
 
   let { win, tab } = await openTabAndWaitForRender();

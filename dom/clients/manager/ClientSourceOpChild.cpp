@@ -18,8 +18,8 @@ ClientSource* ClientSourceOpChild::GetSource() const {
   return actor->GetSource();
 }
 
-template <typename Method, typename Args>
-void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
+template <typename Method, typename... Args>
+void ClientSourceOpChild::DoSourceOp(Method aMethod, Args&&... aArgs) {
   RefPtr<ClientOpPromise> promise;
   nsCOMPtr<nsISerialEventTarget> target;
 
@@ -40,7 +40,7 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
 
     // This may cause the ClientSource object to be destroyed.  Do not
     // use the source variable after this call.
-    promise = (source->*aMethod)(aArgs);
+    promise = (source->*aMethod)(std::forward<Args>(aArgs)...);
   }
 
   // The ClientSource methods are required to always return a promise.  If
@@ -95,6 +95,10 @@ void ClientSourceOpChild::Init(const ClientOpConstructorArgs& aArgs) {
     case ClientOpConstructorArgs::TClientGetInfoAndStateArgs: {
       DoSourceOp(&ClientSource::GetInfoAndState,
                  aArgs.get_ClientGetInfoAndStateArgs());
+      break;
+    }
+    case ClientOpConstructorArgs::TClientEvictBFCacheArgs: {
+      DoSourceOp(&ClientSource::EvictFromBFCacheOp);
       break;
     }
     default: {

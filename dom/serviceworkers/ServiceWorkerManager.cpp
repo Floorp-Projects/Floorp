@@ -2663,6 +2663,16 @@ void ServiceWorkerManager::UpdateClientControllers(
   }
 }
 
+void ServiceWorkerManager::EvictFromBFCache(
+    ServiceWorkerRegistrationInfo* aRegistration) {
+  MOZ_ASSERT(NS_IsMainThread());
+  for (const auto& client : mControlledClients.Values()) {
+    if (client->mRegistrationInfo == aRegistration) {
+      client->mClientHandle->EvictFromBFCache();
+    }
+  }
+}
+
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::GetRegistration(nsIPrincipal* aPrincipal,
                                       const nsACString& aScope) const {

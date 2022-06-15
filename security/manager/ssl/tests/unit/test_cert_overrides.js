@@ -608,8 +608,10 @@ function add_simple_tests() {
       certOverrideService.hasMatchingOverride("::1", 80, {}, cert, {}, {}),
       "Should have added override for [::1]:80"
     );
+    // When in a private browsing context, overrides added in non-private
+    // contexts should match (but not vice-versa).
     Assert.ok(
-      !certOverrideService.hasMatchingOverride(
+      certOverrideService.hasMatchingOverride(
         "example.org",
         443,
         { privateBrowsingId: 1 },
@@ -617,10 +619,10 @@ function add_simple_tests() {
         {},
         {}
       ),
-      "Should not have override for example.org:443 with privateBrowsingId 1"
+      "Should have override for example.org:443 with privateBrowsingId 1"
     );
     Assert.ok(
-      !certOverrideService.hasMatchingOverride(
+      certOverrideService.hasMatchingOverride(
         "example.org",
         443,
         { privateBrowsingId: 2 },
@@ -628,7 +630,7 @@ function add_simple_tests() {
         {},
         {}
       ),
-      "Should not have override for example.org:443 with privateBrowsingId 2"
+      "Should have override for example.org:443 with privateBrowsingId 2"
     );
     Assert.ok(
       certOverrideService.hasMatchingOverride(
@@ -691,7 +693,7 @@ function add_simple_tests() {
       "Should ignore firstPartyDomain and userContextId when checking overrides"
     );
     certOverrideService.rememberValidityOverride(
-      "example.org",
+      "example.test",
       443,
       { privateBrowsingId: 1 },
       cert,
@@ -700,25 +702,36 @@ function add_simple_tests() {
     );
     Assert.ok(
       certOverrideService.hasMatchingOverride(
-        "example.org",
+        "example.test",
         443,
         { privateBrowsingId: 1 },
         cert,
         {},
         {}
       ),
-      "Should have added override for example.org:443 with privateBrowsingId 1"
+      "Should have added override for example.test:443 with privateBrowsingId 1"
     );
     Assert.ok(
       !certOverrideService.hasMatchingOverride(
-        "example.org",
+        "example.test",
         443,
         { privateBrowsingId: 2 },
         cert,
         {},
         {}
       ),
-      "Should not have override for example.org:443 with privateBrowsingId 2"
+      "Should not have override for example.test:443 with privateBrowsingId 2"
+    );
+    Assert.ok(
+      !certOverrideService.hasMatchingOverride(
+        "example.test",
+        443,
+        {},
+        cert,
+        {},
+        {}
+      ),
+      "Should not have override for example.test:443 with non-private OriginAttributes"
     );
     // Clear them all...
     certOverrideService.clearAllOverrides();

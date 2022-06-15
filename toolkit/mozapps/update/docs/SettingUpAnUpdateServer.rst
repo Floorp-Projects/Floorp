@@ -38,20 +38,13 @@ MAR yourself. This is a security measure designed to prevent anyone from
 serving malicious updates. If you want to use a locally-built MAR, the
 copy of Firefox being updated will need to be built to allow un-signed
 MARs. See :ref:`Building Firefox <Firefox Contributors' Quick Reference>`
-for more information on building Firefox locally. These changes will
-need to be made in order to use the locally built MAR:
+for more information on building Firefox locally. In order to use a locally
+built MAR, you will need to put this line in the mozconfig file in root of the
+build directory (create it if it does not exist):
 
--  Put this line in the mozconfig file in root of the build directory
-   (create it if it does not exist):
-   ``ac_add_options --disable-verify-mar``
--  Several files contain a line that must be uncommented. Open them and
-   find this line:
-   ``#DEFINES['DISABLE_UPDATER_AUTHENTICODE_CHECK'] = True``. Delete the
-   ``#`` at the beginning of the line to uncomment it. These are the
-   files that must be changed:
+.. code::
 
-   -  toolkit/components/maintenanceservice/moz.build
-   -  toolkit/mozapps/update/tests/moz.build
+   ac_add_options --enable-unverified-updates
 
 Firefox should otherwise be built normally. After building, you may want
 to copy the installation of Firefox elsewhere. If you update the

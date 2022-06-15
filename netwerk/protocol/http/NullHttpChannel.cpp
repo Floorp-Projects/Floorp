@@ -83,12 +83,6 @@ NullHttpChannel::SetTopBrowsingContextId(uint64_t) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetFlashPluginState(
-    nsIHttpChannel::FlashPluginState* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::GetTransferSize(uint64_t* aTransferSize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

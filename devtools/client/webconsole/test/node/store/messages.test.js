@@ -320,6 +320,7 @@ describe("Message reducer:", () => {
       expect(getAllCssMessagesMatchingElements(state).size).toBe(0);
       expect(getCurrentGroup(state)).toBe(null);
       expect(getAllRepeatById(state)).toEqual({});
+      expect(state.messages.mutableMessagesOrder).toEqual([]);
     });
 
     it("cleans the repeatsById object when messages are pruned", () => {
@@ -383,6 +384,9 @@ describe("Message reducer:", () => {
       expect(getLastMessage(getState()).parameters[0]).toBe(
         `message num ${logLimit + 2}`
       );
+
+      const { mutableMessagesOrder } = getState().messages;
+      expect(mutableMessagesOrder.length).toBe(logLimit);
     });
 
     it("properly limits number of messages when there are nested groups", () => {
@@ -421,9 +425,12 @@ describe("Message reducer:", () => {
 
       const visibleMessages = getVisibleMessages(getState());
       const messages = getMutableMessagesById(getState());
+      const { mutableMessagesOrder } = getState().messages;
 
       expect(messages.size).toBe(logLimit);
       expect(visibleMessages.length).toBe(logLimit);
+      expect(mutableMessagesOrder.length).toBe(logLimit);
+
       expect(messages.get(visibleMessages[0]).parameters[0]).toBe(`message-0`);
       expect(messages.get(visibleMessages[logLimit - 1]).parameters[0]).toBe(
         `message-${logLimit - 1}`
@@ -645,6 +652,73 @@ describe("Message reducer:", () => {
       dispatch(actions.messagesAdd([packet]));
       // The message should not be added to the state.
       expect(getMutableMessagesById(getState()).size).toBe(0);
+    });
+  });
+
+  describe("mutableMessagesOrder", () => {
+    it("adds a message to an empty store", () => {
+      const { dispatch, getState } = setupStore();
+
+      const packet = stubPackets.get("console.log('foobar', 'test')");
+      dispatch(actions.messagesAdd([packet]));
+
+      const { mutableMessagesOrder } = getState().messages;
+      expect(mutableMessagesOrder.length).toBe(1);
+      expect(mutableMessagesOrder[0]).toBe(
+        // Don't get getMessageIndexAt/getFirstMessage since it relies on mutableMessagesOrder
+        [...getMutableMessagesById(getState()).keys()][0]
+      );
+    });
+
+    it("reorder messages", () => {
+      const { dispatch, getState } = setupStore();
+
+      const naNpacket = stubPackets.get("console.log(NaN)");
+      dispatch(actions.messagesAdd([naNpacket]));
+
+      // Add a message that has a shorter timestamp than the previous one, and thus, should
+      // be displayed before
+      const nullPacket = clonePacket(stubPackets.get("console.log(null)"));
+      nullPacket.message.timeStamp = naNpacket.message.timeStamp - 10;
+      dispatch(actions.messagesAdd([nullPacket]));
+
+      // Add a message that should be display between the 2 previous messages
+      const undefinedPacket = clonePacket(
+        stubPackets.get("console.log(undefined)")
+      );
+      undefinedPacket.message.timeStamp = naNpacket.message.timeStamp - 5;
+      dispatch(actions.messagesAdd([undefinedPacket]));
+
+      const { mutableMessagesOrder } = getState().messages;
+      const [nanMessage, nullMessage, undefinedMessage] = [
+        ...getMutableMessagesById(getState()).values(),
+      ];
+      const visibleMessages = getVisibleMessages(getState());
+
+      // Checking that messages in the Map are the expected ones
+      expect(nanMessage.parameters[0].type).toBe("NaN");
+      expect(nullMessage.parameters[0].type).toBe("null");
+      expect(undefinedMessage.parameters[0].type).toBe("undefined");
+
+      // Check that mutableMessagesOrder has the message ids in the chronological order
+      expect(mutableMessagesOrder).toEqual([
+        nullMessage.id,
+        undefinedMessage.id,
+        nanMessage.id,
+      ]);
+
+      // Since we didn't filtered anything, visibleMessages should be similar to mutableMessagesOrder
+      expect(mutableMessagesOrder).toEqual(visibleMessages);
+
+      // Check that visibleMessages is computed from mutableMessagesOrder when filtering
+      dispatch(actions.filterToggle("log"));
+      expect(getVisibleMessages(getState())).toEqual([]);
+      dispatch(actions.filterToggle("log"));
+      expect(getVisibleMessages(getState())).toEqual([
+        nullMessage.id,
+        undefinedMessage.id,
+        nanMessage.id,
+      ]);
     });
   });
 
@@ -1157,8 +1231,10 @@ describe("Message reducer:", () => {
       dispatch(actions.messageRemove(secondTraceMessage.id));
 
       const messages = getMutableMessagesById(getState());
+      const { mutableMessagesOrder } = getState().messages;
       // The messages was removed
       expect(messages.size).toBe(3);
+      expect(mutableMessagesOrder.length).toBe(3);
 
       // Its id was removed from the messagesUI property as well
       expanded = getAllMessagesUiById(getState());

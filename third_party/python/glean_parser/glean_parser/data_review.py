@@ -59,6 +59,13 @@ def generate(
             last_bug = metric.bugs[-1]
             metrics_table += f"`{category_name}.{metric_name}` | "
             metrics_table += f"{one_line_desc} | {sensitivity} | {last_bug}\n"
+            if metric.type == "event" and len(metric.allowed_extra_keys):
+                for extra_name, extra_detail in metric.extra_keys.items():
+                    extra_one_line_desc = extra_detail["description"].replace("\n", " ")
+                    metrics_table += f"`{category_name}.{metric_name}#{extra_name}` | "
+                    metrics_table += (
+                        f"{extra_one_line_desc} | {sensitivity} | {last_bug}\n"
+                    )
 
             durations.add(metric.expires)
 

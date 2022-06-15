@@ -392,37 +392,6 @@ bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
   return SendNotifyClassificationFlags(aClassificationFlags, aIsThirdParty);
 }
 
-bool HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  LOG(
-      ("HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged "
-       "[this=%p]\n",
-       this));
-  AssertIsInMainProcess();
-
-  if (NS_WARN_IF(!mIPCOpened)) {
-    return false;
-  }
-
-  if (!IsOnBackgroundThread()) {
-    MutexAutoLock lock(mBgThreadMutex);
-    RefPtr<HttpBackgroundChannelParent> self = this;
-    nsresult rv = mBackgroundThread->Dispatch(
-        NS_NewRunnableFunction(
-            "net::HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged",
-            [self, aState]() {
-              self->OnNotifyFlashPluginStateChanged(aState);
-            }),
-        NS_DISPATCH_NORMAL);
-
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return SendNotifyFlashPluginStateChanged(aState);
-}
-
 bool HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
     const nsACString& aList, const nsACString& aProvider,
     const nsACString& aFullHash) {

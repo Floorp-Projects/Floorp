@@ -229,6 +229,12 @@ class nsThreadShutdownEvent : public Runnable {
     // broken when the thread exits.
     mThread->mShutdownContext = mShutdownContext;
     MessageLoop::current()->Quit();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    // Let's leave a trace that we passed here in the thread's name.
+    nsAutoCString threadName(PR_GetThreadName(PR_GetCurrentThread()));
+    threadName.Append(",SHDRCV"_ns);
+    NS_SetCurrentThreadName(threadName.get());
+#endif
     return NS_OK;
   }
 
@@ -421,8 +427,9 @@ void nsThread::ThreadFunc(void* aArg) {
   // which case we won't notify our caller, and leak.
   RefPtr<nsThread> joiningThread;
   {
-    auto lock = context->mJoiningThread.Lock();
-    joiningThread = lock->forget();
+    MutexAutoLock lock(context->mJoiningThreadMutex);
+    joiningThread = context->mJoiningThread.forget();
+    MOZ_RELEASE_ASSERT(joiningThread || context->mThreadLeaked);
   }
   if (joiningThread) {
     // Dispatch shutdown ACK
@@ -435,6 +442,13 @@ void nsThread::ThreadFunc(void* aArg) {
     // crash with a hang later anyways. The best we can do is to tell
     // the world what happened right here.
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    // Let's leave a trace that we passed here in the thread's name.
+    nsAutoCString threadName(PR_GetThreadName(PR_GetCurrentThread()));
+    threadName.Append(",SHDACK"_ns);
+    NS_SetCurrentThreadName(threadName.get());
+#endif
   } else {
     NS_WARNING(
         "nsThread exiting after StopWaitingAndLeakThread was called, thread "
@@ -833,6 +847,17 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
   MOZ_ASSERT(mEvents);
   MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(aContext->mTerminatingThread == this);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  {
+    MutexAutoLock lock(aContext->mJoiningThreadMutex);
+
+    // StopWaitingAndLeakThread is explicitely meant to not cause a
+    // nsThreadShutdownAckEvent on the joining thread, which is the only
+    // caller of ShutdownComplete.
+    MOZ_DIAGNOSTIC_ASSERT(!aContext->mThreadLeaked);
+  }
+#endif
 
   MaybeRemoveFromThreadList();
 
@@ -1445,16 +1470,19 @@ nsThreadShutdownContext::StopWaitingAndLeakThread() {
   // thread won't try to dispatch nsThreadShutdownAckEvent to us anymore.
   RefPtr<nsThread> joiningThread;
   {
-    auto lock = mJoiningThread.Lock();
-    joiningThread = lock->forget();
-  }
-  if (!joiningThread) {
-    // Shutdown is already being resolved, so there's nothing for us to do.
-    return NS_ERROR_NOT_AVAILABLE;
+    MutexAutoLock lock(mJoiningThreadMutex);
+    if (!mJoiningThread) {
+      // Shutdown is already being resolved, so there's nothing for us to do.
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    joiningThread = mJoiningThread.forget();
+    mThreadLeaked = true;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(joiningThread->IsOnCurrentThread());
+
   MarkCompleted();
+
   return NS_OK;
 }
 

@@ -683,7 +683,7 @@
 
 /* Firefox View button */
 
-:is(#firefox-view-button, #wrapper-firefox-view-button) + #tabbrowser-tabs {
+:root:not([privatebrowsingmode=temporary]) :is(#firefox-view-button, #wrapper-firefox-view-button) + #tabbrowser-tabs {
   border-inline-start: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   padding-inline-start: calc(var(--tab-overflow-pinned-tabs-width) + 4px);
   margin-inline-start: 4px;

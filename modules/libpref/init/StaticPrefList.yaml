@@ -10147,6 +10147,13 @@
   value: 2
   mirror: always
 
+# Whether to respect the redirected-tainted origin flag
+# https://fetch.spec.whatwg.org/#concept-request-tainted-origin
+- name: network.http.origin.redirectTainted
+  type: bool
+  value: true
+  mirror: always
+
 # Prefs allowing granular control of referers.
 # 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 - name: network.http.sendRefererHeader
@@ -11326,11 +11333,6 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "plugins."
 #---------------------------------------------------------------------------
-
-- name: plugins.flashBlock.enabled
-  type: bool
-  value: false
-  mirror: always
 
 - name: plugins.http_https_only
   type: bool

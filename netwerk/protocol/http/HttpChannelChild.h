@@ -214,8 +214,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
                                         bool aIsThirdParty);
-  void ProcessNotifyFlashPluginStateChanged(
-      nsIHttpChannel::FlashPluginState aState);
   void ProcessSetClassifierMatchedInfo(const nsCString& aList,
                                        const nsCString& aProvider,
                                        const nsCString& aFullHash);

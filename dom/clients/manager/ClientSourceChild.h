@@ -31,6 +31,8 @@ class ClientSourceChild final : public PClientSourceChild {
       PClientSourceOpChild* aActor,
       const ClientOpConstructorArgs& aArgs) override;
 
+  mozilla::ipc::IPCResult RecvEvictFromBFCache() override;
+
  public:
   explicit ClientSourceChild(const ClientSourceConstructorArgs& aArgs);
 

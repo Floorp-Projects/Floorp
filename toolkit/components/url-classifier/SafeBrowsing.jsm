@@ -148,26 +148,6 @@ const FEATURES = [
     },
   },
   {
-    name: "flashBlock",
-    list: [
-      "urlclassifier.flashAllowTable",
-      "urlclassifier.flashAllowExceptTable",
-      "urlclassifier.flashTable",
-      "urlclassifier.flashExceptTable",
-      "urlclassifier.flashSubDocTable",
-      "urlclassifier.flashSubDocExceptTable",
-    ],
-    enabled() {
-      return Services.prefs.getBoolPref("plugins.flashBlock.enabled");
-    },
-    update() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.features.flashBlock.update",
-        this.enabled()
-      );
-    },
-  },
-  {
     name: "fingerprinting-annotation",
     list: [
       "urlclassifier.features.fingerprinting.annotate.blacklistTables",
@@ -287,7 +267,6 @@ var SafeBrowsing = {
     Services.prefs.addObserver("browser.safebrowsing", this);
     Services.prefs.addObserver("privacy.trackingprotection", this);
     Services.prefs.addObserver("urlclassifier", this);
-    Services.prefs.addObserver("plugins.flashBlock.enabled", this);
 
     this.readPrefs();
 

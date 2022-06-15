@@ -35,6 +35,19 @@ class SessionStoreChild final : public PSessionStoreChild {
   void FlushSessionStore();
   void UpdateSHistoryChanges();
 
+  void SessionStoreUpdate(const Maybe<nsCString>& aDocShellCaps,
+                          const Maybe<bool>& aPrivatedMode,
+                          const bool aNeedCollectSHistory,
+                          const uint32_t& aEpoch);
+
+  void IncrementalSessionStoreUpdate(
+      const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
+      const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
+      uint32_t aEpoch);
+
+  void ResetSessionStore(
+      const MaybeDiscarded<BrowsingContext>& aBrowsingContext, uint32_t aEpoch);
+
   SessionStoreChangeListener* GetSessionStoreChangeListener() const {
     return mSessionStoreChangeListener;
   }

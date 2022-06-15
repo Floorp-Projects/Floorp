@@ -357,6 +357,19 @@ void ClientSource::Thaw() {
   MaybeExecute([](PClientSourceChild* aActor) { aActor->SendThaw(); });
 }
 
+void ClientSource::EvictFromBFCache() {
+  if (nsCOMPtr<nsPIDOMWindowInner> win = GetInnerWindow()) {
+    win->RemoveFromBFCacheSync();
+  } else if (WorkerPrivate* vp = GetWorkerPrivate()) {
+    vp->EvictFromBFCache();
+  }
+}
+
+RefPtr<ClientOpPromise> ClientSource::EvictFromBFCacheOp() {
+  EvictFromBFCache();
+  return ClientOpPromise::CreateAndResolve(CopyableErrorResult(), __func__);
+}
+
 const ClientInfo& ClientSource::Info() const { return mClientInfo; }
 
 void ClientSource::WorkerSyncPing(WorkerPrivate* aWorkerPrivate) {
@@ -567,6 +580,10 @@ RefPtr<ClientOpPromise> ClientSource::PostMessage(
   if (nsPIDOMWindowInner* const window = GetInnerWindow()) {
     const RefPtr<ServiceWorkerContainer> container =
         window->Navigator()->ServiceWorker();
+
+    // Note, EvictFromBFCache() may delete the ClientSource object
+    // when bfcache lives in the child process.
+    EvictFromBFCache();
     container->ReceiveMessage(aArgs);
     return ClientOpPromise::CreateAndResolve(CopyableErrorResult(), __func__);
   }

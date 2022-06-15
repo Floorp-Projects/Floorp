@@ -220,9 +220,14 @@ add_task(async function plainExpectSuccessEVTests() {
   await ensureVerifiesAsEV("reverse-order-oids-path");
   // In this case, the end-entity has both the CA/B Forum OID and the test OID
   // (in that order). The intermediate has the CA/B Forum OID. Since the
-  // implementation uses the first EV policy it encounters in the end-entity as
-  // the required one, this successfully verifies as EV.
+  // implementation tries all EV policies it encounters, this successfully
+  // verifies as EV.
   await ensureVerifiesAsEV("cabforum-and-test-oid-ee-cabforum-oid-int-path");
+  // In this case, the end-entity has both the test OID and the CA/B Forum OID
+  // (in that order). The intermediate has only the CA/B Forum OID. Since the
+  // implementation tries all EV policies it encounters, this successfully
+  // verifies as EV.
+  await ensureVerifiesAsEV("test-and-cabforum-oid-ee-cabforum-oid-int-path");
 });
 
 // These fail for various reasons to verify as EV, but fallback to DV should
@@ -236,11 +241,6 @@ add_task(async function expectDVFallbackTests() {
   // CA/B Forum OID. Since the CA/B Forum OID is not treated the same as the
   // anyPolicy OID, this will not verify as EV.
   await ensureVerifiesAsDV("test-oid-ee-cabforum-oid-int-path");
-  // In this case, the end-entity has both the test OID and the CA/B Forum OID
-  // (in that order). The intermediate has only the CA/B Forum OID. Since the
-  // implementation uses the first EV policy it encounters in the end-entity as
-  // the required one, this fails to verify as EV.
-  await ensureVerifiesAsDV("test-and-cabforum-oid-ee-cabforum-oid-int-path");
 });
 
 // Test that removing the trust bits from an EV root causes verifications

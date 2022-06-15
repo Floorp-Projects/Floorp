@@ -136,6 +136,11 @@ parent:
   async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
 
   /*
+   * Lists of accessibles that either gained or lost a selected state.
+   */
+  async SelectedAccessiblesChanged(uint64_t[] aSelectedIDs, uint64_t[] aUnselectedIDs);
+
+  /*
    * Tell the parent process that the given Accessibles are about to be moved
    * via subsequent hide and show events.
    */

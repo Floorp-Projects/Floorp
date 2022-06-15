@@ -29,11 +29,6 @@ interface nsIParentChannel : nsIStreamListener
    */
   [noscript] void setParentListener(in ParentChannelListener listener);
 
-  /**
-   * Called to notify the HttpChannelChild that flash plugin state has changed.
-   */
-  [noscript] void notifyFlashPluginStateChanged(in nsIHttpChannel_FlashPluginState aState);
-
    /**
    * Called to set matched information when URL matches SafeBrowsing list.
    * @param aList

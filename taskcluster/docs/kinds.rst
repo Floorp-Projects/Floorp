@@ -668,10 +668,6 @@ geckodriver-signing
 -------------------
 Signing for geckodriver binary.
 
-iris
-----
-Iris testing suite
-
 maybe-release
 -------------
 A shipitscript task that does the following:

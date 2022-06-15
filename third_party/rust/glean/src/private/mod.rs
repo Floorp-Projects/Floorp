@@ -26,3 +26,9 @@ pub use glean_core::UuidMetric;
 pub use glean_core::{AllowLabeled, LabeledMetric};
 pub use glean_core::{Datetime, DatetimeMetric};
 pub use ping::PingType;
+
+// Re-export types that are used by the glean_parser-generated code.
+#[doc(hidden)]
+pub mod __export {
+    pub use once_cell::sync::Lazy;
+}

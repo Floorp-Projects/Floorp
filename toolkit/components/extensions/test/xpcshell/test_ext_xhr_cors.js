@@ -38,22 +38,34 @@ server.registerPathHandler("/cors-enabled", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "http://example.com");
   res.write("cors_response");
 });
+server.registerPathHandler("/return-origin", (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "*");
+  res.write(req.hasHeader("Origin") ? req.getHeader("Origin") : "undefined");
+});
 
 // We just need to test XHR; fetch is already covered by test_ext_secfetch.js.
 async function test_xhr({ manifest_version }) {
   async function contentScript(manifest_version) {
-    function runXHR(url, extraXHRProps) {
+    function runXHR(url, extraXHRProps, method = "GET") {
       return new Promise(resolve => {
         let x = new XMLHttpRequest();
-        x.open("GET", url);
+        x.open(method, url);
         Object.assign(x, extraXHRProps);
         x.onloadend = () => resolve(x);
         x.send();
       });
     }
-    async function checkXHR({ description, url, extraXHRProps, expected }) {
+    async function checkXHR({
+      description,
+      url,
+      extraXHRProps,
+      method,
+      expected,
+    }) {
       let { status, response } = expected;
-      let x = await runXHR(url, extraXHRProps);
+      let x = await runXHR(url, extraXHRProps, method);
       browser.test.assertEq(status, x.status, `${description} - status`);
       browser.test.assertEq(response, x.response, `${description} - body`);
     }
@@ -128,6 +140,44 @@ async function test_xhr({ manifest_version }) {
         "got parsed document"
       );
     }
+
+    await checkXHR({
+      description: "Same-origin Origin header",
+      url: "http://example.com/return-origin",
+      expected: { status: 200, response: "undefined" },
+    });
+
+    await checkXHR({
+      description: "Same-origin POST Origin header",
+      url: "http://example.com/return-origin",
+      method: "POST",
+      expected:
+        manifest_version === 2
+          ? { status: 200, response: "undefined" }
+          : { status: 200, response: "http://example.com" },
+    });
+
+    await checkXHR({
+      description: "Cross-origin (CORS) Origin header",
+      url: "http://example.org/return-origin",
+      expected:
+        manifest_version === 2
+          ? // Bug 1605197: MV2 cannot fall back to CORS.
+            { status: 0, response: "" }
+          : { status: 200, response: "http://example.com" },
+    });
+
+    await checkXHR({
+      description: "Cross-origin (CORS) POST Origin header",
+      url: "http://example.org/return-origin",
+      method: "POST",
+      expected:
+        manifest_version === 2
+          ? // Bug 1605197: MV2 cannot fall back to CORS.
+            { status: 0, response: "" }
+          : { status: 200, response: "http://example.com" },
+    });
+
     browser.test.sendMessage("done");
   }
   let extension = ExtensionTestUtils.loadExtension({

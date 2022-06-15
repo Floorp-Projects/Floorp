@@ -71,6 +71,11 @@ class SessionHistoryInfo {
     mResultPrincipalURI = aResultPrincipalURI;
   }
 
+  nsIReferrerInfo* GetReferrerInfo() { return mReferrerInfo; }
+  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+    mReferrerInfo = aReferrerInfo;
+  }
+
   bool HasPostData() const { return mPostData; }
   already_AddRefed<nsIInputStream> GetPostData() const;
   void SetPostData(nsIInputStream* aPostData);

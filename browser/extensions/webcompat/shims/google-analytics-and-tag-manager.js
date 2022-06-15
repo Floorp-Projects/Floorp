@@ -174,3 +174,14 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
   // Run dataLayer.hide.end to handle asynchide (bug 1628151)
   run(window.dataLayer?.hide?.end);
 }
+
+if (!window?.gaplugins?.Linker) {
+  window.gaplugins = window.gaplugins || {};
+  window.gaplugins.Linker = class {
+    autoLink() {}
+    decorate(url) {
+      return url;
+    }
+    passthrough() {}
+  };
+}

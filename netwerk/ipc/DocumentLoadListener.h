@@ -427,7 +427,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This defines a variant that describes all the attribute setters (and their
   // parameters) from nsIParentChannel
   //
-  // NotifyFlashPluginStateChanged(nsIHttpChannel::FlashPluginState aState) = 0;
   // SetClassifierMatchedInfo(const nsACString& aList, const nsACString&
   // aProvider, const nsACString& aFullHash) = 0;
   // SetClassifierMatchedTrackingInfo(const nsACString& aLists, const
@@ -449,9 +448,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     bool mIsThirdParty;
   };
 
-  using IParentChannelFunction = mozilla::Variant<
-      nsIHttpChannel::FlashPluginState, ClassifierMatchedInfoParams,
-      ClassifierMatchedTrackingInfoParams, ClassificationFlagsParams>;
+  using IParentChannelFunction =
+      mozilla::Variant<ClassifierMatchedInfoParams,
+                       ClassifierMatchedTrackingInfoParams,
+                       ClassificationFlagsParams>;
 
   // Store a list of all the attribute setters that have been called on this
   // channel, so that we can repeat them on the real channel that we redirect

@@ -791,6 +791,8 @@ class WorkerPrivate final
 
   nsPIDOMWindowInner* GetAncestorWindow() const;
 
+  void EvictFromBFCache();
+
   nsIContentSecurityPolicy* GetCSP() const {
     AssertIsOnMainThread();
     return mLoadInfo.mCSP;

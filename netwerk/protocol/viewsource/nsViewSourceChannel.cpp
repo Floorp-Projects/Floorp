@@ -765,13 +765,6 @@ nsViewSourceChannel::SetTopBrowsingContextId(uint64_t aId) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetFlashPluginState(
-    nsIHttpChannel::FlashPluginState* aResult) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetFlashPluginState(aResult);
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::GetRequestMethod(nsACString& aRequestMethod) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetRequestMethod(aRequestMethod);
