@@ -1293,6 +1293,10 @@ static bool CheckOverflow(const ComputedStyle* aComputedStyle,
     return false;
   }
 
+  if (display->IsContainAny()) {
+    return false;
+  }
+
   *aStyles =
       ScrollStyles(*display, ScrollStyles::MapOverflowToValidScrollStyle);
   return true;

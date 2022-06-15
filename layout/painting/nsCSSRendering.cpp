@@ -1193,7 +1193,7 @@ nsIFrame* nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame) {
   }
 
   nsIFrame* bodyFrame = bodyContent->GetPrimaryFrame();
-  if (!bodyFrame) {
+  if (!bodyFrame || bodyFrame->StyleDisplay()->IsContainAny()) {
     return aForFrame;
   }
 
@@ -1242,21 +1242,24 @@ inline bool FindElementBackground(const nsIFrame* aForFrame,
   // was propagated to the viewport.
 
   nsIContent* content = aForFrame->GetContent();
-  if (!content || content->NodeInfo()->NameAtom() != nsGkAtoms::body)
+  if (!content || content->NodeInfo()->NameAtom() != nsGkAtoms::body) {
     return true;  // not frame for a "body" element
+  }
   // It could be a non-HTML "body" element but that's OK, we'd fail the
   // bodyContent check below
 
-  if (aForFrame->Style()->GetPseudoType() != PseudoStyleType::NotPseudo) {
-    return true;  // A pseudo-element frame.
+  if (aForFrame->Style()->GetPseudoType() != PseudoStyleType::NotPseudo ||
+      aForFrame->StyleDisplay()->IsContainAny()) {
+    return true;  // A pseudo-element frame, or contained.
   }
 
   // We should only look at the <html> background if we're in an HTML document
   Document* document = content->OwnerDoc();
 
   dom::Element* bodyContent = document->GetBodyElement();
-  if (bodyContent != content)
+  if (bodyContent != content) {
     return true;  // this wasn't the background that was propagated
+  }
 
   // This can be called even when there's no root element yet, during frame
   // construction, via nsLayoutUtils::FrameHasTransparency and
