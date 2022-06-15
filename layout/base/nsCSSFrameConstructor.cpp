@@ -2411,7 +2411,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
       if (bodyStyle->StyleDisplay()->IsContainAny()) {
         return rootWM;
       }
-      const WritingMode bodyWM(computedStyle);
+      const WritingMode bodyWM(bodyStyle);
       if (bodyWM != rootWM) {
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, "Layout"_ns, mDocument,
