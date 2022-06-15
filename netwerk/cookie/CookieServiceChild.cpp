@@ -145,13 +145,16 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
       aChannel, attrs);
 
   bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(aChannel, uri);
+  bool hadCrossSiteRedirects = false;
+  bool isSameSiteForeign =
+      CookieCommons::IsSameSiteForeign(aChannel, uri, &hadCrossSiteRedirects);
   SendPrepareCookieList(
       uri, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, attrs);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
+      hadCrossSiteRedirects, attrs);
 }
 
 IPCResult CookieServiceChild::RecvRemoveAll() {
