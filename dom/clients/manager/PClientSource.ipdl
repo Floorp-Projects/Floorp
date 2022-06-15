@@ -28,6 +28,8 @@ parent:
 child:
   async PClientSourceOp(ClientOpConstructorArgs aArgs);
 
+  async EvictFromBFCache();
+
   async __delete__();
 };
 

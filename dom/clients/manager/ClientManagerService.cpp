@@ -204,9 +204,8 @@ ClientSourceParent* ClientManagerService::FindExistingSource(
 
   ClientSourceParent* source = MaybeUnwrapAsExistingSource(entry.Data());
 
-  if (!source || source->IsFrozen() ||
-      NS_WARN_IF(!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
-                                           aPrincipalInfo))) {
+  if (!source || NS_WARN_IF(!ClientMatchPrincipalInfo(
+                     source->Info().PrincipalInfo(), aPrincipalInfo))) {
     return nullptr;
   }
   return source;
@@ -377,8 +376,7 @@ RefPtr<SourcePromise> ClientManagerService::FindSource(
   }
 
   ClientSourceParent* source = entry.Data().as<ClientSourceParent*>();
-  if (source->IsFrozen() ||
-      NS_WARN_IF(!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
+  if (NS_WARN_IF(!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
                                            aPrincipalInfo))) {
     CopyableErrorResult rv;
     rv.ThrowInvalidStateError("Unknown client.");
@@ -634,7 +632,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
   for (const auto& entry : mSourceTable) {
     ClientSourceParent* source = MaybeUnwrapAsExistingSource(entry.GetData());
 
-    if (!source || source->IsFrozen()) {
+    if (!source) {
       continue;
     }
 
@@ -657,6 +655,11 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
     if (!source->ExecutionReady() ||
         source->Info().Type() == ClientType::Serviceworker ||
         source->Info().URL().Find(serviceWorker.scope()) != 0) {
+      continue;
+    }
+
+    if (source->IsFrozen()) {
+      Unused << source->SendEvictFromBFCache();
       continue;
     }
 

@@ -185,4 +185,11 @@ RefPtr<GenericPromise> ClientHandle::OnDetach() {
   return mDetachPromise;
 }
 
+void ClientHandle::EvictFromBFCache() {
+  ClientEvictBFCacheArgs args;
+  StartOp(
+      std::move(args), [](const ClientOpResult& aResult) {},
+      [](const ClientOpResult& aResult) {});
+}
+
 }  // namespace mozilla::dom

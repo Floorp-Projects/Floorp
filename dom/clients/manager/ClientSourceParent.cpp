@@ -119,12 +119,6 @@ IPCResult ClientSourceParent::RecvFreeze() {
   MOZ_DIAGNOSTIC_ASSERT(!mFrozen);
   mFrozen = true;
 
-  // Frozen clients should not be observable.  Act as if the client has
-  // been destroyed.
-  for (ClientHandleParent* handle : mHandleList.Clone()) {
-    Unused << ClientHandleParent::Send__delete__(handle);
-  }
-
   return IPC_OK();
 }
 
@@ -255,7 +249,6 @@ void ClientSourceParent::ClearController() { mController.reset(); }
 
 void ClientSourceParent::AttachHandle(ClientHandleParent* aClientHandle) {
   MOZ_DIAGNOSTIC_ASSERT(aClientHandle);
-  MOZ_DIAGNOSTIC_ASSERT(!mFrozen);
   MOZ_ASSERT(!mHandleList.Contains(aClientHandle));
   mHandleList.AppendElement(aClientHandle);
 }
