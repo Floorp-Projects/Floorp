@@ -6,21 +6,13 @@
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonStudies",
+const { AddonStudies } = ChromeUtils.import(
   "resource://normandy/lib/AddonStudies.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceExperiments",
+const { PreferenceExperiments } = ChromeUtils.import(
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RecipeRunner",
+const { RecipeRunner } = ChromeUtils.import(
   "resource://normandy/lib/RecipeRunner.jsm"
 );
 
@@ -62,17 +54,17 @@ const NormandyMigrations = {
   migrations: [
     migrateShieldPrefs,
     migrateStudiesEnabledWithoutHealthReporting,
-    lazy.AddonStudies.migrations
+    AddonStudies.migrations
       .migration01AddonStudyFieldsToSlugAndUserFacingFields,
-    lazy.PreferenceExperiments.migrations.migration01MoveExperiments,
-    lazy.PreferenceExperiments.migrations.migration02MultiPreference,
-    lazy.PreferenceExperiments.migrations.migration03AddActionName,
-    lazy.PreferenceExperiments.migrations.migration04RenameNameToSlug,
-    lazy.RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
-    lazy.AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
+    PreferenceExperiments.migrations.migration01MoveExperiments,
+    PreferenceExperiments.migrations.migration02MultiPreference,
+    PreferenceExperiments.migrations.migration03AddActionName,
+    PreferenceExperiments.migrations.migration04RenameNameToSlug,
+    RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
+    AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
     migrateRemoveLastBuildIdPref,
-    lazy.PreferenceExperiments.migrations.migration05RemoveOldAction,
-    lazy.PreferenceExperiments.migrations.migration06TrackOverriddenPrefs,
+    PreferenceExperiments.migrations.migration05RemoveOldAction,
+    PreferenceExperiments.migrations.migration06TrackOverriddenPrefs,
   ],
 };
 

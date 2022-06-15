@@ -45,6 +45,9 @@
  */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { LogManager } = ChromeUtils.import(
+  "resource://normandy/lib/LogManager.jsm"
+);
 
 const lazy = {};
 
@@ -70,11 +73,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   lazy,
-  "LogManager",
-  "resource://normandy/lib/LogManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
@@ -91,7 +89,7 @@ const STORE_NAME = "addon-studies";
 const VERSION_STORE_NAME = "addon-studies-version";
 const DB_VERSION = 2;
 const STUDY_ENDED_TOPIC = "shield-study-ended";
-const log = lazy.LogManager.getLogger("addon-studies");
+const log = LogManager.getLogger("addon-studies");
 
 /**
  * Create a new connection to the database.
