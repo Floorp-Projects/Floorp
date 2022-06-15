@@ -1317,44 +1317,28 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       // There's a jit frame above the current one; we don't care about pc
       // since the Jit entry frame is a jit frame which can be considered as
       // an exit frame.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
-      if (offsetFromEntry < PushedRetAddr) {
-        // We haven't pushed the jit return address yet, thus the jit
-        // frame is incomplete. During profiling frame iteration, it means
-        // that the jit profiling frame iterator won't be able to unwind
-        // this frame; drop it.
+      if (offsetFromEntry < PushedFP) {
+        // We haven't pushed the jit caller's frame pointer yet, thus the jit
+        // frame is incomplete. During profiling frame iteration, it means that
+        // the jit profiling frame iterator won't be able to unwind this frame;
+        // drop it.
         return false;
       }
-#endif
+      if (offsetInCode >= codeRange->ret() - PoppedFPJitEntry &&
+          offsetInCode <= codeRange->ret()) {
+        // We've popped FP but still have to return. Similar to the
+        // |offsetFromEntry < PushedFP| case above, the JIT frame is now
+        // incomplete and we can't unwind.
+        return false;
+      }
       // On the error return path, FP might be set to FailFP. Ignore these
       // transient frames.
       if (intptr_t(fp) == (FailFP & ~ExitOrJitEntryFPTag)) {
         return false;
       }
       // Set fixedFP to the address of the JitFrameLayout on the stack.
-      if (offsetFromEntry < PushedFP) {
-        // On ARM64, we allocate the JSJitToWasmFrame before storing the return
-        // address so it's already on the stack. On other architectures this
-        // happens as part of pushing FP.
-#if defined(JS_CODEGEN_ARM64)
+      if (offsetFromEntry < SetFP) {
         fixedFP = reinterpret_cast<uint8_t*>(sp) + sizeof(JSJitToWasmFrame);
-#else
-        fixedFP = reinterpret_cast<uint8_t*>(sp);
-#endif
-      } else if (offsetFromEntry < SetFP) {
-        fixedFP = reinterpret_cast<uint8_t*>(sp) + sizeof(JSJitToWasmFrame);
-      } else if (offsetInCode >= codeRange->ret() - PoppedFPJitEntry &&
-                 offsetInCode <= codeRange->ret()) {
-        // We've popped FP but still have to return. Similar to the
-        // |offsetFromEntry < PushedRetAddr| case above, the JIT frame may be
-        // incomplete on some platforms if we already popped the return address,
-        // so we return false.
-#if defined(JS_CODEGEN_ARM64)
-        return false;
-#else
-        fixedFP = reinterpret_cast<uint8_t*>(sp);
-#endif
       } else {
         fixedFP = fp + JSJitToWasmFrame::jitFrameLayoutOffsetFromFP();
       }
