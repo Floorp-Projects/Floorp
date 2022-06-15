@@ -1508,11 +1508,13 @@ function _loadURI(browser, uri, params = {}) {
     userContextId,
     csp,
     remoteTypeOverride,
+    hasValidUserGestureActivation,
   } = params || {};
   let loadFlags =
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-  let hasValidUserGestureActivation =
+  hasValidUserGestureActivation ??=
     document.hasValidTransientUserGestureActivation;
+
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
@@ -2245,7 +2247,7 @@ var gBrowserInit = {
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
-        // window.arguments[1]: unused (bug 871161)
+        // window.arguments[1]: extraOptions (nsIPropertyBag)
         //                 [2]: referrerInfo (nsIReferrerInfo)
         //                 [3]: postData (nsIInputStream)
         //                 [4]: allowThirdPartyFixup (bool)
@@ -2260,6 +2262,26 @@ var gBrowserInit = {
           window.arguments[5] != undefined
             ? window.arguments[5]
             : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+
+        let hasValidUserGestureActivation = undefined;
+        let fromExternal = undefined;
+        if (window.arguments[1]) {
+          if (!(window.arguments[1] instanceof Ci.nsIPropertyBag2)) {
+            throw new Error(
+              "window.arguments[1] must be null or Ci.nsIPropertyBag2!"
+            );
+          }
+
+          let extraOptions = window.arguments[1];
+          if (extraOptions.hasKey("hasValidUserGestureActivation")) {
+            hasValidUserGestureActivation = extraOptions.getPropertyAsBool(
+              "hasValidUserGestureActivation"
+            );
+          }
+          if (extraOptions.hasKey("fromExternal")) {
+            fromExternal = extraOptions.getPropertyAsBool("fromExternal");
+          }
+        }
 
         try {
           openLinkIn(uriToLoad, "current", {
@@ -2277,6 +2299,8 @@ var gBrowserInit = {
             allowInheritPrincipal: window.arguments[9] !== false,
             csp: window.arguments[10],
             forceAboutBlankViewerInCurrent: !!window.arguments[6],
+            hasValidUserGestureActivation,
+            fromExternal,
           });
         } catch (e) {
           Cu.reportError(e);
@@ -6277,13 +6301,18 @@ nsBrowserAccess.prototype = {
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
         try {
+          let extraOptions = Cc[
+            "@mozilla.org/hash-property-bag;1"
+          ].createInstance(Ci.nsIWritablePropertyBag2);
+          extraOptions.setPropertyAsBool("fromExternal", isExternal);
+
           openDialog(
             AppConstants.BROWSER_CHROME_URL,
             "_blank",
             features,
             // window.arguments
             url,
-            null,
+            extraOptions,
             null,
             null,
             null,

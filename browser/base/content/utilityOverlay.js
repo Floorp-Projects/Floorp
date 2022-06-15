@@ -409,12 +409,17 @@ function openLinkIn(url, where, params) {
     );
     wuri.data = url;
 
-    let charset = null;
-    if (aCharset) {
-      charset = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
+    let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag2
+    );
+    if (params.hasValidUserGestureActivation !== undefined) {
+      extraOptions.setPropertyAsBool(
+        "hasValidUserGestureActivation",
+        params.hasValidUserGestureActivation
       );
-      charset.data = "charset=" + aCharset;
+    }
+    if (params.fromExternal !== undefined) {
+      extraOptions.setPropertyAsBool("fromExternal", params.fromExternal);
     }
 
     var allowThirdPartyFixupSupports = Cc[
@@ -428,7 +433,7 @@ function openLinkIn(url, where, params) {
     userContextIdSupports.data = aUserContextId;
 
     sa.appendElement(wuri);
-    sa.appendElement(charset);
+    sa.appendElement(extraOptions);
     sa.appendElement(aReferrerInfo);
     sa.appendElement(aPostData);
     sa.appendElement(allowThirdPartyFixupSupports);
@@ -579,6 +584,9 @@ function openLinkIn(url, where, params) {
       if (aForceAllowDataURI) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
       }
+      if (params.fromExternal) {
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+      }
 
       let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
       if (
@@ -600,6 +608,7 @@ function openLinkIn(url, where, params) {
         referrerInfo: aReferrerInfo,
         postData: aPostData,
         userContextId: aUserContextId,
+        hasValidUserGestureActivation: params.hasValidUserGestureActivation,
       });
       if (aResolveOnContentBrowserReady) {
         aResolveOnContentBrowserReady(targetBrowser);
@@ -636,6 +645,7 @@ function openLinkIn(url, where, params) {
         csp: aCsp,
         focusUrlBar,
         openerBrowser: params.openerBrowser,
+        fromExternal: params.fromExternal,
       });
       targetBrowser = tabUsedForLoad.linkedBrowser;
 
