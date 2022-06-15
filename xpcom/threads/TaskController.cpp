@@ -16,7 +16,6 @@
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/VsyncTaskManager.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/ProfilerRunnable.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
@@ -49,11 +48,75 @@ int32_t TaskController::GetPoolThreadCount() {
 }
 
 #if defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
+
+struct TaskMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Task");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const nsCString& aName, uint32_t aPriority) {
+    aWriter.StringProperty("name", aName);
+    aWriter.IntProperty("priority", aPriority);
+
+#  define EVENT_PRIORITY(NAME, VALUE)                \
+    if (aPriority == (VALUE)) {                      \
+      aWriter.StringProperty("priorityName", #NAME); \
+    } else
+    EVENT_QUEUE_PRIORITY_LIST(EVENT_PRIORITY)
+#  undef EVENT_PRIORITY
+    {
+      aWriter.StringProperty("priorityName", "Invalid Value");
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.SetChartLabel("{marker.data.name}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.name} - priority: "
+        "{marker.data.priorityName} ({marker.data.priority})");
+    schema.AddKeyLabelFormat("name", "Task Name", MS::Format::String);
+    schema.AddKeyLabelFormat("priorityName", "Priority Name",
+                             MS::Format::String);
+    schema.AddKeyLabelFormat("priority", "Priority level", MS::Format::Integer);
+    return schema;
+  }
+};
+
+class MOZ_RAII AutoProfileTask {
+ public:
+  explicit AutoProfileTask(nsACString& aName, uint64_t aPriority)
+      : mName(aName), mPriority(aPriority) {
+    if (profiler_is_active()) {
+      mStartTime = TimeStamp::Now();
+    }
+  }
+
+  ~AutoProfileTask() {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
+      return;
+    }
+
+    AUTO_PROFILER_LABEL("AutoProfileTask", PROFILER);
+    AUTO_PROFILER_STATS(AUTO_PROFILE_TASK);
+    profiler_add_marker("Runnable", ::mozilla::baseprofiler::category::OTHER,
+                        mStartTime.IsNull()
+                            ? MarkerTiming::IntervalEnd()
+                            : MarkerTiming::IntervalUntilNowFrom(mStartTime),
+                        TaskMarker{}, mName, mPriority);
+  }
+
+ private:
+  TimeStamp mStartTime;
+  nsAutoCString mName;
+  uint32_t mPriority;
+};
+
 #  define AUTO_PROFILE_FOLLOWING_TASK(task)                                  \
     nsAutoCString name;                                                      \
     (task)->GetName(name);                                                   \
     AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("Task", OTHER, name); \
-    AUTO_PROFILE_FOLLOWING_RUNNABLE(name);
+    mozilla::AutoProfileTask PROFILER_RAII(name, (task)->GetPriority());
 #else
 #  define AUTO_PROFILE_FOLLOWING_TASK(task)
 #endif
