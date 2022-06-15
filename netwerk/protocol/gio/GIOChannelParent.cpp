@@ -256,13 +256,6 @@ GIOChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
 }
 
 NS_IMETHODIMP
-GIOChannelParent::NotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  // Nothing to do.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GIOChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                            const nsACString& aProvider,
                                            const nsACString& aFullHash) {

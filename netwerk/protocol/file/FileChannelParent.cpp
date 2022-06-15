@@ -38,13 +38,6 @@ FileChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
 }
 
 NS_IMETHODIMP
-FileChannelParent::NotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  // Nothing to do.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 FileChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
                                             const nsACString& aFullHash) {
