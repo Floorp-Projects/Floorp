@@ -8,8 +8,7 @@
  * To keep the global namespace safe, don't define global variables and
  * functions in this file.
  *
- * This file silently depends on contentAreaUtils.js for
- * getDefaultFileName, getNormalizedLeafName and getDefaultExtension
+ * This file silently depends on contentAreaUtils.js for getDefaultFileName
  */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -403,20 +402,22 @@ var gViewSourceUtils = {
       );
     }
 
-    var tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
     var fileName = this._caUtils.getDefaultFileName(
       null,
       aURI,
       aDocument,
-      aContentType
+      null
     );
-    var extension = this._caUtils.getDefaultExtension(
+
+    const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    fileName = mimeService.validateFileNameForSaving(
       fileName,
-      aURI,
-      aContentType
+      aContentType,
+      mimeService.VALIDATE_DEFAULT
     );
-    var leafName = this._caUtils.getNormalizedLeafName(fileName, extension);
-    tempFile.append(leafName);
+
+    var tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    tempFile.append(fileName);
     return tempFile;
   },
 };
