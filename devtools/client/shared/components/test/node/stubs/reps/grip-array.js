@@ -1014,4 +1014,74 @@ stubs.set("Array(23456)", {
   },
 });
 
+stubs.set("TestArrayWithGetter", {
+  type: "object",
+  actor: "server0.conn0.windowGlobal13/obj21",
+  class: "Array",
+  ownPropertyLength: 2,
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  isError: false,
+  preview: {
+    kind: "ArrayLike",
+    length: 1,
+    items: [{
+      type: "accessor",
+      get: {
+        type: "object",
+        actor: "server0.conn0.windowGlobal13/obj22",
+      }
+    }]
+  }
+});
+
+stubs.set("TestArrayWithSetter", {
+  type: "object",
+  actor: "server0.conn0.windowGlobal13/obj24",
+  class: "Array",
+  ownPropertyLength: 2,
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  isError: false,
+  preview: {
+    kind: "ArrayLike",
+    length: 1,
+    items: [{
+      type: "accessor",
+      set: {
+        type: "object",
+        actor: "server0.conn0.windowGlobal13/obj25",
+      }
+    }]
+  }
+});
+
+stubs.set("TestArrayWithGetterAndSetter", {
+  type: "object",
+  actor: "server0.conn0.windowGlobal13/obj28",
+  class: "Array",
+  ownPropertyLength: 2,
+  extensible: true,
+  frozen: false,
+  sealed: false,
+  isError: false,
+  preview: {
+    kind: "ArrayLike",
+    length: 1,
+    items: [{
+      type: "accessor",
+      get: {
+        type: "object",
+        actor: "server0.conn0.windowGlobal13/obj29",
+      },
+      set: {
+        type: "object",
+        actor: "server0.conn0.windowGlobal13/obj30",
+      }
+    }]
+  }
+});
+
 module.exports = stubs;
