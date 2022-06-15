@@ -82,7 +82,9 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   OriginAttributes attrs = loadInfo->GetOriginAttributes();
   bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
-  bool aIsSameSiteForeign = CookieCommons::IsSameSiteForeign(aChannel, uri);
+  bool hadCrossSiteRedirects = false;
+  bool isSameSiteForeign =
+      CookieCommons::IsSameSiteForeign(aChannel, uri, &hadCrossSiteRedirects);
 
   StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
       aChannel, attrs);
@@ -101,8 +103,8 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
-      rejectedReason, isSafeTopLevelNav, aIsSameSiteForeign, false, attrs,
-      foundCookieList);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
+      hadCrossSiteRedirects, false, attrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList);
   Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
@@ -129,7 +131,8 @@ IPCResult CookieServiceParent::RecvPrepareCookieList(
     const bool& aIsThirdPartySocialTrackingResource,
     const bool& aStorageAccessPermissionGranted,
     const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
-    const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs) {
+    const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
+    const OriginAttributes& aAttrs) {
   // Send matching cookies to Child.
   if (!aHost) {
     return IPC_FAIL(this, "aHost must not be null");
@@ -142,8 +145,8 @@ IPCResult CookieServiceParent::RecvPrepareCookieList(
   mCookieService->GetCookiesForURI(
       aHost, nullptr, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
-      aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign, false, aAttrs,
-      foundCookieList);
+      aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign,
+      aHadCrossSiteRedirects, false, aAttrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList);
   Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
