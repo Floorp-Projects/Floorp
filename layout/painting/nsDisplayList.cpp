@@ -8279,6 +8279,11 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
                                                       wrFilters) &&
       !SVGIntegrationUtils::BuildWebRenderFilters(
           mFrame, filterChain, wrFilters, filterClip, initialized)) {
+    if (mStyle) {
+      // TODO(bug 1769223): Support fallback backdrop-filters in the root
+      // code-path.
+      return true;
+    }
     return false;
   }
 
