@@ -132,11 +132,6 @@ jobs:
     debian10-test:
         symbol: I(deb10-test)
         parent: debian10-base
-    debian10-test-iris:
-        symbol: I(deb10-ti)
-        parent: debian10-test
-        packages:
-            - deb10-python-zstandard
     # Neither the debian11-raw nor the debian11-packages images can have
     # packages dependencies.
     debian11-raw:
