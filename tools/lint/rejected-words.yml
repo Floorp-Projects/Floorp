@@ -256,7 +256,6 @@ avoid-blacklist-and-whitelist:
         - netwerk/url-classifier/UrlClassifierFeatureFactory.h
         - netwerk/url-classifier/UrlClassifierFeatureFingerprintingAnnotation.cpp
         - netwerk/url-classifier/UrlClassifierFeatureFingerprintingProtection.cpp
-        - netwerk/url-classifier/UrlClassifierFeatureFlash.cpp
         - netwerk/url-classifier/UrlClassifierFeatureLoginReputation.cpp
         - netwerk/url-classifier/UrlClassifierFeaturePhishingProtection.cpp
         - netwerk/url-classifier/UrlClassifierFeatureSocialTrackingAnnotation.cpp

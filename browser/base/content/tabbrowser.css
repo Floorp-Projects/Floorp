@@ -84,7 +84,7 @@ tabpanels {
   pointer-events: none;
 }
 
-#tabbrowser-arrowscrollbox:not(:hover) > .closing-tabs-spacer {
+#tabbrowser-arrowscrollbox:not(:hover) > #tabbrowser-arrowscrollbox-periphery > .closing-tabs-spacer {
   transition: width .15s ease-out;
 }
 

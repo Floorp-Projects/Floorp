@@ -561,10 +561,10 @@ Result CertVerifier::VerifyCert(
               ? NSSCertDBTrustDomain::LocalOnlyOCSPForEV
               : NSSCertDBTrustDomain::FetchOCSPForEV;
 
-      CertPolicyId evPolicy;
-      bool foundEVPolicy = GetFirstEVPolicy(certBytes, evPolicy);
+      nsTArray<CertPolicyId> evPolicies;
+      GetKnownEVPolicies(certBytes, evPolicies);
       rv = Result::ERROR_UNKNOWN_ERROR;
-      if (foundEVPolicy) {
+      for (const auto& evPolicy : evPolicies) {
         NSSCertDBTrustDomain trustDomain(
             trustSSL, evOCSPFetching, mOCSPCache, pinArg, mOCSPTimeoutSoft,
             mOCSPTimeoutHard, mCertShortLifetimeInDays, MIN_RSA_BITS,
@@ -593,6 +593,9 @@ Result CertVerifier::VerifyCert(
           }
           break;
         }
+      }
+      if (rv == Success) {
+        break;
       }
       if (flags & FLAG_MUST_BE_EV) {
         rv = Result::ERROR_POLICY_VALIDATION_FAILED;

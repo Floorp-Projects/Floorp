@@ -104,6 +104,10 @@ class ClientSource final : public ClientThing<ClientSourceChild> {
 
   void Thaw();
 
+  void EvictFromBFCache();
+
+  RefPtr<ClientOpPromise> EvictFromBFCacheOp();
+
   const ClientInfo& Info() const;
 
   // Trigger a synchronous IPC ping to the parent process to confirm that

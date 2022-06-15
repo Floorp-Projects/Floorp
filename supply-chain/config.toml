@@ -655,14 +655,6 @@ criteria = "safe-to-deploy"
 version = "0.13.1"
 criteria = "safe-to-deploy"
 
-[[unaudited.glean]]
-version = "50.0.1"
-criteria = "safe-to-deploy"
-
-[[unaudited.glean-core]]
-version = "50.0.1"
-criteria = "safe-to-deploy"
-
 [[unaudited.glob]]
 version = "0.3.0"
 criteria = "safe-to-deploy"

@@ -108,13 +108,6 @@ go-1.14.4:
         sha256: aed845e4185a0b2a3c3d5e1d0a35491702c55889192bb9c30e67a3de6849c067
         size: 123711003
 
-iris-2.0:
-    description: Iris_Firefox source code
-    fetch:
-        type: git
-        repo: https://github.com/mozilla/iris_firefox
-        revision: a91a1cb88a16b0ee4d30f0dfc165d2cacf48b10c
-
 isl-0.16.1:
     description: ISL 0.16.1 source code
     fetch:

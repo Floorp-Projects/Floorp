@@ -8745,59 +8745,151 @@ nsresult nsHttpChannel::CallOrWaitForResume(
   return aFunc(this);
 }
 
-// Step 10 of HTTP-network-or-cache fetch
+// This is loosely based on:
+// https://fetch.spec.whatwg.org/#serializing-a-request-origin
+static bool HasNullRequestOrigin(nsHttpChannel* aChannel, nsIURI* aURI,
+                                 bool isAddonRequest) {
+  // Step 1. If request has a redirect-tainted origin, then return "null".
+  if (aChannel->HasRedirectTaintedOrigin()) {
+    if (StaticPrefs::network_http_origin_redirectTainted()) {
+      return true;
+    }
+  }
+
+  // Non-standard: Only allow HTTP and HTTPS origins.
+  if (!ReferrerInfo::IsReferrerSchemeAllowed(aURI)) {
+    // And moz-extension: for add-on initiated requests.
+    if (!aURI->SchemeIs("moz-extension") || !isAddonRequest) {
+      return true;
+    }
+  }
+
+  // Non-standard: Hide onion URLs.
+  if (StaticPrefs::network_http_referer_hideOnionSource()) {
+    nsAutoCString host;
+    if (NS_SUCCEEDED(aURI->GetAsciiHost(host)) &&
+        StringEndsWith(host, ".onion"_ns)) {
+      return ReferrerInfo::IsCrossOriginRequest(aChannel);
+    }
+  }
+
+  // Step 2. Return request’s origin, serialized.
+  return false;
+}
+
+// Step 8.12. of HTTP-network-or-cache fetch
+//
+// https://fetch.spec.whatwg.org/#append-a-request-origin-header
 void nsHttpChannel::SetOriginHeader() {
-  if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
+  auto* triggeringPrincipal =
+      BasePrincipal::Cast(mLoadInfo->TriggeringPrincipal());
+
+  if (triggeringPrincipal->IsSystemPrincipal()) {
+    // We can't infer an Origin header from the system principal,
+    // this means system requests use whatever Origin header was specified.
     return;
   }
-  nsresult rv;
+  bool isAddonRequest = triggeringPrincipal->AddonPolicy() ||
+                        triggeringPrincipal->ContentScriptAddonPolicy();
 
+  // Non-standard: Handle already existing Origin header.
   nsAutoCString existingHeader;
   Unused << mRequestHead.GetHeader(nsHttp::Origin, existingHeader);
   if (!existingHeader.IsEmpty()) {
     LOG(("nsHttpChannel::SetOriginHeader Origin header already present"));
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), existingHeader);
-    if (NS_SUCCEEDED(rv) &&
-        ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
+    auto const shouldNullifyOriginHeader =
+        [&existingHeader, isAddonRequest](nsHttpChannel* aChannel) {
+          nsCOMPtr<nsIURI> uri;
+          nsresult rv = NS_NewURI(getter_AddRefs(uri), existingHeader);
+          if (NS_FAILED(rv)) {
+            return false;
+          }
+
+          if (HasNullRequestOrigin(aChannel, uri, isAddonRequest)) {
+            return true;
+          }
+
+          nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
+          if (info->GetTainting() == mozilla::LoadTainting::CORS) {
+            return false;
+          }
+
+          return ReferrerInfo::ShouldSetNullOriginHeader(aChannel, uri);
+        };
+
+    if (!existingHeader.EqualsLiteral("null") &&
+        shouldNullifyOriginHeader(this)) {
       LOG(("nsHttpChannel::SetOriginHeader null Origin by Referrer-Policy"));
-      rv = mRequestHead.SetHeader(nsHttp::Origin, "null"_ns, false /* merge */);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      MOZ_ALWAYS_SUCCEEDS(
+          mRequestHead.SetHeader(nsHttp::Origin, "null"_ns, false /* merge */));
     }
     return;
   }
 
   if (StaticPrefs::network_http_sendOriginHeader() == 0) {
-    // Origin header suppressed by user setting
+    // Custom user setting: 0 means never send Origin header.
     return;
   }
 
-  nsCOMPtr<nsIURI> referrer;
-  auto* basePrin = BasePrincipal::Cast(mLoadInfo->TriggeringPrincipal());
-  basePrin->GetURI(getter_AddRefs(referrer));
-  if (!referrer || !dom::ReferrerInfo::IsReferrerSchemeAllowed(referrer)) {
-    return;
-  }
-
-  nsAutoCString origin("null");
-  nsContentUtils::GetASCIIOrigin(referrer, origin);
-
-  // Restrict Origin to same-origin loads if requested by user
-  if (StaticPrefs::network_http_sendOriginHeader() == 1) {
-    nsAutoCString currentOrigin;
-    nsContentUtils::GetASCIIOrigin(mURI, currentOrigin);
-    if (!origin.EqualsIgnoreCase(currentOrigin.get())) {
-      // Origin header suppressed by user setting
+  // Step 1. Let serializedOrigin be the result of byte-serializing a request
+  // origin with request.
+  nsAutoCString serializedOrigin;
+  nsCOMPtr<nsIURI> uri;
+  {
+    if (NS_FAILED(triggeringPrincipal->GetURI(getter_AddRefs(uri)))) {
       return;
+    }
+
+    if (!uri) {
+      if (isAddonRequest) {
+        // For add-on compatibility prefer sending no header at all
+        // instead of `Origin: null`.
+        return;
+      }
+
+      // Otherwise use "null" when the triggeringPrincipal's URI is nullptr.
+      serializedOrigin.AssignLiteral("null");
+    } else if (HasNullRequestOrigin(this, uri, isAddonRequest)) {
+      serializedOrigin.AssignLiteral("null");
+    } else {
+      nsContentUtils::GetASCIIOrigin(uri, serializedOrigin);
     }
   }
 
-  if (ReferrerInfo::ShouldSetNullOriginHeader(this, referrer)) {
-    origin.AssignLiteral("null");
+  // Step 2. If request’s response tainting is "cors" or request’s mode is
+  // "websocket", then append (`Origin`, serializedOrigin) to request’s header
+  // list.
+  //
+  // Note: We don't handle WebSocket here.
+  if (mLoadInfo->GetTainting() == mozilla::LoadTainting::CORS) {
+    MOZ_ALWAYS_SUCCEEDS(mRequestHead.SetHeader(nsHttp::Origin, serializedOrigin,
+                                               false /* merge */));
+    return;
   }
 
-  rv = mRequestHead.SetHeader(nsHttp::Origin, origin, false /* merge */);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  // Step 3. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
+  if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
+    return;
+  }
+
+  if (!serializedOrigin.EqualsLiteral("null")) {
+    // Step 3.1. Switch on request’s referrer policy:
+    if (ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
+      serializedOrigin.AssignLiteral("null");
+    } else if (StaticPrefs::network_http_sendOriginHeader() == 1) {
+      // Restrict Origin to same-origin loads if requested by user
+      nsAutoCString currentOrigin;
+      nsContentUtils::GetASCIIOrigin(mURI, currentOrigin);
+      if (!serializedOrigin.EqualsIgnoreCase(currentOrigin.get())) {
+        // Origin header suppressed by user setting.
+        serializedOrigin.AssignLiteral("null");
+      }
+    }
+  }
+
+  // Step 3.2. Append (`Origin`, serializedOrigin) to request’s header list.
+  MOZ_ALWAYS_SUCCEEDS(mRequestHead.SetHeader(nsHttp::Origin, serializedOrigin,
+                                             false /* merge */));
 }
 
 void nsHttpChannel::SetDoNotTrack() {
@@ -9491,7 +9583,8 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
               ReferrerInfo::GetDefaultReferrerPolicy(nullptr, nullptr,
                                                      isPrivate)) {
         nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
-            referrerInfo->CloneWithNewPolicy(ReferrerPolicy::_empty);
+            referrerInfo->CloneWithNewPolicy(
+                ReferrerInfo::GetDefaultReferrerPolicy(this, mURI, isPrivate));
         // The arguments passed to SetReferrerInfoInternal here should mirror
         // the arguments passed in
         // HttpChannelChild::RecvOverrideReferrerInfoDuringBeginConnect().

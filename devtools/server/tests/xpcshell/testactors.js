@@ -23,6 +23,9 @@ const {
 } = require("devtools/shared/specs/targets/window-global");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 const Targets = require("devtools/server/actors/targets/index");
+const {
+  createContentProcessSessionContext,
+} = require("devtools/server/actors/watcher/session-context");
 
 var gTestGlobals = new Set();
 DevToolsServer.addTestGlobal = function(global) {
@@ -150,6 +153,8 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
   initialize: function(conn, global) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;
+
+    this.sessionContext = createContentProcessSessionContext();
     this._global = global;
     this._global.wrappedJSObject = global;
     this.threadActor = new ThreadActor(this, this._global);

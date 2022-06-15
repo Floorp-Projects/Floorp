@@ -27,6 +27,7 @@ mod rate;
 mod recorded_experiment;
 mod string;
 mod string_list;
+mod text;
 mod time_unit;
 mod timespan;
 mod timing_distribution;
@@ -56,6 +57,7 @@ pub use self::quantity::QuantityMetric;
 pub use self::rate::{Rate, RateMetric};
 pub use self::string::StringMetric;
 pub use self::string_list::StringListMetric;
+pub use self::text::TextMetric;
 pub use self::time_unit::TimeUnit;
 pub use self::timespan::TimespanMetric;
 pub use self::timing_distribution::TimerId;
@@ -125,6 +127,8 @@ pub enum Metric {
     Rate(i32, i32),
     /// A URL metric. See [`UrlMetric`] for more information.
     Url(String),
+    /// A Text metric. See [`TextMetric`] for more information.
+    Text(String),
 }
 
 /// A [`MetricType`] describes common behavior across all metrics.
@@ -181,6 +185,7 @@ impl Metric {
             Metric::Uuid(_) => "uuid",
             Metric::MemoryDistribution(_) => "memory_distribution",
             Metric::Jwe(_) => "jwe",
+            Metric::Text(_) => "text",
         }
     }
 
@@ -209,6 +214,7 @@ impl Metric {
             Metric::Uuid(s) => json!(s),
             Metric::MemoryDistribution(hist) => json!(memory_distribution::snapshot(hist)),
             Metric::Jwe(s) => json!(s),
+            Metric::Text(s) => json!(s),
         }
     }
 }

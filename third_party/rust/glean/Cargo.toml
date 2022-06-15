@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean"
-version = "50.0.1"
+version = "50.1.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -41,7 +41,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "50.0.1"
+version = "50.1.0"
 
 [dependencies.inherent]
 version = "1"

@@ -138,6 +138,10 @@ class DocAccessibleParent : public RemoteAccessible,
       const mozilla::a11y::CacheUpdateType& aUpdateType,
       nsTArray<CacheData>&& aData, const bool& aFinal) override;
 
+  virtual mozilla::ipc::IPCResult RecvSelectedAccessiblesChanged(
+      nsTArray<uint64_t>&& aSelectedIDs,
+      nsTArray<uint64_t>&& aUnselectedIDs) override;
+
   virtual mozilla::ipc::IPCResult RecvAccessiblesWillMove(
       nsTArray<uint64_t>&& aIDs) override;
 

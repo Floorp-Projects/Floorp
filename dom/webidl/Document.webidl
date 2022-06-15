@@ -606,18 +606,6 @@ partial interface Document {
   [ChromeOnly] readonly attribute DOMString cspJSON;
 };
 
-// For more information on Flash classification, see
-// toolkit/components/url-classifier/flash-block-lists.rst
-enum FlashClassification {
-  "unknown",        // Site is not on the whitelist or blacklist
-  "allowed",        // Site is on the Flash whitelist
-  "denied"          // Site is on the Flash blacklist
-};
-partial interface Document {
-  [ChromeOnly]
-  readonly attribute FlashClassification documentFlashClassification;
-};
-
 partial interface Document {
   [Func="Document::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
 };

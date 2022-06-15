@@ -945,6 +945,12 @@ nsresult nsPrintJob::SetupToPrintContent() {
   // then PrintDocContent will be called again.
 
   if (mIsDoingPrinting) {
+    // Double-check that mPrintObject is non-null, because it could have
+    // gotten cleared while running script since we last checked it.
+    if (NS_WARN_IF(!mPrintObject)) {
+      return NS_ERROR_FAILURE;
+    }
+
     PrintDocContent(mPrintObject, rv);  // ignore return value
   }
 

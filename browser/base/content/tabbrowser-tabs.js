@@ -1012,11 +1012,10 @@
       return this.querySelector("#tabs-newtab-button");
     }
 
-    // Accessor for tabs.  arrowScrollbox has two non-tab elements at the
-    // end, everything else is <tab>s
+    // Accessor for tabs.  arrowScrollbox has a container for non-tab elements
+    // at the end, everything else is <tab>s.
     get allTabs() {
       let children = Array.from(this.arrowScrollbox.children);
-      children.pop();
       children.pop();
       return children;
     }
@@ -1032,8 +1031,8 @@
 
       let { arrowScrollbox } = this;
       if (node == null) {
-        // we have a toolbarbutton and a space at the end of the scrollbox
-        node = arrowScrollbox.lastChild.previousSibling;
+        // We have a container for non-tab elements at the end of the scrollbox.
+        node = arrowScrollbox.lastChild;
       }
       return arrowScrollbox.insertBefore(tab, node);
     }

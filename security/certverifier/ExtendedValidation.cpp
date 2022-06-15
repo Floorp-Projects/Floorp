@@ -1276,34 +1276,35 @@ nsresult LoadExtendedValidationInfo() {
   return NS_OK;
 }
 
-// Helper function for GetFirstEVPolicy(): reads an EV Policy if there is one
-bool FindMatchingEVPolicy(Reader& idReader,
-                          mozilla::pkix::CertPolicyId& policy) {
+// Helper function for GetKnownEVPolicies(): reads an EV Policy if there is one,
+// and appends it to the given list of CertPolicyIds.
+void FindMatchingEVPolicy(Reader& idReader,
+                          nsTArray<mozilla::pkix::CertPolicyId>& policies) {
   Input cabForumEVIdBytes;
   Result rv =
       cabForumEVIdBytes.Init(sCABForumEVId.bytes, sCABForumEVId.numBytes);
   if (rv == Success && idReader.MatchRest(cabForumEVIdBytes)) {
-    policy = sCABForumEVId;
-    return true;
+    policies.AppendElement(sCABForumEVId);
+    return;
   }
 
   for (const CertPolicyId& id : sEVInfoIds) {
     Input idBytes;
     rv = idBytes.Init(id.bytes, id.numBytes);
     if (rv == Success && idReader.MatchRest(idBytes)) {
-      policy = id;
-      return true;
+      policies.AppendElement(id);
+      return;
     }
   }
-  return false;
 }
 
-bool GetFirstEVPolicy(const nsTArray<uint8_t>& certBytes,
-                      /*out*/ mozilla::pkix::CertPolicyId& policy) {
+void GetKnownEVPolicies(
+    const nsTArray<uint8_t>& certBytes,
+    /*out*/ nsTArray<mozilla::pkix::CertPolicyId>& policies) {
   Input certInput;
   Result rv = certInput.Init(certBytes.Elements(), certBytes.Length());
   if (rv != Success) {
-    return false;
+    return;
   }
   // we don't use the certificate for path building, so this parameter
   // doesn't matter
@@ -1311,15 +1312,15 @@ bool GetFirstEVPolicy(const nsTArray<uint8_t>& certBytes,
   BackCert cert(certInput, notUsedForPaths, nullptr);
   rv = cert.Init();
   if (rv != Success) {
-    return false;
+    return;
   }
 
-  const Input* policies = cert.GetCertificatePolicies();
-  if (!policies) {
-    return false;
+  const Input* extensionInput = cert.GetCertificatePolicies();
+  if (!extensionInput) {
+    return;
   }
 
-  Reader extension(*policies);
+  Reader extension(*extensionInput);
   Reader certificatePolicies;
   // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
   // PolicyInformation ::= SEQUENCE {
@@ -1329,7 +1330,7 @@ bool GetFirstEVPolicy(const nsTArray<uint8_t>& certBytes,
   // CertPolicyId ::= OBJECT IDENTIFIER
   rv = der::ExpectTagAndGetValue(extension, der::SEQUENCE, certificatePolicies);
   if (rv != Success || !extension.AtEnd()) {
-    return false;
+    return;
   }
 
   do {
@@ -1337,22 +1338,18 @@ bool GetFirstEVPolicy(const nsTArray<uint8_t>& certBytes,
     rv = der::ExpectTagAndGetValue(certificatePolicies, der::SEQUENCE,
                                    policyInformation);
     if (rv != Success) {
-      return false;
+      return;
     }
 
     Reader policyOid;
     rv = der::ExpectTagAndGetValue(policyInformation, der::OIDTag, policyOid);
     if (rv != Success) {
-      return false;
+      return;
     }
 
     // we don't validate policy qualifiers here
-    if (FindMatchingEVPolicy(policyOid, policy)) {
-      return true;
-    }
+    FindMatchingEVPolicy(policyOid, policies);
   } while (!certificatePolicies.AtEnd());
-
-  return false;
 }
 
 }  // namespace psm

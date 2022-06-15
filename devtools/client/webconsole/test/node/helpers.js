@@ -81,8 +81,8 @@ function clonePacket(packet) {
  * @return {Message} - The message, or undefined if the index does not exists in the map.
  */
 function getMessageAt(state, index) {
-  const messages = getMutableMessagesById(state);
-  return messages.get([...messages.keys()][index]);
+  const messageMap = getMutableMessagesById(state);
+  return messageMap.get(state.messages.mutableMessagesOrder[index]);
 }
 
 /**
@@ -102,7 +102,7 @@ function getFirstMessage(state) {
  * @return {Message} - The last message, or undefined if there are no message in store.
  */
 function getLastMessage(state) {
-  const lastIndex = getMutableMessagesById(state).size - 1;
+  const lastIndex = state.messages.mutableMessagesOrder.length - 1;
   return getMessageAt(state, lastIndex);
 }
 

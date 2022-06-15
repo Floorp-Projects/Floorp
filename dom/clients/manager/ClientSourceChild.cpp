@@ -43,6 +43,14 @@ IPCResult ClientSourceChild::RecvPClientSourceOpConstructor(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ClientSourceChild::RecvEvictFromBFCache() {
+  if (mSource) {
+    mSource->EvictFromBFCache();
+  }
+
+  return IPC_OK();
+}
+
 ClientSourceChild::ClientSourceChild(const ClientSourceConstructorArgs& aArgs)
     : mSource(nullptr), mTeardownStarted(false) {}
 

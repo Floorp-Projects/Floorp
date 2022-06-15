@@ -85,36 +85,6 @@ add_task(async function() {
     overrideService.rememberValidityOverride(
       uri.asciiHost,
       uri.port,
-      {},
-      cert,
-      flags,
-      false
-    );
-    Assert.ok(
-      overrideService.hasMatchingOverride(
-        uri.asciiHost,
-        uri.port,
-        {},
-        cert,
-        {},
-        {}
-      ),
-      `Should have added override for ${uri.asciiHost}:${uri.port}`
-    );
-    Assert.ok(
-      !overrideService.hasMatchingOverride(
-        uri.asciiHost,
-        uri.port,
-        { privateBrowsingId: 1 },
-        cert,
-        {},
-        {}
-      ),
-      `Should not have added override for ${uri.asciiHost}:${uri.port} with private browsing ID`
-    );
-    overrideService.rememberValidityOverride(
-      uri.asciiHost,
-      uri.port,
       { privateBrowsingId: 1 },
       cert,
       flags,
@@ -141,6 +111,36 @@ add_task(async function() {
         {}
       ),
       `Should not have added override for ${uri.asciiHost}:${uri.port} with private browsing ID 2`
+    );
+    Assert.ok(
+      !overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        {},
+        cert,
+        {},
+        {}
+      ),
+      `Should not have added override for ${uri.asciiHost}:${uri.port}`
+    );
+    overrideService.rememberValidityOverride(
+      uri.asciiHost,
+      uri.port,
+      {},
+      cert,
+      flags,
+      false
+    );
+    Assert.ok(
+      overrideService.hasMatchingOverride(
+        uri.asciiHost,
+        uri.port,
+        {},
+        cert,
+        {},
+        {}
+      ),
+      `Should have added override for ${uri.asciiHost}:${uri.port}`
     );
   }
 

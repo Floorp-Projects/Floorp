@@ -1096,12 +1096,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void ThemeChangedInternal();
   void RefreshSystemMetrics();
 
-  // update device context's resolution from the widget
+  // Update device context's resolution from the widget
   void UIResolutionChangedInternal();
-
-  // if aScale > 0.0, use it as resolution scale factor to the device context
-  // (otherwise get it from the widget)
-  void UIResolutionChangedInternalScale(double aScale);
 
   void SetImgAnimations(nsIContent* aParent, uint16_t aMode);
   void SetSMILAnimations(mozilla::dom::Document* aDoc, uint16_t aNewMode,

@@ -29,8 +29,8 @@ class ClientSourceOpChild final : public PClientSourceOpChild {
 
   ClientSource* GetSource() const;
 
-  template <typename Method, typename Args>
-  void DoSourceOp(Method aMethod, const Args& aArgs);
+  template <typename Method, typename... Args>
+  void DoSourceOp(Method aMethod, Args&&... aArgs);
 
   // PClientSourceOpChild interface
   void ActorDestroy(ActorDestroyReason aReason) override;

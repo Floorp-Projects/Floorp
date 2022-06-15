@@ -3,6 +3,28 @@
 
   <!-- Mozilla Gecko Visualizers -->
 
+  <Type Name="mozilla::Maybe&lt;*&gt;">
+    <DisplayString Condition="mIsSome == false">Nothing</DisplayString>
+    <DisplayString Condition="mIsSome == true">Some({*($T1 *)&amp;mStorage.val})</DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mIsSome == true">*($T1 *)&amp;mStorage.val</ExpandedItem>
+    </Expand>
+    </Type>
+
+  <Type Name="mozilla::Result&lt;*,*&gt;">
+    <DisplayString>{mImpl}</DisplayString>
+  </Type>
+
+  <Type Name="mozilla::detail::ResultImplementation&lt;*,*,mozilla::detail::PackingStrategy::Variant&gt;">
+    <DisplayString Condition="mStorage.tag == false">ok: {*($T1 *)(mStorage.rawData)}</DisplayString>
+    <DisplayString Condition="mStorage.tag == true">err: {*($T2 *)(mStorage.rawData)}</DisplayString>
+    <DisplayString>%% invalid storage tag in variant %%</DisplayString>
+    <Expand>
+      <ExpandedItem Condition="mStorage.tag == false">*($T1 *)(mStorage.rawData)</ExpandedItem>
+      <ExpandedItem Condition="mStorage.tag == true">*($T2 *)(mStorage.rawData)</ExpandedItem>
+    </Expand>
+  </Type>
+
   <!-- nsTArray -->
   <Type Name="nsTArray&lt;*&gt;">
     <DisplayString Condition="mHdr-&gt;mLength == 0 &amp;&amp; mHdr-&gt;mCapacity == 0">empty</DisplayString>

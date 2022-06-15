@@ -151,7 +151,7 @@ var SearchTestUtils = {
   async searchConfigToEngines(engineConfigurations) {
     let engines = [];
     for (let config of engineConfigurations) {
-      let engine = await Services.search.wrappedJSObject.makeEngineFromConfig(
+      let engine = await Services.search.wrappedJSObject._makeEngineFromConfig(
         config
       );
       engines.push(engine);

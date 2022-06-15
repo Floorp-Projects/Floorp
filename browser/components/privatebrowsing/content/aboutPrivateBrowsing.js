@@ -245,26 +245,20 @@ async function handlePromoOnPreload(message) {
   }
 }
 
-async function setupFeatureConfig() {
+async function setupMessageConfig() {
   let config = null;
   let message = null;
 
+  let hideDefault = window.PrivateBrowsingShouldHideDefault();
   try {
-    config = window.PrivateBrowsingFeatureConfig();
+    let response = await window.ASRouterMessage({
+      type: "PBNEWTAB_MESSAGE_REQUEST",
+      data: { hideDefault: !!hideDefault },
+    });
+    message = response?.message;
+    config = message?.content;
+    config.messageId = message?.id;
   } catch (e) {}
-
-  if (!Object.keys(config).length) {
-    let hideDefault = window.PrivateBrowsingShouldHideDefault();
-    try {
-      let response = await window.ASRouterMessage({
-        type: "PBNEWTAB_MESSAGE_REQUEST",
-        data: { hideDefault: !!hideDefault },
-      });
-      message = response?.message;
-      config = message?.content;
-      config.messageId = message?.id;
-    } catch (e) {}
-  }
 
   await renderInfo(config);
   let hasRendered = await renderPromo(config);
@@ -290,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // We don't do this setup until now, because we don't want to record any impressions until we're
   // sure we're actually running a private window, not just about:privatebrowsing in a normal window.
-  setupFeatureConfig();
+  setupMessageConfig();
 
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");

@@ -65,30 +65,25 @@ async function testMultiSelectable(widget, selectableChildren, msg = "") {
   promise = multipleSelectionChanged(widget, selectableChildren, true);
   let success = widget.selectAll();
   ok(success, `${msg}: selectAll success`);
-  let coalesced = await promise;
-  if (isRemote && coalesced && isCacheEnabled) {
-    todo_is(
-      widget.selectedItemCount,
+  await promise;
+  if (isRemote && isCacheEnabled) {
+    await untilCacheIs(
+      () => widget.selectedItemCount,
       selectableChildren.length,
-      "Bug 1755377: Coalesced SELECTION_WITHIN doesn't update cache"
+      "Selection cache updated"
     );
-    // We bail early here because the cache is out of sync.
-    return;
   }
-
   testSelectableSelection(widget, selectableChildren, `${msg}: selectAll`);
 
   promise = multipleSelectionChanged(widget, selectableChildren, false);
   widget.unselectAll();
-  coalesced = await promise;
-  if (isRemote && coalesced && isCacheEnabled) {
-    todo_is(
-      widget.selectedItemCount,
+  await promise;
+  if (isRemote && isCacheEnabled) {
+    await untilCacheIs(
+      () => widget.selectedItemCount,
       0,
-      "Coalesced SELECTION_WITHIN doesn't update cache"
+      "Selection cache updated"
     );
-    // We bail early here because the cache is out of sync.
-    return;
   }
   testSelectableSelection(widget, [], `${msg}: selectAll`);
 }

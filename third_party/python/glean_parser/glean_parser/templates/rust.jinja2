@@ -32,10 +32,10 @@ pub struct {{ obj.name|Camelize }}{{ suffix }} {
 impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
     const ALLOWED_KEYS: &'static [&'static str] = {{ obj.allowed_extra_keys|extra_keys }};
 
-    fn into_ffi_extra(self) -> ::std::collections::HashMap<i32, String> {
+    fn into_ffi_extra(self) -> ::std::collections::HashMap<::std::string::String, ::std::string::String> {
         let mut map = ::std::collections::HashMap::new();
         {% for key, _ in obj|attr(name) %}
-        self.{{key|snake_case}}.and_then(|val| map.insert({{loop.index-1}}, val));
+        self.{{key|snake_case}}.and_then(|val| map.insert("{{key}}".to_string(), val));
         {% endfor %}
         map
     }
@@ -43,21 +43,17 @@ impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
 {% endmacro %}
 {% for category in categories %}
 {% if category.contains_pings %}
-use glean::private::Ping;
-use once_cell::sync::Lazy;
 {% for obj in category.objs.values() %}
-
 #[allow(non_upper_case_globals, dead_code)]
 /// {{ obj.description|wordwrap() | replace('\n', '\n/// ') }}
 #[rustfmt::skip]
-pub static {{ obj.name|snake_case }}: Lazy<Ping> =
-    Lazy::new(|| Ping::new("{{ obj.name }}", {{ obj.include_client_id|rust }}, {{ obj.send_if_empty|rust }}, {{ obj.reason_codes|rust }}));
+pub static {{ obj.name|snake_case }}: ::glean::private::__export::Lazy<::glean::private::PingType> =
+    ::glean::private::__export::Lazy::new(|| ::glean::private::PingType::new("{{ obj.name }}", {{ obj.include_client_id|rust }}, {{ obj.send_if_empty|rust }}, {{ obj.reason_codes|rust }}));
 {% endfor %}
 {% else %}
 pub mod {{ category.name|snake_case }} {
     #[allow(unused_imports)] // HistogramType might be unusued, let's avoid warnings
     use glean::{private::*, traits::ExtraKeys, CommonMetricData, HistogramType, Lifetime, TimeUnit, MemoryUnit};
-    use once_cell::sync::Lazy;
     {% for obj in category.objs.values() %}
 
     {% if obj|attr("_generate_enums") %}
@@ -67,7 +63,7 @@ pub mod {{ category.name|snake_case }} {
     /// generated from {{ category.name }}.{{ obj.name }}
     ///
     /// {{ obj.description|wordwrap() | replace('\n', '\n    /// ') }}
-    pub static {{ obj.name|snake_case }}: Lazy<{{ obj|type_name }}> = Lazy::new(|| {
+    pub static {{ obj.name|snake_case }}: ::glean::private::__export::Lazy<{{ obj|type_name }}> = ::glean::private::__export::Lazy::new(|| {
         {{ obj|ctor }}(CommonMetricData {
             category: {{ obj.category|rust }},
             name: {{ obj.name|rust }},
@@ -76,7 +72,7 @@ pub mod {{ category.name|snake_case }} {
             disabled: {{ obj.is_disabled()|rust }},
             ..Default::default()
         }
-        {%- for arg_name in extra_args if obj[arg_name] is defined and arg_name not in common_metric_args and arg_name != 'allowed_extra_keys' -%}
+        {%- for arg_name in extra_metric_args if obj[arg_name] is defined and arg_name != 'allowed_extra_keys' -%}
             , {{ obj[arg_name]|rust }}
         {%- endfor -%}
         {{ ", " if obj.labeled else ")\n" }}
@@ -100,10 +96,9 @@ pub(crate) mod __glean_metric_maps {
 
     use super::{id_for_extra_key, extra_keys_len};
     use crate::private::*;
-    use once_cell::sync::Lazy;
 
 {% for typ, metrics in metric_by_type.items() %}
-    pub static {{typ.0}}: Lazy<HashMap<MetricId, &Lazy<{{typ.1}}>>> = Lazy::new(|| {
+    pub static {{typ.0}}: ::glean::private::__export::Lazy<HashMap<MetricId, &Lazy<{{typ.1}}>>> = ::glean::private::__export::Lazy::new(|| {
         let mut map = HashMap::with_capacity({{metrics|length}});
         {% for metric in metrics %}
         map.insert({{metric.0}}.into(), &super::{{metric.1}});
@@ -269,13 +264,13 @@ pub(crate) mod __glean_metric_maps {
 
         pub(crate) const MIN_LABELED_SUBMETRIC_ID: u32 = {{min_submetric_id}};
         pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new(MIN_LABELED_SUBMETRIC_ID);
-        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
+        pub(crate) static LABELED_METRICS_TO_IDS: ::glean::private::__export::Lazy<RwLock<HashMap<(u32, String), u32>>> = ::glean::private::__export::Lazy::new(||
             RwLock::new(HashMap::new())
         );
 
 {% for typ, metrics in metric_by_type.items() %}
 {% if typ.0 in ('BOOLEAN_MAP', 'COUNTER_MAP', 'STRING_MAP') %}
-        pub static {{typ.0}}: Lazy<RwLock<HashMap<MetricId, Labeled{{typ.1}}>>> = Lazy::new(||
+        pub static {{typ.0}}: ::glean::private::__export::Lazy<RwLock<HashMap<MetricId, Labeled{{typ.1}}>>> = ::glean::private::__export::Lazy::new(||
             RwLock::new(HashMap::new())
         );
 {% endif %}

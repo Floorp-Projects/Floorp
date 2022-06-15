@@ -7,10 +7,12 @@
 #include "EarlyHintsService.h"
 #include "ErrorList.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/Logging.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
+#include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -18,9 +20,9 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
+#include "nsILoadInfo.h"
 #include "nsIReferrerInfo.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 
 //
@@ -69,12 +71,76 @@ EarlyHintPreloader::EarlyHintPreloader(nsIURI* aURI) : mURI(aURI) {}
 
 /* static */
 Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
-    ASDestination aAs, nsIURI* aURI, nsIPrincipal* aPrincipal) {
+    ASDestination aAs, nsIURI* aURI, nsIPrincipal* aPrincipal,
+    CORSMode aCorsMode, const nsAString& aType) {
+  if (aAs == ASDestination::DESTINATION_FONT) {
+    return Some(PreloadHashKey::CreateAsFont(aURI, aCorsMode));
+  }
   if (aAs == ASDestination::DESTINATION_IMAGE) {
-    return Some(
-        PreloadHashKey::CreateAsImage(aURI, aPrincipal, CORSMode::CORS_NONE));
+    return Some(PreloadHashKey::CreateAsImage(aURI, aPrincipal, aCorsMode));
+  }
+  if (aAs == ASDestination::DESTINATION_SCRIPT) {
+    JS::loader::ScriptKind scriptKind = JS::loader::ScriptKind::eClassic;
+    if (aType.LowerCaseEqualsASCII("module")) {
+      scriptKind = JS::loader::ScriptKind::eModule;
+    }
+
+    return Some(PreloadHashKey::CreateAsScript(aURI, aCorsMode, scriptKind));
+  }
+  if (aAs == ASDestination::DESTINATION_STYLE) {
+    return Some(PreloadHashKey::CreateAsStyle(
+        aURI, aPrincipal, aCorsMode,
+        css::SheetParsingMode::eAuthorSheetFeatures));
+  }
+  if (aAs == ASDestination::DESTINATION_FETCH) {
+    return Some(PreloadHashKey::CreateAsFetch(aURI, aCorsMode));
   }
   return Nothing();
+}
+
+/* static */
+nsSecurityFlags EarlyHintPreloader::ComputeSecurityFlags(CORSMode aCORSMode,
+                                                         ASDestination aAs,
+                                                         bool aIsModule) {
+  if (aAs == ASDestination::DESTINATION_FONT) {
+    return nsContentSecurityManager::ComputeSecurityFlags(
+        CORSMode::CORS_NONE,
+        nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS);
+  }
+  if (aAs == ASDestination::DESTINATION_IMAGE) {
+    return nsContentSecurityManager::ComputeSecurityFlags(
+               aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                              CORS_NONE_MAPS_TO_INHERITED_CONTEXT) |
+           nsILoadInfo::SEC_ALLOW_CHROME;
+  }
+  if (aAs == ASDestination::DESTINATION_SCRIPT) {
+    if (aIsModule) {
+      return nsContentSecurityManager::ComputeSecurityFlags(
+                 aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                                REQUIRE_CORS_CHECKS) |
+             nsILoadInfo::SEC_ALLOW_CHROME;
+    }
+    return nsContentSecurityManager::ComputeSecurityFlags(
+               aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                              CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS) |
+           nsILoadInfo::SEC_ALLOW_CHROME;
+  }
+  if (aAs == ASDestination::DESTINATION_STYLE) {
+    return nsContentSecurityManager::ComputeSecurityFlags(
+               aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                              CORS_NONE_MAPS_TO_INHERITED_CONTEXT) |
+           nsILoadInfo::SEC_ALLOW_CHROME;
+    ;
+  }
+  if (aAs == ASDestination::DESTINATION_FETCH) {
+    return nsContentSecurityManager::ComputeSecurityFlags(
+        aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
+                       CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS);
+  }
+  MOZ_ASSERT(false, "Unexpected ASDestination");
+  return nsContentSecurityManager::ComputeSecurityFlags(
+      CORSMode::CORS_NONE,
+      nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS);
 }
 
 // static
@@ -96,19 +162,18 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   nsCOMPtr<nsIURI> uri;
   // use the base uri
-  NS_ENSURE_SUCCESS_VOID(
-      NS_NewURI(getter_AddRefs(uri), aHeader.mHref, nullptr, aBaseURI));
+  NS_ENSURE_SUCCESS_VOID(aHeader.NewResolveHref(getter_AddRefs(uri), aBaseURI));
 
-  // Only make same origin preloads, the fromPrivateWindow is only read when
-  // reportError is enabled, so setting both to false is safe.
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          aBaseURI, uri, /* reportError */ false,
-          /* fromPrivateWindow */ false))) {
+  // only preload secure context urls
+  if (!uri->SchemeIs("https")) {
     return;
   }
 
-  Maybe<PreloadHashKey> hashKey = GenerateHashKey(
-      static_cast<ASDestination>(as.GetEnumValue()), uri, aTriggeringPrincipal);
+  CORSMode corsMode = dom::Element::StringToCORSMode(aHeader.mCrossOrigin);
+
+  Maybe<PreloadHashKey> hashKey =
+      GenerateHashKey(static_cast<ASDestination>(as.GetEnumValue()), uri,
+                      aTriggeringPrincipal, corsMode, aHeader.mType);
   if (!hashKey) {
     return;
   }
@@ -132,8 +197,9 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   RefPtr<EarlyHintPreloader> earlyHintPreloader =
       RefPtr(new EarlyHintPreloader(uri));
 
-  nsSecurityFlags securityFlags =
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT;
+  nsSecurityFlags securityFlags = EarlyHintPreloader::ComputeSecurityFlags(
+      corsMode, static_cast<ASDestination>(as.GetEnumValue()),
+      aHeader.mType.LowerCaseEqualsASCII("module"));
 
   NS_ENSURE_SUCCESS_VOID(earlyHintPreloader->OpenChannel(
       aTriggeringPrincipal, securityFlags, contentPolicyType, referrerInfo,
@@ -148,7 +214,12 @@ nsresult EarlyHintPreloader::OpenChannel(
     nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType, nsIReferrerInfo* aReferrerInfo,
     nsICookieJarSettings* aCookieJarSettings) {
-  MOZ_ASSERT(aContentPolicyType == nsContentPolicyType::TYPE_IMAGE);
+  MOZ_ASSERT(aContentPolicyType == nsContentPolicyType::TYPE_IMAGE ||
+             aContentPolicyType ==
+                 nsContentPolicyType::TYPE_INTERNAL_FETCH_PRELOAD ||
+             aContentPolicyType == nsContentPolicyType::TYPE_SCRIPT ||
+             aContentPolicyType == nsContentPolicyType::TYPE_STYLESHEET ||
+             aContentPolicyType == nsContentPolicyType::TYPE_FONT);
   nsresult rv =
       NS_NewChannel(getter_AddRefs(mChannel), mURI, aTriggeringPrincipal,
                     aSecurityFlags, aContentPolicyType, aCookieJarSettings,
@@ -250,12 +321,8 @@ EarlyHintPreloader::AsyncOnChannelRedirect(
     return NS_OK;
   }
 
-  // abort the request if redirecting to cross origin resource, the
-  // fromPrivateWindow is only read when reportError is enabled, so setting both
-  // to false is safe.
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-          mURI, newURI, /* reportError */ false,
-          /* fromPrivateWindow */ false))) {
+  // abort the request if redirecting to insecure context
+  if (!newURI->SchemeIs("https")) {
     callback->OnRedirectVerifyCallback(NS_ERROR_ABORT);
     return NS_OK;
   }

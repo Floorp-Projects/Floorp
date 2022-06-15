@@ -7,12 +7,14 @@ use std::convert::TryFrom;
 use crate::error::{Error, ErrorKind};
 use crate::metrics::labeled::validate_dynamic_label;
 use crate::Glean;
+use serde::{Deserialize, Serialize};
 
 /// The supported metrics' lifetimes.
 ///
 /// A metric's lifetime determines when its stored data gets reset.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[repr(i32)] // Use i32 to be compatible with our JNA definition
+#[serde(rename_all = "lowercase")]
 pub enum Lifetime {
     /// The metric is reset with each sent ping
     Ping,
@@ -53,7 +55,7 @@ impl TryFrom<i32> for Lifetime {
 }
 
 /// The common set of data shared across all different metric types.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct CommonMetricData {
     /// The metric's name.
     pub name: String,
