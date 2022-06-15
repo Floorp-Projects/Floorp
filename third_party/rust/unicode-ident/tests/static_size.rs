@@ -16,6 +16,19 @@ fn test_size() {
     assert_eq!(9752, size);
 }
 
+#[test]
+fn test_xid_size() {
+    #[deny(dead_code)]
+    #[allow(clippy::redundant_static_lifetimes)]
+    #[path = "../generate/src/ucd.rs"]
+    mod ucd;
+
+    let size = size_of_val(ucd::XID_START) + size_of_val(ucd::XID_CONTINUE);
+    assert_eq!(11344, size);
+
+    let _ = ucd::BY_NAME;
+}
+
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn test_trieset_size() {
