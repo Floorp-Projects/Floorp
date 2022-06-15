@@ -8,10 +8,6 @@ toolbar-button-firefox-view =
   .label = { -firefoxview-brand-name }
   .tooltiptext = { -firefoxview-brand-name }
 
-menu-tools-firefox-view =
-  .label = { -firefoxview-brand-name }
-  .accesskey = F
-
 firefoxview-page-title = { -firefoxview-brand-name }
 
 # Used instead of the localized relative time when a timestamp is within a minute or so of now

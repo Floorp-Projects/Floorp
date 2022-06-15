@@ -392,11 +392,6 @@
                         class="sync-ui-item"
                         hidden="true"
                         oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-fxa-re-auth"/>
-
-#ifdef NIGHTLY_BUILD
-              <menuitem id="menu_openFirefoxView"
-                        oncommand="FirefoxViewHandler.openTab();" data-l10n-id="menu-tools-firefox-view"/>
-#endif
               <menuseparator id="devToolsSeparator"/>
               <menu id="browserToolsMenu" data-l10n-id="menu-tools-browser-tools">
                 <menupopup id="menuWebDeveloperPopup">

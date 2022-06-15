@@ -18,15 +18,15 @@ add_setup(async function() {
 });
 
 function assertFirefoxViewTab(w = window) {
-  ok(w.FirefoxViewHandler.tab, "Firefox View tab exists");
-  ok(w.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
+  ok(w.gFirefoxViewTab, "Firefox View tab exists");
+  ok(w.gFirefoxViewTab?.hidden, "Firefox View tab is hidden");
   is(
-    w.gBrowser.tabs.indexOf(w.FirefoxViewHandler.tab),
+    w.gBrowser.tabs.indexOf(w.gFirefoxViewTab),
     0,
     "Firefox View tab is the first tab"
   );
   is(
-    w.gBrowser.visibleTabs.indexOf(w.FirefoxViewHandler.tab),
+    w.gBrowser.visibleTabs.indexOf(w.gFirefoxViewTab),
     -1,
     "Firefox View tab is not in the list of visible tabs"
   );
@@ -34,7 +34,7 @@ function assertFirefoxViewTab(w = window) {
 
 async function openFirefoxViewTab(w = window) {
   ok(
-    !w.FirefoxViewHandler.tab,
+    !w.gFirefoxViewTab,
     "Firefox View tab doesn't exist prior to clicking the button"
   );
   info("Clicking the Firefox View button");
@@ -45,14 +45,14 @@ async function openFirefoxViewTab(w = window) {
   );
   assertFirefoxViewTab(w);
   is(w.gBrowser.tabContainer.selectedIndex, 0, "Firefox View tab is selected");
-  await BrowserTestUtils.browserLoaded(w.FirefoxViewHandler.tab.linkedBrowser);
-  return w.FirefoxViewHandler.tab;
+  await BrowserTestUtils.browserLoaded(w.gFirefoxViewTab.linkedBrowser);
+  return w.gFirefoxViewTab;
 }
 
 function closeFirefoxViewTab(w = window) {
-  w.gBrowser.removeTab(w.FirefoxViewHandler.tab);
+  w.gBrowser.removeTab(w.gFirefoxViewTab);
   ok(
-    !w.FirefoxViewHandler.tab,
+    !w.gFirefoxViewTab,
     "Reference to Firefox View tab got removed when closing the tab"
   );
 }
@@ -98,7 +98,7 @@ add_task(async function accel_w_behavior() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await openFirefoxViewTab(win);
   EventUtils.synthesizeKey("w", { accelKey: true }, win);
-  ok(!win.FirefoxViewHandler.tab, "Accel+w closed the Firefox View tab");
+  ok(!win.gFirefoxViewTab, "Accel+w closed the Firefox View tab");
   await openFirefoxViewTab(win);
   win.gBrowser.selectedTab = win.gBrowser.visibleTabs[0];
   info(

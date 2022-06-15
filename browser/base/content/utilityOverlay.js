@@ -525,7 +525,7 @@ function openLinkIn(url, where, params) {
     // page. If a load request bounces off for the currently selected tab,
     // we'll open a new tab instead.
     let tab = w.gBrowser.getTabForBrowser(targetBrowser);
-    if (tab == w.FirefoxViewHandler.tab) {
+    if (tab == w.gFirefoxViewTab) {
       where = "tab";
       targetBrowser = null;
     } else if (
