@@ -508,18 +508,6 @@ function messages(
           ...visibleMessages.slice(insertIndex),
         ];
       }
-
-      // If the current message is a network event, mark it as opened-once,
-      // so HTTP details are not fetched again the next time the user
-      // opens the log.
-      if (currMessage.source == "network") {
-        openState.mutableMessagesById = new Map(mutableMessagesById).set(
-          action.id,
-          {
-            ...currMessage,
-          }
-        );
-      }
       return openState;
 
     case constants.MESSAGE_CLOSE:
