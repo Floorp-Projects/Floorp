@@ -718,10 +718,10 @@
     <string name="preference_option_phone_feature_ask_to_allow">Ερώτηση για αποδοχή</string>
 
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Να μην επιτρέπεται</string>
+    <string name="preference_option_phone_feature_blocked">Φραγή</string>
 
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">Να επιτρέπεται</string>
+    <string name="preference_option_phone_feature_allowed">Αποδοχή</string>
 
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Αποκλείστηκε από το Android</string>
