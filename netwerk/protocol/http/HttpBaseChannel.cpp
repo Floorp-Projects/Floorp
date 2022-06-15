@@ -196,7 +196,6 @@ HttpBaseChannel::HttpBaseChannel()
       mCanceled(false),
       mFirstPartyClassificationFlags(0),
       mThirdPartyClassificationFlags(0),
-      mFlashPluginState(nsIHttpChannel::FlashPluginUnknown),
       mLoadFlags(LOAD_NORMAL),
       mCaps(0),
       mClassOfService(0, false),
@@ -314,12 +313,6 @@ void HttpBaseChannel::AddClassificationFlags(uint32_t aClassificationFlags,
   } else {
     mFirstPartyClassificationFlags |= aClassificationFlags;
   }
-}
-
-void HttpBaseChannel::SetFlashPluginState(
-    nsIHttpChannel::FlashPluginState aState) {
-  LOG(("HttpBaseChannel::SetFlashPluginState %p", this));
-  mFlashPluginState = aState;
 }
 
 static bool isSecureOrTrustworthyURL(nsIURI* aURI) {
@@ -1732,13 +1725,6 @@ HttpBaseChannel::GetFirstPartyClassificationFlags(uint32_t* aFlags) {
 NS_IMETHODIMP
 HttpBaseChannel::GetThirdPartyClassificationFlags(uint32_t* aFlags) {
   *aFlags = mThirdPartyClassificationFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetFlashPluginState(nsIHttpChannel::FlashPluginState* aState) {
-  uint32_t flashPluginState = mFlashPluginState;
-  *aState = (nsIHttpChannel::FlashPluginState)flashPluginState;
   return NS_OK;
 }
 

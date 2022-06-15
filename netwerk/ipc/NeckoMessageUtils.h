@@ -138,12 +138,6 @@ struct ParamTraits<mozilla::net::NetAddr> {
   }
 };
 
-template <>
-struct ParamTraits<nsIHttpChannel::FlashPluginState>
-    : public ContiguousEnumSerializerInclusive<
-          nsIHttpChannel::FlashPluginState, nsIHttpChannel::FlashPluginUnknown,
-          nsIHttpChannel::FlashPluginLastValue> {};
-
 }  // namespace IPC
 
 #endif  // mozilla_net_NeckoMessageUtils_h

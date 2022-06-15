@@ -464,20 +464,6 @@ interface nsIHttpChannel : nsIIdentChannel
     [must_use] attribute uint64_t topLevelContentWindowId;
 
     /**
-     * Returns the allowing status for flash plugin for this channel.
-     */
-    cenum FlashPluginState : 8 {
-      FlashPluginUnknown = 0,
-      FlashPluginAllowed = 1,
-      FlashPluginDenied = 2,
-      FlashPluginDeniedInSubdocuments = 3,
-
-      // Keep this equal to the last value.
-      FlashPluginLastValue = 3,
-    };
-    [infallible] readonly attribute nsIHttpChannel_FlashPluginState flashPluginState;
-
-    /**
      * ID of the top-level browsing context for this channel.
      *
      * NOTE: The setter of this attribute is currently for xpcshell test only.

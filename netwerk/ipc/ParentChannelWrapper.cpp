@@ -49,17 +49,6 @@ ParentChannelWrapper::SetParentListener(
 }
 
 NS_IMETHODIMP
-ParentChannelWrapper::NotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  // For now, only HttpChannel use this attribute.
-  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel);
-  if (httpChannel) {
-    httpChannel->SetFlashPluginState(aState);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ParentChannelWrapper::SetClassifierMatchedInfo(const nsACString& aList,
                                                const nsACString& aProvider,
                                                const nsACString& aFullHash) {

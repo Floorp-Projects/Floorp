@@ -1464,18 +1464,6 @@ void HttpChannelChild::ProcessNotifyClassificationFlags(
       }));
 }
 
-void HttpChannelChild::ProcessNotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  LOG(("HttpChannelChild::ProcessNotifyFlashPluginStateChanged [this=%p]\n",
-       this));
-  MOZ_ASSERT(OnSocketThread());
-
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aState]() {
-        self->SetFlashPluginState(aState);
-      }));
-}
-
 void HttpChannelChild::ProcessSetClassifierMatchedInfo(
     const nsCString& aList, const nsCString& aProvider,
     const nsCString& aFullHash) {
