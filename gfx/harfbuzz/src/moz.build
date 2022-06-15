@@ -109,7 +109,6 @@ DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 DEFINES['HAVE_OT'] = 1
 DEFINES['HAVE_ROUND'] = 1
 DEFINES['HB_NO_FALLBACK_SHAPE'] = True
-DEFINES['HB_NO_MT'] = True
 DEFINES['HB_NO_UCD'] = True
 DEFINES['HB_NO_UNICODE_FUNCS'] = True
 # Cancel the effect of the -DDEBUG macro if present,
