@@ -26,20 +26,18 @@ const EXPORTED_SYMBOLS = ["creditCardRulesets"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "fathom",
+const { fathom } = ChromeUtils.import(
   "resource://gre/modules/third_party/fathom/fathom.jsm"
 );
-const {
-  element: clickedElement,
-  out,
-  rule,
-  ruleset,
-  score,
-  type,
-} = lazy.fathom;
+const { element: clickedElement, out, rule, ruleset, score, type } = fathom;
+const { CreditCard } = ChromeUtils.import(
+  "resource://gre/modules/CreditCard.jsm"
+);
+const { NETWORK_NAMES } = ChromeUtils.import(
+  "resource://gre/modules/CreditCard.jsm"
+);
+
+const lazy = {};
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -52,8 +50,6 @@ ChromeUtils.defineModuleGetter(
   "resource://autofill/FormAutofillUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
-  NETWORK_NAMES: "resource://gre/modules/CreditCard.jsm",
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
@@ -341,8 +337,8 @@ const yearRegExp = /year/i;
 const MMYYRegExp = /mm\s*(\/|\\)\s*yy/i;
 const VisaCheckoutRegExp = /visa(-|\s)checkout/i;
 const CREDIT_CARD_NETWORK_REGEXP = new RegExp(
-  lazy.CreditCard.getSupportedNetworks()
-    .concat(Object.keys(lazy.NETWORK_NAMES))
+  CreditCard.getSupportedNetworks()
+    .concat(Object.keys(NETWORK_NAMES))
     .join("|"),
   "gui"
   );
@@ -537,8 +533,8 @@ function isSelectWithCreditCardOptions(fnode) {
   if (element.tagName === "SELECT") {
     for (let option of element.querySelectorAll("option")) {
       if (
-        lazy.CreditCard.getNetworkFromName(option.value) ||
-        lazy.CreditCard.getNetworkFromName(option.text)
+        CreditCard.getNetworkFromName(option.value) ||
+        CreditCard.getNetworkFromName(option.text)
       ) {
         return true;
       }
