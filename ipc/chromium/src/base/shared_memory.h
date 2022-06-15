@@ -155,6 +155,8 @@ class SharedMemory {
   // pid to the given string and return true.  If not, return false.
   // (This is public so that the Linux sandboxing code can use it.)
   static bool AppendPosixShmPrefix(std::string* str, pid_t pid);
+  // Similar, but simply returns whether POSIX shm is in use.
+  static bool UsingPosixShm();
 #endif
 
  private:
