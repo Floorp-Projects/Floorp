@@ -17,11 +17,13 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginExport: "resource://gre/modules/LoginExport.jsm",
@@ -69,8 +71,7 @@ const PRIMARY_PASSWORD_NOTIFICATION_ID = "primary-password-login-required";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
-const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
-  lazy.E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 let _gPasswordRemaskTimeout = null;
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
