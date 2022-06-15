@@ -34,8 +34,8 @@ add_task(async function() {
     await waitForPaused(dbg);
     await waitForSelectedSource(dbg, "content_script.js");
 
-    ok(
-      findElementWithSelector(dbg, ".sources-list .focused"),
+    await waitFor(
+      () => findElementWithSelector(dbg, ".sources-list .focused"),
       "Source is focused"
     );
     assertPausedAtSourceAndLine(
