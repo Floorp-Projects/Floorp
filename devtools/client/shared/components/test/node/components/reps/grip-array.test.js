@@ -648,3 +648,62 @@ describe("GripArray - DOMTokenList", () => {
     expectActorAttribute(component, object.actor);
   });
 });
+
+describe("GripArray - accessor", () => {
+  it("renders an array with getter as expected", () => {
+    const object = stubs.get("TestArrayWithGetter");
+    const renderRep = props => shallowRenderRep(object, props);
+    let length = getGripLengthBubbleText(object);
+
+    const defaultOutput = `Array${length} [ Getter ]`;
+
+    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.TINY });
+    expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+
+    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.LONG });
+    const longOutput = `Array${length} [ Getter ]`;
+    expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
+  });
+
+  it("renders an array with setter as expected", () => {
+    const object = stubs.get("TestArrayWithSetter");
+    const renderRep = props => shallowRenderRep(object, props);
+    let length = getGripLengthBubbleText(object);
+
+    const defaultOutput = `Array${length} [ Setter ]`;
+
+    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.TINY });
+    expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+
+    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.LONG });
+    const longOutput = `Array${length} [ Setter ]`;
+    expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
+  });
+
+  it("renders an array with getter and setter as expected", () => {
+    const object = stubs.get("TestArrayWithGetterAndSetter");
+    const renderRep = props => shallowRenderRep(object, props);
+    let length = getGripLengthBubbleText(object);
+
+    const defaultOutput = `Array${length} [ Getter & Setter ]`;
+
+    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.TINY });
+    expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+
+    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
+
+    length = getGripLengthBubbleText(object, { mode: MODE.LONG });
+    const longOutput = `Array${length} [ Getter & Setter ]`;
+    expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
+  });
+});

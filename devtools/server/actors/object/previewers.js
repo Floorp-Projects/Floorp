@@ -226,7 +226,18 @@ const previewers = {
           } else if (!desc) {
             items.push(null);
           } else {
-            items.push(hooks.createValueGrip(undefined));
+            const item = {};
+            if (desc.get) {
+              let getter = Cu.unwaiveXrays(desc.get);
+              getter = ObjectUtils.makeDebuggeeValueIfNeeded(obj, getter);
+              item.get = hooks.createValueGrip(getter);
+            }
+            if (desc.set) {
+              let setter = Cu.unwaiveXrays(desc.set);
+              setter = ObjectUtils.makeDebuggeeValueIfNeeded(obj, setter);
+              item.set = hooks.createValueGrip(setter);
+            }
+            items.push(item);
           }
         } else if (raw && !Object.getOwnPropertyDescriptor(raw, i)) {
           items.push(null);
