@@ -2401,28 +2401,25 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
                "We need to copy <body>'s principal writing-mode before "
                "constructing mRootElementFrame.");
 
-    const WritingMode propagatedWM = [&] {
-      const WritingMode rootWM(computedStyle);
-      Element* body = mDocument->GetBodyElement();
-      if (!body) {
-        return rootWM;
-      }
+    const WritingMode docElementWM(computedStyle);
+    Element* body = mDocument->GetBodyElement();
+    if (body) {
       RefPtr<ComputedStyle> bodyStyle = ResolveComputedStyle(body);
-      if (bodyStyle->StyleDisplay()->IsContainAny()) {
-        return rootWM;
-      }
       const WritingMode bodyWM(bodyStyle);
-      if (bodyWM != rootWM) {
+
+      if (bodyWM != docElementWM) {
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, "Layout"_ns, mDocument,
             nsContentUtils::eLAYOUT_PROPERTIES,
             "PrincipalWritingModePropagationWarning");
       }
-      return bodyWM;
-    }();
 
-    mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-        propagatedWM);
+      mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
+          bodyWM);
+    } else {
+      mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
+          docElementWM);
+    }
   }
 
   nsFrameConstructorSaveState docElementContainingBlockAbsoluteSaveState;

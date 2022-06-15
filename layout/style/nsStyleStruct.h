@@ -1521,8 +1521,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            !IsInternalTableStyleExceptCell();
   }
 
-  bool IsContainAny() const { return !!EffectiveContainment(); }
-
   mozilla::ContainSizeAxes GetContainSizeAxes() const {
     const auto contain = EffectiveContainment();
     // Short circuit for no containment whatsoever
