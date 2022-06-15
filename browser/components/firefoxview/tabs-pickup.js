@@ -10,6 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const SYNC_TABS_PREF = "services.sync.engine.tabs";
+const RECENT_TABS_SYNC = "services.sync.lastTabFetch";
 
 const tabsSetupFlowManager = new (class {
   constructor() {
@@ -21,6 +22,7 @@ const tabsSetupFlowManager = new (class {
 
     XPCOMUtils.defineLazyModuleGetters(this, {
       Services: "resource://gre/modules/Services.jsm",
+      SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
     });
     XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
       return ChromeUtils.import(
@@ -38,6 +40,15 @@ const tabsSetupFlowManager = new (class {
       this,
       "syncTabsPrefEnabled",
       SYNC_TABS_PREF,
+      false,
+      () => {
+        this.maybeUpdateUI();
+      }
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "lastTabFetch",
+      RECENT_TABS_SYNC,
       false,
       () => {
         this.maybeUpdateUI();
@@ -69,16 +80,20 @@ const tabsSetupFlowManager = new (class {
     this.registerSetupState({
       uiStateIndex: 3,
       name: "synced-tabs-not-ready",
+      enter: () => {
+        if (!this.didRecentTabSync) {
+          this.SyncedTabs.syncTabs();
+        }
+      },
       exitConditions: () => {
-        // Bug 1763139 - Implement the actual logic to advance to next step
-        return false;
+        return this.didRecentTabSync;
       },
     });
     this.registerSetupState({
       uiStateIndex: 4,
-      name: "show-synced-tabs-loading",
+      name: "synced-tabs-loaded",
       exitConditions: () => {
-        // Bug 1763139 - Implement the actual logic to advance to next step
+        // This is the end state
         return false;
       },
     });
@@ -108,6 +123,13 @@ const tabsSetupFlowManager = new (class {
       device => device.type == "mobile"
     );
     return !!mobileDevice;
+  }
+  get didRecentTabSync() {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    return (
+      nowSeconds - this.lastTabFetch <
+      this.SyncedTabs.TABS_FRESH_ENOUGH_INTERVAL_SECONDS
+    );
   }
   registerSetupState(state) {
     this.setupState.set(state.name, state);
@@ -141,10 +163,6 @@ const tabsSetupFlowManager = new (class {
           this.syncOpenTabs(event.target);
           break;
         }
-        case "view3-primary-action": {
-          this.confirmSetupComplete(event.target);
-          break;
-        }
       }
     }
   }
@@ -161,10 +179,12 @@ const tabsSetupFlowManager = new (class {
     }
 
     if (nextSetupStateName !== this._currentSetupStateName) {
-      this.elem.updateSetupState(
-        this.setupState.get(nextSetupStateName).uiStateIndex
-      );
+      const state = this.setupState.get(nextSetupStateName);
+      this.elem.updateSetupState(state.uiStateIndex);
       this._currentSetupStateName = nextSetupStateName;
+      if ("function" == typeof state.enter) {
+        state.enter();
+      }
     }
   }
 
@@ -182,12 +202,6 @@ const tabsSetupFlowManager = new (class {
     // Flip the pref on.
     // The observer should trigger re-evaluating state and advance to next step
     this.Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
-  }
-  confirmSetupComplete(containerElem) {
-    // Bug 1763139 - Implement the actual logic to advance to next step
-    this.elem.updateSetupState(
-      this.setupState.get("show-synced-tabs-loading").uiStateIndex
-    );
   }
 })();
 
@@ -239,7 +253,7 @@ class TabsPickupContainer extends HTMLElement {
     const stateIndex = this._currentSetupStateIndex;
 
     // show/hide either the setup or tab list containers, creating each as necessary
-    if (stateIndex < 4) {
+    if (stateIndex < 3) {
       if (!setupElem) {
         this.appendTemplatedElement("sync-setup-template", "tabpickup-steps");
         setupElem = this.setupContainerElem;
@@ -260,6 +274,7 @@ class TabsPickupContainer extends HTMLElement {
       if (setupElem) {
         setupElem.hidden = true;
       }
+      tabsElem.classList.toggle("loading", stateIndex == 3);
       tabsElem.hidden = false;
     }
   }

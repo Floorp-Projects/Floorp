@@ -38,7 +38,7 @@ const TOPIC_TABS_CHANGED = "services.sync.tabs.changed";
 
 // The interval, in seconds, before which we consider the existing list
 // of tabs "fresh enough" and don't force a new sync.
-const TABS_FRESH_ENOUGH_INTERVAL = 30;
+const TABS_FRESH_ENOUGH_INTERVAL_SECONDS = 30;
 
 XPCOMUtils.defineLazyGetter(lazy, "log", function() {
   let log = Log.repository.getLogger("Sync.RemoteTabs");
@@ -143,7 +143,7 @@ let SyncedTabsInternal = {
       // Don't bother refetching tabs if we already did so recently
       let lastFetch = Preferences.get("services.sync.lastTabFetch", 0);
       let now = Math.floor(Date.now() / 1000);
-      if (now - lastFetch < TABS_FRESH_ENOUGH_INTERVAL) {
+      if (now - lastFetch < TABS_FRESH_ENOUGH_INTERVAL_SECONDS) {
         lazy.log.info("_refetchTabs was done recently, do not doing it again");
         return false;
       }
@@ -228,6 +228,9 @@ var SyncedTabs = {
 
   // We make the topic for the observer notification public.
   TOPIC_TABS_CHANGED,
+
+  // Expose the interval used to determine if synced tabs data needs a new sync
+  TABS_FRESH_ENOUGH_INTERVAL_SECONDS,
 
   // Returns true if Sync is configured to Sync tabs, false otherwise
   get isConfiguredToSyncTabs() {
