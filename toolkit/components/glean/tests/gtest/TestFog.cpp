@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FOGFixture.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mozilla/glean/GleanMetrics.h"
@@ -33,7 +32,24 @@ void GTest_FOG_ExpectFailure(const char* aMessage) {
 }
 }
 
-TEST_F(FOGFixture, BuiltinPingsRegistered) {
+// Initialize FOG exactly once.
+// This needs to be the first test to run!
+TEST(FOG, FogInitDoesntCrash)
+{
+  Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
+  const nsCString empty;
+  ASSERT_EQ(NS_OK, fog_init(&empty, &empty));
+  ASSERT_EQ(NS_OK, fog_test_reset(&empty, &empty));
+}
+
+extern "C" void Rust_MeasureInitializeTime();
+// Disabled because this depends on the preinit buffer not overflowing,
+// which currently can't be guaranteed. See bug 1756057 for how to fix it.
+TEST(FOG, DISABLED_TestMeasureInitializeTime)
+{ Rust_MeasureInitializeTime(); }
+
+TEST(FOG, BuiltinPingsRegistered)
+{
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
   nsAutoCString metricsPingName("metrics");
   nsAutoCString baselinePingName("baseline");
@@ -43,7 +59,8 @@ TEST_F(FOGFixture, BuiltinPingsRegistered) {
   ASSERT_EQ(NS_OK, fog_submit_ping(&eventsPingName));
 }
 
-TEST_F(FOGFixture, TestCppCounterWorks) {
+TEST(FOG, TestCppCounterWorks)
+{
   mozilla::glean::test_only::bad_code.Add(42);
 
   ASSERT_EQ(42, mozilla::glean::test_only::bad_code.TestGetValue("test-ping"_ns)
@@ -53,7 +70,8 @@ TEST_F(FOGFixture, TestCppCounterWorks) {
   ASSERT_EQ(42, test_only::bad_code.TestGetValue().unwrap().value());
 }
 
-TEST_F(FOGFixture, TestCppStringWorks) {
+TEST(FOG, TestCppStringWorks)
+{
   auto kValue = "cheez!"_ns;
   mozilla::glean::test_only::cheesy_string.Set(kValue);
 
@@ -64,7 +82,8 @@ TEST_F(FOGFixture, TestCppStringWorks) {
                                  .get());
 }
 
-TEST_F(FOGFixture, TestCppTimespanWorks) {
+TEST(FOG, TestCppTimespanWorks)
+{
   mozilla::glean::test_only::can_we_time_it.Start();
   PR_Sleep(PR_MillisecondsToInterval(10));
   mozilla::glean::test_only::can_we_time_it.Stop();
@@ -75,7 +94,8 @@ TEST_F(FOGFixture, TestCppTimespanWorks) {
           .value() > 0);
 }
 
-TEST_F(FOGFixture, TestCppUuidWorks) {
+TEST(FOG, TestCppUuidWorks)
+{
   nsCString kTestUuid("decafdec-afde-cafd-ecaf-decafdecafde");
   test_only::what_id_it.Set(kTestUuid);
   ASSERT_STREQ(kTestUuid.get(),
@@ -94,7 +114,8 @@ TEST_F(FOGFixture, TestCppUuidWorks) {
                    .get());
 }
 
-TEST_F(FOGFixture, TestCppBooleanWorks) {
+TEST(FOG, TestCppBooleanWorks)
+{
   mozilla::glean::test_only::can_we_flag_it.Set(false);
 
   ASSERT_EQ(false, mozilla::glean::test_only::can_we_flag_it
@@ -108,7 +129,8 @@ MATCHER_P(BitEq, x, "bit equal") {
   return std::memcmp(&arg, &x, sizeof(x)) == 0;
 }
 
-TEST_F(FOGFixture, TestCppDatetimeWorks) {
+TEST(FOG, TestCppDatetimeWorks)
+{
   PRExplodedTime date{0, 35, 10, 12, 6, 10, 2020, 0, 0, {5 * 60 * 60, 0}};
   test_only::what_a_date.Set(&date);
 
@@ -122,7 +144,8 @@ using mozilla::Tuple;
 using mozilla::glean::test_only_ipc::AnEventExtra;
 using mozilla::glean::test_only_ipc::EventWithExtraExtra;
 
-TEST_F(FOGFixture, TestCppEventWorks) {
+TEST(FOG, TestCppEventWorks)
+{
   test_only_ipc::no_extra_event.Record();
   ASSERT_TRUE(test_only_ipc::no_extra_event.TestGetValue("store1"_ns)
                   .unwrap()
@@ -142,7 +165,8 @@ TEST_F(FOGFixture, TestCppEventWorks) {
   ASSERT_STREQ("can set extras", mozilla::Get<1>(events[0].mExtra[0]).get());
 }
 
-TEST_F(FOGFixture, TestCppEventsWithDifferentExtraTypes) {
+TEST(FOG, TestCppEventsWithDifferentExtraTypes)
+{
   EventWithExtraExtra extra = {.extra1 = Some("can set extras"_ns),
                                .extra2 = Some(37),
                                .extra3LongerName = Some(false)};
@@ -173,7 +197,8 @@ TEST_F(FOGFixture, TestCppEventsWithDifferentExtraTypes) {
   }
 }
 
-TEST_F(FOGFixture, TestCppMemoryDistWorks) {
+TEST(FOG, TestCppMemoryDistWorks)
+{
   test_only::do_you_remember.Accumulate(7);
   test_only::do_you_remember.Accumulate(17);
 
@@ -191,7 +216,8 @@ TEST_F(FOGFixture, TestCppMemoryDistWorks) {
   }
 }
 
-TEST_F(FOGFixture, TestCppCustomDistWorks) {
+TEST(FOG, TestCppCustomDistWorks)
+{
   test_only_ipc::a_custom_dist.AccumulateSamples({7, 268435458});
 
   DistributionData data =
@@ -206,7 +232,8 @@ TEST_F(FOGFixture, TestCppCustomDistWorks) {
   }
 }
 
-TEST_F(FOGFixture, TestCppPings) {
+TEST(FOG, TestCppPings)
+{
   test_only::one_ping_one_bool.Set(false);
   const auto& ping = mozilla::glean_pings::OnePingOnly;
   bool submitted = false;
@@ -220,7 +247,8 @@ TEST_F(FOGFixture, TestCppPings) {
   << "Must have actually called the lambda.";
 }
 
-TEST_F(FOGFixture, TestCppStringLists) {
+TEST(FOG, TestCppStringLists)
+{
   auto kValue = "cheez!"_ns;
   auto kValue2 = "cheezier!"_ns;
   auto kValue3 = "cheeziest."_ns;
@@ -242,7 +270,8 @@ TEST_F(FOGFixture, TestCppStringLists) {
   ASSERT_STREQ(kValue3.get(), val[2].get());
 }
 
-TEST_F(FOGFixture, TestCppTimingDistWorks) {
+TEST(FOG, TestCppTimingDistWorks)
+{
   auto id1 = test_only::what_time_is_it.Start();
   auto id2 = test_only::what_time_is_it.Start();
   PR_Sleep(PR_MillisecondsToInterval(5));
@@ -272,7 +301,8 @@ TEST_F(FOGFixture, TestCppTimingDistWorks) {
   ASSERT_EQ(sampleCount, (uint64_t)2);
 }
 
-TEST_F(FOGFixture, TestLabeledBooleanWorks) {
+TEST(FOG, TestLabeledBooleanWorks)
+{
   ASSERT_EQ(mozilla::Nothing(),
             test_only::mabels_like_balloons.Get("hot_air"_ns)
                 .TestGetValue()
@@ -289,7 +319,8 @@ TEST_F(FOGFixture, TestLabeledBooleanWorks) {
                        .ref());
 }
 
-TEST_F(FOGFixture, TestLabeledCounterWorks) {
+TEST(FOG, TestLabeledCounterWorks)
+{
   ASSERT_EQ(mozilla::Nothing(),
             test_only::mabels_kitchen_counters.Get("marble"_ns)
                 .TestGetValue()
@@ -306,7 +337,8 @@ TEST_F(FOGFixture, TestLabeledCounterWorks) {
                    .ref());
 }
 
-TEST_F(FOGFixture, TestLabeledStringWorks) {
+TEST(FOG, TestLabeledStringWorks)
+{
   ASSERT_EQ(mozilla::Nothing(),
             test_only::mabels_balloon_strings.Get("twine"_ns)
                 .TestGetValue()
@@ -328,7 +360,8 @@ TEST_F(FOGFixture, TestLabeledStringWorks) {
                    .get());
 }
 
-TEST_F(FOGFixture, TestCppQuantityWorks) {
+TEST(FOG, TestCppQuantityWorks)
+{
   // This joke only works in base 13.
   const uint32_t kValue = 6 * 9;
   mozilla::glean::test_only::meaning_of_life.Set(kValue);
@@ -338,7 +371,8 @@ TEST_F(FOGFixture, TestCppQuantityWorks) {
                         .value());
 }
 
-TEST_F(FOGFixture, TestCppRateWorks) {
+TEST(FOG, TestCppRateWorks)
+{
   // 1) Standard rate with internal denominator
   const int32_t kNum = 22;
   const int32_t kDen = 7;  // because I like pi, even just approximately.
@@ -360,7 +394,8 @@ TEST_F(FOGFixture, TestCppRateWorks) {
       test_only_ipc::an_external_denominator.TestGetValue().unwrap().extract());
 }
 
-TEST_F(FOGFixture, TestCppUrlWorks) {
+TEST(FOG, TestCppUrlWorks)
+{
   auto kValue = "https://example.com/fog/gtest"_ns;
   mozilla::glean::test_only_ipc::a_url.Set(kValue);
 
@@ -370,6 +405,3 @@ TEST_F(FOGFixture, TestCppUrlWorks) {
                    .value()
                    .get());
 }
-
-extern "C" void Rust_TestRustInGTest();
-TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
