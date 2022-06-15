@@ -7,17 +7,12 @@
 var EXPORTED_SYMBOLS = ["Browser"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/Domain.jsm"
 );
 
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
-});
-
-class Browser extends lazy.Domain {
+class Browser extends Domain {
   getVersion() {
     const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
       Ci.nsIGfxInfo

@@ -10,11 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
-
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   EventsDispatcher:
     "chrome://remote/content/shared/messagehandler/EventsDispatcher.jsm",
@@ -79,7 +81,7 @@ const ContextDescriptorType = {
  * instances are properly registered and can be retrieved based on a given
  * session id as well as some other context information.
  */
-class MessageHandler extends lazy.EventEmitter {
+class MessageHandler extends EventEmitter {
   /**
    * Create a new MessageHandler instance.
    *

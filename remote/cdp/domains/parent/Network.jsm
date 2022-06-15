@@ -7,15 +7,10 @@
 var EXPORTED_SYMBOLS = ["Network"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/Domain.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
-});
 
 const MAX_COOKIE_EXPIRY = Number.MAX_SAFE_INTEGER;
 
@@ -43,7 +38,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "WebManifest",
 };
 
-class Network extends lazy.Domain {
+class Network extends Domain {
   constructor(session) {
     super(session);
     this.enabled = false;

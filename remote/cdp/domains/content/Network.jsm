@@ -6,18 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Network"];
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
 );
 
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContentProcessDomain:
-    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
-});
-
-class Network extends lazy.ContentProcessDomain {
+class Network extends ContentProcessDomain {
   // commands
 
   /**

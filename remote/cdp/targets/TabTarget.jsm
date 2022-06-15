@@ -11,13 +11,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Target } = ChromeUtils.import(
+  "chrome://remote/content/cdp/targets/Target.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
-  Target: "chrome://remote/content/cdp/targets/Target.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -30,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(
 /**
  * Target for a local tab or a remoted frame.
  */
-class TabTarget extends lazy.Target {
+class TabTarget extends Target {
   /**
    * @param TargetList targetList
    * @param BrowserElement browser

@@ -11,6 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Module } = ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/Module.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -22,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   waitForInitialNavigationCompleted:
@@ -66,7 +69,7 @@ const WaitCondition = {
   Complete: "complete",
 };
 
-class BrowsingContextModule extends lazy.Module {
+class BrowsingContextModule extends Module {
   #contextListener;
 
   /**
