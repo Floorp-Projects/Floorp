@@ -10,13 +10,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
@@ -270,7 +272,7 @@ class PageDataCache {
  *   the format defined by the schemas at `browser/components/pagedata/schemas`.
  */
 
-const PageDataService = new (class PageDataService extends lazy.EventEmitter {
+const PageDataService = new (class PageDataService extends EventEmitter {
   /**
    * Caches page data discovered from browsers.
    *

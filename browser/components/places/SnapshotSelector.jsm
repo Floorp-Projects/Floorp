@@ -7,11 +7,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
@@ -75,7 +77,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
  * This component is intentionally decoupled from where the context comes from
  * so it can be unit tested.
  */
-class SnapshotSelector extends lazy.EventEmitter {
+class SnapshotSelector extends EventEmitter {
   /**
    * All of the active selectors.
    */
