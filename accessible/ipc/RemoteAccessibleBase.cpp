@@ -1176,6 +1176,17 @@ void RemoteAccessibleBase<Derived>::SetCaretOffset(int32_t aOffset) {
   Unused << mDoc->SendSetCaretOffset(mID, aOffset);
 }
 
+template <class Derived>
+Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
+    nsAtom* aAttrName) const {
+  if (RefPtr<const AccAttributes> attrs = GetCachedARIAAttributes()) {
+    if (auto val = attrs->GetAttribute<int32_t>(aAttrName)) {
+      return val;
+    }
+  }
+  return Nothing();
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

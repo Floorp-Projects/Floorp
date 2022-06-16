@@ -3816,3 +3816,14 @@ TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
   }
   return AsTableCell();
 }
+
+Maybe<int32_t> LocalAccessible::GetIntARIAAttr(nsAtom* aAttrName) const {
+  if (mContent) {
+    int32_t val;
+    if (nsCoreUtils::GetUIntAttr(mContent, aAttrName, &val)) {
+      return Some(val);
+    }
+    // XXX Handle attributes that allow -1; e.g. aria-row/colcount.
+  }
+  return Nothing();
+}
