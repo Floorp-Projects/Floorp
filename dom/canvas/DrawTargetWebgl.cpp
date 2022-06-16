@@ -2579,12 +2579,25 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   }
   // Hash the incoming text run and looking for a matching entry.
   DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
+#ifdef XP_MACOSX
+  // On macOS, depending on whether the text is classified as light-on-dark or
+  // dark-on-light, we may end up with different amounts of dilation applied, so
+  // we can't use the same mask in the two circumstances, or the glyphs will be
+  // dilated incorrectly.
+  bool lightOnDark = !useBitmaps && color.r >= 0.33f && color.g >= 0.33f &&
+                     color.b >= 0.33f && color.r + color.g + color.b >= 2.0f;
+#else
+  // On other platforms, we assume no color-dependent dilation.
+  const bool lightOnDark = true;
+#endif
   // If the font has bitmaps, use the color directly. Otherwise, the texture
-  // will hold a grayscale mask, so encode the key's subpixel state in the
-  // color.
+  // will hold a grayscale mask, so encode the key's subpixel and light-or-dark
+  // state in the color.
   RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
       aBuffer,
-      useBitmaps ? color : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, 1),
+      useBitmaps
+          ? color
+          : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, lightOnDark ? 1 : 0),
       quantizeTransform, intBounds);
   if (!entry) {
     return false;
@@ -2610,9 +2623,17 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     // If we get here, either there wasn't a cached texture handle or it
     // wasn't valid. Render the text run into a temporary target.
     RefPtr<DrawTargetSkia> textDT = new DrawTargetSkia;
-    if (textDT->Init(intBounds.Size(), !useBitmaps && !aUseSubpixelAA
-                                           ? SurfaceFormat::A8
-                                           : SurfaceFormat::B8G8R8A8)) {
+    if (textDT->Init(intBounds.Size(),
+                     lightOnDark && !useBitmaps && !aUseSubpixelAA
+                         ? SurfaceFormat::A8
+                         : SurfaceFormat::B8G8R8A8)) {
+      if (!lightOnDark) {
+        // If rendering dark-on-light text, we need to clear the background to
+        // white while using an opaque alpha value to allow this.
+        textDT->FillRect(Rect(IntRect(IntPoint(), intBounds.Size())),
+                         ColorPattern(DeviceColor(1, 1, 1, 1)),
+                         DrawOptions(1.0f, CompositionOp::OP_OVER));
+      }
       textDT->SetTransform(currentTransform *
                            Matrix::Translation(-intBounds.TopLeft()));
       textDT->SetPermitSubpixelAA(aUseSubpixelAA);
@@ -2621,11 +2642,39 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
       // If bitmaps might be used, then we have to supply the color, as color
       // emoji may ignore it while grayscale bitmaps may use it, with no way to
       // know ahead of time. Otherwise, assume the output will be a mask and
-      // just render it white to determine intensity.
+      // just render it white to determine intensity. Depending on whether the
+      // text is light or dark, we render white or black text respectively.
       textDT->FillGlyphs(
           aFont, aBuffer,
-          ColorPattern(useBitmaps ? color : DeviceColor(1, 1, 1, 1)),
+          ColorPattern(useBitmaps ? color
+                                  : DeviceColor::Mask(lightOnDark ? 1 : 0, 1)),
           drawOptions);
+      if (!lightOnDark) {
+        uint8_t* data = nullptr;
+        IntSize size;
+        int32_t stride = 0;
+        SurfaceFormat format = SurfaceFormat::UNKNOWN;
+        if (!textDT->LockBits(&data, &size, &stride, &format)) {
+          return false;
+        }
+        uint8_t* row = data;
+        for (int y = 0; y < size.height; ++y) {
+          uint8_t* px = row;
+          for (int x = 0; x < size.width; ++x) {
+            // If rendering dark-on-light text, we need to invert the final mask
+            // so that it is in the expected white text on transparent black
+            // format. The alpha will be initialized to the largest of the
+            // values.
+            px[0] = 255 - px[0];
+            px[1] = 255 - px[1];
+            px[2] = 255 - px[2];
+            px[3] = std::max(px[0], std::max(px[1], px[2]));
+            px += 4;
+          }
+          row += stride;
+        }
+        textDT->ReleaseBits(data);
+      }
       RefPtr<SourceSurface> textSurface = textDT->Snapshot();
       if (textSurface) {
         // If we don't expect the text surface to contain color glyphs
