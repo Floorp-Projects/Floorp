@@ -32,14 +32,6 @@ const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
 const HOUR_MS = MINUTE_MS * 60;
 
-const MOCK_SCOPED_KEY = {
-  k:
-    "3TVYx0exDTbrc5SGMkNg_C_eoNfjV0elHClP7npHrAtrlJu-esNyTUQaR6UcJBVYilPr8-T4BqWlIp4TOpKavA",
-  kid: "1569964308879-5y6waestOxDDM-Ia4_2u1Q",
-  kty: "oct",
-  scope: "https://identity.mozilla.com/apps/oldsync",
-};
-
 const MOCK_ACCESS_TOKEN =
   "e3c5caf17f27a0d9e351926a928938b3737df43e91d4992a5a5fca9a7bdef8ba";
 

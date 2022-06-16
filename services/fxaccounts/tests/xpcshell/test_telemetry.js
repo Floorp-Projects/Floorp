@@ -8,29 +8,6 @@ const { getFxAccountsSingleton } = ChromeUtils.import(
 );
 const fxAccounts = getFxAccountsSingleton();
 
-const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
-
-const { FxAccountsProfile } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsProfile.jsm"
-);
-
-const { FxAccountsProfileClient } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsProfileClient.jsm"
-);
-
-const { FxAccountsTelemetry } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsTelemetry.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
-  jwcrypto: "resource://services-crypto/jwcrypto.jsm",
-  CryptoUtils: "resource://services-crypto/utils.js",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-});
-
 _("Misc tests for FxAccounts.telemetry");
 
 const MOCK_HASHED_UID = "00112233445566778899aabbccddeeff";

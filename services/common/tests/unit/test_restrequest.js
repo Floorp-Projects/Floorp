@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
 );

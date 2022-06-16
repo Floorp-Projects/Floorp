@@ -38,6 +38,8 @@ function do_register_cleanup() {
 }
 
 function run_test() {
+  registerCleanupFunction(do_register_cleanup);
+
   Services.prefs.setStringPref(
     "services.common.log.logger.rest.request",
     "Trace"
