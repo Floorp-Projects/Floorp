@@ -1591,15 +1591,19 @@ class HTMLEditor final : public EditorBase,
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
-   * RemoveBlockContainerElements() removes all format blocks, table related
-   * element, etc in aArrayOfContents from the DOM tree.
-   * If aArrayOfContents has a format node, it will be removed and its contents
+   * RemoveBlockContainerElementsWithTransaction() removes all format blocks,
+   * table related element, etc in aArrayOfContents from the DOM tree. If
+   * aArrayOfContents has a format node, it will be removed and its contents
    * will be moved to where it was.
    * If aArrayOfContents has a table related element, <li>, <blockquote> or
    * <div>, it will be removed and its contents will be moved to where it was.
+   *
+   * @return            A suggest point to put caret if succeeded, but it may be
+   *                    unset if there is no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveBlockContainerElements(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveBlockContainerElementsWithTransaction(
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
    * CreateOrChangeBlockContainerElement() formats all nodes in aArrayOfContents
@@ -1633,10 +1637,12 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aBlockType          New block tag name.
    *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockContainerElements() will be called.
+   *                            RemoveBlockContainerElementsWithTransaction()
+   *                            will be called.
    *                            If nsGkAtoms::blockquote,
    *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.  Otherwise,
+   *                            called.
+   *                            Otherwise,
    *                            CreateOrChangeBlockContainerElement() will be
    *                            called.
    */
