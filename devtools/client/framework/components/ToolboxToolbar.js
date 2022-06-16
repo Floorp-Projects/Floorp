@@ -19,7 +19,6 @@ const MenuButton = createFactory(
 const ToolboxTabs = createFactory(
   require("devtools/client/framework/components/ToolboxTabs")
 );
-const Services = require("Services");
 
 loader.lazyGetter(this, "MeatballMenu", function() {
   return createFactory(
@@ -48,10 +47,6 @@ loader.lazyRequireGetter(
   "devtools/client/shared/unicode-url",
   true
 );
-
-const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
-const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
-const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
 
 /**
  * This is the overall component for the toolbox toolbar. It is designed to not know how
@@ -330,14 +325,6 @@ class ToolboxToolbar extends Component {
     toolbox.onHighlightFrame(id);
   }
 
-  changeScope(event) {
-    Services.prefs.setCharPref(BROWSERTOOLBOX_SCOPE_PREF, event.target.value);
-
-    // Avoid closing the dropdown when changing the scope
-    // so that you can see targets being added/removed from the scope.
-    event.preventDefault();
-  }
-
   createFrameList() {
     const { toolbox } = this.props;
     if (toolbox.frameMap.size < 1) {
@@ -365,50 +352,6 @@ class ToolboxToolbar extends Component {
         items.push(item);
       }
     });
-
-    if (
-      toolbox.isBrowserToolbox &&
-      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-    ) {
-      const scope = Services.prefs.getCharPref(BROWSERTOOLBOX_SCOPE_PREF);
-      items.unshift(
-        dom.form(
-          {
-            className: "menuitem",
-            role: "presentation",
-          },
-          dom.label(
-            {
-              title: this.props.L10N.getStr("toolbox.scope.everything.tooltip"),
-            },
-            dom.input({
-              type: "radio",
-              name: "scope",
-              value: BROWSERTOOLBOX_SCOPE_EVERYTHING,
-              checked: scope == BROWSERTOOLBOX_SCOPE_EVERYTHING,
-              onClick: this.changeScope,
-            }),
-            this.props.L10N.getStr("toolbox.scope.everything")
-          ),
-          dom.label(
-            {
-              title: this.props.L10N.getStr(
-                "toolbox.scope.parent-process.tooltip"
-              ),
-            },
-            dom.input({
-              type: "radio",
-              name: "scope",
-              value: BROWSERTOOLBOX_SCOPE_PARENTPROCESS,
-              checked: scope == BROWSERTOOLBOX_SCOPE_PARENTPROCESS,
-              onClick: this.changeScope,
-            }),
-            this.props.L10N.getStr("toolbox.scope.parent-process")
-          )
-        ),
-        dom.hr({ role: "menuseparator" })
-      );
-    }
 
     return MenuList(
       {
