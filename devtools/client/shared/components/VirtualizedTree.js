@@ -297,7 +297,8 @@ class Tree extends Component {
     this._scrollItemIntoView();
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._autoExpand();
     this._updateHeight();
   }
