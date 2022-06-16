@@ -61,22 +61,15 @@ static int gLastGdkError;
 // Return scale factor of the monitor where the window is located
 // by the most part or layout.css.devPixelsPerPx pref if set to > 0.
 static inline gint GetMonitorScaleFactor(nsPresContext* aPresContext) {
-  // When the layout.css.devPixelsPerPx is set the scale can be < 1,
-  // the real monitor scale cannot go under 1.
-  double scale = StaticPrefs::layout_css_devPixelsPerPx();
-  if (scale <= 0) {
-    if (nsCOMPtr<nsIWidget> rootWidget = aPresContext->GetRootWidget()) {
-      int monitorScale = int(round(rootWidget->GetDefaultScale().scale));
-      // Monitor scale can be negative if it has not been initialized in the
-      // puppet widget yet. We also make sure that we return positive value.
-      if (monitorScale < 1) {
-        return 1;
-      }
-      return monitorScale;
-    }
-  }
-  // Use monitor scaling factor where devPixelsPerPx is set
-  return ScreenHelperGTK::GetGTKMonitorScaleFactor();
+  nsCOMPtr<nsIWidget> rootWidget = aPresContext->GetRootWidget();
+  auto scale = rootWidget ? rootWidget->GetDefaultScale()
+                          : aPresContext->CSSToDevPixelScale();
+  // We prefer the root widget scale since it doesn't account for text scale
+  // factor, this is the same scrollbars do in GTK.
+  int monitorScale = int(round(scale.scale));
+  // When the layout.css.devPixelsPerPx is set the scale can be < 1, the real
+  // monitor scale cannot go under 1.
+  return std::max(1, monitorScale);
 }
 
 static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
