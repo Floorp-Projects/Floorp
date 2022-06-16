@@ -8740,9 +8740,7 @@ void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
     const VMFunctionData& fun = GetVMFunction(id);
     uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*) +
                          IonICCallFrameLayout::FramePointerOffset;
-    uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
-                                              ExitFrameLayout::Size());
-    masm.Push(Imm32(descriptor));
+    masm.PushFrameDescriptor(FrameType::IonICCall);
     masm.callJit(code);
 
     // Remove rest of the frame left on the stack. We remove the return address

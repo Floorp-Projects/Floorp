@@ -32,11 +32,6 @@ inline ExitFrameLayout* JSJitFrameIter::exitFrame() const {
   return (ExitFrameLayout*)fp();
 }
 
-inline size_t JSJitFrameIter::prevFrameLocalSize() const {
-  CommonFrameLayout* current = (CommonFrameLayout*)current_;
-  return current->prevFrameLocalSize();
-}
-
 inline JitFrameLayout* JSJitProfilingFrameIterator::framePtr() const {
   MOZ_ASSERT(!done());
   return (JitFrameLayout*)fp_;
