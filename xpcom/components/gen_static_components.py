@@ -829,7 +829,10 @@ def gen_substs(manifests):
         "\n".join(" %s," % strings.entry_to_cxx(jsm) for jsm in sorted(jsms)) + "\n"
     )
     substs["component_esmodules"] = (
-        "\n".join(" %s," % strings.entry_to_cxx(esModule) for esModule in sorted(esModules)) + "\n"
+        "\n".join(
+            " %s," % strings.entry_to_cxx(esModule) for esModule in sorted(esModules)
+        )
+        + "\n"
     )
 
     substs["interfaces"] = gen_interfaces(interfaces)
