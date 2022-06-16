@@ -78,7 +78,8 @@ class SourcesTree extends Component {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const {
       projectRoot,
       mainThreadHost,
