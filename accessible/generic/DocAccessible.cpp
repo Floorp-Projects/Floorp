@@ -264,24 +264,6 @@ void DocAccessible::ApplyARIAState(uint64_t* aState) const {
   if (mParent) mParent->ApplyARIAState(aState);
 }
 
-already_AddRefed<AccAttributes> DocAccessible::Attributes() {
-  RefPtr<AccAttributes> attributes = HyperTextAccessibleWrap::Attributes();
-
-  // No attributes if document is not attached to the tree or if it's a root
-  // document.
-  if (!mParent || IsRoot()) return attributes.forget();
-
-  // Override ARIA object attributes from outerdoc.
-  aria::AttrIterator attribIter(mParent->GetContent());
-  while (attribIter.Next()) {
-    nsString value;
-    attribIter.AttrValue(value);
-    attributes->SetAttribute(attribIter.AttrName(), std::move(value));
-  }
-
-  return attributes.forget();
-}
-
 LocalAccessible* DocAccessible::FocusedChild() {
   // Return an accessible for the current global focus, which does not have to
   // be contained within the current document.

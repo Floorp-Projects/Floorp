@@ -74,7 +74,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
   virtual uint64_t NativeInteractiveState() const override;
   virtual bool NativelyUnavailable() const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
-  virtual already_AddRefed<AccAttributes> Attributes() override;
 
   virtual void TakeFocus() const override;
 

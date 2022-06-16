@@ -59,10 +59,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAbsentAttrs("currentFalse", {"current": "true"});
       testAttrs("currentSpan", {"current": "page"}, true);
 
-      // inherited attributes by subdocuments
-      var subdoc = getAccessible("iframe").firstChild;
-      testAttrs(subdoc, {"busy": "true"}, true);
-
       // live object attribute
 
       // HTML
@@ -232,10 +228,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
     <li><a href="...">Page 2</a></li>
     <li><span id="currentSpan" aria-current="page">This page</span></li>
   </ol>
-
-  <!-- inherited from iframe -->
-  <iframe id="iframe" src="data:text/html,<html><body></body></html>"
-          aria-busy="true"></iframe>
 
   <!-- html -->
   <output id="output"></output>
