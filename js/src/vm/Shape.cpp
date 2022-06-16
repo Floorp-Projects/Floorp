@@ -907,8 +907,15 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  if (proto.isObject()) {
+  if (proto.isObject() && !proto.toObject()->isUsedAsPrototype()) {
+    // Ensure the proto object has a unique id to prevent OOM crashes later on.
     RootedObject protoObj(cx, proto.toObject());
+    uint64_t unused;
+    if (!cx->zone()->getOrCreateUniqueId(protoObj, &unused)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
     if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
       return false;
     }
@@ -1083,14 +1090,15 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
         }
       }
     } else {
-      RootedObject protoObj(cx, proto.toObject());
-      if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
-        return nullptr;
-      }
       // Ensure the proto object has a unique id to prevent OOM crashes below.
+      RootedObject protoObj(cx, proto.toObject());
       uint64_t unused;
       if (!cx->zone()->getOrCreateUniqueId(protoObj, &unused)) {
         ReportOutOfMemory(cx);
+        return nullptr;
+      }
+
+      if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
         return nullptr;
       }
       proto = TaggedProto(protoObj);
