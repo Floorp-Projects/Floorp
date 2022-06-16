@@ -57,6 +57,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
   bool UseMultistrikeBold() const { return mUseMultistrikeBold; }
   bool ForceGDIMode() const { return mGDIForced; }
 
+  bool UseSubpixelPosition() const override { return !ForceGDIMode(); }
+
   bool HasBoldSimulation() const {
     return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
   }

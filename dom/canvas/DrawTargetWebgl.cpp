@@ -2361,13 +2361,15 @@ void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
 // Skia only supports subpixel positioning to the nearest 1/4 fraction. It
 // would be wasteful to attempt to cache text runs with positioning that is
 // anymore precise than this. To prevent this cache bloat, we quantize the
-// transformed glyph positions to the nearest 1/4.
+// transformed glyph positions to the nearest 1/4. The scaling factor for
+// the quantization is baked into the transform, so that if subpixel rounding
+// is used on a given axis, then the axis will be multiplied by 4 before
+// rounding. Since the quantized position is not used for rasterization, the
+// transform is safe to modify as such.
 static inline IntPoint QuantizePosition(const Matrix& aTransform,
                                         const IntPoint& aOffset,
                                         const Point& aPosition) {
-  IntPoint pos =
-      RoundedToInt(aTransform.TransformPoint(aPosition) * 4.0f) - aOffset * 4;
-  return IntPoint(pos.x & 3, pos.y & 3);
+  return RoundedToInt(aTransform.TransformPoint(aPosition)) - aOffset;
 }
 
 // Hashes a glyph buffer to a single hash value that can be used for quick
@@ -2539,6 +2541,34 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   // as for color emoji.
   bool useBitmaps = aFont->MayUseBitmaps();
 
+  // Depending on whether we enable subpixel position for a given font, Skia may
+  // round transformed coordinates differently on each axis. By default, text is
+  // subpixel quantized horizontally and snapped to a whole integer vertical
+  // baseline. Axis-flip transforms instead snap to horizontal boundaries while
+  // subpixel quantizing along the vertical. For other types of transforms, Skia
+  // just applies subpixel quantization to both axes.
+  // We must duplicate the amount of quantization Skia applies carefully as a
+  // boundary value such as 0.49 may round to 0.5 with subpixel quantization,
+  // but if Skia actually snapped it to a whole integer instead, it would round
+  // down to 0. If a subsequent glyph with offset 0.51 came in, we might
+  // mistakenly round it down to 0.5, whereas Skia would round it up to 1. Thus
+  // we would alias 0.49 and 0.51 to the same cache entry, while Skia would
+  // actually snap the offset to 0 or 1, depending, resulting in mismatched
+  // hinting.
+  Matrix quantizeTransform = currentTransform;
+  if (aFont->UseSubpixelPosition()) {
+    if (currentTransform._12 == 0) {
+      // Glyphs are rendered subpixel horizontally, so snap vertically.
+      quantizeTransform.PostScale(4, 1);
+    } else if (currentTransform._11 == 0) {
+      // Glyphs are rendered subpixel vertically, so snap horizontally.
+      quantizeTransform.PostScale(1, 4);
+    } else {
+      // The transform isn't aligned, so don't snap.
+      quantizeTransform.PostScale(4, 4);
+    }
+  }
+
   // Look for an existing glyph cache on the font. If not there, create it.
   GlyphCache* cache =
       static_cast<GlyphCache*>(aFont->GetUserData(&mGlyphCacheKey));
@@ -2555,7 +2585,7 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
       aBuffer,
       useBitmaps ? color : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, 1),
-      currentTransform, intBounds);
+      quantizeTransform, intBounds);
   if (!entry) {
     return false;
   }

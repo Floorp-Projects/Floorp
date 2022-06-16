@@ -31,7 +31,7 @@ class ScaledFontFreeType : public ScaledFontBase {
 
   AntialiasMode GetDefaultAAMode() override { return AntialiasMode::GRAY; }
 
-  bool UseSubpixelPosition() const;
+  bool UseSubpixelPosition() const override;
 
   bool CanSerialize() override { return true; }
 

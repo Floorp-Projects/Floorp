@@ -56,6 +56,8 @@ class ScaledFontMac : public ScaledFontBase {
 
   bool MayUseBitmaps() override { return mHasColorGlyphs; }
 
+  bool UseSubpixelPosition() const override { return true; }
+
   DeviceColor FontSmoothingBackgroundColor() {
     return mFontSmoothingBackgroundColor;
   }
