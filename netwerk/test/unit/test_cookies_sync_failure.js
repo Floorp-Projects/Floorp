@@ -182,7 +182,7 @@ function* run_test_1(generator) {
   });
 
   // Load the profile and populate it.
-  Services.cookiesvc.setCookieStringFromHttp(
+  Services.cookies.setCookieStringFromHttp(
     uri,
     "oh=hai; max-age=1000",
     channel
@@ -217,7 +217,7 @@ function* run_test_2(generator) {
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
-  Services.cookiesvc.setCookieStringFromHttp(
+  Services.cookies.setCookieStringFromHttp(
     uri,
     "oh=hai; max-age=1000",
     channel
