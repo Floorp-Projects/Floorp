@@ -320,7 +320,9 @@ private:
     V operator* (const SkNx<N,T>& x, T y) { return x *  SkNx<N,T>(y); }
     V operator/ (const SkNx<N,T>& x, T y) { return x /  SkNx<N,T>(y); }
     V operator& (const SkNx<N,T>& x, T y) { return x &  SkNx<N,T>(y); }
+    V operator&&(const SkNx<N,T>& x, const SkNx<N,T>& y) { return x & y; }
     V operator| (const SkNx<N,T>& x, T y) { return x |  SkNx<N,T>(y); }
+    V operator||(const SkNx<N,T>& x, const SkNx<N,T>& y) { return x | y; }
     V operator^ (const SkNx<N,T>& x, T y) { return x ^  SkNx<N,T>(y); }
     V operator==(const SkNx<N,T>& x, T y) { return x == SkNx<N,T>(y); }
     V operator!=(const SkNx<N,T>& x, T y) { return x != SkNx<N,T>(y); }
