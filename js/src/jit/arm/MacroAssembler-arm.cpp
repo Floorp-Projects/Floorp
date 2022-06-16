@@ -1649,7 +1649,10 @@ BufferOffset MacroAssemblerARM::ma_vstr(VFPRegister src, Register base,
 }
 
 bool MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr) {
-  asMasm().PushFrameDescriptor(FrameType::IonJS);  // descriptor_
+  uint32_t descriptor = MakeFrameDescriptor(
+      asMasm().framePushed(), FrameType::IonJS, ExitFrameLayout::Size());
+
+  asMasm().Push(Imm32(descriptor));  // descriptor_
   asMasm().Push(ImmPtr(fakeReturnAddr));
 
   return true;

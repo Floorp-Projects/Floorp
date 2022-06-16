@@ -168,6 +168,9 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 
   GeneratePrologue(masm);
 
+  // Save stack pointer into s4
+  masm.movePtr(StackPointer, s4);
+
   // Save stack pointer as baseline frame.
   masm.movePtr(StackPointer, FramePointer);
 
@@ -222,12 +225,16 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   }
   masm.bind(&footer);
 
+  // Create the frame descriptor.
+  masm.subPtr(StackPointer, s4);
+  masm.makeFrameDescriptor(s4, FrameType::CppToJSJit, JitFrameLayout::Size());
+
   masm.subPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
   masm.storePtr(s3,
                 Address(StackPointer, sizeof(uintptr_t)));  // actual arguments
   masm.storePtr(reg_token, Address(StackPointer, 0));       // callee token
 
-  masm.pushFrameDescriptor(FrameType::CppToJSJit);
+  masm.push(s4);  // descriptor
 
   CodeLabel returnLabel;
   Label oomReturnLabel;
@@ -265,11 +272,16 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.subPtr(scratch, StackPointer);
 
     // Enter exit frame.
+    masm.addPtr(
+        Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset),
+        scratch);
+    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
+                             ExitFrameLayout::Size());
+
     // Push frame descriptor and fake return address.
     masm.reserveStack(2 * sizeof(uintptr_t));
     masm.storePtr(
-        ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
-        Address(StackPointer, sizeof(uintptr_t)));  // Frame descriptor
+        scratch, Address(StackPointer, sizeof(uintptr_t)));  // Frame descriptor
     masm.storePtr(zero, Address(StackPointer, 0));  // fake return address
 
     // No GC things to mark, push a bare token.
@@ -555,6 +567,10 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // [undef] [undef] [undef] [arg2] [arg1] [this] <- sp [ [argc] [callee]
   //                                                      [descr] [raddr] ]
 
+  // Construct sizeDescriptor.
+  masm.subPtr(StackPointer, t2);
+  masm.makeFrameDescriptor(t2, FrameType::Rectifier, JitFrameLayout::Size());
+
   // Construct JitFrameLayout.
   masm.subPtr(Imm32(3 * sizeof(uintptr_t)), StackPointer);
   // Push actual arguments.
@@ -562,8 +578,7 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   // Push callee token.
   masm.storePtr(calleeTokenReg, Address(StackPointer, sizeof(uintptr_t)));
   // Push frame descriptor.
-  masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::Rectifier)),
-                Address(StackPointer, 0));
+  masm.storePtr(t2, Address(StackPointer, 0));
 
   // Call the target function.
   masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), calleeTokenReg);

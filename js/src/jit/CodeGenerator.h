@@ -89,10 +89,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void verifyOsiPointRegs(LSafepoint* safepoint);
 #endif
 
-  void callVMInternal(VMFunctionId id, LInstruction* ins);
+  void callVMInternal(VMFunctionId id, LInstruction* ins,
+                      const Register* dynStack);
 
   template <typename Fn, Fn fn>
-  void callVM(LInstruction* ins);
+  void callVM(LInstruction* ins, const Register* dynStack = nullptr);
 
   template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
   inline OutOfLineCode* oolCallVM(LInstruction* ins, const ArgSeq& args,
@@ -186,23 +187,25 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <typename T>
   void emitApplyGeneric(T* apply);
   template <typename T>
-  void emitCallInvokeFunction(T* apply);
-  void emitAllocateSpaceForApply(Register argcreg, Register scratch);
+  void emitCallInvokeFunction(T* apply, Register extraStackSize);
+  void emitAllocateSpaceForApply(Register argcreg, Register extraStackSpace);
   void emitAllocateSpaceForConstructAndPushNewTarget(
-      Register argcreg, Register newTargetAndScratch);
+      Register argcreg, Register newTargetAndExtraStackSpace);
   void emitCopyValuesForApply(Register argvSrcBase, Register argvIndex,
                               Register copyreg, size_t argvSrcOffset,
                               size_t argvDstOffset);
   void emitRestoreStackPointerFromFP();
-  void emitPushArguments(Register argcreg, Register scratch, Register copyreg,
-                         uint32_t extraFormals);
+  void emitPushArguments(Register argcreg, Register extraStackSpace,
+                         Register copyreg, uint32_t extraFormals);
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,
                                 Register scratch, size_t argvSrcOffset);
-  void emitPushArguments(LApplyArgsGeneric* apply, Register scratch);
-  void emitPushArguments(LApplyArgsObj* apply, Register scratch);
-  void emitPushArguments(LApplyArrayGeneric* apply, Register scratch);
-  void emitPushArguments(LConstructArgsGeneric* construct, Register scratch);
-  void emitPushArguments(LConstructArrayGeneric* construct, Register scratch);
+  void emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace);
+  void emitPushArguments(LApplyArgsObj* apply, Register extraStackSpace);
+  void emitPushArguments(LApplyArrayGeneric* apply, Register extraStackSpace);
+  void emitPushArguments(LConstructArgsGeneric* construct,
+                         Register extraStackSpace);
+  void emitPushArguments(LConstructArrayGeneric* construct,
+                         Register extraStackSpace);
 
   template <class GetInlinedArgument>
   void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,

@@ -72,6 +72,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.push(esi);
   masm.push(edi);
 
+  // Keep track of the stack which has to be unwound after returning from the
+  // compiled function.
+  masm.movl(esp, esi);
+
   // Load the number of values to be copied (argc) into eax
   masm.loadPtr(Address(ebp, ARG_ARGC), eax);
 
@@ -138,6 +142,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
+  // Create the frame descriptor.
+  masm.subl(esp, esi);
+  masm.makeFrameDescriptor(esi, FrameType::CppToJSJit, JitFrameLayout::Size());
+
   // Push the number of actual arguments.  |result| is used to store the
   // actual number of arguments without adding an extra argument to the enter
   // JIT.
@@ -153,7 +161,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.loadPtr(Address(ebp, ARG_STACKFRAME), OsrFrameReg);
 
   // Push the descriptor.
-  masm.pushFrameDescriptor(FrameType::CppToJSJit);
+  masm.push(esi);
 
   CodeLabel returnLabel;
   Label oomReturnLabel;
@@ -196,8 +204,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.subPtr(scratch, esp);
 
     // Enter exit frame.
-    masm.pushFrameDescriptor(FrameType::BaselineJS);
-    masm.push(Imm32(0));  // Fake return address.
+    masm.addPtr(
+        Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset),
+        scratch);
+    masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
+                             ExitFrameLayout::Size());
+    masm.push(scratch);  // Fake return address.
+    masm.push(Imm32(0));
     // No GC things to mark on the stack, push a bare token.
     masm.loadJSContext(scratch);
     masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
@@ -506,10 +519,15 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
     masm.bind(&notConstructing);
   }
 
+  // Construct descriptor, accounting for pushed frame pointer above
+  masm.lea(Operand(FramePointer, sizeof(void*)), ebx);
+  masm.subl(esp, ebx);
+  masm.makeFrameDescriptor(ebx, FrameType::Rectifier, JitFrameLayout::Size());
+
   // Construct JitFrameLayout.
   masm.push(edx);  // number of actual arguments
   masm.push(eax);  // callee token
-  masm.pushFrameDescriptor(FrameType::Rectifier);
+  masm.push(ebx);  // descriptor
 
   // Call the target function.
   masm.andl(Imm32(CalleeTokenMask), eax);

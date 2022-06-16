@@ -463,6 +463,10 @@ struct alignas(uintptr_t) BaselineBailoutInfo {
   // Number of baseline frames to push on the stack.
   uint32_t numFrames = 0;
 
+  // Size of the innermost BaselineFrame. This is equivalent to
+  // BaselineFrame::debugFrameSize_ in debug builds.
+  uint32_t frameSizeOfInnerMostFrame = 0;
+
   // The bailout kind.
   mozilla::Maybe<BailoutKind> bailoutKind = {};
 
