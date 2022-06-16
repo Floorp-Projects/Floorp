@@ -61,7 +61,6 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
     : machine_(bailout->machineState()), activation_(nullptr) {
   uint8_t* sp = bailout->parentStackPointer();
   framePointer_ = sp + bailout->frameSize();
-  topFrameSize_ = framePointer_ - sp;
 
   JSScript* script =
       ScriptFromCalleeToken(((JitFrameLayout*)framePointer_)->calleeToken());
@@ -75,7 +74,6 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    InvalidationBailoutStack* bailout)
     : machine_(bailout->machine()), activation_(nullptr) {
   framePointer_ = (uint8_t*)bailout->fp();
-  topFrameSize_ = framePointer_ - bailout->sp();
   topIonScript_ = bailout->ionScript();
   attachOnJitActivation(activations);
 
@@ -88,7 +86,6 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    const JSJitFrameIter& frame)
     : machine_(frame.machineState()) {
   framePointer_ = (uint8_t*)frame.fp();
-  topFrameSize_ = frame.frameSize();
   topIonScript_ = frame.ionScript();
   attachOnJitActivation(activations);
 
@@ -233,8 +230,8 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
     JitSpew(JitSpew_IonInvalidate, "Bailout failed (Fatal Error)");
     JitSpew(JitSpew_IonInvalidate, "   calleeToken %p",
             (void*)layout->calleeToken());
-    JitSpew(JitSpew_IonInvalidate, "   frameSize %u",
-            unsigned(layout->prevFrameLocalSize()));
+    JitSpew(JitSpew_IonInvalidate, "   callerFramePtr %p",
+            layout->callerFramePtr());
     JitSpew(JitSpew_IonInvalidate, "   ra %p", (void*)layout->returnAddress());
 #endif
   }
