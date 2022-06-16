@@ -868,6 +868,16 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
         mRightContent(aRightContent),
         mRv(NS_OK) {}
 
+  SplitRangeOffFromNodeResult(nsIContent* aLeftContent,
+                              nsIContent* aMiddleContent,
+                              nsIContent* aRightContent,
+                              EditorDOMPoint&& aPointToPutCaret)
+      : mLeftContent(aLeftContent),
+        mMiddleContent(aMiddleContent),
+        mRightContent(aRightContent),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(NS_OK) {}
+
   SplitRangeOffFromNodeResult(SplitNodeResult&& aSplitResultAtLeftOfMiddleNode,
                               SplitNodeResult&& aSplitResultAtRightOfMiddleNode)
       : mRv(NS_OK) {
