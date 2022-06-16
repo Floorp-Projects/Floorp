@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<title>Test for bug 1772841</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1772841">Mozilla Bug 1772841</a>
+<div id="content">
+    <input type="date" id="date" disabled>
+    <input type="time" id="time" disabled>
+    <input type="datetime-local" id="datetime-local" disabled>
+
+    <input type="date" id="date1">
+    <input type="time" id="time1">
+    <input type="datetime-local" id="datetime-local1">
+</div>
+<script>
+    /*
+    *  Test for bug 1772841
+    *  This test checks that when a datetime input element is disabled,
+    *  it should not be focusable by click.
+    **/
+
+    add_task(async function() {
+        await SimpleTest.promiseFocus(window);
+        for (let inputType of ["time", "date", "datetime-local"]) {
+            testFocusState(inputType);
+            testDynamicChange(inputType);
+        }
+    })
+    function testFocusState(inputType) {
+        let input = document.getElementById(inputType);
+        input.click();
+        isnot(document.activeElement, input, "disabled element should not be focusable by click");
+
+        synthesizeMouseAtCenter(input, {});
+        isnot(document.activeElement, input, "disabled element should not be focusable by click");
+    }
+    function testDynamicChange(inputType) {
+        document.getElementById(inputType + "1").disabled = true;
+        testFocusState(inputType + "1");
+    }
+</script>
