@@ -2854,8 +2854,8 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
     return false;
   }
   RefPtr<frontend::CompilationStencil> stencil =
-      frontend::CompileGlobalScriptToStencil(cx, *input, srcBuf,
-                                             ScopeKind::Global);
+      frontend::CompileGlobalScriptToStencil(cx, cx->tempLifoAlloc(), *input,
+                                             srcBuf, ScopeKind::Global);
   if (!stencil) {
     return false;
   }

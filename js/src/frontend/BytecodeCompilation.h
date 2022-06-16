@@ -19,6 +19,7 @@
 namespace js {
 
 class Scope;
+class LifoAlloc;
 
 namespace frontend {
 
@@ -28,11 +29,11 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
-    ScopeKind scopeKind);
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
