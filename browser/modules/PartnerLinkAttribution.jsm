@@ -4,8 +4,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["fetch"]);
-
 var EXPORTED_SYMBOLS = [
   "PartnerLinkAttribution",
   "CONTEXTUAL_SERVICES_PING_TYPES",
