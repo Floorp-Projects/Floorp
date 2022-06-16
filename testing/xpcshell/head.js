@@ -16,7 +16,7 @@
     _PREFS_FILE */
 
 /* defined by XPCShellImpl.cpp */
-/* globals load, sendCommand */
+/* globals load, sendCommand, changeTestShellDir */
 
 /* must be defined by tests using do_await_remote_message/do_send_remote_message */
 /* globals Cc, Ci */
@@ -61,8 +61,6 @@ let { NetUtil: _NetUtil } = ChromeUtils.import(
 let { XPCOMUtils: _XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-let { OS: _OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Support a common assertion library, Assert.jsm.
 var { Assert: AssertCls } = ChromeUtils.import(
@@ -501,19 +499,12 @@ function _initDebugging(port) {
 
 function _execute_test() {
   if (typeof _TEST_CWD != "undefined") {
-    let cwd_complete = false;
-    _OS.File.setCurrentDirectory(_TEST_CWD)
-      .then(_ => (cwd_complete = true))
-      .catch(e => {
-        _testLogger.error(_exception_message(e));
-        cwd_complete = true;
-      });
-    _Services.tm.spinEventLoopUntil(
-      "Test(xpcshell/head.js:setCurrentDirectory)",
-      () => cwd_complete
-    );
+    try {
+      changeTestShellDir(_TEST_CWD);
+    } catch (e) {
+      _testLogger.error(_exception_message(e));
+    }
   }
-
   if (runningInParent && _AppConstants.platform == "android") {
     try {
       // GeckoView initialization needs the profile
