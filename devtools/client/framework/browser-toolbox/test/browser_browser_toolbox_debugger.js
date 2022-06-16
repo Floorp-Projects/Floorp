@@ -68,7 +68,7 @@ add_task(async function runTest() {
   // Execute the function every second in order to trigger the breakpoint
   const interval = setInterval(s.plop, 1000);
 
-  await ToolboxTask.spawn(testUrl, async _testUrl => {
+  await ToolboxTask.spawn(`"${testUrl}"`, async _testUrl => {
     /* global gToolbox, createDebuggerContext, waitForSources, waitForPaused,
           addBreakpoint, assertPausedAtSourceAndLine, stepIn, findSource,
           removeBreakpoint, resume, selectSource, assertNotPaused, assertBreakpoint,
@@ -171,7 +171,7 @@ add_task(async function runTest() {
     );
     content.interval = content.setInterval(s.foo, 1000);
   });
-  await ToolboxTask.spawn(testUrl2, async _testUrl => {
+  await ToolboxTask.spawn(`"${testUrl2}"`, async _testUrl => {
     const dbg = createDebuggerContext(gToolbox);
 
     const fileName = _testUrl.match(/content-process-test.*\.js/)[0];

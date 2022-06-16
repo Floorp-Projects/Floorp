@@ -8,12 +8,8 @@
 // Test that the button is enabled otherwise.
 
 const TEST_URL = "data:text/html;charset=utf8,test frames button visibility";
-const TEST_IFRAME_URL = "data:text/plain,iframe";
-const TEST_IFRAME_URL2 = "data:text/plain,iframe2";
 const TEST_URL_FRAMES =
-  TEST_URL +
-  `<iframe src="${TEST_IFRAME_URL}"></iframe>` +
-  `<iframe src="${TEST_IFRAME_URL2}"></iframe>`;
+  TEST_URL + '<iframe src="data:text/plain,iframe"></iframe>';
 const FRAME_BUTTON_PREF = "devtools.command-button-frames.enabled";
 
 add_task(async function() {
@@ -51,52 +47,16 @@ add_task(async function() {
   framesButton = doc.getElementById("command-button-frames");
   ok(framesButton, "Frames button is rendered again.");
 
-  // Do not run the rest of this test when both fission and EFT is disabled as
-  // it prevents creating a target for the iframe
-  if (!isFissionEnabled() || !isEveryFrameTargetEnabled()) {
-    return;
-  }
-
   info("Navigate to a page with frames, the frames button should be enabled.");
   await navigateTo(TEST_URL_FRAMES);
 
   framesButton = doc.getElementById("command-button-frames");
   ok(framesButton, "Frames button is still rendered.");
 
-  await waitFor(() => {
+  await waitUntil(() => {
     framesButton = doc.getElementById("command-button-frames");
     return framesButton && !framesButton.disabled;
   });
-
-  const { targetCommand } = toolbox.commands;
-  const iframeTarget = targetCommand
-    .getAllTargets([targetCommand.TYPES.FRAME])
-    .find(target => target.url == TEST_IFRAME_URL);
-  ok(iframeTarget, "Found the target for the iframe");
-
-  ok(
-    !framesButton.classList.contains("checked"),
-    "Before selecting an iframe, the button is not checked"
-  );
-  await toolbox.commands.targetCommand.selectTarget(iframeTarget);
-  ok(
-    framesButton.classList.contains("checked"),
-    "After selecting an iframe, the button is checked"
-  );
-
-  info("Remove this first iframe, which is currently selected");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    content.document.querySelector("iframe").remove();
-  });
-
-  await waitFor(() => {
-    return targetCommand.selectedTargetFront == targetCommand.targetFront;
-  }, "Wait for the selected target to be back on the top target");
-
-  ok(
-    !framesButton.classList.contains("checked"),
-    "The button is back unchecked after having removed the selected iframe"
-  );
 
   Services.prefs.clearUserPref(FRAME_BUTTON_PREF);
 });
