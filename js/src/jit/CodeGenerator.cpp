@@ -341,17 +341,8 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
   }
 #endif
 
-  // Push an exit frame descriptor. If |dynStack| is a valid pointer to a
-  // register, then its value is added to the value of the |framePushed()| to
-  // fill the frame descriptor.
-  if (dynStack) {
-    masm.addPtr(Imm32(masm.framePushed()), *dynStack);
-    masm.makeFrameDescriptor(*dynStack, FrameType::IonJS,
-                             ExitFrameLayout::Size());
-    masm.Push(*dynStack);  // descriptor
-  } else {
-    masm.pushStaticFrameDescriptor(FrameType::IonJS, ExitFrameLayout::Size());
-  }
+  // Push an exit frame descriptor.
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Call the wrapper function.  The wrapper is in charge to unwind the stack
   // when returning from the call.  Failures are handled with exceptions based
@@ -5432,12 +5423,10 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
 
-  // Construct the IonFramePrefix.
-  uint32_t descriptor = MakeFrameDescriptor(
-      masm.framePushed(), FrameType::IonJS, JitFrameLayout::Size());
+  // Construct the JitFrameLayout.
   masm.Push(Imm32(call->numActualArgs()));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.Push(Imm32(descriptor));
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Check whether the provided arguments satisfy target argc.
   // We cannot have lowered to LCallGeneric with a known target. Assert that we
@@ -5539,12 +5528,10 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
 
-  // Construct the IonFramePrefix.
-  uint32_t descriptor = MakeFrameDescriptor(
-      masm.framePushed(), FrameType::IonJS, JitFrameLayout::Size());
+  // Construct the JitFrameLayout.
   masm.Push(Imm32(call->numActualArgs()));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.Push(Imm32(descriptor));
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Finally call the function in objreg.
   uint32_t callOffset = masm.callJit(objreg);
@@ -6046,16 +6033,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Knowing that calleereg is a non-native function, load jitcode.
     masm.loadJitCodeRaw(calleereg, objreg);
 
-    // Create the frame descriptor.
-    unsigned pushed = masm.framePushed();
-    Register stackSpace = extraStackSpace;
-    masm.addPtr(Imm32(pushed), stackSpace);
-    masm.makeFrameDescriptor(stackSpace, FrameType::IonJS,
-                             JitFrameLayout::Size());
-
     masm.Push(argcreg);
     masm.PushCalleeToken(calleereg, constructing);
-    masm.Push(stackSpace);  // descriptor
+    masm.PushFrameDescriptor(FrameType::IonJS);
 
     Label underflow, rejoin;
 

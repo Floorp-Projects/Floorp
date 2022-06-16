@@ -120,7 +120,6 @@ struct ResumeFromException;
 class BailoutFrameInfo {
   MachineState machine_;
   uint8_t* framePointer_;
-  size_t topFrameSize_;
   IonScript* topIonScript_;
   uint32_t snapshotOffset_;
   JitActivation* activation_;
@@ -138,7 +137,6 @@ class BailoutFrameInfo {
   uint8_t* fp() const { return framePointer_; }
   SnapshotOffset snapshotOffset() const { return snapshotOffset_; }
   const MachineState* machineState() const { return &machine_; }
-  size_t topFrameSize() const { return topFrameSize_; }
   IonScript* ionScript() const { return topIonScript_; }
   JitActivation* activation() const { return activation_; }
 };
