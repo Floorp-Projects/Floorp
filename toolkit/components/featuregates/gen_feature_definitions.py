@@ -193,6 +193,7 @@ def process_configured_value(name, value):
             "release",
             "dev-edition",
             "esr",
+            "thunderbird",
         }
     )
 
