@@ -26,6 +26,13 @@ interface Clipboard : EventTarget {
   Promise<void> writeText(DOMString data);
 };
 
+partial interface Clipboard {
+  // @param allowed true, if the user allowed (e.g. clicked) the "Paste" menuitem.
+  //                false, when the menupopup was dismissed.
+  [ChromeOnly]
+  void onUserReactedToPasteMenuPopup(boolean allowed);
+};
+
 typedef (DOMString or Blob) ClipboardItemDataType;
 // typedef Promise<ClipboardItemDataType> ClipboardItemData;
 // callback ClipboardItemDelayedCallback = ClipboardItemData ();
