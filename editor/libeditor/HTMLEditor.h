@@ -1578,17 +1578,22 @@ class HTMLEditor final : public EditorBase,
       nsIContent& aEndOfRange);
 
   /**
-   * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
-   * element and moves nodes in aArrayOfContents into new <blockquote>
-   * elements.
-   * If aArrayOfContents includes a table related element except <table>,
-   * this calls itself recursively to insert <blockquote> into the cell.
+   * WrapContentsInBlockquoteElementsWithTransaction() inserts at least one
+   * <blockquote> element and moves nodes in aArrayOfContents into new
+   * <blockquote> elements. If aArrayOfContents includes a table related element
+   * except <table>, this calls itself recursively to insert <blockquote> into
+   * the cell.
    *
    * @param aArrayOfContents    Nodes which will be moved into created
    *                            <blockquote> elements.
+   * @param aEditingHost        The editing host.
+   * @return                    A suggest of caret position if succeeded.  It
+   *                            may be unset if there is no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MoveNodesIntoNewBlockquoteElement(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  WrapContentsInBlockquoteElementsWithTransaction(
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      const Element& aEditingHost);
 
   /**
    * RemoveBlockContainerElementsWithTransaction() removes all format blocks,
@@ -1635,16 +1640,15 @@ class HTMLEditor final : public EditorBase,
    * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
    *       return NS_OK, editor may have been destroyed.
    *
-   * @param aBlockType          New block tag name.
-   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockContainerElementsWithTransaction()
-   *                            will be called.
-   *                            If nsGkAtoms::blockquote,
-   *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.
-   *                            Otherwise,
-   *                            CreateOrChangeBlockContainerElement() will be
-   *                            called.
+   * @param aBlockType  New block tag name.
+   *                    If nsGkAtoms::normal or nsGkAtoms::_empty,
+   *                    RemoveBlockContainerElementsWithTransaction() will be
+   *                    called.
+   *                    If nsGkAtoms::blockquote,
+   *                    WrapContentsInBlockquoteElementsWithTransaction() will
+   *                    be called.
+   *                    Otherwise, CreateOrChangeBlockContainerElement() will be
+   *                    called.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   FormatBlockContainerWithTransaction(nsAtom& aBlockType);

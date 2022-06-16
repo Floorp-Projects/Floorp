@@ -3965,11 +3965,18 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   // whatever is approriate.  Woohoo!  Note: blockquote is handled a little
   // differently.
   if (&blockType == nsGkAtoms::blockquote) {
-    nsresult rv = MoveNodesIntoNewBlockquoteElement(arrayOfContents);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::MoveNodesIntoNewBlockquoteElement() failed");
-    return rv;
+    Result<EditorDOMPoint, nsresult> wrapContentsInBlockquoteElementsResult =
+        WrapContentsInBlockquoteElementsWithTransaction(arrayOfContents,
+                                                        *editingHost);
+    if (wrapContentsInBlockquoteElementsResult.isErr()) {
+      NS_WARNING(
+          "HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction() "
+          "failed");
+      return wrapContentsInBlockquoteElementsResult.unwrapErr();
+    }
+    // Selection will be restored by `restoreSelectionLater`.  Therefore, we
+    // should ignore the suggested caret point.
+    return NS_OK;
   }
   if (&blockType == nsGkAtoms::normal || &blockType == nsGkAtoms::_empty) {
     Result<EditorDOMPoint, nsresult> removeBlockContainerElementsResult =
@@ -8238,14 +8245,11 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   return forwardScanFromStartOfListItemResult.Point<EditorDOMPoint>();
 }
 
-nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
-    nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction(
+    const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return NS_ERROR_FAILURE;
-  }
 
   // The idea here is to put the nodes into a minimal number of blockquotes.
   // When the user blockquotes something, they expect one blockquote.  That
@@ -8264,10 +8268,17 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       // Recursion time
       AutoTArray<OwningNonNull<nsIContent>, 24> childContents;
       HTMLEditor::GetChildNodesOf(*content, childContents);
-      nsresult rv = MoveNodesIntoNewBlockquoteElement(childContents);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::MoveNodesIntoNewBlockquoteElement() failed");
-        return rv;
+      Result<EditorDOMPoint, nsresult> wrapChildrenInAnotherBlockquoteResult =
+          WrapContentsInBlockquoteElementsWithTransaction(childContents,
+                                                          aEditingHost);
+      if (MOZ_UNLIKELY(wrapChildrenInAnotherBlockquoteResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction() "
+            "failed");
+        return wrapChildrenInAnotherBlockquoteResult;
+      }
+      if (wrapChildrenInAnotherBlockquoteResult.inspect().IsSet()) {
+        pointToPutCaret = wrapChildrenInAnotherBlockquoteResult.unwrap();
       }
     }
 
@@ -8288,20 +8299,15 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       CreateElementResult createNewBlockQuoteElementResult =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::blockquote, EditorDOMPoint(content),
-              BRElementNextToSplitPoint::Keep, *editingHost);
+              BRElementNextToSplitPoint::Keep, aEditingHost);
       if (createNewBlockQuoteElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
             "nsGkAtoms::blockquote) failed");
-        return createNewBlockQuoteElementResult.unwrapErr();
+        return Err(createNewBlockQuoteElementResult.unwrapErr());
       }
-      nsresult rv = createNewBlockQuoteElementResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-        return rv;
-      }
+      createNewBlockQuoteElementResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       RefPtr<Element> newBlockQuoteElement =
           createNewBlockQuoteElementResult.UnwrapNewNode();
       MOZ_ASSERT(newBlockQuoteElement);
@@ -8312,25 +8318,16 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
     }
 
     // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to/ keep it alive.
-    const MoveNodeResult moveNodeResult =
+    MoveNodeResult moveNodeResult =
         MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curBlock);
     if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-      return moveNodeResult.unwrapErr();
+      return Err(moveNodeResult.unwrapErr());
     }
-    nsresult rv = moveNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+    moveNodeResult.MoveCaretPointTo(pointToPutCaret,
+                                    {SuggestCaret::OnlyIfHasSuggestion});
   }
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 Result<EditorDOMPoint, nsresult>
