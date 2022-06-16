@@ -393,14 +393,13 @@ class RemoteSettingsClient extends EventEmitter {
   /**
    * Lists settings.
    *
-   * @param  {Object} options                    The options object.
-   * @param  {Object} options.filters            Filter the results (default: `{}`).
-   * @param  {String} options.order              The order to apply (eg. `"-last_modified"`).
-   * @param  {boolean} options.dumpFallback      Fallback to dump data if read of local DB fails (default: `true`).
-   * @param  {boolean} options.emptyListFallback Fallback to empty list if no dump data and read of local DB fails (default: `true`).
-   * @param  {boolean} options.loadDumpIfNewer   Use dump data if it is newer than local data (default: `true`).
-   * @param  {boolean} options.syncIfEmpty       Synchronize from server if local data is empty (default: `true`).
-   * @param  {boolean} options.verifySignature   Verify the signature of the local data (default: `false`).
+   * @param  {Object} options                  The options object.
+   * @param  {Object} options.filters          Filter the results (default: `{}`).
+   * @param  {String} options.order            The order to apply (eg. `"-last_modified"`).
+   * @param  {boolean} options.dumpFallback    Fallback to dump data if read of local DB fails (default: `true`).
+   * @param  {boolean} options.loadDumpIfNewer Use dump data if it is newer than local data (default: `true`).
+   * @param  {boolean} options.syncIfEmpty     Synchronize from server if local data is empty (default: `true`).
+   * @param  {boolean} options.verifySignature Verify the signature of the local data (default: `false`).
    * @return {Promise}
    */
   async get(options = {}) {
@@ -408,13 +407,11 @@ class RemoteSettingsClient extends EventEmitter {
       filters = {},
       order = "", // not sorted by default.
       dumpFallback = true,
-      emptyListFallback = true,
       loadDumpIfNewer = true,
       syncIfEmpty = true,
     } = options;
     let { verifySignature = false } = options;
 
-    const hasParallelCall = !!this._importingPromise;
     let data;
     try {
       let lastModified = await this.db.getLastModified();
@@ -481,12 +478,8 @@ class RemoteSettingsClient extends EventEmitter {
             verifySignature = false;
           }
         } catch (e) {
-          if (!hasParallelCall) {
-            // Sync or load dump failed. Throw.
-            throw e;
-          }
           // Report error, but continue because there could have been data
-          // loaded from a parallel call.
+          // loaded from a parrallel call.
           Cu.reportError(e);
         } finally {
           // then delete this promise again, as now we should have local data:
@@ -498,7 +491,7 @@ class RemoteSettingsClient extends EventEmitter {
       data = await this.db.list({ filters, order });
     } catch (e) {
       // If the local DB cannot be read (for unknown reasons, Bug 1649393)
-      // or sync failed, we fallback to the packaged data, and filter/sort in memory.
+      // We fallback to the packaged data, and filter/sort in memory.
       if (!dumpFallback) {
         throw e;
       }
@@ -509,15 +502,11 @@ class RemoteSettingsClient extends EventEmitter {
       );
       if (data !== null) {
         lazy.console.info(`${this.identifier} falling back to JSON dump`);
-      } else if (emptyListFallback) {
+      } else {
         lazy.console.info(
           `${this.identifier} no dump fallback, return empty list`
         );
         data = [];
-      } else {
-        // Obtaining the records failed, there is no dump, and we don't fallback
-        // to an empty list. Throw the original error.
-        throw e;
       }
       if (!lazy.ObjectUtils.isEmpty(filters)) {
         data = data.filter(r => lazy.Utils.filterObject(filters, r));
