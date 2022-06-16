@@ -29,6 +29,7 @@ private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
 private const val KEY_DIALOG_WIDTH_MATCH_PARENT = "KEY_DIALOG_WIDTH_MATCH_PARENT"
 private const val KEY_TITLE_ICON = "KEY_TITLE_ICON"
 private const val KEY_MESSAGE = "KEY_MESSAGE"
+private const val KEY_NEGATIVE_BUTTON_TEXT = "KEY_NEGATIVE_BUTTON_TEXT"
 private const val KEY_POSITIVE_BUTTON_BACKGROUND_COLOR = "KEY_POSITIVE_BUTTON_BACKGROUND_COLOR"
 private const val KEY_POSITIVE_BUTTON_TEXT_COLOR = "KEY_POSITIVE_BUTTON_TEXT_COLOR"
 private const val KEY_SHOULD_SHOW_LEARN_MORE_LINK = "KEY_SHOULD_SHOW_LEARN_MORE_LINK"
@@ -52,6 +53,8 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         safeArguments.getInt(KEY_TITLE_ICON, DEFAULT_VALUE)
     internal val message: String? get() =
         safeArguments.getString(KEY_MESSAGE, null)
+    internal val negativeButtonText: String? get() =
+        safeArguments.getString(KEY_NEGATIVE_BUTTON_TEXT, null)
 
     internal val dialogGravity: Int get() =
         safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)
@@ -178,6 +181,9 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             positiveButton.setText(R.string.mozac_feature_sitepermissions_always_allow)
             negativeButton.setText(R.string.mozac_feature_sitepermissions_never_allow)
         }
+        negativeButtonText?.let {
+            negativeButton.text = it
+        }
 
         if (shouldShowDoNotAskAgainCheckBox) {
             showDoNotAskAgainCheckbox(rootView, checked = shouldPreselectDoNotAskAgainCheckBox)
@@ -208,7 +214,8 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             shouldSelectDoNotAskAgainCheckBox: Boolean = false,
             isNotificationRequest: Boolean = false,
             message: String? = null,
-            shouldShowLearnMoreLink: Boolean = false
+            negativeButtonText: String? = null,
+            shouldShowLearnMoreLink: Boolean = false,
         ): SitePermissionsDialogFragment {
 
             val fragment = SitePermissionsDialogFragment()
@@ -219,6 +226,7 @@ internal open class SitePermissionsDialogFragment : AppCompatDialogFragment() {
                 putString(KEY_TITLE, title)
                 putInt(KEY_TITLE_ICON, titleIcon)
                 putString(KEY_MESSAGE, message)
+                putString(KEY_NEGATIVE_BUTTON_TEXT, negativeButtonText)
                 putString(KEY_PERMISSION_ID, permissionRequestId)
                 putBoolean(KEY_SHOULD_SHOW_LEARN_MORE_LINK, shouldShowLearnMoreLink)
 

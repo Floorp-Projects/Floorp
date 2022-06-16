@@ -291,6 +291,49 @@ class SitePermissionsDialogFragmentTest {
         verify(mockFeature).onDismiss(permissionRequestId, "sessionId")
     }
 
+    fun `dialog with passed in text for the negative button should use it`() {
+        val expectedText = "This is just a test"
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = false,
+                negativeButtonText = expectedText,
+            )
+        )
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val negativeButton = dialog.findViewById<Button>(R.id.deny_button)
+        assertEquals(expectedText, negativeButton.text)
+    }
+
+    fun `dialog with a text for the negative button not passed has a default available`() {
+        val expectedText = testContext.getString(R.string.mozac_feature_sitepermissions_not_allow)
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = false,
+            )
+        )
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val negativeButton = dialog.findViewById<Button>(R.id.deny_button)
+        assertEquals(expectedText, negativeButton.text)
+    }
+
     @Test
     fun `clicking on negative button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
