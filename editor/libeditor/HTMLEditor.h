@@ -1553,26 +1553,29 @@ class HTMLEditor final : public EditorBase,
                          nsIContent& aEndOfMiddleElement);
 
   /**
-   * SplitRangeOffFromBlockAndRemoveMiddleContainer() splits the nodes
-   * between aStartOfRange and aEndOfRange, then, removes the middle element
-   * and moves its content to where the middle element was.
+   * RemoveBlockContainerElementWithTransactionBetween() splits the nodes
+   * at aStartOfRange and aEndOfRange, then, removes the middle element which
+   * was split off from aBlockContainerElement and moves the ex-children to
+   * where the middle element was.  I.e., all nodes between aStartOfRange and
+   * aEndOfRange (including themselves) will be unwrapped from
+   * aBlockContainerElement.
    *
-   * @param aBlockElement           The node which will be split.
+   * @param aBlockContainerElement  The node which will be split.
    * @param aStartOfRange           The first node which will be unwrapped
-   *                                from aBlockElement.
+   *                                from aBlockContainerElement.
    * @param aEndOfRange             The last node which will be unwrapped from
-   *                                aBlockElement.
+   *                                aBlockContainerElement.
    * @return                        The left content is new created left
-   *                                element of aBlockElement.
+   *                                element of aBlockContainerElement.
    *                                The right content is split element,
-   *                                i.e., must be aBlockElement.
+   *                                i.e., must be aBlockContainerElement.
    *                                The middle content is nullptr since
    *                                removing it is the job of this method.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffFromNodeResult
-  SplitRangeOffFromBlockAndRemoveMiddleContainer(Element& aBlockElement,
-                                                 nsIContent& aStartOfRange,
-                                                 nsIContent& aEndOfRange);
+  RemoveBlockContainerElementWithTransactionBetween(
+      Element& aBlockContainerElement, nsIContent& aStartOfRange,
+      nsIContent& aEndOfRange);
 
   /**
    * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
