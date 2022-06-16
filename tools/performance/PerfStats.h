@@ -15,6 +15,24 @@
 #include <string>
 #include <limits>
 
+// PerfStats
+//
+// Framework for low overhead selective collection of internal performance
+// metrics through ChromeUtils.
+//
+// Gathering: in C++, wrap execution in an RAII class
+// PerfStats::AutoMetricRecording<PerfStats::Metric::MyMetric> or call
+// PerfStats::RecordMeasurement{Start,End} manually. Use
+// RecordMeasurementCount() for incrementing counters.
+//
+// Controlling: Use ChromeUtils.SetPerfStatsCollectionMask(mask), where mask=0
+// disables all metrics and mask=0xFFFFFFFF enables all of them.
+//
+// Reporting: Results can be accessed with ChromeUtils.CollectPerfStats().
+// Browsertime will sum results across processes and report them.
+
+// Define a new metric by adding it to this list. It will be created as a class
+// enum value mozilla::PerfStats::Metric::MyMetricName.
 #define FOR_EACH_PERFSTATS_METRIC(MACRO) \
   MACRO(DisplayListBuilding)             \
   MACRO(Rasterizing)                     \
