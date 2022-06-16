@@ -140,8 +140,8 @@ class AppWindow final : public nsIBaseWindow,
   void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
   void WasRegistered() { mRegistered = true; }
 
-  using nsIBaseWindow::GetSize;
   using nsIBaseWindow::GetPositionAndSize;
+  using nsIBaseWindow::GetSize;
 
   // AppWindow methods...
   nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
