@@ -207,11 +207,11 @@ reportCompare(expect, actual, 'indexedArray: findLastIndex finds last string ele
 
 // Bug 1058394 - Array#findLast and Array#findLastIndex no longer skip holes too.
 var sparseArray = [1,,];
-var sparseArrayWithInheritedDataProperty = Object.setPrototypeOf([1,,], {
+var sparseArrayWithInheritedDataProperty = Object.setPrototypeOf([1,,,], {
   __proto__: [].__proto__,
   2 : 0
 });
-var sparseArrayWithInheritedAccessorProperty = Object.setPrototypeOf([1,,], {
+var sparseArrayWithInheritedAccessorProperty = Object.setPrototypeOf([1,,,], {
   __proto__: [].__proto__,
   get 2(){
     throw "get 2";
@@ -231,7 +231,7 @@ reportCompare(expect, actual, "Don't skip holes in Array#findLast.");
 
 try
 {
-  expect = 0;
+  expect = 1;
   actual = sparseArray.findLastIndex(() => true);
 }
 catch(e)
