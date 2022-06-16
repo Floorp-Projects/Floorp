@@ -12,6 +12,7 @@
 #include "mozilla/Variant.h"  // mozilla::Variant
 
 #include "debugger/DebugAPI.h"
+#include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EitherParser.h"
@@ -219,8 +220,9 @@ using BytecodeCompilerOutput =
 //   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool CompileGlobalScriptToStencilAndMaybeInstantiate(
-    JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind, BytecodeCompilerOutput& output) {
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind,
+    BytecodeCompilerOutput& output) {
 #ifdef JS_ENABLE_SMOOSH
   {
     UniquePtr<ExtensibleCompilationStencil> extensibleStencil;
@@ -280,7 +282,7 @@ template <typename Unit>
 
   AutoAssertReportedException assertException(cx);
 
-  LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
+  LifoAllocScope parserAllocScope(&tempLifoAlloc);
   ScriptCompiler<Unit> compiler(cx, parserAllocScope, input, srcBuf);
   if (!compiler.init(cx)) {
     return false;
@@ -351,27 +353,29 @@ template <typename Unit>
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil> CompileGlobalScriptToStencilImpl(
-    JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind) {
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
-  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input, srcBuf,
-                                                       scopeKind, output)) {
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
+          cx, tempLifoAlloc, input, srcBuf, scopeKind, output)) {
     return nullptr;
   }
   return output.as<OutputType>().forget();
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
-    ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, tempLifoAlloc, input, srcBuf,
+                                          scopeKind);
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, CompilationInput& input, JS::SourceText<Utf8Unit>& srcBuf,
-    ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
+    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, tempLifoAlloc, input, srcBuf,
+                                          scopeKind);
 }
 
 template <typename Unit>
@@ -382,8 +386,8 @@ CompileGlobalScriptToExtensibleStencilImpl(JSContext* cx,
                                            ScopeKind scopeKind) {
   using OutputType = UniquePtr<ExtensibleCompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
-  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input, srcBuf,
-                                                       scopeKind, output)) {
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
+          cx, cx->tempLifoAlloc(), input, srcBuf, scopeKind, output)) {
     return nullptr;
   }
   return std::move(output.as<OutputType>());
@@ -449,8 +453,8 @@ static JSScript* CompileGlobalScriptImpl(
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   Rooted<CompilationGCOutput> gcOutput(cx);
   BytecodeCompilerOutput output(gcOutput.address());
-  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input.get(), srcBuf,
-                                                       scopeKind, output)) {
+  if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
+          cx, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind, output)) {
     return nullptr;
   }
   return gcOutput.get().script;
