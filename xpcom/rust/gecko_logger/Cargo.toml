@@ -8,5 +8,5 @@ license = "MPL-2.0"
 [dependencies]
 lazy_static = "1"
 log = {version = "0.4", features = ["release_max_level_info"]}
-env_logger = {version = "0.8", default-features = false} # disable `regex` to reduce code size
+env_logger = {version = "0.9", default-features = false} # disable `regex` to reduce code size
 app_services_logger = { path = "../../../services/common/app_services_logger" }
