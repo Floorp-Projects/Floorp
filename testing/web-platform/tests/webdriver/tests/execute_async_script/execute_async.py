@@ -5,16 +5,7 @@ from webdriver.transport import Response
 
 from tests.support.asserts import assert_error, assert_success
 from tests.support.sync import Poll
-
-
-def execute_async_script(session, script, args=None):
-    if args is None:
-        args = []
-    body = {"script": script, "args": args}
-
-    return session.transport.send(
-        "POST", "/session/{session_id}/execute/async".format(**vars(session)),
-        body)
+from . import execute_async_script
 
 
 def test_null_parameter_value(session, http):
