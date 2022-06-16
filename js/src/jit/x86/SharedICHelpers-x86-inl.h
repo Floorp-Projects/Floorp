@@ -17,47 +17,31 @@ namespace jit {
 
 inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
                                    uint32_t argSize) {
+#ifdef DEBUG
   // We assume during this that R0 and R1 have been pushed.
-
-  // Compute frame size.
+  // Store frame size without VMFunction arguments for debug assertions.
   masm.movl(FramePointer, eax);
   masm.addl(Imm32(BaselineFrame::FramePointerOffset), eax);
   masm.subl(BaselineStackReg, eax);
-
-#ifdef DEBUG
-  // Store frame size without VMFunction arguments for debug assertions.
-  masm.movl(eax, ebx);
-  masm.subl(Imm32(argSize), ebx);
+  masm.subl(Imm32(argSize), eax);
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
-  masm.store32(ebx, frameSizeAddr);
+  masm.store32(eax, frameSizeAddr);
 #endif
 
   // Push frame descriptor and perform the tail call.
-  masm.makeFrameDescriptor(eax, FrameType::BaselineJS, ExitFrameLayout::Size());
-  masm.push(eax);
+  masm.pushFrameDescriptor(FrameType::BaselineJS);
   masm.push(ICTailCallReg);
   masm.jump(target);
 }
 
-inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm,
-                                                  Register reg,
-                                                  uint32_t headerSize) {
-  // Compute stub frame size.
-  masm.movl(FramePointer, reg);
-  masm.addl(Imm32(BaselineStubFrameLayout::FramePointerOffset), reg);
-  masm.subl(BaselineStackReg, reg);
-
-  masm.makeFrameDescriptor(reg, FrameType::BaselineStub, headerSize);
-}
-
 inline void EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm) {
-  EmitBaselineCreateStubFrameDescriptor(masm, eax, ExitFrameLayout::Size());
-  masm.push(eax);
+  masm.pushFrameDescriptor(FrameType::BaselineStub);
   masm.call(target);
 }
 
 inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
+#ifdef DEBUG
   // Compute frame size. Because the return address is still on the stack,
   // this is:
   //
@@ -76,7 +60,6 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.movl(FramePointer, scratch);
   masm.subl(BaselineStackReg, scratch);
 
-#ifdef DEBUG
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(scratch, frameSizeAddr);
@@ -89,9 +72,8 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.Push(Operand(BaselineStackReg, 0));
 
   // Replace the original return address with the frame descriptor.
-  masm.makeFrameDescriptor(scratch, FrameType::BaselineJS,
-                           BaselineStubFrameLayout::Size());
-  masm.storePtr(scratch, Address(BaselineStackReg, sizeof(uintptr_t)));
+  masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
+                Address(BaselineStackReg, sizeof(uintptr_t)));
 
   // Save old frame pointer, stack pointer and stub reg.
   masm.Push(FramePointer);
