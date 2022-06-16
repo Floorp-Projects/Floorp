@@ -320,10 +320,10 @@ hb_position_t gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) {
   InitializeVertical();
 
   if (!mVmtxTable) {
-    // Must be a "vertical" font that doesn't actually have vertical metrics;
-    // use a fixed advance.
-    return FloatToFixed(
-        mFont->GetMetrics(nsFontMetrics::eVertical).aveCharWidth);
+    // Must be a "vertical" font that doesn't actually have vertical metrics.
+    // Return an invalid (negative) value to tell the caller to fall back to
+    // something else.
+    return -1;
   }
 
   NS_ASSERTION(mNumLongVMetrics > 0,
@@ -367,11 +367,17 @@ hb_position_t gfxHarfBuzzShaper::HBGetGlyphVAdvance(hb_font_t* font,
   // and provide hinted platform-specific vertical advances (analogous to the
   // GetGlyphWidth method for horizontal advances). If that proves necessary,
   // we'll add a new gfxFont method and call it from here.
-  //
+  hb_position_t advance = fcd->mShaper->GetGlyphVAdvance(glyph);
+  if (advance < 0) {
+    // Not available (e.g. broken metrics in the font); use a fallback value.
+    advance = FloatToFixed(fcd->mShaper->GetFont()
+                               ->GetMetrics(nsFontMetrics::eVertical)
+                               .aveCharWidth);
+  }
   // We negate the value from GetGlyphVAdvance here because harfbuzz shapes
   // with a coordinate system where positive is upwards, whereas the inline
   // direction in which glyphs advance is downwards.
-  return -fcd->mShaper->GetGlyphVAdvance(glyph);
+  return -advance;
 }
 
 struct VORG {
