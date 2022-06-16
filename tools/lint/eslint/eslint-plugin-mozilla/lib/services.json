@@ -12,6 +12,7 @@
     "nsIClipboard": "clipboard",
     "nsIConsoleService": "console",
     "nsICookieManager": "cookies",
+    "nsICookieService": "cookies",
     "nsIDOMRequestService": "DOMRequest",
     "nsIDOMStorageManager": "domStorageManager",
     "nsIDirectoryService": "dirsvc",
