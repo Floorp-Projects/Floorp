@@ -169,15 +169,28 @@ extern uint64_t RoundUpToNextValidARMImmediate(uint64_t i);
 // On WASM_SUPPORTS_HUGE_MEMORY platforms, every asm.js or WebAssembly 32-bit
 // memory unconditionally allocates a huge region of virtual memory of size
 // wasm::HugeMappedSize. This allows all memory resizing to work without
-// reallocation and provides enough guard space for all offsets to be folded
+// reallocation and provides enough guard space for most offsets to be folded
 // into memory accesses.  See "Linear memory addresses and bounds checking" in
 // wasm/WasmMemory.cpp for more information.
 
+// Reserve 4GiB to support any i32 index.
 static const uint64_t HugeIndexRange = uint64_t(UINT32_MAX) + 1;
-static const uint64_t HugeOffsetGuardLimit = uint64_t(INT32_MAX) + 1;
+// Reserve 32MiB to support most offset immediates. Any immediate that is over
+// this will require a bounds check to be emitted. 32MiB was chosen to
+// generously cover the max offset immediate, 20MiB, found in a corpus of wasm
+// modules.
+static const uint64_t HugeOffsetGuardLimit = 1 << 25;
+// Reserve a wasm page (64KiB) to support slop on unaligned accesses.
 static const uint64_t HugeUnalignedGuardPage = PageSize;
+
+// Compute the total memory reservation.
 static const uint64_t HugeMappedSize =
     HugeIndexRange + HugeOffsetGuardLimit + HugeUnalignedGuardPage;
+
+// Try to keep the memory reservation aligned to the wasm page size. This
+// ensures that it's aligned to the system page size.
+static_assert(HugeMappedSize % PageSize == 0);
+
 #endif
 
 // The size of the guard page for non huge-memories.
