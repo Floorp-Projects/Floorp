@@ -85,7 +85,8 @@ class LazyMessageList extends Component {
     this.#scrollHandlerBinding = this.#scrollHandler.bind(this);
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     if (nextProps.cacheGeneration !== this.props.cacheGeneration) {
       this.#cachedHeights = [];
       this.#startIndex = 0;
