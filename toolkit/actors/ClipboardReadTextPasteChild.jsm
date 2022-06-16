@@ -26,11 +26,15 @@ class ClipboardReadTextPasteChild extends JSWindowActorChild {
   receiveMessage(value) {
     switch (value.name) {
       case "ClipboardReadTextPaste:PasteMenuItemClicked": {
-        // TODO: notify C++ side.
+        this.contentWindow.navigator.clipboard.onUserReactedToPasteMenuPopup(
+          true
+        );
         break;
       }
       case "ClipboardReadTextPaste:PasteMenuItemDismissed": {
-        // TODO: notify C++ side.
+        this.contentWindow.navigator.clipboard.onUserReactedToPasteMenuPopup(
+          false
+        );
         break;
       }
     }
