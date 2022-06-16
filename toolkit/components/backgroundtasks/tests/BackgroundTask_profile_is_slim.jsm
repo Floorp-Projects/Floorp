@@ -11,8 +11,6 @@
 
 var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { EXIT_CODE } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksManager.jsm"
 ).BackgroundTasksManager;

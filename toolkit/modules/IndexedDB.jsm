@@ -15,8 +15,6 @@
 /* exported IndexedDB */
 var EXPORTED_SYMBOLS = ["IndexedDB"];
 
-Cu.importGlobalProperties(["indexedDB"]);
-
 /**
  * Wraps the given request object, and returns a Promise which resolves when
  * the requests succeeds or rejects when it fails.
