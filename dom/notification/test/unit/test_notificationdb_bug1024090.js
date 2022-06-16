@@ -7,12 +7,11 @@ function run_test() {
 
 // For bug 1024090: test edge case of notificationstore.json
 add_test(function test_bug1024090_purge() {
-  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  const NOTIFICATION_STORE_PATH = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  const NOTIFICATION_STORE_PATH = PathUtils.join(
+    PathUtils.profileDir,
     "notificationstore"
   );
-  let cleanup = OS.File.removeDir(NOTIFICATION_STORE_PATH);
+  let cleanup = IOUtils.remove(NOTIFICATION_STORE_PATH, { recursive: true });
   cleanup
     .then(
       function onSuccess() {
