@@ -107,37 +107,75 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 #define ERROR_UNINITIALIZED_SYMBOL \
   "%s - Symbol '%s' accessed before initialization. Cyclic import?"
 
-static constexpr char JSMSuffix[] = ".jsm";
-static constexpr size_t JSMSuffixLength = mozilla::ArrayLength(JSMSuffix) - 1;
-static constexpr char MJSSuffix[] = ".sys.mjs";
-static constexpr size_t MJSSuffixLength = mozilla::ArrayLength(MJSSuffix) - 1;
+static constexpr char JSM_Suffix[] = ".jsm";
+static constexpr size_t JSM_SuffixLength = mozilla::ArrayLength(JSM_Suffix) - 1;
+static constexpr char JSM_JS_Suffix[] = ".jsm.js";
+static constexpr size_t JSM_JS_SuffixLength =
+    mozilla::ArrayLength(JSM_JS_Suffix) - 1;
+static constexpr char JS_Suffix[] = ".js";
+static constexpr size_t JS_SuffixLength = mozilla::ArrayLength(JS_Suffix) - 1;
+static constexpr char MJS_Suffix[] = ".sys.mjs";
+static constexpr size_t MJS_SuffixLength = mozilla::ArrayLength(MJS_Suffix) - 1;
 
 static bool IsJSM(const nsACString& aLocation) {
-  if (aLocation.Length() < JSMSuffixLength) {
+  if (aLocation.Length() < JSM_SuffixLength) {
     return false;
   }
-  const auto ext = Substring(aLocation, aLocation.Length() - JSMSuffixLength);
-  return ext == JSMSuffix;
+  const auto ext = Substring(aLocation, aLocation.Length() - JSM_SuffixLength);
+  return ext == JSM_Suffix;
+}
+
+static bool IsJS(const nsACString& aLocation) {
+  if (aLocation.Length() < JS_SuffixLength) {
+    return false;
+  }
+  const auto ext = Substring(aLocation, aLocation.Length() - JS_SuffixLength);
+  return ext == JS_Suffix;
+}
+
+static bool IsJSM_JS(const nsACString& aLocation) {
+  if (aLocation.Length() < JSM_JS_SuffixLength) {
+    return false;
+  }
+  const auto ext =
+      Substring(aLocation, aLocation.Length() - JSM_JS_SuffixLength);
+  return ext == JSM_JS_Suffix;
 }
 
 static bool IsMJS(const nsACString& aLocation) {
-  if (aLocation.Length() < MJSSuffixLength) {
+  if (aLocation.Length() < MJS_SuffixLength) {
     return false;
   }
-  const auto ext = Substring(aLocation, aLocation.Length() - MJSSuffixLength);
-  return ext == MJSSuffix;
+  const auto ext = Substring(aLocation, aLocation.Length() - MJS_SuffixLength);
+  return ext == MJS_Suffix;
 }
 
-static void ToJSM(const nsACString& aLocation, nsAutoCString& aOut) {
+static void MJSToJSM(const nsACString& aLocation, nsAutoCString& aOut) {
   MOZ_ASSERT(IsMJS(aLocation));
-  aOut = Substring(aLocation, 0, aLocation.Length() - MJSSuffixLength);
-  aOut += JSMSuffix;
+  aOut = Substring(aLocation, 0, aLocation.Length() - MJS_SuffixLength);
+  aOut += JSM_Suffix;
 }
 
-static void ToMJS(const nsACString& aLocation, nsAutoCString& aOut) {
-  MOZ_ASSERT(IsJSM(aLocation));
-  aOut = Substring(aLocation, 0, aLocation.Length() - JSMSuffixLength);
-  aOut += MJSSuffix;
+static bool TryToMJS(const nsACString& aLocation, nsAutoCString& aOut) {
+  if (IsJSM(aLocation)) {
+    aOut = Substring(aLocation, 0, aLocation.Length() - JSM_SuffixLength);
+    aOut += MJS_Suffix;
+    return true;
+  }
+
+  if (IsJSM_JS(aLocation)) {
+    aOut = Substring(aLocation, 0, aLocation.Length() - JSM_JS_SuffixLength);
+    aOut += MJS_Suffix;
+    return true;
+  }
+
+  if (IsJS(aLocation)) {
+    aOut = Substring(aLocation, 0, aLocation.Length() - JS_SuffixLength);
+    aOut += MJS_Suffix;
+    return true;
+  }
+
+  return false;
 }
 
 static bool Dump(JSContext* cx, unsigned argc, Value* vp) {
@@ -1128,9 +1166,12 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
     return NS_OK;
   }
 
-  if (IsJSM(aLocation) && mModuleLoader) {
+  if (mModuleLoader) {
     nsAutoCString mjsLocation;
-    ToMJS(aLocation, mjsLocation);
+    if (!TryToMJS(aLocation, mjsLocation)) {
+      *retval = false;
+      return NS_OK;
+    }
 
     ComponentLoaderInfo mjsInfo(mjsLocation);
 
@@ -1171,7 +1212,10 @@ nsresult mozJSComponentLoader::GetLoadedJSAndESModules(
   for (const auto& location : modules) {
     if (IsMJS(location)) {
       nsAutoCString jsmLocation;
-      ToJSM(location, jsmLocation);
+      // NOTE: Unconditionally convert to *.jsm.  This doesn't cover *.js case
+      //       but given `Cu.loadedModules` is rarely used for system modules,
+      //       this won't cause much compat issue.
+      MJSToJSM(location, jsmLocation);
       aLoadedModules.AppendElement(jsmLocation);
     }
   }
@@ -1517,12 +1561,10 @@ nsresult mozJSComponentLoader::TryFallbackToImportModule(
     JSContext* aCx, const nsACString& aLocation,
     JS::MutableHandleObject aModuleGlobal,
     JS::MutableHandleObject aModuleExports, bool aIgnoreExports) {
-  if (!IsJSM(aLocation)) {
+  nsAutoCString mjsLocation;
+  if (!TryToMJS(aLocation, mjsLocation)) {
     return NS_ERROR_FILE_NOT_FOUND;
   }
-
-  nsAutoCString mjsLocation;
-  ToMJS(aLocation, mjsLocation);
 
   JS::RootedObject moduleNamespace(aCx);
   nsresult rv = ImportModule(aCx, mjsLocation, &moduleNamespace);
