@@ -224,6 +224,9 @@ if (this.Components) {
     getCurrentDirectory: function getCurrentDirectory() {
       return exports.OS.Shared.Type.path.toMsg(File.getCurrentDirectory());
     },
+    setCurrentDirectory: function setCurrentDirectory(path) {
+      File.setCurrentDirectory(exports.OS.Shared.Type.path.fromMsg(path));
+    },
     copy: function copy(sourcePath, destPath, options) {
       return File.copy(
         Type.path.fromMsg(sourcePath),

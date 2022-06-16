@@ -1123,6 +1123,13 @@
     };
 
     /**
+     * Set the current directory by setCurrentDirectory.
+     */
+    File.setCurrentDirectory = function setCurrentDirectory(path) {
+      throw_on_negative("setCurrentDirectory", UnixFile.chdir(path), path);
+    };
+
+    /**
      * Get/set the current directory.
      */
     Object.defineProperty(File, "curDir", {

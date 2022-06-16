@@ -37,7 +37,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
-#include "nsJSUtils.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "BackstagePass.h"
@@ -639,41 +638,6 @@ static bool RegisterAppManifest(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ChangeTestShellDir(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (args.length() != 1) {
-    JS_ReportErrorASCII(cx, "changeTestShellDir() takes one argument");
-    return false;
-  }
-
-#ifdef XP_WIN
-  nsAutoJSString path;
-#else
-  nsAutoJSCString path;
-#endif
-
-  if (!path.init(cx, args[0])) {
-    JS_ReportErrorASCII(
-        cx, "changeTestShellDir(): could not convert argument 1 to string");
-    return false;
-  }
-
-  bool success;
-#ifdef XP_WIN
-  success = !!SetCurrentDirectoryW(path.get());
-#else
-  success = !chdir(path.get());
-#endif
-
-  if (!success) {
-    JS_ReportErrorASCII(cx, "changeTestShellDir(): could not change directory");
-    return false;
-  }
-
-  return true;
-}
-
 #ifdef ENABLE_TESTS
 static bool RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -709,7 +673,6 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FN("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FN("simulateNoScriptActivity", SimulateNoScriptActivity, 1,0),
     JS_FN("registerAppManifest", RegisterAppManifest, 1, 0),
-    JS_FN("changeTestShellDir", ChangeTestShellDir, 1,0),
 #ifdef ENABLE_TESTS
     JS_FN("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
 #endif
