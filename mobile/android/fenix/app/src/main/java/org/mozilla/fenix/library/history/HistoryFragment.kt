@@ -108,6 +108,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             invalidateOptionsMenu = ::invalidateOptionsMenu,
             deleteSnackbar = :: deleteSnackbar,
             syncHistory = ::syncHistory,
+            settings = requireContext().components.settings,
         )
         historyInteractor = DefaultHistoryInteractor(
             historyController

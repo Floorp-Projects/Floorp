@@ -72,6 +72,7 @@ import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
@@ -250,14 +251,24 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         requireComponents.core.engine.speculativeCreateSession(isPrivate)
 
-        if (fromHomeFragment) {
-            // When displayed above home, dispatches the touch events to scrim area to the HomeFragment
-            binding.searchWrapper.background = ColorDrawable(Color.TRANSPARENT)
-            dialog?.window?.decorView?.setOnTouchListener { _, event ->
-                requireActivity().dispatchTouchEvent(event)
-                // toolbarView.view.displayMode()
-                false
+        when (findNavController().previousBackStackEntry?.destination?.id) {
+            R.id.homeFragment -> {
+                // When displayed above home, dispatches the touch events to scrim area to the HomeFragment
+                binding.searchWrapper.background = ColorDrawable(Color.TRANSPARENT)
+                dialog?.window?.decorView?.setOnTouchListener { _, event ->
+                    requireActivity().dispatchTouchEvent(event)
+                    // toolbarView.view.displayMode()
+                    false
+                }
             }
+            R.id.historyFragment -> {
+                requireComponents.core.store.state.search.searchEngines.firstOrNull { searchEngine ->
+                    searchEngine.id == HISTORY_SEARCH_ENGINE_ID
+                }?.let { searchEngine ->
+                    store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine))
+                }
+            }
+            else -> {}
         }
 
         return binding.root
@@ -287,6 +298,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 binding.searchWrapper.setOnTouchListener { _, _ ->
                     binding.searchWrapper.hideKeyboard()
                     false
+                }
+            }
+            R.id.historyFragment -> {
+                binding.searchWrapper.setOnTouchListener { _, _ ->
+                    dismissAllowingStateLoss()
+                    true
                 }
             }
             else -> {}
@@ -704,6 +721,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         } else {
             searchSelectorMenu.menuController.submitList(searchEngineList)
         }
+
+        toolbarView.view.invalidateActions()
     }
 
     private fun addSearchSelector() {
