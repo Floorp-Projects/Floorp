@@ -16,6 +16,20 @@ Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
 
 CookieXPCShellUtils.init(this);
 
+XPCOMUtils.defineLazyServiceGetter(
+  Services,
+  "cookiesvc",
+  "@mozilla.org/cookieService;1",
+  "nsICookieService"
+);
+// eslint-disable-next-line mozilla/use-services
+XPCOMUtils.defineLazyServiceGetter(
+  Services,
+  "cookiemgr",
+  "@mozilla.org/cookiemanager;1",
+  "nsICookieManager"
+);
+
 function do_check_throws(f, result, stack) {
   if (!stack) {
     stack = Components.stack.caller;
@@ -142,8 +156,8 @@ function do_load_profile(generator) {
 // Set a single session cookie using http and test the cookie count
 // against 'expected'
 function do_set_single_http_cookie(uri, channel, expected) {
-  Services.cookies.setCookieStringFromHttp(uri, "foo=bar", channel);
-  Assert.equal(Services.cookies.countCookiesFromHost(uri.host), expected);
+  Services.cookiesvc.setCookieStringFromHttp(uri, "foo=bar", channel);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected);
 }
 
 // Set two cookies; via document.channel and via http request.
@@ -175,15 +189,15 @@ async function do_set_cookies(uri, channel, session, expected) {
   );
   await contentPage.close();
 
-  Assert.equal(Services.cookies.countCookiesFromHost(uri.host), expected[0]);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[0]);
 
   // via http request
-  Services.cookies.setCookieStringFromHttp(uri, "hot=dog" + suffix, channel);
-  Assert.equal(Services.cookies.countCookiesFromHost(uri.host), expected[1]);
+  Services.cookiesvc.setCookieStringFromHttp(uri, "hot=dog" + suffix, channel);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost(uri.host), expected[1]);
 }
 
 function do_count_cookies() {
-  return Services.cookies.cookies.length;
+  return Services.cookiemgr.cookies.length;
 }
 
 // Helper object to store cookie data.

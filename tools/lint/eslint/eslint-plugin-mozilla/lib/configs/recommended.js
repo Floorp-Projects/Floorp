@@ -179,7 +179,6 @@ module.exports = {
     "mozilla/use-ownerGlobal": "error",
     "mozilla/use-returnValue": "error",
     "mozilla/use-services": "error",
-    "mozilla/valid-services": "error",
 
     // Use [] instead of Array()
     "no-array-constructor": "error",

@@ -19,19 +19,18 @@ add_task(async () => {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
 
-  Services.cookies.setCookieStringFromHttp(
-    cookieURI,
-    "BadCookie1=\x01",
-    channel
+  var cookieService = Cc["@mozilla.org/cookieService;1"].getService(
+    Ci.nsICookieService
   );
-  Services.cookies.setCookieStringFromHttp(cookieURI, "BadCookie2=\v", channel);
-  Services.cookies.setCookieStringFromHttp(
+  cookieService.setCookieStringFromHttp(cookieURI, "BadCookie1=\x01", channel);
+  cookieService.setCookieStringFromHttp(cookieURI, "BadCookie2=\v", channel);
+  cookieService.setCookieStringFromHttp(
     cookieURI,
     "Bad\x07Name=illegal",
     channel
   );
-  Services.cookies.setCookieStringFromHttp(cookieURI, GOOD_COOKIE, channel);
-  Services.cookies.setCookieStringFromHttp(cookieURI, SPACEY_COOKIE, channel);
+  cookieService.setCookieStringFromHttp(cookieURI, GOOD_COOKIE, channel);
+  cookieService.setCookieStringFromHttp(cookieURI, SPACEY_COOKIE, channel);
 
   CookieXPCShellUtils.createServer({ hosts: ["mozilla.org"] });
 

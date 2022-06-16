@@ -12,8 +12,6 @@
 // This fixture is probably doing too much and should be reduced to the minimum
 // needed to pass the tests.
 
-/* eslint-disable mozilla/valid-services */
-
 // Some constants from nsIPrefBranch.idl.
 const PREF_INVALID = 0;
 const PREF_STRING = 32;

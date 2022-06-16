@@ -193,7 +193,8 @@ function setCookie(name, domain, path, maxAge, url) {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
 
-  Services.cookies.setCookieStringFromHttp(url, value, channel);
+  const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+  cs.setCookieStringFromHttp(url, value, channel);
 
   return new Promise(function(resolve) {
     // Windows XP has low precision timestamps that cause our cookie eviction
