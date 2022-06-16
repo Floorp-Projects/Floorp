@@ -189,9 +189,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   // out.
   bool HasValidTransientUserGestureActivation();
 
-  // Reture timestamp of last user gesture in milliseconds relative to
-  // navigation start timestamp.
-  DOMHighResTimeStamp LastUserGestureTimeStamp();
+  // See `mUserGestureStart`.
+  const TimeStamp& GetUserGestureStart() const;
 
   // Return true if the corresponding window has valid transient user gesture
   // activation and the transient user gesture activation had been consumed
