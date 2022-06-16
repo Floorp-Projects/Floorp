@@ -187,7 +187,7 @@ private fun showTrackingProtectionCfrChanged(
     state: AppState,
     action: AppAction.ShowTrackingProtectionCfrChange
 ): AppState {
-    return state.copy(showTrackingProtectionCfr = action.value)
+    return state.copy(showTrackingProtectionCfrForTab = action.value)
 }
 
 private fun openSitePermissionOptionsScreen(

@@ -44,7 +44,9 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
         if (action is TabListAction.AddTabAction &&
             onboardingConfig.isCfrEnabled &&
-            !components.appStore.state.showTrackingProtectionCfr
+            !components.appStore.state.showTrackingProtectionCfrForTab.getOrDefault(
+                    context.state.selectedTabId, false
+                )
         ) {
             components.settings.numberOfTabsOpened++
             if (components.settings.numberOfTabsOpened == ERASE_CFR_LIMIT) {
@@ -54,8 +56,15 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         }
 
         if (shouldShowCfrForTrackingProtection(action = action, browserState = context.state)) {
-            onboardingFeature.recordExposure()
-            components.appStore.dispatch(AppAction.ShowTrackingProtectionCfrChange(true))
+            components.appStore.dispatch(
+                AppAction.ShowTrackingProtectionCfrChange(
+                    mapOf(
+                        (
+                            action as TrackingProtectionAction.TrackerBlockedAction
+                            ).tabId to true
+                    )
+                )
+            )
         }
     }
 

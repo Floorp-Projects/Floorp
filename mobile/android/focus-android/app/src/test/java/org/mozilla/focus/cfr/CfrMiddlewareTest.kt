@@ -85,7 +85,7 @@ class CfrMiddlewareTest {
             browserStore.dispatch(trackerBlockedAction).joinBlocking()
             appStore.waitUntilIdle()
 
-            assertTrue(appStore.state.showTrackingProtectionCfr)
+            assertTrue(appStore.state.showTrackingProtectionCfrForTab.getOrDefault("1", false))
         }
     }
 
@@ -106,14 +106,14 @@ class CfrMiddlewareTest {
             browserStore.dispatch(updateSecurityInfoAction).joinBlocking()
             appStore.waitUntilIdle()
 
-            assertFalse(appStore.state.showTrackingProtectionCfr)
+            assertFalse(appStore.state.showTrackingProtectionCfrForTab.getOrDefault("1", false))
         }
     }
 
     @Test
     fun `GIVEN mozilla tab WHEN UpdateSecurityInfoAction is intercepted THEN showTrackingProtectionCfr is not changed to true`() {
         if (onboardingExperiment.isCfrEnabled) {
-            val mozillaTab = createTab(url = "https://www.mozilla.org")
+            val mozillaTab = createTab(id = "1", url = "https://www.mozilla.org")
             val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
                 "1",
                 SecurityInfoState(
@@ -126,7 +126,7 @@ class CfrMiddlewareTest {
             browserStore.dispatch(updateSecurityInfoAction).joinBlocking()
             appStore.waitUntilIdle()
 
-            assertFalse(appStore.state.showTrackingProtectionCfr)
+            assertFalse(appStore.state.showTrackingProtectionCfrForTab.getOrDefault("1", false))
         }
     }
 

@@ -25,7 +25,7 @@ data class AppState(
     val sitePermissionOptionChange: Boolean = false,
     val secretSettingsEnabled: Boolean = false,
     val showEraseTabsCfr: Boolean = false,
-    val showTrackingProtectionCfr: Boolean = false
+    val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap()
 ) : State
 
 /**
