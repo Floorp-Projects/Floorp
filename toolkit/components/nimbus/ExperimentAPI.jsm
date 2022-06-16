@@ -190,7 +190,7 @@ const ExperimentAPI = {
    * @param {{slug: string, featureId: string }}
    * @returns {Branch | null}
    */
-  activateBranch({ slug, featureId }) {
+  getActiveBranch({ slug, featureId }) {
     let experiment = null;
     try {
       if (slug) {
@@ -406,7 +406,7 @@ class _ExperimentFeature {
    * @returns {obj} The feature value
    */
   isEnabled({ defaultValue = null } = {}) {
-    const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
+    const branch = ExperimentAPI.getActiveBranch({ featureId: this.featureId });
 
     let feature = featuresCompat(branch).find(
       ({ featureId }) => featureId === this.featureId
@@ -442,7 +442,7 @@ class _ExperimentFeature {
   getAllVariables({ defaultValues = null } = {}) {
     // Any user pref will override any other configuration
     let userPrefs = this._getUserPrefsValues();
-    const branch = ExperimentAPI.activateBranch({ featureId: this.featureId });
+    const branch = ExperimentAPI.getActiveBranch({ featureId: this.featureId });
     const featureValue = featuresCompat(branch).find(
       ({ featureId }) => featureId === this.featureId
     )?.value;
@@ -474,7 +474,7 @@ class _ExperimentFeature {
     }
 
     // Next, check if an experiment is defined
-    const branch = ExperimentAPI.activateBranch({
+    const branch = ExperimentAPI.getActiveBranch({
       featureId: this.featureId,
     });
     const experimentValue = featuresCompat(branch).find(
