@@ -294,10 +294,6 @@ struct JSWindowActorInfo
   nsCString name;
   bool allFrames;
 
-  // True if `url` is for ESM.
-  // False if `url` is for JSM or nothing.
-  bool isESModule;
-
   // The module of the url.
   nsCString? url;
 
@@ -314,11 +310,6 @@ struct JSProcessActorInfo
 {
     // The name of the actor.
     nsCString name;
-
-    // True if `url` is for ESM.
-    // False if `url` is for JSM or nothing.
-    bool isESModule;
-
     // The module of the url.
     nsCString? url;
 

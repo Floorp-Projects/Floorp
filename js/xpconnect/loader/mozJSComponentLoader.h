@@ -92,8 +92,6 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   nsresult Unload(const nsACString& aResourceURI);
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
-  nsresult IsJSModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
-  nsresult IsESModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
 
   // Public methods for use from ComponentModuleLoader.

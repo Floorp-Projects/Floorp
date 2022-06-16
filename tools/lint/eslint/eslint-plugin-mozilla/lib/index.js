@@ -39,7 +39,6 @@ module.exports = {
     "import-content-task-globals": require("../lib/rules/import-content-task-globals"),
     "import-globals": require("../lib/rules/import-globals"),
     "import-headjs-globals": require("../lib/rules/import-headjs-globals"),
-    "lazy-getter-object-name": require("../lib/rules/lazy-getter-object-name"),
     "mark-exported-symbols-as-used": require("../lib/rules/mark-exported-symbols-as-used"),
     "mark-test-function-used": require("../lib/rules/mark-test-function-used"),
     "no-aArgs": require("../lib/rules/no-aArgs"),
