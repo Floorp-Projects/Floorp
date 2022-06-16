@@ -1097,9 +1097,7 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   // Expose object attributes from ARIA attributes.
   aria::AttrIterator attribIter(mContent);
   while (attribIter.Next()) {
-    nsString value;
-    attribIter.AttrValue(value);
-    attributes->SetAttribute(attribIter.AttrName(), std::move(value));
+    attribIter.ExposeAttr(attributes);
   }
 
   // If there is no aria-live attribute then expose default value of 'live'
