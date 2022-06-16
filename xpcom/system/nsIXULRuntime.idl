@@ -95,7 +95,8 @@ interface nsIXULRuntime : nsISupports
         13,  // The user is in the Treatment Group, so it is enabled
     DisabledByDefault = 14,  // The default value of the pref is false
     EnabledByDefault = 15,    // The default value of the pref is true
-    DecodersArentRemote = 16
+    DecodersArentRemote = 16,
+    IncompatibleMitigationPolicy = 17, // Some incompatible Windows Exploit Mitigation policies are enabled
   };
 
   // This is the current value of the experiment for the session
