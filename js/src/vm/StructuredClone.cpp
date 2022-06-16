@@ -416,10 +416,16 @@ struct JSStructuredCloneReader {
         allowedScope(scope),
         cloneDataPolicy(cloneDataPolicy),
         objs(in.context()),
+        objState(in.context(), in.context()),
         allObjs(in.context()),
         numItemsRead(0),
         callbacks(cb),
-        closure(cbClosure) {}
+        closure(cbClosure) {
+    // Avoid the need to bounds check by keeping a never-matching element at the
+    // base of the `objState` stack. This append() will always succeed because
+    // the objState vector has a nonzero MinInlineCapacity.
+    MOZ_ALWAYS_TRUE(objState.append(std::make_pair(nullptr, true)));
+  }
 
   SCInput& input() { return in; }
   bool read(MutableHandleValue vp, size_t nbytes);
@@ -462,6 +468,18 @@ struct JSStructuredCloneReader {
 
   // Stack of objects with properties remaining to be read.
   RootedValueVector objs;
+
+  // Maintain a stack of state values for the `objs` stack. Since this is only
+  // needed for a very small subset of objects (those with a known set of
+  // object children), the state information is stored as a stack of
+  // <object, state> pairs where the object determines which element of the
+  // `objs` stack that it corresponds to. So when reading from the `objs` stack,
+  // the state will be retrieved only if the top object on `objState` matches
+  // the top object of `objs`.
+  //
+  // Currently, the only state needed is a boolean indicating whether the fields
+  // have been read yet.
+  Rooted<GCVector<std::pair<HeapPtr<JSObject*>, bool>, 8>> objState;
 
   // Array of all objects read during this deserialization, for resolving
   // backreferences.
@@ -2804,12 +2822,20 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
 
     case SCTAG_SAVED_FRAME_OBJECT: {
       auto obj = readSavedFrame(data);
-      if (!obj || !objs.append(ObjectValue(*obj))) {
+      if (!obj || !objs.append(ObjectValue(*obj)) ||
+          !objState.append(std::make_pair(obj, false))) {
         return false;
       }
       vp.setObject(*obj);
       break;
     }
+
+    case SCTAG_END_OF_KEYS:
+      JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                JSMSG_SC_BAD_SERIALIZED_DATA,
+                                "truncated input");
+      return false;
+      break;
 
     default: {
       if (tag <= SCTAG_FLOAT_MAX) {
@@ -3169,78 +3195,6 @@ JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
   return savedFrame;
 }
 
-// Class for counting "children" (actually parent frames) of the SavedFrames on
-// the `objs` stack. When a SavedFrame is complete, it should have exactly 1
-// parent frame.
-//
-// This class must be notified after every startRead() call.
-//
-// If we add other types with restrictions on the number of children, this
-// should be expanded to handle those types as well.
-//
-class ChildCounter {
-  JSContext* cx;
-  Vector<size_t> counts;
-  size_t objsLength;
-  size_t objCountsIndex;
-
- public:
-  explicit ChildCounter(JSContext* cx) : cx(cx), counts(cx), objsLength(0) {}
-
-  void noteObjIsOnTopOfStack() { objCountsIndex = counts.length() - 1; }
-
-  // startRead() will have pushed any newly seen object onto the `objs` stack.
-  // If it did not read an object, or if the object it read was a backreference
-  // to an earlier object, the stack will be unchanged.
-  bool postStartRead(HandleValueVector objs) {
-    if (objs.length() == objsLength) {
-      // No new object pushed.
-      return true;
-    }
-
-    // Push a new child counter (initialized to zero) for the new object.
-    MOZ_ASSERT(objs.length() == objsLength + 1);
-    objsLength = objs.length();
-    if (objs.back().toObject().is<SavedFrame>()) {
-      return counts.append(0);
-    }
-
-    // Not a SavedFrame; do nothing.
-    return true;
-  }
-
-  // Reading has reached the end of the children for an object. Check whether
-  // we saw the right number of children.
-  bool handleEndOfChildren(HandleValueVector objs) {
-    MOZ_ASSERT(objsLength > 0);
-    objsLength--;
-
-    if (objs.back().toObject().is<SavedFrame>()) {
-      if (counts.back() != 1) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "must have single SavedFrame parent");
-        return false;
-      }
-
-      counts.popBack();
-    }
-    return true;
-  }
-
-  // While we are reading children, we need to know whether this is the first
-  // child seen or not, in order to avoid double-initializing in the error
-  // case.
-  bool checkSingleParentFrame() {
-    // We are checking at a point where we have read 0 or more parent frames,
-    // in which case `obj` may not be on top of the `objs` stack anymore and
-    // the count on top of the `counts` stack will correspond to the most
-    // recently read frame, not `obj`. Use the remembered `counts` index from
-    // when `obj` *was* on top of the stack.
-    return ++counts[objCountsIndex] == 1;
-  }
-};
-
 // Perform the whole recursive reading procedure.
 bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
   auto startTime = mozilla::TimeStamp::Now();
@@ -3253,12 +3207,13 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
     return false;
   }
 
-  ChildCounter childCounter(context());
+  MOZ_ASSERT(objs.length() == 0);
+  MOZ_ASSERT(objState.length() == 1);
 
   // Start out by reading in the main object and pushing it onto the 'objs'
   // stack. The data related to this object and its descendants extends from
   // here to the SCTAG_END_OF_KEYS at the end of the stream.
-  if (!startRead(vp) || !childCounter.postStartRead(objs)) {
+  if (!startRead(vp)) {
     return false;
   }
 
@@ -3266,7 +3221,6 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
   while (objs.length() != 0) {
     // What happens depends on the top obj on the objs stack.
     RootedObject obj(context(), &objs.back().toObject());
-    childCounter.noteObjIsOnTopOfStack();
 
     uint32_t tag, data;
     if (!in.getPair(&tag, &data)) {
@@ -3274,16 +3228,21 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
     }
 
     if (tag == SCTAG_END_OF_KEYS) {
-      if (!childCounter.handleEndOfChildren(objs)) {
-        return false;
-      }
-
       // Pop the current obj off the stack, since we are done with it and
       // its children.
       MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
       objs.popBack();
+      if (objState.back().first == obj) {
+        objState.popBack();
+      }
       continue;
     }
+
+    // Remember the index of the current top of the state stack, which will
+    // correspond to the state for `obj` iff `obj` is a type that uses state.
+    // startRead() may push additional entries before the state is accessed and
+    // updated while filling in the object's data.
+    size_t objStateIdx = objState.length() - 1;
 
     // The input stream contains a sequence of "child" values, whose
     // interpretation depends on the type of obj. These values can be
@@ -3299,7 +3258,7 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
     // Note that this means the ordering in the stream is a little funky for
     // things like Map. See the comment above traverseMap() for an example.
     RootedValue key(context());
-    if (!startRead(&key) || !childCounter.postStartRead(objs)) {
+    if (!startRead(&key)) {
       return false;
     }
 
@@ -3307,9 +3266,10 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
                           obj->is<SavedFrame>())) {
       // Backwards compatibility: Null formerly indicated the end of
       // object properties.
-      if (!childCounter.handleEndOfChildren(objs)) {
-        return false;
-      }
+
+      // No legacy objects used the state stack.
+      MOZ_ASSERT(objState[objStateIdx].first() != obj);
+
       objs.popBack();
       continue;
     }
@@ -3323,7 +3283,7 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
       continue;
     }
 
-    // SavedFrame object: there is one following value, the parent SavedFrame,
+    // SavedFrame object: there is one child value, the parent SavedFrame,
     // which is either null or another SavedFrame object.
     if (obj->is<SavedFrame>()) {
       SavedFrame* parentFrame;
@@ -3338,21 +3298,24 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
         return false;
       }
 
-      if (!childCounter.checkSingleParentFrame()) {
-        // This is an error (more than one parent given), but it will be
-        // reported when the SavedFrame is complete so it can be handled along
-        // with the "no parent given" case.
-      } else {
+      MOZ_ASSERT(objState[objStateIdx].first() == obj);
+      bool& state = objState[objStateIdx].second();
+      if (state == false) {
         obj->as<SavedFrame>().initParent(parentFrame);
+        state = true;
+      } else {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                  JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "multiple SavedFrame parents");
+        return false;
       }
-
       continue;
     }
 
     // Everything else uses a series of key,value,key,value,... Value
     // objects.
     RootedValue val(context());
-    if (!startRead(&val) || !childCounter.postStartRead(objs)) {
+    if (!startRead(&val)) {
       return false;
     }
 
@@ -3418,8 +3381,6 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
 
   return true;
 }
-
-using namespace js;
 
 JS_PUBLIC_API bool JS_ReadStructuredClone(
     JSContext* cx, const JSStructuredCloneData& buf, uint32_t version,
