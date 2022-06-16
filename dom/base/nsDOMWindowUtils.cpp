@@ -6,6 +6,7 @@
 
 #include "nsDOMWindowUtils.h"
 
+#include "LayoutConstants.h"
 #include "MobileViewportManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "nsPresContext.h"
@@ -280,6 +281,33 @@ CompositorBridgeChild* nsDOMWindowUtils::GetCompositorBridge() {
     }
   }
   return nullptr;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetLastOverWindowMouseLocationInCSSPixels(float* aX,
+                                                            float* aY) {
+  const PresShell* presShell = GetPresShell();
+  const nsPresContext* presContext = GetPresContext();
+
+  if (!presShell || !presContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const nsPoint& lastOverWindowMouseLocation =
+      presShell->GetLastOverWindowMouseLocation();
+
+  if (lastOverWindowMouseLocation.X() == NS_UNCONSTRAINEDSIZE &&
+      lastOverWindowMouseLocation.Y() == NS_UNCONSTRAINEDSIZE) {
+    *aX = 0;
+    *aY = 0;
+  } else {
+    const CSSPoint lastOverWindowMouseLocationInCSSPixels =
+        CSSPoint::FromAppUnits(lastOverWindowMouseLocation);
+    *aX = lastOverWindowMouseLocationInCSSPixels.X();
+    *aY = lastOverWindowMouseLocationInCSSPixels.Y();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

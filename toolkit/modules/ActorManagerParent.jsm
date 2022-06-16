@@ -178,6 +178,21 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  ClipboardReadTextPaste: {
+    parent: {
+      moduleURI: "resource://gre/actors/ClipboardReadTextPasteParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/ClipboardReadTextPasteChild.jsm",
+      events: {
+        MozClipboardReadTextPaste: {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   Conduits: {
     parent: {
       moduleURI: "resource://gre/modules/ConduitsParent.jsm",
