@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<div style="width: 100px; height: 100px;">
+    <canvas id="c" width="100" height="100"></canvas>
+</div>
+
+<script>
+var ctx = document.getElementById('c').getContext('2d');
+var grd = ctx.createLinearGradient(0, 0, 100, 0);
+grd.addColorStop(0, 'black');
+grd.addColorStop(1, 'white');
+ctx.fillStyle = grd;
+ctx.fillRect(0, 0, 100, 100);
+
+ctx.globalAlpha = 0.8;
+ctx.fillStyle = 'white';
+ctx.fillRect(0, 0, 100, 100);
+</script>
