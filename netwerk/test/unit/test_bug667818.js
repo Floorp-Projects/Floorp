@@ -13,7 +13,6 @@ add_task(async () => {
   );
   Services.prefs.setBoolPref("dom.security.https_first", false);
 
-  var serv = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var uri = makeURI("http://example.com/");
   var channel = NetUtil.newChannel({
     uri,
@@ -36,7 +35,7 @@ add_task(async () => {
   );
 
   // Now sanity check
-  serv.setCookieStringFromHttp(
+  Services.cookies.setCookieStringFromHttp(
     uri,
     "test2=test2; path=/; domain=example.com;",
     channel
