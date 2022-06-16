@@ -116,6 +116,31 @@ already_AddRefed<nsIRunnable> Clipboard::ReadTextRequest::Answer() {
       });
 }
 
+static bool IsReadTextExposedToContent() {
+  return StaticPrefs::dom_events_asyncClipboard_readText_DoNotUseDirectly();
+}
+
+already_AddRefed<nsIRunnable>
+Clipboard::CheckReadTextPermissionAndHandleRequest(
+    Promise& aPromise, nsIPrincipal& aSubjectPrincipal) {
+  if (IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal)) {
+    MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+            ("%s: testing pref enabled or has read permission", __FUNCTION__));
+    return ReadTextRequest{aPromise, aSubjectPrincipal}.Answer();
+  }
+
+  if (aSubjectPrincipal.GetIsAddonOrExpandedAddonPrincipal()) {
+    // TODO: enable showing the "Paste" button in this case; see bug 1773681.
+    MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+            ("%s: Addon without read permssion.", __FUNCTION__));
+    aPromise.MaybeRejectWithUndefined();
+    return nullptr;
+  }
+
+  return HandleReadTextRequestWhichRequiresPasteButton(aPromise,
+                                                       aSubjectPrincipal);
+}
+
 already_AddRefed<nsIRunnable>
 Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
     Promise& aPromise, nsIPrincipal& aSubjectPrincipal) {
@@ -188,18 +213,10 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
     return nullptr;
   }
 
-  // We want to disable security check for automated tests that have the pref
-  //  dom.events.testing.asyncClipboard set to true
-  const bool isTestingPrefEnabledOrHasReadPermission =
-      IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal);
-
   switch (aClipboardReadType) {
     case eReadText: {
       RefPtr<nsIRunnable> runnable =
-          isTestingPrefEnabledOrHasReadPermission
-              ? ReadTextRequest{*p, aSubjectPrincipal}.Answer()
-              : HandleReadTextRequestWhichRequiresPasteButton(
-                    *p, aSubjectPrincipal);
+          CheckReadTextPermissionAndHandleRequest(*p, aSubjectPrincipal);
 
       if (runnable) {
         GetParentObject()->Dispatch(TaskCategory::Other, runnable.forget());
@@ -208,6 +225,12 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
       break;
     }
     case eRead: {
+      // We want to disable security check for automated tests that have the
+      // pref
+      //  dom.events.testing.asyncClipboard set to true
+      const bool isTestingPrefEnabledOrHasReadPermission =
+          IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal);
+
       if (!isTestingPrefEnabledOrHasReadPermission) {
         MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
                 ("Clipboard, ReadHelper, "
@@ -765,7 +788,8 @@ LogModule* Clipboard::GetClipboardLog() { return gClipboardLog; }
 /* static */
 bool Clipboard::ReadTextEnabled(JSContext* aCx, JSObject* aGlobal) {
   nsIPrincipal* prin = nsContentUtils::SubjectPrincipal(aCx);
-  return IsTestingPrefEnabled() || prin->GetIsAddonOrExpandedAddonPrincipal() ||
+  return IsReadTextExposedToContent() ||
+         prin->GetIsAddonOrExpandedAddonPrincipal() ||
          prin->IsSystemPrincipal();
 }
 
