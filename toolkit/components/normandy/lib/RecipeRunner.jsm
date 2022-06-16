@@ -333,7 +333,10 @@ var RecipeRunner = {
       // Fetch recipes before execution in case we fail and exit early.
       let recipesAndSignatures;
       try {
-        recipesAndSignatures = await lazy.gRemoteSettingsClient.get();
+        recipesAndSignatures = await lazy.gRemoteSettingsClient.get({
+          // Do not return an empty list if an error occurs.
+          emptyListFallback: false,
+        });
       } catch (e) {
         await lazy.Uptake.reportRunner(lazy.Uptake.RUNNER_SERVER_ERROR);
         return;
