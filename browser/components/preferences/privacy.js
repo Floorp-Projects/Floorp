@@ -2846,13 +2846,11 @@ var gPrivacyPane = {
       allowedByPolicy &&
       Services.prefs.getBoolPref(PREF_NORMANDY_ENABLED, false)
     ) {
-      if (Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED, false)) {
-        checkbox.setAttribute("checked", "true");
-      } else {
-        checkbox.removeAttribute("checked");
-      }
-      checkbox.setAttribute("preference", PREF_OPT_OUT_STUDIES_ENABLED);
       checkbox.removeAttribute("disabled");
+      dataCollectionCheckboxHandler({
+        checkbox,
+        pref: PREF_OPT_OUT_STUDIES_ENABLED,
+      });
     } else {
       checkbox.removeAttribute("preference");
       checkbox.removeAttribute("checked");
