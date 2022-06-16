@@ -39,7 +39,7 @@ add_task(async () => {
   });
   for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookiesvc.setCookieStringFromHttp(
+    Services.cookies.setCookieStringFromHttp(
       uri,
       "oh=hai; max-age=1000",
       channel

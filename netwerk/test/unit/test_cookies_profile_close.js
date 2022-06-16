@@ -52,11 +52,11 @@ add_task(async () => {
     ""
   );
 
-  Assert.equal(Services.cookiesvc.getCookieStringFromHttp(uri, channel), "");
+  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, channel), "");
 
   await CookieXPCShellUtils.setCookieToDocument(uri.spec, "oh2=hai");
 
-  Services.cookiesvc.setCookieStringFromHttp(uri, "oh3=hai", channel);
+  Services.cookies.setCookieStringFromHttp(uri, "oh3=hai", channel);
   Assert.equal(
     await CookieXPCShellUtils.getCookieStringFromDocument("http://foo.com/"),
     ""
