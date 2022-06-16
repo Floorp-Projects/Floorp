@@ -1018,10 +1018,8 @@ TRRService::ConfirmationContext::Notify(nsITimer* aTimer) {
   MutexSingleWriterAutoLock lock(OwningObject()->mLock);
   if (aTimer == mTimer) {
     HandleEvent(ConfirmationEvent::Retry, lock);
-    return NS_OK;
   }
 
-  MOZ_CRASH("Unknown timer");
   return NS_OK;
 }
 
