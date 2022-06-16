@@ -190,6 +190,41 @@ add_task(async function test_import_ontop() {
   await testImportedBookmarks();
 });
 
+add_task(async function test_import_iconuri() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+
+  let bookmarksFile = PathUtils.join(
+    do_get_cwd().path,
+    "bookmarks_iconuri.json"
+  );
+
+  await BookmarkJSONUtils.importFromFile(bookmarksFile, {
+    replace: true,
+  });
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await testImportedBookmarks();
+});
+
+add_task(async function test_export_bookmarks_with_iconuri() {
+  bookmarksExportedFile = PathUtils.join(
+    PathUtils.profileDir,
+    "bookmarks.exported.json"
+  );
+  await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  await PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(async function test_import_exported_bookmarks_with_iconuri() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, {
+    replace: true,
+  });
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await testImportedBookmarks();
+});
+
 add_task(async function test_clean() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
