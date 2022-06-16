@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <!-- Required by the .js part of the test. In a more ideal world, the script
+    could be loaded in the .js part; however, currently, that causes other
+    problems, which would require other changes in test framework code. -->
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+
+  <script>
+    function onLoad() {
+      const readTextResult = document.getElementById("readTextResultId");
+
+      const b1 = document.getElementById("invokeReadTextOnceId");
+      b1.addEventListener("click", async () => {
+        navigator.clipboard.readText().then(text => {
+          readTextResult.textContent = "Resolved: " + text;
+        }, () => { readTextResult.textContent = "Rejected." });
+      });
+
+      const b2 = document.getElementById("invokeReadTextTwiceId");
+      b2.addEventListener("click", async () => {
+        const t1 = navigator.clipboard.readText();
+        const t2 = navigator.clipboard.readText();
+
+        const r1 = await t1.then(text => {
+          return "Resolved 1: " + text;
+        }, () => { return "Rejected: 1";});
+
+        const r2 = await t2.then(text => {
+          return "Resolved 2: " + text;
+        }, () => { return "Rejected: 2";});
+
+        readTextResult.textContent = r1 + "; " + r2;
+      });
+    }
+  </script>
+  </head>
+  <body onload="onLoad()">
+   <button id="invokeReadTextOnceId">1</button>
+   <button id="invokeReadTextTwiceId">2</button>
+   <div id="readTextResultId"/>
+  </body>
+</html>
