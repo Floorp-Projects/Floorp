@@ -11,7 +11,6 @@
 #include "BackstagePass.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
-#include "mozilla/dom/IndexedDatabaseManager.h"
 
 using namespace mozilla::dom;
 
@@ -67,36 +66,7 @@ BackstagePass::Resolve(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
   JS::RootedId id(cx, idArg);
   *_retval =
       WebIDLGlobalNameHash::ResolveForSystemGlobal(cx, obj, id, resolvedp);
-  if (!*_retval) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (*resolvedp) {
-    return NS_OK;
-  }
-
-  XPCJSContext* xpccx = XPCJSContext::Get();
-  if (idArg == xpccx->GetStringID(XPCJSContext::IDX_FETCH)) {
-    *_retval = xpc::SandboxCreateFetch(cx, obj);
-    if (!*_retval) {
-      return NS_ERROR_FAILURE;
-    }
-    *resolvedp = true;
-  } else if (idArg == xpccx->GetStringID(XPCJSContext::IDX_CRYPTO)) {
-    *_retval = xpc::SandboxCreateCrypto(cx, obj);
-    if (!*_retval) {
-      return NS_ERROR_FAILURE;
-    }
-    *resolvedp = true;
-  } else if (idArg == xpccx->GetStringID(XPCJSContext::IDX_INDEXEDDB)) {
-    *_retval = IndexedDatabaseManager::DefineIndexedDB(cx, obj);
-    if (!*_retval) {
-      return NS_ERROR_FAILURE;
-    }
-    *resolvedp = true;
-  }
-
-  return NS_OK;
+  return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIServiceWorkerManager"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["indexedDB"]);
+
 /**
  * This module assists with tasks around testing functionality that shows
  * or clears site data.
@@ -61,7 +63,11 @@ var SiteDataTestUtils = {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         origin
       );
-      let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+      let request = lazy.indexedDB.openForPrincipal(
+        principal,
+        "TestDatabase",
+        1
+      );
       request.onupgradeneeded = function(e) {
         let db = e.target.result;
         db.createObjectStore("TestStore");
@@ -250,7 +256,11 @@ var SiteDataTestUtils = {
     );
     return new Promise(resolve => {
       let data = true;
-      let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+      let request = lazy.indexedDB.openForPrincipal(
+        principal,
+        "TestDatabase",
+        1
+      );
       request.onupgradeneeded = function(e) {
         data = false;
       };

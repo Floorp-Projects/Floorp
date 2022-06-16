@@ -43,6 +43,8 @@ XPCOMUtils.defineLazyGetter(lazy, "PLATFORM", () => {
 
 var EXPORTED_SYMBOLS = ["AddonRepository"];
 
+Cu.importGlobalProperties(["fetch"]);
+
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_CACHE_ID_ENABLED =

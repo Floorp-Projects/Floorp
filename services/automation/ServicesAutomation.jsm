@@ -49,6 +49,8 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
+
 const AUTOCONFIG_PREF = "identity.fxaccounts.autoconfig.uri";
 
 /*
@@ -205,7 +207,7 @@ var Authentication = {
     const tries = 10;
     const normalWait = 4000;
     for (let i = 0; i < tries; ++i) {
-      let resp = await fetch(restmailURI);
+      let resp = await lazy.fetch(restmailURI);
       let messages = await resp.json();
       // Sort so that the most recent emails are first.
       messages.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));

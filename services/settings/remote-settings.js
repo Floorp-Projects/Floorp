@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
 });
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
+
 const PREF_SETTINGS_BRANCH = "services.settings.";
 const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";

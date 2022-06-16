@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyGetter(lazy, "gDOMBundle", () =>
   Services.strings.createBundle("chrome://global/locale/dom/dom.properties")
 );
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["crypto"]);
+
 // getCryptoParamsFromHeaders is exported for test purposes.
 const EXPORTED_SYMBOLS = ["PushCrypto", "getCryptoParamsFromHeaders"];
 
@@ -241,13 +243,17 @@ function concatArray(arrays) {
 }
 
 function hmac(key) {
-  this.keyPromise = crypto.subtle.importKey("raw", key, HMAC_SHA256, false, [
-    "sign",
-  ]);
+  this.keyPromise = lazy.crypto.subtle.importKey(
+    "raw",
+    key,
+    HMAC_SHA256,
+    false,
+    ["sign"]
+  );
 }
 
 hmac.prototype.hash = function(input) {
-  return this.keyPromise.then(k => crypto.subtle.sign("HMAC", k, input));
+  return this.keyPromise.then(k => lazy.crypto.subtle.sign("HMAC", k, input));
 };
 
 function hkdf(salt, ikm) {
@@ -325,7 +331,7 @@ class Decoder {
     try {
       let ikm = await this.computeSharedSecret();
       let [gcmBits, nonce] = await this.deriveKeyAndNonce(ikm);
-      let key = await crypto.subtle.importKey(
+      let key = await lazy.crypto.subtle.importKey(
         "raw",
         gcmBits,
         "AES-GCM",
@@ -362,14 +368,14 @@ class Decoder {
    */
   async computeSharedSecret() {
     let [appServerKey, subscriptionPrivateKey] = await Promise.all([
-      crypto.subtle.importKey("raw", this.senderKey, ECDH_KEY, false, [
+      lazy.crypto.subtle.importKey("raw", this.senderKey, ECDH_KEY, false, [
         "deriveBits",
       ]),
-      crypto.subtle.importKey("jwk", this.privateKey, ECDH_KEY, false, [
+      lazy.crypto.subtle.importKey("jwk", this.privateKey, ECDH_KEY, false, [
         "deriveBits",
       ]),
     ]);
-    return crypto.subtle.deriveBits(
+    return lazy.crypto.subtle.deriveBits(
       { name: "ECDH", public: appServerKey },
       subscriptionPrivateKey,
       256
@@ -402,7 +408,7 @@ class Decoder {
       name: "AES-GCM",
       iv: generateNonce(nonce, index),
     };
-    let decoded = await crypto.subtle.decrypt(params, key, slice);
+    let decoded = await lazy.crypto.subtle.decrypt(params, key, slice);
     return this.unpadChunk(new Uint8Array(decoded), last);
   }
 
@@ -603,22 +609,22 @@ var PushCrypto = {
   concatArray,
 
   generateAuthenticationSecret() {
-    return crypto.getRandomValues(new Uint8Array(16));
+    return lazy.crypto.getRandomValues(new Uint8Array(16));
   },
 
   validateAppServerKey(key) {
-    return crypto.subtle
+    return lazy.crypto.subtle
       .importKey("raw", key, ECDSA_KEY, true, ["verify"])
       .then(_ => key);
   },
 
   generateKeys() {
-    return crypto.subtle
+    return lazy.crypto.subtle
       .generateKey(ECDH_KEY, true, ["deriveBits"])
       .then(cryptoKey =>
         Promise.all([
-          crypto.subtle.exportKey("raw", cryptoKey.publicKey),
-          crypto.subtle.exportKey("jwk", cryptoKey.privateKey),
+          lazy.crypto.subtle.exportKey("raw", cryptoKey.publicKey),
+          lazy.crypto.subtle.exportKey("jwk", cryptoKey.privateKey),
         ])
       );
   },
@@ -725,9 +731,10 @@ var PushCrypto = {
     // purposes we allow it to be specified.
     const senderKeyPair =
       options.senderKeyPair ||
-      (await crypto.subtle.generateKey(ECDH_KEY, true, ["deriveBits"]));
+      (await lazy.crypto.subtle.generateKey(ECDH_KEY, true, ["deriveBits"]));
     // allowing a salt to be specified is useful for tests.
-    const salt = options.salt || crypto.getRandomValues(new Uint8Array(16));
+    const salt =
+      options.salt || lazy.crypto.getRandomValues(new Uint8Array(16));
     const rs = options.rs === undefined ? 4096 : options.rs;
 
     const encoder = new aes128gcmEncoder(
@@ -766,7 +773,7 @@ class aes128gcmEncoder {
       this.senderKeyPair.privateKey
     );
 
-    const rawSenderPublicKey = await crypto.subtle.exportKey(
+    const rawSenderPublicKey = await lazy.crypto.subtle.exportKey(
       "raw",
       this.senderKeyPair.publicKey
     );
@@ -775,7 +782,7 @@ class aes128gcmEncoder {
       rawSenderPublicKey
     );
 
-    const contentEncryptionKey = await crypto.subtle.importKey(
+    const contentEncryptionKey = await lazy.crypto.subtle.importKey(
       "raw",
       gcmBits,
       "AES-GCM",
@@ -801,7 +808,7 @@ class aes128gcmEncoder {
     if (this.plaintext.byteLength === 0) {
       // Send an authentication tag for empty messages.
       chunks = [
-        await crypto.subtle.encrypt(
+        await lazy.crypto.subtle.encrypt(
           {
             name: "AES-GCM",
             iv: generateNonce(nonce, 0),
@@ -819,7 +826,7 @@ class aes128gcmEncoder {
           let isLast = index == inChunks.length - 1;
           let padding = new Uint8Array([isLast ? 2 : 1]);
           let input = concatArray([slice, padding]);
-          return crypto.subtle.encrypt(
+          return lazy.crypto.subtle.encrypt(
             {
               name: "AES-GCM",
               iv: generateNonce(nonce, index),
@@ -853,7 +860,7 @@ class aes128gcmEncoder {
   // Note: this duplicates some of Decoder.computeSharedSecret, but the key
   // management is slightly different.
   async computeSharedSecret(receiverPublicKey, senderPrivateKey) {
-    const receiverPublicCryptoKey = await crypto.subtle.importKey(
+    const receiverPublicCryptoKey = await lazy.crypto.subtle.importKey(
       "raw",
       receiverPublicKey,
       ECDH_KEY,
@@ -861,7 +868,7 @@ class aes128gcmEncoder {
       ["deriveBits"]
     );
 
-    return crypto.subtle.deriveBits(
+    return lazy.crypto.subtle.deriveBits(
       { name: "ECDH", public: receiverPublicCryptoKey },
       senderPrivateKey,
       256

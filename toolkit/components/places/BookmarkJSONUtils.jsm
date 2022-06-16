@@ -9,6 +9,8 @@ const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+Cu.importGlobalProperties(["fetch"]);
+
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

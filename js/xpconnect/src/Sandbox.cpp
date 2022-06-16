@@ -270,7 +270,7 @@ static bool SandboxImport(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool xpc::SandboxCreateCrypto(JSContext* cx, JS::Handle<JSObject*> obj) {
+static bool SandboxCreateCrypto(JSContext* cx, JS::HandleObject obj) {
   MOZ_ASSERT(JS_IsGlobalObject(obj));
 
   nsIGlobalObject* native = xpc::NativeGlobal(obj);
@@ -359,7 +359,7 @@ static bool SandboxFetchPromise(JSContext* cx, unsigned argc, Value* vp) {
   return ConvertExceptionToPromise(cx, args.rval());
 }
 
-bool xpc::SandboxCreateFetch(JSContext* cx, JS::Handle<JSObject*> obj) {
+static bool SandboxCreateFetch(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(JS_IsGlobalObject(obj));
 
   return JS_DefineFunction(cx, obj, "fetch", SandboxFetchPromise, 2, 0) &&

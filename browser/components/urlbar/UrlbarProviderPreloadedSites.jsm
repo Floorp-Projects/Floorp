@@ -17,6 +17,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",

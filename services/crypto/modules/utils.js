@@ -14,6 +14,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const lazy = {};
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["crypto"]);
 
 XPCOMUtils.defineLazyGetter(lazy, "textEncoder", function() {
   return new TextEncoder();
@@ -51,7 +52,7 @@ var CryptoUtils = {
   },
 
   generateRandomBytes(length) {
-    return crypto.getRandomValues(new Uint8Array(length));
+    return lazy.crypto.getRandomValues(new Uint8Array(length));
   },
 
   /**
@@ -148,14 +149,14 @@ var CryptoUtils = {
    * @returns {Uint8Array}
    */
   async hmac(alg, key, data) {
-    const hmacKey = await crypto.subtle.importKey(
+    const hmacKey = await lazy.crypto.subtle.importKey(
       "raw",
       key,
       { name: "HMAC", hash: alg },
       false,
       ["sign"]
     );
-    const result = await crypto.subtle.sign("HMAC", hmacKey, data);
+    const result = await lazy.crypto.subtle.sign("HMAC", hmacKey, data);
     return new Uint8Array(result);
   },
 
@@ -167,14 +168,14 @@ var CryptoUtils = {
    * @returns {Uint8Array}
    */
   async hkdf(ikm, salt, info, len) {
-    const key = await crypto.subtle.importKey(
+    const key = await lazy.crypto.subtle.importKey(
       "raw",
       ikm,
       { name: "HKDF" },
       false,
       ["deriveBits"]
     );
-    const okm = await crypto.subtle.deriveBits(
+    const okm = await lazy.crypto.subtle.deriveBits(
       {
         name: "HKDF",
         hash: "SHA-256",
@@ -198,14 +199,14 @@ var CryptoUtils = {
   async pbkdf2Generate(passphrase, salt, iterations, len) {
     passphrase = CommonUtils.byteStringToArrayBuffer(passphrase);
     salt = CommonUtils.byteStringToArrayBuffer(salt);
-    const key = await crypto.subtle.importKey(
+    const key = await lazy.crypto.subtle.importKey(
       "raw",
       passphrase,
       { name: "PBKDF2" },
       false,
       ["deriveBits"]
     );
-    const output = await crypto.subtle.deriveBits(
+    const output = await lazy.crypto.subtle.deriveBits(
       {
         name: "PBKDF2",
         hash: "SHA-256",
@@ -472,7 +473,7 @@ var CryptoUtils = {
       const buffer = lazy.textEncoder.encode(
         `hawk.1.payload\n${contentType}\n${options.payload}\n`
       );
-      const hash = await crypto.subtle.digest("SHA-256", buffer);
+      const hash = await lazy.crypto.subtle.digest("SHA-256", buffer);
       // HAWK specifies this .hash to use +/ (not _-) and include the
       // trailing "==" padding.
       artifacts.hash = ChromeUtils.base64URLEncode(hash, { pad: true })

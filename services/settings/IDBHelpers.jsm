@@ -7,6 +7,12 @@ var EXPORTED_SYMBOLS = ["IDBHelpers"];
 const DB_NAME = "remote-settings";
 const DB_VERSION = 3;
 
+// `indexedDB` is accessible in the worker global, but not the JSM global,
+// where we have to import it - and the worker global doesn't have Cu.
+if (typeof indexedDB == "undefined") {
+  Cu.importGlobalProperties(["indexedDB"]);
+}
+
 /**
  * Wrap IndexedDB errors to catch them more easily.
  */
