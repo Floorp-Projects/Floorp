@@ -1238,6 +1238,17 @@
     };
 
     /**
+     * Set the current directory by setCurrentDirectory.
+     */
+    File.setCurrentDirectory = function setCurrentDirectory(path) {
+      throw_on_zero(
+        "setCurrentDirectory",
+        WinFile.SetCurrentDirectory(path),
+        path
+      );
+    };
+
+    /**
      * Get/set the current directory by |curDir|.
      */
     Object.defineProperty(File, "curDir", {
