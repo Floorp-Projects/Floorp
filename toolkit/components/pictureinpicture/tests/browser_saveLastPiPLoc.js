@@ -358,6 +358,6 @@ add_task(async function test_pip_save_last_loc() {
 });
 
 add_task(async function test_pip_save_last_loc_with_os_zoom() {
-  await SpecialPowers.pushPrefEnv({ set: [["ui.textScaleFactor", 200]] });
+  await SpecialPowers.pushPrefEnv({ set: [["ui.textScaleFactor", 120]] });
   await doTest();
 });
