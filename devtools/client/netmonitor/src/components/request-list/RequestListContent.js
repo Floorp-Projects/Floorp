@@ -121,7 +121,8 @@ class RequestListContent extends Component {
     };
   }
 
-  componentWillMount() {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillMount() {
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
     window.addEventListener("resize", this.onResize);
   }
