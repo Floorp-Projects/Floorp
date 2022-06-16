@@ -8,6 +8,9 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -59,7 +62,6 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.jsm",
   CoveragePing: "resource://gre/modules/CoveragePing.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.jsm",
@@ -301,13 +303,13 @@ var Impl = {
   // This is a public barrier Telemetry clients can use to add blockers to the shutdown
   // of TelemetryController.
   // After this barrier, clients can not submit Telemetry pings anymore.
-  _shutdownBarrier: new lazy.AsyncShutdown.Barrier(
+  _shutdownBarrier: new AsyncShutdown.Barrier(
     "TelemetryController: Waiting for clients."
   ),
   // This state is included in the async shutdown annotation for crash pings and reports.
   _shutdownState: "Shutdown not started.",
   // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new lazy.AsyncShutdown.Barrier(
+  _connectionsBarrier: new AsyncShutdown.Barrier(
     "TelemetryController: Waiting for pending ping activity"
   ),
   // This is true when running in the test infrastructure.
@@ -910,7 +912,7 @@ var Impl = {
       this._testMode ? 0 : undefined
     );
 
-    lazy.AsyncShutdown.sendTelemetry.addBlocker(
+    AsyncShutdown.sendTelemetry.addBlocker(
       "TelemetryController: shutting down",
       () => this.shutdown(),
       () => this._getState()
@@ -1230,10 +1232,10 @@ var Impl = {
 
     let sessionReset = lazy.TelemetrySession.testReset();
 
-    this._connectionsBarrier = new lazy.AsyncShutdown.Barrier(
+    this._connectionsBarrier = new AsyncShutdown.Barrier(
       "TelemetryController: Waiting for pending ping activity"
     );
-    this._shutdownBarrier = new lazy.AsyncShutdown.Barrier(
+    this._shutdownBarrier = new AsyncShutdown.Barrier(
       "TelemetryController: Waiting for clients."
     );
 

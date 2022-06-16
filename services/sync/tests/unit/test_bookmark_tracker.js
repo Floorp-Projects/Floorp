@@ -32,36 +32,6 @@ async function resetTracker() {
   tracker.resetScore();
 }
 
-// We have some tests that uses Places "batch mode", which isn't async aware,
-// so a couple of these tests spin an event loop waiting for a promise.
-function promiseSpinningly(promise) {
-  let resolved = false;
-  let rv, rerror;
-  promise
-    .then(
-      result => {
-        rv = result;
-      },
-      err => {
-        rerror = err || new Error("Promise rejected without explicit error");
-      }
-    )
-    .finally(() => {
-      resolved = true;
-    });
-  let tm = Cc["@mozilla.org/thread-manager;1"].getService();
-
-  // Keep waiting until the promise resolves.
-  tm.spinEventLoopUntil(
-    "Test(test_bookmark_tracker.js:promiseSpinningly)",
-    () => resolved
-  );
-  if (rerror) {
-    throw rerror;
-  }
-  return rv;
-}
-
 async function cleanup() {
   await engine.setLastSync(0);
   await store.wipe();
@@ -100,6 +70,8 @@ async function verifyTrackedCount(expected) {
 }
 
 // A debugging helper that dumps the full bookmarks tree.
+// Currently unused, but might come in handy
+// eslint-disable-next-line no-unused-vars
 async function dumpBookmarks() {
   let columns = [
     "id",
@@ -128,50 +100,6 @@ async function dumpBookmarks() {
         dump(JSON.stringify(all, undefined, 2));
       });
   });
-}
-
-async function insertBookmarksToMigrate() {
-  await PlacesUtils.bookmarks.insert({
-    guid: "0gtWTOgYcoJD",
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "https://mozilla.org",
-  });
-  let fxBmk = await PlacesUtils.bookmarks.insert({
-    guid: "0dbpnMdxKxfg",
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "http://getfirefox.com",
-  });
-  let tbBmk = await PlacesUtils.bookmarks.insert({
-    guid: "r5ouWdPB3l28",
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "http://getthunderbird.com",
-  });
-  await PlacesUtils.bookmarks.insert({
-    guid: "YK5Bdq5MIqL6",
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "https://bugzilla.mozilla.org",
-  });
-  let exampleBmk = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "https://example.com",
-  });
-
-  await PlacesTestUtils.setBookmarkSyncFields(
-    {
-      guid: fxBmk.guid,
-      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
-    },
-    {
-      guid: tbBmk.guid,
-      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
-    },
-    {
-      guid: exampleBmk.guid,
-      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
-    }
-  );
-
-  await PlacesUtils.bookmarks.remove(exampleBmk.guid);
 }
 
 add_task(async function test_tracking() {

@@ -181,7 +181,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual LayoutDeviceIntRect Bounds() const override;
 
-  nsRect GetBoundsInAppUnits() const;
+  virtual nsRect BoundsInAppUnits() const override;
 
   virtual uint64_t State() override;
 

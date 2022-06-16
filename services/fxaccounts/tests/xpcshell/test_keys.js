@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { FX_OAUTH_CLIENT_ID } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
-);
 const { FxAccountsKeys } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsKeys.jsm"
 );

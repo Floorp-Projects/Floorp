@@ -9,16 +9,10 @@ const { FxAccountsPairingFlow } = ChromeUtils.import(
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
 XPCOMUtils.defineLazyModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.jsm",
 });
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "crypto"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const CHANNEL_ID = "sW-UA97Q6Dljqen7XRlYPw";
 const CHANNEL_KEY = crypto.getRandomValues(new Uint8Array(32));

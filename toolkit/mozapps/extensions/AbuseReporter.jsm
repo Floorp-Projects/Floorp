@@ -12,8 +12,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-Cu.importGlobalProperties(["fetch"]);
-
 const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
 const PREF_AMO_DETAILS_API_URL = "extensions.abuseReport.amoDetailsURL";
 

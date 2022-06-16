@@ -1541,7 +1541,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
    * aStartOfMiddleElement and after aEndOfMiddleElement.  If they are very
-   * start or very end of aBlcok, this won't create empty block.
+   * start or very end of aBlockElement, this won't create empty block.
    *
    * @param aBlockElement           A block element which will be split.
    * @param aStartOfMiddleElement   Start node of middle block element.
@@ -1553,26 +1553,29 @@ class HTMLEditor final : public EditorBase,
                          nsIContent& aEndOfMiddleElement);
 
   /**
-   * SplitRangeOffFromBlockAndRemoveMiddleContainer() splits the nodes
-   * between aStartOfRange and aEndOfRange, then, removes the middle element
-   * and moves its content to where the middle element was.
+   * RemoveBlockContainerElementWithTransactionBetween() splits the nodes
+   * at aStartOfRange and aEndOfRange, then, removes the middle element which
+   * was split off from aBlockContainerElement and moves the ex-children to
+   * where the middle element was.  I.e., all nodes between aStartOfRange and
+   * aEndOfRange (including themselves) will be unwrapped from
+   * aBlockContainerElement.
    *
-   * @param aBlockElement           The node which will be split.
+   * @param aBlockContainerElement  The node which will be split.
    * @param aStartOfRange           The first node which will be unwrapped
-   *                                from aBlockElement.
+   *                                from aBlockContainerElement.
    * @param aEndOfRange             The last node which will be unwrapped from
-   *                                aBlockElement.
+   *                                aBlockContainerElement.
    * @return                        The left content is new created left
-   *                                element of aBlockElement.
+   *                                element of aBlockContainerElement.
    *                                The right content is split element,
-   *                                i.e., must be aBlockElement.
+   *                                i.e., must be aBlockContainerElement.
    *                                The middle content is nullptr since
    *                                removing it is the job of this method.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffFromNodeResult
-  SplitRangeOffFromBlockAndRemoveMiddleContainer(Element& aBlockElement,
-                                                 nsIContent& aStartOfRange,
-                                                 nsIContent& aEndOfRange);
+  RemoveBlockContainerElementWithTransactionBetween(
+      Element& aBlockContainerElement, nsIContent& aStartOfRange,
+      nsIContent& aEndOfRange);
 
   /**
    * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
@@ -1588,15 +1591,19 @@ class HTMLEditor final : public EditorBase,
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
-   * RemoveBlockContainerElements() removes all format blocks, table related
-   * element, etc in aArrayOfContents from the DOM tree.
-   * If aArrayOfContents has a format node, it will be removed and its contents
+   * RemoveBlockContainerElementsWithTransaction() removes all format blocks,
+   * table related element, etc in aArrayOfContents from the DOM tree. If
+   * aArrayOfContents has a format node, it will be removed and its contents
    * will be moved to where it was.
    * If aArrayOfContents has a table related element, <li>, <blockquote> or
    * <div>, it will be removed and its contents will be moved to where it was.
+   *
+   * @return            A suggest point to put caret if succeeded, but it may be
+   *                    unset if there is no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveBlockContainerElements(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveBlockContainerElementsWithTransaction(
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
    * CreateOrChangeBlockContainerElement() formats all nodes in aArrayOfContents
@@ -1613,9 +1620,13 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aArrayOfContents    Must be descendants of a node.
    * @param aBlockTag           The element name of new block elements.
+   * @param aEditingHost        The editing host.
+   * @return                    May suggest a point to put caret if succeeded.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CreateOrChangeBlockContainerElement(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  CreateOrChangeBlockContainerElement(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag,
+      const Element& aEditingHost);
 
   /**
    * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
@@ -1626,10 +1637,12 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aBlockType          New block tag name.
    *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockContainerElements() will be called.
+   *                            RemoveBlockContainerElementsWithTransaction()
+   *                            will be called.
    *                            If nsGkAtoms::blockquote,
    *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.  Otherwise,
+   *                            called.
+   *                            Otherwise,
    *                            CreateOrChangeBlockContainerElement() will be
    *                            called.
    */
@@ -4657,11 +4670,12 @@ class HTMLEditor final : public EditorBase,
                                   // CollectListChildren,
                                   // CollectNonEditableNodes,
                                   // CollectTableChildren
-  friend class SlurpBlobEventListener;  // BlobReader
-  friend class SplitNodeResult;         // CollapseSelectionTo
-  friend class SplitNodeTransaction;    // DoJoinNodes, DoSplitNode
-  friend class TransactionManager;      // DidDoTransaction, DidRedoTransaction,
-                                        // DidUndoTransaction
+  friend class SlurpBlobEventListener;       // BlobReader
+  friend class SplitNodeResult;              // CollapseSelectionTo
+  friend class SplitNodeTransaction;         // DoJoinNodes, DoSplitNode
+  friend class SplitRangeOffFromNodeResult;  // CollapseSelectionTo
+  friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
+                                    // DidUndoTransaction
   friend class
       WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
                                    // CanMoveOrDeleteSomethingInHardLine,

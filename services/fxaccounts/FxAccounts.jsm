@@ -28,7 +28,7 @@ const {
   ERROR_UNKNOWN,
   ERROR_UNVERIFIED_ACCOUNT,
   FXA_PWDMGR_PLAINTEXT_FIELDS,
-  FXA_PWDMGR_REAUTH_WHITELIST,
+  FXA_PWDMGR_REAUTH_ALLOWLIST,
   FXA_PWDMGR_SECURE_FIELDS,
   FX_OAUTH_CLIENT_ID,
   ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
@@ -1554,7 +1554,7 @@ FxAccountsInternal.prototype = {
     // reauthenticate.
     let updateData = {};
     let clearField = field => {
-      if (!FXA_PWDMGR_REAUTH_WHITELIST.has(field)) {
+      if (!FXA_PWDMGR_REAUTH_ALLOWLIST.has(field)) {
         updateData[field] = null;
       }
     };

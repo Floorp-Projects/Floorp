@@ -33,6 +33,15 @@
   border-radius: 6px;
   border-style: none;
 }
+.container::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: ButtonFace;
+  border-radius: 6px;
+}
 
 .toolbarButton,
 .toolbarCenter {

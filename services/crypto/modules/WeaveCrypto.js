@@ -9,10 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const lazy = {};
-
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["crypto"]);
-
 const CRYPT_ALGO = "AES-CBC";
 const CRYPT_ALGO_LENGTH = 256;
 const CRYPT_ALGO_USAGES = ["encrypt", "decrypt"];
@@ -78,7 +74,7 @@ WeaveCrypto.prototype = {
 
   // /!\ Only use this for tests! /!\
   _getCrypto() {
-    return lazy.crypto;
+    return crypto;
   },
 
   async encrypt(clearTextUCS2, symmetricKey, iv) {
@@ -135,17 +131,12 @@ WeaveCrypto.prototype = {
     let iv = this.byteCompressInts(ivStr);
     let symKey = await this.importSymKey(symKeyStr, operation);
     let cryptMethod = (operation === OPERATIONS.ENCRYPT
-      ? lazy.crypto.subtle.encrypt
-      : lazy.crypto.subtle.decrypt
-    ).bind(lazy.crypto.subtle);
+      ? crypto.subtle.encrypt
+      : crypto.subtle.decrypt
+    ).bind(crypto.subtle);
     let algo = { name: CRYPT_ALGO, iv };
 
-    let keyBytes = await cryptMethod.call(
-      lazy.crypto.subtle,
-      algo,
-      symKey,
-      data
-    );
+    let keyBytes = await cryptMethod.call(crypto.subtle, algo, symKey, data);
     return new Uint8Array(keyBytes);
   },
 
@@ -155,12 +146,8 @@ WeaveCrypto.prototype = {
       name: CRYPT_ALGO,
       length: CRYPT_ALGO_LENGTH,
     };
-    let key = await lazy.crypto.subtle.generateKey(
-      algo,
-      true,
-      CRYPT_ALGO_USAGES
-    );
-    let keyBytes = await lazy.crypto.subtle.exportKey("raw", key);
+    let key = await crypto.subtle.generateKey(algo, true, CRYPT_ALGO_USAGES);
+    let keyBytes = await crypto.subtle.exportKey("raw", key);
     return this.encodeBase64(new Uint8Array(keyBytes));
   },
 
@@ -172,7 +159,7 @@ WeaveCrypto.prototype = {
     this.log("generateRandomBytes() called");
 
     let randBytes = new Uint8Array(byteCount);
-    lazy.crypto.getRandomValues(randBytes);
+    crypto.getRandomValues(randBytes);
 
     return this.encodeBase64(randBytes);
   },
@@ -208,7 +195,7 @@ WeaveCrypto.prototype = {
     let symmetricKeyBuffer = this.makeUint8Array(encodedKeyString, true);
     let algo = { name: CRYPT_ALGO };
     let usages = [operation === OPERATIONS.ENCRYPT ? "encrypt" : "decrypt"];
-    let symKey = await lazy.crypto.subtle.importKey(
+    let symKey = await crypto.subtle.importKey(
       "raw",
       symmetricKeyBuffer,
       algo,

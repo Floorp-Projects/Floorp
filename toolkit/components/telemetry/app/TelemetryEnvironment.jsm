@@ -17,6 +17,9 @@ const { ObjectUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { UpdateUtils } = ChromeUtils.import(
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 const Utils = TelemetryUtils;
 
@@ -40,11 +43,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "WindowsRegistry",
   "resource://gre/modules/WindowsRegistry.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
 );
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -396,9 +394,9 @@ const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 const GMP_PROVIDER_REGISTERED_TOPIC = "gmp-provider-registered";
 const AUTO_UPDATE_PREF_CHANGE_TOPIC =
-  lazy.UpdateUtils.PER_INSTALLATION_PREFS["app.update.auto"].observerTopic;
+  UpdateUtils.PER_INSTALLATION_PREFS["app.update.auto"].observerTopic;
 const BACKGROUND_UPDATE_PREF_CHANGE_TOPIC =
-  lazy.UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"]
+  UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"]
     .observerTopic;
 const SERVICES_INFO_CHANGE_TOPIC = "sync-ui-state:update";
 const FIREFOX_SUGGEST_UPDATE_TOPIC = "firefox-suggest-update";
@@ -1727,8 +1725,8 @@ EnvironmentCache.prototype = {
    */
   async _loadAsyncUpdateSettings() {
     if (AppConstants.MOZ_UPDATER) {
-      this._updateAutoDownloadCache = await lazy.UpdateUtils.getAppUpdateAutoEnabled();
-      this._updateBackgroundCache = await lazy.UpdateUtils.readUpdateConfigSetting(
+      this._updateAutoDownloadCache = await UpdateUtils.getAppUpdateAutoEnabled();
+      this._updateBackgroundCache = await UpdateUtils.readUpdateConfigSetting(
         "app.update.background.enabled"
       );
     } else {

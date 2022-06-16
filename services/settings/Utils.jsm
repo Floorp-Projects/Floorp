@@ -34,8 +34,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsINetworkLinkService"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -303,7 +301,7 @@ var Utils = {
    */
   async hasLocalDump(bucket, collection) {
     try {
-      await lazy.fetch(
+      await fetch(
         `resource://app/defaults/settings/${bucket}/${collection}.json`,
         {
           method: "HEAD",
@@ -327,7 +325,7 @@ var Utils = {
       if (!this._dumpStatsInitPromise) {
         this._dumpStatsInitPromise = (async () => {
           try {
-            let res = await lazy.fetch(
+            let res = await fetch(
               "resource://app/defaults/settings/last_modified.json"
             );
             this._dumpStats = await res.json();

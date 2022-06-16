@@ -8,11 +8,6 @@
 
 var EXPORTED_SYMBOLS = ["SharedUtils"];
 
-// Import globals that are available by default in workers but not in JSMs.
-if (typeof crypto == "undefined") {
-  Cu.importGlobalProperties(["fetch", "crypto"]);
-}
-
 var SharedUtils = {
   /**
    * Check that the specified content matches the expected size and SHA-256 hash.

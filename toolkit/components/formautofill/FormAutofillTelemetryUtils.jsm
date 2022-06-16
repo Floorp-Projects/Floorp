@@ -7,16 +7,11 @@
 var EXPORTED_SYMBOLS = ["CreditCardTelemetry"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
+const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
 
-const { FIELD_STATES } = lazy.FormAutofillUtils;
+const { FIELD_STATES } = FormAutofillUtils;
 
 const CreditCardTelemetry = {
   // Mapping of field name used in formautofill code to the field name

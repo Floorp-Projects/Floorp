@@ -6,18 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Performance"];
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
 );
 
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContentProcessDomain:
-    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
-});
-
-class Performance extends lazy.ContentProcessDomain {
+class Performance extends ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;

@@ -21,10 +21,7 @@ let global = Cu.getGlobalForObject({});
 // and `MessagePort`. This table maps those extra symbols to the main
 // import name.
 const EXTRA_GLOBAL_NAME_TO_IMPORT_NAME = {
-  Headers: "fetch",
   MessagePort: "MessageChannel",
-  Request: "fetch",
-  Response: "fetch",
 };
 
 /**

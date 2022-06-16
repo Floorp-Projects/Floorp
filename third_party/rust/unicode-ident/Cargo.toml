@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "unicode-ident"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Determine whether characters have the XID_Start or XID_Continue properties according to Unicode Standard Annex #31"
 documentation = "https://docs.rs/unicode-ident"

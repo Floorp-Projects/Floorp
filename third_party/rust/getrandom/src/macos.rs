@@ -17,6 +17,7 @@ use core::mem;
 type GetEntropyFn = unsafe extern "C" fn(*mut u8, libc::size_t) -> libc::c_int;
 
 pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
+    // getentropy(2) was added in 10.12, Rust supports 10.7+
     static GETENTROPY: Weak = unsafe { Weak::new("getentropy\0") };
     if let Some(fptr) = GETENTROPY.ptr() {
         let func: GetEntropyFn = unsafe { mem::transmute(fptr) };

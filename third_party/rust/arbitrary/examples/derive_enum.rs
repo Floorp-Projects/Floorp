@@ -2,6 +2,10 @@
 //!
 //! Note that this requires enabling the "derive" cargo feature.
 
+// Various enums/fields that we are deriving `Arbitrary` for aren't actually
+// used except to show off the derive.
+#![allow(dead_code)]
+
 use arbitrary::{Arbitrary, Unstructured};
 
 #[derive(Arbitrary, Debug)]

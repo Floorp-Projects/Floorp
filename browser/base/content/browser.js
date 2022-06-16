@@ -1508,11 +1508,13 @@ function _loadURI(browser, uri, params = {}) {
     userContextId,
     csp,
     remoteTypeOverride,
+    hasValidUserGestureActivation,
   } = params || {};
   let loadFlags =
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-  let hasValidUserGestureActivation =
+  hasValidUserGestureActivation ??=
     document.hasValidTransientUserGestureActivation;
+
   if (!triggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
   }
@@ -2245,7 +2247,7 @@ var gBrowserInit = {
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
-        // window.arguments[1]: unused (bug 871161)
+        // window.arguments[1]: extraOptions (nsIPropertyBag)
         //                 [2]: referrerInfo (nsIReferrerInfo)
         //                 [3]: postData (nsIInputStream)
         //                 [4]: allowThirdPartyFixup (bool)
@@ -2260,23 +2262,50 @@ var gBrowserInit = {
           window.arguments[5] != undefined
             ? window.arguments[5]
             : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
-        loadURI(
-          uriToLoad,
-          window.arguments[2] || null,
-          window.arguments[3] || null,
-          window.arguments[4] || false,
-          userContextId,
-          // pass the origin principal (if any) and force its use to create
-          // an initial about:blank viewer if present:
-          window.arguments[6],
-          window.arguments[7],
-          !!window.arguments[6],
-          window.arguments[8],
-          // TODO fix allowInheritPrincipal to default to false.
-          // Default to true unless explicitly set to false because of bug 1475201.
-          window.arguments[9] !== false,
-          window.arguments[10]
-        );
+
+        let hasValidUserGestureActivation = undefined;
+        let fromExternal = undefined;
+        if (window.arguments[1]) {
+          if (!(window.arguments[1] instanceof Ci.nsIPropertyBag2)) {
+            throw new Error(
+              "window.arguments[1] must be null or Ci.nsIPropertyBag2!"
+            );
+          }
+
+          let extraOptions = window.arguments[1];
+          if (extraOptions.hasKey("hasValidUserGestureActivation")) {
+            hasValidUserGestureActivation = extraOptions.getPropertyAsBool(
+              "hasValidUserGestureActivation"
+            );
+          }
+          if (extraOptions.hasKey("fromExternal")) {
+            fromExternal = extraOptions.getPropertyAsBool("fromExternal");
+          }
+        }
+
+        try {
+          openLinkIn(uriToLoad, "current", {
+            referrerInfo: window.arguments[2] || null,
+            postData: window.arguments[3] || null,
+            allowThirdPartyFixup: window.arguments[4] || false,
+            userContextId,
+            // pass the origin principal (if any) and force its use to create
+            // an initial about:blank viewer if present:
+            originPrincipal: window.arguments[6],
+            originStoragePrincipal: window.arguments[7],
+            triggeringPrincipal: window.arguments[8],
+            // TODO fix allowInheritPrincipal to default to false.
+            // Default to true unless explicitly set to false because of bug 1475201.
+            allowInheritPrincipal: window.arguments[9] !== false,
+            csp: window.arguments[10],
+            forceAboutBlankViewerInCurrent: !!window.arguments[6],
+            hasValidUserGestureActivation,
+            fromExternal,
+          });
+        } catch (e) {
+          Cu.reportError(e);
+        }
+
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
@@ -6272,13 +6301,18 @@ nsBrowserAccess.prototype = {
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
         try {
+          let extraOptions = Cc[
+            "@mozilla.org/hash-property-bag;1"
+          ].createInstance(Ci.nsIWritablePropertyBag2);
+          extraOptions.setPropertyAsBool("fromExternal", isExternal);
+
           openDialog(
             AppConstants.BROWSER_CHROME_URL,
             "_blank",
             features,
             // window.arguments
             url,
-            null,
+            extraOptions,
             null,
             null,
             null,

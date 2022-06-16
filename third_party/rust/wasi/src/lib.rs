@@ -31,7 +31,6 @@
 
 #![no_std]
 
-mod error;
 mod lib_generated;
 pub use lib_generated::*;
 

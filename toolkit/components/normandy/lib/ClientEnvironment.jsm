@@ -5,6 +5,9 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { ClientEnvironmentBase } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
+);
 
 const lazy = {};
 
@@ -12,11 +15,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "NormandyApi",
   "resource://normandy/lib/NormandyApi.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientEnvironmentBase",
-  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -45,7 +43,7 @@ var EXPORTED_SYMBOLS = ["ClientEnvironment"];
 // service.
 let _classifyRequest = null;
 
-class ClientEnvironment extends lazy.ClientEnvironmentBase {
+class ClientEnvironment extends ClientEnvironmentBase {
   /**
    * Fetches information about the client that is calculated on the server,
    * like geolocation and the current time.

@@ -144,7 +144,6 @@ for (let [name, files] of Object.entries(ADDONS)) {
 }
 
 let engine;
-let tracker;
 let store;
 let reconciler;
 
@@ -242,7 +241,6 @@ async function checkReconcilerUpToDate(addon) {
 add_task(async function setup() {
   await Service.engineManager.register(AddonsEngine);
   engine = Service.engineManager.get("addons");
-  tracker = engine._tracker;
   store = engine._store;
   reconciler = engine._reconciler;
 

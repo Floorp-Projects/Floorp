@@ -10,15 +10,17 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AnimationFramePromise: "chrome://remote/content/shared/Sync.jsm",
-  ContentProcessDomain:
-    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
 });
 
-class Emulation extends lazy.ContentProcessDomain {
+class Emulation extends ContentProcessDomain {
   // commands
 
   /**

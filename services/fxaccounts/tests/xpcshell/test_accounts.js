@@ -14,7 +14,6 @@ const { FxAccountsClient } = ChromeUtils.import(
 );
 const {
   ERRNO_INVALID_AUTH_TOKEN,
-  ERROR_NETWORK,
   ERROR_NO_ACCOUNT,
   FX_OAUTH_CLIENT_ID,
   ONLOGIN_NOTIFICATION,
@@ -32,8 +31,6 @@ var { AccountState } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
-const ONE_HOUR_MS = 1000 * 60 * 60;
-const ONE_DAY_MS = ONE_HOUR_MS * 24;
 const MOCK_TOKEN_RESPONSE = {
   access_token:
     "43793fdfffec22eb39fc3c44ed09193a6fde4c24e5d6a73f73178597b268af69",

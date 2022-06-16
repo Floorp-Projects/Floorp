@@ -10,7 +10,6 @@ var httpProtocolHandler = Cc[
 
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();
-var collections = collectionsHelper.collections;
 
 var meta_global;
 var server;

@@ -49,8 +49,6 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 const AUTOCONFIG_PREF = "identity.fxaccounts.autoconfig.uri";
 
 /*
@@ -196,7 +194,7 @@ var Authentication = {
 
   /*
    * This whole verification process may be bypassed if the
-   * account is whitelisted.
+   * account is allow-listed.
    */
   async _completeVerification(username) {
     LOG("Fetching mail (from restmail) for user " + username);
@@ -207,7 +205,7 @@ var Authentication = {
     const tries = 10;
     const normalWait = 4000;
     for (let i = 0; i < tries; ++i) {
-      let resp = await lazy.fetch(restmailURI);
+      let resp = await fetch(restmailURI);
       let messages = await resp.json();
       // Sort so that the most recent emails are first.
       messages.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
@@ -260,7 +258,7 @@ var Authentication = {
       LOG("Signed in, setting up the signed user in fxAccounts");
       await lazy.fxAccounts._internal.setSignedInUser(credentials);
 
-      // If the account is not whitelisted for tests, we need to verify it
+      // If the account is not allow-listed for tests, we need to verify it
       if (!credentials.verified) {
         LOG("We need to verify the account");
         await this._completeVerification(username);

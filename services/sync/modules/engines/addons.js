@@ -606,7 +606,7 @@ AddonsStore.prototype = {
 
     if (!this._syncableTypes.includes(addon.type)) {
       this._log.debug(
-        addon.id + " not syncable: type not in whitelist: " + addon.type
+        addon.id + " not syncable: type not in allowed list: " + addon.type
       );
       return false;
     }

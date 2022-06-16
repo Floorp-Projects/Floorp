@@ -7,9 +7,6 @@ const { BookmarkHTMLUtils } = ChromeUtils.import(
 const { BookmarkJSONUtils } = ChromeUtils.import(
   "resource://gre/modules/BookmarkJSONUtils.jsm"
 );
-const { SyncedBookmarksMirror } = ChromeUtils.import(
-  "resource://gre/modules/SyncedBookmarksMirror.jsm"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {
   Bookmark,

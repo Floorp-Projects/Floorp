@@ -135,6 +135,9 @@ parking_lot = { path = "build/rust/parking_lot" }
 # Override tinyvec with smallvec
 tinyvec = { path = "build/rust/tinyvec" }
 
+# Patch wasi 0.10 to 0.11
+wasi = { path = "build/rust/wasi" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

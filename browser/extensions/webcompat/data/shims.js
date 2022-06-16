@@ -165,7 +165,7 @@ const AVAILABLE_SHIMS = [
         types: ["image", "imageset", "xmlhttprequest"],
       },
     ],
-    onlyIfDFPIActive: true,
+    onlyIfBlockedByETP: true,
   },
   {
     id: "AdSafeProtectedGoogleIMAAdapter",
@@ -545,7 +545,7 @@ const AVAILABLE_SHIMS = [
         types: ["image", "imageset", "xmlhttprequest"],
       },
     ],
-    onlyIfDFPIActive: true,
+    onlyIfBlockedByETP: true,
   },
   {
     id: "Vidible",

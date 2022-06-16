@@ -4,6 +4,11 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -15,16 +20,11 @@ ChromeUtils.defineModuleGetter(
   "Preferences",
   "resource://gre/modules/Preferences.jsm"
 );
-ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -48,10 +48,7 @@ const MAX_NAME_LENGTH = 64;
 const TRUNCATION_DELIMITER = "\u2026";
 
 var TelemetryModules = Object.freeze({
-  _log: lazy.Log.repository.getLoggerWithMessagePrefix(
-    LOGGER_NAME,
-    LOGGER_PREFIX
-  ),
+  _log: Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX),
 
   start() {
     // The list of loaded modules is obtainable only when the profiler is enabled.

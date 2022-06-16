@@ -11,13 +11,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  "resource://gre/modules/jsdebugger.jsm"
+);
+const { ContentProcessDomain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
-
-  ContentProcessDomain:
-    "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm",
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
   ExecutionContext:
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.jsm",
@@ -30,7 +33,8 @@ XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
 });
 
 // Import the `Debugger` constructor in the current scope
-lazy.addDebuggerToGlobal(globalThis);
+// eslint-disable-next-line mozilla/reject-globalThis-modification
+addDebuggerToGlobal(globalThis);
 
 const CONSOLE_API_LEVEL_MAP = {
   warn: "warning",
@@ -62,7 +66,7 @@ class SetMap extends Map {
   }
 }
 
-class Runtime extends lazy.ContentProcessDomain {
+class Runtime extends ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;

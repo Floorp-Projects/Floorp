@@ -825,6 +825,41 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
     return dom::Element::FromNodeOrNull(mRightContent);
   }
 
+  /**
+   * Suggest caret position to aHTMLEditor.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const HTMLEditor& aHTMLEditor, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const HTMLEditor& aHTMLEditor,
+                        const SuggestCaretOptions& aOptions);
+
+  SplitRangeOffFromNodeResult() = delete;
+
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent,
                               nsIContent* aMiddleContent,
                               nsIContent* aRightContent)
@@ -833,12 +868,22 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
         mRightContent(aRightContent),
         mRv(NS_OK) {}
 
+  SplitRangeOffFromNodeResult(nsIContent* aLeftContent,
+                              nsIContent* aMiddleContent,
+                              nsIContent* aRightContent,
+                              EditorDOMPoint&& aPointToPutCaret)
+      : mLeftContent(aLeftContent),
+        mMiddleContent(aMiddleContent),
+        mRightContent(aRightContent),
+        mCaretPoint(std::move(aPointToPutCaret)),
+        mRv(NS_OK) {}
+
   SplitRangeOffFromNodeResult(SplitNodeResult&& aSplitResultAtLeftOfMiddleNode,
                               SplitNodeResult&& aSplitResultAtRightOfMiddleNode)
       : mRv(NS_OK) {
     // The given results are created for creating this instance so that the
     // caller may not need to handle with them.  For making who taking the
-    // reposible clearer, we should move them into this constructor.
+    // responsible clearer, we should move them into this constructor.
     SplitNodeResult splitResultAtLeftOfMiddleNode(
         std::move(aSplitResultAtLeftOfMiddleNode));
     SplitNodeResult splitResultARightOfMiddleNode(
@@ -855,6 +900,15 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
     if (!mMiddleContent && splitResultAtLeftOfMiddleNode.isOk()) {
       mMiddleContent = splitResultAtLeftOfMiddleNode.GetNextContent();
     }
+    // Prefer the right split result if available.
+    if (splitResultARightOfMiddleNode.HasCaretPointSuggestion()) {
+      splitResultAtLeftOfMiddleNode.IgnoreCaretPointSuggestion();
+      mCaretPoint = splitResultARightOfMiddleNode.UnwrapCaretPoint();
+    }
+    // Otherwise, if the left split result has a suggestion, take it.
+    else if (splitResultAtLeftOfMiddleNode.HasCaretPointSuggestion()) {
+      mCaretPoint = splitResultAtLeftOfMiddleNode.UnwrapCaretPoint();
+    }
   }
 
   explicit SplitRangeOffFromNodeResult(nsresult aRv) : mRv(aRv) {
@@ -869,14 +923,24 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
   SplitRangeOffFromNodeResult& operator=(SplitRangeOffFromNodeResult&& aOther) =
       default;
 
+#ifdef DEBUG
+  ~SplitRangeOffFromNodeResult() {
+    MOZ_ASSERT_IF(isOk(), !mCaretPoint.IsSet() || mHandledCaretPoint);
+  }
+#endif
+
  private:
   nsCOMPtr<nsIContent> mLeftContent;
   nsCOMPtr<nsIContent> mMiddleContent;
   nsCOMPtr<nsIContent> mRightContent;
 
+  // The point which is a good point to put caret from point of view the
+  // splitter.
+  EditorDOMPoint mCaretPoint;
+
   nsresult mRv;
 
-  SplitRangeOffFromNodeResult() = delete;
+  bool mutable mHandledCaretPoint = false;
 };
 
 /*****************************************************************************

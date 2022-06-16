@@ -10,12 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/Domain.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
-
-  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -29,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 const CERT_PINNING_ENFORCEMENT_PREF = "security.cert_pinning.enforcement_level";
 const HSTS_PRELOAD_LIST_PREF = "network.stricttransportsecurity.preloadlist";
 
-class Security extends lazy.Domain {
+class Security extends Domain {
   destructor() {
     this.setIgnoreCertificateErrors({ ignore: false });
   }

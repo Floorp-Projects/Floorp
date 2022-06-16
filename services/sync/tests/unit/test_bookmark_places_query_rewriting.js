@@ -5,6 +5,8 @@ _("Rewrite place: URIs.");
 const { BookmarkQuery, BookmarkFolder } = ChromeUtils.import(
   "resource://services-sync/engines/bookmarks.js"
 );
+// `Service` is used as a global in head_helpers.js.
+// eslint-disable-next-line no-unused-vars
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 function makeTagRecord(id, uri) {

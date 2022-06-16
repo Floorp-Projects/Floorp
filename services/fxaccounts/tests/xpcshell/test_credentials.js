@@ -8,12 +8,7 @@ const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
 
-var {
-  hexToBytes: h2b,
-  hexAsString: h2s,
-  stringAsHex: s2h,
-  bytesAsHex: b2h,
-} = CommonUtils;
+var { hexToBytes: h2b, hexAsString: h2s, bytesAsHex: b2h } = CommonUtils;
 
 // Test vectors for the "onepw" protocol:
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-test-vectors

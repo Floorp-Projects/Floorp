@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.jsm",
 });
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 class DownloadError extends Error {
   constructor(url, resp) {
@@ -469,7 +468,7 @@ class Downloader {
   async _readAttachmentDump(attachmentId) {
     async function fetchResource(resourceUrl) {
       try {
-        return await lazy.fetch(resourceUrl);
+        return await fetch(resourceUrl);
       } catch (e) {
         throw new Downloader.DownloadError(resourceUrl);
       }

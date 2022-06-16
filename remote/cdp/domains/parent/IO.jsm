@@ -10,21 +10,25 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Domain } = ChromeUtils.import(
+  "chrome://remote/content/cdp/domains/Domain.jsm"
+);
+const { StreamRegistry } = ChromeUtils.import(
+  "chrome://remote/content/cdp/StreamRegistry.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   OS: "resource://gre/modules/osfile.jsm",
-
-  Domain: "chrome://remote/content/cdp/domains/Domain.jsm",
-  StreamRegistry: "chrome://remote/content/cdp/StreamRegistry.jsm",
 });
 
 const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
 
 // Global singleton for managing open streams
-const streamRegistry = new lazy.StreamRegistry();
+const streamRegistry = new StreamRegistry();
 
-class IO extends lazy.Domain {
+class IO extends Domain {
   // commands
 
   /**

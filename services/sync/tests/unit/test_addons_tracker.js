@@ -23,9 +23,7 @@ Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 Svc.Prefs.set("engine.addons", true);
 
-let engine;
 let reconciler;
-let store;
 let tracker;
 
 const addon1ID = "addon1@tests.mozilla.org";
@@ -57,9 +55,8 @@ add_task(async function setup() {
     XPIS[name] = AddonTestUtils.createTempWebExtensionFile(data);
   }
   await Service.engineManager.register(AddonsEngine);
-  engine = Service.engineManager.get("addons");
+  let engine = Service.engineManager.get("addons");
   reconciler = engine._reconciler;
-  store = engine._store;
   tracker = engine._tracker;
 
   await cleanup();

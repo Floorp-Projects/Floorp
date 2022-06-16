@@ -18,11 +18,6 @@ ChromeUtils.defineModuleGetter(
 );
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
@@ -67,7 +62,7 @@ class PersonalityProvider {
     }
     const server = Services.prefs.getCharPref("services.settings.server");
     const serverInfo = await (
-      await lazy.fetch(`${server}/`, {
+      await fetch(`${server}/`, {
         credentials: "omit",
       })
     ).json();

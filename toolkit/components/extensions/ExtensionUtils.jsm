@@ -20,8 +20,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 // xpcshell doesn't handle idle callbacks well.
 XPCOMUtils.defineLazyGetter(lazy, "idleTimeout", () =>
   Services.appinfo.name === "XPCShell" ? 500 : undefined
@@ -324,7 +322,7 @@ function parseMatchPatterns(patterns, options) {
 async function makeDataURI(iconUrl) {
   let response;
   try {
-    response = await lazy.fetch(iconUrl);
+    response = await fetch(iconUrl);
   } catch (e) {
     // Failed to fetch, ignore engine's favicon.
     Cu.reportError(e);
