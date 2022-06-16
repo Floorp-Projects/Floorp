@@ -214,7 +214,7 @@ export function getProjectDirectoryRootName(state) {
   return state.sources.projectDirectoryRootName;
 }
 
-const getDisplayedSourceIDs = createSelector(
+const getSourcesTreeList = createSelector(
   getSourcesMap,
   state => state.sources.sourcesWithUrls,
   state => state.sources.projectDirectoryRoot,
@@ -233,11 +233,12 @@ const getDisplayedSourceIDs = createSelector(
       projectDirectoryRoot,
       threads
     );
-    const sourceIDsByThread = {};
+    const list = [];
 
     for (const id of sourcesWithUrls) {
       const source = sourcesMap.get(id);
 
+      // This is the key part defining which sources appear in the SourcesTree
       const displayed =
         isDescendantOfRoot(source, rootWithoutThreadActor) &&
         (!source.isExtension ||
@@ -248,62 +249,70 @@ const getDisplayedSourceIDs = createSelector(
         continue;
       }
 
-      const thread = source.thread;
-      if (!sourceIDsByThread[thread]) {
-        sourceIDsByThread[thread] = new Set();
-      }
-      sourceIDsByThread[thread].add(id);
+      list.push(source);
     }
-    return sourceIDsByThread;
-  }
+    return list;
+  },
+  // As the input arguments always change, even if we added/removed a hidden source,
+  // Use shallow equal to ensure returning the exact same array if nothing changed.
+  { memoizeOptions: { resultEqualityCheck: shallowEqual } }
 );
 
 export const getDisplayedSources = createSelector(
-  getSourcesMap,
-  getDisplayedSourceIDs,
+  getSourcesTreeList,
   getMainThreadHost,
-  (sourcesMap, idsByThread, mainThreadHost) => {
+  (list, mainThreadHost) => {
     const result = {};
+    const entriesByNoQueryURL = {};
+    for (const source of list) {
+      const displayURL = getDisplayURL(source.url, mainThreadHost);
 
-    for (const thread of Object.keys(idsByThread)) {
-      const entriesByNoQueryURL = Object.create(null);
+      // Ignore source which have not been able to be sorted in a group by getDisplayURL
+      // It should be only javascript: URLs and weird URLs without protocols.
+      if (!displayURL.group) {
+        continue;
+      }
 
-      for (const id of idsByThread[thread]) {
-        const source = sourcesMap.get(id);
-        const displayURL = getDisplayURL(source.url, mainThreadHost);
+      // Duplicate Source objects into a new dedicated type of "displayed source object"
+      // with two additional fields: parts and displayURL.
+      const displayedSource = {
+        thread: source.thread,
+        isPrettyPrinted: source.isPrettyPrinted,
+        isBlackBoxed: source.isBlackBoxed,
+        isOriginal: source.isOriginal,
+        url: source.url,
+        // quick-open codebase uses this attribute:
+        relativeUrl: source.relativeUrl,
+        id: source.id,
+        displayURL,
+        parts: getPathParts(displayURL, source.thread, mainThreadHost),
+      };
+      const thread = displayedSource.thread;
 
-        // Ignore source which have not been able to be sorted in a group by getDisplayURL
-        // It should be only javascript: URLs and weird URLs without protocols.
-        if (!displayURL.group) {
-          continue;
-        }
+      if (!result[thread]) {
+        result[thread] = {};
+      }
+      result[thread][displayedSource.id] = displayedSource;
 
-        const entry = {
-          ...source,
-          displayURL,
-          parts: getPathParts(displayURL, thread, mainThreadHost),
-        };
-
-        if (!result[thread]) {
-          result[thread] = {};
-        }
-        result[thread][id] = entry;
-
-        const noQueryURL = stripQuery(entry.url);
+      // Lets see if we have sources
+      // with query parameters in their URL that can be removed
+      const noQueryURL = stripQuery(displayedSource.url);
+      // This had query parameters to strip out
+      if (noQueryURL != displayedSource.url) {
         if (!entriesByNoQueryURL[noQueryURL]) {
           entriesByNoQueryURL[noQueryURL] = [];
         }
-        entriesByNoQueryURL[noQueryURL].push(entry);
+        entriesByNoQueryURL[noQueryURL].push(displayedSource);
       }
+    }
 
-      // If the URL does not compete with another without the query string,
-      // we exclude the query string when rendering the source URL to keep the
-      // UI more easily readable.
-      for (const noQueryURL in entriesByNoQueryURL) {
-        const entries = entriesByNoQueryURL[noQueryURL];
-        if (entries.length === 1) {
-          entries[0].displayURL = getDisplayURL(noQueryURL, mainThreadHost);
-        }
+    // If the URL does not compete with another without the query string,
+    // we exclude the query string when rendering the source URL to keep the
+    // UI more easily readable.
+    for (const noQueryURL in entriesByNoQueryURL) {
+      const entries = entriesByNoQueryURL[noQueryURL];
+      if (entries.length === 1) {
+        entries[0].displayURL = getDisplayURL(noQueryURL, mainThreadHost);
       }
     }
 
