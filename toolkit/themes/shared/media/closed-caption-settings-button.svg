@@ -1,6 +1,0 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-  - License, v. 2.0. If a copy of the MPL was not distributed with this
-  - file, You can obtain one at http://mozilla.org/MPL/2.0/.-->
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="m13.15 2.25.6.6v7.3l-.6.6h-1.9c-.28 0-.5.22-.5.5v2.15l-3.04-2.43c-.18-.14-.4-.22-.62-.22H2.85l-.6-.6v-7.3l.6-.6h10.3ZM13 1H3c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h4l3.75 3H12v-3h1c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2ZM6.27 7.73H4.86a.62.62 0 0 0-.62.62v.01c0 .342.278.62.62.62h1.41a.62.62 0 0 0 .62-.62v-.01a.62.62 0 0 0-.62-.62Zm2.24 0h2.63a.62.62 0 0 1 .62.62v.01a.62.62 0 0 1-.62.62H8.51a.62.62 0 0 1-.62-.62v-.01a.62.62 0 0 1 .62-.62Zm2.63-2.75H9.73a.62.62 0 0 0-.62.62v.01c0 .342.278.62.62.62h1.41a.62.62 0 0 0 .62-.62V5.6a.62.62 0 0 0-.62-.62Zm-6.28 0h2.63a.62.62 0 0 1 .62.62v.01a.62.62 0 0 1-.62.62H4.86a.62.62 0 0 1-.62-.62V5.6a.62.62 0 0 1 .62-.62Z" fill="context-fill"/>
-</svg>

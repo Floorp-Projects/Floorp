@@ -36,7 +36,7 @@ toolkit.jar:
   skin/classic/global/media/closedCaptionButton-cc-on.svg  (../../shared/media/closedCaptionButton-cc-on.svg)
   skin/classic/global/media/fullscreenEnterButton.svg      (../../shared/media/fullscreenEnterButton.svg)
   skin/classic/global/media/fullscreenExitButton.svg       (../../shared/media/fullscreenExitButton.svg)
-  skin/classic/global/media/closed-caption-settings-button.svg (../../shared/media/closed-caption-settings-button.svg)
+
 # Text recognition widget
 
   skin/classic/global/media/textrecognition.css            (../../shared/media/textrecognition.css)
