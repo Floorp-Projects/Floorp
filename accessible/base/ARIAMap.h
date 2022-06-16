@@ -198,6 +198,8 @@ struct nsRoleMapEntry {
  */
 namespace mozilla {
 namespace a11y {
+class AccAttributes;
+
 namespace aria {
 
 /**
@@ -288,11 +290,15 @@ class AttrIterator {
 
   bool Next();
 
-  void AttrName(nsAString& aAttrName) const;
-
   nsAtom* AttrName() const;
 
   void AttrValue(nsAString& aAttrValue) const;
+
+  /**
+   * Expose this ARIA attribute in a specified AccAttributes. The appropriate
+   * type will be used for the attribute; e.g. an atom for a token value.
+   */
+  bool ExposeAttr(AccAttributes* aTargetAttrs) const;
 
  private:
   AttrIterator() = delete;
@@ -303,6 +309,7 @@ class AttrIterator {
   uint32_t mAttrIdx;
   uint32_t mAttrCount;
   RefPtr<nsAtom> mAttrAtom;
+  uint8_t mAttrCharacteristics;
 };
 
 }  // namespace aria
