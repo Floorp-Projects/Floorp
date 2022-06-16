@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
+  // eslint-disable-next-line mozilla/reject-globalThis-modification
   lazy.addDebuggerToGlobal(globalThis);
   return new Debugger();
 });
