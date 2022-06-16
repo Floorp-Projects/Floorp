@@ -169,6 +169,7 @@ class JSJitFrameIter {
   bool isBaselineStub() const { return type_ == FrameType::BaselineStub; }
   bool isRectifier() const { return type_ == FrameType::Rectifier; }
   bool isBareExit() const;
+  bool isUnwoundJitExit() const;
   template <typename T>
   bool isExitFrameLayout() const;
 
