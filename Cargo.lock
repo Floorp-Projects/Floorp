@@ -385,7 +385,7 @@ dependencies = [
  "bindgen 0.59.2",
  "cranelift-codegen",
  "cranelift-wasm",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "log",
  "mozbuild",
  "smallvec",
@@ -2054,7 +2054,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "lazy_static",
  "log",
 ]
@@ -3932,7 +3932,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "lazy_static",
  "libloading 0.5.2",
  "log",
@@ -4924,7 +4924,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "jsparagus",
  "log",
 ]
