@@ -2247,9 +2247,17 @@
   value: false
   mirror: always
 
+# Skips checking permission and user activation when accessing the clipboard.
 # Should only be enabled in tests.
 # Access with Clipboard::IsTestingPrefEnabled().
 - name: dom.events.testing.asyncClipboard
+  type: bool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
+# Control whether `navigator.clipboard.readText()` is exposed to content.
+- name: dom.events.asyncClipboard.readText
   type: bool
   value: false
   mirror: always
