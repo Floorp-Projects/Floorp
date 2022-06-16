@@ -58,7 +58,7 @@ function* do_run_test() {
   setCookies("tasty.horse.radish", 50, futureExpiry);
   Assert.equal(countCookies("horse.radish", "horse.radish"), 50);
 
-  for (let cookie of Services.cookiemgr.cookies) {
+  for (let cookie of Services.cookies.cookies) {
     if (cookie.host == "horse.radish") {
       do_throw("cookies not evicted by lastAccessed order");
     }
@@ -67,7 +67,7 @@ function* do_run_test() {
   // Test that expired cookies for a domain are evicted before live ones.
   let shortExpiry = Math.floor(Date.now() / 1000 + 2);
   setCookies("captchart.com", 49, futureExpiry);
-  Services.cookiemgr.add(
+  Services.cookies.add(
     "captchart.com",
     "",
     "test100",
@@ -84,7 +84,7 @@ function* do_run_test() {
   yield;
 
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
-  Services.cookiemgr.add(
+  Services.cookies.add(
     "captchart.com",
     "",
     "test200",
@@ -99,10 +99,7 @@ function* do_run_test() {
   );
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
 
-  for (let cookie of Services.cookiemgr.getCookiesFromHost(
-    "captchart.com",
-    {}
-  )) {
+  for (let cookie of Services.cookies.getCookiesFromHost("captchart.com", {})) {
     Assert.ok(cookie.expiry == futureExpiry);
   }
 
@@ -112,7 +109,7 @@ function* do_run_test() {
 // set 'aNumber' cookies with host 'aHost', with distinct names.
 function setCookies(aHost, aNumber, aExpiry) {
   for (let i = 0; i < aNumber; ++i) {
-    Services.cookiemgr.add(
+    Services.cookies.add(
       aHost,
       "",
       "test" + i,
@@ -138,7 +135,7 @@ function countCookies(aBaseDomain, aHost) {
   // count how many cookies are within domain 'aBaseDomain' using the cookies
   // array.
   let cookies = [];
-  for (let cookie of Services.cookiemgr.cookies) {
+  for (let cookie of Services.cookies.cookies) {
     if (
       cookie.host.length >= aBaseDomain.length &&
       cookie.host.slice(cookie.host.length - aBaseDomain.length) == aBaseDomain
@@ -150,12 +147,12 @@ function countCookies(aBaseDomain, aHost) {
   // confirm the count using countCookiesFromHost and getCookiesFromHost.
   let result = cookies.length;
   Assert.equal(
-    Services.cookiemgr.countCookiesFromHost(aBaseDomain),
+    Services.cookies.countCookiesFromHost(aBaseDomain),
     cookies.length
   );
-  Assert.equal(Services.cookiemgr.countCookiesFromHost(aHost), cookies.length);
+  Assert.equal(Services.cookies.countCookiesFromHost(aHost), cookies.length);
 
-  for (let cookie of Services.cookiemgr.getCookiesFromHost(aHost, {})) {
+  for (let cookie of Services.cookies.getCookiesFromHost(aHost, {})) {
     if (
       cookie.host.length >= aBaseDomain.length &&
       cookie.host.slice(cookie.host.length - aBaseDomain.length) == aBaseDomain

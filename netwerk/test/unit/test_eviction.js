@@ -66,7 +66,7 @@ function* do_run_test() {
   // we test the following cases of eviction:
   // 1) excess and age are satisfied, but only some of the excess are old enough
   // to be purged.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   if (!set_cookies(0, 5, expiry)) {
     repeat_test();
     return;
@@ -88,7 +88,7 @@ function* do_run_test() {
 
   // 2) excess and age are satisfied, and all of the excess are old enough
   // to be purged.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   if (!set_cookies(0, 10, expiry)) {
     repeat_test();
     return;
@@ -107,7 +107,7 @@ function* do_run_test() {
 
   // 3) excess and age are satisfied, and more than the excess are old enough
   // to be purged.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   if (!set_cookies(0, 50, expiry)) {
     repeat_test();
     return;
@@ -125,7 +125,7 @@ function* do_run_test() {
   Assert.ok(check_remaining_cookies(111, 50, 101));
 
   // 4) excess but not age are satisfied.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   if (!set_cookies(0, 120, expiry)) {
     repeat_test();
     return;
@@ -137,7 +137,7 @@ function* do_run_test() {
   Assert.ok(check_remaining_cookies(120, 0, 120));
 
   // 5) age but not excess are satisfied.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   if (!set_cookies(0, 20, expiry)) {
     repeat_test();
     return;
@@ -156,7 +156,7 @@ function* do_run_test() {
 
   // 6) Excess and age are satisfied, but the cookie limit can be satisfied by
   // purging expired cookies.
-  Services.cookiemgr.removeAll();
+  Services.cookies.removeAll();
   let shortExpiry = Math.floor(Date.now() / 1000) + gShortExpiry;
   if (!set_cookies(0, 20, shortExpiry)) {
     repeat_test();
@@ -191,7 +191,7 @@ function set_cookies(begin, end, expiry) {
   let beginTime;
   for (let i = begin; i < end; ++i) {
     let host = "eviction." + i + ".tests";
-    Services.cookiemgr.add(
+    Services.cookies.add(
       host,
       "",
       "test",
@@ -223,7 +223,7 @@ function set_cookies(begin, end, expiry) {
 
 function get_creationTime(i) {
   let host = "eviction." + i + ".tests";
-  let cookies = Services.cookiemgr.getCookiesFromHost(host, {});
+  let cookies = Services.cookies.getCookiesFromHost(host, {});
   Assert.ok(cookies.length);
   let cookie = cookies[0];
   return cookie.creationTime;
@@ -236,7 +236,7 @@ function get_creationTime(i) {
 // + 10% are exceeded.
 function check_remaining_cookies(aNumberTotal, aNumberOld, aNumberToExpect) {
   let i = 0;
-  for (let cookie of Services.cookiemgr.cookies) {
+  for (let cookie of Services.cookies.cookies) {
     ++i;
 
     if (aNumberTotal != aNumberToExpect) {
