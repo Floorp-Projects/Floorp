@@ -326,7 +326,7 @@ var TelemetryEnvironmentTesting = {
 
       let win32kLockdownState =
         data.settings.sandbox.contentWin32kLockdownState;
-      lazy.Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 15);
+      lazy.Assert.ok(win32kLockdownState >= 1 && win32kLockdownState <= 17);
     }
 
     // Check "defaultSearchEngine" separately, as it can either be undefined or string.

@@ -97,6 +97,9 @@ mio = "=0.8.0"
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
+[target.'cfg(target_os = "windows")'.dependencies]
+detect_win32k_conflicts = { path = "../../../xre/detect_win32k_conflicts" }
+
 [features]
 default = []
 cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server", "audioipc2-client", "audioipc2-server"]

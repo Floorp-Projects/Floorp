@@ -89,6 +89,9 @@ extern crate rust_minidump_writer_linux;
 #[cfg(feature = "webmidi_midir_impl")]
 extern crate midir_impl;
 
+#[cfg(target_os = "windows")]
+extern crate detect_win32k_conflicts;
+
 extern crate origin_trials_ffi;
 
 extern crate log;
