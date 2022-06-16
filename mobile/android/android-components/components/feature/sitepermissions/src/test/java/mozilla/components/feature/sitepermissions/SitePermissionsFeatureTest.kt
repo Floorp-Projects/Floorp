@@ -50,6 +50,7 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
+import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
@@ -963,7 +964,7 @@ class SitePermissionsFeatureTest {
 
         // then
         verify(sitePermissionFeature).createContentCrossOriginStorageAccessPermissionPrompt(
-            testContext, host, permissionRequest, false, true
+            context = testContext, host, permissionRequest, false, true
         )
     }
 
@@ -978,14 +979,38 @@ class SitePermissionsFeatureTest {
         }
 
         // when
-        sitePermissionFeature.createContentCrossOriginStorageAccessPermissionPrompt(
+        val dialog = sitePermissionFeature.createContentCrossOriginStorageAccessPermissionPrompt(
             testContext, host, permissionRequest, false, true
         )
 
         // then
-        verify(sitePermissionFeature).createContentCrossOriginStorageAccessPermissionPrompt(
-            testContext, host, permissionRequest, false, true
+        assertEquals(SESSION_ID, dialog.sessionId)
+        assertEquals(
+            testContext.getString(
+                R.string.mozac_feature_sitepermissions_storage_access_title,
+                host.stripDefaultPort(),
+                selectedTab.content.url.stripDefaultPort()
+            ),
+            dialog.title
         )
+        assertEquals(R.drawable.mozac_ic_cookies, dialog.icon)
+        assertEquals(permissionRequest.id, dialog.permissionRequestId)
+        assertEquals(sitePermissionFeature, dialog.feature)
+        assertEquals(false, dialog.shouldShowDoNotAskAgainCheckBox)
+        assertEquals(true, dialog.shouldPreselectDoNotAskAgainCheckBox)
+        assertEquals(false, dialog.isNotificationRequest)
+        assertEquals(
+            testContext.getString(
+                R.string.mozac_feature_sitepermissions_storage_access_message,
+                host.stripDefaultPort()
+            ),
+            dialog.message
+        )
+        assertEquals(
+            testContext.getString(R.string.mozac_feature_sitepermissions_storage_access_not_allow),
+            dialog.negativeButtonText
+        )
+        assertEquals(true, dialog.shouldShowLearnMoreLink)
     }
 
     @Test

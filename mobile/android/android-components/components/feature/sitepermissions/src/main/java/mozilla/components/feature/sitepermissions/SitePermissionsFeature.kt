@@ -864,12 +864,14 @@ class SitePermissionsFeature(
             R.string.mozac_feature_sitepermissions_storage_access_message,
             host.stripDefaultPort()
         )
+        val negativeButtonText = context.getString(R.string.mozac_feature_sitepermissions_storage_access_not_allow)
 
         return SitePermissionsDialogFragment.newInstance(
             sessionId = currentSession.id,
             title = title,
             titleIcon = R.drawable.mozac_ic_cookies,
             message = message,
+            negativeButtonText = negativeButtonText,
             permissionRequestId = permissionRequest.id,
             feature = this,
             shouldShowDoNotAskAgainCheckBox = showDoNotAskAgainCheckBox,

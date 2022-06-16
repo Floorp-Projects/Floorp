@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **site-permission-feature**
+  * 🆕 [issue #12338](https://github.com/mozilla-mobile/android-components/issues/12338) - Add support for setting a custom text for the negative button of the site permission prompts. Use "Block" for the storage access prompt.
+
 * **feature-recentlyclosed**
   * 🚒 Bug fixed [issue #12310](https://github.com/mozilla-mobile/android-components/issues/12310) - Catch all database exceptions thrown when querying recently closed tabs and clean the storage for corrupted data.
 
