@@ -218,33 +218,26 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
   uint32_t itemCount = 0;
   switch (aContainer->Role()) {
     case roles::TABLE:
-      if (LocalAccessible* localContainer = aContainer->AsLocal()) {
-        if (nsCoreUtils::GetUIntAttr(localContainer->GetContent(),
-                                     nsGkAtoms::aria_rowcount,
-                                     (int32_t*)&itemCount)) {
-          break;
+      if (auto val = aContainer->GetIntARIAAttr(nsGkAtoms::aria_rowcount)) {
+        if (*val >= 0) {
+          return *val;
         }
       }
-
       if (TableAccessibleBase* tableAcc = aContainer->AsTableBase()) {
         return tableAcc->RowCount();
       }
       break;
     case roles::ROW:
       if (Accessible* table = nsAccUtils::TableFor(aContainer)) {
-        if (LocalAccessible* localTable = table->AsLocal()) {
-          if (nsCoreUtils::GetUIntAttr(localTable->GetContent(),
-                                       nsGkAtoms::aria_colcount,
-                                       (int32_t*)&itemCount)) {
-            break;
+        if (auto val = table->GetIntARIAAttr(nsGkAtoms::aria_colcount)) {
+          if (*val >= 0) {
+            return *val;
           }
         }
-
         if (TableAccessibleBase* tableAcc = table->AsTableBase()) {
           return tableAcc->ColCount();
         }
       }
-
       break;
     case roles::OUTLINE:
     case roles::LIST:
