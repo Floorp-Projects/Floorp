@@ -41,8 +41,8 @@ euclid = "0.22"
 fxhash = "0.2"
 html5ever = {version = "0.24", optional = true}
 indexmap = {version = "1.0", features = ["std"]}
-itertools = "0.8"
-itoa = "0.4"
+itertools = "0.10"
+itoa = "1.0"
 lazy_static = "1"
 log = "0.4"
 malloc_size_of = { path = "../malloc_size_of" }
@@ -85,5 +85,5 @@ log = { version = "0.4", features = ["std"] }
 bindgen = {version = "0.59", optional = true, default-features = false}
 regex = {version = "1.0", optional = true, default-features = false, features = ["perf", "std"]}
 walkdir = "2.1.4"
-toml = {version = "0.4.5", optional = true, default-features = false}
+toml = {version = "0.5", optional = true, default-features = false}
 mozbuild = {version = "0.1", optional = true}
