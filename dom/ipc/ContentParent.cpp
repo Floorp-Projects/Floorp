@@ -1766,13 +1766,15 @@ void ContentParent::MaybeAsyncSendShutDownMessage() {
       &ContentParent::ShutDownProcess, SEND_SHUTDOWN_MESSAGE));
 }
 
-void LogShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
-                            const char* aFile, int32_t aLine) {
+void MaybeLogBlockShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
+                                      const char* aFile, int32_t aLine) {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  nsAutoCString logmsg;
-  logmsg.AppendPrintf("ContentParent: id=%p | BlockShutdown: ", aSelf);
-  logmsg.Append(aMsg);
-  NS_DebugBreak(NS_DEBUG_WARNING, logmsg.get(), nullptr, aFile, aLine);
+  if (aSelf->IsBlockingShutdown()) {
+    nsAutoCString logmsg;
+    logmsg.AppendPrintf("ContentParent: id=%p - ", aSelf);
+    logmsg.Append(aMsg);
+    NS_DebugBreak(NS_DEBUG_WARNING, logmsg.get(), nullptr, aFile, aLine);
+  }
 #else
   Unused << aSelf;
   Unused << aMsg;
@@ -1801,24 +1803,25 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
         Unused << SendShutdownConfirmedHP();
         // Send the definite message with normal priority.
         if (SendShutdown()) {
-          LogShutdownDiagnostics(this,
-                                 "ShutDownProcess: Sent shutdown message.",
-                                 __FILE__, __LINE__);
+          MaybeLogBlockShutdownDiagnostics(
+              this, "ShutDownProcess: Sent shutdown message.", __FILE__,
+              __LINE__);
           mShutdownPending = true;
           // Start the force-kill timer if we haven't already.
           StartForceKillTimer();
         } else {
-          LogShutdownDiagnostics(
-              this, "ShutDownProcess: >>> Send shutdown message failed! <<<",
+          MaybeLogBlockShutdownDiagnostics(
+              this, "ShutDownProcess: !!! Send shutdown message failed! !!!",
               __FILE__, __LINE__);
         }
       } else {
-        LogShutdownDiagnostics(this, "ShutDownProcess: >>> !CanSend <<<",
-                               __FILE__, __LINE__);
+        MaybeLogBlockShutdownDiagnostics(
+            this, "ShutDownProcess: !!! !CanSend !!!", __FILE__, __LINE__);
       }
     } else {
-      LogShutdownDiagnostics(this, "ShutDownProcess: Shutdown already pending.",
-                             __FILE__, __LINE__);
+      MaybeLogBlockShutdownDiagnostics(
+          this, "ShutDownProcess: Shutdown already pending.", __FILE__,
+          __LINE__);
     }
     // If call was not successful, the channel must have been broken
     // somehow, and we will clean up the error in ActorDestroy.
@@ -1836,15 +1839,12 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
 
   if (aMethod == CLOSE_CHANNEL) {
     if (!mCalledClose) {
-      LogShutdownDiagnostics(this, "ShutDownProcess: Closing channel.",
-                             __FILE__, __LINE__);
+      MaybeLogBlockShutdownDiagnostics(
+          this, "ShutDownProcess: Closing channel.", __FILE__, __LINE__);
       // Close() can only be called once: It kicks off the destruction
       // sequence.
       mCalledClose = true;
       Close();
-    } else {
-      LogShutdownDiagnostics(this, "ShutDownProcess: Close already called.",
-                             __FILE__, __LINE__);
     }
   }
 
@@ -1860,6 +1860,12 @@ mozilla::ipc::IPCResult ContentParent::RecvFinishShutdown() {
   // SEND_SHUTDOWN_MESSAGE. To actually close the channel, we call
   // ShutDownProcess again with CLOSE_CHANNEL.
   MOZ_ASSERT(mShutdownPending);
+  if (mCalledClose) {
+    MaybeLogBlockShutdownDiagnostics(
+        this, "RecvFinishShutdown: Channel already closed.", __FILE__,
+        __LINE__);
+  }
+
   ShutDownProcess(CLOSE_CHANNEL);
   return IPC_OK();
 }
@@ -2828,7 +2834,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mBlockShutdownCalled(false),
 #endif
       mHangMonitorActor(nullptr) {
@@ -3587,7 +3593,7 @@ NS_INTERFACE_MAP_END
 // Async shutdown blocker
 NS_IMETHODIMP
 ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // We register two shutdown blockers and both would call us, but
   // if things go well we will unregister both as (delayed) reaction
   // to the first call we get and thus never receive a second call.
@@ -3597,7 +3603,8 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
 #endif
 
   if (CanSend()) {
-    LogShutdownDiagnostics(this, "CanSend.", __FILE__, __LINE__);
+    MaybeLogBlockShutdownDiagnostics(this, "BlockShutdown: CanSend.", __FILE__,
+                                     __LINE__);
 
     // Make sure that our process will get scheduled.
     ProcessPriorityManager::SetProcessPriority(this,
@@ -3608,8 +3615,8 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
     // XXX: Check for successful dispatch, see bug 1765732
     ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
   } else if (IsLaunching()) {
-    LogShutdownDiagnostics(this, "!CanSend && IsLaunching.", __FILE__,
-                           __LINE__);
+    MaybeLogBlockShutdownDiagnostics(
+        this, "BlockShutdown: !CanSend && IsLaunching.", __FILE__, __LINE__);
 
     // If we get here while we are launching, we must wait for the child to
     // be able to react on our commands. Mark this process as dead. This
@@ -3619,12 +3626,13 @@ ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
   } else {
     MOZ_ASSERT(IsDead());
     if (!IsDead()) {
-      LogShutdownDiagnostics(this,
-                             ">>> !CanSend && !IsLaunching && !IsDead <<<",
-                             __FILE__, __LINE__);
+      MaybeLogBlockShutdownDiagnostics(
+          this, "BlockShutdown: !!! !CanSend && !IsLaunching && !IsDead !!!",
+          __FILE__, __LINE__);
     } else {
-      LogShutdownDiagnostics(this, "!CanSend && !IsLaunching && IsDead.",
-                             __FILE__, __LINE__);
+      MaybeLogBlockShutdownDiagnostics(
+          this, "BlockShutdown: !CanSend && !IsLaunching && IsDead.", __FILE__,
+          __LINE__);
     }
     // Nothing left we can do. We must assume that we race with an ongoing
     // process shutdown, such that we can expect our shutdown blockers to be
@@ -3696,6 +3704,12 @@ void ContentParent::AddShutdownBlockers() {
 void ContentParent::RemoveShutdownBlockers() {
   MOZ_ASSERT(sXPCOMShutdownClient);
   MOZ_ASSERT(sProfileBeforeChangeClient);
+
+  MaybeLogBlockShutdownDiagnostics(this, "RemoveShutdownBlockers", __FILE__,
+                                   __LINE__);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  mBlockShutdownCalled = false;
+#endif
 
   if (sXPCOMShutdownClient) {
     Unused << sXPCOMShutdownClient->RemoveBlocker(this);
