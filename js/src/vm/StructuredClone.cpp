@@ -32,6 +32,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/ScopeExit.h"
 
@@ -56,6 +57,7 @@
 #include "js/SharedArrayBuffer.h"   // JS::IsSharedArrayBufferObject
 #include "js/Wrapper.h"
 #include "vm/BigIntType.h"
+#include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
@@ -65,6 +67,8 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmJS.h"
 
+#include "vm/Compartment-inl.h"
+#include "vm/ErrorObject-inl.h"
 #include "vm/InlineCharBuffer-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -78,6 +82,7 @@ using JS::RegExpFlags;
 using JS::RootedValueVector;
 using mozilla::AssertedCast;
 using mozilla::BitwiseCast;
+using mozilla::Maybe;
 using mozilla::NativeEndian;
 using mozilla::NumbersAreIdentical;
 using mozilla::RangedPtr;
@@ -134,6 +139,8 @@ enum StructuredDataType : uint32_t {
   SCTAG_ARRAY_BUFFER_OBJECT,
   SCTAG_TYPED_ARRAY_OBJECT,
   SCTAG_DATA_VIEW_OBJECT,
+
+  SCTAG_ERROR_OBJECT,
 
   SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
   SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -436,6 +443,8 @@ struct JSStructuredCloneReader {
   bool readHeader();
   bool readTransferMap();
 
+  [[nodiscard]] bool readUint32(uint32_t* num);
+
   template <typename CharT>
   JSString* readStringImpl(uint32_t nchars, gc::InitialHeap heap);
   JSString* readString(uint32_t data, gc::InitialHeap heap = gc::DefaultHeap);
@@ -444,15 +453,35 @@ struct JSStructuredCloneReader {
 
   [[nodiscard]] bool readTypedArray(uint32_t arrayType, uint64_t nelems,
                                     MutableHandleValue vp, bool v1Read = false);
+
   [[nodiscard]] bool readDataView(uint64_t byteLength, MutableHandleValue vp);
+
   [[nodiscard]] bool readArrayBuffer(StructuredDataType type, uint32_t data,
                                      MutableHandleValue vp);
-  [[nodiscard]] bool readSharedArrayBuffer(MutableHandleValue vp);
-  [[nodiscard]] bool readSharedWasmMemory(uint32_t nbytes,
-                                          MutableHandleValue vp);
   [[nodiscard]] bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
                                        MutableHandleValue vp);
-  JSObject* readSavedFrame(uint32_t principalsTag);
+
+  [[nodiscard]] bool readSharedArrayBuffer(MutableHandleValue vp);
+
+  [[nodiscard]] bool readSharedWasmMemory(uint32_t nbytes,
+                                          MutableHandleValue vp);
+
+  // A serialized SavedFrame contains primitive values in a header followed by
+  // an optional parent frame that is read recursively.
+  [[nodiscard]] JSObject* readSavedFrameHeader(uint32_t principalsTag);
+  [[nodiscard]] bool readSavedFrameFields(Handle<SavedFrame*> frameObj,
+                                          HandleValue parent, bool* state);
+
+  // A serialized Error contains primitive values in a header followed by
+  // 'cause', 'errors', and 'stack' fields that are read recursively.
+  [[nodiscard]] JSObject* readErrorHeader(uint32_t type);
+  [[nodiscard]] bool readErrorFields(Handle<ErrorObject*> errorObj,
+                                     HandleValue cause, bool* state);
+
+  [[nodiscard]] bool readMapField(Handle<MapObject*> mapObj, HandleValue key);
+
+  [[nodiscard]] bool readObjectField(HandleObject obj, HandleValue key);
+
   [[nodiscard]] bool startRead(MutableHandleValue vp,
                                gc::InitialHeap strHeap = gc::DefaultHeap);
 
@@ -575,6 +604,7 @@ struct JSStructuredCloneWriter {
   bool traverseMap(HandleObject obj);
   bool traverseSet(HandleObject obj);
   bool traverseSavedFrame(HandleObject obj);
+  bool traverseError(HandleObject obj);
 
   template <typename... Args>
   bool reportDataCloneError(uint32_t errorId, Args&&... aArgs);
@@ -609,6 +639,7 @@ struct JSStructuredCloneWriter {
   // For Map: Key followed by value
   // For Set: Key
   // For SavedFrame: parent SavedFrame
+  // For Error: cause, errors, stack
   RootedValueVector otherEntries;
 
   // The "memory" list described in the HTML5 internal structured cloning
@@ -1611,9 +1642,9 @@ bool JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls) {
 //     <Map tag>
 //     <key1 class tag>
 //     <value1 class tag>
-//     ...key1 data...
+//     ...key1 fields...
 //     <end-of-children marker for key1>
-//     ...value1 data...
+//     ...value1 fields...
 //     <end-of-children marker for value1>
 //     <end-of-children marker for Map>
 //
@@ -1778,6 +1809,163 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
   return true;
 }
 
+// https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
+// 2.7.3 StructuredSerializeInternal ( value, forStorage [ , memory ] )
+//
+// Step 17. Otherwise, if value has an [[ErrorData]] internal slot and
+//          value is not a platform object, then:
+//
+// Note: This contains custom extensions for handling non-standard properties.
+bool JSStructuredCloneWriter::traverseError(HandleObject obj) {
+  JSContext* cx = context();
+
+  // 1. Let name be ? Get(value, "name").
+  RootedValue name(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().name, &name)) {
+    return false;
+  }
+
+  // 2. If name is not one of "Error", "EvalError", "RangeError",
+  // "ReferenceError", "SyntaxError", "TypeError", or "URIError",
+  // (not yet specified: or "AggregateError")
+  // then set name to "Error".
+  JSExnType type = JSEXN_ERR;
+  if (name.isString()) {
+    JSLinearString* linear = name.toString()->ensureLinear(cx);
+    if (!linear) {
+      return false;
+    }
+
+    if (EqualStrings(linear, cx->names().Error)) {
+      type = JSEXN_ERR;
+    } else if (EqualStrings(linear, cx->names().EvalError)) {
+      type = JSEXN_EVALERR;
+    } else if (EqualStrings(linear, cx->names().RangeError)) {
+      type = JSEXN_RANGEERR;
+    } else if (EqualStrings(linear, cx->names().ReferenceError)) {
+      type = JSEXN_REFERENCEERR;
+    } else if (EqualStrings(linear, cx->names().SyntaxError)) {
+      type = JSEXN_SYNTAXERR;
+    } else if (EqualStrings(linear, cx->names().TypeError)) {
+      type = JSEXN_TYPEERR;
+    } else if (EqualStrings(linear, cx->names().URIError)) {
+      type = JSEXN_URIERR;
+    } else if (EqualStrings(linear, cx->names().AggregateError)) {
+      type = JSEXN_AGGREGATEERR;
+    }
+  }
+
+  // 3. Let valueMessageDesc be ? value.[[GetOwnProperty]]("message").
+  RootedId messageId(cx, NameToId(cx->names().message));
+  Rooted<Maybe<PropertyDescriptor>> messageDesc(cx);
+  if (!GetOwnPropertyDescriptor(cx, obj, messageId, &messageDesc)) {
+    return false;
+  }
+
+  // 4. Let message be undefined if IsDataDescriptor(valueMessageDesc) is false,
+  //    and ? ToString(valueMessageDesc.[[Value]]) otherwise.
+  RootedString message(cx);
+  if (messageDesc.isSome() && messageDesc->isDataDescriptor()) {
+    RootedValue messageVal(cx, messageDesc->value());
+    message = ToString<CanGC>(cx, messageVal);
+    if (!message) {
+      return false;
+    }
+  }
+
+  // 5. Set serialized to { [[Type]]: "Error", [[Name]]: name, [[Message]]:
+  // message }.
+
+  if (!objs.append(ObjectValue(*obj))) {
+    return false;
+  }
+
+  Rooted<ErrorObject*> unwrapped(cx, obj->maybeUnwrapAs<ErrorObject>());
+  MOZ_ASSERT(unwrapped);
+
+  // Non-standard: Serialize |stack|.
+  // The Error stack property is saved as SavedFrames, which
+  // have an associated principal. This principal can't be cloned
+  // in certain cases.
+  RootedValue stack(cx, NullValue());
+  if (cloneDataPolicy.areErrorStackFramesAllowed()) {
+    RootedObject stackObj(cx, unwrapped->stack());
+    if (stackObj && stackObj->canUnwrapAs<SavedFrame>()) {
+      stack.setObject(*stackObj);
+      if (!cx->compartment()->wrap(cx, &stack)) {
+        return false;
+      }
+    }
+  }
+  if (!otherEntries.append(stack)) {
+    return false;
+  }
+
+  // Serialize |errors|
+  if (type == JSEXN_AGGREGATEERR) {
+    RootedValue errors(cx);
+    if (!GetProperty(cx, obj, obj, cx->names().errors, &errors)) {
+      return false;
+    }
+    if (!otherEntries.append(errors)) {
+      return false;
+    }
+  } else {
+    if (!otherEntries.append(NullValue())) {
+      return false;
+    }
+  }
+
+  // Non-standard: Serialize |cause|. Because this property
+  // might be missing we also write "hasCause" later.
+  Rooted<Maybe<Value>> cause(cx, unwrapped->getCause());
+  if (!cx->compartment()->wrap(cx, &cause)) {
+    return false;
+  }
+  if (!otherEntries.append(cause.get().valueOr(NullValue()))) {
+    return false;
+  }
+
+  // |cause| + |errors| + |stack|, pushed in reverse order
+  if (!counts.append(3)) {
+    return false;
+  }
+
+  checkStack();
+
+  if (!out.writePair(SCTAG_ERROR_OBJECT, type)) {
+    return false;
+  }
+
+  RootedValue val(cx, message ? StringValue(message) : NullValue());
+  if (!writePrimitive(val)) {
+    return false;
+  }
+
+  // hasCause
+  val = BooleanValue(cause.isSome());
+  if (!writePrimitive(val)) {
+    return false;
+  }
+
+  // Non-standard: Also serialize fileName, lineNumber and columnNumber.
+  {
+    JSAutoRealm ar(cx, unwrapped);
+    val = StringValue(unwrapped->fileName(cx));
+  }
+  if (!cx->compartment()->wrap(cx, &val) || !writePrimitive(val)) {
+    return false;
+  }
+
+  val = Int32Value(unwrapped->lineNumber());
+  if (!writePrimitive(val)) {
+    return false;
+  }
+
+  val = Int32Value(unwrapped->columnNumber());
+  return writePrimitive(val);
+}
+
 bool JSStructuredCloneWriter::writePrimitive(HandleValue v) {
   MOZ_ASSERT(v.isPrimitive());
   context()->check(v);
@@ -1884,6 +2072,8 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
       return traverseSet(obj);
     case ESClass::Map:
       return traverseMap(obj);
+    case ESClass::Error:
+      return traverseError(obj);
     case ESClass::BigInt: {
       RootedValue unboxed(context());
       if (!Unbox(context(), obj, &unboxed)) {
@@ -1895,7 +2085,6 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     case ESClass::MapIterator:
     case ESClass::SetIterator:
     case ESClass::Arguments:
-    case ESClass::Error:
     case ESClass::Function:
       break;
 
@@ -2136,6 +2325,10 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
   RootedValue val(context());
   RootedId id(context());
 
+  RootedValue cause(context());
+  RootedValue errors(context());
+  RootedValue stack(context());
+
   while (!counts.empty()) {
     obj = &objs.back().toObject();
     context()->check(obj);
@@ -2163,6 +2356,21 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
         checkStack();
 
         if (!startWrite(key)) {
+          return false;
+        }
+      } else if (cls == ESClass::Error) {
+        cause = otherEntries.popCopy();
+        checkStack();
+
+        counts.back()--;
+        errors = otherEntries.popCopy();
+        checkStack();
+
+        counts.back()--;
+        stack = otherEntries.popCopy();
+        checkStack();
+
+        if (!startWrite(cause) || !startWrite(errors) || !startWrite(stack)) {
           return false;
         }
       } else {
@@ -2228,6 +2436,20 @@ JSString* JSStructuredCloneReader::readString(uint32_t data,
   bool latin1 = data & (1 << 31);
   return latin1 ? readStringImpl<Latin1Char>(nchars, heap)
                 : readStringImpl<char16_t>(nchars, heap);
+}
+
+[[nodiscard]] bool JSStructuredCloneReader::readUint32(uint32_t* num) {
+  Rooted<Value> lineVal(context());
+  if (!startRead(&lineVal)) {
+    return false;
+  }
+  if (!lineVal.isInt32()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA, "integer required");
+    return false;
+  }
+  *num = uint32_t(lineVal.toInt32());
+  return true;
 }
 
 BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
@@ -2836,7 +3058,17 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
     }
 
     case SCTAG_SAVED_FRAME_OBJECT: {
-      auto obj = readSavedFrame(data);
+      auto* obj = readSavedFrameHeader(data);
+      if (!obj || !objs.append(ObjectValue(*obj)) ||
+          !objState.append(std::make_pair(obj, false))) {
+        return false;
+      }
+      vp.setObject(*obj);
+      break;
+    }
+
+    case SCTAG_ERROR_OBJECT: {
+      auto* obj = readErrorHeader(data);
       if (!obj || !objs.append(ObjectValue(*obj)) ||
           !objState.append(std::make_pair(obj, false))) {
         return false;
@@ -3079,7 +3311,8 @@ bool JSStructuredCloneReader::readTransferMap() {
   return true;
 }
 
-JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
+JSObject* JSStructuredCloneReader::readSavedFrameHeader(
+    uint32_t principalsTag) {
   Rooted<SavedFrame*> savedFrame(context(), SavedFrame::create(context()));
   if (!savedFrame) {
     return nullptr;
@@ -3150,16 +3383,14 @@ JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
 
   RootedValue lineVal(context());
   uint32_t line;
-  if (!startRead(&lineVal) || !lineVal.isNumber() ||
-      !ToUint32(context(), lineVal, &line)) {
+  if (!readUint32(&line)) {
     return nullptr;
   }
   savedFrame->initLine(line);
 
   RootedValue columnVal(context());
   uint32_t column;
-  if (!startRead(&columnVal) || !columnVal.isNumber() ||
-      !ToUint32(context(), columnVal, &column)) {
+  if (!readUint32(&column)) {
     return nullptr;
   }
   savedFrame->initColumn(column);
@@ -3208,6 +3439,216 @@ JSObject* JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag) {
   savedFrame->initAsyncCause(atomCause);
 
   return savedFrame;
+}
+
+// SavedFrame object: there is one child value, the parent SavedFrame,
+// which is either null or another SavedFrame object.
+bool JSStructuredCloneReader::readSavedFrameFields(Handle<SavedFrame*> frameObj,
+                                                   HandleValue parent,
+                                                   bool* state) {
+  if (*state) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "multiple SavedFrame parents");
+    return false;
+  }
+
+  SavedFrame* parentFrame;
+  if (parent.isNull()) {
+    parentFrame = nullptr;
+  } else if (parent.isObject() && parent.toObject().is<SavedFrame>()) {
+    parentFrame = &parent.toObject().as<SavedFrame>();
+  } else {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid SavedFrame parent");
+    return false;
+  }
+
+  frameObj->initParent(parentFrame);
+  *state = true;
+  return true;
+}
+
+JSObject* JSStructuredCloneReader::readErrorHeader(uint32_t type) {
+  JSContext* cx = context();
+
+  switch (type) {
+    case JSEXN_ERR:
+    case JSEXN_EVALERR:
+    case JSEXN_RANGEERR:
+    case JSEXN_REFERENCEERR:
+    case JSEXN_SYNTAXERR:
+    case JSEXN_TYPEERR:
+    case JSEXN_URIERR:
+    case JSEXN_AGGREGATEERR:
+      break;
+    default:
+      JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                JSMSG_SC_BAD_SERIALIZED_DATA,
+                                "invalid error type");
+      return nullptr;
+  }
+
+  RootedString message(cx);
+  {
+    RootedValue messageVal(cx);
+    if (!startRead(&messageVal)) {
+      return nullptr;
+    }
+    if (messageVal.isString()) {
+      message = messageVal.toString();
+    } else if (!messageVal.isNull()) {
+      JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                JSMSG_SC_BAD_SERIALIZED_DATA,
+                                "invalid 'message' field for Error object");
+      return nullptr;
+    }
+  }
+
+  // We have to set |cause| to something if it exists, otherwise the shape
+  // would be wrong. The actual value will be overwritten later.
+  RootedValue val(cx);
+  if (!startRead(&val)) {
+    return nullptr;
+  }
+  bool hasCause = ToBoolean(val);
+  Rooted<Maybe<Value>> cause(cx, mozilla::Nothing());
+  if (hasCause) {
+    cause = mozilla::Some(BooleanValue(true));
+  }
+
+  if (!startRead(&val)) {
+    return nullptr;
+  }
+  if (!val.isString()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid 'fileName' field for Error object");
+    return nullptr;
+  }
+  RootedString fileName(cx, val.toString());
+
+  uint32_t lineNumber, columnNumber;
+  if (!readUint32(&lineNumber) || !readUint32(&columnNumber)) {
+    return nullptr;
+  }
+
+  // The |cause| and |stack| slots of the objects might be overwritten later.
+  // For AggregateErrors the |errors| property will be added.
+  RootedObject errorObj(
+      cx, ErrorObject::create(cx, static_cast<JSExnType>(type), nullptr,
+                              fileName, 0, lineNumber, columnNumber, nullptr,
+                              message, cause));
+  if (!errorObj) {
+    return nullptr;
+  }
+
+  return errorObj;
+}
+
+// Error objects have 3 fields, some or all of them null: cause,
+// errors, and stack.
+bool JSStructuredCloneReader::readErrorFields(Handle<ErrorObject*> errorObj,
+                                              HandleValue cause, bool* state) {
+  JSContext* cx = context();
+  if (*state) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "unexpected child value seen for Error object");
+    return false;
+  }
+
+  RootedValue errors(cx);
+  RootedValue stack(cx);
+  if (!startRead(&errors) || !startRead(&stack)) {
+    return false;
+  }
+
+  bool hasCause = errorObj->getCause().isSome();
+  if (hasCause) {
+    errorObj->setCauseSlot(cause);
+  } else if (!cause.isNull()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid 'cause' field for Error object");
+    return false;
+  }
+
+  if (errorObj->type() == JSEXN_AGGREGATEERR) {
+    if (!DefineDataProperty(context(), errorObj, cx->names().errors, errors,
+                            0)) {
+      return false;
+    }
+  } else if (!errors.isNull()) {
+    JS_ReportErrorNumberASCII(
+        cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+        "unexpected 'errors' field seen for non-AggregateError");
+    return false;
+  }
+
+  if (stack.isObject()) {
+    RootedObject stackObj(cx, &stack.toObject());
+    if (!stackObj->is<SavedFrame>()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SC_BAD_SERIALIZED_DATA,
+                                "invalid 'stack' field for Error object");
+      return false;
+    }
+    if (!cloneDataPolicy.areErrorStackFramesAllowed()) {
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+          "disallowed 'stack' field encountered for Error object");
+      return false;
+    }
+    errorObj->setStackSlot(stack);
+  } else if (!stack.isNull()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "invalid 'stack' field for Error object");
+    return false;
+  }
+
+  *state = true;
+  return true;
+}
+
+// Read a value and treat as a key,value pair.
+bool JSStructuredCloneReader::readMapField(Handle<MapObject*> mapObj,
+                                           HandleValue key) {
+  RootedValue val(context());
+  if (!startRead(&val)) {
+    return false;
+  }
+  return MapObject::set(context(), mapObj, key, val);
+}
+
+// Read a value and treat as a key,value pair. Interpret as a plain property
+// value.
+bool JSStructuredCloneReader::readObjectField(HandleObject obj,
+                                              HandleValue key) {
+  RootedValue val(context());
+  if (!startRead(&val)) {
+    return false;
+  }
+
+  if (!key.isString() && !key.isInt32()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "property key expected");
+    return false;
+  }
+
+  RootedId id(context());
+  if (!PrimitiveValueToId<CanGC>(context(), key, &id)) {
+    return false;
+  }
+
+  if (!DefineDataProperty(context(), obj, id, val)) {
+    return false;
+  }
+
+  return true;
 }
 
 // Perform the whole recursive reading procedure.
@@ -3278,7 +3719,7 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
     }
 
     if (key.isNull() && !(obj->is<MapObject>() || obj->is<SetObject>() ||
-                          obj->is<SavedFrame>())) {
+                          obj->is<SavedFrame>() || obj->is<ErrorObject>())) {
       // Backwards compatibility: Null formerly indicated the end of
       // object properties.
 
@@ -3289,73 +3730,39 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
       continue;
     }
 
-    // Set object: the values between obj header (from startRead()) and
-    // SCTAG_END_OF_KEYS are all interpreted as values to add to the set.
+    context()->check(key);
+
     if (obj->is<SetObject>()) {
+      // Set object: the values between obj header (from startRead()) and
+      // SCTAG_END_OF_KEYS are all interpreted as values to add to the set.
       if (!SetObject::add(context(), obj, key)) {
         return false;
       }
-      continue;
-    }
-
-    // SavedFrame object: there is one child value, the parent SavedFrame,
-    // which is either null or another SavedFrame object.
-    if (obj->is<SavedFrame>()) {
-      SavedFrame* parentFrame;
-      if (key.isNull()) {
-        parentFrame = nullptr;
-      } else if (key.isObject() && key.toObject().is<SavedFrame>()) {
-        parentFrame = &key.toObject().as<SavedFrame>();
-      } else {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                  JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "invalid SavedFrame parent");
+    } else if (obj->is<MapObject>()) {
+      Rooted<MapObject*> mapObj(context(), &obj->as<MapObject>());
+      if (!readMapField(mapObj, key)) {
         return false;
       }
-
+    } else if (obj->is<SavedFrame>()) {
+      Rooted<SavedFrame*> frameObj(context(), &obj->as<SavedFrame>());
       MOZ_ASSERT(objState[objStateIdx].first() == obj);
-      bool& state = objState[objStateIdx].second();
-      if (state == false) {
-        obj->as<SavedFrame>().initParent(parentFrame);
-        state = true;
-      } else {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                  JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "multiple SavedFrame parents");
+      bool state = objState[objStateIdx].second();
+      if (!readSavedFrameFields(frameObj, key, &state)) {
         return false;
       }
-      continue;
-    }
-
-    // Everything else uses a series of key,value,key,value,... Value
-    // objects.
-    RootedValue val(context());
-    if (!startRead(&val)) {
-      return false;
-    }
-
-    if (obj->is<MapObject>()) {
-      // For a Map, store those <key,value> pairs in the contained map
-      // data structure.
-      if (!MapObject::set(context(), obj, key, val)) {
+      objState[objStateIdx].second() = state;
+    } else if (obj->is<ErrorObject>()) {
+      Rooted<ErrorObject*> errorObj(context(), &obj->as<ErrorObject>());
+      MOZ_ASSERT(objState[objStateIdx].first() == obj);
+      bool state = objState[objStateIdx].second();
+      if (!readErrorFields(errorObj, key, &state)) {
         return false;
       }
+      objState[objStateIdx].second() = state;
     } else {
-      // For any other Object, interpret them as plain properties.
-      RootedId id(context());
-
-      if (!key.isString() && !key.isInt32()) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                  JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "property key expected");
-        return false;
-      }
-
-      if (!PrimitiveValueToId<CanGC>(context(), key, &id)) {
-        return false;
-      }
-
-      if (!DefineDataProperty(context(), obj, id, val)) {
+      // Everything else uses a series of key,value,key,value,... Value
+      // objects.
+      if (!readObjectField(obj, key)) {
         return false;
       }
     }
@@ -3369,8 +3776,8 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
 #ifndef FUZZING
   bool extraData;
   if (tailStartPos.isSome()) {
-    // in.tell() is the end of the main data. If "tail" data was consumed, then
-    // check whether there's any data between the main data and the
+    // in.tell() is the end of the main data. If "tail" data was consumed,
+    // then check whether there's any data between the main data and the
     // beginning of the tail, or after the last read point in the tail.
     extraData = (in.tell() != *tailStartPos || !tailEndPos->done());
   } else {

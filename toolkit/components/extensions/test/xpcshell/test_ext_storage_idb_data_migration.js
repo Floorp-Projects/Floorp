@@ -591,7 +591,7 @@ add_task(async function test_storage_local_data_migration_failure() {
   // (because it can't be cloned and it is going to raise a DataCloneError), which
   // will trigger a data migration failure that we expect to increment the related
   // telemetry histogram.
-  jsonFile.data.set("fake_invalid_key", new Error());
+  jsonFile.data.set("fake_invalid_key", function() {});
 
   async function background() {
     await browser.storage.local.set({

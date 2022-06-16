@@ -13,7 +13,6 @@ function check(v) {
 }
 
 // Unsupported object types.
-check(new Error("oops"));
 check(this);
 check(Math);
 check(function () {});
