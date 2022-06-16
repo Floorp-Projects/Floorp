@@ -1300,13 +1300,15 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec,
 }
 
 // After a first lookup attempt with TRR in mode 2, we may:
-// - If we are not in strict mode, retry with native.
-// - If we are in strict mode:
+// - If network.trr.retry_on_recoverable_errors is false, retry with native.
+// - If network.trr.retry_on_recoverable_errors is true:
 //   - Retry with native if the first attempt failed because we got NXDOMAIN, an
 //     unreachable address (TRR_DISABLED_FLAG), or we skipped TRR because
 //     Confirmation failed.
-//   - Trigger a "strict mode" Confirmation which will start a fresh
+//   - Trigger a "RetryTRR" Confirmation which will start a fresh
 //     connection for TRR, and then retry the lookup with TRR.
+//   - If the second attempt failed, fallback to native if
+//     network.trr.strict_native_fallback is false.
 // Returns true if we retried with either TRR or Native.
 bool nsHostResolver::MaybeRetryTRRLookup(
     AddrHostRecord* aAddrRec, nsresult aFirstAttemptStatus,
@@ -1318,7 +1320,7 @@ bool nsHostResolver::MaybeRetryTRRLookup(
   }
 
   MOZ_ASSERT(!aAddrRec->mResolving);
-  if (!StaticPrefs::network_trr_strict_native_fallback()) {
+  if (!StaticPrefs::network_trr_retry_on_recoverable_errors()) {
     LOG(("nsHostResolver::MaybeRetryTRRLookup retrying with native"));
     return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
   }
@@ -1336,6 +1338,13 @@ bool nsHostResolver::MaybeRetryTRRLookup(
   }
 
   if (aAddrRec->mTrrAttempts > 1) {
+    if (!StaticPrefs::network_trr_strict_native_fallback()) {
+      LOG(
+          ("nsHostResolver::MaybeRetryTRRLookup retry failed. Using "
+           "native."));
+      return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
+    }
+
     if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_TIMEOUT &&
         StaticPrefs::network_trr_strict_native_fallback_allow_timeouts()) {
       LOG(
@@ -1351,7 +1360,7 @@ bool nsHostResolver::MaybeRetryTRRLookup(
       ("nsHostResolver::MaybeRetryTRRLookup triggering Confirmation and "
        "retrying with TRR, skip reason was %d",
        static_cast<uint32_t>(aFirstAttemptSkipReason)));
-  TRRService::Get()->StrictModeConfirm();
+  TRRService::Get()->RetryTRRConfirm();
 
   {
     // Clear out the old query
