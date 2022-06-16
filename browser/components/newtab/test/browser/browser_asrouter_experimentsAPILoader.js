@@ -177,7 +177,6 @@ async function setup(experiment) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["app.shield.optoutstudies.enabled", true],
-      ["datareporting.healthreport.uploadEnabled", true],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
         `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","spotlight","infobar","aboutwelcome"],"updateCycleInMs":0}`,

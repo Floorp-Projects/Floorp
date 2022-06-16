@@ -978,24 +978,25 @@
                  class="learnMore" is="text-link"
                  data-l10n-id="addon-recommendations-link"/>
         </hbox>
-#ifdef MOZ_NORMANDY
-        <hbox align="center">
-         <checkbox id="optOutStudiesEnabled"
-                   class="tail-with-learn-more"
-                   data-l10n-id="collection-studies"/>
-         <label id="viewShieldStudies"
-                href="about:studies"
-                useoriginprincipal="true"
-                class="learnMore" is="text-link"
-                data-l10n-id="collection-studies-link"/>
-        </hbox>
-#endif
       </vbox>
     </description>
 #ifndef MOZ_TELEMETRY_REPORTING
   <description id="TelemetryDisabledDesc"
     class="indent tip-caption" control="telemetryGroup"
     data-l10n-id="collection-health-report-disabled"/>
+#endif
+
+#ifdef MOZ_NORMANDY
+    <hbox align="center">
+      <checkbox id="optOutStudiesEnabled"
+                class="tail-with-learn-more"
+                data-l10n-id="collection-studies"/>
+      <label id="viewShieldStudies"
+              href="about:studies"
+              useoriginprincipal="true"
+              class="learnMore" is="text-link"
+              data-l10n-id="collection-studies-link"/>
+    </hbox>
 #endif
 
 #ifdef MOZ_CRASHREPORTER
