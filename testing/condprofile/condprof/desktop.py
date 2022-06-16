@@ -34,9 +34,16 @@ class DesktopGeckodriver(Geckodriver):
             "--marionette-port",
             "2828",
         ]
-        return await subprocess_based_service(
-            pargs, f"http://localhost:{port}", self.log_file
-        )
+        try:
+            return await subprocess_based_service(
+                pargs, f"http://localhost:{port}", self.log_file
+            )
+        except ProcessLookupError as e:
+            return await subprocess_based_service(
+                pargs.extend(["--host", "127.0.0.1"]),
+                f"http://localhost:{port}",
+                self.log_file,
+            )
 
 
 @contextlib.contextmanager
