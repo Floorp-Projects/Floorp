@@ -243,6 +243,7 @@ class StaticComponents final {
                                    bool aInvalid = true);
 
   static already_AddRefed<nsIUTF8StringEnumerator> GetComponentJSMs();
+  static already_AddRefed<nsIUTF8StringEnumerator> GetComponentESModules();
 
   static Span<const JSServiceEntry> GetJSServices();
 
