@@ -6687,6 +6687,12 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
+  # Experimental support for Array.findLast/Array.findLastIndex in JavaScript.
+-   name: javascript.options.experimental.array_find_last
+    type: bool
+    value: false
+    mirror: always
+
 # Experimental support for class static blocks in JavaScript.
 -   name: javascript.options.experimental.class_static_blocks
     type: bool
