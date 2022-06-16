@@ -29,6 +29,8 @@ class ScaledFontWin : public ScaledFontBase {
 
   bool MayUseBitmaps() override { return true; }
 
+  bool UseSubpixelPosition() const override { return false; }
+
  protected:
   cairo_font_face_t* CreateCairoFontFace(
       cairo_font_options_t* aFontOptions) override;
