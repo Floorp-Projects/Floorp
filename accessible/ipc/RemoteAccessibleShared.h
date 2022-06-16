@@ -202,7 +202,7 @@ Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,
     LocalAccessible::EWhichChildAtPoint aWhichChild) override;
 LayoutDeviceIntRect Bounds() const override;
-nsIntRect BoundsInCSSPixels();
+virtual nsIntRect BoundsInCSSPixels() const override;
 
 void Language(nsString& aLocale);
 void DocType(nsString& aType);
