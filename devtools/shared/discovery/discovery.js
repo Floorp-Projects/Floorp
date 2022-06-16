@@ -46,16 +46,6 @@ const UPDATE_PORT = 50625;
 const ADDRESS = "224.0.0.115";
 const REPLY_TIMEOUT = 5000;
 
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "converter", () => {
-  const conv = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  conv.charset = "utf8";
-  return conv;
-});
-
 var logging = Services.prefs.getBoolPref("devtools.discovery.log");
 function log(msg) {
   if (logging) {
@@ -96,7 +86,7 @@ Transport.prototype = {
       log("Send to " + port + ":\n" + JSON.stringify(object, null, 2));
     }
     const message = JSON.stringify(object);
-    const rawMessage = converter.convertToByteArray(message);
+    const rawMessage = Uint8Array.from(message, x => x.charCodeAt(0));
     try {
       this.socket.send(ADDRESS, port, rawMessage, rawMessage.length);
     } catch (e) {

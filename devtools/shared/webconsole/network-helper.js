@@ -123,6 +123,9 @@ var NetworkHelper = {
    *          Converted text.
    */
   convertToUnicode: function(text, charset) {
+    // FIXME: We need to throw when text can't be converted e.g. the contents of
+    // an image. Until we have a way to do so with TextEncoder and TextDecoder
+    // we need to use nsIScriptableUnicodeConverter instead.
     const conv = Cc[
       "@mozilla.org/intl/scriptableunicodeconverter"
     ].createInstance(Ci.nsIScriptableUnicodeConverter);
