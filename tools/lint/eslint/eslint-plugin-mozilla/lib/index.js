@@ -73,6 +73,7 @@ module.exports = {
     "use-isInstance": require("./rules/use-isInstance"),
     "use-returnValue": require("../lib/rules/use-returnValue"),
     "use-services": require("../lib/rules/use-services"),
+    "valid-services": require("../lib/rules/valid-services"),
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level"),
   },
 };
