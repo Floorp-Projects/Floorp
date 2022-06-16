@@ -264,7 +264,6 @@ function removeSourcesAndActors(state, sources) {
     ...state,
     urls: { ...state.urls },
     plainUrls: { ...state.plainUrls },
-    sourcesWithUrls: [...state.sourcesWithUrls],
   };
 
   const newSourceMap = new Map(state.sources);
