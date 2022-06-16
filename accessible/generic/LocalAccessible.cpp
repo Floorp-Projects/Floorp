@@ -789,10 +789,6 @@ LayoutDeviceIntRect LocalAccessible::Bounds() const {
       BoundsInAppUnits(), mDoc->PresContext()->AppUnitsPerDevPixel());
 }
 
-nsIntRect LocalAccessible::BoundsInCSSPixels() const {
-  return BoundsInAppUnits().ToNearestPixels(AppUnitsPerCSSPixel());
-}
-
 void LocalAccessible::SetSelected(bool aSelect) {
   if (!HasOwnContent()) return;
 

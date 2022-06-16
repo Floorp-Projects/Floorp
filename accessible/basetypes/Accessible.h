@@ -198,6 +198,16 @@ class Accessible {
   virtual LayoutDeviceIntRect Bounds() const = 0;
 
   /**
+   * Return boundaries in screen coordinates in app units.
+   */
+  virtual nsRect BoundsInAppUnits() const = 0;
+
+  /**
+   * Return boundaries in screen coordinates in CSS pixels.
+   */
+  virtual nsIntRect BoundsInCSSPixels() const;
+
+  /**
    * Returns text of accessible if accessible has text role otherwise empty
    * string.
    *

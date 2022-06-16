@@ -457,7 +457,7 @@ void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
 }
 
 template <class Derived>
-nsRect RemoteAccessibleBase<Derived>::GetBoundsInAppUnits() const {
+nsRect RemoteAccessibleBase<Derived>::BoundsInAppUnits() const {
   dom::CanonicalBrowsingContext* cbc =
       static_cast<dom::BrowserParent*>(mDoc->Manager())
           ->GetBrowsingContext()

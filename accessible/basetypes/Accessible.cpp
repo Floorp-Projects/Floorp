@@ -97,6 +97,10 @@ bool Accessible::HasGenericType(AccGenericType aType) const {
          (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
+nsIntRect Accessible::BoundsInCSSPixels() const {
+  return BoundsInAppUnits().ToNearestPixels(AppUnitsPerCSSPixel());
+}
+
 LayoutDeviceIntSize Accessible::Size() const { return Bounds().Size(); }
 
 LayoutDeviceIntPoint Accessible::Position(uint32_t aCoordType) {
