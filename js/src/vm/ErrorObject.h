@@ -126,6 +126,17 @@ class ErrorObject : public NativeObject {
     return mozilla::Some(value);
   }
 
+  void setStackSlot(const Value& stack) {
+    MOZ_ASSERT(stack.isObjectOrNull());
+    setReservedSlot(STACK_SLOT, stack);
+  }
+
+  void setCauseSlot(const Value& cause) {
+    MOZ_ASSERT(!cause.isMagic());
+    MOZ_ASSERT(getCause().isSome());
+    setReservedSlot(CAUSE_SLOT, cause);
+  }
+
   // Getter and setter for the Error.prototype.stack accessor.
   static bool getStack(JSContext* cx, unsigned argc, Value* vp);
   static bool getStack_impl(JSContext* cx, const CallArgs& args);
