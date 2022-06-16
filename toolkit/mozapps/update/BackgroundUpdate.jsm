@@ -7,12 +7,15 @@
 
 var EXPORTED_SYMBOLS = ["BackgroundUpdate"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
+);
+const { BackgroundTasksManager } = ChromeUtils.import(
+  "resource://gre/modules/BackgroundTasksManager.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const lazy = {};
@@ -20,7 +23,6 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
-  BackgroundTasksManager: "resource://gre/modules/BackgroundTasksManager.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
@@ -641,7 +643,7 @@ BackgroundUpdate.REASON = {
  * more general errors reading from the default profile.
  */
 BackgroundUpdate.EXIT_CODE = {
-  ...lazy.BackgroundTasksManager.EXIT_CODE,
+  ...BackgroundTasksManager.EXIT_CODE,
   // We clone the other exit codes simply so we can use one object for all the codes.
   DEFAULT_PROFILE_DOES_NOT_EXIST: 11,
   DEFAULT_PROFILE_CANNOT_BE_LOCKED: 12,

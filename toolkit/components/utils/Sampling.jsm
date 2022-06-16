@@ -4,12 +4,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const lazy = {};
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["crypto"]);
-
 var EXPORTED_SYMBOLS = ["Sampling"];
 
 const hashBits = 48;
@@ -78,7 +72,7 @@ var Sampling = {
    * @promise A hash of `data`, truncated to the 12 most significant characters.
    */
   async truncatedHash(data) {
-    const hasher = lazy.crypto.subtle;
+    const hasher = crypto.subtle;
     const input = new TextEncoder("utf-8").encode(JSON.stringify(data));
     const hash = await hasher.digest("SHA-256", input);
     // truncate hash to 12 characters (2^48), because the full hash is larger

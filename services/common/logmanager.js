@@ -3,15 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict;";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+
 const lazy = {};
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -61,7 +62,7 @@ const PR_UINT32_MAX = 0xffffffff;
  * during logging. Instead, one can periodically consume the input stream and
  * e.g. write it to disk asynchronously.
  */
-class StorageStreamAppender extends lazy.Log.Appender {
+class StorageStreamAppender extends Log.Appender {
   constructor(formatter) {
     super(formatter);
     this._name = "StorageStreamAppender";
@@ -148,7 +149,7 @@ class FlushableStorageAppender extends StorageStreamAppender {
   }
 
   append(message) {
-    if (message.level >= lazy.Log.Level.Error) {
+    if (message.level >= Log.Level.Error) {
       this.sawError = true;
     }
     StorageStreamAppender.prototype.append.call(this, message);
@@ -251,9 +252,9 @@ LogManager.prototype = {
     this.logFilePrefix = logFilePrefix;
     if (!formatter) {
       // Create a formatter and various appenders to attach to the logs.
-      formatter = new lazy.Log.BasicFormatter();
-      consoleAppender = new lazy.Log.ConsoleAppender(formatter);
-      dumpAppender = new lazy.Log.DumpAppender(formatter);
+      formatter = new Log.BasicFormatter();
+      consoleAppender = new Log.ConsoleAppender(formatter);
+      dumpAppender = new Log.DumpAppender(formatter);
     }
 
     allBranches.add(this._prefs._branchStr);
@@ -266,7 +267,7 @@ LogManager.prototype = {
       findSmallest = false
     ) => {
       let observer = newVal => {
-        let level = lazy.Log.Level[newVal] || defaultLevel;
+        let level = Log.Level[newVal] || defaultLevel;
         if (findSmallest) {
           // As some of our appenders have global impact (ie, there is only one
           // place 'dump' goes to), we need to find the smallest value from all
@@ -275,7 +276,7 @@ LogManager.prototype = {
           // dump=Error, we need to keep dump=Debug so consumerA is respected.
           for (let branch of allBranches) {
             let lookPrefBranch = new Preferences(branch);
-            let lookVal = lazy.Log.Level[lookPrefBranch.get(prefName)];
+            let lookVal = Log.Level[lookPrefBranch.get(prefName)];
             if (lookVal && lookVal < level) {
               level = lookVal;
             }
@@ -293,13 +294,13 @@ LogManager.prototype = {
     this._observeConsolePref = setupAppender(
       consoleAppender,
       "log.appender.console",
-      lazy.Log.Level.Fatal,
+      Log.Level.Fatal,
       true
     );
     this._observeDumpPref = setupAppender(
       dumpAppender,
       "log.appender.dump",
-      lazy.Log.Level.Error,
+      Log.Level.Error,
       true
     );
 
@@ -310,18 +311,18 @@ LogManager.prototype = {
     this._observeStreamPref = setupAppender(
       fapp,
       "log.appender.file.level",
-      lazy.Log.Level.Debug
+      Log.Level.Debug
     );
 
     // now attach the appenders to all our logs.
     for (let logName of logNames) {
-      let log = lazy.Log.repository.getLogger(logName);
+      let log = Log.repository.getLogger(logName);
       for (let appender of [fapp, dumpAppender, consoleAppender]) {
         log.addAppender(appender);
       }
     }
     // and use the first specified log as a "root" for our log.
-    this._log = lazy.Log.repository.getLogger(logNames[0] + ".LogManager");
+    this._log = Log.repository.getLogger(logNames[0] + ".LogManager");
   },
 
   /**

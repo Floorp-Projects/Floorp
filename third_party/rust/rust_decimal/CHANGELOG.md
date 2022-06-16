@@ -1,5 +1,15 @@
 # Version History
 
+## 1.25.0
+
+### Added
+
+* Expands `rand` support to implement `SampleUniform` to allow for `rng.gen_range` calls ([#519](https://github.com/paupino/rust-decimal/pull/519))
+* Adds [`rkyv` framework](https://github.com/rkyv/rkyv) support for zero-cost (de)serialization ([#520](https://github.com/paupino/rust-decimal/pull/520))
+
+A big thank you to [@lukesneeringer](https://github.com/lukesneeringer) and [@dovahcrow](https://github.com/dovahcrow) for your help building
+features for this release.
+
 ## 1.24.0
 
 * Introduces new feature `rand` which allows for random number generation within `rust_decimal` ([#517](https://github.com/paupino/rust-decimal/pull/517)).

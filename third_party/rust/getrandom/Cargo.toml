@@ -12,17 +12,29 @@
 [package]
 edition = "2018"
 name = "getrandom"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["The Rand Project Developers"]
 exclude = [".*"]
 description = "A small cross-platform library for retrieving random data from system source"
 documentation = "https://docs.rs/getrandom"
-categories = ["os", "no-std"]
+readme = "README.md"
+categories = [
+    "os",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-random/getrandom"
+
 [package.metadata.docs.rs]
-features = ["std", "custom"]
-rustdoc-args = ["--cfg", "docsrs"]
+features = [
+    "std",
+    "custom",
+]
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
+
 [dependencies.cfg-if]
 version = "1"
 
@@ -37,11 +49,20 @@ package = "rustc-std-workspace-core"
 
 [features]
 custom = []
-js = ["wasm-bindgen", "js-sys"]
+js = [
+    "wasm-bindgen",
+    "js-sys",
+]
 rdrand = []
-rustc-dep-of-std = ["compiler_builtins", "core", "libc/rustc-dep-of-std", "wasi/rustc-dep-of-std"]
+rustc-dep-of-std = [
+    "compiler_builtins",
+    "core",
+    "libc/rustc-dep-of-std",
+    "wasi/rustc-dep-of-std",
+]
 std = []
 test-in-browser = []
+
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.js-sys]
 version = "0.3"
 optional = true
@@ -50,10 +71,13 @@ optional = true
 version = "0.2.62"
 optional = true
 default-features = false
+
 [target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dev-dependencies.wasm-bindgen-test]
 version = "0.3.18"
+
 [target."cfg(target_os = \"wasi\")".dependencies.wasi]
-version = "0.10"
+version = "0.11"
+
 [target."cfg(unix)".dependencies.libc]
 version = "0.2.120"
 default-features = false

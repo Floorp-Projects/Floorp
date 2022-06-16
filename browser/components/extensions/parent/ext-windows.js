@@ -260,7 +260,7 @@ this.windows = class extends ExtensionAPIPersistent {
             }
           }
 
-          args.appendElement(null); // unused
+          args.appendElement(null); // extraOptions
           args.appendElement(null); // referrerInfo
           args.appendElement(null); // postData
           args.appendElement(null); // allowThirdPartyFixup

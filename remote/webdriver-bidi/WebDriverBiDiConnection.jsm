@@ -10,6 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { WebSocketConnection } = ChromeUtils.import(
+  "chrome://remote/content/shared/WebSocketConnection.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -18,14 +22,13 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
-  WebSocketConnection: "chrome://remote/content/shared/WebSocketConnection.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
 
-class WebDriverBiDiConnection extends lazy.WebSocketConnection {
+class WebDriverBiDiConnection extends WebSocketConnection {
   /**
    * @param {WebSocket} webSocket
    *     The WebSocket server connection to wrap.

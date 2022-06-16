@@ -11,6 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 const lazy = {};
 
@@ -37,7 +40,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];
@@ -88,7 +90,7 @@ function cacheProxy(target) {
 }
 
 var RecipeRunner = {
-  initializedPromise: lazy.PromiseUtils.defer(),
+  initializedPromise: PromiseUtils.defer(),
 
   async init() {
     this.running = false;

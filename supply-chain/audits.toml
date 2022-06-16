@@ -1,6 +1,11 @@
 
 # cargo-vet audits file
 
+[[audits.arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.1.0 -> 1.1.1"
+
 [[audits.atomic_refcell]]
 who = "Bobby Holley <bholley@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -18,6 +23,21 @@ who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.6.3"
 notes = "Another crate I own via contain-rs that is ancient and in maintenance mode but otherwise perfectly fine."
+
+[[audits.clap_lex]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.0 -> 0.2.2"
+
+[[audits.derive_arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.1.0 -> 1.1.1"
+
+[[audits.getrandom]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.6 -> 0.2.7"
 
 [[audits.glean]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
@@ -37,9 +57,24 @@ criteria = "safe-to-deploy"
 version = "0.5.4"
 notes = "I own this crate (I am contain-rs) and 0.5.4 passes miri. This code is very old and used by lots of people, so I'm pretty confident in it, even though it's in maintenance-mode and missing some nice-to-have APIs."
 
+[[audits.rust_decimal]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.24.0 -> 1.25.0"
+
+[[audits.semver]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.9 -> 1.0.10"
+
 [[audits.thin-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.2.5"
 notes = "I own this crate, and most of its versions were codeveloped and reviewed by Nika Layzell. This version was not explicitly reviewed by her, but it was specifically a release that made the code pass miri and was reviewed by me. Firefox uses it in the gecko-ffi configuration which is less thoroughly tested and more dangerous but we're reasonably confident in it. The real danger is from C++ code failing to use it correctly in FFI but that's just how FFI is."
+
+[[audits.unicode-ident]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.0 -> 1.0.1"
 

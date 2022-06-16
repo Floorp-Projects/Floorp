@@ -10,14 +10,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Module } = ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/Module.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.jsm",
-  Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
 });
 
-class BrowsingContextModule extends lazy.Module {
+class BrowsingContextModule extends Module {
   #loadListener;
 
   constructor(messageHandler) {

@@ -13,6 +13,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
+);
 
 const lazy = {};
 
@@ -20,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   Database: "resource://services-settings/Database.jsm",
-  Downloader: "resource://services-settings/Attachments.jsm",
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -193,7 +195,7 @@ class UnknownCollectionError extends Error {
   }
 }
 
-class AttachmentDownloader extends lazy.Downloader {
+class AttachmentDownloader extends Downloader {
   constructor(client) {
     super(client.bucketName, client.collectionName);
     this._client = client;

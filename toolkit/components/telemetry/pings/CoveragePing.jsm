@@ -4,6 +4,7 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 const lazy = {};
 
@@ -12,7 +13,6 @@ ChromeUtils.defineModuleGetter(
   "CommonUtils",
   "resource://services-common/utils.js"
 );
-ChromeUtils.defineModuleGetter(lazy, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "PromiseUtils",
@@ -43,9 +43,9 @@ const REPORTING_ENDPOINT_BASE_PREF = `toolkit.coverage.endpoint.base`;
 const REPORTING_ENDPOINT = "submit/coverage/coverage";
 const PING_SUBMISSION_TIMEOUT = 30 * 1000; // 30 seconds
 
-const log = lazy.Log.repository.getLogger("Telemetry::CoveragePing");
-log.level = Services.prefs.getIntPref(LOG_LEVEL_PREF, lazy.Log.Level.Error);
-log.addAppender(new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter()));
+const log = Log.repository.getLogger("Telemetry::CoveragePing");
+log.level = Services.prefs.getIntPref(LOG_LEVEL_PREF, Log.Level.Error);
+log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 var CoveragePing = Object.freeze({
   async startup() {

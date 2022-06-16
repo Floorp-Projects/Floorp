@@ -12,7 +12,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const lazy = {};
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SnippetsTestMessageProvider:
     "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
@@ -192,7 +191,7 @@ const MessageLoaderUtils = {
 
       let response;
       try {
-        response = await lazy.fetch(provider.url, {
+        response = await fetch(provider.url, {
           headers,
           credentials: "omit",
         });

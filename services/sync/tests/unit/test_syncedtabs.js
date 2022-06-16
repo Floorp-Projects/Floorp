@@ -8,10 +8,6 @@ const { SyncedTabs } = ChromeUtils.import(
   "resource://services-sync/SyncedTabs.jsm"
 );
 
-const faviconService = Cc["@mozilla.org/browser/favicon-service;1"].getService(
-  Ci.nsIFaviconService
-);
-
 Log.repository.getLogger("Sync.RemoteTabs").addAppender(new Log.DumpAppender());
 
 // A mock "Tabs" engine which the SyncedTabs module will use instead of the real

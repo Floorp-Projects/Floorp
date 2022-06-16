@@ -1715,8 +1715,12 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   const SandboxOpenedFiles* mFiles;
 
  public:
-  explicit GMPSandboxPolicy(const SandboxOpenedFiles* aFiles)
-      : mFiles(aFiles) {}
+  explicit GMPSandboxPolicy(const SandboxOpenedFiles* aFiles) : mFiles(aFiles) {
+    // Used by the profiler to send data back to the parent process;
+    // we are not enabling the file broker, so this will only work if
+    // memfd_create is available.
+    mMayCreateShmem = true;
+  }
 
   ~GMPSandboxPolicy() override = default;
 
@@ -1768,6 +1772,16 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
             .ElseIf(advice == MADV_MERGEABLE, Error(EPERM))  // bug 1705045
             .Else(Error(ENOSYS));
       }
+
+      // The profiler will try to readlink /proc/self/exe for native
+      // stackwalking, but that's broken for several other reasons;
+      // see discussion in bug 1770905.  (That can be emulated by
+      // pre-recording the result if/when we need it.)
+#ifdef __NR_readlink
+      case __NR_readlink:
+#endif
+      case __NR_readlinkat:
+        return Error(EINVAL);
 
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);

@@ -230,6 +230,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { GlobalState } = ChromeUtils.import(
+  "resource:///modules/sessionstore/GlobalState.jsm"
+);
 
 const lazy = {};
 
@@ -248,7 +251,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  GlobalState: "resource:///modules/sessionstore/GlobalState.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
@@ -606,7 +608,7 @@ var SessionStoreInternal = {
     "nsISupportsWeakReference",
   ]),
 
-  _globalState: new lazy.GlobalState(),
+  _globalState: new GlobalState(),
 
   // A counter to be used to generate a unique ID for each closed tab or window.
   _nextClosedId: 0,

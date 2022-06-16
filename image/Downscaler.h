@@ -17,6 +17,7 @@
 #include "gfxPoint.h"
 #include "nsRect.h"
 #include "mozilla/gfx/ConvolutionFilter.h"
+#include "mozilla/gfx/Matrix.h"
 
 namespace mozilla {
 namespace image {
@@ -55,7 +56,7 @@ class Downscaler {
   const nsIntSize FrameSize() const {
     return nsIntSize(mFrameRect.Width(), mFrameRect.Height());
   }
-  const gfxSize& Scale() const { return mScale; }
+  const gfx::MatrixScalesDouble& Scale() const { return mScale; }
 
   /**
    * Begins a new frame and reinitializes the Downscaler.
@@ -118,7 +119,7 @@ class Downscaler {
   nsIntSize mOriginalSize;
   nsIntSize mTargetSize;
   nsIntRect mFrameRect;
-  gfxSize mScale;
+  gfx::MatrixScalesDouble mScale;
 
   uint8_t* mOutputBuffer;
 

@@ -16,8 +16,6 @@ var EXPORTED_SYMBOLS = [
   "extensionStorageSync",
 ];
 
-Cu.importGlobalProperties(["atob", "btoa"]);
-
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

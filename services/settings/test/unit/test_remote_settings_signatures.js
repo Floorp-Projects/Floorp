@@ -17,7 +17,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 );
 
 const PREF_SETTINGS_SERVER = "services.settings.server";
-const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
 const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
 const TELEMETRY_COMPONENT = "remotesettings";
 

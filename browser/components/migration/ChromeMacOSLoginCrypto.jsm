@@ -11,8 +11,6 @@
 
 var EXPORTED_SYMBOLS = ["ChromeMacOSLoginCrypto"];
 
-Cu.importGlobalProperties(["crypto"]);
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

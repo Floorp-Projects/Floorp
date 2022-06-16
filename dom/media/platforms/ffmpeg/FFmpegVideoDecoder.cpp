@@ -774,7 +774,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
 #endif
 
 static int64_t GetFramePts(AVFrame* aFrame) {
-#if LIBAVCODEC_VERSION_MAJOR > 58
+#if LIBAVCODEC_VERSION_MAJOR > 57
   return aFrame->pts;
 #else
   return aFrame->pkt_pts;

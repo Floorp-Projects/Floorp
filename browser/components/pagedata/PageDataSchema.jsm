@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PageDataSchema"];
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

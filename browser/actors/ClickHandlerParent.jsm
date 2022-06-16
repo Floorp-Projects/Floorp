@@ -115,6 +115,8 @@ class ClickHandlerParent extends JSWindowActorParent {
       csp: data.csp ? lazy.E10SUtils.deserializeCSP(data.csp) : null,
       frameID: data.frameID,
       openerBrowser: browser,
+      // The child ensures that untrusted events have a valid user activation.
+      hasValidUserGestureActivation: true,
     };
 
     // The new tab/window must use the same userContextId.

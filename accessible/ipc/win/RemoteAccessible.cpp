@@ -252,7 +252,11 @@ LayoutDeviceIntRect RemoteAccessible::Bounds() const {
   return rect;
 }
 
-nsIntRect RemoteAccessible::BoundsInCSSPixels() {
+nsIntRect RemoteAccessible::BoundsInCSSPixels() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::BoundsInCSSPixels();
+  }
+
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return nsIntRect();

@@ -1046,7 +1046,7 @@ BookmarkExporter.prototype = {
   },
 
   async _writeFaviconAttribute(aItem) {
-    if (!aItem.iconuri) {
+    if (!aItem.iconUri) {
       return;
     }
     let favicon;

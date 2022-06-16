@@ -19,10 +19,13 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { MigratorPrototype } = ChromeUtils.import(
+  "resource:///modules/MigrationUtils.jsm"
+);
+
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
-  MigratorPrototype: "resource:///modules/MigrationUtils.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -76,7 +79,7 @@ function ChromeProfileMigrator() {
   this._chromeUserDataPathSuffix = "Chrome";
 }
 
-ChromeProfileMigrator.prototype = Object.create(lazy.MigratorPrototype);
+ChromeProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 ChromeProfileMigrator.prototype._keychainServiceName = "Chrome Safe Storage";
 ChromeProfileMigrator.prototype._keychainAccountName = "Chrome";

@@ -17,8 +17,8 @@ To get started, add `rust_decimal` and optionally `rust_decimal_macros` to your 
 
 ```toml
 [dependencies]
-rust_decimal = "1.24"
-rust_decimal_macros = "1.24"
+rust_decimal = "1.25"
+rust_decimal_macros = "1.25"
 ```
 
 ## Usage
@@ -79,6 +79,7 @@ assert_eq!(total.to_string(), "27.26");
 * [c-repr](#c-repr)
 * [legacy-ops](#legacy-ops)
 * [maths](#maths)
+* [rkyv](#rkyv)
 * [rocket-traits](#rocket-traits)
 * [rust-fuzz](#rust-fuzz)
 * [std](#std)
@@ -143,6 +144,13 @@ non-panicking behavior, please use the feature: `maths-nopanic`.
 ### `rand`
 
 Implements `rand::distributions::Distribution<Decimal>` to allow the creation of random instances.
+
+Note: When using `rand::Rng` trait to generate a decimal between a range of two other decimals, the scale of the randomly-generated
+decimal will be the same as the scale of the input decimals (or, if the inputs have different scales, the higher of the two).
+
+### `rkyv`
+Enables [rkyv](https://github.com/rkyv/rkyv) serialization for `Decimal`.
+Supports rkyv's safe API when the `rkyv-safe` feature is enabled as well.
 
 ### `rocket-traits`
 

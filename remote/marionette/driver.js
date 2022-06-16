@@ -11,6 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { element } = ChromeUtils.import(
+  "chrome://remote/content/marionette/element.js"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -27,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   DebounceCallback: "chrome://remote/content/marionette/sync.js",
   disableEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
-  element: "chrome://remote/content/marionette/element.js",
   enableEventsActor:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
@@ -73,14 +76,14 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const SUPPORTED_STRATEGIES = new Set([
-  lazy.element.Strategy.ClassName,
-  lazy.element.Strategy.Selector,
-  lazy.element.Strategy.ID,
-  lazy.element.Strategy.Name,
-  lazy.element.Strategy.LinkText,
-  lazy.element.Strategy.PartialLinkText,
-  lazy.element.Strategy.TagName,
-  lazy.element.Strategy.XPath,
+  element.Strategy.ClassName,
+  element.Strategy.Selector,
+  element.Strategy.ID,
+  element.Strategy.Name,
+  element.Strategy.LinkText,
+  element.Strategy.PartialLinkText,
+  element.Strategy.TagName,
+  element.Strategy.XPath,
 ]);
 
 // Timeout used to abort fullscreen, maximize, and minimize

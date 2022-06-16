@@ -1,10 +1,10 @@
 [
   {
+    "filename": "host-utils-103.0a1.en-US.mac.tar.gz",
+    "size": 152932731,
     "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "host-utils-101.0a1.en-US.mac.tar.gz",
+    "digest": "dca1f742fa4f0c482e2ab5823ff563fcf8487261650f305ec4b43a06dccdba7bf67e0fd6919cef997b6dd4525f3fca0e6f1579f9abb351ed55394bf7c82a04a1",
     "unpack": true,
-    "digest": "2e6c338921d271cec9d7b96c067f2d5b0e56a319a38584fd6f4490ca2308fc31b5694f6b88875652b5444df961fb42a87e52e176bbf82184f4327e71c4fbc4e7",
-    "size": 152686257
+    "visibility": "public"
   }
 ]

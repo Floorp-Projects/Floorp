@@ -35,7 +35,6 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 );
 
 const lazy = {};
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
@@ -337,7 +336,7 @@ XPIPackage = class XPIPackage extends Package {
   }
 
   async readBinary(...path) {
-    let response = await lazy.fetch(this.rootURI.resolve(path.join("/")));
+    let response = await fetch(this.rootURI.resolve(path.join("/")));
     return response.arrayBuffer();
   }
 
@@ -388,7 +387,7 @@ function builtinPackage(baseURL) {
     },
     async hasResource(path) {
       try {
-        let response = await lazy.fetch(this.rootURI.resolve(path));
+        let response = await fetch(this.rootURI.resolve(path));
         return response.ok;
       } catch (e) {
         return false;

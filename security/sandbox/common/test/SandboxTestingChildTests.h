@@ -680,6 +680,29 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
                        return fd;
                      });
   }
+
+  child->ErrnoValueTest("readlink_exe"_ns, EINVAL, [] {
+    char pathBuf[PATH_MAX];
+    return readlink("/proc/self/exe", pathBuf, sizeof(pathBuf));
+  });
+
+  child->ErrnoTest("memfd_sizing"_ns, true, [] {
+    int fd = syscall(__NR_memfd_create, "sandbox-test", 0);
+    if (fd < 0) {
+      if (errno == ENOSYS) {
+        // Don't fail the test if the kernel is old.
+        return 0;
+      }
+      return -1;
+    }
+
+    int rv = ftruncate(fd, 4096);
+    int savedErrno = errno;
+    close(fd);
+    errno = savedErrno;
+    return rv;
+  });
+
 #  elif XP_MACOSX  // XP_LINUX
   RunMacTestLaunchProcess(child);
   /* The Mac GMP process requires access to the window server */

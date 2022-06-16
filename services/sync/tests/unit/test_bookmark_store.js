@@ -5,9 +5,10 @@ const {
   Bookmark,
   BookmarkFolder,
   BookmarkQuery,
-  BookmarksEngine,
   PlacesItem,
 } = ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+// `Service` is used as a global in head_helpers.js.
+// eslint-disable-next-line no-unused-vars
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const BookmarksToolbarTitle = "toolbar";
@@ -393,11 +394,6 @@ add_bookmark_test(async function test_empty_query_doesnt_die(engine) {
   delete record.folderName;
   await apply_records(engine, [record]);
 });
-
-async function assertDeleted(guid) {
-  let item = await PlacesUtils.bookmarks.fetch(guid);
-  ok(!item);
-}
 
 add_bookmark_test(async function test_calculateIndex_for_invalid_url(engine) {
   let store = engine._store;

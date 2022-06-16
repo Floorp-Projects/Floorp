@@ -250,12 +250,17 @@ function openBrowserWindow(
     });
     args = [uriArray];
   } else {
+    let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag2
+    );
+    extraOptions.setPropertyAsBool("fromExternal", true);
+
     // Always pass at least 3 arguments to avoid the "|"-splitting behavior,
     // ie. avoid the loadOneOrMoreURIs function.
     // Also, we need to pass the triggering principal.
     args = [
       urlOrUrlList,
-      null, // charset
+      extraOptions,
       null, // refererInfo
       postData,
       undefined, // allowThirdPartyFixup; this would be `false` but that

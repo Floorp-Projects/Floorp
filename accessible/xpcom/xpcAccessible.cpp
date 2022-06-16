@@ -435,13 +435,7 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
 
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntRect rect;
-  if (LocalAccessible* acc = IntlGeneric()->AsLocal()) {
-    rect = acc->Bounds();
-  } else {
-    rect = IntlGeneric()->AsRemote()->Bounds();
-  }
-
+  LayoutDeviceIntRect rect = IntlGeneric()->Bounds();
   rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }
@@ -462,13 +456,7 @@ xpcAccessible::GetBoundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
     return NS_ERROR_FAILURE;
   }
 
-  nsIntRect rect;
-  if (LocalAccessible* acc = IntlGeneric()->AsLocal()) {
-    rect = acc->BoundsInCSSPixels();
-  } else {
-    rect = IntlGeneric()->AsRemote()->BoundsInCSSPixels();
-  }
-
+  nsIntRect rect = IntlGeneric()->BoundsInCSSPixels();
   rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }

@@ -1220,8 +1220,6 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 // just save on Accept, once the project is complete.
 pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
 
-pref("dom.ipc.shims.enabledWarnings", false);
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   // This controls the strength of the Windows content process sandbox for
   // testing purposes. This will require a restart.
@@ -1606,6 +1604,8 @@ pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
 pref("browser.aboutwelcome.screens", "");
 pref("browser.aboutwelcome.skipFocus", true);
+// Used to enable template for MR 2022 Onboarding
+pref("browser.aboutwelcome.templateMR", false);
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);

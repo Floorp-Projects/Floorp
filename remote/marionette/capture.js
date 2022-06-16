@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["crypto"]);
 
 const CONTEXT_2D = "2d";
 const BG_COLOUR = "rgb(255,255,255)";
@@ -185,7 +184,7 @@ capture.toBase64 = function(canvas) {
 capture.toHash = function(canvas) {
   let u = capture.toBase64(canvas);
   let buffer = new TextEncoder("utf-8").encode(u);
-  return lazy.crypto.subtle.digest("SHA-256", buffer).then(hash => hex(hash));
+  return crypto.subtle.digest("SHA-256", buffer).then(hash => hex(hash));
 };
 
 /**
