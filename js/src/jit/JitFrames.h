@@ -175,7 +175,7 @@ static_assert(sizeof(ResumeFromException) % 16 == 0,
 
 void HandleException(ResumeFromException* rfe);
 
-void EnsureBareExitFrame(JitActivation* act, JitFrameLayout* frame);
+void EnsureUnwoundJitExitFrame(JitActivation* act, JitFrameLayout* frame);
 
 void TraceJitActivations(JSContext* cx, JSTracer* trc);
 
@@ -328,6 +328,7 @@ enum class ExitFrameType : uint8_t {
   IonOOLProxy = 0x6,
   WasmGenericJitEntry = 0x7,
   DirectWasmJitCall = 0x8,
+  UnwoundJit = 0xFB,
   InterpreterStub = 0xFC,
   VMFunction = 0xFD,
   LazyLink = 0xFE,
@@ -348,7 +349,9 @@ class ExitFooterFrame {
 
  public:
   static inline size_t Size() { return sizeof(ExitFooterFrame); }
-  void setBareExitFrame() { data_ = uintptr_t(ExitFrameType::Bare); }
+  void setUnwoundJitExitFrame() {
+    data_ = uintptr_t(ExitFrameType::UnwoundJit);
+  }
   ExitFrameType type() const {
     static_assert(sizeof(ExitFrameType) == sizeof(uint8_t),
                   "Code assumes ExitFrameType fits in a byte");
@@ -422,6 +425,9 @@ class ExitFrameLayout : public CommonFrameLayout {
     return footer()->type() == ExitFrameType::VMFunction;
   }
   inline bool isBareExit() { return footer()->type() == ExitFrameType::Bare; }
+  inline bool isUnwoundJitExit() {
+    return footer()->type() == ExitFrameType::UnwoundJit;
+  }
 
   // See the various exit frame layouts below.
   template <typename T>
