@@ -65,27 +65,6 @@ urlbar.engagement
   example by picking a result in the urlbar panel or typing a search term or URL
   in the urlbar and pressing the enter key.
 
-urlbar.impression.*
-  A uint recording the number of impression that was displaying when user picks
-  any result.
-
-  - ``autofill_about``
-    For about-page type autofill.
-  - ``autofill_adaptive``
-    For adaptive history type autofill.
-  - ``autofill_origin``
-    For origin type autofill.
-  - ``autofill_other``
-    Counts how many times some other type of autofill result that does not have
-    a specific scalar was shown. This is a fallback that is used when the code is
-    not properly setting a specific autofill type, and it should not normally be
-    used. If it appears in the data, it means we need to investigate and fix the
-    code that is not properly setting a specific autofill type.
-  - ``autofill_preloaded``
-    For preloaded site type autofill.
-  - ``autofill_url``
-    For url type autofill.
-
 urlbar.tips
   This is a keyed scalar whose values are uints and are incremented each time a
   tip result is shown, a tip is picked, and a tip's help button is picked. The
@@ -236,21 +215,10 @@ urlbar.picked.*
   - ``autofill``
     An origin or a URL completed the user typed text inline. This was deprecated
     in Firefox 102.
-  - ``autofill_about``
-    An about-page completed the user typed text inline.
   - ``autofill_adaptive``
     An adaptive history completed the user typed text inline.
   - ``autofill_origin``
     An origin completed the user typed text inline.
-  - ``autofill_other``
-    Counts how many times some other type of autofill result that does not have
-    a specific keyed scalar was picked at a given index. This is a fallback that
-    is used when the code is not properly setting a specific autofill type, and
-    it should not normally be used. If it appears in the data, it means we need
-    to investigate and fix the code that is not properly setting a specific
-    autofill type.
-  - ``autofill_preloaded``
-    A preloaded site completed the user typed text inline.
   - ``autofill_url``
     A URL completed the user typed text inline.
   - ``bookmark``
