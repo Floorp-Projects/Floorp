@@ -45,7 +45,8 @@ class ViewportDimension extends PureComponent {
     this.onInputSubmit = this.onInputSubmit.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { width, height } = nextProps.viewport;
 
     this.setState({
