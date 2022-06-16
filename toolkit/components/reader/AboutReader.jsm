@@ -140,9 +140,6 @@ var AboutReader = function(
   this.colorSchemeMediaList = win.matchMedia("(prefers-color-scheme: dark)");
   this.colorSchemeMediaList.addEventListener("change", this);
 
-  this.prefersContrastMediaList = win.matchMedia("(prefers-contrast)");
-  this.prefersContrastMediaList.addEventListener("change", this);
-
   this._topScrollChange = this._topScrollChange.bind(this);
   this._intersectionObs = new win.IntersectionObserver(this._topScrollChange, {
     root: null,
@@ -345,7 +342,7 @@ AboutReader.prototype = {
           let btn = this._doc.createElement("button");
           btn.dataset.buttonid = message.data.id;
           btn.dataset.telemetryId = `reader-${message.data.telemetryId}`;
-          btn.className = "toolbar-button " + message.data.id;
+          btn.className = "button " + message.data.id;
           let tip = this._doc.createElement("span");
           tip.className = "hover-label";
           tip.textContent = message.data.label;
@@ -494,18 +491,15 @@ AboutReader.prototype = {
         break;
 
       case "change":
-        let colorScheme;
-        if (this.prefersContrastMediaList.matches) {
-          colorScheme = "hcm";
-        } else {
-          colorScheme = Services.prefs.getCharPref("reader.color_scheme");
-          // We should be changing the color scheme in relation to a preference change
-          // if the user has the color scheme preference set to "Auto".
-          if (colorScheme == "auto") {
-            colorScheme = this.colorSchemeMediaList.matches ? "dark" : "light";
-          }
+        // We should only be changing the color scheme in relation to a preference change
+        // if the user has the color scheme preference set to "Auto"
+        if (Services.prefs.getCharPref("reader.color_scheme") === "auto") {
+          let colorScheme = this.colorSchemeMediaList.matches
+            ? "dark"
+            : "light";
+
+          this._setColorScheme(colorScheme);
         }
-        this._setColorScheme(colorScheme);
 
         break;
     }
@@ -786,16 +780,10 @@ AboutReader.prototype = {
       bodyClasses.remove(this._colorScheme);
     }
 
-    if (!this._win.matchMedia("(prefers-contrast)").matches) {
-      if (newColorScheme === "auto") {
-        this._colorScheme = this.colorSchemeMediaList.matches
-          ? "dark"
-          : "light";
-      } else {
-        this._colorScheme = newColorScheme;
-      }
+    if (newColorScheme === "auto") {
+      this._colorScheme = this.colorSchemeMediaList.matches ? "dark" : "light";
     } else {
-      this._colorScheme = "hcm";
+      this._colorScheme = newColorScheme;
     }
 
     bodyClasses.add(this._colorScheme);
