@@ -172,6 +172,8 @@
   MACRO_(finally, finally_, "finally")                                         \
   MACRO_(find, find, "find")                                                   \
   MACRO_(findIndex, findIndex, "findIndex")                                    \
+  MACRO_(findLast, findLast, "findLast")                                       \
+  MACRO_(findLastIndex, findLastIndex, "findLastIndex")                        \
   MACRO_(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek")                     \
   MACRO_(fix, fix, "fix")                                                      \
   MACRO_(flags, flags, "flags")                                                \
