@@ -118,6 +118,11 @@ const uint8_t ATTR_VALTOKEN = 0x1 << 2;
  */
 const uint8_t ATTR_GLOBAL = 0x1 << 3;
 
+/**
+ * Indicates that the attribute should have an integer value.
+ */
+const uint8_t ATTR_VALINT = 0x1 << 4;
+
 ////////////////////////////////////////////////////////////////////////////////
 // State map entry
 
