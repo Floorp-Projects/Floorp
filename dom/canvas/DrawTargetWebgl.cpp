@@ -425,7 +425,7 @@ void DrawTargetWebgl::SharedContext::SetBlendState(
 
 // Ensure the WebGL framebuffer is set to the current target.
 bool DrawTargetWebgl::SharedContext::SetTarget(DrawTargetWebgl* aDT) {
-  if (mWebgl->IsContextLost()) {
+  if (!mWebgl || mWebgl->IsContextLost()) {
     return false;
   }
   if (aDT != mCurrentTarget) {
@@ -481,7 +481,7 @@ bool DrawTargetWebgl::PrepareContext(bool aClipped) {
 }
 
 bool DrawTargetWebgl::SharedContext::IsContextLost() const {
-  return mWebgl->IsContextLost();
+  return !mWebgl || mWebgl->IsContextLost();
 }
 
 // Signal to CanvasRenderingContext2D when the WebGL context is lost.
