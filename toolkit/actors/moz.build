@@ -23,13 +23,9 @@ SPHINX_TREES["actors"] = "docs"
 
 TESTING_JS_MODULES += [
     "TestProcessActorChild.jsm",
-    "TestProcessActorChild.sys.mjs",
     "TestProcessActorParent.jsm",
-    "TestProcessActorParent.sys.mjs",
     "TestWindowChild.jsm",
-    "TestWindowChild.sys.mjs",
     "TestWindowParent.jsm",
-    "TestWindowParent.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.actors += [

@@ -65,25 +65,18 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
   MOZ_ASSERT(loader);
 
   // If a module URI was provided, use it to construct an instance of the actor.
-  JS::Rooted<JSObject*> actorObj(aCx);
-  if (side.mModuleURI || side.mESModuleURI) {
-    JS::Rooted<JSObject*> exports(aCx);
-    if (side.mModuleURI) {
-      JS::Rooted<JSObject*> global(aCx);
-      aRv = loader->Import(aCx, side.mModuleURI.ref(), &global, &exports);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-    } else {
-      aRv = loader->ImportESModule(aCx, side.mESModuleURI.ref(), &exports);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
+  JS::RootedObject actorObj(aCx);
+  if (side.mModuleURI) {
+    JS::RootedObject global(aCx);
+    JS::RootedObject exports(aCx);
+    aRv = loader->Import(aCx, side.mModuleURI.ref(), &global, &exports);
+    if (aRv.Failed()) {
+      return nullptr;
     }
     MOZ_ASSERT(exports, "null exports!");
 
     // Load the specific property from our module.
-    JS::Rooted<JS::Value> ctor(aCx);
+    JS::RootedValue ctor(aCx);
     nsAutoCString ctorName(aName);
     ctorName.Append(isParent ? "Parent"_ns : "Child"_ns);
     if (!JS_GetProperty(aCx, exports, ctorName.get(), &ctor)) {
