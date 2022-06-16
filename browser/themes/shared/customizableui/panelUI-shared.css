@@ -1076,7 +1076,8 @@ panelview .toolbarbutton-1,
  * indicator to be so hard to read, so we override the disabled text
  * style on it.
  */
-#appMenu-zoomReset-button2[disabled] {
+#appMenu-zoomReset-button2[disabled],
+#zoom-reset-button[disabled] {
   opacity: 1;
 }
 
