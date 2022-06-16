@@ -6706,6 +6706,9 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
       nsView* rootView = mViewManager->GetRootView();
       mMouseLocation = nsLayoutUtils::TranslateWidgetToView(
           mPresContext, aEvent->mWidget, aEvent->mRefPoint, rootView);
+      // TODO: instead, encapsulate `mMouseLocation` and
+      // `mLastOverWindowMouseLocation` in a struct.
+      mLastOverWindowMouseLocation = mMouseLocation;
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
       RelativeTo relativeTo{rootFrame};
@@ -6714,6 +6717,7 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
       }
       mMouseLocation =
           nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, relativeTo);
+      mLastOverWindowMouseLocation = mMouseLocation;
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
     mMouseLocationWasSetBySynthesizedMouseEventForTests =

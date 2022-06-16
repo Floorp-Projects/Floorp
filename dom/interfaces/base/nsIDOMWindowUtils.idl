@@ -96,6 +96,17 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getDocumentMetadata(in AString aName);
 
   /**
+   * Relative to the top-level document.
+   *
+   * @param aX 0, if there's no such location.
+   * @param aY 0, if there's no such location.
+   *
+   * TODO: verify this is also the touch-position and rename the method
+   * accordingly (bug 1770358).
+   */
+  void getLastOverWindowMouseLocationInCSSPixels(out float aX, out float aY);
+
+  /**
    * Force a synchronous layer transaction for this window if necessary.
    */
   [can_run_script]
