@@ -28,6 +28,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "LoginHelper",

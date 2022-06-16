@@ -32,6 +32,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesSyncUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["URLSearchParams"]);
+
 var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
 const QUERY_PROTOCOL = "place:";
@@ -46,12 +48,12 @@ function areURLsEqual(a, b) {
   // Tag queries are special because we rewrite them to point to the
   // local tag folder ID. It's expected that the folders won't match,
   // but all other params should.
-  let aParams = new URLSearchParams(a.slice(QUERY_PROTOCOL.length));
+  let aParams = new lazy.URLSearchParams(a.slice(QUERY_PROTOCOL.length));
   let aType = +aParams.get("type");
   if (aType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
     return false;
   }
-  let bParams = new URLSearchParams(b.slice(QUERY_PROTOCOL.length));
+  let bParams = new lazy.URLSearchParams(b.slice(QUERY_PROTOCOL.length));
   let bType = +bParams.get("type");
   if (bType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
     return false;
@@ -681,7 +683,7 @@ class BookmarkValidator {
         ) {
           return;
         }
-        let params = new URLSearchParams(
+        let params = new lazy.URLSearchParams(
           entry.bmkUri.slice(QUERY_PROTOCOL.length)
         );
         // Queries with `excludeQueries` won't form cycles because they'll

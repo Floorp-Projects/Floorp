@@ -3,10 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NewTabUtils } = ChromeUtils.import(
   "resource://gre/modules/NewTabUtils.jsm"
 );
+const lazy = {};
+XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
@@ -24,7 +29,6 @@ const { PersistentCache } = ChromeUtils.import(
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
 
-const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "pktApi",
@@ -192,7 +196,7 @@ class TopStoriesFeed {
       return null;
     }
     try {
-      const response = await fetch(this.stories_endpoint, {
+      const response = await lazy.fetch(this.stories_endpoint, {
         credentials: "omit",
       });
       if (!response.ok) {
@@ -292,7 +296,7 @@ class TopStoriesFeed {
       return null;
     }
     try {
-      const response = await fetch(this.topics_endpoint, {
+      const response = await lazy.fetch(this.topics_endpoint, {
         credentials: "omit",
       });
       if (!response.ok) {
