@@ -98,6 +98,13 @@ bool JSJitFrameIter::isBareExit() const {
   return exitFrame()->isBareExit();
 }
 
+bool JSJitFrameIter::isUnwoundJitExit() const {
+  if (type_ != FrameType::Exit) {
+    return false;
+  }
+  return exitFrame()->isUnwoundJitExit();
+}
+
 bool JSJitFrameIter::isFunctionFrame() const {
   return CalleeTokenIsFunction(calleeToken());
 }
