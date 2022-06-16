@@ -143,9 +143,13 @@ function checkRedirectedSameOrigin(entry) {
 }
 
 // The final entry passes the timing-allow-check,
-// but one of the redirects does not. redirectStart/End are 0.
+// but one of the redirects does not. redirectStart/End and the rest of the
+// attributes are 0 because all redirects need to pass TAO check.
 function checkRedirectCrossOriginResourceSameOrigin(entry) {
-  const checks = { "redirectStart": 0, "redirectEnd": 0 };
+  const checks = { "redirectStart": 0, "redirectEnd": 0,
+                   "domainLookupStart": 0, "domainLookupEnd": 0,
+                   "connectStart": 0, "connectEnd": 0,
+                   "requestStart": 0, "responseStart": 0 };
   checkEntry(entry, checks);
 }
 

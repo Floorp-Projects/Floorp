@@ -15,6 +15,21 @@
 #include "PerformanceTiming.h"
 
 namespace mozilla::dom {
+#define IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(name)                \
+  DOMHighResTimeStamp name(Maybe<nsIPrincipal*>& aSubjectPrincipal) const { \
+    bool allowed = !mTimingData->RedirectCountReal()                        \
+                       ? TimingAllowedForCaller(aSubjectPrincipal)          \
+                       : ReportRedirectForCaller(aSubjectPrincipal, false); \
+    return allowed ? mTimingData->name##HighRes(mPerformance) : 0;          \
+  }
+
+#define IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(name)                  \
+  uint64_t name(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {            \
+    bool allowed = !mTimingData->RedirectCountReal()                        \
+                       ? TimingAllowedForCaller(aSubjectPrincipal)          \
+                       : ReportRedirectForCaller(aSubjectPrincipal, false); \
+    return allowed ? mTimingData->name() : 0;                               \
+  }
 
 // http://www.w3.org/TR/resource-timing/#performanceresourcetiming
 class PerformanceResourceTiming : public PerformanceEntry {
@@ -48,7 +63,9 @@ class PerformanceResourceTiming : public PerformanceEntry {
   }
 
   void GetNextHopProtocol(nsAString& aNextHopProtocol) const {
-    aNextHopProtocol = mTimingData->NextHopProtocol();
+    if (mTimingData->TimingAllowed()) {
+      aNextHopProtocol = mTimingData->NextHopProtocol();
+    }
   }
 
   DOMHighResTimeStamp WorkerStart() const {
@@ -91,80 +108,33 @@ class PerformanceResourceTiming : public PerformanceEntry {
                        false /* aEnsureSameOriginAndIgnoreTAO */);
   }
 
-  DOMHighResTimeStamp DomainLookupStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->DomainLookupStartHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(DomainLookupStart)
 
-  DOMHighResTimeStamp DomainLookupEnd(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->DomainLookupEndHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(DomainLookupEnd)
 
-  DOMHighResTimeStamp ConnectStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->ConnectStartHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(ConnectStart)
 
-  DOMHighResTimeStamp ConnectEnd(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->ConnectEndHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(ConnectEnd)
 
-  DOMHighResTimeStamp RequestStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->RequestStartHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(RequestStart)
 
-  DOMHighResTimeStamp ResponseStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->ResponseStartHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(ResponseStart)
 
   DOMHighResTimeStamp ResponseEnd() const {
     return mTimingData->ResponseEndHighRes(mPerformance);
   }
 
-  DOMHighResTimeStamp SecureConnectionStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->SecureConnectionStartHighRes(mPerformance)
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(SecureConnectionStart)
 
   virtual const PerformanceResourceTiming* ToResourceTiming() const override {
     return this;
   }
 
-  uint64_t TransferSize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->TransferSize()
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(TransferSize)
 
-  uint64_t EncodedBodySize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->EncodedBodySize()
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(EncodedBodySize)
 
-  uint64_t DecodedBodySize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    return TimingAllowedForCaller(aSubjectPrincipal)
-               ? mTimingData->DecodedBodySize()
-               : 0;
-  }
+  IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(DecodedBodySize)
 
   void GetServerTiming(nsTArray<RefPtr<PerformanceServerTiming>>& aRetval,
                        Maybe<nsIPrincipal*>& aSubjectPrincipal);
