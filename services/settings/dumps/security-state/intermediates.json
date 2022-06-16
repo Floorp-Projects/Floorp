@@ -1,6 +1,96 @@
 {
   "data": [
     {
+      "schema": 1655189823484,
+      "derHash": "cDV7nlbT+zxsAJw4xxgUVMRikI37zm1U1g3+HlBuFP0=",
+      "subject": "CN=TrustAsia ECC OV TLS Pro CA G2,O=TrustAsia Technologies\\, Inc.,C=CN",
+      "subjectDN": "MF0xCzAJBgNVBAYTAkNOMSUwIwYDVQQKExxUcnVzdEFzaWEgVGVjaG5vbG9naWVzLCBJbmMuMScwJQYDVQQDEx5UcnVzdEFzaWEgRUNDIE9WIFRMUyBQcm8gQ0EgRzI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eef7786b39056fba3e747973ce4532b06a0cd3dc1326554703821b55ecdd5eff",
+        "size": 1406,
+        "filename": "zQ_SLNg_h_U_OTLMb3XQLYnyHZ7Y7Hk6_xyTVTSQekc=.pem",
+        "location": "security-state-staging/intermediates/48fd3053-a283-46d0-99e4-f89312258dce.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zQ/SLNg/h/U/OTLMb3XQLYnyHZ7Y7Hk6/xyTVTSQekc=",
+      "crlite_enrolled": false,
+      "id": "24ff0be6-616b-4ad5-8017-005dbb310bf7",
+      "last_modified": 1655301423076
+    },
+    {
+      "schema": 1655189537975,
+      "derHash": "Du8FvaeELqhdHZgSSV78VhKDuqkNFDHFed1h9+2SaaE=",
+      "subject": "CN=Viking Cloud Organization Validation CA\\, Level 1,O=Viking Cloud\\, Inc.,C=US",
+      "subjectDN": "MGUxCzAJBgNVBAYTAlVTMRswGQYDVQQKExJWaWtpbmcgQ2xvdWQsIEluYy4xOTA3BgNVBAMTMFZpa2luZyBDbG91ZCBPcmdhbml6YXRpb24gVmFsaWRhdGlvbiBDQSwgTGV2ZWwgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "006d8c79464234dbd24dd5a3685784e0002a510529a17a45c586e2ffdbfabd36",
+        "size": 1605,
+        "filename": "unLMj_QBNe_Q7to-eIcm3DJAgrMoPWPkEwFZMsbRY7k=.pem",
+        "location": "security-state-staging/intermediates/6745493c-4ee2-43be-b7a9-f05026fe3760.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "unLMj/QBNe/Q7to+eIcm3DJAgrMoPWPkEwFZMsbRY7k=",
+      "crlite_enrolled": false,
+      "id": "e59c2c37-90bb-440b-8396-b716e868dd84",
+      "last_modified": 1655189822967
+    },
+    {
+      "schema": 1655189537137,
+      "derHash": "OGrZZdokgSAW7T8BHyES39WRaT2r6z0OYbEUX1+dEhc=",
+      "subject": "CN=Viking Cloud Domain Validation CA\\, Level 1,O=Viking Cloud\\, Inc.,C=US",
+      "subjectDN": "MF8xCzAJBgNVBAYTAlVTMRswGQYDVQQKExJWaWtpbmcgQ2xvdWQsIEluYy4xMzAxBgNVBAMTKlZpa2luZyBDbG91ZCBEb21haW4gVmFsaWRhdGlvbiBDQSwgTGV2ZWwgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "098935eae4896b90a68d29bc952ccfd67b8c3dd84203ffcb2ac77db9abae8adb",
+        "size": 1585,
+        "filename": "junHeKNTWfpbz93WVSLN_XeDp-DEZkJSqMzt00XxYBA=.pem",
+        "location": "security-state-staging/intermediates/482b11d7-dab4-4f06-8578-b1e78997ed3a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "junHeKNTWfpbz93WVSLN/XeDp+DEZkJSqMzt00XxYBA=",
+      "crlite_enrolled": false,
+      "id": "459a3e96-9edd-4b67-a702-416676d676b7",
+      "last_modified": 1655189822960
+    },
+    {
+      "schema": 1655189536211,
+      "derHash": "ELYI5T4PP0RDKjK5Bs11MAFzasi/6Q7ToIR98oXi2Xc=",
+      "subject": "CN=Viking Cloud Extended Validation CA\\, Level 1,O=Viking Cloud\\, Inc.,C=US",
+      "subjectDN": "MGExCzAJBgNVBAYTAlVTMRswGQYDVQQKExJWaWtpbmcgQ2xvdWQsIEluYy4xNTAzBgNVBAMTLFZpa2luZyBDbG91ZCBFeHRlbmRlZCBWYWxpZGF0aW9uIENBLCBMZXZlbCAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6ec99683dce9696b64633a066f22f6b0706a0ecb071f4e7b9410380d74da608c",
+        "size": 1601,
+        "filename": "iaX3F_DBxteIvZKYoTUXBd_2bVXGONmIkaeGjVNPR2w=.pem",
+        "location": "security-state-staging/intermediates/df82cc9d-4f57-40e8-af0e-c60132ffa421.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "iaX3F/DBxteIvZKYoTUXBd/2bVXGONmIkaeGjVNPR2w=",
+      "crlite_enrolled": false,
+      "id": "0f04579c-51bb-474a-b50c-f4fb19248d2b",
+      "last_modified": 1655189822953
+    },
+    {
+      "schema": 1655103423568,
+      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
+      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
+        "size": 2406,
+        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
+        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
+      "crlite_enrolled": false,
+      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
+      "last_modified": 1655146623017
+    },
+    {
       "schema": 1654847823526,
       "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
       "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
@@ -233,24 +323,6 @@
       "crlite_enrolled": false,
       "id": "b934396e-4172-49e2-97f4-c680f60b9532",
       "last_modified": 1654826223036
-    },
-    {
-      "schema": 1654822121446,
-      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
-      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
-        "size": 2406,
-        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
-        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
-      "crlite_enrolled": true,
-      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
-      "last_modified": 1654822624797
     },
     {
       "schema": 1654822121934,
@@ -9557,24 +9629,6 @@
       "crlite_enrolled": true,
       "id": "48a4c34d-ae22-4bed-a3e3-7c45741571fe",
       "last_modified": 1643540242270
-    },
-    {
-      "schema": 1643539742401,
-      "derHash": "cDV7nlbT+zxsAJw4xxgUVMRikI37zm1U1g3+HlBuFP0=",
-      "subject": "CN=TrustAsia ECC OV TLS Pro CA G2,O=TrustAsia Technologies\\, Inc.,C=CN",
-      "subjectDN": "MF0xCzAJBgNVBAYTAkNOMSUwIwYDVQQKExxUcnVzdEFzaWEgVGVjaG5vbG9naWVzLCBJbmMuMScwJQYDVQQDEx5UcnVzdEFzaWEgRUNDIE9WIFRMUyBQcm8gQ0EgRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "eef7786b39056fba3e747973ce4532b06a0cd3dc1326554703821b55ecdd5eff",
-        "size": 1406,
-        "filename": "zQ_SLNg_h_U_OTLMb3XQLYnyHZ7Y7Hk6_xyTVTSQekc=.pem",
-        "location": "security-state-staging/intermediates/48fd3053-a283-46d0-99e4-f89312258dce.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zQ/SLNg/h/U/OTLMb3XQLYnyHZ7Y7Hk6/xyTVTSQekc=",
-      "crlite_enrolled": true,
-      "id": "24ff0be6-616b-4ad5-8017-005dbb310bf7",
-      "last_modified": 1643540242239
     },
     {
       "schema": 1643539750313,
@@ -25075,5 +25129,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1655103423113
+  "timestamp": 1655301423076
 }
