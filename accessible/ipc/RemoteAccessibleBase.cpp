@@ -685,6 +685,18 @@ RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
 }
 
 template <class Derived>
+RefPtr<const AccAttributes>
+RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
+  if (mCachedFields) {
+    auto attrs =
+        mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::aria);
+    VERIFY_CACHE(CacheDomain::ARIA);
+    return attrs;
+  }
+  return nullptr;
+}
+
+template <class Derived>
 uint64_t RemoteAccessibleBase<Derived>::State() {
   uint64_t state = 0;
   if (mCachedFields) {
@@ -769,6 +781,10 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
 
     if (bool layoutGuess = TableIsProbablyForLayout()) {
       attributes->SetAttribute(nsGkAtoms::layout_guess, layoutGuess);
+    }
+
+    if (auto ariaAttrs = GetCachedARIAAttributes()) {
+      ariaAttrs->CopyTo(attributes);
     }
   }
 
