@@ -9,8 +9,6 @@ const { Sampling } = ChromeUtils.import(
 const { ClientEnvironment } = ChromeUtils.import(
   "resource://normandy/lib/ClientEnvironment.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const { cleanupStorePrefCache } = ExperimentFakes;
 
 const { ExperimentStore } = ChromeUtils.import(
@@ -453,11 +451,12 @@ add_task(async function test_sampling_check() {
 add_task(async function enroll_in_reference_aw_experiment() {
   cleanupStorePrefCache();
 
-  let dir = await OS.File.getCurrentDirectory();
-  let src = OS.Path.join(dir, "reference_aboutwelcome_experiment_content.json");
-  let bytes = await OS.File.read(src);
-  const decoder = new TextDecoder();
-  const content = JSON.parse(decoder.decode(bytes));
+  let dir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
+  let src = PathUtils.join(
+    dir,
+    "reference_aboutwelcome_experiment_content.json"
+  );
+  const content = await IOUtils.readJSON(src);
   // Create two dummy branches with the content from disk
   const branches = ["treatment-a", "treatment-b"].map(slug => ({
     slug,
