@@ -81,13 +81,7 @@ function read(srcChromeURL) {
 }
 
 function write(data, file, callback) {
-  const converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-
-  converter.charset = "UTF-8";
-
-  const istream = converter.convertToInputStream(data);
+  const istream = getInputStream(data);
   const ostream = FileUtils.openSafeFileOutputStream(file);
 
   NetUtil.asyncCopy(istream, ostream, function(status) {

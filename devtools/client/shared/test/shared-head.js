@@ -1997,3 +1997,13 @@ async function closeRDM(tab, options) {
   await manager.closeIfNeeded(tab.ownerGlobal, tab, options);
   info("Responsive design mode closed");
 }
+
+function getInputStream(data) {
+  const BufferStream = CC(
+    "@mozilla.org/io/arraybuffer-input-stream;1",
+    "nsIArrayBufferInputStream",
+    "setData"
+  );
+  const buffer = new TextEncoder().encode(data).buffer;
+  return new BufferStream(buffer, 0, buffer.byteLength);
+}
