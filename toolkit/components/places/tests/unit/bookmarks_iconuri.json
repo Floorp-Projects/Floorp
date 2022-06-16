@@ -1,0 +1,307 @@
+{
+  "guid": "root________",
+  "title": "",
+  "id": 1,
+  "dateAdded": 1361551978957783,
+  "lastModified": 1361551978957783,
+  "type": "text/x-moz-place-container",
+  "root": "placesRoot",
+  "children": [
+    {
+      "guid": "menu________",
+      "title": "Bookmarks Menu",
+      "id": 2,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1361551979382837,
+      "type": "text/x-moz-place-container",
+      "root": "bookmarksMenuFolder",
+      "children": [
+        {
+          "guid": "OCyeUO5uu9FF",
+          "title": "Mozilla Firefox",
+          "id": 6,
+          "parent": 2,
+          "dateAdded": 1361551979350273,
+          "lastModified": 1361551979376699,
+          "type": "text/x-moz-place-container",
+          "children": [
+            {
+              "guid": "OCyeUO5uu9FG",
+              "title": "Help and Tutorials",
+              "id": 7,
+              "parent": 6,
+              "dateAdded": 1361551979356436,
+              "lastModified": 1361551979362718,
+              "type": "text/x-moz-place",
+              "uri": "http://en-us.www.mozilla.com/en-US/firefox/help/",
+              "iconUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
+            },
+            {
+              "guid": "OCyeUO5uu9FH",
+              "index": 1,
+              "title": "Customize Firefox",
+              "id": 8,
+              "parent": 6,
+              "dateAdded": 1361551979365662,
+              "lastModified": 1361551979368077,
+              "type": "text/x-moz-place",
+              "uri": "http://en-us.www.mozilla.com/en-US/firefox/customize/",
+              "iconUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
+            },
+            {
+              "guid": "OCyeUO5uu9FJ",
+              "index": 3,
+              "title": "About Us",
+              "id": 10,
+              "parent": 6,
+              "dateAdded": 1361551979376699,
+              "lastModified": 1361551979379060,
+              "type": "text/x-moz-place",
+              "uri": "http://en-us.www.mozilla.com/en-US/about/",
+              "iconUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
+            },
+            {
+              "guid": "OCyeUO5uu9FI",
+              "index": 2,
+              "title": "Get Involved",
+              "id": 9,
+              "parent": 6,
+              "dateAdded": 1361551979371071,
+              "lastModified": 1361551979373745,
+              "type": "text/x-moz-place",
+              "uri": "http://en-us.www.mozilla.com/en-US/firefox/community/",
+              "iconUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
+            },
+            {
+              "guid": "QFM-QnE2ZpMz",
+              "title": "Test null postData",
+              "index": 4,
+              "dateAdded": 1481639510868000,
+              "lastModified": 1489563704300000,
+              "id": 17,
+              "charset": "UTF-8",
+              "annos": [
+                {
+                  "name": "bookmarkProperties/description",
+                  "flags": 0,
+                  "expires": 4,
+                  "value": "The best"
+                }
+              ],
+              "type": "text/x-moz-place",
+              "uri": "http://example.com/search?q=%s&suggid=",
+              "postData": null
+            }
+          ]
+        },
+        {
+          "guid": "OCyeUO5uu9FK",
+          "index": 1,
+          "title": "",
+          "id": 11,
+          "parent": 2,
+          "dateAdded": 1361551979380988,
+          "lastModified": 1361551979380988,
+          "type": "text/x-moz-place-separator"
+        },
+        {
+          "guid": "OCyeUO5uu9FL",
+          "index": 2,
+          "title": "test",
+          "id": 12,
+          "parent": 2,
+          "dateAdded": 1177541020000000,
+          "lastModified": 1177541050000000,
+          "annos": [
+            {
+              "name": "bookmarkProperties/description",
+              "flags": 0,
+              "expires": 4,
+              "mimeType": null,
+              "type": 3,
+              "value": "folder test comment"
+            }
+          ],
+          "type": "text/x-moz-place-container",
+          "children": [
+            {
+              "guid": "OCyeUO5uu9GX",
+              "title": "test post keyword",
+              "id": 13,
+              "parent": 12,
+              "dateAdded": 1177375336000000,
+              "lastModified": 1177375423000000,
+              "annos": [
+                {
+                  "name": "bookmarkProperties/description",
+                  "flags": 0,
+                  "expires": 4,
+                  "mimeType": null,
+                  "type": 3,
+                  "value": "item description"
+                },
+                {
+                  "name": "bookmarkProperties/loadInSidebar",
+                  "flags": 0,
+                  "expires": 4,
+                  "mimeType": null,
+                  "type": 1,
+                  "value": 1
+                }
+              ],
+              "type": "text/x-moz-place",
+              "uri": "http://test/post",
+              "keyword": "test",
+              "charset": "ISO-8859-1",
+              "postData": "hidden1%3Dbar&text1%3D%25s"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "title": "Bookmarks Toolbar",
+      "id": 3,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1177541050000000,
+      "annos": [
+        {
+          "name": "bookmarkProperties/description",
+          "flags": 0,
+          "expires": 4,
+          "mimeType": null,
+          "type": 3,
+          "value": "Add bookmarks to this folder to see them displayed on the Bookmarks Toolbar"
+        }
+      ],
+      "type": "text/x-moz-place-container",
+      "root": "toolbarFolder",
+      "children": [
+        {
+          "guid": "OCyeUO5uu9FB",
+          "title": "Getting Started",
+          "id": 15,
+          "parent": 3,
+          "dateAdded": 1361551979409695,
+          "lastModified": 1361551979412080,
+          "type": "text/x-moz-place",
+          "uri": "http://en-us.www.mozilla.com/en-US/firefox/central/",
+          "iconUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
+        },
+        {
+          "guid": "OCyeUO5uu9FR",
+          "index": 1,
+          "title": "Latest Headlines",
+          "id": 16,
+          "parent": 3,
+          "dateAdded": 1361551979451584,
+          "lastModified": 1361551979457086,
+          "livemark": 1,
+          "annos": [
+            {
+              "name": "livemark/feedURI",
+              "flags": 0,
+              "expires": 4,
+              "mimeType": null,
+              "type": 3,
+              "value": "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml"
+            },
+            {
+              "name": "livemark/siteURI",
+              "flags": 0,
+              "expires": 4,
+              "mimeType": null,
+              "type": 3,
+              "value": "http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/"
+            }
+          ],
+          "type": "text/x-moz-place-container",
+          "children": []
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Tags",
+      "id": 4,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1361551978957783,
+      "type": "text/x-moz-place-container",
+      "root": "tagsFolder",
+      "children": []
+    },
+    {
+      "index": 3,
+      "title": "Unsorted Bookmarks",
+      "id": 5,
+      "parent": 1,
+      "dateAdded": 1361551978957783,
+      "lastModified": 1177541050000000,
+      "type": "text/x-moz-place-container",
+      "root": "unfiledBookmarksFolder",
+      "children": [
+        {
+          "guid": "OCyeUO5uu9FW",
+          "title": "Example.tld",
+          "id": 14,
+          "parent": 5,
+          "dateAdded": 1361551979401846,
+          "lastModified": 1361551979402952,
+          "type": "text/x-moz-place",
+          "uri": "http://example.tld/"
+        },
+        {
+          "guid": "Cfkety492Afk",
+          "title": "test tagged bookmark",
+          "id": 15,
+          "parent": 5,
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "type": "text/x-moz-place",
+          "uri": "http://example.tld/tagged",
+          "tags": "foo"
+        },
+        {
+          "guid": "lOZGoFR1eXbl",
+          "title": "Bookmarks Toolbar Shortcut",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 16,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=TOOLBAR"
+        },
+        {
+          "guid": "7yJWnBVhjRtP",
+          "title": "Folder Shortcut",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 17,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6"
+        },
+        {
+          "guid": "vm5QXWuWc12l",
+          "title": "Folder Shortcut 2",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 18,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6123443"
+        },
+        {
+          "guid": "Icg1XlIozA1D",
+          "title": "Folder Shortcut 3",
+          "dateAdded": 1507025843703345,
+          "lastModified": 1507025844703124,
+          "id": 18,
+          "type": "text/x-moz-place",
+          "uri": "place:folder=6&folder=BOOKMARKS_MENU"
+        }
+      ]
+    }
+  ]
+}

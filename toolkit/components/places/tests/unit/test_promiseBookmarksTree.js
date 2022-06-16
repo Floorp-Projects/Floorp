@@ -49,7 +49,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
     check_unset("parentGuid");
   }
 
-  const BOOKMARK_ONLY_PROPS = ["uri", "iconuri", "tags", "charset", "keyword"];
+  const BOOKMARK_ONLY_PROPS = ["uri", "iconUri", "tags", "charset", "keyword"];
   const FOLDER_ONLY_PROPS = ["children", "root"];
 
   let nodesCount = 1;
@@ -119,13 +119,13 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 
       if (aNode.icon) {
         try {
-          await compareFavicons(aNode.icon, aItem.iconuri);
+          await compareFavicons(aNode.icon, aItem.iconUri);
         } catch (ex) {
           info(ex);
           todo_check_true(false);
         }
       } else {
-        check_unset(aItem.iconuri);
+        check_unset(aItem.iconUri);
       }
 
       check_unset(...FOLDER_ONLY_PROPS);

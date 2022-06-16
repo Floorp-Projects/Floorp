@@ -500,7 +500,7 @@ var PlacesBackups = {
    *         The following properties exist only for a subset of bookmarks:
    *         * annos: array of annotations
    *         * uri: url
-   *         * iconuri: favicon's url
+   *         * iconUri: favicon's url
    *         * keyword: associated keyword
    *         * charset: last known charset
    *         * tags: csv string of tags
