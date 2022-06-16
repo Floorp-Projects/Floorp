@@ -2467,7 +2467,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   if (topLevelAwait) {
-    if (!topLevelAwait->emitEnd()) {
+    if (!topLevelAwait->emitEndModule()) {
       return false;
     }
   }
@@ -6084,15 +6084,10 @@ bool BytecodeEmitter::finishReturn(BytecodeOffset setRvalOffset) {
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
   bool needsFinalYield =
       sc->isFunctionBox() && sc->asFunctionBox()->needsFinalYield();
-  bool needsIteratorResult =
-      sc->isFunctionBox() && sc->asFunctionBox()->needsIteratorResult();
-  bool needsPromiseResult =
-      sc->isFunctionBox() && sc->asFunctionBox()->needsPromiseResult();
   bool isSimpleReturn =
       setRvalOffset.valid() &&
       setRvalOffset + BytecodeOffsetDiff(JSOpLength_SetRval) ==
           bytecodeSection().offset();
-  MOZ_ASSERT_IF(needsIteratorResult || needsPromiseResult, needsFinalYield);
 
   if (isDerivedClassConstructor) {
     MOZ_ASSERT(!needsFinalYield);
@@ -6103,51 +6098,7 @@ bool BytecodeEmitter::finishReturn(BytecodeOffset setRvalOffset) {
   }
 
   if (needsFinalYield) {
-    // We know that .generator is on the function scope, as we just exited
-    // all nested scopes.
-    NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
-        TaggedParserAtomIndex::WellKnown::dotGenerator(), varEmitterScope);
-    if (needsIteratorResult) {
-      // Wrap the return value in an iterator result.
-      if (!emitPrepareIteratorResult()) {
-        return false;
-      }
-      if (!emit1(JSOp::GetRval)) {
-        return false;
-      }
-      if (!emitFinishIteratorResult(true)) {
-        return false;
-      }
-      if (!emit1(JSOp::SetRval)) {
-        //          [stack]
-        return false;
-      }
-    } else if (needsPromiseResult) {
-      // Resolve the return value before emitting the final yield.
-      if (!emit1(JSOp::GetRval)) {
-        //          [stack] RVAL
-        return false;
-      }
-      if (!emitGetNameAtLocation(
-              TaggedParserAtomIndex::WellKnown::dotGenerator(), loc)) {
-        //          [stack] RVAL GEN
-        return false;
-      }
-      if (!emit2(JSOp::AsyncResolve,
-                 uint8_t(AsyncFunctionResolveKind::Fulfill))) {
-        //          [stack] PROMISE
-        return false;
-      }
-      if (!emit1(JSOp::SetRval)) {
-        //          [stack]
-        return false;
-      }
-    }
-    if (!emitGetNameAtLocation(TaggedParserAtomIndex::WellKnown::dotGenerator(),
-                               loc)) {
-      return false;
-    }
-    if (!emitYieldOp(JSOp::FinalYieldRval)) {
+    if (!emitJump(JSOp::Goto, &finalYields)) {
       return false;
     }
     return true;

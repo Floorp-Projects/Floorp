@@ -39,8 +39,9 @@ struct BytecodeEmitter;
 //     ae.prepareForBody();
 //
 //     // Emit body of the Function.
+//     ...
 //
-//     ae.emitEnd();
+//     ae.emitEndFunction();
 //
 //   Complex case - For a function with expression parameters:
 //   `async function f(<expression>) {<body>}`,
@@ -59,7 +60,9 @@ struct BytecodeEmitter;
 //
 //     // Emit body of the Function.
 //     ...
-//     ae.emitEnd();
+//
+//     // The final yield is emitted in FunctionScriptEmitter::emitEndBody().
+//     ae.emitEndFunction();
 //
 //
 //   Async Module case - For a module with `await` in the top level:
@@ -74,7 +77,7 @@ struct BytecodeEmitter;
 //
 //     // Emit body of the Script.
 //
-//     ae.emitEnd();
+//     ae.emitEndModule();
 //
 
 class MOZ_STACK_CLASS AsyncEmitter {
@@ -121,7 +124,13 @@ class MOZ_STACK_CLASS AsyncEmitter {
   //                         +---------+        |  <emit script body>
   //   +----------------------------------------+
   //   |
-  //   |  emitEnd             +-----+
+  //   |  [Functions]
+  //   |  emitEndFunction     +-----+
+  //   +--------------------->| End |
+  //   |                      +-----+
+  //   |
+  //   |  [Modules]
+  //   |  emitEndModule       +-----+
   //   +--------------------->| End |
   //                          +-----+
 
@@ -154,7 +163,8 @@ class MOZ_STACK_CLASS AsyncEmitter {
   [[nodiscard]] bool prepareForModule();
   [[nodiscard]] bool emitParamsEpilogue();
   [[nodiscard]] bool prepareForBody();
-  [[nodiscard]] bool emitEnd();
+  [[nodiscard]] bool emitEndFunction();
+  [[nodiscard]] bool emitEndModule();
 };
 
 } /* namespace frontend */
