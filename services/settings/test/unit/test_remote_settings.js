@@ -379,23 +379,6 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails_later() {
 });
 add_task(clear_state);
 
-add_task(async function test_get_falls_back_to_dump_if_network_fails() {
-  if (IS_ANDROID) {
-    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
-    return;
-  }
-  const backup = clientWithDump.sync;
-  clientWithDump.sync = () => {
-    throw new Error("Sync error");
-  };
-
-  const records = await clientWithDump.get();
-  ok(records.length > 0, "dump content is returned");
-
-  clientWithDump.sync = backup;
-});
-add_task(clear_state);
-
 add_task(async function test_get_does_not_sync_if_empty_dump_is_provided() {
   if (IS_ANDROID) {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
@@ -432,29 +415,13 @@ add_task(
 );
 add_task(clear_state);
 
-add_task(async function test_get_ignores_synchronization_errors_by_default() {
+add_task(async function test_get_ignores_synchronization_errors() {
   // The monitor endpoint won't contain any information about this collection.
   let data = await RemoteSettings("some-unknown-key").get();
   equal(data.length, 0);
   // The sync endpoints are not mocked, this fails internally.
   data = await RemoteSettings("no-mocked-responses").get();
   equal(data.length, 0);
-});
-add_task(clear_state);
-
-add_task(async function test_get_throws_if_no_empty_fallback() {
-  // The monitor endpoint won't contain any information about this collection.
-  try {
-    await RemoteSettings("some-unknown-key").get({
-      emptyListFallback: false,
-    });
-    Assert.ok(false, ".get() should throw");
-  } catch (error) {
-    Assert.ok(
-      error.message.includes("Response from server unparseable"),
-      "Server error was thrown"
-    );
-  }
 });
 add_task(clear_state);
 

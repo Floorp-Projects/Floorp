@@ -73,9 +73,6 @@ Options
 * ``verifySignature``: verify the content signature of the local data (default: ``false``).
   An error is thrown if the local data was altered. This hurts performance, but can be used if your use case needs to be secure from local tampering.
 
-* ``emptyListFallback``: return an empty list if obtaining the records fails (default: ``true``).
-  If an error occurs during the reading of local data, or during synchronization, then an empty list is returned.
-
 
 Events
 ------
