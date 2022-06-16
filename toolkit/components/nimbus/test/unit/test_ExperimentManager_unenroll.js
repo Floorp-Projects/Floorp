@@ -7,6 +7,7 @@ const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
+const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 
 const globalSandbox = sinon.createSandbox();
 globalSandbox.spy(TelemetryEnvironment, "setExperimentInactive");
@@ -115,6 +116,30 @@ add_task(async function test_unenroll_rollout_opt_out() {
   );
   // reset pref
   Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
+});
+
+add_task(async function test_unenroll_uploadPref() {
+  globalSandbox.reset();
+  const manager = ExperimentFakes.manager();
+  const recipe = ExperimentFakes.recipe("foo");
+
+  await manager.onStartup();
+  await ExperimentFakes.enrollmentHelper(recipe, { manager }).enrollmentPromise;
+
+  Assert.equal(
+    manager.store.get(recipe.slug).active,
+    true,
+    "Should set .active to true"
+  );
+
+  Services.prefs.setBoolPref(UPLOAD_ENABLED_PREF, false);
+
+  Assert.equal(
+    manager.store.get(recipe.slug).active,
+    false,
+    "Should set .active to false"
+  );
+  Services.prefs.clearUserPref(UPLOAD_ENABLED_PREF);
 });
 
 add_task(async function test_setExperimentInactive_called() {
