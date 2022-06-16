@@ -37,7 +37,7 @@ add_task(async () => {
     "oh=hai; max-age=1000"
   );
 
-  let cookies = Services.cookiemgr.cookies;
+  let cookies = Services.cookies.cookies;
   Assert.ok(cookies.length == 1);
   let cookie = cookies[0];
 
@@ -63,15 +63,15 @@ add_task(async () => {
   );
 
   do_check_throws(function() {
-    Services.cookiemgr.removeAll();
+    Services.cookies.removeAll();
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.cookies;
+    Services.cookies.cookies;
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.add(
+    Services.cookies.add(
       "foo.com",
       "",
       "oh4",
@@ -87,11 +87,11 @@ add_task(async () => {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.remove("foo.com", "", "oh4", {});
+    Services.cookies.remove("foo.com", "", "oh4", {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {});
+    Services.cookies.cookieExists(cookie.host, cookie.path, cookie.name, {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
@@ -108,7 +108,7 @@ add_task(async () => {
   // Load the profile and check that the API is available.
   do_load_profile();
   Assert.ok(
-    Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {})
+    Services.cookies.cookieExists(cookie.host, cookie.path, cookie.name, {})
   );
   Services.prefs.clearUserPref("dom.security.https_first");
 });
