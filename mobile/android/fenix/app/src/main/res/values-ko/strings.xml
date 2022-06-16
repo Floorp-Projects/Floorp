@@ -434,6 +434,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">포켓</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">스폰서 소식</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">배경 화면</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->

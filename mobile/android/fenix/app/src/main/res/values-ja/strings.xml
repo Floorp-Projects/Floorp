@@ -434,6 +434,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">広告ストーリー</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">壁紙</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -1828,6 +1830,11 @@
     <string name="inactive_tabs_title">休止中のタブ</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">休止中のタブをすべて閉じます</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">休止中のタブを展開します</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">休止中のタブを折りたたみます</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

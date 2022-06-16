@@ -428,6 +428,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Saku</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Carita anu disponsoran</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Latar</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->

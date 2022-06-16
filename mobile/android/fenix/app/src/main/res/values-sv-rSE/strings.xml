@@ -433,6 +433,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Sponsrade berättelser</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Bakgrundsbilder</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
