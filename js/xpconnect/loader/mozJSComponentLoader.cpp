@@ -1506,8 +1506,8 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
       }
 
       if (rv == NS_ERROR_FILE_NOT_FOUND) {
-        return TryFallbackToImportModule(aCx, aLocation, aModuleGlobal,
-                                         aModuleExports, aIgnoreExports);
+        return TryFallbackToImportESModule(aCx, aLocation, aModuleGlobal,
+                                           aModuleExports, aIgnoreExports);
       }
 
       // Something failed, but we don't know what it is, guess.
@@ -1557,7 +1557,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult mozJSComponentLoader::TryFallbackToImportModule(
+nsresult mozJSComponentLoader::TryFallbackToImportESModule(
     JSContext* aCx, const nsACString& aLocation,
     JS::MutableHandleObject aModuleGlobal,
     JS::MutableHandleObject aModuleExports, bool aIgnoreExports) {
@@ -1567,7 +1567,7 @@ nsresult mozJSComponentLoader::TryFallbackToImportModule(
   }
 
   JS::RootedObject moduleNamespace(aCx);
-  nsresult rv = ImportModule(aCx, mjsLocation, &moduleNamespace);
+  nsresult rv = ImportESModule(aCx, mjsLocation, &moduleNamespace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::RootedObject globalProxy(aCx);
@@ -1601,14 +1601,14 @@ nsresult mozJSComponentLoader::TryFallbackToImportModule(
   return NS_OK;
 }
 
-nsresult mozJSComponentLoader::ImportModule(
+nsresult mozJSComponentLoader::ImportESModule(
     JSContext* aCx, const nsACString& aLocation,
     JS::MutableHandleObject aModuleNamespace) {
   using namespace JS::loader;
 
   MOZ_ASSERT(mModuleLoader);
 
-  // Called from ChromeUtils::ImportModule.
+  // Called from ChromeUtils::ImportESModule.
   nsCString str(aLocation);
 
   AUTO_PROFILER_MARKER_TEXT(

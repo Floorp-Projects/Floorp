@@ -3,19 +3,19 @@
 
 function run_test() {
   // Test basic import.
-  let ns = ChromeUtils.importModule("resource://test/es6module.js");
+  let ns = ChromeUtils.importESModule("resource://test/es6module.js");
   Assert.equal(ns.loadCount, 1);
   Assert.equal(ns.value, 2);
 
   // Test re-import of the same module.
-  let ns2 = ChromeUtils.importModule("resource://test/es6module.js");
+  let ns2 = ChromeUtils.importESModule("resource://test/es6module.js");
   Assert.equal(ns.loadCount, 1);
   Assert.equal(ns, ns2);
 
   // Test load failure.
   let threw = false;
   try {
-    ChromeUtils.importModule("resource://test/es6module_not_found.js");
+    ChromeUtils.importESModule("resource://test/es6module_not_found.js");
   } catch (e) {
     threw = true;
   }
@@ -25,7 +25,7 @@ function run_test() {
   threw = false;
   let exception;
   try {
-    ChromeUtils.importModule("resource://test/es6module_throws.js");
+    ChromeUtils.importESModule("resource://test/es6module_throws.js");
   } catch (e) {
     exception = e;
     threw = true;
@@ -37,7 +37,7 @@ function run_test() {
   threw = false;
   let exception2;
   try {
-    ChromeUtils.importModule("resource://test/es6module_throws.js");
+    ChromeUtils.importESModule("resource://test/es6module_throws.js");
   } catch (e) {
     exception2 = e;
     threw = true;
@@ -46,13 +46,13 @@ function run_test() {
   Assert.equal(exception, exception2);
 
   // Test loading cyclic module graph.
-  ns = ChromeUtils.importModule("resource://test/es6module_cycle_a.js");
+  ns = ChromeUtils.importESModule("resource://test/es6module_cycle_a.js");
   Assert.ok(ns.loaded);
   Assert.equal(ns.getValueFromB(), "b");
-  ns = ChromeUtils.importModule("resource://test/es6module_cycle_b.js");
+  ns = ChromeUtils.importESModule("resource://test/es6module_cycle_b.js");
   Assert.ok(ns.loaded);
   Assert.equal(ns.getValueFromC(), "c");
-  ns = ChromeUtils.importModule("resource://test/es6module_cycle_c.js");
+  ns = ChromeUtils.importESModule("resource://test/es6module_cycle_c.js");
   Assert.ok(ns.loaded);
   Assert.equal(ns.getValueFromA(), "a");
 
@@ -60,7 +60,7 @@ function run_test() {
   threw = false;
   exception = undefined;
   try {
-    ChromeUtils.importModule("resource://test/es6module_top_level_await.js");
+    ChromeUtils.importESModule("resource://test/es6module_top_level_await.js");
   } catch (e) {
     exception = e;
     threw = true;
