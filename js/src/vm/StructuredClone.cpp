@@ -569,6 +569,7 @@ struct JSStructuredCloneWriter {
   bool writeSharedArrayBuffer(HandleObject obj);
   bool writeSharedWasmMemory(HandleObject obj);
   bool startObject(HandleObject obj, bool* backref);
+  bool writePrimitive(HandleValue v);
   bool startWrite(HandleValue v);
   bool traverseObject(HandleObject obj, ESClass cls);
   bool traverseMap(HandleObject obj);
@@ -1736,23 +1737,23 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
   RootedValue val(context());
 
   val = BooleanValue(savedFrame->getMutedErrors());
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
   context()->markAtom(savedFrame->getSource());
   val = StringValue(savedFrame->getSource());
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
   val = NumberValue(savedFrame->getLine());
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
   val = NumberValue(savedFrame->getColumn());
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
@@ -1761,7 +1762,7 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
     context()->markAtom(name);
   }
   val = name ? StringValue(name) : NullValue();
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
@@ -1770,14 +1771,15 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
     context()->markAtom(cause);
   }
   val = cause ? StringValue(cause) : NullValue();
-  if (!startWrite(val)) {
+  if (!writePrimitive(val)) {
     return false;
   }
 
   return true;
 }
 
-bool JSStructuredCloneWriter::startWrite(HandleValue v) {
+bool JSStructuredCloneWriter::writePrimitive(HandleValue v) {
+  MOZ_ASSERT(v.isPrimitive());
   context()->check(v);
 
   if (v.isString()) {
@@ -1794,132 +1796,145 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     return out.writePair(SCTAG_UNDEFINED, 0);
   } else if (v.isBigInt()) {
     return writeBigInt(SCTAG_BIGINT, v.toBigInt());
-  } else if (v.isObject()) {
-    RootedObject obj(context(), &v.toObject());
+  }
 
-    bool backref;
-    if (!startObject(obj, &backref)) {
-      return false;
-    }
-    if (backref) {
-      return true;
-    }
+  return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
+}
 
-    ESClass cls;
-    if (!GetBuiltinClass(context(), obj, &cls)) {
-      return false;
-    }
+bool JSStructuredCloneWriter::startWrite(HandleValue v) {
+  context()->check(v);
 
-    switch (cls) {
-      case ESClass::Object:
-      case ESClass::Array:
-        return traverseObject(obj, cls);
-      case ESClass::Number: {
-        RootedValue unboxed(context());
-        if (!Unbox(context(), obj, &unboxed)) {
-          return false;
-        }
-        return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-               out.writeDouble(unboxed.toNumber());
-      }
-      case ESClass::String: {
-        RootedValue unboxed(context());
-        if (!Unbox(context(), obj, &unboxed)) {
-          return false;
-        }
-        return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
-      }
-      case ESClass::Boolean: {
-        RootedValue unboxed(context());
-        if (!Unbox(context(), obj, &unboxed)) {
-          return false;
-        }
-        return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
-      }
-      case ESClass::RegExp: {
-        RegExpShared* re = RegExpToShared(context(), obj);
-        if (!re) {
-          return false;
-        }
-        return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags().value()) &&
-               writeString(SCTAG_STRING, re->getSource());
-      }
-      case ESClass::ArrayBuffer: {
-        if (JS::IsArrayBufferObject(obj) && JS::ArrayBufferHasData(obj)) {
-          return writeArrayBuffer(obj);
-        }
-        break;
-      }
-      case ESClass::SharedArrayBuffer:
-        if (JS::IsSharedArrayBufferObject(obj)) {
-          return writeSharedArrayBuffer(obj);
-        }
-        break;
-      case ESClass::Date: {
-        RootedValue unboxed(context());
-        if (!Unbox(context(), obj, &unboxed)) {
-          return false;
-        }
-        return out.writePair(SCTAG_DATE_OBJECT, 0) &&
-               out.writeDouble(unboxed.toNumber());
-      }
-      case ESClass::Set:
-        return traverseSet(obj);
-      case ESClass::Map:
-        return traverseMap(obj);
-      case ESClass::BigInt: {
-        RootedValue unboxed(context());
-        if (!Unbox(context(), obj, &unboxed)) {
-          return false;
-        }
-        return writeBigInt(SCTAG_BIGINT_OBJECT, unboxed.toBigInt());
-      }
-      case ESClass::Promise:
-      case ESClass::MapIterator:
-      case ESClass::SetIterator:
-      case ESClass::Arguments:
-      case ESClass::Error:
-      case ESClass::Function:
-        break;
+  if (v.isPrimitive()) {
+    return writePrimitive(v);
+  }
 
-#ifdef ENABLE_RECORD_TUPLE
-      case ESClass::Record:
-      case ESClass::Tuple:
-        MOZ_CRASH("Record and Tuple are not supported");
-#endif
+  if (!v.isObject()) {
+    return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
+  }
 
-      case ESClass::Other: {
-        if (obj->canUnwrapAs<TypedArrayObject>()) {
-          return writeTypedArray(obj);
-        }
-        if (obj->canUnwrapAs<DataViewObject>()) {
-          return writeDataView(obj);
-        }
-        if (wasm::IsSharedWasmMemoryObject(obj)) {
-          return writeSharedWasmMemory(obj);
-        }
-        if (obj->canUnwrapAs<SavedFrame>()) {
-          return traverseSavedFrame(obj);
-        }
-        break;
-      }
-    }
+  RootedObject obj(context(), &v.toObject());
 
-    if (out.buf.callbacks_ && out.buf.callbacks_->write) {
-      bool sameProcessScopeRequired = false;
-      if (!out.buf.callbacks_->write(context(), this, obj,
-                                     &sameProcessScopeRequired,
-                                     out.buf.closure_)) {
+  bool backref;
+  if (!startObject(obj, &backref)) {
+    return false;
+  }
+  if (backref) {
+    return true;
+  }
+
+  ESClass cls;
+  if (!GetBuiltinClass(context(), obj, &cls)) {
+    return false;
+  }
+
+  switch (cls) {
+    case ESClass::Object:
+    case ESClass::Array:
+      return traverseObject(obj, cls);
+    case ESClass::Number: {
+      RootedValue unboxed(context());
+      if (!Unbox(context(), obj, &unboxed)) {
         return false;
       }
-
-      if (sameProcessScopeRequired) {
-        output().sameProcessScopeRequired();
-      }
-
-      return true;
+      return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
+             out.writeDouble(unboxed.toNumber());
     }
-    // else fall through
+    case ESClass::String: {
+      RootedValue unboxed(context());
+      if (!Unbox(context(), obj, &unboxed)) {
+        return false;
+      }
+      return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
+    }
+    case ESClass::Boolean: {
+      RootedValue unboxed(context());
+      if (!Unbox(context(), obj, &unboxed)) {
+        return false;
+      }
+      return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
+    }
+    case ESClass::RegExp: {
+      RegExpShared* re = RegExpToShared(context(), obj);
+      if (!re) {
+        return false;
+      }
+      return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags().value()) &&
+             writeString(SCTAG_STRING, re->getSource());
+    }
+    case ESClass::ArrayBuffer: {
+      if (JS::IsArrayBufferObject(obj) && JS::ArrayBufferHasData(obj)) {
+        return writeArrayBuffer(obj);
+      }
+      break;
+    }
+    case ESClass::SharedArrayBuffer:
+      if (JS::IsSharedArrayBufferObject(obj)) {
+        return writeSharedArrayBuffer(obj);
+      }
+      break;
+    case ESClass::Date: {
+      RootedValue unboxed(context());
+      if (!Unbox(context(), obj, &unboxed)) {
+        return false;
+      }
+      return out.writePair(SCTAG_DATE_OBJECT, 0) &&
+             out.writeDouble(unboxed.toNumber());
+    }
+    case ESClass::Set:
+      return traverseSet(obj);
+    case ESClass::Map:
+      return traverseMap(obj);
+    case ESClass::BigInt: {
+      RootedValue unboxed(context());
+      if (!Unbox(context(), obj, &unboxed)) {
+        return false;
+      }
+      return writeBigInt(SCTAG_BIGINT_OBJECT, unboxed.toBigInt());
+    }
+    case ESClass::Promise:
+    case ESClass::MapIterator:
+    case ESClass::SetIterator:
+    case ESClass::Arguments:
+    case ESClass::Error:
+    case ESClass::Function:
+      break;
+
+#ifdef ENABLE_RECORD_TUPLE
+    case ESClass::Record:
+    case ESClass::Tuple:
+      MOZ_CRASH("Record and Tuple are not supported");
+#endif
+
+    case ESClass::Other: {
+      if (obj->canUnwrapAs<TypedArrayObject>()) {
+        return writeTypedArray(obj);
+      }
+      if (obj->canUnwrapAs<DataViewObject>()) {
+        return writeDataView(obj);
+      }
+      if (wasm::IsSharedWasmMemoryObject(obj)) {
+        return writeSharedWasmMemory(obj);
+      }
+      if (obj->canUnwrapAs<SavedFrame>()) {
+        return traverseSavedFrame(obj);
+      }
+      break;
+    }
+  }
+
+  if (out.buf.callbacks_ && out.buf.callbacks_->write) {
+    bool sameProcessScopeRequired = false;
+    if (!out.buf.callbacks_->write(context(), this, obj,
+                                   &sameProcessScopeRequired,
+                                   out.buf.closure_)) {
+      return false;
+    }
+
+    if (sameProcessScopeRequired) {
+      output().sameProcessScopeRequired();
+    }
+
+    return true;
   }
 
   return reportDataCloneError(JS_SCERR_UNSUPPORTED_TYPE);
@@ -2159,7 +2174,7 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
         bool found;
         if (GetOwnPropertyPure(context(), obj, id, val.address(), &found)) {
           if (found) {
-            if (!startWrite(key) || !startWrite(val)) {
+            if (!writePrimitive(key) || !startWrite(val)) {
               return false;
             }
           }
@@ -2171,8 +2186,8 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
         }
 
         if (found) {
-          if (!startWrite(key) || !GetProperty(context(), obj, obj, id, &val) ||
-              !startWrite(val)) {
+          if (!writePrimitive(key) ||
+              !GetProperty(context(), obj, obj, id, &val) || !startWrite(val)) {
             return false;
           }
         }
