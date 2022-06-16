@@ -7130,7 +7130,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-06-02T15:16:31Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2022-06-14T15:15:19Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8452,7 +8452,7 @@ health
 // healthcare : 2014-06-12 Binky Moon, LLC
 healthcare
 
-// help : 2014-06-26 UNR Corp.
+// help : 2014-06-26 Innovation service Limited
 help
 
 // helsinki : 2015-02-05 City of Helsinki
@@ -8866,7 +8866,7 @@ living
 // llc : 2017-12-14 Afilias Limited
 llc
 
-// llp : 2019-08-26 UNR Corp.
+// llp : 2019-08-26 Intercap Registry Inc.
 llp
 
 // loan : 2014-11-20 dot Loan Limited
