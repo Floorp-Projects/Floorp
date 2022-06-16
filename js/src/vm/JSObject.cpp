@@ -2255,6 +2255,13 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 #endif
 
+  if (key == JSProto_Array &&
+      !cx->realm()->creationOptions().getArrayFindLastEnabled() &&
+      (id == NameToId(cx->names().findLast) ||
+       id == NameToId(cx->names().findLastIndex))) {
+    return true;
+  }
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
       (id == NameToId(cx->names().with) ||

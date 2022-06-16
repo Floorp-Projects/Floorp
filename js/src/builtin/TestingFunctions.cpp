@@ -206,6 +206,12 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 #endif
 
+  bool arrayFindLast = cx->realm()->creationOptions().getArrayFindLastEnabled();
+  if (!JS_SetProperty(cx, info, "enableArrayFindLast",
+                      arrayFindLast ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy = cx->options().changeArrayByCopy();
   if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",
