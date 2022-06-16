@@ -41,8 +41,6 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],
-      ["datareporting.healthreport.uploadEnabled", true],
-      ["app.shield.optoutstudies.enabled", true],
       ["nimbus.debug", true],
     ],
   });

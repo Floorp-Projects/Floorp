@@ -14,8 +14,6 @@ const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
-const UPLOAD_PREF = "datareporting.healthreport.uploadEnabled";
-const DEBUG_PREF = "nimbus.debug";
 
 add_task(async function test_real_exp_manager() {
   equal(
@@ -247,68 +245,4 @@ add_task(async function test_checkExperimentSelfReference() {
     false,
     "Should fail targeting"
   );
-});
-
-add_task(async function test_optIn_debug_disabled() {
-  info("Testing users cannot opt-in when nimbus.debug is false");
-
-  const sandbox = sinon.createSandbox();
-
-  const loader = ExperimentFakes.rsLoader();
-  const recipe = ExperimentFakes.recipe("foo");
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
-
-  Services.prefs.setBoolPref(DEBUG_PREF, false);
-  Services.prefs.setBoolPref(UPLOAD_PREF, true);
-  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
-
-  await Assert.rejects(
-    loader.optInToExperiment({
-      slug: recipe.slug,
-      branchSlug: recipe.branches[0].slug,
-    }),
-    /Could not opt in/
-  );
-
-  Services.prefs.clearUserPref(DEBUG_PREF);
-  Services.prefs.clearUserPref(UPLOAD_PREF);
-  Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
-
-  sandbox.reset();
-});
-
-add_task(async function test_optIn_studies_disabled() {
-  info(
-    "Testing users cannot opt-in when telemetry is disabled or studies are disabled."
-  );
-
-  const sandbox = sinon.createSandbox();
-  const prefs = [UPLOAD_PREF, STUDIES_OPT_OUT_PREF];
-
-  const loader = ExperimentFakes.rsLoader();
-  const recipe = ExperimentFakes.recipe("foo");
-  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
-
-  Services.prefs.setBoolPref(DEBUG_PREF, true);
-
-  for (const pref of prefs) {
-    Services.prefs.setBoolPref(UPLOAD_PREF, true);
-    Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
-
-    Services.prefs.setBoolPref(pref, false);
-
-    await Assert.rejects(
-      loader.optInToExperiment({
-        slug: recipe.slug,
-        branchSlug: recipe.branches[0].slug,
-      }),
-      /Could not opt in: studies are disabled/
-    );
-  }
-
-  Services.prefs.clearUserPref(DEBUG_PREF);
-  Services.prefs.clearUserPref(UPLOAD_PREF);
-  Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
-
-  sandbox.reset();
 });
