@@ -3689,7 +3689,7 @@
 
 - name: dom.streams.transferable.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # For area and anchor elements with target=_blank and no rel set to
@@ -12371,7 +12371,7 @@
   value: 10
 #else
   value: 0
-#endif 
+#endif
   mirror: always
 
 # Whether to retry connections without ECH Grease
