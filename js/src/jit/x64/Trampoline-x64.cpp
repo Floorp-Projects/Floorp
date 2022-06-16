@@ -28,8 +28,14 @@ using mozilla::IsPowerOfTwo;
 // Given a `CommonFrameLayout* frame`:
 // - `frame->prevType()` should be `FrameType::CppToJSJit`.
 // - Then EnterJITStackEntry starts at:
-//   (uint8_t*)frame + frame->headerSize() + frame->prevFrameLocalSize()
+//     frame->callerFramePtr() + EnterJITStackEntry::offsetFromFP()
+//     (the offset is negative, so this subtracts from the frame pointer)
 struct EnterJITStackEntry {
+  // Offset from frame pointer to EnterJITStackEntry*.
+  static constexpr int32_t offsetFromFP() {
+    return -int32_t(offsetof(EnterJITStackEntry, rbp));
+  }
+
   void* result;
 
 #if defined(_WIN64)
@@ -327,7 +333,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 
   // Discard arguments and padding. Set rsp to the address of the
   // EnterJITStackEntry on the stack.
-  masm.lea(Operand(rbp, -int32_t(offsetof(EnterJITStackEntry, rbp))), rsp);
+  masm.lea(Operand(rbp, EnterJITStackEntry::offsetFromFP()), rsp);
 
   /*****************************************************************
   Place return value where it belongs, pop all saved registers
@@ -372,13 +378,11 @@ JitRuntime::getCppEntryRegisters(JitFrameLayout* frameStackAddress) {
     return mozilla::Nothing{};
   }
 
-  // The entry is (frame size stored in descriptor) bytes past the header.
-  MOZ_ASSERT(frameStackAddress->headerSize() == JitFrameLayout::Size());
-  const size_t offsetToCppEntry =
-      JitFrameLayout::Size() + frameStackAddress->prevFrameLocalSize();
-  EnterJITStackEntry* enterJITStackEntry =
-      reinterpret_cast<EnterJITStackEntry*>(
-          reinterpret_cast<uint8_t*>(frameStackAddress) + offsetToCppEntry);
+  // Compute pointer to start of EnterJITStackEntry on the stack.
+  uint8_t* fp = frameStackAddress->callerFramePtr();
+  auto* enterJITStackEntry = reinterpret_cast<EnterJITStackEntry*>(
+      fp + EnterJITStackEntry::offsetFromFP());
+  MOZ_ASSERT(enterJITStackEntry->rbp == fp);
 
   // Extract native function call registers.
   ::JS::ProfilingFrameIterator::RegisterState registerState;
