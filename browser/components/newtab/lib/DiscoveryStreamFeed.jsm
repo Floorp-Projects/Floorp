@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -21,7 +18,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
@@ -287,7 +283,7 @@ class DiscoveryStreamFeed {
       const controller = new AbortController();
       const { signal } = controller;
 
-      const fetchPromise = lazy.fetch(endpoint, {
+      const fetchPromise = fetch(endpoint, {
         ...options,
         credentials: "omit",
         signal,
