@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const lazy = {};
-
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
 
 const TIPPYTOP_PATH = "chrome://activity-stream/content/data/content/tippytop/";
 const TIPPYTOP_JSON_PATH =
@@ -43,7 +36,7 @@ class TippyTopProvider {
     // Load the Tippy Top sites from the json manifest.
     try {
       for (const site of await (
-        await lazy.fetch(TIPPYTOP_JSON_PATH, {
+        await fetch(TIPPYTOP_JSON_PATH, {
           credentials: "omit",
         })
       ).json()) {

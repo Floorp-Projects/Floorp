@@ -25,8 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(lazy, ["fetch"]);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "wifiScanningEnabled",
@@ -747,10 +745,7 @@ class RegionDetector {
   async _fetchTimeout(url, opts, timeout) {
     let controller = new AbortController();
     opts.signal = controller.signal;
-    return Promise.race([
-      lazy.fetch(url, opts),
-      this._timeout(timeout, controller),
-    ]);
+    return Promise.race([fetch(url, opts), this._timeout(timeout, controller)]);
   }
 
   /**
