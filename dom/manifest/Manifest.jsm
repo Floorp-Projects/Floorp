@@ -24,7 +24,6 @@ const { ManifestIcons } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "JSONFile",
@@ -59,10 +58,7 @@ function stripQuery(url) {
 }
 
 // Folder in which we store the manifest files
-const MANIFESTS_DIR = lazy.OS.Path.join(
-  lazy.OS.Constants.Path.profileDir,
-  "manifests"
-);
+const MANIFESTS_DIR = PathUtils.join(PathUtils.profileDir, "manifests");
 
 // We maintain a list of scopes for installed webmanifests so we can determine
 // whether a given url is within the scope of a previously installed manifest
@@ -78,7 +74,7 @@ class Manifest {
     // The key for this is the manifests URL that is required to be unique.
     // However arbitrary urls are not safe file paths so lets hash it.
     const fileName = generateHash(manifestUrl) + ".json";
-    this._path = lazy.OS.Path.join(MANIFESTS_DIR, fileName);
+    this._path = PathUtils.join(MANIFESTS_DIR, fileName);
     this.browser = browser;
   }
 
@@ -180,13 +176,10 @@ var Manifests = {
     // Prevent multiple initializations
     this._readyPromise = (async () => {
       // Make sure the manifests have the folder needed to save into
-      await lazy.OS.File.makeDir(MANIFESTS_DIR, { ignoreExisting: true });
+      await IOUtils.makeDirectory(MANIFESTS_DIR, { ignoreExisting: true });
 
       // Ensure any existing scope data we have about manifests is loaded
-      this._path = lazy.OS.Path.join(
-        lazy.OS.Constants.Path.profileDir,
-        MANIFESTS_FILE
-      );
+      this._path = PathUtils.join(PathUtils.profileDir, MANIFESTS_FILE);
       this._store = new lazy.JSONFile({ path: this._path });
       await this._store.load();
 
