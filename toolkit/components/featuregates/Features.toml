@@ -7,7 +7,7 @@ preference = "layout.css.grid-template-masonry-value.enabled"
 type = "boolean"
 bug-numbers = [1607954]
 is-public = true
-default-value = {default = false, nightly = true}
+default-value = {default = false, nightly = true, thunderbird = true}
 
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
