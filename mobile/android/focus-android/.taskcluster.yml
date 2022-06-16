@@ -208,6 +208,7 @@ tasks:
                                       MOBILE_HEAD_TAG: '${head_tag}'
                                       MOBILE_PIP_REQUIREMENTS: taskcluster/requirements.txt
                                       MOBILE_REPOSITORY_TYPE: git
+                                      MOZ_AUTOMATION: "1"
                                       REPOSITORIES: {$json: {mobile: "Focus-Android"}}
                                       ANDROID_SDK_ROOT: /builds/worker/android-sdk
                                     - $if: 'tasks_for in ["github-pull-request"]'
