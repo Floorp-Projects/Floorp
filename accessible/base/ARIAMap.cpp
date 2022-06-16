@@ -1351,6 +1351,8 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_atomic,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
+  {nsGkAtoms::aria_colcount,          ATTR_VALINT                                  },
+  {nsGkAtoms::aria_colindex,          ATTR_VALINT                                  },
   {nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_current,  ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
@@ -1384,6 +1386,8 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
   {nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_rowcount,          ATTR_VALINT                                  },
+  {nsGkAtoms::aria_rowindex,          ATTR_VALINT                                  },
   {nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
   {nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
   {nsGkAtoms::aria_sort,                               ATTR_VALTOKEN               },
@@ -1549,6 +1553,22 @@ bool AttrIterator::ExposeAttr(AccAttributes* aTargetAttrs) const {
       aTargetAttrs->SetAttribute(mAttrAtom, normalizedValue);
       return true;
     }
+  } else if (mAttrCharacteristics & ATTR_VALINT) {
+    int32_t intVal;
+    if (nsCoreUtils::GetUIntAttr(mElement, mAttrAtom, &intVal)) {
+      aTargetAttrs->SetAttribute(mAttrAtom, intVal);
+      return true;
+    }
+    if (mAttrAtom == nsGkAtoms::aria_colcount ||
+        mAttrAtom == nsGkAtoms::aria_rowcount) {
+      // These attributes allow a value of -1.
+      if (mElement->AttrValueIs(kNameSpaceID_None, mAttrAtom, u"-1"_ns,
+                                eCaseMatters)) {
+        aTargetAttrs->SetAttribute(mAttrAtom, -1);
+        return true;
+      }
+    }
+    return false;  // Invalid value.
   }
   nsAutoString value;
   if (mElement->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
