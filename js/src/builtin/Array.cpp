@@ -4408,6 +4408,8 @@ static const JSFunctionSpec array_methods[] = {
 
     /* Proposal */
     JS_SELF_HOSTED_FN("at", "ArrayAt", 1, 0),
+    JS_SELF_HOSTED_FN("findLast", "ArrayFindLast", 1, 0),
+    JS_SELF_HOSTED_FN("findLastIndex", "ArrayFindLastIndex", 1, 0),
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
     JS_SELF_HOSTED_FN("toReversed", "ArrayToReversed", 0, 0),
@@ -4658,6 +4660,8 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
       !DefineDataProperty(cx, unscopables, cx->names().fill, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().find, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().findIndex, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().findLast, value) ||
+      !DefineDataProperty(cx, unscopables, cx->names().findLastIndex, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().flat, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().flatMap, value) ||
       !DefineDataProperty(cx, unscopables, cx->names().includes, value) ||
