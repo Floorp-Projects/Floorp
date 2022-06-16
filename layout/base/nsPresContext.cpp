@@ -1321,6 +1321,10 @@ static Element* GetPropagatedScrollStylesForViewport(
     return docElement;
   }
 
+  if (rootStyle && rootStyle->StyleDisplay()->IsContainAny()) {
+    return nullptr;
+  }
+
   // Don't look in the BODY for non-HTML documents or HTML documents
   // with non-HTML roots.
   // XXX this should be earlier; we shouldn't even look at the document root
@@ -1339,6 +1343,10 @@ static Element* GetPropagatedScrollStylesForViewport(
              "GetBodyElement returned something bogus");
 
   const auto* bodyStyle = Servo_Element_GetMaybeOutOfDateStyle(bodyElement);
+  if (bodyStyle && bodyStyle->StyleDisplay()->IsContainAny()) {
+    return nullptr;
+  }
+
   if (CheckOverflow(bodyStyle, aStyles)) {
     // tell caller we stole the overflow style from the body element
     return bodyElement;
