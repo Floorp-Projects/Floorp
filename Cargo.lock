@@ -3213,14 +3213,14 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 name = "memmap2"
 version = "0.2.999"
 dependencies = [
- "memmap2 0.3.1",
+ "memmap2 0.5.4",
 ]
 
 [[package]]
 name = "memmap2"
-version = "0.3.1"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b6c2ebff6180198788f5db08d7ce3bc1d0b617176678831a7510825973e357"
+checksum = "d5172b50c23043ff43dd53e51392f36519d9b35a8f3a410d30ece5d1aedd58ae"
 dependencies = [
  "libc",
 ]
@@ -4237,7 +4237,7 @@ dependencies = [
 name = "profiler_helper"
 version = "0.1.0"
 dependencies = [
- "memmap2 0.3.1",
+ "memmap2 0.5.4",
  "object",
  "rustc-demangle",
  "thin-vec",

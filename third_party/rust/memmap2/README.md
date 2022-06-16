@@ -2,7 +2,7 @@
 ![Build Status](https://github.com/RazrFalcon/memmap2-rs/workflows/Rust/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/memmap2.svg)](https://crates.io/crates/memmap2)
 [![Documentation](https://docs.rs/memmap2/badge.svg)](https://docs.rs/memmap2)
-[![Rust 1.31+](https://img.shields.io/badge/rust-1.31+-orange.svg)](https://www.rust-lang.org)
+[![Rust 1.36+](https://img.shields.io/badge/rust-1.36+-orange.svg)](https://www.rust-lang.org)
 
 A Rust library for cross-platform memory mapped IO.
 

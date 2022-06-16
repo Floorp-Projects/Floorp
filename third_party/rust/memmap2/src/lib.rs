@@ -1,51 +1,78 @@
 //! A cross-platform Rust API for memory mapped buffers.
+//!
+//! The core functionality is provided by either [`Mmap`] or [`MmapMut`],
+//! which correspond to mapping a [`File`] to a [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html)
+//! or [`&mut [u8]`](https://doc.rust-lang.org/std/primitive.slice.html)
+//! respectively. Both function by dereferencing to a slice, allowing the
+//! [`Mmap`]/[`MmapMut`] to be used in the same way you would the equivelant slice
+//! types.
+//!
+//! [`File`]: std::fs::File
+//!
+//! # Examples
+//!
+//! For simple cases [`Mmap`] can be used directly:
+//!
+//! ```
+//! use std::fs::File;
+//! use std::io::Read;
+//!
+//! use memmap2::Mmap;
+//!
+//! # fn main() -> std::io::Result<()> {
+//! let mut file = File::open("LICENSE-APACHE")?;
+//!
+//! let mut contents = Vec::new();
+//! file.read_to_end(&mut contents)?;
+//!
+//! let mmap = unsafe { Mmap::map(&file)?  };
+//!
+//! assert_eq!(&contents[..], &mmap[..]);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! However for cases which require configuration of the mapping, then
+//! you can use [`MmapOptions`] in order to further configure a mapping
+//! before you create it.
 
-#![doc(html_root_url = "https://docs.rs/memmap2/0.3.1")]
-
-#[cfg(windows)]
-mod windows;
-#[cfg(windows)]
-use crate::windows::file_len;
-#[cfg(windows)]
-use crate::windows::MmapInner;
+#[cfg_attr(unix, path = "unix.rs")]
+#[cfg_attr(windows, path = "windows.rs")]
+#[cfg_attr(not(any(unix, windows)), path = "stub.rs")]
+mod os;
+use crate::os::{file_len, MmapInner};
 
 #[cfg(unix)]
-mod unix;
+mod advice;
 #[cfg(unix)]
-use crate::unix::file_len;
-#[cfg(unix)]
-use crate::unix::MmapInner;
-
-#[cfg(not(any(unix, windows)))]
-mod stub;
-#[cfg(not(any(unix, windows)))]
-use crate::stub::file_len;
-#[cfg(not(any(unix, windows)))]
-use crate::stub::MmapInner;
+pub use crate::advice::Advice;
 
 use std::fmt;
+#[cfg(not(any(unix, windows)))]
 use std::fs::File;
 use std::io::{Error, ErrorKind, Result};
 use std::ops::{Deref, DerefMut};
 #[cfg(unix)]
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::{AsRawFd, RawFd};
+#[cfg(windows)]
+use std::os::windows::io::{AsRawHandle, RawHandle};
 use std::slice;
 use std::usize;
 
-#[cfg(windows)]
+#[cfg(not(any(unix, windows)))]
 pub struct MmapRawDescriptor<'a>(&'a File);
 
 #[cfg(unix)]
-pub struct MmapRawDescriptor(std::os::unix::io::RawFd);
+pub struct MmapRawDescriptor(RawFd);
 
-#[cfg(not(any(unix, windows)))]
-pub struct MmapRawDescriptor<'a>(&'a File);
+#[cfg(windows)]
+pub struct MmapRawDescriptor(RawHandle);
 
 pub trait MmapAsRawDesc {
     fn as_raw_desc(&self) -> MmapRawDescriptor;
 }
 
-#[cfg(windows)]
+#[cfg(not(any(unix, windows)))]
 impl MmapAsRawDesc for &File {
     fn as_raw_desc(&self) -> MmapRawDescriptor {
         MmapRawDescriptor(self)
@@ -53,23 +80,36 @@ impl MmapAsRawDesc for &File {
 }
 
 #[cfg(unix)]
-impl MmapAsRawDesc for &File {
-    fn as_raw_desc(&self) -> MmapRawDescriptor {
-        MmapRawDescriptor(self.as_raw_fd())
-    }
-}
-
-#[cfg(unix)]
-impl MmapAsRawDesc for std::os::unix::io::RawFd {
+impl MmapAsRawDesc for RawFd {
     fn as_raw_desc(&self) -> MmapRawDescriptor {
         MmapRawDescriptor(*self)
     }
 }
 
-#[cfg(not(any(unix, windows)))]
-impl MmapAsRawDesc for &File {
+#[cfg(unix)]
+impl<'a, T> MmapAsRawDesc for &'a T
+where
+    T: AsRawFd,
+{
     fn as_raw_desc(&self) -> MmapRawDescriptor {
-        MmapRawDescriptor(self)
+        MmapRawDescriptor(self.as_raw_fd())
+    }
+}
+
+#[cfg(windows)]
+impl MmapAsRawDesc for RawHandle {
+    fn as_raw_desc(&self) -> MmapRawDescriptor {
+        MmapRawDescriptor(*self)
+    }
+}
+
+#[cfg(windows)]
+impl<'a, T> MmapAsRawDesc for &'a T
+where
+    T: AsRawHandle,
+{
+    fn as_raw_desc(&self) -> MmapRawDescriptor {
+        MmapRawDescriptor(self.as_raw_handle())
     }
 }
 
@@ -306,7 +346,7 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_exec(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| Mmap { inner: inner })
+            .map(|inner| Mmap { inner })
     }
 
     /// Creates a writeable memory map backed by a file.
@@ -320,7 +360,7 @@ impl MmapOptions {
     ///
     /// ```
     /// # extern crate memmap2;
-    /// # extern crate tempdir;
+    /// # extern crate tempfile;
     /// #
     /// use std::fs::OpenOptions;
     /// use std::path::PathBuf;
@@ -328,7 +368,7 @@ impl MmapOptions {
     /// use memmap2::MmapOptions;
     /// #
     /// # fn main() -> std::io::Result<()> {
-    /// # let tempdir = tempdir::TempDir::new("mmap")?;
+    /// # let tempdir = tempfile::tempdir()?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("map_mut");
     /// let file = OpenOptions::new().read(true).write(true).create(true).open(&path)?;
@@ -346,7 +386,7 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_mut(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapMut { inner: inner })
+            .map(|inner| MmapMut { inner })
     }
 
     /// Creates a copy-on-write memory map backed by a file.
@@ -377,7 +417,7 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_copy(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapMut { inner: inner })
+            .map(|inner| MmapMut { inner })
     }
 
     /// Creates a copy-on-write read-only memory map backed by a file.
@@ -412,7 +452,7 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_copy_read_only(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| Mmap { inner: inner })
+            .map(|inner| Mmap { inner })
     }
 
     /// Creates an anonymous memory map.
@@ -437,7 +477,7 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_mut(self.get_len(&file)?, desc.0, self.offset, self.populate)
-            .map(|inner| MmapRaw { inner: inner })
+            .map(|inner| MmapRaw { inner })
     }
 }
 
@@ -535,7 +575,7 @@ impl Mmap {
     ///
     /// ```
     /// # extern crate memmap2;
-    /// # extern crate tempdir;
+    /// # extern crate tempfile;
     /// #
     /// use memmap2::Mmap;
     /// use std::ops::DerefMut;
@@ -543,7 +583,7 @@ impl Mmap {
     /// # use std::fs::OpenOptions;
     ///
     /// # fn main() -> std::io::Result<()> {
-    /// # let tempdir = tempdir::TempDir::new("mmap")?;
+    /// # let tempdir = tempfile::tempdir()?;
     /// let file = /* file opened with write permissions */
     /// #          OpenOptions::new()
     /// #                      .read(true)
@@ -563,7 +603,18 @@ impl Mmap {
         self.inner.make_mut()?;
         Ok(MmapMut { inner: self.inner })
     }
+
+    /// Advise OS how this memory map will be accessed. Only supported on Unix.
+    ///
+    /// See [madvise()](https://man7.org/linux/man-pages/man2/madvise.2.html) map page.
+    #[cfg(unix)]
+    pub fn advise(&self, advice: Advice) -> Result<()> {
+        self.inner.advise(advice)
+    }
 }
+
+#[cfg(feature = "stable_deref_trait")]
+unsafe impl stable_deref_trait::StableDeref for Mmap {}
 
 impl Deref for Mmap {
     type Target = [u8];
@@ -640,6 +691,81 @@ impl MmapRaw {
     pub fn len(&self) -> usize {
         self.inner.len()
     }
+
+    /// Flushes outstanding memory map modifications to disk.
+    ///
+    /// When this method returns with a non-error result, all outstanding changes to a file-backed
+    /// memory map are guaranteed to be durably stored. The file's metadata (including last
+    /// modification timestamp) may not be updated.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate memmap2;
+    /// # extern crate tempfile;
+    /// #
+    /// use std::fs::OpenOptions;
+    /// use std::io::Write;
+    /// use std::path::PathBuf;
+    /// use std::slice;
+    ///
+    /// use memmap2::MmapRaw;
+    ///
+    /// # fn main() -> std::io::Result<()> {
+    /// let tempdir = tempfile::tempdir()?;
+    /// let path: PathBuf = /* path to file */
+    /// #   tempdir.path().join("flush");
+    /// let file = OpenOptions::new().read(true).write(true).create(true).open(&path)?;
+    /// file.set_len(128)?;
+    ///
+    /// let mut mmap = unsafe { MmapRaw::map_raw(&file)? };
+    ///
+    /// let mut memory = unsafe { slice::from_raw_parts_mut(mmap.as_mut_ptr(), 128) };
+    /// memory.write_all(b"Hello, world!")?;
+    /// mmap.flush()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn flush(&self) -> Result<()> {
+        let len = self.len();
+        self.inner.flush(0, len)
+    }
+
+    /// Asynchronously flushes outstanding memory map modifications to disk.
+    ///
+    /// This method initiates flushing modified pages to durable storage, but it will not wait for
+    /// the operation to complete before returning. The file's metadata (including last
+    /// modification timestamp) may not be updated.
+    pub fn flush_async(&self) -> Result<()> {
+        let len = self.len();
+        self.inner.flush_async(0, len)
+    }
+
+    /// Flushes outstanding memory map modifications in the range to disk.
+    ///
+    /// The offset and length must be in the bounds of the memory map.
+    ///
+    /// When this method returns with a non-error result, all outstanding changes to a file-backed
+    /// memory in the range are guaranteed to be durable stored. The file's metadata (including
+    /// last modification timestamp) may not be updated. It is not guaranteed the only the changes
+    /// in the specified range are flushed; other outstanding changes to the memory map may be
+    /// flushed as well.
+    pub fn flush_range(&self, offset: usize, len: usize) -> Result<()> {
+        self.inner.flush(offset, len)
+    }
+
+    /// Asynchronously flushes outstanding memory map modifications in the range to disk.
+    ///
+    /// The offset and length must be in the bounds of the memory map.
+    ///
+    /// This method initiates flushing modified pages to durable storage, but it will not wait for
+    /// the operation to complete before returning. The file's metadata (including last
+    /// modification timestamp) may not be updated. It is not guaranteed that the only changes
+    /// flushed are those in the specified range; other outstanding changes to the memory map may
+    /// be flushed as well.
+    pub fn flush_async_range(&self, offset: usize, len: usize) -> Result<()> {
+        self.inner.flush_async(offset, len)
+    }
 }
 
 impl fmt::Debug for MmapRaw {
@@ -696,7 +822,7 @@ impl MmapMut {
     ///
     /// ```
     /// # extern crate memmap2;
-    /// # extern crate tempdir;
+    /// # extern crate tempfile;
     /// #
     /// use std::fs::OpenOptions;
     /// use std::path::PathBuf;
@@ -704,7 +830,7 @@ impl MmapMut {
     /// use memmap2::MmapMut;
     /// #
     /// # fn main() -> std::io::Result<()> {
-    /// # let tempdir = tempdir::TempDir::new("mmap")?;
+    /// # let tempdir = tempfile::tempdir()?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("map_mut");
     /// let file = OpenOptions::new()
@@ -745,7 +871,7 @@ impl MmapMut {
     ///
     /// ```
     /// # extern crate memmap2;
-    /// # extern crate tempdir;
+    /// # extern crate tempfile;
     /// #
     /// use std::fs::OpenOptions;
     /// use std::io::Write;
@@ -754,7 +880,7 @@ impl MmapMut {
     /// use memmap2::MmapMut;
     ///
     /// # fn main() -> std::io::Result<()> {
-    /// # let tempdir = tempdir::TempDir::new("mmap")?;
+    /// # let tempdir = tempfile::tempdir()?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("flush");
     /// let file = OpenOptions::new().read(true).write(true).create(true).open(&path)?;
@@ -853,7 +979,18 @@ impl MmapMut {
         self.inner.make_exec()?;
         Ok(Mmap { inner: self.inner })
     }
+
+    /// Advise OS how this memory map will be accessed. Only supported on Unix.
+    ///
+    /// See [madvise()](https://man7.org/linux/man-pages/man2/madvise.2.html) map page.
+    #[cfg(unix)]
+    pub fn advise(&self, advice: Advice) -> Result<()> {
+        self.inner.advise(advice)
+    }
 }
+
+#[cfg(feature = "stable_deref_trait")]
+unsafe impl stable_deref_trait::StableDeref for MmapMut {}
 
 impl Deref for MmapMut {
     type Target = [u8];
@@ -896,8 +1033,10 @@ impl fmt::Debug for MmapMut {
 
 #[cfg(test)]
 mod test {
-    extern crate tempdir;
+    extern crate tempfile;
 
+    #[cfg(unix)]
+    use crate::advice::Advice;
     use std::fs::OpenOptions;
     use std::io::{Read, Write};
     #[cfg(unix)]
@@ -913,7 +1052,7 @@ mod test {
     #[test]
     fn map_file() {
         let expected_len = 128;
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -946,7 +1085,7 @@ mod test {
     #[cfg(unix)]
     fn map_fd() {
         let expected_len = 128;
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -975,10 +1114,10 @@ mod test {
         assert_eq!(&incr[..], &mmap[..]);
     }
 
-    /// Checks that a 0-length file will not be mapped.
+    /// Checks that "mapping" a 0-length file derefs to an empty slice.
     #[test]
     fn map_empty_file() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -987,8 +1126,10 @@ mod test {
             .create(true)
             .open(&path)
             .unwrap();
-        let mmap = unsafe { Mmap::map(&file) };
-        assert!(mmap.is_err());
+        let mmap = unsafe { Mmap::map(&file).unwrap() };
+        assert!(mmap.is_empty());
+        let mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
+        assert!(mmap.is_empty());
     }
 
     #[test]
@@ -1013,12 +1154,12 @@ mod test {
 
     #[test]
     fn map_anon_zero_len() {
-        assert!(MmapOptions::new().map_anon().is_err())
+        assert!(MmapOptions::new().map_anon().unwrap().is_empty())
     }
 
     #[test]
     fn file_write() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let mut file = OpenOptions::new()
@@ -1042,7 +1183,7 @@ mod test {
 
     #[test]
     fn flush_range() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -1068,7 +1209,7 @@ mod test {
 
     #[test]
     fn map_copy() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let mut file = OpenOptions::new()
@@ -1104,7 +1245,7 @@ mod test {
 
     #[test]
     fn map_copy_read_only() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -1127,32 +1268,9 @@ mod test {
         assert_eq!(nulls, &read);
     }
 
-    // 32bit Linux cannot map a file larger than i32, but Windows can.
-    #[cfg(all(target_os = "linux", target_pointer_width = "32"))]
     #[test]
     fn map_offset() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
-        let path = tempdir.path().join("mmap");
-
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(&path)
-            .unwrap();
-
-        let offset = u32::max_value() as u64 + 2;
-        let len = 5432;
-        file.set_len(offset + len as u64).unwrap();
-
-        let mmap = unsafe { MmapOptions::new().offset(offset).map_mut(&file) };
-        assert!(mmap.is_err());
-    }
-
-    #[cfg(not(all(target_os = "linux", target_pointer_width = "32")))]
-    #[test]
-    fn map_offset() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let file = OpenOptions::new()
@@ -1238,7 +1356,7 @@ mod test {
     #[test]
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn jit_x86_file() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let mut options = OpenOptions::new();
         #[cfg(windows)]
         options.access_mode(GENERIC_ALL);
@@ -1256,7 +1374,7 @@ mod test {
 
     #[test]
     fn mprotect_file() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let mut options = OpenOptions::new();
@@ -1302,7 +1420,7 @@ mod test {
 
     #[test]
     fn mprotect_copy() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmap");
 
         let mut options = OpenOptions::new();
@@ -1359,7 +1477,7 @@ mod test {
 
     #[test]
     fn raw() {
-        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let tempdir = tempfile::tempdir().unwrap();
         let path = tempdir.path().join("mmapraw");
 
         let mut options = OpenOptions::new();
@@ -1374,5 +1492,69 @@ mod test {
         assert_eq!(mmap.len(), 6);
         assert!(!mmap.as_ptr().is_null());
         assert_eq!(unsafe { std::ptr::read(mmap.as_ptr()) }, b'a');
+    }
+
+    /// Something that relies on StableDeref
+    #[test]
+    #[cfg(feature = "stable_deref_trait")]
+    fn owning_ref() {
+        extern crate owning_ref;
+
+        let mut map = MmapMut::map_anon(128).unwrap();
+        map[10] = 42;
+        let owning = owning_ref::OwningRef::new(map);
+        let sliced = owning.map(|map| &map[10..20]);
+        assert_eq!(42, sliced[0]);
+
+        let map = sliced.into_owner().make_read_only().unwrap();
+        let owning = owning_ref::OwningRef::new(map);
+        let sliced = owning.map(|map| &map[10..20]);
+        assert_eq!(42, sliced[0]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn advise() {
+        let expected_len = 128;
+        let tempdir = tempfile::tempdir().unwrap();
+        let path = tempdir.path().join("mmap_advise");
+
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(&path)
+            .unwrap();
+
+        file.set_len(expected_len as u64).unwrap();
+
+        // Test MmapMut::advise
+        let mut mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
+        mmap.advise(Advice::Random)
+            .expect("mmap advising should be supported on unix");
+
+        let len = mmap.len();
+        assert_eq!(expected_len, len);
+
+        let zeros = vec![0; len];
+        let incr: Vec<u8> = (0..len as u8).collect();
+
+        // check that the mmap is empty
+        assert_eq!(&zeros[..], &mmap[..]);
+
+        // write values into the mmap
+        (&mut mmap[..]).write_all(&incr[..]).unwrap();
+
+        // read values back
+        assert_eq!(&incr[..], &mmap[..]);
+
+        // Set advice and Read from the read-only map
+        let mmap = unsafe { Mmap::map(&file).unwrap() };
+
+        mmap.advise(Advice::Random)
+            .expect("mmap advising should be supported on unix");
+
+        // read values back
+        assert_eq!(&incr[..], &mmap[..]);
     }
 }
