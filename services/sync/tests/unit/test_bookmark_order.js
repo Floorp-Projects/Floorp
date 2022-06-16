@@ -4,7 +4,7 @@
 _(
   "Making sure after processing incoming bookmarks, they show up in the right order"
 );
-const { Bookmark, BookmarkFolder, BookmarksEngine } = ChromeUtils.import(
+const { Bookmark, BookmarkFolder } = ChromeUtils.import(
   "resource://services-sync/engines/bookmarks.js"
 );
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");

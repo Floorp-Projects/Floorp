@@ -8,12 +8,6 @@ const { FirefoxAdapter } = ChromeUtils.import(
   "resource://services-common/kinto-storage-adapter.js"
 );
 
-const BinaryInputStream = Components.Constructor(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream"
-);
-
 var server;
 
 // set up what we need to make storage adapters

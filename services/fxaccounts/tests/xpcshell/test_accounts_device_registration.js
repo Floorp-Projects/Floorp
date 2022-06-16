@@ -960,17 +960,6 @@ add_task(async function test_checking_remote_availableCommands_match() {
   );
 });
 
-function expandHex(two_hex) {
-  // Return a 64-character hex string, encoding 32 identical bytes.
-  let eight_hex = two_hex + two_hex + two_hex + two_hex;
-  let thirtytwo_hex = eight_hex + eight_hex + eight_hex + eight_hex;
-  return thirtytwo_hex + thirtytwo_hex;
-}
-
-function expandBytes(two_hex) {
-  return CommonUtils.hexToBytes(expandHex(two_hex));
-}
-
 function getTestUser(name) {
   return {
     email: name + "@example.com",

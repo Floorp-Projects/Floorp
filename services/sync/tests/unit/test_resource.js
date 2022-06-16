@@ -9,8 +9,6 @@ const { SyncAuthManager } = ChromeUtils.import(
   "resource://services-sync/sync_auth.js"
 );
 
-var logger;
-
 var fetched = false;
 function server_open(metadata, response) {
   let body;
@@ -169,7 +167,6 @@ Observers.add("weave:service:quota:remaining", function(subject) {
 });
 
 function run_test() {
-  logger = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   Svc.Prefs.set("network.numRetries", 1); // speed up test

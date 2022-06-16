@@ -2,9 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure a failing sync reports a useful error");
-const { BookmarksEngine } = ChromeUtils.import(
-  "resource://services-sync/engines/bookmarks.js"
-);
+// `Service` is used as a global in head_helpers.js.
+// eslint-disable-next-line no-unused-vars
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 add_bookmark_test(async function run_test(engine) {

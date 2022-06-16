@@ -4,7 +4,6 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BridgedRecord: "resource://services-sync/bridged_engine.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   Service: "resource://services-sync/service.js",
 });
