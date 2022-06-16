@@ -748,16 +748,6 @@ extern UniqueChars ToString(ValType type);
 
 extern UniqueChars ToString(const Maybe<ValType>& type);
 
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-
-// The JS API sometimes uses different names ("anyfunc" rather than "funcref").
-
-extern UniqueChars ToJSAPIString(RefType type);
-
-extern UniqueChars ToJSAPIString(ValType type);
-
-#endif
-
 }  // namespace wasm
 }  // namespace js
 
