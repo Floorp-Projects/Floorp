@@ -201,6 +201,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
+  virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const override;
+
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 
