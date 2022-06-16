@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-array-find-last) skip-if(!xulRuntime.shell)
 /*
  * Any copyright is dedicated to the Public Domain.
  * https://creativecommons.org/publicdomain/zero/1.0/
