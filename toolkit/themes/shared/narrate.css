@@ -4,24 +4,34 @@
 
 /* Avoid adding ID selector rules in this style sheet, since they could
  * inadvertently match elements in the article content. */
-:root {
-  --blue-60: #0060df;
+
+body {
+  --current-voice: #7f7f7f;
+  --narrate-word-highlight-color: #ffe087;
+  --narrating-paragraph-background-color: #ffc;
 }
+
+body.sepia {
+  --narrate-word-highlight-color: #bdb5a5;
+  --narrating-paragraph-background-color: #e0d7c5;
+}
+
+body.dark {
+  --current-voice: #a09eac;
+  --narrate-word-highlight-color: #6f6f6f;
+  --narrating-paragraph-background-color: #242424;
+}
+
+body.hcm {
+  --current-voice: inherit;
+  --narrate-word-highlight-color: CanvasText;
+  --narrating-paragraph-background-color: Canvas;
+}
+
 .narrating {
   position: relative;
   z-index: 1;
-}
-
-body.light .narrating {
-  background-color: #ffc;
-}
-
-body.sepia .narrating {
-  background-color: #e0d7c5;
-}
-
-body.dark .narrating {
-  background-color: #242424;
+  background-color: var(--narrating-paragraph-background-color);
 }
 
 .narrate-word-highlight {
@@ -42,25 +52,8 @@ body.dark .narrating {
   transition: none;
 }
 
-body.light .narrate-word-highlight {
-  border-bottom-color: #ffe087;
-}
-
-body.sepia .narrate-word-highlight {
-  border-bottom-color: #bdb5a5;
-}
-
-body.dark .narrate-word-highlight {
-  border-bottom-color: #6f6f6f;
-}
-
-.narrate-dropdown {
-  --border-color: #e5e5e5;
-  --current-voice: #7f7f7f;
-}
-.dark .narrate-dropdown {
-  --border-color: #65646a;
-  --current-voice: #a09eac;
+.narrate-word-highlight {
+  border-bottom-color: var(--narrate-word-highlight-color);
 }
 
 .narrate-toggle {
@@ -70,6 +63,16 @@ body.dark .narrate-word-highlight {
 .speaking .narrate-toggle {
   /* This shows with an animation. */
   background-image: url("chrome://global/skin/narrate/headphone-active.svg");
+  fill: var(--toolbar-button-foreground-active);
+}
+
+body.hcm .speaking .narrate-toggle {
+  background-color: var(--toolbar-button-background-active);
+}
+
+body.hcm .speaking .narrate-toggle:hover {
+  background-color: var(--toolbar-button-foreground-active);
+  fill: var(--toolbar-button-background-active);
 }
 
 .narrate-dropdown > .dropdown-popup button {
@@ -77,8 +80,14 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-dropdown > .dropdown-popup button:enabled:hover,
-.narrate-dropdown > .dropdown-popup button:enabled:focus {
-  background-color: var(--popup-button-hover);
+.narrate-dropdown > .dropdown-popup button:enabled:focus-visible {
+  background-color: var(--popup-button-background-hover);
+  color: var(--popup-button-foreground-hover);
+  fill: var(--popup-button-foreground-hover);
+}
+
+.narrate-dropdown > .dropdown-popup button:enabled:hover:active {
+  background-color: var(--popup-button-background-active);
 }
 
 .narrate-dropdown > .dropdown-popup {
@@ -101,7 +110,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-row:not(:first-child) {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--popup-line);
 }
 
 /* Control buttons */
@@ -113,7 +122,6 @@ body.dark .narrate-word-highlight {
   height: 64px;
   width: 82px;
   border: none;
-  color: #666;
   box-sizing: border-box;
 }
 
@@ -141,7 +149,8 @@ body.dark .narrate-word-highlight {
 
 /* Rate control */
 
-.narrate-rate::before, .narrate-rate::after {
+.narrate-rate::before,
+.narrate-rate::after {
   content: '';
   width: 48px;
   height: 40px;
@@ -163,7 +172,7 @@ body.dark .narrate-word-highlight {
 .narrate-rate-input {
   margin: 0 1px;
   flex-grow: 1;
-  background-color: var(--popup-bgcolor);
+  background-color: var(--popup-background);
   width: 148px;
 }
 
@@ -173,7 +182,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-rate-input::-moz-range-progress {
-  background-color: var(--active-color);
+  background-color: var(--primary-color);
   height: 2px;
 }
 
@@ -186,7 +195,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-rate-input:active::-moz-range-thumb {
-  background-color: var(--blue-60);
+  background-color: var(--primary-color);
 }
 
 /* Voice selection */
@@ -215,29 +224,8 @@ body.dark .narrate-word-highlight {
   vertical-align: middle;
 }
 
-.voiceselect > .options > button.option:not(:first-child) {
-  border-top: 1px solid var(--border-color);
-}
-
-.voiceselect > .options > button.option  {
-  box-sizing: border-box;
-}
-
-.voiceselect > .options:not(.hovering) > button.option:focus {
-  background-color: #eaeaea;
-}
-
-body.dark .voiceselect > .options:not(.hovering) > button.option:focus {
-  background-color: var(--popup-button-hover);
-}
-
-.voiceselect > .options:not(.hovering) > button.option:hover:not(:focus) {
-  background-color: transparent;
-}
-
-.voiceselect > .options > button.option::-moz-focus-inner {
-  outline: none;
-  border: 0;
+.current-voice {
+  color: var(--current-voice);
 }
 
 .voiceselect > .options {
@@ -247,11 +235,24 @@ body.dark .voiceselect > .options:not(.hovering) > button.option:focus {
 
 .voiceselect.open > .options {
   display: block;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--popup-line);
 }
 
-.current-voice {
-  color: var(--current-voice);
+.voiceselect > .options > button.option {
+  box-sizing: border-box;
+}
+
+.voiceselect > .options > button.option:not(:first-child) {
+  border-top: 1px solid var(--popup-line);
+}
+
+.voiceselect > .options > button.option::-moz-focus-inner {
+  outline: none;
+  border: 0;
+}
+
+.voiceselect > .options:not(.hovering) > button.option:hover:not(:focus) {
+  background-color: transparent;
 }
 
 .voiceselect:not(.open) > button,

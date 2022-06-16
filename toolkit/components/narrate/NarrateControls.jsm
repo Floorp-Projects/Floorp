@@ -45,7 +45,7 @@ function NarrateControls(win, languagePromise) {
 
   let toggle = win.document.createElement("li");
   let toggleButton = win.document.createElement("button");
-  toggleButton.className = "dropdown-toggle button narrate-toggle";
+  toggleButton.className = "dropdown-toggle toolbar-button narrate-toggle";
   toggleButton.dataset.telemetryId = "reader-listen";
   let tip = win.document.createElement("span");
   let labelText = gStrings.GetStringFromName("listen");
