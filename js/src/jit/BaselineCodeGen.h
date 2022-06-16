@@ -121,7 +121,8 @@ class BaselineCodeGen {
 
   void prepareVMCall();
 
-  void storeFrameSizeAndPushDescriptor(uint32_t argSize, Register scratch);
+  void storeFrameSizeAndPushDescriptor(uint32_t argSize, Register scratch1,
+                                       Register scratch2);
 
   enum class CallVMPhase { BeforePushingLocals, AfterPushingLocals };
   bool callVMInternal(VMFunctionId id, RetAddrEntry::Kind kind,

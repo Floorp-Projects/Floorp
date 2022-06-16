@@ -600,7 +600,7 @@ class LApplyArgsGeneric
   static const size_t ThisIndex = 2;
 
   const LDefinition* getTempObject() { return getTemp(0); }
-  const LDefinition* getTempForArgCopy() { return getTemp(1); }
+  const LDefinition* getTempStackCounter() { return getTemp(1); }
 };
 
 class LApplyArgsObj
@@ -632,7 +632,7 @@ class LApplyArgsObj
   static const size_t ThisIndex = 2;
 
   const LDefinition* getTempObject() { return getTemp(0); }
-  const LDefinition* getTempForArgCopy() { return getTemp(1); }
+  const LDefinition* getTempStackCounter() { return getTemp(1); }
 };
 
 class LApplyArrayGeneric
@@ -664,7 +664,7 @@ class LApplyArrayGeneric
   static const size_t ThisIndex = 2;
 
   const LDefinition* getTempObject() { return getTemp(0); }
-  const LDefinition* getTempForArgCopy() { return getTemp(1); }
+  const LDefinition* getTempStackCounter() { return getTemp(1); }
 };
 
 class LConstructArgsGeneric
@@ -699,10 +699,10 @@ class LConstructArgsGeneric
 
   const LDefinition* getTempObject() { return getTemp(0); }
 
-  // tempForArgCopy is mapped to the same register as newTarget:
-  // tempForArgCopy becomes live as newTarget is dying, all registers are
+  // tempStackCounter is mapped to the same register as newTarget:
+  // tempStackCounter becomes live as newTarget is dying, all registers are
   // calltemps.
-  const LAllocation* getTempForArgCopy() { return getOperand(2); }
+  const LAllocation* getTempStackCounter() { return getOperand(2); }
 };
 
 class LConstructArrayGeneric
@@ -739,10 +739,10 @@ class LConstructArrayGeneric
   // live as elements is dying, all registers are calltemps.
   const LAllocation* getArgc() { return getOperand(1); }
 
-  // tempForArgCopy is mapped to the same register as newTarget:
-  // tempForArgCopy becomes live as newTarget is dying, all registers are
+  // tempStackCounter is mapped to the same register as newTarget:
+  // tempStackCounter becomes live as newTarget is dying, all registers are
   // calltemps.
-  const LAllocation* getTempForArgCopy() { return getOperand(2); }
+  const LAllocation* getTempStackCounter() { return getOperand(2); }
 };
 
 // Takes in either an integer or boolean input and tests it for truthiness.

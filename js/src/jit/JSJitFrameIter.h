@@ -109,6 +109,7 @@ class JSJitFrameIter {
   uint8_t* current_;
   FrameType type_;
   uint8_t* resumePCinCurrentFrame_;
+  size_t frameSize_;
 
   // Size of the current Baseline frame. Equivalent to
   // BaselineFrame::debugFrameSize_ in debug builds.
@@ -168,7 +169,6 @@ class JSJitFrameIter {
   bool isBaselineStub() const { return type_ == FrameType::BaselineStub; }
   bool isRectifier() const { return type_ == FrameType::Rectifier; }
   bool isBareExit() const;
-  bool isUnwoundJitExit() const;
   template <typename T>
   bool isExitFrameLayout() const;
 
@@ -195,8 +195,16 @@ class JSJitFrameIter {
   uint8_t* resumePCinCurrentFrame() const { return resumePCinCurrentFrame_; }
 
   // Previous frame information extracted from the current frame.
+  inline size_t prevFrameLocalSize() const;
   inline FrameType prevType() const;
   uint8_t* prevFp() const;
+
+  // Returns the stack space used by the current frame, in bytes. This does
+  // not include the size of its fixed header.
+  size_t frameSize() const {
+    MOZ_ASSERT(!isExitFrame());
+    return frameSize_;
+  }
 
   // Functions used to iterate on frames. When prevType is an entry,
   // the current frame is the last JS Jit frame.

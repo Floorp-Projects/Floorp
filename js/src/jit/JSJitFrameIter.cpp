@@ -32,11 +32,13 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation,
     : current_(fp),
       type_(frameType),
       resumePCinCurrentFrame_(nullptr),
+      frameSize_(0),
       cachedSafepointIndex_(nullptr),
       activation_(activation) {
   MOZ_ASSERT(type_ == FrameType::JSJitToWasm || type_ == FrameType::Exit);
   if (activation_->bailoutData()) {
     current_ = activation_->bailoutData()->fp();
+    frameSize_ = activation_->bailoutData()->topFrameSize();
     type_ = FrameType::Bailout;
   } else {
     MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
@@ -96,13 +98,6 @@ bool JSJitFrameIter::isBareExit() const {
   return exitFrame()->isBareExit();
 }
 
-bool JSJitFrameIter::isUnwoundJitExit() const {
-  if (type_ != FrameType::Exit) {
-    return false;
-  }
-  return exitFrame()->isUnwoundJitExit();
-}
-
 bool JSJitFrameIter::isFunctionFrame() const {
   return CalleeTokenIsFunction(calleeToken());
 }
@@ -152,56 +147,43 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
 Value* JSJitFrameIter::actualArgs() const { return jsFrame()->argv() + 1; }
 
 uint8_t* JSJitFrameIter::prevFp() const {
+  uint8_t* res =
+      current_ + current()->prevFrameLocalSize() + current()->headerSize();
+#ifdef DEBUG
+  // The saved frame pointer must match the frame descriptor, except for the
+  // special CppToJSJit entry frame (AssertJitStackInvariants calls prevFp for
+  // the entry frame too, but we don't really care about the exact return
+  // value).
+  static constexpr size_t FPOffset = CommonFrameLayout::FramePointerOffset;
   if (current()->prevType() == FrameType::WasmToJSJit) {
-    return current()->callerFramePtr();
+    MOZ_ASSERT(current()->callerFramePtr() == res);
+  } else if (current()->prevType() != FrameType::CppToJSJit) {
+    MOZ_ASSERT(current()->callerFramePtr() + FPOffset == res);
   }
-  return current()->callerFramePtr() + CommonFrameLayout::FramePointerOffset;
-}
-
-// Compute the size of a Baseline frame excluding pushed VMFunction arguments or
-// callee frame headers. This is used to calculate the number of Value slots in
-// the frame. The caller asserts this matches BaselineFrame::debugFrameSize.
-static uint32_t ComputeBaselineFrameSize(const JSJitFrameIter& frame) {
-  MOZ_ASSERT(frame.prevType() == FrameType::BaselineJS);
-
-  uint32_t frameSize = frame.current()->callerFramePtr() +
-                       CommonFrameLayout::FramePointerOffset - frame.fp();
-
-  if (frame.isBaselineStub()) {
-    return frameSize - BaselineStubFrameLayout::Size();
-  }
-
-  // Note: an UnwoundJit exit frame is a JitFrameLayout that was turned into an
-  // ExitFrameLayout by EnsureUnwoundJitExitFrame. We have to use the original
-  // header size here because that's what we have on the stack.
-  if (frame.isScripted() || frame.isUnwoundJitExit()) {
-    return frameSize - JitFrameLayout::Size();
-  }
-
-  if (frame.isExitFrame()) {
-    frameSize -= ExitFrameLayout::Size();
-    if (frame.exitFrame()->isWrapperExit()) {
-      const VMFunctionData* data = frame.exitFrame()->footer()->function();
-      frameSize -= data->explicitStackSlots() * sizeof(void*);
-    }
-    return frameSize;
-  }
-
-  MOZ_CRASH("Unexpected frame");
+#endif
+  return res;
 }
 
 void JSJitFrameIter::operator++() {
   MOZ_ASSERT(!isEntry());
 
-  // Compute BaselineFrame size. In debug builds this is equivalent to
-  // BaselineFrame::debugFrameSize_. This is asserted at the end of this method.
+  // Compute BaselineFrame size, the size stored in the descriptor excluding
+  // VMFunction arguments pushed for VM calls.
+  //
+  // In debug builds this is equivalent to BaselineFrame::debugFrameSize_. This
+  // is asserted at the end of this method.
   if (current()->prevType() == FrameType::BaselineJS) {
-    uint32_t frameSize = ComputeBaselineFrameSize(*this);
+    uint32_t frameSize = prevFrameLocalSize();
+    if (isExitFrame() && exitFrame()->isWrapperExit()) {
+      const VMFunctionData* data = exitFrame()->footer()->function();
+      frameSize -= data->explicitStackSlots() * sizeof(void*);
+    }
     baselineFrameSize_ = mozilla::Some(frameSize);
   } else {
     baselineFrameSize_ = mozilla::Nothing();
   }
 
+  frameSize_ = prevFrameLocalSize();
   cachedSafepointIndex_ = nullptr;
 
   // If the next frame is the entry frame, just exit. Don't update current_,
@@ -358,14 +340,16 @@ void JSJitFrameIter::dump() const {
   switch (type_) {
     case FrameType::CppToJSJit:
       fprintf(stderr, " Entry frame\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      fprintf(stderr, "  Frame size: %u\n",
+              unsigned(current()->prevFrameLocalSize()));
       break;
     case FrameType::BaselineJS:
       dumpBaseline();
       break;
     case FrameType::BaselineStub:
       fprintf(stderr, " Baseline stub frame\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      fprintf(stderr, "  Frame size: %u\n",
+              unsigned(current()->prevFrameLocalSize()));
       break;
     case FrameType::Bailout:
     case FrameType::IonJS: {
@@ -381,15 +365,18 @@ void JSJitFrameIter::dump() const {
     }
     case FrameType::Rectifier:
       fprintf(stderr, " Rectifier frame\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      fprintf(stderr, "  Frame size: %u\n",
+              unsigned(current()->prevFrameLocalSize()));
       break;
     case FrameType::IonICCall:
       fprintf(stderr, " Ion IC call\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      fprintf(stderr, "  Frame size: %u\n",
+              unsigned(current()->prevFrameLocalSize()));
       break;
     case FrameType::WasmToJSJit:
       fprintf(stderr, " Fast wasm-to-JS entry frame\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      fprintf(stderr, "  Frame size: %u\n",
+              unsigned(current()->prevFrameLocalSize()));
       break;
     case FrameType::Exit:
       fprintf(stderr, " Exit frame\n");
@@ -556,11 +543,17 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
 
 template <typename ReturnType = CommonFrameLayout*>
 static inline ReturnType GetPreviousRawFrame(CommonFrameLayout* frame) {
-  if (frame->prevType() == FrameType::WasmToJSJit) {
-    return ReturnType(frame->callerFramePtr());
-  }
+  size_t prevSize = frame->prevFrameLocalSize() + frame->headerSize();
+  uint8_t* res = (uint8_t*)frame + prevSize;
+#ifdef DEBUG
   static constexpr size_t FPOffset = CommonFrameLayout::FramePointerOffset;
-  return ReturnType(frame->callerFramePtr() + FPOffset);
+  if (frame->prevType() == FrameType::WasmToJSJit) {
+    MOZ_ASSERT(frame->callerFramePtr() == res);
+  } else {
+    MOZ_ASSERT(frame->callerFramePtr() + FPOffset == res);
+  }
+#endif
+  return ReturnType(res);
 }
 
 JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(

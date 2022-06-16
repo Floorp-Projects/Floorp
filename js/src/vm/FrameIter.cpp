@@ -14,7 +14,7 @@
 #include <stdlib.h>  // getenv
 
 #include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
-#include "jit/JitFrames.h"       // js::jit::EnsureUnwoundJitExitFrame
+#include "jit/JitFrames.h"       // js::jit::EnsureBareExitFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::{FrameType,InlineFrameIterator,JSJitFrameIter,MaybeReadFallback,SnapshotIterator}
 #include "js/GCAPI.h"            // JS::AutoSuppressGCAnalysis
 #include "js/Principals.h"       // JSSubsumesOp
@@ -227,7 +227,7 @@ void JitFrameIter::operator++() {
       // don't see this frame when they use ScriptFrameIter, and (2)
       // ScriptFrameIter does not crash when accessing an IonScript
       // that's destroyed by the ionScript->decref call.
-      EnsureUnwoundJitExitFrame(act_, prevFrame);
+      EnsureBareExitFrame(act_, prevFrame);
     }
   } else if (isWasm()) {
     ++asWasm();

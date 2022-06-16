@@ -260,8 +260,10 @@ static void* GetReturnAddressToIonCode(JSContext* cx) {
 void IonCacheIRCompiler::enterStubFrame(MacroAssembler& masm,
                                         const AutoSaveLiveRegisters&) {
   MOZ_ASSERT(!enteredStubFrame_);
+  uint32_t descriptor = MakeFrameDescriptor(
+      masm.framePushed(), FrameType::IonJS, IonICCallFrameLayout::Size());
   pushStubCodePointer();
-  masm.PushFrameDescriptor(FrameType::IonJS);
+  masm.Push(Imm32(descriptor));
   masm.Push(ImmPtr(GetReturnAddressToIonCode(cx_)));
 
   masm.Push(FramePointer);
@@ -892,9 +894,13 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc
   masm.Push(scratch);
-  masm.PushFrameDescriptor(FrameType::IonICCall);
+  masm.Push(Imm32(descriptor));
 
   // Check stack alignment. Add sizeof(uintptr_t) for the return address.
   MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
@@ -1540,9 +1546,13 @@ bool IonCacheIRCompiler::emitCallScriptedSetter(ObjOperandId receiverId,
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(1));  // argc
   masm.Push(scratch);
-  masm.PushFrameDescriptor(FrameType::IonICCall);
+  masm.Push(Imm32(descriptor));
 
   // Check stack alignment. Add sizeof(uintptr_t) for the return address.
   MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
@@ -1944,9 +1954,13 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
 
+  uint32_t frameSize =
+      argSize + padding + IonICCallFrameLayout::FramePointerOffset;
+  uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
+                                            JitFrameLayout::Size());
   masm.Push(Imm32(0));  // argc
   masm.Push(callee);
-  masm.PushFrameDescriptor(FrameType::IonICCall);
+  masm.Push(Imm32(descriptor));
 
   masm.loadJitCodeRaw(callee, callee);
   masm.callJit(callee);
