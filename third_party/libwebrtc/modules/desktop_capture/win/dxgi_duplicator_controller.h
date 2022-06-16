@@ -26,6 +26,7 @@
 #include "modules/desktop_capture/win/dxgi_context.h"
 #include "modules/desktop_capture/win/dxgi_frame.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -40,7 +41,7 @@ namespace webrtc {
 // but a later Duplicate() returns false, this usually means the display mode is
 // changing. Consumers should retry after a while. (Typically 50 milliseconds,
 // but according to hardware performance, this time may vary.)
-class DxgiDuplicatorController {
+class RTC_EXPORT DxgiDuplicatorController {
  public:
   using Context = DxgiFrameContext;
 
