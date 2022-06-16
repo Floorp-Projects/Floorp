@@ -3,6 +3,7 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
 var observer = {
   observe(subject, topic, data) {

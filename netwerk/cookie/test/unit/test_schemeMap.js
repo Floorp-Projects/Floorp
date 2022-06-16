@@ -13,10 +13,10 @@ const { CookieXPCShellUtils } = ChromeUtils.import(
   "resource://testing-common/CookieXPCShellUtils.jsm"
 );
 
-let CookieXPCShellUtilsInitialized = false;
+let cookieXPCShellUtilsInitialized = false;
 function maybeInitializeCookieXPCShellUtils() {
-  if (!CookieXPCShellUtilsInitialized) {
-    CookieXPCShellUtilsInitialized = true;
+  if (!cookieXPCShellUtilsInitialized) {
+    cookieXPCShellUtilsInitialized = true;
     CookieXPCShellUtils.init(this);
 
     CookieXPCShellUtils.createServer({ hosts: ["example.org"] });
@@ -38,6 +38,8 @@ add_task(async _ => {
     );
   }
 
+  let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+
   info("Let's set a cookie from HTTP example.org");
 
   let uri = NetUtil.newURI("http://example.org/");
@@ -52,7 +54,7 @@ add_task(async _ => {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   });
 
-  Services.cookies.setCookieStringFromHttp(uri, "a=b; sameSite=lax", channel);
+  cs.setCookieStringFromHttp(uri, "a=b; sameSite=lax", channel);
 
   let cookies = Services.cookies.getCookiesFromHost("example.org", {});
   Assert.equal(cookies.length, 1, "We expect 1 cookie only");
@@ -70,7 +72,7 @@ add_task(async _ => {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   });
 
-  Services.cookies.setCookieStringFromHttp(uri, "a=b; sameSite=lax", channel);
+  cs.setCookieStringFromHttp(uri, "a=b; sameSite=lax", channel);
 
   cookies = Services.cookies.getCookiesFromHost("example.org", {});
   Assert.equal(cookies.length, 1, "We expect 1 cookie only");
@@ -104,6 +106,8 @@ add_task(async _ => {
       );
     }
 
+    let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+
     info(
       `Testing schemefulSameSite=${schemefulComparison}. Let's set a cookie from HTTPS example.org`
     );
@@ -120,7 +124,7 @@ add_task(async _ => {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
-    Services.cookies.setCookieStringFromHttp(
+    cs.setCookieStringFromHttp(
       https_uri,
       "a=b; sameSite=lax",
       same_site_channel

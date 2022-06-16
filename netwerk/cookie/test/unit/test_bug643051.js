@@ -17,6 +17,8 @@ add_task(async () => {
     true
   );
 
+  let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+
   let uri = NetUtil.newURI("http://example.org/");
   let channel = NetUtil.newChannel({
     uri,
@@ -26,9 +28,9 @@ add_task(async () => {
 
   let set = "foo=bar\nbaz=foo";
   let expected = "foo=bar; baz=foo";
-  Services.cookies.setCookieStringFromHttp(uri, set, channel);
+  cs.setCookieStringFromHttp(uri, set, channel);
 
-  let actual = Services.cookies.getCookieStringFromHttp(uri, channel);
+  let actual = cs.getCookieStringFromHttp(uri, channel);
   Assert.equal(actual, expected);
 
   await CookieXPCShellUtils.setCookieToDocument("http://example.net/", set);
