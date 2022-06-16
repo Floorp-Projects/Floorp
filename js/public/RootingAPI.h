@@ -1570,6 +1570,27 @@ void CallTraceCallbackOnNonHeap(T* v, const TraceCallbacks& aCallbacks,
 
 } /* namespace gc */
 
+template <typename Wrapper, typename T1, typename T2>
+class WrappedPtrOperations<std::pair<T1, T2>, Wrapper> {
+  const std::pair<T1, T2>& pair() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  const T1& first() const { return pair().first; }
+  const T2& second() const { return pair().second; }
+};
+
+template <typename Wrapper, typename T1, typename T2>
+class MutableWrappedPtrOperations<std::pair<T1, T2>, Wrapper>
+    : public WrappedPtrOperations<std::pair<T1, T2>, Wrapper> {
+  std::pair<T1, T2>& pair() { return static_cast<Wrapper*>(this)->get(); }
+
+ public:
+  T1& first() { return pair().first; }
+  T2& second() { return pair().second; }
+};
+
 } /* namespace js */
 
 #endif /* js_RootingAPI_h */
