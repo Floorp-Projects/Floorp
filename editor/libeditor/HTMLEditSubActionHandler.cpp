@@ -6678,32 +6678,6 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
   return point;
 }
 
-void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
-    nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
-
-  const uint32_t rangeCount = SelectionRef().RangeCount();
-  aOutArrayOfRanges.SetCapacity(rangeCount);
-  for (const uint32_t i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
-    const nsRange* selectionRange = SelectionRef().GetRangeAt(i);
-    MOZ_ASSERT(selectionRange);
-    EditorRawDOMRange rawRange(*selectionRange);
-    if (!rawRange.IsPositioned() ||
-        !rawRange.EnsureNotInNativeAnonymousSubtree()) {
-      continue;  // ignore ranges which are in orphan fragment which were
-                 // disconnected from native anonymous subtrees
-    }
-    RefPtr<nsRange> extendedRange =
-        CreateRangeIncludingAdjuscentWhiteSpaces(rawRange);
-    if (!extendedRange) {
-      extendedRange = selectionRange->CloneRange();
-    }
-
-    aOutArrayOfRanges.AppendElement(extendedRange);
-  }
-}
 void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
     nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
     EditSubAction aEditSubAction) {
