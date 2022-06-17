@@ -11,13 +11,6 @@ const TEST_URI =
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  // Use a local file for the device list, otherwise the panel tries to reach an external
-  // URL, which makes the test fail.
-  await pushPref(
-    "devtools.devices.url",
-    "http://example.com/browser/devtools/client/responsive/test/browser/devices.json"
-  );
-
   info("Open responsive design mode");
   await openRDM(tab);
 

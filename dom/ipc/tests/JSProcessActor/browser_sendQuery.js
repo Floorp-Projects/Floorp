@@ -2,6 +2,23 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const ERROR_LINE_NUMBERS = {
+  jsm: 33,
+  "sys.mjs": 31,
+};
+const EXCEPTION_LINE_NUMBERS = {
+  jsm: ERROR_LINE_NUMBERS.jsm + 3,
+  "sys.mjs": ERROR_LINE_NUMBERS["sys.mjs"] + 3,
+};
+const ERROR_COLUMN_NUMBERS = {
+  jsm: 31,
+  "sys.mjs": 31,
+};
+const EXCEPTION_COLUMN_NUMBERS = {
+  jsm: 22,
+  "sys.mjs": 22,
+};
+
 function maybeAsyncStack(offset, column) {
   if (
     Services.prefs.getBoolPref(
@@ -22,7 +39,7 @@ function maybeAsyncStack(offset, column) {
 }
 
 declTest("sendQuery Error", {
-  async test(browser) {
+  async test(browser, _window, fileExt) {
     let parent = browser.browsingContext.currentWindowGlobal.domProcess;
     let actorParent = parent.getActor("TestProcessActor");
 
@@ -35,7 +52,7 @@ declTest("sendQuery Error", {
     is(error.name, "SyntaxError", "Error should have the correct name");
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:33:31\n" +
+      `receiveMessage@resource://testing-common/TestProcessActorChild.${fileExt}:${ERROR_LINE_NUMBERS[fileExt]}:${ERROR_COLUMN_NUMBERS[fileExt]}\n` +
         asyncStack,
       "Error should have the correct stack"
     );
@@ -43,7 +60,7 @@ declTest("sendQuery Error", {
 });
 
 declTest("sendQuery Exception", {
-  async test(browser) {
+  async test(browser, _window, fileExt) {
     let parent = browser.browsingContext.currentWindowGlobal.domProcess;
     let actorParent = parent.getActor("TestProcessActor");
 
@@ -63,7 +80,7 @@ declTest("sendQuery Exception", {
     );
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestProcessActorChild.jsm:36:22\n" +
+      `receiveMessage@resource://testing-common/TestProcessActorChild.${fileExt}:${EXCEPTION_LINE_NUMBERS[fileExt]}:${EXCEPTION_COLUMN_NUMBERS[fileExt]}\n` +
         asyncStack,
       "Error should have the correct stack"
     );

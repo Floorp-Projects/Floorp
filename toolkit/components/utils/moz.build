@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 EXTRA_JS_MODULES += [
-    "SimpleServices.jsm",
+    "SimpleServices.sys.mjs",
 ]
 
 EXTRA_JS_MODULES["components-utils"] = [

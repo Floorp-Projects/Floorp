@@ -296,6 +296,7 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
 pref("media.videocontrols.picture-in-picture.video-toggle.position", "right");
 pref("media.videocontrols.picture-in-picture.video-toggle.has-used", false);
+pref("media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.size", "medium");
 pref("media.videocontrols.keyboard-tab-to-all-controls", true);
 
@@ -4369,9 +4370,6 @@ pref("devtools.remote.adb.extensionID", "adb@mozilla.org");
 // The URL for for devtools-adb-extension (overridden in tests to a local
 // path).
 pref("devtools.remote.adb.extensionURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/devtools/adb-extension/#OS#/adb-extension-latest-#OS#.xpi");
-
-// URL of the remote JSON catalog used for device simulation.
-pref("devtools.devices.url", "https://code.cdn.mozilla.net/devices/devices.json");
 
 // Enable Inactive CSS detection; used both by the client and the server.
 pref("devtools.inspector.inactive.css.enabled", true);

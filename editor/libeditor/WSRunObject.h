@@ -1394,13 +1394,15 @@ class WhiteSpaceVisibilityKeeper final {
    * @param aListElementTagName Set some if aRightBlockElement is a list
    *                            element and it'll be merged with another
    *                            list element.
+   * @param aEditingHost        The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement(
       HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
       Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
       const Maybe<nsAtom*>& aListElementTagName,
-      const HTMLBRElement* aPrecedingInvisibleBRElement);
+      const HTMLBRElement* aPrecedingInvisibleBRElement,
+      const Element& aEditingHost);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement() merges
@@ -1421,6 +1423,7 @@ class WhiteSpaceVisibilityKeeper final {
    * @param aListElementTagName Set some if aRightBlockElement is a list
    *                            element and it'll be merged with another
    *                            list element.
+   * @param aEditingHost        The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement(
@@ -1428,7 +1431,8 @@ class WhiteSpaceVisibilityKeeper final {
       Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
       nsIContent& aLeftContentInBlock,
       const Maybe<nsAtom*>& aListElementTagName,
-      const HTMLBRElement* aPrecedingInvisibleBRElement);
+      const HTMLBRElement* aPrecedingInvisibleBRElement,
+      const Element& aEditingHost);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoLeftBlockElement() merges first
@@ -1443,12 +1447,14 @@ class WhiteSpaceVisibilityKeeper final {
    *                            removed when this becomes empty.
    * @param aListElementTagName Set some if aRightBlockElement is a list
    *                            element and its type needs to be changed.
+   * @param aEditingHost        The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static EditActionResult
   MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
       HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
       Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
-      const HTMLBRElement* aPrecedingInvisibleBRElement);
+      const HTMLBRElement* aPrecedingInvisibleBRElement,
+      const Element& aEditingHost);
 
   /**
    * InsertBRElement() inserts a <br> node at (before) aPointToInsert and delete

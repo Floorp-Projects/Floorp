@@ -3,9 +3,13 @@
 "use strict";
 
 declTest("double register", {
-  async test() {
+  async test(_browser, _window, fileExt) {
     SimpleTest.doesThrow(
-      () => ChromeUtils.registerWindowActor("TestWindow", windowActorOptions),
+      () =>
+        ChromeUtils.registerWindowActor(
+          "TestWindow",
+          windowActorOptions[fileExt]
+        ),
       "Should throw if register has duplicate name."
     );
   },

@@ -30,7 +30,6 @@ DevToolsModules(
     "enum.js",
     "events.js",
     "focus.js",
-    "getjson.js",
     "inplace-editor.js",
     "key-shortcuts.js",
     "keycodes.js",

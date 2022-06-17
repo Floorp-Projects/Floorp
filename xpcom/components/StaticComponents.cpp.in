@@ -87,6 +87,10 @@ const StringOffset gComponentJSMs[] = {
 //# @component_jsms@
 };
 
+const StringOffset gComponentESModules[] = {
+//# @component_esmodules@
+};
+
 /**
  * Returns a nsCString corresponding to the given entry in the `gStrings` string
  * table. The resulting nsCString points directly to static storage, and does
@@ -107,10 +111,12 @@ bool ContractEntry::Matches(const nsACString& aContractID) const {
   return aContractID == ContractID() && Module().Active();
 }
 
+enum class ComponentType { JSM, ESM };
 
-static nsresult ConstructJSMComponent(const nsACString& aURI,
-                                      const char* aConstructor,
-                                      nsISupports** aResult) {
+template <ComponentType type>
+static nsresult ConstructJSMOrESMComponent(const nsACString& aURI,
+                                           const char* aConstructor,
+                                           nsISupports** aResult) {
   if (!nsComponentManagerImpl::JSLoaderReady()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -119,17 +125,21 @@ static nsresult ConstructJSMComponent(const nsACString& aURI,
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsapi.cx();
 
-  JS::RootedObject global(cx);
-  JS::RootedObject exports(cx);
-  MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, aURI, &global, &exports));
+  JS::Rooted<JSObject*> exports(cx);
+  if constexpr (type == ComponentType::JSM) {
+    JS::Rooted<JSObject*> global(cx);
+    MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, aURI, &global, &exports));
+  } else {
+    MOZ_TRY(mozJSComponentLoader::Get()->ImportESModule(cx, aURI, &exports));
+  }
 
-  JS::RootedValue ctor(cx);
+  JS::Rooted<JS::Value> ctor(cx);
   if (!JS_GetProperty(cx, exports, aConstructor, &ctor) ||
       !ctor.isObject()) {
     return NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED;
   }
 
-  JS::RootedObject inst(cx);
+  JS::Rooted<JSObject*> inst(cx);
   if (!JS::Construct(cx, ctor, JS::HandleValueArray::empty(), &inst)) {
     return NS_ERROR_FAILURE;
   }
@@ -138,6 +148,19 @@ static nsresult ConstructJSMComponent(const nsACString& aURI,
                                              (void**)aResult);
 }
 
+static nsresult ConstructJSMComponent(const nsACString& aURI,
+                                      const char* aConstructor,
+                                      nsISupports** aResult) {
+  return ConstructJSMOrESMComponent<ComponentType::JSM>(
+    aURI, aConstructor, aResult);
+}
+
+static nsresult ConstructESModuleComponent(const nsACString& aURI,
+                                      const char* aConstructor,
+                                      nsISupports** aResult) {
+  return ConstructJSMOrESMComponent<ComponentType::ESM>(
+    aURI, aConstructor, aResult);
+}
 
 //# @module_cid_table@
 
@@ -327,6 +350,20 @@ StaticComponents::GetComponentJSMs() {
   nsCOMPtr<nsIUTF8StringEnumerator> result;
   MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
                                                          jsms.release()));
+  return result.forget();
+}
+
+/* static */ already_AddRefed<nsIUTF8StringEnumerator>
+StaticComponents::GetComponentESModules() {
+  auto esModules = MakeUnique<nsTArray<nsCString>>(MOZ_ARRAY_LENGTH(gComponentESModules));
+
+  for (const auto& entry : gComponentESModules) {
+    esModules->AppendElement(GetString(entry));
+  }
+
+  nsCOMPtr<nsIUTF8StringEnumerator> result;
+  MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
+                                                         esModules.release()));
   return result.forget();
 }
 

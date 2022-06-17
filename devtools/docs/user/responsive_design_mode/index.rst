@@ -115,7 +115,7 @@ Additionally, Firefox sets the `User-Agent <https://developer.mozilla.org/en-US/
   <br/>
 
 
-The devices listed in the drop-down are just a subset of the devices that can be selected. At the end of the drop-down, there is an item labeled **Edit list**. Select this to see a panel containing all the choices, which enables you to check the devices you want to see in the drop-down. The set of devices, and the values associated with each device, are taken from https://github.com/mozilla/simulated-devices. You can also define a custom device, as described below.</span>
+The devices listed in the drop-down are just a subset of the devices that can be selected. At the end of the drop-down, there is an item labeled **Edit list**. Select this to see a panel containing all the choices, which enables you to check the devices you want to see in the drop-down.
 
 
 Creating custom devices

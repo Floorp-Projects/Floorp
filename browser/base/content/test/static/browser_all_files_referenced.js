@@ -832,6 +832,7 @@ add_task(async function checkAllTheFiles() {
     ".mjs",
     ".js",
     ".jsm",
+    ".mjs",
     ".json",
     ".html",
     ".xhtml",
@@ -879,6 +880,9 @@ add_task(async function checkAllTheFiles() {
 
   for (let jsm of Components.manager.getComponentJSMs()) {
     gReferencesFromCode.set(jsm, null);
+  }
+  for (let esModule of Components.manager.getComponentESModules()) {
+    gReferencesFromCode.set(esModule, null);
   }
 
   // manifest.json is a common name, it is used for WebExtension manifests

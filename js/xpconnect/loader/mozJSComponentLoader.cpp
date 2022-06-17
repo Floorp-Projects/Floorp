@@ -1188,6 +1188,40 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
   return NS_OK;
 }
 
+nsresult mozJSComponentLoader::IsJSModuleLoaded(const nsACString& aLocation,
+                                                bool* retval) {
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  mInitialized = true;
+  ComponentLoaderInfo info(aLocation);
+  if (mImports.Get(info.Key())) {
+    *retval = true;
+    return NS_OK;
+  }
+
+  *retval = false;
+  return NS_OK;
+}
+
+nsresult mozJSComponentLoader::IsESModuleLoaded(const nsACString& aLocation,
+                                                bool* retval) {
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  mInitialized = true;
+  ComponentLoaderInfo info(aLocation);
+
+  nsresult rv = info.EnsureURI();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mModuleLoader->IsModuleFetched(info.URI())) {
+    *retval = true;
+    return NS_OK;
+  }
+
+  *retval = false;
+  return NS_OK;
+}
+
 void mozJSComponentLoader::GetLoadedModules(
     nsTArray<nsCString>& aLoadedModules) {
   aLoadedModules.SetCapacity(mImports.Count());

@@ -66,7 +66,7 @@ ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
     nsresult rv = aHTMLEditor.CollectEditTargetNodes(
@@ -137,7 +137,7 @@ ListItemElementSelectionState::ListItemElementSelectionState(
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
     nsresult rv = aHTMLEditor.CollectEditTargetNodes(
@@ -274,7 +274,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   //     ranges.  `HTMLEditor` should have
   //     `GetFirstSelectionRangeExtendedToHardLineStartAndEnd()`.
   else {
-    AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> arrayOfRanges;
     aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
         arrayOfRanges, EditSubAction::eSetOrClearAlignment);
 
@@ -584,7 +584,7 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     HTMLEditor& aHTMLEditor,
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrRemoveBlock);
     nsresult rv = aHTMLEditor.CollectEditTargetNodes(
