@@ -4692,8 +4692,8 @@ Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
   }
 
   // If there is only a padding `<br>` element in a empty block, it's selected
-  // by `SelectBRElementIfCollapsedInEmptyBlock()`.  However, it won't be
-  // moved.  Although it'll be deleted,
+  // by `UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement()`.
+  // However, it won't be moved.  Although it'll be deleted,
   // `MoveOneHardLineContentsWithTransaction()` returns "ignored".  Therefore,
   // we should return `false` in this case.
   if (nsIContent* childContent = oneLineRange->GetChildAtStartOffset()) {

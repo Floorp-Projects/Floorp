@@ -570,6 +570,15 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     mDirection = nsDirection::eDirNext;
   }
 
+  /**
+   * If the points are same (i.e., mean a collapsed range) and in an empty block
+   * element except the padding <br> element, this makes aStartPoint and
+   * aEndPoint contain the padding <br> element.
+   */
+  static void UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+      EditorDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
+      const dom::Element& aEditingHost);
+
  private:
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
   RefPtr<nsRange> mAnchorFocusRange;
