@@ -685,6 +685,18 @@ RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
 }
 
 template <class Derived>
+RefPtr<const AccAttributes>
+RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
+  if (mCachedFields) {
+    auto attrs =
+        mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::aria);
+    VERIFY_CACHE(CacheDomain::ARIA);
+    return attrs;
+  }
+  return nullptr;
+}
+
+template <class Derived>
 uint64_t RemoteAccessibleBase<Derived>::State() {
   uint64_t state = 0;
   if (mCachedFields) {
@@ -769,6 +781,10 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
 
     if (bool layoutGuess = TableIsProbablyForLayout()) {
       attributes->SetAttribute(nsGkAtoms::layout_guess, layoutGuess);
+    }
+
+    if (auto ariaAttrs = GetCachedARIAAttributes()) {
+      ariaAttrs->CopyTo(attributes);
     }
   }
 
@@ -1158,6 +1174,17 @@ RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() const {
 template <class Derived>
 void RemoteAccessibleBase<Derived>::SetCaretOffset(int32_t aOffset) {
   Unused << mDoc->SendSetCaretOffset(mID, aOffset);
+}
+
+template <class Derived>
+Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
+    nsAtom* aAttrName) const {
+  if (RefPtr<const AccAttributes> attrs = GetCachedARIAAttributes()) {
+    if (auto val = attrs->GetAttribute<int32_t>(aAttrName)) {
+      return val;
+    }
+  }
+  return Nothing();
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

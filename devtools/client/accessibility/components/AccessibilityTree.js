@@ -69,7 +69,8 @@ class AccessibilityTree extends Component {
   /**
    * Add accessibility event listeners that affect tree rendering and updates.
    */
-  componentWillMount() {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillMount() {
     this.props.startListeningForAccessibilityEvents({
       reorder: this.onReorder,
       "name-change": this.onNameChange,

@@ -72,6 +72,29 @@ inline bool IsRelevantTRRSkipReason(TRRSkippedReason aReason) {
   return true;
 }
 
+inline bool IsBlockedTRRRequest(TRRSkippedReason aReason) {
+  // See TRR::MaybeBlockRequest. These are the reasons that could block sending
+  // TRR requests.
+  return (aReason == TRRSkippedReason::TRR_EXCLUDED ||
+          aReason == TRRSkippedReason::TRR_MODE_NOT_ENABLED ||
+          aReason == TRRSkippedReason::TRR_HOST_BLOCKED_TEMPORARY);
+}
+
+inline bool IsNonRecoverableTRRSkipReason(TRRSkippedReason aReason) {
+  // These are non-recoverable reasons and we'll fallback to native without
+  // retrying.
+  return (aReason == TRRSkippedReason::TRR_NXDOMAIN ||
+          aReason == TRRSkippedReason::TRR_NO_ANSWERS ||
+          aReason == TRRSkippedReason::TRR_DISABLED_FLAG ||
+          aReason == TRRSkippedReason::TRR_RCODE_FAIL);
+}
+
+inline bool IsFailedConfirmationOrNoConnectivity(TRRSkippedReason aReason) {
+  // TRR is in non-confirmed state now, so we don't try to use TRR at all.
+  return (aReason == TRRSkippedReason::TRR_NOT_CONFIRMED ||
+          aReason == TRRSkippedReason::TRR_NO_CONNECTIVITY);
+}
+
 }  // namespace net
 }  // namespace mozilla
 

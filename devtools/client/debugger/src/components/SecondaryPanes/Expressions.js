@@ -78,7 +78,8 @@ class Expressions extends Component {
     });
   };
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.state.editing && !nextProps.expressionError) {
       this.clear();
     }

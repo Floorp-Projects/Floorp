@@ -6378,7 +6378,7 @@ bool BCPaintBorderIterator::SetNewRowGroup() {
       mCellMap = mTableCellMap->GetMapFor(fifRg, nullptr);
       if (!mCellMap) ABORT1(false);
     }
-    if (mRg && mTable->GetPrevInFlow() && !mRg->GetPrevInFlow()) {
+    if (mTable->GetPrevInFlow() && !mRg->GetPrevInFlow()) {
       // if mRowGroup doesn't have a prev in flow, then it may be a repeated
       // header or footer
       const nsStyleDisplay* display = mRg->StyleDisplay();

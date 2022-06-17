@@ -570,6 +570,38 @@ void ChromeUtils::Import(const GlobalObject& aGlobal,
   aRetval.set(exports);
 }
 
+/* static */
+void ChromeUtils::ImportESModule(const GlobalObject& aGlobal,
+                                 const nsAString& aResourceURI,
+                                 JS::MutableHandle<JSObject*> aRetval,
+                                 ErrorResult& aRv) {
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  MOZ_ASSERT(moduleloader);
+
+  NS_ConvertUTF16toUTF8 registryLocation(aResourceURI);
+
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
+      "ChromeUtils::ImportESModule", OTHER, registryLocation);
+
+  JSContext* cx = aGlobal.Context();
+
+  JS::Rooted<JSObject*> moduleNamespace(cx);
+  nsresult rv =
+      moduleloader->ImportESModule(cx, registryLocation, &moduleNamespace);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  MOZ_ASSERT(!JS_IsExceptionPending(cx));
+
+  if (!JS_WrapObject(cx, &moduleNamespace)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  aRetval.set(moduleNamespace);
+}
+
 namespace module_getter {
 static const size_t SLOT_ID = 0;
 static const size_t SLOT_URI = 1;

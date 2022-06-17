@@ -20,23 +20,11 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-static const char* const sMetricNames[] = {"DisplayListBuilding",
-                                           "Rasterizing",
-                                           "LayerBuilding",
-                                           "LayerTransactions",
-                                           "Compositing",
-                                           "Reflowing",
-                                           "Styling",
-                                           "HttpChannelCompletion",
-                                           "HttpChannelCompletion_Network",
-                                           "HttpChannelCompletion_Cache",
-                                           "JSBC_Compression",
-                                           "JSBC_Decompression",
-                                           "JSBC_IO_Read",
-                                           "JSBC_IO_Write"};
-
-static_assert(sizeof(sMetricNames) / sizeof(sMetricNames[0]) ==
-              static_cast<uint64_t>(PerfStats::Metric::Max));
+#define METRIC_NAME(metric) #metric,
+static const char* const sMetricNames[] = {
+    FOR_EACH_PERFSTATS_METRIC(METRIC_NAME)
+#undef METRIC_NAME
+        "Invalid"};
 
 PerfStats::MetricMask PerfStats::sCollectionMask = 0;
 StaticMutex PerfStats::sMutex;

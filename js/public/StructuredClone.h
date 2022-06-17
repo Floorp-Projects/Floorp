@@ -217,13 +217,15 @@ enum TransferableOwnership {
 class CloneDataPolicy {
   bool allowIntraClusterClonableSharedObjects_;
   bool allowSharedMemoryObjects_;
+  bool allowErrorStackFrames_;
 
  public:
   // The default is to deny all policy-controlled aspects.
 
   CloneDataPolicy()
       : allowIntraClusterClonableSharedObjects_(false),
-        allowSharedMemoryObjects_(false) {}
+        allowSharedMemoryObjects_(false),
+        allowErrorStackFrames_(false) {}
 
   // SharedArrayBuffers and WASM modules can only be cloned intra-process
   // because the shared memory areas are allocated in process-private memory or
@@ -234,16 +236,20 @@ class CloneDataPolicy {
   void allowIntraClusterClonableSharedObjects() {
     allowIntraClusterClonableSharedObjects_ = true;
   }
-
   bool areIntraClusterClonableSharedObjectsAllowed() const {
     return allowIntraClusterClonableSharedObjects_;
   }
 
   void allowSharedMemoryObjects() { allowSharedMemoryObjects_ = true; }
-
   bool areSharedMemoryObjectsAllowed() const {
     return allowSharedMemoryObjects_;
   }
+
+  // The Error stack property is saved as SavedFrames, which
+  // have an associated principal. This principal can't be cloned
+  // in certain cases.
+  void allowErrorStackFrames() { allowErrorStackFrames_ = true; }
+  bool areErrorStackFramesAllowed() const { return allowErrorStackFrames_; }
 };
 
 } /* namespace JS */

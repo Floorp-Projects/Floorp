@@ -1204,10 +1204,6 @@ class HTMLEditor final : public EditorBase,
    * elements around aArrayOfRanges.  Then, collects edit target nodes to
    * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
    * <br> element in it.
-   * FYI: You can use SplitInlinesAndCollectEditTargetNodesInOneHardLine()
-   *      or SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
-   *      instead if you want to call this with a hard line including
-   *      specific DOM point or extended selection ranges.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitInlinesAndCollectEditTargetNodes(
@@ -1227,8 +1223,6 @@ class HTMLEditor final : public EditorBase,
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
    * First, this collects all nodes in given ranges, then, modifies the
    * result for specific edit sub-actions.
-   * FYI: You can use CollectEditTargetNodesInExtendedSelectionRanges() instead
-   *      if you want to call this with extended selection ranges.
    */
   nsresult CollectEditTargetNodes(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
@@ -1311,90 +1305,6 @@ class HTMLEditor final : public EditorBase,
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
       nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
-
-  /**
-   * SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges() calls
-   * SplitInlinesAndCollectEditTargetNodes() with result of
-   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
-   * methods for the detail.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    aEditSubAction);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, aOutArrayOfContents, aEditSubAction,
-        aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
-
-  /**
-   * SplitInlinesAndCollectEditTargetNodesInOneHardLine() just calls
-   * SplitInlinesAndCollectEditTargetNodes() with result of calling
-   * CreateRangeExtendedToHardLineStartAndEnd() with aPointInOneHardLine.
-   * In other words, returns nodes in the hard line including
-   * `aPointInOneHardLine`.  See the comments for these methods for the
-   * detail.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitInlinesAndCollectEditTargetNodesInOneHardLine(
-      const EditorDOMPoint& aPointInOneHardLine,
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    if (MOZ_UNLIKELY(
-            NS_WARN_IF(!aPointInOneHardLine.IsSet()) ||
-            NS_WARN_IF(aPointInOneHardLine.IsInNativeAnonymousSubtree()))) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
-        aPointInOneHardLine, aPointInOneHardLine, aEditSubAction);
-    if (!oneLineRange) {
-      // XXX It seems odd to create collapsed range for one line range...
-      ErrorResult error;
-      oneLineRange =
-          nsRange::Create(aPointInOneHardLine.ToRawRangeBoundary(),
-                          aPointInOneHardLine.ToRawRangeBoundary(), error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    }
-    AutoTArray<RefPtr<nsRange>, 1> arrayOfLineRanges;
-    arrayOfLineRanges.AppendElement(oneLineRange);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        arrayOfLineRanges, aOutArrayOfContents, aEditSubAction,
-        aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
-
-  /**
-   * CollectEditTargetNodesInExtendedSelectionRanges() calls
-   * CollectEditTargetNodes() with result of
-   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
-   * methods for the detail.
-   */
-  nsresult CollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    aEditSubAction);
-    nsresult rv =
-        CollectEditTargetNodes(extendedSelectionRanges, aOutArrayOfContents,
-                               aEditSubAction, aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
-    return rv;
-  }
 
   /**
    * SelectBRElementIfCollapsedInEmptyBlock() helper method for
@@ -1578,17 +1488,22 @@ class HTMLEditor final : public EditorBase,
       nsIContent& aEndOfRange);
 
   /**
-   * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
-   * element and moves nodes in aArrayOfContents into new <blockquote>
-   * elements.
-   * If aArrayOfContents includes a table related element except <table>,
-   * this calls itself recursively to insert <blockquote> into the cell.
+   * WrapContentsInBlockquoteElementsWithTransaction() inserts at least one
+   * <blockquote> element and moves nodes in aArrayOfContents into new
+   * <blockquote> elements. If aArrayOfContents includes a table related element
+   * except <table>, this calls itself recursively to insert <blockquote> into
+   * the cell.
    *
    * @param aArrayOfContents    Nodes which will be moved into created
    *                            <blockquote> elements.
+   * @param aEditingHost        The editing host.
+   * @return                    A suggest of caret position if succeeded.  It
+   *                            may be unset if there is no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MoveNodesIntoNewBlockquoteElement(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  WrapContentsInBlockquoteElementsWithTransaction(
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      const Element& aEditingHost);
 
   /**
    * RemoveBlockContainerElementsWithTransaction() removes all format blocks,
@@ -1635,16 +1550,15 @@ class HTMLEditor final : public EditorBase,
    * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
    *       return NS_OK, editor may have been destroyed.
    *
-   * @param aBlockType          New block tag name.
-   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockContainerElementsWithTransaction()
-   *                            will be called.
-   *                            If nsGkAtoms::blockquote,
-   *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.
-   *                            Otherwise,
-   *                            CreateOrChangeBlockContainerElement() will be
-   *                            called.
+   * @param aBlockType  New block tag name.
+   *                    If nsGkAtoms::normal or nsGkAtoms::_empty,
+   *                    RemoveBlockContainerElementsWithTransaction() will be
+   *                    called.
+   *                    If nsGkAtoms::blockquote,
+   *                    WrapContentsInBlockquoteElementsWithTransaction() will
+   *                    be called.
+   *                    Otherwise, CreateOrChangeBlockContainerElement() will be
+   *                    called.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   FormatBlockContainerWithTransaction(nsAtom& aBlockType);
@@ -4654,11 +4568,13 @@ class HTMLEditor final : public EditorBase,
   friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
                                       // DoSplitNode, RangeUpdaterRef
   friend class
-      ListElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
-                                  // CollectNonEditableNodes
+      ListElementSelectionState;  // CollectEditTargetNodes,
+                                  // CollectNonEditableNodes,
+                                  // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class
-      ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
-                                      // CollectNonEditableNodes
+      ListItemElementSelectionState;  // CollectEditTargetNodes,
+                                      // CollectNonEditableNodes,
+                                      // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class MoveNodeResult;       // AllowsTransactionsToChangeSelection,
                                      // CollapseSelectionTo
   friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
@@ -4666,10 +4582,11 @@ class HTMLEditor final : public EditorBase,
                                      // RangeUpdaterRef
   friend class
       ParagraphStateAtSelection;  // CollectChildren,
-                                  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectEditTargetNodes,
                                   // CollectListChildren,
                                   // CollectNonEditableNodes,
-                                  // CollectTableChildren
+                                  // CollectTableChildren,
+                                  // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class SlurpBlobEventListener;       // BlobReader
   friend class SplitNodeResult;              // CollapseSelectionTo
   friend class SplitNodeTransaction;         // DoJoinNodes, DoSplitNode
@@ -4806,9 +4723,10 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
   /**
    * CollectEditableFormatNodesInSelection() collects only editable nodes
    * around selection ranges (with
-   * `HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges()`, see its
-   * document for the detail).  If it includes list, list item or table
-   * related elements, they will be replaced their children.
+   * `HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd()` and
+   * `HTMLEditor::CollectEditTargetNodes()`, see its document for the detail).
+   * If it includes list, list item or table related elements, they will be
+   * replaced their children.
    */
   static nsresult CollectEditableFormatNodesInSelection(
       HTMLEditor& aHTMLEditor,

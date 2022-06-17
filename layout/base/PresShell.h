@@ -236,6 +236,13 @@ class PresShell final : public nsStubDocumentObserver,
   static nsAccessibilityService* GetAccessibilityService();
 #endif  // #ifdef ACCESSIBILITY
 
+  /**
+   * See `mLastOverWindowMouseLocation`.
+   */
+  const nsPoint& GetLastOverWindowMouseLocation() const {
+    return mLastOverWindowMouseLocation;
+  }
+
   void Init(nsPresContext*, nsViewManager*);
 
   /**
@@ -2994,6 +3001,8 @@ class PresShell final : public nsStubDocumentObserver,
   // NS_UNCONSTRAINEDSIZE) if the mouse isn't over our window or there is no
   // last observed mouse location for some reason.
   nsPoint mMouseLocation;
+  // The last mouse location (see `mMouseLocation`) which was over the window.
+  nsPoint mLastOverWindowMouseLocation;
   // This is an APZ state variable that tracks the target guid for the last
   // mouse event that was processed (corresponding to mMouseLocation). This is
   // needed for the synthetic mouse events.

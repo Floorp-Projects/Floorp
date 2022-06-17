@@ -135,8 +135,6 @@ var SaveToPocket = {
       "Pocket",
     ]),
     image: "chrome://global/skin/icons/pocket.svg",
-    width: 16,
-    height: 16,
   },
 
   onPrefChange(pref, oldValue, newValue) {

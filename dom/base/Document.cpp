@@ -16296,8 +16296,16 @@ bool Document::HasBeenUserGestureActivated() {
 
 DOMHighResTimeStamp Document::LastUserGestureTimeStamp() {
   if (RefPtr<WindowContext> wc = GetWindowContext()) {
-    return wc->LastUserGestureTimeStamp();
+    if (nsGlobalWindowInner* innerWindow = wc->GetInnerWindow()) {
+      if (Performance* perf = innerWindow->GetPerformance()) {
+        return perf->GetDOMTiming()->TimeStampToDOMHighRes(
+            wc->GetUserGestureStart());
+      }
+    }
   }
+
+  NS_WARNING(
+      "Unable to calculate DOMHighResTimeStamp for LastUserGestureTimeStamp");
   return 0;
 }
 

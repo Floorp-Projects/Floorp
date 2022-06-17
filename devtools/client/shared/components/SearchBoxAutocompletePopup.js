@@ -36,7 +36,8 @@ class SearchBoxAutocompletePopup extends Component {
     this.onMouseDown = this.onMouseDown.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.props.filter === nextProps.filter) {
       return;
     }

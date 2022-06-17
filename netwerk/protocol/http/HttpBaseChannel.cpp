@@ -4781,8 +4781,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  // This channel has been redirected. Don't report timing info.
-  StoreTimingEnabled(false);
   return NS_OK;
 }
 

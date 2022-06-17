@@ -65,15 +65,21 @@ ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
   }
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
-      arrayOfContents, EditSubAction::eCreateOrChangeList,
-      HTMLEditor::CollectNonEditableNodes::No);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges("
-        "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
-    aRv = EditorBase::ToGenericNSResult(rv);
-    return;
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    nsresult rv = aHTMLEditor.CollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eCreateOrChangeList,
+        HTMLEditor::CollectNonEditableNodes::No);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
+      aRv = EditorBase::ToGenericNSResult(rv);
+      return;
+    }
   }
 
   // Examine list type for nodes in selection.
@@ -130,15 +136,22 @@ ListItemElementSelectionState::ListItemElementSelectionState(
   }
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
-      arrayOfContents, EditSubAction::eCreateOrChangeList,
-      HTMLEditor::CollectNonEditableNodes::No);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges("
-        "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
-    aRv = EditorBase::ToGenericNSResult(rv);
-    return;
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    nsresult rv = aHTMLEditor.CollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eCreateOrChangeList,
+        HTMLEditor::CollectNonEditableNodes::No);
+    if (NS_FAILED(rv)) {
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
+      aRv = EditorBase::ToGenericNSResult(rv);
+      return;
+    }
   }
 
   // examine list type for nodes in selection
@@ -570,14 +583,20 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
 nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     HTMLEditor& aHTMLEditor,
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
-  nsresult rv = aHTMLEditor.CollectEditTargetNodesInExtendedSelectionRanges(
-      aArrayOfContents, EditSubAction::eCreateOrRemoveBlock,
-      HTMLEditor::CollectNonEditableNodes::Yes);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges("
-        "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
-    return rv;
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    aHTMLEditor.GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrRemoveBlock);
+    nsresult rv = aHTMLEditor.CollectEditTargetNodes(
+        extendedSelectionRanges, aArrayOfContents,
+        EditSubAction::eCreateOrRemoveBlock,
+        HTMLEditor::CollectNonEditableNodes::Yes);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
+      return rv;
+    }
   }
 
   // Pre-process our list of nodes

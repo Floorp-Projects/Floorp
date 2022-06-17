@@ -2013,6 +2013,11 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("at", "TypedArrayAt", 1, 0),
     JS_FS_END};
 
+const JSFunctionSpec arrayFindLastProtoFunctions[] = {
+    JS_SELF_HOSTED_FN("findLast", "TypedArrayFindLast", 1, 0),
+    JS_SELF_HOSTED_FN("findLastIndex", "TypedArrayFindLastIndex", 1, 0),
+    JS_FS_END};
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
     JS_SELF_HOSTED_FN("toReversed", "TypedArrayToReversed", 0, 0),
@@ -2021,17 +2026,24 @@ const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
     JS_SELF_HOSTED_FN("toSpliced", "TypedArrayToSpliced", 3, 0),
 
     JS_FS_END};
+#endif
 
 static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto) {
+  if (cx->realm()->creationOptions().getArrayFindLastEnabled()) {
+    if (!js::DefineFunctions(cx, proto, arrayFindLastProtoFunctions)) {
+      return false;
+    }
+  }
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (cx->options().changeArrayByCopy()) {
     if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
       return false;
     }
   }
+#endif
   return true;
 }
-#endif
 
 /* static */ const JSFunctionSpec TypedArrayObject::staticFunctions[] = {
     JS_SELF_HOSTED_FN("from", "TypedArrayStaticFrom", 3, 0),
@@ -2053,11 +2065,7 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
     TypedArrayProtoFinish,
-#else
-    nullptr,
-#endif
     ClassSpec::DontDefineConstructor};
 
 /* static */ const JSClass TypedArrayObject::sharedTypedArrayPrototypeClass = {

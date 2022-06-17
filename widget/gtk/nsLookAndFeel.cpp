@@ -1094,16 +1094,8 @@ bool nsLookAndFeel::PerThemeData::GetFont(FontID aID, nsString& aFontName,
       break;
   }
 
-  // Scale the font for the current monitor
-  double scaleFactor = StaticPrefs::layout_css_devPixelsPerPx();
-  if (scaleFactor > 0) {
-    aFontStyle.size *=
-        widget::ScreenHelperGTK::GetGTKMonitorScaleFactor() / scaleFactor;
-  } else {
-    // Convert gdk pixels to CSS pixels.
-    aFontStyle.size /= gfxPlatformGtk::GetFontScaleFactor();
-  }
-
+  // Convert gdk pixels to CSS pixels.
+  aFontStyle.size /= gfxPlatformGtk::GetFontScaleFactor();
   return true;
 }
 

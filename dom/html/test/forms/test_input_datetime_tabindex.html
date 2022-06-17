@@ -79,7 +79,6 @@ function testTabindex(type) {
   checkInnerTextboxTabindex(input1, 0);
   checkInnerTextboxTabindex(input2, -1);
   checkInnerTextboxTabindex(input3, 0);
-  checkInnerTextboxTabindex(input4, -1);
 
   // Changing the tabindex attribute dynamically.
   input3.setAttribute("tabindex", "-1");
@@ -92,7 +91,6 @@ function testTabindex(type) {
         "disabled element should not be tabbable");
 
   checkInnerTextboxTabindex(input3, -1);
-  checkInnerTextboxTabindex(input4, -1);
 }
 
 function test() {

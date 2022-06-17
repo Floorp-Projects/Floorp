@@ -50,7 +50,8 @@ class StackTracePanel extends Component {
    * `componentWillReceiveProps` is the only method called when
    * switching between two requests while this panel is displayed.
    */
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { request, connector } = nextProps;
     // Only try to fetch the stacktrace if we don't already have the stacktrace yet
     if (!request.stacktrace) {

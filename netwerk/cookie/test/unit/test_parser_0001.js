@@ -15,8 +15,6 @@ function run_test() {
     );
   }
 
-  let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-
   let uri = NetUtil.newURI("http://example.org/");
   let channel = NetUtil.newChannel({
     uri,
@@ -25,9 +23,9 @@ function run_test() {
   });
 
   let set = "foo=bar";
-  cs.setCookieStringFromHttp(uri, set, channel);
+  Services.cookies.setCookieStringFromHttp(uri, set, channel);
 
   let expected = "foo=bar";
-  let actual = cs.getCookieStringFromHttp(uri, channel);
+  let actual = Services.cookies.getCookieStringFromHttp(uri, channel);
   Assert.equal(actual, expected);
 }

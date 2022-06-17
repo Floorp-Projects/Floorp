@@ -154,9 +154,15 @@ add_task(async function test_2nd_desktop_connected() {
     ],
   });
 
+  // ensure tab sync is false so we don't skip onto next step
+  ok(
+    !Services.prefs.getBoolPref("services.sync.engine.tabs", false),
+    "services.sync.engine.tabs is initially false"
+  );
+
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
   await waitForVisibleStep(browser, {
-    expectedVisible: "#tabpickup-steps-view1",
+    expectedVisible: "#tabpickup-steps-view2",
   });
 
   is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");

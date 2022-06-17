@@ -104,7 +104,25 @@ bool AsyncEmitter::prepareForBody() {
   return rejectTryCatch_->emitTry();
 }
 
-bool AsyncEmitter::emitEnd() {
+bool AsyncEmitter::emitEndFunction() {
+#ifdef DEBUG
+  MOZ_ASSERT(state_ == State::Body);
+#endif
+
+  // The final yield has already been emitted
+  // by FunctionScriptEmitter::emitEndBody().
+
+  if (!emitRejectCatch()) {
+    return false;
+  }
+
+#ifdef DEBUG
+  state_ = State::End;
+#endif
+  return true;
+}
+
+bool AsyncEmitter::emitEndModule() {
 #ifdef DEBUG
   MOZ_ASSERT(state_ == State::Body);
 #endif

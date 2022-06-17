@@ -74,17 +74,8 @@ async function createLocalFile() {
   return file;
 }
 
-function getUnicodeConverter() {
-  const className = "@mozilla.org/intl/scriptableunicodeconverter";
-  const converter = Cc[className].createInstance(
-    Ci.nsIScriptableUnicodeConverter
-  );
-  converter.charset = "UTF-8";
-  return converter;
-}
-
 function writeInFile(string, file) {
-  const inputStream = getUnicodeConverter().convertToInputStream(string);
+  const inputStream = getInputStream(string);
   const outputStream = FileUtils.openSafeFileOutputStream(file);
 
   return new Promise((resolve, reject) => {

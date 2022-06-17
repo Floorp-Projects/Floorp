@@ -4690,7 +4690,7 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
-      cx, input.get(), srcBuf, scopeKind);
+      cx, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }

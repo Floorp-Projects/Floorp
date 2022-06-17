@@ -7,6 +7,7 @@ description = "Shared Rust code for libxul"
 
 [dependencies]
 moz_asserts = "0.1"
+mozglue-static = { path = "../../../../mozglue/static/rust" }
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
@@ -97,8 +98,12 @@ mio = "=0.8.0"
 viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
+[target.'cfg(target_os = "windows")'.dependencies]
+detect_win32k_conflicts = { path = "../../../xre/detect_win32k_conflicts" }
+
 [features]
 default = []
+moz_memory = ["mozglue-static/moz_memory"]
 cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server", "audioipc2-client", "audioipc2-server"]
 cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
 cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]

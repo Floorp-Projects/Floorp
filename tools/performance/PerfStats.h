@@ -15,6 +15,40 @@
 #include <string>
 #include <limits>
 
+// PerfStats
+//
+// Framework for low overhead selective collection of internal performance
+// metrics through ChromeUtils.
+//
+// Gathering: in C++, wrap execution in an RAII class
+// PerfStats::AutoMetricRecording<PerfStats::Metric::MyMetric> or call
+// PerfStats::RecordMeasurement{Start,End} manually. Use
+// RecordMeasurementCount() for incrementing counters.
+//
+// Controlling: Use ChromeUtils.SetPerfStatsCollectionMask(mask), where mask=0
+// disables all metrics and mask=0xFFFFFFFF enables all of them.
+//
+// Reporting: Results can be accessed with ChromeUtils.CollectPerfStats().
+// Browsertime will sum results across processes and report them.
+
+// Define a new metric by adding it to this list. It will be created as a class
+// enum value mozilla::PerfStats::Metric::MyMetricName.
+#define FOR_EACH_PERFSTATS_METRIC(MACRO) \
+  MACRO(DisplayListBuilding)             \
+  MACRO(Rasterizing)                     \
+  MACRO(LayerBuilding)                   \
+  MACRO(LayerTransactions)               \
+  MACRO(Compositing)                     \
+  MACRO(Reflowing)                       \
+  MACRO(Styling)                         \
+  MACRO(HttpChannelCompletion)           \
+  MACRO(HttpChannelCompletion_Network)   \
+  MACRO(HttpChannelCompletion_Cache)     \
+  MACRO(JSBC_Compression)                \
+  MACRO(JSBC_Decompression)              \
+  MACRO(JSBC_IO_Read)                    \
+  MACRO(JSBC_IO_Write)
+
 namespace mozilla {
 
 class PerfStats {
@@ -22,21 +56,10 @@ class PerfStats {
   typedef MozPromise<nsCString, bool, true> PerfStatsPromise;
 
   enum class Metric : uint32_t {
-    DisplayListBuilding = 0,
-    Rasterizing,
-    LayerBuilding,
-    LayerTransactions,
-    Compositing,
-    Reflowing,
-    Styling,
-    HttpChannelCompletion,
-    HttpChannelCompletion_Network,
-    HttpChannelCompletion_Cache,
-    JSBC_Compression,
-    JSBC_Decompression,
-    JSBC_IO_Read,
-    JSBC_IO_Write,
-    Max
+#define DECLARE_ENUM(metric) metric,
+    FOR_EACH_PERFSTATS_METRIC(DECLARE_ENUM)
+#undef DECLARE_ENUM
+        Max
   };
 
   // MetricMask is a bitmask based on 'Metric', i.e. Metric::LayerBuilding (2)

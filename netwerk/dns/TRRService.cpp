@@ -734,9 +734,9 @@ bool TRRService::ConfirmationContext::HandleEvent(
 
     MOZ_ASSERT(mode == nsIDNSService::MODE_TRRFIRST,
                "Should only confirm in TRR first mode");
-    // Set aUseFreshConnection if we are in strict fallback mode.
+    // Set aUseFreshConnection if TRR lookups are retried.
     mTask = new TRR(service, service->mConfirmationNS, TRRTYPE_NS, ""_ns, false,
-                    StaticPrefs::network_trr_strict_native_fallback());
+                    StaticPrefs::network_trr_retry_on_recoverable_errors());
     mTask->SetTimeout(StaticPrefs::network_trr_confirmation_timeout_ms());
     mTask->SetPurpose(TRR::Confirmation);
 
@@ -764,10 +764,10 @@ bool TRRService::ConfirmationContext::HandleEvent(
       resetConfirmation();
       maybeConfirm("pref-change");
       break;
-    case ConfirmationEvent::Retry:
+    case ConfirmationEvent::ConfirmationRetry:
       MOZ_ASSERT(mState == CONFIRM_FAILED);
       if (mState == CONFIRM_FAILED) {
-        maybeConfirm("retry");
+        maybeConfirm("confirmation-retry");
       }
       break;
     case ConfirmationEvent::FailedLookups:
@@ -777,9 +777,9 @@ bool TRRService::ConfirmationContext::HandleEvent(
           mFailureReasons, mTRRFailures % ConfirmationContext::RESULTS_SIZE);
       maybeConfirm("failed-lookups");
       break;
-    case ConfirmationEvent::StrictMode:
+    case ConfirmationEvent::RetryTRR:
       MOZ_ASSERT(mState == CONFIRM_OK);
-      maybeConfirm("strict-mode");
+      maybeConfirm("retry-trr");
       break;
     case ConfirmationEvent::URIChange:
       resetConfirmation();
@@ -1017,11 +1017,9 @@ NS_IMETHODIMP
 TRRService::ConfirmationContext::Notify(nsITimer* aTimer) {
   MutexSingleWriterAutoLock lock(OwningObject()->mLock);
   if (aTimer == mTimer) {
-    HandleEvent(ConfirmationEvent::Retry, lock);
-    return NS_OK;
+    HandleEvent(ConfirmationEvent::ConfirmationRetry, lock);
   }
 
-  MOZ_CRASH("Unknown timer");
   return NS_OK;
 }
 
@@ -1070,10 +1068,10 @@ static char StatusToChar(nsresult aLookupStatus, nsresult aChannelStatus) {
   return '?';
 }
 
-void TRRService::StrictModeConfirm() {
+void TRRService::RetryTRRConfirm() {
   if (mConfirmation.State() == CONFIRM_OK) {
-    LOG(("TRRService::StrictModeConfirm triggering confirmation"));
-    mConfirmation.HandleEvent(ConfirmationEvent::StrictMode);
+    LOG(("TRRService::RetryTRRConfirm triggering confirmation"));
+    mConfirmation.HandleEvent(ConfirmationEvent::RetryTRR);
   }
 }
 
@@ -1107,12 +1105,12 @@ void TRRService::ConfirmationContext::RecordTRRStatus(nsresult aChannelStatus) {
     return;
   }
 
-  // In strict mode, nsHostResolver will trigger Confirmation immediately
-  // upon a lookup failure, so nothing to be done here. nsHostResolver
-  // can assess the success of the lookup considering all the involved
-  // results (A, AAAA) so we let it tell us when to re-Confirm.
-  if (StaticPrefs::network_trr_strict_native_fallback()) {
-    LOG(("TRRService not counting failures in strict mode"));
+  // When TRR retry is enabled, nsHostResolver will trigger Confirmation
+  // immediately upon a lookup failure, so nothing to be done here.
+  // nsHostResolver can assess the success of the lookup considering all the
+  // involved results (A, AAAA) so we let it tell us when to re-Confirm.
+  if (StaticPrefs::network_trr_retry_on_recoverable_errors()) {
+    LOG(("TRRService not counting failures when retry is enabled"));
     return;
   }
 

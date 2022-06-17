@@ -102,7 +102,6 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
-  virtual mozilla::a11y::GroupPos GroupPosition() override;
 
  protected:
   virtual ~ARIAGridCellAccessible() {}

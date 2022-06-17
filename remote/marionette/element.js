@@ -627,8 +627,22 @@ element.findClosest = function(startNode, selector) {
  * @return {object} The ContentDOMReference ElementIdentifier for the DOM
  *     element augmented with a Marionette WebElement reference, and some
  *     additional properties.
+ *
+ * @throws {StaleElementReferenceError}
+ *     If the element has gone stale, indicating it is no longer
+ *     attached to the DOM, or its node document is no longer the
+ *     active document.
  */
 element.getElementId = function(el) {
+  if (element.isStale(el)) {
+    throw new lazy.error.StaleElementReferenceError(
+      lazy.pprint`The element reference of ${el} ` +
+        "is stale; either the element is no longer attached to the DOM, " +
+        "it is not in the current frame context, " +
+        "or the document has been refreshed"
+    );
+  }
+
   const webEl = WebElement.from(el);
 
   const id = lazy.ContentDOMReference.get(el);

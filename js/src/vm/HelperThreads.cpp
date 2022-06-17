@@ -723,8 +723,9 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  stencil_ = frontend::CompileGlobalScriptToStencil(cx, *stencilInput_, data,
-                                                    scopeKind);
+  js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+  stencil_ = frontend::CompileGlobalScriptToStencil(
+      cx, tempLifoAlloc, *stencilInput_, data, scopeKind);
   if (!stencil_) {
     return;
   }

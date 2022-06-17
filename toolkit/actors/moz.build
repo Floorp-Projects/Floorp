@@ -42,6 +42,8 @@ FINAL_TARGET_FILES.actors += [
     "BackgroundThumbnailsChild.jsm",
     "BrowserElementChild.jsm",
     "BrowserElementParent.jsm",
+    "ClipboardReadTextPasteChild.jsm",
+    "ClipboardReadTextPasteParent.jsm",
     "ContentMetaChild.jsm",
     "ContentMetaParent.jsm",
     "ControllersChild.jsm",

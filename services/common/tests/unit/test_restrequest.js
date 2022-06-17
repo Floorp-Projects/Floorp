@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
 );
@@ -842,16 +844,13 @@ add_task(async function test_not_sending_cookie() {
   }
   let server = httpd_setup({ "/test": handler });
 
-  let cookieSer = Cc["@mozilla.org/cookieService;1"].getService(
-    Ci.nsICookieService
-  );
   let uri = CommonUtils.makeURI(server.baseURI);
   let channel = NetUtil.newChannel({
     uri,
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
-  cookieSer.setCookieStringFromHttp(uri, "test=test; path=/;", channel);
+  Services.cookies.setCookieStringFromHttp(uri, "test=test; path=/;", channel);
 
   let res = new RESTRequest(server.baseURI + "/test");
   let response = await res.get();

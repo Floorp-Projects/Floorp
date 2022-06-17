@@ -56,8 +56,10 @@ function trr_test_setup() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  // Turn off strict fallback mode for most tests, it is tested specifically.
+  // Turn off strict fallback mode and TRR retry for most tests,
+  // it is tested specifically.
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
+  Services.prefs.setBoolPref("network.trr.retry_on_recoverable_errors", false);
 
   // Turn off temp blocklist feature in tests. When enabled we may issue a
   // lookup to resolve a parent name when blocklisting, which may bleed into

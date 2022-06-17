@@ -33,12 +33,12 @@ function doFileActivity()
   const fout = FileUtils.openSafeFileOutputStream(gTmpFile,
     FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
 
-  const converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                  createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  const fileContentStream = converter.convertToInputStream(fileContent);
-
-  NetUtil.asyncCopy(fileContentStream, fout, addIframe);
+  const stream = Cc[
+    "@mozilla.org/io/arraybuffer-input-stream;1"
+  ].createInstance(Ci.nsIArrayBufferInputStream);
+  const buffer = new TextEncoder().encode(fileContent).buffer;
+  stream.setData(buffer, 0, buffer.byteLength);
+  NetUtil.asyncCopy(stream, fout, addIframe);
 }
 
 function addIframe(aStatus)

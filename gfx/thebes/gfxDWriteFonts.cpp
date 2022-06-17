@@ -82,7 +82,6 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
                              AntialiasOption anAAOption)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, anAAOption),
       mFontFace(aFontFace ? aFontFace : aUnscaledFont->GetFontFace()),
-      mMetrics(nullptr),
       mUseSubpixelPositions(false),
       mAllowManualShowGlyphs(true),
       mAzureScaledFontUsedClearType(false) {
@@ -112,7 +111,6 @@ gfxDWriteFont::~gfxDWriteFont() {
   if (auto* scaledFont = mAzureScaledFontGDI.exchange(nullptr)) {
     scaledFont->Release();
   }
-  delete mMetrics;
 }
 
 /* static */
@@ -305,6 +303,8 @@ bool gfxDWriteFont::GetFakeMetricsForArialBlack(
 }
 
 void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
+  ::memset(&mMetrics, 0, sizeof(mMetrics));
+
   DWRITE_FONT_METRICS fontMetrics;
   if (!(mFontEntry->Weight().Min() == FontWeight::FromInt(900) &&
         mFontEntry->Weight().Max() == FontWeight::FromInt(900) &&
@@ -381,22 +381,19 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     mAllowManualShowGlyphs = false;
   }
 
-  mMetrics = new gfxFont::Metrics;
-  ::memset(mMetrics, 0, sizeof(*mMetrics));
+  mMetrics.xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
+  mMetrics.capHeight = fontMetrics.capHeight * mFUnitsConvFactor;
 
-  mMetrics->xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
-  mMetrics->capHeight = fontMetrics.capHeight * mFUnitsConvFactor;
+  mMetrics.maxAscent = round(fontMetrics.ascent * mFUnitsConvFactor);
+  mMetrics.maxDescent = round(fontMetrics.descent * mFUnitsConvFactor);
+  mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
 
-  mMetrics->maxAscent = round(fontMetrics.ascent * mFUnitsConvFactor);
-  mMetrics->maxDescent = round(fontMetrics.descent * mFUnitsConvFactor);
-  mMetrics->maxHeight = mMetrics->maxAscent + mMetrics->maxDescent;
+  mMetrics.emHeight = mAdjustedSize;
+  mMetrics.emAscent =
+      mMetrics.emHeight * mMetrics.maxAscent / mMetrics.maxHeight;
+  mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
-  mMetrics->emHeight = mAdjustedSize;
-  mMetrics->emAscent =
-      mMetrics->emHeight * mMetrics->maxAscent / mMetrics->maxHeight;
-  mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
-
-  mMetrics->maxAdvance = mAdjustedSize;
+  mMetrics.maxAdvance = mAdjustedSize;
 
   // try to get the true maxAdvance value from 'hhea'
   gfxFontEntry::AutoTable hheaTable(GetFontEntry(),
@@ -406,28 +403,27 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
     const MetricsHeader* hhea = reinterpret_cast<const MetricsHeader*>(
         hb_blob_get_data(hheaTable, &len));
     if (len >= sizeof(MetricsHeader)) {
-      mMetrics->maxAdvance =
-          uint16_t(hhea->advanceWidthMax) * mFUnitsConvFactor;
+      mMetrics.maxAdvance = uint16_t(hhea->advanceWidthMax) * mFUnitsConvFactor;
     }
   }
 
-  mMetrics->internalLeading =
-      std::max(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
-  mMetrics->externalLeading = ceil(fontMetrics.lineGap * mFUnitsConvFactor);
+  mMetrics.internalLeading =
+      std::max(mMetrics.maxHeight - mMetrics.emHeight, 0.0);
+  mMetrics.externalLeading = ceil(fontMetrics.lineGap * mFUnitsConvFactor);
 
   UINT32 ucs = L' ';
   UINT16 glyph;
   if (SUCCEEDED(mFontFace->GetGlyphIndices(&ucs, 1, &glyph)) && glyph != 0) {
     mSpaceGlyph = glyph;
-    mMetrics->spaceWidth = MeasureGlyphWidth(glyph);
+    mMetrics.spaceWidth = MeasureGlyphWidth(glyph);
   } else {
-    mMetrics->spaceWidth = 0;
+    mMetrics.spaceWidth = 0;
   }
 
   // try to get aveCharWidth from the OS/2 table, fall back to measuring 'x'
   // if the table is not available or if using hinted/pixel-snapped widths
   if (mUseSubpixelPositions) {
-    mMetrics->aveCharWidth = 0;
+    mMetrics.aveCharWidth = 0;
     gfxFontEntry::AutoTable os2Table(GetFontEntry(),
                                      TRUETYPE_TAG('O', 'S', '/', '2'));
     if (os2Table) {
@@ -438,57 +434,56 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
         // Not checking against sizeof(mozilla::OS2Table) here because older
         // versions of the table have different sizes; we only need the first
         // two 16-bit fields here.
-        mMetrics->aveCharWidth =
-            int16_t(os2->xAvgCharWidth) * mFUnitsConvFactor;
+        mMetrics.aveCharWidth = int16_t(os2->xAvgCharWidth) * mFUnitsConvFactor;
       }
     }
   }
 
-  if (mMetrics->aveCharWidth < 1) {
-    mMetrics->aveCharWidth = GetCharAdvance('x');
-    if (mMetrics->aveCharWidth < 1) {
+  if (mMetrics.aveCharWidth < 1) {
+    mMetrics.aveCharWidth = GetCharAdvance('x');
+    if (mMetrics.aveCharWidth < 1) {
       // Let's just assume the X is square.
-      mMetrics->aveCharWidth = fontMetrics.xHeight * mFUnitsConvFactor;
+      mMetrics.aveCharWidth = fontMetrics.xHeight * mFUnitsConvFactor;
     }
   }
 
-  mMetrics->zeroWidth = GetCharAdvance('0');
+  mMetrics.zeroWidth = GetCharAdvance('0');
 
-  mMetrics->ideographicWidth = GetCharAdvance(kWaterIdeograph);
+  mMetrics.ideographicWidth = GetCharAdvance(kWaterIdeograph);
 
-  mMetrics->underlineOffset = fontMetrics.underlinePosition * mFUnitsConvFactor;
-  mMetrics->underlineSize = fontMetrics.underlineThickness * mFUnitsConvFactor;
-  mMetrics->strikeoutOffset =
+  mMetrics.underlineOffset = fontMetrics.underlinePosition * mFUnitsConvFactor;
+  mMetrics.underlineSize = fontMetrics.underlineThickness * mFUnitsConvFactor;
+  mMetrics.strikeoutOffset =
       fontMetrics.strikethroughPosition * mFUnitsConvFactor;
-  mMetrics->strikeoutSize =
+  mMetrics.strikeoutSize =
       fontMetrics.strikethroughThickness * mFUnitsConvFactor;
 
-  SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);
+  SanitizeMetrics(&mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
   if (ApplySyntheticBold()) {
     auto delta = GetSyntheticBoldOffset();
-    mMetrics->spaceWidth += delta;
-    mMetrics->aveCharWidth += delta;
-    mMetrics->maxAdvance += delta;
-    if (mMetrics->zeroWidth > 0) {
-      mMetrics->zeroWidth += delta;
+    mMetrics.spaceWidth += delta;
+    mMetrics.aveCharWidth += delta;
+    mMetrics.maxAdvance += delta;
+    if (mMetrics.zeroWidth > 0) {
+      mMetrics.zeroWidth += delta;
     }
-    if (mMetrics->ideographicWidth > 0) {
-      mMetrics->ideographicWidth += delta;
+    if (mMetrics.ideographicWidth > 0) {
+      mMetrics.ideographicWidth += delta;
     }
   }
 
 #if 0
     printf("Font: %p (%s) size: %f\n", this,
            NS_ConvertUTF16toUTF8(GetName()).get(), mStyle.size);
-    printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics->emHeight, mMetrics->emAscent, mMetrics->emDescent);
-    printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance);
-    printf("    internalLeading: %f externalLeading: %f\n", mMetrics->internalLeading, mMetrics->externalLeading);
+    printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
+    printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
+    printf("    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
     printf("    spaceWidth: %f aveCharWidth: %f zeroWidth: %f\n",
-           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroWidth);
-    printf("    xHeight: %f capHeight: %f\n", mMetrics->xHeight, mMetrics->capHeight);
+           mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.zeroWidth);
+    printf("    xHeight: %f capHeight: %f\n", mMetrics.xHeight, mMetrics.capHeight);
     printf("    uOff: %f uSize: %f stOff: %f stSize: %f\n",
-           mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize);
+           mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize);
 #endif
 }
 
@@ -766,7 +761,6 @@ bool gfxDWriteFont::GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
 void gfxDWriteFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                            FontCacheSizes* aSizes) const {
   gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
-  aSizes->mFontInstances += aMallocSizeOf(mMetrics);
   if (mGlyphWidths) {
     aSizes->mFontInstances +=
         mGlyphWidths->ShallowSizeOfIncludingThis(aMallocSizeOf);

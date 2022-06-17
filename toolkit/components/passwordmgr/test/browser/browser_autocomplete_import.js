@@ -50,7 +50,7 @@ add_task(async function test_initialize() {
     .stub(MigrationUtils, "getMigrator")
     .resolves(gTestMigrator);
 
-  const experiment = sinon.stub(ExperimentAPI, "activateBranch").returns({
+  const experiment = sinon.stub(ExperimentAPI, "getActiveBranch").returns({
     slug: "foo",
     ratio: 1,
     features: [

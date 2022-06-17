@@ -208,6 +208,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getArrayFindLastEnabled() const { return arrayFindLast_; }
+  RealmCreationOptions& setArrayFindLastEnabled(bool flag) {
+    arrayFindLast_ = flag;
+    return *this;
+  }
+
 #ifdef NIGHTLY_BUILD
   bool getArrayGroupingEnabled() const { return arrayGrouping_; }
   RealmCreationOptions& setArrayGroupingEnabled(bool flag) {
@@ -267,6 +273,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;
+  bool arrayFindLast_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = true;
 #endif

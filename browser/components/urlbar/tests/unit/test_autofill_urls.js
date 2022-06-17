@@ -687,21 +687,28 @@ add_task(async function viewSourceAsPrefix() {
   let testData = [
     {
       input: "view-source:h",
-      expectedAutofill: "view-source:https:/",
+      completed: "view-source:https:/",
+      autofilled: "view-source:https:/",
     },
     {
       input: "view-source:http",
-      expectedAutofill: "view-source:https:/",
+      completed: "view-source:https:/",
+      autofilled: "view-source:https:/",
+    },
+    {
+      input: "VIEW-SOURCE:http",
+      completed: "view-source:https:/",
+      autofilled: "VIEW-SOURCE:https:/",
     },
   ];
 
   // Only autofills from view-source:h to view-source:https:/
-  for (let { input, expectedAutofill } of testData) {
+  for (let { input, completed, autofilled } of testData) {
     let context = createContext(input, { isPrivate: false });
     await check_results({
       context,
-      completed: expectedAutofill,
-      autofilled: expectedAutofill,
+      completed,
+      autofilled,
       hasAutofillTitle: false,
       matches: [
         {
@@ -734,21 +741,27 @@ add_task(async function dataAsPrefix() {
   let testData = [
     {
       input: "data:t",
-      expectedAutofill: "data:text/",
+      completed: "data:text/",
+      autofilled: "data:text/",
     },
     {
       input: "data:text",
-      expectedAutofill: "data:text/",
+      completed: "data:text/",
+      autofilled: "data:text/",
+    },
+    {
+      input: "DATA:text",
+      completed: "data:text/",
+      autofilled: "DATA:text/",
     },
   ];
 
-  // Only autofills from text:t to view-source:https:/
-  for (let { input, expectedAutofill } of testData) {
+  for (let { input, completed, autofilled } of testData) {
     let context = createContext(input, { isPrivate: false });
     await check_results({
       context,
-      completed: expectedAutofill,
-      autofilled: expectedAutofill,
+      completed,
+      autofilled,
       hasAutofillTitle: false,
       matches: [
         {
@@ -761,6 +774,40 @@ add_task(async function dataAsPrefix() {
           iconUri: "chrome://global/skin/icons/defaultFavicon.svg",
           title,
         }),
+      ],
+    });
+  }
+
+  await cleanupPlaces();
+});
+
+// Checks about prefixes
+add_task(async function aboutAsPrefix() {
+  let testData = [
+    {
+      input: "about:abou",
+      completed: "about:about",
+      autofilled: "about:about",
+    },
+    {
+      input: "ABOUT:abou",
+      completed: "about:about",
+      autofilled: "ABOUT:about",
+    },
+  ];
+
+  for (let { input, completed, autofilled } of testData) {
+    let context = createContext(input, { isPrivate: false });
+    await check_results({
+      context,
+      completed,
+      autofilled,
+      matches: [
+        {
+          heuristic: true,
+          type: UrlbarUtils.RESULT_TYPE.URL,
+          source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        },
       ],
     });
   }

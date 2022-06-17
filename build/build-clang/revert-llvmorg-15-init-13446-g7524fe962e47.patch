@@ -1,0 +1,39 @@
+From 12f64ca10837bd68ec30804ebfa21653925ad5cf Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Thu, 16 Jun 2022 12:51:29 +0900
+Subject: [PATCH] Revert "[libFuzzer] Use the compiler to link the relocatable
+ object"
+
+This reverts commit 7524fe962e479416fd6318407eff4eed5b96a40b.
+---
+ compiler-rt/lib/fuzzer/CMakeLists.txt | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/compiler-rt/lib/fuzzer/CMakeLists.txt b/compiler-rt/lib/fuzzer/CMakeLists.txt
+index 856cd732d517..d51de53f5acc 100644
+--- a/compiler-rt/lib/fuzzer/CMakeLists.txt
++++ b/compiler-rt/lib/fuzzer/CMakeLists.txt
+@@ -138,15 +138,15 @@ if(OS_NAME MATCHES "Linux|Fuchsia" AND
+    COMPILER_RT_LIBCXX_PATH AND
+    COMPILER_RT_LIBCXXABI_PATH)
+   macro(partially_link_libcxx name dir arch)
+-    get_target_flags_for_arch(${arch} target_cflags)
+-    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+-      get_compiler_rt_target(${arch} target)
+-      set(target_cflags "--target=${target} ${target_cflags}")
++    if(${arch} MATCHES "i386")
++      set(EMULATION_ARGUMENT "-m" "elf_i386")
++    else()
++      set(EMULATION_ARGUMENT "")
+     endif()
+     set(cxx_${arch}_merge_dir "${CMAKE_CURRENT_BINARY_DIR}/cxx_${arch}_merge.dir")
+     file(MAKE_DIRECTORY ${cxx_${arch}_merge_dir})
+     add_custom_command(TARGET clang_rt.${name}-${arch} POST_BUILD
+-      COMMAND ${CMAKE_CXX_COMPILER} ${target_cflags} -Wl,--whole-archive "$<TARGET_LINKER_FILE:clang_rt.${name}-${arch}>" -Wl,--no-whole-archive ${dir}/lib/libc++.a -r -o ${name}.o
++      COMMAND ${CMAKE_LINKER} ${EMULATION_ARGUMENT} --whole-archive "$<TARGET_LINKER_FILE:clang_rt.${name}-${arch}>" --no-whole-archive ${dir}/lib/libc++.a -r -o ${name}.o
+       COMMAND ${CMAKE_OBJCOPY} --localize-hidden ${name}.o
+       COMMAND ${CMAKE_COMMAND} -E remove "$<TARGET_LINKER_FILE:clang_rt.${name}-${arch}>"
+       COMMAND ${CMAKE_AR} qcs "$<TARGET_LINKER_FILE:clang_rt.${name}-${arch}>" ${name}.o
+-- 
+2.36.0.1.g2bbe56bd8d
+

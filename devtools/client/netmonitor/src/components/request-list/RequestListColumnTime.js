@@ -43,7 +43,8 @@ class RequestListColumnTime extends Component {
     fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { item, connector } = nextProps;
     fetchNetworkUpdatePacket(connector.requestData, item, ["eventTimings"]);
   }

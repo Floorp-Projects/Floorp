@@ -71,6 +71,8 @@ static bool gForceEventLog = false;
 
 namespace {
 
+constexpr wchar_t kEventSourceName[] = L"" MOZ_APP_DISPLAYNAME " Launcher";
+
 struct EventSourceDeleter {
   using pointer = HANDLE;
 
@@ -90,7 +92,8 @@ struct SerializedEventData {
 static void PostErrorToLog(const mozilla::LauncherError& aError) {
   // This is very bare-bones; just enough to spit out an HRESULT to the
   // Application event log.
-  EventLog log(::RegisterEventSourceW(nullptr, L"Firefox"));
+  EventLog log(::RegisterEventSourceW(nullptr, kEventSourceName));
+
   if (!log) {
     return;
   }

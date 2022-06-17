@@ -22,7 +22,8 @@ class ColorPath extends ComputedStylePath {
     this.state = this.propToState(props);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState(this.propToState(nextProps));
   }
 

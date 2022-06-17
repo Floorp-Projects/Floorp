@@ -10,7 +10,7 @@ bumpalo = "3.4.0"
 log = "0.4"
 # Setup RUST_LOG logging.
 # Disable regex feature for code size.
-env_logger = {version = "0.8", default-features = false}
+env_logger = {version = "0.9", default-features = false}
 # For non-jsparagus developers.
 jsparagus = { git = "https://github.com/mozilla-spidermonkey/jsparagus", rev = "20d01b2c01a5be01d3dea3ec7a1ede2fdda3d9d2" }
 # For local development, replace above with

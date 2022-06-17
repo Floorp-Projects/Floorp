@@ -268,3 +268,106 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of ARIA attributes that are exposed via object attributes.
+ */
+addAccessibleTask(
+  `
+<div id="currentTrue" aria-current="true">currentTrue</div>
+<div id="currentFalse" aria-current="false">currentFalse</div>
+<div id="currentPage" aria-current="page">currentPage</div>
+<div id="currentBlah" aria-current="blah">currentBlah</div>
+<div id="haspopupMenu" aria-haspopup="menu">haspopup</div>
+<div id="rowColCountPositive" role="table" aria-rowcount="1000" aria-colcount="1000">
+  <div role="row">
+    <div id="rowColIndexPositive" role="cell" aria-rowindex="100" aria-colindex="100">positive</div>
+  </div>
+</div>
+<div id="rowColCountNegative" role="table" aria-rowcount="-1" aria-colcount="-1">
+  <div role="row">
+    <div id="rowColIndexNegative" role="cell" aria-rowindex="-1" aria-colindex="-1">negative</div>
+  </div>
+</div>
+<div id="rowColCountInvalid" role="table" aria-rowcount="z" aria-colcount="z">
+  <div role="row">
+    <div id="rowColIndexInvalid" role="cell" aria-rowindex="z" aria-colindex="z">invalid</div>
+  </div>
+</div>
+<div id="foo" aria-foo="bar">foo</div>
+<div id="mutate" aria-current="true">mutate</div>
+  `,
+  async function(browser, docAcc) {
+    const currentTrue = findAccessibleChildByID(docAcc, "currentTrue");
+    testAttrs(currentTrue, { current: "true" }, true);
+    const currentFalse = findAccessibleChildByID(docAcc, "currentFalse");
+    testAbsentAttrs(currentFalse, { current: "" });
+    const currentPage = findAccessibleChildByID(docAcc, "currentPage");
+    testAttrs(currentPage, { current: "page" }, true);
+    // Test that token normalization works.
+    const currentBlah = findAccessibleChildByID(docAcc, "currentBlah");
+    testAttrs(currentBlah, { current: "true" }, true);
+    const haspopupMenu = findAccessibleChildByID(docAcc, "haspopupMenu");
+    testAttrs(haspopupMenu, { haspopup: "menu" }, true);
+
+    // Test normalization of integer values.
+    const rowColCountPositive = findAccessibleChildByID(
+      docAcc,
+      "rowColCountPositive"
+    );
+    testAttrs(
+      rowColCountPositive,
+      { rowcount: "1000", colcount: "1000" },
+      true
+    );
+    const rowColIndexPositive = findAccessibleChildByID(
+      docAcc,
+      "rowColIndexPositive"
+    );
+    testAttrs(rowColIndexPositive, { rowindex: "100", colindex: "100" }, true);
+    const rowColCountNegative = findAccessibleChildByID(
+      docAcc,
+      "rowColCountNegative"
+    );
+    testAttrs(rowColCountNegative, { rowcount: "-1", colcount: "-1" }, true);
+    const rowColIndexNegative = findAccessibleChildByID(
+      docAcc,
+      "rowColIndexNegative"
+    );
+    testAbsentAttrs(rowColIndexNegative, { rowindex: "", colindex: "" });
+    const rowColCountInvalid = findAccessibleChildByID(
+      docAcc,
+      "rowColCountInvalid"
+    );
+    testAbsentAttrs(rowColCountInvalid, { rowcount: "", colcount: "" });
+    const rowColIndexInvalid = findAccessibleChildByID(
+      docAcc,
+      "rowColIndexInvalid"
+    );
+    testAbsentAttrs(rowColIndexInvalid, { rowindex: "", colindex: "" });
+
+    // Test that unknown aria- attributes get exposed.
+    const foo = findAccessibleChildByID(docAcc, "foo");
+    testAttrs(foo, { foo: "bar" }, true);
+
+    const mutate = findAccessibleChildByID(docAcc, "mutate");
+    testAttrs(mutate, { current: "true" }, true);
+    info("mutate: Removing aria-current");
+    let changed = waitForEvent(EVENT_OBJECT_ATTRIBUTE_CHANGED, mutate);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").removeAttribute("aria-current");
+    });
+    await changed;
+    testAbsentAttrs(mutate, { current: "" });
+    info("mutate: Adding aria-current");
+    changed = waitForEvent(EVENT_OBJECT_ATTRIBUTE_CHANGED, mutate);
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("mutate")
+        .setAttribute("aria-current", "page");
+    });
+    await changed;
+    testAttrs(mutate, { current: "page" }, true);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);

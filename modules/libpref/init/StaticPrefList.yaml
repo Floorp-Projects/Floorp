@@ -2247,9 +2247,17 @@
   value: false
   mirror: always
 
+# Skips checking permission and user activation when accessing the clipboard.
 # Should only be enabled in tests.
 # Access with Clipboard::IsTestingPrefEnabled().
 - name: dom.events.testing.asyncClipboard
+  type: bool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
+# Control whether `navigator.clipboard.readText()` is exposed to content.
+- name: dom.events.asyncClipboard.readText
   type: bool
   value: false
   mirror: always
@@ -3689,7 +3697,7 @@
 
 - name: dom.streams.transferable.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # For area and anchor elements with target=_blank and no rel set to
@@ -6678,6 +6686,12 @@
     value: true
     mirror: always
 #endif  // NIGHTLY_BUILD
+
+  # Experimental support for Array.findLast/Array.findLastIndex in JavaScript.
+-   name: javascript.options.experimental.array_find_last
+    type: bool
+    value: false
+    mirror: always
 
 # Experimental support for class static blocks in JavaScript.
 -   name: javascript.options.experimental.class_static_blocks
@@ -10613,6 +10627,12 @@
   value: "https://mozilla.cloudflare-dns.com/dns-query"
   mirror: never
 
+# If true, retry TRR for recoverable errors once.
+- name: network.trr.retry_on_recoverable_errors
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # If true, don't fallback to native DNS upon network errors.
 - name: network.trr.strict_native_fallback
   type: RelaxedAtomicBool
@@ -12365,7 +12385,7 @@
   value: 10
 #else
   value: 0
-#endif 
+#endif
   mirror: always
 
 # Whether to retry connections without ECH Grease

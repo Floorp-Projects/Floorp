@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // This component is used for handling dragover and drop of urls.
 //
@@ -103,7 +102,7 @@ ContentAreaDropListener.prototype = {
     if (files && i < files.length) {
       this._addLink(
         links,
-        OS.Path.toFileURI(files[i].mozFullPath),
+        PathUtils.toFileURI(files[i].mozFullPath),
         files[i].name,
         "application/x-moz-file"
       );

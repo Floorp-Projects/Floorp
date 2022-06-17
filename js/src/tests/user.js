@@ -36,3 +36,4 @@ user_pref("javascript.options.experimental.ergonomic_brand_checks", true);
 user_pref("javascript.options.experimental.enable_change_array_by_copy", false);
 user_pref("javascript.options.experimental.enable_new_set_methods", false);
 user_pref("javascript.options.experimental.import_assertions", true);
+user_pref("javascript.options.experimental.array_find_last", false);

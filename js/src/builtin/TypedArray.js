@@ -1201,6 +1201,91 @@ function TypedArrayAt(index) {
 // This function is only barely too long for normal inlining.
 SetIsInlinableLargeFunction(TypedArrayAt);
 
+// https://github.com/tc39/proposal-array-find-from-last
+// %TypedArray%.prototype.findLast ( predicate, thisArg )
+function TypedArrayFindLast(predicate/*, thisArg*/) {
+    // Step 1.
+    var O = this;
+
+    // Step 2.
+    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
+
+    // If we got here, `this` is either a typed array or a wrapper for one.
+
+    // Step 3.
+    var len;
+    if (isTypedArray) {
+        len = TypedArrayLength(O);
+    } else {
+        len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
+
+    // Step 4.
+    if (arguments.length === 0) {
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.findLast");
+    }
+    if (!IsCallable(predicate)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
+
+    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+
+    // Steps 5-6.
+    for (var k = len - 1; k >= 0; k--) {
+        // Steps 6.a-b.
+        var kValue = O[k];
+
+        // Steps 6.c-d.
+        if (callContentFunction(predicate, thisArg, kValue, k, O)) {
+            return kValue;
+        }
+    }
+
+    // Step 7.
+    return undefined;
+}
+
+// https://github.com/tc39/proposal-array-find-from-last
+// %TypedArray%.prototype.findLastIndex ( predicate, thisArg )
+function TypedArrayFindLastIndex(predicate/*, thisArg*/) {
+    // Step 1.
+    var O = this;
+
+    // Step 2.
+    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
+
+    // If we got here, `this` is either a typed array or a wrapper for one.
+
+    // Step 3.
+    var len;
+    if (isTypedArray) {
+        len = TypedArrayLength(O);
+    } else {
+        len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
+
+    // Step 4.
+    if (arguments.length === 0) {
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.findLastIndex");
+    }
+    if (!IsCallable(predicate)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
+
+    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+
+    // Steps 5-6.
+    for (var k = len - 1; k >= 0; k--) {
+        // Steps 6.a-f.
+        if (callContentFunction(predicate, thisArg, O[k], k, O)) {
+            return k;
+        }
+    }
+
+    // Step 7.
+    return -1;
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
 //
 // Uncloned functions with `$` prefix are allocated as extended function
