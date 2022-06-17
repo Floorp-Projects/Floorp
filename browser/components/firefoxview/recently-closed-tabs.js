@@ -10,10 +10,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(globalThis, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
 });
 
-const relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {});
+import {
+  formatURIForDisplay,
+  convertTimestamp,
+  createFaviconElement,
+} from "./helpers.js";
+
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
 function getWindow() {
@@ -50,42 +54,6 @@ class RecentlyClosedTabsList extends HTMLElement {
     ) {
       this.openTabAndUpdate(event);
     }
-  }
-
-  convertTimestamp(timestamp) {
-    const elapsed = Date.now() - timestamp;
-    const nowThresholdMs = 91000;
-    let formattedTime;
-    if (elapsed <= nowThresholdMs) {
-      // Use a different string for very recent timestamps
-      formattedTime = this.fluentStrings.formatValueSync(
-        "firefoxview-just-now-timestamp"
-      );
-    } else {
-      formattedTime = relativeTimeFormat.formatBestUnit(new Date(timestamp));
-    }
-    return formattedTime;
-  }
-
-  formatURIForDisplay(uriString) {
-    // TODO: Bug 1764816: Make sure we handle file:///, jar:, blob, IP4/IP6 etc. addresses
-    let uri;
-    try {
-      uri = Services.io.newURI(uriString);
-    } catch (ex) {
-      return uriString;
-    }
-    if (!uri.asciiHost) {
-      return uriString;
-    }
-    let displayHost;
-    try {
-      // This might fail if it's an IP address or doesn't have more than 1 part
-      displayHost = Services.eTLD.getBaseDomain(uri);
-    } catch (ex) {
-      return uri.displayHostPort;
-    }
-    return displayHost.length ? displayHost : uriString;
   }
 
   getTabStateValue(tab, key) {
@@ -173,18 +141,6 @@ class RecentlyClosedTabsList extends HTMLElement {
     }
   }
 
-  setFavicon(tab) {
-    const imageUrl = tab.image
-      ? PlacesUIUtils.getImageURL(tab)
-      : "chrome://global/skin/icons/defaultFavicon.svg";
-    let favicon = document.createElement("div");
-
-    favicon.style.backgroundImage = `url('${imageUrl}')`;
-    favicon.classList.add("favicon");
-    favicon.setAttribute("role", "presentation");
-    return favicon;
-  }
-
   generateListItem(tab) {
     const li = document.createElement("li");
     li.classList.add("closed-tab-li");
@@ -195,24 +151,25 @@ class RecentlyClosedTabsList extends HTMLElement {
     title.textContent = `${tab.title}`;
     title.classList.add("closed-tab-li-title");
 
-    const favicon = this.setFavicon(tab);
+    const favicon = createFaviconElement(tab.image);
     li.append(favicon);
 
     const targetURI = this.getTabStateValue(tab, "url");
     li.dataset.targetURI = targetURI;
-    document.l10n.setAttributes(li, "firefoxview-closed-tabs-tab-button", {
+    document.l10n.setAttributes(li, "firefoxview-tabs-list-tab-button", {
       targetURI,
     });
 
     const url = document.createElement("span");
 
     if (targetURI) {
-      url.textContent = this.formatURIForDisplay(targetURI);
+      url.textContent = formatURIForDisplay(targetURI);
       url.classList.add("closed-tab-li-url");
     }
 
     const time = document.createElement("span");
-    time.textContent = this.convertTimestamp(tab.closedAt);
+    time.textContent = convertTimestamp(tab.closedAt, this.fluentStrings);
+
     time.classList.add("closed-tab-li-time");
 
     li.append(title, url, time);

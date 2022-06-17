@@ -1816,8 +1816,8 @@ var PlacesUIUtils = {
     }
   },
 
-  getImageURL(aItem) {
-    let iconURL = aItem.image;
+  getImageURL(icon) {
+    let iconURL = icon;
     // don't initiate a connection just to fetch a favicon (see bug 467828)
     if (/^https?:/.test(iconURL)) {
       iconURL = "moz-anno:favicon:" + iconURL;
