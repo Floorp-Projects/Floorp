@@ -101,6 +101,12 @@ interface nsIComponentManager : nsISupports
      * should only be used in automation.
      */
     nsIUTF8StringEnumerator getComponentJSMs();
+
+    /**
+     * Returns a list of ESM URLs which are used to create components. This
+     * should only be used in automation.
+     */
+    nsIUTF8StringEnumerator getComponentESModules();
 };
 
 
