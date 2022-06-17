@@ -1210,39 +1210,6 @@ set_define(
     depends_if("--enable-wasm-type-reflections")(lambda x: True),
 )
 
-# Support for WebAssembly exceptions
-# ==================================
-
-
-@depends("--enable-cranelift")
-def default_wasm_exceptions(cranelift_enabled):
-    if cranelift_enabled:
-        return
-
-    return True
-
-
-option(
-    "--enable-wasm-exceptions",
-    default=default_wasm_exceptions,
-    help="{Enable|Disable} WebAssembly exceptions",
-)
-
-
-@depends("--enable-wasm-exceptions", "--enable-cranelift")
-def wasm_exceptions(value, cranelift_enabled):
-    if not value:
-        return
-
-    if cranelift_enabled:
-        die("--enable-wasm-exceptions is not supported for --enable-cranelift")
-
-    return True
-
-
-set_config("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
-set_define("ENABLE_WASM_EXCEPTIONS", wasm_exceptions)
-
 # Wasi configuration
 # ===================================================
 
