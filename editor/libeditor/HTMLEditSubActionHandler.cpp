@@ -3114,14 +3114,16 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         OwningNonNull<nsIContent>(*parentListElement));
   } else {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    nsresult rv =
-        SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-            arrayOfContents, EditSubAction::eCreateOrChangeList,
-            CollectNonEditableNodes::No);
+
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::"
-          "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges("
+          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return EditActionResult(rv);
     }
@@ -3738,23 +3740,24 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
-    nsresult rv =
-        SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-            arrayOfContents, EditSubAction::eCreateOrChangeList,
-            CollectNonEditableNodes::No);
+
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::"
-          "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges("
+          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return rv;
     }
   }
 
   // Remove all non-editable nodes.  Leave them be.
-  // XXX SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
-  //     should return only editable contents when it's called with
-  //     CollectNonEditableNodes::No.
+  // XXX SplitInlinesAndCollectEditTargetNodes() should return only editable
+  //     contents when it's called with CollectNonEditableNodes::No.
   for (int32_t i = arrayOfContents.Length() - 1; i >= 0; i--) {
     OwningNonNull<nsIContent>& content = arrayOfContents[i];
     if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
@@ -3813,15 +3816,19 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  nsresult rv = SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
-      CollectNonEditableNodes::Yes);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::"
-        "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges("
-        "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
-    return rv;
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eCreateOrRemoveBlock);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eCreateOrRemoveBlock, CollectNonEditableNodes::Yes);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
+      return rv;
+    }
   }
 
   // If there is no visible and editable nodes in the edit targets, make an
@@ -3955,7 +3962,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     // Put selection in new block
     // MOZ_KnownLive(createNewBlockElementResult.GetNewNode()) because it's
     // grabbed by createNewBlockElementResult.
-    rv = CollapseSelectionToStartOf(
+    nsresult rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*createNewBlockElementResult.GetNewNode()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::CollapseSelectionToStartOf() failed");
@@ -4324,15 +4331,16 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   }
 
   if (arrayOfContents.IsEmpty()) {
-    nsresult rv =
-        SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-            arrayOfContents, EditSubAction::eIndent,
-            CollectNonEditableNodes::Yes);
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
+                                                    EditSubAction::eIndent);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents, EditSubAction::eIndent,
+        CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::"
-          "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges("
-          "eIndent, CollectNonEditableNodes::Yes) failed");
+          "SplitInlinesAndCollectEditTargetNodes(EditSubAction::eIndent, "
+          "CollectNonEditableNodes::Yes) failed");
       return rv;
     }
   }
@@ -4946,14 +4954,19 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
   // and then further expands to include any ancestors whose children are all
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  nsresult rv = SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      arrayOfContents, EditSubAction::eOutdent, CollectNonEditableNodes::Yes);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::"
-        "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges() "
-        "failed");
-    return SplitRangeOffFromNodeResult(rv);
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
+                                                    EditSubAction::eOutdent);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents, EditSubAction::eOutdent,
+        CollectNonEditableNodes::Yes);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "eOutdent, CollectNonEditableNodes::Yes) failed");
+      return SplitRangeOffFromNodeResult(rv);
+    }
   }
 
   nsCOMPtr<nsIContent> leftContentOfLastOutdented;
@@ -5067,8 +5080,8 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
       }
       // XXX `content` could become different element since
       //     `OutdentPartOfBlock()` may run mutation event listeners.
-      rv = LiftUpListItemElement(MOZ_KnownLive(*content->AsElement()),
-                                 LiftUpFromAllParentListElements::No);
+      nsresult rv = LiftUpListItemElement(MOZ_KnownLive(*content->AsElement()),
+                                          LiftUpFromAllParentListElements::No);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "HTMLEditor::LiftUpListItemElement(LiftUpFromAllParentListElements:"
@@ -5757,15 +5770,19 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
   // and then further expands to include any ancestors whose children are all
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  nsresult rv = SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      arrayOfContents, EditSubAction::eSetOrClearAlignment,
-      CollectNonEditableNodes::Yes);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::"
-        "SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges("
-        "eSetOrClearAlignment, CollectNonEditableNodes::Yes) failed");
-    return rv;
+  {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(
+        extendedSelectionRanges, EditSubAction::eSetOrClearAlignment);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, arrayOfContents,
+        EditSubAction::eSetOrClearAlignment, CollectNonEditableNodes::Yes);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "eSetOrClearAlignment, CollectNonEditableNodes::Yes) failed");
+      return rv;
+    }
   }
 
   // If we don't have any nodes, or we have only a single br, then we are
@@ -5830,10 +5847,10 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
     if (result.Handled()) {
       restoreSelectionLater.Abort();
     }
-    return rv;
+    return result.Rv();
   }
 
-  rv = AlignNodesAndDescendants(arrayOfContents, aAlignType);
+  nsresult rv = AlignNodesAndDescendants(arrayOfContents, aAlignType);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::AlignNodesAndDescendants() failed");
   return rv;
