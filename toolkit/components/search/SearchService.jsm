@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
+  PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
@@ -463,12 +464,18 @@ class SearchService {
    *   the idl for more details.
    */
   async addPolicyEngine(details) {
-    await this._createAndAddEngine({
-      extensionID: "set-via-policy",
-      extensionBaseURI: "",
-      isAppProvided: false,
-      manifest: details,
-    });
+    await this.init();
+
+    let newEngine = new lazy.PolicySearchEngine({ details });
+    let existingEngine = this._engines.get(newEngine.name);
+    if (existingEngine) {
+      throw Components.Exception(
+        "An engine with that name already exists!",
+        Cr.NS_ERROR_FILE_ALREADY_EXISTS
+      );
+    }
+    lazy.logConsole.debug(`Adding ${newEngine.name}`);
+    this.#addEngineToStore(newEngine);
   }
 
   /**
@@ -483,12 +490,7 @@ class SearchService {
       details.chrome_settings_overrides.search_provider.name
     );
     if (engine && !engine.isAppProvided) {
-      engine._updateFromManifest(
-        "set-via-policy",
-        "",
-        details,
-        engine._locale || lazy.SearchUtils.DEFAULT_TAG
-      );
+      engine.update(details);
     }
   }
 
@@ -2032,11 +2034,16 @@ class SearchService {
       }
 
       try {
-        let engine = new lazy.SearchEngine({
-          isAppProvided: false,
-          loadPath: engineJSON._loadPath,
-        });
-        engine._initWithJSON(engineJSON);
+        let engine;
+        if (loadPath?.includes("set-via-policy")) {
+          engine = new lazy.PolicySearchEngine({ json: engineJSON });
+        } else {
+          engine = new lazy.SearchEngine({
+            isAppProvided: false,
+            loadPath: engineJSON._loadPath,
+          });
+          engine._initWithJSON(engineJSON);
+        }
         this.#addEngineToStore(engine);
       } catch (ex) {
         lazy.logConsole.error(
@@ -2446,7 +2453,6 @@ class SearchService {
     }
 
     let newEngine = new lazy.SearchEngine({
-      name,
       isAppProvided,
       loadPath: `[other]addEngineWithDetails:${extensionID}`,
     });
