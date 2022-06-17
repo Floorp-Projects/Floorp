@@ -31,6 +31,7 @@ fun Autocomplete.Address.toAddress() = Address(
  */
 fun Address.toAutocompleteAddress() = Autocomplete.Address.Builder()
     .guid(guid)
+    .name(fullName)
     .givenName(givenName)
     .additionalName(additionalName)
     .familyName(familyName)

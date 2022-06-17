@@ -362,7 +362,17 @@ data class Address(
     val timeLastUsed: Long? = 0L,
     val timeLastModified: Long = 0L,
     val timesUsed: Long = 0L
-) : Parcelable
+) : Parcelable {
+    /**
+     * Returns the full name for the [Address]. The combination of names is based on desktop code
+     * found here:
+     * https://searchfox.org/mozilla-central/rev/d989c65584ded72c2de85cb40bede7ac2f176387/toolkit/components/formautofill/FormAutofillNameUtils.jsm#400
+     */
+    val fullName: String
+        get() = listOf(givenName, additionalName, familyName)
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+}
 
 /**
  * Information about a new address. This is what you pass to create or update an address.
