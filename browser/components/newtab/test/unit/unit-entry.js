@@ -528,6 +528,9 @@ const TEST_GLOBAL = {
     off: () => {},
   },
   NimbusFeatures: {
+    glean: {
+      getVariable() {},
+    },
     newtab: {
       isEnabled() {},
       getVariable() {},
