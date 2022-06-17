@@ -1232,8 +1232,15 @@ ComputedStyle* nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame) {
   return FindBackgroundStyleFrame(aForFrame)->Style();
 }
 
-inline bool FindElementBackground(const nsIFrame* aForFrame,
-                                  nsIFrame* aRootElementFrame) {
+// Helper for FindBackgroundFrame. Returns true if aForFrame has a meaningful
+// background that it should draw (i.e. that it hasn't propagated to another
+// frame).  See documentation for FindBackground.
+inline bool FrameHasMeaningfulBackground(const nsIFrame* aForFrame,
+                                         nsIFrame* aRootElementFrame) {
+  MOZ_ASSERT(!nsCSSRendering::IsCanvasFrame(aForFrame),
+             "FindBackgroundFrame handles canvas frames before calling us, "
+             "so we don't need to consider them here");
+
   if (aForFrame == aRootElementFrame) {
     // We must have propagated our background to the viewport or canvas. Abort.
     return false;
@@ -1280,9 +1287,7 @@ nsIFrame* nsCSSRendering::FindBackgroundFrame(const nsIFrame* aForFrame) {
     return FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
   }
 
-  // XXXdholbert FindElementBackground will be renamed for clarity later
-  // in this series.
-  if (FindElementBackground(aForFrame, rootElementFrame)) {
+  if (FrameHasMeaningfulBackground(aForFrame, rootElementFrame)) {
     return const_cast<nsIFrame*>(aForFrame);
   }
 
