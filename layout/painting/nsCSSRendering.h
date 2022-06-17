@@ -283,13 +283,15 @@ struct nsCSSRendering {
   static bool IsCanvasFrame(const nsIFrame* aFrame);
 
   /**
-   * Fill in an aBackgroundSC to be used to paint the background
-   * for an element.  This applies the rules for propagating
-   * backgrounds between BODY, the root element, and the canvas.
-   * @return true if there is some meaningful background.
+   * Returns the ComputedStyle to be used to paint the background for the given
+   * frame, if its element has a meaningful background.  This applies the rules
+   * for propagating backgrounds between BODY, the root element, and the
+   * canvas.
+   *
+   * @return the ComputedStyle (if any) to be used for painting aForFrame's
+   *         background.
    */
-  static bool FindBackground(const nsIFrame* aForFrame,
-                             mozilla::ComputedStyle** aBackgroundSC);
+  static mozilla::ComputedStyle* FindBackground(const nsIFrame* aForFrame);
   static bool FindBackgroundFrame(const nsIFrame* aForFrame,
                                   nsIFrame** aBackgroundFrame);
 

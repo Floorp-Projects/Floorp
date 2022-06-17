@@ -14778,8 +14778,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
       }
       bool drawImage = false;
       bool drawColor = false;
-      ComputedStyle* bgStyle = nullptr;
-      if (nsCSSRendering::FindBackground(frame, &bgStyle)) {
+      if (auto* bgStyle = nsCSSRendering::FindBackground(frame)) {
         const nscolor color = nsCSSRendering::DetermineBackgroundColor(
             pc, bgStyle, frame, drawImage, drawColor);
         if (drawImage &&

@@ -7499,9 +7499,13 @@ nsRect nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame) {
-  ComputedStyle* bgSC;
-  if (!nsCSSRendering::FindBackground(aFrame, &bgSC)) return;
-  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame)) return;
+  ComputedStyle* bgSC = nsCSSRendering::FindBackground(aFrame);
+  if (!bgSC) {
+    return;
+  }
+  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame)) {
+    return;
+  }
 
   mPartHasFixedBackground = true;
 }
