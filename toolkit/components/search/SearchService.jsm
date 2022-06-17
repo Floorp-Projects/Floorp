@@ -19,6 +19,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
   PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.jsm",
@@ -2040,6 +2041,11 @@ class SearchService {
           engine = new lazy.PolicySearchEngine({ json: engineJSON });
         } else if (loadPath?.includes("set-via-user")) {
           engine = new lazy.UserSearchEngine({ json: engineJSON });
+        } else if (engineJSON.extensionID ?? engineJSON._extensionID) {
+          engine = new lazy.AddonSearchEngine({
+            isAppProvided: false,
+            json: engineJSON,
+          });
         } else {
           engine = new lazy.SearchEngine({
             isAppProvided: false,
@@ -2414,57 +2420,46 @@ class SearchService {
     locale = lazy.SearchUtils.DEFAULT_TAG,
     initEngine = false,
   }) {
-    if (!extensionID) {
-      throw Components.Exception(
-        "Empty extensionID passed to _createAndAddEngine!",
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-    let searchProvider = manifest.chrome_settings_overrides.search_provider;
-    let name = searchProvider.name.trim();
-    lazy.logConsole.debug("_createAndAddEngine: Adding", name);
-    let isCurrent = false;
-
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
     if (!this._initialized && !isAppProvided && !initEngine) {
       await this.init();
     }
+
+    let isCurrent = false;
+
     // Special search engines (policy and user) are skipped for migration as
     // there would never have been an OpenSearch engine associated with those.
-    if (extensionID && !extensionID.startsWith("set-via")) {
-      for (let engine of this._engines.values()) {
-        if (
-          !engine.extensionID &&
-          engine._loadPath.startsWith(`jar:[profile]/extensions/${extensionID}`)
-        ) {
-          // This is a legacy extension engine that needs to be migrated to WebExtensions.
-          lazy.logConsole.debug("Migrating existing engine");
-          isCurrent = isCurrent || this.defaultEngine == engine;
-          await this.removeEngine(engine);
-        }
+    for (let engine of this._engines.values()) {
+      if (
+        !engine.extensionID &&
+        engine._loadPath.startsWith(`jar:[profile]/extensions/${extensionID}`)
+      ) {
+        // This is a legacy extension engine that needs to be migrated to WebExtensions.
+        lazy.logConsole.debug("Migrating existing engine");
+        isCurrent = isCurrent || this.defaultEngine == engine;
+        await this.removeEngine(engine);
       }
     }
 
-    let existingEngine = this._engines.get(name);
+    let newEngine = new lazy.AddonSearchEngine({
+      isAppProvided,
+      details: {
+        extensionID,
+        extensionBaseURI,
+        manifest,
+        locale,
+      },
+    });
+
+    let existingEngine = this._engines.get(newEngine.name);
     if (existingEngine) {
       throw Components.Exception(
         "An engine with that name already exists!",
         Cr.NS_ERROR_FILE_ALREADY_EXISTS
       );
     }
-
-    let newEngine = new lazy.SearchEngine({
-      isAppProvided,
-      loadPath: `[other]addEngineWithDetails:${extensionID}`,
-    });
-    newEngine._initFromManifest(
-      extensionID,
-      extensionBaseURI,
-      manifest,
-      locale
-    );
 
     this.#addEngineToStore(newEngine);
     if (isCurrent) {
@@ -3174,19 +3169,16 @@ class SearchService {
 
     let manifest = await this.#getManifestForLocale(policy.extension, locale);
 
-    let engine = new lazy.SearchEngine({
-      name: manifest.chrome_settings_overrides.search_provider.name.trim(),
+    return new lazy.AddonSearchEngine({
       isAppProvided: policy.extension.isAppProvided,
-      loadPath: `[other]addEngineWithDetails:${policy.extension.id}`,
+      details: {
+        extensionID: policy.extension.id,
+        extensionBaseURI: policy.extension.baseURI,
+        manifest,
+        locale,
+        config,
+      },
     });
-    engine._initFromManifest(
-      policy.extension.id,
-      policy.extension.baseURI,
-      manifest,
-      locale,
-      config
-    );
-    return engine;
   }
 
   /**
