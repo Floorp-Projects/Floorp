@@ -2206,6 +2206,7 @@ dependencies = [
  "midir_impl",
  "mio 0.8.0",
  "moz_asserts",
+ "mozglue-static",
  "mozurl",
  "mp4parse_capi",
  "neqo_glue",
