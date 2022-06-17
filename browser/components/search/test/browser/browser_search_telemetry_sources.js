@@ -238,49 +238,46 @@ add_task(async function test_source_urlbar_handoff() {
       return tab;
     },
     async () => {
+      const issueRecords = Glean.newtabSearch.issued.testGetValue();
+      Assert.ok(!!issueRecords, "Must have recorded a search issuance");
+      Assert.equal(issueRecords.length, 1, "One search, one event");
+      const newtabVisitId = issueRecords[0].extra.newtab_visit_id;
+      Assert.ok(!!newtabVisitId, "Must have a visit id");
+      Assert.deepEqual(
+        {
+          // Yes, this is tautological. But I want to use deepEqual.
+          newtab_visit_id: newtabVisitId,
+          search_access_point: "urlbar_handoff",
+          telemetry_id: "other-Example",
+        },
+        issueRecords[0].extra,
+        "Must have recorded the expected information."
+      );
       const impRecords = Glean.newtabSearchAd.impression.testGetValue();
       Assert.equal(impRecords.length, 1, "One impression, one event.");
-      Assert.equal(
-        impRecords[0].extra.search_access_point,
-        "urlbar_handoff",
-        "Must have the expected search source."
-      );
-      // This urlbar handoff is tagged and is not follow-on, so:
-      // (( Alas, search extras are all strings ))
-      Assert.equal(
-        impRecords[0].extra.is_tagged,
-        "true",
-        "It was a tagged impression."
-      );
-      Assert.equal(impRecords[0].extra.is_follow_on, "false", "Not follow-on.");
-      Assert.equal(
-        impRecords[0].extra.telemetry_id,
-        "example",
-        "Must have the test engine"
+      Assert.deepEqual(
+        {
+          newtab_visit_id: newtabVisitId,
+          search_access_point: "urlbar_handoff",
+          telemetry_id: "example",
+          is_tagged: "true",
+          is_follow_on: "false",
+        },
+        impRecords[0].extra,
+        "Must have recorded the expected information."
       );
       const clickRecords = Glean.newtabSearchAd.click.testGetValue();
       Assert.equal(clickRecords.length, 1, "One click, one event.");
-      Assert.equal(
-        clickRecords[0].extra.search_access_point,
-        "urlbar_handoff",
-        "Must have the expected search source."
-      );
-      // This urlbar handoff is tagged and is not follow-on, so:
-      // (( Alas, search extras are all strings ))
-      Assert.equal(
-        clickRecords[0].extra.is_tagged,
-        "true",
-        "It was a tagged click."
-      );
-      Assert.equal(
-        clickRecords[0].extra.is_follow_on,
-        "false",
-        "Not follow-on."
-      );
-      Assert.equal(
-        clickRecords[0].extra.telemetry_id,
-        "example",
-        "Must have the test engine"
+      Assert.deepEqual(
+        {
+          newtab_visit_id: newtabVisitId,
+          search_access_point: "urlbar_handoff",
+          telemetry_id: "example",
+          is_tagged: "true",
+          is_follow_on: "false",
+        },
+        clickRecords[0].extra,
+        "Must have recorded the expected information."
       );
       BrowserTestUtils.removeTab(tab);
     }
