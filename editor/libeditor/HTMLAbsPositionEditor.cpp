@@ -57,8 +57,13 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
     return rv;
   }
 
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
   if (aEnabled) {
-    EditActionResult result = SetSelectionToAbsoluteAsSubAction();
+    EditActionResult result = SetSelectionToAbsoluteAsSubAction(*editingHost);
     NS_WARNING_ASSERTION(
         result.Succeeded(),
         "HTMLEditor::SetSelectionToAbsoluteAsSubAction() failed");

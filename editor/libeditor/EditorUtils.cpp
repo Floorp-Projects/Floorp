@@ -747,6 +747,56 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
   return point;
 }
 
+void AutoRangeArray::ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+    EditSubAction aEditSubAction, const Element& aEditingHost) {
+  // FYI: This is originated in
+  // https://searchfox.org/mozilla-central/rev/1739f1301d658c9bff544a0a095ab11fca2e549d/editor/libeditor/HTMLEditSubActionHandler.cpp#6712
+
+  bool removeSomeRanges = false;
+  for (OwningNonNull<nsRange>& range : mRanges) {
+    // Remove non-positioned ranges.
+    if (MOZ_UNLIKELY(!range->IsPositioned())) {
+      removeSomeRanges = true;
+      continue;
+    }
+    // If the range is native anonymous subtrees, we must meet a bug of
+    // `Selection` so that we need to hack here.
+    if (MOZ_UNLIKELY(range->GetStartContainer()->IsInNativeAnonymousSubtree() ||
+                     range->GetEndContainer()->IsInNativeAnonymousSubtree())) {
+      EditorRawDOMRange rawRange(range);
+      if (!rawRange.EnsureNotInNativeAnonymousSubtree()) {
+        range->Reset();
+        removeSomeRanges = true;
+        continue;
+      }
+      if (NS_FAILED(
+              range->SetStartAndEnd(rawRange.StartRef().ToRawRangeBoundary(),
+                                    rawRange.EndRef().ToRawRangeBoundary())) ||
+          MOZ_UNLIKELY(!range->IsPositioned())) {
+        range->Reset();
+        removeSomeRanges = true;
+        continue;
+      }
+    }
+    // Finally, extend the range.
+    if (NS_FAILED(ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+            range, aEditSubAction, aEditingHost))) {
+      // If we failed to extend the range, we should use the original range
+      // as-is unless the range is broken at setting the range.
+      if (NS_WARN_IF(!range->IsPositioned())) {
+        removeSomeRanges = true;
+      }
+    }
+  }
+  if (removeSomeRanges) {
+    for (size_t i : Reversed(IntegerRange(mRanges.Length()))) {
+      if (!mRanges[i]->IsPositioned()) {
+        mRanges.RemoveElementAt(i);
+      }
+    }
+  }
+}
+
 // static
 nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
     nsRange& aRange, EditSubAction aEditSubAction,
