@@ -20,21 +20,10 @@ import re
 import sys
 import tarfile
 from contextlib import contextmanager
-from distutils.dir_util import copy_tree
 
 from shutil import which
 
 import zstandard
-
-
-def symlink(source, link_name):
-    os_symlink = getattr(os, "symlink", None)
-    if callable(os_symlink):
-        os_symlink(source, link_name)
-    else:
-        if os.path.isdir(source):
-            # Fall back to copying the directory :(
-            copy_tree(source, link_name)
 
 
 def check_run(args):
@@ -195,7 +184,6 @@ def build_one_stage(
     osx_cross_compile,
     build_type,
     assertions,
-    libcxx_include_dir,
     targets,
     is_final_stage=False,
     profile=None,
@@ -238,21 +226,22 @@ def build_one_stage(
             cmake_args += [
                 "-DCLANG_REPOSITORY_STRING=taskcluster-%s" % os.environ["TASK_ID"],
             ]
+        projects = ["clang"]
         # libc++ doesn't build with MSVC because of the use of #include_next.
         if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
-            cmake_args += [
-                "-DLLVM_TOOL_LIBCXX_BUILD=ON",
-                # libc++abi has conflicting definitions between the shared and static
-                # library on Windows because of the import library for the dll having
-                # the same name as the static library. libc++abi is not necessary on
-                # Windows anyways.
-                "-DLLVM_TOOL_LIBCXXABI_BUILD=%s" % ("OFF" if is_windows() else "ON"),
-            ]
-        if not is_final_stage:
-            cmake_args += [
-                "-DLLVM_ENABLE_PROJECTS=clang",
-                "-DLLVM_TOOL_LLI_BUILD=OFF",
-            ]
+            projects.append("libcxx")
+            # libc++abi has conflicting definitions between the shared and static
+            # library on Windows because of the import library for the dll having
+            # the same name as the static library. libc++abi is not necessary on
+            # Windows anyways.
+            if not is_windows():
+                projects.append("libcxxabi")
+        if is_final_stage:
+            projects.extend(("clang-tools-extra", "lld"))
+        else:
+            cmake_args.append("-DLLVM_TOOL_LLI_BUILD=OFF")
+
+        cmake_args.append("-DLLVM_ENABLE_PROJECTS=%s" % ";".join(projects))
 
         # There is no libxml2 on Windows except if we build one ourselves.
         # libxml2 is only necessary for llvm-mt, but Windows can just use the
@@ -286,7 +275,6 @@ def build_one_stage(
             cmake_args += [
                 "-DCMAKE_SYSTEM_NAME=Darwin",
                 "-DCMAKE_SYSTEM_VERSION=%s" % os.environ["MACOSX_DEPLOYMENT_TARGET"],
-                "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % libcxx_include_dir,
                 "-DCMAKE_OSX_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                 "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                 "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER",
@@ -502,11 +490,6 @@ def main():
         os.sys.exit(0)
 
     llvm_source_dir = source_dir + "/llvm"
-    extra_source_dir = source_dir + "/clang-tools-extra"
-    clang_source_dir = source_dir + "/clang"
-    lld_source_dir = source_dir + "/lld"
-    libcxx_source_dir = source_dir + "/libcxx"
-    libcxxabi_source_dir = source_dir + "/libcxxabi"
 
     exe_ext = ""
     if is_windows():
@@ -630,22 +613,6 @@ def main():
         for p in config.get("patches", []):
             patch(p, source_dir)
 
-    symlinks = [
-        (clang_source_dir, llvm_source_dir + "/tools/clang"),
-        (extra_source_dir, llvm_source_dir + "/tools/clang/tools/extra"),
-        (lld_source_dir, llvm_source_dir + "/tools/lld"),
-        (libcxx_source_dir, llvm_source_dir + "/projects/libcxx"),
-        (libcxxabi_source_dir, llvm_source_dir + "/projects/libcxxabi"),
-        (source_dir + "/cmake", llvm_source_dir + "/projects/cmake"),
-    ]
-    for l in symlinks:
-        # On Windows, we have to re-copy the whole directory every time.
-        if not is_windows() and os.path.islink(l[1]):
-            continue
-        delete(l[1])
-        if os.path.exists(l[0]):
-            symlink(l[0], l[1])
-
     package_name = "clang"
     if build_clang_tidy:
         package_name = "clang-tidy"
@@ -656,8 +623,6 @@ def main():
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
-
-    libcxx_include_dir = os.path.join(llvm_source_dir, "projects", "libcxx", "include")
 
     stage1_dir = build_dir + "/stage1"
     stage1_inst_dir = stage1_dir + "/" + package_name
@@ -760,7 +725,6 @@ def main():
             osx_cross_compile,
             build_type,
             assertions,
-            libcxx_include_dir,
             targets,
             is_final_stage=(stages == 1),
         )
@@ -787,7 +751,6 @@ def main():
             osx_cross_compile,
             build_type,
             assertions,
-            libcxx_include_dir,
             targets,
             is_final_stage=(stages == 2),
             profile="gen" if pgo else None,
@@ -815,7 +778,6 @@ def main():
             osx_cross_compile,
             build_type,
             assertions,
-            libcxx_include_dir,
             targets,
             (stages == 3),
         )
@@ -859,7 +821,6 @@ def main():
             osx_cross_compile,
             build_type,
             assertions,
-            libcxx_include_dir,
             targets,
             (stages == 4),
             profile=profile,
