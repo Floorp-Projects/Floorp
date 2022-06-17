@@ -480,9 +480,18 @@ void AutoRangeArray::
   }
 }
 
-// static
-EditorDOMPoint
-AutoRangeArray::GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
+/**
+ * Get the point before the line containing aPointInLine.
+ *
+ * @return              If the line starts after a `<br>` element, returns next
+ *                      sibling of the `<br>` element.
+ *                      If the line is first line of a block, returns point of
+ *                      the block.
+ * NOTE: The result may be point of editing host.  I.e., the container may be
+ *       outside of editing host.
+ */
+static EditorDOMPoint
+GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
     const EditorDOMPoint& aPointInLine, EditSubAction aEditSubAction,
     const Element& aEditingHost) {
   // FYI: This was moved from
@@ -580,9 +589,19 @@ AutoRangeArray::GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
   return point;
 }
 
-// static
-EditorDOMPoint
-AutoRangeArray::GetPointAfterFollowingLineBreakOrAtFollowingBlock(
+/**
+ * Get the point after the following line break or the block which breaks the
+ * line containing aPointInLine.
+ *
+ * @return              If the line ends with a visible `<br>` element, returns
+ *                      the point after the `<br>` element.
+ *                      If the line ends with a preformatted linefeed, returns
+ *                      the point after the linefeed unless it's an invisible
+ *                      line break immediately before a block boundary.
+ *                      If the line ends with a block boundary, returns the
+ *                      point of the block.
+ */
+static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
     const EditorDOMPoint& aPointInLine, const Element& aEditingHost) {
   // FYI: This was moved from
   // https://searchfox.org/mozilla-central/rev/3419858c997f422e3e70020a46baae7f0ec6dacc/editor/libeditor/HTMLEditSubActionHandler.cpp#6541
@@ -726,6 +745,77 @@ AutoRangeArray::GetPointAfterFollowingLineBreakOrAtFollowingBlock(
     }
   }
   return point;
+}
+
+// static
+already_AddRefed<nsRange>
+AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+    const EditorDOMRange& aRange, EditSubAction aEditSubAction,
+    const Element& aEditingHost) {
+  if (!aRange.IsPositioned()) {
+    return nullptr;
+  }
+  return CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+      aRange.StartRef(), aRange.EndRef(), aEditSubAction, aEditingHost);
+}
+
+// static
+already_AddRefed<nsRange>
+AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+    const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+    EditSubAction aEditSubAction, const Element& aEditingHost) {
+  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
+  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
+
+  if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
+    return nullptr;
+  }
+
+  EditorDOMPoint startPoint(aStartPoint), endPoint(aEndPoint);
+  AutoRangeArray::UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+      startPoint, endPoint, aEditingHost);
+
+  // Make a new adjusted range to represent the appropriate block content.
+  // This is tricky.  The basic idea is to push out the range endpoints to
+  // truly enclose the blocks that we will affect.
+
+  // Make sure that the new range ends up to be in the editable section.
+  // XXX Looks like that this check wastes the time.  Perhaps, we should
+  //     implement a method which checks both two DOM points in the editor
+  //     root.
+
+  startPoint = GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
+      startPoint, aEditSubAction, aEditingHost);
+  // XXX GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock() may
+  //     return point of editing host.  Perhaps, we should change it and stop
+  //     checking it here since this check may be expensive.
+  // XXX If the container is an element in the editing host but it points end of
+  //     the container, this returns nullptr.  Is it intentional?
+  if (!startPoint.GetChildOrContainerIfDataNode() ||
+      !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          &aEditingHost)) {
+    return nullptr;
+  }
+  endPoint =
+      GetPointAfterFollowingLineBreakOrAtFollowingBlock(endPoint, aEditingHost);
+  const EditorDOMPoint lastRawPoint =
+      endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint();
+  // XXX GetPointAfterFollowingLineBreakOrAtFollowingBlock() may return point of
+  //     editing host.  Perhaps, we should change it and stop checking it here
+  //     since this check may be expensive.
+  // XXX If the container is an element in the editing host but it points end of
+  //     the container, this returns nullptr.  Is it intentional?
+  if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
+      !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
+          &aEditingHost)) {
+    return nullptr;
+  }
+
+  RefPtr<nsRange> range =
+      nsRange::Create(startPoint.ToRawRangeBoundary(),
+                      endPoint.ToRawRangeBoundary(), IgnoreErrors());
+  NS_WARNING_ASSERTION(range, "nsRange::Create() failed");
+  return range.forget();
 }
 
 /******************************************************************************
