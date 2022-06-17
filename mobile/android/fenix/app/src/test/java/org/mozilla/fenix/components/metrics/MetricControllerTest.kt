@@ -24,6 +24,7 @@ import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
+import mozilla.components.feature.sitepermissions.SitePermissionsFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
@@ -49,6 +50,7 @@ import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
+import org.mozilla.fenix.GleanMetrics.SitePermissions
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -754,5 +756,62 @@ class MetricControllerTest {
         }
 
         assertEquals(2, BrowserSearch.inContent["provider"].testGetValue())
+    }
+
+    @Test
+    fun `GIVEN a site permissions prompt is shown WHEN processing the fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val fact = Fact(
+            component = Component.FEATURE_SITEPERMISSIONS,
+            action = Action.DISPLAY,
+            item = SitePermissionsFacts.Items.PERMISSIONS,
+            value = "test"
+        )
+        assertNull(SitePermissions.promptShown.testGetValue())
+
+        controller.run {
+            fact.process()
+        }
+
+        assertEquals(1, SitePermissions.promptShown.testGetValue()!!.size)
+        assertEquals("test", SitePermissions.promptShown.testGetValue()!!.single().extra!!["permissions"])
+    }
+
+    @Test
+    fun `GIVEN site permissions are allowed WHEN processing the fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val fact = Fact(
+            component = Component.FEATURE_SITEPERMISSIONS,
+            action = Action.CONFIRM,
+            item = SitePermissionsFacts.Items.PERMISSIONS,
+            value = "allow"
+        )
+        assertNull(SitePermissions.promptShown.testGetValue())
+
+        controller.run {
+            fact.process()
+        }
+
+        assertEquals(1, SitePermissions.permissionsAllowed.testGetValue()!!.size)
+        assertEquals("allow", SitePermissions.permissionsAllowed.testGetValue()!!.single().extra!!["permissions"])
+    }
+
+    @Test
+    fun `GIVEN site permissions are denied WHEN processing the fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val fact = Fact(
+            component = Component.FEATURE_SITEPERMISSIONS,
+            action = Action.CANCEL,
+            item = SitePermissionsFacts.Items.PERMISSIONS,
+            value = "deny"
+        )
+        assertNull(SitePermissions.promptShown.testGetValue())
+
+        controller.run {
+            fact.process()
+        }
+
+        assertEquals(1, SitePermissions.permissionsDenied.testGetValue()!!.size)
+        assertEquals("deny", SitePermissions.permissionsDenied.testGetValue()!!.single().extra!!["permissions"])
     }
 }

@@ -6162,6 +6162,71 @@ autoplay:
     metadata:
       tags:
         - SitePermissions
+
+site_permissions:
+  prompt_shown:
+    type: event
+    description: |
+      A prompt for the user to approve site permissions is shown.
+    extra_keys:
+      permissions:
+        description: |
+          Comma delimited list of permissions to approve.
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25658
+    data_reviews:
+      - ??????????????
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 115
+    metadata:
+      tags:
+        - SitePermissions
+  permissions_allowed:
+    type: event
+    description: |
+      User approved site permissions.
+    extra_keys:
+      permissions:
+        description: |
+          Comma delimited list of approved permissions.
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25658
+    data_reviews:
+      - ??????????????
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 115
+    metadata:
+      tags:
+        - SitePermissions
+  permissions_denied:
+    type: event
+    description: |
+      User denied site permissions.
+    extra_keys:
+      permissions:
+        description: |
+          Comma delimited list of approved permissions.
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/25658
+    data_reviews:
+      - ??????????????
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 115
+    metadata:
+      tags:
+        - SitePermissions
 storage.stats:
   query_stats_duration:
     send_in_pings:

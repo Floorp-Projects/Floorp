@@ -21,6 +21,7 @@ import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
+import mozilla.components.feature.sitepermissions.SitePermissionsFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.support.base.Component
@@ -44,6 +45,7 @@ import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
+import org.mozilla.fenix.GleanMetrics.SitePermissions
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
@@ -292,6 +294,18 @@ internal class ReleaseMetricController(
                 settings.topSitesSize = count
             }
             Unit
+        }
+        Component.FEATURE_SITEPERMISSIONS to SitePermissionsFacts.Items.PERMISSIONS -> {
+            when (action) {
+                Action.DISPLAY -> SitePermissions.promptShown.record(SitePermissions.PromptShownExtra(value))
+                Action.CONFIRM ->
+                    SitePermissions.permissionsAllowed.record(SitePermissions.PermissionsAllowedExtra(value))
+                Action.CANCEL ->
+                    SitePermissions.permissionsDenied.record(SitePermissions.PermissionsDeniedExtra(value))
+                else -> {
+                    // no-op
+                }
+            }
         }
 
         else -> {
