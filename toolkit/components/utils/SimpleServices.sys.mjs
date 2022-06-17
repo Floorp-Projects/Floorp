@@ -14,6 +14,7 @@
 
 /* globals WebExtensionPolicy */
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -25,7 +26,6 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -46,7 +46,7 @@ const ArrayBufferInputStream = Components.Constructor(
  * See SubstituteChannel in netwerk/protocol/res/ExtensionProtocolHandler.cpp
  * for usage.
  */
-function AddonLocalizationConverter() {}
+export function AddonLocalizationConverter() {}
 
 AddonLocalizationConverter.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIStreamConverter"]),
@@ -137,7 +137,7 @@ AddonLocalizationConverter.prototype = {
   },
 };
 
-function HttpIndexViewer() {}
+export function HttpIndexViewer() {}
 
 HttpIndexViewer.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIDocumentLoaderFactory"]),
@@ -180,5 +180,3 @@ HttpIndexViewer.prototype = {
     return res;
   },
 };
-
-var EXPORTED_SYMBOLS = ["AddonLocalizationConverter", "HttpIndexViewer"];
