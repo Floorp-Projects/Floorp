@@ -324,6 +324,11 @@ const ExperimentAPI = {
     } catch (e) {
       Cu.reportError(e);
     }
+    Glean.nimbusEvents.exposure.record({
+      experiment: experimentSlug,
+      branch: branchSlug,
+      feature_id: featureId,
+    });
   },
 };
 
