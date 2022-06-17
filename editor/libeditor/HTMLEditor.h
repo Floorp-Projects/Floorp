@@ -1204,10 +1204,6 @@ class HTMLEditor final : public EditorBase,
    * elements around aArrayOfRanges.  Then, collects edit target nodes to
    * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
    * <br> element in it.
-   * FYI: You could use
-   *      SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
-   *      instead if you want to call this with a hard line including specific
-   *      DOM point or extended selection ranges.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitInlinesAndCollectEditTargetNodes(
@@ -1311,28 +1307,6 @@ class HTMLEditor final : public EditorBase,
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
       nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
-
-  /**
-   * SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges() calls
-   * SplitInlinesAndCollectEditTargetNodes() with result of
-   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
-   * methods for the detail.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    aEditSubAction);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, aOutArrayOfContents, aEditSubAction,
-        aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
 
   /**
    * CollectEditTargetNodesInExtendedSelectionRanges() calls
