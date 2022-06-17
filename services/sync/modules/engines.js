@@ -39,6 +39,7 @@ const { SerializableSet, Svc, Utils } = ChromeUtils.import(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  OS: "resource://gre/modules/osfile.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
@@ -49,8 +50,9 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
 });
 
 function ensureDirectory(path) {
-  return IOUtils.makeDirectory(PathUtils.parent(path), {
-    createAncestors: true,
+  let basename = lazy.OS.Path.dirname(path);
+  return lazy.OS.File.makeDir(basename, {
+    from: lazy.OS.Constants.Path.profileDir,
   });
 }
 
