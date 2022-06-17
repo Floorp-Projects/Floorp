@@ -17,6 +17,8 @@ namespace mozilla {
 // Forward declaration
 struct StaticXREAppData;
 
+#define ATTEMPTING_DEELEVATION_FLAG L"attempting-deelevation"
+
 /**
  * Determine whether or not the current process should be run as the launcher
  * process, and run if so. If we are not supposed to run as the launcher
@@ -30,9 +32,30 @@ enum class LauncherFlags : uint32_t {
   eNone = 0,
   eWaitForBrowser = (1 << 0),  // Launcher should block until browser finishes
   eNoDeelevate = (1 << 1),     // If elevated, do not attempt to de-elevate
+  eDeelevating = (1 << 2),     // A de-elevation attempt has been made
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LauncherFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LauncherFlags);
+
+enum class DeelevationStatus : uint32_t {
+  // The deelevation status could not be determined.
+  Unknown = 0,
+
+  // Deelevation did not need to be performed because the process was started
+  // without administrative privileges.
+  StartedUnprivileged = 1,
+  // Deelevation would have been performed, but was prohibited due to a flag.
+  DeelevationProhibited = 2,
+  // The launcher process was successfully deelevated.
+  SuccessfullyDeelevated = 3,
+  // The launcher process was not successfully deelevated, but a
+  // medium-integrity token was used to launch the main process.
+  PartiallyDeelevated = 4,
+  // Deelevation was attempted, but failed completely. The main process is
+  // running with administrative privileges.
+  UnsuccessfullyDeelevated = 5,
+};
+
 
 }  // namespace mozilla
 
