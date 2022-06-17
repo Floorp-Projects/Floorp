@@ -188,6 +188,7 @@ class TelemetryFeed {
       this._impressionId
     );
     Services.telemetry.scalarSet("deletion.request.context_id", lazy.contextId);
+    Glean.newtab.locale.set(Services.locale.appLocaleAsBCP47);
   }
 
   handleEvent(event) {
@@ -422,6 +423,14 @@ class TelemetryFeed {
 
     this.sendDiscoveryStreamLoadedContent(portID, session);
     this.sendDiscoveryStreamImpressions(portID, session);
+
+    Glean.newtab.closed.record({ newtab_session_id: session.session_id });
+    if (
+      this.telemetryEnabled &&
+      Services.prefs.getBoolPref("browser.newtabpage.ping.enabled", true)
+    ) {
+      GleanPings.newtab.submit("newtab_session_end");
+    }
 
     if (session.perf.visibility_event_rcvd_ts) {
       let absNow = this.processStartTs + Cu.now();
@@ -845,9 +854,10 @@ class TelemetryFeed {
 
   handleTopSitesImpressionStats(action) {
     const { data } = action;
-    const { type, position, source } = data;
+    const { type, position, source, advertiser } = data;
     let pingType;
 
+    const session = this.sessions.get(au.getPortIdOfSender(action));
     if (type === "impression") {
       pingType = "topsites-impression";
       Services.telemetry.keyedScalarAdd(
@@ -855,6 +865,12 @@ class TelemetryFeed {
         `${source}_${position}`,
         1
       );
+      if (session) {
+        Glean.topsites.impression.record({
+          newtab_session_id: session.session_id,
+          is_sponsored: !!advertiser,
+        });
+      }
     } else if (type === "click") {
       pingType = "topsites-click";
       Services.telemetry.keyedScalarAdd(
@@ -862,6 +878,12 @@ class TelemetryFeed {
         `${source}_${position}`,
         1
       );
+      if (session) {
+        Glean.topsites.click.record({
+          newtab_session_id: session.session_id,
+          is_sponsored: !!advertiser,
+        });
+      }
     } else {
       Cu.reportError("Unknown ping type for TopSites impression");
       return;
@@ -1146,6 +1168,17 @@ class TelemetryFeed {
     }
 
     Object.assign(session.perf, data);
+
+    if (data.visibility_event_rcvd_ts && !session.newtabOpened) {
+      session.newtabOpened = true;
+      const source = ONBOARDING_ALLOWED_PAGE_VALUES.includes(session.page)
+        ? session.page
+        : "other";
+      Glean.newtab.opened.record({
+        newtab_session_id: session.session_id,
+        source,
+      });
+    }
   }
 
   uninit() {
