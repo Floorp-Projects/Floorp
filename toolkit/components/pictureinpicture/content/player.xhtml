@@ -51,6 +51,38 @@
         <div class="gap" hidden="true"></div>
         <button id="audio" class="control-item" hidden="true" tabindex="1"
                 data-l10n-id="pictureinpicture-mute"/>
+        <div class="gap subtitles" hidden="true"></div>
+        <button id="closed-caption" class="control-item closed-caption subtitles" hidden="true" tabindex="1"></button>
+        <div id="settings" class="hide">
+          <div class="panel">
+            <div class="box">
+              <div class="subtitle-grid">
+                <label data-l10n-id="pictureinpicture-subtitles-label" class="bold"></label>
+                <label class="switch">
+                  <input id="subtitles-toggle" type="checkbox" tabindex="1" checked=""/>
+                  <span class="slider" role="presentation"></span>
+                </label>
+              </div>
+              <div class="grey-line"></div>
+              <div class="font-size-selection">
+                <label data-l10n-id="pictureinpicture-font-size-label" class="bold"></label>
+                <label>
+                  <input id="small" type="radio" name="cc-size" tabindex="1"/>
+                  <span data-l10n-id="pictureinpicture-font-size-small"></span>
+                </label>
+                <label>
+                  <input id="medium" type="radio" name="cc-size" tabindex="1"/>
+                  <span data-l10n-id="pictureinpicture-font-size-medium"></span>
+                </label>
+                <label>
+                  <input id="large" type="radio" name="cc-size" tabindex="1"/>
+                  <span data-l10n-id="pictureinpicture-font-size-large"></span>
+                </label>
+              </div>
+            </div>
+            <div class="arrow"></div>
+          </div>
+        </div>
       </div>
     </div>
   </body>

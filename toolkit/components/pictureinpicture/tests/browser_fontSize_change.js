@@ -87,17 +87,33 @@ add_task(async () => {
         "The medium font size is .06 of the PiP window height"
       );
 
+      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
+
       // change font size to small
       await SpecialPowers.pushPrefEnv({
         set: [[TEXT_TRACK_FONT_SIZE, "small"]],
       });
+
+      pipWin = await triggerPictureInPicture(browser, videoID);
+      ok(pipWin, "Got Picture-in-Picture window.");
+
+      pipBrowser = pipWin.document.getElementById("browser");
+
       fontSize = await getFontSize(pipBrowser);
       checkFontSize(fontSize, 14, "The small font size is the minimum 14px");
+
+      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
 
       // change font size to large
       await SpecialPowers.pushPrefEnv({
         set: [[TEXT_TRACK_FONT_SIZE, "large"]],
       });
+
+      pipWin = await triggerPictureInPicture(browser, videoID);
+      ok(pipWin, "Got Picture-in-Picture window.");
+
+      pipBrowser = pipWin.document.getElementById("browser");
+
       fontSize = await getFontSize(pipBrowser);
       checkFontSize(
         fontSize,
@@ -113,10 +129,18 @@ add_task(async () => {
       fontSize = await getFontSize(pipBrowser);
       checkFontSize(fontSize, 40, "The large font size is the max of 40px");
 
+      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
+
       // change font size to small
       await SpecialPowers.pushPrefEnv({
         set: [[TEXT_TRACK_FONT_SIZE, "small"]],
       });
+
+      pipWin = await triggerPictureInPicture(browser, videoID);
+      ok(pipWin, "Got Picture-in-Picture window.");
+
+      pipBrowser = pipWin.document.getElementById("browser");
+
       fontSize = await getFontSize(pipBrowser);
       checkFontSize(
         fontSize,
