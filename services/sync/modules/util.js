@@ -29,6 +29,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 const FxAccountsCommon = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
@@ -343,7 +344,7 @@ var Utils = {
     let [fileName] = args.splice(-1);
 
     return PathUtils.join(
-      PathUtils.profileDir,
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
       "weave",
       ...args,
       `${fileName}.json`
@@ -375,9 +376,9 @@ var Utils = {
     }
 
     try {
-      return await IOUtils.readJSON(path);
+      return await CommonUtils.readJSON(path);
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === "NotFoundError")) {
+      if (!(e instanceof lazy.OS.File.Error && e.becauseNoSuchFile)) {
         if (that._log) {
           that._log.debug("Failed to load json", e);
         }
@@ -402,14 +403,16 @@ var Utils = {
    *        Promise resolved when the write has been performed.
    */
   async jsonSave(filePath, that, obj) {
-    let path = PathUtils.join(
-      PathUtils.profileDir,
+    let path = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(filePath + ".json").split("/")
     );
-    let dir = PathUtils.parent(path);
+    let dir = lazy.OS.Path.dirname(path);
 
-    await IOUtils.makeDirectory(dir, { createAncestors: true });
+    await lazy.OS.File.makeDir(dir, {
+      from: lazy.OS.Constants.Path.profileDir,
+    });
 
     if (that._log) {
       that._log.trace("Saving json to disk: " + path);
@@ -417,7 +420,7 @@ var Utils = {
 
     let json = typeof obj == "function" ? obj.call(that) : obj;
 
-    return IOUtils.writeJSON(path, json);
+    return CommonUtils.writeJSON(json, path);
   },
 
   /**
@@ -472,20 +475,20 @@ var Utils = {
    *        Object to use for logging
    */
   jsonMove(aFrom, aTo, that) {
-    let pathFrom = PathUtils.join(
-      PathUtils.profileDir,
+    let pathFrom = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(aFrom + ".json").split("/")
     );
-    let pathTo = PathUtils.join(
-      PathUtils.profileDir,
+    let pathTo = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(aTo + ".json").split("/")
     );
     if (that._log) {
       that._log.trace("Moving " + pathFrom + " to " + pathTo);
     }
-    return IOUtils.move(pathFrom, pathTo, { noOverwrite: true });
+    return lazy.OS.File.move(pathFrom, pathTo, { noOverwrite: true });
   },
 
   /**
@@ -500,15 +503,15 @@ var Utils = {
    *        Object to use for logging
    */
   jsonRemove(filePath, that) {
-    let path = PathUtils.join(
-      PathUtils.profileDir,
+    let path = lazy.OS.Path.join(
+      lazy.OS.Constants.Path.profileDir,
       "weave",
       ...(filePath + ".json").split("/")
     );
     if (that._log) {
       that._log.trace("Deleting " + path);
     }
-    return IOUtils.remove(path, { ignoreAbsent: true });
+    return lazy.OS.File.remove(path, { ignoreAbsent: true });
   },
 
   /**

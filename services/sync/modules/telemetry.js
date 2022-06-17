@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Observers: "resource://services-common/observers.js",
+  OS: "resource://gre/modules/osfile.jsm",
   Resource: "resource://services-sync/resource.js",
   Status: "resource://services-sync/status.js",
   Svc: "resource://services-sync/util.js",
@@ -222,7 +223,7 @@ class ErrorSanitizer {
   // This escaping function is from:
   // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
   static reProfileDir = new RegExp(
-    PathUtils.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    lazy.OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
     "gi"
   );
 
