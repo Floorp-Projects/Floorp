@@ -143,6 +143,13 @@ TableWidget.prototype = {
   scrollIntoViewOnUpdate: null,
 
   /**
+   * Return true if the table body has a scrollbar.
+   */
+  get hasScrollbar() {
+    return this.tbody.scrollHeight > this.tbody.clientHeight;
+  },
+
+  /**
    * Getter for the headers context menu popup id.
    */
   get headersContextMenu() {

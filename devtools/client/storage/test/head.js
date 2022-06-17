@@ -1070,7 +1070,7 @@ function getCellLength() {
 }
 
 function checkCellLength(len) {
-  is(getCellLength(), len, `Table should initially display ${len} items`);
+  is(getCellLength(), len, `Table should contain ${len} items`);
 }
 
 async function scroll() {

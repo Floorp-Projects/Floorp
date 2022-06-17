@@ -6861,12 +6861,10 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_EXTENDED_CONST)
 
-#if defined(ENABLE_WASM_EXCEPTIONS)
 -   name: javascript.options.wasm_exceptions
     type: bool
     value: true
     mirror: always
-#endif // defined(ENABLE_WASM_EXCEPTIONS)
 
 #if defined(ENABLE_WASM_FUNCTION_REFERENCES)
 -   name: javascript.options.wasm_function_references

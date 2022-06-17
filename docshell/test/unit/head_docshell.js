@@ -66,30 +66,18 @@ async function addTestEngines() {
   // WebExtensions need is only defined for browser/
   await Services.search.addPolicyEngine({
     description: "urifixup search engine",
-    chrome_settings_overrides: {
-      search_provider: {
-        name: kSearchEngineID,
-        search_url: kSearchEngineURL,
-      },
-    },
+    name: kSearchEngineID,
+    search_url: kSearchEngineURL,
   });
   await Services.search.addPolicyEngine({
     description: "urifixup private search engine",
-    chrome_settings_overrides: {
-      search_provider: {
-        name: kPrivateSearchEngineID,
-        search_url: kPrivateSearchEngineURL,
-      },
-    },
+    name: kPrivateSearchEngineID,
+    search_url: kPrivateSearchEngineURL,
   });
   await Services.search.addPolicyEngine({
     description: "urifixup POST search engine",
-    chrome_settings_overrides: {
-      search_provider: {
-        name: kPostSearchEngineID,
-        search_url: kPostSearchEngineURL,
-        search_url_post_params: kPostSearchEngineData,
-      },
-    },
+    name: kPostSearchEngineID,
+    search_url: kPostSearchEngineURL,
+    search_url_post_params: kPostSearchEngineData,
   });
 }

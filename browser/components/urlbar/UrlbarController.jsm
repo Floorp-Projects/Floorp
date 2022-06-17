@@ -775,6 +775,7 @@ class TelemetryEvent {
     };
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
+
     this._controller.manager.notifyEngagementChange(
       this._isPrivate,
       "start",
@@ -905,6 +906,13 @@ class TelemetryEvent {
     );
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
+
+    if (method === "engagement" && queryContext.results?.[0].autofill) {
+      // Record autofill impressions upon engagement.
+      const type = UrlbarUtils.telemetryTypeFromResult(queryContext.results[0]);
+      Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
+    }
+
     this._controller.manager.notifyEngagementChange(
       this._isPrivate,
       method,

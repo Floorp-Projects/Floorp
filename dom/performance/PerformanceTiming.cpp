@@ -138,6 +138,7 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   if (aChannel) {
     aChannel->GetAsyncOpen(&mAsyncOpen);
     aChannel->GetAllRedirectsSameOrigin(&mAllRedirectsSameOrigin);
+    aChannel->GetAllRedirectsPassTimingAllowCheck(&mAllRedirectsPassTAO);
     aChannel->GetRedirectCount(&mRedirectCount);
     aChannel->GetRedirectStart(&mRedirectStart);
     aChannel->GetRedirectEnd(&mRedirectEnd);

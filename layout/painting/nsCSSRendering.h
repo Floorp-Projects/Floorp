@@ -283,15 +283,16 @@ struct nsCSSRendering {
   static bool IsCanvasFrame(const nsIFrame* aFrame);
 
   /**
-   * Fill in an aBackgroundSC to be used to paint the background
-   * for an element.  This applies the rules for propagating
-   * backgrounds between BODY, the root element, and the canvas.
-   * @return true if there is some meaningful background.
+   * Returns the ComputedStyle to be used to paint the background for the given
+   * frame, if its element has a meaningful background.  This applies the rules
+   * for propagating backgrounds between BODY, the root element, and the
+   * canvas.
+   *
+   * @return the ComputedStyle (if any) to be used for painting aForFrame's
+   *         background.
    */
-  static bool FindBackground(const nsIFrame* aForFrame,
-                             mozilla::ComputedStyle** aBackgroundSC);
-  static bool FindBackgroundFrame(const nsIFrame* aForFrame,
-                                  nsIFrame** aBackgroundFrame);
+  static mozilla::ComputedStyle* FindBackground(const nsIFrame* aForFrame);
+  static nsIFrame* FindBackgroundFrame(const nsIFrame* aForFrame);
 
   /**
    * As FindBackground, but the passed-in frame is known to be a root frame
@@ -348,7 +349,7 @@ struct nsCSSRendering {
    * Determine the background color to draw taking into account print settings.
    */
   static nscolor DetermineBackgroundColor(nsPresContext* aPresContext,
-                                          mozilla::ComputedStyle* aStyle,
+                                          const mozilla::ComputedStyle* aStyle,
                                           nsIFrame* aFrame,
                                           bool& aDrawBackgroundImage,
                                           bool& aDrawBackgroundColor);
@@ -502,7 +503,8 @@ struct nsCSSRendering {
    */
   static ImgDrawResult PaintStyleImageLayerWithSC(
       const PaintBGParams& aParams, gfxContext& aRenderingCtx,
-      mozilla::ComputedStyle* mBackgroundSC, const nsStyleBorder& aBorder);
+      const mozilla::ComputedStyle* aBackgroundSC,
+      const nsStyleBorder& aBorder);
 
   static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(
       WebRenderLayerManager* aManager, nsPresContext& aPresCtx,

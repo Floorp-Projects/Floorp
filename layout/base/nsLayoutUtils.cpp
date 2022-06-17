@@ -6868,15 +6868,16 @@ nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
     return eTransparencyOpaque;
   }
 
-  ComputedStyle* bgSC;
-  if (!nsCSSRendering::FindBackground(aBackgroundFrame, &bgSC)) {
+  ComputedStyle* bgSC = nsCSSRendering::FindBackground(aBackgroundFrame);
+  if (!bgSC) {
     return eTransparencyTransparent;
   }
   const nsStyleBackground* bg = bgSC->StyleBackground();
   if (NS_GET_A(bg->BackgroundColor(bgSC)) < 255 ||
       // bottom layer's clip is used for the color
-      bg->BottomLayer().mClip != StyleGeometryBox::BorderBox)
+      bg->BottomLayer().mClip != StyleGeometryBox::BorderBox) {
     return eTransparencyTransparent;
+  }
   return eTransparencyOpaque;
 }
 
@@ -8923,14 +8924,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     if (isRootScrollFrame) {
       metadata.SetBackgroundColor(
           sRGBColor::FromABGR(presShell->GetCanvasBackground()));
-    } else {
-      ComputedStyle* backgroundStyle;
-      if (nsCSSRendering::FindBackground(aScrollFrame, &backgroundStyle)) {
-        nscolor backgroundColor =
-            backgroundStyle->StyleBackground()->BackgroundColor(
-                backgroundStyle);
-        metadata.SetBackgroundColor(sRGBColor::FromABGR(backgroundColor));
-      }
+    } else if (const auto* backgroundStyle =
+                   nsCSSRendering::FindBackground(aScrollFrame)) {
+      nscolor backgroundColor =
+          backgroundStyle->StyleBackground()->BackgroundColor(backgroundStyle);
+      metadata.SetBackgroundColor(sRGBColor::FromABGR(backgroundColor));
     }
   }
 

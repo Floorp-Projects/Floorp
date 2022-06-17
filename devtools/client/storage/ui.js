@@ -31,6 +31,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyImporter(
   this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+loader.lazyImporter(
+  this,
   "VariablesView",
   "resource://devtools/client/storage/VariablesView.jsm"
 );
@@ -41,6 +46,9 @@ const REASON = {
   POPULATE: "populate",
   UPDATE: "update",
 };
+
+// How long we wait to debounce resize events
+const LAZY_RESIZE_INTERVAL_MS = 200;
 
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
@@ -143,7 +151,7 @@ class StorageUI {
     this.updateObjectSidebar = this.updateObjectSidebar.bind(this);
     this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
 
-    this.handleScrollEnd = this.handleScrollEnd.bind(this);
+    this.handleScrollEnd = this.loadMoreItems.bind(this);
     this.table.on(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
 
     this.editItem = this.editItem.bind(this);
@@ -189,6 +197,7 @@ class StorageUI {
     this.onRefreshTable = this.onRefreshTable.bind(this);
     this.onAddItem = this.onAddItem.bind(this);
     this.onCopyItem = this.onCopyItem.bind(this);
+    this.onPanelWindowResize = this.#onPanelWindowResize.bind(this);
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
     this.onRemoveAll = this.onRemoveAll.bind(this);
@@ -200,6 +209,8 @@ class StorageUI {
 
     this._addButton = this._panelDoc.getElementById("add-button");
     this._addButton.addEventListener("click", this.onAddItem);
+
+    this._window.addEventListener("resize", this.onPanelWindowResize, true);
 
     this._variableViewPopupCopy = this._panelDoc.getElementById(
       "variable-view-popup-copy"
@@ -413,6 +424,11 @@ class StorageUI {
   }
 
   destroy() {
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+
     const { resourceCommand } = this._toolbox;
     resourceCommand.unwatchResources(
       [
@@ -429,7 +445,7 @@ class StorageUI {
     );
 
     this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.updateObjectSidebar);
-    this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
+    this.table.off(TableWidget.EVENTS.SCROLL_END, this.loadMoreItems);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
     this.table.destroy();
 
@@ -442,6 +458,8 @@ class StorageUI {
       this.onPaneToggleButtonClicked
     );
     this.sidebarToggleBtn = null;
+
+    this._window.removeEventListener("resize", this.#onPanelWindowResize, true);
 
     this._treePopup.removeEventListener(
       "popupshowing",
@@ -674,6 +692,40 @@ class StorageUI {
   }
 
   /**
+   * Debounce the window resize event by calling _onLazyPanelResize() if
+   * the required amount of time has passed.
+   */
+  #onPanelWindowResize() {
+    if (this._toolbox.currentToolId !== "storage") {
+      return;
+    }
+
+    if (!this._lazyResizeHandler) {
+      this._lazyResizeHandler = new DeferredTask(
+        this.#onLazyPanelResize.bind(this),
+        LAZY_RESIZE_INTERVAL_MS,
+        0
+      );
+    }
+    this._lazyResizeHandler.arm();
+  }
+
+  /**
+   * If the panel is resized we need to check if we should load the next batch of
+   * storage items.
+   */
+  async #onLazyPanelResize() {
+    // We can be called on a closed window or destroyed toolbox because of the
+    // deferred task.
+    if (this._window.closed || this._destroyed || this.table.hasScrollbar) {
+      return;
+    }
+
+    await this.loadMoreItems();
+    this.emit("storage-resize");
+  }
+
+  /**
    * Get a string for a column name automatically choosing whether or not the
    * string should be localized.
    *
@@ -899,9 +951,13 @@ class StorageUI {
         await this.resetColumns(type, host, subType);
       }
 
-      const { data } = await storage.getStoreObjects(host, names, fetchOpts);
+      const { data, total } = await storage.getStoreObjects(
+        host,
+        names,
+        fetchOpts
+      );
       if (data.length) {
-        await this.populateTable(data, reason);
+        await this.populateTable(data, reason, total);
       } else if (reason === REASON.POPULATE) {
         await this.clearHeaders();
       }
@@ -1235,8 +1291,9 @@ class StorageUI {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
-    await this.fetchStorageObjects(type, host, names, REASON.POPULATE);
+
     this.itemOffset = 0;
+    await this.fetchStorageObjects(type, host, names, REASON.POPULATE);
   }
 
   /**
@@ -1312,8 +1369,10 @@ class StorageUI {
    *        Array of objects to be populated in the storage table
    * @param {Constant} reason
    *        See REASON constant at top of file.
+   * @param {number} totalAvailable
+   *        The total number of items available in the current storage type.
    */
-  async populateTable(data, reason) {
+  async populateTable(data, reason, totalAvailable) {
     for (const item of data) {
       if (item.value) {
         item.valueActor = item.value;
@@ -1350,6 +1409,14 @@ class StorageUI {
       }
 
       this.shouldLoadMoreItems = true;
+    }
+
+    if (
+      (reason === REASON.POPULATE || reason === REASON.NEXT_50_ITEMS) &&
+      this.table.items.size < totalAvailable &&
+      !this.table.hasScrollbar
+    ) {
+      await this.loadMoreItems();
     }
   }
 
@@ -1390,9 +1457,9 @@ class StorageUI {
   }
 
   /**
-   * Handles endless scrolling for the table
+   * Load the next batch of 50 items
    */
-  async handleScrollEnd() {
+  async loadMoreItems() {
     if (!this.shouldLoadMoreItems) {
       return;
     }

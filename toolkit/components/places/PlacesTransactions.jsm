@@ -166,15 +166,12 @@ var EXPORTED_SYMBOLS = ["PlacesTransactions"];
 
 const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 function setTimeout(callback, ms) {
@@ -301,6 +298,8 @@ class TransactionsHistoryArray extends Array {
     }
   }
 }
+
+const lazy = {};
 
 XPCOMUtils.defineLazyGetter(
   lazy,
@@ -752,7 +751,7 @@ DefineTransaction.strOrNullValidate = simpleValidateFunc(
   v => typeof v == "string" || v === null
 );
 DefineTransaction.indexValidate = simpleValidateFunc(
-  v => Number.isInteger(v) && v >= lazy.PlacesUtils.bookmarks.DEFAULT_INDEX
+  v => Number.isInteger(v) && v >= PlacesUtils.bookmarks.DEFAULT_INDEX
 );
 DefineTransaction.guidValidate = simpleValidateFunc(v =>
   /^[a-zA-Z0-9\-_]{12}$/.test(v)
@@ -774,7 +773,7 @@ DefineTransaction.childObjectValidate = function(obj) {
   if (
     obj &&
     checkProperty(obj, "title", false, v => typeof v == "string") &&
-    !("type" in obj && obj.type != lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK)
+    !("type" in obj && obj.type != PlacesUtils.bookmarks.TYPE_BOOKMARK)
   ) {
     obj.url = DefineTransaction.urlValidate(obj.url);
     let validKeys = ["title", "url"];
@@ -970,7 +969,7 @@ DefineTransaction.defineInputProps(
 DefineTransaction.defineInputProps(
   ["index", "newIndex"],
   DefineTransaction.indexValidate,
-  lazy.PlacesUtils.bookmarks.DEFAULT_INDEX
+  PlacesUtils.bookmarks.DEFAULT_INDEX
 );
 DefineTransaction.defineInputProps(
   ["child"],
@@ -1002,43 +1001,43 @@ function createItemsFromBookmarksTree(tree, restoring = false) {
   async function createItem(
     item,
     parentGuid,
-    index = lazy.PlacesUtils.bookmarks.DEFAULT_INDEX
+    index = PlacesUtils.bookmarks.DEFAULT_INDEX
   ) {
     let guid;
     let info = { parentGuid, index };
     if (restoring) {
       info.guid = item.guid;
-      info.dateAdded = lazy.PlacesUtils.toDate(item.dateAdded);
-      info.lastModified = lazy.PlacesUtils.toDate(item.lastModified);
+      info.dateAdded = PlacesUtils.toDate(item.dateAdded);
+      info.lastModified = PlacesUtils.toDate(item.lastModified);
     }
     let shouldResetLastModified = false;
     switch (item.type) {
-      case lazy.PlacesUtils.TYPE_X_MOZ_PLACE: {
+      case PlacesUtils.TYPE_X_MOZ_PLACE: {
         info.url = item.uri;
         if (typeof item.title == "string") {
           info.title = item.title;
         }
 
-        guid = (await lazy.PlacesUtils.bookmarks.insert(info)).guid;
+        guid = (await PlacesUtils.bookmarks.insert(info)).guid;
 
         if ("keyword" in item) {
           let { uri: url, keyword, postData } = item;
-          await lazy.PlacesUtils.keywords.insert({ url, keyword, postData });
+          await PlacesUtils.keywords.insert({ url, keyword, postData });
         }
         if ("tags" in item) {
-          lazy.PlacesUtils.tagging.tagURI(
+          PlacesUtils.tagging.tagURI(
             Services.io.newURI(item.uri),
             item.tags.split(",")
           );
         }
         break;
       }
-      case lazy.PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER: {
-        info.type = lazy.PlacesUtils.bookmarks.TYPE_FOLDER;
+      case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER: {
+        info.type = PlacesUtils.bookmarks.TYPE_FOLDER;
         if (typeof item.title == "string") {
           info.title = item.title;
         }
-        guid = (await lazy.PlacesUtils.bookmarks.insert(info)).guid;
+        guid = (await PlacesUtils.bookmarks.insert(info)).guid;
         if ("children" in item) {
           for (let child of item.children) {
             await createItem(child, guid);
@@ -1049,16 +1048,16 @@ function createItemsFromBookmarksTree(tree, restoring = false) {
         }
         break;
       }
-      case lazy.PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR: {
-        info.type = lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR;
-        guid = (await lazy.PlacesUtils.bookmarks.insert(info)).guid;
+      case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR: {
+        info.type = PlacesUtils.bookmarks.TYPE_SEPARATOR;
+        guid = (await PlacesUtils.bookmarks.insert(info)).guid;
         break;
       }
     }
 
     if (shouldResetLastModified) {
-      let lastModified = lazy.PlacesUtils.toDate(item.lastModified);
-      await lazy.PlacesUtils.bookmarks.update({ guid, lastModified });
+      let lastModified = PlacesUtils.toDate(item.lastModified);
+      await PlacesUtils.bookmarks.update({ guid, lastModified });
     }
 
     return guid;
@@ -1092,16 +1091,16 @@ PT.NewBookmark.prototype = Object.seal({
     let info = { parentGuid, index, url, title };
     // Filter tags to exclude already existing ones.
     if (tags.length) {
-      let currentTags = lazy.PlacesUtils.tagging.getTagsForURI(
+      let currentTags = PlacesUtils.tagging.getTagsForURI(
         Services.io.newURI(url.href)
       );
       tags = tags.filter(t => !currentTags.includes(t));
     }
 
     async function createItem() {
-      info = await lazy.PlacesUtils.bookmarks.insert(info);
+      info = await PlacesUtils.bookmarks.insert(info);
       if (tags.length) {
-        lazy.PlacesUtils.tagging.tagURI(Services.io.newURI(url.href), tags);
+        PlacesUtils.tagging.tagURI(Services.io.newURI(url.href), tags);
       }
     }
 
@@ -1109,9 +1108,9 @@ PT.NewBookmark.prototype = Object.seal({
 
     this.undo = async function() {
       // Pick up the removed info so we have the accurate last-modified value.
-      await lazy.PlacesUtils.bookmarks.remove(info);
+      await PlacesUtils.bookmarks.remove(info);
       if (tags.length) {
-        lazy.PlacesUtils.tagging.untagURI(Services.io.newURI(url.href), tags);
+        PlacesUtils.tagging.untagURI(Services.io.newURI(url.href), tags);
       }
     };
     this.redo = async function() {
@@ -1140,9 +1139,9 @@ PT.NewFolder.prototype = Object.seal({
       children: [
         {
           // Ensure to specify a guid to be restored on redo.
-          guid: lazy.PlacesUtils.history.makeGuid(),
+          guid: PlacesUtils.history.makeGuid(),
           title,
-          type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
         },
       ],
       // insertTree uses guid as the parent for where it is being inserted
@@ -1153,7 +1152,7 @@ PT.NewFolder.prototype = Object.seal({
     if (children && children.length) {
       // Ensure to specify a guid for each child to be restored on redo.
       info.children[0].children = children.map(c => {
-        c.guid = lazy.PlacesUtils.history.makeGuid();
+        c.guid = PlacesUtils.history.makeGuid();
         return c;
       });
     }
@@ -1163,21 +1162,21 @@ PT.NewFolder.prototype = Object.seal({
       // For simplicity, we only get the new folder id here. This means that
       // an undo then redo won't retain exactly the same information for all
       // the child bookmarks, but we believe that isn't important at the moment.
-      let bmInfo = await lazy.PlacesUtils.bookmarks.insertTree(info);
+      let bmInfo = await PlacesUtils.bookmarks.insertTree(info);
       // insertTree returns an array, but we only need to deal with the folder guid.
       folderGuid = bmInfo[0].guid;
 
       // Bug 1388097: insertTree doesn't handle inserting at a specific index for the folder,
       // therefore we update the bookmark manually afterwards.
-      if (index != lazy.PlacesUtils.bookmarks.DEFAULT_INDEX) {
+      if (index != PlacesUtils.bookmarks.DEFAULT_INDEX) {
         bmInfo[0].index = index;
-        bmInfo = await lazy.PlacesUtils.bookmarks.update(bmInfo[0]);
+        bmInfo = await PlacesUtils.bookmarks.update(bmInfo[0]);
       }
     }
     await createItem();
 
     this.undo = async function() {
-      await lazy.PlacesUtils.bookmarks.remove(folderGuid);
+      await PlacesUtils.bookmarks.remove(folderGuid);
     };
     this.redo = async function() {
       await createItem();
@@ -1198,16 +1197,10 @@ PT.NewFolder.prototype = Object.seal({
 PT.NewSeparator = DefineTransaction(["parentGuid"], ["index"]);
 PT.NewSeparator.prototype = Object.seal({
   async execute(info) {
-    info.type = lazy.PlacesUtils.bookmarks.TYPE_SEPARATOR;
-    info = await lazy.PlacesUtils.bookmarks.insert(info);
-    this.undo = lazy.PlacesUtils.bookmarks.remove.bind(
-      lazy.PlacesUtils.bookmarks,
-      info
-    );
-    this.redo = lazy.PlacesUtils.bookmarks.insert.bind(
-      lazy.PlacesUtils.bookmarks,
-      info
-    );
+    info.type = PlacesUtils.bookmarks.TYPE_SEPARATOR;
+    info = await PlacesUtils.bookmarks.insert(info);
+    this.undo = PlacesUtils.bookmarks.remove.bind(PlacesUtils.bookmarks, info);
+    this.redo = PlacesUtils.bookmarks.insert.bind(PlacesUtils.bookmarks, info);
     return info.guid;
   },
 });
@@ -1226,7 +1219,7 @@ PT.Move.prototype = Object.seal({
 
     for (let guid of guids) {
       // We need to save the original data for undo.
-      let originalInfo = await lazy.PlacesUtils.bookmarks.fetch(guid);
+      let originalInfo = await PlacesUtils.bookmarks.fetch(guid);
       if (!originalInfo) {
         throw new Error("Cannot move a non-existent item");
       }
@@ -1234,7 +1227,7 @@ PT.Move.prototype = Object.seal({
       originalInfos.push(originalInfo);
     }
 
-    await lazy.PlacesUtils.bookmarks.moveToFolder(guids, newParentGuid, index);
+    await PlacesUtils.bookmarks.moveToFolder(guids, newParentGuid, index);
 
     this.undo = async function() {
       // Undo has the potential for moving multiple bookmarks to multiple different
@@ -1242,11 +1235,11 @@ PT.Move.prototype = Object.seal({
       // individual moves one at a time and hopefully everything is put back approximately
       // where it should be.
       for (let info of originalInfos) {
-        await lazy.PlacesUtils.bookmarks.update(info);
+        await PlacesUtils.bookmarks.update(info);
       }
     };
-    this.redo = lazy.PlacesUtils.bookmarks.moveToFolder.bind(
-      lazy.PlacesUtils.bookmarks,
+    this.redo = PlacesUtils.bookmarks.moveToFolder.bind(
+      PlacesUtils.bookmarks,
       guids,
       newParentGuid,
       index
@@ -1263,20 +1256,20 @@ PT.Move.prototype = Object.seal({
 PT.EditTitle = DefineTransaction(["guid", "title"]);
 PT.EditTitle.prototype = Object.seal({
   async execute({ guid, title }) {
-    let originalInfo = await lazy.PlacesUtils.bookmarks.fetch(guid);
+    let originalInfo = await PlacesUtils.bookmarks.fetch(guid);
     if (!originalInfo) {
       throw new Error("cannot update a non-existent item");
     }
 
     let updateInfo = { guid, title };
-    updateInfo = await lazy.PlacesUtils.bookmarks.update(updateInfo);
+    updateInfo = await PlacesUtils.bookmarks.update(updateInfo);
 
-    this.undo = lazy.PlacesUtils.bookmarks.update.bind(
-      lazy.PlacesUtils.bookmarks,
+    this.undo = PlacesUtils.bookmarks.update.bind(
+      PlacesUtils.bookmarks,
       originalInfo
     );
-    this.redo = lazy.PlacesUtils.bookmarks.update.bind(
-      lazy.PlacesUtils.bookmarks,
+    this.redo = PlacesUtils.bookmarks.update.bind(
+      PlacesUtils.bookmarks,
       updateInfo
     );
   },
@@ -1290,54 +1283,52 @@ PT.EditTitle.prototype = Object.seal({
 PT.EditUrl = DefineTransaction(["guid", "url"]);
 PT.EditUrl.prototype = Object.seal({
   async execute({ guid, url }) {
-    let originalInfo = await lazy.PlacesUtils.bookmarks.fetch(guid);
+    let originalInfo = await PlacesUtils.bookmarks.fetch(guid);
     if (!originalInfo) {
       throw new Error("cannot update a non-existent item");
     }
-    if (originalInfo.type != lazy.PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+    if (originalInfo.type != PlacesUtils.bookmarks.TYPE_BOOKMARK) {
       throw new Error("Cannot edit url for non-bookmark items");
     }
 
     let uri = Services.io.newURI(url.href);
     let originalURI = Services.io.newURI(originalInfo.url.href);
-    let originalTags = lazy.PlacesUtils.tagging.getTagsForURI(originalURI);
+    let originalTags = PlacesUtils.tagging.getTagsForURI(originalURI);
     let updatedInfo = { guid, url };
     let newURIAdditionalTags = null;
 
     async function updateItem() {
-      updatedInfo = await lazy.PlacesUtils.bookmarks.update(updatedInfo);
+      updatedInfo = await PlacesUtils.bookmarks.update(updatedInfo);
       // Move tags from the original URI to the new URI.
       if (originalTags.length) {
         // Untag the original URI only if this was the only bookmark.
-        if (
-          !(await lazy.PlacesUtils.bookmarks.fetch({ url: originalInfo.url }))
-        ) {
-          lazy.PlacesUtils.tagging.untagURI(originalURI, originalTags);
+        if (!(await PlacesUtils.bookmarks.fetch({ url: originalInfo.url }))) {
+          PlacesUtils.tagging.untagURI(originalURI, originalTags);
         }
-        let currentNewURITags = lazy.PlacesUtils.tagging.getTagsForURI(uri);
+        let currentNewURITags = PlacesUtils.tagging.getTagsForURI(uri);
         newURIAdditionalTags = originalTags.filter(
           t => !currentNewURITags.includes(t)
         );
         if (newURIAdditionalTags && newURIAdditionalTags.length) {
-          lazy.PlacesUtils.tagging.tagURI(uri, newURIAdditionalTags);
+          PlacesUtils.tagging.tagURI(uri, newURIAdditionalTags);
         }
       }
     }
     await updateItem();
 
     this.undo = async function() {
-      await lazy.PlacesUtils.bookmarks.update(originalInfo);
+      await PlacesUtils.bookmarks.update(originalInfo);
       // Move tags from new URI to original URI.
       if (originalTags.length) {
         // Only untag the new URI if this is the only bookmark.
         if (
           newURIAdditionalTags &&
           !!newURIAdditionalTags.length &&
-          !(await lazy.PlacesUtils.bookmarks.fetch({ url }))
+          !(await PlacesUtils.bookmarks.fetch({ url }))
         ) {
-          lazy.PlacesUtils.tagging.untagURI(uri, newURIAdditionalTags);
+          PlacesUtils.tagging.untagURI(uri, newURIAdditionalTags);
         }
-        lazy.PlacesUtils.tagging.tagURI(originalURI, originalTags);
+        PlacesUtils.tagging.tagURI(originalURI, originalTags);
       }
     };
 
@@ -1362,16 +1353,16 @@ PT.EditKeyword.prototype = Object.seal({
     let url;
     let oldKeywordEntry;
     if (oldKeyword) {
-      oldKeywordEntry = await lazy.PlacesUtils.keywords.fetch(oldKeyword);
+      oldKeywordEntry = await PlacesUtils.keywords.fetch(oldKeyword);
       url = oldKeywordEntry.url;
-      await lazy.PlacesUtils.keywords.remove(oldKeyword);
+      await PlacesUtils.keywords.remove(oldKeyword);
     }
 
     if (keyword) {
       if (!url) {
-        url = (await lazy.PlacesUtils.bookmarks.fetch(guid)).url;
+        url = (await PlacesUtils.bookmarks.fetch(guid)).url;
       }
-      await lazy.PlacesUtils.keywords.insert({
+      await PlacesUtils.keywords.insert({
         url,
         keyword,
         postData: postData || (oldKeywordEntry ? oldKeywordEntry.postData : ""),
@@ -1380,10 +1371,10 @@ PT.EditKeyword.prototype = Object.seal({
 
     this.undo = async function() {
       if (keyword) {
-        await lazy.PlacesUtils.keywords.remove(keyword);
+        await PlacesUtils.keywords.remove(keyword);
       }
       if (oldKeywordEntry) {
-        await lazy.PlacesUtils.keywords.insert(oldKeywordEntry);
+        await PlacesUtils.keywords.insert(oldKeywordEntry);
       }
     };
   },
@@ -1399,14 +1390,14 @@ PT.SortByName.prototype = {
   async execute({ guid }) {
     let sortingMethod = (node_a, node_b) => {
       if (
-        lazy.PlacesUtils.nodeIsContainer(node_a) &&
-        !lazy.PlacesUtils.nodeIsContainer(node_b)
+        PlacesUtils.nodeIsContainer(node_a) &&
+        !PlacesUtils.nodeIsContainer(node_b)
       ) {
         return -1;
       }
       if (
-        !lazy.PlacesUtils.nodeIsContainer(node_a) &&
-        lazy.PlacesUtils.nodeIsContainer(node_b)
+        !PlacesUtils.nodeIsContainer(node_a) &&
+        PlacesUtils.nodeIsContainer(node_b)
       ) {
         return 1;
       }
@@ -1418,11 +1409,11 @@ PT.SortByName.prototype = {
 
     // This is not great, since it does main-thread IO.
     // PromiseBookmarksTree can't be used, since it' won't stop at the first level'.
-    let root = lazy.PlacesUtils.getFolderContents(guid, false, false).root;
+    let root = PlacesUtils.getFolderContents(guid, false, false).root;
     for (let i = 0; i < root.childCount; ++i) {
       let node = root.getChild(i);
       oldOrderGuids.push(node.bookmarkGuid);
-      if (lazy.PlacesUtils.nodeIsSeparator(node)) {
+      if (PlacesUtils.nodeIsSeparator(node)) {
         if (preSepNodes.length) {
           preSepNodes.sort(sortingMethod);
           newOrderGuids.push(...preSepNodes.map(n => n.bookmarkGuid));
@@ -1438,13 +1429,13 @@ PT.SortByName.prototype = {
       preSepNodes.sort(sortingMethod);
       newOrderGuids.push(...preSepNodes.map(n => n.bookmarkGuid));
     }
-    await lazy.PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
+    await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
 
     this.undo = async function() {
-      await lazy.PlacesUtils.bookmarks.reorder(guid, oldOrderGuids);
+      await PlacesUtils.bookmarks.reorder(guid, oldOrderGuids);
     };
     this.redo = async function() {
-      await lazy.PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
+      await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
     };
   },
 };
@@ -1463,7 +1454,7 @@ PT.Remove.prototype = {
       try {
         // Although we don't strictly need to get this information for the remove,
         // we do need it for the possibility of undo().
-        removedItems.push(await lazy.PlacesUtils.promiseBookmarksTree(guid));
+        removedItems.push(await PlacesUtils.promiseBookmarksTree(guid));
       } catch (ex) {
         if (!ex.becauseInvalidURL) {
           throw new Error(`Failed to get info for the guid: ${guid}: ${ex}`);
@@ -1477,7 +1468,7 @@ PT.Remove.prototype = {
         // We have to pass just the guids as although remove() accepts full
         // info items, promiseBookmarksTree returns dateAdded and lastModified
         // as PRTime rather than date types.
-        await lazy.PlacesUtils.bookmarks.remove(
+        await PlacesUtils.bookmarks.remove(
           removedItems.map(info => ({ guid: info.guid }))
         );
       }
@@ -1508,13 +1499,13 @@ PT.Tag.prototype = {
     let onUndo = [],
       onRedo = [];
     for (let url of urls) {
-      if (!(await lazy.PlacesUtils.bookmarks.fetch({ url }))) {
+      if (!(await PlacesUtils.bookmarks.fetch({ url }))) {
         // Tagging is only allowed for bookmarked URIs (but see 424160).
         let createTxn = lazy.TransactionsHistory.getRawTransaction(
           PT.NewBookmark({
             url,
             tags,
-            parentGuid: lazy.PlacesUtils.bookmarks.unfiledGuid,
+            parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           })
         );
         await createTxn.execute();
@@ -1522,15 +1513,15 @@ PT.Tag.prototype = {
         onRedo.push(createTxn.redo.bind(createTxn));
       } else {
         let uri = Services.io.newURI(url.href);
-        let currentTags = lazy.PlacesUtils.tagging.getTagsForURI(uri);
+        let currentTags = PlacesUtils.tagging.getTagsForURI(uri);
         let newTags = tags.filter(t => !currentTags.includes(t));
         if (newTags.length) {
-          lazy.PlacesUtils.tagging.tagURI(uri, newTags);
+          PlacesUtils.tagging.tagURI(uri, newTags);
           onUndo.unshift(() => {
-            lazy.PlacesUtils.tagging.untagURI(uri, newTags);
+            PlacesUtils.tagging.untagURI(uri, newTags);
           });
           onRedo.push(() => {
-            lazy.PlacesUtils.tagging.tagURI(uri, newTags);
+            PlacesUtils.tagging.tagURI(uri, newTags);
           });
         }
       }
@@ -1564,23 +1555,23 @@ PT.Untag.prototype = {
     for (let url of urls) {
       let uri = Services.io.newURI(url.href);
       let tagsToRemove;
-      let tagsSet = lazy.PlacesUtils.tagging.getTagsForURI(uri);
+      let tagsSet = PlacesUtils.tagging.getTagsForURI(uri);
       if (tags.length) {
         tagsToRemove = tags.filter(t => tagsSet.includes(t));
       } else {
         tagsToRemove = tagsSet;
       }
       if (tagsToRemove.length) {
-        lazy.PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+        PlacesUtils.tagging.untagURI(uri, tagsToRemove);
       }
       onUndo.unshift(() => {
         if (tagsToRemove.length) {
-          lazy.PlacesUtils.tagging.tagURI(uri, tagsToRemove);
+          PlacesUtils.tagging.tagURI(uri, tagsToRemove);
         }
       });
       onRedo.push(() => {
         if (tagsToRemove.length) {
-          lazy.PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+          PlacesUtils.tagging.untagURI(uri, tagsToRemove);
         }
       });
     }
@@ -1610,9 +1601,7 @@ PT.RenameTag.prototype = {
     let onUndo = [],
       onRedo = [];
     let urls = new Set();
-    await lazy.PlacesUtils.bookmarks.fetch({ tags: [oldTag] }, b =>
-      urls.add(b.url)
-    );
+    await PlacesUtils.bookmarks.fetch({ tags: [oldTag] }, b => urls.add(b.url));
     if (urls.size > 0) {
       urls = Array.from(urls);
       let tagTxn = lazy.TransactionsHistory.getRawTransaction(
@@ -1629,7 +1618,7 @@ PT.RenameTag.prototype = {
       onRedo.push(untagTxn.redo.bind(untagTxn));
 
       // Update all the place: queries that refer to this tag.
-      let db = await lazy.PlacesUtils.promiseDBConnection();
+      let db = await PlacesUtils.promiseDBConnection();
       let rows = await db.executeCached(
         `
         SELECT h.url, b.guid, b.title
@@ -1713,7 +1702,7 @@ PT.Copy.prototype = {
   async execute({ guid, newParentGuid, newIndex }) {
     let creationInfo = null;
     try {
-      creationInfo = await lazy.PlacesUtils.promiseBookmarksTree(guid);
+      creationInfo = await PlacesUtils.promiseBookmarksTree(guid);
     } catch (ex) {
       throw new Error(
         "Failed to get info for the specified item (guid: " +
@@ -1729,9 +1718,9 @@ PT.Copy.prototype = {
     let newItemInfo = null;
     this.undo = async function() {
       if (!newItemInfo) {
-        newItemInfo = await lazy.PlacesUtils.promiseBookmarksTree(newItemGuid);
+        newItemInfo = await PlacesUtils.promiseBookmarksTree(newItemGuid);
       }
-      await lazy.PlacesUtils.bookmarks.remove(newItemGuid);
+      await PlacesUtils.bookmarks.remove(newItemGuid);
     };
     this.redo = async function() {
       await createItemsFromBookmarksTree(newItemInfo, true);

@@ -18,7 +18,9 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_search"
 
 EXTRA_JS_MODULES += [
+    "AddonSearchEngine.jsm",
     "OpenSearchEngine.jsm",
+    "PolicySearchEngine.jsm",
     "SearchEngine.jsm",
     "SearchEngineSelector.jsm",
     "SearchService.jsm",
@@ -27,6 +29,7 @@ EXTRA_JS_MODULES += [
     "SearchSuggestionController.jsm",
     "SearchSuggestions.jsm",
     "SearchUtils.jsm",
+    "UserSearchEngine.jsm",
 ]
 
 EXTRA_COMPONENTS += [

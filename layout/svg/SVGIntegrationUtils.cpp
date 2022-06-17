@@ -491,7 +491,7 @@ using PaintFramesParams = SVGIntegrationUtils::PaintFramesParams;
  */
 static bool PaintMaskSurface(const PaintFramesParams& aParams,
                              DrawTarget* aMaskDT, float aOpacity,
-                             ComputedStyle* aSC,
+                             const ComputedStyle* aSC,
                              const nsTArray<SVGMaskFrame*>& aMaskFrames,
                              const nsPoint& aOffsetToUserSpace) {
   MOZ_ASSERT(aMaskFrames.Length() > 0);
@@ -568,7 +568,7 @@ struct MaskPaintResult {
 };
 
 static MaskPaintResult CreateAndPaintMaskSurface(
-    const PaintFramesParams& aParams, float aOpacity, ComputedStyle* aSC,
+    const PaintFramesParams& aParams, float aOpacity, const ComputedStyle* aSC,
     const nsTArray<SVGMaskFrame*>& aMaskFrames,
     const nsPoint& aOffsetToUserSpace) {
   const nsStyleSVGReset* svgReset = aSC->StyleSVGReset();

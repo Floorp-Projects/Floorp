@@ -353,17 +353,23 @@ var addProperty = async function(
  * @param {String} value
  *        The new value to be used. If null is passed, then the value will be
  *        deleted
- * @param {Boolean} blurNewProperty
+ * @param {Object} options
+ * @param {Boolean} options.blurNewProperty
  *        After the value has been changed, a new property would have been
  *        focused. This parameter is true by default, and that causes the new
  *        property to be blurred. Set to false if you don't want this.
+ * @param {number} options.flushCount
+ *        The ruleview uses a manual flush for tests only, and some properties are
+ *        only updated after several flush. Allow tests to trigger several flushes
+ *        if necessary. Defaults to 1.
  */
 var setProperty = async function(
   view,
   textProp,
   value,
-  blurNewProperty = true
+  { blurNewProperty = true, flushCount = 1 } = {}
 ) {
+  info("Set property to: " + value);
   await focusEditableField(view, textProp.editor.valueSpan);
 
   const onPreview = view.once("ruleview-changed");
@@ -374,14 +380,29 @@ var setProperty = async function(
   } else {
     EventUtils.sendString(value, view.styleWindow);
   }
+
+  info("Waiting for ruleview-changed after updating property");
   view.debounce.flush();
+  flushCount--;
+
+  while (flushCount > 0) {
+    // Wait for some time before triggering a new flush to let new debounced
+    // functions queue in-between.
+    await wait(100);
+    view.debounce.flush();
+    flushCount--;
+  }
+
   await onPreview;
 
   const onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+
+  info("Waiting for another ruleview-changed after setting property");
   await onValueDone;
 
   if (blurNewProperty) {
+    info("Force blur on the active element");
     view.styleDocument.activeElement.blur();
   }
 };

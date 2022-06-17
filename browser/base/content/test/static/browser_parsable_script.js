@@ -24,6 +24,8 @@ const kESModuleList = new Set([
   /browser\/content\/browser\/firefoxview\.js$/,
   /browser\/content\/browser\/recently-closed-tabs\.js$/,
   /browser\/content\/browser\/tabs-pickup\.js$/,
+  /browser\/content\/browser\/helpers\.js$/,
+  /browser\/content\/browser\/tab-pickup-list\.js$/,
   /toolkit\/content\/global\/certviewer\/components\/.*\.js$/,
   /toolkit\/content\/global\/certviewer\/.*\.js$/,
   /chrome\/pdfjs\/content\/web\/.*\.js$/,

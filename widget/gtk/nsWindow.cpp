@@ -1028,7 +1028,7 @@ void nsWindow::Move(double aX, double aY) {
   LOG("nsWindow::Move to %d %d\n", x, y);
 
   if (mSizeMode != nsSizeMode_Normal && (mWindowType == eWindowType_toplevel ||
-                                          mWindowType == eWindowType_dialog)) {
+                                         mWindowType == eWindowType_dialog)) {
     LOG("  size state is not normal, bailing");
     return;
   }
@@ -3033,66 +3033,27 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
   return rect;
 }
 
-void nsWindow::UpdateClientOffsetFromFrameExtents() {
-  AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
-
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+void nsWindow::RecomputeClientOffset(bool aNotify) {
+  if (mWindowType != eWindowType_dialog &&
+      mWindowType != eWindowType_toplevel) {
     return;
   }
 
-  if (!mShell ||
-      gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
-    mClientOffset = nsIntPoint(0, 0);
-    return;
+  auto oldOffset = mClientOffset;
+
+  mClientOffset = WidgetToScreenOffset() - mBounds.TopLeft();
+
+  if (aNotify && mClientOffset != oldOffset) {
+    // Send a WindowMoved notification. This ensures that BrowserParent picks up
+    // the new client offset and sends it to the child process if appropriate.
+    NotifyWindowMoved(mBounds.x, mBounds.y);
   }
-
-#ifdef MOZ_X11
-  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-
-  GdkAtom type_returned;
-  int format_returned;
-  int length_returned;
-  long* frame_extents;
-
-  if (!gdk_property_get(gtk_widget_get_window(mShell),
-                        gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE),
-                        cardinal_atom,
-                        0,      // offset
-                        4 * 4,  // length
-                        FALSE,  // delete
-                        &type_returned, &format_returned, &length_returned,
-                        (guchar**)&frame_extents) ||
-      length_returned / sizeof(glong) != 4) {
-    mClientOffset = nsIntPoint(0, 0);
-  } else {
-    // data returned is in the order left, right, top, bottom
-    auto left = int32_t(frame_extents[0]);
-    auto top = int32_t(frame_extents[2]);
-    g_free(frame_extents);
-
-    mClientOffset = nsIntPoint(left, top);
-  }
-
-  // Send a WindowMoved notification. This ensures that BrowserParent
-  // picks up the new client offset and sends it to the child process
-  // if appropriate.
-  NotifyWindowMoved(mBounds.x, mBounds.y);
-
-  LOG("nsWindow::UpdateClientOffsetFromFrameExtents %d,%d\n", mClientOffset.x,
-      mClientOffset.y);
-#endif
-}
-
-LayoutDeviceIntPoint nsWindow::GetClientOffset() {
-  return GdkIsX11Display()
-             ? LayoutDeviceIntPoint::FromUnknownPoint(mClientOffset)
-             : LayoutDeviceIntPoint(0, 0);
 }
 
 gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
                                          GdkEventProperty* aEvent) {
   if (aEvent->atom == gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE)) {
-    UpdateClientOffsetFromFrameExtents();
+    RecomputeClientOffset(/* aNotify = */ true);
     return FALSE;
   }
   if (!mGdkWindow) {
@@ -3865,6 +3826,7 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   }
 
   mBounds.MoveTo(screenBounds.TopLeft());
+  RecomputeClientOffset(/* aNotify = */ false);
 
   // XXX mozilla will invalidate the entire window after this move
   // complete.  wtf?
@@ -3901,15 +3863,17 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   // is enabled. In either cases (Wayland or system titlebar is off on X11)
   // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
   // it from mContainer position.
-  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
-    if (GdkIsWaylandDisplay() || (GdkIsX11Display() && mDrawInTitlebar)) {
-      UpdateClientOffsetFromCSDWindow();
-    }
-  }
+  RecomputeClientOffset(/* aNotify = */ true);
 
   mHasReceivedSizeAllocate = true;
 
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
+
+  // Sometimes the window manager gives us garbage sizes (way past the maximum
+  // texture size) causing crashes if we don't enforce size constraints again
+  // here.
+  ConstrainSize(&size.width, &size.height);
+
   if (mBounds.Size() == size) {
     LOG("  Already the same size");
     // mBounds was set at Create() or Resize().
@@ -8510,34 +8474,6 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     }
   } else {
     mCompositorWidgetDelegate = nullptr;
-  }
-}
-
-/* nsWindow::UpdateClientOffsetFromCSDWindow() is designed to be called from
- * nsWindow::OnConfigureEvent() when mContainer window is already positioned.
- *
- * It works only for CSD decorated GtkWindow.
- */
-void nsWindow::UpdateClientOffsetFromCSDWindow() {
-  int x = 0, y = 0;
-
-  if (mGdkWindow) {
-    gdk_window_get_position(mGdkWindow, &x, &y);
-  }
-
-  x = GdkCoordToDevicePixels(x);
-  y = GdkCoordToDevicePixels(y);
-
-  if (mClientOffset.x != x || mClientOffset.y != y) {
-    mClientOffset = nsIntPoint(x, y);
-
-    LOG("nsWindow::UpdateClientOffsetFromCSDWindow %d, %d\n", mClientOffset.x,
-        mClientOffset.y);
-
-    // Send a WindowMoved notification. This ensures that BrowserParent
-    // picks up the new client offset and sends it to the child process
-    // if appropriate.
-    NotifyWindowMoved(mBounds.x, mBounds.y);
   }
 }
 

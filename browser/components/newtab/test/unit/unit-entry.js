@@ -528,6 +528,9 @@ const TEST_GLOBAL = {
     off: () => {},
   },
   NimbusFeatures: {
+    glean: {
+      getVariable() {},
+    },
     newtab: {
       isEnabled() {},
       getVariable() {},
@@ -580,6 +583,33 @@ const TEST_GLOBAL = {
   },
   Logger,
   getFxAccountsSingleton() {},
+  AboutNewTab: {},
+  Glean: {
+    newtab: {
+      opened: {
+        record() {},
+      },
+      closed: {
+        record() {},
+      },
+      locale: {
+        set() {},
+      },
+    },
+    topsites: {
+      impression: {
+        record() {},
+      },
+      click: {
+        record() {},
+      },
+    },
+  },
+  GleanPings: {
+    newtab: {
+      submit() {},
+    },
+  },
 };
 overrider.set(TEST_GLOBAL);
 
