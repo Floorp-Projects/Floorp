@@ -128,9 +128,7 @@ add_task(async function testTabStopsNoPageWithHomeButton() {
   await withNewBlankTab(async function() {
     startFromUrlBar();
     await expectFocusAfterKey("Shift+Tab", "home-button");
-    await expectFocusAfterKey("Shift+Tab", "tabs-newtab-button");
-    await expectFocusAfterKey("Shift+Tab", gBrowser.selectedTab);
-    await expectFocusAfterKey("Tab", "tabs-newtab-button");
+    await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", "home-button");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
     await expectFocusAfterKey("Tab", afterUrlBarButton);
@@ -149,9 +147,7 @@ add_task(async function testTabStopsPageLoaded() {
       "tracking-protection-icon-container"
     );
     await expectFocusAfterKey("Shift+Tab", "reload-button");
-    await expectFocusAfterKey("Shift+Tab", "tabs-newtab-button");
-    await expectFocusAfterKey("Shift+Tab", gBrowser.selectedTab);
-    await expectFocusAfterKey("Tab", "tabs-newtab-button");
+    await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", "reload-button");
     await expectFocusAfterKey("Tab", "tracking-protection-icon-container");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
@@ -206,7 +202,7 @@ add_task(async function testTabStopNoButtons() {
     // The Home button is the only other button at that tab stop.
     CustomizableUI.removeWidgetFromArea("home-button");
     startFromUrlBar();
-    await expectFocusAfterKey("Shift+Tab", "tabs-newtab-button");
+    await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", gURLBar.inputField);
     resetToolbarWithoutDevEditionButtons();
     AddHomeBesideReload();
