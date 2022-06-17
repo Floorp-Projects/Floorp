@@ -31,13 +31,13 @@ newtab.search:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: &newtab_session_id
+      newtab_visit_id: &newtab_visit_id
         description: >
-          The id of the newtab session that originated the search.
+          The id of the newtab visit that originated the search.
           Should always be present for handoff searches.
           TODO(bug 1774597): for searches done without handoff (e.g. with
           `browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar`
-          set to `false`), the active newtab session id is unknown.
+          set to `false`), the active newtab visit id is unknown.
         type: string
       search_access_point: &search_access_point
         description: >
@@ -60,7 +60,7 @@ newtab.search.ad:
   impression:
     type: event
     description: >
-      Recorded when a session that began in a newtab resulted in a search that
+      Recorded when a newtab visit resulted in a search that
       loaded a Search Engine Result Page (SERP) that contains an ad link.
       And the SERP is visible.
     bugs:
@@ -76,7 +76,7 @@ newtab.search.ad:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: *newtab_session_id
+      newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point
       is_follow_on: &is_follow_on
         description: >
@@ -108,7 +108,7 @@ newtab.search.ad:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: *newtab_session_id
+      newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point
       is_follow_on: *is_follow_on
       is_tagged: *is_tagged
