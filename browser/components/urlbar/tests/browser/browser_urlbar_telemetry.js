@@ -149,15 +149,6 @@ add_task(async function test_simpleQuery() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -217,22 +208,6 @@ add_task(async function test_simpleQuery() {
     { category: "navigation", method: "search" }
   );
 
-  // Check the histograms as well.
-  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
-
-  TelemetryTestUtils.assertHistogram(
-    resultTypeHist,
-    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
-    1
-  );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    resultIndexByTypeHist,
-    "searchengine",
-    0,
-    1
-  );
-
   TelemetryTestUtils.assertHistogram(
     resultMethodHist,
     UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
@@ -246,15 +221,6 @@ add_task(async function test_searchMode_enter() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -298,22 +264,6 @@ add_task(async function test_searchMode_enter() {
     { category: "navigation", method: "search" }
   );
 
-  // Check the histograms as well.
-  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
-
-  TelemetryTestUtils.assertHistogram(
-    resultTypeHist,
-    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
-    1
-  );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    resultIndexByTypeHist,
-    "searchengine",
-    0,
-    1
-  );
-
   TelemetryTestUtils.assertHistogram(
     resultMethodHist,
     UrlbarTestUtils.SELECTED_RESULT_METHODS.enter,
@@ -329,15 +279,6 @@ add_task(async function test_oneOff_enter() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -410,22 +351,6 @@ add_task(async function test_oneOff_enter() {
       ],
     ],
     { category: "navigation", method: "search" }
-  );
-
-  // Check the histograms as well.
-  TelemetryTestUtils.assertHistogram(resultIndexHist, 0, 1);
-
-  TelemetryTestUtils.assertHistogram(
-    resultTypeHist,
-    UrlbarUtils.SELECTED_RESULT_TYPES.searchengine,
-    1
-  );
-
-  TelemetryTestUtils.assertKeyedHistogramValue(
-    resultIndexByTypeHist,
-    "searchengine",
-    0,
-    1
   );
 
   TelemetryTestUtils.assertHistogram(
@@ -539,15 +464,6 @@ add_task(async function test_suggestion_click() {
   Services.telemetry.clearEvents();
   await UrlbarTestUtils.formHistory.clear();
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -602,22 +518,6 @@ add_task(async function test_suggestion_click() {
         ],
       ],
       { category: "navigation", method: "search" }
-    );
-
-    // Check the histograms as well.
-    TelemetryTestUtils.assertHistogram(resultIndexHist, 3, 1);
-
-    TelemetryTestUtils.assertHistogram(
-      resultTypeHist,
-      UrlbarUtils.SELECTED_RESULT_TYPES.searchsuggestion,
-      1
-    );
-
-    TelemetryTestUtils.assertKeyedHistogramValue(
-      resultIndexByTypeHist,
-      "searchsuggestion",
-      3,
-      1
     );
 
     TelemetryTestUtils.assertHistogram(
@@ -733,15 +633,6 @@ add_task(async function test_searchmode_suggestion_click() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -799,22 +690,6 @@ add_task(async function test_searchmode_suggestion_click() {
         ],
       ],
       { category: "navigation", method: "search" }
-    );
-
-    // Check the histograms as well.
-    TelemetryTestUtils.assertHistogram(resultIndexHist, 1, 1);
-
-    TelemetryTestUtils.assertHistogram(
-      resultTypeHist,
-      UrlbarUtils.SELECTED_RESULT_TYPES.searchsuggestion,
-      1
-    );
-
-    TelemetryTestUtils.assertKeyedHistogramValue(
-      resultIndexByTypeHist,
-      "searchsuggestion",
-      1,
-      1
     );
 
     TelemetryTestUtils.assertHistogram(
@@ -944,15 +819,6 @@ add_task(async function test_formHistory_click() {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
   });
 
-  let resultIndexHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX"
-  );
-  let resultTypeHist = TelemetryTestUtils.getAndClearHistogram(
-    "FX_URLBAR_SELECTED_RESULT_TYPE_2"
-  );
-  let resultIndexByTypeHist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2"
-  );
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
@@ -970,7 +836,7 @@ add_task(async function test_formHistory_click() {
     let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     await searchInAwesomebar("foo");
     info("Clicking the form history.");
-    let foobarIndex = await clickURLBarSuggestion("foobar");
+    await clickURLBarSuggestion("foobar");
     await p;
 
     // Check if the scalars contain the expected values.
@@ -1007,22 +873,6 @@ add_task(async function test_formHistory_click() {
         ],
       ],
       { category: "navigation", method: "search" }
-    );
-
-    // Check the histograms as well.
-    TelemetryTestUtils.assertHistogram(resultIndexHist, foobarIndex, 1);
-
-    TelemetryTestUtils.assertHistogram(
-      resultTypeHist,
-      UrlbarUtils.SELECTED_RESULT_TYPES.formhistory,
-      1
-    );
-
-    TelemetryTestUtils.assertKeyedHistogramValue(
-      resultIndexByTypeHist,
-      "formhistory",
-      foobarIndex,
-      1
     );
 
     TelemetryTestUtils.assertHistogram(

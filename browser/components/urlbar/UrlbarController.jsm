@@ -545,10 +545,6 @@ class UrlbarController {
     //   newly added telemetryType.
     // * Add a test named browser_UsageTelemetry_urlbar_newType.js to
     //   browser/modules/test/browser.
-    // * Add the telemetryType to UrlbarUtils.SELECTED_RESULT_TYPES, which is
-    //   used by the histograms below. These histograms are deprecated, but the
-    //   code below logs an error if telemetryType is not in
-    //   SELECTED_RESULT_TYPES.
     //
     // The "topsite" type overrides the other ones, because it starts from a
     // unique user interaction, that we want to count apart. We do this here
@@ -570,22 +566,6 @@ class UrlbarController {
         1
       );
     }
-
-    // These histograms should be removed after a deprecation time where we'll
-    // confirm goodness of the new scalar above.
-    if (!(telemetryType in UrlbarUtils.SELECTED_RESULT_TYPES)) {
-      Cu.reportError(`Unsupported telemetry type ${telemetryType}`);
-      return;
-    }
-    Services.telemetry
-      .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
-      .add(resultIndex);
-    Services.telemetry
-      .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE_2")
-      .add(UrlbarUtils.SELECTED_RESULT_TYPES[telemetryType]);
-    Services.telemetry
-      .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2")
-      .add(telemetryType, resultIndex);
   }
 
   /**

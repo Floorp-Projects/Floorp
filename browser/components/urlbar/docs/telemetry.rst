@@ -204,7 +204,7 @@ urlbar.picked.*
 
   .. note::
     Available from Firefox 84 on. Use the *FX_URLBAR_SELECTED_** histograms in
-    earlier versions. See the `Obsolete probes`_ section below.
+    earlier versions.
 
   .. note::
     Firefox 102 added ``autofill_adaptive``, ``autofill_origin`` and
@@ -481,48 +481,5 @@ Telemetry Environment
 Firefox Suggest
   Telemetry specific to Firefox Suggest is described in the
   :doc:`firefox-suggest-telemetry` document.
-
-Obsolete probes
----------------
-
-Obsolete histograms
-~~~~~~~~~~~~~~~~~~~
-
-FX_URLBAR_SELECTED_RESULT_INDEX (OBSOLETE)
-  This probe tracked the indexes of picked results in the results list.
-  It was an enumerated histogram with 17 groups.
-
-FX_URLBAR_SELECTED_RESULT_TYPE and FX_URLBAR_SELECTED_RESULT_TYPE_2 (from Firefox 78 on) (OBSOLETE)
-  This probe tracked the types of picked results.
-  It was an enumerated histogram with the following groups:
-
-    0. autofill
-    1. bookmark
-    2. history
-    3. keyword
-    4. searchengine
-    5. searchsuggestion
-    6. switchtab
-    7. tag
-    8. visiturl
-    9. remotetab
-    10. extension
-    11. preloaded-top-site
-    12. tip
-    13. topsite
-    14. formhistory
-    15. dynamic
-    16. tabtosearch
-    17. quicksuggest
-    18. autofill_adaptive
-    19. autofill_origin
-    20. autofill_url
-
-FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE and FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2 (from Firefox 78 on) (OBSOLETE)
-  This probe tracked picked result type, for each one it tracked the index where
-  it appeared.
-  It was a keyed histogram where the keys were result types (see
-  FX_URLBAR_SELECTED_RESULT_TYPE above). For each key, this recorded the indexes
-  of picked results for that result type.
 
 .. _search telemetry: /browser/search/telemetry.html
