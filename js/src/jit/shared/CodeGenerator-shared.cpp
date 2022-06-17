@@ -81,7 +81,13 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
     // regular array where all slots are sizeof(Value), it maintains the max
     // argument stack depth separately.
     MOZ_ASSERT(graph->argumentSlotCount() == 0);
+
+#ifdef JS_CODEGEN_ARM64
+    // Ensure SP is aligned to 16 bytes.
+    frameDepth_ = AlignBytes(graph->localSlotsSize(), WasmStackAlignment);
+#else
     frameDepth_ = AlignBytes(graph->localSlotsSize(), sizeof(uintptr_t));
+#endif
     frameDepth_ += gen->wasmMaxStackArgBytes();
 
 #ifdef ENABLE_WASM_SIMD
@@ -101,6 +107,11 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
                                           WasmStackAlignment);
     }
+
+#ifdef JS_CODEGEN_ARM64
+    MOZ_ASSERT((frameDepth_ % WasmStackAlignment) == 0,
+               "Trap exit stub needs 16-byte aligned stack pointer");
+#endif
   } else {
     // Reserve space for frame pointer (and padding on 32-bit platforms).
     offsetOfLocalSlots_ = JitFrameLayout::IonFirstSlotOffset;
