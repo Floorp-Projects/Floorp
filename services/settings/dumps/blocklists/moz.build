@@ -9,8 +9,8 @@ with Files("**"):
 
 # The addons blocklist is also in mobile/android/installer/package-manifest.in
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    # Remove "addons.json" once bug 1639050 is resolved.
-    FINAL_TARGET_FILES.defaults.settings.blocklists += ["addons.json", "gfx.json"]
+    # Remove this once bug 1639050 is resolved.
+    FINAL_TARGET_FILES.defaults.settings.blocklists += ["addons.json"]
 else:
     FINAL_TARGET_FILES.defaults.settings.blocklists += [
         "addons-bloomfilters.json",
