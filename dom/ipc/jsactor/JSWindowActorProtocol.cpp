@@ -16,7 +16,6 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 
 #include "nsContentUtils.h"
-#include "JSActorProtocolUtils.h"
 
 namespace mozilla::dom {
 
@@ -35,14 +34,14 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aInfo.name());
-  JSActorProtocolUtils::FromIPCShared(proto, aInfo);
-
   // Content processes cannot load chrome browsing contexts, so this flag is
   // irrelevant and not propagated.
   proto->mIncludeChrome = false;
   proto->mAllFrames = aInfo.allFrames();
   proto->mMatches = aInfo.matches().Clone();
+  proto->mRemoteTypes = aInfo.remoteTypes().Clone();
   proto->mMessageManagerGroups = aInfo.messageManagerGroups().Clone();
+  proto->mChild.mModuleURI = aInfo.url();
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
   for (auto& ipc : aInfo.events()) {
@@ -57,6 +56,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
     event->mCreateActor = ipc.createActor();
   }
 
+  proto->mChild.mObservers = aInfo.observers().Clone();
   return proto.forget();
 }
 
@@ -64,11 +64,12 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   JSWindowActorInfo info;
-  JSActorProtocolUtils::ToIPCShared(info, this);
-
+  info.name() = mName;
   info.allFrames() = mAllFrames;
   info.matches() = mMatches.Clone();
+  info.remoteTypes() = mRemoteTypes.Clone();
   info.messageManagerGroups() = mMessageManagerGroups.Clone();
+  info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
   for (auto& event : mChild.mEvents) {
@@ -83,6 +84,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     ipc->createActor() = event.mCreateActor;
   }
 
+  info.observers() = mChild.mObservers.Clone();
   return info;
 }
 
@@ -93,10 +95,6 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
-  if (!JSActorProtocolUtils::FromWebIDLOptionsShared(proto, aOptions, aRv)) {
-    return nullptr;
-  }
-
   proto->mAllFrames = aOptions.mAllFrames;
   proto->mIncludeChrome = aOptions.mIncludeChrome;
 
@@ -105,8 +103,27 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
     proto->mMatches = aOptions.mMatches.Value();
   }
 
+  if (aOptions.mRemoteTypes.WasPassed()) {
+    MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
+    proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
+  }
+
   if (aOptions.mMessageManagerGroups.WasPassed()) {
     proto->mMessageManagerGroups = aOptions.mMessageManagerGroups.Value();
+  }
+
+  if (aOptions.mParent.WasPassed()) {
+    proto->mParent.mModuleURI.emplace(aOptions.mParent.Value().mModuleURI);
+  }
+  if (aOptions.mChild.WasPassed()) {
+    proto->mChild.mModuleURI.emplace(aOptions.mChild.Value().mModuleURI);
+  }
+
+  if (!aOptions.mChild.WasPassed() && !aOptions.mParent.WasPassed()) {
+    aRv.ThrowNotSupportedError(
+        "No point registering an actor with neither child nor parent "
+        "specifications.");
+    return nullptr;
   }
 
   // For each event declared in the source dictionary, initialize the
@@ -138,6 +155,11 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
       }
       evt->mCreateActor = entry.mValue.mCreateActor;
     }
+  }
+
+  if (aOptions.mChild.WasPassed() &&
+      aOptions.mChild.Value().mObservers.WasPassed()) {
+    proto->mChild.mObservers = aOptions.mChild.Value().mObservers.Value();
   }
 
   return proto.forget();

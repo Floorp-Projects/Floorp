@@ -211,11 +211,6 @@ class ChromeUtils {
                                  const nsAString& resourceURI,
                                  ErrorResult& aRv);
 
-  static void DefineESModuleGetters(const GlobalObject& global,
-                                    JS::Handle<JSObject*> target,
-                                    JS::Handle<JSObject*> modules,
-                                    ErrorResult& aRv);
-
   static void GetCallerLocation(const GlobalObject& global,
                                 nsIPrincipal* principal,
                                 JS::MutableHandle<JSObject*> aRetval);

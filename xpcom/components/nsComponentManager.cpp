@@ -1878,15 +1878,6 @@ nsComponentManagerImpl::GetComponentJSMs(nsIUTF8StringEnumerator** aJSMs) {
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::GetComponentESModules(
-    nsIUTF8StringEnumerator** aESModules) {
-  nsCOMPtr<nsIUTF8StringEnumerator> result =
-      StaticComponents::GetComponentESModules();
-  result.forget(aESModules);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsComponentManagerImpl::GetManifestLocations(nsIArray** aLocations) {
   NS_ENSURE_ARG_POINTER(aLocations);
   *aLocations = nullptr;
