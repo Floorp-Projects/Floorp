@@ -33,6 +33,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/import-globals
    eslint-plugin-mozilla/import-globals-from
    eslint-plugin-mozilla/import-headjs-globals
+   eslint-plugin-mozilla/lazy-getter-object-name
    eslint-plugin-mozilla/mark-exported-symbols-as-used
    eslint-plugin-mozilla/mark-test-function-used
    eslint-plugin-mozilla/no-aArgs
