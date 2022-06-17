@@ -2957,8 +2957,8 @@ nsDisplayBackgroundImage::~nsDisplayBackgroundImage() {
 }
 
 static nsIFrame* GetBackgroundComputedStyleFrame(nsIFrame* aFrame) {
-  nsIFrame* f;
-  if (!nsCSSRendering::FindBackgroundFrame(aFrame, &f)) {
+  nsIFrame* f = nsCSSRendering::FindBackgroundFrame(aFrame);
+  if (!f) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, other wise keep going in order to let the theme stuff

@@ -1138,8 +1138,8 @@ auto nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
     }
 
     if (IsCanvasFrame(frame)) {
-      nsIFrame* bgFrame = nullptr;
-      if (FindBackgroundFrame(frame, &bgFrame) &&
+      nsIFrame* bgFrame = FindBackgroundFrame(frame);
+      if (bgFrame &&
           NS_GET_A(bgFrame->StyleBackground()->BackgroundColor(bgFrame))) {
         return {bgFrame, false, true};
       }
@@ -1273,22 +1273,24 @@ inline bool FindElementBackground(const nsIFrame* aForFrame,
   return !htmlBG->IsTransparent(aRootElementFrame);
 }
 
-bool nsCSSRendering::FindBackgroundFrame(const nsIFrame* aForFrame,
-                                         nsIFrame** aBackgroundFrame) {
+nsIFrame* nsCSSRendering::FindBackgroundFrame(const nsIFrame* aForFrame) {
   nsIFrame* rootElementFrame =
       aForFrame->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
   if (IsCanvasFrame(aForFrame)) {
-    *aBackgroundFrame = FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
-    return true;
+    return FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
   }
 
-  *aBackgroundFrame = const_cast<nsIFrame*>(aForFrame);
-  return FindElementBackground(aForFrame, rootElementFrame);
+  // XXXdholbert FindElementBackground will be renamed for clarity later
+  // in this series.
+  if (FindElementBackground(aForFrame, rootElementFrame)) {
+    return const_cast<nsIFrame*>(aForFrame);
+  }
+
+  return nullptr;
 }
 
 ComputedStyle* nsCSSRendering::FindBackground(const nsIFrame* aForFrame) {
-  nsIFrame* backgroundFrame = nullptr;
-  if (FindBackgroundFrame(aForFrame, &backgroundFrame)) {
+  if (auto* backgroundFrame = FindBackgroundFrame(aForFrame)) {
     return backgroundFrame->Style();
   }
   return nullptr;

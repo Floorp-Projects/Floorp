@@ -461,11 +461,13 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     ComputedStyle* bg = nullptr;
     nsIFrame* dependentFrame = nullptr;
     bool isThemed = IsThemed();
-    if (!isThemed &&
-        nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
-      bg = dependentFrame->Style();
-      if (dependentFrame == this) {
-        dependentFrame = nullptr;
+    if (!isThemed) {
+      dependentFrame = nsCSSRendering::FindBackgroundFrame(this);
+      if (dependentFrame) {
+        bg = dependentFrame->Style();
+        if (dependentFrame == this) {
+          dependentFrame = nullptr;
+        }
       }
     }
 
