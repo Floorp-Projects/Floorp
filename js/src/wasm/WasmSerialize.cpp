@@ -814,9 +814,7 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
   MOZ_TRY((CodeVector<mode, FuncExport, CodeFuncExport<mode>>(
       coder, &item->funcExports)));
   MOZ_TRY(CodeStackMaps(coder, &item->stackMaps, codeStart));
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_TRY(CodePodVector(coder, &item->tryNotes));
-#endif
   return Ok();
 }
 
@@ -838,9 +836,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
   MOZ_TRY(CodePodVector(coder, &item->tables));
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_TRY((CodeVector<mode, TagDesc, &CodeTagDesc<mode>>(coder, &item->tags)));
-#endif
   MOZ_TRY(CodePod(coder, &item->moduleName));
   MOZ_TRY(CodePodVector(coder, &item->funcNames));
   MOZ_TRY(CodeCacheableChars(coder, &item->filename));
