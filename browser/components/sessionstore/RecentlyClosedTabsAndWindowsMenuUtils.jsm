@@ -194,7 +194,7 @@ function createEntry(
 
   element.setAttribute("label", aMenuLabel);
   if (aClosedTab.image) {
-    const iconURL = lazy.PlacesUIUtils.getImageURL(aClosedTab.image);
+    const iconURL = lazy.PlacesUIUtils.getImageURL(aClosedTab);
     element.setAttribute("image", iconURL);
   }
   if (!aIsWindowsFragment) {

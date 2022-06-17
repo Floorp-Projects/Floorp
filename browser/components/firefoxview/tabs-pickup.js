@@ -261,28 +261,19 @@ class TabsPickupContainer extends HTMLElement {
       }
       setupElem.hidden = false;
       setupElem.selectedViewName = `sync-setup-view${stateIndex}`;
-      return;
-    }
-
-    if (!tabsElem) {
-      this.appendTemplatedElement(
-        "synced-tabs-template",
-        "tabpickup-tabs-container"
-      );
-      tabsElem = this.tabsContainerElem;
-      tabsElem.classList.toggle("loading", stateIndex == 3);
-    }
-    if (setupElem) {
-      setupElem.hidden = true;
-    }
-    tabsElem.hidden = false;
-
-    const tabPickupList = document.querySelector("tab-pickup-list");
-    if (stateIndex == 4 && !tabPickupList.tabsList.hasChildNodes()) {
-      if (tabsElem) {
-        tabsElem.classList.toggle("loading", false);
+    } else {
+      if (!tabsElem) {
+        this.appendTemplatedElement(
+          "synced-tabs-template",
+          "tabpickup-tabs-container"
+        );
+        tabsElem = this.tabsContainerElem;
       }
-      tabPickupList.getSyncedTabData();
+      if (setupElem) {
+        setupElem.hidden = true;
+      }
+      tabsElem.classList.toggle("loading", stateIndex == 3);
+      tabsElem.hidden = false;
     }
   }
 }
