@@ -42,9 +42,9 @@ newtab.search:
       search_access_point: &search_access_point
         description: >
           One of the search access points available on the new tab like
-          * `urlbar-handoff`
-          * `abouthome`
-          * `newtab`
+          * `urlbar_handoff`
+          * `about_home`
+          * `about_newtab`
         type: string
       telemetry_id: &telemetry_id
         description: >
