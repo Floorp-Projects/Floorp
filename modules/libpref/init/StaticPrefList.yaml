@@ -6265,12 +6265,6 @@
   value: false
   mirror: always
 
-# Decode all images automatically on load, ignoring our normal heuristics.
-- name: image.decode-sync.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether we attempt to downscale images during decoding.
 - name: image.downscale-during-decode.enabled
   type: RelaxedAtomicBool
