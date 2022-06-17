@@ -40,7 +40,6 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.startsWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -106,8 +105,6 @@ class SearchRobot {
         assertSearchEngineSuggestionResults(rule, searchSuggestion)
     fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) =
         assertNoSuggestionsAreDisplayed(rule, searchSuggestion)
-
-    fun verifySearchEngineURL(searchEngineName: String) = assertSearchEngineURL(searchEngineName)
     fun verifySearchSettings() = assertSearchSettings()
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
@@ -303,15 +300,6 @@ private fun clearButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
 
 private fun searchWrapper() = mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
-
-private fun assertSearchEngineURL(searchEngineName: String) {
-    mDevice.waitNotNull(
-        Until.findObject(By.textContains("${searchEngineName.lowercase()}.com/?q=mozilla")),
-        waitingTime
-    )
-    onView(allOf(withText(startsWith("${searchEngineName.lowercase()}.com"))))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
 
 private fun assertSearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) {
     rule.waitUntil(waitingTime, waitForSearchSuggestions(rule, searchSuggestion, searchEngineName))
