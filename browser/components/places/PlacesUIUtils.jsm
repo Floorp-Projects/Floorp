@@ -1561,6 +1561,23 @@ var PlacesUIUtils = {
 
     PlacesUIUtils.lastContextMenuTriggerNode = menupopup.triggerNode;
 
+    if (Services.prefs.getBoolPref("browser.tabs.loadBookmarksInTabs", false)) {
+      menupopup.ownerDocument
+        .getElementById("placesContext_open")
+        .removeAttribute("default");
+      menupopup.ownerDocument
+        .getElementById("placesContext_open:newtab")
+        .setAttribute("default", "true");
+      // else clause ensures correct behavior if pref is repeatedly toggled
+    } else {
+      menupopup.ownerDocument
+        .getElementById("placesContext_open:newtab")
+        .removeAttribute("default");
+      menupopup.ownerDocument
+        .getElementById("placesContext_open")
+        .setAttribute("default", "true");
+    }
+
     let isManaged = !!menupopup.triggerNode.closest("#managed-bookmarks");
     if (isManaged) {
       this.managedPlacesContextShowing(event);
