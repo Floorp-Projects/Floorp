@@ -50,10 +50,7 @@ firefoxview-closed-tabs-collapse-button =
 firefoxview-closed-tabs-description = Reopen pages you’ve closed on this device.
 firefoxview-closed-tabs-placeholder = History is empty <br/> The next time you close a tab, you can reopen it here.
 
-# refers to the last tab that was used
-firefoxview-pickup-tabs-badge = Last active
-
 # Variables:
 #   $targetURI (string) - URL that will be opened in the new tab
-firefoxview-tabs-list-tab-button =
+firefoxview-closed-tabs-tab-button =
   .title = Open { $targetURI } in a new tab

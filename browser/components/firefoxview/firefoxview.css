@@ -323,152 +323,15 @@ body > main > aside {
   text-align: end;
 }
 
-.closed-tab-li-url,
-.closed-tab-li-time,
-.synced-tab-li-device,
-.synced-tab-li-url,
-.synced-tab-li-time,
-.synced-tab-li-url-device {
+.closed-tab-li-url, .closed-tab-li-time {
   color: var(--in-content-deemphasized-text);
   font-weight: 400;
 }
 
-.closed-tab-li-title,
-.closed-tab-li-url,
-.synced-tab-li:not(:first-child) > .synced-tab-li-title,
-.synced-tab-li-device,
-.synced-tab-li-url-device {
+.closed-tab-li-title, .closed-tab-li-url {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-}
-
-.synced-tabs-list {
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: 4fr 4fr;
-  column-gap: 16px;
-  row-gap: 8px;
-
-  grid-template-areas:
-      "first second"
-      "first third";
-}
-
-.synced-tab-li {
-  box-sizing: border-box;
-  border: 1px solid #CFCFD8;
-  border-radius: 8px;
-  padding: 10px;
-  display: grid;
-  grid-template-columns: min-content repeat(3, 1fr);
-  grid-template-rows: auto auto;
-  grid-template-areas:
-  "favicon title title title"
-  "favicon url-device url-device time"
-}
-
-.synced-tab-li:hover {
-  box-shadow: 0px 2px 6px rgba(58, 57, 68, 0.2);
-  cursor: pointer;
-}
-
-.synced-tab-li:not(:first-child) {
-  align-content: center;
-}
-
-@media only screen and (max-width: 60rem) {
-  .synced-tab-li {
-    grid-template-areas:
-    "favicon title title title"
-    "favicon url-device url-device url-device"
-  }
-  .synced-tab-li:not(:first-child) > .synced-tab-li-time {
-    display: none;
-  }
-}
-
-.synced-tab-li:first-child {
-  padding-top: 20px;
-  grid-area: first;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: auto;
-  grid-template-areas:
-  "favicon favicon badge badge"
-  "title title title title"
-  "domain domain domain time"
-  "device device device time";
-}
-
-.synced-tab-li:nth-child(2) {
-  grid-area: second;
-}
-
-.synced-tab-li:nth-child(3) {
-  grid-area: third;
-}
-
-.synced-tab-li-url,
-.synced-tab-li-device,
-.synced-tab-li-time,
-.synced-tab-li:not(:first-child) > .synced-tab-li-title {
-  font-size: .85em;
-}
-
-.synced-tab-li-url {
-  text-decoration-line: underline;
-}
-
-.synced-tab-li:first-child > .synced-tab-li-url {
-  align-self: end;
-  grid-area: domain;
-}
-
-.synced-tab-li-title {
-  grid-area: title;
-  font-weight: 500;
-}
-
-.synced-tab-li:first-child > .synced-tab-li-title {
-  color: inherit;
-  padding-top: 5px;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  height: 2.5em;
-}
-
-.synced-tab-li-url-device {
-  grid-area: url-device;
-  padding-top: 4px
-}
-
-.synced-tab-li:first-child > .synced-tab-li-device {
-  grid-area: device;
-  margin-top: 5px;
-}
-
-.synced-tab-li-time {
-  grid-area: time;
-  justify-self: end;
-  color: var(--in-content-deemphasized-text);
-  align-self: end;
-}
-
-.synced-tab-li:first-child > .synced-tab-li-time {
-  align-self: center;
-}
-
-.synced-tab-li .favicon {
-  grid-area: favicon;
-  margin-inline-end: 10px;
-}
-
-.synced-tab-li .icon {
-  vertical-align: bottom;
-  margin-inline-end: 5px;
 }
 
 .icon {
@@ -477,6 +340,7 @@ body > main > aside {
   display: inline-block;
   -moz-context-properties: fill;
   fill: currentColor;
+  margin-top: 10px;
 }
 
 .icon.arrow-down {
@@ -491,50 +355,12 @@ body > main > aside {
   background-image: url('chrome://browser/skin/history.svg');
 }
 
-.icon.phone {
-  background-image: url('chrome://browser/skin/device-phone.svg');
-}
-
-.icon.desktop {
-  background-image: url('chrome://browser/skin/device-desktop.svg');
-}
-
-.icon.tablet {
-  background-image: url('chrome://browser/skin/device-tablet.svg');
-}
-
 .favicon {
   background-size: cover;
+  margin: 2px;
 }
 
 .favicon, .icon {
   width: 16px;
   height: 16px;
-}
-
-.last-active-badge {
-  height: 1.25em;
-  width: 6em;
-  background-color: #E3FFF3;
-  grid-area: badge;
-  border-radius: 2em;
-  justify-self: end;
-  text-align: center;
-  padding-bottom: 5px;
-}
-
-.dot {
-  height: 8px;
-  width: 8px;
-  background-color: #2AC3A2;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.badge-text {
-  font-weight: 400;
-  font-size: .75em;
-  letter-spacing: 0.02em;
-  margin-inline-start: 4px;
-  color: #000000;
 }

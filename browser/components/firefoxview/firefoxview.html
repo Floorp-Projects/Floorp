@@ -17,8 +17,6 @@
     <script type="module" src="chrome://browser/content/tabs-pickup.js"></script>
     <script type="module" src="chrome://browser/content/firefoxview.js"></script>
     <script type="module" src="chrome://browser/content/recently-closed-tabs.js"></script>
-    <script type="module" src="chrome://browser/content/tab-pickup-list.js"></script>
-    <script type="module" src="chrome://browser/content/helpers.js"></script>
   </head>
 
   <body>
@@ -85,9 +83,9 @@
       </template>
       <template id="synced-tabs-template">
         <div class="synced-tabs-container" data-prefix="id:" hidden>
-          <tab-pickup-list>
-            <ol hidden="true" class="synced-tabs-list"></ol>
-          </tab-pickup-list>
+          <div class="card">
+            <h2 data-l10n-id="firefoxview-tabpickup-recenttabs-description"></h2>
+          </div>
           <p class="loading-content" data-l10n-id="firefoxview-tabpickup-syncing"></p>
         </div>
       </template>
