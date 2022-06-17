@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 async function makeSteamEngine() {
@@ -116,7 +115,6 @@ add_task(async function test_lastSync() {
 add_task(async function test_toFetch() {
   _("SyncEngine.toFetch corresponds to file on disk");
   await SyncTestingInfrastructure(server);
-  const filename = "weave/toFetch/steam.json";
 
   await testSteamEngineStorage({
     toFetch: guidSetOfSize(3),
@@ -153,9 +151,13 @@ add_task(async function test_toFetch() {
   await testSteamEngineStorage({
     toFetch: guidSetOfSize(2),
     async beforeCheck() {
-      let toFetchPath = OS.Path.join(OS.Constants.Path.profileDir, filename);
-      let bytes = new TextEncoder().encode(JSON.stringify(this.toFetch));
-      await OS.File.writeAtomic(toFetchPath, bytes, {
+      let toFetchPath = PathUtils.join(
+        PathUtils.profileDir,
+        "weave",
+        "toFetch",
+        "steam.json"
+      );
+      await IOUtils.writeJSON(toFetchPath, this.toFetch, {
         tmpPath: toFetchPath + ".tmp",
       });
     },
@@ -169,7 +171,6 @@ add_task(async function test_toFetch() {
 add_task(async function test_previousFailed() {
   _("SyncEngine.previousFailed corresponds to file on disk");
   await SyncTestingInfrastructure(server);
-  const filename = "weave/failed/steam.json";
 
   await testSteamEngineStorage({
     previousFailed: guidSetOfSize(3),
@@ -206,12 +207,14 @@ add_task(async function test_previousFailed() {
   await testSteamEngineStorage({
     previousFailed: guidSetOfSize(2),
     async beforeCheck() {
-      let previousFailedPath = OS.Path.join(
-        OS.Constants.Path.profileDir,
-        filename
+      let previousFailedPath = PathUtils.join(
+        PathUtils.profileDir,
+        "weave",
+        "failed",
+        "steam.json"
       );
       let bytes = new TextEncoder().encode(JSON.stringify(this.previousFailed));
-      await OS.File.writeAtomic(previousFailedPath, bytes, {
+      await IOUtils.writeJSON(previousFailedPath, this.previousFailed, {
         tmpPath: previousFailedPath + ".tmp",
       });
     },
