@@ -8,7 +8,6 @@ const protocol = require("devtools/shared/protocol");
 const { getCSSLexer } = require("devtools/shared/css/lexer");
 const InspectorUtils = require("InspectorUtils");
 const TrackChangeEmitter = require("devtools/server/actors/utils/track-change-emitter");
-
 const {
   getRuleText,
   getTextAtLineColumn,
@@ -92,6 +91,8 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // names and values before tracking changes. Using cached values instead of accessing
     // this.form().declarations on demand because that would cause needless re-parsing.
     this._declarations = [];
+
+    this._pendingDeclarationChanges = [];
 
     if (CSSRule.isInstance(item)) {
       this.type = item.type;
@@ -459,6 +460,16 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         return decl;
       });
 
+      // We have computed the new `declarations` array, before forgetting about
+      // the old declarations compute the CSS changes for pending modifications
+      // applied by the user. Comparing the old and new declarations arrays
+      // ensures we only rely on values understood by the engine and not authored
+      // values. See Bug 1590031.
+      this._pendingDeclarationChanges.forEach(change =>
+        this.logDeclarationChange(change, declarations, this._declarations)
+      );
+      this._pendingDeclarationChanges = [];
+
       // Cache parsed declarations so we don't needlessly re-parse authoredText every time
       // we need to check previous property names and values when tracking changes.
       this._declarations = declarations;
@@ -711,9 +722,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       throw new Error("invalid call to setRuleText");
     }
 
-    // Log the changes before applying them so we have access to the previous values.
-    modifications.map(mod => this.logDeclarationChange(mod));
-
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
       this.rawNode.setAttributeDevtools("style", newText);
@@ -750,6 +758,11 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
     this.authoredText = newText;
     this.pageStyle.refreshObservedRules();
+
+    // Add processed modifications to the _pendingDeclarationChanges array,
+    // they will be emitted as CSS_CHANGE resources once `declarations` have
+    // been re-computed in `form`.
+    this._pendingDeclarationChanges.push(...modifications);
 
     // Returning this updated actor over the protocol will update its corresponding front
     // and any references to it.
@@ -794,7 +807,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     const tempElement = document.createElementNS(XHTML_NS, "div");
 
     for (const mod of modifications) {
-      this.logDeclarationChange(mod);
       if (mod.type === "set") {
         tempElement.style.setProperty(mod.name, mod.value, mod.priority || "");
         this.rawStyle.setProperty(
@@ -808,6 +820,11 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     this.pageStyle.refreshObservedRules();
+
+    // Add processed modifications to the _pendingDeclarationChanges array,
+    // they will be emitted as CSS_CHANGE resources once `declarations` have
+    // been re-computed in `form`.
+    this._pendingDeclarationChanges.push(...modifications);
 
     return this;
   },
@@ -912,8 +929,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *
    * @param {Object} change
    *        Data about a modification to a declaration. @see |modifyProperties()|
+   * @param {Object} newDeclarations
+   *        The current declarations array to get the latest values, names...
+   * @param {Object} oldDeclarations
+   *        The previous declarations array to use to fetch old values, names...
    */
-  logDeclarationChange(change) {
+  logDeclarationChange(change, newDeclarations, oldDeclarations) {
     // Position of the declaration within its rule.
     const index = change.index;
     // Destructure properties from the previous CSS declaration at this index, if any,
@@ -923,7 +944,9 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       name: prevName,
       priority: prevPriority,
       commentOffsets,
-    } = this._declarations[index] || {};
+    } = oldDeclarations[index] || {};
+
+    const { value: currentValue } = newDeclarations[index] || {};
     // A declaration is disabled if it has a `commentOffsets` array.
     // Here we type coerce the value to a boolean with double-bang (!!)
     const prevDisabled = !!commentOffsets;
@@ -941,9 +964,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // declaration is being updated. In that case, use the provided `change.name`.
         const name = change.newName ? change.newName : change.name;
         // Append the "!important" string if defined in the incoming priority flag.
+
+        const changeValue = currentValue || change.value;
         const newValue = change.priority
-          ? `${change.value} !important`
-          : change.value;
+          ? `${changeValue} !important`
+          : changeValue;
+
         // Reuse the previous value string, when the property is renamed.
         // Otherwise, use the incoming value string.
         const value = change.newName ? prevValue : newValue;
