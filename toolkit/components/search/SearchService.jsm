@@ -587,7 +587,7 @@ class SearchService {
       var engine = new lazy.OpenSearchEngine();
       engine._setIcon(iconURL, false);
       errCode = await new Promise(resolve => {
-        engine._install(engineURL, errorCode => {
+        engine.install(engineURL, errorCode => {
           resolve(errorCode);
         });
       });
@@ -2047,11 +2047,9 @@ class SearchService {
             json: engineJSON,
           });
         } else {
-          engine = new lazy.SearchEngine({
-            isAppProvided: false,
-            loadPath: engineJSON._loadPath,
+          engine = new lazy.OpenSearchEngine({
+            json: engineJSON,
           });
-          engine._initWithJSON(engineJSON);
         }
         this.#addEngineToStore(engine);
       } catch (ex) {
@@ -3296,7 +3294,7 @@ var engineUpdateService = {
       testEngine = new lazy.OpenSearchEngine();
       testEngine._engineToUpdate = engine;
       try {
-        testEngine._install(updateURI);
+        testEngine.install(updateURI);
       } catch (ex) {
         lazy.logConsole.error("Failed to update", engine.name, ex);
       }

@@ -69,12 +69,23 @@ class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
 
-  constructor() {
+  /**
+   * Creates a OpenSearchEngine.
+   *
+   * @param {object} [options]
+   * @param {object} [options.json]
+   *   An object that represents the saved JSON settings for the engine.
+   */
+  constructor(options = {}) {
     super({
       isAppProvided: false,
       // We don't know what this is until after it has loaded, so add a placeholder.
-      loadPath: "[opensearch]loading",
+      loadPath: options.json?._loadPath ?? "[opensearch]loading",
     });
+
+    if (options.json) {
+      this._initWithJSON(options.json);
+    }
   }
 
   /**
@@ -86,7 +97,7 @@ class OpenSearchEngine extends SearchEngine {
    * @param {function} [callback]
    *   A callback to receive any details of errors.
    */
-  _install(uri, callback) {
+  install(uri, callback) {
     let loadURI =
       uri instanceof Ci.nsIURI ? uri : lazy.SearchUtils.makeURI(uri);
     if (!loadURI) {
