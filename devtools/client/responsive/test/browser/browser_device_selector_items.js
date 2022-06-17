@@ -29,12 +29,21 @@ const TEST_DEVICES = [
     hasIcon: true,
   },
   {
-    name: "Laptop (1366 x 768)",
+    name: "Laptop with MDPI screen",
     hasIcon: false,
   },
 ];
 
 addDeviceForTest(FIREFOX_DEVICE);
+
+// Add the laptop to the device list
+const {
+  updatePreferredDevices,
+} = require("devtools/client/responsive/actions/devices");
+updatePreferredDevices({
+  added: ["Laptop with MDPI screen"],
+  removed: [],
+});
 
 addRDMTask(
   URL_ROOT,

@@ -10,18 +10,27 @@ const DEFAULT_DPPX = window.devicePixelRatio;
 
 /* eslint-disable max-len */
 const TEST_DEVICE = {
-  name: "Apple iPhone 6s",
+  name: "iPhone 6/7/8",
   width: 375,
   height: 667,
   pixelRatio: 2,
   userAgent:
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1",
   touch: true,
   firefoxOS: false,
-  os: "ios",
+  os: "iOS",
   featured: true,
 };
 /* eslint-enable max-len */
+
+// Add the device to the list
+const {
+  updatePreferredDevices,
+} = require("devtools/client/responsive/actions/devices");
+updatePreferredDevices({
+  added: [TEST_DEVICE.name],
+  removed: [],
+});
 
 const Types = require("devtools/client/responsive/types");
 
