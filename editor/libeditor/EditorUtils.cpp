@@ -748,30 +748,19 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
 }
 
 // static
-already_AddRefed<nsRange>
-AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
-    const EditorDOMRange& aRange, EditSubAction aEditSubAction,
+nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+    nsRange& aRange, EditSubAction aEditSubAction,
     const Element& aEditingHost) {
-  if (!aRange.IsPositioned()) {
-    return nullptr;
-  }
-  return CreateRangeWrappingStartAndEndLinesContainingBoundaries(
-      aRange.StartRef(), aRange.EndRef(), aEditSubAction, aEditingHost);
-}
+  MOZ_DIAGNOSTIC_ASSERT(
+      !EditorRawDOMPoint(aRange.StartRef()).IsInNativeAnonymousSubtree());
+  MOZ_DIAGNOSTIC_ASSERT(
+      !EditorRawDOMPoint(aRange.EndRef()).IsInNativeAnonymousSubtree());
 
-// static
-already_AddRefed<nsRange>
-AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
-    const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
-    EditSubAction aEditSubAction, const Element& aEditingHost) {
-  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
-  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
-
-  if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
-    return nullptr;
+  if (NS_WARN_IF(!aRange.IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  EditorDOMPoint startPoint(aStartPoint), endPoint(aEndPoint);
+  EditorDOMPoint startPoint(aRange.StartRef()), endPoint(aRange.EndRef());
   AutoRangeArray::UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
       startPoint, endPoint, aEditingHost);
 
@@ -794,7 +783,7 @@ AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
   if (!startPoint.GetChildOrContainerIfDataNode() ||
       !startPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
           &aEditingHost)) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   endPoint =
       GetPointAfterFollowingLineBreakOrAtFollowingBlock(endPoint, aEditingHost);
@@ -808,14 +797,15 @@ AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
   if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
       !lastRawPoint.GetChildOrContainerIfDataNode()->IsInclusiveDescendantOf(
           &aEditingHost)) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsRange> range =
-      nsRange::Create(startPoint.ToRawRangeBoundary(),
-                      endPoint.ToRawRangeBoundary(), IgnoreErrors());
-  NS_WARNING_ASSERTION(range, "nsRange::Create() failed");
-  return range.forget();
+  nsresult rv = aRange.SetStartAndEnd(startPoint.ToRawRangeBoundary(),
+                                      endPoint.ToRawRangeBoundary());
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 /******************************************************************************

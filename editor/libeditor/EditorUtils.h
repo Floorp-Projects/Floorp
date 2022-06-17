@@ -587,13 +587,36 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   static already_AddRefed<nsRange>
   CreateRangeWrappingStartAndEndLinesContainingBoundaries(
       const EditorDOMRange& aRange, EditSubAction aEditSubAction,
-      const dom::Element& aEditingHost);
+      const dom::Element& aEditingHost) {
+    if (!aRange.IsPositioned()) {
+      return nullptr;
+    }
+    return CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+        aRange.StartRef(), aRange.EndRef(), aEditSubAction, aEditingHost);
+  }
   static already_AddRefed<nsRange>
   CreateRangeWrappingStartAndEndLinesContainingBoundaries(
       const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
-      EditSubAction aEditSubAction, const dom::Element& aEditingHost);
+      EditSubAction aEditSubAction, const dom::Element& aEditingHost) {
+    RefPtr<nsRange> range =
+        nsRange::Create(aStartPoint.ToRawRangeBoundary(),
+                        aEndPoint.ToRawRangeBoundary(), IgnoreErrors());
+    if (MOZ_UNLIKELY(!range)) {
+      return nullptr;
+    }
+    if (NS_FAILED(ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+            *range, aEditSubAction, aEditingHost)) ||
+        MOZ_UNLIKELY(!range->IsPositioned())) {
+      return nullptr;
+    }
+    return range.forget();
+  }
 
  private:
+  static nsresult ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+      nsRange& aRange, EditSubAction aEditSubAction,
+      const dom::Element& aEditingHost);
+
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
   RefPtr<nsRange> mAnchorFocusRange;
   nsDirection mDirection = nsDirection::eDirNext;
