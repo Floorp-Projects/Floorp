@@ -20,6 +20,16 @@
 namespace mozilla {
 using namespace mozilla::dom;
 
+#ifndef MOZ_THUNDERBIRD
+#  define MOZ_AMO_HOSTNAME "addons.mozilla.org"
+#  define MOZ_AMO_STAGE_HOSTNAME "addons.allizom.org"
+#  define MOZ_AMO_DEV_HOSTNAME "addons-dev.allizom.org"
+#else
+#  define MOZ_AMO_HOSTNAME "addons.thunderbird.net"
+#  define MOZ_AMO_STAGE_HOSTNAME "addons-stage.thunderbird.net"
+#  undef MOZ_AMO_DEV_HOSTNAME
+#endif
+
 static bool IsValidHost(const nsACString& host) {
   // This hidden pref allows users to disable mozAddonManager entirely if they
   // want for fingerprinting resistance. Someone like Tor browser will use this
@@ -29,14 +39,16 @@ static bool IsValidHost(const nsACString& host) {
     return false;
   }
 
-  if (host.EqualsLiteral("addons.mozilla.org")) {
+  if (host.EqualsLiteral(MOZ_AMO_HOSTNAME)) {
     return true;
   }
 
   // When testing allow access to the developer sites.
   if (Preferences::GetBool("extensions.webapi.testing", false)) {
-    if (host.LowerCaseEqualsLiteral("addons.allizom.org") ||
-        host.LowerCaseEqualsLiteral("addons-dev.allizom.org") ||
+    if (host.LowerCaseEqualsLiteral(MOZ_AMO_STAGE_HOSTNAME) ||
+#ifdef MOZ_AMO_DEV_HOSTNAME
+        host.LowerCaseEqualsLiteral(MOZ_AMO_DEV_HOSTNAME) ||
+#endif
         host.LowerCaseEqualsLiteral("example.com")) {
       return true;
     }
