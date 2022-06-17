@@ -79,10 +79,6 @@ class TelemetryHandler {
   // browser - one of the KNOWN_SEARCH_SOURCES in BrowserSearchTelemetry.
   _browserSourceMap = new WeakMap();
 
-  // _browserNewtabSessionMap is a map of the newtab session id for particular
-  // browsers.
-  _browserNewtabSessionMap = new WeakMap();
-
   constructor() {
     this._contentHandler = new ContentHandler({
       browserInfoByURL: this._browserInfoByURL,
@@ -157,19 +153,6 @@ class TelemetryHandler {
   }
 
   /**
-   * Records the newtab source for particular browsers, in case it needs
-   * to be associated with a SERP.
-   *
-   * @param {browser} browser
-   *   The browser where the search originated.
-   * @param {string} newtabSessionId
-   *    The sessionId of the newtab session the search originated from.
-   */
-  recordBrowserNewtabSession(browser, newtabSessionId) {
-    this._browserNewtabSessionMap.set(browser, newtabSessionId);
-  }
-
-  /**
    * Handles the TabClose event received from the listeners.
    *
    * @param {object} event
@@ -180,7 +163,6 @@ class TelemetryHandler {
       return;
     }
 
-    this._browserNewtabSessionMap.delete(event.target.linkedBrowser);
     this.stopTrackingBrowser(event.target.linkedBrowser);
   }
 
@@ -245,7 +227,6 @@ class TelemetryHandler {
     }
     let info = this._checkURLForSerpMatch(url);
     if (!info) {
-      this._browserNewtabSessionMap.delete(browser);
       this.stopTrackingBrowser(browser);
       return;
     }
@@ -260,13 +241,6 @@ class TelemetryHandler {
       this._browserSourceMap.delete(browser);
     }
 
-    let newtabSessionId;
-    if (this._browserNewtabSessionMap.has(browser)) {
-      newtabSessionId = this._browserNewtabSessionMap.get(browser);
-      // We leave the newtabSessionId in the map for this browser
-      // until we stop loading SERP pages or the tab is closed.
-    }
-
     this._reportSerpPage(info, source, url);
 
     let item = this._browserInfoByURL.get(url);
@@ -275,14 +249,12 @@ class TelemetryHandler {
       item.browsers.set(browser, "no ads reported");
       item.count++;
       item.source = source;
-      item.newtabSessionId = newtabSessionId;
     } else {
       item = this._browserInfoByURL.set(url, {
         browsers: new WeakMap().set(browser, "no ads reported"),
         info,
         count: 1,
         source,
-        newtabSessionId,
       });
     }
   }
@@ -798,15 +770,6 @@ class ContentHandler {
           1
         );
         wrappedChannel._adClickRecorded = true;
-        if (item.newtabSessionId) {
-          Glean.newtabSearchAd.click.record({
-            newtab_visit_id: item.newtabSessionId,
-            search_access_point: item.source,
-            is_follow_on: item.info.type.endsWith("follow-on"),
-            is_tagged: item.info.type.startsWith("tagged"),
-            telemetry_id: item.info.provider,
-          });
-        }
       } catch (e) {
         Cu.reportError(e);
       }
@@ -864,16 +827,6 @@ class ContentHandler {
     );
 
     item.browsers.set(browser, "ad reported");
-
-    if (item.newtabSessionId) {
-      Glean.newtabSearchAd.impression.record({
-        newtab_visit_id: item.newtabSessionId,
-        search_access_point: item.source,
-        is_follow_on: item.info.type.endsWith("follow-on"),
-        is_tagged: item.info.type.startsWith("tagged"),
-        telemetry_id: item.info.provider,
-      });
-    }
   }
 }
 

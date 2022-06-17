@@ -135,7 +135,6 @@ add_task(async function test_about_newtab() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  Services.fog.testResetFOG();
   let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
     "SEARCH_COUNTS"
   );
@@ -190,19 +189,6 @@ add_task(async function test_about_newtab() {
       },
     ],
     { category: "navigation", method: "search" }
-  );
-
-  // Also also check Glean events.
-  const record = Glean.newtabSearch.issued.testGetValue();
-  Assert.ok(!!record, "Must have recorded a search issuance");
-  Assert.equal(record.length, 1, "One search, one event");
-  Assert.deepEqual(
-    {
-      search_access_point: "about_newtab",
-      telemetry_id: "other-MozSearch",
-    },
-    record[0].extra,
-    "Must have recorded the expected information."
   );
 
   BrowserTestUtils.removeTab(tab);

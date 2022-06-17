@@ -106,9 +106,6 @@ describe("PlacesFeed", () => {
     PlacesObserver = PlacesFeed.PlacesObserver;
     feed = new PlacesFeed();
     feed.store = { dispatch: sinon.spy() };
-    globals.set("AboutNewTab", {
-      activityStream: { store: { feeds: { get() {} } } },
-    });
   });
   afterEach(() => {
     globals.restore();
@@ -738,25 +735,16 @@ describe("PlacesFeed", () => {
       });
     });
     it("should properly handle handoff with text data passed in", () => {
-      const sessionId = "decafc0ffee";
-      sandbox.stub(AboutNewTab.activityStream.store.feeds, "get").returns({
-        sessions: {
-          get: () => {
-            return { session_id: sessionId };
-          },
-        },
-      });
       feed.handoffSearchToAwesomebar({
         _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
         data: { text: "foo" },
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.handoff);
-      assert.calledWithExactly(
+      assert.calledWith(
         fakeUrlBar.handoff,
         "foo",
-        global.Services.search.defaultEngine,
-        sessionId
+        global.Services.search.defaultEngine
       );
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
@@ -782,11 +770,10 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.handoff);
-      assert.calledWithExactly(
+      assert.calledWith(
         fakeUrlBar.handoff,
         "foo",
-        global.Services.search.defaultPrivateEngine,
-        undefined
+        global.Services.search.defaultPrivateEngine
       );
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
@@ -815,8 +802,7 @@ describe("PlacesFeed", () => {
       assert.calledWithExactly(
         fakeUrlBar.handoff,
         "foo",
-        global.Services.search.defaultEngine,
-        undefined
+        global.Services.search.defaultEngine
       );
       assert.notCalled(fakeUrlBar.focus);
 
@@ -831,45 +817,6 @@ describe("PlacesFeed", () => {
           toTarget: {},
         },
         type: "SHOW_SEARCH",
-      });
-    });
-    it("should properly handoff a newtab session id with no text passed in", () => {
-      const sessionId = "decafc0ffee";
-      sandbox.stub(AboutNewTab.activityStream.store.feeds, "get").returns({
-        sessions: {
-          get: () => {
-            return { session_id: sessionId };
-          },
-        },
-      });
-      feed.handoffSearchToAwesomebar({
-        _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
-        data: {},
-        meta: { fromTarget: {} },
-      });
-      assert.calledOnce(fakeUrlBar.setHiddenFocus);
-      assert.notCalled(fakeUrlBar.handoff);
-      assert.notCalled(feed.store.dispatch);
-
-      // Now type a character.
-      listeners.keydown({ key: "f" });
-      assert.calledOnce(fakeUrlBar.handoff);
-      assert.calledWithExactly(
-        fakeUrlBar.handoff,
-        "",
-        global.Services.search.defaultEngine,
-        sessionId
-      );
-      assert.calledOnce(fakeUrlBar.removeHiddenFocus);
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWith(feed.store.dispatch, {
-        meta: {
-          from: "ActivityStream:Main",
-          skipMain: true,
-          to: "ActivityStream:Content",
-          toTarget: {},
-        },
-        type: "DISABLE_SEARCH",
       });
     });
   });

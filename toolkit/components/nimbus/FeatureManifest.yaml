@@ -519,11 +519,3 @@ pictureinpicture:
     showIconOnly:
       type: boolean
       description: Whether to show the first time PiP toggle or show the PiP icon only
-glean:
-  description: "The Glean data collection SDK within Firefox Desktop"
-  hasExposure: false
-  variables:
-    newtabPingEnabled:
-      type: "boolean"
-      fallbackPref: "browser.newtabpage.ping.enabled"
-      description: "Whether to submit the 'newtab' ping"

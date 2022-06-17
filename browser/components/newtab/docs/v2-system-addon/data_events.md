@@ -1254,12 +1254,3 @@ These record the impression and click pings for the Sponsored TopSites.
   }
 }
 ```
-
-## Glean "newtab" ping
-
-Unlike the other data collections, this is a
-[Glean Ping](https://mozilla.github.io/glean/book/user/pings/index.html)
-that batches events and metadata about newtab sessions.
-
-You can find full documentation about this ping and its contents in
-[its Glean Dictionary entry](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/newtab).
