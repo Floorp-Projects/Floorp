@@ -266,24 +266,6 @@ enum JSWhyMagic {
   JS_GENERIC_MAGIC,
 
   /**
-   * Write records queued up in WritableStreamDefaultController.[[queue]] in the
-   * spec are either "close" (a String) or Record { [[chunk]]: chunk }, where
-   * chunk is an arbitrary user-provided (and therefore non-magic) value.
-   * Represent "close" the String as this magic value; represent Record records
-   * as the |chunk| value within each of them.
-   */
-  JS_WRITABLESTREAM_CLOSE_RECORD,
-
-  /**
-   * The ReadableStream pipe-to operation concludes with a "finalize" operation
-   * that accepts an optional |error| argument.  In certain cases that optional
-   * |error| must be stored in a handler function, for use after a promise has
-   * settled.  We represent the argument not being provided, in those cases,
-   * using this magic value.
-   */
-  JS_READABLESTREAM_PIPETO_FINALIZE_WITHOUT_ERROR,
-
-  /**
    * When an error object is created without the error cause argument, we set
    * the error's cause slot to this magic value.
    */

@@ -27,7 +27,7 @@ add_task(async function() {
   let prop = rule.textProps[0];
 
   info("Clearing the property value");
-  await setProperty(view, prop, null, false);
+  await setProperty(view, prop, null, { blurNewProperty: false });
 
   let newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "background-color should have been unset.");
@@ -44,7 +44,7 @@ add_task(async function() {
   view.styleDocument.activeElement.blur();
 
   info("Clearing the property value");
-  await setProperty(view, prop, null, false);
+  await setProperty(view, prop, null, { blurNewProperty: false });
 
   newValue = await getRulePropertyValue(0, 0, "background-color");
   is(newValue, "", "color should have been unset.");

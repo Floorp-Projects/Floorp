@@ -1471,7 +1471,7 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static CreateElementResult InsertBRElement(
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
-      Element& aEditingHost);
+      const Element& aEditingHost);
 
   /**
    * InsertText() inserts aStringToInsert to aPointToInsert and makes any needed

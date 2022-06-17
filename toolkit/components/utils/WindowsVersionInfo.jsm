@@ -9,18 +9,13 @@ var EXPORTED_SYMBOLS = ["WindowsVersionInfo"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ctypes",
-  "resource://gre/modules/ctypes.jsm"
-);
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
-const BYTE = lazy.ctypes.uint8_t;
-const WORD = lazy.ctypes.uint16_t;
-const DWORD = lazy.ctypes.uint32_t;
-const WCHAR = lazy.ctypes.char16_t;
-const BOOL = lazy.ctypes.int;
+const BYTE = ctypes.uint8_t;
+const WORD = ctypes.uint16_t;
+const DWORD = ctypes.uint32_t;
+const WCHAR = ctypes.char16_t;
+const BOOL = ctypes.int;
 
 var WindowsVersionInfo = {
   UNKNOWN_VERSION_INFO: {
@@ -62,13 +57,13 @@ var WindowsVersionInfo = {
     // This structure is described at:
     // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
     const SZCSDVERSIONLENGTH = 128;
-    const OSVERSIONINFOEXW = new lazy.ctypes.StructType("OSVERSIONINFOEXW", [
+    const OSVERSIONINFOEXW = new ctypes.StructType("OSVERSIONINFOEXW", [
       { dwOSVersionInfoSize: DWORD },
       { dwMajorVersion: DWORD },
       { dwMinorVersion: DWORD },
       { dwBuildNumber: DWORD },
       { dwPlatformId: DWORD },
-      { szCSDVersion: lazy.ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH) },
+      { szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH) },
       { wServicePackMajor: WORD },
       { wServicePackMinor: WORD },
       { wSuiteMask: WORD },
@@ -78,7 +73,7 @@ var WindowsVersionInfo = {
 
     let kernel32;
     try {
-      kernel32 = lazy.ctypes.open("kernel32");
+      kernel32 = ctypes.open("kernel32");
     } catch (err) {
       return throwOrUnknown(
         new WindowsVersionInfo.CannotOpenKernelError(
@@ -90,7 +85,7 @@ var WindowsVersionInfo = {
     try {
       let GetVersionEx = kernel32.declare(
         "GetVersionExW",
-        lazy.ctypes.winapi_abi,
+        ctypes.winapi_abi,
         BOOL,
         OSVERSIONINFOEXW.ptr
       );

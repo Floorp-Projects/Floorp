@@ -70,11 +70,6 @@
 #else
 #  define WASM_EXTENDED_CONST_ENABLED 0
 #endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-#  define WASM_EXCEPTIONS_ENABLED 1
-#else
-#  define WASM_EXCEPTIONS_ENABLED 0
-#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 #  define WASM_FUNCTION_REFERENCES_ENABLED 1
 #else
@@ -116,7 +111,7 @@
   TENTATIVE(                                                                  \
       /* capitalized name   */ Exceptions,                                    \
       /* lower case name    */ exceptions,                                    \
-      /* compile predicate  */ WASM_EXCEPTIONS_ENABLED,                       \
+      /* compile predicate  */ true,                                          \
       /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
       /* flag predicate     */ !IsFuzzingCranelift(cx),                       \
       /* shell flag         */ "exceptions",                                  \

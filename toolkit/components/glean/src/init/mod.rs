@@ -113,10 +113,10 @@ fn fog_init_internal(
 
     log::debug!("Configuration: {:#?}", conf);
 
-    glean::initialize(conf, client_info);
-
     // Register all custom pings before we initialize.
     fog::pings::register_pings();
+
+    glean::initialize(conf, client_info);
 
     fog::metrics::fog::initialization.stop();
 

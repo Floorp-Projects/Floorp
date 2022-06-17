@@ -1,0 +1,147 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: New Tab Page'
+
+newtab:
+  locale:
+    type: string
+    description: >
+      The application's locale as of when newtab's TelemetryFeed was init.
+      Comes from `Services.local.appLocaleAsBCP47`.
+      Looks like `en-US`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    send_in_pings:
+      - newtab
+    lifetime: application
+
+  opened:
+    type: event
+    description: >
+      Recorded when newtab UI is opened via `about:newtab` or `about:home` or
+      `about:welcome` and has been made visible (see `visibility_event_rcvd_ts`
+      in
+      [detect-user-session-start.js](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/lib/detect-user-session-start.js)).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_visit_id: &newtab_visit_id
+        description: >
+          The id of this newtab visit.
+          Allows you to separate multiple simultaneous newtabs and
+          build an event timeline of actions taken from this newtab.
+        type: string
+      source:
+        description: >
+          The source that opened this newtab.
+          One of
+            * `about:newtab`
+            * `about:home`
+            * `about:welcome`
+            * `other`
+          (See `ONBOARDING_ALLOWED_PAGE_VALUES`).
+        type: string
+    send_in_pings:
+      - newtab
+
+  closed:
+    type: event
+    description: >
+      Recorded when newtab UI is closed by
+      * navigation
+      * closing the tab
+
+      Doesn't mean that the newtab was ever visible to a user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+    send_in_pings:
+      - newtab
+
+topsites:
+  impression:
+    type: event
+    description: >
+      Recorded when topsite tiles are loaded.
+      Presently only happens for sponsored tiles.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: &is_sponsored
+        description: Whether the topsite tile was sponsored.
+        type: boolean
+    send_in_pings:
+      - newtab
+
+  click:
+    type: event
+    description: >
+      Recorded when a topsite tile is clicked.
+      Presently only happens for sponsored tiles.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: *is_sponsored
+    send_in_pings:
+      - newtab

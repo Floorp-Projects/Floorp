@@ -18,7 +18,6 @@ includes = ["nsTArray.h", "nsString.h"]
 
 [export.rename]
 "ThinVec" = "nsTArray"
-"nsCStringRepr" = "nsCString"
 
 [parse]
 parse_deps = true

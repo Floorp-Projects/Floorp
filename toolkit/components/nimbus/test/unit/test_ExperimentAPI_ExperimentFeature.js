@@ -54,6 +54,17 @@ const FAKE_FEATURE_REMOTE_VALUE = {
 };
 
 /**
+ * FOG requires a little setup in order to test it
+ */
+add_setup(function test_setup() {
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
+
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+});
+
+/**
  * # ExperimentFeature.isEnabled
  */
 
@@ -180,6 +191,10 @@ add_task(
         ],
       },
     });
+
+    // Clear any pre-existing data in Glean
+    Services.fog.testResetFOG();
+
     const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
     await manager.store.ready();
@@ -217,9 +232,38 @@ add_task(
 
     Assert.ok(exposureSpy.notCalled, "should not emit exposure by default");
 
+    // Check that there aren't any Glean exposure events yet
+    var exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+    Assert.equal(
+      undefined,
+      exposureEvents,
+      "no Glean exposure events before exposure"
+    );
+
     featureInstance.recordExposureEvent();
 
     Assert.ok(exposureSpy.calledOnce, "should emit exposure event");
+
+    // Check that the Glean exposure event was recorded.
+    exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+    // We expect only one event
+    Assert.equal(1, exposureEvents.length);
+    // And that one event matches the expected
+    Assert.equal(
+      expected.slug,
+      exposureEvents[0].extra.experiment,
+      "Glean.nimbusEvents.exposure recorded with correct experiment slug"
+    );
+    Assert.equal(
+      expected.branch.slug,
+      exposureEvents[0].extra.branch,
+      "Glean.nimbusEvents.exposure recorded with correct branch slug"
+    );
+    Assert.equal(
+      expected.branch.features[0].featureId,
+      exposureEvents[0].extra.feature_id,
+      "Glean.nimbusEvents.exposure recorded with correct feature id"
+    );
 
     sandbox.restore();
   }
@@ -274,11 +318,22 @@ add_task(async function test_record_exposure_event() {
   const getExperimentSpy = sandbox.spy(ExperimentAPI, "getExperimentMetaData");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
+  // Clear any pre-existing data in Glean
+  Services.fog.testResetFOG();
+
   featureInstance.recordExposureEvent();
 
   Assert.ok(
     exposureSpy.notCalled,
     "should not emit an exposure event when no experiment is active"
+  );
+
+  // Check that there aren't any Glean exposure events yet
+  var exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+  Assert.equal(
+    undefined,
+    exposureEvents,
+    "no Glean exposure events before exposure"
   );
 
   await manager.store.addEnrollment(
@@ -303,6 +358,27 @@ add_task(async function test_record_exposure_event() {
   );
   Assert.equal(getExperimentSpy.callCount, 2, "Should be called every time");
 
+  // Check that the Glean exposure event was recorded.
+  exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+  // We expect only one event
+  Assert.equal(1, exposureEvents.length);
+  // And that one event matches the expected
+  Assert.equal(
+    "blah",
+    exposureEvents[0].extra.experiment,
+    "Glean.nimbusEvents.exposure recorded with correct experiment slug"
+  );
+  Assert.equal(
+    "treatment",
+    exposureEvents[0].extra.branch,
+    "Glean.nimbusEvents.exposure recorded with correct branch slug"
+  );
+  Assert.equal(
+    "foo",
+    exposureEvents[0].extra.feature_id,
+    "Glean.nimbusEvents.exposure recorded with correct feature id"
+  );
+
   sandbox.restore();
 });
 
@@ -312,6 +388,9 @@ add_task(async function test_record_exposure_event_once() {
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  // Clear any pre-existing data in Glean
+  Services.fog.testResetFOG();
 
   await manager.store.addEnrollment(
     ExperimentFakes.experiment("blah", {
@@ -336,6 +415,11 @@ add_task(async function test_record_exposure_event_once() {
     "Should emit a single exposure event when the once param is true."
   );
 
+  // Check that the Glean exposure event was recorded.
+  let exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+  // We expect only one event
+  Assert.equal(1, exposureEvents.length);
+
   sandbox.restore();
 });
 
@@ -344,6 +428,10 @@ add_task(async function test_allow_multiple_exposure_events() {
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+
+  // Clear any pre-existing data in Glean
+  Services.fog.testResetFOG();
+
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: "foo",
@@ -362,6 +450,11 @@ add_task(async function test_allow_multiple_exposure_events() {
     3,
     "Should emit an exposure event for each function call"
   );
+
+  // Check that the Glean exposure event was recorded.
+  let exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
+  // We expect 3 events
+  Assert.equal(3, exposureEvents.length);
 
   sandbox.restore();
   await doExperimentCleanup();

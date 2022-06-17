@@ -95,8 +95,9 @@ class DownscalingFilter final : public SurfaceFilter {
 
     mInputSize = aConfig.mInputSize;
     gfx::IntSize outputSize = mNext.InputSize();
-    mScale = gfxSize(double(mInputSize.width) / outputSize.width,
-                     double(mInputSize.height) / outputSize.height);
+    mScale =
+        gfx::MatrixScalesDouble(double(mInputSize.width) / outputSize.width,
+                                double(mInputSize.height) / outputSize.height);
     mHasAlpha = aConfig.mFormat == gfx::SurfaceFormat::OS_RGBA;
 
     ReleaseWindow();
@@ -154,7 +155,7 @@ class DownscalingFilter final : public SurfaceFilter {
 
     if (invalidRect) {
       // Compute the input space invalid rect by scaling.
-      invalidRect->mInputSpaceRect.ScaleRoundOut(mScale.width, mScale.height);
+      invalidRect->mInputSpaceRect.ScaleRoundOut(mScale.xScale, mScale.yScale);
     }
 
     return invalidRect;
@@ -285,10 +286,10 @@ class DownscalingFilter final : public SurfaceFilter {
 
   Next mNext;  /// The next SurfaceFilter in the chain.
 
-  gfx::IntSize mInputSize;  /// The size of the input image.
-  gfxSize mScale;           /// The scale factors in each dimension.
-                            /// Computed from @mInputSize and
-                            /// the next filter's input size.
+  gfx::IntSize mInputSize;         /// The size of the input image.
+  gfx::MatrixScalesDouble mScale;  /// The scale factors in each dimension.
+                                   /// Computed from @mInputSize and
+                                   /// the next filter's input size.
 
   UniquePtr<uint8_t[]> mRowBuffer;  /// The buffer into which input is written.
   UniquePtr<uint8_t*[]> mWindow;    /// The last few rows which were written.

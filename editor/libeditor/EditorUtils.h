@@ -346,6 +346,13 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   void EnsureRangesInTextNode(const dom::Text& aTextNode);
 
   /**
+   * Extend ranges to wrap lines to handle block level edit actions such as
+   * updating the block parent or indent/outdent around the selection.
+   */
+  void ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction aEditSubAction, const dom::Element& aEditingHost);
+
+  /**
    * Check whether the range is in aEditingHost and both containers of start and
    * end boundaries of the range are editable.
    */

@@ -5462,7 +5462,7 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
     return {GetDefaultBackgroundColorToDraw(), false};
   }
 
-  ComputedStyle* bgStyle =
+  const ComputedStyle* bgStyle =
       nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
   // XXX We should really be passing the canvasframe, not the root element
   // style frame but we don't have access to the canvasframe here. It isn't

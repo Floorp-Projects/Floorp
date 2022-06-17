@@ -1354,8 +1354,6 @@ class NativeObject : public JSObject {
   inline void ensureDenseInitializedLength(uint32_t index, uint32_t extra);
 
   void setDenseElement(uint32_t index, const Value& val) {
-    // Note: Streams code can call this for the internal ListObject type with
-    // MagicValue(JS_WRITABLESTREAM_CLOSE_RECORD).
     MOZ_ASSERT_IF(val.isMagic(), val.whyMagic() != JS_ELEMENTS_HOLE);
     setDenseElementUnchecked(index, val);
   }

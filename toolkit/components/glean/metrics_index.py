@@ -14,6 +14,8 @@
 metrics_yamls = [
     "browser/base/content/metrics.yaml",
     "browser/components/metrics.yaml",
+    "browser/components/newtab/metrics.yaml",
+    "browser/components/search/metrics.yaml",
     "browser/modules/metrics.yaml",
     "dom/media/metrics.yaml",
     "dom/metrics.yaml",
@@ -21,6 +23,7 @@ metrics_yamls = [
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/glean/tests/test_metrics.yaml",
+    "toolkit/components/nimbus/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
     "toolkit/components/search/metrics.yaml",
     "toolkit/components/telemetry/metrics.yaml",
@@ -31,6 +34,7 @@ metrics_yamls = [
 # The list of all Glean pings.yaml files, relative to the top src dir.
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 pings_yamls = [
+    "browser/components/newtab/pings.yaml",
     "toolkit/components/glean/pings.yaml",
     "toolkit/components/glean/tests/test_pings.yaml",
     "toolkit/mozapps/update/pings.yaml",

@@ -44,8 +44,6 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/glean/bindings/Glean.h"
-#include "mozilla/glean/bindings/GleanPings.h"
 #include "Units.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
@@ -90,6 +88,11 @@ class PromiseDocumentFlushedResolver;
 namespace mozilla {
 class AbstractThread;
 class ErrorResult;
+
+namespace glean {
+class Glean;
+class GleanPings;
+}  // namespace glean
 
 namespace hal {
 enum class ScreenOrientation : uint32_t;

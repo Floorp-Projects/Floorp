@@ -429,6 +429,14 @@ class _ExperimentManager {
       enrollmentId:
         enrollment.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
+    // Sent Glean event equivalent
+    Glean.nimbusEvents.unenrollment.record({
+      experiment: slug,
+      branch: enrollment.branch.slug,
+      enrollment_id:
+        enrollment.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      reason,
+    });
 
     lazy.log.debug(`Recipe unenrolled: ${slug}`);
   }
@@ -459,6 +467,17 @@ class _ExperimentManager {
     lazy.TelemetryEvents.sendEvent(eventName, TELEMETRY_EVENT_OBJECT, slug, {
       reason,
     });
+    if (eventName == "enrollFailed") {
+      Glean.nimbusEvents.enrollFailed.record({
+        experiment: slug,
+        reason,
+      });
+    } else if (eventName == "unenrollFailed") {
+      Glean.nimbusEvents.unenrollFailed.record({
+        experiment: slug,
+        reason,
+      });
+    }
   }
 
   /**
@@ -471,6 +490,13 @@ class _ExperimentManager {
       branch: branch.slug,
       enrollmentId:
         enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+    });
+    Glean.nimbusEvents.enrollment.record({
+      experiment: slug,
+      branch: branch.slug,
+      enrollment_id:
+        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      experiment_type: experimentType,
     });
   }
 

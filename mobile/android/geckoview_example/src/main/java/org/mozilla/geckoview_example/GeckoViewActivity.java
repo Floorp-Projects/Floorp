@@ -812,7 +812,8 @@ public class GeckoViewActivity extends AppCompatActivity
                 Intent clickIntent = new Intent(GeckoViewActivity.this, GeckoViewActivity.class);
                 clickIntent.putExtra("onClick", notification);
                 PendingIntent dismissIntent =
-                    PendingIntent.getActivity(GeckoViewActivity.this, mLastID, clickIntent, 0);
+                    PendingIntent.getActivity(
+                        GeckoViewActivity.this, mLastID, clickIntent, PendingIntent.FLAG_IMMUTABLE);
 
                 NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(GeckoViewActivity.this, CHANNEL_ID)
