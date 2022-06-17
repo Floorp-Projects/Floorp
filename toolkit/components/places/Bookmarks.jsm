@@ -1905,7 +1905,7 @@ async function updateBookmark(
 
   if (info.hasOwnProperty("url")) {
     // Ensure a page exists in moz_places for this URL.
-    await maybeInsertPlace(db, info.url);
+    await lazy.PlacesUtils.maybeInsertPlace(db, info.url);
     // Update tuples for the update query.
     tuples.set("url", {
       value: info.url.href,
@@ -2122,7 +2122,7 @@ function insertBookmark(item, parent) {
         if (item.type == Bookmarks.TYPE_BOOKMARK) {
           // Ensure a page exists in moz_places for this URL.
           // The IGNORE conflict can trigger on `guid`.
-          await maybeInsertPlace(db, item.url);
+          await lazy.PlacesUtils.maybeInsertPlace(db, item.url);
         }
 
         // Adjust indices.
@@ -2214,7 +2214,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
     "Bookmarks.jsm: insertBookmarkTree",
     async function(db) {
       await db.executeTransaction(async function transaction() {
-        await maybeInsertManyPlaces(db, urls);
+        await lazy.PlacesUtils.maybeInsertManyPlaces(db, urls);
 
         let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
           source
@@ -3335,52 +3335,6 @@ var removeFoldersContents = async function(db, folderGuids, options) {
 
   return itemsRemoved.filter(item => "url" in item).map(item => item.url);
 };
-
-/**
- * Tries to insert a new place if it doesn't exist yet.
- * @param url
- *        A valid URL object.
- * @return {Promise} resolved when the operation is complete.
- */
-async function maybeInsertPlace(db, url) {
-  // The IGNORE conflict can trigger on `guid`.
-  await db.executeCached(
-    `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
-     VALUES (:url, hash(:url), :rev_host, 0, :frecency,
-             IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
-                    GENERATE_GUID()))
-    `,
-    {
-      url: url.href,
-      rev_host: lazy.PlacesUtils.getReversedHost(url),
-      frecency: url.protocol == "place:" ? 0 : -1,
-    }
-  );
-  await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
-}
-
-/**
- * Tries to insert a new place if it doesn't exist yet.
- * @param db
- *        The database to use
- * @param urls
- *        An array with all the url objects to insert.
- * @return {Promise} resolved when the operation is complete.
- */
-async function maybeInsertManyPlaces(db, urls) {
-  await db.executeCached(
-    `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid) VALUES
-     (:url, hash(:url), :rev_host, 0, :frecency,
-     IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :maybeguid))`,
-    urls.map(url => ({
-      url: url.href,
-      rev_host: lazy.PlacesUtils.getReversedHost(url),
-      frecency: url.protocol == "place:" ? 0 : -1,
-      maybeguid: lazy.PlacesUtils.history.makeGuid(),
-    }))
-  );
-  await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
-}
 
 // Indicates whether we should write a tombstone for an item that has been
 // uploaded to the server. We ignore "NEW" and "UNKNOWN" items: "NEW" items
