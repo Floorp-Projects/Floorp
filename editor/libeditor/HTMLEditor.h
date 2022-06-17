@@ -1231,31 +1231,6 @@ class HTMLEditor final : public EditorBase,
       CollectNonEditableNodes aCollectNonEditableNodes);
 
   /**
-   * GetCurrentHardLineStartPoint() returns start point of hard line
-   * including aPoint.  If the line starts after a `<br>` element, returns
-   * next sibling of the `<br>` element.  If the line is first line of a block,
-   * returns point of the block.
-   * NOTE: The result may be point of editing host.  I.e., the container may
-   *       be outside of editing host.
-   */
-  template <typename EditorDOMPointType>
-  EditorDOMPoint GetCurrentHardLineStartPoint(
-      const EditorDOMPointType& aPoint, EditSubAction aEditSubAction,
-      const Element& aEditingHost) const;
-
-  /**
-   * GetCurrentHardLineEndPoint() returns end point of hard line including
-   * aPoint.  If the line ends with a visible `<br>` element, returns the point
-   * after the `<br>` element.  If the line ends with a preformatted linefeed,
-   * returns the point after the linefeed unless it's an invisible linebreak
-   * immediately before a block boundary.  If the line ends with a block
-   * boundary, returns the block.
-   */
-  template <typename EditorDOMPointType>
-  EditorDOMPoint GetCurrentHardLineEndPoint(const EditorDOMPointType& aPoint,
-                                            const Element& aEditingHost) const;
-
-  /**
    * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
    * which may be expanded from the given range to include adjuscent
    * white-spaces.  If this fails handling something, returns nullptr.
