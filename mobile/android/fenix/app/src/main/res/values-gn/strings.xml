@@ -16,6 +16,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Eheka térã ehai kundaharape</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Emoinge ñe’ẽ ehekaséva</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Umi tendayke ijurujáva ojehecháta ápe.</string>
 
@@ -40,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Techaukaha ramoguáva</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Techaukaha oñeñongaturamóva</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Techaukapaite</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -240,8 +240,6 @@
     <string name="search_suggestions_onboarding_title">¿Emoneĩ jehekarã tembiapo ñemiguápe?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s omohekuãta ehaíva guive kundaharape rendápe nde hekaha ijypykuéva ndive.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Kuaave</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Eheka %s</string>
@@ -432,6 +430,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Tembiasakue jehepyme’ẽguáva</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Mba’erechaha rugua</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -740,7 +740,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Eñongatu tendayke atyhápe</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Poravorã rendayke</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Poravorã rendayke</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Emboguete atygua</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1195,40 +1195,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Aty mboguepyre</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview ko’ág̃a ha’e Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly hekopyahu opaite pyharekue ha oreko tembiapoite pyahu ñeha’ãmby.
-        Upéicharõ jepe, ikatu sa’ive hekopyta. Emboguejy ore kundaha beta emba’apo porãve hag̃ua.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Eguereko Firefox Android Beta peg̃uarã</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly ovákuri</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ko tembipuru’i ndahekopyahuvéima tekorosãrã. Ndoipuruvéima ko tembipuru’i ha ováma Nightly pyahúpe.
-        \n\nEmbohasa hag̃ua techaukaha, emoñepyrũ tembiapo ha tembiasakue ambue tembipuru’ípe, emoheñói Firefox mba’ete pyahúpe.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Eva Nightly pyahúpe</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly ovákuri</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ko tembipuru’i ndahekopyahuvéima tekorosãrã. Emboguejy Nightly pyahu ha anive eipuru ko tembipuru’i.
-        \n\nEmbohasa hag̃ua techaukaha, emoñepyrũ tembiapo ha tembiasakue ambue tembipuru’ípe, emoheñói Firefox mba’ete pyahu.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Ereko Nightly pyahu</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">¡Eg̃uahẽporãite %s-pe!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Embojuehe Firefox mba’e’oka pa’ũme</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Embojuehe %1$s mba’e’oka ndive</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Egueru techaukaha, tembiasakue ha ñe’ẽñemi %1$s-pe ko mba’e’okápe.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1655,8 +1627,10 @@
     <string name="addresses_street_address">Kundaharape</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Táva</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Tetãvore</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Tetãpehẽ</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Tendaréra papapy</string>
     <!-- The header for the country or region of an address -->
@@ -1722,19 +1696,6 @@
     <string name="search_edit_custom_engine_success_message">Ñongatu %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Mboguete %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Eg̃uahẽporãite peteĩ %s ipyahuetévape</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Nera’arõ kundahára ipyahuetéva, oikóva ha hembiapoite porãvéva ne pytyvõ hag̃ua emba’apove hag̃ua ñandutípe.\n\nEha’arõ hekopyahu aja %s nde</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Hekopyahuhína %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Ñepyrũ %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Ovapaitéma</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Emoneĩ hag̃ua:</string>
@@ -1832,8 +1793,6 @@
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Ndererekói tendayke ijurujáva Firefox-pe ambue ne mba’e’okápe.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Ndererekói tendayke ijurujáva %1$s-pe ambue ne mba’e’okápe.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Ehecha tendayke rysýi ambue ne mba’e’okápe.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1884,6 +1843,11 @@
     <string name="inactive_tabs_title">Tendayke ojepuru’ỹva</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Embotypaite tendayke ojepuru’ỹva</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Emyasãi tendayke ojepuru’ỹva</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Emomichĩ tendayke ojepuru’ỹva</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
