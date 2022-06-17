@@ -67,6 +67,7 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 });
@@ -427,7 +428,7 @@ class TelemetryFeed {
     Glean.newtab.closed.record({ newtab_session_id: session.session_id });
     if (
       this.telemetryEnabled &&
-      Services.prefs.getBoolPref("browser.newtabpage.ping.enabled", true)
+      (lazy.NimbusFeatures.glean.getVariable("newtabPingEnabled") ?? true)
     ) {
       GleanPings.newtab.submit("newtab_session_end");
     }
