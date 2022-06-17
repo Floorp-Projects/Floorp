@@ -8,30 +8,15 @@
 const URL = "about:blank";
 const TEST_URL = "http://test2.example.org/";
 let windowActorOptions = {
-  jsm: {
-    parent: {
-      moduleURI: "resource://testing-common/TestWindowParent.jsm",
-    },
-    child: {
-      moduleURI: "resource://testing-common/TestWindowChild.jsm",
-    },
+  parent: {
+    moduleURI: "resource://testing-common/TestWindowParent.jsm",
   },
-  "sys.mjs": {
-    parent: {
-      esModuleURI: "resource://testing-common/TestWindowParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource://testing-common/TestWindowChild.sys.mjs",
-    },
+  child: {
+    moduleURI: "resource://testing-common/TestWindowChild.jsm",
   },
 };
 
 function declTest(name, cfg) {
-  declTestWithOptions(name, cfg, "jsm");
-  declTestWithOptions(name, cfg, "sys.mjs");
-}
-
-function declTestWithOptions(name, cfg, fileExt) {
   let {
     url = "about:blank",
     allFrames = false,
@@ -47,8 +32,8 @@ function declTestWithOptions(name, cfg, fileExt) {
   // Build the actor options object which will be used to register & unregister
   // our window actor.
   let actorOptions = {
-    parent: { ...windowActorOptions[fileExt].parent },
-    child: { ...windowActorOptions[fileExt].child, events, observers },
+    parent: { ...windowActorOptions.parent },
+    child: { ...windowActorOptions.child, events, observers },
   };
   actorOptions.allFrames = allFrames;
   actorOptions.includeChrome = includeChrome;
@@ -71,7 +56,7 @@ function declTestWithOptions(name, cfg, fileExt) {
     try {
       await BrowserTestUtils.withNewTab(url, async browser => {
         info("browser ready");
-        await Promise.resolve(test(browser, window, fileExt));
+        await Promise.resolve(test(browser, window));
       });
     } finally {
       // Unregister the actor after the test is complete.
