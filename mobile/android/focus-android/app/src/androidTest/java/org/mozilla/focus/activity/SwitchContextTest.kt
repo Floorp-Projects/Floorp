@@ -13,7 +13,6 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,12 +66,13 @@ class SwitchContextTest {
 
     @SmokeTest
     @Test
-    @Ignore("Failing. See https://github.com/mozilla-mobile/focus-android/issues/6486")
     fun notificationOpenButtonTest() {
         val testPage = TestAssetHelper.getGenericAsset(webServer)
 
         searchScreen {
-        }.loadPage(testPage.url) { }
+        }.loadPage(testPage.url) {
+            verifyPageContent(testPage.content)
+        }
         // Send app to background
         pressHomeKey()
         // Pull down system bar and select Open
@@ -87,7 +87,6 @@ class SwitchContextTest {
 
     @SmokeTest
     @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun switchFromSettingsToFocusTest() {
         // Initialize UiDevice instance
         val LAUNCH_TIMEOUT = 5000
