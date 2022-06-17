@@ -37,3 +37,4 @@ legacy.telemetry:
     send_in_pings:
       - 'metrics'
       - 'events'
+      - 'newtab'

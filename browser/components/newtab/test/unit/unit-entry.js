@@ -580,6 +580,24 @@ const TEST_GLOBAL = {
   },
   Logger,
   getFxAccountsSingleton() {},
+  Glean: {
+    newtab: {
+      opened: {
+        record() {},
+      },
+      closed: {
+        record() {},
+      },
+    },
+    topsites: {
+      impression: {
+        record() {},
+      },
+      click: {
+        record() {},
+      },
+    },
+  },
 };
 overrider.set(TEST_GLOBAL);
 
