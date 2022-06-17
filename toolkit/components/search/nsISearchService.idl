@@ -291,13 +291,17 @@ interface nsISearchService : nsISupports
    * Adds a new search engine for enterprises.
    *
    * @param details
-   *        An object that simulates the WebExtension manifest structure:
+   *        An object with the following details:
    *
-   *        {iconURL} Optional
-   *        {description} Optional
-   *        {chrome_settings_overrides} This should contain a {search_provider}
-   *                                    structure that mimics the WebExtension
-   *                                    manifest structure.
+   *        {iconURL} Optional. The icon to use for the engine.
+   *        {description} Optional. The description of the engine.
+   *        {name} The name of the engine
+   *        {encoding} Optional. The encoding of the engine.
+   *        {search_url} The search url for the engine.
+   *        {keyword} Optional. The keyword for the engine.
+   *        {search_url_post_params} Optional. Post parameters for the search
+   *          engine submission.
+   *        {suggest_url} The suggestion url for the engine.
    */
   Promise addPolicyEngine(in jsval details);
 
@@ -305,13 +309,17 @@ interface nsISearchService : nsISupports
    * Updates an existing engine for enterprises.
    *
    * @param details
-   *        An object that simulates the WebExtension manifest structure:
+   *        An object with the following details:
    *
-   *        {iconURL} Optional
-   *        {description} Optional
-   *        {chrome_settings_overrides} This should contain a {search_provider}
-   *                                    structure that mimics the WebExtension
-   *                                    manifest structure.
+   *        {iconURL} Optional. The icon to use for the engine.
+   *        {description} Optional. The description of the engine.
+   *        {name} The name of the engine
+   *        {encoding} Optional. The encoding of the engine.
+   *        {search_url} The search url for the engine.
+   *        {keyword} Optional. The keyword for the engine.
+   *        {search_url_post_params} Optional. Post parameters for the search
+   *          engine submission.
+   *        {suggest_url} The suggestion url for the engine.
    */
   Promise updatePolicyEngine(in jsval details);
 

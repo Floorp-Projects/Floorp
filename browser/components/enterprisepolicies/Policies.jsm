@@ -2046,22 +2046,17 @@ var Policies = {
                 let manifest = {
                   description: newEngine.Description,
                   iconURL: newEngine.IconURL ? newEngine.IconURL.href : null,
-                  chrome_settings_overrides: {
-                    search_provider: {
-                      name: newEngine.Name,
-                      // If the encoding is not specified or is falsy, the
-                      // search service will fall back to the default encoding.
-                      encoding: newEngine.Encoding,
-                      search_url: encodeURI(newEngine.URLTemplate),
-                      keyword: newEngine.Alias,
-                      search_url_post_params:
-                        newEngine.Method == "POST"
-                          ? newEngine.PostData
-                          : undefined,
-                      suggest_url: newEngine.SuggestURLTemplate,
-                    },
-                  },
+                  name: newEngine.Name,
+                  // If the encoding is not specified or is falsy, the
+                  // search service will fall back to the default encoding.
+                  encoding: newEngine.Encoding,
+                  search_url: encodeURI(newEngine.URLTemplate),
+                  keyword: newEngine.Alias,
+                  search_url_post_params:
+                    newEngine.Method == "POST" ? newEngine.PostData : undefined,
+                  suggest_url: newEngine.SuggestURLTemplate,
                 };
+
                 let engine = Services.search.getEngineByName(newEngine.Name);
                 if (engine) {
                   try {
