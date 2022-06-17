@@ -717,7 +717,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 // static
 CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
-    Element& aEditingHost) {
+    const Element& aEditingHost) {
   if (MOZ_UNLIKELY(NS_WARN_IF(!aPointToInsert.IsSet()))) {
     return CreateElementResult(NS_ERROR_INVALID_ARG);
   }

@@ -1257,7 +1257,12 @@ NS_IMETHODIMP HTMLEditor::InsertLineBreak() {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = InsertParagraphSeparatorAsSubAction();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  EditActionResult result = InsertParagraphSeparatorAsSubAction(*editingHost);
   NS_WARNING_ASSERTION(
       result.Succeeded(),
       "HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
@@ -1297,7 +1302,12 @@ nsresult HTMLEditor::InsertParagraphSeparatorAsAction(
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = InsertParagraphSeparatorAsSubAction();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  EditActionResult result = InsertParagraphSeparatorAsSubAction(*editingHost);
   NS_WARNING_ASSERTION(
       result.Succeeded(),
       "HTMLEditor::InsertParagraphSeparatorAsSubAction() failed");
@@ -2153,6 +2163,12 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
     return EditorBase::ToGenericNSResult(rv);
   }
 
+  // TODO: Computing the editing host here makes the `execCommand` in
+  //       docshell/base/crashtests/file_432114-2.xhtml cannot run
+  //       `DOMNodeRemoved` event listener with deleting the bogus <br> element.
+  //       So that it should be rewritten with different mutation event listener
+  //       since we'd like to stop using it.
+
   nsAutoString lowerCaseTagName(aParagraphFormat);
   ToLowerCase(lowerCaseTagName);
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
@@ -2165,6 +2181,7 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
                          "SelectAllOfCurrentList::No) failed");
     return EditorBase::ToGenericNSResult(result.Rv());
   }
+
   rv = FormatBlockContainerAsSubAction(*tagName);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::FormatBlockContainerAsSubAction() failed");
@@ -2573,7 +2590,12 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RemoveListAtSelectionAsSubAction();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  rv = RemoveListAtSelectionAsSubAction(*editingHost);
   NS_WARNING_ASSERTION(NS_FAILED(rv),
                        "HTMLEditor::RemoveListAtSelectionAsSubAction() failed");
   return rv;
@@ -2642,7 +2664,11 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   // FormatBlockContainerWithTransaction() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = FormatBlockContainerWithTransaction(aTagName);
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (MOZ_UNLIKELY(!editingHost)) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+  rv = FormatBlockContainerWithTransaction(aTagName, *editingHost);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -2673,7 +2699,12 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = IndentAsSubAction();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  EditActionResult result = IndentAsSubAction(*editingHost);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "HTMLEditor::IndentAsSubAction() failed");
   return EditorBase::ToGenericNSResult(result.Rv());
@@ -2693,7 +2724,12 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = OutdentAsSubAction();
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  EditActionResult result = OutdentAsSubAction(*editingHost);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "HTMLEditor::OutdentAsSubAction() failed");
   return EditorBase::ToGenericNSResult(result.Rv());
@@ -2712,7 +2748,12 @@ nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  EditActionResult result = AlignAsSubAction(aAlignType);
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (!editingHost) {
+    return NS_SUCCESS_DOM_NO_OPERATION;
+  }
+
+  EditActionResult result = AlignAsSubAction(aAlignType, *editingHost);
   NS_WARNING_ASSERTION(result.Succeeded(),
                        "HTMLEditor::AlignAsSubAction() failed");
   return EditorBase::ToGenericNSResult(result.Rv());
@@ -5860,9 +5901,8 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
 }
 
 Result<EditorDOMPoint, nsresult>
-HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
-                                                       Element& aNewBlock,
-                                                       Element& aEditingHost) {
+HTMLEditor::CopyLastEditableChildStylesWithTransaction(
+    Element& aPreviousBlock, Element& aNewBlock, const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // First, clear out aNewBlock.  Contract is that we want only the styles

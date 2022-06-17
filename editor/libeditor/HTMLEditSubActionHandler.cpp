@@ -1481,7 +1481,8 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
   return rv;
 }
 
-EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
+EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
+    const Element& aEditingHost) {
   if (NS_WARN_IF(!mInitSucceeded)) {
     return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
@@ -1550,11 +1551,6 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     }
   }
 
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
-
   if (IsMailEditor()) {
     const auto pointToSplit = GetFirstSelectionStartPoint<EditorDOMPoint>();
     if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
@@ -1567,7 +1563,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
       // table cell boundaries?
       Result<EditorDOMPoint, nsresult> atNewBRElementOrError =
           HandleInsertParagraphInMailCiteElement(*mailCiteElement, pointToSplit,
-                                                 *editingHost);
+                                                 aEditingHost);
       if (MOZ_UNLIKELY(atNewBRElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::HandleInsertParagraphInMailCiteElement() failed");
@@ -1612,11 +1608,11 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // insert new paragraph nor <br> element.
   // XXX Currently, we don't support editing outside <body> element, but Blink
   //     does it.
-  if (editingHost->GetParentElement() &&
-      HTMLEditUtils::IsSimplyEditableNode(*editingHost->GetParentElement()) &&
+  if (aEditingHost.GetParentElement() &&
+      HTMLEditUtils::IsSimplyEditableNode(*aEditingHost.GetParentElement()) &&
       (!atStartOfSelection.IsInContentNode() ||
        !nsContentUtils::ContentIsFlattenedTreeDescendantOf(
-           atStartOfSelection.ContainerAsContent(), editingHost))) {
+           atStartOfSelection.ContainerAsContent(), &aEditingHost))) {
     return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
   }
 
@@ -1644,9 +1640,9 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   else if (!HTMLEditUtils::IsSplittableNode(*editableBlockElement)) {
     insertLineBreak =
         separator == ParagraphSeparator::br ||
-        !HTMLEditUtils::CanElementContainParagraph(*editingHost) ||
+        !HTMLEditUtils::CanElementContainParagraph(aEditingHost) ||
         HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
-                                                     *editingHost);
+                                                     aEditingHost);
   }
   // If the nearest block parent is a single-line container declared in
   // the execCommand spec and not the editing host, we should separate the
@@ -1675,8 +1671,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     // paragraph separator is set to "br" which is Gecko-specific mode.
     if (separator != ParagraphSeparator::br &&
         HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
-                                                     *editingHost)) {
-      nsresult rv = HandleInsertLinefeed(atStartOfSelection, *editingHost);
+                                                     aEditingHost)) {
+      nsresult rv = HandleInsertLinefeed(atStartOfSelection, aEditingHost);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::HandleInsertLinefeed() failed");
         return EditActionResult(rv);
@@ -1685,7 +1681,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     }
 
     CreateElementResult insertBRElementResult =
-        HandleInsertBRElement(atStartOfSelection, *editingHost);
+        HandleInsertBRElement(atStartOfSelection, aEditingHost);
     if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
       return EditActionHandled(insertBRElementResult.unwrapErr());
@@ -1707,7 +1703,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     // Therefore, even if it returns NS_OK, editor might have been destroyed
     // at restoring Selection.
     nsresult rv = FormatBlockContainerWithTransaction(
-        MOZ_KnownLive(HTMLEditor::ToParagraphSeparatorTagName(separator)));
+        MOZ_KnownLive(HTMLEditor::ToParagraphSeparatorTagName(separator)),
+        aEditingHost);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
         NS_WARN_IF(Destroyed())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -1738,7 +1735,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     if (NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(*editableBlockElement))) {
       // Didn't create a new block for some reason, fall back to <br>
       CreateElementResult insertBRElementResult =
-          HandleInsertBRElement(atStartOfSelection, *editingHost);
+          HandleInsertBRElement(atStartOfSelection, aEditingHost);
       if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
         return EditActionResult(insertBRElementResult.unwrapErr());
@@ -1793,12 +1790,12 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
 
   RefPtr<Element> maybeNonEditableListItem =
       HTMLEditUtils::GetClosestAncestorListItemElement(*editableBlockElement,
-                                                       editingHost);
+                                                       &aEditingHost);
   if (maybeNonEditableListItem &&
       HTMLEditUtils::IsSplittableNode(*maybeNonEditableListItem)) {
     Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
         HandleInsertParagraphInListItemElement(
-            *maybeNonEditableListItem, atStartOfSelection, *editingHost);
+            *maybeNonEditableListItem, atStartOfSelection, aEditingHost);
     if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       if (NS_WARN_IF(pointToPutCaretOrError.unwrapErr() ==
                      NS_ERROR_EDITOR_DESTROYED)) {
@@ -1884,7 +1881,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
   CreateElementResult insertBRElementResult =
-      HandleInsertBRElement(atStartOfSelection, *editingHost);
+      HandleInsertBRElement(atStartOfSelection, aEditingHost);
   if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
     return EditActionIgnored(insertBRElementResult.unwrapErr());
@@ -1898,7 +1895,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
 }
 
 CreateElementResult HTMLEditor::HandleInsertBRElement(
-    const EditorDOMPoint& aPointToBreak, Element& aEditingHost) {
+    const EditorDOMPoint& aPointToBreak, const Element& aEditingHost) {
   MOZ_ASSERT(aPointToBreak.IsSet());
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -2052,7 +2049,7 @@ CreateElementResult HTMLEditor::HandleInsertBRElement(
 }
 
 nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
-                                          Element& aEditingHost) {
+                                          const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPointToBreak.IsSet())) {
@@ -2194,7 +2191,7 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
 Result<EditorDOMPoint, nsresult>
 HTMLEditor::HandleInsertParagraphInMailCiteElement(
     Element& aMailCiteElement, const EditorDOMPoint& aPointToSplit,
-    Element& aEditingHost) {
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToSplit.IsSet());
   NS_ASSERTION(!HTMLEditUtils::IsEmptyNode(aMailCiteElement),
@@ -3037,9 +3034,13 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
   // ChangeSelectedHardLinesToList() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  result = ChangeSelectedHardLinesToList(MOZ_KnownLive(*listTagName),
-                                         MOZ_KnownLive(*listItemTagName),
-                                         aBulletType, aSelectAllOfCurrentList);
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (MOZ_UNLIKELY(!editingHost)) {
+    return EditActionIgnored(NS_SUCCESS_DOM_NO_OPERATION);
+  }
+  result = ChangeSelectedHardLinesToList(
+      MOZ_KnownLive(*listTagName), MOZ_KnownLive(*listItemTagName), aBulletType,
+      aSelectAllOfCurrentList, *editingHost);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -3051,14 +3052,10 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
 EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     nsAtom& aListElementTagName, nsAtom& aListItemElementTagName,
     const nsAString& aBulletType,
-    SelectAllOfCurrentList aSelectAllOfCurrentList) {
+    SelectAllOfCurrentList aSelectAllOfCurrentList,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
-
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
 
   AutoSelectionRestorer restoreSelectionLater(*this);
 
@@ -3073,11 +3070,11 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   } else {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(
-        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eCreateOrChangeList, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents,
+        extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -3134,7 +3131,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     CreateElementResult createNewListElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
             aListElementTagName, atStartOfSelection,
-            BRElementNextToSplitPoint::Keep, *editingHost,
+            BRElementNextToSplitPoint::Keep, aEditingHost,
             // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
             [&newListItemElement, &aListItemElementTagName](
                 HTMLEditor& aHTMLEditor, Element& aListElement,
@@ -3531,7 +3528,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       CreateElementResult createNewListElementResult =
           InsertElementWithSplittingAncestorsWithTransaction(
               aListElementTagName, atContent, BRElementNextToSplitPoint::Keep,
-              *editingHost);
+              aEditingHost);
       if (createNewListElementResult.isErr()) {
         NS_WARNING(
             nsPrintfCString(
@@ -3661,7 +3658,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   return EditActionHandled();
 }
 
-nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
+nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   EditActionResult result = CanHandleHTMLEditSubAction();
@@ -3699,11 +3697,11 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
   {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(
-        extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eCreateOrChangeList, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents,
+        extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -3752,13 +3750,9 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
   return NS_OK;
 }
 
-nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
+nsresult HTMLEditor::FormatBlockContainerWithTransaction(
+    nsAtom& blockType, const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-
-  const RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return NS_ERROR_FAILURE;
-  }
 
   if (!SelectionRef().IsCollapsed()) {
     nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -3775,11 +3769,11 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(
-        extendedSelectionRanges, EditSubAction::eCreateOrRemoveBlock);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eCreateOrRemoveBlock, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents,
+        extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrRemoveBlock, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -3826,7 +3820,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       // which is visually bad.
       if (nsCOMPtr<nsIContent> brContent = HTMLEditUtils::GetNextContent(
               pointToInsertBlock, {WalkTreeOption::IgnoreNonEditableNode},
-              editingHost)) {
+              &aEditingHost)) {
         if (brContent && brContent->IsHTMLElement(nsGkAtoms::br)) {
           AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
           nsresult rv = DeleteNodeWithTransaction(*brContent);
@@ -3868,7 +3862,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
             pointToInsertBlock,
             {WalkTreeOption::IgnoreNonEditableNode,
              WalkTreeOption::StopAtBlockBoundary},
-            editingHost)) {
+            &aEditingHost)) {
       if (maybeBRContent->IsHTMLElement(nsGkAtoms::br)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
         nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
@@ -3884,7 +3878,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     CreateElementResult createNewBlockElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
             blockType, pointToInsertBlock, BRElementNextToSplitPoint::Keep,
-            *editingHost);
+            aEditingHost);
     if (createNewBlockElementResult.isErr()) {
       NS_WARNING(
           nsPrintfCString(
@@ -3932,7 +3926,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   if (&blockType == nsGkAtoms::blockquote) {
     Result<EditorDOMPoint, nsresult> wrapContentsInBlockquoteElementsResult =
         WrapContentsInBlockquoteElementsWithTransaction(arrayOfContents,
-                                                        *editingHost);
+                                                        aEditingHost);
     if (wrapContentsInBlockquoteElementsResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction() "
@@ -3957,7 +3951,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   }
   Result<EditorDOMPoint, nsresult> wrapContentsInBlockElementResult =
       CreateOrChangeBlockContainerElement(arrayOfContents, blockType,
-                                          *editingHost);
+                                          aEditingHost);
   if (MOZ_UNLIKELY(wrapContentsInBlockElementResult.isErr())) {
     NS_WARNING("HTMLEditor::CreateOrChangeBlockContainerElement() failed");
     return wrapContentsInBlockElementResult.unwrapErr();
@@ -3996,7 +3990,7 @@ nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
   return rv;
 }
 
-EditActionResult HTMLEditor::IndentAsSubAction() {
+EditActionResult HTMLEditor::IndentAsSubAction(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(
@@ -4023,7 +4017,7 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
     return EditActionIgnored();
   }
 
-  result |= HandleIndentAtSelection();
+  result |= HandleIndentAtSelection(aEditingHost);
   if (result.Failed() || result.Canceled()) {
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "HTMLEditor::HandleIndentAtSelection() failed");
@@ -4182,7 +4176,8 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   return NS_OK;
 }
 
-EditActionResult HTMLEditor::HandleIndentAtSelection() {
+EditActionResult HTMLEditor::HandleIndentAtSelection(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
@@ -4219,18 +4214,18 @@ EditActionResult HTMLEditor::HandleIndentAtSelection() {
   }
 
   if (IsCSSEnabled()) {
-    nsresult rv = HandleCSSIndentAtSelection();
+    nsresult rv = HandleCSSIndentAtSelection(aEditingHost);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::HandleCSSIndentAtSelection() failed");
     return EditActionHandled(rv);
   }
-  rv = HandleHTMLIndentAtSelection();
+  rv = HandleHTMLIndentAtSelection(aEditingHost);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::HandleHTMLIndent() failed");
   return EditActionHandled(rv);
 }
 
-nsresult HTMLEditor::HandleCSSIndentAtSelection() {
+nsresult HTMLEditor::HandleCSSIndentAtSelection(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
@@ -4247,7 +4242,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelection() {
   // HandleCSSIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  nsresult rv = HandleCSSIndentAtSelectionInternal();
+  nsresult rv = HandleCSSIndentAtSelectionInternal(aEditingHost);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4257,14 +4252,10 @@ nsresult HTMLEditor::HandleCSSIndentAtSelection() {
   return rv;
 }
 
-nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
+nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
-
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return NS_ERROR_FAILURE;
-  }
 
   AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
@@ -4289,12 +4280,12 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   }
 
   if (arrayOfContents.IsEmpty()) {
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    EditSubAction::eIndent);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eIndent, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents, EditSubAction::eIndent,
-        CollectNonEditableNodes::Yes);
+        extendedSelectionRanges.Ranges(), arrayOfContents,
+        EditSubAction::eIndent, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "SplitInlinesAndCollectEditTargetNodes(EditSubAction::eIndent, "
@@ -4322,7 +4313,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     CreateElementResult createNewDivElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
             *nsGkAtoms::div, atStartOfSelection,
-            BRElementNextToSplitPoint::Keep, *editingHost);
+            BRElementNextToSplitPoint::Keep, aEditingHost);
     if (createNewDivElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4418,7 +4409,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       CreateElementResult createNewDivElementResult =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-              *editingHost);
+              aEditingHost);
       if (createNewDivElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4471,7 +4462,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   return NS_OK;
 }
 
-nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
+nsresult HTMLEditor::HandleHTMLIndentAtSelection(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
@@ -4488,7 +4479,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
   // HandleHTMLIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  nsresult rv = HandleHTMLIndentAtSelectionInternal();
+  nsresult rv = HandleHTMLIndentAtSelectionInternal(aEditingHost);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4498,13 +4489,9 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
   return rv;
 }
 
-nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
+nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return NS_ERROR_FAILURE;
-  }
 
   AutoSelectionRestorer restoreSelectionLater(*this);
 
@@ -4513,14 +4500,14 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
 
-  AutoTArray<OwningNonNull<nsRange>, 4> arrayOfRanges;
-  GetSelectionRangesExtendedToHardLineStartAndEnd(arrayOfRanges,
-                                                  EditSubAction::eIndent);
+  AutoRangeArray extendedSelectionRanges(SelectionRef());
+  extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction::eIndent, aEditingHost);
 
   // use these ranges to construct a list of nodes to act on.
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-      arrayOfRanges, arrayOfContents, EditSubAction::eIndent,
+      extendedSelectionRanges.Ranges(), arrayOfContents, EditSubAction::eIndent,
       CollectNonEditableNodes::Yes);
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -4547,7 +4534,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     CreateElementResult createNewBlockQuoteElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
             *nsGkAtoms::blockquote, atStartOfSelection,
-            BRElementNextToSplitPoint::Keep, *editingHost);
+            BRElementNextToSplitPoint::Keep, aEditingHost);
     if (createNewBlockQuoteElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4622,7 +4609,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // to act on that is still inside the same li.
     if (RefPtr<Element> listItem =
             HTMLEditUtils::GetClosestAncestorListItemElement(content,
-                                                             editingHost)) {
+                                                             &aEditingHost)) {
       if (indentedLI == listItem) {
         // already indented this list item
         continue;
@@ -4645,7 +4632,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         CreateElementResult createNewListElementResult =
             InsertElementWithSplittingAncestorsWithTransaction(
                 MOZ_KnownLive(*containerName), atListItem,
-                BRElementNextToSplitPoint::Keep, *editingHost);
+                BRElementNextToSplitPoint::Keep, aEditingHost);
         if (createNewListElementResult.isErr()) {
           NS_WARNING(nsPrintfCString("HTMLEditor::"
                                      "InsertElementWithSplittingAncestorsWithTr"
@@ -4709,7 +4696,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       CreateElementResult createNewBlockQuoteElementResult =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::blockquote, atContent,
-              BRElementNextToSplitPoint::Keep, *editingHost);
+              BRElementNextToSplitPoint::Keep, aEditingHost);
       if (createNewBlockQuoteElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4759,7 +4746,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   return NS_OK;
 }
 
-EditActionResult HTMLEditor::OutdentAsSubAction() {
+EditActionResult HTMLEditor::OutdentAsSubAction(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(
@@ -4786,7 +4773,7 @@ EditActionResult HTMLEditor::OutdentAsSubAction() {
     return EditActionIgnored();
   }
 
-  result |= HandleOutdentAtSelection();
+  result |= HandleOutdentAtSelection(aEditingHost);
   if (result.Failed() || result.Canceled()) {
     NS_WARNING_ASSERTION(result.Succeeded(),
                          "HTMLEditor::HandleOutdentAtSelection() failed");
@@ -4806,7 +4793,8 @@ EditActionResult HTMLEditor::OutdentAsSubAction() {
   return result.SetResult(rv);
 }
 
-EditActionResult HTMLEditor::HandleOutdentAtSelection() {
+EditActionResult HTMLEditor::HandleOutdentAtSelection(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
@@ -4821,7 +4809,7 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
   // Therefore, even if it returns NS_OK, the editor might have been destroyed
   // at restoring Selection.
   SplitRangeOffFromNodeResult outdentResult =
-      HandleOutdentAtSelectionInternal();
+      HandleOutdentAtSelectionInternal(aEditingHost);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -4900,7 +4888,8 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
   return EditActionHandled();
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
+SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
@@ -4913,12 +4902,12 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    EditSubAction::eOutdent);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eOutdent, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents, EditSubAction::eOutdent,
-        CollectNonEditableNodes::Yes);
+        extendedSelectionRanges.Ranges(), arrayOfContents,
+        EditSubAction::eOutdent, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
@@ -5622,7 +5611,8 @@ nsresult HTMLEditor::CreateStyleForInsertText(
   return rv;
 }
 
-EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
+EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType,
+                                              const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(
@@ -5695,7 +5685,7 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   // AlignContentsAtSelection() creates AutoSelectionRestorer.  Therefore,
   // we need to check whether we've been destroyed or not even if it returns
   // NS_OK.
-  rv = AlignContentsAtSelection(aAlignType);
+  rv = AlignContentsAtSelection(aAlignType, aEditingHost);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -5717,7 +5707,8 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType) {
   return EditActionHandled(rv);
 }
 
-nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
+nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
+                                              const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
@@ -5729,11 +5720,11 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(
-        extendedSelectionRanges, EditSubAction::eSetOrClearAlignment);
+    AutoRangeArray extendedSelectionRanges(SelectionRef());
+    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+        EditSubAction::eSetOrClearAlignment, aEditingHost);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        extendedSelectionRanges, arrayOfContents,
+        extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eSetOrClearAlignment, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -6394,42 +6385,6 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
   }
   return error.StealNSResult();
-}
-
-void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
-    nsTArray<OwningNonNull<nsRange>>& aOutArrayOfRanges,
-    EditSubAction aEditSubAction) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
-
-  Element* editingHost = ComputeEditingHost();
-
-  const uint32_t rangeCount = SelectionRef().RangeCount();
-  aOutArrayOfRanges.SetCapacity(rangeCount);
-  for (const uint32_t i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
-    // Make a new adjusted range to represent the appropriate block content.
-    // The basic idea is to push out the range endpoints to truly enclose the
-    // blocks that we will affect.  This call alters opRange.
-    nsRange* selectionRange = SelectionRef().GetRangeAt(i);
-    MOZ_ASSERT(selectionRange);
-    EditorDOMRange editorRange(*selectionRange);
-    if (!editorRange.IsPositioned() ||
-        !editorRange.EnsureNotInNativeAnonymousSubtree()) {
-      continue;  // ignore ranges which are in orphan fragment which were
-                 // disconnected from native anonymous subtrees
-    }
-    RefPtr<nsRange> extendedRange;
-    if (editingHost) {
-      extendedRange = AutoRangeArray::
-          CreateRangeWrappingStartAndEndLinesContainingBoundaries(
-              editorRange, aEditSubAction, *editingHost);
-    }
-    if (!extendedRange) {
-      extendedRange = selectionRange->CloneRange();
-    }
-    aOutArrayOfRanges.AppendElement(std::move(extendedRange));
-  }
 }
 
 template <typename EditorDOMRangeType>
@@ -7573,7 +7528,7 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
 Result<EditorDOMPoint, nsresult>
 HTMLEditor::HandleInsertParagraphInListItemElement(
     Element& aListItemElement, const EditorDOMPoint& aPointToSplit,
-    Element& aEditingHost) {
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(HTMLEditUtils::IsListItem(&aListItemElement));
 
@@ -10044,7 +9999,8 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
   return rv;
 }
 
-EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
+EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction(
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoPlaceholderBatch treatAsOneTransaction(
@@ -10115,7 +10071,7 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
 
   RefPtr<Element> divElement;
   rv = MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
-      address_of(divElement));
+      address_of(divElement), aEditingHost);
   // MoveSelectedContentsToDivElementToMakeItAbsolutePosition() may restore
   // selection with AutoSelectionRestorer.  Therefore, the editor might have
   // already been destroyed now.
@@ -10155,26 +10111,21 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction() {
 }
 
 nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
-    RefPtr<Element>* aTargetElement) {
+    RefPtr<Element>* aTargetElement, const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aTargetElement);
 
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return NS_ERROR_FAILURE;
-  }
-
   AutoSelectionRestorer restoreSelectionLater(*this);
 
-  AutoTArray<OwningNonNull<nsRange>, 4> arrayOfRanges;
-  GetSelectionRangesExtendedToHardLineStartAndEnd(
-      arrayOfRanges, EditSubAction::eSetPositionToAbsolute);
+  AutoRangeArray extendedSelectionRanges(SelectionRef());
+  extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction::eSetPositionToAbsolute, aEditingHost);
 
   // Use these ranges to construct a list of nodes to act on.
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-      arrayOfRanges, arrayOfContents, EditSubAction::eSetPositionToAbsolute,
-      CollectNonEditableNodes::Yes);
+      extendedSelectionRanges.Ranges(), arrayOfContents,
+      EditSubAction::eSetPositionToAbsolute, CollectNonEditableNodes::Yes);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::SplitInlinesAndCollectEditTargetNodes("
@@ -10200,7 +10151,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     CreateElementResult createNewDivElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
             *nsGkAtoms::div, atCaret, BRElementNextToSplitPoint::Keep,
-            *editingHost);
+            aEditingHost);
     if (createNewDivElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -10292,7 +10243,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           CreateElementResult createNewDivElementResult =
               InsertElementWithSplittingAncestorsWithTransaction(
                   *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-                  *editingHost);
+                  aEditingHost);
           if (createNewDivElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -10358,7 +10309,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // because we want to keep indent level of the contents.
     if (RefPtr<Element> listItemElement =
             HTMLEditUtils::GetClosestAncestorListItemElement(content,
-                                                             editingHost)) {
+                                                             &aEditingHost)) {
       if (handledListItemElement == listItemElement) {
         // Current node has already been moved into the `<div>` element.
         continue;
@@ -10402,7 +10353,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           CreateElementResult createNewDivElementResult =
               InsertElementWithSplittingAncestorsWithTransaction(
                   *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-                  *editingHost);
+                  aEditingHost);
           if (createNewDivElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -10481,7 +10432,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       CreateElementResult createNewDivElementResult =
           InsertElementWithSplittingAncestorsWithTransaction(
               *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep,
-              *editingHost);
+              aEditingHost);
       if (createNewDivElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
