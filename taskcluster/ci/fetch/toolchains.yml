@@ -380,11 +380,11 @@ rust-1.62.0-dev:
         revision: 60e50fc1cfe0bb693a5f4f93eb83ef70854531e3
 
 wasi-sdk:
-    description: wasi-sdk-15 source code + LLVM-15 fix
+    description: wasi-sdk-16 source code
     fetch:
         type: git
         repo: https://github.com/WebAssembly/wasi-sdk
-        revision: 37ae6af88201884c8b98a65adcd6d8cd1284f95e
+        revision: 7b7b8a974a31f527d71467499b0d5be3b12f2fa9
 
 ninja:
     description: ninja 1.9.0
