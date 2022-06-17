@@ -476,6 +476,18 @@ partial namespace ChromeUtils {
   void defineModuleGetter(object target, DOMString id, DOMString resourceURI);
 
   /**
+   * Defines propertys on the given target which lazily imports a ES module
+   * when accessed.
+   *
+   * @param target The target object on which to define the property.
+   * @param modules An object with a property for each module property to be
+   *                imported, where the property name is the name of the
+   *                imported symbol and the value is the module URI.
+   */
+  [Throws]
+  void defineESModuleGetters(object target, object modules);
+
+  /**
    * Returns the scripted location of the first ancestor stack frame with a
    * principal which is subsumed by the given principal. If no such frame
    * exists on the call stack, returns null.
