@@ -6,6 +6,8 @@
 
 /* utility functions for drawing borders and backgrounds */
 
+#include "nsCSSRendering.h"
+
 #include <ctime>
 
 #include "gfx2DGlue.h"
@@ -41,7 +43,6 @@
 #include "nsIScrollableFrame.h"
 #include "imgIContainer.h"
 #include "ImageOps.h"
-#include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
