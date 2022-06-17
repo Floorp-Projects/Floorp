@@ -4,15 +4,18 @@
 
 "use strict";
 
-const { getJSON } = require("devtools/client/shared/getjson");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/device.properties"
 );
 
+const ChromeUtils = require("ChromeUtils");
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
+
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
-const DEVICES_URL = "devtools.devices.url";
 const LOCAL_DEVICES = "devtools.devices.local";
 
 /* This is a catalog of common web-enabled devices and their properties,
@@ -30,8 +33,8 @@ const LOCAL_DEVICES = "devtools.devices.local";
  * The device types are:
  *   ["phones", "tablets", "laptops", "televisions", "consoles", "watches"].
  *
- * To propose new devices for the shared catalog, check out the repo at
- * https://github.com/mozilla/simulated-devices and file a pull request.
+ * To propose new devices for the shared catalog, see
+ * https://firefox-source-docs.mozilla.org/devtools/responsive/devices.html#adding-and-removing-devices.
  *
  * You can easily add more devices to this catalog from your own code (e.g. an
  * addon) like so:
@@ -139,17 +142,28 @@ async function removeLocalDevices() {
  * Get the complete devices catalog.
  */
 async function getDevices() {
-  // Fetch common devices from Mozilla's CDN.
-  const devices = await getJSON(DEVICES_URL);
+  const records = await RemoteSettings("devtools-devices").get();
+  const devicesByType = {
+    TYPES: [],
+  };
+  for (const record of records) {
+    const { type } = record;
+    if (!devicesByType.TYPES.includes(type)) {
+      devicesByType.TYPES.push(type);
+      devicesByType[type] = [];
+    }
+    devicesByType[type].push(record);
+  }
+
   await loadLocalDevices();
   for (const type in localDevices) {
-    if (!devices[type]) {
-      devices.TYPES.push(type);
-      devices[type] = [];
+    if (!devicesByType[type]) {
+      devicesByType.TYPES.push(type);
+      devicesByType[type] = [];
     }
-    devices[type] = localDevices[type].concat(devices[type]);
+    devicesByType[type] = localDevices[type].concat(devicesByType[type]);
   }
-  return devices;
+  return devicesByType;
 }
 
 /**

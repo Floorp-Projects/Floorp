@@ -32,10 +32,9 @@ addRDMTask(
     info(
       "Checking displayed device checkboxes are checked in the device modal."
     );
-    const checkedCbs = [
-      ...document.querySelectorAll(".device-input-checkbox"),
-    ].filter(cb => cb.checked);
-
+    const checkedCbs = document.querySelectorAll(
+      ".device-input-checkbox:checked"
+    );
     const remoteList = await getDevices();
 
     const featuredCount = remoteList.TYPES.reduce((total, type) => {
@@ -62,9 +61,9 @@ addRDMTask(
 
     // Tests where the user adds a non-featured device
     info("Check the first unchecked device and submit new device list.");
-    const uncheckedCb = [
-      ...document.querySelectorAll(".device-input-checkbox"),
-    ].filter(cb => !cb.checked)[0];
+    const uncheckedCb = document.querySelector(
+      ".device-input-checkbox:not(:checked)"
+    );
     const value = uncheckedCb.value;
     uncheckedCb.click();
     document.getElementById("device-close-button").click();
@@ -93,18 +92,28 @@ addRDMTask(
     info("Reopen device modal and check new device is correctly checked");
     await openDeviceModal(ui);
 
-    ok(
-      [...document.querySelectorAll(".device-input-checkbox")].filter(
-        cb => cb.checked && cb.value === value
-      )[0],
-      value + " is checked in the device modal."
-    );
+    const previouslyClickedCb = [
+      ...document.querySelectorAll(".device-input-checkbox"),
+    ].find(cb => cb.value === value);
+    ok(previouslyClickedCb.checked, value + " is checked in the device modal.");
 
     // Tests where the user removes a featured device
     info("Uncheck the first checked device different than the previous one");
-    const checkedCb = [
-      ...document.querySelectorAll(".device-input-checkbox"),
-    ].filter(cb => cb.checked && cb.value != value)[0];
+    const checkboxes = [...document.querySelectorAll(".device-input-checkbox")];
+    const checkedCb = checkboxes.find(cb => {
+      if (!cb.checked || cb.value == value) {
+        return false;
+      }
+      // In the list, we have devices with similar names (e.g. "Galaxy Note 20" and "Galaxy Note 20 Ultra")
+      // Given how some test helpers are using `includes` to check device names, we might
+      // get positive result for "Galaxy Note 20" although it would actually match "Galaxy Note 20 Ultra".
+      // To prevent such issue without modifying existing helpers, we're excluding any
+      // item whose name is part of another device.
+      return !checkboxes.some(
+        innerCb =>
+          innerCb.value !== cb.value && innerCb.value.includes(cb.value)
+      );
+    });
     const checkedVal = checkedCb.value;
     checkedCb.click();
     document.getElementById("device-close-button").click();
