@@ -12,7 +12,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 * **site-permission-feature**
-  * 🆕 [issue #12345](https://github.com/mozilla-mobile/android-components/issues/12345) - Add an id for all site permissions allowing to easily identify with what permissions the user interacts.
+  * 🆕 [issue #12345](https://github.com/mozilla-mobile/android-components/issues/12345) 
+  * - Add an id for all site permissions allowing to easily identify with what permissions the user interacts.
+  * - Emit facts for when a permission prompt is shown/allowed/denied.
 
 * **site-permission-feature**
   * 🆕 [issue #12338](https://github.com/mozilla-mobile/android-components/issues/12338) - Add support for setting a custom text for the negative button of the site permission prompts. Use "Block" for the storage access prompt.

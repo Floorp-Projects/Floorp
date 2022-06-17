@@ -49,6 +49,9 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCK
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
+import mozilla.components.support.base.Component.FEATURE_SITEPERMISSIONS
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.test.any
@@ -110,6 +113,7 @@ class SitePermissionsFeatureTest {
         mockFragmentManager = mockFragmentManager()
         mockContentState = mock()
         mockPermissionRequest = mock()
+        doReturn(true).`when`(mockPermissionRequest).containsVideoAndAudioSources()
         mockAppPermissionRequest = mock()
         mockSitePermissionRules = mock()
 
@@ -297,6 +301,47 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `GIVEN a permission prompt WHEN one permission is allowed THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+            doNothing().`when`(sitePermissionFeature)
+                .onContentPermissionGranted(mockPermissionRequest, true)
+            doReturn(listOf(ContentCrossOriginStorageAccess())).`when`(mockPermissionRequest).permissions
+            doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
+
+            sitePermissionFeature.onPositiveButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.CONFIRM, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals(ContentCrossOriginStorageAccess().id, facts[0].value)
+        }
+    }
+
+    @Test
+    fun `GIVEN a permission prompt WHEN multiple permission are allowed THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            doReturn(
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone())
+            ).`when`(mockPermissionRequest).permissions
+            doReturn(true).`when`(mockPermissionRequest).containsVideoAndAudioSources()
+            doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
+
+            sitePermissionFeature.onPositiveButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.CONFIRM, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals(
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()).joinToString { it.id!! },
+                facts[0].value
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN permissionRequest WHEN onNegativeButtonPress() THEN consumePermissionRequest, onContentPermissionDeny are called`() {
         // given
         doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
@@ -314,6 +359,47 @@ class SitePermissionsFeatureTest {
             .consumePermissionRequest(mockPermissionRequest, SESSION_ID)
         verify(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, true)
+    }
+
+    @Test
+    fun `GIVEN a permission prompt WHEN the permission is denied THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+            doNothing().`when`(sitePermissionFeature)
+                .onContentPermissionDeny(mockPermissionRequest, true)
+            doReturn(listOf(ContentGeoLocation())).`when`(mockPermissionRequest).permissions
+            doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
+
+            sitePermissionFeature.onNegativeButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.CANCEL, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals(ContentGeoLocation().id, facts[0].value)
+        }
+    }
+
+    @Test
+    fun `GIVEN a permission prompt WHEN multiple permissions are denied THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            doReturn(
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone())
+            ).`when`(mockPermissionRequest).permissions
+            doReturn(true).`when`(mockPermissionRequest).containsVideoAndAudioSources()
+            doReturn(mockPermissionRequest).`when`(sitePermissionFeature).findRequestedPermission(anyString())
+
+            sitePermissionFeature.onNegativeButtonPress(PERMISSION_ID, SESSION_ID, true)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.CANCEL, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals(
+                listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone()).joinToString { it.id!! },
+                facts[0].value
+            )
+        }
     }
 
     @Test
@@ -1063,6 +1149,65 @@ class SitePermissionsFeatureTest {
             ArgumentMatchers.anyBoolean(),
             ArgumentMatchers.anyBoolean()
         )
+    }
+
+    @Test
+    fun `GIVEN a request for one permission WHEN a prompt is created THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+            val mockPermissionRequest: PermissionRequest = mock {
+                whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
+            }
+            doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+                .handlingSingleContentPermissions(any(), any(), any())
+
+            sitePermissionFeature.createPrompt(mockPermissionRequest, URL)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.DISPLAY, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals("permission", facts[0].value)
+        }
+    }
+
+    @Test
+    fun `GIVEN a request for a permission with video and audio sources WHEN a prompt is created THEN emit a fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri = "http://www.mozilla.org"
+                override val id = PERMISSION_ID
+
+                override val permissions: List<Permission>
+                    get() = listOf(ContentVideoCapture(), ContentVideoCamera(), ContentAudioMicrophone())
+
+                override fun grant(permissions: List<Permission>) {}
+
+                override fun containsVideoAndAudioSources() = true
+
+                override fun reject() = Unit
+            }
+            val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
+            doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
+                .createSinglePermissionPrompt(
+                    any(),
+                    ArgumentMatchers.anyString(),
+                    any(),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.anyBoolean(),
+                    ArgumentMatchers.anyBoolean(),
+                    ArgumentMatchers.anyBoolean()
+                )
+
+            sitePermissionFeature.createPrompt(permissionRequest, URL)
+
+            assertEquals(1, facts.size)
+            assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
+            assertEquals(Action.DISPLAY, facts[0].action)
+            assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
+            assertEquals(permissionRequest.permissions.joinToString { it.id!! }, facts[0].value)
+        }
     }
 
     @Test

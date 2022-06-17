@@ -16,7 +16,6 @@ import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -310,6 +309,12 @@ class SitePermissionsFeature(
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
             onContentPermissionGranted(permissionRequest, shouldStore)
+
+            if (!permissionRequest.containsVideoAndAudioSources()) {
+                emitPermissionAllowed(permissionRequest.permissions.first())
+            } else {
+                emitPermissionsAllowed(permissionRequest.permissions)
+            }
         }
     }
 
@@ -321,6 +326,12 @@ class SitePermissionsFeature(
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
             onContentPermissionDeny(permissionRequest, shouldStore)
+
+            if (!permissionRequest.containsVideoAndAudioSources()) {
+                emitPermissionDenied(permissionRequest.permissions.first())
+            } else {
+                emitPermissionsDenied(permissionRequest.permissions)
+            }
         }
     }
 
@@ -708,7 +719,9 @@ class SitePermissionsFeature(
     ): SitePermissionsDialogFragment {
         return if (!permissionRequest.containsVideoAndAudioSources()) {
             val permission = permissionRequest.permissions.first()
-            handlingSingleContentPermissions(permissionRequest, permission, host)
+            handlingSingleContentPermissions(permissionRequest, permission, host).also {
+                emitPermissionDialogDisplayed(permission)
+            }
         } else {
             createSinglePermissionPrompt(
                 context,
@@ -719,7 +732,9 @@ class SitePermissionsFeature(
                 showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                 shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                     ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN
-            )
+            ).also {
+                emitPermissionsDialogDisplayed(permissionRequest.permissions)
+            }
         }
     }
 
