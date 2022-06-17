@@ -37,15 +37,7 @@ addRDMTask(
     );
     const remoteList = await getDevices();
 
-    const featuredCount = remoteList.TYPES.reduce((total, type) => {
-      return (
-        total +
-        remoteList[type].reduce((subtotal, device) => {
-          return subtotal + (device.os != "fxos" && device.featured ? 1 : 0);
-        }, 0)
-      );
-    }, 0);
-
+    const featuredCount = getNumberOfFeaturedDevices(remoteList);
     is(
       featuredCount,
       checkedCbs.length,
@@ -161,14 +153,7 @@ addRDMTask(
     await openDeviceModal(ui);
 
     const remoteList = await getDevices();
-    const featuredCount = remoteList.TYPES.reduce((total, type) => {
-      return (
-        total +
-        remoteList[type].reduce((subtotal, device) => {
-          return subtotal + (device.os != "fxos" && device.featured ? 1 : 0);
-        }, 0)
-      );
-    }, 0);
+    const featuredCount = getNumberOfFeaturedDevices(remoteList);
     const preferredDevices = _loadPreferredDevices();
 
     // Tests to prove that reloading the RDM didn't break our device list
@@ -199,3 +184,20 @@ addRDMTask(
   },
   { waitForDeviceList: true }
 );
+
+/**
+ * Returns the number of featured devices
+ *
+ * @param {Map} devicesByType: Map of devices, keyed by type (as returned by getDevices)
+ * @returns {Integer}
+ */
+function getNumberOfFeaturedDevices(devicesByType) {
+  let count = 0;
+  const devices = [...devicesByType.values()].flat();
+  for (const device of devices) {
+    if (device.featured && device.os != "fxos") {
+      count++;
+    }
+  }
+  return count;
+}
