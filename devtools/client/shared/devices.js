@@ -143,25 +143,21 @@ async function removeLocalDevices() {
  */
 async function getDevices() {
   const records = await RemoteSettings("devtools-devices").get();
-  const devicesByType = {
-    TYPES: [],
-  };
+  const devicesByType = new Map();
   for (const record of records) {
     const { type } = record;
-    if (!devicesByType.TYPES.includes(type)) {
-      devicesByType.TYPES.push(type);
-      devicesByType[type] = [];
+    if (!devicesByType.has(type)) {
+      devicesByType.set(type, []);
     }
-    devicesByType[type].push(record);
+    devicesByType.get(type).push(record);
   }
 
   await loadLocalDevices();
   for (const type in localDevices) {
-    if (!devicesByType[type]) {
-      devicesByType.TYPES.push(type);
-      devicesByType[type] = [];
+    if (!devicesByType.has(type)) {
+      devicesByType.set(type, []);
     }
-    devicesByType[type] = localDevices[type].concat(devicesByType[type]);
+    devicesByType.get(type).push(...localDevices[type]);
   }
   return devicesByType;
 }
