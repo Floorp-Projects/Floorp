@@ -55,3 +55,63 @@ newtab.search:
         type: string
     send_in_pings:
       - newtab
+
+newtab.search.ad:
+  impression:
+    type: event
+    description: >
+      Recorded when a session that began in a newtab resulted in a search that
+      loaded a Search Engine Result Page (SERP) that contains an ad link.
+      And the SERP is visible.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_session_id: *newtab_session_id
+      search_access_point: *search_access_point
+      is_follow_on: &is_follow_on
+        description: >
+          Whether the preceding search happened on a search results page.
+        type: boolean
+      is_tagged: &is_tagged
+        description: >
+          Whether the preceding search was tagged with a partner code.
+        type: boolean
+      telemetry_id: *telemetry_id
+    send_in_pings:
+      - newtab
+
+  click:
+    type: event
+    description: >
+      Recorded when an ad link is clicked on a Search Engine Result Page (SERP)
+      which was loaded by a seach that began on a newtab page.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 107
+    extra_keys:
+      newtab_session_id: *newtab_session_id
+      search_access_point: *search_access_point
+      is_follow_on: *is_follow_on
+      is_tagged: *is_tagged
+      telemetry_id: *telemetry_id
+    send_in_pings:
+      - newtab
