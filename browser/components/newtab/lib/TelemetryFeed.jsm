@@ -425,7 +425,7 @@ class TelemetryFeed {
     this.sendDiscoveryStreamLoadedContent(portID, session);
     this.sendDiscoveryStreamImpressions(portID, session);
 
-    Glean.newtab.closed.record({ newtab_session_id: session.session_id });
+    Glean.newtab.closed.record({ newtab_visit_id: session.session_id });
     if (
       this.telemetryEnabled &&
       (lazy.NimbusFeatures.glean.getVariable("newtabPingEnabled") ?? true)
@@ -868,7 +868,7 @@ class TelemetryFeed {
       );
       if (session) {
         Glean.topsites.impression.record({
-          newtab_session_id: session.session_id,
+          newtab_visit_id: session.session_id,
           is_sponsored: !!advertiser,
         });
       }
@@ -881,7 +881,7 @@ class TelemetryFeed {
       );
       if (session) {
         Glean.topsites.click.record({
-          newtab_session_id: session.session_id,
+          newtab_visit_id: session.session_id,
           is_sponsored: !!advertiser,
         });
       }
@@ -1176,7 +1176,7 @@ class TelemetryFeed {
         ? session.page
         : "other";
       Glean.newtab.opened.record({
-        newtab_session_id: session.session_id,
+        newtab_visit_id: session.session_id,
         source,
       });
     }
