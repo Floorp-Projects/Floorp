@@ -84,3 +84,7 @@ if CONFIG["MOZ_CRASHREPORTER"] and CONFIG['MOZ_OXIDIZED_BREAKPAD']:
 
 if CONFIG["MOZ_WEBMIDI_MIDIR_IMPL"]:
     gkrust_features += ['webmidi_midir_impl']
+
+
+# This must remain last.
+gkrust_features = ["gkrust-shared/%s" % f for f in gkrust_features]
