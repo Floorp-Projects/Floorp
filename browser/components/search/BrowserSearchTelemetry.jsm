@@ -222,7 +222,7 @@ class BrowserSearchTelemetryHandler {
       }
       if (["urlbar-handoff", "abouthome", "newtab"].includes(source)) {
         Glean.newtabSearch.issued.record({
-          newtab_session_id: details.newtabSessionId,
+          newtab_visit_id: details.newtabSessionId,
           search_access_point: source,
           telemetry_id: engine.telemetryId,
         });

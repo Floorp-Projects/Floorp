@@ -46,8 +46,8 @@ add_task(async function test_newtab_tab_close_sends_ping() {
 
   let record = Glean.newtab.opened.testGetValue("newtab");
   Assert.equal(record.length, 1, "Should only be one open");
-  const sessionId = record[0].extra.newtab_session_id;
-  Assert.ok(!!sessionId, "newtab_session_id must be present");
+  const sessionId = record[0].extra.newtab_visit_id;
+  Assert.ok(!!sessionId, "newtab_visit_id must be present");
 
   let pingSubmitted = false;
   GleanPings.newtab.testBeforeNextSubmit(reason => {
@@ -56,7 +56,7 @@ add_task(async function test_newtab_tab_close_sends_ping() {
     record = Glean.newtab.closed.testGetValue("newtab");
     Assert.equal(record.length, 1, "Should only have one close");
     Assert.equal(
-      record[0].extra.newtab_session_id,
+      record[0].extra.newtab_visit_id,
       sessionId,
       "Should've closed the session we opened"
     );
@@ -95,8 +95,8 @@ add_task(async function test_newtab_tab_nav_sends_ping() {
   );
   let record = Glean.newtab.opened.testGetValue("newtab");
   Assert.equal(record.length, 1, "Should only be one open");
-  const sessionId = record[0].extra.newtab_session_id;
-  Assert.ok(!!sessionId, "newtab_session_id must be present");
+  const sessionId = record[0].extra.newtab_visit_id;
+  Assert.ok(!!sessionId, "newtab_visit_id must be present");
 
   let pingSubmitted = false;
   GleanPings.newtab.testBeforeNextSubmit(reason => {
@@ -105,7 +105,7 @@ add_task(async function test_newtab_tab_nav_sends_ping() {
     record = Glean.newtab.closed.testGetValue("newtab");
     Assert.equal(record.length, 1, "Should only have one close");
     Assert.equal(
-      record[0].extra.newtab_session_id,
+      record[0].extra.newtab_visit_id,
       sessionId,
       "Should've closed the session we opened"
     );
@@ -146,8 +146,8 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
 
   let record = Glean.newtab.opened.testGetValue("newtab");
   Assert.equal(record.length, 1, "Should only be one open");
-  const sessionId = record[0].extra.newtab_session_id;
-  Assert.ok(!!sessionId, "newtab_session_id must be present");
+  const sessionId = record[0].extra.newtab_visit_id;
+  Assert.ok(!!sessionId, "newtab_visit_id must be present");
 
   GleanPings.newtab.testBeforeNextSubmit(() => {
     Assert.ok(false, "Must not submit ping!");

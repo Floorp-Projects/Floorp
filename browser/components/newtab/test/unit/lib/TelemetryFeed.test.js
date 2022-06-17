@@ -1303,7 +1303,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(spy);
       assert.calledWith(spy, topsites_first_painted_ts);
     });
-    it("should record a Glean newtab.opened event with the correct session_id when visibility event received", () => {
+    it("should record a Glean newtab.opened event with the correct visit_id when visibility event received", () => {
       const session_id = "decafc0ffee";
       const page = "about:newtab";
       const session = { page, perf: {}, session_id };
@@ -1315,7 +1315,7 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(Glean.newtab.opened.record);
       assert.deepEqual(Glean.newtab.opened.record.firstCall.args[0], {
-        newtab_session_id: session_id,
+        newtab_visit_id: session_id,
         source: page,
       });
     });
@@ -1991,7 +1991,7 @@ describe("TelemetryFeed", () => {
       // Event should be recorded
       assert.calledOnce(Glean.topsites.impression.record);
       assert.calledWith(Glean.topsites.impression.record, {
-        newtab_session_id: session_id,
+        newtab_visit_id: session_id,
         is_sponsored: true,
       });
     });
@@ -2013,7 +2013,7 @@ describe("TelemetryFeed", () => {
       // Event should be recorded
       assert.calledOnce(Glean.topsites.click.record);
       assert.calledWith(Glean.topsites.click.record, {
-        newtab_session_id: session_id,
+        newtab_visit_id: session_id,
         is_sponsored: false,
       });
     });
