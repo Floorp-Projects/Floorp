@@ -104,6 +104,21 @@ add_task(async function testColorwayClosetPrefEnabled() {
 
   // Mock expiry date string and BuiltInThemeConfig.findActiveColorwayCollection()
   const mockExpiry = getMockExpiry();
+
+  info(
+    "Verify first if any data from BuiltInThemeConfig.findActiveColorwayCollection is valid"
+  );
+  let collection = BuiltInThemeConfig.findActiveColorwayCollection();
+  if (collection) {
+    info("Found a collection");
+    ok(collection.l10nId, "Collection in BuiltInThemeConfig has l10n data");
+    ok(
+      collection.l10nId.title,
+      "Collection in BuiltInThemeConfig has valid l10n title"
+    );
+  }
+
+  info("Now mocking BuiltInThemeConfig.findActiveColorwayCollection");
   BuiltInThemeConfig.findActiveColorwayCollection = () => {
     info(
       `Return mock active colorway collection with expiry set to: ${
@@ -113,7 +128,7 @@ add_task(async function testColorwayClosetPrefEnabled() {
     return {
       id: "colorway-test-collection",
       expiry: mockExpiry,
-      l10nId: mockL10nId,
+      l10nId: { title: mockL10nId },
     };
   };
 
