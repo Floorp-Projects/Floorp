@@ -626,7 +626,7 @@ static bool ExtractArgs(JSContext* aCx, JS::CallArgs& aArgs,
   return true;
 }
 
-static bool ModuleGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+static bool JSModuleGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
 
   JS::Rooted<JSObject*> callee(aCx);
@@ -668,7 +668,7 @@ static bool ModuleGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
   return true;
 }
 
-static bool ModuleSetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+static bool JSModuleSetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
 
   JS::Rooted<JSObject*> callee(aCx);
@@ -681,8 +681,9 @@ static bool ModuleSetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
   return JS_DefinePropertyById(aCx, thisObj, id, args.get(0), JSPROP_ENUMERATE);
 }
 
-static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
-                         const nsAString& aId, const nsAString& aResourceURI) {
+static bool DefineJSModuleGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
+                                 const nsAString& aId,
+                                 const nsAString& aResourceURI) {
   JS::Rooted<JS::Value> uri(aCx);
   JS::Rooted<JS::Value> idValue(aCx);
   JS::Rooted<jsid> id(aCx);
@@ -695,11 +696,11 @@ static bool DefineGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
 
   JS::Rooted<JSObject*> getter(
       aCx, JS_GetFunctionObject(
-               js::NewFunctionByIdWithReserved(aCx, ModuleGetter, 0, 0, id)));
+               js::NewFunctionByIdWithReserved(aCx, JSModuleGetter, 0, 0, id)));
 
   JS::Rooted<JSObject*> setter(
       aCx, JS_GetFunctionObject(
-               js::NewFunctionByIdWithReserved(aCx, ModuleSetter, 0, 0, id)));
+               js::NewFunctionByIdWithReserved(aCx, JSModuleSetter, 0, 0, id)));
 
   if (!getter || !setter) {
     JS_ReportOutOfMemory(aCx);
@@ -722,7 +723,8 @@ void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
                                      const nsAString& id,
                                      const nsAString& resourceURI,
                                      ErrorResult& aRv) {
-  if (!module_getter::DefineGetter(global.Context(), target, id, resourceURI)) {
+  if (!module_getter::DefineJSModuleGetter(global.Context(), target, id,
+                                           resourceURI)) {
     aRv.NoteJSContextException(global.Context());
   }
 }
