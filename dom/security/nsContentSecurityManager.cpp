@@ -1562,6 +1562,46 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
   return NS_OK;
 }
 
+// https://fetch.spec.whatwg.org/#serializing-a-request-origin
+void nsContentSecurityManager::GetSerializedOrigin(
+    nsIPrincipal* aOrigin, nsIPrincipal* aResourceOrigin,
+    nsACString& aSerializedOrigin, nsILoadInfo* aLoadInfo) {
+  // The following for loop performs the
+  // https://fetch.spec.whatwg.org/#ref-for-concept-request-tainted-origin
+  nsCOMPtr<nsIPrincipal> lastOrigin;
+  for (nsIRedirectHistoryEntry* entry : aLoadInfo->RedirectChain()) {
+    if (!lastOrigin) {
+      entry->GetPrincipal(getter_AddRefs(lastOrigin));
+      continue;
+    }
+
+    nsCOMPtr<nsIPrincipal> currentOrigin;
+    entry->GetPrincipal(getter_AddRefs(currentOrigin));
+
+    if (!currentOrigin->Equals(lastOrigin) && !lastOrigin->Equals(aOrigin)) {
+      return;
+    }
+    lastOrigin = currentOrigin;
+  }
+
+  // When the redirectChain is empty, it means this is the first redirect.
+  // So according to the #serializing-a-request-origin spec, we don't
+  // have a redirect-tainted origin, so we return the origin of the request
+  // here.
+  if (!lastOrigin) {
+    aOrigin->GetAsciiOrigin(aSerializedOrigin);
+    return;
+  }
+
+  // Same as above, redirectChain doesn't contain the current redirect,
+  // so we have to do the check one last time here.
+  if (lastOrigin->Equals(aResourceOrigin) && !lastOrigin->Equals(aOrigin)) {
+    return;
+  }
+
+  aOrigin->GetAsciiOrigin(aSerializedOrigin);
+}
+
 // ==== nsIContentSecurityManager implementation =====
 
 NS_IMETHODIMP

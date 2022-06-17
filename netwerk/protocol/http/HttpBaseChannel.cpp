@@ -5003,7 +5003,7 @@ HttpBaseChannel::SetAllRedirectsPassTimingAllowCheck(bool aPassesCheck) {
   return NS_OK;
 }
 
-// http://www.w3.org/TR/resource-timing/#timing-allow-check
+// https://fetch.spec.whatwg.org/#tao-check
 NS_IMETHODIMP
 HttpBaseChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
@@ -5017,7 +5017,13 @@ HttpBaseChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
 
   bool sameOrigin = false;
   rv = resourcePrincipal->Equals(aOrigin, &sameOrigin);
-  if (NS_SUCCEEDED(rv) && sameOrigin) {
+
+  nsAutoCString serializedOrigin;
+  nsContentSecurityManager::GetSerializedOrigin(aOrigin, resourcePrincipal,
+                                                serializedOrigin, mLoadInfo);
+
+  // All redirects are same origin
+  if (sameOrigin && !serializedOrigin.IsEmpty()) {
     *_retval = true;
     return NS_OK;
   }
@@ -5028,9 +5034,6 @@ HttpBaseChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
     *_retval = false;
     return NS_OK;
   }
-
-  nsAutoCString origin;
-  aOrigin->GetAsciiOrigin(origin);
 
   Tokenizer p(headerValue);
   Tokenizer::Token t;
@@ -5044,7 +5047,7 @@ HttpBaseChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
       nsHttp::TrimHTTPWhitespace(headerItem, headerItem);
       // If the list item contains a case-sensitive match for the value of the
       // origin, or a wildcard, return pass
-      if (headerItem == origin || headerItem == "*") {
+      if (headerItem == serializedOrigin || headerItem == "*") {
         *_retval = true;
         return NS_OK;
       }
