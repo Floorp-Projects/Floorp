@@ -1,0 +1,9 @@
+[package]
+name = "detect_win32k_conflicts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4"
+thiserror = "1"
+winapi = { version = "0.3", features = ["winerror", "winreg"] }
