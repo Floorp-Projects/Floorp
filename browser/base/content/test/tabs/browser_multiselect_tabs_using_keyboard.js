@@ -58,11 +58,6 @@ add_task(async function changeSelectionUsingKeyboard() {
     "VK_TAB",
     { shiftKey: true }
   );
-  await synthesizeKeyAndWaitForFocus(
-    document.getElementById("tabs-newtab-button"),
-    "VK_TAB",
-    { shiftKey: true }
-  );
   await synthesizeKeyAndWaitForFocus(tab3, "VK_TAB", { shiftKey: true });
   is(document.activeElement, tab3, "Tab3 should be focused");
 
