@@ -23,7 +23,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
-    implementation "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+    implementation "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean_plugin}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 

@@ -9,7 +9,7 @@ buildscript {
         }
 
         dependencies {
-            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean_plugin}"
         }
     }
 }
