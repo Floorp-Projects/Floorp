@@ -99,6 +99,7 @@ class JSActorProtocol : public nsISupports {
  public:
   struct Sided {
     Maybe<nsCString> mModuleURI;
+    Maybe<nsCString> mESModuleURI;
   };
 
   virtual const Sided& Parent() const = 0;

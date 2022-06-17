@@ -62,10 +62,24 @@ dictionary ProcessActorOptions {
 dictionary ProcessActorSidedOptions {
   /**
    * The JSM path which should be loaded for the actor on this side.
-   * If not passed, the specified side cannot receive messages, but may send
-   * them using `sendAsyncMessage` or `sendQuery`.
+   *
+   * Mutually exclusive with `esModuleURI`.
+   *
+   * If neither this nor `esModuleURI` is passed, the specified side cannot receive
+   * messages, but may send them using `sendAsyncMessage` or `sendQuery`.
    */
-  required ByteString moduleURI;
+  ByteString moduleURI;
+
+  /**
+   * The ESM path which should be loaded for the actor on this side.
+   *
+   * Mutually exclusive with `moduleURI`.
+   *
+   * If neither this nor `moduleURI` is passed, the specified side cannot
+   * receive messages, but may send them using `sendAsyncMessage` or
+   * `sendQuery`.
+   */
+  ByteString esModuleURI;
 };
 
 dictionary ProcessActorChildOptions : ProcessActorSidedOptions {
