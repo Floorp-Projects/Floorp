@@ -580,34 +580,18 @@ class MOZ_STACK_CLASS AutoRangeArray final {
       const dom::Element& aEditingHost);
 
   /**
-   * Get the point before the line containing aPointInLine.
-   *
-   * @return            If the line starts after a `<br>` element, returns next
-   *                    sibling of the `<br>` element.
-   *                    If the line is first line of a block, returns point of
-   *                    the block.
-   * NOTE: The result may be point of editing host.  I.e., the container may be
-   *       outside of editing host.
+   * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
+   * which may be expanded to start/end of hard line at both edges of the given
+   * range.  If this fails handling something, returns nullptr.
    */
-  static EditorDOMPoint
-  GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
-      const EditorDOMPoint& aPointInLine, EditSubAction aEditSubAction,
+  static already_AddRefed<nsRange>
+  CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+      const EditorDOMRange& aRange, EditSubAction aEditSubAction,
       const dom::Element& aEditingHost);
-
-  /**
-   * Get the point after the following line break or the block which breaks the
-   * line containing aPointInLine.
-   *
-   * @return            If the line ends with a visible `<br>` element, returns
-   *                    the point after the `<br>` element.
-   *                    If the line ends with a preformatted linefeed, returns
-   *                    the point after the linefeed unless it's an invisible
-   *                    line break immediately before a block boundary.
-   *                    If the line ends with a block boundary, returns the
-   *                    point of the block.
-   */
-  static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
-      const EditorDOMPoint& aPoint, const dom::Element& aEditingHost);
+  static already_AddRefed<nsRange>
+  CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+      const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+      EditSubAction aEditSubAction, const dom::Element& aEditingHost);
 
  private:
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;

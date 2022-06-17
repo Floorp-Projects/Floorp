@@ -159,7 +159,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const EditorDOMPoint& aAtRightBlockChild,
         const Maybe<nsAtom*>& aListElementTagName,
-        const HTMLBRElement* aPrecedingInvisibleBRElement) {
+        const HTMLBRElement* aPrecedingInvisibleBRElement,
+        const Element& aEditingHost) {
   MOZ_ASSERT(
       EditorUtils::IsDescendantOf(aLeftBlockElement, aRightBlockElement));
   MOZ_ASSERT(&aRightBlockElement == aAtRightBlockChild.GetContainer());
@@ -282,13 +283,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
                  "The relation is not guaranteed but assumed");
 #ifdef DEBUG
     Result<bool, nsresult> firstLineHasContent =
-        aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(EditorRawDOMPoint(
-            rightBlockElement, afterRightBlockChild.Offset()));
+        aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
+            EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
+            aEditingHost);
 #endif  // #ifdef DEBUG
     MoveNodeResult moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
             EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
-            EditorDOMPoint(&aLeftBlockElement, 0u),
+            EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
             HTMLEditor::MoveToEndOfContainer::Yes);
     if (moveNodeResult.isErr()) {
       NS_WARNING(
@@ -337,7 +339,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         Element& aRightBlockElement, const EditorDOMPoint& aAtLeftBlockChild,
         nsIContent& aLeftContentInBlock,
         const Maybe<nsAtom*>& aListElementTagName,
-        const HTMLBRElement* aPrecedingInvisibleBRElement) {
+        const HTMLBRElement* aPrecedingInvisibleBRElement,
+        const Element& aEditingHost) {
   MOZ_ASSERT(
       EditorUtils::IsDescendantOf(aRightBlockElement, aLeftBlockElement));
   MOZ_ASSERT(
@@ -515,7 +518,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #ifdef DEBUG
     Result<bool, nsresult> firstLineHasContent =
         aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
-            EditorRawDOMPoint(&aRightBlockElement, 0));
+            EditorDOMPoint(&aRightBlockElement, 0u), aEditingHost);
 #endif  // #ifdef DEBUG
 
     Element* editingHost =
@@ -555,7 +558,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 
     MoveNodeResult moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
-            EditorDOMPoint(&aRightBlockElement, 0u), atPreviousContent);
+            EditorDOMPoint(&aRightBlockElement, 0u), atPreviousContent,
+            aEditingHost);
     if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveOneHardLineContentsWithTransaction() failed");
       return EditActionResult(moveNodeResult.unwrapErr());
@@ -596,7 +600,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     MergeFirstLineOfRightBlockElementIntoLeftBlockElement(
         HTMLEditor& aHTMLEditor, Element& aLeftBlockElement,
         Element& aRightBlockElement, const Maybe<nsAtom*>& aListElementTagName,
-        const HTMLBRElement* aPrecedingInvisibleBRElement) {
+        const HTMLBRElement* aPrecedingInvisibleBRElement,
+        const Element& aEditingHost) {
   MOZ_ASSERT(
       !EditorUtils::IsDescendantOf(aLeftBlockElement, aRightBlockElement));
   MOZ_ASSERT(
@@ -660,14 +665,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #ifdef DEBUG
     Result<bool, nsresult> firstLineHasContent =
         aHTMLEditor.CanMoveOrDeleteSomethingInHardLine(
-            EditorRawDOMPoint(&aRightBlockElement, 0));
+            EditorDOMPoint(&aRightBlockElement, 0u), aEditingHost);
 #endif  // #ifdef DEBUG
 
     // Nodes are dissimilar types.
     MoveNodeResult moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
             EditorDOMPoint(&aRightBlockElement, 0u),
-            EditorDOMPoint(&aLeftBlockElement, 0u),
+            EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
             HTMLEditor::MoveToEndOfContainer::Yes);
     if (moveNodeResult.isErr()) {
       NS_WARNING(
