@@ -39,6 +39,27 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acceptar lo risc e contunhar</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Aqueste site web requerís una connexion segura.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La pagina qu’ensajatz de visualizar se pòt pas afichar perque aqueste site requerís una connexion segura.</li>
+         <li>Lo problèma ven probablament del site web e i a pas res que poscatz far per lo resòlver;</li>
+         <li>Podètz senhalar lo problèma als administrators del site web.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avançat…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+<label> <b>%1$s</b> a una estrategia de seguretat HTTP Strict Transport Security (HSTS), valent a dire que <b>%2$s</b> pòt sonque s’i connectar amb una connexion securizada. Podètz pas apondre d’excepcion per consultar aqueste site.
+]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Tornar</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La connexion es estada interrompuda</string>
 

@@ -42,6 +42,26 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Risiko akzeptieren und fortfahren</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Diese Website erfordert eine sichere Verbindung.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Die Seite, die Sie aufrufen möchten, kann nicht angezeigt werden, da für diese Website eine sichere Verbindung erforderlich ist.</li>
+         <li>Das Problem liegt höchstwahrscheinlich bei der Website, und Sie können nichts tun, um es zu lösen.</li>
+         <li>Sie können den Administrator der Website über das Problem informieren.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Erweitert…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> hat eine Sicherheitsrichtlinie namens HTTP Strict Transport Security (HSTS), was bedeutet, dass sich <b>%2$s</b> nur über eine sichere Verbindung mit der Website verbinden kann. Daher kann keine Ausnahme für die Website hinzugefügt werden.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Zurück</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Fehler: Datenübertragung unterbrochen</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
