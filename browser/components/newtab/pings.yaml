@@ -8,7 +8,8 @@ $schema: moz://mozilla.org/schemas/glean/pings/2-0-0
 newtab:
   description: |
     Newtab-related instrumentation.
-
+    Can be disabled via the `newtabPingEnabled` variable of the `glean` Nimbus
+    feature, or the `browser.newtabpage.ping.enabled` pref.
   reasons:
     newtab_session_end: |
       The newtab session ended.
