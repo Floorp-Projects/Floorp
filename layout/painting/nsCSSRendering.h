@@ -292,8 +292,7 @@ struct nsCSSRendering {
    *         background.
    */
   static mozilla::ComputedStyle* FindBackground(const nsIFrame* aForFrame);
-  static bool FindBackgroundFrame(const nsIFrame* aForFrame,
-                                  nsIFrame** aBackgroundFrame);
+  static nsIFrame* FindBackgroundFrame(const nsIFrame* aForFrame);
 
   /**
    * As FindBackground, but the passed-in frame is known to be a root frame
