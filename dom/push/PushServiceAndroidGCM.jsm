@@ -8,6 +8,12 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { PushRecord } = ChromeUtils.import(
+  "resource://gre/modules/PushRecord.jsm"
+);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 const lazy = {};
 
@@ -18,11 +24,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   lazy,
-  "PushRecord",
-  "resource://gre/modules/PushRecord.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
@@ -30,11 +31,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "EventDispatcher",
   "resource://gre/modules/Messaging.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "Log", () => {
@@ -60,7 +56,7 @@ const kPUSHANDROIDGCMDB_STORE_NAME = "pushAndroidGCM";
 
 const FXA_PUSH_SCOPE = "chrome://fxa-push";
 
-const prefs = new lazy.Preferences("dom.push.");
+const prefs = new Preferences("dom.push.");
 
 /**
  * The implementation of WebPush push backed by Android's GCM
@@ -311,11 +307,11 @@ var PushServiceAndroidGCM = {
 };
 
 function PushRecordAndroidGCM(record) {
-  lazy.PushRecord.call(this, record);
+  PushRecord.call(this, record);
   this.channelID = record.channelID;
 }
 
-PushRecordAndroidGCM.prototype = Object.create(lazy.PushRecord.prototype, {
+PushRecordAndroidGCM.prototype = Object.create(PushRecord.prototype, {
   keyID: {
     get() {
       return this.channelID;
