@@ -4775,20 +4775,19 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
 
     RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
         aPointInHardLine, aPointInHardLine, EditSubAction::eMergeBlockContents);
-    if (!oneLineRange) {
+    if (MOZ_UNLIKELY(!oneLineRange)) {
       // XXX It's odd to create collapsed range because it'll split parents at
       //     the collapsed range even though we won't move anything from there.
-      IgnoredErrorResult error;
-      oneLineRange =
-          nsRange::Create(aPointInHardLine.ToRawRangeBoundary(),
-                          aPointInHardLine.ToRawRangeBoundary(), error);
-      if (error.Failed()) {
+      oneLineRange = nsRange::Create(aPointInHardLine.ToRawRangeBoundary(),
+                                     aPointInHardLine.ToRawRangeBoundary(),
+                                     IgnoreErrors());
+      if (MOZ_UNLIKELY(!oneLineRange)) {
         NS_WARNING("nsRange::Create() failed");
-        return MoveNodeResult(error.StealNSResult());
+        return MoveNodeResult(NS_ERROR_FAILURE);
       }
     }
-    AutoTArray<RefPtr<nsRange>, 1> arrayOfLineRanges;
-    arrayOfLineRanges.AppendElement(oneLineRange);
+    AutoTArray<OwningNonNull<nsRange>, 1> arrayOfLineRanges;
+    arrayOfLineRanges.AppendElement(std::move(oneLineRange));
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
         arrayOfLineRanges, arrayOfContents, EditSubAction::eMergeBlockContents,
         CollectNonEditableNodes::Yes);

@@ -1133,13 +1133,13 @@ class HTMLEditor final : public EditorBase,
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
 
   /**
-   * SplitParentInlineElementsAtRangeEdges(nsTArray<RefPtr<nsRange>>&) calls
-   * SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.  Then,
-   * updates given range to keep edit target ranges as expected.
+   * SplitParentInlineElementsAtRangeEdges(nsTArray<OwningNonNull<nsRange>>&)
+   * calls SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.
+   * Then, updates given range to keep edit target ranges as expected.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitParentInlineElementsAtRangeEdges(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * SplitElementsAtEveryBRElement() splits before all <br> elements in
@@ -1207,7 +1207,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitInlinesAndCollectEditTargetNodes(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
@@ -1217,7 +1217,7 @@ class HTMLEditor final : public EditorBase,
    * middle of a text node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitTextNodesAtRangeEnd(nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+  SplitTextNodesAtRangeEnd(nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
@@ -1225,7 +1225,7 @@ class HTMLEditor final : public EditorBase,
    * result for specific edit sub-actions.
    */
   nsresult CollectEditTargetNodes(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
@@ -1266,7 +1266,7 @@ class HTMLEditor final : public EditorBase,
    *                            when you call this.
    */
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
-      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
 
   /**

@@ -3093,7 +3093,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   } else {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -3719,7 +3719,7 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
   {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrChangeList);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -3795,7 +3795,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eCreateOrRemoveBlock);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -4309,7 +4309,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   }
 
   if (arrayOfContents.IsEmpty()) {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
                                                     EditSubAction::eIndent);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -4533,7 +4533,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
 
-  AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
+  AutoTArray<OwningNonNull<nsRange>, 4> arrayOfRanges;
   GetSelectionRangesExtendedToHardLineStartAndEnd(arrayOfRanges,
                                                   EditSubAction::eIndent);
 
@@ -4933,7 +4933,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
                                                     EditSubAction::eOutdent);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -5749,7 +5749,7 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
   // in the range
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    AutoTArray<OwningNonNull<nsRange>, 4> extendedSelectionRanges;
     GetSelectionRangesExtendedToHardLineStartAndEnd(
         extendedSelectionRanges, EditSubAction::eSetOrClearAlignment);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
@@ -6417,7 +6417,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
 }
 
 void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
-    nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
+    nsTArray<OwningNonNull<nsRange>>& aOutArrayOfRanges,
     EditSubAction aEditSubAction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
@@ -6442,7 +6442,7 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
     if (!extendedRange) {
       extendedRange = selectionRange->CloneRange();
     }
-    aOutArrayOfRanges.AppendElement(extendedRange);
+    aOutArrayOfRanges.AppendElement(std::move(extendedRange));
   }
 }
 
@@ -6607,7 +6607,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
 }
 
 nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
-    nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
     EditSubAction aEditSubAction,
     CollectNonEditableNodes aCollectNonEditableNodes) {
@@ -6639,13 +6639,13 @@ nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
 }
 
 nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
-    nsTArray<RefPtr<nsRange>>& aArrayOfRanges) {
+    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges) {
   // Split text nodes. This is necessary, since given ranges may end in text
   // nodes in case where part of a pre-formatted elements needs to be moved.
   EditorDOMPoint pointToPutCaret;
   nsresult rv = NS_OK;
   IgnoredErrorResult ignoredError;
-  for (RefPtr<nsRange>& range : aArrayOfRanges) {
+  for (OwningNonNull<nsRange>& range : aArrayOfRanges) {
     EditorDOMPoint atEnd(range->EndRef());
     if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode()) {
       continue;
@@ -6691,12 +6691,12 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
 }
 
 nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
-    nsTArray<RefPtr<nsRange>>& aArrayOfRanges) {
+    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges) {
   nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
   rangeItemArray.AppendElements(aArrayOfRanges.Length());
 
   // First register ranges for special editor gravity
-  for (auto& rangeItem : rangeItemArray) {
+  for (OwningNonNull<RangeItem>& rangeItem : rangeItemArray) {
     rangeItem = new RangeItem();
     rangeItem->StoreRange(*aArrayOfRanges[0]);
     RangeUpdaterRef().RegisterRangeItem(*rangeItem);
@@ -6704,7 +6704,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   }
   // Now bust up inlines.
   nsresult rv = NS_OK;
-  for (auto& item : Reversed(rangeItemArray)) {
+  for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
     // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
     rv = SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
     if (NS_FAILED(rv)) {
@@ -6713,11 +6713,11 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     }
   }
   // Then unregister the ranges
-  for (auto& item : rangeItemArray) {
+  for (OwningNonNull<RangeItem>& item : rangeItemArray) {
     RangeUpdaterRef().DropRangeItem(item);
     RefPtr<nsRange> range = item->GetRange();
     if (range) {
-      aArrayOfRanges.AppendElement(range);
+      aArrayOfRanges.AppendElement(std::move(range));
     }
   }
 
@@ -6728,7 +6728,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
 }
 
 nsresult HTMLEditor::CollectEditTargetNodes(
-    nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
     EditSubAction aEditSubAction,
     CollectNonEditableNodes aCollectNonEditableNodes) {
@@ -10255,7 +10255,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
 
   AutoSelectionRestorer restoreSelectionLater(*this);
 
-  AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
+  AutoTArray<OwningNonNull<nsRange>, 4> arrayOfRanges;
   GetSelectionRangesExtendedToHardLineStartAndEnd(
       arrayOfRanges, EditSubAction::eSetPositionToAbsolute);
 
