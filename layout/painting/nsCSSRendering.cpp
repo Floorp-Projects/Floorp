@@ -1224,9 +1224,9 @@ nsIFrame* nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame) {
  *  + we don't paint the background on the BODY element in *some* cases,
  *    and for SGML-based HTML documents only.
  *
- * |FindBackground| returns true if a background should be painted, and
- * the resulting ComputedStyle to use for the background information
- * will be filled in to |aBackground|.
+ * |FindBackground| checks whether a background should be painted. If yes, it
+ * returns the resulting ComputedStyle to use for the background information;
+ * Otherwise, it returns nullptr.
  */
 ComputedStyle* nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame) {
   return FindBackgroundStyleFrame(aForFrame)->Style();
@@ -1286,14 +1286,12 @@ bool nsCSSRendering::FindBackgroundFrame(const nsIFrame* aForFrame,
   return FindElementBackground(aForFrame, rootElementFrame);
 }
 
-bool nsCSSRendering::FindBackground(const nsIFrame* aForFrame,
-                                    ComputedStyle** aBackgroundSC) {
+ComputedStyle* nsCSSRendering::FindBackground(const nsIFrame* aForFrame) {
   nsIFrame* backgroundFrame = nullptr;
   if (FindBackgroundFrame(aForFrame, &backgroundFrame)) {
-    *aBackgroundSC = backgroundFrame->Style();
-    return true;
+    return backgroundFrame->Style();
   }
-  return false;
+  return nullptr;
 }
 
 void nsCSSRendering::BeginFrameTreesLocked() { ++gFrameTreeLockCount; }
@@ -1791,8 +1789,8 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
   MOZ_ASSERT(aParams.frame,
              "Frame is expected to be provided to PaintStyleImageLayer");
 
-  ComputedStyle* sc;
-  if (!FindBackground(aParams.frame, &sc)) {
+  ComputedStyle* sc = FindBackground(aParams.frame);
+  if (!sc) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, otherwise keep going in order to let the theme stuff
@@ -1879,8 +1877,8 @@ ImgDrawResult nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
              "Frame is expected to be provided to "
              "BuildWebRenderDisplayItemsForStyleImageLayer");
 
-  ComputedStyle* sc;
-  if (!FindBackground(aParams.frame, &sc)) {
+  ComputedStyle* sc = FindBackground(aParams.frame);
+  if (!sc) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, otherwise keep going in order to let the theme stuff
