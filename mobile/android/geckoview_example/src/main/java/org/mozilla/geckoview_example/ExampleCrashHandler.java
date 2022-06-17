@@ -52,13 +52,24 @@ public class ExampleCrashHandler extends Service {
 
       String id = createNotificationChannel();
 
+      int intentFlag = 0;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        intentFlag = PendingIntent.FLAG_IMMUTABLE;
+      }
+
       PendingIntent reportIntent =
           PendingIntent.getService(
-              this, 0, new Intent(ACTION_REPORT_CRASH, null, this, ExampleCrashHandler.class), 0);
+              this,
+              0,
+              new Intent(ACTION_REPORT_CRASH, null, this, ExampleCrashHandler.class),
+              intentFlag);
 
       PendingIntent dismissIntent =
           PendingIntent.getService(
-              this, 0, new Intent(ACTION_DISMISS, null, this, ExampleCrashHandler.class), 0);
+              this,
+              0,
+              new Intent(ACTION_DISMISS, null, this, ExampleCrashHandler.class),
+              intentFlag);
 
       Notification notification =
           new NotificationCompat.Builder(this, id)
@@ -66,8 +77,8 @@ public class ExampleCrashHandler extends Service {
               .setContentTitle(getResources().getString(R.string.crashed_title))
               .setContentText(getResources().getString(R.string.crashed_text))
               .setDefaults(Notification.DEFAULT_ALL)
-              .setContentIntent(reportIntent)
               .addAction(0, getResources().getString(R.string.crashed_ignore), dismissIntent)
+              .addAction(0, getResources().getString(R.string.crashed_report), reportIntent)
               .setAutoCancel(true)
               .setOngoing(false)
               .build();

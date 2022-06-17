@@ -33,6 +33,7 @@
     <string name="crashed_title">GeckoView Example Crashed</string>
     <string name="crashed_text">Tap to report to Mozilla.</string>
     <string name="crashed_ignore">Ignore</string>
+    <string name="crashed_report">Report</string>
     <string name="device_sharing_microphone">Microphone is on</string>
     <string name="device_sharing_camera">Camera is on</string>
     <string name="device_sharing_camera_and_mic">Camera and microphone are on</string>
