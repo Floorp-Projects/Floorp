@@ -67,28 +67,86 @@ sealed class Permission {
     abstract val id: String?
     abstract val desc: String?
 
-    data class ContentAudioCapture(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentAudioMicrophone(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentAudioOther(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentGeoLocation(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentNotification(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentProtectedMediaId(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoCamera(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoCapture(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoScreen(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentVideoOther(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentAutoPlayAudible(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentAutoPlayInaudible(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentPersistentStorage(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class ContentMediaKeySystemAccess(override val id: String? = "", override val desc: String? = "") :
-        Permission()
-    data class ContentCrossOriginStorageAccess(override val id: String? = "", override val desc: String? = "") :
-        Permission()
+    data class ContentAudioCapture(
+        override val id: String? = "ContentAudioCapture",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentAudioMicrophone(
+        override val id: String? = "ContentAudioMicrophone",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentAudioOther(
+        override val id: String? = "ContentAudioOther",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentGeoLocation(
+        override val id: String? = "ContentGeoLocation",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentNotification(
+        override val id: String? = "ContentNotification",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentProtectedMediaId(
+        override val id: String? = "ContentProtectedMediaId",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentVideoCamera(
+        override val id: String? = "ContentVideoCamera",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentVideoCapture(
+        override val id: String? = "ContentVideoCapture",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentVideoScreen(
+        override val id: String? = "ContentVideoScreen",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentVideoOther(
+        override val id: String? = "ContentVideoOther",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentAutoPlayAudible(
+        override val id: String? = "ContentAutoPlayAudible",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentAutoPlayInaudible(
+        override val id: String? = "ContentAutoPlayInaudible",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentPersistentStorage(
+        override val id: String? = "ContentPersistentStorage",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentMediaKeySystemAccess(
+        override val id: String? = "ContentMediaKeySystemAccess",
+        override val desc: String? = "",
+    ) : Permission()
+    data class ContentCrossOriginStorageAccess(
+        override val id: String? = "ContentCrossOriginStorageAccess",
+        override val desc: String? = "",
+    ) : Permission()
 
-    data class AppCamera(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class AppAudio(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class AppLocationCoarse(override val id: String? = "", override val desc: String? = "") : Permission()
-    data class AppLocationFine(override val id: String? = "", override val desc: String? = "") : Permission()
+    data class AppCamera(
+        override val id: String? = "AppCamera",
+        override val desc: String? = "",
+    ) : Permission()
+    data class AppAudio(
+        override val id: String? = "AppAudio",
+        override val desc: String? = "",
+    ) : Permission()
+    data class AppLocationCoarse(
+        override val id: String? = "AppLocationCoarse",
+        override val desc: String? = "",
+    ) : Permission()
+    data class AppLocationFine(
+        override val id: String? = "AppLocationFine",
+        override val desc: String? = "",
+    ) : Permission()
 
-    data class Generic(override val id: String?, override val desc: String? = "") : Permission()
+    data class Generic(
+        override val id: String? = "Generic",
+        override val desc: String? = "",
+    ) : Permission()
 }

@@ -1111,7 +1111,7 @@ class SitePermissionsFeatureTest {
             ContentVideoCamera(),
             ContentVideoCapture(),
             ContentCrossOriginStorageAccess(),
-            Generic(id = null)
+            Generic()
         )
 
         var exceptionThrown = false
