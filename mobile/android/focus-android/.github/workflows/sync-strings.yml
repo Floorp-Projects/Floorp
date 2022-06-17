@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: "Discover Focus Beta Version"
         id: focus-android-beta-version
-        uses: mozilla-mobile/fenix-beta-version@3.0.0
+        uses: mozilla-mobile/fenix-beta-version@4.0.0
       - name: "Skip non-beta versions"
         uses: andymckay/cancel-action@0.2
         if: ${{ steps.focus-android-beta-version.outputs.beta_version == '' }}
