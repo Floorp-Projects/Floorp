@@ -151,16 +151,6 @@ template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint,
     EditSubAction aEditSubAction) const;
-template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const;
-template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorRawDOMPoint& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const;
-template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorDOMPoint& aPoint, const Element& aEditingHost) const;
-template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorRawDOMPoint& aPoint, const Element& aEditingHost) const;
 
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -6426,246 +6416,6 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   return error.StealNSResult();
 }
 
-template <typename EditorDOMPointType>
-EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const EditorDOMPointType& aPoint, EditSubAction aEditSubAction,
-    const Element& aEditingHost) const {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return EditorDOMPoint();
-  }
-
-  auto point = aPoint.template To<EditorDOMPoint>();
-  // Start scanning from the container node if aPoint is in a text node.
-  // XXX Perhaps, IsInDataNode() must be expected.
-  if (point.IsInTextNode()) {
-    if (!point.GetContainer()->GetParentNode()) {
-      // Okay, can't promote any further
-      // XXX Why don't we return start of the text node?
-      return point;
-    }
-    // If there is a preformatted linefeed in the text node, let's return
-    // the point after it.
-    EditorDOMPoint atLastPreformattedNewLine =
-        HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
-            point);
-    if (atLastPreformattedNewLine.IsSet()) {
-      return atLastPreformattedNewLine.NextPoint();
-    }
-    point.Set(point.GetContainer());
-  }
-
-  // Look back through any further inline nodes that aren't across a <br>
-  // from us, and that are enclosed in the same block.
-  // I.e., looking for start of current hard line.
-  constexpr HTMLEditUtils::WalkTreeOptions
-      ignoreNonEditableNodeAndStopAtBlockBoundary{
-          WalkTreeOption::IgnoreNonEditableNode,
-          WalkTreeOption::StopAtBlockBoundary};
-  for (nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
-       previousEditableContent && previousEditableContent->GetParentNode() &&
-       !HTMLEditUtils::IsVisibleBRElement(*previousEditableContent) &&
-       !HTMLEditUtils::IsBlockElement(*previousEditableContent);
-       previousEditableContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
-    EditorDOMPoint atLastPreformattedNewLine =
-        HTMLEditUtils::GetPreviousPreformattedNewLineInTextNode<EditorDOMPoint>(
-            EditorRawDOMPoint::AtEndOf(*previousEditableContent));
-    if (atLastPreformattedNewLine.IsSet()) {
-      return atLastPreformattedNewLine.NextPoint();
-    }
-    point.Set(previousEditableContent);
-  }
-
-  // Finding the real start for this point unless current line starts after
-  // <br> element.  Look up the tree for as long as we are the first node in
-  // the container (typically, start of nearest block ancestor), and as long
-  // as we haven't hit the body node.
-  for (nsIContent* nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
-       !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
-       point.GetContainerParent();
-       nearContent = HTMLEditUtils::GetPreviousContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
-    // Don't keep looking up if we have found a blockquote element to act on
-    // when we handle outdent.
-    // XXX Sounds like this is hacky.  If possible, it should be check in
-    //     outdent handler for consistency between edit sub-actions.
-    //     We should check Chromium's behavior of outdent when Selection
-    //     starts from `<blockquote>` and starts from first child of
-    //     `<blockquote>`.
-    if (aEditSubAction == EditSubAction::eOutdent &&
-        point.IsContainerHTMLElement(nsGkAtoms::blockquote)) {
-      break;
-    }
-
-    // Don't walk past the editable section. Note that we need to check
-    // before walking up to a parent because we need to return the parent
-    // object, so the parent itself might not be in the editable area, but
-    // it's OK if we're not performing a block-level action.
-    bool blockLevelAction =
-        aEditSubAction == EditSubAction::eIndent ||
-        aEditSubAction == EditSubAction::eOutdent ||
-        aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-        aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
-    // XXX So, does this check whether the container is removable or not? It
-    //     seems that here can be rewritten as obviously what here tries to
-    //     check.
-    if (!point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost) &&
-        (blockLevelAction ||
-         !point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost))) {
-      break;
-    }
-
-    point.Set(point.GetContainer());
-  }
-  return point;
-}
-
-template <typename EditorDOMPointType>
-EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const EditorDOMPointType& aPoint, const Element& aEditingHost) const {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return EditorDOMPoint();
-  }
-
-  auto point = aPoint.template To<EditorDOMPoint>();
-  // Start scanning from the container node if aPoint is in a text node.
-  // XXX Perhaps, IsInDataNode() must be expected.
-  if (point.IsInTextNode()) {
-    if (NS_WARN_IF(!point.GetContainer()->GetParentNode())) {
-      // Okay, can't promote any further
-      // XXX Why don't we return end of the text node?
-      return point;
-    }
-    EditorDOMPoint atNextPreformattedNewLine =
-        HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
-            EditorDOMPoint>(point);
-    if (atNextPreformattedNewLine.IsSet()) {
-      // If the linefeed is last character of the text node, it may be
-      // invisible if it's immediately before a block boundary.  In such
-      // case, we should retrun the block boundary.
-      Element* maybeNonEditableBlockElement = nullptr;
-      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
-              atNextPreformattedNewLine, &maybeNonEditableBlockElement) &&
-          maybeNonEditableBlockElement) {
-        // If the block is a parent of the editing host, let's return end
-        // of editing host.
-        if (maybeNonEditableBlockElement == &aEditingHost ||
-            !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
-                &aEditingHost)) {
-          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
-        }
-        // If it's invisible because of parent block boundary, return end
-        // of the block.  Otherwise, i.e., it's followed by a child block,
-        // returns the point of the child block.
-        if (atNextPreformattedNewLine.ContainerAsText()
-                ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
-          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
-        }
-        return EditorDOMPoint(maybeNonEditableBlockElement);
-      }
-      // Otherwise, return the point after the preformatted linefeed.
-      return atNextPreformattedNewLine.NextPoint();
-    }
-    // want to be after the text node
-    point.SetAfter(point.GetContainer());
-    NS_WARNING_ASSERTION(point.IsSet(), "Failed to set to after the text node");
-  }
-
-  // Look ahead through any further inline nodes that aren't across a <br> from
-  // us, and that are enclosed in the same block.
-  // XXX Currently, we stop block-extending when finding visible <br> element.
-  //     This might be different from "block-extend" of execCommand spec.
-  //     However, the spec is really unclear.
-  // XXX Probably, scanning only editable nodes is wrong for
-  //     EditSubAction::eCreateOrRemoveBlock because it might be better to wrap
-  //     existing inline elements even if it's non-editable.  For example,
-  //     following examples with insertParagraph causes different result:
-  //     * <div contenteditable>foo[]<b contenteditable="false">bar</b></div>
-  //     * <div contenteditable>foo[]<b>bar</b></div>
-  //     * <div contenteditable>foo[]<b contenteditable="false">bar</b>baz</div>
-  //     Only in the first case, after the caret position isn't wrapped with
-  //     new <div> element.
-  constexpr HTMLEditUtils::WalkTreeOptions
-      ignoreNonEditableNodeAndStopAtBlockBoundary{
-          WalkTreeOption::IgnoreNonEditableNode,
-          WalkTreeOption::StopAtBlockBoundary};
-  for (nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
-       nextEditableContent &&
-       !HTMLEditUtils::IsBlockElement(*nextEditableContent) &&
-       nextEditableContent->GetParent();
-       nextEditableContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
-    EditorDOMPoint atFirstPreformattedNewLine =
-        HTMLEditUtils::GetInclusiveNextPreformattedNewLineInTextNode<
-            EditorDOMPoint>(EditorRawDOMPoint(nextEditableContent, 0));
-    if (atFirstPreformattedNewLine.IsSet()) {
-      // If the linefeed is last character of the text node, it may be
-      // invisible if it's immediately before a block boundary.  In such
-      // case, we should retrun the block boundary.
-      Element* maybeNonEditableBlockElement = nullptr;
-      if (HTMLEditUtils::IsInvisiblePreformattedNewLine(
-              atFirstPreformattedNewLine, &maybeNonEditableBlockElement) &&
-          maybeNonEditableBlockElement) {
-        // If the block is a parent of the editing host, let's return end
-        // of editing host.
-        if (maybeNonEditableBlockElement == &aEditingHost ||
-            !maybeNonEditableBlockElement->IsInclusiveDescendantOf(
-                &aEditingHost)) {
-          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
-        }
-        // If it's invisible because of parent block boundary, return end
-        // of the block.  Otherwise, i.e., it's followed by a child block,
-        // returns the point of the child block.
-        if (atFirstPreformattedNewLine.ContainerAsText()
-                ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
-          return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
-        }
-        return EditorDOMPoint(maybeNonEditableBlockElement);
-      }
-      // Otherwise, return the point after the preformatted linefeed.
-      return atFirstPreformattedNewLine.NextPoint();
-    }
-    point.SetAfter(nextEditableContent);
-    if (NS_WARN_IF(!point.IsSet())) {
-      break;
-    }
-    if (HTMLEditUtils::IsVisibleBRElement(*nextEditableContent)) {
-      break;
-    }
-  }
-
-  // Finding the real end for this point unless current line ends with a <br>
-  // element.  Look up the tree for as long as we are the last node in the
-  // container (typically, block node), and as long as we haven't hit the body
-  // node.
-  for (nsIContent* nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost);
-       !nearContent && !point.IsContainerHTMLElement(nsGkAtoms::body) &&
-       point.GetContainerParent();
-       nearContent = HTMLEditUtils::GetNextContent(
-           point, ignoreNonEditableNodeAndStopAtBlockBoundary, &aEditingHost)) {
-    // Don't walk past the editable section. Note that we need to check before
-    // walking up to a parent because we need to return the parent object, so
-    // the parent itself might not be in the editable area, but it's OK.
-    // XXX Maybe returning parent of editing host is really error prone since
-    //     everybody need to check whether the end point is in editing host
-    //     when they touch there.
-    if (!point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost) &&
-        !point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost)) {
-      break;
-    }
-
-    point.SetAfter(point.GetContainer());
-    if (NS_WARN_IF(!point.IsSet())) {
-      break;
-    }
-  }
-  return point;
-}
-
 void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
     nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
     EditSubAction aEditSubAction) {
@@ -6821,11 +6571,12 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
   //     implement a method which checks both two DOM points in the editor
   //     root.
 
-  startPoint =
-      GetCurrentHardLineStartPoint(startPoint, aEditSubAction, *editingHost);
-  // XXX GetCurrentHardLineStartPoint() may return point of editing
-  //     host.  Perhaps, we should change it and stop checking it here
-  //     since this check may be expensive.
+  startPoint = AutoRangeArray::
+      GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock(
+          startPoint, aEditSubAction, *editingHost);
+  // XXX GetPointAtFirstContentOfLineOrParentBlockIfFirstContentOfBlock() may
+  //     return point of editing host.  Perhaps, we should change it and stop
+  //     checking it here since this check may be expensive.
   // XXX If the container is an element in the editing host but it points end of
   //     the container, this returns nullptr.  Is it intentional?
   if (!startPoint.GetChildOrContainerIfDataNode() ||
@@ -6833,12 +6584,13 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
           editingHost)) {
     return nullptr;
   }
-  endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
+  endPoint = AutoRangeArray::GetPointAfterFollowingLineBreakOrAtFollowingBlock(
+      endPoint, *editingHost);
   const EditorDOMPoint lastRawPoint =
       endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint();
-  // XXX GetCurrentHardLineEndPoint() may return point of editing host.
-  //     Perhaps, we should change it and stop checking it here since this
-  //     check may be expensive.
+  // XXX GetPointAfterFollowingLineBreakOrAtFollowingBlock() may return point of
+  //     editing host.  Perhaps, we should change it and stop checking it here
+  //     since this check may be expensive.
   // XXX If the container is an element in the editing host but it points end of
   //     the container, this returns nullptr.  Is it intentional?
   if (!lastRawPoint.GetChildOrContainerIfDataNode() ||
