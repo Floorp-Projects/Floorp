@@ -280,8 +280,6 @@ class JSJitProfilingFrameIterator {
   [[nodiscard]] bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                       bool forLastCallSite);
 
-  void moveToCppEntryFrame();
-  void moveToWasmFrame(CommonFrameLayout* frame);
   void moveToNextFrame(CommonFrameLayout* frame);
 
  public:
