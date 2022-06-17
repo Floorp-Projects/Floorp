@@ -678,23 +678,6 @@ void JSJitProfilingFrameIterator::operator++() {
   moveToNextFrame(frame);
 }
 
-void JSJitProfilingFrameIterator::moveToWasmFrame(CommonFrameLayout* frame) {
-  // No previous js jit frame, this is a transition frame, used to
-  // pass a wasm iterator the correct value of FP.
-  resumePCinCurrentFrame_ = nullptr;
-  fp_ = GetPreviousRawFrame<uint8_t*>(frame);
-  type_ = FrameType::WasmToJSJit;
-  MOZ_ASSERT(!done());
-}
-
-void JSJitProfilingFrameIterator::moveToCppEntryFrame() {
-  // No previous frame, set to nullptr to indicate that
-  // JSJitProfilingFrameIterator is done().
-  resumePCinCurrentFrame_ = nullptr;
-  fp_ = nullptr;
-  type_ = FrameType::CppToJSJit;
-}
-
 void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
   /*
    * fp_ points to a Baseline or Ion frame.  The possible call-stacks
@@ -760,11 +743,20 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     }
 
     case FrameType::WasmToJSJit:
-      moveToWasmFrame(frame);
+      // No previous js jit frame, this is a transition frame, used to
+      // pass a wasm iterator the correct value of FP.
+      resumePCinCurrentFrame_ = nullptr;
+      fp_ = GetPreviousRawFrame<uint8_t*>(frame);
+      type_ = FrameType::WasmToJSJit;
+      MOZ_ASSERT(!done());
       return;
 
     case FrameType::CppToJSJit:
-      moveToCppEntryFrame();
+      // No previous frame, set to nullptr to indicate that
+      // JSJitProfilingFrameIterator is done().
+      resumePCinCurrentFrame_ = nullptr;
+      fp_ = nullptr;
+      type_ = FrameType::CppToJSJit;
       return;
 
     case FrameType::Rectifier:
