@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   SearchSettings: "resource://gre/modules/SearchSettings.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  UserSearchEngine: "resource://gre/modules/UserSearchEngine.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -502,20 +503,20 @@ class SearchService {
    * @param {string} alias
    */
   async addUserEngine(name, url, alias) {
-    await this._createAndAddEngine({
-      extensionID: "set-via-user",
-      extensionBaseURI: "",
-      isAppProvided: false,
-      manifest: {
-        chrome_settings_overrides: {
-          search_provider: {
-            name,
-            search_url: encodeURI(url),
-            keyword: alias,
-          },
-        },
-      },
+    await this.init();
+
+    let newEngine = new lazy.UserSearchEngine({
+      details: { name, url, alias },
     });
+    let existingEngine = this._engines.get(newEngine.name);
+    if (existingEngine) {
+      throw Components.Exception(
+        "An engine with that name already exists!",
+        Cr.NS_ERROR_FILE_ALREADY_EXISTS
+      );
+    }
+    lazy.logConsole.debug(`Adding ${newEngine.name}`);
+    this.#addEngineToStore(newEngine);
   }
 
   /**
@@ -2037,6 +2038,8 @@ class SearchService {
         let engine;
         if (loadPath?.includes("set-via-policy")) {
           engine = new lazy.PolicySearchEngine({ json: engineJSON });
+        } else if (loadPath?.includes("set-via-user")) {
+          engine = new lazy.UserSearchEngine({ json: engineJSON });
         } else {
           engine = new lazy.SearchEngine({
             isAppProvided: false,
