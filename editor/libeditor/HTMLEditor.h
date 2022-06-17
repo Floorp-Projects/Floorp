@@ -1269,18 +1269,6 @@ class HTMLEditor final : public EditorBase,
       const EditorDOMPointType2& aEndPoint);
 
   /**
-   * GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces() collects
-   * selection ranges with extending to include adjuscent white-spaces
-   * of each range start and end.
-   *
-   * @param aOutArrayOfRanges   [out] Always appended same number of ranges
-   *                            as Selection::RangeCount().  Must be empty
-   *                            when you call this.
-   */
-  void GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
-      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges);
-
-  /**
    * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
    * which may be expanded to start/end of hard line at both edges of the given
    * range.  If this fails handling something, returns nullptr.
