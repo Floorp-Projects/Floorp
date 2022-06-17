@@ -29,6 +29,7 @@ search.engine.default:
     lifetime: application
     send_in_pings:
       - 'metrics'
+      - 'newtab'
 
   display_name:
     type: string
@@ -151,6 +152,7 @@ search.engine.private:
     lifetime: application
     send_in_pings:
       - 'metrics'
+      - 'newtab'
 
   display_name:
     type: string

@@ -226,6 +226,10 @@ class BrowserSearchTelemetryHandler {
           search_access_point: source,
           telemetry_id: engine.telemetryId,
         });
+        lazy.SearchSERPTelemetry.recordBrowserNewtabSession(
+          browser,
+          details.newtabSessionId
+        );
       }
     } catch (ex) {
       // Catch any errors here, so that search actions are not broken if
