@@ -95,7 +95,7 @@ from mozrunner.utils import get_stack_fixer_function
 # (U+0000 through U+001F; U+007F; U+0080 through U+009F),
 # except TAB (U+0009), CR (U+000D), LF (U+000A) and backslash (U+005C).
 # A raw string is deliberately not used.
-_cleanup_encoding_re = re.compile(u"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]")
+_cleanup_encoding_re = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]")
 
 
 def _cleanup_encoding_repl(m):
@@ -176,6 +176,7 @@ class XPCShellTestThread(Thread):
         self.runFailures = kwargs.get("runFailures")
         self.timeoutAsPass = kwargs.get("timeoutAsPass")
         self.crashAsPass = kwargs.get("crashAsPass")
+        self.conditionedProfileDir = kwargs.get("conditionedProfileDir")
         if self.runFailures:
             retry = False
 
@@ -442,6 +443,19 @@ class XPCShellTestThread(Thread):
         # This is the path set by buildPrefsFile.
         return self.rootPrefsFile
 
+    @property
+    def conditioned_profile_copy(self):
+        """Returns a copy of the original conditioned profile that was created."""
+
+        condprof_copy = os.path.join(tempfile.mkdtemp(), "profile")
+        shutil.copytree(
+            self.conditionedProfileDir,
+            condprof_copy,
+            ignore=shutil.ignore_patterns("lock"),
+        )
+        self.log.info("Created a conditioned-profile copy: %s" % condprof_copy)
+        return condprof_copy
+
     def buildCmdTestFile(self, name):
         """
         Build the command line arguments for the test file.
@@ -482,7 +496,9 @@ class XPCShellTestThread(Thread):
 
         On a remote system, this may be overloaded to use a remote path structure.
         """
-        if self.interactive or self.singleFile:
+        if self.conditionedProfileDir:
+            profileDir = self.conditioned_profile_copy
+        elif self.interactive or self.singleFile:
             profileDir = os.path.join(gettempdir(), self.profileName, "xpcshellprofile")
             try:
                 # This could be left over from previous runs
@@ -955,6 +971,7 @@ class XPCShellTests(object):
         self.harness_timeout = HARNESS_TIMEOUT
         self.nodeProc = {}
         self.http3ServerProc = {}
+        self.conditioned_profile_dir = None
 
     def getTestManifest(self, manifest):
         if isinstance(manifest, TestManifest):
@@ -1047,7 +1064,7 @@ class XPCShellTests(object):
                     mp.active_tests(
                         filters=filters,
                         noDefaultFilters=noDefaultFilters,
-                        **mozinfo.info
+                        **mozinfo.info,
                     ),
                 )
             )
@@ -1523,9 +1540,77 @@ class XPCShellTests(object):
             "network.http.network_access_on_socket_process.enabled", False
         )
 
+        self.mozInfo["condprof"] = options.get("conditionedProfile", False)
         mozinfo.update(self.mozInfo)
 
         return True
+
+    @property
+    def conditioned_profile_copy(self):
+        """Returns a copy of the original conditioned profile that was created."""
+        condprof_copy = os.path.join(tempfile.mkdtemp(), "profile")
+        shutil.copytree(
+            self.conditioned_profile_dir,
+            condprof_copy,
+            ignore=shutil.ignore_patterns("lock"),
+        )
+        self.log.info("Created a conditioned-profile copy: %s" % condprof_copy)
+        return condprof_copy
+
+    def downloadConditionedProfile(self, profile_scenario):
+        from condprof.client import get_profile
+        from condprof.util import get_current_platform
+
+        if self.conditioned_profile_dir:
+            # We already have a directory, so provide a copy that
+            # will get deleted after it's done with
+            return self.conditioned_profile_dir
+
+        # create a temp file to help ensure uniqueness
+        temp_download_dir = tempfile.mkdtemp()
+        self.log.info(
+            "Making temp_download_dir from inside get_conditioned_profile {}".format(
+                temp_download_dir
+            )
+        )
+        # call condprof's client API to yield our platform-specific
+        # conditioned-profile binary
+        platform = get_current_platform()
+
+        if not profile_scenario:
+            profile_scenario = "settled"
+        try:
+            cond_prof_target_dir = get_profile(
+                temp_download_dir,
+                platform,
+                profile_scenario,
+                repo="mozilla-central",
+            )
+        except Exception:
+            # any other error is a showstopper
+            self.log.critical("Could not get the conditioned profile")
+            traceback.print_exc()
+            raise
+
+        # now get the full directory path to our fetched conditioned profile
+        self.conditioned_profile_dir = os.path.join(
+            temp_download_dir, cond_prof_target_dir
+        )
+        if not os.path.exists(cond_prof_target_dir):
+            self.log.critical(
+                "Can't find target_dir {}, from get_profile()"
+                "temp_download_dir {}, platform {}, scenario {}".format(
+                    cond_prof_target_dir, temp_download_dir, platform, profile_scenario
+                )
+            )
+            raise OSError
+
+        self.log.info(
+            "Original self.conditioned_profile_dir is now set: {}".format(
+                self.conditioned_profile_dir
+            )
+        )
+        return self.conditioned_profile_copy
 
     def runSelfTest(self):
         import selftest
@@ -1554,7 +1639,6 @@ class XPCShellTests(object):
         """
         Run xpcshell tests.
         """
-
         global gotSIGINT
 
         # Number of times to repeat test(s) in --verify mode
@@ -1640,11 +1724,19 @@ class XPCShellTests(object):
         self.runFailures = options.get("runFailures")
         self.timeoutAsPass = options.get("timeoutAsPass")
         self.crashAsPass = options.get("crashAsPass")
+        self.conditionedProfile = options.get("conditionedProfile")
 
         self.testCount = 0
         self.passCount = 0
         self.failCount = 0
         self.todoCount = 0
+
+        if self.conditionedProfile:
+            self.conditioned_profile_dir = self.downloadConditionedProfile("full")
+            options["self_test"] = False
+            if not options["test_tags"]:
+                options["test_tags"] = []
+            options["test_tags"].append("condprof")
 
         self.setAbsPath()
 
@@ -1752,6 +1844,7 @@ class XPCShellTests(object):
             "runFailures": self.runFailures,
             "timeoutAsPass": self.timeoutAsPass,
             "crashAsPass": self.crashAsPass,
+            "conditionedProfileDir": self.conditioned_profile_dir,
         }
 
         if self.sequential:
@@ -1811,7 +1904,7 @@ class XPCShellTests(object):
                     verbose=self.verbose or test_object.get("verbose") == "true",
                     usingTSan=usingTSan,
                     mobileArgs=mobileArgs,
-                    **kwargs
+                    **kwargs,
                 )
                 if "run-sequentially" in test_object or self.sequential:
                     sequential_tests.append(test)
@@ -1917,7 +2010,6 @@ class XPCShellTests(object):
     def runTestList(
         self, tests_queue, sequential_tests, testClass, mobileArgs, **kwargs
     ):
-
         if self.sequential:
             self.log.info("Running tests sequentially.")
         else:
@@ -2024,7 +2116,7 @@ class XPCShellTests(object):
                 retry=False,
                 verbose=self.verbose,
                 mobileArgs=mobileArgs,
-                **kwargs
+                **kwargs,
             )
             self.start_test(test)
             test.join()
