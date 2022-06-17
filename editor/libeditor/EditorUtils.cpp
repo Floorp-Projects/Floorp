@@ -431,6 +431,54 @@ AutoRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
   return changed;
 }
 
+// static
+void AutoRangeArray::
+    UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+        EditorDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
+        const Element& aEditingHost) {
+  // FYI: This was moved from
+  // https://searchfox.org/mozilla-central/rev/3419858c997f422e3e70020a46baae7f0ec6dacc/editor/libeditor/HTMLEditSubActionHandler.cpp#6743
+
+  // MOOSE major hack:
+  // The HTMLEditor::GetCurrentHardLineStartPoint() and
+  // HTMLEditor::GetCurrentHardLineEndPoint() don't really do the right thing
+  // for collapsed ranges inside block elements that contain nothing but a solo
+  // <br>.  It's easier/ to put a workaround here than to revamp them.  :-(
+  if (aStartPoint != aEndPoint) {
+    return;
+  }
+
+  if (!aStartPoint.IsInContentNode()) {
+    return;
+  }
+
+  // XXX Perhaps, this should be more careful.  This may not select only one
+  //     node because this just check whether the block is empty or not,
+  //     and may not select in non-editable block.  However, for inline
+  //     editing host case, it's right to look for block element without
+  //     editable state check.  Now, this method is used for preparation for
+  //     other things.  So, cannot write test for this method behavior.
+  //     So, perhaps, we should get rid of this method and each caller should
+  //     handle its job better.
+  Element* const maybeNonEditableBlockElement =
+      HTMLEditUtils::GetInclusiveAncestorElement(
+          *aStartPoint.ContainerAsContent(),
+          HTMLEditUtils::ClosestBlockElement);
+  if (!maybeNonEditableBlockElement) {
+    return;
+  }
+
+  // Make sure we don't go higher than our root element in the content tree
+  if (aEditingHost.IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
+    return;
+  }
+
+  if (HTMLEditUtils::IsEmptyNode(*maybeNonEditableBlockElement)) {
+    aStartPoint.Set(maybeNonEditableBlockElement, 0u);
+    aEndPoint.SetToEndOf(maybeNonEditableBlockElement);
+  }
+}
+
 /******************************************************************************
  * some general purpose editor utils
  *****************************************************************************/

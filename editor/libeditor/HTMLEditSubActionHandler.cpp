@@ -111,18 +111,6 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
   }
 }
 
-template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
-template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorRawDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
-template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPoint& aStartPoint, EditorRawDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
-template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorRawDOMPoint& aStartPoint, EditorRawDOMPoint& aEndPoint,
-    const Element& aEditingHost) const;
 template already_AddRefed<nsRange>
 HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     const EditorDOMRange& aRange);
@@ -6708,50 +6696,6 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
   }
 }
 
-template <typename EditorDOMPointType1, typename EditorDOMPointType2>
-void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
-    EditorDOMPointType1& aStartPoint, EditorDOMPointType2& aEndPoint,
-    const Element& aEditingHost) const {
-  // MOOSE major hack:
-  // The GetCurrentHardLineStartPoint() and GetCurrentHardLineEndPoint() don't
-  // really do the right thing for collapsed ranges inside block elements that
-  // contain nothing but a solo <br>.  It's easier/ to put a workaround here
-  // than to revamp them.  :-(
-  if (aStartPoint != aEndPoint) {
-    return;
-  }
-
-  if (!aStartPoint.IsInContentNode()) {
-    return;
-  }
-
-  // XXX Perhaps, this should be more careful.  This may not select only one
-  //     node because this just check whether the block is empty or not,
-  //     and may not select in non-editable block.  However, for inline
-  //     editing host case, it's right to look for block element without
-  //     editable state check.  Now, this method is used for preparation for
-  //     other things.  So, cannot write test for this method behavior.
-  //     So, perhaps, we should get rid of this method and each caller should
-  //     handle its job better.
-  Element* const maybeNonEditableBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorElement(
-          *aStartPoint.ContainerAsContent(),
-          HTMLEditUtils::ClosestBlockElement);
-  if (!maybeNonEditableBlockElement) {
-    return;
-  }
-
-  // Make sure we don't go higher than our root element in the content tree
-  if (aEditingHost.IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
-    return;
-  }
-
-  if (HTMLEditUtils::IsEmptyNode(*maybeNonEditableBlockElement)) {
-    aStartPoint.Set(maybeNonEditableBlockElement, 0u);
-    aEndPoint.SetToEndOf(maybeNonEditableBlockElement);
-  }
-}
-
 template <typename EditorDOMRangeType>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     const EditorDOMRangeType& aRange) {
@@ -6778,13 +6722,17 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     return nullptr;
   }
 
-  auto startPoint = aStartPoint.template To<EditorRawDOMPoint>();
-  auto endPoint = aEndPoint.template To<EditorRawDOMPoint>();
-  SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
+  EditorDOMPoint startPoint = aStartPoint.template To<EditorDOMPoint>();
+  EditorDOMPoint endPoint = aEndPoint.template To<EditorDOMPoint>();
+  AutoRangeArray::UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+      startPoint, endPoint, *editingHost);
 
   if (NS_WARN_IF(!startPoint.IsInContentNode()) ||
       NS_WARN_IF(!endPoint.IsInContentNode())) {
-    NS_WARNING("HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock() failed");
+    NS_WARNING(
+        "AutoRangeArray::"
+        "UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement() "
+        "failed");
     return nullptr;
   }
 
@@ -6816,7 +6764,7 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
       MOZ_ALWAYS_TRUE(endPoint.AdvanceOffset());
     }
   }
-  EditorRawDOMPoint lastRawPoint(endPoint);
+  EditorDOMPoint lastRawPoint(endPoint);
   if (!lastRawPoint.IsStartOfContainer()) {
     lastRawPoint.RewindOffset();
   }
@@ -6861,7 +6809,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
 
   auto startPoint = aStartPoint.template To<EditorDOMPoint>();
   auto endPoint = aEndPoint.template To<EditorDOMPoint>();
-  SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
+  AutoRangeArray::UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+      startPoint, endPoint, *editingHost);
 
   // Make a new adjusted range to represent the appropriate block content.
   // This is tricky.  The basic idea is to push out the range endpoints to

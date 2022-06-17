@@ -1295,18 +1295,6 @@ class HTMLEditor final : public EditorBase,
       EditSubAction aEditSubAction);
 
   /**
-   * SelectBRElementIfCollapsedInEmptyBlock() helper method for
-   * CreateRangeIncludingAdjuscentWhiteSpaces() and
-   * CreateRangeExtendedToLineStartAndEnd().  If the given range is collapsed
-   * in a block and the block has only one `<br>` element, this makes
-   * aStartPoint and aEndRef select the `<br>` element.
-   */
-  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
-  void SelectBRElementIfCollapsedInEmptyBlock(
-      EditorDOMPointType1& aStartPoint, EditorDOMPointType2& aEndPoint,
-      const Element& aEditingHost) const;
-
-  /**
    * GetChildNodesOf() returns all child nodes of aParent with an array.
    */
   static void GetChildNodesOf(
