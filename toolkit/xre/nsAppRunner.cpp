@@ -109,6 +109,7 @@
 #  include <intrin.h>
 #  include <math.h>
 #  include "cairo/cairo-features.h"
+#  include "detect_win32k_conflicts.h"
 #  include "mozilla/PreXULSkeletonUI.h"
 #  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
 #  include "mozilla/WindowsDllBlocklist.h"
@@ -718,6 +719,20 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
   if (!IsWin10FallCreatorsUpdateOrLater()) {
     return nsIXULRuntime::ContentWin32kLockdownState::
         OperatingSystemNotSupported;
+  }
+
+  {
+    ConflictingMitigationStatus conflictingMitigationStatus = {};
+    if (!detect_win32k_conflicting_mitigations(&conflictingMitigationStatus)) {
+      return nsIXULRuntime::ContentWin32kLockdownState::
+          IncompatibleMitigationPolicy;
+    }
+    if (conflictingMitigationStatus.caller_check ||
+        conflictingMitigationStatus.sim_exec ||
+        conflictingMitigationStatus.stack_pivot) {
+      return nsIXULRuntime::ContentWin32kLockdownState::
+          IncompatibleMitigationPolicy;
+    }
   }
 
   // Win32k Lockdown requires WebRender, but WR is not currently guaranteed

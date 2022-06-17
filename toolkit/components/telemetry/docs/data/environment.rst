@@ -480,6 +480,7 @@ Specific keys are:
   - DisabledByDefault = 14 - The default value of the pref is false
   - EnabledByDefault = 15 - The default value of the pref is true
   - DecodersArentRemote = 16 - Some decoder is not remoted to RDD Process (checks PDMFactory::AllDecodersAreRemote)
+  - IncompatibleMitigationPolicy = 17 - Some incompatible Windows Exploit Mitigation policies are enabled
 
 
 profile

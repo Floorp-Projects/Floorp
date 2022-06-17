@@ -1313,6 +1313,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "detect_win32k_conflicts"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "thiserror",
+ "winapi",
+]
+
+[[package]]
 name = "devd-rs"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2044,6 +2053,7 @@ dependencies = [
  "cubeb-coreaudio",
  "cubeb-pulse",
  "cubeb-sys",
+ "detect_win32k_conflicts",
  "encoding_glue",
  "fluent",
  "fluent-fallback",
