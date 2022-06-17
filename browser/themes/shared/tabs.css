@@ -681,7 +681,7 @@
   }
 }
 
-/* Firefox View button */
+/* Firefox View button and menu item */
 
 :root:not([privatebrowsingmode=temporary]) :is(#firefox-view-button, #wrapper-firefox-view-button) + #tabbrowser-tabs {
   border-inline-start: 1px solid color-mix(in srgb, currentColor 25%, transparent);
@@ -689,7 +689,7 @@
   margin-inline-start: 4px;
 }
 
-:root[privatebrowsingmode=temporary] #firefox-view-button {
+:root[privatebrowsingmode=temporary] :is(#firefox-view-button, #menu_openFirefoxView) {
   display: none;
 }
 
