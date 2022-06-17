@@ -1223,8 +1223,6 @@ class HTMLEditor final : public EditorBase,
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
    * First, this collects all nodes in given ranges, then, modifies the
    * result for specific edit sub-actions.
-   * FYI: You can use CollectEditTargetNodesInExtendedSelectionRanges() instead
-   *      if you want to call this with extended selection ranges.
    */
   nsresult CollectEditTargetNodes(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
@@ -1307,26 +1305,6 @@ class HTMLEditor final : public EditorBase,
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
       nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
-
-  /**
-   * CollectEditTargetNodesInExtendedSelectionRanges() calls
-   * CollectEditTargetNodes() with result of
-   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
-   * methods for the detail.
-   */
-  nsresult CollectEditTargetNodesInExtendedSelectionRanges(
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
-    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
-                                                    aEditSubAction);
-    nsresult rv =
-        CollectEditTargetNodes(extendedSelectionRanges, aOutArrayOfContents,
-                               aEditSubAction, aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
-    return rv;
-  }
 
   /**
    * SelectBRElementIfCollapsedInEmptyBlock() helper method for
@@ -4590,11 +4568,13 @@ class HTMLEditor final : public EditorBase,
   friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
                                       // DoSplitNode, RangeUpdaterRef
   friend class
-      ListElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
-                                  // CollectNonEditableNodes
+      ListElementSelectionState;  // CollectEditTargetNodes,
+                                  // CollectNonEditableNodes,
+                                  // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class
-      ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
-                                      // CollectNonEditableNodes
+      ListItemElementSelectionState;  // CollectEditTargetNodes,
+                                      // CollectNonEditableNodes,
+                                      // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class MoveNodeResult;       // AllowsTransactionsToChangeSelection,
                                      // CollapseSelectionTo
   friend class MoveNodeTransaction;  // AllowsTransactionsToChangeSelection,
@@ -4602,10 +4582,11 @@ class HTMLEditor final : public EditorBase,
                                      // RangeUpdaterRef
   friend class
       ParagraphStateAtSelection;  // CollectChildren,
-                                  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectEditTargetNodes,
                                   // CollectListChildren,
                                   // CollectNonEditableNodes,
-                                  // CollectTableChildren
+                                  // CollectTableChildren,
+                                  // GetSelectionRangesExtendedToHardLineStartAndEnd
   friend class SlurpBlobEventListener;       // BlobReader
   friend class SplitNodeResult;              // CollapseSelectionTo
   friend class SplitNodeTransaction;         // DoJoinNodes, DoSplitNode
@@ -4742,9 +4723,10 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
   /**
    * CollectEditableFormatNodesInSelection() collects only editable nodes
    * around selection ranges (with
-   * `HTMLEditor::CollectEditTargetNodesInExtendedSelectionRanges()`, see its
-   * document for the detail).  If it includes list, list item or table
-   * related elements, they will be replaced their children.
+   * `HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd()` and
+   * `HTMLEditor::CollectEditTargetNodes()`, see its document for the detail).
+   * If it includes list, list item or table related elements, they will be
+   * replaced their children.
    */
   static nsresult CollectEditableFormatNodesInSelection(
       HTMLEditor& aHTMLEditor,
