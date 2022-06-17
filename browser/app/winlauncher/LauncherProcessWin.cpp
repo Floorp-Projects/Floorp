@@ -44,7 +44,8 @@
  */
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    HANDLE aChildMainThread, const bool aIsSafeMode) {
+    HANDLE aChildMainThread, mozilla::DeelevationStatus /*unused*/,
+    const bool aIsSafeMode) {
   return mozilla::InitializeDllBlocklistOOPFromLauncher(aFullImagePath,
                                                         aChildProcess);
 }
@@ -140,6 +141,11 @@ static mozilla::LauncherFlags ProcessCmdLine(int& aArgc, wchar_t* aArgv[]) {
 
   if (mozilla::CheckArg(aArgc, aArgv, L"no-deelevate") == mozilla::ARG_FOUND) {
     result |= mozilla::LauncherFlags::eNoDeelevate;
+  }
+
+  if (mozilla::CheckArg(aArgc, aArgv, ATTEMPTING_DEELEVATION_FLAG) ==
+      mozilla::ARG_FOUND) {
+    result |= mozilla::LauncherFlags::eDeelevating;
   }
 
   return result;
@@ -313,21 +319,50 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     return Nothing();
   }
 
-  // If we're elevated, we should relaunch ourselves as a normal user.
-  // Note that we only call LaunchUnelevated when we don't need to wait for the
-  // browser process.
-  if (elevationState.unwrap() == ElevationState::eElevated &&
-      !(flags &
-        (LauncherFlags::eWaitForBrowser | LauncherFlags::eNoDeelevate)) &&
-      !mediumIlToken.get()) {
-    LauncherVoidResult launchedUnelevated = LaunchUnelevated(argc, argv);
-    bool failed = launchedUnelevated.isErr();
-    if (failed) {
-      HandleLauncherError(launchedUnelevated);
-      return Nothing();
+  // Distill deelevation status, and/or attempt to perform launcher deelevation
+  // via an indirect relaunch.
+  DeelevationStatus deelevationStatus = DeelevationStatus::Unknown;
+  if (mediumIlToken.get()) {
+    // Rather than indirectly relaunch the launcher, we'll attempt to directly
+    // launch the main process with a reduced-privilege security token.
+    deelevationStatus = DeelevationStatus::PartiallyDeelevated;
+  } else if (elevationState.unwrap() == ElevationState::eElevated) {
+    if (flags & LauncherFlags::eWaitForBrowser) {
+      // An indirect relaunch won't provide a process-handle to block on,
+      // so we have to continue onwards with this process.
+      deelevationStatus = DeelevationStatus::DeelevationProhibited;
+    } else if (flags & LauncherFlags::eNoDeelevate) {
+      // Our invoker (hopefully, the user) has explicitly requested that the
+      // launcher not deelevate itself.
+      deelevationStatus = DeelevationStatus::DeelevationProhibited;
+    } else if (flags & LauncherFlags::eDeelevating) {
+      // We've already tried to deelevate, to no effect. Continue onward.
+      deelevationStatus = DeelevationStatus::UnsuccessfullyDeelevated;
+    } else {
+      // Otherwise, attempt to relaunch the launcher process itself via the
+      // shell, which hopefully will not be elevated. (But see bug 1733821.)
+      LauncherVoidResult launchedUnelevated = LaunchUnelevated(argc, argv);
+      if (launchedUnelevated.isErr()) {
+        // On failure, don't even try for a launcher process. Continue onwards
+        // in this one. (TODO: why? This isn't technically fatal...)
+        HandleLauncherError(launchedUnelevated);
+        return Nothing();
+      }
+      // Otherwise, tell our caller to exit with a success code.
+      return Some(0);
     }
-
-    return Some(0);
+  } else if (elevationState.unwrap() == ElevationState::eNormalUser) {
+    if (flags & LauncherFlags::eDeelevating) {
+      // Deelevation appears to have been successful!
+      deelevationStatus = DeelevationStatus::SuccessfullyDeelevated;
+    } else {
+      // We haven't done anything and we don't need to.
+      deelevationStatus = DeelevationStatus::StartedUnprivileged;
+    }
+  } else {
+    // Some other elevation state with no medium-integrity token.
+    // (This should probably not happen.)
+    deelevationStatus = DeelevationStatus::Unknown;
   }
 
 #if defined(MOZ_LAUNCHER_PROCESS)
@@ -424,8 +459,9 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
     job = CreateJobAndAssignProcess(process.get());
   }
 
-  LauncherVoidResult setupResult = PostCreationSetup(
-      argv[0], process.get(), mainThread.get(), isSafeMode.value());
+  LauncherVoidResult setupResult =
+      PostCreationSetup(argv[0], process.get(), mainThread.get(),
+                        deelevationStatus, isSafeMode.value());
   if (setupResult.isErr()) {
     HandleLauncherError(setupResult);
     ::TerminateProcess(process.get(), 1);
