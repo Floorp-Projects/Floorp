@@ -4,16 +4,18 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
+const { SearchEngine } = ChromeUtils.import(
+  "resource://gre/modules/SearchEngine.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EngineURL: "resource://gre/modules/SearchEngine.jsm",
-  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
@@ -63,7 +65,7 @@ function ENSURE_WARN(assertion, message, resultCode) {
 /**
  * OpenSearchEngine represents an OpenSearch base search engine.
  */
-class OpenSearchEngine extends lazy.SearchEngine {
+class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
 

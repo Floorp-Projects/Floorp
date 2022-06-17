@@ -6,20 +6,22 @@
 
 var EXPORTED_SYMBOLS = ["PlacesPreviews", "PlacesPreviewsHelperService"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -204,7 +206,7 @@ class DeletionHandler {
  * format. All the previews are saved into a "places-previews" folder under
  * the roaming profile folder.
  */
-const PlacesPreviews = new (class extends lazy.EventEmitter {
+const PlacesPreviews = new (class extends EventEmitter {
   #placesObserver = null;
   #deletionHandler = null;
   // This is used as a cache to avoid fetching the same preview multiple
