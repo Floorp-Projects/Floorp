@@ -171,7 +171,17 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetScreenBounds() override;
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntSize GetClientSize() override;
-  LayoutDeviceIntPoint GetClientOffset() override;
+  LayoutDeviceIntPoint GetClientOffset() override { return mClientOffset; }
+
+  // Recomputes the client offset according to our current window position.
+  // If aNotify is true, NotifyWindowMoved will be called on client offset
+  // changes.
+  //
+  // NOTE(emilio): It seems that as long any change here update either the size
+  // or the position of the window, we should be doing fine without notifying,
+  // but this is done to preserve existing behavior.
+  void RecomputeClientOffset(bool aNotify);
+
   void SetCursor(const Cursor&) override;
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void* GetNativeData(uint32_t aDataType) override;
@@ -467,9 +477,6 @@ class nsWindow final : public nsBaseWidget {
   void GrabPointer(guint32 aTime);
   void ReleaseGrabs(void);
 
-  void UpdateClientOffsetFromFrameExtents();
-  void UpdateClientOffsetFromCSDWindow();
-
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
 
@@ -532,13 +539,14 @@ class nsWindow final : public nsBaseWidget {
   nsSizeMode mSizeMode = nsSizeMode_Normal;
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;
+
   // The size requested, which might not be reflected in mBounds.  Used in
   // WaylandPopupSetDirectPosition() to remember intended size for popup
   // positioning, in LockAspect() to remember the intended aspect ratio, and
   // to remember a size requested while waiting for moved-to-rect when
   // OnSizeAllocate() might change mBounds.Size().
   LayoutDeviceIntSize mLastSizeRequest;
-  nsIntPoint mClientOffset;
+  LayoutDeviceIntPoint mClientOffset;
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime = GDK_CURRENT_TIME;
