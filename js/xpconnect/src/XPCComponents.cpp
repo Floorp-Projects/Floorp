@@ -1561,11 +1561,27 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::IsModuleLoaded(const nsACString& registryLocation,
+nsXPCComponents_Utils::IsModuleLoaded(const nsACString& aResourceURI,
                                       bool* retval) {
   RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
   MOZ_ASSERT(moduleloader);
-  return moduleloader->IsModuleLoaded(registryLocation, retval);
+  return moduleloader->IsModuleLoaded(aResourceURI, retval);
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsJSModuleLoaded(const nsACString& aResourceURI,
+                                        bool* retval) {
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  MOZ_ASSERT(moduleloader);
+  return moduleloader->IsJSModuleLoaded(aResourceURI, retval);
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsESModuleLoaded(const nsACString& aResourceURI,
+                                        bool* retval) {
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  MOZ_ASSERT(moduleloader);
+  return moduleloader->IsESModuleLoaded(aResourceURI, retval);
 }
 
 NS_IMETHODIMP
@@ -2530,6 +2546,19 @@ nsXPCComponents_Utils::GetLoadedComponents(
     nsTArray<nsCString>& aLoadedComponents) {
   mozJSComponentLoader::Get()->GetLoadedComponents(aLoadedComponents);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetLoadedJSModules(
+    nsTArray<nsCString>& aLoadedJSModules) {
+  mozJSComponentLoader::Get()->GetLoadedModules(aLoadedJSModules);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetLoadedESModules(
+    nsTArray<nsCString>& aLoadedESModules) {
+  return mozJSComponentLoader::Get()->GetLoadedESModules(aLoadedESModules);
 }
 
 NS_IMETHODIMP

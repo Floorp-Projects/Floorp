@@ -213,8 +213,8 @@ interface nsIXPCComponents_Utils : nsISupports
     jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
 
     /**
-     * Returns true if the js file located at 'registryLocation' location has
-     * been loaded previously via the import method above. Returns false
+     * Returns true if the JSM is loaded into the system global previously via
+     * the import method above, or corresponding ESM is loaded. Returns false
      * otherwise.
      *
      * @param resourceURI A resource:// URI string representing the location of
@@ -223,6 +223,19 @@ interface nsIXPCComponents_Utils : nsISupports
      *          otherwise
      */
     boolean isModuleLoaded(in AUTF8String aResourceURI);
+
+
+    /**
+     * Returns true if the JSM is loaded into the system global previously via
+     * the import method above. Returns false otherwise.
+     */
+    boolean isJSModuleLoaded(in AUTF8String aResourceURI);
+
+    /**
+     * Returns true if the ESM is loaded into the system global previously via
+     * the ChromeUtils.importESModule method etc. Returns false otherwise.
+     */
+    boolean isESModuleLoaded(in AUTF8String aResourceURI);
 
     /*
      * Unloads the JS module at 'registryLocation'. Existing references to the
@@ -707,8 +720,18 @@ interface nsIXPCComponents_Utils : nsISupports
 
     // These attributes are for startup testing purposes. They are not expected
     // to be used for production code.
+
+    // Array of the URI of JSM and ESM loaded, converting ESM URI into JSM URI.
     readonly attribute Array<ACString> loadedModules;
+
     readonly attribute Array<ACString> loadedComponents;
+
+    // Array of the URI of JSM loaded.
+    readonly attribute Array<ACString> loadedJSModules;
+
+    // Array of the URI of ESM loaded.
+    readonly attribute Array<ACString> loadedESModules;
+
 
     // These 2 functions will only return useful values if the
     // "browser.startup.record" preference was true at the time the JS file
