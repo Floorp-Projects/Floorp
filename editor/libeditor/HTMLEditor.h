@@ -1204,10 +1204,10 @@ class HTMLEditor final : public EditorBase,
    * elements around aArrayOfRanges.  Then, collects edit target nodes to
    * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
    * <br> element in it.
-   * FYI: You can use SplitInlinesAndCollectEditTargetNodesInOneHardLine()
-   *      or SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
-   *      instead if you want to call this with a hard line including
-   *      specific DOM point or extended selection ranges.
+   * FYI: You could use
+   *      SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
+   *      instead if you want to call this with a hard line including specific
+   *      DOM point or extended selection ranges.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitInlinesAndCollectEditTargetNodes(
@@ -1328,48 +1328,6 @@ class HTMLEditor final : public EditorBase,
                                                     aEditSubAction);
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
         extendedSelectionRanges, aOutArrayOfContents, aEditSubAction,
-        aCollectNonEditableNodes);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
-
-  /**
-   * SplitInlinesAndCollectEditTargetNodesInOneHardLine() just calls
-   * SplitInlinesAndCollectEditTargetNodes() with result of calling
-   * CreateRangeExtendedToHardLineStartAndEnd() with aPointInOneHardLine.
-   * In other words, returns nodes in the hard line including
-   * `aPointInOneHardLine`.  See the comments for these methods for the
-   * detail.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitInlinesAndCollectEditTargetNodesInOneHardLine(
-      const EditorDOMPoint& aPointInOneHardLine,
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes) {
-    if (MOZ_UNLIKELY(
-            NS_WARN_IF(!aPointInOneHardLine.IsSet()) ||
-            NS_WARN_IF(aPointInOneHardLine.IsInNativeAnonymousSubtree()))) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
-        aPointInOneHardLine, aPointInOneHardLine, aEditSubAction);
-    if (!oneLineRange) {
-      // XXX It seems odd to create collapsed range for one line range...
-      ErrorResult error;
-      oneLineRange =
-          nsRange::Create(aPointInOneHardLine.ToRawRangeBoundary(),
-                          aPointInOneHardLine.ToRawRangeBoundary(), error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    }
-    AutoTArray<RefPtr<nsRange>, 1> arrayOfLineRanges;
-    arrayOfLineRanges.AppendElement(oneLineRange);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        arrayOfLineRanges, aOutArrayOfContents, aEditSubAction,
         aCollectNonEditableNodes);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "SplitInlinesAndCollectEditTargetNodes() failed");
