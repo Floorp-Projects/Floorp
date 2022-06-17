@@ -698,19 +698,21 @@ void JSJitProfilingFrameIterator::moveToCppEntryFrame() {
 void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
   /*
    * fp_ points to a Baseline or Ion frame.  The possible call-stacks
-   * patterns occurring between this frame and a previous Ion or Baseline
+   * patterns occurring between this frame and a previous Ion, Baseline or Entry
    * frame are as follows:
    *
    * <Baseline-Or-Ion>
    * ^
    * |
-   * ^--- Ion
+   * ^--- Ion (or Baseline JSOp::Resume)
    * |
    * ^--- Baseline Stub <---- Baseline
    * |
+   * ^--- IonICCall <---- Ion
+   * |
    * ^--- WasmToJSJit <---- (other wasm frames, not handled by this iterator)
    * |
-   * ^--- Argument Rectifier
+   * ^--- Arguments Rectifier
    * |    ^
    * |    |
    * |    ^--- Ion
@@ -719,100 +721,59 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
    * |    |
    * |    ^--- WasmToJSJit <--- (other wasm frames)
    * |    |
-   * |    ^--- CppToJSJit
+   * |    ^--- Entry Frame (CppToJSJit)
    * |
-   * ^--- Entry Frame (From C++)
-   *      Exit Frame (From previous JitActivation)
-   *      ^
-   *      |
-   *      ^--- Ion
-   *      |
-   *      ^--- Baseline
-   *      |
-   *      ^--- Baseline Stub <---- Baseline
+   * ^--- Entry Frame (CppToJSJit)
+   *
+   * NOTE: Keep this in sync with JitRuntime::generateProfilerExitFrameTailStub!
    */
+
+  // Unwrap rectifier frames.
+  if (frame->prevType() == FrameType::Rectifier) {
+    frame = GetPreviousRawFrame<RectifierFrameLayout*>(frame);
+    MOZ_ASSERT(frame->prevType() == FrameType::IonJS ||
+               frame->prevType() == FrameType::BaselineStub ||
+               frame->prevType() == FrameType::WasmToJSJit ||
+               frame->prevType() == FrameType::CppToJSJit);
+  }
+
   FrameType prevType = frame->prevType();
-
-  if (prevType == FrameType::IonJS) {
-    resumePCinCurrentFrame_ = frame->returnAddress();
-    fp_ = GetPreviousRawFrame<uint8_t*>(frame);
-    type_ = FrameType::IonJS;
-    return;
-  }
-
-  if (prevType == FrameType::BaselineJS) {
-    resumePCinCurrentFrame_ = frame->returnAddress();
-    fp_ = GetPreviousRawFrame<uint8_t*>(frame);
-    type_ = FrameType::BaselineJS;
-    return;
-  }
-
-  if (prevType == FrameType::BaselineStub) {
-    BaselineStubFrameLayout* stubFrame =
-        GetPreviousRawFrame<BaselineStubFrameLayout*>(frame);
-    MOZ_ASSERT(stubFrame->prevType() == FrameType::BaselineJS);
-
-    resumePCinCurrentFrame_ = stubFrame->returnAddress();
-    fp_ = GetPreviousRawFrame<uint8_t*>(stubFrame);
-    type_ = FrameType::BaselineJS;
-    return;
-  }
-
-  if (prevType == FrameType::Rectifier) {
-    RectifierFrameLayout* rectFrame =
-        GetPreviousRawFrame<RectifierFrameLayout*>(frame);
-    FrameType rectPrevType = rectFrame->prevType();
-
-    if (rectPrevType == FrameType::IonJS) {
-      resumePCinCurrentFrame_ = rectFrame->returnAddress();
-      fp_ = GetPreviousRawFrame<uint8_t*>(rectFrame);
-      type_ = FrameType::IonJS;
+  switch (prevType) {
+    case FrameType::IonJS:
+    case FrameType::BaselineJS:
+      resumePCinCurrentFrame_ = frame->returnAddress();
+      fp_ = GetPreviousRawFrame<uint8_t*>(frame);
+      type_ = prevType;
       return;
-    }
 
-    if (rectPrevType == FrameType::BaselineStub) {
-      BaselineStubFrameLayout* stubFrame =
-          GetPreviousRawFrame<BaselineStubFrameLayout*>(rectFrame);
-      MOZ_ASSERT(stubFrame->prevType() == FrameType::BaselineJS);
+    case FrameType::BaselineStub:
+    case FrameType::IonICCall: {
+      FrameType stubPrevType = (prevType == FrameType::BaselineStub)
+                                   ? FrameType::BaselineJS
+                                   : FrameType::IonJS;
+      auto* stubFrame = GetPreviousRawFrame<CommonFrameLayout*>(frame);
+      MOZ_ASSERT(stubFrame->prevType() == stubPrevType);
       resumePCinCurrentFrame_ = stubFrame->returnAddress();
       fp_ = GetPreviousRawFrame<uint8_t*>(stubFrame);
-      type_ = FrameType::BaselineJS;
+      type_ = stubPrevType;
       return;
     }
 
-    if (rectPrevType == FrameType::WasmToJSJit) {
-      moveToWasmFrame(rectFrame);
+    case FrameType::WasmToJSJit:
+      moveToWasmFrame(frame);
       return;
-    }
 
-    if (rectPrevType == FrameType::CppToJSJit) {
+    case FrameType::CppToJSJit:
       moveToCppEntryFrame();
       return;
-    }
 
-    MOZ_CRASH("Bad frame type prior to rectifier frame.");
-  }
-
-  if (prevType == FrameType::IonICCall) {
-    IonICCallFrameLayout* callFrame =
-        GetPreviousRawFrame<IonICCallFrameLayout*>(frame);
-
-    MOZ_ASSERT(callFrame->prevType() == FrameType::IonJS);
-
-    resumePCinCurrentFrame_ = callFrame->returnAddress();
-    fp_ = GetPreviousRawFrame<uint8_t*>(callFrame);
-    type_ = FrameType::IonJS;
-    return;
-  }
-
-  if (prevType == FrameType::WasmToJSJit) {
-    moveToWasmFrame(frame);
-    return;
-  }
-
-  if (prevType == FrameType::CppToJSJit) {
-    moveToCppEntryFrame();
-    return;
+    case FrameType::Rectifier:
+    case FrameType::Exit:
+    case FrameType::Bailout:
+    case FrameType::JSJitToWasm:
+      // Rectifier frames are handled before this switch. The other frame types
+      // can't call JS functions directly.
+      break;
   }
 
   MOZ_CRASH("Bad frame type.");
