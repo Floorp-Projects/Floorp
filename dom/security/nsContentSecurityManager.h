@@ -71,6 +71,10 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static nsSecurityFlags ComputeSecurityFlags(
       mozilla::CORSMode aCORSMode, CORSSecurityMapping aCORSSecurityMapping);
 
+  static void GetSerializedOrigin(nsIPrincipal* aOrigin,
+                                  nsIPrincipal* aResourceOrigin,
+                                  nsACString& aResult, nsILoadInfo* aLoadInfo);
+
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
   static nsresult CheckFTPSubresourceLoad(nsIChannel* aChannel);
