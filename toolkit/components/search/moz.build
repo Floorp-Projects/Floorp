@@ -19,6 +19,7 @@ XPIDL_MODULE = "toolkit_search"
 
 EXTRA_JS_MODULES += [
     "OpenSearchEngine.jsm",
+    "PolicySearchEngine.jsm",
     "SearchEngine.jsm",
     "SearchEngineSelector.jsm",
     "SearchService.jsm",
