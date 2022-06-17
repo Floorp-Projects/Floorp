@@ -113,7 +113,6 @@ module.exports = {
         "import/no-unassigned-import": "error",
         "import/no-unresolved": "error",
         "import/no-useless-path-segments": "error",
-        "import/prefer-default-export": "error",
       },
     },
     {
