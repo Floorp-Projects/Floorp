@@ -286,6 +286,13 @@ def add_common_arguments(parser):
         "whether to use headless mode",
     )
     parser.add_argument(
+        "--conditioned-profile",
+        action="store_true",
+        default=False,
+        dest="conditionedProfile",
+        help="Run with conditioned profile instead of fresh blank profile",
+    )
+    parser.add_argument(
         "--self-test",
         action="store_true",
         default=False,

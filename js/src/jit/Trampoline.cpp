@@ -97,6 +97,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   // |    ^--- Entry Frame (CppToJSJit or WasmToJSJit)
   // |
   // ^--- Entry Frame (CppToJSJit or WasmToJSJit)
+  //
+  // NOTE: Keep this in sync with JSJitProfilingFrameIterator::moveToNextFrame!
 
   Register actReg = regs.takeAny();
   masm.loadJSContext(actReg);

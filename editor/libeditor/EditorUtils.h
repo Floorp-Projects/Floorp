@@ -570,7 +570,53 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     mDirection = nsDirection::eDirNext;
   }
 
+  /**
+   * If the points are same (i.e., mean a collapsed range) and in an empty block
+   * element except the padding <br> element, this makes aStartPoint and
+   * aEndPoint contain the padding <br> element.
+   */
+  static void UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+      EditorDOMPoint& aStartPoint, EditorDOMPoint& aEndPoint,
+      const dom::Element& aEditingHost);
+
+  /**
+   * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
+   * which may be expanded to start/end of hard line at both edges of the given
+   * range.  If this fails handling something, returns nullptr.
+   */
+  static already_AddRefed<nsRange>
+  CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+      const EditorDOMRange& aRange, EditSubAction aEditSubAction,
+      const dom::Element& aEditingHost) {
+    if (!aRange.IsPositioned()) {
+      return nullptr;
+    }
+    return CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+        aRange.StartRef(), aRange.EndRef(), aEditSubAction, aEditingHost);
+  }
+  static already_AddRefed<nsRange>
+  CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+      const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+      EditSubAction aEditSubAction, const dom::Element& aEditingHost) {
+    RefPtr<nsRange> range =
+        nsRange::Create(aStartPoint.ToRawRangeBoundary(),
+                        aEndPoint.ToRawRangeBoundary(), IgnoreErrors());
+    if (MOZ_UNLIKELY(!range)) {
+      return nullptr;
+    }
+    if (NS_FAILED(ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+            *range, aEditSubAction, aEditingHost)) ||
+        MOZ_UNLIKELY(!range->IsPositioned())) {
+      return nullptr;
+    }
+    return range.forget();
+  }
+
  private:
+  static nsresult ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
+      nsRange& aRange, EditSubAction aEditSubAction,
+      const dom::Element& aEditingHost);
+
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
   RefPtr<nsRange> mAnchorFocusRange;
   nsDirection mDirection = nsDirection::eDirNext;

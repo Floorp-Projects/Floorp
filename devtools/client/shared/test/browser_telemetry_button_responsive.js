@@ -19,15 +19,9 @@ const asyncStorage = require("devtools/shared/async-storage");
 requestLongerTimeout(2);
 
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-Services.prefs.setCharPref(
-  "devtools.devices.url",
-  "http://example.com/browser/devtools/client/responsive/test/browser/devices.json"
-);
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-  asyncStorage.removeItem("devtools.devices.url_cache");
   asyncStorage.removeItem("devtools.devices.local");
 });
 

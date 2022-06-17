@@ -1133,13 +1133,13 @@ class HTMLEditor final : public EditorBase,
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
 
   /**
-   * SplitParentInlineElementsAtRangeEdges(nsTArray<RefPtr<nsRange>>&) calls
-   * SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.  Then,
-   * updates given range to keep edit target ranges as expected.
+   * SplitParentInlineElementsAtRangeEdges(nsTArray<OwningNonNull<nsRange>>&)
+   * calls SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.
+   * Then, updates given range to keep edit target ranges as expected.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitParentInlineElementsAtRangeEdges(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * SplitElementsAtEveryBRElement() splits before all <br> elements in
@@ -1207,7 +1207,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SplitInlinesAndCollectEditTargetNodes(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
@@ -1217,7 +1217,7 @@ class HTMLEditor final : public EditorBase,
    * middle of a text node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitTextNodesAtRangeEnd(nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+  SplitTextNodesAtRangeEnd(nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
@@ -1225,35 +1225,10 @@ class HTMLEditor final : public EditorBase,
    * result for specific edit sub-actions.
    */
   nsresult CollectEditTargetNodes(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
-
-  /**
-   * GetCurrentHardLineStartPoint() returns start point of hard line
-   * including aPoint.  If the line starts after a `<br>` element, returns
-   * next sibling of the `<br>` element.  If the line is first line of a block,
-   * returns point of the block.
-   * NOTE: The result may be point of editing host.  I.e., the container may
-   *       be outside of editing host.
-   */
-  template <typename EditorDOMPointType>
-  EditorDOMPoint GetCurrentHardLineStartPoint(
-      const EditorDOMPointType& aPoint, EditSubAction aEditSubAction,
-      const Element& aEditingHost) const;
-
-  /**
-   * GetCurrentHardLineEndPoint() returns end point of hard line including
-   * aPoint.  If the line ends with a visible `<br>` element, returns the point
-   * after the `<br>` element.  If the line ends with a preformatted linefeed,
-   * returns the point after the linefeed unless it's an invisible linebreak
-   * immediately before a block boundary.  If the line ends with a block
-   * boundary, returns the block.
-   */
-  template <typename EditorDOMPointType>
-  EditorDOMPoint GetCurrentHardLineEndPoint(const EditorDOMPointType& aPoint,
-                                            const Element& aEditingHost) const;
 
   /**
    * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
@@ -1269,31 +1244,6 @@ class HTMLEditor final : public EditorBase,
       const EditorDOMPointType2& aEndPoint);
 
   /**
-   * GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces() collects
-   * selection ranges with extending to include adjuscent white-spaces
-   * of each range start and end.
-   *
-   * @param aOutArrayOfRanges   [out] Always appended same number of ranges
-   *                            as Selection::RangeCount().  Must be empty
-   *                            when you call this.
-   */
-  void GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
-      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges);
-
-  /**
-   * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
-   * which may be expanded to start/end of hard line at both edges of the given
-   * range.  If this fails handling something, returns nullptr.
-   */
-  template <typename EditorDOMRangeType>
-  already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
-      const EditorDOMRangeType& aRange, EditSubAction aEditSubAction) const;
-  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
-  already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
-      const EditorDOMPointType1& aStartPoint,
-      const EditorDOMPointType2& aEndPoint, EditSubAction aEditSubAction) const;
-
-  /**
    * GetSelectionRangesExtendedToHardLineStartAndEnd() collects selection ranges
    * with extending to start/end of hard line from each range start and end.
    * XXX This means that same range may be included in the result.
@@ -1303,20 +1253,8 @@ class HTMLEditor final : public EditorBase,
    *                            when you call this.
    */
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
-      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
+      nsTArray<OwningNonNull<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
-
-  /**
-   * SelectBRElementIfCollapsedInEmptyBlock() helper method for
-   * CreateRangeIncludingAdjuscentWhiteSpaces() and
-   * CreateRangeExtendedToLineStartAndEnd().  If the given range is collapsed
-   * in a block and the block has only one `<br>` element, this makes
-   * aStartPoint and aEndRef select the `<br>` element.
-   */
-  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
-  void SelectBRElementIfCollapsedInEmptyBlock(
-      EditorDOMPointType1& aStartPoint, EditorDOMPointType2& aEndPoint,
-      const Element& aEditingHost) const;
 
   /**
    * GetChildNodesOf() returns all child nodes of aParent with an array.
@@ -2031,6 +1969,7 @@ class HTMLEditor final : public EditorBase,
    *                                    same hard line will be moved.
    * @param aPointToInsert              Point to insert contents of the hard
    *                                    line.
+   * @param aEditingHost                The editing host.
    * @param aMoveToEndOfContainer       If `Yes`, aPointToInsert.Offset() will
    *                                    be ignored and instead, all contents
    *                                    will be appended to the container of
@@ -2045,7 +1984,7 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
   MoveOneHardLineContentsWithTransaction(
       const EditorDOMPoint& aPointInHardLine,
-      const EditorDOMPoint& aPointToInsert,
+      const EditorDOMPoint& aPointToInsert, const Element& aEditingHost,
       MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
 
   /**
@@ -2056,9 +1995,9 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aPointInHardLine    A point in a hard line.
    */
-  template <typename PT, typename CT>
   Result<bool, nsresult> CanMoveOrDeleteSomethingInHardLine(
-      const EditorDOMPointBase<PT, CT>& aPointInHardLine) const;
+      const EditorDOMPoint& aPointInHardLine,
+      const Element& aEditingHost) const;
 
   /**
    * SplitNodeWithTransaction() creates a transaction to create a new node

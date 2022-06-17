@@ -130,6 +130,13 @@ class PictureInPictureParent extends JSWindowActorParent {
         }
         break;
       }
+      case "PictureInPicture:ShowSubtitlesButton": {
+        let player = PictureInPicture.getWeakPipPlayer(this);
+        if (player) {
+          player.showSubtitlesButton();
+        }
+        break;
+      }
     }
   }
 }

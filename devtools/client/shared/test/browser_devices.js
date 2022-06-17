@@ -10,24 +10,28 @@ const {
 } = require("devtools/client/shared/devices");
 
 add_task(async function() {
-  Services.prefs.setCharPref(
-    "devtools.devices.url",
-    TEST_URI_ROOT + "browser_devices.json"
-  );
-
   let devices = await getDevices();
 
-  is(devices.TYPES.length, 1, "Found 1 device type.");
+  let types = [...devices.keys()];
+  ok(types.length > 0, `Found ${types.length} device types.`);
 
-  const type1 = devices.TYPES[0];
+  for (const type of types) {
+    const string = getDeviceString(type);
+    ok(
+      typeof string === "string" &&
+        string.length > 0 &&
+        string != `device.${type}`,
+      `Able to localize "${type}": "${string}"`
+    );
 
-  is(devices[type1].length, 2, "Found 2 devices of type #1.");
+    ok(
+      devices.get(type).length > 0,
+      `Found ${devices.get(type).length} ${type} devices`
+    );
+  }
 
-  const string = getDeviceString(type1);
-  ok(
-    typeof string === "string" && string.length > 0,
-    "Able to localize type #1."
-  );
+  const type1 = types[0];
+  const type1DeviceCount = devices.get(type1).length;
 
   const device1 = {
     name: "SquarePhone",
@@ -38,12 +42,16 @@ add_task(async function() {
     touch: true,
     firefoxOS: true,
   };
-  addDevice(device1, type1);
+  addDevice(device1, types[0]);
   devices = await getDevices();
 
-  is(devices[type1].length, 3, "Added new device of type #1.");
+  is(
+    devices.get(type1).length,
+    type1DeviceCount + 1,
+    `Added new device of type "${type1}".`
+  );
   ok(
-    devices[type1].filter(d => d.name === device1.name),
+    devices.get(type1).find(d => d.name === device1.name),
     "Found the new device."
   );
 
@@ -57,9 +65,12 @@ add_task(async function() {
     touch: true,
     firefoxOS: true,
   };
+
+  const typeCount = types.length;
   addDevice(device2, type2);
   devices = await getDevices();
+  types = [...devices.keys()];
 
-  is(devices.TYPES.length, 2, "Added device type #2.");
-  is(devices[type2].length, 1, "Added new device of type #2.");
+  is(types.length, typeCount + 1, `Added device type "${type2}".`);
+  is(devices.get(type2).length, 1, `Added new "${type2}" device`);
 });

@@ -62,10 +62,6 @@ SimpleTest.waitForExplicitFinish();
 // should be enough.
 requestLongerTimeout(2);
 
-Services.prefs.setCharPref(
-  "devtools.devices.url",
-  TEST_URI_ROOT + "devices.json"
-);
 // The appearance of this notification causes intermittent behavior in some tests that
 // send mouse events, since it causes the content to shift when it appears.
 Services.prefs.setBoolPref(
@@ -77,7 +73,6 @@ Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
 Services.prefs.setBoolPref("devtools.responsive.showUserAgentInput", true);
 
 registerCleanupFunction(async () => {
-  Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref(
     "devtools.responsive.reloadNotification.enabled"
   );
@@ -95,7 +90,6 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.viewport.height");
   Services.prefs.clearUserPref("devtools.responsive.viewport.pixelRatio");
   Services.prefs.clearUserPref("devtools.responsive.viewport.width");
-  await asyncStorage.removeItem("devtools.devices.url_cache");
   await asyncStorage.removeItem("devtools.responsive.deviceState");
   await removeLocalDevices();
 });

@@ -12,7 +12,9 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/JSActorBinding.h"
 #include "mozilla/dom/PContent.h"
+
 #include "nsContentUtils.h"
+#include "JSActorProtocolUtils.h"
 
 namespace mozilla::dom {
 
@@ -31,13 +33,11 @@ JSProcessActorProtocol::FromIPC(const JSProcessActorInfo& aInfo) {
 
   RefPtr<JSProcessActorProtocol> proto =
       new JSProcessActorProtocol(aInfo.name());
+  JSActorProtocolUtils::FromIPCShared(proto, aInfo);
 
   // Content processes aren't the parent process, so this flag is irrelevant and
   // not propagated.
   proto->mIncludeParent = false;
-  proto->mRemoteTypes = aInfo.remoteTypes().Clone();
-  proto->mChild.mModuleURI = aInfo.url();
-  proto->mChild.mObservers = aInfo.observers().Clone();
 
   return proto.forget();
 }
@@ -46,10 +46,8 @@ JSProcessActorInfo JSProcessActorProtocol::ToIPC() {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   JSProcessActorInfo info;
-  info.name() = mName;
-  info.remoteTypes() = mRemoteTypes.Clone();
-  info.url() = mChild.mModuleURI;
-  info.observers() = mChild.mObservers.Clone();
+  JSActorProtocolUtils::ToIPCShared(info, this);
+
   return info;
 }
 
@@ -60,31 +58,11 @@ JSProcessActorProtocol::FromWebIDLOptions(const nsACString& aName,
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSProcessActorProtocol> proto = new JSProcessActorProtocol(aName);
-  proto->mIncludeParent = aOptions.mIncludeParent;
-
-  if (aOptions.mRemoteTypes.WasPassed()) {
-    MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
-    proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
-  }
-
-  if (aOptions.mParent.WasPassed()) {
-    proto->mParent.mModuleURI.emplace(aOptions.mParent.Value().mModuleURI);
-  }
-  if (aOptions.mChild.WasPassed()) {
-    proto->mChild.mModuleURI.emplace(aOptions.mChild.Value().mModuleURI);
-  }
-
-  if (!aOptions.mChild.WasPassed() && !aOptions.mParent.WasPassed()) {
-    aRv.ThrowNotSupportedError(
-        "No point registering an actor with neither child nor parent "
-        "specifications.");
+  if (!JSActorProtocolUtils::FromWebIDLOptionsShared(proto, aOptions, aRv)) {
     return nullptr;
   }
 
-  if (aOptions.mChild.WasPassed() &&
-      aOptions.mChild.Value().mObservers.WasPassed()) {
-    proto->mChild.mObservers = aOptions.mChild.Value().mObservers.Value();
-  }
+  proto->mIncludeParent = aOptions.mIncludeParent;
 
   return proto.forget();
 }
