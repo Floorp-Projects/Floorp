@@ -800,7 +800,7 @@ class ContentHandler {
         wrappedChannel._adClickRecorded = true;
         if (item.newtabSessionId) {
           Glean.newtabSearchAd.click.record({
-            newtab_session_id: item.newtabSessionId,
+            newtab_visit_id: item.newtabSessionId,
             search_access_point: item.source,
             is_follow_on: item.info.type.endsWith("follow-on"),
             is_tagged: item.info.type.startsWith("tagged"),
@@ -867,7 +867,7 @@ class ContentHandler {
 
     if (item.newtabSessionId) {
       Glean.newtabSearchAd.impression.record({
-        newtab_session_id: item.newtabSessionId,
+        newtab_visit_id: item.newtabSessionId,
         search_access_point: item.source,
         is_follow_on: item.info.type.endsWith("follow-on"),
         is_tagged: item.info.type.startsWith("tagged"),

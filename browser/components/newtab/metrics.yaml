@@ -39,7 +39,7 @@ newtab:
       Recorded when newtab UI is opened via `about:newtab` or `about:home` or
       `about:welcome` and has been made visible (see `visibility_event_rcvd_ts`
       in
-      [detect-user-session-start.js](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/lib/detect-user-session-start.js).
+      [detect-user-session-start.js](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/lib/detect-user-session-start.js)).
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
     data_reviews:
@@ -53,9 +53,9 @@ newtab:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: &newtab_session_id
+      newtab_visit_id: &newtab_visit_id
         description: >
-          The id of this newtab session.
+          The id of this newtab visit.
           Allows you to separate multiple simultaneous newtabs and
           build an event timeline of actions taken from this newtab.
         type: string
@@ -93,7 +93,7 @@ newtab:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: *newtab_session_id
+      newtab_visit_id: *newtab_visit_id
     send_in_pings:
       - newtab
 
@@ -116,7 +116,7 @@ topsites:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: *newtab_session_id
+      newtab_visit_id: *newtab_visit_id
       is_sponsored: &is_sponsored
         description: Whether the topsite tile was sponsored.
         type: boolean
@@ -141,7 +141,7 @@ topsites:
       - najiang@mozilla.com
     expires: 107
     extra_keys:
-      newtab_session_id: *newtab_session_id
+      newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
     send_in_pings:
       - newtab
