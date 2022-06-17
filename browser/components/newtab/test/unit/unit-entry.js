@@ -583,6 +583,7 @@ const TEST_GLOBAL = {
   },
   Logger,
   getFxAccountsSingleton() {},
+  AboutNewTab: {},
   Glean: {
     newtab: {
       opened: {
@@ -590,6 +591,9 @@ const TEST_GLOBAL = {
       },
       closed: {
         record() {},
+      },
+      locale: {
+        set() {},
       },
     },
     topsites: {
@@ -599,6 +603,11 @@ const TEST_GLOBAL = {
       click: {
         record() {},
       },
+    },
+  },
+  GleanPings: {
+    newtab: {
+      submit() {},
     },
   },
 };

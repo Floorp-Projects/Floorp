@@ -8,11 +8,16 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
+const {
+  actionCreators: ac,
+  actionTypes: at,
+  actionUtils: au,
+} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 const { shortURL } = ChromeUtils.import(
   "resource://activity-stream/lib/ShortURL.jsm"
+);
+const { AboutNewTab } = ChromeUtils.import(
+  "resource:///modules/AboutNewTab.jsm"
 );
 
 const lazy = {};
@@ -443,17 +448,21 @@ class PlacesFeed {
     ];
   }
 
-  handoffSearchToAwesomebar({ _target, data, meta }) {
+  handoffSearchToAwesomebar(action) {
+    const { _target, data, meta } = action;
     const searchEngine = this._getDefaultSearchEngine(
       lazy.PrivateBrowsingUtils.isBrowserPrivate(_target.browser)
     );
     const urlBar = _target.browser.ownerGlobal.gURLBar;
     let isFirstChange = true;
 
+    const newtabSession = AboutNewTab.activityStream.store.feeds
+      .get("feeds.telemetry")
+      ?.sessions.get(au.getPortIdOfSender(action));
     if (!data || !data.text) {
       urlBar.setHiddenFocus();
     } else {
-      urlBar.handoff(data.text, searchEngine);
+      urlBar.handoff(data.text, searchEngine, newtabSession?.session_id);
       isFirstChange = false;
     }
 
@@ -464,7 +473,7 @@ class PlacesFeed {
       if (isFirstChange) {
         isFirstChange = false;
         urlBar.removeHiddenFocus(true);
-        urlBar.handoff("", searchEngine);
+        urlBar.handoff("", searchEngine, newtabSession?.session_id);
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.DISABLE_SEARCH }, meta.fromTarget)
         );

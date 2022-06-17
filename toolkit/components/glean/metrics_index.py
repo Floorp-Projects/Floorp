@@ -15,6 +15,7 @@ metrics_yamls = [
     "browser/base/content/metrics.yaml",
     "browser/components/metrics.yaml",
     "browser/components/newtab/metrics.yaml",
+    "browser/components/search/metrics.yaml",
     "browser/modules/metrics.yaml",
     "dom/media/metrics.yaml",
     "dom/metrics.yaml",
