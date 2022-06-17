@@ -4151,8 +4151,6 @@ already_AddRefed<nsIFile> Preferences::ReadSavedPrefs() {
   rv = openPrefFile(file, PrefValueKind::User);
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     // This is a normal case for new users.
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::PREFERENCES_CREATED_NEW_USER_PREFS_FILE, true);
     rv = NS_OK;
   } else if (NS_FAILED(rv)) {
     // Save a backup copy of the current (invalid) prefs file, since all prefs

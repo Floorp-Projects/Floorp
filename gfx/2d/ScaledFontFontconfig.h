@@ -30,7 +30,7 @@ class ScaledFontFontconfig : public ScaledFontBase {
 
   AntialiasMode GetDefaultAAMode() override;
 
-  bool UseSubpixelPosition() const;
+  bool UseSubpixelPosition() const override;
 
   bool CanSerialize() override { return true; }
 

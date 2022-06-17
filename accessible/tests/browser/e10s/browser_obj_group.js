@@ -436,7 +436,7 @@ addAccessibleTask(
 
     testGroupParentAttrs(getAcc("treegrid"), 2, true);
     // row child item count provided by parent grid's aria-colcount
-    testGroupParentAttrs(getAcc("treegrid_row1"), 4, false, isCacheEnabled);
+    testGroupParentAttrs(getAcc("treegrid_row1"), 4, false);
   }
 );
 
@@ -498,13 +498,13 @@ addAccessibleTask(
 
     // ////////////////////////////////////////////////////////////////////////
     // ARIA table
-    testGroupAttrs(getAcc("table_cell"), 3, 4, null, isCacheEnabled);
-    testGroupAttrs(getAcc("table_row"), 2, 2, null, isCacheEnabled);
+    testGroupAttrs(getAcc("table_cell"), 3, 4);
+    testGroupAttrs(getAcc("table_row"), 2, 2);
 
     // grid child item count provided by aria-rowcount
-    testGroupParentAttrs(getAcc("table"), 2, false, isCacheEnabled);
+    testGroupParentAttrs(getAcc("table"), 2, false);
     // row child item count provided by parent grid's aria-colcount
-    testGroupParentAttrs(getAcc("table_row"), 4, false, isCacheEnabled);
+    testGroupParentAttrs(getAcc("table_row"), 4, false);
   }
 );
 

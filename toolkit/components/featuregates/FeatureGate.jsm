@@ -234,6 +234,7 @@ class FeatureGate {
     ["mac", AppConstants.platform === "macosx"],
     ["linux", AppConstants.platform === "linux"],
     ["android", AppConstants.platform === "android"],
+    ["thunderbird", AppConstants.MOZ_APP_NAME === "thunderbird"],
   ]);
 
   /**

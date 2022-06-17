@@ -1097,9 +1097,7 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   // Expose object attributes from ARIA attributes.
   aria::AttrIterator attribIter(mContent);
   while (attribIter.Next()) {
-    nsString value;
-    attribIter.AttrValue(value);
-    attributes->SetAttribute(attribIter.AttrName(), std::move(value));
+    attribIter.ExposeAttr(attributes);
   }
 
   // If there is no aria-live attribute then expose default value of 'live'
@@ -1320,6 +1318,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     if (StringBeginsWith(nsDependentAtomString(aAttribute), u"aria-"_ns)) {
       uint8_t attrFlags = aria::AttrCharacteristicsFor(aAttribute);
       if (!(attrFlags & ATTR_BYPASSOBJ)) {
+        mDoc->QueueCacheUpdate(this, CacheDomain::ARIA);
         // For aria attributes like drag and drop changes we fire a generic
         // attribute change event; at least until native API comes up with a
         // more meaningful event.
@@ -3540,6 +3539,25 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  if (aCacheDomain & CacheDomain::ARIA && mContent) {
+    // We use a nested AccAttributes to make cache updates simpler. Rather than
+    // managing individual removals, we just replace or remove the entire set of
+    // ARIA attributes.
+    RefPtr<AccAttributes> ariaAttrs;
+    aria::AttrIterator attrIt(mContent);
+    while (attrIt.Next()) {
+      if (!ariaAttrs) {
+        ariaAttrs = new AccAttributes();
+      }
+      attrIt.ExposeAttr(ariaAttrs);
+    }
+    if (ariaAttrs) {
+      fields->SetAttribute(nsGkAtoms::aria, std::move(ariaAttrs));
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::aria, DeleteEntry());
+    }
+  }
+
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
@@ -3797,4 +3815,15 @@ TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
     return CachedTableCellAccessible::GetFrom(this);
   }
   return AsTableCell();
+}
+
+Maybe<int32_t> LocalAccessible::GetIntARIAAttr(nsAtom* aAttrName) const {
+  if (mContent) {
+    int32_t val;
+    if (nsCoreUtils::GetUIntAttr(mContent, aAttrName, &val)) {
+      return Some(val);
+    }
+    // XXX Handle attributes that allow -1; e.g. aria-row/colcount.
+  }
+  return Nothing();
 }

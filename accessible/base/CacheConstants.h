@@ -27,6 +27,7 @@ class CacheDomain {
   static constexpr uint64_t Table = ((uint64_t)0x1) << 12;
   static constexpr uint64_t Spelling = ((uint64_t)0x1) << 13;
   static constexpr uint64_t Viewport = ((uint64_t)0x1) << 14;
+  static constexpr uint64_t ARIA = ((uint64_t)0x1) << 15;
   static constexpr uint64_t All = ~((uint64_t)0x0);
 };
 

@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer,array-find-from-last is not supported
+// |reftest| skip -- resizable-arraybuffer is not supported
 // Copyright (C) 2021 Microsoft. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

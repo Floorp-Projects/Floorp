@@ -137,7 +137,7 @@ extern bool enableIteratorHelpers;
 extern bool enableArrayGrouping;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
-extern bool enableErgonomicBrandChecks;
+extern bool enableArrayFindLast;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 extern bool enableChangeArrayByCopy;
 #endif

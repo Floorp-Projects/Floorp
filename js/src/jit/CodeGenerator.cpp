@@ -303,8 +303,7 @@ static void StoreAllLiveRegs(MacroAssembler& masm, LiveRegisterSet liveRegs) {
 
 // Before doing any call to Cpp, you should ensure that volatile
 // registers are evicted by the register allocator.
-void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
-                                   const Register* dynStack) {
+void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins) {
   TrampolinePtr code = gen->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
 
@@ -341,17 +340,8 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
   }
 #endif
 
-  // Push an exit frame descriptor. If |dynStack| is a valid pointer to a
-  // register, then its value is added to the value of the |framePushed()| to
-  // fill the frame descriptor.
-  if (dynStack) {
-    masm.addPtr(Imm32(masm.framePushed()), *dynStack);
-    masm.makeFrameDescriptor(*dynStack, FrameType::IonJS,
-                             ExitFrameLayout::Size());
-    masm.Push(*dynStack);  // descriptor
-  } else {
-    masm.pushStaticFrameDescriptor(FrameType::IonJS, ExitFrameLayout::Size());
-  }
+  // Push an exit frame descriptor.
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Call the wrapper function.  The wrapper is in charge to unwind the stack
   // when returning from the call.  Failures are handled with exceptions based
@@ -382,9 +372,9 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins,
 }
 
 template <typename Fn, Fn fn>
-void CodeGenerator::callVM(LInstruction* ins, const Register* dynStack) {
+void CodeGenerator::callVM(LInstruction* ins) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
-  callVMInternal(id, ins, dynStack);
+  callVMInternal(id, ins);
 }
 
 // ArgSeq store arguments for OutOfLineCallVM.
@@ -5432,12 +5422,10 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
 
-  // Construct the IonFramePrefix.
-  uint32_t descriptor = MakeFrameDescriptor(
-      masm.framePushed(), FrameType::IonJS, JitFrameLayout::Size());
+  // Construct the JitFrameLayout.
   masm.Push(Imm32(call->numActualArgs()));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.Push(Imm32(descriptor));
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Check whether the provided arguments satisfy target argc.
   // We cannot have lowered to LCallGeneric with a known target. Assert that we
@@ -5539,12 +5527,10 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
 
-  // Construct the IonFramePrefix.
-  uint32_t descriptor = MakeFrameDescriptor(
-      masm.framePushed(), FrameType::IonJS, JitFrameLayout::Size());
+  // Construct the JitFrameLayout.
   masm.Push(Imm32(call->numActualArgs()));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.Push(Imm32(descriptor));
+  masm.PushFrameDescriptor(FrameType::IonJS);
 
   // Finally call the function in objreg.
   uint32_t callOffset = masm.callJit(objreg);
@@ -5579,9 +5565,8 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
 }
 
 template <typename T>
-void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
+void CodeGenerator::emitCallInvokeFunction(T* apply) {
   Register objreg = ToRegister(apply->getTempObject());
-  MOZ_ASSERT(objreg != extraStackSize);
 
   // Push the space used by the arguments.
   masm.moveStackPtrTo(objreg);
@@ -5592,19 +5577,17 @@ void CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize) {
   pushArg(Imm32(apply->mir()->isConstructing()));      // isConstructing.
   pushArg(ToRegister(apply->getFunction()));           // JSFunction*.
 
-  // This specialization of callVM creates a frame descriptor that includes
-  // extraStackSize.
   using Fn = bool (*)(JSContext*, HandleObject, bool, bool, uint32_t, Value*,
                       MutableHandleValue);
-  callVM<Fn, jit::InvokeFunction>(apply, &extraStackSize);
+  callVM<Fn, jit::InvokeFunction>(apply);
 }
 
 // Do not bailout after the execution of this function since the stack no longer
 // correspond to what is expected by the snapshots.
 void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
-                                              Register extraStackSpace) {
-  // Initialize the loop counter AND Compute the stack usage (if == 0)
-  masm.movePtr(argcreg, extraStackSpace);
+                                              Register scratch) {
+  // Use scratch register to calculate stack space (including padding).
+  masm.movePtr(argcreg, scratch);
 
   // Align the JitFrameLayout on the JitStackAlignment.
   if (JitStackValueAlignment > 1) {
@@ -5614,14 +5597,14 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
     Label noPaddingNeeded;
     // if the number of arguments is odd, then we do not need any padding.
     masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
-    masm.addPtr(Imm32(1), extraStackSpace);
+    masm.addPtr(Imm32(1), scratch);
     masm.bind(&noPaddingNeeded);
   }
 
   // Reserve space for copying the arguments.
   NativeObject::elementsSizeMustNotOverflow();
-  masm.lshiftPtr(Imm32(ValueShift), extraStackSpace);
-  masm.subFromStackPtr(extraStackSpace);
+  masm.lshiftPtr(Imm32(ValueShift), scratch);
+  masm.subFromStackPtr(scratch);
 
 #ifdef DEBUG
   // Put a magic value in the space reserved for padding. Note, this code
@@ -5642,10 +5625,10 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
 // Do not bailout after the execution of this function since the stack no longer
 // correspond to what is expected by the snapshots.
 void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
-    Register argcreg, Register newTargetAndExtraStackSpace) {
+    Register argcreg, Register newTargetAndScratch) {
   // Align the JitFrameLayout on the JitStackAlignment. Contrary to
   // |emitAllocateSpaceForApply()|, we're always pushing a magic value, because
-  // we can't write to |newTargetAndExtraStackSpace| before |new.target| has
+  // we can't write to |newTargetAndScratch| before |new.target| has
   // been pushed onto the stack.
   if (JitStackValueAlignment > 1) {
     MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
@@ -5660,31 +5643,15 @@ void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
   }
 
   // Push |new.target| after the padding value, but before any arguments.
-  masm.pushValue(JSVAL_TYPE_OBJECT, newTargetAndExtraStackSpace);
+  masm.pushValue(JSVAL_TYPE_OBJECT, newTargetAndScratch);
 
-  // Initialize the loop counter AND compute the stack usage.
-  masm.movePtr(argcreg, newTargetAndExtraStackSpace);
+  // Use newTargetAndScratch to calculate stack space (including padding).
+  masm.movePtr(argcreg, newTargetAndScratch);
 
   // Reserve space for copying the arguments.
   NativeObject::elementsSizeMustNotOverflow();
-  masm.lshiftPtr(Imm32(ValueShift), newTargetAndExtraStackSpace);
-  masm.subFromStackPtr(newTargetAndExtraStackSpace);
-
-  // Account for |new.target| which has already been pushed onto the stack.
-  masm.addPtr(Imm32(sizeof(Value)), newTargetAndExtraStackSpace);
-
-  // And account for the padding.
-  if (JitStackValueAlignment > 1) {
-    MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
-               "Stack padding assumes that the frameSize is correct");
-    MOZ_ASSERT(JitStackValueAlignment == 2);
-
-    Label noPaddingNeeded;
-    // If the number of arguments is even, then we do not need any padding.
-    masm.branchTestPtr(Assembler::Zero, argcreg, Imm32(1), &noPaddingNeeded);
-    masm.addPtr(Imm32(sizeof(Value)), newTargetAndExtraStackSpace);
-    masm.bind(&noPaddingNeeded);
-  }
+  masm.lshiftPtr(Imm32(ValueShift), newTargetAndScratch);
+  masm.subFromStackPtr(newTargetAndScratch);
 }
 
 // Destroys argvIndex and copyreg.
@@ -5698,18 +5665,19 @@ void CodeGenerator::emitCopyValuesForApply(Register argvSrcBase,
   // As argvIndex is off by 1, and we use the decBranchPtr instruction
   // to loop back, we have to substract the size of the word which are
   // copied.
-  BaseValueIndex srcPtr(argvSrcBase, argvIndex, argvSrcOffset - sizeof(void*));
+  BaseValueIndex srcPtr(argvSrcBase, argvIndex,
+                        int32_t(argvSrcOffset) - sizeof(void*));
   BaseValueIndex dstPtr(masm.getStackPointer(), argvIndex,
-                        argvDstOffset - sizeof(void*));
+                        int32_t(argvDstOffset) - sizeof(void*));
   masm.loadPtr(srcPtr, copyreg);
   masm.storePtr(copyreg, dstPtr);
 
   // Handle 32 bits architectures.
   if (sizeof(Value) == 2 * sizeof(void*)) {
     BaseValueIndex srcPtrLow(argvSrcBase, argvIndex,
-                             argvSrcOffset - 2 * sizeof(void*));
+                             int32_t(argvSrcOffset) - 2 * sizeof(void*));
     BaseValueIndex dstPtrLow(masm.getStackPointer(), argvIndex,
-                             argvDstOffset - 2 * sizeof(void*));
+                             int32_t(argvDstOffset) - 2 * sizeof(void*));
     masm.loadPtr(srcPtrLow, copyreg);
     masm.storePtr(copyreg, dstPtrLow);
   }
@@ -5728,8 +5696,7 @@ void CodeGenerator::emitRestoreStackPointerFromFP() {
                                masm.getStackPointer());
 }
 
-void CodeGenerator::emitPushArguments(Register argcreg,
-                                      Register extraStackSpace,
+void CodeGenerator::emitPushArguments(Register argcreg, Register scratch,
                                       Register copyreg, uint32_t extraFormals) {
   Label end;
 
@@ -5746,57 +5713,39 @@ void CodeGenerator::emitPushArguments(Register argcreg,
   // clang-format on
 
   // Compute the source and destination offsets into the stack.
-  size_t argvSrcOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
+  Register argvSrcBase = FramePointer;
+  size_t argvSrcOffset = JitFrameLayout::FramePointerOffset +
+                         JitFrameLayout::offsetOfActualArgs() +
                          extraFormals * sizeof(JS::Value);
   size_t argvDstOffset = 0;
 
-  // Save the extra stack space, and re-use the register as a base.
-  masm.push(extraStackSpace);
-  Register argvSrcBase = extraStackSpace;
-  argvSrcOffset += sizeof(void*);
-  argvDstOffset += sizeof(void*);
-
-  // Save the actual number of register, and re-use the register as an index
-  // register.
-  masm.push(argcreg);
-  Register argvIndex = argcreg;
-  argvSrcOffset += sizeof(void*);
-  argvDstOffset += sizeof(void*);
-
-  // srcPtr = (StackPointer + extraStackSpace) + argvSrcOffset
-  // dstPtr = (StackPointer                  ) + argvDstOffset
-  masm.addStackPtrTo(argvSrcBase);
+  Register argvIndex = scratch;
+  masm.move32(argcreg, argvIndex);
 
   // Copy arguments.
   emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, argvSrcOffset,
                          argvDstOffset);
-
-  // Restore argcreg and the extra stack space counter.
-  masm.pop(argcreg);
-  masm.pop(extraStackSpace);
 
   // Join with all arguments copied and the extra stack usage computed.
   masm.bind(&end);
 }
 
 void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
-                                      Register extraStackSpace) {
+                                      Register scratch) {
   // Holds the function nargs. Initially the number of args to the caller.
   Register argcreg = ToRegister(apply->getArgc());
   Register copyreg = ToRegister(apply->getTempObject());
   uint32_t extraFormals = apply->numExtraFormals();
 
-  emitAllocateSpaceForApply(argcreg, extraStackSpace);
+  emitAllocateSpaceForApply(argcreg, scratch);
 
-  emitPushArguments(argcreg, extraStackSpace, copyreg, extraFormals);
+  emitPushArguments(argcreg, scratch, copyreg, extraFormals);
 
   // Push |this|.
-  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
   masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushArguments(LApplyArgsObj* apply,
-                                      Register extraStackSpace) {
+void CodeGenerator::emitPushArguments(LApplyArgsObj* apply, Register scratch) {
   // argc and argsObj are mapped to the same calltemp register.
   MOZ_ASSERT(apply->getArgsObj() == apply->getArgc());
 
@@ -5808,8 +5757,8 @@ void CodeGenerator::emitPushArguments(LApplyArgsObj* apply,
   masm.unboxInt32(lengthAddr, tmpArgc);
   masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), tmpArgc);
 
-  // Allocate space on the stack for arguments. This modifies extraStackSpace.
-  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
+  // Allocate space on the stack for arguments. This modifies scratch.
+  emitAllocateSpaceForApply(tmpArgc, scratch);
 
   // Load arguments data
   masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()),
@@ -5818,9 +5767,8 @@ void CodeGenerator::emitPushArguments(LApplyArgsObj* apply,
 
   // This is the end of the lifetime of argsObj.
   // After this call, the argsObj register holds the argument count instead.
-  emitPushArrayAsArguments(tmpArgc, argsObj, extraStackSpace, argsSrcOffset);
+  emitPushArrayAsArguments(tmpArgc, argsObj, scratch, argsSrcOffset);
 
-  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
   masm.pushValue(ToValue(apply, LApplyArgsObj::ThisIndex));
 }
 
@@ -5838,8 +5786,7 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
   //    the allocated space.
   // 2. |srcBaseAndArgc| now contains the original value of |tmpArgc|.
   //
-  // |scratch| is used as a temp register within this function. It is
-  // restored before returning.
+  // |scratch| is used as a temp register within this function and clobbered.
 
   Label noCopy, epilogue;
 
@@ -5851,10 +5798,7 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
   size_t argvDstOffset = 0;
 
   Register argvSrcBase = srcBaseAndArgc;
-
-  masm.push(scratch);
   Register copyreg = scratch;
-  argvDstOffset += sizeof(void*);
 
   masm.push(tmpArgc);
   Register argvIndex = tmpArgc;
@@ -5866,7 +5810,6 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
 
   // Restore.
   masm.pop(srcBaseAndArgc);  // srcBaseAndArgc now contains argc.
-  masm.pop(scratch);
   masm.jump(&epilogue);
 
   // Clear argc if we skipped the copy step.
@@ -5879,7 +5822,7 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
 }
 
 void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
-                                      Register extraStackSpace) {
+                                      Register scratch) {
   Register tmpArgc = ToRegister(apply->getTempObject());
   Register elementsAndArgc = ToRegister(apply->getElements());
 
@@ -5893,21 +5836,19 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   masm.load32(length, tmpArgc);
 
   // Allocate space for the values.
-  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
+  emitAllocateSpaceForApply(tmpArgc, scratch);
 
   // After this call "elements" has become "argc".
   size_t elementsOffset = 0;
-  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, extraStackSpace,
-                           elementsOffset);
+  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, scratch, elementsOffset);
 
   // Push |this|.
-  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
   masm.pushValue(ToValue(apply, LApplyArrayGeneric::ThisIndex));
 }
 
 void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
-                                      Register extraStackSpace) {
-  MOZ_ASSERT(extraStackSpace == ToRegister(construct->getNewTarget()));
+                                      Register scratch) {
+  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
 
   // Holds the function nargs. Initially the number of args to the caller.
   Register argcreg = ToRegister(construct->getArgc());
@@ -5915,19 +5856,18 @@ void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
   uint32_t extraFormals = construct->numExtraFormals();
 
   // Allocate space for the values.
-  // After this call "newTarget" has become "extraStackSpace".
-  emitAllocateSpaceForConstructAndPushNewTarget(argcreg, extraStackSpace);
+  // After this call "newTarget" has become "scratch".
+  emitAllocateSpaceForConstructAndPushNewTarget(argcreg, scratch);
 
-  emitPushArguments(argcreg, extraStackSpace, copyreg, extraFormals);
+  emitPushArguments(argcreg, scratch, copyreg, extraFormals);
 
   // Push |this|.
-  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
   masm.pushValue(ToValue(construct, LConstructArgsGeneric::ThisIndex));
 }
 
 void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
-                                      Register extraStackSpace) {
-  MOZ_ASSERT(extraStackSpace == ToRegister(construct->getNewTarget()));
+                                      Register scratch) {
+  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
 
   Register tmpArgc = ToRegister(construct->getTempObject());
   Register elementsAndArgc = ToRegister(construct->getElements());
@@ -5942,16 +5882,14 @@ void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
   masm.load32(length, tmpArgc);
 
   // Allocate space for the values.
-  emitAllocateSpaceForConstructAndPushNewTarget(tmpArgc, extraStackSpace);
+  emitAllocateSpaceForConstructAndPushNewTarget(tmpArgc, scratch);
 
   // After this call "elements" has become "argc" and "newTarget" has become
-  // "extraStackSpace".
+  // "scratch".
   size_t elementsOffset = 0;
-  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, extraStackSpace,
-                           elementsOffset);
+  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, scratch, elementsOffset);
 
   // Push |this|.
-  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
   masm.pushValue(ToValue(construct, LConstructArrayGeneric::ThisIndex));
 }
 
@@ -5962,7 +5900,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   // Temporary register for modifying the function object.
   Register objreg = ToRegister(apply->getTempObject());
-  Register extraStackSpace = ToRegister(apply->getTempStackCounter());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
 
   // Holds the function nargs, computed in the invoker or (for ApplyArray,
   // ConstructArray, or ApplyArgsObj) in the argument pusher.
@@ -5977,13 +5915,10 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // after it returns.
   //
   // In the case of ConstructArray or ConstructArgs, also overwrite newTarget
-  // with extraStackSpace; newTarget must not be referenced after this point.
+  // with scratch; newTarget must not be referenced after this point.
   //
   // objreg is dead across this call.
-  //
-  // extraStackSpace is garbage on entry (for ApplyArray and ApplyArgs) and
-  // defined on exit.
-  emitPushArguments(apply, extraStackSpace);
+  emitPushArguments(apply, scratch);
 
   masm.checkStackAlignment();
 
@@ -5992,7 +5927,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // If the function is native, only emit the call to InvokeFunction.
   if (apply->hasSingleTarget() &&
       apply->getSingleTarget()->isNativeWithoutJitEntry()) {
-    emitCallInvokeFunction(apply, extraStackSpace);
+    emitCallInvokeFunction(apply);
 
 #ifdef DEBUG
     // Native constructors are guaranteed to return an Object value, so we never
@@ -6046,22 +5981,15 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Knowing that calleereg is a non-native function, load jitcode.
     masm.loadJitCodeRaw(calleereg, objreg);
 
-    // Create the frame descriptor.
-    unsigned pushed = masm.framePushed();
-    Register stackSpace = extraStackSpace;
-    masm.addPtr(Imm32(pushed), stackSpace);
-    masm.makeFrameDescriptor(stackSpace, FrameType::IonJS,
-                             JitFrameLayout::Size());
-
     masm.Push(argcreg);
     masm.PushCalleeToken(calleereg, constructing);
-    masm.Push(stackSpace);  // descriptor
+    masm.PushFrameDescriptor(FrameType::IonJS);
 
     Label underflow, rejoin;
 
     // Check whether the provided arguments satisfy target argc.
     if (!apply->hasSingleTarget()) {
-      Register nformals = extraStackSpace;
+      Register nformals = scratch;
       masm.loadFunctionArgCount(calleereg, nformals);
       masm.branch32(Assembler::Below, argcreg, nformals, &underflow);
     } else {
@@ -6105,7 +6033,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // Handle uncompiled or native functions.
   {
     masm.bind(&invoke);
-    emitCallInvokeFunction(apply, extraStackSpace);
+    emitCallInvokeFunction(apply);
   }
 
   masm.bind(&end);

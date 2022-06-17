@@ -71,7 +71,8 @@ class SmartTrace extends Component {
     return { l10n: dbgL10n };
   }
 
-  componentWillMount() {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillMount() {
     if (this.props.sourceMapURLService) {
       this.sourceMapURLServiceUnsubscriptions = [];
       const sourceMapInit = Promise.all(

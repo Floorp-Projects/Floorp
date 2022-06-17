@@ -7,6 +7,7 @@
 
 #include "ARIAMap.h"
 
+#include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "Role.h"
@@ -1350,6 +1351,8 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_atomic,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
+  {nsGkAtoms::aria_colcount,          ATTR_VALINT                                  },
+  {nsGkAtoms::aria_colindex,          ATTR_VALINT                                  },
   {nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_current,  ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
@@ -1383,6 +1386,8 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
   {nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_rowcount,          ATTR_VALINT                                  },
+  {nsGkAtoms::aria_rowindex,          ATTR_VALINT                                  },
   {nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
   {nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
   {nsGkAtoms::aria_sort,                               ATTR_VALTOKEN               },
@@ -1479,7 +1484,9 @@ bool aria::HasDefinedARIAHidden(nsIContent* aContent) {
 // AttrIterator class
 
 AttrIterator::AttrIterator(nsIContent* aContent)
-    : mElement(dom::Element::FromNode(aContent)), mAttrIdx(0) {
+    : mElement(dom::Element::FromNode(aContent)),
+      mAttrIdx(0),
+      mAttrCharacteristics(0) {
   mAttrCount = mElement ? mElement->GetAttrCount() : 0;
 }
 
@@ -1492,17 +1499,19 @@ bool AttrIterator::Next() {
       nsDependentAtomString attrStr(mAttrAtom);
       if (!StringBeginsWith(attrStr, u"aria-"_ns)) continue;  // Not ARIA
 
-      uint8_t attrFlags = aria::AttrCharacteristicsFor(mAttrAtom);
-      if (attrFlags & ATTR_BYPASSOBJ) {
+      // AttrCharacteristicsFor has to search for the entry, so cache it here
+      // rather than having to search again later.
+      mAttrCharacteristics = aria::AttrCharacteristicsFor(mAttrAtom);
+      if (mAttrCharacteristics & ATTR_BYPASSOBJ) {
         continue;  // No need to handle exposing as obj attribute here
       }
 
-      if ((attrFlags & ATTR_VALTOKEN) &&
+      if ((mAttrCharacteristics & ATTR_VALTOKEN) &&
           !nsAccUtils::HasDefinedARIAToken(mElement, mAttrAtom)) {
         continue;  // only expose token based attributes if they are defined
       }
 
-      if ((attrFlags & ATTR_BYPASSOBJ_IF_FALSE) &&
+      if ((mAttrCharacteristics & ATTR_BYPASSOBJ_IF_FALSE) &&
           mElement->AttrValueIs(kNameSpaceID_None, mAttrAtom, nsGkAtoms::_false,
                                 eCaseMatters)) {
         continue;  // only expose token based attribute if value is not 'false'.
@@ -1512,16 +1521,10 @@ bool AttrIterator::Next() {
     }
   }
 
+  mAttrCharacteristics = 0;
   mAttrAtom = nullptr;
 
   return false;
-}
-
-void AttrIterator::AttrName(nsAString& aAttrName) const {
-  nsDependentAtomString attrStr(mAttrAtom);
-  MOZ_ASSERT(StringBeginsWith(attrStr, u"aria-"_ns),
-             "Stored atom is an aria attribute.");
-  aAttrName.Assign(Substring(attrStr, 5));
 }
 
 nsAtom* AttrIterator::AttrName() const { return mAttrAtom; }
@@ -1529,7 +1532,7 @@ nsAtom* AttrIterator::AttrName() const { return mAttrAtom; }
 void AttrIterator::AttrValue(nsAString& aAttrValue) const {
   nsAutoString value;
   if (mElement->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
-    if (aria::AttrCharacteristicsFor(mAttrAtom) & ATTR_VALTOKEN) {
+    if (mAttrCharacteristics & ATTR_VALTOKEN) {
       nsAtom* normalizedValue =
           nsAccUtils::NormalizeARIAToken(mElement, mAttrAtom);
       if (normalizedValue) {
@@ -1540,4 +1543,37 @@ void AttrIterator::AttrValue(nsAString& aAttrValue) const {
     }
     aAttrValue.Assign(value);
   }
+}
+
+bool AttrIterator::ExposeAttr(AccAttributes* aTargetAttrs) const {
+  if (mAttrCharacteristics & ATTR_VALTOKEN) {
+    nsAtom* normalizedValue =
+        nsAccUtils::NormalizeARIAToken(mElement, mAttrAtom);
+    if (normalizedValue) {
+      aTargetAttrs->SetAttribute(mAttrAtom, normalizedValue);
+      return true;
+    }
+  } else if (mAttrCharacteristics & ATTR_VALINT) {
+    int32_t intVal;
+    if (nsCoreUtils::GetUIntAttr(mElement, mAttrAtom, &intVal)) {
+      aTargetAttrs->SetAttribute(mAttrAtom, intVal);
+      return true;
+    }
+    if (mAttrAtom == nsGkAtoms::aria_colcount ||
+        mAttrAtom == nsGkAtoms::aria_rowcount) {
+      // These attributes allow a value of -1.
+      if (mElement->AttrValueIs(kNameSpaceID_None, mAttrAtom, u"-1"_ns,
+                                eCaseMatters)) {
+        aTargetAttrs->SetAttribute(mAttrAtom, -1);
+        return true;
+      }
+    }
+    return false;  // Invalid value.
+  }
+  nsAutoString value;
+  if (mElement->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
+    aTargetAttrs->SetAttribute(mAttrAtom, std::move(value));
+    return true;
+  }
+  return false;
 }

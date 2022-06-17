@@ -1290,3 +1290,69 @@ function ArrayToSorted(comparefn) {
 }
 
 #endif
+
+// https://github.com/tc39/proposal-array-find-from-last
+// Array.prototype.findLast ( predicate, thisArg )
+function ArrayFindLast(predicate/*, thisArg*/) {
+    /* Steps 1. */
+    var O = ToObject(this);
+
+    /* Steps 2. */
+    var len = ToLength(O.length);
+
+    /* Step 3. */
+    if (arguments.length === 0) {
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.findLast");
+    }
+    if (!IsCallable(predicate)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
+
+    var T = arguments.length > 1 ? arguments[1] : undefined;
+
+    /* Step 4-5. */
+    for (var k = len - 1; k >= 0; k--) {
+        /* Steps 5.a-b. */
+        var kValue = O[k];
+        /* Steps 5.c-d. */
+        if (callContentFunction(predicate, T, kValue, k, O)) {
+            return kValue;
+        }
+    }
+
+    /* Step 6. */
+    return undefined;
+}
+
+// https://github.com/tc39/proposal-array-find-from-last
+// Array.prototype.findLastIndex ( predicate, thisArg )
+function ArrayFindLastIndex(predicate/*, thisArg*/) {
+    /* Steps 1. */
+    var O = ToObject(this);
+
+    /* Steps 2. */
+    var len = ToLength(O.length);
+
+    /* Step 3. */
+    if (arguments.length === 0) {
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.findLastIndex");
+    }
+    if (!IsCallable(predicate)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
+
+    var T = arguments.length > 1 ? arguments[1] : undefined;
+
+    /* Step 4-5. */
+    for (var k = len - 1; k >= 0; k--) {
+        /* Steps 5.a-b. */
+        var kValue = O[k];
+        /* Steps 5.c-d. */
+        if (callContentFunction(predicate, T, kValue, k, O)) {
+            return k;
+        }
+    }
+
+    /* Step 6. */
+    return -1;
+}

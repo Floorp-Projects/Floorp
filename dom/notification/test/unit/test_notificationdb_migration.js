@@ -3,7 +3,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const fooNotification = getNotificationObject(
   "foo",
@@ -21,8 +20,8 @@ const msg = "Notification:GetAll";
 const msgReply = "Notification:GetAll:Return:OK";
 
 do_get_profile();
-const OLD_STORE_PATH = OS.Path.join(
-  OS.Constants.Path.profileDir,
+const OLD_STORE_PATH = PathUtils.join(
+  PathUtils.profileDir,
   "notificationstore.json"
 );
 
@@ -47,7 +46,7 @@ add_task(
       },
     };
 
-    await OS.File.writeAtomic(OLD_STORE_PATH, JSON.stringify(notifications));
+    await IOUtils.writeJSON(OLD_STORE_PATH, notifications);
 
     startNotificationDB();
   }
@@ -123,7 +122,7 @@ add_task(
   },
   async function test_old_datastore_deleted() {
     Assert.ok(
-      !(await OS.File.exists(OLD_STORE_PATH)),
+      !(await IOUtils.exists(OLD_STORE_PATH)),
       "old datastore no longer exists"
     );
   }

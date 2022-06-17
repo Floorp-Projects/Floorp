@@ -308,6 +308,8 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
                   HashNumber aHash);
   ~GlyphCacheEntry();
 
+  const GlyphBuffer& GetGlyphBuffer() const { return mBuffer; }
+
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                      const Matrix& aTransform, const IntRect& aBounds,
                      HashNumber aHash);

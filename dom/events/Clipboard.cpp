@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Clipboard.h"
+
+#include <algorithm>
+
 #include "mozilla/AbstractThread.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/Clipboard.h"
 #include "mozilla/dom/ClipboardItem.h"
 #include "mozilla/dom/ClipboardBinding.h"
 #include "mozilla/dom/ContentChild.h"
@@ -45,6 +49,161 @@ Clipboard::Clipboard(nsPIDOMWindowInner* aWindow)
 
 Clipboard::~Clipboard() = default;
 
+// static
+bool Clipboard::IsTestingPrefEnabledOrHasReadPermission(
+    nsIPrincipal& aSubjectPrincipal) {
+  return IsTestingPrefEnabled() ||
+         nsContentUtils::PrincipalHasPermission(aSubjectPrincipal,
+                                                nsGkAtoms::clipboardRead);
+}
+
+// @return true iff the event was dispatched successfully.
+static bool MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(
+    nsPIDOMWindowInner& aOwner) {
+  RefPtr<Document> document = aOwner.GetDoc();
+
+  if (!document) {
+    // Presumably, this shouldn't happen but to be safe, this case is handled.
+    MOZ_LOG(Clipboard::GetClipboardLog(), LogLevel::Debug,
+            ("%s: no document.", __FUNCTION__));
+    return false;
+  }
+
+  // Conceptionally, `ClipboardReadTextPasteChild` is the target of the event.
+  // It ensures to receive the event by declaring the event in
+  // <BrowserGlue.jsm>.
+  return !NS_WARN_IF(NS_FAILED(nsContentUtils::DispatchChromeEvent(
+      document, ToSupports(document), u"MozClipboardReadTextPaste"_ns,
+      CanBubble::eNo, Cancelable::eNo)));
+}
+
+already_AddRefed<nsIRunnable> Clipboard::ReadTextRequest::Answer() {
+  return NS_NewRunnableFunction(
+      "Clipboard::ReadText",
+      [p = std::move(mPromise),
+       dataTransfer = MakeRefPtr<DataTransfer>(
+           nullptr, ePaste, !XRE_IsContentProcess() /* aIsExternal */,
+           nsIClipboard::kGlobalClipboard),
+       principal = std::move(mSubjectPrincipal)]() {
+        if (XRE_IsContentProcess()) {
+          ContentChild* contentChild = ContentChild::GetSingleton();
+
+          AutoTArray<nsCString, 1> types{nsLiteralCString{kUnicodeMime}};
+
+          contentChild
+              ->SendGetClipboardAsync(types, nsIClipboard::kGlobalClipboard)
+              ->Then(
+                  GetMainThreadSerialEventTarget(), __func__,
+                  /* success */
+                  [p, dataTransfer,
+                   principal](const IPCDataTransfer& ipcDataTransfer) {
+                    DataTransfer::IPCDataTransferTextItemsToDataTransfer(
+                        ipcDataTransfer, false /* aHidden */, *dataTransfer);
+                    Clipboard::ProcessDataTransfer(*dataTransfer, *p, eReadText,
+                                                   nullptr /* aOwner */,
+                                                   *principal,
+                                                   /* aNeedToFill */ false);
+                  },
+                  /* failure */
+                  [p](mozilla::ipc::ResponseRejectReason aReason) {
+                    p->MaybeRejectWithUndefined();
+                  });
+        } else {
+          Clipboard::ProcessDataTransfer(*dataTransfer, *p, eReadText,
+                                         nullptr /* aOwner */, *principal,
+                                         /* aNeedToFill */ true);
+        }
+      });
+}
+
+static bool IsReadTextExposedToContent() {
+  return StaticPrefs::dom_events_asyncClipboard_readText_DoNotUseDirectly();
+}
+
+already_AddRefed<nsIRunnable>
+Clipboard::CheckReadTextPermissionAndHandleRequest(
+    Promise& aPromise, nsIPrincipal& aSubjectPrincipal) {
+  if (IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal)) {
+    MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+            ("%s: testing pref enabled or has read permission", __FUNCTION__));
+    return ReadTextRequest{aPromise, aSubjectPrincipal}.Answer();
+  }
+
+  if (aSubjectPrincipal.GetIsAddonOrExpandedAddonPrincipal()) {
+    // TODO: enable showing the "Paste" button in this case; see bug 1773681.
+    MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+            ("%s: Addon without read permssion.", __FUNCTION__));
+    aPromise.MaybeRejectWithUndefined();
+    return nullptr;
+  }
+
+  return HandleReadTextRequestWhichRequiresPasteButton(aPromise,
+                                                       aSubjectPrincipal);
+}
+
+already_AddRefed<nsIRunnable>
+Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
+    Promise& aPromise, nsIPrincipal& aSubjectPrincipal) {
+  RefPtr<nsIRunnable> runnable;
+
+  nsPIDOMWindowInner* owner = GetOwner();
+  WindowContext* windowContext = owner ? owner->GetWindowContext() : nullptr;
+  if (!windowContext) {
+    MOZ_ASSERT_UNREACHABLE("There should be a WindowContext.");
+    aPromise.MaybeRejectWithUndefined();
+    return runnable.forget();
+  }
+
+  // If no transient user activation, reject the promise and return.
+  if (!windowContext->HasValidTransientUserGestureActivation()) {
+    aPromise.MaybeRejectWithNotAllowedError(
+        "`navigator.clipboard.readText()` was blocked due to lack of "
+        "user activation.");
+    return runnable.forget();
+  }
+
+  // TODO: when a user activation stems from a contextmenu event
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event),
+  // forbid pasting (bug 1767941).
+
+  switch (mTransientUserPasteState.RefreshAndGet(*windowContext)) {
+    case TransientUserPasteState::Value::Initial: {
+      MOZ_ASSERT(mReadTextRequests.IsEmpty());
+
+      if (MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(*owner)) {
+        mTransientUserPasteState.OnStartWaitingForUserReactionToPasteMenuPopup(
+            windowContext->GetUserGestureStart());
+        mReadTextRequests.AppendElement(
+            MakeUnique<ReadTextRequest>(aPromise, aSubjectPrincipal));
+      } else {
+        // This shouldn't happen but let's handle this case.
+        aPromise.MaybeRejectWithUndefined();
+      }
+      break;
+    }
+    case TransientUserPasteState::Value::
+        WaitingForUserReactionToPasteMenuPopup: {
+      MOZ_ASSERT(!mReadTextRequests.IsEmpty());
+
+      mReadTextRequests.AppendElement(
+          MakeUnique<ReadTextRequest>(aPromise, aSubjectPrincipal));
+      break;
+    }
+    case TransientUserPasteState::Value::TransientlyForbiddenByUser: {
+      aPromise.MaybeRejectWithNotAllowedError(
+          "`navigator.clipboard.readText()` was blocked due to the user "
+          "dismissing the 'Paste' button.");
+      break;
+    }
+    case TransientUserPasteState::Value::TransientlyAllowedByUser: {
+      runnable = ReadTextRequest{aPromise, aSubjectPrincipal}.Answer();
+      break;
+    }
+  }
+
+  return runnable.forget();
+}
+
 already_AddRefed<Promise> Clipboard::ReadHelper(
     nsIPrincipal& aSubjectPrincipal, ClipboardReadType aClipboardReadType,
     ErrorResult& aRv) {
@@ -54,64 +213,53 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
     return nullptr;
   }
 
-  // We want to disable security check for automated tests that have the pref
-  //  dom.events.testing.asyncClipboard set to true
-  if (!IsTestingPrefEnabled() &&
-      !nsContentUtils::PrincipalHasPermission(aSubjectPrincipal,
-                                              nsGkAtoms::clipboardRead)) {
-    MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
-            ("Clipboard, ReadHelper, "
-             "Don't have permissions for reading\n"));
-    p->MaybeRejectWithUndefined();
-    return p.forget();
+  switch (aClipboardReadType) {
+    case eReadText: {
+      RefPtr<nsIRunnable> runnable =
+          CheckReadTextPermissionAndHandleRequest(*p, aSubjectPrincipal);
+
+      if (runnable) {
+        GetParentObject()->Dispatch(TaskCategory::Other, runnable.forget());
+      }
+
+      break;
+    }
+    case eRead: {
+      // We want to disable security check for automated tests that have the
+      // pref
+      //  dom.events.testing.asyncClipboard set to true
+      const bool isTestingPrefEnabledOrHasReadPermission =
+          IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal);
+
+      if (!isTestingPrefEnabledOrHasReadPermission) {
+        MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+                ("Clipboard, ReadHelper, "
+                 "Don't have permissions for reading\n"));
+        p->MaybeRejectWithUndefined();
+        return p.forget();
+      }
+
+      // Want isExternal = true in order to use the data transfer object to
+      // perform a read
+      RefPtr<DataTransfer> dataTransfer = new DataTransfer(
+          this, ePaste, true /* aIsExternal */, nsIClipboard::kGlobalClipboard);
+
+      RefPtr<nsPIDOMWindowInner> owner = GetOwner();
+
+      RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
+          "Clipboard::Read", [p, dataTransfer, owner, aClipboardReadType,
+                              principal = RefPtr{&aSubjectPrincipal}]() {
+            // TODO: read async also for `eRead`, see bug 1755863.
+            ProcessDataTransfer(*dataTransfer, *p, aClipboardReadType, owner,
+                                *principal,
+                                /* aNeedToFill */ true);
+          });
+
+      GetParentObject()->Dispatch(TaskCategory::Other, r.forget());
+      break;
+    }
   }
 
-  RefPtr<nsPIDOMWindowInner> owner = GetOwner();
-
-  // Create a new runnable
-  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "Clipboard::Read", [clipboard = RefPtr{this}, p,
-                          subjectPrincipal = RefPtr{&aSubjectPrincipal},
-                          aClipboardReadType, owner]() {
-        IgnoredErrorResult ier;
-        // TODO: read async also for `eRead`, see bug 1755863.
-        if (XRE_IsContentProcess() && aClipboardReadType == eReadText) {
-          RefPtr<DataTransfer> dataTransfer =
-              new DataTransfer(clipboard, ePaste, /* aIsExternal */ false,
-                               nsIClipboard::kGlobalClipboard);
-          ContentChild* contentChild = ContentChild::GetSingleton();
-
-          AutoTArray<nsCString, 1> types{nsLiteralCString{kUnicodeMime}};
-          RefPtr<PContentChild::GetClipboardAsyncPromise> promise =
-              contentChild->SendGetClipboardAsync(
-                  types, nsIClipboard::kGlobalClipboard);
-          promise->Then(
-              GetMainThreadSerialEventTarget(), __func__,
-              /* success */
-              [dataTransfer, p, aClipboardReadType, owner,
-               subjectPrincipal](const IPCDataTransfer& ipcDataTransfer) {
-                DataTransfer::IPCDataTransferTextItemsToDataTransfer(
-                    ipcDataTransfer, false /* aHidden */, *dataTransfer);
-                Clipboard::ProcessDataTransfer(*dataTransfer, *p,
-                                               aClipboardReadType, *owner,
-                                               *subjectPrincipal,
-                                               /* aNeedToFill */ false);
-              },
-              /* failure */
-              [p](mozilla::ipc::ResponseRejectReason aReason) {
-                p->MaybeRejectWithUndefined();
-              });
-        } else {
-          RefPtr<DataTransfer> dataTransfer = new DataTransfer(
-              clipboard, ePaste,
-              /* aIsExternal */ true, nsIClipboard::kGlobalClipboard);
-          ProcessDataTransfer(*dataTransfer, *p, aClipboardReadType, *owner,
-                              *subjectPrincipal,
-                              /* aNeedToFill */ true);
-        }
-      });
-  // Dispatch the runnable
-  GetParentObject()->Dispatch(TaskCategory::Other, r.forget());
   return p.forget();
 }
 
@@ -119,7 +267,7 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
 void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
                                     Promise& aPromise,
                                     ClipboardReadType aClipboardReadType,
-                                    nsPIDOMWindowInner& aOwner,
+                                    nsPIDOMWindowInner* aOwner,
                                     nsIPrincipal& aSubjectPrincipal,
                                     bool aNeedToFill) {
   IgnoredErrorResult ier;
@@ -179,11 +327,11 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
 
       nsTArray<RefPtr<ClipboardItem>> sequence;
       sequence.AppendElement(MakeRefPtr<ClipboardItem>(
-          &aOwner, PresentationStyle::Unspecified, std::move(entries)));
+          aOwner, PresentationStyle::Unspecified, std::move(entries)));
       aPromise.MaybeResolve(sequence);
       break;
     }
-    case eReadText:
+    case eReadText: {
       MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
               ("Clipboard, ReadHelper, read text case\n"));
       nsAutoString str;
@@ -199,7 +347,58 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
       // or resolve with an empty string if nothing was found
       aPromise.MaybeResolve(str);
       break;
+    }
   }
+}
+
+auto Clipboard::TransientUserPasteState::RefreshAndGet(
+    WindowContext& aWindowContext) -> Value {
+  MOZ_ASSERT(aWindowContext.HasValidTransientUserGestureActivation());
+
+  switch (mValue) {
+    case Value::Initial: {
+      MOZ_ASSERT(mUserGestureStart.IsNull());
+      break;
+    }
+    case Value::WaitingForUserReactionToPasteMenuPopup: {
+      MOZ_ASSERT(!mUserGestureStart.IsNull());
+      MOZ_ASSERT(
+          mUserGestureStart == aWindowContext.GetUserGestureStart(),
+          "A new transient user gesture activation should be impossible while "
+          "there's no response to the 'Paste' button.");
+      // `OnUserReactedToPasteMenuPopup` will handle the reaction.
+      break;
+    }
+    case Value::TransientlyForbiddenByUser: {
+      [[fallthrough]];
+    }
+    case Value::TransientlyAllowedByUser: {
+      MOZ_ASSERT(!mUserGestureStart.IsNull());
+
+      if (mUserGestureStart != aWindowContext.GetUserGestureStart()) {
+        *this = {};
+      }
+      break;
+    }
+  }
+
+  return mValue;
+}
+
+void Clipboard::TransientUserPasteState::
+    OnStartWaitingForUserReactionToPasteMenuPopup(
+        const TimeStamp& aUserGestureStart) {
+  MOZ_ASSERT(mValue == Value::Initial);
+  MOZ_ASSERT(!aUserGestureStart.IsNull());
+
+  mValue = Value::WaitingForUserReactionToPasteMenuPopup;
+  mUserGestureStart = aUserGestureStart;
+}
+
+void Clipboard::TransientUserPasteState::OnUserReactedToPasteMenuPopup(
+    const bool aAllowed) {
+  mValue = aAllowed ? Value::TransientlyAllowedByUser
+                    : Value::TransientlyForbiddenByUser;
 }
 
 already_AddRefed<Promise> Clipboard::Read(nsIPrincipal& aSubjectPrincipal,
@@ -554,6 +753,30 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
   return Write(std::move(sequence), aSubjectPrincipal, aRv);
 }
 
+void Clipboard::ReadTextRequest::MaybeRejectWithNotAllowedError(
+    const nsACString& aMessage) {
+  mPromise->MaybeRejectWithNotAllowedError(aMessage);
+}
+
+void Clipboard::OnUserReactedToPasteMenuPopup(const bool aAllowed) {
+  MOZ_LOG(GetClipboardLog(), LogLevel::Debug, ("%s", __FUNCTION__));
+
+  mTransientUserPasteState.OnUserReactedToPasteMenuPopup(aAllowed);
+
+  MOZ_ASSERT(!mReadTextRequests.IsEmpty());
+
+  for (UniquePtr<ReadTextRequest>& request : mReadTextRequests) {
+    if (aAllowed) {
+      GetParentObject()->Dispatch(TaskCategory::Other, request->Answer());
+    } else {
+      request->MaybeRejectWithNotAllowedError(
+          "The user dismissed the 'Paste' button."_ns);
+    }
+  }
+
+  mReadTextRequests.Clear();
+}
+
 JSObject* Clipboard::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
   return Clipboard_Binding::Wrap(aCx, this, aGivenProto);
@@ -565,7 +788,8 @@ LogModule* Clipboard::GetClipboardLog() { return gClipboardLog; }
 /* static */
 bool Clipboard::ReadTextEnabled(JSContext* aCx, JSObject* aGlobal) {
   nsIPrincipal* prin = nsContentUtils::SubjectPrincipal(aCx);
-  return IsTestingPrefEnabled() || prin->GetIsAddonOrExpandedAddonPrincipal() ||
+  return IsReadTextExposedToContent() ||
+         prin->GetIsAddonOrExpandedAddonPrincipal() ||
          prin->IsSystemPrincipal();
 }
 

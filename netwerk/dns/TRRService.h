@@ -53,7 +53,7 @@ class TRRService : public TRRServiceBase,
   void GetURI(nsACString& result) override;
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
-  void StrictModeConfirm();
+  void RetryTRRConfirm();
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb, const nsACString& aOriginSuffix,
@@ -148,9 +148,9 @@ class TRRService : public TRRServiceBase,
   enum class ConfirmationEvent {
     Init,
     PrefChange,
-    Retry,
+    ConfirmationRetry,
     FailedLookups,
-    StrictMode,
+    RetryTRR,
     URIChange,
     CaptivePortalConnectivity,
     NetworkUp,
@@ -158,26 +158,26 @@ class TRRService : public TRRServiceBase,
     ConfirmFail,
   };
 
-  //                            (FailedLookups/StrictMode/URIChange/NetworkUp)
-  //                                    +-------------------------+
-  // +-----------+                      |                         |
-  // |   (Init)  |               +------v---------+             +-+--+
-  // |           | TRR turned on |                | (ConfirmOK) |    |
-  // |    OFF    +--------------->     TRY-OK     +-------------> OK |
-  // |           |  (PrefChange) |                |             |    |
-  // +-----^-----+               +^-^----+--------+             +-^--+
-  //       |    (PrefChange/CP)   | |    |                        |
-  //   TRR +   +------------------+ |    |                        |
-  //   off |   |               +----+    |(ConfirmFail)           |(ConfirmOK)
-  // (Pref)|   |               |         |                        |
-  // +---------+-+             |         |                        |
-  // |           |    (CPConn) | +-------v--------+         +-----+-----+
-  // | ANY-STATE |  (NetworkUp)| |                |  timer  |           |
-  // |           |  (URIChange)+-+      FAIL      +--------->  TRY-FAIL |
-  // +-----+-----+               |                | (Retry) |           |
-  //       |                     +------^---------+         +------+----+
-  //       | (PrefChange)               |                         |
-  //       | TRR_ONLY mode or           +-------------------------+
+  //                            (FailedLookups/RetryTRR/URIChange/NetworkUp)
+  //                                    +---------------------------+
+  // +-----------+                      |                           |
+  // |   (Init)  |               +------v---------+               +-+--+
+  // |           | TRR turned on |                | (ConfirmOK)   |    |
+  // |    OFF    +--------------->     TRY-OK     +---------------> OK |
+  // |           |  (PrefChange) |                |               |    |
+  // +-----^-----+               +^-^----+--------+               +-^--+
+  //       |    (PrefChange/CP)   | |    |                          |
+  //   TRR +   +------------------+ |    |                          |
+  //   off |   |               +----+    |(ConfirmFail)             |(ConfirmOK)
+  // (Pref)|   |               |         |                          |
+  // +---------+-+             |         |                          |
+  // |           |    (CPConn) | +-------v--------+               +-+---------+
+  // | ANY-STATE |  (NetworkUp)| |                |  timer        |           |
+  // |           |  (URIChange)+-+      FAIL      +--------------->  TRY-FAIL |
+  // +-----+-----+               |                | (Confirmation |           |
+  //       |                     +------^---------+  Retry)       +------+----+
+  //       | (PrefChange)               |                                |
+  //       | TRR_ONLY mode or           +--------------------------------+
   //       | confirmationNS = skip                (ConfirmFail)
   // +-----v-----+
   // |           |

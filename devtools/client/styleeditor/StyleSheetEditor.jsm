@@ -20,6 +20,16 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const lazy = {};
 
+loader.lazyGetter(lazy, "BufferStream", () => {
+  const { CC } = require("chrome");
+
+  return CC(
+    "@mozilla.org/io/arraybuffer-input-stream;1",
+    "nsIArrayBufferInputStream",
+    "setData"
+  );
+});
+
 loader.lazyRequireGetter(
   lazy,
   "FileUtils",
@@ -752,11 +762,8 @@ StyleSheetEditor.prototype = {
       }
 
       const ostream = lazy.FileUtils.openSafeFileOutputStream(returnFile);
-      const converter = Cc[
-        "@mozilla.org/intl/scriptableunicodeconverter"
-      ].createInstance(Ci.nsIScriptableUnicodeConverter);
-      converter.charset = "UTF-8";
-      const istream = converter.convertToInputStream(this._state.text);
+      const buffer = new TextEncoder().encode(this._state.text).buffer;
+      const istream = new lazy.BufferStream(buffer, 0, buffer.byteLength);
 
       lazy.NetUtil.asyncCopy(istream, ostream, status => {
         if (!Components.isSuccessCode(status)) {

@@ -984,9 +984,17 @@ gfxFloat gfxFont::GetGlyphAdvance(uint16_t aGID, bool aVertical) {
   NS_ASSERTION(mFUnitsConvFactor >= 0.0f,
                "missing font unit conversion factor");
   if (gfxHarfBuzzShaper* shaper = GetHarfBuzzShaper()) {
-    return (aVertical ? shaper->GetGlyphVAdvance(aGID)
-                      : shaper->GetGlyphHAdvance(aGID)) /
-           65536.0;
+    if (aVertical) {
+      // Note that GetGlyphVAdvance may return -1 to indicate it was unable
+      // to retrieve vertical metrics; in that case we fall back to the
+      // aveCharWidth value as a default advance.
+      int32_t advance = shaper->GetGlyphVAdvance(aGID);
+      if (advance < 0) {
+        return GetMetrics(nsFontMetrics::eVertical).aveCharWidth;
+      }
+      return advance / 65536.0;
+    }
+    return shaper->GetGlyphHAdvance(aGID) / 65536.0;
   }
   return 0.0;
 }
@@ -3948,6 +3956,7 @@ void gfxFont::CreateVerticalMetrics() {
   if (mFUnitsConvFactor < 0.0) {
     uint16_t upem = GetFontEntry()->UnitsPerEm();
     if (upem != gfxFontEntry::kInvalidUPEM) {
+      AutoWriteLock lock(mLock);
       mFUnitsConvFactor = GetAdjustedSize() / upem;
     }
   }
@@ -4016,7 +4025,17 @@ void gfxFont::CreateVerticalMetrics() {
         metrics->maxDescent = halfExtent;
         SET_SIGNED(externalLeading, vhea->lineGap);
       }
-      metrics->ideographicWidth = GetCharAdvance(kWaterIdeograph, true);
+      // Call gfxHarfBuzzShaper::GetGlyphVAdvance directly, as GetCharAdvance
+      // would potentially recurse if no v-advance is available and it attempts
+      // to fall back to a value from mVerticalMetrics.
+      if (gfxHarfBuzzShaper* shaper = GetHarfBuzzShaper()) {
+        uint32_t gid = ProvidesGetGlyph()
+                           ? GetGlyph(kWaterIdeograph, 0)
+                           : shaper->GetNominalGlyph(kWaterIdeograph);
+        int32_t advance = shaper->GetGlyphVAdvance(gid);
+        metrics->ideographicWidth =
+            advance < 0 ? metrics->aveCharWidth : mFUnitsConvFactor * advance;
+      }
     }
   }
 

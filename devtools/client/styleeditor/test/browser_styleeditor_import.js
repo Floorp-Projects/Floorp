@@ -39,11 +39,8 @@ function importSheet(ui, panelWindow) {
   // create file to import first
   const file = FileUtils.getFile("ProfD", [FILENAME]);
   const ostream = FileUtils.openSafeFileOutputStream(file);
-  const converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  const istream = converter.convertToInputStream(SOURCE);
+  const istream = getInputStream(SOURCE);
+
   NetUtil.asyncCopy(istream, ostream, function() {
     FileUtils.closeSafeFileOutputStream(ostream);
 

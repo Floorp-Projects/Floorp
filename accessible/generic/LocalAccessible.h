@@ -451,6 +451,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual void GetNativeInterface(void** aNativeAccessible);
 
+  virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const override;
+
   //////////////////////////////////////////////////////////////////////////////
   // Downcasting and types
 

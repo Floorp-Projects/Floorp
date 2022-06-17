@@ -2467,7 +2467,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   if (topLevelAwait) {
-    if (!topLevelAwait->emitEnd()) {
+    if (!topLevelAwait->emitEndModule()) {
       return false;
     }
   }
@@ -6014,14 +6014,6 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     return false;
   }
 
-  bool needsIteratorResult =
-      sc->isFunctionBox() && sc->asFunctionBox()->needsIteratorResult();
-  if (needsIteratorResult) {
-    if (!emitPrepareIteratorResult()) {
-      return false;
-    }
-  }
-
   if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
     return false;
   }
@@ -6044,12 +6036,6 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   } else {
     /* No explicit return value provided */
     if (!emit1(JSOp::Undefined)) {
-      return false;
-    }
-  }
-
-  if (needsIteratorResult) {
-    if (!emitFinishIteratorResult(true)) {
       return false;
     }
   }
@@ -6081,67 +6067,52 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
 }
 
 bool BytecodeEmitter::finishReturn(BytecodeOffset setRvalOffset) {
-  bool needsFinalYield =
-      sc->isFunctionBox() && sc->asFunctionBox()->needsFinalYield();
+  // The return value is currently in rval. Depending on the current function,
+  // we may have to do additional work before returning:
+  // - Derived class constructors must check if the return value is an object.
+  // - Generators and async functions must do a final yield.
+  // - Non-async generators must return the value as an iterator result:
+  //   { value: <rval>, done: true }
+  // - Non-generator async functions must resolve the function's result promise
+  //   with the value.
+  //
+  // If we have not generated any code since the SetRval that stored the return
+  // value, we can also optimize the bytecode by rewriting that SetRval as a
+  // JSOp::Return. See |emitReturn| above.
+
   bool isDerivedClassConstructor =
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
+  bool needsFinalYield =
+      sc->isFunctionBox() && sc->asFunctionBox()->needsFinalYield();
   bool isSimpleReturn =
       setRvalOffset.valid() &&
       setRvalOffset + BytecodeOffsetDiff(JSOpLength_SetRval) ==
           bytecodeSection().offset();
 
-  if (needsFinalYield) {
-    // We know that .generator is on the function scope, as we just exited
-    // all nested scopes.
-    NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
-        TaggedParserAtomIndex::WellKnown::dotGenerator(), varEmitterScope);
-
-    // Resolve the return value before emitting the final yield.
-    if (sc->asFunctionBox()->needsPromiseResult()) {
-      if (!emit1(JSOp::GetRval)) {
-        //          [stack] RVAL
-        return false;
-      }
-      if (!emitGetNameAtLocation(
-              TaggedParserAtomIndex::WellKnown::dotGenerator(), loc)) {
-        //          [stack] RVAL GEN
-        return false;
-      }
-      if (!emit2(JSOp::AsyncResolve,
-                 uint8_t(AsyncFunctionResolveKind::Fulfill))) {
-        //          [stack] PROMISE
-        return false;
-      }
-      if (!emit1(JSOp::SetRval)) {
-        //          [stack]
-        return false;
-      }
-    }
-
-    if (!emitGetNameAtLocation(TaggedParserAtomIndex::WellKnown::dotGenerator(),
-                               loc)) {
-      return false;
-    }
-    if (!emitYieldOp(JSOp::FinalYieldRval)) {
-      return false;
-    }
-  } else if (isDerivedClassConstructor) {
+  if (isDerivedClassConstructor) {
+    MOZ_ASSERT(!needsFinalYield);
     if (!emitJump(JSOp::Goto, &endOfDerivedClassConstructorBody)) {
       return false;
     }
-  } else if (isSimpleReturn) {
-    // We haven't generated any code since the JSOp::SetRval, so we can replace
-    // it with a JSOp::Return. See |emitReturn| above.
+    return true;
+  }
+
+  if (needsFinalYield) {
+    if (!emitJump(JSOp::Goto, &finalYields)) {
+      return false;
+    }
+    return true;
+  }
+
+  if (isSimpleReturn) {
     MOZ_ASSERT(JSOp(bytecodeSection().code()[setRvalOffset.value()]) ==
                JSOp::SetRval);
     bytecodeSection().code()[setRvalOffset.value()] = jsbytecode(JSOp::Return);
-  } else {
-    if (!emitReturnRval()) {
-      return false;
-    }
+    return true;
   }
 
-  return true;
+  // Nothing special needs to be done.
+  return emitReturnRval();
 }
 
 bool BytecodeEmitter::emitGetDotGeneratorInScope(EmitterScope& currentScope) {

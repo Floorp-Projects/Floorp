@@ -65,9 +65,9 @@ const tabsSetupFlowManager = new (class {
     // TODO: handle offline, sync service not ready or available
     this.registerSetupState({
       uiStateIndex: 1,
-      name: "no-mobile-device",
+      name: "connect-mobile-device",
       exitConditions: () => {
-        return this.mobileDeviceConnected;
+        return this.secondaryDeviceConnected;
       },
     });
     this.registerSetupState({
@@ -118,11 +118,9 @@ const tabsSetupFlowManager = new (class {
       this.sync.UIState.get().status === this.sync.UIState.STATUS_SIGNED_IN
     );
   }
-  get mobileDeviceConnected() {
-    let mobileDevice = this.fxAccounts.device?.recentDeviceList?.find(
-      device => device.type == "mobile"
-    );
-    return !!mobileDevice;
+  get secondaryDeviceConnected() {
+    let recentDevices = this.fxAccounts.device?.recentDeviceList?.length;
+    return recentDevices > 1;
   }
   get didRecentTabSync() {
     const nowSeconds = Math.floor(Date.now() / 1000);

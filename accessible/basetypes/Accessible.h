@@ -250,6 +250,8 @@ class Accessible {
 
   LayoutDeviceIntPoint Position(uint32_t aCoordType);
 
+  virtual Maybe<int32_t> GetIntARIAAttr(nsAtom* aAttrName) const = 0;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;

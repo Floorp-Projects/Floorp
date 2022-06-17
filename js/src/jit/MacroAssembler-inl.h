@@ -256,21 +256,13 @@ uint32_t MacroAssembler::callJit(ImmPtr callee) {
   return currentOffset();
 }
 
-void MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type,
-                                         uint32_t headerSize) {
-  // See JitFrames.h for a description of the frame descriptor format.
-  // The saved-frame bit is zero for new frames. See js::SavedStacks.
-
-  lshiftPtr(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
-
-  headerSize = EncodeFrameHeaderSize(headerSize);
-  orPtr(Imm32((headerSize << FRAME_HEADER_SIZE_SHIFT) | uint32_t(type)),
-        frameSizeReg);
+void MacroAssembler::pushFrameDescriptor(FrameType type) {
+  uint32_t descriptor = MakeFrameDescriptor(type);
+  push(Imm32(descriptor));
 }
 
-void MacroAssembler::pushStaticFrameDescriptor(FrameType type,
-                                               uint32_t headerSize) {
-  uint32_t descriptor = MakeFrameDescriptor(framePushed(), type, headerSize);
+void MacroAssembler::PushFrameDescriptor(FrameType type) {
+  uint32_t descriptor = MakeFrameDescriptor(type);
   Push(Imm32(descriptor));
 }
 
@@ -304,7 +296,7 @@ void MacroAssembler::loadFunctionFromCalleeToken(Address token, Register dest) {
 uint32_t MacroAssembler::buildFakeExitFrame(Register scratch) {
   mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
 
-  pushStaticFrameDescriptor(FrameType::IonJS, ExitFrameLayout::Size());
+  PushFrameDescriptor(FrameType::IonJS);
   uint32_t retAddr = pushFakeReturnAddress(scratch);
 
   MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());

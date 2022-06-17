@@ -483,6 +483,15 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Nielsen",
+    platform: "all",
+    name: "Nielsen",
+    bug: "1760754",
+    file: "nielsen.js",
+    matches: ["*://*.imrworldwide.com/v60.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Optimizely",
     platform: "all",
     name: "Optimizely",

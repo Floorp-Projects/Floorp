@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Markus Stange <mstange@themasta.com>"]
 
 [dependencies]
-memmap2 = "0.3"
+memmap2 = "0.5"
 rustc-demangle = "0.1"
 uuid = "0.8"
 

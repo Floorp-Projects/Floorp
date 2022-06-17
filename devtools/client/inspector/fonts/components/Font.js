@@ -42,7 +42,8 @@ class Font extends PureComponent {
     this.onFontFaceRuleToggle = this.onFontFaceRuleToggle.bind(this);
   }
 
-  componentWillReceiveProps(newProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(newProps) {
     if (this.props.font.name === newProps.font.name) {
       return;
     }

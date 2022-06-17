@@ -778,6 +778,20 @@ RefPtr<GenericPromise> GMPParent::ReadGMPMetaData() {
   return ReadChromiumManifestFile(manifestFile);
 }
 
+#if defined(XP_LINUX)
+static void ApplyGlibcWorkaround(nsCString& aLibs) {
+  // These glibc libraries were merged into libc.so.6 as of glibc
+  // 2.34; they now exist only as stub libraries for compatibility and
+  // newly linked code won't depend on them, so we need to ensure
+  // they're loaded for plugins that may have been linked against a
+  // different version of glibc.  (See also bug 1725828.)
+  if (!aLibs.IsEmpty()) {
+    aLibs.AppendLiteral(", ");
+  }
+  aLibs.AppendLiteral("libdl.so.2, libpthread.so.0, librt.so.1");
+}
+#endif
+
 RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMPInfoFileParser parser;
@@ -796,6 +810,14 @@ RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
 #if defined(XP_WIN) || defined(XP_LINUX)
   // "Libraries" field is optional.
   ReadInfoField(parser, "libraries"_ns, mLibs);
+#endif
+
+#ifdef XP_LINUX
+  // The glibc workaround (see above) isn't needed for clearkey
+  // because it's built along with the browser.
+  if (!mDisplayName.EqualsASCII("clearkey")) {
+    ApplyGlibcWorkaround(mLibs);
+  }
 #endif
 
   nsTArray<nsCString> apiTokens;
@@ -935,17 +957,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   }
 
 #ifdef XP_LINUX
-  // These glibc libraries were merged into libc.so.6 as of glibc
-  // 2.34; they now exist only as stub libraries for compatibility and
-  // newly linked code won't depend on them, so we need to ensure
-  // they're loaded for plugins that may have been linked against a
-  // different version of glibc.  (See also bug 1725828.)
-  if (!mDisplayName.EqualsASCII("clearkey")) {
-    if (!mLibs.IsEmpty()) {
-      mLibs.AppendLiteral(", ");
-    }
-    mLibs.AppendLiteral("libdl.so.2, libpthread.so.0, librt.so.1");
-  }
+  ApplyGlibcWorkaround(mLibs);
 #endif
 
   nsCString codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs);

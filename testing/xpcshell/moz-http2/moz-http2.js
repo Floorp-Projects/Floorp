@@ -236,6 +236,7 @@ var illegalheader_conn = null;
 
 var gDoHPortsLog = [];
 var gDoHNewConnLog = {};
+var gDoHRequestCount = 0;
 
 // eslint-disable-next-line complexity
 function handleRequest(req, res) {
@@ -417,6 +418,13 @@ function handleRequest(req, res) {
       // DNS response header is 12 bytes, we check for this minimum length
       // at the start of decoding so this is the simplest way to force
       // a decode error.
+      return "\xFF\xFF\xFF\xFF";
+    }
+
+    // Because we send two TRR requests (A and AAAA), skip the first two
+    // requests when testing retry.
+    if (u.query.retryOnDecodeFailure && gDoHRequestCount < 2) {
+      gDoHRequestCount++;
       return "\xFF\xFF\xFF\xFF";
     }
 
@@ -901,6 +909,14 @@ function handleRequest(req, res) {
     res.setHeader("Content-Length", rContent.length);
     res.writeHead(400);
     res.end(rContent);
+    return;
+  } else if (u.pathname == "/reset-doh-request-count") {
+    gDoHRequestCount = 0;
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Content-Length", "ok".length);
+    res.writeHead(200);
+    res.write("ok");
+    res.end("");
     return;
   } else if (u.pathname == "/doh") {
     let responseIP = u.query.responseIP;

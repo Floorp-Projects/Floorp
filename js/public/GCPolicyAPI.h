@@ -88,6 +88,8 @@ template <>
 struct GCPolicy<uint32_t> : public IgnoreGCPolicy<uint32_t> {};
 template <>
 struct GCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
+template <>
+struct GCPolicy<bool> : public IgnoreGCPolicy<bool> {};
 
 template <typename T>
 struct GCPointerPolicy {
@@ -184,6 +186,21 @@ struct GCPolicy<mozilla::Maybe<T>> {
       return GCPolicy<T>::isValid(t.ref());
     }
     return true;
+  }
+};
+
+template <typename T1, typename T2>
+struct GCPolicy<std::pair<T1, T2>> {
+  static void trace(JSTracer* trc, std::pair<T1, T2>* tp, const char* name) {
+    GCPolicy<T1>::trace(trc, &tp->first, name);
+    GCPolicy<T2>::trace(trc, &tp->second, name);
+  }
+  static bool traceWeak(JSTracer* trc, std::pair<T1, T2>* tp) {
+    return GCPolicy<T1>::traceWeak(trc, &tp->first) &&
+           GCPolicy<T2>::traceWeak(trc, &tp->second);
+  }
+  static bool isValid(const std::pair<T1, T2>& t) {
+    return GCPolicy<T1>::isValid(t.first) && GCPolicy<T2>::isValid(t.second);
   }
 };
 

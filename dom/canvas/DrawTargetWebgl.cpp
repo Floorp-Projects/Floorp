@@ -425,7 +425,7 @@ void DrawTargetWebgl::SharedContext::SetBlendState(
 
 // Ensure the WebGL framebuffer is set to the current target.
 bool DrawTargetWebgl::SharedContext::SetTarget(DrawTargetWebgl* aDT) {
-  if (mWebgl->IsContextLost()) {
+  if (!mWebgl || mWebgl->IsContextLost()) {
     return false;
   }
   if (aDT != mCurrentTarget) {
@@ -481,7 +481,7 @@ bool DrawTargetWebgl::PrepareContext(bool aClipped) {
 }
 
 bool DrawTargetWebgl::SharedContext::IsContextLost() const {
-  return mWebgl->IsContextLost();
+  return !mWebgl || mWebgl->IsContextLost();
 }
 
 // Signal to CanvasRenderingContext2D when the WebGL context is lost.
@@ -1134,8 +1134,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
   // can be significantly expensive when repeated. So when a Skia layer is
   // active, if it is possible to continue drawing into the layer, then don't
   // accelerate the drawing request.
-  if (mWebglValid ||
-      (mSkiaLayer && (aAccelOnly || !SupportsLayering(aOptions)))) {
+  if (mWebglValid || (mSkiaLayer && !mLayerDepth &&
+                      (aAccelOnly || !SupportsLayering(aOptions)))) {
     // If we get here, either the WebGL context is being directly drawn to
     // or we are going to flush the Skia layer to it before doing so. The shared
     // context still needs to be claimed and prepared for drawing. If this
@@ -2361,13 +2361,15 @@ void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
 // Skia only supports subpixel positioning to the nearest 1/4 fraction. It
 // would be wasteful to attempt to cache text runs with positioning that is
 // anymore precise than this. To prevent this cache bloat, we quantize the
-// transformed glyph positions to the nearest 1/4.
+// transformed glyph positions to the nearest 1/4. The scaling factor for
+// the quantization is baked into the transform, so that if subpixel rounding
+// is used on a given axis, then the axis will be multiplied by 4 before
+// rounding. Since the quantized position is not used for rasterization, the
+// transform is safe to modify as such.
 static inline IntPoint QuantizePosition(const Matrix& aTransform,
                                         const IntPoint& aOffset,
                                         const Point& aPosition) {
-  IntPoint pos =
-      RoundedToInt(aTransform.TransformPoint(aPosition) * 4.0f) - aOffset * 4;
-  return IntPoint(pos.x & 3, pos.y & 3);
+  return RoundedToInt(aTransform.TransformPoint(aPosition)) - aOffset;
 }
 
 // Hashes a glyph buffer to a single hash value that can be used for quick
@@ -2539,6 +2541,34 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   // as for color emoji.
   bool useBitmaps = aFont->MayUseBitmaps();
 
+  // Depending on whether we enable subpixel position for a given font, Skia may
+  // round transformed coordinates differently on each axis. By default, text is
+  // subpixel quantized horizontally and snapped to a whole integer vertical
+  // baseline. Axis-flip transforms instead snap to horizontal boundaries while
+  // subpixel quantizing along the vertical. For other types of transforms, Skia
+  // just applies subpixel quantization to both axes.
+  // We must duplicate the amount of quantization Skia applies carefully as a
+  // boundary value such as 0.49 may round to 0.5 with subpixel quantization,
+  // but if Skia actually snapped it to a whole integer instead, it would round
+  // down to 0. If a subsequent glyph with offset 0.51 came in, we might
+  // mistakenly round it down to 0.5, whereas Skia would round it up to 1. Thus
+  // we would alias 0.49 and 0.51 to the same cache entry, while Skia would
+  // actually snap the offset to 0 or 1, depending, resulting in mismatched
+  // hinting.
+  Matrix quantizeTransform = currentTransform;
+  if (aFont->UseSubpixelPosition()) {
+    if (currentTransform._12 == 0) {
+      // Glyphs are rendered subpixel horizontally, so snap vertically.
+      quantizeTransform.PostScale(4, 1);
+    } else if (currentTransform._11 == 0) {
+      // Glyphs are rendered subpixel vertically, so snap horizontally.
+      quantizeTransform.PostScale(1, 4);
+    } else {
+      // The transform isn't aligned, so don't snap.
+      quantizeTransform.PostScale(4, 4);
+    }
+  }
+
   // Look for an existing glyph cache on the font. If not there, create it.
   GlyphCache* cache =
       static_cast<GlyphCache*>(aFont->GetUserData(&mGlyphCacheKey));
@@ -2549,13 +2579,26 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   }
   // Hash the incoming text run and looking for a matching entry.
   DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
+#ifdef XP_MACOSX
+  // On macOS, depending on whether the text is classified as light-on-dark or
+  // dark-on-light, we may end up with different amounts of dilation applied, so
+  // we can't use the same mask in the two circumstances, or the glyphs will be
+  // dilated incorrectly.
+  bool lightOnDark = !useBitmaps && color.r >= 0.33f && color.g >= 0.33f &&
+                     color.b >= 0.33f && color.r + color.g + color.b >= 2.0f;
+#else
+  // On other platforms, we assume no color-dependent dilation.
+  const bool lightOnDark = true;
+#endif
   // If the font has bitmaps, use the color directly. Otherwise, the texture
-  // will hold a grayscale mask, so encode the key's subpixel state in the
-  // color.
+  // will hold a grayscale mask, so encode the key's subpixel and light-or-dark
+  // state in the color.
   RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
       aBuffer,
-      useBitmaps ? color : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, 1),
-      currentTransform, intBounds);
+      useBitmaps
+          ? color
+          : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, lightOnDark ? 1 : 0),
+      quantizeTransform, intBounds);
   if (!entry) {
     return false;
   }
@@ -2580,9 +2623,17 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     // If we get here, either there wasn't a cached texture handle or it
     // wasn't valid. Render the text run into a temporary target.
     RefPtr<DrawTargetSkia> textDT = new DrawTargetSkia;
-    if (textDT->Init(intBounds.Size(), !useBitmaps && !aUseSubpixelAA
-                                           ? SurfaceFormat::A8
-                                           : SurfaceFormat::B8G8R8A8)) {
+    if (textDT->Init(intBounds.Size(),
+                     lightOnDark && !useBitmaps && !aUseSubpixelAA
+                         ? SurfaceFormat::A8
+                         : SurfaceFormat::B8G8R8A8)) {
+      if (!lightOnDark) {
+        // If rendering dark-on-light text, we need to clear the background to
+        // white while using an opaque alpha value to allow this.
+        textDT->FillRect(Rect(IntRect(IntPoint(), intBounds.Size())),
+                         ColorPattern(DeviceColor(1, 1, 1, 1)),
+                         DrawOptions(1.0f, CompositionOp::OP_OVER));
+      }
       textDT->SetTransform(currentTransform *
                            Matrix::Translation(-intBounds.TopLeft()));
       textDT->SetPermitSubpixelAA(aUseSubpixelAA);
@@ -2591,11 +2642,39 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
       // If bitmaps might be used, then we have to supply the color, as color
       // emoji may ignore it while grayscale bitmaps may use it, with no way to
       // know ahead of time. Otherwise, assume the output will be a mask and
-      // just render it white to determine intensity.
+      // just render it white to determine intensity. Depending on whether the
+      // text is light or dark, we render white or black text respectively.
       textDT->FillGlyphs(
           aFont, aBuffer,
-          ColorPattern(useBitmaps ? color : DeviceColor(1, 1, 1, 1)),
+          ColorPattern(useBitmaps ? color
+                                  : DeviceColor::Mask(lightOnDark ? 1 : 0, 1)),
           drawOptions);
+      if (!lightOnDark) {
+        uint8_t* data = nullptr;
+        IntSize size;
+        int32_t stride = 0;
+        SurfaceFormat format = SurfaceFormat::UNKNOWN;
+        if (!textDT->LockBits(&data, &size, &stride, &format)) {
+          return false;
+        }
+        uint8_t* row = data;
+        for (int y = 0; y < size.height; ++y) {
+          uint8_t* px = row;
+          for (int x = 0; x < size.width; ++x) {
+            // If rendering dark-on-light text, we need to invert the final mask
+            // so that it is in the expected white text on transparent black
+            // format. The alpha will be initialized to the largest of the
+            // values.
+            px[0] = 255 - px[0];
+            px[1] = 255 - px[1];
+            px[2] = 255 - px[2];
+            px[3] = std::max(px[0], std::max(px[1], px[2]));
+            px += 4;
+          }
+          row += stride;
+        }
+        textDT->ReleaseBits(data);
+      }
       RefPtr<SourceSurface> textSurface = textDT->Snapshot();
       if (textSurface) {
         // If we don't expect the text surface to contain color glyphs
@@ -2917,6 +2996,33 @@ bool DrawTargetWebgl::Draw3DTransformedSurface(SourceSurface* aSurface,
                                                const Matrix4x4& aMatrix) {
   MarkSkiaChanged();
   return mSkia->Draw3DTransformedSurface(aSurface, aMatrix);
+}
+
+void DrawTargetWebgl::PushLayer(bool aOpaque, Float aOpacity,
+                                SourceSurface* aMask,
+                                const Matrix& aMaskTransform,
+                                const IntRect& aBounds, bool aCopyBackground) {
+  PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, aBounds,
+                     aCopyBackground, CompositionOp::OP_OVER);
+}
+
+void DrawTargetWebgl::PushLayerWithBlend(bool aOpaque, Float aOpacity,
+                                         SourceSurface* aMask,
+                                         const Matrix& aMaskTransform,
+                                         const IntRect& aBounds,
+                                         bool aCopyBackground,
+                                         CompositionOp aCompositionOp) {
+  MarkSkiaChanged(DrawOptions(aOpacity, aCompositionOp));
+  mSkia->PushLayerWithBlend(aOpaque, aOpacity, aMask, aMaskTransform, aBounds,
+                            aCopyBackground, aCompositionOp);
+  ++mLayerDepth;
+}
+
+void DrawTargetWebgl::PopLayer() {
+  MOZ_ASSERT(mSkiaValid);
+  MOZ_ASSERT(mLayerDepth > 0);
+  --mLayerDepth;
+  mSkia->PopLayer();
 }
 
 }  // namespace mozilla::gfx

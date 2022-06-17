@@ -190,7 +190,7 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   [[nodiscard]] bool finishLastFrame();
 
   [[nodiscard]] bool prepareForNextFrame(HandleValueVector savedCallerArgs);
-  [[nodiscard]] bool finishOuterFrame(uint32_t frameSize);
+  [[nodiscard]] bool finishOuterFrame();
   [[nodiscard]] bool buildStubFrame(uint32_t frameSize,
                                     HandleValueVector savedCallerArgs);
   [[nodiscard]] bool buildRectifierFrame(uint32_t actualArgc,
@@ -386,10 +386,6 @@ class MOZ_STACK_CLASS BaselineStackBuilder {
   }
 
   void setResumeAddr(void* resumeAddr) { header_->resumeAddr = resumeAddr; }
-
-  void setFrameSizeOfInnerMostFrame(uint32_t size) {
-    header_->frameSizeOfInnerMostFrame = size;
-  }
 
   template <typename T>
   BufferPointer<T> pointerAtStackOffset(size_t offset) {
@@ -839,14 +835,14 @@ bool BaselineStackBuilder::prepareForNextFrame(
 
   // Write out descriptor and return address for the baseline frame.
   // The icEntry in question MUST have an inlinable fallback stub.
-  if (!finishOuterFrame(frameSize)) {
+  if (!finishOuterFrame()) {
     return false;
   }
 
   return buildStubFrame(frameSize, savedCallerArgs);
 }
 
-bool BaselineStackBuilder::finishOuterFrame(uint32_t frameSize) {
+bool BaselineStackBuilder::finishOuterFrame() {
   // .               .
   // |  Descr(BLJS)  |
   // +---------------+
@@ -859,8 +855,7 @@ bool BaselineStackBuilder::finishOuterFrame(uint32_t frameSize) {
   blFrame()->setInterpreterFields(script_, pc_);
 
   // Write out descriptor of BaselineJS frame.
-  size_t baselineFrameDescr = MakeFrameDescriptor(
-      frameSize, FrameType::BaselineJS, BaselineStubFrameLayout::Size());
+  size_t baselineFrameDescr = MakeFrameDescriptor(FrameType::BaselineJS);
   if (!writeWord(baselineFrameDescr, "Descriptor")) {
     return false;
   }
@@ -897,8 +892,6 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   // +===============+
 
   JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-STUB FRAME]");
-
-  size_t startOfBaselineStubFrame = framePushed();
 
   // Write previous frame pointer (saved earlier).
   if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
@@ -1000,13 +993,6 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   // rectifier frame, save the framePushed values here for later use.
   size_t endOfBaselineStubArgs = framePushed();
 
-  // Calculate frame size for descriptor.
-  size_t baselineStubFrameSize =
-      endOfBaselineStubArgs - startOfBaselineStubFrame;
-  size_t baselineStubFrameDescr =
-      MakeFrameDescriptor((uint32_t)baselineStubFrameSize,
-                          FrameType::BaselineStub, JitFrameLayout::Size());
-
   // Push actual argc
   if (!writeWord(actualArgc, "ActualArgc")) {
     return false;
@@ -1023,6 +1009,7 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   setNextCallee(calleeFun);
 
   // Push BaselineStub frame descriptor
+  size_t baselineStubFrameDescr = MakeFrameDescriptor(FrameType::BaselineStub);
   if (!writeWord(baselineStubFrameDescr, "Descriptor")) {
     return false;
   }
@@ -1076,8 +1063,6 @@ bool BaselineStackBuilder::buildRectifierFrame(uint32_t actualArgc,
   JitSpew(JitSpew_BaselineBailouts, "      [RECTIFIER FRAME]");
   bool pushedNewTarget = IsConstructPC(pc_);
 
-  size_t startOfRectifierFrame = framePushed();
-
   if (!writePtr(prevFramePtr(), "PrevFramePtr")) {
     return false;
   }
@@ -1126,12 +1111,6 @@ bool BaselineStackBuilder::buildRectifierFrame(uint32_t actualArgc,
   memcpy(pointerAtStackOffset<uint8_t>(0).get(), stubArgsEnd.get(),
          (actualArgc + 1) * sizeof(Value));
 
-  // Calculate frame size for descriptor.
-  size_t rectifierFrameSize = framePushed() - startOfRectifierFrame;
-  size_t rectifierFrameDescr =
-      MakeFrameDescriptor((uint32_t)rectifierFrameSize, FrameType::Rectifier,
-                          JitFrameLayout::Size());
-
   // Push actualArgc
   if (!writeWord(actualArgc, "ActualArgc")) {
     return false;
@@ -1143,6 +1122,7 @@ bool BaselineStackBuilder::buildRectifierFrame(uint32_t actualArgc,
   }
 
   // Push rectifier frame descriptor
+  size_t rectifierFrameDescr = MakeFrameDescriptor(FrameType::Rectifier);
   if (!writeWord(rectifierFrameDescr, "Descriptor")) {
     return false;
   }
@@ -1165,7 +1145,6 @@ bool BaselineStackBuilder::finishLastFrame() {
       cx_->runtime()->jitRuntime()->baselineInterpreter();
 
   setResumeFramePtr(prevFramePtr());
-  setFrameSizeOfInnerMostFrame(framePushed());
 
   // Compute the native address (within the Baseline Interpreter) that we will
   // resume at and initialize the frame's interpreter fields.

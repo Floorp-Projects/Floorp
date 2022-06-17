@@ -68,7 +68,8 @@ class Scopes extends PureComponent {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const {
       selectedFrame,
       originalFrameScopes,

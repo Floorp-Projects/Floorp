@@ -79,6 +79,11 @@ const char* ContentWin32kLockdownStateToString(
 
     case nsIXULRuntime::ContentWin32kLockdownState::EnabledByDefault:
       return "Win32k Lockdown enabled -- default value is true";
+
+    case nsIXULRuntime::ContentWin32kLockdownState::
+        IncompatibleMitigationPolicy:
+      return "Win32k Lockdown disabled -- Incompatible Windows Exploit "
+             "Protection policies enabled";
   }
 
   MOZ_CRASH("Should never reach here");

@@ -340,7 +340,7 @@ void AddrHostRecord::ResolveComplete() {
       }
     }
 
-    if (StaticPrefs::network_trr_strict_native_fallback()) {
+    if (StaticPrefs::network_trr_retry_on_recoverable_errors()) {
       nsAutoCString telemetryKey(TRRService::ProviderKey());
 
       if (mFirstTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET) {

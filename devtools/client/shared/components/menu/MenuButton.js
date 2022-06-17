@@ -132,7 +132,8 @@ class MenuButton extends PureComponent {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
     // If the window changes, we need to regenerate the HTMLTooltip or else the
     // XUL wrapper element will appear above (in terms of z-index) the old
     // window, and not the new.

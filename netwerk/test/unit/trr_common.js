@@ -236,8 +236,46 @@ async function test_timeout_mode3() {
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
 }
 
+async function test_trr_retry() {
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
+
+  info("Test fallback to native");
+  Services.prefs.setBoolPref("network.trr.retry_on_recoverable_errors", false);
+  setModeAndURI(2, "doh?noResponse=true");
+  Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
+
+  await new TRRDNSListener("timeout.example.com", {
+    expectedAnswer: "127.0.0.1",
+  });
+
+  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
+  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
+
+  info("Test Retry Success");
+  Services.prefs.setBoolPref("network.trr.retry_on_recoverable_errors", true);
+
+  let chan = makeChan(
+    `https://foo.example.com:${h2Port}/reset-doh-request-count`,
+    Ci.nsIRequest.TRR_DISABLED_MODE
+  );
+  await new Promise(resolve =>
+    chan.asyncOpen(new ChannelListener(resolve, null))
+  );
+
+  setModeAndURI(2, "doh?responseIP=2.2.2.2&retryOnDecodeFailure=true");
+  await new TRRDNSListener("retry_ok.example.com", "2.2.2.2");
+
+  info("Test Retry Failed");
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
+  await new TRRDNSListener("retry_ng.example.com", "127.0.0.1");
+}
+
 async function test_strict_native_fallback() {
   dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.retry_on_recoverable_errors", true);
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
 
   info("First a timeout case");

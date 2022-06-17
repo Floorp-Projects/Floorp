@@ -132,7 +132,8 @@ class ConsoleOutput extends Component {
     });
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     this.isUpdating = true;
     if (nextProps.cacheGeneration !== this.props.cacheGeneration) {
       this.messageIdsToKeepAlive = new Set();

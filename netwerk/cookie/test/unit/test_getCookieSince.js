@@ -1,9 +1,6 @@
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-const cm = cs.QueryInterface(Ci.nsICookieManager);
-
 function setCookie(name, url) {
   let value = `${name}=${Math.random()}; Path=/; Max-Age=1000; sameSite=none; Secure`;
   info(`Setting cookie ${value} for ${url.spec}`);
@@ -14,7 +11,7 @@ function setCookie(name, url) {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
 
-  cs.setCookieStringFromHttp(url, value, channel);
+  Services.cookies.setCookieStringFromHttp(url, value, channel);
 }
 
 async function sleep() {
@@ -49,24 +46,26 @@ add_task(async function() {
   await setCookie("D", Services.io.newURI("https://example.com/D/"));
   await sleep();
 
-  Assert.equal(cm.cookies.length, 4, "Cookie check");
+  Assert.equal(Services.cookies.cookies.length, 4, "Cookie check");
 
-  const cookies = cm.getCookiesSince(0);
+  const cookies = Services.cookies.getCookiesSince(0);
   Assert.equal(cookies.length, 4, "We retrieve all the 4 cookies");
   checkSorting(cookies);
 
-  let someCookies = cm.getCookiesSince(cookies[0].creationTime + 1);
+  let someCookies = Services.cookies.getCookiesSince(
+    cookies[0].creationTime + 1
+  );
   Assert.equal(someCookies.length, 3, "We retrieve some cookies");
   checkSorting(someCookies);
 
-  someCookies = cm.getCookiesSince(cookies[1].creationTime + 1);
+  someCookies = Services.cookies.getCookiesSince(cookies[1].creationTime + 1);
   Assert.equal(someCookies.length, 2, "We retrieve some cookies");
   checkSorting(someCookies);
 
-  someCookies = cm.getCookiesSince(cookies[2].creationTime + 1);
+  someCookies = Services.cookies.getCookiesSince(cookies[2].creationTime + 1);
   Assert.equal(someCookies.length, 1, "We retrieve some cookies");
   checkSorting(someCookies);
 
-  someCookies = cm.getCookiesSince(cookies[3].creationTime + 1);
+  someCookies = Services.cookies.getCookiesSince(cookies[3].creationTime + 1);
   Assert.equal(someCookies.length, 0, "We retrieve some cookies");
 });

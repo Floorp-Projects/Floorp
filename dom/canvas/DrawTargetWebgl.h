@@ -80,6 +80,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool mClipDirty = true;
   // The framebuffer has been modified and should be copied to the swap chain.
   bool mNeedsPresent = true;
+  // The number of layers currently pushed.
+  int32_t mLayerDepth = 0;
 
   RefPtr<TextureHandle> mSnapshotTexture;
 
@@ -360,17 +362,13 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                  const Matrix& aMaskTransform,
                  const IntRect& aBounds = IntRect(),
-                 bool aCopyBackground = false) override {
-    MOZ_ASSERT(false);
-  }
+                 bool aCopyBackground = false) override;
   void PushLayerWithBlend(
       bool aOpaque, Float aOpacity, SourceSurface* aMask,
       const Matrix& aMaskTransform, const IntRect& aBounds = IntRect(),
       bool aCopyBackground = false,
-      CompositionOp aCompositionOp = CompositionOp::OP_OVER) override {
-    MOZ_ASSERT(false);
-  }
-  void PopLayer() override { MOZ_ASSERT(false); }
+      CompositionOp aCompositionOp = CompositionOp::OP_OVER) override;
+  void PopLayer() override;
   already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(
       unsigned char* aData, const IntSize& aSize, int32_t aStride,
       SurfaceFormat aFormat) const override;

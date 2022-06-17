@@ -160,7 +160,8 @@ class HTTPCustomRequestPanel extends Component {
     this.getStateFromPref = this.getStateFromPref.bind(this);
   }
 
-  async componentWillMount() {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  async UNSAFE_componentWillMount() {
     const { connector, request } = this.props;
     if (request?.requestPostDataAvailable && !this.state.postBody) {
       const requestData = await connector.requestData(

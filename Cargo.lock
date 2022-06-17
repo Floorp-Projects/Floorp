@@ -385,7 +385,7 @@ dependencies = [
  "bindgen 0.59.2",
  "cranelift-codegen",
  "cranelift-wasm",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "log",
  "mozbuild",
  "smallvec",
@@ -1036,7 +1036,7 @@ dependencies = [
  "cranelift-codegen",
  "cranelift-entity",
  "cranelift-frontend",
- "itertools 0.10.3",
+ "itertools",
  "log",
  "smallvec",
  "thiserror",
@@ -1171,7 +1171,7 @@ checksum = "f93d03419cb5950ccfd3daf3ff1c7a36ace64609a1a8746d493df1ca0afde0fa"
 dependencies = [
  "cssparser-macros",
  "dtoa-short",
- "itoa 1.0.2",
+ "itoa",
  "matches",
  "phf",
  "proc-macro2",
@@ -1392,6 +1392,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "detect_win32k_conflicts"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "thiserror",
+ "winapi",
 ]
 
 [[package]]
@@ -2045,7 +2054,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "lazy_static",
  "log",
 ]
@@ -2171,6 +2180,7 @@ dependencies = [
  "cubeb-coreaudio",
  "cubeb-pulse",
  "cubeb-sys",
+ "detect_win32k_conflicts",
  "dom",
  "encoding_glue",
  "fluent",
@@ -2196,6 +2206,7 @@ dependencies = [
  "midir_impl",
  "mio 0.8.0",
  "moz_asserts",
+ "mozglue-static",
  "mozurl",
  "mp4parse_capi",
  "neqo_glue",
@@ -2524,7 +2535,7 @@ checksum = "75f43d41e26995c17e71ee126451dd3941010b0514a81a9d11f3b341debc2399"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
- "itoa 1.0.2",
+ "itoa",
 ]
 
 [[package]]
@@ -2598,7 +2609,7 @@ dependencies = [
  "http-body",
  "httparse",
  "httpdate",
- "itoa 1.0.2",
+ "itoa",
  "pin-project-lite",
  "socket2",
  "tokio 1.17.0",
@@ -2725,25 +2736,11 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.8.999"
-dependencies = [
- "itertools 0.10.3",
-]
-
-[[package]]
-name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
 dependencies = [
  "either",
-]
-
-[[package]]
-name = "itoa"
-version = "0.4.999"
-dependencies = [
- "itoa 1.0.2",
 ]
 
 [[package]]
@@ -3217,14 +3214,14 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 name = "memmap2"
 version = "0.2.999"
 dependencies = [
- "memmap2 0.3.1",
+ "memmap2 0.5.4",
 ]
 
 [[package]]
 name = "memmap2"
-version = "0.3.1"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b6c2ebff6180198788f5db08d7ce3bc1d0b617176678831a7510825973e357"
+checksum = "d5172b50c23043ff43dd53e51392f36519d9b35a8f3a410d30ece5d1aedd58ae"
 dependencies = [
  "libc",
 ]
@@ -3922,7 +3919,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "lazy_static",
  "libloading 0.5.2",
  "log",
@@ -4241,7 +4238,7 @@ dependencies = [
 name = "profiler_helper"
 version = "0.1.0"
 dependencies = [
- "memmap2 0.3.1",
+ "memmap2 0.5.4",
  "object",
  "rustc-demangle",
  "thin-vec",
@@ -4271,7 +4268,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "600d2f334aa05acb02a755e217ef1ab6dea4d51b58b7846588b747edec04efba"
 dependencies = [
  "anyhow",
- "itertools 0.10.3",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn",
@@ -4748,7 +4745,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
 dependencies = [
  "indexmap",
- "itoa 1.0.2",
+ "itoa",
  "ryu",
  "serde",
 ]
@@ -4771,7 +4768,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
 dependencies = [
  "form_urlencoded",
- "itoa 1.0.2",
+ "itoa",
  "ryu",
  "serde",
 ]
@@ -4914,7 +4911,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "jsparagus",
  "log",
 ]
@@ -5017,8 +5014,8 @@ dependencies = [
  "fxhash",
  "gecko-profiler",
  "indexmap",
- "itertools 0.8.999",
- "itoa 0.4.999",
+ "itertools",
+ "itoa",
  "lazy_static",
  "log",
  "malloc_size_of",
@@ -5048,7 +5045,7 @@ dependencies = [
  "time 0.1.44",
  "to_shmem",
  "to_shmem_derive",
- "toml 0.4.999",
+ "toml 0.5.9",
  "uluru",
  "unicode-bidi",
  "unicode-segmentation",
@@ -5261,7 +5258,7 @@ version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2702e08a7a860f005826c6815dcac101b19b5eb330c27fe4a5928fec1d20ddd"
 dependencies = [
- "itoa 1.0.2",
+ "itoa",
  "libc",
  "num_threads",
  "time-macros",

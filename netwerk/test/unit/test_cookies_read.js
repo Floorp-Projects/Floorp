@@ -23,7 +23,7 @@ add_task(async () => {
 
   // Start the cookieservice, to force creation of a database.
   // Get the sessionCookies to join the initialization in cookie thread
-  Services.cookiemgr.sessionCookies;
+  Services.cookies.sessionCookies;
 
   // Open a database connection now, after synchronous initialization has
   // completed. We may not be able to open one later once asynchronous writing
@@ -39,7 +39,7 @@ add_task(async () => {
   });
   for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookiesvc.setCookieStringFromHttp(
+    Services.cookies.setCookieStringFromHttp(
       uri,
       "oh=hai; max-age=1000",
       channel
@@ -65,11 +65,11 @@ add_task(async () => {
   do_load_profile();
 
   // test a few random cookies
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("999.com"), 1);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("abc.com"), 0);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("100.com"), 1);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("400.com"), 1);
-  Assert.equal(Services.cookiemgr.countCookiesFromHost("xyz.com"), 0);
+  Assert.equal(Services.cookies.countCookiesFromHost("999.com"), 1);
+  Assert.equal(Services.cookies.countCookiesFromHost("abc.com"), 0);
+  Assert.equal(Services.cookies.countCookiesFromHost("100.com"), 1);
+  Assert.equal(Services.cookies.countCookiesFromHost("400.com"), 1);
+  Assert.equal(Services.cookies.countCookiesFromHost("xyz.com"), 0);
 
   // force synchronous load of everything
   Assert.equal(do_count_cookies(), CMAX);
@@ -77,7 +77,7 @@ add_task(async () => {
   // check that everything's precisely correct
   for (let i = 0; i < CMAX; ++i) {
     let host = i.toString() + ".com";
-    Assert.equal(Services.cookiemgr.countCookiesFromHost(host), 1);
+    Assert.equal(Services.cookies.countCookiesFromHost(host), 1);
   }
 
   // reload again, to make sure the additions were written correctly
@@ -87,11 +87,11 @@ add_task(async () => {
   // remove some of the cookies, in both reverse and forward order
   for (let i = 100; i-- > 0; ) {
     let host = i.toString() + ".com";
-    Services.cookiemgr.remove(host, "oh", "/", {});
+    Services.cookies.remove(host, "oh", "/", {});
   }
   for (let i = CMAX - 100; i < CMAX; ++i) {
     let host = i.toString() + ".com";
-    Services.cookiemgr.remove(host, "oh", "/", {});
+    Services.cookies.remove(host, "oh", "/", {});
   }
 
   // check the count
@@ -112,7 +112,7 @@ add_task(async () => {
   Assert.equal(do_count_cookies(), CMAX - 200);
   for (let i = 100; i < CMAX - 100; ++i) {
     let host = i.toString() + ".com";
-    Assert.equal(Services.cookiemgr.countCookiesFromHost(host), 1);
+    Assert.equal(Services.cookies.countCookiesFromHost(host), 1);
   }
 
   Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");

@@ -101,7 +101,8 @@ define(function(require, exports, module) {
       });
     }
 
-    componentWillReceiveProps(nextProps) {
+    // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+    UNSAFE_componentWillReceiveProps(nextProps) {
       // I don't like accessing the underlying DOM elements directly,
       // but this optimization makes the filtering so damn fast!
       // The row doesn't have to be re-rendered, all we really need

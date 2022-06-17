@@ -32,7 +32,6 @@ UNSUPPORTED_FEATURES = set(
         "resizable-arraybuffer",
         "Temporal",
         "ShadowRealm",
-        "array-find-from-last",
         "array-grouping",
         "regexp-v-flag",
     ]
@@ -50,6 +49,7 @@ RELEASE_OR_BETA = set(
 )
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
+    "array-find-from-last": "--enable-array-find-last",
 }
 
 

@@ -460,16 +460,9 @@ bool WindowContext::HasBeenUserGestureActivated() {
   return GetUserActivationState() != UserActivation::State::None;
 }
 
-DOMHighResTimeStamp WindowContext::LastUserGestureTimeStamp() {
+const TimeStamp& WindowContext::GetUserGestureStart() const {
   MOZ_ASSERT(IsInProcess());
-  if (nsGlobalWindowInner* innerWindow = GetInnerWindow()) {
-    if (Performance* perf = innerWindow->GetPerformance()) {
-      return perf->GetDOMTiming()->TimeStampToDOMHighRes(mUserGestureStart);
-    }
-  }
-  NS_WARNING(
-      "Unable to calculate DOMHighResTimeStamp for LastUserGestureTimeStamp");
-  return 0;
+  return mUserGestureStart;
 }
 
 bool WindowContext::HasValidTransientUserGestureActivation() {

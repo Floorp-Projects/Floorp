@@ -300,6 +300,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // constructor body.
   JumpList endOfDerivedClassConstructorBody = {};
 
+  // Jump target just before the final yield in a generator or async function.
+  JumpList finalYields = {};
+
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
    * space above their tempMark points. This means that you cannot alloc from

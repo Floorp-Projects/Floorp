@@ -12,7 +12,10 @@ for feature in gkrust_features:
     # We don't want to enable refcount logging during rusttests, since the
     # relevant FFI symbols wouldn't be found.
     # Nor do we want Glean to assume there are Gecko symbols.
-    if feature not in ("gecko_refcount_logging", "glean_with_gecko"):
+    if feature not in (
+        "gkrust-shared/gecko_refcount_logging",
+        "gkrust-shared/glean_with_gecko",
+    ):
         RUST_TEST_FEATURES.append(feature)
 
 # Target directory doesn't matter a lot here, since we can't share panic=abort

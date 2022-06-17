@@ -88,7 +88,8 @@ class ToolboxTabs extends Component {
     this.updateOverflowedTabs();
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     if (this.shouldUpdateToolboxTabs(this.props, nextProps)) {
       // Force recalculate and render in this cycle if panel definition has
       // changed or selected tool has changed.

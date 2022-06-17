@@ -1,8 +1,8 @@
 [
   {
-    "size": 7387746,
+    "size": 33166483,
     "visibility": "public",
-    "digest": "a9f6c0604316ae650532ea5e39abf0c507e65fe30d6ae3a7cb7ae61151b5732a11f34b630d7edc4eb3ec92f6a1e3d880a5099bd445d8d57523106698bd71f677",
+    "digest": "3d1dc0e1b5d1ba2f7004cdd975c62a8cb010a53aeba74da48225f9cb22d0091f2109e9b29053198c0c6df268665ed919f69cca04d0efe161c35a234b59272fb8",
     "algorithm": "sha512",
     "filename": "mitm7-linux-firefox-imgur.zip"
   }

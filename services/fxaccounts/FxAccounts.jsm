@@ -452,11 +452,15 @@ class FxAccounts {
     const ONE_DAY = 24 * 60 * 60 * 1000;
 
     return this._withSessionToken(async sessionToken => {
-      const attachedClients = await this._internal.fxAccountsClient.attachedClients(
+      const response = await this._internal.fxAccountsClient.attachedClients(
         sessionToken
       );
-      // We should use the server timestamp here - bug 1595635
-      let now = Date.now();
+      const attachedClients = response.body;
+      const timestamp = response.headers["x-timestamp"];
+      const now =
+        timestamp !== undefined
+          ? new Date(parseInt(timestamp, 10))
+          : Date.now();
       return attachedClients.map(client => {
         const daysAgo = client.lastAccessTime
           ? Math.max(Math.floor((now - client.lastAccessTime) / ONE_DAY), 0)
