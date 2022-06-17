@@ -6,7 +6,7 @@
 
 include("../../rust/gkrust-features.mozbuild")
 
-if CONFIG['LIBFUZZER']:
+if CONFIG["LIBFUZZER"]:
     gkrust_features += ["gecko-fuzz-targets"]
 
 RustLibrary(
