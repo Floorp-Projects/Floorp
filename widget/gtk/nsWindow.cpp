@@ -3910,6 +3910,12 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   mHasReceivedSizeAllocate = true;
 
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
+
+  // Sometimes the window manager gives us garbage sizes (way past the maximum
+  // texture size) causing crashes if we don't enforce size constraints again
+  // here.
+  ConstrainSize(&size.width, &size.height);
+
   if (mBounds.Size() == size) {
     LOG("  Already the same size");
     // mBounds was set at Create() or Resize().
