@@ -37,12 +37,7 @@ class PolicySearchEngine extends lazy.SearchEngine {
     });
 
     if (options.details) {
-      this._initFromManifest(
-        "",
-        "",
-        options.details,
-        lazy.SearchUtils.DEFAULT_TAG
-      );
+      this._initWithDetails(options.details);
     } else {
       this._initWithJSON(options.json);
     }
@@ -65,7 +60,12 @@ class PolicySearchEngine extends lazy.SearchEngine {
    *   nsISearchService.updatePolicyEngine for more details.
    */
   update(details) {
-    this._updateFromManifest("", "", details, lazy.SearchUtils.DEFAULT_TAG);
+    this._urls = [];
+    this._iconMapObj = null;
+
+    this._initWithDetails(details);
+
+    lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 }
 

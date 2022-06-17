@@ -488,9 +488,7 @@ class SearchService {
    *   the idl for more details.
    */
   async updatePolicyEngine(details) {
-    let engine = this.getEngineByName(
-      details.chrome_settings_overrides.search_provider.name
-    );
+    let engine = this.getEngineByName(details.name);
     if (engine && !engine.isAppProvided) {
       engine.update(details);
     }
@@ -1738,7 +1736,7 @@ class SearchService {
         locale = engine._locale;
         manifest = await this.#getManifestForLocale(policy.extension, locale);
       }
-      engine._updateFromManifest(
+      engine.updateFromManifest(
         policy.extension.id,
         policy.extension.baseURI,
         manifest,
@@ -2494,7 +2492,7 @@ class SearchService {
       let isDefault = engine == this.defaultEngine;
       let isDefaultPrivate = engine == this.defaultPrivateEngine;
 
-      engine._updateFromManifest(
+      engine.updateFromManifest(
         extension.id,
         extension.baseURI,
         manifest,

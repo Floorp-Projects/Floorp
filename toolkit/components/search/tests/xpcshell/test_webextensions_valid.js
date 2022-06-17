@@ -181,12 +181,8 @@ add_task(async function test_policy_engine() {
 
   await Services.search.addPolicyEngine({
     description: "test policy engine",
-    chrome_settings_overrides: {
-      search_provider: {
-        name: "test_policy_engine",
-        search_url: "https://www.example.org/?search={searchTerms}",
-      },
-    },
+    name: "test_policy_engine",
+    search_url: "https://www.example.org/?search={searchTerms}",
   });
 
   await Services.search.runBackgroundChecks();

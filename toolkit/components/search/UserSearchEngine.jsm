@@ -40,20 +40,11 @@ class UserSearchEngine extends lazy.SearchEngine {
     });
 
     if (options.details) {
-      this._initFromManifest(
-        "",
-        "",
-        {
-          chrome_settings_overrides: {
-            search_provider: {
-              name: options.details.name,
-              search_url: encodeURI(options.details.url),
-              keyword: options.details.alias,
-            },
-          },
-        },
-        lazy.SearchUtils.DEFAULT_TAG
-      );
+      this._initWithDetails({
+        name: options.details.name,
+        search_url: encodeURI(options.details.url),
+        keyword: options.details.alias,
+      });
     } else {
       this._initWithJSON(options.json);
     }
