@@ -36,6 +36,13 @@
 #  include "SameBinary.h"
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
+namespace mozilla {
+// "const" because nothing in this process modifies it.
+// "volatile" because something in another process may.
+const volatile DeelevationStatus gDeelevationStatus =
+    DeelevationStatus::DefaultStaticValue;
+}  // namespace mozilla
+
 /**
  * At this point the child process has been created in a suspended state. Any
  * additional startup work (eg, blocklist setup) should go here.
@@ -44,8 +51,28 @@
  */
 static mozilla::LauncherVoidResult PostCreationSetup(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    HANDLE aChildMainThread, mozilla::DeelevationStatus /*unused*/,
+    HANDLE aChildMainThread, mozilla::DeelevationStatus aDStatus,
     const bool aIsSafeMode) {
+  /* scope for txManager */ {
+    mozilla::nt::CrossExecTransferManager txManager(aChildProcess);
+    if (!txManager) {
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+    }
+
+    using mozilla::gDeelevationStatus;
+
+    void* targetAddress = (LPVOID)&gDeelevationStatus;
+
+    auto const guard = txManager.Protect(
+        targetAddress, sizeof(gDeelevationStatus), PAGE_READWRITE);
+
+    mozilla::LauncherVoidResult result =
+        txManager.Transfer(targetAddress, &aDStatus, sizeof(aDStatus));
+    if (result.isErr()) {
+      return result;
+    }
+  }
+
   return mozilla::InitializeDllBlocklistOOPFromLauncher(aFullImagePath,
                                                         aChildProcess);
 }

@@ -38,7 +38,8 @@ enum class LauncherFlags : uint32_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LauncherFlags);
 
 enum class DeelevationStatus : uint32_t {
-  // The deelevation status could not be determined.
+  // The deelevation status could not be determined. Should never actually be
+  // the value of `gDeelevationStatus`.
   Unknown = 0,
 
   // Deelevation did not need to be performed because the process was started
@@ -54,8 +55,17 @@ enum class DeelevationStatus : uint32_t {
   // Deelevation was attempted, but failed completely. The main process is
   // running with administrative privileges.
   UnsuccessfullyDeelevated = 5,
+
+  // This is the static initial value of `gDeelevationStatus`; it acts as a
+  // sentinel to determine whether the launcher has set it at all. (It's
+  // therefore the normal value of `gDeelevationStatus` when the launcher is
+  // disabled.)
+  DefaultStaticValue = 0x55AA55AA,
 };
 
+// The result of the deelevation attempt. Set by the launcher process in the
+// main process when the two are distinct.
+extern const volatile DeelevationStatus gDeelevationStatus;
 
 }  // namespace mozilla
 
