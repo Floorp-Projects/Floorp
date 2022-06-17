@@ -16,15 +16,17 @@ var EXPORTED_SYMBOLS = [
   "TestingCrashManager",
 ];
 
+const { CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CrashManager: "resource://gre/modules/CrashManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -54,11 +56,11 @@ var sleep = function(wait) {
 };
 
 var TestingCrashManager = function(options) {
-  lazy.CrashManager.call(this, options);
+  CrashManager.call(this, options);
 };
 
 TestingCrashManager.prototype = {
-  __proto__: lazy.CrashManager.prototype,
+  __proto__: CrashManager.prototype,
 
   createDummyDump(submitted = false, date = new Date(), hr = false) {
     let uuid = Services.uuid.generateUUID().toString();
@@ -156,7 +158,7 @@ TestingCrashManager.prototype = {
       return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
     }
 
-    return lazy.CrashManager.prototype._handleEventFilePayload.call(
+    return CrashManager.prototype._handleEventFilePayload.call(
       this,
       store,
       entry,
