@@ -1303,22 +1303,6 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(spy);
       assert.calledWith(spy, topsites_first_painted_ts);
     });
-    it("should record a Glean newtab.opened event with the correct visit_id when visibility event received", () => {
-      const session_id = "decafc0ffee";
-      const page = "about:newtab";
-      const session = { page, perf: {}, session_id };
-      const data = { visibility_event_rcvd_ts: 444455 };
-      sandbox.stub(instance.sessions, "get").returns(session);
-
-      sandbox.spy(Glean.newtab.opened, "record");
-      instance.saveSessionPerfData("port123", data);
-
-      assert.calledOnce(Glean.newtab.opened.record);
-      assert.deepEqual(Glean.newtab.opened.record.firstCall.args[0], {
-        newtab_visit_id: session_id,
-        source: page,
-      });
-    });
   });
   describe("#uninit", () => {
     it("should call .pingCentre.uninit", () => {
@@ -1971,51 +1955,6 @@ describe("TelemetryFeed", () => {
       assert.equal(args[2], "topsites-click");
       // version
       assert.equal(args[3], "1");
-    });
-    it("should record a Glean topsites.impression event on an impression event", async () => {
-      const data = {
-        type: "impression",
-        tile_id: 42,
-        source: "newtab",
-        position: 1,
-        reporting_url: "https://test.reporting.net/",
-        advertiser: "adnoid ads",
-      };
-      instance = new TelemetryFeed();
-      const session_id = "decafc0ffee";
-      sandbox.stub(instance.sessions, "get").returns({ session_id });
-      sandbox.spy(Glean.topsites.impression, "record");
-
-      await instance.handleTopSitesImpressionStats({ data });
-
-      // Event should be recorded
-      assert.calledOnce(Glean.topsites.impression.record);
-      assert.calledWith(Glean.topsites.impression.record, {
-        newtab_visit_id: session_id,
-        is_sponsored: true,
-      });
-    });
-    it("should record a Glean topsites.click event on a click event", async () => {
-      const data = {
-        type: "click",
-        tile_id: 42,
-        source: "newtab",
-        position: 1,
-        reporting_url: "https://test.reporting.net/",
-      };
-      instance = new TelemetryFeed();
-      const session_id = "decafc0ffee";
-      sandbox.stub(instance.sessions, "get").returns({ session_id });
-      sandbox.spy(Glean.topsites.click, "record");
-
-      await instance.handleTopSitesImpressionStats({ data });
-
-      // Event should be recorded
-      assert.calledOnce(Glean.topsites.click.record);
-      assert.calledWith(Glean.topsites.click.record, {
-        newtab_visit_id: session_id,
-        is_sponsored: false,
-      });
     });
     it("should reportError on unknown pingTypes", async () => {
       const data = { type: "unknown_type" };
