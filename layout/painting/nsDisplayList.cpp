@@ -2885,7 +2885,7 @@ static Maybe<nsRect> GetViewportRectRelativeToReferenceFrame(
 nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame, uint16_t aLayer,
                                       const nsRect& aBackgroundRect,
-                                      ComputedStyle* aBackgroundStyle) {
+                                      const ComputedStyle* aBackgroundStyle) {
   nsPresContext* presContext = aFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   const nsStyleImageLayers::Layer& layer =
@@ -3085,7 +3085,7 @@ static nsDisplayThemedBackground* CreateThemedBackground(
 
 static nsDisplayBackgroundColor* CreateBackgroundColor(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
-    nsRect& aBgRect, ComputedStyle* aBgSC, nscolor aColor) {
+    nsRect& aBgRect, const ComputedStyle* aBgSC, nscolor aColor) {
   if (aSecondaryFrame) {
     const uint16_t index = static_cast<uint16_t>(GetTableTypeFromFrame(aFrame));
     return MakeDisplayItemWithIndex<nsDisplayTableBackgroundColor>(
