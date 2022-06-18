@@ -319,6 +319,26 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     Initialize(aSelection);
   }
 
+  template <typename PointType>
+  explicit AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange) {
+    MOZ_ASSERT(aRange.IsPositionedAndValid());
+    RefPtr<nsRange> range = aRange.CreateRange(IgnoreErrors());
+    if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+      return;
+    }
+    mRanges.AppendElement(std::move(range));
+  }
+
+  template <typename PT, typename CT>
+  explicit AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint) {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    RefPtr<nsRange> range = aPoint.CreateCollapsedRange(IgnoreErrors());
+    if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+      return;
+    }
+    mRanges.AppendElement(std::move(range));
+  }
+
   void Initialize(const dom::Selection& aSelection) {
     mDirection = aSelection.GetDirection();
     mRanges.Clear();
