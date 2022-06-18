@@ -503,7 +503,8 @@ struct nsCSSRendering {
    */
   static ImgDrawResult PaintStyleImageLayerWithSC(
       const PaintBGParams& aParams, gfxContext& aRenderingCtx,
-      mozilla::ComputedStyle* mBackgroundSC, const nsStyleBorder& aBorder);
+      const mozilla::ComputedStyle* aBackgroundSC,
+      const nsStyleBorder& aBorder);
 
   static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(
       WebRenderLayerManager* aManager, nsPresContext& aPresCtx,
