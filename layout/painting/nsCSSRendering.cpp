@@ -1796,7 +1796,7 @@ ImgDrawResult nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
   MOZ_ASSERT(aParams.frame,
              "Frame is expected to be provided to PaintStyleImageLayer");
 
-  ComputedStyle* sc = FindBackground(aParams.frame);
+  const ComputedStyle* sc = FindBackground(aParams.frame);
   if (!sc) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
@@ -2387,7 +2387,7 @@ static CompositionOp DetermineCompositionOp(
 
 ImgDrawResult nsCSSRendering::PaintStyleImageLayerWithSC(
     const PaintBGParams& aParams, gfxContext& aRenderingCtx,
-    ComputedStyle* aBackgroundSC, const nsStyleBorder& aBorder) {
+    const ComputedStyle* aBackgroundSC, const nsStyleBorder& aBorder) {
   MOZ_ASSERT(aParams.frame,
              "Frame is expected to be provided to PaintStyleImageLayerWithSC");
 
