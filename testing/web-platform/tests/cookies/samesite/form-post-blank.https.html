@@ -15,7 +15,6 @@
             f.action = target + "/cookies/resources/postToParent.py";
             f.target = "_blank";
             f.method = "POST";
-            f.rel = "opener";
 
             var msgHandler = e => {
               window.removeEventListener("message", msgHandler);
