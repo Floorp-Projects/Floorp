@@ -44,6 +44,27 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Rozumiem riziku a chcem pokračovať</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Táto webová stránka vyžaduje zabezpečené pripojenie.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Stránka, ktorú sa pokúšate zobraziť, sa nedá zobraziť, pretože táto webová lokalita vyžaduje zabezpečené pripojenie.</li>
+         <li>Problém je s najväčšou pravdepodobnosťou na webových stránkach a nemôžete ho nijako vyriešiť.</li>
+         <li>O probléme môžete informovať správcu webových stránok.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Pokročilé…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> má bezpečnostnú politiku s názvom HTTP Strict Transport Security (HSTS), čo znamená, že <b>%2$s</b> sa k nemu môže pripojiť iba zabezpečene. Na návštevu tohto webu nemôžete pridať výnimku.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Prejsť naspäť</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Pripojenie bolo prerušené</string>
 

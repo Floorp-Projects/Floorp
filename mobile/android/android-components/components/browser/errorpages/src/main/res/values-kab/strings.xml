@@ -44,6 +44,15 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Asmel-a web yesra tuqqna taɣelsant.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Asebter i tettaɛraḍeḍ ad t-twaliḍ ur yezmir ara ad d-yettwaskan acku asmel-a yesra tuqqna taɣelsant.</li>
+         <li>Ugur ad yili akked usmel-a web, ur yelli wayen ara t-tgeḍ i wakken ad yefru.</li>
+         <li>You can notify the website’s administrator about the problem.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Talqayt…</string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->

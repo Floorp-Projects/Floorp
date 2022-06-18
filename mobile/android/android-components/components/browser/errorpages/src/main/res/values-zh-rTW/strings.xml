@@ -42,6 +42,22 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">接受風險並繼續</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">此網站要求必須使用安全連線。</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[      <ul>
+         <li>由於此網站必須使用安全性連線，無法顯示您嘗試檢視的頁面。</li>
+         <li>這個問題最有可能是由於網站端的設定不正確，無法由您調整設定解決。</li>
+         <li>可以通知網站管理員處理。</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">進階…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[<label><b>%1$s</b> 有一條稱為 HTTP Strict Transport Security (HSTS) 的安全性政策，讓 <b>%2$s</b> 僅能與其進行安全連線。您無法加入例外，手動排除此政策。]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">回上一頁</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">連線中斷</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->

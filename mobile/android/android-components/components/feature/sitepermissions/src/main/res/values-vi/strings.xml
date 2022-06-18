@@ -41,6 +41,8 @@
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">Bạn có thể muốn chặn quyền truy cập nếu không rõ tại sao %s cần dữ liệu này.</string>
+    <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
+    <string name="mozac_feature_sitepermissions_storage_access_not_allow">Chặn</string>
     <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
     <string name="mozac_feature_sitepermissions_learn_more_title">Tìm hiểu thêm</string>
 </resources>

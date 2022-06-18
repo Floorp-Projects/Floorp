@@ -50,6 +50,8 @@
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">若 %s 未明确阐述需要此数据的原因，您应该阻止它。</string>
+    <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
+    <string name="mozac_feature_sitepermissions_storage_access_not_allow">阻止</string>
     <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
     <string name="mozac_feature_sitepermissions_learn_more_title">详细了解</string>
 </resources>

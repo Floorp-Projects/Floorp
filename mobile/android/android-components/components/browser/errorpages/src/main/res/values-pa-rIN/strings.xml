@@ -47,6 +47,26 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ਖ਼ਤਰਾ ਮੰਨੋ ਤੇ ਜਾਰੀ ਰੱਖੋ</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ਇਸ ਵੈੱਬਸਾਈਟ ਲਈ ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਚਾਹੀਦਾ ਹੈ।</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ਤੁਸੀਂ ਜਿਸ ਸਫ਼ੇ ਨੂੰ ਖੋਲ੍ਹਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਹੋ, ਉਸ ਇਸ ਵੈੱਬਸਾਈਟ ਵਲੋਂ ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਜ਼ਰੂਰੀ ਹੋਣ ਕਰਕੇ ਦਿਖਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ ਹੈ।</li>
+         <li>ਮਸਲਾ ਅਕਸਰ ਵੈੱਬਸਾਈਟ ਨਾਲ ਹੈ ਅਤੇ ਇਸ ਨੂੰ ਠੀਕ ਕਰਨ ਲਈ ਤੁਸੀਂ ਕੁਝ ਵੀ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹੋ।</li>
+         <li>ਤੁਸੀਂ ਸਮੱਸਿਆ ਬਾਰੇ ਵੈੱਬਸਾਈਟ ਦੇ ਪਰਸ਼ਾਸਕ ਨੂੰ ਜਾਣਕਾਰੀ ਦੇ ਸਕਦੇ ਹੋ।</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">…ਤਕਨੀਕੀ</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> ਕੋਲ HTTP Strict Transport Security (HSTS) ਨਾਂ ਦੀ ਸੁਰੱਖਿਆ ਨੀਤੀ ਹੈ, ਜਿਸ ਦਾ ਅਰਥ ਹੈ ਕਿ <b>%2$s</b> ਇਸ ਨਾਲ ਸਿਰਫ਼ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਹੀ ਕਨੈਕਟ ਹੋ ਸਕਦਾ ਹੈ। ਤੁਸੀਂ ਇਸ ਵੈੱਬਸਾਈਟ ਲਈ ਛੋਟ ਦੇ ਸਕਦੇ ਹੋ।
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ਪਿੱਛੇ ਜਾਓ</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ਕਨੈਕਸ਼ਨ ‘ਚ ਰੁਕਾਵਟ ਆਈ ਸੀ</string>
 
