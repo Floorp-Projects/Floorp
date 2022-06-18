@@ -4117,7 +4117,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
  public:
   struct InitData {
     nsDisplayListBuilder* builder;
-    ComputedStyle* backgroundStyle;
+    const ComputedStyle* backgroundStyle;
     nsCOMPtr<imgIContainer> image;
     nsRect backgroundRect;
     nsRect fillArea;
@@ -4136,7 +4136,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
    */
   static InitData GetInitData(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               uint16_t aLayer, const nsRect& aBackgroundRect,
-                              ComputedStyle* aBackgroundStyle);
+                              const ComputedStyle* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
                                     nsIFrame* aFrame, const InitData& aInitData,
@@ -4251,7 +4251,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
 
   // Cache the result of nsCSSRendering::FindBackground. Always null if
   // mIsThemed is true or if FindBackground returned false.
-  RefPtr<ComputedStyle> mBackgroundStyle;
+  RefPtr<const ComputedStyle> mBackgroundStyle;
   nsCOMPtr<imgIContainer> mImage;
   nsIFrame* mDependentFrame;
   nsRect mBackgroundRect;  // relative to the reference frame
