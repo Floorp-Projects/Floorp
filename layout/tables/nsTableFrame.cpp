@@ -7498,18 +7498,6 @@ nsRect nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder,
   return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
-void nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame) {
-  ComputedStyle* bgSC = nsCSSRendering::FindBackground(aFrame);
-  if (!bgSC) {
-    return;
-  }
-  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame)) {
-    return;
-  }
-
-  mPartHasFixedBackground = true;
-}
-
 nsDisplayItemGeometry* nsDisplayTableItem::AllocateGeometry(
     nsDisplayListBuilder* aBuilder) {
   return new nsDisplayTableItemGeometry(
@@ -7521,17 +7509,8 @@ void nsDisplayTableItem::ComputeInvalidationRegion(
     nsRegion* aInvalidRegion) const {
   auto geometry = static_cast<const nsDisplayTableItemGeometry*>(aGeometry);
 
-  bool invalidateForAttachmentFixed = false;
-  if (mDrawsBackground && mPartHasFixedBackground) {
-    nsPoint frameOffsetToViewport =
-        mFrame->GetOffsetTo(mFrame->PresShell()->GetRootFrame());
-    invalidateForAttachmentFixed =
-        frameOffsetToViewport != geometry->mFrameOffsetToViewport;
-  }
-
-  if (invalidateForAttachmentFixed ||
-      (aBuilder->ShouldSyncDecodeImages() &&
-       geometry->ShouldInvalidateToSyncDecodeImages())) {
+  if (aBuilder->ShouldSyncDecodeImages() &&
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
     bool snap;
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
