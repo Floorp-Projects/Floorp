@@ -1121,12 +1121,12 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForColGroup;
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
-          nullptr, colGroup->GetRect() + backgrounds->TableToReferenceFrame(),
-          this, &buildingForColGroup);
+          colGroup->GetRect() + backgrounds->TableToReferenceFrame(), this,
+          &buildingForColGroup);
 
       Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForCol;
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false, nullptr,
+          aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false,
           col->GetRect() + colGroup->GetPosition() +
               backgrounds->TableToReferenceFrame(),
           this, &buildingForCol);
