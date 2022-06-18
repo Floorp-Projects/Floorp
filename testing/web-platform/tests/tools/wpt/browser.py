@@ -610,7 +610,7 @@ class ChromeChromiumBase(Browser):
         if self.platform == "Linux":
             bits = "64" if uname[4] == "x86_64" else "32"
         elif self.platform == "Mac":
-            bits = "64"
+            bits = "64_m1" if uname.machine == "arm64" else "64"
         elif self.platform == "Win":
             bits = "32"
         return f"{self.platform.lower()}{bits}"
