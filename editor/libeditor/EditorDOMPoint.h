@@ -1089,6 +1089,15 @@ class EditorDOMPointBase final {
     return RawRangeBoundary(mParent, mParent->GetLastChild());
   }
 
+  already_AddRefed<nsRange> CreateCollapsedRange(ErrorResult& aRv) const {
+    const RawRangeBoundary boundary = ToRawRangeBoundary();
+    RefPtr<nsRange> range = nsRange::Create(boundary, boundary, aRv);
+    if (MOZ_UNLIKELY(aRv.Failed() || !range)) {
+      return nullptr;
+    }
+    return range.forget();
+  }
+
   EditorDOMPointInText GetAsInText() const {
     return IsInTextNode() ? EditorDOMPointInText(ContainerAsText(), Offset(),
                                                  mInterlinePosition)
@@ -1315,6 +1324,15 @@ class EditorDOMRangeBase final {
       mEnd.SetAfter(parent);
     }
     return true;
+  }
+
+  already_AddRefed<nsRange> CreateRange(ErrorResult& aRv) const {
+    RefPtr<nsRange> range = nsRange::Create(mStart.ToRawRangeBoundary(),
+                                            mEnd.ToRawRangeBoundary(), aRv);
+    if (MOZ_UNLIKELY(aRv.Failed() || !range)) {
+      return nullptr;
+    }
+    return range.forget();
   }
 
  private:
