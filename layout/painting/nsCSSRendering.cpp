@@ -2293,7 +2293,8 @@ static Maybe<nscolor> CalcScrollbarColor(nsIFrame* aFrame,
   return Some(color.CalcColor(*scrollbarStyle));
 }
 
-static nscolor GetBackgroundColor(nsIFrame* aFrame, ComputedStyle* aStyle) {
+static nscolor GetBackgroundColor(nsIFrame* aFrame,
+                                  const ComputedStyle* aStyle) {
   switch (aStyle->StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
@@ -2319,7 +2320,7 @@ static nscolor GetBackgroundColor(nsIFrame* aFrame, ComputedStyle* aStyle) {
 }
 
 nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
-                                                 ComputedStyle* aStyle,
+                                                 const ComputedStyle* aStyle,
                                                  nsIFrame* aFrame,
                                                  bool& aDrawBackgroundImage,
                                                  bool& aDrawBackgroundColor) {

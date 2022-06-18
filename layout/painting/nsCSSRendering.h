@@ -349,7 +349,7 @@ struct nsCSSRendering {
    * Determine the background color to draw taking into account print settings.
    */
   static nscolor DetermineBackgroundColor(nsPresContext* aPresContext,
-                                          mozilla::ComputedStyle* aStyle,
+                                          const mozilla::ComputedStyle* aStyle,
                                           nsIFrame* aFrame,
                                           bool& aDrawBackgroundImage,
                                           bool& aDrawBackgroundColor);
