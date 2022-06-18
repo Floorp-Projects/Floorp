@@ -237,7 +237,7 @@ static nscolor GetBackplateColor(nsIFrame* aFrame) {
     // colors with the non-native theme, and native system colors should also
     // match the native theme), then we're alright and we should compute an
     // appropriate backplate color.
-    auto* style = frame->Style();
+    const auto* style = frame->Style();
     if (style->StyleBackground()->IsTransparent(style)) {
       continue;
     }
