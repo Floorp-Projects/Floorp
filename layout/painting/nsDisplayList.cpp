@@ -3104,7 +3104,7 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     const nsRect& aBackgroundOriginRect, nsIFrame* aSecondaryReferenceFrame,
     Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
         aAutoBuildingDisplayList) {
-  ComputedStyle* bgSC = aComputedStyle;
+  const ComputedStyle* bgSC = aComputedStyle;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect;
   nsRect bgOriginRect = bgRect;
