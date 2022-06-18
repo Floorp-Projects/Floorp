@@ -551,7 +551,7 @@ void nsTableRowFrame::PaintCellBackgroundsForFrame(
     }
     cellRect += toReferenceFrame;
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-        aBuilder, aFrame, cellRect, aLists.BorderBackground(), true, nullptr,
+        aBuilder, aFrame, cellRect, aLists.BorderBackground(), true,
         aFrame->GetRectRelativeToSelf() + toReferenceFrame, cell);
   }
 }

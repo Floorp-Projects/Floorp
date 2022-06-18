@@ -4156,7 +4156,6 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       const nsRect& aBackgroundRect, nsDisplayList* aList,
       bool aAllowWillPaintBorderOptimization = true,
-      ComputedStyle* aComputedStyle = nullptr,
       const nsRect& aBackgroundOriginRect = nsRect(),
       nsIFrame* aSecondaryReferenceFrame = nullptr,
       Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
