@@ -315,7 +315,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">隐私与安全</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">站点权限</string>
+    <string name="preferences_site_permissions">网站权限</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">隐私浏览</string>
     <!-- Preference for opening links in a private tab-->
@@ -437,6 +437,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">赞助内容</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">壁纸</string>
 
@@ -1180,7 +1182,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">释放存储空间</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">站点权限</string>
+    <string name="preferences_delete_browsing_data_site_permissions">网站权限</string>
     <!-- Title for the downloads item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_downloads">下载项</string>
     <!-- Text for the button to delete browsing data -->

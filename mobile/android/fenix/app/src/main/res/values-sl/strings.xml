@@ -1536,6 +1536,8 @@
     <string name="preferences_addresses_add_address">Dodaj naslov</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Upravljanje naslovov</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Shranjuj in samodejno izpolnjuj naslove</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Vključi podatke, kot so številke, e-poštni naslovi in naslovi za dostavo</string>
 
@@ -1612,6 +1614,8 @@
     <string name="addresses_city">Mesto</string>
     <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Zvezna država</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Pokrajina</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Poštna številka</string>
     <!-- The header for the country or region of an address -->

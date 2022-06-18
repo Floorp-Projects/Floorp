@@ -431,6 +431,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Articles sponsorisés</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Fonds d’écran</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -1624,6 +1626,8 @@
     <string name="addresses_city">Ville</string>
     <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">État</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Province</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Code postal</string>
     <!-- The header for the country or region of an address -->
@@ -1832,6 +1836,11 @@
     <string name="inactive_tabs_title">Onglets inactifs</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Fermer tous les onglets inactifs</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Développer les onglets inactifs</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Réduire les onglets inactifs</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
