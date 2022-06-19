@@ -1158,8 +1158,11 @@ class HTMLEditor final : public EditorBase,
    *                                    is first leaf node of
    *                                    aMostAncestorToBeSplit, starting from
    *                                    the first <br> element.
+   * @return                            A suggest point to put caret if
+   *                                    succeeded, but it may unset.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SplitElementsAtEveryBRElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SplitElementsAtEveryBRElement(
       nsIContent& aMostAncestorToBeSplit,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents);
 
@@ -1168,8 +1171,12 @@ class HTMLEditor final : public EditorBase,
    * for each given node when this needs to do that for aEditSubAction.
    * If split a node, it in aArrayOfContents is replaced with split nodes and
    * <br> elements.
+   *
+   * @return                            A suggest point to put caret if
+   *                                    succeeded, but it may unset.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MaybeSplitElementsAtEveryBRElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  MaybeSplitElementsAtEveryBRElement(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       EditSubAction aEditSubAction);
 
