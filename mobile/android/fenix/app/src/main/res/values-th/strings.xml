@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">ปิดใช้งานการเรียกดูแบบส่วนตัว</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ค้นหาหรือป้อนที่อยู่</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">ป้อนคำค้นหา</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">แท็บที่คุณเปิดจะถูกแสดงที่นี่</string>
 
@@ -38,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ที่คั่นหน้าล่าสุด</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">ที่คั่นหน้าที่บันทึกไว้ล่าสุด</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">แสดงหมด</string>
 
@@ -237,8 +237,6 @@
 
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s จะแบ่งปันทุกอย่างที่คุณพิมพ์ในแถบที่อยู่ไปยังเครื่องมือค้นหาเริ่มต้นของคุณ</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติม</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">ค้นหา %s</string>
@@ -428,6 +426,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">เรื่องราวที่ได้รับการสนับสนุน</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">รูปพื้นหลัง</string>
 
@@ -726,7 +726,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">บันทึกแท็บไปยังชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">เมนูแท็บ</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">เมนูแท็บ</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ลบชุดสะสม</string>
@@ -1171,40 +1171,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">ลบกลุ่มแล้ว</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">ตอนนี้ Firefox Preview เป็น Firefox Nightly แล้ว</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly อัปเดตทุกคืนและมีลูกเล่นใหม่ ๆ ทุกคืน
-        อย่างไรก็ตามความเสถียรอาจลดลง ดาวน์โหลดเบราว์เซอร์เบต้าของเราเพื่อประสบการณ์ที่เสถียรยิ่งขึ้น</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">รับ Firefox Beta สำหรับ Android</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly ย้ายไปแล้ว</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">แอพนี้จะไม่ได้รับการอัปเดตด้านความปลอดภัยอีกต่อไป หยุดใช้งานแอปนี้และเปลี่ยนเป็น Nightly ตัวใหม่
-        \n\nหากต้องการโอนที่คั่นหน้า การเข้าสู่ระบบ และประวัติการท่องของตุณไปยังแอปอื่นให้สร้างบัญชี Firefox ขึ้นมา</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">โยกไปใช้ Nightly ตัวใหม่</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly ได้ย้ายไปแล้ว</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">แอพนี้จะไม่ได้รับการอัปเดตความปลอดภัยอีกต่อไป รับ Nightly ใหม่และหยุดใช้แอปนี้
-        \n\nหากต้องการโอนที่คั่นหน้า การเข้าสู่ระบบ และประวัติการท่องของคุณไปยังแอปอื่นให้สร้างบัญชี Firefox ขึ้นมา</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">รับ Nightly ตัวใหม่</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">ยินดีต้อนรับสู่ %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">ซิงค์ %1$s ระหว่างอุปกรณ์</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง %1$s บนอุปกรณ์นี้</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1544,6 +1516,9 @@
     <string name="preferences_addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">จัดการที่อยู่</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">บันทึกและป้อนที่อยู่อัตโนมัติ</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">เพิ่มบัตร</string>
     <!-- Title of the "Edit card" screen -->
@@ -1613,8 +1588,10 @@
     <string name="addresses_street_address">ที่อยู่ถนน</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">เมือง</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">รัฐ</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">จังหวัด</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">รหัสไปรษณีย์</string>
     <!-- The header for the country or region of an address -->
@@ -1680,19 +1657,6 @@
     <string name="search_edit_custom_engine_success_message">บันทึก %s แล้ว</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">ลบ %s แล้ว</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">ยินดีต้อนรับสู่ %s โฉมใหม่</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">เบราว์เซอร์ที่ปรับปรุงใหม่หมดจดกำลังคอยการปรับปรุงคุณสมบัติและประสิทธิภาพเพื่อช่วยให้คุณออนไลน์ได้มากขึ้น\n\nโปรดรอในขณะที่เราอัปเดต %s</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">กำลังอัปเดต %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">เริ่ม %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">การโอนย้ายเสร็จสมบูรณ์</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">รหัสผ่าน</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">เมื่อต้องการอนุญาต:</string>
@@ -1787,8 +1751,6 @@
     <string name="synced_tabs_enable_tab_syncing">โปรดเปิดใช้งานซิงค์แท็บ</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">คุณไม่มีแท็บใด ๆ ที่เปิดอยู่ใน Firefox บนอุปกรณ์อื่น ๆ ของคุณ</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">คุณไม่มีแท็บใด ๆ ที่เปิดอยู่ใน %1$s บนอุปกรณ์อื่น ๆ ของคุณ</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">ดูรายการแท็บจากอุปกรณ์อื่น ๆ ของคุณ</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1840,6 +1802,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">ปิดแท็บที่ไม่ได้ใช้งานทั้งหมด</string>
 
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">ขยายแท็บที่ไม่ได้ใช้งาน</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">ยุบแท็บที่ไม่ได้ใช้งาน</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ปิดอัตโนมัติหลังจากหนึ่งเดือน?</string>
@@ -1879,6 +1846,9 @@
     <string name="pocket_stories_feature_caption">ส่วนหนึ่งของตระกูล Firefox %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">เรียนรู้เพิ่มเติม</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">ได้รับการสนับสนุน</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">เปิดใช้งานการส่งข้อมูลทางไกลเพื่อส่งข้อมูล</string>
