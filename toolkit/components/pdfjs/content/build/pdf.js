@@ -1353,7 +1353,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.15.117',
+    apiVersion: '2.15.129',
     source: {
       data: source.data,
       url: source.url,
@@ -3381,9 +3381,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.15.117';
+const version = '2.15.129';
 exports.version = version;
-const build = '1a6ae5f03';
+const build = 'be2dfe45f';
 exports.build = build;
 
 /***/ }),
@@ -4421,6 +4421,14 @@ class AnnotationEditor {
     this.isAttachedToDOM = false;
   }
 
+  setInBackground() {
+    this.div.classList.add("background");
+  }
+
+  setInForeground() {
+    this.div.classList.remove("background");
+  }
+
   focusin() {
     this.parent.setActiveEditor(this);
   }
@@ -4437,14 +4445,16 @@ class AnnotationEditor {
     }
 
     event.preventDefault();
+    this.commitOrRemove();
+    this.parent.setActiveEditor(null);
+  }
 
+  commitOrRemove() {
     if (this.isEmpty()) {
       this.remove();
     } else {
       this.commit();
     }
-
-    this.parent.setActiveEditor(null);
   }
 
   mousedown(event) {
@@ -4481,7 +4491,6 @@ class AnnotationEditor {
     this.div = document.createElement("div");
     this.div.className = this.name;
     this.div.setAttribute("id", this.id);
-    this.div.draggable = true;
     this.div.tabIndex = 100;
     const [tx, ty] = this.getInitialTranslation();
     this.x = Math.round(this.x + tx);
@@ -4609,7 +4618,7 @@ class CommandManager {
   #position = NaN;
   #start = 0;
 
-  add(cmd, undo) {
+  add(cmd, undo, mustExec) {
     const save = [cmd, undo];
     const next = (this.#position + 1) % this.#maxSize;
 
@@ -4625,7 +4634,10 @@ class CommandManager {
     }
 
     this.#setCommands(save);
-    cmd();
+
+    if (mustExec) {
+      cmd();
+    }
   }
 
   undo() {
@@ -4806,6 +4818,10 @@ class AnnotationEditorUIManager {
       this.#disableAll();
     } else {
       this.#enableAll();
+
+      for (const layer of this.#allLayers) {
+        layer.updateMode(mode);
+      }
     }
   }
 
@@ -4865,8 +4881,8 @@ class AnnotationEditorUIManager {
     this.#commandManager.redo();
   }
 
-  addCommands(cmd, undo) {
-    this.#commandManager.add(cmd, undo);
+  addCommands(cmd, undo, mustExec) {
+    this.#commandManager.add(cmd, undo, mustExec);
   }
 
   get allowClick() {
@@ -4903,7 +4919,7 @@ class AnnotationEditorUIManager {
         }
       };
 
-      this.addCommands(cmd, undo);
+      this.addCommands(cmd, undo, true);
     } else {
       if (!this.#activeEditor) {
         return;
@@ -4920,7 +4936,7 @@ class AnnotationEditorUIManager {
       };
     }
 
-    this.addCommands(cmd, undo);
+    this.addCommands(cmd, undo, true);
   }
 
   copy() {
@@ -4942,7 +4958,7 @@ class AnnotationEditorUIManager {
         layer.addOrRebuild(editor);
       };
 
-      this.addCommands(cmd, undo);
+      this.addCommands(cmd, undo, true);
     }
   }
 
@@ -4961,7 +4977,7 @@ class AnnotationEditorUIManager {
       editor.remove();
     };
 
-    this.addCommands(cmd, undo);
+    this.addCommands(cmd, undo, true);
   }
 
   selectAll() {
@@ -9918,6 +9934,7 @@ var _display_utils = __w_pdfjs_require__(5);
 
 class AnnotationEditorLayer {
   #boundClick;
+  #boundMouseover;
   #editors = new Map();
   #uiManager;
   static _initialized = false;
@@ -9935,6 +9952,7 @@ class AnnotationEditorLayer {
     this.pageIndex = options.pageIndex;
     this.div = options.div;
     this.#boundClick = this.click.bind(this);
+    this.#boundMouseover = this.mouseover.bind(this);
 
     for (const editor of this.#uiManager.getEditors(options.pageIndex)) {
       this.add(editor);
@@ -9943,8 +9961,24 @@ class AnnotationEditorLayer {
     this.#uiManager.addLayer(this);
   }
 
-  addCommands(cmd, undo) {
-    this.#uiManager.addCommands(cmd, undo);
+  updateMode(mode) {
+    if (mode === _util.AnnotationEditorType.INK) {
+      this.div.addEventListener("mouseover", this.#boundMouseover);
+      this.div.removeEventListener("click", this.#boundClick);
+    } else {
+      this.div.removeEventListener("mouseover", this.#boundMouseover);
+    }
+  }
+
+  mouseover(event) {
+    if (event.target === this.div && event.buttons === 0) {
+      const editor = this.#createAndAddNewEditor(event);
+      editor.setInBackground();
+    }
+  }
+
+  addCommands(cmd, undo, mustExec) {
+    this.#uiManager.addCommands(cmd, undo, mustExec);
   }
 
   undo() {
@@ -9988,6 +10022,18 @@ class AnnotationEditorLayer {
   }
 
   setActiveEditor(editor) {
+    const currentActive = this.#uiManager.getActive();
+
+    if (currentActive === editor) {
+      return;
+    }
+
+    this.#uiManager.setActiveEditor(editor);
+
+    if (currentActive && currentActive !== editor) {
+      currentActive.commitOrRemove();
+    }
+
     if (editor) {
       this.unselectAll();
       this.div.removeEventListener("click", this.#boundClick);
@@ -9995,8 +10041,6 @@ class AnnotationEditorLayer {
       this.#uiManager.allowClick = false;
       this.div.addEventListener("click", this.#boundClick);
     }
-
-    this.#uiManager.setActiveEditor(editor);
   }
 
   attach(editor) {
@@ -10017,7 +10061,6 @@ class AnnotationEditorLayer {
     if (this.#uiManager.isActive(editor) || this.#editors.size === 0) {
       this.setActiveEditor(null);
       this.#uiManager.allowClick = true;
-      this.div.focus();
     }
   }
 
@@ -10069,7 +10112,19 @@ class AnnotationEditorLayer {
       editor.remove();
     };
 
-    this.addCommands(cmd, undo);
+    this.addCommands(cmd, undo, true);
+  }
+
+  addUndoableEditor(editor) {
+    const cmd = () => {
+      this.addOrRebuild(editor);
+    };
+
+    const undo = () => {
+      editor.remove();
+    };
+
+    this.addCommands(cmd, undo, false);
   }
 
   getNextId() {
@@ -10088,12 +10143,7 @@ class AnnotationEditorLayer {
     return null;
   }
 
-  click(event) {
-    if (!this.#uiManager.allowClick) {
-      this.#uiManager.allowClick = true;
-      return;
-    }
-
+  #createAndAddNewEditor(event) {
     const id = this.getNextId();
     const editor = this.#createNewEditor({
       parent: this,
@@ -10103,8 +10153,19 @@ class AnnotationEditorLayer {
     });
 
     if (editor) {
-      this.addANewEditor(editor);
+      this.add(editor);
     }
+
+    return editor;
+  }
+
+  click(event) {
+    if (!this.#uiManager.allowClick) {
+      this.#uiManager.allowClick = true;
+      return;
+    }
+
+    this.#createAndAddNewEditor(event);
   }
 
   drop(event) {
@@ -10197,6 +10258,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   #color;
   #content = "";
   #contentHTML = "";
+  #hasAlreadyBeenCommitted = false;
   #fontSize;
   static _freeTextDefaultContent = "";
   static _l10nPromise;
@@ -10296,6 +10358,11 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   commit() {
+    if (!this.#hasAlreadyBeenCommitted) {
+      this.#hasAlreadyBeenCommitted = true;
+      this.parent.addUndoableEditor(this);
+    }
+
     this.disableEditMode();
     this.#contentHTML = this.editorDiv.innerHTML;
     this.#content = this.#extractText().trimEnd();
@@ -10385,15 +10452,15 @@ var _editor = __w_pdfjs_require__(9);
 var _fit_curve = __w_pdfjs_require__(24);
 
 class InkEditor extends _editor.AnnotationEditor {
-  #aspectRatio;
-  #baseHeight;
-  #baseWidth;
+  #aspectRatio = 0;
+  #baseHeight = 0;
+  #baseWidth = 0;
   #boundCanvasMousemove;
   #boundCanvasMouseleave;
   #boundCanvasMouseup;
   #boundCanvasMousedown;
-  #disableEditing;
-  #observer;
+  #disableEditing = false;
+  #observer = null;
 
   constructor(params) {
     super({ ...params,
@@ -10406,10 +10473,6 @@ class InkEditor extends _editor.AnnotationEditor {
     this.currentPath = [];
     this.scaleFactor = 1;
     this.translationX = this.translationY = 0;
-    this.#baseWidth = this.#baseHeight = 0;
-    this.#aspectRatio = 0;
-    this.#disableEditing = false;
-    this.#observer = null;
     this.x = 0;
     this.y = 0;
     this.#boundCanvasMousemove = this.canvasMousemove.bind(this);
@@ -10464,16 +10527,16 @@ class InkEditor extends _editor.AnnotationEditor {
       return;
     }
 
-    super.remove();
     this.canvas.width = this.canvas.heigth = 0;
     this.canvas.remove();
     this.canvas = null;
     this.#observer.disconnect();
     this.#observer = null;
+    super.remove();
   }
 
   enableEditMode() {
-    if (this.#disableEditing) {
+    if (this.#disableEditing || this.canvas === null) {
       return;
     }
 
@@ -10491,13 +10554,14 @@ class InkEditor extends _editor.AnnotationEditor {
 
     super.disableEditMode();
     this.canvas.style.cursor = "auto";
-    this.div.draggable = true;
+    this.div.draggable = !this.isEmpty();
     this.div.classList.remove("editing");
     this.canvas.removeEventListener("mousedown", this.#boundCanvasMousedown);
     this.canvas.removeEventListener("mouseup", this.#boundCanvasMouseup);
   }
 
   onceAdded() {
+    this.div.draggable = !this.isEmpty();
     this.div.focus();
   }
 
@@ -10555,11 +10619,16 @@ class InkEditor extends _editor.AnnotationEditor {
       if (this.paths.length === 0) {
         this.remove();
       } else {
+        if (!this.canvas) {
+          this.#createCanvas();
+          this.#createObserver();
+        }
+
         this.#fitToContent();
       }
     };
 
-    this.parent.addCommands(cmd, undo);
+    this.parent.addCommands(cmd, undo, true);
   }
 
   #redraw() {
@@ -10590,6 +10659,7 @@ class InkEditor extends _editor.AnnotationEditor {
     }
 
     this.disableEditMode();
+    this.setInForeground();
     this.#disableEditing = true;
     this.div.classList.add("disabled");
     this.#fitToContent();
@@ -10605,6 +10675,7 @@ class InkEditor extends _editor.AnnotationEditor {
       return;
     }
 
+    this.setInForeground();
     event.stopPropagation();
     this.canvas.addEventListener("mouseleave", this.#boundCanvasMouseleave);
     this.canvas.addEventListener("mousemove", this.#boundCanvasMousemove);
@@ -10620,11 +10691,13 @@ class InkEditor extends _editor.AnnotationEditor {
     if (this.isInEditMode() && this.currentPath.length !== 0) {
       event.stopPropagation();
       this.#endDrawing(event);
+      this.setInBackground();
     }
   }
 
   canvasMouseleave(event) {
     this.#endDrawing(event);
+    this.setInBackground();
   }
 
   #endDrawing(event) {
@@ -11464,7 +11537,7 @@ class AnnotationElement {
     return (0, _util.shadow)(this, "_commonActions", {
       display: event => {
         const hidden = event.detail.display % 2 === 1;
-        event.target.style.visibility = hidden ? "hidden" : "visible";
+        this.container.style.visibility = hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
           hidden,
           print: event.detail.display === 0 || event.detail.display === 3
@@ -11476,7 +11549,7 @@ class AnnotationElement {
         });
       },
       hidden: event => {
-        event.target.style.visibility = event.detail.hidden ? "hidden" : "visible";
+        this.container.style.visibility = event.detail.hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
           hidden: event.detail.hidden
         });
@@ -11706,6 +11779,7 @@ class LinkAnnotationElement extends AnnotationElement {
       linkService
     } = this;
     const link = document.createElement("a");
+    link.setAttribute("id", data.id);
     let isBound = false;
 
     if (data.url) {
@@ -12564,7 +12638,15 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
       container.title = this.data.alternativeText;
     }
 
-    this._setDefaultPropertiesFromJS(container);
+    if (this.enableScripting && this.hasJSActions) {
+      const linkElement = container.lastChild;
+
+      this._setDefaultPropertiesFromJS(linkElement);
+
+      linkElement.addEventListener("updatefromsandbox", jsEvent => {
+        this._dispatchEventFromSandbox({}, jsEvent);
+      });
+    }
 
     return container;
   }
@@ -12638,7 +12720,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       noneOptionElement.value = " ";
       noneOptionElement.setAttribute("hidden", true);
       noneOptionElement.setAttribute("selected", true);
-      selectElement.insertBefore(noneOptionElement, selectElement.firstChild);
+      selectElement.prepend(noneOptionElement);
 
       removeEmptyEntry = () => {
         noneOptionElement.remove();
@@ -12728,10 +12810,17 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
               displayValue,
               exportValue
             } = event.detail.insert;
+            const selectChild = selectElement.children[index];
             const optionElement = document.createElement("option");
             optionElement.textContent = displayValue;
             optionElement.value = exportValue;
-            selectElement.insertBefore(optionElement, selectElement.children[index]);
+
+            if (selectChild) {
+              selectChild.before(optionElement);
+            } else {
+              selectElement.append(optionElement);
+            }
+
             storage.setValue(id, {
               value: getValue(event, true),
               items: getItems(event)
@@ -14977,8 +15066,8 @@ var _svg = __w_pdfjs_require__(29);
 
 var _xfa_layer = __w_pdfjs_require__(27);
 
-const pdfjsVersion = '2.15.117';
-const pdfjsBuild = '1a6ae5f03';
+const pdfjsVersion = '2.15.129';
+const pdfjsBuild = 'be2dfe45f';
 ;
 })();
 
