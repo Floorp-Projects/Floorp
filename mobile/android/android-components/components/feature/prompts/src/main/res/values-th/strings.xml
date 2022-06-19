@@ -113,4 +113,14 @@
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">ต้องการปรับปรุงวันหมดอายุบัตรหรือไม่?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">หมายเลขบัตรจะถูกเข้ารหัส รหัสความปลอดภัยจะไม่ถูกบันทึก</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address">เลือกที่อยู่</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">ขยายที่อยู่ที่เสนอแนะ</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">ยุบที่อยู่ที่เสนอแนะ</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">จัดการที่อยู่</string>
 </resources>

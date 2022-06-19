@@ -42,6 +42,27 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">خطرے کوں قبول کرو تے جاری رکھو</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ایں ویب سائٹ کوں محفوظ کنکشن دی لوڑ ہے۔</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>جہڑا ورقہ تساں ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیوں جو ایں ویب سائٹ کوں محفوظ کنکشن دی لوڑ ہے۔</li>
+         <li>ایہ مسئلہ  غالباً ویب سائٹ وی وجہ نال ہے۔ ایندے حل کیتے تہاݙے کول کجھ کائنی۔</li>
+         <li>تساں ایں مسئلے بارے ویب سائٹ ایڈمن کوں ݙسا سڳدے ہو۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ودھایا۔۔۔</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> دی ہک حفاظتی پالیسی ہے جیکوں ایچ ٹی ٹی پی سخت ٹرانسپورٹ حفاظت(HSTS) آہدے ہن، جیندے مطلب ایہ ہے جو  <b>%2$s</b> صرف ایندے نال حفاظت نال کنکٹ کر سڳدے۔ تساں ایں سائٹ تے ون٘ڄݨ کیتے کوئی استثناء شامل نہوے کر سڳدے۔
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">واپس ون٘ڄو</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">کنکشن خراب  تھی ڳیا ہائی۔</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
