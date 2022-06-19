@@ -969,9 +969,13 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
 }
 
 void DrawTargetWebgl::ClearRect(const Rect& aRect) {
+  // OP_SOURCE may not be bounded by a mask, so we ensure that a clip is pushed
+  // here to avoid a group being pushed for it.
+  PushClipRect(aRect);
   ColorPattern pattern(
       DeviceColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f));
   DrawRect(aRect, pattern, DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  PopClip();
 }
 
 // Attempts to create the framebuffer used for drawing and also any relevant
