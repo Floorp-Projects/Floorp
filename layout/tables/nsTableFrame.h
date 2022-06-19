@@ -38,11 +38,8 @@ class StackingContextHelper;
 
 class nsDisplayTableItem : public nsPaintedDisplayItem {
  public:
-  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                     bool aDrawsBackground = true)
-      : nsPaintedDisplayItem(aBuilder, aFrame),
-        mPartHasFixedBackground(false),
-        mDrawsBackground(aDrawsBackground) {}
+  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+      : nsPaintedDisplayItem(aBuilder, aFrame) {}
 
   // With collapsed borders, parts of the collapsed border can extend outside
   // the table part frames, so allow this display element to blow out to our
@@ -56,12 +53,6 @@ class nsDisplayTableItem : public nsPaintedDisplayItem {
   virtual void ComputeInvalidationRegion(
       nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
       nsRegion* aInvalidRegion) const override;
-
-  void UpdateForFrameBackground(nsIFrame* aFrame);
-
- private:
-  bool mPartHasFixedBackground;
-  bool mDrawsBackground;
 };
 
 class nsDisplayTableBackgroundSet {

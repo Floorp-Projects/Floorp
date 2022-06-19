@@ -4751,7 +4751,7 @@ class BaseTreeViewer {
       }
     };
 
-    div.insertBefore(toggler, div.firstChild);
+    div.prepend(toggler);
   }
 
   _toggleTreeItem(root, show = false) {
@@ -9626,7 +9626,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.117';
+    const viewerVersion = '2.15.129';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -12658,7 +12658,7 @@ class TextHighlighter {
 
       if (div.nodeType === Node.TEXT_NODE) {
         const span = document.createElement("span");
-        div.parentNode.insertBefore(span, div);
+        div.before(span);
         span.append(div);
         textDivs[divIdx] = span;
         div = span;
@@ -14659,8 +14659,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.117';
-const pdfjsBuild = '1a6ae5f03';
+const pdfjsVersion = '2.15.129';
+const pdfjsBuild = 'be2dfe45f';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;

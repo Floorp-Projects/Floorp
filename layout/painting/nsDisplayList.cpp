@@ -3100,11 +3100,11 @@ static nsDisplayBackgroundColor* CreateBackgroundColor(
 AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsRect& aBackgroundRect, nsDisplayList* aList,
-    bool aAllowWillPaintBorderOptimization, ComputedStyle* aComputedStyle,
-    const nsRect& aBackgroundOriginRect, nsIFrame* aSecondaryReferenceFrame,
+    bool aAllowWillPaintBorderOptimization, const nsRect& aBackgroundOriginRect,
+    nsIFrame* aSecondaryReferenceFrame,
     Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
         aAutoBuildingDisplayList) {
-  const ComputedStyle* bgSC = aComputedStyle;
+  const ComputedStyle* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect;
   nsRect bgOriginRect = bgRect;

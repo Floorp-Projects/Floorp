@@ -835,9 +835,6 @@ struct ReflowInput : public SizeComputationInput {
     ComputedBSize() = aComputedBSize;
   }
 
-  void SetTruncated(const ReflowOutput& aMetrics,
-                    nsReflowStatus* aStatus) const;
-
   bool WillReflowAgainForClearance() const {
     return mDiscoveredClearance && *mDiscoveredClearance;
   }

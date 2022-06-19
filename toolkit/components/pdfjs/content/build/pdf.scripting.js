@@ -5040,8 +5040,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.117';
-const pdfjsBuild = '1a6ae5f03';
+const pdfjsVersion = '2.15.129';
+const pdfjsBuild = 'be2dfe45f';
 })();
 
 /******/ 	return __webpack_exports__;
