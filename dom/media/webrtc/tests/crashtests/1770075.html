@@ -1,0 +1,8 @@
+<script>
+window.addEventListener('load', () => {
+  let a = new RTCPeerConnection({}, {})
+  a.createOffer({'offerToReceiveVideo': true})
+  let b = new WeakRef(a.getTransceivers()[0])
+  setTimeout("self.close()", 200)
+})
+</script>
