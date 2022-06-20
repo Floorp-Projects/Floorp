@@ -206,7 +206,9 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
                 spec[spec_attr] = [
                     d
                     for d in spec[spec_attr]
-                    if "CR_XCODE_VERSION" not in d and "CR_SYSROOT_HASH" not in d
+                    if "CR_XCODE_VERSION" not in d
+                    and "CR_SYSROOT_HASH" not in d
+                    and "_FORTIFY_SOURCE" not in d
                 ]
             if spec_attr == "include_dirs":
                 spec[spec_attr] = [d for d in spec[spec_attr] if gen_path != Path(d)]
