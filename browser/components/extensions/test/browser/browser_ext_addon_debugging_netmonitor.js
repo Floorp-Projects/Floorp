@@ -82,8 +82,8 @@ async function setupToolboxTest(extensionId) {
 
   // Because this is an Addon target, the client isn't closed on toolbox close.
   // (TargetMixin.shouldCloseClient only applies to local tabs)
-  // So that we have to do it manually from this test.
-  await client.close();
+  // So that we have to do it manually from this test via commands.
+  await commands.destroy();
 }
 
 add_task(async function test_addon_debugging_netmonitor_panel() {

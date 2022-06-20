@@ -64,6 +64,8 @@ async function testOpeningOnParentProcessDocument() {
     targetCommand.targetFront,
     "the target is the current top level one"
   );
+
+  await commands.destroy();
 }
 
 async function testNavigationToParentProcessDocument() {
@@ -113,6 +115,8 @@ async function testNavigationToParentProcessDocument() {
     targetCommand.targetFront,
     "second target is the current top level one"
   );
+
+  await commands.destroy();
 }
 
 async function testOpeningOnAboutBlankDocument() {
@@ -131,6 +135,8 @@ async function testOpeningOnAboutBlankDocument() {
     targetCommand.targetFront,
     "the target is the current top level one"
   );
+
+  await commands.destroy();
 }
 
 async function testNavigationToAboutBlankDocument() {
@@ -185,6 +191,8 @@ async function testNavigationToAboutBlankDocument() {
       "without server target switching, we stay on the same top level target"
     );
   }
+
+  await commands.destroy();
 }
 
 async function testBrowserFrames() {
@@ -665,4 +673,6 @@ async function testNestedIframes() {
       "With fission, second level has top level target as parent"
     );
   }
+
+  await commands.destroy();
 }
