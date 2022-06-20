@@ -2861,6 +2861,17 @@ void gfxPlatform::InitWebGLConfig() {
       gfxVars::SetAllowEglRbab(false);
     }
   }
+
+  if (kIsWayland || kIsX11) {
+    // Disable EGL_MESA_image_dma_buf_export on mesa/radeonsi due to
+    // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6666
+    nsString adapterDriverVendor;
+    gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
+    if (adapterDriverVendor.Find("mesa") != -1 &&
+        adapterDriverVendor.Find("radeonsi") != -1) {
+      gfxVars::SetUseDMABufSurfaceExport(false);
+    }
+  }
 }
 
 void gfxPlatform::InitWebGPUConfig() {
