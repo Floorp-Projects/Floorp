@@ -31,6 +31,12 @@ function getDebuggerSourceURL(source) {
   ) {
     return null;
   }
+  // When using <iframe srcdoc="<script> js source </script>"/>, we can't easily fetch the srcdoc
+  // full html text content. So, consider each inline script as independant source with
+  // their own URL. Thus the ID appended to each URL.
+  if (source.url == "about:srcdoc") {
+    return source.url + "#" + source.id;
+  }
 
   return source.url;
 }

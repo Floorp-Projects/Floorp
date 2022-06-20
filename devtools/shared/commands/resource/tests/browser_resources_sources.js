@@ -196,6 +196,38 @@ async function getExpectedResources(ignoreUnresurrectedSources = false) {
         source: "666",
       },
     },
+    {
+      description: "srcdoc attribute on iframes #1",
+      sourceForm: {
+        introductionType: "scriptElement",
+        // We do not assert url/sourceMapBaseURL as it includes the Debugger.Source.id
+        // which is random
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+        isInlineSource: false,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        source: "console.log('srcdoc')",
+      },
+    },
+    {
+      description: "srcdoc attribute on iframes #2",
+      sourceForm: {
+        introductionType: "scriptElement",
+        // We do not assert url/sourceMapBaseURL as it includes the Debugger.Source.id
+        // which is random
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+        isInlineSource: false,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        source: "console.log('srcdoc 2')",
+      },
+    },
   ];
 
   if (ignoreUnresurrectedSources) {
