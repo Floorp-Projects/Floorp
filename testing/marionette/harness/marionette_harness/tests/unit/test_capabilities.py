@@ -49,7 +49,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("browserName", self.caps)
         self.assertIn("browserVersion", self.caps)
         self.assertIn("platformName", self.caps)
-        self.assertIn("platformVersion", self.caps)
         self.assertIn("proxy", self.caps)
         self.assertIn("setWindowRect", self.caps)
         self.assertIn("strictFileInteractability", self.caps)
@@ -59,7 +58,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["browserName"], self.appinfo["name"].lower())
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
         self.assertEqual(self.caps["platformName"], self.os_name)
-        self.assertEqual(self.caps["platformVersion"], self.os_version)
         self.assertEqual(self.caps["proxy"], {})
 
         if self.appinfo["name"] == "Firefox":
@@ -98,6 +96,9 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["moz:buildID"], self.appinfo["buildID"])
 
         self.assertNotIn("moz:debuggerAddress", self.caps)
+
+        self.assertIn("moz:platformVersion", self.caps)
+        self.assertEqual(self.caps["moz:platformVersion"], self.os_version)
 
         self.assertIn("moz:useNonSpecCompliantPointerOrigin", self.caps)
         self.assertFalse(self.caps["moz:useNonSpecCompliantPointerOrigin"])
