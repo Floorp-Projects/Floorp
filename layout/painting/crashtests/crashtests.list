@@ -20,7 +20,7 @@ load 1504033.html
 load 1514544-1.html
 asserts(0-1) asserts-if(Android,0-2) load 1547420-1.html
 load 1549909.html
-asserts(6) load 1551389-1.html # bug 847368
+load 1551389-1.html
 asserts(0-2) load 1555819-1.html
 load 1574392.html
 load 1589800-1.html
