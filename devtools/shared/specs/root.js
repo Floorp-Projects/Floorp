@@ -92,6 +92,13 @@ const rootSpecPrototype = {
       oneway: true,
     },
 
+    clearResources: {
+      request: {
+        resourceTypes: Arg(0, "array:string"),
+      },
+      oneway: true,
+    },
+
     requestTypes: {
       request: {},
       response: RetVal("json"),
