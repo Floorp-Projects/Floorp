@@ -14,9 +14,8 @@ import textwrap
 # The bash template passes the python script into vpython via stdin.
 # The interpreter doesn't know about the script, so we have bash
 # inject the script location.
-BASH_TEMPLATE = textwrap.dedent(
-    """\
-    #!/usr/bin/env vpython
+BASH_TEMPLATE = textwrap.dedent("""\
+    #!/usr/bin/env {vpython}
     _SCRIPT_LOCATION = __file__
     {script}
     """)
@@ -26,10 +25,9 @@ BASH_TEMPLATE = textwrap.dedent(
 # flag instructing the interpreter to ignore the first line. The interpreter
 # knows about the (batch) script in this case, so it can get the file location
 # directly.
-BATCH_TEMPLATE = textwrap.dedent(
-    """\
+BATCH_TEMPLATE = textwrap.dedent("""\
     @SETLOCAL ENABLEDELAYEDEXPANSION \
-      & vpython.bat -x "%~f0" %* \
+      & {vpython}.bat -x "%~f0" %* \
       & EXIT /B !ERRORLEVEL!
     _SCRIPT_LOCATION = __file__
     {script}
@@ -88,10 +86,65 @@ PY_TEMPLATE = textwrap.dedent("""\
       return args
 
 
+    def FindIsolatedOutdir(raw_args):
+      outdir = None
+      i = 0
+      remaining_args = []
+      while i < len(raw_args):
+        if raw_args[i] == '--isolated-outdir' and i < len(raw_args)-1:
+          outdir = raw_args[i+1]
+          i += 2
+        elif raw_args[i].startswith('--isolated-outdir='):
+          outdir = raw_args[i][len('--isolated-outdir='):]
+          i += 1
+        else:
+          remaining_args.append(raw_args[i])
+          i += 1
+      if not outdir and 'ISOLATED_OUTDIR' in os.environ:
+        outdir = os.environ['ISOLATED_OUTDIR']
+      return outdir, remaining_args
+
+
+    def FilterIsolatedOutdirBasedArgs(outdir, args):
+      rargs = []
+      i = 0
+      while i < len(args):
+        if 'ISOLATED_OUTDIR' in args[i]:
+          if outdir:
+            # Rewrite the arg.
+            rargs.append(args[i].replace('${{ISOLATED_OUTDIR}}',
+                                         outdir).replace(
+              '$ISOLATED_OUTDIR', outdir))
+            i += 1
+          else:
+            # Simply drop the arg.
+            i += 1
+        elif (not outdir and
+              args[i].startswith('-') and
+              '=' not in args[i] and
+              i < len(args) - 1 and
+              'ISOLATED_OUTDIR' in args[i+1]):
+          # Parsing this case is ambiguous; if we're given
+          # `--foo $ISOLATED_OUTDIR` we can't tell if $ISOLATED_OUTDIR
+          # is meant to be the value of foo, or if foo takes no argument
+          # and $ISOLATED_OUTDIR is the first positional arg.
+          #
+          # We assume the former will be much more common, and so we
+          # need to drop --foo and $ISOLATED_OUTDIR.
+          i += 2
+        else:
+          rargs.append(args[i])
+          i += 1
+      return rargs
+
+
     def main(raw_args):
       executable_path = ExpandWrappedPath('{executable_path}')
-      executable_args = ExpandWrappedPaths({executable_args})
-      cmd = [executable_path] + executable_args + raw_args
+      outdir, remaining_args = FindIsolatedOutdir(raw_args)
+      args = {executable_args}
+      args = FilterIsolatedOutdirBasedArgs(outdir, args)
+      executable_args = ExpandWrappedPaths(args)
+      cmd = [executable_path] + args + remaining_args
       if executable_path.endswith('.py'):
         cmd = [sys.executable] + cmd
       return subprocess.call(cmd)
@@ -119,8 +172,8 @@ def Wrap(args):
         executable_path=str(args.executable),
         executable_args=str(args.executable_args))
     template = SCRIPT_TEMPLATES[args.script_language]
-    wrapper_script.write(template.format(
-        script=py_contents))
+    wrapper_script.write(
+        template.format(script=py_contents, vpython=args.vpython))
   os.chmod(args.wrapper_script, 0o750)
 
   return 0
@@ -142,6 +195,12 @@ def CreateArgumentParser():
       '--script-language',
       choices=SCRIPT_TEMPLATES.keys(),
       help='Language in which the wrapper script will be written.')
+  parser.add_argument('--use-vpython3',
+                      dest='vpython',
+                      action='store_const',
+                      const='vpython3',
+                      default='vpython',
+                      help='Use vpython3 instead of vpython')
   parser.add_argument(
       'executable_args', nargs='*',
       help='Arguments to wrap into the executable.')

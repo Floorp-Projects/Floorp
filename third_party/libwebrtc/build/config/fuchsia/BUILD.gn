@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/chromecast_build.gni")
+
 assert(is_fuchsia)
 assert(!is_posix)
 
@@ -14,11 +16,11 @@ config("compiler") {
   # will be available. Raise to 8M which matches e.g. macOS.
   ldflags = [ "-Wl,-z,stack-size=0x800000" ]
 
-  if (target_cpu != "arm64") {
-    # TODO(https://crbug.com/1086134): RELR packing of dynamic relocations is
-    # enabled by default in the Fuchsia toolchain, but is not fully supported
-    # in Chromium builds except on ARM64.
-    ldflags += [ "-Wl,--pack-dyn-relocs=none" ]
+  # Allow this in chromium-only builds, but do not allow this in Chromecast
+  # builds.
+  if (!is_chromecast) {
+    cflags_cc = [ "-fexperimental-relative-c++-abi-vtables" ]
+    ldflags += [ "-fexperimental-relative-c++-abi-vtables" ]
   }
 }
 

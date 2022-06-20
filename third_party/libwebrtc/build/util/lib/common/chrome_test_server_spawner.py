@@ -9,7 +9,6 @@ chrome test server on the host.
 """
 # pylint: disable=W0702
 
-import BaseHTTPServer
 import json
 import logging
 import os
@@ -19,14 +18,13 @@ import subprocess
 import sys
 import threading
 import time
-import urlparse
+
+from six.moves import BaseHTTPServer, urllib
 
 
 SERVER_TYPES = {
     'http': '',
     'ftp': '-f',
-    'tcpecho': '--tcp-echo',
-    'udpecho': '--udp-echo',
     'ws': '--websocket',
 }
 
@@ -61,9 +59,6 @@ def _GetServerTypeCommandLine(server_type):
   """
   if server_type not in SERVER_TYPES:
     raise NotImplementedError('Unknown server type: %s' % server_type)
-  if server_type == 'udpecho':
-    raise Exception('Please do not run UDP echo tests because we do not have '
-                    'a UDP forwarder tool.')
   return SERVER_TYPES[server_type]
 
 
@@ -214,8 +209,11 @@ class TestServerThread(threading.Thread):
   def _CloseUnnecessaryFDsForTestServerProcess(self):
     # This is required to avoid subtle deadlocks that could be caused by the
     # test server child process inheriting undesirable file descriptors such as
-    # file lock file descriptors.
-    for fd in xrange(0, 1024):
+    # file lock file descriptors. Note stdin, stdout, and stderr (0-2) are left
+    # alone and redirected with subprocess.Popen. It is important to leave those
+    # fds filled, or the test server will accidentally open other fds at those
+    # numbers.
+    for fd in xrange(3, 1024):
       if fd != self.pipe_out:
         try:
           os.close(fd)
@@ -226,9 +224,14 @@ class TestServerThread(threading.Thread):
     _logger.info('Start running the thread!')
     self.wait_event.clear()
     self._GenerateCommandLineArguments()
-    command = [sys.executable,
-               os.path.join(_DIR_SOURCE_ROOT, 'net', 'tools', 'testserver',
-                            'testserver.py')] + self.command_line
+    # TODO(crbug.com/941669): When this script is ported to Python 3, replace
+    # 'vpython3' below with sys.executable. The call to
+    # vpython3 -vpython-tool install below can also be removed.
+    command = [
+        'vpython3',
+        os.path.join(_DIR_SOURCE_ROOT, 'net', 'tools', 'testserver',
+                     'testserver.py')
+    ] + self.command_line
     _logger.info('Running: %s', command)
 
     # Disable PYTHONUNBUFFERED because it has a bad interaction with the
@@ -236,10 +239,32 @@ class TestServerThread(threading.Thread):
     unbuf = os.environ.pop('PYTHONUNBUFFERED', None)
 
     # Pass _DIR_SOURCE_ROOT as the child's working directory so that relative
-    # paths in the arguments are resolved correctly.
-    self.process = subprocess.Popen(
-        command, preexec_fn=self._CloseUnnecessaryFDsForTestServerProcess,
-        cwd=_DIR_SOURCE_ROOT)
+    # paths in the arguments are resolved correctly. devnull can be replaced
+    # with subprocess.DEVNULL in Python 3.
+    with open(os.devnull, 'r+b') as devnull:
+      # _WaitToStartAndGetPortFromTestServer has a short timeout. If the
+      # vpython3 cache is not initialized, launching the test server can take
+      # some time. Prewarm the cache before running the server.
+      subprocess.check_call(
+          [
+              'vpython3', '-vpython-spec',
+              os.path.join(_DIR_SOURCE_ROOT, '.vpython3'), '-vpython-tool',
+              'install'
+          ],
+          preexec_fn=self._CloseUnnecessaryFDsForTestServerProcess,
+          stdin=devnull,
+          stdout=None,
+          stderr=None,
+          cwd=_DIR_SOURCE_ROOT)
+
+      self.process = subprocess.Popen(
+          command,
+          preexec_fn=self._CloseUnnecessaryFDsForTestServerProcess,
+          stdin=devnull,
+          # Preserve stdout and stderr from the test server.
+          stdout=None,
+          stderr=None,
+          cwd=_DIR_SOURCE_ROOT)
     if unbuf:
       os.environ['PYTHONUNBUFFERED'] = unbuf
     if self.process:
@@ -404,7 +429,7 @@ class SpawningServerRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       pass
 
   def do_POST(self):
-    parsed_path = urlparse.urlparse(self.path)
+    parsed_path = urllib.parse.urlparse(self.path)
     action = parsed_path.path
     _logger.info('Action for POST method is: %s.', action)
     if action == '/start':
@@ -414,9 +439,9 @@ class SpawningServerRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       _logger.info('Encounter unknown request: %s.', action)
 
   def do_GET(self):
-    parsed_path = urlparse.urlparse(self.path)
+    parsed_path = urllib.parse.urlparse(self.path)
     action = parsed_path.path
-    params = urlparse.parse_qs(parsed_path.query, keep_blank_values=1)
+    params = urllib.parse.parse_qs(parsed_path.query, keep_blank_values=1)
     _logger.info('Action for GET method is: %s.', action)
     for param in params:
       _logger.info('%s=%s', param, params[param][0])

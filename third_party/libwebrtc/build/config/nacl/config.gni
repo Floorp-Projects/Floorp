@@ -3,10 +3,16 @@
 # found in the LICENSE file.
 
 declare_args() {
-  # Native Client supports both Newlib and Glibc C libraries where Newlib
-  # is assumed to be the default one; use this to determine whether Glibc
-  # is being used instead.
+  # Native Client supports multiple toolchains:
+  #   - nacl_glibc, based on gcc and glibc.
+  #   - pnacl_newlib, based on llvm 3.7 and newlib (default).
+  #   - saigo_newlib, based on llvm 12+ and newlib.
+
+  # True if nacl_glibc is used.
   is_nacl_glibc = false
+
+  # True if saigo_newlib is used.
+  is_nacl_saigo = false
 }
 
 is_nacl_irt = false
@@ -15,22 +21,22 @@ is_nacl_nonsfi = false
 nacl_toolchain_dir = "//native_client/toolchain/${host_os}_x86"
 
 if (is_nacl_glibc) {
-  if (target_cpu == "x86" || target_cpu == "x64") {
+  if (current_cpu == "x86" || current_cpu == "x64") {
     nacl_toolchain_package = "nacl_x86_glibc"
-  } else if (target_cpu == "arm") {
+  } else if (current_cpu == "arm") {
     nacl_toolchain_package = "nacl_arm_glibc"
   }
 } else {
   nacl_toolchain_package = "pnacl_newlib"
 }
 
-if (target_cpu == "pnacl") {
+if (current_cpu == "pnacl") {
   _nacl_tuple = "pnacl"
-} else if (target_cpu == "x86" || target_cpu == "x64") {
+} else if (current_cpu == "x86" || current_cpu == "x64") {
   _nacl_tuple = "x86_64-nacl"
-} else if (target_cpu == "arm") {
+} else if (current_cpu == "arm") {
   _nacl_tuple = "arm-nacl"
-} else if (target_cpu == "mipsel") {
+} else if (current_cpu == "mipsel") {
   _nacl_tuple = "mipsel-nacl"
 } else {
   # In order to allow this file to be included unconditionally

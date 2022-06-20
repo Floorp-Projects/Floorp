@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//webrtc.gni")
 import("//build/config/clang/clang.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/win/manifest.gni")
@@ -17,10 +16,9 @@ windows_manifest("default_exe_manifest") {
   ]
 }
 
-build_with_mozilla = false
-if (is_win && !build_with_mozilla) {
-#  assert(host_os != "mac" || target_cpu != "x86",
-#         "Windows cross-builds from Mac must be 64-bit.")
+if (is_win) {
+  assert(host_os != "mac" || target_cpu != "x86",
+         "Windows cross-builds from Mac must be 64-bit.")
 
   action("copy_cdb_to_output") {
     script = "//build/win/copy_cdb_to_output.py"
@@ -38,7 +36,7 @@ if (is_win && !build_with_mozilla) {
       "$root_out_dir/cdb/winxp/exts.dll",
       "$root_out_dir/cdb/winxp/ntsdexts.dll",
     ]
-    if (target_cpu != "arm64") {
+    if (current_cpu != "arm64") {
       # The UCRT files are not redistributable for ARM64 Win32.
       outputs += [
         "$root_out_dir/cdb/api-ms-win-core-console-l1-1-0.dll",
@@ -88,7 +86,7 @@ if (is_win && !build_with_mozilla) {
     }
     args = [
       rebase_path("$root_out_dir/cdb", root_out_dir),
-      target_cpu,
+      current_cpu,
     ]
   }
 
@@ -111,7 +109,7 @@ if (is_win && !build_with_mozilla) {
         "$root_out_dir/vccorlib140${vcrt_suffix}.dll",
         "$root_out_dir/vcruntime140${vcrt_suffix}.dll",
       ]
-      if (target_cpu == "x64") {
+      if (current_cpu == "x64") {
         data += [ "$root_out_dir/vcruntime140_1${vcrt_suffix}.dll" ]
       }
       if (is_debug) {
@@ -122,7 +120,7 @@ if (is_win && !build_with_mozilla) {
                "ASan is only supported in 64-bit builds on Windows.")
         data += [ "$clang_base_path/lib/clang/$clang_version/lib/windows/clang_rt.asan_dynamic-x86_64.dll" ]
       }
-      if (target_cpu != "arm64") {
+      if (current_cpu != "arm64") {
         data += [
           # Universal Windows 10 CRT files
           "$root_out_dir/api-ms-win-core-console-l1-1-0.dll",

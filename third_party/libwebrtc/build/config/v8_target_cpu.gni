@@ -13,8 +13,8 @@ declare_args() {
   #
   # This arg is defined here rather than in the v8 project because we want
   # some of the common architecture-specific args (like arm_float_abi or
-  # mips_arch_variant) to be set to their defaults either if the target_cpu
-  # applies *or* if the v8_target_cpu applies.
+  # mips_arch_variant) to be set to their defaults either if the current_cpu
+  # applies *or* if the v8_current_cpu applies.
   #
   # As described below, you can also specify the v8_target_cpu to use
   # indirectly by specifying a `custom_toolchain` that contains v8_$cpu in the
@@ -57,5 +57,5 @@ if (v8_target_cpu == "") {
 declare_args() {
   # This argument is declared here so that it can be overridden in toolchains.
   # It should never be explicitly set by the user.
-  # v8_target_cpu = v8_target_cpu
+  v8_current_cpu = v8_target_cpu
 }

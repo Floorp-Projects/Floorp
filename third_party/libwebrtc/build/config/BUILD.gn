@@ -103,11 +103,6 @@ config("feature_flags") {
     defines += [ "OFFICIAL_BUILD" ]
   }
 
-  if (is_chrome_branded) {
-    # TODO(thakis): Remove this in favor of build/branding_buildflags.h.
-    defines += [ "GOOGLE_CHROME_BUILD" ]
-  }
-
   # ==============================================
   #   PLEASE DO NOT ADD MORE THINGS TO THIS LIST
   # ==============================================
@@ -119,11 +114,10 @@ config("feature_flags") {
 
 config("debug") {
   defines = [
+    "_DEBUG",
     "DYNAMIC_ANNOTATIONS_ENABLED=1",
   ]
-  if (!is_win) {
-   defines += [ "_DEBUG" ]
-  }
+
   if (is_nacl) {
     defines += [ "DYNAMIC_ANNOTATIONS_PREFIX=NACL_" ]
   }
@@ -134,11 +128,12 @@ config("debug") {
       # builds, and we have to tell it to turn it off.
       defines += [ "_HAS_ITERATOR_DEBUGGING=0" ]
     }
-  } else if ((is_linux || is_chromeos) && target_cpu == "x64" && enable_iterator_debugging) {
+  } else if ((is_linux || is_chromeos) && current_cpu == "x64" &&
+             enable_iterator_debugging) {
     # Enable libstdc++ debugging facilities to help catch problems early, see
     # http://crbug.com/65151 .
     # TODO(phajdan.jr): Should we enable this for all of POSIX?
-    #defines += [ "_GLIBCXX_DEBUG=1" ]
+    defines += [ "_GLIBCXX_DEBUG=1" ]
   }
 }
 
@@ -254,9 +249,9 @@ group("common_deps") {
     public_deps += [ "//build/config/sanitizers:deps" ]
   }
 
-  #if (use_custom_libcxx) {
-  #  public_deps += [ "//buildtools/third_party/libc++" ]
-  #}
+  if (use_custom_libcxx) {
+    public_deps += [ "//buildtools/third_party/libc++" ]
+  }
 
   if (use_afl) {
     public_deps += [ "//third_party/afl" ]
@@ -264,10 +259,6 @@ group("common_deps") {
 
   if (is_android && use_order_profiling) {
     public_deps += [ "//base/android/orderfile:orderfile_instrumentation" ]
-  }
-
-  if (is_win && generate_order_files && !is_nacl) {
-    public_deps += [ "//tools/cygprofile_win" ]
   }
 
   if (is_fuchsia) {
@@ -348,7 +339,10 @@ config("shared_library_config") {
   } else if (is_mac) {
     configs += [ "//build/config/mac:mac_dynamic_flags" ]
   } else if (is_ios) {
-    configs += [ "//build/config/ios:ios_dynamic_flags" ]
+    configs += [
+      "//build/config/ios:ios_dynamic_flags",
+      "//build/config/ios:ios_shared_library_flags",
+    ]
   } else if (is_chromecast) {
     configs += [ "//build/config/chromecast:shared_library_config" ]
   } else if (is_linux || is_chromeos || current_os == "aix") {
@@ -389,7 +383,7 @@ config("precompiled_headers") {
 
       # Force include the header.
       cflags = [ "/FI$precompiled_header" ]
-    } else if (is_mac) {
+    } else if (is_mac || is_linux) {
       precompiled_source = "//build/precompile.h"
     }
   }

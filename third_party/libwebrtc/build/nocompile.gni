@@ -59,6 +59,7 @@
 # least processed when things go right.
 
 import("//build/config/clang/clang.gni")
+import("//build/config/python.gni")
 import("//build/toolchain/toolchain.gni")
 import("//testing/test.gni")
 
@@ -101,11 +102,17 @@ if (enable_nocompile_tests) {
         "-Wfatal-errors",
         "-Wthread-safety",
         "-I" + rebase_path("//", root_build_dir),
+        "-I" + rebase_path("//third_party/abseil-cpp/", root_build_dir),
+        "-I" + rebase_path("//buildtools/third_party/libc++/", root_build_dir),
         "-I" + rebase_path(root_gen_dir, root_build_dir),
 
         # TODO(https://crbug.com/989932): Track build/config/compiler/BUILD.gn
         "-Wno-implicit-int-float-conversion",
       ]
+
+      if (is_apple && host_os != "mac") {
+        args += [ "--target=x86_64-apple-macos" ]
+      }
 
       # Iterate over any extra include dirs and append them to the command line.
       if (defined(invoker.include_dirs)) {

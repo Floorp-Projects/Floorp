@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2014 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -333,9 +333,8 @@ def DoGenerate(source_paths):
                       '"// GENERATED_JAVA_ENUM_PACKAGE: foo"?' %
                       source_path)
     for enum_definition in enum_definitions:
-      package_path = enum_definition.enum_package.replace('.', os.path.sep)
-      file_name = enum_definition.class_name + '.java'
-      output_path = os.path.join(package_path, file_name)
+      output_path = java_cpp_utils.GetJavaFilePath(enum_definition.enum_package,
+                                                   enum_definition.class_name)
       output = GenerateOutput(source_path, enum_definition)
       yield output_path, output
 
