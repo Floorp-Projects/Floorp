@@ -4,7 +4,7 @@
 
 import("//build/config/v8_target_cpu.gni")
 
-# These are primarily relevant in current_cpu == "mips*" contexts, where
+# These are primarily relevant in target_cpu == "mips*" contexts, where
 # MIPS code is being compiled.  But they can also be relevant in the
 # other contexts when the code will change its behavior based on the
 # cpu it wants to generate code for.
@@ -13,8 +13,8 @@ declare_args() {
   mips_use_mmi = false
 }
 
-if (current_cpu == "mipsel" || v8_current_cpu == "mipsel" ||
-    current_cpu == "mips" || v8_current_cpu == "mips") {
+if (target_cpu == "mipsel" || v8_target_cpu == "mipsel" ||
+    target_cpu == "mips" || v8_target_cpu == "mips") {
   declare_args() {
     # MIPS arch variant. Possible values are:
     #   "r1"
@@ -43,8 +43,8 @@ if (current_cpu == "mipsel" || v8_current_cpu == "mipsel" ||
     #   "fpxx": sets the GCC -mfpxx option.
     mips_fpu_mode = "fp32"
   }
-} else if (current_cpu == "mips64el" || v8_current_cpu == "mips64el" ||
-           current_cpu == "mips64" || v8_current_cpu == "mips64") {
+} else if (target_cpu == "mips64el" || v8_target_cpu == "mips64el" ||
+           target_cpu == "mips64" || v8_target_cpu == "mips64") {
   # MIPS arch variant. Possible values are:
   #   "r2"
   #   "r6"

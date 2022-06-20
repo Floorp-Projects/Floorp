@@ -40,7 +40,7 @@ template("generate_nmf") {
     # TODO(phosek): Remove this conditional once
     # https://bugs.chromium.org/p/nativeclient/issues/detail?id=4339 is
     # resolved.
-    if (current_cpu == "pnacl") {
+    if (target_cpu == "pnacl") {
       objdump = rebase_path("${nacl_toolchain_bindir}/x86_64-nacl-objdump")
     } else {
       objdump = rebase_path("${nacl_toolprefix}objdump")
@@ -75,18 +75,18 @@ template("generate_nmf") {
       # NOTE: There is no explicit dependency for the lib directory
       # (lib32 and lib64 for x86/x64) created in the product directory.
       # They are created as a side-effect of nmf creation.
-      if (current_cpu != "x86" && current_cpu != "x64") {
+      if (target_cpu != "x86" && target_cpu != "x64") {
         nmfflags +=
             [ "--library-path=" +
               rebase_path("${nacl_toolchain_tooldir}/lib", root_build_dir) ]
-        if (current_cpu == "arm") {
+        if (target_cpu == "arm") {
           data += [ "${lib_path}/libarm/" ]
         } else {
           data += [ "${lib_path}/lib/" ]
         }
       } else {
         # For x86-32, the lib/ directory is called lib32/ instead.
-        if (current_cpu == "x86") {
+        if (target_cpu == "x86") {
           nmfflags +=
               [ "--library-path=" +
                 rebase_path("${nacl_toolchain_tooldir}/lib32", root_build_dir) ]
@@ -98,12 +98,12 @@ template("generate_nmf") {
         # gets handled at a higher level (see the nacl_test_data template),
         # so a single generate_nmf invocation gets both x86-32 and x86-64
         # nexes listed in executables.
-        if (current_cpu == "x64" || target_os == "win") {
+        if (target_cpu == "x64" || target_os == "win") {
           # For x86-64, the lib/ directory is called lib64/ instead
           # when copied by create_nmf.py.
           glibc_tc = "//build/toolchain/nacl:glibc"
-          assert(current_toolchain == "${glibc_tc}_${current_cpu}")
-          if (current_cpu == "x64") {
+          assert(current_toolchain == "${glibc_tc}_${target_cpu}")
+          if (target_cpu == "x64") {
             x64_out_dir = root_out_dir
           } else {
             x64_out_dir = get_label_info(":${target_name}(${glibc_tc}_x64)",
@@ -123,7 +123,7 @@ template("generate_nmf") {
              "--objdump=" + rebase_path(objdump, root_build_dir),
              "--output=" + rebase_path(nmf, root_build_dir),
            ] + nmfflags + rebase_path(sources, root_build_dir)
-    if (is_nacl_glibc && current_cpu == "arm") {
+    if (is_nacl_glibc && target_cpu == "arm") {
       deps += [ "//native_client/src/untrusted/elf_loader:elf_loader" ]
     }
   }
@@ -158,8 +158,8 @@ template("generate_nonsfi_test_nmf") {
     sources = [ executable ]
     outputs = [ nmf ]
 
-    # NOTE: We use target_cpu rather than current_cpu on purpose because
-    # current_cpu is always going to be pnacl for Non-SFI, but the Non-SFI
+    # NOTE: We use target_cpu rather than target_cpu on purpose because
+    # target_cpu is always going to be pnacl for Non-SFI, but the Non-SFI
     # .nexe executable is always translated to run on the target machine.
     if (target_cpu == "x86") {
       arch = "x86-32"

@@ -4,11 +4,11 @@
 
 import("//build/config/v8_target_cpu.gni")
 
-# These are primarily relevant in current_cpu == "arm" contexts, where
+# These are primarily relevant in target_cpu == "arm" contexts, where
 # ARM code is being compiled.  But they can also be relevant in the
 # other contexts when the code will change its behavior based on the
 # cpu it wants to generate code for.
-if (current_cpu == "arm" || v8_current_cpu == "arm") {
+if (target_cpu == "arm" || v8_target_cpu == "arm") {
   declare_args() {
     # Version of the ARM processor when compiling on ARM. Ignored on non-ARM
     # platforms.
@@ -119,7 +119,7 @@ if (current_cpu == "arm" || v8_current_cpu == "arm") {
       }
     }
   }
-} else if (current_cpu == "arm64" || v8_current_cpu == "arm64") {
+} else if (target_cpu == "arm64" || v8_target_cpu == "arm64") {
   # arm64 supports only "hard".
   arm_float_abi = "hard"
   arm_use_neon = true

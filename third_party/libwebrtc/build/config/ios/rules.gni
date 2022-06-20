@@ -58,7 +58,7 @@ template("lipo_binary") {
     _output_name = invoker.output_name
   }
 
-  _all_target_cpu = [ current_cpu ] + additional_target_cpus
+  _all_target_cpu = [ target_cpu ] + additional_target_cpus
   _all_toolchains = [ current_toolchain ] + additional_toolchains
 
   _arch_binary_target = invoker.arch_binary_target
@@ -788,7 +788,7 @@ template("ios_app_bundle") {
 
     output_name = _output_name
     output_prefix_override = true
-    output_dir = "$target_out_dir/$current_cpu"
+    output_dir = "$target_out_dir/$target_cpu"
   }
 
   if (is_fat_secondary_toolchain) {
@@ -1397,7 +1397,7 @@ template("ios_framework_bundle") {
     output_extension = ""
     output_name = _output_name
     output_prefix_override = true
-    output_dir = "$target_out_dir/$current_cpu"
+    output_dir = "$target_out_dir/$target_cpu"
   }
 
   if (is_fat_secondary_toolchain) {
@@ -1734,7 +1734,7 @@ template("ios_xctest_bundle") {
     deps = [ ":$_arch_loadable_module_source" ]
     configs += [ "//build/config/ios:xctest_config" ]
 
-    output_dir = "$target_out_dir/$current_cpu"
+    output_dir = "$target_out_dir/$target_cpu"
     output_name = _output_name
     output_prefix_override = true
     output_extension = ""

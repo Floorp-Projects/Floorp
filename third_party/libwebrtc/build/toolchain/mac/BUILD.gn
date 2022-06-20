@@ -39,64 +39,64 @@ template("mac_toolchain") {
 
 mac_toolchain("clang_arm") {
   toolchain_args = {
-    current_cpu = "arm"
+    target_cpu = "arm"
   }
 }
 
 mac_toolchain("clang_arm64") {
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
   }
 }
 
 mac_toolchain("clang_x64") {
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
   }
 }
 
 mac_toolchain("clang_x86") {
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
   }
 }
 
 mac_toolchain("clang_x86_v8_arm") {
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
 
-    if (defined(v8_current_cpu)) {
-      v8_current_cpu = "arm"
+    if (defined(v8_target_cpu)) {
+      v8_target_cpu = "arm"
     }
   }
 }
 
 mac_toolchain("clang_x86_v8_mipsel") {
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
 
-    if (defined(v8_current_cpu)) {
-      v8_current_cpu = "mipsel"
+    if (defined(v8_target_cpu)) {
+      v8_target_cpu = "mipsel"
     }
   }
 }
 
 mac_toolchain("clang_x64_v8_arm64") {
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
 
-    if (defined(v8_current_cpu)) {
-      v8_current_cpu = "arm64"
+    if (defined(v8_target_cpu)) {
+      v8_target_cpu = "arm64"
     }
   }
 }
 
 mac_toolchain("clang_x64_v8_mips64el") {
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
 
-    if (defined(v8_current_cpu)) {
-      v8_current_cpu = "mips64el"
+    if (defined(v8_target_cpu)) {
+      v8_target_cpu = "mips64el"
     }
   }
 }

@@ -17,7 +17,7 @@ group("linux") {
 # is applied to all targets. It is here to separate out the logic that is
 # Linux-only. This is not applied to Android, but is applied to ChromeOS.
 config("compiler") {
-  if (current_cpu == "arm64") {
+  if (target_cpu == "arm64") {
     import("//build/config/arm.gni")
     cflags = []
     asmflags = []
@@ -41,7 +41,7 @@ config("runtime_library") {
 
   if ((!(is_chromeos_ash || is_chromeos_lacros) ||
        default_toolchain != "//build/toolchain/cros:target") &&
-      (!use_custom_libcxx || current_cpu == "mipsel") && !build_with_mozilla) {
+      (!use_custom_libcxx || target_cpu == "mipsel") && !build_with_mozilla) {
     libs = [ "atomic" ]
   }
 }

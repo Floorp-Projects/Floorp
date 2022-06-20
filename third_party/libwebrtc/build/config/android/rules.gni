@@ -694,11 +694,11 @@ if (enable_java_templates) {
   #       variables must not be set.
   template("write_native_libraries_java") {
     _native_libraries_file = "$target_gen_dir/$target_name.srcjar"
-    if (current_cpu == "arm" || current_cpu == "arm64") {
+    if (target_cpu == "arm" || target_cpu == "arm64") {
       _cpu_family = "CPU_FAMILY_ARM"
-    } else if (current_cpu == "x86" || current_cpu == "x64") {
+    } else if (target_cpu == "x86" || target_cpu == "x64") {
       _cpu_family = "CPU_FAMILY_X86"
-    } else if (current_cpu == "mipsel" || current_cpu == "mips64el") {
+    } else if (target_cpu == "mipsel" || target_cpu == "mips64el") {
       _cpu_family = "CPU_FAMILY_MIPS"
     } else {
       assert(false, "Unsupported CPU family")

@@ -33,7 +33,7 @@ config("compiler") {
     "ANDROID_NDK_VERSION_ROLL=${android_ndk_version}_1",
   ]
 
-  if (current_cpu == "mips64el") {
+  if (target_cpu == "mips64el") {
     cflags += [
       # Have to force IAS for mips64.
       "-fintegrated-as",
@@ -53,7 +53,7 @@ config("compiler") {
 
   # TODO(crbug.com/1184398): Move to compiler-rt when we are ready.
   ldflags += [ "--rtlib=libgcc" ]
-  if (current_cpu == "arm64") {
+  if (target_cpu == "arm64") {
     # For outline atomics on AArch64 (can't pass this unconditionally
     # due to unused flag warning on other targets).
     cflags += [ "--rtlib=libgcc" ]
@@ -93,26 +93,26 @@ config("runtime_library") {
   # strto{d,f,l,ul}_l. These symbols are not used by our libc++, and newer NDKs
   # don't provide a libandroid_support.a on 64-bit platforms, so we only depend
   # on this library on 32-bit platforms.
-  if (current_cpu == "arm" || current_cpu == "x86") {
+  if (target_cpu == "arm" || target_cpu == "x86") {
     libs += [ "android_support" ]
   }
 
   # arm builds of libc++ starting in NDK r12 depend on unwind.
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     libs += [ "unwind" ]
   }
 
-  if (current_cpu == "arm" && arm_version == 6) {
+  if (target_cpu == "arm" && arm_version == 6) {
     libs += [ "atomic" ]
   }
 
-  if (current_cpu == "mipsel") {
+  if (target_cpu == "mipsel") {
     libs += [ "atomic" ]
   }
 
   # TODO(jdduke) Re-enable on mips after resolving linking
   # issues with libc++ (crbug.com/456380).
-  if (current_cpu != "mipsel" && current_cpu != "mips64el") {
+  if (target_cpu != "mipsel" && target_cpu != "mips64el") {
     ldflags += [ "-Wl,--warn-shared-textrel" ]
   }
 }

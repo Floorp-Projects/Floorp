@@ -26,16 +26,16 @@ config("compiler") {
   common_flags = []
 
   # CPU architecture.
-  if (current_cpu == "x64") {
+  if (target_cpu == "x64") {
     triplet_cpu = "x86_64"
-  } else if (current_cpu == "x86") {
+  } else if (target_cpu == "x86") {
     triplet_cpu = "i386"
-  } else if (current_cpu == "arm" || current_cpu == "armv7") {
+  } else if (target_cpu == "arm" || target_cpu == "armv7") {
     triplet_cpu = "armv7"
-  } else if (current_cpu == "arm64") {
+  } else if (target_cpu == "arm64") {
     triplet_cpu = "arm64"
   } else {
-    assert(false, "unsupported cpu: $current_cpu")
+    assert(false, "unsupported cpu: $target_cpu")
   }
 
   # Environment.

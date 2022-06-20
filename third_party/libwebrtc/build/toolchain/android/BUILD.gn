@@ -71,7 +71,7 @@ template("android_clang_toolchain") {
 android_clang_toolchain("android_clang_x86") {
   binary_prefix = "i686-linux-android"
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
 
     # We lack the libclang_rt.profile library for x86 and x86_64, so we cannot
     # link any binaries that are generated with coverage instrumentation.
@@ -96,21 +96,21 @@ android_clang_toolchain("android_clang_x86") {
 android_clang_toolchain("android_clang_arm") {
   binary_prefix = "arm-linux-androideabi"
   toolchain_args = {
-    current_cpu = "arm"
+    target_cpu = "arm"
   }
 }
 
 android_clang_toolchain("android_clang_mipsel") {
   binary_prefix = "mipsel-linux-android"
   toolchain_args = {
-    current_cpu = "mipsel"
+    target_cpu = "mipsel"
   }
 }
 
 android_clang_toolchain("android_clang_x64") {
   binary_prefix = "x86_64-linux-android"
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
 
     # We lack the libclang_rt.profile library for x86 and x86_64, so we cannot
     # link any binaries that are generated with coverage instrumentation.
@@ -135,14 +135,14 @@ android_clang_toolchain("android_clang_x64") {
 android_clang_toolchain("android_clang_arm64") {
   binary_prefix = "aarch64-linux-android"
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
   }
 }
 
 android_clang_toolchain("android_clang_arm64_hwasan") {
   binary_prefix = "aarch64-linux-android"
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
     is_hwasan = true
     android64_ndk_api_level = 29
   }
@@ -151,6 +151,6 @@ android_clang_toolchain("android_clang_arm64_hwasan") {
 android_clang_toolchain("android_clang_mips64el") {
   binary_prefix = "mips64el-linux-android"
   toolchain_args = {
-    current_cpu = "mips64el"
+    target_cpu = "mips64el"
   }
 }

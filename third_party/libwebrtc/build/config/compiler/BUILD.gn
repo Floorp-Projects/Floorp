@@ -24,14 +24,14 @@ import("//build/toolchain/rbe.gni")
 import("//build/toolchain/toolchain.gni")
 import("//build_overrides/build.gni")
 
-if (current_cpu == "arm" || current_cpu == "arm64") {
+if (target_cpu == "arm" || target_cpu == "arm64") {
   import("//build/config/arm.gni")
 }
-if (current_cpu == "mipsel" || current_cpu == "mips64el" ||
-    current_cpu == "mips" || current_cpu == "mips64") {
+if (target_cpu == "mipsel" || target_cpu == "mips64el" ||
+    target_cpu == "mips" || target_cpu == "mips64") {
   import("//build/config/mips.gni")
 }
-if (current_cpu == "x64") {
+if (target_cpu == "x64") {
   import("//build/config/x64.gni")
 }
 if (is_mac) {
@@ -199,8 +199,8 @@ declare_args() {
   use_icf =
       (is_posix || is_fuchsia) && !is_debug && !using_sanitizer &&
       !use_clang_coverage && !(is_android && use_order_profiling) &&
-      (use_lld || (use_gold && (is_chromeos_ash || !(current_cpu == "x86" ||
-                                                     current_cpu == "x64"))))
+      (use_lld || (use_gold && (is_chromeos_ash || !(target_cpu == "x86" ||
+                                                     target_cpu == "x64"))))
 }
 
 if (is_android || (is_chromeos_ash && is_chromeos_device)) {
@@ -339,7 +339,7 @@ config("compiler") {
       cflags += [ "--param=ssp-buffer-size=4" ]
 
       # The x86 toolchain currently has problems with stack-protector.
-      if (is_android && current_cpu == "x86") {
+      if (is_android && target_cpu == "x86") {
         cflags += [ "-fno-stack-protector" ]
       } else if (current_os != "aix") {
         # Not available on aix.
@@ -452,7 +452,7 @@ config("compiler") {
   # Linux-specific compiler flags setup.
   # ------------------------------------
   if ((is_posix || is_fuchsia) && !is_apple && use_lld) {
-    if (current_cpu == "arm64") {
+    if (target_cpu == "arm64") {
       # Reduce the page size from 65536 in order to reduce binary size slightly
       # by shrinking the alignment gap between segments. This also causes all
       # segments to be mapped adjacently, which breakpad relies on.
@@ -710,7 +710,7 @@ config("compiler") {
     }
 
     # TODO(https://crbug.com/1211155): investigate why this isn't effective on arm32.
-    if (!is_android || current_cpu == "arm64") {
+    if (!is_android || target_cpu == "arm64") {
       cflags += [ "-fwhole-program-vtables" ]
       if (!is_win) {
         ldflags += [ "-fwhole-program-vtables" ]
@@ -722,7 +722,7 @@ config("compiler") {
     # unless the architecture revision in .ARM.attributes is sufficiently new.
     # TODO(pcc): The contents of .ARM.attributes should be based on the
     # -march flag passed at compile time (see llvm.org/pr36291).
-    if (current_cpu == "arm") {
+    if (target_cpu == "arm") {
       ldflags += [ "-march=$arm_arch" ]
     }
   }
@@ -878,14 +878,14 @@ config("compiler_cpu_abi") {
   if ((is_posix && !is_apple) || is_fuchsia) {
     # CPU architecture. We may or may not be doing a cross compile now, so for
     # simplicity we always explicitly set the architecture.
-    if (current_cpu == "x64") {
+    if (target_cpu == "x64") {
       cflags += [
         "-m64",
         "-march=$x64_arch",
         "-msse3",
       ]
       ldflags += [ "-m64" ]
-    } else if (current_cpu == "x86") {
+    } else if (target_cpu == "x86") {
       cflags += [ "-m32" ]
       ldflags += [ "-m32" ]
       if (!is_nacl) {
@@ -894,7 +894,7 @@ config("compiler_cpu_abi") {
           "-msse3",
         ]
       }
-    } else if (current_cpu == "arm") {
+    } else if (target_cpu == "arm") {
       if (is_clang && !is_android && !is_nacl) {
         cflags += [ "--target=arm-linux-gnueabihf" ]
         ldflags += [ "--target=arm-linux-gnueabihf" ]
@@ -908,12 +908,12 @@ config("compiler_cpu_abi") {
       if (arm_tune != "") {
         cflags += [ "-mtune=$arm_tune" ]
       }
-    } else if (current_cpu == "arm64") {
+    } else if (target_cpu == "arm64") {
       if (is_clang && !is_android && !is_nacl && !is_fuchsia) {
         cflags += [ "--target=aarch64-linux-gnu" ]
         ldflags += [ "--target=aarch64-linux-gnu" ]
       }
-    } else if (current_cpu == "mipsel" && !is_nacl) {
+    } else if (target_cpu == "mipsel" && !is_nacl) {
       ldflags += [ "-Wl,--hash-style=sysv" ]
       if (custom_toolchain == "") {
         if (is_clang) {
@@ -998,7 +998,7 @@ config("compiler_cpu_abi") {
       }
 
       cflags += [ "-m${mips_float_abi}-float" ]
-    } else if (current_cpu == "mips" && !is_nacl) {
+    } else if (target_cpu == "mips" && !is_nacl) {
       ldflags += [ "-Wl,--hash-style=sysv" ]
       if (custom_toolchain == "") {
         if (is_clang) {
@@ -1043,7 +1043,7 @@ config("compiler_cpu_abi") {
       }
 
       cflags += [ "-m${mips_float_abi}-float" ]
-    } else if (current_cpu == "mips64el") {
+    } else if (target_cpu == "mips64el") {
       cflags += [ "-D__SANE_USERSPACE_TYPES__" ]
       ldflags += [ "-Wl,--hash-style=sysv" ]
       if (custom_toolchain == "") {
@@ -1107,7 +1107,7 @@ config("compiler_cpu_abi") {
           "-Wa,-march=loongson3a",
         ]
       }
-    } else if (current_cpu == "mips64") {
+    } else if (target_cpu == "mips64") {
       ldflags += [ "-Wl,--hash-style=sysv" ]
       if (custom_toolchain == "") {
         if (is_clang) {
@@ -1145,7 +1145,7 @@ config("compiler_cpu_abi") {
         ]
         ldflags += [ "-mips64r2" ]
       }
-    } else if (current_cpu == "pnacl" && is_nacl_nonsfi) {
+    } else if (target_cpu == "pnacl" && is_nacl_nonsfi) {
       if (target_cpu == "x86" || target_cpu == "x64") {
         cflags += [
           "-arch",
@@ -1172,7 +1172,7 @@ config("compiler_cpu_abi") {
           "--target=armv7-unknown-nacl-gnueabihf",
         ]
       }
-    } else if (current_cpu == "ppc64") {
+    } else if (target_cpu == "ppc64") {
       if (current_os == "aix") {
         cflags += [ "-maix64" ]
         ldflags += [ "-maix64" ]
@@ -1180,7 +1180,7 @@ config("compiler_cpu_abi") {
         cflags += [ "-m64" ]
         ldflags += [ "-m64" ]
       }
-    } else if (current_cpu == "s390x") {
+    } else if (target_cpu == "s390x") {
       cflags += [ "-m64" ]
       ldflags += [ "-m64" ]
     }
@@ -1201,7 +1201,7 @@ config("compiler_codegen") {
     configs += [ "//build/config/nacl:compiler_codegen" ]
   }
 
-  if (current_cpu == "arm64" && is_android) {
+  if (target_cpu == "arm64" && is_android) {
     # On arm64 disable outlining for Android. See crbug.com/931297 for more
     # information.
     cflags += [ "-mno-outline" ]
@@ -1325,7 +1325,7 @@ config("clang_revision") {
 }
 
 config("compiler_arm_fpu") {
-  if (current_cpu == "arm" && !is_ios && !is_nacl) {
+  if (target_cpu == "arm" && !is_ios && !is_nacl) {
     cflags = [ "-mfpu=$arm_fpu" ]
     if (!arm_use_thumb) {
       cflags += [ "-marm" ]
@@ -1335,14 +1335,14 @@ config("compiler_arm_fpu") {
 }
 
 config("compiler_arm_thumb") {
-  if (current_cpu == "arm" && arm_use_thumb && is_posix &&
+  if (target_cpu == "arm" && arm_use_thumb && is_posix &&
       !(is_apple || is_nacl)) {
     cflags = [ "-mthumb" ]
   }
 }
 
 config("compiler_arm") {
-  if (current_cpu == "arm" && (is_chromeos_ash || is_chromeos_lacros)) {
+  if (target_cpu == "arm" && (is_chromeos_ash || is_chromeos_lacros)) {
     # arm is normally the default mode for clang, but on chromeos a wrapper
     # is used to pass -mthumb, and therefor change the default.
     cflags = [ "-marm" ]
@@ -1558,7 +1558,7 @@ config("default_warnings") {
       "/wd4577",
     ]
 
-    if (current_cpu == "x86") {
+    if (target_cpu == "x86") {
       cflags += [
         # VC++ 2015 changes 32-bit size_t truncation warnings from 4244 to
         # 4267. Example: short TruncTest(size_t x) { return x; }
@@ -1582,7 +1582,7 @@ config("default_warnings") {
 
     # Suppress warnings about ABI changes on ARM (Clang doesn't give this
     # warning).
-    if (current_cpu == "arm" && !is_clang) {
+    if (target_cpu == "arm" && !is_clang) {
       cflags += [ "-Wno-psabi" ]
     }
 
@@ -1725,9 +1725,9 @@ config("chromium_code") {
       "__STDC_FORMAT_MACROS",
     ]
 
-    if (!is_debug && !using_sanitizer && current_cpu != "s390x" &&
-        current_cpu != "s390" && current_cpu != "ppc64" &&
-        current_cpu != "mips" && current_cpu != "mips64") {
+    if (!is_debug && !using_sanitizer && target_cpu != "s390x" &&
+        target_cpu != "s390" && target_cpu != "ppc64" &&
+        target_cpu != "mips" && target_cpu != "mips64") {
       # Non-chromium code is not guaranteed to compile cleanly with
       # _FORTIFY_SOURCE. Also, fortified build may fail when optimizations are
       # disabled, so only do that for Release build.
@@ -1975,9 +1975,9 @@ config("no_incompatible_pointer_warnings") {
   cflags = []
   if (is_clang) {
     cflags += [ "-Wno-incompatible-pointer-types" ]
-  } else if (current_cpu == "mipsel" || current_cpu == "mips64el") {
+  } else if (target_cpu == "mipsel" || target_cpu == "mips64el") {
     cflags += [ "-w" ]
-  } else if (is_chromeos_ash && current_cpu == "arm") {
+  } else if (is_chromeos_ash && target_cpu == "arm") {
     cflags += [ "-w" ]
   }
 }
@@ -2031,7 +2031,7 @@ if (is_win) {
   if (is_android) {
     # TODO(jdduke) Re-enable on mips after resolving linking
     # issues with libc++ (crbug.com/456380).
-    if (current_cpu != "mipsel" && current_cpu != "mips64el") {
+    if (target_cpu != "mipsel" && target_cpu != "mips64el") {
       common_optimize_on_ldflags += [
         # Warn in case of text relocations.
         "-Wl,--warn-shared-textrel",
@@ -2082,7 +2082,7 @@ config("default_stack_frames") {
       # Omit frame pointers for leaf functions on x86, otherwise building libyuv
       # gives clang's register allocator issues, see llvm.org/PR15798 /
       # crbug.com/233709
-      if (is_clang && current_cpu == "x86" && !is_apple) {
+      if (is_clang && target_cpu == "x86" && !is_apple) {
         cflags += [ "-momit-leaf-frame-pointer" ]
       }
     } else {
@@ -2438,7 +2438,7 @@ config("symbols") {
     # obj/native_client/src/trusted/service_runtime/sel_asm/nacl_switch_32.o:
     # DWARF info may be corrupt; offsets in a range list entry are in different
     # sections" there.  Maybe just a bug in nacl_switch_32.S.
-    if (!is_apple && !is_nacl && current_cpu != "x86" &&
+    if (!is_apple && !is_nacl && target_cpu != "x86" &&
         (use_gold || use_lld)) {
       if (is_clang) {
         # This flag enables the GNU-format pubnames and pubtypes sections,
