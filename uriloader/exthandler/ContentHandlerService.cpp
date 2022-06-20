@@ -11,6 +11,8 @@
 #include "nsIMIMEInfo.h"
 #include "nsIStringEnumerator.h"
 #include "nsReadableUtils.h"
+#include "nsMIMEInfoImpl.h"
+#include "nsMIMEInfoChild.h"
 
 using mozilla::dom::ContentChild;
 using mozilla::dom::HandlerInfo;
@@ -168,12 +170,12 @@ NS_IMETHODIMP ContentHandlerService::FillHandlerInfo(
 }
 
 NS_IMETHODIMP ContentHandlerService::GetMIMEInfoFromOS(
-    nsIHandlerInfo* aHandlerInfo, const nsACString& aMIMEType,
-    const nsACString& aExtension, bool* aFound) {
+    const nsACString& aMIMEType, const nsACString& aFileExt, bool* aFound,
+    nsIMIMEInfo** aMIMEInfo) {
   nsresult rv = NS_ERROR_FAILURE;
   HandlerInfo returnedInfo;
   if (!mHandlerServiceChild->SendGetMIMEInfoFromOS(nsCString(aMIMEType),
-                                                   nsCString(aExtension), &rv,
+                                                   nsCString(aFileExt), &rv,
                                                    &returnedInfo, aFound)) {
     return NS_ERROR_FAILURE;
   }
@@ -182,7 +184,10 @@ NS_IMETHODIMP ContentHandlerService::GetMIMEInfoFromOS(
     return rv;
   }
 
-  CopyHandlerInfoTonsIHandlerInfo(returnedInfo, aHandlerInfo);
+  RefPtr<nsChildProcessMIMEInfo> mimeInfo =
+      new nsChildProcessMIMEInfo(returnedInfo.type());
+  CopyHandlerInfoTonsIHandlerInfo(returnedInfo, mimeInfo);
+  mimeInfo.forget(aMIMEInfo);
   return NS_OK;
 }
 
