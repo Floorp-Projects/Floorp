@@ -134,8 +134,7 @@ LoginRecipesParent.prototype = {
         }
         initPromise = this._rsClient.get();
       } else if (this._defaults.startsWith("resource://")) {
-        initPromise = lazy
-          .fetch(this._defaults)
+        initPromise = fetch(this._defaults)
           .then(resp => resp.json())
           .then(({ data }) => data);
       } else {
