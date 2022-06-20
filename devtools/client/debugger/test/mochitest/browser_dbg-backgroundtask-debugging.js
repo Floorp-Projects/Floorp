@@ -105,7 +105,7 @@ add_task(async function test_backgroundtask_debugger() {
   // concatenation.  But functions do not survive this process, so we manually
   // recreate (in the toolbox process) the single function the `expandAllScopes`
   // invocation in this test needs.
-  await ToolboxTask.spawn(JSON.stringify(selectors), async _selectors => {
+  await ToolboxTask.spawn(selectors, async _selectors => {
     this.selectors = _selectors;
     this.selectors.scopeNode = i =>
       `.scopes-list .tree-node:nth-child(${i}) .object-label`;
