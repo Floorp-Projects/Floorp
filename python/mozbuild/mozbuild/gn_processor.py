@@ -152,7 +152,7 @@ def find_deps(all_targets, target):
     return all_deps
 
 
-def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
+def filter_gn_config(gn_result, sandbox_vars, input_vars, gn_target):
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
     gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
@@ -205,7 +205,7 @@ def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
 
 
 def process_gn_config(
-    gn_config, srcdir, config, output, non_unified_sources, sandbox_vars, mozilla_flags
+    gn_config, topsrcdir, srcdir, non_unified_sources, sandbox_vars, mozilla_flags
 ):
     # Translates a json gn config into attributes that can be used to write out
     # moz.build files for this configuration.
@@ -216,7 +216,7 @@ def process_gn_config(
 
     targets = gn_config["targets"]
 
-    project_relsrcdir = mozpath.relpath(srcdir, config.topsrcdir)
+    project_relsrcdir = mozpath.relpath(srcdir, topsrcdir)
 
     non_unified_sources = set([mozpath.normpath(s) for s in non_unified_sources])
 
@@ -293,7 +293,7 @@ def process_gn_config(
                 include = include[2:]
             # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
             if include.startswith("/"):
-                resolved = mozpath.abspath(mozpath.join(config.topsrcdir, include[1:]))
+                resolved = mozpath.abspath(mozpath.join(topsrcdir, include[1:]))
             else:
                 resolved = mozpath.abspath(mozpath.join(srcdir, include))
             if not os.path.exists(resolved):
@@ -439,9 +439,8 @@ def find_common_attrs(config_attributes):
 
 
 def write_mozbuild(
-    config,
+    topsrcdir,
     srcdir,
-    output,
     non_unified_sources,
     gn_config_files,
     mozilla_flags,
@@ -455,9 +454,8 @@ def write_mozbuild(
             gn_config = json.load(fh)
             mozbuild_attrs = process_gn_config(
                 gn_config,
+                topsrcdir,
                 srcdir,
-                config,
-                output,
                 non_unified_sources,
                 gn_config["sandbox_vars"],
                 mozilla_flags,
@@ -474,7 +472,7 @@ def write_mozbuild(
             configs_by_dir[d].append((mozbuild_args, build_data))
 
     for relsrcdir, configs in sorted(configs_by_dir.items()):
-        target_srcdir = mozpath.join(config.topsrcdir, relsrcdir)
+        target_srcdir = mozpath.join(topsrcdir, relsrcdir)
         mkdir(target_srcdir)
 
         target_mozbuild = mozpath.join(target_srcdir, "moz.build")
@@ -572,10 +570,8 @@ def write_mozbuild(
 
 
 def generate_gn_config(
-    config,
     srcdir,
     output,
-    non_unified_sources,
     gn_binary,
     input_variables,
     sandbox_variables,
@@ -632,7 +628,7 @@ def generate_gn_config(
     with open(gn_config_file, "r") as fh:
         gn_out = json.load(fh)
         gn_out = filter_gn_config(
-            gn_out, config, sandbox_variables, input_variables, gn_target
+            gn_out, sandbox_variables, input_variables, gn_target
         )
 
     os.remove(gn_config_file)
@@ -680,10 +676,8 @@ class GnConfigGenBackend(BuildBackend):
 
             for vars in vars_set:
                 generate_gn_config(
-                    obj.config,
                     mozpath.join(obj.srcdir, obj.target_dir),
                     mozpath.join(obj.objdir, obj.target_dir),
-                    obj.non_unified_sources,
                     gn_binary,
                     vars,
                     obj.gn_sandbox_variables,
@@ -714,9 +708,8 @@ class GnMozbuildWriterBackend(BuildBackend):
                     % gn_config_files
                 )
                 write_mozbuild(
-                    obj.config,
+                    obj.config.topsrcdir,
                     mozpath.join(obj.srcdir, obj.target_dir),
-                    mozpath.join(obj.objdir, obj.target_dir),
                     obj.non_unified_sources,
                     gn_config_files,
                     obj.mozilla_flags,
