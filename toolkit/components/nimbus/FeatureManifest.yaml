@@ -164,6 +164,10 @@ aboutwelcome:
       description: >-
         Should users see about:welcome? If this is false, users will see a
         regular new tab instead.
+    id:
+      type: string
+      description: >-
+        Descriptive ID for the about:welcome content
     screens:
       type: json
       fallbackPref: browser.aboutwelcome.screens
