@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("../../../webrtc.gni")
+
 import("//build/config/c++/c++.gni")
 import("//build/config/chromeos/ui_mode.gni")
 import("//build/config/linux/pkg_config.gni")
@@ -39,7 +41,7 @@ config("runtime_library") {
 
   if ((!(is_chromeos_ash || is_chromeos_lacros) ||
        default_toolchain != "//build/toolchain/cros:target") &&
-      (!use_custom_libcxx || current_cpu == "mipsel")) {
+      (!use_custom_libcxx || current_cpu == "mipsel") && !build_with_mozilla) {
     libs = [ "atomic" ]
   }
 }
