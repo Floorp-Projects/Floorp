@@ -37,7 +37,7 @@ add_setup(async function() {
   PermissionTestUtils.add(
     TEST_URI,
     "automatic-download",
-    Services.perms.UNKNOWN
+    Services.perms.UNKNOWN_ACTION
   );
   await SpecialPowers.pushPrefEnv({
     set: [
