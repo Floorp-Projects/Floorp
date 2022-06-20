@@ -7708,6 +7708,13 @@
   mirror: always
   rust: true
 
+# Is support for :has() enabled?
+- name: layout.css.has-selector.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for CSS hyphenate-character enabled?
 - name: layout.css.hyphenate-character.enabled
   type: RelaxedAtomicBool
