@@ -34,9 +34,6 @@ const { AppConstants } = ChromeUtils.import(
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 const { CreditCard } = ChromeUtils.import(
   "resource://gre/modules/CreditCard.jsm"
 );
