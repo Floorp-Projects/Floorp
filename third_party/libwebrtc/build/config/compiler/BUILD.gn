@@ -1880,7 +1880,7 @@ config("no_rtti") {
 # to heap-allocated memory are passed over shared library boundaries.
 config("export_dynamic") {
   # TODO(crbug.com/1052397): Revisit after target_os flip is completed.
-  if (is_linux || is_chromeos_lacros || export_libcxxabi_from_executables) {
+  if (is_linux || is_bsd || is_chromeos_lacros || export_libcxxabi_from_executables) {
     ldflags = [ "-rdynamic" ]
   }
 }
