@@ -619,8 +619,15 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Awaken the timer thread.
-  if (mWaiting && mTimers[0]->Value() == aTimer) {
+  // Awaken the timer thread if:
+  // - This is the new front timer, which may require the TimerThread to wake up
+  //   earlier than previously planned. AND/OR
+  // - The delay is 0, which is usually meant to be run as soon as possible.
+  //   Note: Even if the thread is scheduled to wake up now/soon, on some
+  //   systems there could be a significant delay compared to notifying, which
+  //   is almost immediate; and some users of 0-delay depend on it being this
+  //   fast!
+  if (mWaiting && (mTimers[0]->Value() == aTimer || aTimer->mDelay.IsZero())) {
     mNotified = true;
     mMonitor.Notify();
   }
