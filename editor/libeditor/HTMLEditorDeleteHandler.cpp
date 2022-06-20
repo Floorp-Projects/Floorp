@@ -4793,6 +4793,25 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
     rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
         EditSubAction::eMergeBlockContents, aEditingHost);
+    Result<EditorDOMPoint, nsresult> splitResult =
+        rangesToWrapTheLine
+            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+                *this);
+    if (MOZ_UNLIKELY(splitResult.isErr())) {
+      NS_WARNING(
+          "AutoRangeArray::"
+          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+          "failed");
+      return MoveNodeResult(splitResult.unwrapErr());
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return MoveNodeResult(rv);
+      }
+    }
     nsresult rv = SplitInlinesAndCollectEditTargetNodes(
         rangesToWrapTheLine.Ranges(), arrayOfContents,
         EditSubAction::eMergeBlockContents, CollectNonEditableNodes::Yes);

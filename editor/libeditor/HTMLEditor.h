@@ -1147,18 +1147,6 @@ class HTMLEditor final : public EditorBase,
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
 
   /**
-   * SplitParentInlineElementsAtRangeEdges(nsTArray<OwningNonNull<nsRange>>&)
-   * calls SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.
-   * Then, updates given range to keep edit target ranges as expected.
-   *
-   * @return                    A suggest point to put caret if succeeded, but
-   *                            it may be unset.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SplitParentInlineElementsAtRangeEdges(
-      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
-
-  /**
    * SplitElementsAtEveryBRElement() splits before all <br> elements in
    * aMostAncestorToBeSplit.  All <br> nodes will be moved before right node
    * at splitting its parent.  Finally, this returns left node, first <br>
@@ -1235,17 +1223,6 @@ class HTMLEditor final : public EditorBase,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes);
-
-  /**
-   * SplitTextNodesAtRangeEnd() splits text nodes if each range end is in
-   * middle of a text node.
-   *
-   * @return            A suggest point to put caret if succeeded, but it may be
-   *                    unset.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SplitTextNodesAtRangeEnd(
-      const nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
@@ -4543,6 +4520,8 @@ class HTMLEditor final : public EditorBase,
 
   friend class AlignStateAtSelection;  // CollectEditableTargetNodes,
                                        // CollectNonEditableNodes
+  friend class AutoRangeArray;  // RangeUpdaterRef, SplitNodeWithTransaction,
+                                // SplitParentInlineElementsAtRangeEdges
   friend class AutoSelectionSetterAfterTableEdit;  // SetSelectionAfterEdit
   friend class
       AutoSetTemporaryAncestorLimiter;  // InitializeSelectionAncestorLimit

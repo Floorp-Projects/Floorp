@@ -858,6 +858,89 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
   return NS_OK;
 }
 
+Result<EditorDOMPoint, nsresult> AutoRangeArray::
+    SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+        HTMLEditor& aHTMLEditor) {
+  // FYI: The following code is originated in
+  // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#6971
+
+  // Split text nodes. This is necessary, since given ranges may end in text
+  // nodes in case where part of a pre-formatted elements needs to be moved.
+  EditorDOMPoint pointToPutCaret;
+  IgnoredErrorResult ignoredError;
+  for (const OwningNonNull<nsRange>& range : mRanges) {
+    EditorDOMPoint atEnd(range->EndRef());
+    if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode()) {
+      continue;
+    }
+
+    if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
+      // Split the text node.
+      SplitNodeResult splitAtEndResult =
+          aHTMLEditor.SplitNodeWithTransaction(atEnd);
+      if (splitAtEndResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtEndResult.unwrapErr());
+      }
+      splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
+                                        {SuggestCaret::OnlyIfHasSuggestion});
+
+      // Correct the range.
+      // The new end parent becomes the parent node of the text.
+      MOZ_ASSERT(!range->IsInSelection());
+      range->SetEnd(splitAtEndResult.AtNextContent<EditorRawDOMPoint>()
+                        .ToRawRangeBoundary(),
+                    ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "nsRange::SetEnd() failed, but ignored");
+      ignoredError.SuppressException();
+    }
+  }
+
+  // FYI: The following code is originated in
+  // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#7023
+  nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
+  rangeItemArray.AppendElements(mRanges.Length());
+
+  // First register ranges for special editor gravity
+  for (OwningNonNull<RangeItem>& rangeItem : rangeItemArray) {
+    rangeItem = new RangeItem();
+    rangeItem->StoreRange(*mRanges[0]);
+    aHTMLEditor.RangeUpdaterRef().RegisterRangeItem(*rangeItem);
+    // TODO: We should keep the array, and just update the ranges.
+    mRanges.RemoveElementAt(0);
+  }
+  // Now bust up inlines.
+  nsresult rv = NS_OK;
+  for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
+    // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
+    Result<EditorDOMPoint, nsresult> splitParentsResult =
+        aHTMLEditor.SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
+    if (MOZ_UNLIKELY(splitParentsResult.isErr())) {
+      NS_WARNING("HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
+      rv = splitParentsResult.unwrapErr();
+      break;
+    }
+    if (splitParentsResult.inspect().IsSet()) {
+      pointToPutCaret = splitParentsResult.unwrap();
+    }
+  }
+  // Then unregister the ranges
+  for (OwningNonNull<RangeItem>& item : rangeItemArray) {
+    aHTMLEditor.RangeUpdaterRef().DropRangeItem(item);
+    RefPtr<nsRange> range = item->GetRange();
+    if (range) {
+      mRanges.AppendElement(std::move(range));
+    }
+  }
+
+  // XXX Why do we ignore the other errors here??
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  return pointToPutCaret;
+}
+
 /******************************************************************************
  * some general purpose editor utils
  *****************************************************************************/
