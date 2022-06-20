@@ -458,9 +458,7 @@ add_task(async function testSourceTreeNamesForWebExtensions() {
     assertSourceTreeNode,
   });
 
-  // ToolboxTask.spawn pass input arguments by stringify them via string concatenation.
-  // This mean we have to stringify the input object, but don't have to parse it from the task.
-  await ToolboxTask.spawn(JSON.stringify(selectors), async _selectors => {
+  await ToolboxTask.spawn(selectors, async _selectors => {
     this.selectors = _selectors;
   });
 
