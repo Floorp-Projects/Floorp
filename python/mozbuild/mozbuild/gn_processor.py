@@ -653,7 +653,7 @@ def main():
     for is_debug in (True, False):
         for target_os in ("android", "linux", "mac", "openbsd", "win"):
             target_cpus = ["x64"]
-            if target_os in ("android", "linux", "mac", "win"):
+            if target_os in ("android", "linux", "mac", "win", "openbsd"):
                 target_cpus.append("arm64")
             if target_os in ("android", "linux"):
                 target_cpus.append("arm")

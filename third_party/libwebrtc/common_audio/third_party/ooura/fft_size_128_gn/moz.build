@@ -88,10 +88,6 @@ if CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
@@ -101,10 +97,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
 
@@ -168,6 +160,12 @@ if CONFIG["CPU_ARCH"] == "x86":
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
+if CONFIG["CPU_ARCH"] == "x86_64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
@@ -216,18 +214,10 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 
     CXXFLAGS += [
         "-msse2"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -255,14 +245,10 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    CXXFLAGS += [
+        "-msse2"
     ]
 
 Library("fft_size_128_gn")
