@@ -59,27 +59,23 @@ browsertime-tp6:
                         - --chimera
                         - --browsertime
                         - --conditioned-profile=settled
-        variants: [fission]
         run-on-projects:
-            by-variant:
-                fission:
-                    by-subtest:
-                        netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
+            by-subtest:
+                netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
+                    by-app:
+                        firefox:
                             by-test-platform:
                                 windows.*-32.*: []
                                 (linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
                                 macosx1015.*shippable-qr.*: []
                                 default: []
-                        default:
-                            by-test-platform:
-                                windows.*-32.*: []
-                                .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
-                                default: []
+                        default: []
                 default:
                     by-app:
                         firefox:
                             by-test-platform:
-                                (!.*shippable-qr/.*): [trunk, mozilla-beta, mozilla-release]
+                                windows.*-32.*: []
+                                .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -113,12 +109,9 @@ browsertime-tp6:
             - wikia
             - youtube
     tier:
-        by-variant:
-            fission: 2
-            default:
-                by-app:
-                    firefox: 2
-                    default: 3
+        by-app:
+            firefox: 2
+            default: 3
 
 browsertime-responsiveness:
     <<: *tp6-defaults
@@ -145,19 +138,13 @@ browsertime-responsiveness:
                     - --browsertime
                     - --conditioned-profile=settled
     run-on-projects:
-        by-variant:
-            fission:
+        by-app:
+            firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [trunk]
+                    .*64.*shippable-qr/.*: [trunk]
                     default: []
-            default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            (!.*shippable-qr/.*): [trunk]
-                            default: []
-                    default: []
+            default: []
     tier:
         by-app:
             firefox: 2
@@ -180,20 +167,14 @@ browsertime-tp6-essential:
             - wikipedia
             - yahoo-mail
     run-on-projects:
-        by-variant:
-            fission:
+        by-app:
+            firefox:
                 by-test-platform:
                     windows.*-32.*: []
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                    .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
-            default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            (!.*shippable-qr/.*): [trunk, mozilla-release]
-                            default: []
-                    default: []
+            default: []
     tier:
         by-test-platform:
             linux1804-64-clang-trunk-qr/opt: 2
@@ -220,59 +201,41 @@ browsertime-benchmark:
             - [webaudio, wa]
     treeherder-symbol: Btime()
     tier:
-        by-variant:
-            fission:
-                by-app:
-                    firefox:
-                        by-subtest:
-                            motionmark-animometer:
-                                by-test-platform:
-                                    linux1804-64-clang-trunk-qr/opt: 2
-                                    default: 1
-                            unity-webgl: 3
-                            default:
-                                by-test-platform:
-                                    windows10-64-ccov.*/.*: 3
-                                    linux64-ccov.*/.*: 3
-                                    default: 2
-                    default:
-                        by-subtest:
-                            unity-webgl: 3
-                            default: 2
-            default: 3
-    variants: [fission]
-    run-on-projects:
-        by-variant:
-            fission:
+        by-app:
+            firefox:
                 by-subtest:
-                    unity-webgl:
+                    motionmark-animometer:
                         by-test-platform:
-                            windows.*-32.*: []
-                            .*shippable-qr/.*: [trunk, mozilla-release]
-                            default: []
+                            linux1804-64-clang-trunk-qr/opt: 2
+                            default: 1
+                    unity-webgl: 3
                     default:
                         by-test-platform:
-                            windows.*-32.*: []
-                            .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
-                            default: []
+                            windows10-64-ccov.*/.*: 3
+                            linux64-ccov.*/.*: 3
+                            default: 2
             default:
                 by-subtest:
-                    unity-webgl:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    windows.*-32.*: []
-                                    (!.*shippable-qr/.*): [trunk, mozilla-release]
-                                    default: []
+                    unity-webgl: 3
+                    default: 2
+    run-on-projects:
+        by-subtest:
+            unity-webgl:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            windows.*-32.*: []
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
-                    default:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    windows.*-32.*: []
-                                    (!.*shippable-qr/.*): [trunk, mozilla-beta, mozilla-release]
-                                    default: []
+                    default: []
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            windows.*-32.*: []
+                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             default: []
+                    default: []
     max-run-time:
         by-subtest:
             assorted-dom:
@@ -309,21 +272,14 @@ browsertime-benchmark-wasm:
                     - [wasm-godot, godot]
     treeherder-symbol: Btime()
     tier: 2
-    variants: [fission]
     run-on-projects:
-        by-variant:
-            fission:
+        by-app:
+            firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central, mozilla-release]
+                    .*64.*shippable-qr/.*: [mozilla-central, mozilla-release]
                     default: []
-            default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            (!.*shippable-qr/.*): [mozilla-central, mozilla-release]
-                            default: []
-                    default: []
+            default: []
     max-run-time:
         by-subtest:
             wasm-godot: 1500
@@ -348,18 +304,11 @@ browsertime-youtube-playback:
                     - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
                     - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     treeherder-symbol: Btime()
-    variants: [fission]
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central, mozilla-release]
-                    default: []
-            default:
-                by-test-platform:
-                    (!.*shippable-qr/.*): [mozilla-central, mozilla-release]
-                    default: []
+        by-test-platform:
+            windows.*-32.*: []
+            .*64.*shippable-qr/.*: [mozilla-central, mozilla-release]
+            default: []
     tier: 2
     limit-platforms:
         by-subtest:
@@ -433,14 +382,11 @@ browsertime-tp6-live-sheriffed:
             - --chimera
             - --live-sites
     run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                    (linux|windows|macosx1015)(?!.*-qr).*: []
-                    windows.*-32.*: []
-                    default: []
+        by-test-platform:
+            (linux|windows10-64|macos)(?!.*shippable).*: []
+            (linux|windows|macosx1015)(?!.*-qr).*: []
+            windows.*-32.*: []
+            default: []
     tier: 2
     treeherder-symbol: Btime-live(tp6)
 
@@ -457,16 +403,10 @@ browsertime-tp6-profiling:
             - --chimera
             - --gecko-profile
     run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    (linux|windows|macosx1015).*shippable-qr.*: [mozilla-central]
-                    default: []
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+        by-test-platform:
+            (linux|windows|macosx1015).*shippable-qr.*: [mozilla-central]
+            default: []
+    tier: 2
     treeherder-symbol: Btime-Prof(tp6)
 
 browsertime-custom:
@@ -479,18 +419,11 @@ browsertime-custom:
     mozharness:
         extra-options:
             - --chimera
-    variants: [fission]
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
-                    default: []
-            default:
-                by-test-platform:
-                    (!.*shippable-qr/.*): [mozilla-central]
-                    default: []
+        by-test-platform:
+            windows.*-32.*: []
+            .*64.*shippable-qr/.*: [mozilla-central]
+            default: []
     tier: 2
     treeherder-symbol: Btime(ps)
 
@@ -504,17 +437,10 @@ browsertime-first-install:
     mozharness:
         extra-options:
             - --chimera
-    variants: [fission]
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    .*shippable-qr/.*: [trunk]
-                    default: []
-            default:
-                by-test-platform:
-                    (!.*shippable-qr/.*): [trunk]
-                    default: []
+        by-test-platform:
+            windows.*-32.*: []
+            .*64.*shippable-qr/.*: [trunk]
+            default: []
     tier: 2
     treeherder-symbol: Btime(welcome)

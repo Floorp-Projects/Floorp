@@ -376,8 +376,6 @@ def filter_raptor_jobs(full_task_graph, label_to_taskid):
         if "firefox" in entry.attributes.get(
             "raptor_try_name", ""
         ) and entry.attributes.get("test_platform", "").endswith("64-shippable-qr/opt"):
-            if "fission" not in entry.attributes.get("unittest_variant", ""):
-                continue
             # add the browsertime test
             if label not in label_to_taskid:
                 to_run.append(label)
