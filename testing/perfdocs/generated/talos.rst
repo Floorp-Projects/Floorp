@@ -397,7 +397,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -413,7 +413,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -451,7 +451,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -467,7 +467,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -516,12 +516,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -537,17 +537,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -563,17 +563,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -589,12 +589,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -610,12 +610,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -631,12 +631,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -652,12 +652,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -724,12 +724,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -745,17 +745,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-profiling-fis-e10s**
+      * - **talos-chrome-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -771,17 +771,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-profiling-fis-e10s**
+      * - **talos-chrome-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -797,12 +797,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -818,12 +818,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -839,12 +839,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -860,12 +860,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -932,12 +932,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ❌
         - ❌
         - ❌
@@ -953,17 +953,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-bcv-profiling-fis-e10s**
+      * - **talos-bcv-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ✅
         - ✅
         - ❌
@@ -979,17 +979,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-bcv-profiling-fis-e10s**
+      * - **talos-bcv-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ✅
         - ✅
         - ❌
@@ -1005,12 +1005,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ❌
         - ❌
         - ❌
@@ -1026,12 +1026,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ❌
         - ❌
         - ❌
@@ -1047,12 +1047,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ✅
         - ✅
         - ❌
@@ -1068,12 +1068,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-bcv-fis-e10s**
+      * - **talos-bcv**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-bcv-swr-fis-e10s**
+      * - **talos-bcv-swr**
         - ✅
         - ✅
         - ❌
@@ -1114,12 +1114,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1135,17 +1135,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1161,17 +1161,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1187,12 +1187,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1208,12 +1208,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1229,12 +1229,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1250,12 +1250,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1295,12 +1295,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1316,17 +1316,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1342,17 +1342,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1368,12 +1368,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1389,12 +1389,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1410,12 +1410,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -1431,12 +1431,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -1528,32 +1528,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1569,32 +1569,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1610,32 +1610,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1651,32 +1651,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1692,32 +1692,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1733,32 +1733,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ❌
         - ❌
         - ❌
@@ -1774,32 +1774,32 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-damp-inspector-fis-e10s**
+      * - **talos-damp-inspector**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-inspector-swr-fis-e10s**
+      * - **talos-damp-inspector-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-fis-e10s**
+      * - **talos-damp-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-other-swr-fis-e10s**
+      * - **talos-damp-other-swr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-fis-e10s**
+      * - **talos-damp-webconsole**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-damp-webconsole-swr-fis-e10s**
+      * - **talos-damp-webconsole-swr**
         - ✅
         - ✅
         - ❌
@@ -1851,12 +1851,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -1872,17 +1872,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -1898,17 +1898,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -1924,12 +1924,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -1945,12 +1945,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -1966,12 +1966,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -1987,12 +1987,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -2066,7 +2066,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2082,12 +2082,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-dromaeojs-profiling-fis-e10s**
+      * - **talos-dromaeojs-profiling**
         - ❌
         - ❌
         - ❌
@@ -2103,12 +2103,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-dromaeojs-profiling-fis-e10s**
+      * - **talos-dromaeojs-profiling**
         - ❌
         - ❌
         - ❌
@@ -2124,7 +2124,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2140,7 +2140,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2156,7 +2156,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2172,7 +2172,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
@@ -2222,12 +2222,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g3-fis-e10s**
+      * - **talos-g3**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g3-swr-fis-e10s**
+      * - **talos-g3-swr**
         - ❌
         - ❌
         - ❌
@@ -2243,17 +2243,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g3-fis-e10s**
+      * - **talos-g3**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g3-profiling-fis-e10s**
+      * - **talos-g3-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g3-swr-fis-e10s**
+      * - **talos-g3-swr**
         - ✅
         - ✅
         - ❌
@@ -2269,7 +2269,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g3-profiling-fis-e10s**
+      * - **talos-g3-profiling**
         - ❌
         - ❌
         - ❌
@@ -2327,17 +2327,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2353,27 +2353,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2389,27 +2389,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2425,17 +2425,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2451,17 +2451,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2477,17 +2477,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2503,17 +2503,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2529,17 +2529,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2594,17 +2594,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2620,27 +2620,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2656,27 +2656,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2692,17 +2692,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2718,17 +2718,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2744,17 +2744,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2770,17 +2770,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -2796,17 +2796,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -2869,7 +2869,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2885,12 +2885,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-dromaeojs-profiling-fis-e10s**
+      * - **talos-dromaeojs-profiling**
         - ❌
         - ❌
         - ❌
@@ -2906,12 +2906,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-dromaeojs-profiling-fis-e10s**
+      * - **talos-dromaeojs-profiling**
         - ❌
         - ❌
         - ❌
@@ -2927,7 +2927,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2943,7 +2943,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2959,7 +2959,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ❌
         - ❌
         - ❌
@@ -2975,7 +2975,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-dromaeojs-fis-e10s**
+      * - **talos-dromaeojs**
         - ✅
         - ✅
         - ❌
@@ -3007,7 +3007,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -3023,7 +3023,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -3047,7 +3047,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -3063,7 +3063,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-motionmark-profiling-fis-e10s**
+      * - **talos-motionmark-profiling**
         - ❌
         - ❌
         - ❌
@@ -3096,17 +3096,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3122,27 +3122,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -3158,27 +3158,27 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-profiling-e10s**
+      * - **talos-webgl-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-profiling-gli-fis-e10s**
+      * - **talos-webgl-profiling-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -3194,17 +3194,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3220,17 +3220,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3246,17 +3246,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3272,17 +3272,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ❌
         - ❌
         - ❌
@@ -3298,17 +3298,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-webgl-fis-e10s**
+      * - **talos-webgl**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-webgl-gli-fis-e10s**
+      * - **talos-webgl-gli**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-webgl-swr-fis-e10s**
+      * - **talos-webgl-swr**
         - ✅
         - ✅
         - ❌
@@ -3342,12 +3342,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -3363,17 +3363,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -3389,17 +3389,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -3415,12 +3415,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -3436,12 +3436,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -3457,12 +3457,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -3478,12 +3478,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -3564,12 +3564,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ❌
         - ❌
         - ❌
@@ -3585,17 +3585,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-perf-reftest-profiling-fis-e10s**
+      * - **talos-perf-reftest-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ✅
         - ✅
         - ❌
@@ -3611,17 +3611,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-perf-reftest-profiling-fis-e10s**
+      * - **talos-perf-reftest-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ✅
         - ✅
         - ❌
@@ -3637,12 +3637,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ❌
         - ❌
         - ❌
@@ -3658,12 +3658,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ❌
         - ❌
         - ❌
@@ -3679,12 +3679,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ❌
         - ❌
         - ❌
@@ -3700,12 +3700,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-fis-e10s**
+      * - **talos-perf-reftest**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-perf-reftest-swr-fis-e10s**
+      * - **talos-perf-reftest-swr**
         - ✅
         - ✅
         - ❌
@@ -3762,7 +3762,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ❌
         - ❌
         - ❌
@@ -3778,12 +3778,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-perf-reftest-singletons-profiling-fis-e10s**
+      * - **talos-perf-reftest-singletons-profiling**
         - ❌
         - ❌
         - ❌
@@ -3799,12 +3799,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-perf-reftest-singletons-profiling-fis-e10s**
+      * - **talos-perf-reftest-singletons-profiling**
         - ❌
         - ❌
         - ❌
@@ -3820,7 +3820,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ❌
         - ❌
         - ❌
@@ -3836,7 +3836,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ❌
         - ❌
         - ❌
@@ -3852,7 +3852,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ❌
         - ❌
         - ❌
@@ -3868,7 +3868,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-perf-reftest-singletons-fis-e10s**
+      * - **talos-perf-reftest-singletons**
         - ✅
         - ✅
         - ❌
@@ -3926,12 +3926,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -3947,17 +3947,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -3973,17 +3973,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -3999,12 +3999,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4020,12 +4020,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4041,12 +4041,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4062,12 +4062,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4123,12 +4123,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4144,17 +4144,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4170,17 +4170,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-profiling-fis-e10s**
+      * - **talos-g4-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4196,12 +4196,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4217,12 +4217,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4238,12 +4238,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ❌
         - ❌
         - ❌
@@ -4259,12 +4259,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g4-fis-e10s**
+      * - **talos-g4**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g4-swr-fis-e10s**
+      * - **talos-g4-swr**
         - ✅
         - ✅
         - ❌
@@ -4327,12 +4327,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4348,17 +4348,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4374,17 +4374,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4400,12 +4400,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4421,12 +4421,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4442,12 +4442,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4463,12 +4463,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4492,12 +4492,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ❌
         - ❌
         - ❌
@@ -4513,17 +4513,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-profiling-fis-e10s**
+      * - **talos-sessionrestore-many-windows-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ✅
         - ✅
         - ❌
@@ -4539,17 +4539,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-profiling-fis-e10s**
+      * - **talos-sessionrestore-many-windows-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ✅
         - ✅
         - ❌
@@ -4565,12 +4565,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ❌
         - ❌
         - ❌
@@ -4586,12 +4586,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ❌
         - ❌
         - ❌
@@ -4607,12 +4607,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ❌
         - ❌
         - ❌
@@ -4628,12 +4628,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-sessionrestore-many-windows-fis-e10s**
+      * - **talos-sessionrestore-many-windows**
         - ✅
         - ✅
         - ❌
         - ❌
-      * - **talos-sessionrestore-many-windows-swr-fis-e10s**
+      * - **talos-sessionrestore-many-windows-swr**
         - ✅
         - ✅
         - ❌
@@ -4658,12 +4658,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4679,17 +4679,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4705,17 +4705,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4731,12 +4731,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4752,12 +4752,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4773,12 +4773,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4794,12 +4794,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4837,12 +4837,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4858,17 +4858,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4884,17 +4884,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -4910,12 +4910,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4931,12 +4931,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4952,12 +4952,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -4973,12 +4973,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5008,12 +5008,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5029,17 +5029,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5055,17 +5055,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5081,12 +5081,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5102,12 +5102,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5123,12 +5123,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5144,12 +5144,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5187,7 +5187,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ❌
         - ❌
         - ❌
@@ -5203,12 +5203,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-realworld-webextensions-profiling-fis-e10s**
+      * - **talos-realworld-webextensions-profiling**
         - ❌
         - ❌
         - ❌
@@ -5224,12 +5224,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-realworld-webextensions-profiling-fis-e10s**
+      * - **talos-realworld-webextensions-profiling**
         - ❌
         - ❌
         - ❌
@@ -5245,7 +5245,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ❌
         - ❌
         - ❌
@@ -5261,7 +5261,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ❌
         - ❌
         - ❌
@@ -5277,7 +5277,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ❌
         - ❌
         - ❌
@@ -5293,7 +5293,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-realworld-webextensions-fis-e10s**
+      * - **talos-realworld-webextensions**
         - ✅
         - ✅
         - ❌
@@ -5357,12 +5357,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5378,17 +5378,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5404,17 +5404,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5430,12 +5430,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5451,12 +5451,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5472,12 +5472,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -5493,12 +5493,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -5594,12 +5594,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -5615,17 +5615,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-tabswitch-profiling-fis-e10s**
+      * - **talos-tabswitch-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ✅
         - ✅
         - ❌
@@ -5641,7 +5641,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-profiling-fis-e10s**
+      * - **talos-tabswitch-profiling**
         - ❌
         - ❌
         - ❌
@@ -5657,12 +5657,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -5678,12 +5678,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -5699,12 +5699,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ❌
         - ❌
         - ❌
@@ -5720,12 +5720,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tabswitch-fis-e10s**
+      * - **talos-tabswitch**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-tabswitch-swr-fis-e10s**
+      * - **talos-tabswitch-swr**
         - ✅
         - ✅
         - ❌
@@ -5821,12 +5821,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -5842,17 +5842,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -5868,17 +5868,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -5894,12 +5894,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -5915,12 +5915,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -5936,12 +5936,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -5957,12 +5957,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -5987,7 +5987,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-flex-fis-e10s**
+      * - **talos-flex**
         - ❌
         - ❌
         - ❌
@@ -6003,7 +6003,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-flex-fis-e10s**
+      * - **talos-flex**
         - ✅
         - ❌
         - ❌
@@ -6059,12 +6059,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-xperf-fis-e10s**
+      * - **talos-xperf**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-xperf-swr-fis-e10s**
+      * - **talos-xperf-swr**
         - ❌
         - ❌
         - ❌
@@ -6080,12 +6080,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-xperf-fis-e10s**
+      * - **talos-xperf**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-xperf-swr-fis-e10s**
+      * - **talos-xperf-swr**
         - ✅
         - ✅
         - ❌
@@ -6213,12 +6213,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ❌
         - ❌
         - ❌
@@ -6234,17 +6234,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-tp5o-profiling-fis-e10s**
+      * - **talos-tp5o-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ✅
         - ✅
         - ❌
@@ -6260,17 +6260,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-tp5o-profiling-fis-e10s**
+      * - **talos-tp5o-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ✅
         - ✅
         - ❌
@@ -6286,12 +6286,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ❌
         - ❌
         - ❌
@@ -6307,12 +6307,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ❌
         - ❌
         - ❌
@@ -6328,12 +6328,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ❌
         - ❌
         - ❌
@@ -6349,12 +6349,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-tp5o-fis-e10s**
+      * - **talos-tp5o**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-tp5o-swr-fis-e10s**
+      * - **talos-tp5o-swr**
         - ✅
         - ✅
         - ❌
@@ -6465,12 +6465,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ❌
         - ❌
         - ❌
@@ -6486,17 +6486,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g1-profiling-fis-e10s**
+      * - **talos-g1-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ✅
         - ✅
         - ❌
@@ -6512,17 +6512,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g1-profiling-fis-e10s**
+      * - **talos-g1-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ✅
         - ✅
         - ❌
@@ -6538,12 +6538,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ❌
         - ❌
         - ❌
@@ -6559,12 +6559,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ❌
         - ❌
         - ❌
@@ -6580,12 +6580,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ❌
         - ❌
         - ❌
@@ -6601,12 +6601,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g1-fis-e10s**
+      * - **talos-g1**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g1-swr-fis-e10s**
+      * - **talos-g1-swr**
         - ✅
         - ✅
         - ❌
@@ -6631,12 +6631,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -6652,17 +6652,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-profiling-fis-e10s**
+      * - **talos-g5-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -6678,17 +6678,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-profiling-fis-e10s**
+      * - **talos-g5-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -6704,12 +6704,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -6725,12 +6725,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -6746,12 +6746,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -6767,12 +6767,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -6831,12 +6831,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -6852,17 +6852,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-profiling-fis-e10s**
+      * - **talos-chrome-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -6878,17 +6878,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-profiling-fis-e10s**
+      * - **talos-chrome-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -6904,12 +6904,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -6925,12 +6925,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -6946,12 +6946,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ❌
         - ❌
         - ❌
@@ -6967,12 +6967,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-chrome-fis-e10s**
+      * - **talos-chrome**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-chrome-swr-fis-e10s**
+      * - **talos-chrome-swr**
         - ✅
         - ✅
         - ❌
@@ -7027,12 +7027,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -7048,17 +7048,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -7074,17 +7074,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -7100,12 +7100,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -7121,12 +7121,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -7142,12 +7142,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -7163,12 +7163,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -7193,7 +7193,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-flex-fis-e10s**
+      * - **talos-flex**
         - ❌
         - ❌
         - ❌
@@ -7209,7 +7209,7 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-flex-fis-e10s**
+      * - **talos-flex**
         - ✅
         - ❌
         - ❌
@@ -7241,12 +7241,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -7262,17 +7262,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-profiling-fis-e10s**
+      * - **talos-g5-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -7288,17 +7288,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-profiling-fis-e10s**
+      * - **talos-g5-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -7314,12 +7314,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -7335,12 +7335,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -7356,12 +7356,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ❌
         - ❌
         - ❌
@@ -7377,12 +7377,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-g5-fis-e10s**
+      * - **talos-g5**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-g5-swr-fis-e10s**
+      * - **talos-g5-swr**
         - ✅
         - ✅
         - ❌
@@ -7443,12 +7443,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7464,17 +7464,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7490,17 +7490,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7516,12 +7516,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7537,12 +7537,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7558,12 +7558,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7579,12 +7579,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7632,12 +7632,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7653,17 +7653,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7679,17 +7679,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7705,12 +7705,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7726,12 +7726,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7747,12 +7747,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7768,12 +7768,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7846,12 +7846,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7867,17 +7867,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7893,17 +7893,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -7919,12 +7919,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7940,12 +7940,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7961,12 +7961,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -7982,12 +7982,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8054,12 +8054,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8075,17 +8075,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8101,17 +8101,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-profiling-fis-e10s**
+      * - **talos-svgr-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8127,12 +8127,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8148,12 +8148,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8169,12 +8169,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ❌
         - ❌
         - ❌
@@ -8190,12 +8190,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-svgr-fis-e10s**
+      * - **talos-svgr**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-svgr-swr-fis-e10s**
+      * - **talos-svgr-swr**
         - ✅
         - ✅
         - ❌
@@ -8244,12 +8244,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -8265,17 +8265,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -8291,17 +8291,17 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-profiling-fis-e10s**
+      * - **talos-other-profiling**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌
@@ -8317,12 +8317,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -8338,12 +8338,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -8359,12 +8359,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ❌
         - ❌
         - ❌
@@ -8380,12 +8380,12 @@ Talos test lists
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **talos-other-fis-e10s**
+      * - **talos-other**
         - ✅
         - ✅
         - ❌
         - ✅
-      * - **talos-other-swr-fis-e10s**
+      * - **talos-other-swr**
         - ✅
         - ✅
         - ❌

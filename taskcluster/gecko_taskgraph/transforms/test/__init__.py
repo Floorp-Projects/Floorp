@@ -427,7 +427,9 @@ def make_job_description(config, tasks):
             label += suffix
             try_name += suffix
 
-        if "1proc" not in attributes.get("unittest_variant", ""):
+        if "1proc" not in attributes.get("unittest_variant", "") and task[
+            "suite"
+        ] not in ["talos", "raptor", "awsy"]:
             label += "-e10s"
 
         if task["chunks"] > 1:

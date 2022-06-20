@@ -32,8 +32,6 @@ awsy:
 
 awsy-tp6:
     description: Are we slim yet - tp6 pageset
-    variants: [fission]
-    run-without-variant: false
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
         by-test-platform:
@@ -55,8 +53,6 @@ awsy-dmd:
 
 awsy-base:
     description: Are we slim yet - about:blank base case
-    variants: [fission]
-    run-without-variant: false
     treeherder-symbol: SY(ab)
     run-on-projects:
         by-test-platform:
