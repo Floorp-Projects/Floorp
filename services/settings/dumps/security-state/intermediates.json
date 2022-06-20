@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1655707894171,
+      "derHash": "uL4mSapRjpQ78P0eNKJARD5G556ntWLgn8yDCsfS8/w=",
+      "subject": "CN=CFCA DV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgRFYgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2be5224f05030c2619f20c79e5d3d0a7ccec19c852503bc9f670433a504fd4ba",
+        "size": 1906,
+        "filename": "NDdbYkZJ3sCpHzwdPTY7sHel3usnZ9uO-7xS1XQnIZA=.pem",
+        "location": "security-state-staging/intermediates/1232f2c6-0b0b-4420-8bea-7f81a03108de.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NDdbYkZJ3sCpHzwdPTY7sHel3usnZ9uO+7xS1XQnIZA=",
+      "crlite_enrolled": false,
+      "id": "25d39d77-0444-499e-b07d-aee39a597a47",
+      "last_modified": 1655708223204
+    },
+    {
+      "schema": 1655388215620,
+      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
+      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
+        "size": 2406,
+        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
+        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
+      "crlite_enrolled": true,
+      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
+      "last_modified": 1655600223161
+    },
+    {
+      "schema": 1655600006973,
+      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
+      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
+        "size": 1963,
+        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
+        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
+      "crlite_enrolled": true,
+      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
+      "last_modified": 1655600223149
+    },
+    {
       "schema": 1655189823484,
       "derHash": "cDV7nlbT+zxsAJw4xxgUVMRikI37zm1U1g3+HlBuFP0=",
       "subject": "CN=TrustAsia ECC OV TLS Pro CA G2,O=TrustAsia Technologies\\, Inc.,C=CN",
@@ -71,42 +125,6 @@
       "crlite_enrolled": false,
       "id": "0f04579c-51bb-474a-b50c-f4fb19248d2b",
       "last_modified": 1655189822953
-    },
-    {
-      "schema": 1655103423568,
-      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
-      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
-        "size": 2406,
-        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
-        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
-      "crlite_enrolled": false,
-      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
-      "last_modified": 1655146623017
-    },
-    {
-      "schema": 1654847823526,
-      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
-      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
-        "size": 1963,
-        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
-        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
-      "crlite_enrolled": false,
-      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
-      "last_modified": 1655103423113
     },
     {
       "schema": 1654847312403,
@@ -25129,5 +25147,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1655301423076
+  "timestamp": 1655708223204
 }
