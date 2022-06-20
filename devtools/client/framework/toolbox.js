@@ -3393,7 +3393,12 @@ Toolbox.prototype = {
       this.frameMap.clear();
       this.selectedFrameId = null;
     } else if (data.selected) {
-      this.selectedFrameId = data.selected;
+      // If we select the top level target, default back to no particular selected document.
+      if (data.selected == this.target.actorID) {
+        this.selectedFrameId = null;
+      } else {
+        this.selectedFrameId = data.selected;
+      }
     } else if (data.frameData && this.frameMap.has(data.frameData.id)) {
       const existingFrameData = this.frameMap.get(data.frameData.id);
       if (
