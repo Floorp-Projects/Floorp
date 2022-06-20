@@ -9,6 +9,7 @@ import sys
 import os
 import glob
 import re
+import subprocess
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -16,7 +17,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 # import the guts
 import mozharness
 from mozharness.base.vcs.vcsbase import VCSScript
-from mozharness.base.log import ERROR, DEBUG
+from mozharness.base.log import ERROR, DEBUG, FATAL
 from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 
@@ -224,9 +225,11 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             retval.append("CC=clang-cl")
             retval.append("CXX=clang-cl")
             if self.config["arch"] == "x86":
-                retval.append("CFLAGS=-m32")
+                retval.append("CFLAGS=-m32 -D_HAS_EXCEPTIONS=0")
             elif self.config["arch"] == "aarch64":
-                retval.append("CFLAGS=--target=aarch64-windows-msvc")
+                retval.append(
+                    "CFLAGS=--target=aarch64-windows-msvc -D_HAS_EXCEPTIONS=0"
+                )
                 retval.append("CXX_LINK_O=-nologo --target=aarch64-windows-msvc -Fe$@")
         else:
             retval.append("CC=clang")
@@ -258,6 +261,15 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             return self.get_output_from_command(cmd, **kwargs)
         else:
             return self.run_command(cmd, **kwargs)
+
+    def _git_checkout(self, repo, repo_dir, rev):
+        try:
+            subprocess.run(["git", "clone", "-q", "--no-checkout", repo, repo_dir])
+            subprocess.run(["git", "checkout", "-q", "-f", f"{rev}^0"], cwd=repo_dir)
+        except Exception:
+            self.rmtree(repo_dir)
+            raise
+        return True
 
     def checkout_sources(self):
         repo = self.config["repo"]
@@ -310,17 +322,12 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                 )
             return 0
 
-        repos = [
-            {"vcs": "gittool", "repo": repo, "dest": repo_dir, "revision": rev},
-        ]
-
-        # self.vcs_checkout already retries, so no need to wrap it in
-        # self.retry. We set the error_level to ERROR to prevent it going fatal
-        # so we can do our own handling here.
-        retval = self.vcs_checkout_repos(repos, error_level=ERROR)
-        if not retval:
-            self.rmtree(repo_dir)
-            self.fatal("Automation Error: couldn't clone repo", exit_code=4)
+        self.retry(
+            self._git_checkout,
+            error_level=FATAL,
+            error_message="Automation Error: couldn't clone repo",
+            args=(repo, repo_dir, rev),
+        )
 
         # Checkout gmp-api
         # TODO: Nothing here updates it yet, or enforces versions!
@@ -399,7 +406,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         kwargs = dict(cwd=repo_dir, env=env)
         dump_syms = os.path.join(dirs["abs_work_dir"], c["dump_syms_binary"])
         self.chmod(dump_syms, 0o755)
-        python = self.query_exe("python2.7")
+        python = self.query_exe("python3")
         cmd = [
             python,
             os.path.join(external_tools_path, "packagesymbols.py"),

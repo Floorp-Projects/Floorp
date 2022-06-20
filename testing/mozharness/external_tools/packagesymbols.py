@@ -20,7 +20,9 @@ class ProcError(Exception):
 
 
 def check_output(command):
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+    )
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
         raise ProcError(proc.returncode, stderr)
