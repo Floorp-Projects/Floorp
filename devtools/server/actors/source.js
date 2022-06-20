@@ -109,9 +109,12 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (this.__isInlineSource === undefined) {
       // If the source has a usable displayURL, the source is treated as not
       // inlined because it has its own URL.
+      // Also consider sources loaded from <iframe srcdoc> as independant sources,
+      // because we can't easily fetch the full html content of the srcdoc attribute.
       this.__isInlineSource =
         source.introductionType === "inlineScript" &&
-        !resolveSourceURL(source.displayURL, this.threadActor._parent.window);
+        !resolveSourceURL(source.displayURL, this.threadActor._parent.window) &&
+        !this.url.startsWith("about:srcdoc");
     }
     return this.__isInlineSource;
   },
@@ -223,6 +226,16 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // It will be "no source" if the Debugger API wasn't able to load
     // the source because sources were discarded
     // (javascript.options.discardSystemSource == true).
+    //
+    // For inline source, we do something special and ignore individual source content.
+    // Instead, each inline source will return the full HTML page content where
+    // the inline source is (i.e. `<script> js source </script>`).
+    //
+    // When using srcdoc attribute on iframes:
+    //   <iframe srcdoc="<script> js source </script>"></iframe>
+    // The whole iframe source is going to be considered as an inline source because displayURL is null
+    // and introductionType is inlineScript. But Debugger.Source.text is the only way
+    // to retrieve the source content.
     if (this._source.text !== "[no source]" && !this._isInlineSource) {
       return {
         content: this.actualText(),
