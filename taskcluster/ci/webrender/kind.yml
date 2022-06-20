@@ -240,6 +240,8 @@ jobs:
 
     wrench-android-debug:
         description: Debug build of wrench for Android
+        attributes:
+            build_platform: android
         worker-type: b-linux
         worker:
             max-run-time: 5400
@@ -283,6 +285,8 @@ jobs:
 
     wrench-android-release:
         description: Release build of wrench for Android
+        attributes:
+            build_platform: android
         worker-type: b-linux
         worker:
             max-run-time: 5400
@@ -326,6 +330,8 @@ jobs:
 
     android-emulator-debug:
         description: Run debug wrench reftests on Android emulator
+        attributes:
+            build_platform: android
         worker-type: t-linux-metal  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
@@ -371,6 +377,8 @@ jobs:
 
     android-emulator-release:
         description: Run release wrench reftests on Android emulator
+        attributes:
+            build_platform: android
         worker-type: t-linux-metal  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
@@ -416,6 +424,8 @@ jobs:
 
     android-hw-p2-debug:
         description: Run debug wrench reftests on Android Pixel2
+        attributes:
+            build_platform: android
         worker-type: t-bitbar-gw-unit-p2
         worker:
             max-run-time: 5400
@@ -460,6 +470,8 @@ jobs:
 
     android-hw-p2-opt:
         description: Run opt wrench reftests on Android Pixel2
+        attributes:
+            build_platform: android
         worker-type: t-bitbar-gw-unit-p2
         worker:
             max-run-time: 5400
@@ -504,6 +516,8 @@ jobs:
 
     android-hw-a51-debug:
         description: Run debug wrench reftests on Android Samsung Galaxy A51
+        attributes:
+            build_platform: android
         worker-type: t-bitbar-gw-perf-a51
         worker:
             max-run-time: 5400
@@ -548,6 +562,8 @@ jobs:
 
     android-hw-a51-opt:
         description: Run opt wrench reftests on Android Samsung Galaxy A51
+        attributes:
+            build_platform: android
         worker-type: t-bitbar-gw-perf-a51
         worker:
             max-run-time: 5400
