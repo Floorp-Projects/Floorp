@@ -693,11 +693,14 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Awaken the timer thread.
-  if (mWaiting) {
-    mNotified = true;
-    mMonitor.Notify();
-  }
+  // Note: The timer thread is *not* awoken.
+  // The removed-timer entry is just left null, and will be reused (by a new or
+  // re-set timer) or discarded (when the timer thread logic handles non-null
+  // timers around it).
+  // If this was the front timer, and in the unlikely case that its entry is not
+  // soon reused by a re-set timer, the timer thread will wake up at the
+  // previously-scheduled time, but will quickly notice that there is no actual
+  // pending timer, and will restart its wait until the following real timeout.
 
   if (profiler_thread_is_being_profiled_for_markers(mProfilerThreadId)) {
     nsAutoCString name;
