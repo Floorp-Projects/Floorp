@@ -6497,11 +6497,21 @@ nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = MaybeSplitElementsAtEveryBRElement(aOutArrayOfContents, aEditSubAction);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::MaybeSplitElementsAtEveryBRElement() failed");
-  return rv;
+  const Result<EditorDOMPoint, nsresult> splitResult =
+      MaybeSplitElementsAtEveryBRElement(aOutArrayOfContents, aEditSubAction);
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
+    NS_WARNING("HTMLEditor::MaybeSplitElementsAtEveryBRElement() failed");
+    return splitResult.inspectErr();
+  }
+  const EditorDOMPoint& pointToPutCaret = splitResult.inspect();
+  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
+    }
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
@@ -6733,7 +6743,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
   return NS_OK;
 }
 
-nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
+Result<EditorDOMPoint, nsresult> HTMLEditor::MaybeSplitElementsAtEveryBRElement(
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
     EditSubAction aEditSubAction) {
   // Post-process the list to break up inline containers that contain br's, but
@@ -6745,7 +6755,8 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
     case EditSubAction::eSetOrClearAlignment:
     case EditSubAction::eSetPositionToAbsolute:
     case EditSubAction::eIndent:
-    case EditSubAction::eOutdent:
+    case EditSubAction::eOutdent: {
+      EditorDOMPoint pointToPutCaret;
       for (int32_t i = aArrayOfContents.Length() - 1; i >= 0; i--) {
         OwningNonNull<nsIContent>& content = aArrayOfContents[i];
         if (HTMLEditUtils::IsInlineElement(content) &&
@@ -6753,21 +6764,25 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
           AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfInlineContents;
           // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
           // alive.
-          nsresult rv = SplitElementsAtEveryBRElement(MOZ_KnownLive(content),
-                                                      arrayOfInlineContents);
-          if (NS_FAILED(rv)) {
+          Result<EditorDOMPoint, nsresult> splitResult =
+              SplitElementsAtEveryBRElement(MOZ_KnownLive(content),
+                                            arrayOfInlineContents);
+          if (splitResult.isErr()) {
             NS_WARNING("HTMLEditor::SplitElementsAtEveryBRElement() failed");
-            return rv;
+            return splitResult;
           }
-
+          if (splitResult.inspect().IsSet()) {
+            pointToPutCaret = splitResult.unwrap();
+          }
           // Put these nodes in aArrayOfContents, replacing the current node
           aArrayOfContents.RemoveElementAt(i);
           aArrayOfContents.InsertElementsAt(i, arrayOfInlineContents);
         }
       }
-      return NS_OK;
+      return pointToPutCaret;
+    }
     default:
-      return NS_OK;
+      return EditorDOMPoint();
   }
 }
 
@@ -6887,7 +6902,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   return NS_OK;
 }
 
-nsresult HTMLEditor::SplitElementsAtEveryBRElement(
+Result<EditorDOMPoint, nsresult> HTMLEditor::SplitElementsAtEveryBRElement(
     nsIContent& aMostAncestorToBeSplit,
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -6900,29 +6915,25 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
   // If there aren't any breaks, just put inNode itself in the array
   if (arrayOfBRElements.IsEmpty()) {
     aOutArrayOfContents.AppendElement(aMostAncestorToBeSplit);
-    return NS_OK;
+    return EditorDOMPoint();
   }
 
   // Else we need to bust up aMostAncestorToBeSplit along all the breaks
   nsCOMPtr<nsIContent> nextContent = &aMostAncestorToBeSplit;
+  EditorDOMPoint pointToPutCaret;
   for (OwningNonNull<HTMLBRElement>& brElement : arrayOfBRElements) {
     EditorDOMPoint atBRNode(brElement);
     if (NS_WARN_IF(!atBRNode.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
-    const SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
+    SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
         *nextContent, atBRNode, SplitAtEdges::eAllowToCreateEmptyContainer);
     if (splitNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return splitNodeResult.unwrapErr();
+      return Err(splitNodeResult.unwrapErr());
     }
-    nsresult rv = splitNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-      return rv;
-    }
+    splitNodeResult.MoveCaretPointTo(pointToPutCaret,
+                                     {SuggestCaret::OnlyIfHasSuggestion});
     // Put previous node at the split point.
     if (nsIContent* previousContent = splitNodeResult.GetPreviousContent()) {
       // Might not be a left node.  A break might have been at the very
@@ -6930,30 +6941,18 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
       // SplitNodeDeepWithTransaction() would not actually split anything.
       aOutArrayOfContents.AppendElement(*previousContent);
     }
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitNodeResult.IgnoreCaretPointSuggestion();
 
     // Move break outside of container and also put in node list
     // MOZ_KnownLive because 'arrayOfBRElements' is guaranteed to keep it alive.
-    const MoveNodeResult moveBRElementResult = MoveNodeWithTransaction(
+    MoveNodeResult moveBRElementResult = MoveNodeWithTransaction(
         MOZ_KnownLive(brElement),
         splitNodeResult.AtNextContent<EditorDOMPoint>());
     if (moveBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return moveBRElementResult.unwrapErr();
+      return Err(moveBRElementResult.unwrapErr());
     }
-    rv = moveBRElementResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+    moveBRElementResult.MoveCaretPointTo(pointToPutCaret,
+                                         {SuggestCaret::OnlyIfHasSuggestion});
     aOutArrayOfContents.AppendElement(brElement);
 
     nextContent = splitNodeResult.GetNextContent();
@@ -6962,7 +6961,7 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
   // Now tack on remaining next node.
   aOutArrayOfContents.AppendElement(*nextContent);
 
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 // static
