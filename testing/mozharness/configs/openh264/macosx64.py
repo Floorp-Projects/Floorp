@@ -15,7 +15,7 @@ external_tools_path = os.path.join(
 config = {
     "exes": {
         "gittool.py": [os.path.join(external_tools_path, "gittool.py")],
-        "python2.7": "python2.7",
+        "python3": "python3",
     },
     "dump_syms_binary": "{}/dump_syms/dump_syms".format(os.environ["MOZ_FETCHES_DIR"]),
     "arch": "x64",
