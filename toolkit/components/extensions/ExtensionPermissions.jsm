@@ -44,7 +44,7 @@ XPCOMUtils.defineLazyGetter(
   () => lazy.ExtensionParent.apiManager
 );
 
-var EXPORTED_SYMBOLS = ["ExtensionPermissions"];
+var EXPORTED_SYMBOLS = ["ExtensionPermissions", "OriginControls"];
 
 // This is the old preference file pre-migration to rkv
 const FILE_NAME = "extension-preferences.json";
@@ -425,5 +425,62 @@ var ExtensionPermissions = {
 
   removeListener(listener) {
     lazy.Management.off("change-permissions", listener);
+  },
+};
+
+var OriginControls = {
+  /**
+   * Get origin controls state for a given extension on a given host.
+   * @param {WebExtensionPolicy} policy
+   * @param {nsIURI} uri
+   * @returns {object} Extension origin controls for this host include:
+   *  @param {boolean} noAccess     no options, can never access host.
+   *  @param {boolean} whenClicked  option to access host when clicked.
+   *  @param {boolean} alwaysOn     option to always access this host.
+   *  @param {boolean} allDomains   option to access to all domains.
+   *  @param {boolean} hasAccess    extension currently has access to host.
+   */
+  getState(policy, uri) {
+    let allDomains = new MatchPattern("*://*/*");
+    let activeTab = policy.permissions.includes("activeTab");
+    let couldRequest = policy.extension.optionalOrigins.matches(uri);
+    let hasAccess = policy.canAccessURI(uri);
+
+    if (
+      !allDomains.matches(uri) ||
+      WebExtensionPolicy.isRestrictedURI(uri) ||
+      (!couldRequest && !hasAccess && !activeTab)
+    ) {
+      return { noAccess: true };
+    }
+    if (!couldRequest && !hasAccess && activeTab) {
+      return { whenClicked: true };
+    }
+    if (policy.allowedOrigins.subsumes(allDomains)) {
+      return { allDomains: true, hasAccess };
+    }
+    return {
+      whenClicked: true,
+      alwaysOn: true,
+      hasAccess,
+    };
+  },
+
+  // Grant extension host permission to always run on this host.
+  setAlwaysOn(policy, uri) {
+    if (!policy.active) {
+      return;
+    }
+    let perms = { permissions: [], origins: ["*://" + uri.host] };
+    ExtensionPermissions.add(policy.id, perms, policy.extension);
+  },
+
+  // Revoke permission, extension should run only when clicked on this host.
+  setWhenClicked(policy, uri) {
+    if (!policy.active) {
+      return;
+    }
+    let perms = { permissions: [], origins: ["*://" + uri.host] };
+    ExtensionPermissions.remove(policy.id, perms, policy.extension);
   },
 };
