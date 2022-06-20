@@ -297,8 +297,11 @@
     <string name="preference_security_biometric">გამოიყენეთ თითის ანაბეჭდი, პროგრამის გასახსნელად</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">თითის ანაბეჭდით შეგიძლიათ შეხვიდეთ %1$s-ში თუ URL-ბმული უკვე გახსნილია პროგრამაში. ფარული რეჟიმი კვლავ ჩართული იქნება.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">თითის ანაბეჭდით შეგიძლიათ შეხვიდეთ %1$s-ში თუ URL-ბმული უკვე გახსნილია პროგრამაში. ფარული რეჟიმი კვლავ ჩართული იქნება.</string>
+
+    <string name="preference_security_biometric_summary2">გახსენით თითის ანაბეჭდით, თუ დამატებული გაქვთ მალსახმობებში ან საიტისთვის უკვე გამოიყენეთ %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -307,7 +310,7 @@
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
      to other displays. -->
-    <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას და ეკრანის სურათების გადაღების შეზღუდვა.</string>
+    <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა პროგრამების გადართვისას და ეკრანის სურათების გადაღების შეზღუდვა.</string>
 
     <string name="preference_category_security">უსაფრთხოება</string>
 

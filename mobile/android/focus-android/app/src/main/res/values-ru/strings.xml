@@ -302,6 +302,8 @@
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
     <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Ваш отпечаток сможет разблокировать %1$s, если ссылка уже открыта в приложении. Режим «Невидимка» будет включён.</string>
 
+    <string name="preference_security_biometric_summary2">Разблокировать с помощью отпечатка пальца, если вы добавили ярлыки или когда веб-сайт уже открыт в %s.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Невидимка</string>

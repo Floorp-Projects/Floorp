@@ -297,8 +297,11 @@
     <string name="preference_security_biometric">Uporabljaj prstni odtis za odklepanje aplikacije</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Če je v %1$su odprt spletni naslov, lahko aplikacijo odklenete s prstnim odtisom. Skrivni način bo vključen.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Če je v %1$su odprt spletni naslov, lahko aplikacijo odklenete s prstnim odtisom. Skrivni način bo vključen.</string>
+
+    <string name="preference_security_biometric_summary2">Odklenite s prstnim odtisom, če ste dodali bližnjice ali če je spletno mesto že odprto v %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

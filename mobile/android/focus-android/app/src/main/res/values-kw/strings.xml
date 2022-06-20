@@ -13,7 +13,7 @@
     <string name="action_save">Gwitha</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
-    <string name="urlbar_hint">Hwilowgh po entrowgh trigva</string>
+    <string name="urlbar_hint">Hwilewgh po entra trigva</string>
 
     <string name="teaser">Peuri privedh awtomatek.\nPeurowgh. Dileowgh. Daswrewgh.</string>
 
@@ -122,11 +122,24 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Hwilas yn privedh</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>Gans %1$s yth esowgh hwi ow kul maystri.</p>
+<p>Gwrewgh hy usya avel peurell brivedh:
+  <ul>
+    <li>Hwilas ha peuri a-berth y\'n dowlen</li>
+    <li>Lettya helerghellow (po nowedhi settyansow dhe amyttya helerghellow)</li>
+    <li>Dilea pastiow, keffrys hag istori hwilas ha peuri</li>
+  </ul>
+</p>
+<p>Askorrys gans Mozilla yw %1$s. Agan amkan yw maga kesrosweyth yagh hag ygor.<br/>
+<a href="%2$s">Dyski moy</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privetter ha sekerder</string>
 
     <!-- Preference summary for settings related to privacy and security -->
-    <string name="preference_privacy_and_security_summary">Helerghi, cookies, dewisyow data</string>
+    <string name="preference_privacy_and_security_summary">Helerghi, pastiow, dewisyow kedhlow</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
@@ -137,6 +150,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">A-dro dhe %1$s, gweres</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Difresyans Gwellhes Rag Helerghi</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Dalgh gwias</string>
 
@@ -146,8 +162,11 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Ollgemmyn</string>
 
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Peurell, yeth skwir</string>
+
     <!-- Preference category for settings about sending usage data -->
-    <string name="preference_category_data_collection_use">Kuntel data ha devnydh</string>
+    <string name="preference_category_data_collection_use">Kuntel Kedhlow &amp; Devnydh</string>
 
     <string name="preference_category_search">Hwilas</string>
 
@@ -175,8 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Rag an gwiasvaow an moyha visityes</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Gallosegi dhe wul dhe %s kollenwel yn awtomatek moy es 450 URL gerys da y\'n barr trigva.</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Rag gwiasvaow a geworrowgh</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Gweythresa dhe wul dhe %s eskollenwel agas URL moyha kerys.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Dyghtya gwiasvaow</string>
@@ -186,6 +213,12 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Keworra URL personelhes</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Agas rol eskollenwel:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Keworra URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Keworra URL personelhes</string>
@@ -251,15 +284,24 @@
     <string name="preference_privacy_block_content_summary2">Gallosegi a allsa kawsya kudynnow war neb folennow</string>
     <string name="preference_privacy_category_cookies">Lettya cookies</string>
 
-    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Lettya cookies helerghi 3a-parti yn unnik</string>
-    <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies 3a parti yn unnik</string>
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Na, meur ras</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Lettya pastiow helerghi 3a rann yn unnik</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Pastiow 3a rann yn unnik</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Lettya pastiow treuswiasva</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ya, mar pleg</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usya bysprynt rag dialhwedha an app</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Agas bysprynt a yll dialhwedha %1$s mars eus URL ygerys y\'n app. An modh kel a vydh bywhes.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Agas bysprynt a yll dialhwedha %1$s mars eus URL ygerys y\'n app. An modh kel a vydh bywhes.</string>
+
+    <string name="preference_security_biometric_summary2">Dialhwedha gans bysprynt mar keworrsys Skochfordhow po pan vo gwiasva ygor seulabrys yn %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -285,7 +327,7 @@
      "default apps" settings screen or if not supported by this Android version to a SUMO page describing
      how to set Focus as a default browser.
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_default_browser2">Gul dhe %1$s an beurell dhefowt</string>
+    <string name="preference_default_browser2">Gul dhe %1$s bos an beurell skwir</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry2">Danvon data devnydh</string>
@@ -294,7 +336,7 @@
     <string name="preference_mozilla_telemetry_summary">Dyski moy</string>
 
     <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="preference_mozilla_telemetry_summary2">Mozilla a striv dhe guntel yn unnik an pyth yw res dhyn dhe brovia ha gwellhe %1$s rag pubonan.</string>
+    <string name="preference_mozilla_telemetry_summary2">Mozilla a striv dhe guntel an pyth yw res dhyn hepken dhe brovia ha gwellhe %1$s rag pubonan.</string>
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Argemmyn privetter</string>
@@ -305,6 +347,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Jynnow-hwilas ynstallyes</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Dewis jynn-hwilas</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Daskor an jynnow-hwilas defowt</string>
 
@@ -313,6 +358,11 @@
     <string name="preference_search_add2">+ Keworra jynn-hwilas aral</string>
     <string name="preference_search_remove_title">Dilea jynnow-hwilas</string>
     <string name="preference_search_remove">Dilea</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Keworra jynn-hwilas</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Dewis dha jynn gwell:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -330,7 +380,7 @@
 
     <string name="search_add_confirmation">Jynn-hwilas nowydh keworrys.</string>
 
-    <string name="search_add_error_empty_name">Keworrowgh hanow an jynn-hwilas</string>
+    <string name="search_add_error_empty_name">Keworr hanow an jynn-hwilas</string>
     <string name="search_add_error_duplicate_name">Yma jynn-hwilas ynstallyes owth usya an hanow na seulabrys.</string>
 
     <string name="search_add_error_empty_search">Entrowgh korden hwilas</string>
@@ -367,11 +417,11 @@
     <string name="accessibility_announcement_loading_finished">Gwiasva kergys</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">Moy dewisyow</string>
+    <string name="content_description_menu">Dewisyow moy</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
     on home screen-->
-    <string name="indicator_content_description_menu">Boton moy dewisyow</string>
+    <string name="indicator_content_description_menu">Boton dewisyow moy</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">Mos yn-rag</string>
@@ -444,7 +494,37 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Dynnargh dhe %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Peuri privedh dres an kemmyn peskweyth ma\'n mynni</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Le may tierbyn kudhvodh orth anweladow</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s yw peurell brivedh-kynsa gans difres rag helerghi ha pastiow gorgrev yssynsys.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Peuri kepar dell na hwarva</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Unn tapp a dhile dha istori peuri ha pastiow — ha lettya argemynnow rag agas holya a-derdro.</string>
+    <string name="onboarding_history_description2">Unn tapp a dhile dha istori peuri ha pastiow — ha lettya argemynnow rag agas holya a-derdro.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privetter a omdhesedh orth py studh pynag</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Mars eus edhom a janj dhe\'th peuri , es yw skeulya dha dhewisyow privetter yn-bann po yn-nans.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Dalleth peuri</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Kenerthowgh agas privetter</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Kemerowgh peuri privedh dhe\'n nivel nessa. Lettyowgh argemynnow ha dalgh aral a yll agas helerghi a-dreus dhe wiasvaow ha lenthe karga folennow.</string>
@@ -474,8 +554,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Keworra</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">YA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Hedhi</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NA</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Skochfordh a wra ygeri gans Difresyans Gwellhes Rag Helerghi disweythresys</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -507,7 +597,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[Dyllys yw %1$s dhis yn-dann dermys <a href="%2$s">Leshyans Poblek Mozilla</a> ha leshyansow fenten-ygor erel.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nyns yw grontys dhis gwiryow po leshyansow vyth dhe werthnosow an Fondyans Mozilla po py rann bynag, y\'ga mysk henwyn po logoyow Mozilla, Firefox, po %1$s. Y hyllir kavos kedhlow ynwedhek <a href="%2$s">omma</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Kavadow yw kod pennfenten ynwedhek rag %1$s yn-dann lies <a href="%2$s">leshyans</a> fenten-ygor ha heb kost aral.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s a us ynwedh rolyow lettya proviys gans Disconnect, Inc. avel oberennow diblans hag anserghen yn-dann an <a href="%2$s">Leshyans Poblek Ollgemmyn GNU v3</a>, kavadhow <a href="%3$s">omma</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Hanow usyer</string>
     <string name="gv_prompt_password_hint">Ger tremena</string>
     <string name="gv_prompt_clear">Klerhe</string>
@@ -548,14 +659,101 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Gweles an versyon jynn-amontya</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Gwiasva dhesken</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL kopies</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Toulys displegya</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Ygeri kevrennow yn appys</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avonsys</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Kummyasow gwiasva</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Esseni</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Dh\'y amyttya:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Ke dhe Dewisyow Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tapp war <b>Kummyasow</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Ke dhe Dewisyow</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Hig <b>%1$s</b> dhe BYW]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Korrgowsell</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Tyller</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Gwarnyans</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Dalgh maystrys gans DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Pysi a amyttya</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Lettys</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Amyttys</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Lettys gans Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Amyttya sonadow ha gwydhyow</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Lettya sonadow hepken</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Komendys</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Lettya sonadow ha gwydhyow</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studhyansow</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Possybyl yw y hwra lea ha gweythresa Firefox studhyansow a dermyn dhe dermyn.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Dyski moy</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">An gweythyn a wra dastalleth dhe weytha chanjyow</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Dilea</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Gweythresek</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Kowlwrys</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Dibuggya pell der USB/Wi-Fi</string>
@@ -571,6 +769,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Esedhek nowydh</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Ygeri Kevren yn Esedhek Nowydh</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Arwodhik bysprynt</string>
 
@@ -581,6 +783,13 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Agas bys a wayas re uskis. Assayowgh arta.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Diskwedhes profyansow hwilas?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Dhe gavos profyansow, res yw dhe %1$s danvon an pyth a jynnskrifowgh y\'n barr trigva dhe\'n jynn-hwilas.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nag eus</string>
@@ -600,6 +809,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Eus kudyn gans an wiasva?\nAssayowgh diallosegi difresans rag helerghi</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">A fyll dalgh a\'n wiasva po hi dhe omdhegi yn koynt?\n
+ Assay skwychya Difresyans Gwellhes rag Helerghi yn farow</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Hedhas unn tapp dhe\'n wiasvaow an moyha usys genowgh%1$s Rol > Keworra dhe\'n skrin dre]]></string>
@@ -617,8 +831,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Ygeri kevren yn tabb nowydh\nHirwaskowgh neb kevren folen</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">A vynn\'ta gweles gwersyon leun an wiasva?\n
+ Skwych Gwiasva an Dhesken yn fyw a\'n rol %1$s</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Diallosegi profyansow war an skrin dre</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">A vynn\'ta gwitha Difresyans Gwellhes rag Helerghi yn farow rag gwiasva a fydhydh?\n
+ Keworr hi dhe\'n Gasrol yn Dewisyow
+ </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Yn tevri, yma semlans nonwydh dhyn!\n Red moy yn kever hemma ha nowedhyansow erel dhe %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Gwruthyl skochfordhow dhe\'n gwiasvaow a welogh an moyha:\n
+ Dewis Keworra dhe Skochfordhow a\'n rol %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Tabb nowydh ygerys</string>
@@ -636,6 +870,12 @@
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Lettya gwiasvaow derivys avel tollus hag omsettya, gwiasvaow malware, ha gwiasvaow medhelweyth anwovynys.</string>
 
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Modh HTTPS-Hepken</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Yth assay yn awtomatek omjunya dhe wiasvaow dre HTTPS rag diogeledh ynkressys. Junyansow HTTPS a brovi junyans diogel hag argelys dhe wiasvaow a welydh.</string>
+    <string name="preference_https_only_summary3">Yth assay yn awtomatek omjunya dhe wiasvaow der an arskwir argelans HTTPS rag diogeledh ynkressys.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Nammow</string>
     <!-- Description for the exceptions preference screen-->
@@ -644,6 +884,12 @@
     <string name="preference_exceptions_menu_remove">Dilea</string>
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Dilea pub gwiasva</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Lettya Pastiow</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">A vynn\'ta lettya pastiow?</string>
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">An tabb a vommas</string>
@@ -662,4 +908,82 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Helerghellow lettys a-dhia %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Dalgh</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Argemynna</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sosyel</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Re Dielvennel</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Difresyans Gwellhes rag Helerghi</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Yma difresyans YN FAROW y\'n wiasva ma</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Yma difresyans YN FYW y\'n wiasva ma</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Junyans yw diogel</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Nyns yw junyans diogel</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Helerghellow ha Skrifedhow dhe Lettya</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Mos war-gamm</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Dilea</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Dashenwel</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Dashenwel</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Hanow skochfordh</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">&lt;b&gt;Ny vydh diles&lt;/b&gt; imajys gwithys ha kevrennys pan dhilei istori %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Thema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Golow</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tewl</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Settys gans Gwither Batri</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Sewya thema an devis</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Ny skoodh HTTPS an wiasva a wovynnsys</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Dre skwir yth assay %1$s junya dre HTTPS rag diogeledh ynkressys. Dhe janjya an dewis ma po dhe dhyski moy, ke dhe Dewisyow &gt; Privetter &amp; Diogeledh &gt; Diogeledh.</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Degea tab</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Dell hevel yth assaya an wiasva ma dha helerghi. Klyck an skoos rag dewisyow an wiasva ha stattys lettya helerghellow.</string>
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Degea lammlen</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Difresys os!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">An dewisyow skwir ma a brof difresyans krev. Byttele yth yw es dhe skwychya\'n dewisyow dh\'aga desedha dhe\'th edhommow komparek.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Gordhyllo</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Remov dha gedhlow personel, istori peuri ha moy a\'n esedhek ma dre dappya war an boton atal. Assay e!</string>
+
+</resources>
