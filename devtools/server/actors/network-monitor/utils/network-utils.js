@@ -78,6 +78,30 @@ exports.stringToCauseType = function(value) {
   );
 };
 
+function isChannelFromSystemPrincipal(channel) {
+  let principal = null;
+  let browsingContext = channel.loadInfo.browsingContext;
+  if (!browsingContext) {
+    const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+    if (topFrame) {
+      browsingContext = topFrame.browsingContext;
+    } else {
+      // Fallback to the triggering principal when browsingContext and topFrame is null
+      // e.g some chrome requests
+      principal = channel.loadInfo.triggeringPrincipal;
+    }
+  }
+
+  // When in the parent process, we can get the documentPrincipal from the
+  // WindowGlobal which is available on the BrowsingContext
+  if (!principal) {
+    principal = CanonicalBrowsingContext.isInstance(browsingContext)
+      ? browsingContext.currentWindowGlobal.documentPrincipal
+      : browsingContext.window.document.nodePrincipal;
+  }
+  return principal.isSystemPrincipal;
+}
+
 /**
  * Get the browsing context id for the channel.
  *
@@ -161,6 +185,7 @@ exports.createNetworkEvent = function(
   const event = {};
   event.method = channel.requestMethod;
   event.channelId = channel.channelId;
+  event.isFromSystemPrincipal = isChannelFromSystemPrincipal(channel);
   event.browsingContextID = this.getChannelBrowsingContextID(channel);
   event.innerWindowId = this.getChannelInnerWindowId(channel);
   event.url = channel.URI.spec;
