@@ -2126,6 +2126,6 @@ skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-
 skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) != 1773633.html 1773633.html
 skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,2) == 1773633.html 1773633-text-zoom.html
 # TODO(emilio): This doesn't quite work because textScaleFactor also applies to the reftest window itself, ugh.
-# test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) == 1773633.html 1773633-full-zoom.html
+# test-pref(ui.textScaleFactor,50) test-pref(browser.display.os-zoom-behavior,1) == 1773633.html 1773633-full-zoom.html
 # This works (but not on macOS for some reason).
-skip-if(Android||cocoaWidget) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
+skip-if(Android) test-pref(ui.textScaleFactor,50) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
