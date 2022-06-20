@@ -4,6 +4,10 @@
 "use strict";
 
 add_task(async function test_fileurl_nonscript_load() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.block_fileuri_script_with_wrong_mime", true]],
+  });
+
   let file = getChromeDir(getResolvedURI(gTestPath));
   file.append("file_loads_nonscript.html");
   let uriString = Services.io.newFileURI(file).spec;
