@@ -106,7 +106,7 @@ function runCurrentTest()
 
 function SetPrefs(aSet)
 {
-  var prefSvc = SpecialPowers.Services.prefs.nsIPrefBranch;
+  var prefSvc = SpecialPowers.Services.prefs;
   const kPrefName = "ui.cursor_snapping.always_enabled";
   if (aSet) {
     prefSvc.setBoolPref(kPrefName, true);
