@@ -42,7 +42,11 @@ add_task(async function() {
   is(cmdSelectAll.getAttribute("disabled"), "true", "cmdSelectAll is disabled");
   is(cmdCut.getAttribute("disabled"), "true", "cmdCut is disabled");
   is(cmdCopy.getAttribute("disabled"), "true", "cmdCopy is disabled");
-  is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
+
+  if (isWindows()) {
+    // emptyClipboard only works on Windows (666254), assert paste only for this OS.
+    is(cmdPaste.getAttribute("disabled"), "true", "cmdPaste is disabled");
+  }
 
   info("Closing context menu");
   let onContextMenuClose = toolbox.once("menu-close");

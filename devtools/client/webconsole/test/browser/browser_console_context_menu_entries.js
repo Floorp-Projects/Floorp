@@ -15,8 +15,6 @@ add_task(async function() {
   await pushPref("devtools.browserconsole.filter.net", true);
   // This is required for testing the text input in the browser console:
   await pushPref("devtools.chrome.enabled", true);
-  // Empty the clipboard to check that paste actions are disabled.
-  emptyClipboard();
 
   await addTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
@@ -93,7 +91,9 @@ add_task(async function() {
   is(actualEntries[0], "#editmenu-undo (text-action-undo) [disabled]");
   is(actualEntries[1], "#editmenu-cut (text-action-cut) [disabled]");
   is(actualEntries[2], "#editmenu-copy (text-action-copy) [disabled]");
-  is(actualEntries[3], "#editmenu-paste (text-action-paste) [disabled]");
+  // Paste may or may not be enabled depending on what ran before this.
+  // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
+  ok(actualEntries[3].startsWith("#editmenu-paste (text-action-paste)"));
   is(actualEntries[4], "#editmenu-delete (text-action-delete) [disabled]");
   is(
     actualEntries[5],
@@ -113,7 +113,9 @@ add_task(async function() {
   is(actualEntries[0], "#editmenu-undo (text-action-undo) [disabled]");
   is(actualEntries[1], "#editmenu-cut (text-action-cut) [disabled]");
   is(actualEntries[2], "#editmenu-copy (text-action-copy) [disabled]");
-  is(actualEntries[3], "#editmenu-paste (text-action-paste) [disabled]");
+  // Paste may or may not be enabled depending on what ran before this.
+  // If emptyClipboard is fixed (666254) we could assert if it's enabled/disabled.
+  ok(actualEntries[3].startsWith("#editmenu-paste (text-action-paste)"));
   is(actualEntries[4], "#editmenu-delete (text-action-delete) [disabled]");
   is(
     actualEntries[5],
