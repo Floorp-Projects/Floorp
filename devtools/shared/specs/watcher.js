@@ -46,6 +46,13 @@ const watcherSpecPrototype = {
       oneway: true,
     },
 
+    clearResources: {
+      request: {
+        resourceTypes: Arg(0, "array:string"),
+      },
+      oneway: true,
+    },
+
     getNetworkParentActor: {
       request: {},
       response: {

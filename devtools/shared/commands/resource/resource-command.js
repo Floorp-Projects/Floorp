@@ -78,6 +78,39 @@ class ResourceCommand {
   }
 
   /**
+   * Clear all the resources related to specifed resource types.
+   * Should also trigger clearing of the caches that exists on the related
+   * serverside resource watchers.
+   *
+   * @param {Array:string} resourceTypes
+   *                       A list of all the resource types whose
+   *                       resources shouled be cleared.
+   */
+  async clearResources(resourceTypes) {
+    if (!Array.isArray(resourceTypes)) {
+      throw new Error("clearResources expects a list of resources types");
+    }
+    // Clear the cached resources of the type.
+    for (const [key, resource] of this._cache) {
+      if (resourceTypes.includes(resource.resourceType)) {
+        // NOTE: To anyone paranoid like me, yes it is okay to delete from a Map while iterating it.
+        this._cache.delete(key);
+      }
+    }
+
+    const resourcesToClear = resourceTypes.filter(resourceType =>
+      this.hasResourceCommandSupport(resourceType)
+    );
+    if (
+      resourcesToClear.length &&
+      // @backward-compat { version 103 } The clearResources functionality was added in 103 and
+      // not supported in old servers.
+      this.targetCommand.hasTargetWatcherSupport("supportsClearResources")
+    ) {
+      this.watcherFront.clearResources(resourcesToClear);
+    }
+  }
+  /**
    * Return all specified resources cached in this watcher.
    *
    * @param {String} resourceType
