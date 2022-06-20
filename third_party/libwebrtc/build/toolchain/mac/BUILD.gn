@@ -15,7 +15,7 @@ if (is_ios) {
 import("//build/config/mac/mac_sdk.gni")
 import("//build/config/mac/symbols.gni")
 
-#assert(host_os == "mac")
+assert(host_os == "mac")
 
 import("//build/toolchain/cc_wrapper.gni")
 import("//build/toolchain/concurrent_links.gni")

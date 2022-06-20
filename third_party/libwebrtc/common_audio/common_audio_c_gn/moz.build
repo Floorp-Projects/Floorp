@@ -120,6 +120,7 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["_GNU_SOURCE"] = True
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
@@ -127,6 +128,11 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     OS_LIBS += [
         "rt"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -199,12 +205,26 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "ppc64":
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
+    OS_LIBS += [
+        "android_support",
+        "unwind"
     ]
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
@@ -237,13 +257,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
-
-    OS_LIBS += [
-        "android_support",
-        "unwind"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CFLAGS += [
@@ -266,39 +279,10 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["_GNU_SOURCE"] = True
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["_GNU_SOURCE"] = True
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CFLAGS += [
         "-msse2"
-    ]
-
-    DEFINES["_GNU_SOURCE"] = True
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["_GNU_SOURCE"] = True
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
 Library("common_audio_c_gn")

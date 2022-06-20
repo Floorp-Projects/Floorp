@@ -1,0 +1,4 @@
+ac_add_options --enable-bootstrap
+
+mk_add_options MOZ_OBJDIR=obj-x64_False_x64_linux_True
+

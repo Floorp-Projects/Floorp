@@ -1,0 +1,5 @@
+ac_add_options --target=aarch64
+ac_add_options --enable-bootstrap
+
+mk_add_options MOZ_OBJDIR=obj-x64_False_arm64_linux_True
+

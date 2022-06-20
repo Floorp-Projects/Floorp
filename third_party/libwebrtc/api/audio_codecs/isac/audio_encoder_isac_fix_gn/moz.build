@@ -14,7 +14,12 @@ CXXFLAGS += [
 ]
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["ANDROID"] = True
+DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+DEFINES["HAVE_SYS_UIO_H"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
+DEFINES["WEBRTC_ANDROID"] = True
+DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
 DEFINES["WEBRTC_ARCH_ARM"] = True
 DEFINES["WEBRTC_ARCH_ARM_V7"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
@@ -39,6 +44,12 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
+OS_LIBS += [
+    "android_support",
+    "log",
+    "unwind"
+]
+
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_fix.cc"
 ]
@@ -48,43 +59,11 @@ if not CONFIG["MOZ_DEBUG"]:
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
     DEFINES["NDEBUG"] = True
     DEFINES["NVALGRIND"] = True
+    DEFINES["_FORTIFY_SOURCE"] = "2"
 
 if CONFIG["MOZ_DEBUG"] == "1":
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
-
-if CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
-    DEFINES["HAVE_SYS_UIO_H"] = True
-    DEFINES["WEBRTC_ANDROID"] = True
-    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-
-    OS_LIBS += [
-        "android_support",
-        "log",
-        "unwind"
-    ]
-
-if CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["USE_AURA"] = "1"
-    DEFINES["USE_GLIB"] = "1"
-    DEFINES["USE_NSS_CERTS"] = "1"
-    DEFINES["USE_OZONE"] = "1"
-    DEFINES["USE_UDEV"] = True
-    DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["_LARGEFILE64_SOURCE"] = True
-    DEFINES["_LARGEFILE_SOURCE"] = True
-
-    OS_LIBS += [
-        "rt"
-    ]
-
-if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
-
-    DEFINES["USE_X11"] = "1"
 
 Library("audio_encoder_isac_fix_gn")

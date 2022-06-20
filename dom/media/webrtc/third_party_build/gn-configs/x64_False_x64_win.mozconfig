@@ -1,0 +1,2 @@
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-x64_False_x64_win
+
