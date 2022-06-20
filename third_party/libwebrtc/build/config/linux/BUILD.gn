@@ -52,7 +52,7 @@ config("libresolv") {
   libs = [ "resolv" ]
 }
 
-if (use_glib) {
+if (false && use_glib) {
   pkg_config("glib") {
     packages = [
       "glib-2.0",
