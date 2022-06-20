@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2015 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -341,15 +341,16 @@ def main(args):
     depfile_deps += secondary_native_libs
 
   if options.java_resources:
-    # Included via .build_config, so need to write it to depfile.
+    # Included via .build_config.json, so need to write it to depfile.
     depfile_deps.extend(options.java_resources)
 
   assets = _ExpandPaths(options.assets)
   uncompressed_assets = _ExpandPaths(options.uncompressed_assets)
 
-  # Included via .build_config, so need to write it to depfile.
+  # Included via .build_config.json, so need to write it to depfile.
   depfile_deps.extend(x[0] for x in assets)
   depfile_deps.extend(x[0] for x in uncompressed_assets)
+  depfile_deps.append(options.resource_apk)
 
   # Bundle modules have a structure similar to APKs, except that resources
   # are compiled in protobuf format (instead of binary xml), and that some
@@ -454,7 +455,7 @@ def main(args):
       # 3. Dex files
       logging.debug('Adding classes.dex')
       if options.dex_file:
-        with open(options.dex_file) as dex_file_obj:
+        with open(options.dex_file, 'rb') as dex_file_obj:
           if options.dex_file.endswith('.dex'):
             max_dex_number = 1
             # This is the case for incremental_install=true.
@@ -473,7 +474,7 @@ def main(args):
                     compress=not options.uncompress_dex)
 
       if options.jdk_libs_dex_file:
-        with open(options.jdk_libs_dex_file) as dex_file_obj:
+        with open(options.jdk_libs_dex_file, 'rb') as dex_file_obj:
           add_to_zip(
               apk_dex_dir + 'classes{}.dex'.format(max_dex_number + 1),
               dex_file_obj.read(),

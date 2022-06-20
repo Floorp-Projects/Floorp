@@ -57,36 +57,42 @@ def _GetTotalMemoryInBytes():
   return 0
 
 
-def _GetDefaultConcurrentLinks(per_link_gb, reserve_gb, secondary_per_link_gb):
+def _GetDefaultConcurrentLinks(per_link_gb, reserve_gb, thin_lto_type,
+                               secondary_per_link_gb):
   explanation = []
   explanation.append(
       'per_link_gb={} reserve_gb={} secondary_per_link_gb={}'.format(
           per_link_gb, reserve_gb, secondary_per_link_gb))
-  # Inherit the legacy environment variable for people that have set it in GYP.
-  num_links = int(os.getenv('GYP_LINK_CONCURRENCY', 0))
-  if num_links:
-    reason = 'GYP_LINK_CONCURRENCY'
-  else:
-    mem_total_gb = float(_GetTotalMemoryInBytes()) / 2**30
-    mem_total_gb = max(0, mem_total_gb - reserve_gb)
-    mem_cap = int(max(1, mem_total_gb / per_link_gb))
-    hard_cap = max(1, int(os.getenv('GYP_LINK_CONCURRENCY_MAX', 2**32)))
+  mem_total_gb = float(_GetTotalMemoryInBytes()) / 2**30
+  mem_total_gb = max(0, mem_total_gb - reserve_gb)
+  mem_cap = int(max(1, mem_total_gb / per_link_gb))
 
-    try:
-      cpu_cap = multiprocessing.cpu_count()
-    except:
+  try:
+    cpu_count = multiprocessing.cpu_count()
+  except:
+    cpu_count = 1
+
+  # A local LTO links saturate all cores, but only for some amount of the link.
+  # Goma LTO runs LTO codegen on goma, only run one of these tasks at once.
+  cpu_cap = cpu_count
+  if thin_lto_type is not None:
+    if thin_lto_type == 'goma':
       cpu_cap = 1
-
-    explanation.append('cpu_count={} mem_total_gb={:.1f}GiB'.format(
-        cpu_cap, mem_total_gb))
-
-    num_links = min(mem_cap, hard_cap, cpu_cap)
-    if num_links == cpu_cap:
-      reason = 'cpu_count'
-    elif num_links == hard_cap:
-      reason = 'GYP_LINK_CONCURRENCY_MAX'
     else:
-      reason = 'RAM'
+      assert thin_lto_type == 'local'
+      cpu_cap = min(cpu_count, 6)
+
+  explanation.append('cpu_count={} cpu_cap={} mem_total_gb={:.1f}GiB'.format(
+      cpu_count, cpu_cap, mem_total_gb))
+
+  num_links = min(mem_cap, cpu_cap)
+  if num_links == cpu_cap:
+    if cpu_cap == cpu_count:
+      reason = 'cpu_count'
+    else:
+      reason = 'cpu_cap (thinlto)'
+  else:
+    reason = 'RAM'
 
   explanation.append('concurrent_links={}  (reason: {})'.format(
       num_links, reason))
@@ -108,11 +114,12 @@ def main():
   parser.add_argument('--mem_per_link_gb', type=int, default=8)
   parser.add_argument('--reserve_mem_gb', type=int, default=0)
   parser.add_argument('--secondary_mem_per_link', type=int, default=0)
+  parser.add_argument('--thin-lto')
   options = parser.parse_args()
 
   primary_pool_size, secondary_pool_size, explanation = (
       _GetDefaultConcurrentLinks(options.mem_per_link_gb,
-                                 options.reserve_mem_gb,
+                                 options.reserve_mem_gb, options.thin_lto,
                                  options.secondary_mem_per_link))
   sys.stdout.write(
       gn_helpers.ToGNString({

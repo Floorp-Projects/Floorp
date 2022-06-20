@@ -7,8 +7,8 @@
 import boot_data
 import common
 import emu_target
+import hashlib
 import logging
-import md5
 import os
 import platform
 import qemu_image
@@ -24,9 +24,7 @@ from target import FuchsiaTargetException
 
 
 # Virtual networking configuration data for QEMU.
-GUEST_NET = '192.168.3.0/24'
-GUEST_IP_ADDRESS = '192.168.3.9'
-HOST_IP_ADDRESS = '192.168.3.2'
+HOST_IP_ADDRESS = '10.0.2.2'
 GUEST_MAC_ADDRESS = '52:54:00:63:5e:7b'
 
 # Capacity of the system's blobstore volume.
@@ -47,6 +45,11 @@ class QemuTarget(emu_target.EmuTarget):
     self._require_kvm=require_kvm
     self._ram_size_mb=ram_size_mb
 
+  @staticmethod
+  def CreateFromArgs(args):
+    return QemuTarget(args.out_dir, args.target_cpu, args.system_log_file,
+                      args.cpu_cores, args.require_kvm, args.ram_size_mb)
+
   def _IsKvmEnabled(self):
     kvm_supported = sys.platform.startswith('linux') and \
                     os.access('/dev/kvm', os.R_OK | os.W_OK)
@@ -65,8 +68,9 @@ class QemuTarget(emu_target.EmuTarget):
                       'in for the change to take effect.'
         raise FuchsiaTargetException(kvm_error)
       else:
-        raise FuchsiaTargetException('KVM unavailable when CPU architecture of'\
-                                     ' host is different from that of target.')
+        raise FuchsiaTargetException('KVM unavailable when CPU architecture '\
+                                     'of host is different from that of'\
+                                     ' target. See --allow-no-kvm.')
     else:
       return False
 
@@ -116,11 +120,9 @@ class QemuTarget(emu_target.EmuTarget):
           '-machine', 'q35',
       ])
 
-    # Configure virtual network. It is used in the tests to connect to
-    # testserver running on the host.
+    # Configure virtual network.
     netdev_type = 'virtio-net-pci'
-    netdev_config = 'user,id=net0,net=%s,dhcpstart=%s,host=%s' % \
-            (GUEST_NET, GUEST_IP_ADDRESS, HOST_IP_ADDRESS)
+    netdev_config = 'type=user,id=net0,restrict=off'
 
     self._host_ssh_port = common.GetAvailableTcpPort()
     netdev_config += ",hostfwd=tcp::%s-:22" % self._host_ssh_port
@@ -139,7 +141,7 @@ class QemuTarget(emu_target.EmuTarget):
       else:
         kvm_command.append('host,migratable=no,+invtsc')
     else:
-      logging.warning('Unable to launch %s with KVM acceleration.'
+      logging.warning('Unable to launch %s with KVM acceleration. '
                       'The guest VM will be slow.' % (self.EMULATOR_NAME))
       if self._target_cpu == 'arm64':
         kvm_command = ['-cpu', 'cortex-a53']
@@ -165,7 +167,13 @@ class QemuTarget(emu_target.EmuTarget):
     return emu_command
 
   def _BuildCommand(self):
-    qemu_exec = 'qemu-system-'+self._GetTargetSdkLegacyArch()
+    if self._target_cpu == 'arm64':
+      qemu_exec = 'qemu-system-' + 'aarch64'
+    elif self._target_cpu == 'x64':
+      qemu_exec = 'qemu-system-' + 'x86_64'
+    else:
+      raise Exception('Unknown target_cpu %s:' % self._target_cpu)
+
     qemu_command = [
         os.path.join(GetEmuRootForPlatform(self.EMULATOR_NAME), 'bin',
                      qemu_exec)
@@ -175,7 +183,7 @@ class QemuTarget(emu_target.EmuTarget):
     return qemu_command
 
 def _ComputeFileHash(filename):
-  hasher = md5.new()
+  hasher = hashlib.md5()
   with open(filename, 'rb') as f:
     buf = f.read(4096)
     while buf:

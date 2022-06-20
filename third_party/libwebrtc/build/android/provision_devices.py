@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env vpython3
 #
 # Copyright (c) 2013 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -501,11 +501,6 @@ def main():
                       ' (the default is to provision all devices attached)')
   parser.add_argument('--adb-path',
                       help='Absolute path to the adb binary to use.')
-  # TODO(crbug.com/1097306): Remove this once callers have all switched to
-  # --denylist-file.
-  parser.add_argument('--blacklist-file',
-                      dest='denylist_file',
-                      help=argparse.SUPPRESS)
   parser.add_argument('--denylist-file', help='Device denylist JSON file.')
   parser.add_argument('--phase', action='append', choices=_PHASES.ALL,
                       dest='phases',
@@ -544,11 +539,6 @@ def main():
                       help='Log more information.')
   parser.add_argument('--max-battery-temp', type=int, metavar='NUM',
                       help='Wait for the battery to have this temp or lower.')
-  # TODO(crbug.com/1097306): Remove this once callers have all switched to
-  # --output-device-denylist.
-  parser.add_argument('--output-device-blacklist',
-                      dest='output_device_denylist',
-                      help=argparse.SUPPRESS)
   parser.add_argument('--output-device-denylist',
                       help='Json file to output the device denylist.')
   parser.add_argument('--chrome-specific-wipe', action='store_true',

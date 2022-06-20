@@ -21,13 +21,13 @@ declare_args() {
 
   # Controls default is_linux sysroot. If set to true, and sysroot
   # is empty, default sysroot is calculated.
-  use_sysroot = target_cpu == "x86" || target_cpu == "x64" ||
-                target_cpu == "arm" || target_cpu == "arm64" ||
-                target_cpu == "mipsel" || target_cpu == "mips64el"
+  use_sysroot = current_cpu == "x86" || current_cpu == "x64" ||
+                current_cpu == "arm" || current_cpu == "arm64" ||
+                current_cpu == "mipsel" || current_cpu == "mips64el"
 }
 
 if (sysroot == "") {
-  if (current_os == target_os && target_cpu == target_cpu &&
+  if (current_os == target_os && current_cpu == target_cpu &&
       target_sysroot != "") {
     sysroot = target_sysroot
   } else if (is_android) {
@@ -38,34 +38,34 @@ if (sysroot == "") {
   } else if ((is_linux || is_chromeos) && use_sysroot) {
     # By default build against a sysroot image downloaded from Cloud Storage
     # during gclient runhooks.
-    if (target_cpu == "x64") {
+    if (current_cpu == "x64") {
       sysroot = "$target_sysroot_dir/debian_sid_amd64-sysroot"
-    } else if (target_cpu == "x86") {
+    } else if (current_cpu == "x86") {
       sysroot = "$target_sysroot_dir/debian_sid_i386-sysroot"
-    } else if (target_cpu == "mipsel") {
+    } else if (current_cpu == "mipsel") {
       sysroot = "$target_sysroot_dir/debian_sid_mips-sysroot"
-    } else if (target_cpu == "mips64el") {
+    } else if (current_cpu == "mips64el") {
       sysroot = "$target_sysroot_dir/debian_sid_mips64el-sysroot"
-    } else if (target_cpu == "arm") {
+    } else if (current_cpu == "arm") {
       sysroot = "$target_sysroot_dir/debian_sid_arm-sysroot"
-    } else if (target_cpu == "arm64") {
+    } else if (current_cpu == "arm64") {
       sysroot = "$target_sysroot_dir/debian_sid_arm64-sysroot"
     } else {
       assert(false, "No linux sysroot for cpu: $target_cpu")
     }
 
     if (sysroot != "") {
-      _script_arch = target_cpu
+      _script_arch = current_cpu
       if (_script_arch == "x86") {
         _script_arch = "i386"
       } else if (_script_arch == "x64") {
         _script_arch = "amd64"
       }
-      #assert(
-      #    exec_script("//build/dir_exists.py",
-      #                [ rebase_path(sysroot) ],
-      #                "string") == "True",
-      #    "Missing sysroot ($sysroot). To fix, run: build/linux/sysroot_scripts/install-sysroot.py --arch=$_script_arch")
+      assert(
+          exec_script("//build/dir_exists.py",
+                      [ rebase_path(sysroot) ],
+                      "string") == "True",
+          "Missing sysroot ($sysroot). To fix, run: build/linux/sysroot_scripts/install-sysroot.py --arch=$_script_arch")
     }
   } else if (is_mac) {
     import("//build/config/mac/mac_sdk.gni")
@@ -74,8 +74,8 @@ if (sysroot == "") {
     import("//build/config/ios/ios_sdk.gni")
     sysroot = ios_sdk_path
   } else if (is_fuchsia) {
-    if (target_cpu == "arm64" || target_cpu == "x64") {
-      sysroot = "//third_party/fuchsia-sdk/sdk/arch/$target_cpu/sysroot"
+    if (current_cpu == "arm64" || current_cpu == "x64") {
+      sysroot = "//third_party/fuchsia-sdk/sdk/arch/$current_cpu/sysroot"
     }
   }
 }

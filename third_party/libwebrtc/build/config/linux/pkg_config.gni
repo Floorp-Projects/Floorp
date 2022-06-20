@@ -59,7 +59,7 @@ if (sysroot != "") {
     "-s",
     rebase_path(sysroot),
     "-a",
-    target_cpu,
+    current_cpu,
   ]
 }
 

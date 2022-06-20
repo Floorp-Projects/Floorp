@@ -326,26 +326,24 @@ HacksAndPatchesCommon() {
   sed -i -e 's|/usr/lib/${arch}-${os}/||g'  ${lscripts}
   sed -i -e 's|/lib/${arch}-${os}/||g' ${lscripts}
 
-  # Unversion libdbus, libxkbcommon, and libwayland-client symbols.
-  # This is required because libdbus-1-3, libwayland-client0 and
-  # libxkbcommon0 switched from unversioned symbols to versioned
-  # ones, and we must still support distros using the unversioned library.
-  # This hack can be removed once support for Ubuntu Trusty and Debian
-  # Jessie are dropped.
+  # Unversion libdbus and libxkbcommon symbols.  This is required because
+  # libdbus-1-3 and libxkbcommon0 switched from unversioned symbols to versioned
+  # ones, and we must still support distros using the unversioned library.  This
+  # hack can be removed once support for Ubuntu Trusty and Debian Jessie are
+  # dropped.
   ${strip} -R .gnu.version_d -R .gnu.version \
     "${INSTALL_ROOT}/lib/${arch}-${os}/libdbus-1.so.3"
   cp "${SCRIPT_DIR}/libdbus-1-3-symbols" \
     "${INSTALL_ROOT}/debian/libdbus-1-3/DEBIAN/symbols"
 
   ${strip} -R .gnu.version_d -R .gnu.version \
-    "${INSTALL_ROOT}/usr/lib/${arch}-${os}/libwayland-client.so.0.3.0"
-  cp "${SCRIPT_DIR}/libwayland-client-symbols" \
-    "${INSTALL_ROOT}/debian/libwayland-client0/DEBIAN/symbols"
-
-  ${strip} -R .gnu.version_d -R .gnu.version \
     "${INSTALL_ROOT}/usr/lib/${arch}-${os}/libxkbcommon.so.0.0.0"
   cp "${SCRIPT_DIR}/libxkbcommon0-symbols" \
     "${INSTALL_ROOT}/debian/libxkbcommon0/DEBIAN/symbols"
+
+  # libxcomposite1 is missing a symbols file.
+  cp "${SCRIPT_DIR}/libxcomposite1-symbols" \
+    "${INSTALL_ROOT}/debian/libxcomposite1/DEBIAN/symbols"
 
   # Shared objects depending on libdbus-1.so.3 have unsatisfied undefined
   # versioned symbols. To avoid LLD --no-allow-shlib-undefined errors, rewrite
@@ -390,19 +388,17 @@ HacksAndPatchesCommon() {
   nm -D --defined-only --with-symbol-versions "${libc_so}" | \
     "${SCRIPT_DIR}/find_incompatible_glibc_symbols.py" >> "${fcntl_h}"
 
+  # __GLIBC_MINOR__ is used as a feature test macro.  Replace it with the
+  # earliest supported version of glibc (2.17, https://crbug.com/376567).
+  local features_h="${INSTALL_ROOT}/usr/include/features.h"
+  sed -i 's|\(#define\s\+__GLIBC_MINOR__\)|\1 17 //|' "${features_h}"
+
   # This is for chrome's ./build/linux/pkg-config-wrapper
   # which overwrites PKG_CONFIG_LIBDIR internally
   SubBanner "Move pkgconfig scripts"
   mkdir -p ${INSTALL_ROOT}/usr/lib/pkgconfig
   mv ${INSTALL_ROOT}/usr/lib/${arch}-${os}/pkgconfig/* \
       ${INSTALL_ROOT}/usr/lib/pkgconfig
-
-  # Temporary workaround for invalid implicit conversion from void* in pipewire.
-  # This is already fixed upstream in [1], so this can be removed once it rolls
-  # into Debian.
-  # [1] https://github.com/PipeWire/pipewire/commit/371da358d1580dc06218d18a12a99611cac39e4e
-  local pipewire_utils_h="${INSTALL_ROOT}/usr/include/pipewire/utils.h"
-  sed -i 's/malloc/(struct spa_pod*)malloc/' "${pipewire_utils_h}"
 }
 
 
@@ -517,6 +513,7 @@ VerifyLibraryDepsCommon() {
   local arch=$1
   local os=$2
   local find_dirs=(
+    "${INSTALL_ROOT}/lib/"
     "${INSTALL_ROOT}/lib/${arch}-${os}/"
     "${INSTALL_ROOT}/usr/lib/${arch}-${os}/"
   )
