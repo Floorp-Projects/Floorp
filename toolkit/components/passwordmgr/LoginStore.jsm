@@ -70,9 +70,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  */
 const kDataVersion = 3;
 
-// The permission type we store in the permission manager.
-const PERMISSION_SAVE_LOGINS = "login-saving";
-
 const MAX_DATE_MS = 8640000000000000;
 
 // LoginStore

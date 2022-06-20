@@ -418,7 +418,7 @@ LoginManagerAuthPrompter.prototype = {
     let foundLogins = null;
     let canRememberLogin = false;
     var selectedLogin = null;
-    var [origin, realm, unused] = this._getRealmInfo(aPasswordRealm);
+    var [origin, realm] = this._getRealmInfo(aPasswordRealm);
 
     // If origin is null, we can't save this login.
     if (origin) {

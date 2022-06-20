@@ -12,14 +12,6 @@ module.exports = {
     // be removed & synced with the mozilla/recommended value.
     complexity: ["error", 59],
 
-    "no-unused-vars": [
-      "error",
-      {
-        args: "none",
-        vars: "local",
-        varsIgnorePattern: "^(ids|ignored|unused)$",
-      },
-    ],
     "no-var": "error",
   },
 };

@@ -4,8 +4,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 const { LoginFormFactory } = ChromeUtils.import(
   "resource://gre/modules/LoginFormFactory.jsm"
 );
@@ -470,7 +468,7 @@ function _setPrefs() {
   });
 }
 
-this._setPrefs();
+_setPrefs();
 
 for (let tc of TEST_ENVIRONMENT_CASES) {
   info("Sanity checking the testcase: " + tc.description);

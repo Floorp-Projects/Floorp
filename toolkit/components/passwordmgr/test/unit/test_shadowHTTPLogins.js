@@ -26,10 +26,6 @@ const DOMAIN1_HTTP_TO_HTTP_U1_P1_DIFFERENT_PORT = TestData.formLogin({
 const DOMAIN2_HTTP_TO_HTTP_U1_P1 = TestData.formLogin({
   origin: "http://different.example.com",
 });
-const DOMAIN2_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
-  origin: "https://different.example.com",
-  formActionOrigin: "https://login.example.com",
-});
 
 add_task(function test_shadowHTTPLogins() {
   let testcases = [
