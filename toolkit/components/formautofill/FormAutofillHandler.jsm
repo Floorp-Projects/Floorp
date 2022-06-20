@@ -23,7 +23,7 @@ const { FormAutofill } = ChromeUtils.import(
 );
 
 const { FormAutofillUtils } = ChromeUtils.import(
-"resource://autofill/FormAutofillUtils.jsm"
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 
 const lazy = {};
@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
 });
-
 
 const formFillController = Cc[
   "@mozilla.org/satchel/form-fill-controller;1"
