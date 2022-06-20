@@ -90,9 +90,7 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_UDEV"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["_GNU_SOURCE"] = True
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
@@ -103,13 +101,7 @@ if CONFIG["OS_TARGET"] == "Linux":
         "rt"
     ]
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc",
         "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_linux.cc"
@@ -236,23 +228,28 @@ if CONFIG["CPU_ARCH"] == "aarch64":
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG["CPU_ARCH"] == "arm":
 
-    DEFINES["_DEBUG"] = True
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
 
-    DEFINES["_DEBUG"] = True
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
+    ]
 
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
+    ]
 
-    DEFINES["_DEBUG"] = True
-
-if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
-
-    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
-
-if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -281,10 +278,66 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
     ]
 
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
     ]
 
 Library("desktop_capture_generic_gn")

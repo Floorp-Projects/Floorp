@@ -80,17 +80,13 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_UDEV"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["_GNU_SOURCE"] = True
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "m",
         "rt"
     ]
 
@@ -160,9 +156,13 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "1"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "0"
 
+if CONFIG["CPU_ARCH"] == "ppc64":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
     OS_LIBS += [
-        "android_support",
-        "unwind"
+        "m"
     ]
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
@@ -194,6 +194,13 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
 
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
@@ -212,10 +219,42 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+    DEFINES["_GNU_SOURCE"] = True
+
+    OS_LIBS += [
+        "m"
+    ]
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+    DEFINES["_GNU_SOURCE"] = True
+
+    OS_LIBS += [
+        "m"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+    DEFINES["_GNU_SOURCE"] = True
+
+    OS_LIBS += [
+        "m"
     ]
 
 Library("builtin_audio_encoder_factory_gn")
