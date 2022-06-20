@@ -2929,7 +2929,7 @@ UpdateService.prototype = {
             "but there isn't a ready update, removing update"
         );
         cleanupReadyUpdate();
-      } else if (Services.startup.wasSilentlyRestarted) {
+      } else if (Services.startup.wasSilentlyStarted) {
         // This check _should_ be unnecessary since we should not silently
         // restart if state == pending-elevate. But the update elevation dialog
         // is a way that we could potentially show UI on startup, even with no
