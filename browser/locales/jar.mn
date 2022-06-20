@@ -13,6 +13,7 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
   preview/textrecognition.ftl                      (../../toolkit/content/widgets/textrecognition-preview.ftl)
+  preview/originControls.ftl                       (../components/extensions/originControls.ftl)
 #ifdef NIGHTLY_BUILD
   preview/firefoxView.ftl                          (../components/firefoxview/firefoxView.ftl)
   preview/colorwaycloset.ftl                       (../components/colorways/colorwaycloset.ftl)

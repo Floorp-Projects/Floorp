@@ -7426,6 +7426,8 @@ var ToolbarContextMenu = {
       removeExtension.disabled = !(
         addon.permissions & AddonManager.PERM_CAN_UNINSTALL
       );
+
+      ExtensionsUI.originControlsMenu(popup, id);
     }
   },
 
