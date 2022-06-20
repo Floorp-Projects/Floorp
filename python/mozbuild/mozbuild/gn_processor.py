@@ -157,15 +157,27 @@ def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
     # mozbuild configuration.
     gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
 
-    gn_mozbuild_vars = (
-        "MOZ_DEBUG",
-        "OS_TARGET",
-        "HOST_CPU_ARCH",
-        "CPU_ARCH",
-        "MOZ_X11",
-    )
+    cpus = {
+        "arm64": "aarch64",
+        "x64": "x86_64",
+    }
+    oses = {
+        "android": "Android",
+        "linux": "Linux",
+        "mac": "Darwin",
+        "openbsd": "OpenBSD",
+        "win": "WINNT",
+    }
 
-    mozbuild_args = {k: config.substs.get(k) for k in gn_mozbuild_vars}
+    mozbuild_args = {
+        "MOZ_DEBUG": "1" if input_vars.get("is_debug") else None,
+        "OS_TARGET": oses[input_vars["target_os"]],
+        "HOST_CPU_ARCH": cpus.get(input_vars["host_cpu"], input_vars["host_cpu"]),
+        "CPU_ARCH": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
+    }
+    if input_vars["target_os"] in ("linux", "android", "openbsd"):
+        mozbuild_args["MOZ_X11"] = "1" if input_vars.get("use_x11") else None
+
     gn_out["mozbuild_args"] = mozbuild_args
     all_deps = find_deps(gn_result["targets"], gn_target)
 
@@ -580,8 +592,32 @@ def generate_gn_config(
             return str(v).lower()
         return '"%s"' % v
 
+    gn_input_variables = input_variables.copy()
+    gn_input_variables.update(
+        {
+            "concurrent_links": 1,
+            "action_pool_depth": 1,
+        }
+    )
+
+    if input_variables["target_os"] == "win":
+        gn_input_variables.update(
+            {
+                "visual_studio_path": "/",
+                "visual_studio_version": 2015,
+                "wdk_path": "/",
+            }
+        )
+    if input_variables["target_os"] == "mac":
+        gn_input_variables.update(
+            {
+                "mac_sdk_path": "/",
+                "enable_wmax_tokens": False,
+            }
+        )
+
     gn_args = "--args=%s" % " ".join(
-        ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(input_variables)]
+        ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(gn_input_variables)]
     )
     # Don't make use_x11 part of the string for openbsd to avoid creating
     # new json files.
@@ -622,16 +658,43 @@ class GnConfigGenBackend(BuildBackend):
                     "The GN program must be present to generate GN configs."
                 )
 
-            generate_gn_config(
-                obj.config,
-                mozpath.join(obj.srcdir, obj.target_dir),
-                mozpath.join(obj.objdir, obj.target_dir),
-                obj.non_unified_sources,
-                gn_binary,
-                obj.gn_input_variables,
-                obj.gn_sandbox_variables,
-                obj.gn_target,
-            )
+            vars_set = []
+            for is_debug in (True, False):
+                for target_os in ("android", "linux", "mac", "openbsd", "win"):
+                    target_cpus = ["x64"]
+                    if target_os in ("android", "linux", "mac", "win"):
+                        target_cpus.append("arm64")
+                    if target_os == "android":
+                        target_cpus.append("arm")
+                    if target_os in ("android", "linux", "win"):
+                        target_cpus.append("x86")
+                    for target_cpu in target_cpus:
+                        vars = {
+                            "host_cpu": "x64",
+                            "is_debug": is_debug,
+                            "target_cpu": target_cpu,
+                            "target_os": target_os,
+                        }
+                        if target_os == "linux":
+                            for use_x11 in (True, False):
+                                vars["use_x11"] = use_x11
+                                vars_set.append(vars.copy())
+                        else:
+                            if target_os == "openbsd":
+                                vars["use_x11"] = True
+                            vars_set.append(vars)
+
+            for vars in vars_set:
+                generate_gn_config(
+                    obj.config,
+                    mozpath.join(obj.srcdir, obj.target_dir),
+                    mozpath.join(obj.objdir, obj.target_dir),
+                    obj.non_unified_sources,
+                    gn_binary,
+                    vars,
+                    obj.gn_sandbox_variables,
+                    obj.gn_target,
+                )
         return True
 
     def consume_finished(self):
