@@ -246,6 +246,13 @@ clang_toolchain("clang_mips64el") {
   }
 }
 
+clang_toolchain("clang_mips64") {
+  toolchain_args = {
+    current_cpu = "mips64"
+    current_os = "linux"
+  }
+}
+
 gcc_toolchain("mipsel") {
   toolprefix = "mipsel-linux-gnu-"
 
@@ -331,6 +338,22 @@ gcc_toolchain("s390x") {
 
     # reclient does not support gcc.
     use_rbe = false
+    is_clang = false
+  }
+}
+
+gcc_toolchain("mips64") {
+  cc = "gcc"
+  cxx = "g++"
+
+  readelf = "readelf"
+  nm = "nm"
+  ar = "ar"
+  ld = cxx
+
+  toolchain_args = {
+    current_cpu = "mips64"
+    current_os = "linux"
     is_clang = false
   }
 }
