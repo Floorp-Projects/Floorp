@@ -338,7 +338,13 @@ async function getUnvirtualizedConsoleOutputText(webConsoleWrapper) {
         {
           store: webConsoleWrapper.getStore(),
         },
-        createElement(ToolboxProvider, { store: toolbox.store }, consoleOutput)
+        toolbox
+          ? createElement(
+              ToolboxProvider,
+              { store: toolbox.store },
+              consoleOutput
+            )
+          : consoleOutput
       ),
       singleUseElement,
       () => {
