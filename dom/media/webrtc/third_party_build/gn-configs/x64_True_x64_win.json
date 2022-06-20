@@ -40673,7 +40673,6 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "/media/libyuv/",
-                "/media/libyuv/libyuv/include/",
                 "/third_party/pipewire/",
                 "//",
                 "//third_party/abseil-cpp/"

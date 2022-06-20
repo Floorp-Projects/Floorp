@@ -27717,8 +27717,6 @@
                 "/media/libyuv/libyuv/include/",
                 "/third_party/libwebrtc/third_party/pipewire/",
                 "/media/libyuv/",
-                "/media/libyuv/libyuv/include/",
-                "/third_party/pipewire/",
                 "/third_party/pipewire/",
                 "//",
                 "//third_party/abseil-cpp/"
