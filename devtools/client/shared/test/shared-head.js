@@ -1358,8 +1358,7 @@ async function closeToolbox() {
 }
 
 /**
- * Clean the logical clipboard content. This method only clears the OS clipboard on
- * Windows (see Bug 666254).
+ * Clean the logical clipboard content.
  */
 function emptyClipboard() {
   const clipboard = Services.clipboard;
