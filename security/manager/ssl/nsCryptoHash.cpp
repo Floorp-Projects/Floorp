@@ -175,3 +175,34 @@ nsCryptoHash::Finish(bool ascii, nsACString& _retval) {
   _retval.Assign(BitwiseCast<char*>(buffer), hashLen);
   return NS_OK;
 }
+
+already_AddRefed<nsICryptoHash> NS_NewCryptoHash() {
+  return MakeAndAddRef<nsCryptoHash>();
+}
+
+nsresult NS_NewCryptoHash(uint32_t aHashType, nsICryptoHash** aOutHasher) {
+  MOZ_ASSERT(aOutHasher);
+
+  nsCOMPtr<nsICryptoHash> hasher = new nsCryptoHash();
+  nsresult rv = hasher->Init(aHashType);
+
+  if (NS_SUCCEEDED(rv)) {
+    hasher.forget(aOutHasher);
+  }
+
+  return rv;
+}
+
+nsresult NS_NewCryptoHash(const nsACString& aHashType,
+                          nsICryptoHash** aOutHasher) {
+  MOZ_ASSERT(aOutHasher);
+
+  nsCOMPtr<nsICryptoHash> hasher = new nsCryptoHash();
+  nsresult rv = hasher->InitWithString(aHashType);
+
+  if (NS_SUCCEEDED(rv)) {
+    hasher.forget(aOutHasher);
+  }
+
+  return rv;
+}
