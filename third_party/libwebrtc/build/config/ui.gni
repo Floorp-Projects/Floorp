@@ -35,7 +35,7 @@ declare_args() {
   use_glib = is_linux && !is_chromecast
 }
 
-assert(!use_glib || (is_linux && !is_chromecast))
+assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
 
 use_atk = is_linux && !is_chromecast && use_glib &&
           current_toolchain == default_toolchain
