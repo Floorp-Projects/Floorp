@@ -41,6 +41,10 @@
           "type": "boolean",
           "description": "When this property is set to true, the the SDK should not enroll new users into the experiment that have not already been enrolled."
         },
+        "isRollout": {
+          "type": "boolean",
+          "description": "When this property is set to true, treat this experiment as a rollout. Rollouts are currently handled as single-branch experiments separated from the bucketing namespace for normal experiments. See also: https://mozilla-hub.atlassian.net/browse/SDK-405"
+        },
         "bucketConfig": {
           "type": "object",
           "properties": {
@@ -286,6 +290,14 @@
             "null"
           ],
           "description": "Actual publish date of the experiment Note that this value is expected to be null in Remote Settings.",
+          "format": "date"
+        },
+        "enrollmentEndDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Actual enrollment end date of the experiment. Note that this value is expected to be null in Remote Settings.",
           "format": "date"
         },
         "endDate": {
