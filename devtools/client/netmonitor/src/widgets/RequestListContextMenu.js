@@ -276,8 +276,8 @@ class RequestListContextMenu {
     const menu = [];
 
     menu.push({
-      label: L10N.getStr("netmonitor.context.copy"),
-      accesskey: L10N.getStr("netmonitor.context.copy.accesskey"),
+      label: L10N.getStr("netmonitor.context.copyValue"),
+      accesskey: L10N.getStr("netmonitor.context.copyValue.accesskey"),
       visible: !!clickedRequest,
       submenu: copySubMenu,
     });
