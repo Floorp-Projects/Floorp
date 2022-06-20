@@ -6477,13 +6477,21 @@ nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
     nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
     EditSubAction aEditSubAction,
     CollectNonEditableNodes aCollectNonEditableNodes) {
-  nsresult rv = SplitTextNodesAtRangeEnd(aArrayOfRanges);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::SplitTextNodesAtRangeEnd() failed");
-  if (NS_FAILED(rv)) {
-    return rv;
+  const Result<EditorDOMPoint, nsresult> splitTextNodesResult =
+      SplitTextNodesAtRangeEnd(aArrayOfRanges);
+  if (splitTextNodesResult.isErr()) {
+    NS_WARNING("HTMLEditor::SplitTextNodesAtRangeEnd() failed");
+    return splitTextNodesResult.inspectErr();
   }
-  rv = SplitParentInlineElementsAtRangeEdges(aArrayOfRanges);
+  if (AllowsTransactionsToChangeSelection() &&
+      splitTextNodesResult.inspect().IsSet()) {
+    nsresult rv = CollapseSelectionTo(splitTextNodesResult.inspect());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
+    }
+  }
+  nsresult rv = SplitParentInlineElementsAtRangeEdges(aArrayOfRanges);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
@@ -6514,14 +6522,13 @@ nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
   return NS_OK;
 }
 
-nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
-    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges) {
+Result<EditorDOMPoint, nsresult> HTMLEditor::SplitTextNodesAtRangeEnd(
+    const nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges) {
   // Split text nodes. This is necessary, since given ranges may end in text
   // nodes in case where part of a pre-formatted elements needs to be moved.
   EditorDOMPoint pointToPutCaret;
-  nsresult rv = NS_OK;
   IgnoredErrorResult ignoredError;
-  for (OwningNonNull<nsRange>& range : aArrayOfRanges) {
+  for (const OwningNonNull<nsRange>& range : aArrayOfRanges) {
     EditorDOMPoint atEnd(range->EndRef());
     if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode()) {
       continue;
@@ -6532,12 +6539,10 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
       SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
       if (splitAtEndResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        rv = splitAtEndResult.unwrapErr();
-        break;
+        return Err(splitAtEndResult.unwrapErr());
       }
-      splitAtEndResult.MoveCaretPointTo(
-          pointToPutCaret, *this,
-          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
+                                        {SuggestCaret::OnlyIfHasSuggestion});
       MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
                     pointToPutCaret.IsSet());
 
@@ -6553,17 +6558,7 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
     }
   }
 
-  if (!pointToPutCaret.IsSet()) {
-    return rv;
-  }
-  nsresult rvOfCollapseSelection = CollapseSelectionTo(pointToPutCaret);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvOfCollapseSelection),
-                       "EditorBase::CollapseSelectionTo() failed");
-  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED ||
-                   rvOfCollapseSelection == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  return MOZ_LIKELY(NS_SUCCEEDED(rv)) ? rvOfCollapseSelection : rv;
+  return pointToPutCaret;
 }
 
 nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(

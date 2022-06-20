@@ -1222,9 +1222,13 @@ class HTMLEditor final : public EditorBase,
   /**
    * SplitTextNodesAtRangeEnd() splits text nodes if each range end is in
    * middle of a text node.
+   *
+   * @return            A suggest point to put caret if succeeded, but it may be
+   *                    unset.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitTextNodesAtRangeEnd(nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SplitTextNodesAtRangeEnd(
+      const nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges);
 
   /**
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
