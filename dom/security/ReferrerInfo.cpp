@@ -63,21 +63,21 @@ enum DefaultReferrerPolicy : uint32_t {
   eDefaultPolicyNoReferrerWhenDownGrade = 3,
 };
 
-static uint32_t GetDefaultFirstPartyReferrerPolicyPref(bool privateBrowsing) {
-  return privateBrowsing
+static uint32_t GetDefaultFirstPartyReferrerPolicyPref(bool aPrivateBrowsing) {
+  return aPrivateBrowsing
              ? StaticPrefs::network_http_referer_defaultPolicy_pbmode()
              : StaticPrefs::network_http_referer_defaultPolicy();
 }
 
-static uint32_t GetDefaultThirdPartyReferrerPolicyPref(bool privateBrowsing) {
-  return privateBrowsing
+static uint32_t GetDefaultThirdPartyReferrerPolicyPref(bool aPrivateBrowsing) {
+  return aPrivateBrowsing
              ? StaticPrefs::network_http_referer_defaultPolicy_trackers_pbmode()
              : StaticPrefs::network_http_referer_defaultPolicy_trackers();
 }
 
 static ReferrerPolicy DefaultReferrerPolicyToReferrerPolicy(
-    uint32_t defaultToUse) {
-  switch (defaultToUse) {
+    uint32_t aDefaultToUse) {
+  switch (aDefaultToUse) {
     case DefaultReferrerPolicy::eDefaultPolicyNoReferrer:
       return ReferrerPolicy::No_referrer;
     case DefaultReferrerPolicy::eDefaultPolicySameOrgin:
@@ -226,14 +226,14 @@ uint32_t ReferrerInfo::GetUserXOriginTrimmingPolicy() {
 /* static */
 ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
                                                       nsIURI* aURI,
-                                                      bool privateBrowsing) {
+                                                      bool aPrivateBrowsing) {
   bool thirdPartyTrackerIsolated = false;
   if (aChannel && aURI) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     nsCOMPtr<nsICookieJarSettings> cjs;
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
     if (!cjs) {
-      cjs = privateBrowsing
+      cjs = aPrivateBrowsing
                 ? net::CookieJarSettings::Create(CookieJarSettings::ePrivate)
                 : net::CookieJarSettings::Create(CookieJarSettings::eRegular);
     }
@@ -256,10 +256,13 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     }
   }
 
+  // Select the appropriate pref starting with
+  // "network.http.referer.defaultPolicy" to use based on private-browsing
+  // ("pbmode") AND third-party trackers ("trackers").
   return DefaultReferrerPolicyToReferrerPolicy(
       thirdPartyTrackerIsolated
-          ? GetDefaultThirdPartyReferrerPolicyPref(privateBrowsing)
-          : GetDefaultFirstPartyReferrerPolicyPref(privateBrowsing));
+          ? GetDefaultThirdPartyReferrerPolicyPref(aPrivateBrowsing)
+          : GetDefaultFirstPartyReferrerPolicyPref(aPrivateBrowsing));
 }
 
 /* static */
