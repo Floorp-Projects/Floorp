@@ -30,6 +30,7 @@ from .data import (
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
+    GnProjectData,
     ExternalStaticLibrary,
     ExternalSharedLibrary,
     HostDefines,
@@ -619,6 +620,26 @@ class TreeMetadataEmitter(LoggingMixin):
             **static_args,
         )
 
+    def _handle_gn_dirs(self, context):
+        for target_dir in context.get("GN_DIRS", []):
+            context["DIRS"] += [target_dir]
+            gn_dir = context["GN_DIRS"][target_dir]
+            for v in ("variables",):
+                if not getattr(gn_dir, "variables"):
+                    raise SandboxValidationError(
+                        "Missing value for " 'GN_DIRS["%s"].%s' % (target_dir, v),
+                        context,
+                    )
+
+            non_unified_sources = set()
+            for s in gn_dir.non_unified_sources:
+                source = SourcePath(context, s)
+                if not os.path.exists(source.full_path):
+                    raise SandboxValidationError("Cannot find %s." % source, context)
+                non_unified_sources.add(mozpath.join(context.relsrcdir, s))
+
+            yield GnProjectData(context, target_dir, gn_dir, non_unified_sources)
+
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
         host_linkables = []
@@ -1185,6 +1206,9 @@ class TreeMetadataEmitter(LoggingMixin):
         # early.
         if any(k in context for k in ("FINAL_TARGET", "XPI_NAME", "DIST_SUBDIR")):
             yield InstallationTarget(context)
+
+        for obj in self._handle_gn_dirs(context):
+            yield obj
 
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.

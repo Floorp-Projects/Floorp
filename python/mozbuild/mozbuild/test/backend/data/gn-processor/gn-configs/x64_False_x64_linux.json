@@ -1,0 +1,47 @@
+{
+  "mozbuild_args": {
+    "HOST_CPU_ARCH": "x86_64", 
+    "OS_TARGET": "Linux", 
+    "CPU_ARCH": "x86_64",
+    "MOZ_DEBUG": false
+  }, 
+  "targets": {
+    "//webrtc:webrtc": {
+      "deps": [
+        "//webrtc/base:base"
+      ],
+      "sources": [
+        "//webrtc/build/no_op_function.cc", 
+        "//webrtc/call.h", 
+        "//webrtc/config.h"
+      ], 
+      "cflags": [
+        "-fno-strict-aliasing", 
+        "-fstack-protector"
+      ],
+      "defines": [
+        "USE_NSS_CERTS=1", 
+        "USE_X11=1", 
+        "CHROMIUM_BUILD",
+        "NDEBUG", 
+        "NVALGRIND",
+        "LINUX_NDEBUG"
+      ],
+      "type": "static_library", 
+      "include_dirs": [
+        "//webrtc/modules/include/"
+      ]
+    }
+  },
+  "sandbox_vars": {
+    "FINAL_LIBRARY": "webrtc", 
+    "COMPILE_FLAGS": {
+      "WARNINGS_AS_ERRORS": []
+    }
+  }, 
+  "gn_gen_args": {
+    "host_cpu": "x64", 
+    "target_os": "linux", 
+    "target_cpu": "x64"
+  }
+}
