@@ -10,7 +10,7 @@ declare_args() {
   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
   # that does not require X11.
   use_ozone =
-      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux
+      is_chromeos || (is_chromecast && !is_android) || is_fuchsia || is_linux || is_bsd
 }
 
 declare_args() {
@@ -91,7 +91,7 @@ declare_args() {
     } else if (is_chromeos_lacros) {
       ozone_platform = "wayland"
       ozone_platform_wayland = true
-    } else if (is_linux) {
+    } else if (is_linux || is_bsd) {
       ozone_platform = "x11"
       ozone_platform_wayland = true
       ozone_platform_x11 = true
@@ -119,7 +119,7 @@ declare_args() {
   # once all the other places are fixed.
   # TODO(1096425): remove use_x11.
   use_x11 =
-      ozone_platform_x11 && is_linux && !is_chromecast && !is_chromeos_lacros
+      ozone_platform_x11 && (is_linux || is_bsd) && !is_chromecast && !is_chromeos_lacros
 }
 
 import(ozone_extra_path)
@@ -149,4 +149,4 @@ if (ozone_platform == "gbm") {
   ozone_platform = "drm"
 }
 
-assert(use_x11 == ozone_platform_x11 || !is_linux || is_chromecast)
+assert(use_x11 == ozone_platform_x11 || !is_linux || !is_bsd || is_chromecast)

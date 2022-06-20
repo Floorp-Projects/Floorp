@@ -32,12 +32,12 @@ declare_args() {
   # True means the UI is built using the "views" framework.
   toolkit_views = is_mac || is_win || is_linux || is_chromeos || is_fuchsia
 
-  use_glib = is_linux && !is_chromecast
+  use_glib = (is_linux || is_bsd) && !is_chromecast
 }
 
 assert(!use_glib || ((is_linux || is_bsd) && !is_chromecast))
 
-use_atk = is_linux && !is_chromecast && use_glib &&
+use_atk = (is_linux || is_bsd) && !is_chromecast && use_glib &&
           current_toolchain == default_toolchain
 
 # Whether using Xvfb to provide a display server for a test might be

@@ -6,5 +6,5 @@ import("//build/config/ui.gni")
 
 declare_args() {
   # Whether or not we should use libgtk.
-  use_gtk = is_linux && !is_chromecast
+  use_gtk = (is_linux || is_bsd) && !is_chromecast
 }
