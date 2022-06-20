@@ -45,7 +45,7 @@ using ::testing::MockFunction;
 using ::testing::NiceMock;
 typedef mozilla::layers::GeckoContentController::TapType TapType;
 
-static TimeStamp GetStartupTime() {
+inline TimeStamp GetStartupTime() {
   static TimeStamp sStartupTime = TimeStamp::Now();
   return sStartupTime;
 }
