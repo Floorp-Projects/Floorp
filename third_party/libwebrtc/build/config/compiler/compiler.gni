@@ -16,7 +16,7 @@ import("//build_overrides/build.gni")
 if (is_android) {
   import("//build/config/android/abi.gni")
 }
-if (current_cpu == "arm" || current_cpu == "arm64") {
+if (target_cpu == "arm" || target_cpu == "arm64") {
   import("//build/config/arm.gni")
 }
 
@@ -85,7 +85,7 @@ declare_args() {
   #
   # It's currently not possible to collect AFDO profiles on anything but
   # x86{,_64}.
-  using_mismatched_sample_profile = current_cpu != "x64" && current_cpu != "x86"
+  using_mismatched_sample_profile = target_cpu != "x64" && target_cpu != "x86"
 
   # Whether an error should be raised on attempts to make debug builds with
   # is_component_build=false. Very large debug symbols can have unwanted side
@@ -142,12 +142,12 @@ if (is_chromeos_ash || is_chromeos_lacros) {
   # However, Clang does not currently generate usable frame pointers in ARM
   # 32-bit builds (https://bugs.llvm.org/show_bug.cgi?id=18505) so disable them
   # there to avoid the unnecessary overhead.
-  enable_frame_pointers = current_cpu != "arm"
+  enable_frame_pointers = target_cpu != "arm"
 } else if (is_apple || is_linux || is_chromeos) {
   enable_frame_pointers = true
 } else if (is_win) {
   # 64-bit Windows ABI doesn't support frame pointers.
-  if (current_cpu == "x64") {
+  if (target_cpu == "x64") {
     enable_frame_pointers = false
   } else {
     enable_frame_pointers = true
@@ -156,12 +156,12 @@ if (is_chromeos_ash || is_chromeos_lacros) {
   enable_frame_pointers =
       enable_profiling ||
       # Ensure that stacks from arm64 crash dumps are usable (crbug.com/391706).
-      current_cpu == "arm64" ||
+      target_cpu == "arm64" ||
       # For x86 Android, unwind tables are huge without frame pointers
       # (crbug.com/762629). Enabling frame pointers grows the code size slightly
       # but overall shrinks binaries considerably by avoiding huge unwind
       # tables.
-      (current_cpu == "x86" && !exclude_unwind_tables && optimize_for_size) ||
+      (target_cpu == "x86" && !exclude_unwind_tables && optimize_for_size) ||
       using_sanitizer ||
       # For caller-callee instrumentation version which needs frame pointers to
       # get the caller address.
@@ -178,7 +178,7 @@ if (is_chromeos_ash || is_chromeos_lacros) {
 # most translation units, that they are emitted correctly, and that the
 # compiler or platform provides a way to access them.
 can_unwind_with_frame_pointers = enable_frame_pointers
-if (current_cpu == "arm" && arm_use_thumb) {
+if (target_cpu == "arm" && arm_use_thumb) {
   # We cannot currently unwind ARM Thumb frame pointers correctly.
   # See https://bugs.llvm.org/show_bug.cgi?id=18505
   can_unwind_with_frame_pointers = false
@@ -193,12 +193,12 @@ assert(!can_unwind_with_frame_pointers || enable_frame_pointers)
 # Unwinding with CFI table is only possible on static library builds and
 # requried only when frame pointers are not enabled.
 can_unwind_with_cfi_table = is_android && !is_component_build &&
-                            !enable_frame_pointers && current_cpu == "arm"
+                            !enable_frame_pointers && target_cpu == "arm"
 
 # Whether or not cfi table should be enabled on arm.
 # TODO(crbug.com/1090409): Replace can_unwind_with_cfi_table with this once
 # sampling profiler is enabled on android.
-enable_arm_cfi_table = is_android && !is_component_build && current_cpu == "arm"
+enable_arm_cfi_table = is_android && !is_component_build && target_cpu == "arm"
 
 declare_args() {
   # If this running on a GPU FYI bot.
@@ -219,13 +219,13 @@ declare_args() {
 declare_args() {
   # Whether to use the gold linker from binutils instead of lld or bfd.
   use_gold = !use_lld && !(is_chromecast && is_linux &&
-                           (current_cpu == "arm" || current_cpu == "mipsel")) &&
+                           (target_cpu == "arm" || target_cpu == "mipsel")) &&
              (((is_linux || is_chromeos_lacros) &&
-               (current_cpu == "x64" || current_cpu == "x86" ||
-                current_cpu == "arm" || current_cpu == "arm64" ||
-                current_cpu == "mipsel" || current_cpu == "mips64el")) ||
-              (is_android && (current_cpu == "x86" || current_cpu == "x64" ||
-                              current_cpu == "arm" || current_cpu == "arm64")))
+               (target_cpu == "x64" || target_cpu == "x86" ||
+                target_cpu == "arm" || target_cpu == "arm64" ||
+                target_cpu == "mipsel" || target_cpu == "mips64el")) ||
+              (is_android && (target_cpu == "x86" || target_cpu == "x64" ||
+                              target_cpu == "arm" || target_cpu == "arm64")))
 }
 
 # Use relative paths for debug info. This is important to make the build

@@ -71,7 +71,7 @@ if (host_os == "win") {
 #   environment: File name of environment file.
 #
 # You would also define a toolchain_args variable with at least these set:
-#   current_cpu: current_cpu to pass as a build arg
+#   target_cpu: target_cpu to pass as a build arg
 #   current_os: current_os to pass as a build arg
 template("msvc_toolchain") {
   toolchain(target_name) {
@@ -244,7 +244,7 @@ template("msvc_toolchain") {
     tool("asm") {
       is_msvc_assembler = true
 
-      if (toolchain_args.current_cpu == "arm64") {
+      if (toolchain_args.target_cpu == "arm64") {
         if (is_clang) {
           prefix = rebase_path("$clang_base_path/bin", root_build_dir)
           ml = "${clang_prefix}${prefix}/${clang_cl} --target=arm64-windows"
@@ -261,7 +261,7 @@ template("msvc_toolchain") {
         }
       } else {
         # x86/x64 builds always use the MSVC assembler.
-        if (toolchain_args.current_cpu == "x64") {
+        if (toolchain_args.target_cpu == "x64") {
           ml = "ml64.exe"
         } else {
           ml = "ml.exe"
@@ -273,7 +273,7 @@ template("msvc_toolchain") {
 
         # Suppress final-stage linking on x64/x86 builds. (Armasm64 does not
         # require /c because it doesn't support linking.)
-        if (toolchain_args.current_cpu != "arm64") {
+        if (toolchain_args.target_cpu != "arm64") {
           ml += " /c"
         }
         if (use_lld) {
@@ -287,7 +287,7 @@ template("msvc_toolchain") {
           ml = "$python_path $ml_py $ml"
         }
       }
-      if (toolchain_args.current_cpu != "arm64" || is_clang) {
+      if (toolchain_args.target_cpu != "arm64" || is_clang) {
         command = "$python_path $tool_wrapper_path asm-wrapper $env $ml {{defines}} {{include_dirs}} {{asmflags}} {{source}}"
       } else {
         # armasm64.exe does not support definitions passed via the command line.
@@ -494,7 +494,7 @@ template("win_toolchains") {
         is_clang = false
         use_clang_coverage = false
         current_os = "win"
-        current_cpu = "arm64"
+        target_cpu = "arm64"
       }
     }
   }
@@ -524,7 +524,7 @@ template("win_toolchains") {
       }
       is_clang = true
       current_os = "win"
-      current_cpu = "arm64"
+      target_cpu = "arm64"
     }
   }
 }
@@ -580,7 +580,7 @@ if (target_os == "winuwp") {
     cl = "${goma_prefix}\"${store_cpu_toolchain_data.vc_bin_dir}/cl.exe\""
     toolchain_args = {
       current_os = "winuwp"
-      current_cpu = target_cpu
+      target_cpu = target_cpu
       is_clang = false
     }
   }

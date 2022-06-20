@@ -17,7 +17,7 @@ declare_args() {
 }
 
 if (target_environment == "") {
-  if (current_cpu == "x86" || current_cpu == "x64") {
+  if (target_cpu == "x86" || target_cpu == "x64") {
     target_environment = "simulator"
   } else {
     target_environment = "device"

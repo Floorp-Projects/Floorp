@@ -66,7 +66,7 @@ cros_toolchain("target") {
     cc_wrapper = ""
     needs_gomacc_path_arg = true
     clang_use_chrome_plugins = false
-    current_cpu = target_cpu
+    target_cpu = target_cpu
     current_os = "chromeos"
     is_clang = is_clang
     use_debug_fission = use_debug_fission
@@ -101,7 +101,7 @@ cros_toolchain("nacl_bootstrap") {
     cc_wrapper = ""
     needs_gomacc_path_arg = true
     clang_use_chrome_plugins = false
-    current_cpu = target_cpu
+    target_cpu = target_cpu
     current_os = "chromeos"
     is_clang = is_clang
     use_debug_fission = false
@@ -133,7 +133,7 @@ cros_toolchain("host") {
     needs_gomacc_path_arg = false
     clang_use_chrome_plugins = false
     is_clang = cros_host_is_clang
-    current_cpu = host_cpu
+    target_cpu = host_cpu
     current_os = "linux"
     use_sysroot = use_sysroot
     sysroot = cros_host_sysroot
@@ -164,11 +164,11 @@ cros_toolchain("v8_snapshot") {
     clang_use_chrome_plugins = false
     is_clang = cros_v8_snapshot_is_clang
     if (target_cpu == "x86" || target_cpu == "arm" || target_cpu == "mipsel") {
-      current_cpu = "x86"
+      target_cpu = "x86"
     } else {
-      current_cpu = "x64"
+      target_cpu = "x64"
     }
-    v8_current_cpu = v8_target_cpu
+    v8_target_cpu = v8_target_cpu
     current_os = "linux"
     use_sysroot = use_sysroot
     sysroot = cros_v8_snapshot_sysroot

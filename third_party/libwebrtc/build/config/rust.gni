@@ -56,9 +56,9 @@ rustc_can_link = !use_thin_lto && !is_android
 # Has a Rust toolchain available in the build by default.
 toolchain_has_official_rust =
     (!is_nacl &&
-     (is_android && (current_cpu == "arm" || current_cpu == "arm64" ||
-                     current_cpu == "x64" || current_cpu == "x86"))) ||
-    (is_linux && current_cpu == "x64")
+     (is_android && (target_cpu == "arm" || target_cpu == "arm64" ||
+                     target_cpu == "x64" || target_cpu == "x86"))) ||
+    (is_linux && target_cpu == "x64")
 
 toolchain_has_rust = enable_rust && (toolchain_has_official_rust ||
                                      use_unverified_rust_toolchain)
@@ -106,25 +106,25 @@ if (is_android) {
     rust_abi_target = "armv7-linux-androideabi"
   }
 } else if (is_fuchsia) {
-  if (current_cpu == "arm64") {
+  if (target_cpu == "arm64") {
     rust_abi_target = "aarch64-fuchsia"
-  } else if (current_cpu == "x64") {
+  } else if (target_cpu == "x64") {
     rust_abi_target = "x86_64-fuchsia"
   } else {
     assert(false, "Architecture not supported")
   }
 } else if (is_ios) {
-  if (current_cpu == "arm64") {
+  if (target_cpu == "arm64") {
     rust_abi_target = "aarch64-apple-ios"
-  } else if (current_cpu == "arm") {
+  } else if (target_cpu == "arm") {
     # There's also an armv7s-apple-ios, which targets a more recent ARMv7
     # generation CPU found in later iPhones. We'll go with the older one for
     # maximal compatibility. As we come to support all the different platforms
     # with Rust, we might want to be more precise here.
     rust_abi_target = "armv7-apple-ios"
-  } else if (current_cpu == "x64") {
+  } else if (target_cpu == "x64") {
     rust_abi_target = "x86_64-apple-ios"
-  } else if (current_cpu == "x86") {
+  } else if (target_cpu == "x86") {
     rust_abi_target = "i386-apple-ios"
   } else {
     assert(false, "Architecture not supported")

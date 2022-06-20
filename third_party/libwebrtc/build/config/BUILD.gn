@@ -129,7 +129,7 @@ config("debug") {
       # builds, and we have to tell it to turn it off.
       defines += [ "_HAS_ITERATOR_DEBUGGING=0" ]
     }
-  } else if ((is_linux || is_chromeos) && current_cpu == "x64" &&
+  } else if ((is_linux || is_chromeos) && target_cpu == "x64" &&
              enable_iterator_debugging) {
     # Enable libstdc++ debugging facilities to help catch problems early, see
     # http://crbug.com/65151 .

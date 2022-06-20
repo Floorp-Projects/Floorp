@@ -124,8 +124,8 @@ template("gcc_toolchain") {
     assert(defined(invoker.toolchain_args),
            "Toolchains must specify toolchain_args")
     invoker_toolchain_args = invoker.toolchain_args
-    assert(defined(invoker_toolchain_args.current_cpu),
-           "toolchain_args must specify a current_cpu")
+    assert(defined(invoker_toolchain_args.target_cpu),
+           "toolchain_args must specify a target_cpu")
     assert(defined(invoker_toolchain_args.current_os),
            "toolchain_args must specify a current_os")
 
@@ -141,8 +141,8 @@ template("gcc_toolchain") {
       # set on those toolchains.
       host_toolchain = host_toolchain
 
-      if (!defined(invoker_toolchain_args.v8_current_cpu)) {
-        v8_current_cpu = invoker_toolchain_args.current_cpu
+      if (!defined(invoker_toolchain_args.v8_target_cpu)) {
+        v8_target_cpu = invoker_toolchain_args.target_cpu
       }
     }
 

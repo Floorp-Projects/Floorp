@@ -53,7 +53,7 @@ group("deps") {
   }
 }
 
-assert(!(is_win && is_asan && current_cpu == "x86"),
+assert(!(is_win && is_asan && target_cpu == "x86"),
        "ASan is only supported in 64-bit builds on Windows.")
 
 if ((is_mac || is_win || (is_ios && !use_xcode_clang)) && is_asan) {
@@ -61,7 +61,7 @@ if ((is_mac || is_win || (is_ios && !use_xcode_clang)) && is_asan) {
     _clang_rt_dso_path = "darwin/libclang_rt.asan_osx_dynamic.dylib"
   } else if (is_ios) {
     _clang_rt_dso_path = "darwin/libclang_rt.asan_iossim_dynamic.dylib"
-  } else if (is_win && current_cpu == "x64") {
+  } else if (is_win && target_cpu == "x64") {
     _clang_rt_dso_path = "windows/clang_rt.asan_dynamic-x86_64.dll"
   }
 
@@ -219,14 +219,14 @@ config("default_sanitizer_ldflags") {
       # In the static-library build, ASan libraries are different for
       # executables and dlls, see link_executable and link_shared_library below.
       # This here handles only the component build.
-      if (current_cpu == "x64") {
+      if (target_cpu == "x64") {
         # Windows 64-bit.
         libs = [
           "clang_rt.asan_dynamic-x86_64.lib",
           "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
         ]
       } else {
-        assert(current_cpu == "x86", "WinASan unsupported architecture")
+        assert(target_cpu == "x86", "WinASan unsupported architecture")
         libs = [
           "clang_rt.asan_dynamic-i386.lib",
           "clang_rt.asan_dynamic_runtime_thunk-i386.lib",
@@ -234,7 +234,7 @@ config("default_sanitizer_ldflags") {
       }
     }
     if (use_libfuzzer) {
-      assert(current_cpu == "x64", "LibFuzzer unsupported architecture")
+      assert(target_cpu == "x64", "LibFuzzer unsupported architecture")
       assert(!is_component_build,
              "LibFuzzer only supports non-component builds on Windows")
 
@@ -283,10 +283,10 @@ config("asan_flags") {
 
 config("link_executable") {
   if (is_asan && is_win && !is_component_build) {
-    if (current_cpu == "x64") {
+    if (target_cpu == "x64") {
       ldflags = [ "-wholearchive:clang_rt.asan-x86_64.lib" ]
     } else {
-      assert(current_cpu == "x86", "WinASan unsupported architecture")
+      assert(target_cpu == "x86", "WinASan unsupported architecture")
       ldflags = [ "-wholearchive:clang_rt.asan-i386.lib" ]
     }
   }
@@ -294,10 +294,10 @@ config("link_executable") {
 
 config("link_shared_library") {
   if (is_asan && is_win && !is_component_build) {
-    if (current_cpu == "x64") {
+    if (target_cpu == "x64") {
       libs = [ "clang_rt.asan_dll_thunk-x86_64.lib" ]
     } else {
-      assert(current_cpu == "x86", "WinASan unsupported architecture")
+      assert(target_cpu == "x86", "WinASan unsupported architecture")
       libs = [ "clang_rt.asan_dll_thunk-i386.lib" ]
     }
   }
@@ -381,7 +381,7 @@ config("coverage_flags") {
         "-mllvm",
         "-sanitizer-coverage-prune-blocks=1",
       ]
-      if (current_cpu == "arm") {
+      if (target_cpu == "arm") {
         # http://crbug.com/517105
         cflags += [
           "-mllvm",

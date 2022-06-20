@@ -26,12 +26,12 @@ template("fuchsia_clang_toolchain") {
 
 fuchsia_clang_toolchain("x64") {
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
   }
 }
 
 fuchsia_clang_toolchain("arm64") {
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
   }
 }

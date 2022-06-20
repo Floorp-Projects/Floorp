@@ -61,7 +61,7 @@ config("ldconfig") {
 config("executable_config") {
   configs = [ ":ldconfig" ]
 
-  if (!is_clang && current_cpu == "arm") {
+  if (!is_clang && target_cpu == "arm") {
     ldflags = [
       # Export stdlibc++ and libgcc symbols to force shlibs to refer to these
       # symbols from the executable.
@@ -89,7 +89,7 @@ config("executable_config") {
 # shared libs to inherit RPATH from the parent executable that is loading
 # the shared library. (See internal b/37514052 for more details.)
 config("shared_library_config") {
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     configs = [ ":static_config" ]
   }
 }

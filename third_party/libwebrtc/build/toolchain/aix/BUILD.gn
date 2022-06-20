@@ -14,7 +14,7 @@ gcc_toolchain("ppc64") {
   ld = cxx
 
   toolchain_args = {
-    current_cpu = "ppc64"
+    target_cpu = "ppc64"
     current_os = "aix"
 
     # reclient does not support gcc.

@@ -21,22 +21,22 @@ is_nacl_nonsfi = false
 nacl_toolchain_dir = "//native_client/toolchain/${host_os}_x86"
 
 if (is_nacl_glibc) {
-  if (current_cpu == "x86" || current_cpu == "x64") {
+  if (target_cpu == "x86" || target_cpu == "x64") {
     nacl_toolchain_package = "nacl_x86_glibc"
-  } else if (current_cpu == "arm") {
+  } else if (target_cpu == "arm") {
     nacl_toolchain_package = "nacl_arm_glibc"
   }
 } else {
   nacl_toolchain_package = "pnacl_newlib"
 }
 
-if (current_cpu == "pnacl") {
+if (target_cpu == "pnacl") {
   _nacl_tuple = "pnacl"
-} else if (current_cpu == "x86" || current_cpu == "x64") {
+} else if (target_cpu == "x86" || target_cpu == "x64") {
   _nacl_tuple = "x86_64-nacl"
-} else if (current_cpu == "arm") {
+} else if (target_cpu == "arm") {
   _nacl_tuple = "arm-nacl"
-} else if (current_cpu == "mipsel") {
+} else if (target_cpu == "mipsel") {
   _nacl_tuple = "mipsel-nacl"
 } else {
   # In order to allow this file to be included unconditionally
