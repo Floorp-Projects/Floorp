@@ -3231,6 +3231,11 @@
 #   2: Depth-first. Delazify all functions off-thread in the order of appearance
 #      in the source.
 #
+#   3: Large-first. Delazify all functions off-thread starting with the largest
+#      functions first, and the smallest as the last one to be delazified, where
+#      the size of function is measured in bytes between the start to the end of
+#      the function.
+#
 # 255: Parse everything eagerly, from the first parse. All functions are parsed
 #      at the same time as the top-level of a file.
 - name: dom.script_loader.delazification.strategy

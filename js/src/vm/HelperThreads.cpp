@@ -873,9 +873,9 @@ bool js::StartOffThreadDelazification(
   return true;
 }
 
-bool DepthFirstDelazification::add(JSContext* cx,
-                                   const frontend::CompilationStencil& stencil,
-                                   ScriptIndex index) {
+bool DelazifyStrategy::add(JSContext* cx,
+                           const frontend::CompilationStencil& stencil,
+                           ScriptIndex index) {
   using namespace js::frontend;
   ScriptStencilRef scriptRef{stencil, index};
 
@@ -909,10 +909,80 @@ bool DepthFirstDelazification::add(JSContext* cx,
       continue;
     }
 
-    if (!stack.append(innerScriptIndex)) {
+    // Maybe insert the new script index in the queue of functions to delazify.
+    if (!insert(innerScriptIndex, innerScriptRef)) {
       ReportOutOfMemory(cx);
       return false;
     }
+  }
+
+  return true;
+}
+
+DelazifyStrategy::ScriptIndex LargeFirstDelazification::next() {
+  std::swap(heap.back(), heap[0]);
+  ScriptIndex result = heap.popCopy().second;
+
+  // NOTE: These are a heap indexes offseted by 1, such that we can manipulate
+  // the tree of heap-sorted values which bubble up the largest values towards
+  // the root of the tree.
+  size_t len = heap.length();
+  size_t i = 1;
+  while (true) {
+    // NOTE: We write (n + 1) - 1, instead of n, to explicit that the
+    // manipualted indexes are all offseted by 1.
+    size_t n = 2 * i;
+    size_t largest;
+    if (n + 1 <= len && heap[(n + 1) - 1].first > heap[n - 1].first) {
+      largest = n + 1;
+    } else if (n <= len) {
+      // The condition is n <= len in case n + 1 is out of the heap vector, but
+      // not n, in which case we still want to check if the last element of the
+      // heap vector should be swapped. Otherwise heap[n - 1] represents a
+      // larger function than heap[(n + 1) - 1].
+      largest = n;
+    } else {
+      // n is out-side the heap vector, thus our element is already in a leaf
+      // position and would not be moved any more.
+      break;
+    }
+
+    if (heap[i - 1].first < heap[largest - 1].first) {
+      // We found a function which has a larger body as a child of the current
+      // element. we swap it with the current element, such that the largest
+      // element is closer to the root of the tree.
+      std::swap(heap[i - 1], heap[largest - 1]);
+      i = largest;
+    } else {
+      // The largest function found as a child of the current node is smaller
+      // than the current node's function size. The heap tree is now organized
+      // as expected.
+      break;
+    }
+  }
+
+  return result;
+}
+
+bool LargeFirstDelazification::insert(ScriptIndex index,
+                                      frontend::ScriptStencilRef& ref) {
+  const frontend::ScriptStencilExtra& extra = ref.scriptExtra();
+  SourceSize size = extra.extent.sourceEnd - extra.extent.sourceStart;
+  if (!heap.append(std::pair(size, index))) {
+    return false;
+  }
+
+  // NOTE: These are a heap indexes offseted by 1, such that we can manipulate
+  // the tree of heap-sorted values which bubble up the largest values towards
+  // the root of the tree.
+  size_t i = heap.length();
+  while (i > 1) {
+    if (heap[i - 1].first <= heap[(i / 2) - 1].first) {
+      return true;
+    }
+
+    std::swap(heap[i - 1], heap[(i / 2) - 1]);
+    i /= 2;
   }
 
   return true;
@@ -988,6 +1058,11 @@ bool DelazifyTask::init(
       // ConcurrentDepthFirst visit all functions to be delazified, visiting the
       // inner functions before the siblings functions.
       strategy = cx->make_unique<DepthFirstDelazification>();
+      break;
+    case JS::DelazificationOption::ConcurrentLargeFirst:
+      // ConcurrentLargeFirst visit all functions to be delazified, visiting the
+      // largest function first.
+      strategy = cx->make_unique<LargeFirstDelazification>();
       break;
     case JS::DelazificationOption::ParseEverythingEagerly:
       // ParseEverythingEagerly parse all functions eagerly, thus leaving no
