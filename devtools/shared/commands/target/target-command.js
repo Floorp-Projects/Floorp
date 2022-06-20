@@ -8,7 +8,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
-const BROWSERTOOLBOX_SCOPE = "devtools.browsertoolbox.scope";
+const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
 // Possible values of the previous pref:
 const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
 const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
@@ -47,7 +47,7 @@ class TargetCommand extends EventEmitter {
     );
 
     Services.prefs.addObserver(
-      BROWSERTOOLBOX_SCOPE,
+      BROWSERTOOLBOX_SCOPE_PREF,
       this._updateBrowserToolboxScope
     );
     // Until Watcher actor notify about new top level target when navigating to another process
@@ -114,7 +114,7 @@ class TargetCommand extends EventEmitter {
   }
 
   /**
-   * Called fired when BROWSERTOOLBOX_SCOPE pref changes.
+   * Called fired when BROWSERTOOLBOX_SCOPE_PREF pref changes.
    * This will enable/disable the full multiprocess debugging.
    * When enabled we will watch for content process targets and debug all the processes.
    * When disabled we will only watch for FRAME and WORKER and restrict ourself to parent process resources.
@@ -127,7 +127,7 @@ class TargetCommand extends EventEmitter {
       return;
     }
     const browserToolboxScope = Services.prefs.getCharPref(
-      BROWSERTOOLBOX_SCOPE
+      BROWSERTOOLBOX_SCOPE_PREF
     );
     if (browserToolboxScope == BROWSERTOOLBOX_SCOPE_EVERYTHING) {
       // Force listening to new additional target types
@@ -543,7 +543,7 @@ class TargetCommand extends EventEmitter {
         BROWSERTOOLBOX_FISSION_ENABLED
       );
       const browserToolboxScope = Services.prefs.getCharPref(
-        BROWSERTOOLBOX_SCOPE
+        BROWSERTOOLBOX_SCOPE_PREF
       );
       if (
         fissionBrowserToolboxEnabled &&
@@ -1094,7 +1094,7 @@ class TargetCommand extends EventEmitter {
     this._isDestroyed = true;
 
     Services.prefs.removeObserver(
-      BROWSERTOOLBOX_SCOPE,
+      BROWSERTOOLBOX_SCOPE_PREF,
       this._updateBrowserToolboxScope
     );
   }
