@@ -40,86 +40,23 @@ else
   exit 1
 fi
 
-IS_WIN=0
-IS_DARWIN=0
-IS_LINUX=0
-
-# Erase content of third_party/libwebrtc/moz.build to help with generating
-# files that may conflict with current moz.build files.  Each config calls
-# ./mach configure.  If there are conflicts in any moz.build files under
-# third_party/libwebrtc, it would keep our configure step from completing
-# successfully.  Since this file will be regenerated at the end of this
-# process, we can make it an empty file to avoid conflicts during the
-# configure step.
-echo "" > third_party/libwebrtc/moz.build
-
-# For now, only macOS, Windows, and Linux (including Android builds) are supported here.
-if [ "x$SYS_NAME" = "xDarwin" ]; then
-  CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
-  IS_DARWIN=1
-elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
-  unset ANSICON
-  CONFIGS="x64_True_arm64_win x64_False_arm64_win"
-  CONFIGS="$CONFIGS x64_True_x64_win x64_False_x64_win"
-  CONFIGS="$CONFIGS x64_True_x86_win x64_False_x86_win"
-  IS_WIN=1
-elif [ "x$SYS_NAME" = "xOpenBSD" ]; then
-  CONFIGS="x64_False_x64_openbsd x64_True_x64_openbsd"
-else
-  # Ensure rust has the correct targets for building x86 and arm64.  These
-  # operations succeed quickly if previously completed.
-  rustup target add aarch64-unknown-linux-gnu
-  rustup target add i686-unknown-linux-gnu
-
-  CONFIGS="x64_False_x64_linux_False x64_True_x64_linux_False"
-  CONFIGS="$CONFIGS x64_False_x64_linux_True x64_True_x64_linux_True"
-  CONFIGS="$CONFIGS x64_False_x86_linux_False x64_True_x86_linux_False"
-  CONFIGS="$CONFIGS x64_False_x86_linux_True x64_True_x86_linux_True"
-  CONFIGS="$CONFIGS x64_False_arm64_linux_False x64_True_arm64_linux_False"
-  CONFIGS="$CONFIGS x64_False_arm64_linux_True x64_True_arm64_linux_True"
-  CONFIGS="$CONFIGS x64_False_arm_android x64_True_arm_android"
-  CONFIGS="$CONFIGS x64_False_x64_android x64_True_x64_android"
-  CONFIGS="$CONFIGS x64_False_x86_android x64_True_x86_android"
-  CONFIGS="$CONFIGS x64_False_arm64_android x64_True_arm64_android"
-  IS_LINUX=1
-fi
-
 CONFIG_DIR=dom/media/webrtc/third_party_build/gn-configs
 echo "CONFIG_DIR is $CONFIG_DIR"
 
-# Each mozconfig is for a particular "platform" and defines debug/non-debug and a
-# MOZ_OBJDIR based on the name of the mozconfig to make it easier to know where to
-# find the generated gn json file.
-# The output of this step is a series of gn produced json files with a name format
-# that follows the form a-b-c-d.json where:
-#   a = generating cpu (example: x64)
-#   b = debug (True / False)
-#   c = target cpu (example: x64 / arm64)
-#   d = target platform (mac/linux)
-for THIS_BUILD in $CONFIGS
-do
-  echo "Building gn json file for $THIS_BUILD"
-  export MOZCONFIG=$CONFIG_DIR/$THIS_BUILD.mozconfig
-  echo "Using MOZCONFIG=$MOZCONFIG"
-
-  ./mach configure | tee $THIS_BUILD.configure.log
-  if [ ! -d obj-$THIS_BUILD ]; then
-    echo "Expected build output directory obj-$THIS_BUILD is missing, ensure this is set in $MOZCONFIG"
-    exit 1
-  fi
-  ./mach build-backend -b GnConfigGen --verbose | tee $THIS_BUILD.build-backend.log
-  cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/$THIS_BUILD.json $CONFIG_DIR
-done
+export MOZ_OBJDIR=$(mktemp -d -p . obj-XXXXXXXXXX)
+./mach configure
+if [ ! -d $MOZ_OBJDIR ]; then
+  echo "Expected build output directory $MOZ_OBJDIR is missing"
+  exit 1
+fi
+./mach build-backend -b GnConfigGen --verbose | tee $MOZ_OBJDIR/build-backend.log
+cp $MOZ_OBJDIR/third_party/libwebrtc/gn-output/*.json $CONFIG_DIR
 
 # run some fixup (mostly removing dev-machine dependent info) on json files
-for THIS_CONFIG in $CONFIGS
+for THIS_CONFIG in $CONFIG_DIR/*.json
 do
-  echo "fixup file: $CONFIG_DIR/$THIS_CONFIG.json"
-  ./$CONFIG_DIR/fixup_json.py $CONFIG_DIR/$THIS_CONFIG.json
-  if [ "$IS_WIN" == 1 ]; then
-    # Use Linux/UNIX line endings
-    dos2unix $CONFIG_DIR/$THIS_CONFIG.json
-  fi
+  echo "fixup file: $THIS_CONFIG"
+  ./$CONFIG_DIR/fixup_json.py $THIS_CONFIG
 done
 
 #  The symlinks are no longer needed after generating the .json files.
@@ -139,15 +76,7 @@ fi
 echo "Building moz.build files from gn json files"
 ./mach build-backend -b GnMozbuildWriter --verbose
 
-# Make sure all the moz.build files have unix line endings if generated
-# on Windows.
-if [ "$IS_WIN" == 1 ]; then
-  MODIFIED_BUILD_FILES=`hg status --modified --added --no-status --include '**/moz.build'`
-  for BUILD_FILE in $MODIFIED_BUILD_FILES
-  do
-    dos2unix $BUILD_FILE
-  done
-fi
+rm -rf $MOZ_OBJDIR
 
 echo
 echo "Done generating gn build files. You should now be able to build with ./mach build"

@@ -1,4 +1,0 @@
-ac_add_options --enable-debug
-
-mk_add_options MOZ_OBJDIR=obj-x64_True_x64_mac
-
