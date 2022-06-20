@@ -73,8 +73,8 @@ if (use_unverified_rust_toolchain) {
   rust_prefix = "$rust_bin_dir/"
 } else if (toolchain_has_official_rust) {
   if (host_os != "linux") {
-    assert(false,
-           "Attempt to use standard Rust toolchain on an unsupported platform")
+#     assert(false,
+#            "Attempt to use standard Rust toolchain on an unsupported platform")
   }
   rust_prefix =
       rebase_path("//third_party/android_rust_toolchain/toolchain/1.54.0/bin/")
