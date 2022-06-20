@@ -566,6 +566,8 @@ def main():
   if len(sys.argv) < 2 or sys.argv[1] not in commands:
     print('Expected one of: %s' % ', '.join(commands), file=sys.stderr)
     return 1
+  if sys.argv[1] == 'copy_dlls':
+    return 0
   return commands[sys.argv[1]](*sys.argv[2:])
 
 
