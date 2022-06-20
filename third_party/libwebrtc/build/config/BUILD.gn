@@ -249,9 +249,9 @@ group("common_deps") {
     public_deps += [ "//build/config/sanitizers:deps" ]
   }
 
-  if (use_custom_libcxx) {
-    public_deps += [ "//buildtools/third_party/libc++" ]
-  }
+  #if (use_custom_libcxx) {
+  #  public_deps += [ "//buildtools/third_party/libc++" ]
+  #}
 
   if (use_afl) {
     public_deps += [ "//third_party/afl" ]

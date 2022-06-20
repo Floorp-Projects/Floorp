@@ -13,7 +13,7 @@ import("//build/config/clang/clang.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/coverage/coverage.gni")
 import("//build/config/dcheck_always_on.gni")
-import("//build/config/gclient_args.gni")
+#import("//build/config/gclient_args.gni")
 import("//build/config/host_byteorder.gni")
 import("//build/config/rust.gni")
 import("//build/config/sanitizers/sanitizers.gni")
@@ -1304,7 +1304,7 @@ config("compiler_deterministic") {
 }
 
 config("clang_revision") {
-  if (is_clang && clang_base_path == default_clang_base_path) {
+  if (false && is_clang && clang_base_path == default_clang_base_path) {
     update_args = [
       "--print-revision",
       "--verify-version=$clang_version",

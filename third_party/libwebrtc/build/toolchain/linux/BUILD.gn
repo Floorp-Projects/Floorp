@@ -342,21 +342,21 @@ gcc_toolchain("s390x") {
   }
 }
 
-gcc_toolchain("mips64") {
-  cc = "gcc"
-  cxx = "g++"
-
-  readelf = "readelf"
-  nm = "nm"
-  ar = "ar"
-  ld = cxx
-
-  toolchain_args = {
-    current_cpu = "mips64"
-    current_os = "linux"
-    is_clang = false
-  }
-}
+#gcc_toolchain("mips64") {
+#  cc = "gcc"
+#  cxx = "g++"
+#
+#  readelf = "readelf"
+#  nm = "nm"
+#  ar = "ar"
+#  ld = cxx
+#
+#  toolchain_args = {
+#    current_cpu = "mips64"
+#    current_os = "linux"
+#    is_clang = false
+#  }
+#}
 
 gcc_toolchain("ppc64") {
   cc = "gcc"
