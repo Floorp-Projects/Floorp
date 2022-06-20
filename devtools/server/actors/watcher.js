@@ -198,6 +198,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       traits: {
         ...this.sessionContext.supportedTargets,
         resources: this.sessionContext.supportedResources,
+        // @backward-compat { version 103 } Clear resources not supported by old servers
+        supportsClearResources: true,
       },
     };
   },
@@ -600,6 +602,16 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
     WatcherRegistry.maybeUnregisteringJSWindowActor();
+  },
+
+  clearResources(resourceTypes) {
+    // First process resources which have to be listened from the parent process
+    // (the watcher actor always runs in the parent process)
+    // TODO: content process / worker thread resources are not cleared. See Bug 1774573
+    Resources.clearResources(
+      this,
+      Resources.getParentProcessResourceTypes(resourceTypes)
+    );
   },
 
   /**
