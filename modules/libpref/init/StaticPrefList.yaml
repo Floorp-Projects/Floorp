@@ -3231,6 +3231,11 @@
 #   2: Depth-first. Delazify all functions off-thread in the order of appearance
 #      in the source.
 #
+#   3: Large-first. Delazify all functions off-thread starting with the largest
+#      functions first, and the smallest as the last one to be delazified, where
+#      the size of function is measured in bytes between the start to the end of
+#      the function.
+#
 # 255: Parse everything eagerly, from the first parse. All functions are parsed
 #      at the same time as the top-level of a file.
 - name: dom.script_loader.delazification.strategy
@@ -7708,6 +7713,13 @@
   mirror: always
   rust: true
 
+# Is support for :has() enabled?
+- name: layout.css.has-selector.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for CSS hyphenate-character enabled?
 - name: layout.css.hyphenate-character.enabled
   type: RelaxedAtomicBool
@@ -8475,13 +8487,13 @@
 # is unspecified.
 - name: mathml.scriptminsize_attribute.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable the scriptsizemultiplier attribute.
 - name: mathml.scriptsizemultiplier_attribute.disabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to disable support for stretching operators with STIXGeneral fonts.
@@ -12163,7 +12175,7 @@
 # (OS) mapping when loaded via the file:// protocol.
 - name: security.block_fileuri_script_with_wrong_mime
   type: bool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Cancel outgoing requests from SystemPrincipal:

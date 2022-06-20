@@ -56,9 +56,8 @@ var scrollbarTester = {
        "Scrollbar thumb should follow the mouse when dragged.");
   },
   setScrollToClick(value) {
-    var prefService = SpecialPowers.Services.prefs.nsIPrefService;
-    var uiBranch = prefService.getBranch("ui.");
-    uiBranch.setIntPref("scrollToClick", value ? 1 : 0);
+    SpecialPowers.Services.prefs.getBranch("ui.")
+      .setIntPref("scrollToClick", value ? 1 : 0);
   },
   getPos() {
     return this.scrollbar.getAttribute("curpos");

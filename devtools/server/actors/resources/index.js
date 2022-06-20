@@ -345,6 +345,30 @@ function unwatchResources(rootOrWatcherOrTargetActor, resourceTypes) {
 exports.unwatchResources = unwatchResources;
 
 /**
+ * Clear resources for a list of resource types.
+ *
+ * @param Actor rootOrWatcherOrTargetActor
+ *        The related actor, already passed to watchResources.
+ * @param Array<String> resourceTypes
+ *        List of all type of resource to clear.
+ */
+function clearResources(rootOrWatcherOrTargetActor, resourceTypes) {
+  for (const resourceType of resourceTypes) {
+    const { watchers } = getResourceTypeEntry(
+      rootOrWatcherOrTargetActor,
+      resourceType
+    );
+
+    const watcher = watchers.get(rootOrWatcherOrTargetActor);
+    if (watcher && typeof watcher.clear == "function") {
+      watcher.clear();
+    }
+  }
+}
+
+exports.clearResources = clearResources;
+
+/**
  * Stop watching for all watched resources on a given actor.
  *
  * @param Actor rootOrWatcherOrTargetActor

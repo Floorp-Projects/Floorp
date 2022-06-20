@@ -32,18 +32,8 @@ nsCString CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt) {
   std::string originSalt(aOriginSalt.BeginReading(), aOriginSalt.Length());
   std::string input =
       machineId + originSalt + CDMStorageIdProvider::kBrowserIdentifier;
-  nsresult rv;
-  nsCOMPtr<nsICryptoHash> hasher =
-      do_CreateInstance("@mozilla.org/security/hash;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG_DEBUG(
-        "CDMStorageIdProvider::ComputeStorageId: no crypto hash(0x%08" PRIx32
-        ")",
-        static_cast<uint32_t>(rv));
-    return ""_ns;
-  }
-
-  rv = hasher->Init(nsICryptoHash::SHA256);
+  nsCOMPtr<nsICryptoHash> hasher;
+  nsresult rv = NS_NewCryptoHash(nsICryptoHash::SHA256, getter_AddRefs(hasher));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_LOG_DEBUG(
         "CDMStorageIdProvider::ComputeStorageId: failed to initialize "

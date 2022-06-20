@@ -88,6 +88,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._referrerPolicy = networkEvent.referrerPolicy;
     this._priority = networkEvent.priority;
     this._channelId = networkEvent.channelId;
+    this._isFromSystemPrincipal = networkEvent.isFromSystemPrincipal;
     this._browsingContextID = networkEvent.browsingContextID;
     this.innerWindowId = networkEvent.innerWindowId;
     this._serial = networkEvent.serial;
@@ -147,6 +148,9 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       stacktraceResourceId:
         this._cause.type == "websocket" ? this._serial : this._channelId,
       isNavigationRequest: this.isNavigationRequest,
+      // This is used specifically in the browser toolbox console to distiguish priviledeged
+      // resources from the parent process from those from the contet
+      chromeContext: this._isFromSystemPrincipal,
     };
   },
 

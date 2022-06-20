@@ -54,7 +54,7 @@ function run_test() {
       provider
     );
 
-    Services.catMan.nsICategoryManager.addCategoryEntry(
+    Services.catMan.addCategoryEntry(
       categoryName,
       "unit test",
       providerContract,

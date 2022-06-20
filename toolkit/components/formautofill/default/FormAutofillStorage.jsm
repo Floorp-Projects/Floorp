@@ -24,31 +24,18 @@ const {
   AddressesBase,
 } = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JSONFile",
-  "resource://gre/modules/JSONFile.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "OSKeyStore",
-  "resource://gre/modules/OSKeyStore.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCard",
-  "resource://gre/modules/CreditCard.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  JSONFile: "resource://gre/modules/JSONFile.jsm",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
+});
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 

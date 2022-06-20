@@ -19,12 +19,6 @@ const { DevToolsClient } = require("devtools/client/devtools-client");
  *   the global evaluation scope of the toolbox. The toolbox cannot load testing
  *   files directly.
  *
- * spawn(arg, function)
- *
- *   Invoke the given function and argument within the global evaluation scope
- *   of the toolbox. The evaluation scope predefines the name "gToolbox" for the
- *   toolbox itself.
- *
  * destroy()
  *
  *   Destroy the browser toolbox and make sure it exits cleanly.
@@ -158,12 +152,32 @@ async function initBrowserToolboxTask({
     return onEvaluationResult;
   }
 
+  /**
+   * Invoke the given function and argument(s) within the global evaluation scope
+   * of the toolbox. The evaluation scope predefines the name "gToolbox" for the
+   * toolbox itself.
+   *
+   * @param {value|Array<value>} arg
+   *        If an Array is passed, we will consider it as the list of arguments
+   *        to pass to `fn`. Otherwise we will consider it as the unique argument
+   *        to pass to it.
+   * @param {Function} fn
+   *        Function to call in the global scope within the browser toolbox process.
+   *        This function will be stringified and passed to the process via RDP.
+   * @return {Promise<Value>}
+   *        Return the primitive value returned by `fn`.
+   */
   async function spawn(arg, fn) {
-    const rv = await evaluateExpression(`(${fn})(${arg})`, {
+    // Use JSON.stringify to ensure that we can pass strings
+    // as well as any JSON-able object.
+    const argString = JSON.stringify(Array.isArray(arg) ? arg : [arg]);
+    const rv = await evaluateExpression(`(${fn}).apply(null,${argString})`, {
+      // Use the following argument in order to ensure waiting for the completion
+      // of the promise returned by `fn` (in case this is an async method).
       mapped: { await: true },
     });
-    if (rv.exception) {
-      throw new Error(`ToolboxTask.spawn failure: ${rv.exception.message}`);
+    if (rv.exceptionMessage) {
+      throw new Error(`ToolboxTask.spawn failure: ${rv.exceptionMessage}`);
     } else if (rv.topLevelAwaitRejected) {
       throw new Error(`ToolboxTask.spawn await rejected`);
     }

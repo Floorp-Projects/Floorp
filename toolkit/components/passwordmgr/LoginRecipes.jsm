@@ -20,7 +20,6 @@ const OPTIONAL_KEYS = [
 ];
 const SUPPORTED_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -135,8 +134,7 @@ LoginRecipesParent.prototype = {
         }
         initPromise = this._rsClient.get();
       } else if (this._defaults.startsWith("resource://")) {
-        initPromise = lazy
-          .fetch(this._defaults)
+        initPromise = fetch(this._defaults)
           .then(resp => resp.json())
           .then(({ data }) => data);
       } else {

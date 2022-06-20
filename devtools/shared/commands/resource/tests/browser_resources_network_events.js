@@ -24,18 +24,21 @@ add_task(async function testContentProcessRequests() {
       url: CSP_URL,
       method: "GET",
       isNavigationRequest: true,
+      chromeContext: false,
     },
     {
       url: JS_CSP_URL,
       method: "GET",
       blockedReason: CSP_BLOCKED_REASON_CODE,
       isNavigationRequest: false,
+      chromeContext: false,
     },
     {
       url: CSS_CSP_URL,
       method: "GET",
       blockedReason: CSP_BLOCKED_REASON_CODE,
       isNavigationRequest: false,
+      chromeContext: false,
     },
   ];
   const expectedUpdated = [
@@ -43,18 +46,21 @@ add_task(async function testContentProcessRequests() {
       url: CSP_URL,
       method: "GET",
       isNavigationRequest: true,
+      chromeContext: false,
     },
     {
       url: JS_CSP_URL,
       method: "GET",
       blockedReason: CSP_BLOCKED_REASON_CODE,
       isNavigationRequest: false,
+      chromeContext: false,
     },
     {
       url: CSS_CSP_URL,
       method: "GET",
       blockedReason: CSP_BLOCKED_REASON_CODE,
       isNavigationRequest: false,
+      chromeContext: false,
     },
   ];
 
@@ -89,12 +95,14 @@ add_task(async function testCanceledRequest() {
       url: pageUrl,
       method: "GET",
       isNavigationRequest: true,
+      chromeContext: false,
     },
     {
       url: requestUrl,
       method: "GET",
       isNavigationRequest: false,
       blockedReason: "NS_BINDING_ABORTED",
+      chromeContext: false,
     },
   ];
   const expectedUpdated = [
@@ -102,12 +110,14 @@ add_task(async function testCanceledRequest() {
       url: pageUrl,
       method: "GET",
       isNavigationRequest: true,
+      chromeContext: false,
     },
     {
       url: requestUrl,
       method: "GET",
       isNavigationRequest: false,
       blockedReason: "NS_BINDING_ABORTED",
+      chromeContext: false,
     },
   ];
 
@@ -153,6 +163,7 @@ add_task(async function testIframeRequest() {
     {
       url: pageUrl,
       method: "GET",
+      chromeContext: false,
       isNavigationRequest: true,
       // The top level navigation request relates to the previous top level target.
       // Unfortunately, it is hard to test because it is racy.
@@ -164,12 +175,14 @@ add_task(async function testIframeRequest() {
       method: "GET",
       isNavigationRequest: false,
       targetFrontUrl: pageUrl,
+      chromeContext: false,
     },
     {
       url: iframeRequestUrl,
       method: "GET",
       isNavigationRequest: false,
       targetFrontUrl: iframeUrl,
+      chromeContext: false,
     },
   ];
   const expectedUpdated = [
@@ -177,16 +190,19 @@ add_task(async function testIframeRequest() {
       url: pageUrl,
       method: "GET",
       isNavigationRequest: true,
+      chromeContext: false,
     },
     {
       url: iframeUrl,
       method: "GET",
       isNavigationRequest: false,
+      chromeContext: false,
     },
     {
       url: iframeRequestUrl,
       method: "GET",
       isNavigationRequest: false,
+      chromeContext: false,
     },
   ];
 

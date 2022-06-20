@@ -94,6 +94,8 @@ add_task(async function testParentProcessRequests() {
     FETCH_URI,
     "The first resource is for the fetch request"
   );
+  ok(fetchRequest.chromeContext, "The fetch request is privileged");
+
   const fetchStacktrace = receivedStacktraces[0].lastFrame;
   is(receivedStacktraces[0].resourceId, fetchRequest.stacktraceResourceId);
   is(fetchStacktrace.filename, gTestPath);
@@ -122,6 +124,8 @@ add_task(async function testParentProcessRequests() {
     "The second resource is for the first image request"
   );
   ok(!firstImageRequest.fromCache, "The first image request isn't cached");
+  ok(firstImageRequest.chromeContext, "The first image request is privileged");
+
   const firstImageStacktrace = receivedStacktraces[1].lastFrame;
   is(receivedStacktraces[1].resourceId, firstImageRequest.stacktraceResourceId);
   is(firstImageStacktrace.filename, gTestPath);
@@ -138,6 +142,10 @@ add_task(async function testParentProcessRequests() {
     "The third resource is for the second image request"
   );
   ok(secondImageRequest.fromCache, "The second image request is cached");
+  ok(
+    secondImageRequest.chromeContext,
+    "The second image request is privileged"
+  );
 
   await resourceCommand.unwatchResources(
     [resourceCommand.TYPES.NETWORK_EVENT],

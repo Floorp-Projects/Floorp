@@ -89,6 +89,11 @@ enum class AsmJSOption : uint8_t {
   _(ConcurrentDepthFirst)                                                      \
                                                                                \
   /*                                                                           \
+   * Delazifiy functions strating with the largest function first.             \
+   */                                                                          \
+  _(ConcurrentLargeFirst)                                                      \
+                                                                               \
+  /*                                                                           \
    * Parse everything eagerly, from the first parse.                           \
    *                                                                           \
    * NOTE: Either the Realm configuration or specialized VM operating modes    \
@@ -266,12 +271,14 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool forceStrictMode() const { return forceStrictMode_; }
   bool consumeDelazificationCache() const {
     return eagerDelazificationIsOneOf<
-        DelazificationOption::ConcurrentDepthFirst>();
+        DelazificationOption::ConcurrentDepthFirst,
+        DelazificationOption::ConcurrentLargeFirst>();
   }
   bool populateDelazificationCache() const {
     return eagerDelazificationIsOneOf<
         DelazificationOption::CheckConcurrentWithOnDemand,
-        DelazificationOption::ConcurrentDepthFirst>();
+        DelazificationOption::ConcurrentDepthFirst,
+        DelazificationOption::ConcurrentLargeFirst>();
   }
   bool waitForDelazificationCache() const {
     return eagerDelazificationIsOneOf<

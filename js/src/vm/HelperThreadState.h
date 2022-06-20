@@ -43,6 +43,10 @@ struct FreeDelazifyTask;
 struct PromiseHelperTask;
 class PromiseObject;
 
+namespace frontend {
+struct ScriptStencilRef;
+}
+
 namespace jit {
 class IonCompileTask;
 class IonFreeTask;
@@ -609,6 +613,13 @@ struct DelazifyStrategy {
   // after this call.
   virtual void clear() = 0;
 
+  // Insert an index in the container of the delazification strategy. A strategy
+  // can choose to ignore the insertion of an index in its queue of function to
+  // delazify. Return false only in case of errors while inserting, and true
+  // otherwise.
+  [[nodiscard]] virtual bool insert(ScriptIndex index,
+                                    frontend::ScriptStencilRef& ref) = 0;
+
   // Add the inner functions of a delazified function. This function should only
   // be called with a function which has some bytecode associated with it, and
   // register functions which parent are already delazified.
@@ -616,9 +627,9 @@ struct DelazifyStrategy {
   // This function is called with the script index of:
   //  - top-level script, when starting the off-thread delazification.
   //  - functions added by `add` and delazified by `DelazifyTask`.
-  [[nodiscard]] virtual bool add(JSContext* cx,
-                                 const frontend::CompilationStencil& stencil,
-                                 ScriptIndex index) = 0;
+  [[nodiscard]] bool add(JSContext* cx,
+                         const frontend::CompilationStencil& stencil,
+                         ScriptIndex index);
 };
 
 // Delazify all functions using a Depth First traversal of the function-tree
@@ -638,9 +649,23 @@ struct DepthFirstDelazification final : public DelazifyStrategy {
   bool done() const override { return stack.empty(); }
   ScriptIndex next() override { return stack.popCopy(); }
   void clear() override { return stack.clear(); }
-  [[nodiscard]] bool add(JSContext* cx,
-                         const frontend::CompilationStencil& stencil,
-                         ScriptIndex index) override;
+  bool insert(ScriptIndex index, frontend::ScriptStencilRef&) override {
+    return stack.append(index);
+  }
+};
+
+// Delazify all functions using a traversal which select the largest function
+// first. The intent being that if the main thread races with the helper thread,
+// then the main thread should only have to parse small functions instead of the
+// large ones which would be prioritized by this delazification strategy.
+struct LargeFirstDelazification final : public DelazifyStrategy {
+  using SourceSize = uint32_t;
+  Vector<std::pair<SourceSize, ScriptIndex>, 0, SystemAllocPolicy> heap;
+
+  bool done() const override { return heap.empty(); }
+  ScriptIndex next() override;
+  void clear() override { return heap.clear(); }
+  bool insert(ScriptIndex, frontend::ScriptStencilRef&) override;
 };
 
 // Eagerly delazify functions, and send the result back to the runtime which

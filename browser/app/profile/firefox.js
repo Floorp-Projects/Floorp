@@ -1821,10 +1821,12 @@ pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
 
-// Enable URL query stripping in Nightly.
+// Enable URL query stripping in regular browsing in Nightly.
 #ifdef NIGHTLY_BUILD
 pref("privacy.query_stripping.enabled", true);
 #endif
+// Enable URL query stripping in Private Browsing Mode for all desktop channels.
+pref("privacy.query_stripping.enabled.pbmode", true);
 
 pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
 pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
@@ -2273,6 +2275,13 @@ pref("devtools.browsertoolbox.fission", true);
 #else
 pref("devtools.browsertoolbox.fission", false);
 #endif
+
+// When the Multiprocess Browser Toolbox is enabled, you can configure the scope of it:
+// - "everything" will enable debugging absolutely everything in the browser
+//   All processes, all documents, all workers, all add-ons.
+// - "parent-process" will restrict debugging to the parent process
+//   All privileged javascript, documents and workers running in the parent process.
+pref("devtools.browsertoolbox.scope", "everything");
 
 // This preference will enable watching top-level targets from the server side.
 pref("devtools.target-switching.server.enabled", true);

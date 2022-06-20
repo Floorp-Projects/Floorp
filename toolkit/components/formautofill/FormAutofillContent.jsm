@@ -24,56 +24,19 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddressResult",
-  "resource://autofill/ProfileAutoCompleteResult.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ComponentUtils",
-  "resource://gre/modules/ComponentUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCardResult",
-  "resource://autofill/ProfileAutoCompleteResult.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofill",
-  "resource://autofill/FormAutofill.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillHandler",
-  "resource://autofill/FormAutofillHandler.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCardTelemetry",
-  "resource://autofill/FormAutofillTelemetryUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormLikeFactory",
-  "resource://gre/modules/FormLikeFactory.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "InsecurePasswordUtils",
-  "resource://gre/modules/InsecurePasswordUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AddressResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
+  ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
+  CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
+  CreditCardTelemetry: "resource://autofill/FormAutofillTelemetryUtils.jsm",
+  FormAutofill: "resource://autofill/FormAutofill.jsm",
+  FormAutofillHandler: "resource://autofill/FormAutofillHandler.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "DELEGATE_AUTOCOMPLETE",

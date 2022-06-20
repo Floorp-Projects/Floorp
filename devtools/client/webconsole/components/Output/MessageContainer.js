@@ -28,6 +28,7 @@ const ConsoleCommand = require("devtools/client/webconsole/components/Output/mes
 const CSSWarning = require("devtools/client/webconsole/components/Output/message-types/CSSWarning");
 const DefaultRenderer = require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer");
 const EvaluationResult = require("devtools/client/webconsole/components/Output/message-types/EvaluationResult");
+const NavigationMarker = require("devtools/client/webconsole/components/Output/message-types/NavigationMarker");
 const NetworkEventMessage = require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage");
 const PageError = require("devtools/client/webconsole/components/Output/message-types/PageError");
 const SimpleTable = require("devtools/client/webconsole/components/Output/message-types/SimpleTable");
@@ -107,6 +108,9 @@ function getMessageComponent(message) {
       }
       if (message.type === MESSAGE_TYPE.SIMPLE_TABLE) {
         return SimpleTable;
+      }
+      if (message.type === MESSAGE_TYPE.NAVIGATION_MARKER) {
+        return NavigationMarker;
       }
       break;
   }

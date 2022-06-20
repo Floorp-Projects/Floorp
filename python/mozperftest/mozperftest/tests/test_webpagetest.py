@@ -68,6 +68,7 @@ def init_placeholder_wpt_data(fvonly=False, invalid_results=False):
             "standardDeviation": views,
             "median": views,
             "runs": {"1": {"firstView": {"browserVersion": 101.1}}},
+            "url": "testurl.ca",
         },
         "webPagetestVersion": 21.0,
     }
@@ -87,6 +88,7 @@ def init_mocked_request(status_code, **kwargs):
             "ec2-us-east-1": {"PendingTests": {"Queued": 3}, "Label": "California"},
             "jsonUrl": "mock_test.com",
             "summary": "Just a pageload test",
+            "url": "testurl.ca",
         },
         "statusCode": status_code,
     }

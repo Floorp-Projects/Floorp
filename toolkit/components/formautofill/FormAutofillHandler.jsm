@@ -21,27 +21,19 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
+
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCardTelemetry",
-  "resource://autofill/FormAutofillTelemetryUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillHeuristics",
-  "resource://autofill/FormAutofillHeuristics.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormLikeFactory",
-  "resource://gre/modules/FormLikeFactory.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+  CreditCardTelemetry: "resource://autofill/FormAutofillTelemetryUtils.jsm",
+  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.jsm",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+});
 
 const formFillController = Cc[
   "@mozilla.org/satchel/form-fill-controller;1"
@@ -57,10 +49,6 @@ XPCOMUtils.defineLazyGetter(lazy, "reauthPasswordPromptMessage", () => {
     `useCreditCardPasswordPrompt.${platform}`,
     [brandShortName]
   );
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.jsm",
 });
 
 FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);

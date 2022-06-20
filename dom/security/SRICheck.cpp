@@ -200,11 +200,8 @@ nsresult SRICheckDataVerifier::EnsureCryptoHash() {
     return NS_OK;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsICryptoHash> cryptoHash =
-      do_CreateInstance("@mozilla.org/security/hash;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = cryptoHash->Init(mHashType);
+  nsCOMPtr<nsICryptoHash> cryptoHash;
+  nsresult rv = NS_NewCryptoHash(mHashType, getter_AddRefs(cryptoHash));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCryptoHash = cryptoHash;
