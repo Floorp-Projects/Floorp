@@ -13,16 +13,11 @@ const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CreditCard",
-  "resource://gre/modules/CreditCard.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
