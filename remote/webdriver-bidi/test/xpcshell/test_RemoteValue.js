@@ -3,13 +3,6 @@
 
 "use strict";
 
-class MockDate extends Date {}
-
-// Mock `toString` to avoid timezone differences.
-MockDate.prototype.toString = function() {
-  return "Tue May 31 2022 15:47:29 GMT+0200 (Central European Summer Time)";
-};
-
 const PRIMITIVE_TYPES = [
   { value: undefined, serialized: { type: "undefined" } },
   { value: null, serialized: { type: "null" } },
@@ -41,10 +34,10 @@ const REMOTE_SIMPLE_VALUES = [
     },
   },
   {
-    value: new MockDate(1654004849000),
+    value: new Date(1654004849000),
     serialized: {
       type: "date",
-      value: "Tue May 31 2022 15:47:29 GMT+0200 (Central European Summer Time)",
+      value: "2022-05-31T13:47:29.000Z",
     },
   },
 ];
