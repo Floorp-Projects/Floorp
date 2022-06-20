@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict, deque
 from copy import deepcopy
+from pathlib import Path
 import glob
 import json
 import os
@@ -152,7 +153,8 @@ def find_deps(all_targets, target):
     return all_deps
 
 
-def filter_gn_config(gn_result, sandbox_vars, input_vars, gn_target):
+def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
+    gen_path = (Path(path) / "gen").resolve()
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
     gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
@@ -199,7 +201,16 @@ def filter_gn_config(gn_result, sandbox_vars, input_vars, gn_target):
             "libs",
         ):
             spec[spec_attr] = raw_spec.get(spec_attr, [])
-            gn_out["targets"][target_fullname] = spec
+            if spec_attr == "defines":
+                spec[spec_attr] = [
+                    d
+                    for d in spec[spec_attr]
+                    if "CR_XCODE_VERSION" not in d and "CR_SYSROOT_HASH" not in d
+                ]
+            if spec_attr == "include_dirs":
+                spec[spec_attr] = [d for d in spec[spec_attr] if gen_path != Path(d)]
+
+        gn_out["targets"][target_fullname] = spec
 
     return gn_out
 
@@ -628,7 +639,7 @@ def generate_gn_config(
     with open(gn_config_file, "r") as fh:
         gn_out = json.load(fh)
         gn_out = filter_gn_config(
-            gn_out, sandbox_variables, input_variables, gn_target
+            out_dir, gn_out, sandbox_variables, input_variables, gn_target
         )
 
     os.remove(gn_config_file)
