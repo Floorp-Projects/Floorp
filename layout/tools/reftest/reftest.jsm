@@ -1588,6 +1588,8 @@ async function RestoreChangedPreferences()
         }
     });
 
+    g.prefsToRestore = [];
+
     if (requiresRefresh) {
         await new Promise(resolve => g.containingWindow.requestAnimationFrame(resolve));
     }
