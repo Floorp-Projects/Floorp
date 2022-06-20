@@ -359,7 +359,9 @@ class WebPageTest(Layer):
                         self.error(f"Fail {wpt_run['data']['url']}")
                         return
                     if value not in wpt_run["data"][statistic][view].keys():
-                        raise WPTDataProcessingError(f"{value} not found wpt results")
+                        raise WPTDataProcessingError(
+                            f"{value} not found {wpt_run['data']['url']}"
+                        )
                     desired_values[f"{value}.{view}.{statistic}"] = int(
                         wpt_run["data"][statistic][view][value]
                     )
