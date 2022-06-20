@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
 
-      let prefs = SpecialPowers.Services.prefs.nsIPrefBranch;
+      let prefs = SpecialPowers.Services.prefs;
       prefs.setCharPref("intl.l10n.pseudo", "bidi");
 
       let rootDir = getRootDirectory(window.location.href);

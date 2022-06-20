@@ -11,10 +11,6 @@ const DOMAIN1_HTTP_TO_HTTP_U1_P1 = TestData.formLogin({
 const DOMAIN1_HTTP_TO_HTTP_U1_P2 = TestData.formLogin({
   password: "password two",
 });
-const DOMAIN1_HTTP_TO_HTTP_U2_P2 = TestData.formLogin({
-  password: "password two",
-  username: "username two",
-});
 const DOMAIN2_HTTP_TO_HTTP_U2_P2 = TestData.formLogin({
   origin: "http://www4.example.com",
   formActionOrigin: "http://www4.example.com",
@@ -31,14 +27,6 @@ const DOMAIN1_HTTPS_TO_HTTP_U1_P1 = TestData.formLogin({
 const DOMAIN1_HTTPS_TO_HTTPS_U1_P1 = TestData.formLogin({
   formActionOrigin: "https://www.example.com",
   origin: "https://www3.example.com",
-  timePasswordChanged: 4000,
-  timeLastUsed: 1000,
-});
-
-const DOMAIN1_HTTPS_TO_HTTPS_U1_P2 = TestData.formLogin({
-  formActionOrigin: "https://www.example.com",
-  origin: "https://www3.example.com",
-  password: "password two",
   timePasswordChanged: 4000,
   timeLastUsed: 1000,
 });

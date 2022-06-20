@@ -36,15 +36,14 @@ class NetworkEventStackTracesWatcher {
    *          This will be called for each resource.
    */
   async watch(targetActor, { onAvailable }) {
+    this.stacktraces = new Map();
+    this.onStackTraceAvailable = onAvailable;
+    this.targetActor = targetActor;
+
     Services.obs.addObserver(this, "http-on-opening-request");
     Services.obs.addObserver(this, "document-on-opening-request");
     Services.obs.addObserver(this, "network-monitor-alternate-stack");
     ChannelEventSinkFactory.getService().registerCollector(this);
-
-    this.targetActor = targetActor;
-    this.onStackTraceAvailable = onAvailable;
-
-    this.stacktraces = new Map();
   }
 
   /**

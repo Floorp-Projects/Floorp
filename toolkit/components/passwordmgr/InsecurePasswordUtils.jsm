@@ -16,12 +16,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gContentSecurityManager",
-  "@mozilla.org/contentsecuritymanager;1",
-  "nsIContentSecurityManager"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "LoginHelper",

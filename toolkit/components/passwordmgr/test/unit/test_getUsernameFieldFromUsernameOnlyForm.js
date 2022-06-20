@@ -137,7 +137,7 @@ function _setPrefs() {
   });
 }
 
-this._setPrefs();
+_setPrefs();
 
 for (let tc of TESTCASES) {
   info("Sanity checking the testcase: " + tc.description);

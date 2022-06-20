@@ -29,11 +29,6 @@ ChromeUtils.defineModuleGetter(
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginManagerPrompter",
-  "resource://gre/modules/LoginManagerPrompter.jsm"
-);
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -418,7 +413,7 @@ LoginManagerAuthPrompter.prototype = {
     let foundLogins = null;
     let canRememberLogin = false;
     var selectedLogin = null;
-    var [origin, realm, unused] = this._getRealmInfo(aPasswordRealm);
+    var [origin, realm] = this._getRealmInfo(aPasswordRealm);
 
     // If origin is null, we can't save this login.
     if (origin) {

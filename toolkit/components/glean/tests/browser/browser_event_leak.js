@@ -4,6 +4,7 @@
 "use strict";
 
 add_task(async () => {
+  Services.fog.testResetFOG(); // Needed for TV which reuses profiles on repeat
   Assert.equal(
     undefined,
     Glean.testOnlyIpc.eventWithExtra.testGetValue(),

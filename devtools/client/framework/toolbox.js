@@ -19,6 +19,10 @@ const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const REGEX_4XX_5XX = /^[4,5]\d\d$/;
 
+const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
+const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
+const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
+
 var { Ci, Cc } = require("chrome");
 const { debounce } = require("devtools/shared/debounce");
 const { throttle } = require("devtools/shared/throttle");
@@ -903,6 +907,10 @@ Toolbox.prototype = {
       Services.prefs.addObserver(
         "devtools.serviceWorkers.testing.enabled",
         this._applyServiceWorkersTestingSettings
+      );
+      Services.prefs.addObserver(
+        BROWSERTOOLBOX_SCOPE_PREF,
+        this._refreshHostTitle
       );
 
       // Get the DOM element to mount the ToolboxController to.
@@ -3151,7 +3159,14 @@ Toolbox.prototype = {
       // hardcoded in english.
       title = "XPCShell Toolbox";
     } else if (isMultiProcessBrowserToolbox) {
-      title = L10N.getStr("toolbox.multiProcessBrowserToolboxTitle");
+      const scope = Services.prefs.getCharPref(BROWSERTOOLBOX_SCOPE_PREF);
+      if (scope == BROWSERTOOLBOX_SCOPE_EVERYTHING) {
+        title = L10N.getStr("toolbox.multiProcessBrowserToolboxTitle");
+      } else if (scope == BROWSERTOOLBOX_SCOPE_PARENTPROCESS) {
+        title = L10N.getStr("toolbox.parentProcessBrowserToolboxTitle");
+      } else {
+        throw new Error("Unsupported scope: " + scope);
+      }
     } else if (this.target.name && this.target.name != this.target.url) {
       const url = this.target.isWebExtension
         ? this.target.getExtensionPathName(this.target.url)
@@ -3378,7 +3393,12 @@ Toolbox.prototype = {
       this.frameMap.clear();
       this.selectedFrameId = null;
     } else if (data.selected) {
-      this.selectedFrameId = data.selected;
+      // If we select the top level target, default back to no particular selected document.
+      if (data.selected == this.target.actorID) {
+        this.selectedFrameId = null;
+      } else {
+        this.selectedFrameId = data.selected;
+      }
     } else if (data.frameData && this.frameMap.has(data.frameData.id)) {
       const existingFrameData = this.frameMap.get(data.frameData.id);
       if (
@@ -3937,6 +3957,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver(
       "devtools.serviceWorkers.testing.enabled",
       this._applyServiceWorkersTestingSettings
+    );
+    Services.prefs.removeObserver(
+      BROWSERTOOLBOX_SCOPE_PREF,
+      this._refreshHostTitle
     );
 
     // We normally handle toolClosed from selectTool() but in the event of the

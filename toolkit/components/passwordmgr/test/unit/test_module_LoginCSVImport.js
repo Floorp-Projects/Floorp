@@ -8,11 +8,9 @@
 
 "use strict";
 
-const {
-  LoginCSVImport,
-  ImportFailedException,
-  ImportFailedErrorType,
-} = ChromeUtils.import("resource://gre/modules/LoginCSVImport.jsm");
+const { LoginCSVImport } = ChromeUtils.import(
+  "resource://gre/modules/LoginCSVImport.jsm"
+);
 const { LoginExport } = ChromeUtils.import(
   "resource://gre/modules/LoginExport.jsm"
 );

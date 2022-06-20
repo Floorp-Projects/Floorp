@@ -7,32 +7,19 @@
 var EXPORTED_SYMBOLS = ["FormAutofillChild"];
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofill",
-  "resource://autofill/FormAutofill.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillContent",
-  "resource://autofill/FormAutofillContent.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AutoCompleteChild",
-  "resource://gre/actors/AutoCompleteChild.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AutoCompleteChild: "resource://gre/actors/AutoCompleteChild.jsm",
+  FormAutofill: "resource://autofill/FormAutofill.jsm",
+  FormAutofillContent: "resource://autofill/FormAutofillContent.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
 
 /**
  * Handles content's interactions for the frame.

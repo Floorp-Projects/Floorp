@@ -19,16 +19,6 @@ ChromeUtils.defineModuleGetter(
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginFormFactory",
-  "resource://gre/modules/LoginFormFactory.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "InsecurePasswordUtils",
-  "resource://gre/modules/InsecurePasswordUtils.jsm"
-);
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManager");

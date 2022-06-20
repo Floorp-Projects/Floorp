@@ -9,7 +9,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsOSHelperAppServiceChild.h"
-#include "nsMIMEInfoChild.h"
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -85,30 +84,22 @@ nsOSHelperAppServiceChild::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                              const nsACString& aFileExt,
                                              bool* aFound,
                                              nsIMIMEInfo** aMIMEInfo) {
-  RefPtr<nsChildProcessMIMEInfo> mimeInfo =
-      new nsChildProcessMIMEInfo(aMIMEType);
-
+  nsresult rv;
   nsCOMPtr<nsIHandlerService> handlerSvc =
-      do_GetService(NS_HANDLERSERVICE_CONTRACTID);
-  if (handlerSvc) {
-    nsresult rv =
-        handlerSvc->GetMIMEInfoFromOS(mimeInfo, aMIMEType, aFileExt, aFound);
-    LOG(
-        ("nsOSHelperAppServiceChild::GetMIMEInfoFromOS(): "
-         "MIME type: %s, extension: %s, result: %" PRId32,
-         PromiseFlatCString(aMIMEType).get(),
-         PromiseFlatCString(aFileExt).get(), static_cast<uint32_t>(rv)));
-    mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  } else {
+      do_GetService(NS_HANDLERSERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_ERR(("nsOSHelperAppServiceChild error: no handler service"));
-    *aFound = false;
+    return rv;
   }
 
-  mimeInfo.forget(aMIMEInfo);
-  return NS_OK;
+  rv = handlerSvc->GetMIMEInfoFromOS(aMIMEType, aFileExt, aFound, aMIMEInfo);
+  LOG(
+      ("nsOSHelperAppServiceChild::GetMIMEInfoFromOS(): "
+       "MIME type: %s, extension: %s, result: %" PRId32,
+       PromiseFlatCString(aMIMEType).get(), PromiseFlatCString(aFileExt).get(),
+       static_cast<uint32_t>(rv)));
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
+  return rv;
 }
 
 NS_IMETHODIMP

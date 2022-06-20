@@ -110,14 +110,18 @@ void IdleSchedulerChild::StartedGC() {
   mIsRequestingGC = false;
 
   if (!mIsDoingGC) {
-    SendStartedGC();
+    if (CanSend()) {
+      SendStartedGC();
+    }
     mIsDoingGC = true;
   }
 }
 
 void IdleSchedulerChild::DoneGC() {
   if (mIsDoingGC) {
-    SendDoneGC();
+    if (CanSend()) {
+      SendDoneGC();
+    }
     mIsDoingGC = false;
   }
 }

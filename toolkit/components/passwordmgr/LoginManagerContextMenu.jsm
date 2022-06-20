@@ -18,14 +18,6 @@ ChromeUtils.defineModuleGetter(
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginManagerParent",
-  "resource://gre/modules/LoginManagerParent.jsm"
-);
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  return lazy.LoginHelper.createLogger("LoginManagerContextMenu");
-});
 
 /**
  * Password manager object for the browser contextual menu.

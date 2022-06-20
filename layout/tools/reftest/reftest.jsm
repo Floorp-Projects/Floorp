@@ -689,7 +689,7 @@ function Blur()
     g.containingWindow.blur();
 }
 
-function StartCurrentTest()
+async function StartCurrentTest()
 {
     g.testLog = [];
 
@@ -718,7 +718,7 @@ function StartCurrentTest()
 
     if ((g.urls.length == 0 && g.repeat == 0) ||
         (g.runUntilFailure && HasUnexpectedResult())) {
-        RestoreChangedPreferences();
+        await RestoreChangedPreferences();
         DoneTests();
     } else if (g.urls.length == 0 && g.repeat > 0) {
         // Repeat
@@ -774,6 +774,14 @@ function updateBrowserRemotenessByURL(aBrowser, aURL) {
   return Promise.resolve();
 }
 
+// This logic should match SpecialPowersParent._applyPrefs.
+function PrefRequiresRefresh(name) {
+  return name == "layout.css.prefers-color-scheme.content-override" ||
+         name.startsWith("ui.") ||
+         name.startsWith("browser.display.") ||
+         name.startsWith("font.");
+}
+
 async function StartCurrentURI(aURLTargetType)
 {
     const isStartingRef = (aURLTargetType == URL_TARGET_TYPE_REFERENCE);
@@ -781,13 +789,15 @@ async function StartCurrentURI(aURLTargetType)
     g.currentURL = g.urls[0][isStartingRef ? "url2" : "url1"].spec;
     g.currentURLTargetType = aURLTargetType;
 
-    RestoreChangedPreferences();
+    await RestoreChangedPreferences();
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
 
     const prefSettings =
       g.urls[0][isStartingRef ? "prefSettings2" : "prefSettings1"];
+
+    var prefsRequireRefresh = false;
 
     if (prefSettings.length > 0) {
         var badPref = undefined;
@@ -831,10 +841,13 @@ async function StartCurrentURI(aURLTargetType)
                     }
                 }
                 if (!prefExists || oldVal != ps.value) {
+                    var requiresRefresh = PrefRequiresRefresh(ps.name);
+                    prefsRequireRefresh = prefsRequireRefresh || requiresRefresh;
                     g.prefsToRestore.push( { name: ps.name,
-                                            type: ps.type,
-                                            value: oldVal,
-                                            prefExisted: prefExists } );
+                                             type: ps.type,
+                                             value: oldVal,
+                                             requiresRefresh,
+                                             prefExisted: prefExists } );
                     var value = ps.value;
                     if (ps.type == PREF_BOOLEAN) {
                         prefs.setBoolPref(ps.name, value);
@@ -862,7 +875,7 @@ async function StartCurrentURI(aURLTargetType)
 
                 // skip the test that had a bad preference
                 g.urls.shift();
-                StartCurrentTest();
+                await StartCurrentTest();
                 return;
             } else {
                 throw e;
@@ -886,6 +899,10 @@ async function StartCurrentURI(aURLTargetType)
                 " (" + Math.floor(100 * (currentTest / g.totalTests)) + "%)\n");
         TestBuffer("START " + g.currentURL);
         await updateBrowserRemotenessByURL(g.browser, g.currentURL);
+
+        if (prefsRequireRefresh) {
+            await new Promise(resolve => g.containingWindow.requestAnimationFrame(resolve));
+        }
 
         var type = g.urls[0].type
         if (TYPE_SCRIPT == type) {
@@ -1502,7 +1519,7 @@ function FinishTestItem()
     g.failedAssignedLayerMessages = [];
 }
 
-function DoAssertionCheck(numAsserts)
+async function DoAssertionCheck(numAsserts)
 {
     if (g.debug.isDebugBuild) {
         if (g.browserIsRemote) {
@@ -1534,7 +1551,7 @@ function DoAssertionCheck(numAsserts)
 
     // And start the next test.
     g.urls.shift();
-    StartCurrentTest();
+    await StartCurrentTest();
 }
 
 function ResetRenderingState()
@@ -1543,30 +1560,38 @@ function ResetRenderingState()
     // We would want to clear any viewconfig here, if we add support for it
 }
 
-function RestoreChangedPreferences()
+async function RestoreChangedPreferences()
 {
-    if (g.prefsToRestore.length > 0) {
-        var prefs = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-        g.prefsToRestore.reverse();
-        g.prefsToRestore.forEach(function(ps) {
-            if (ps.prefExisted) {
-                var value = ps.value;
-                if (ps.type == PREF_BOOLEAN) {
-                    prefs.setBoolPref(ps.name, value);
-                } else if (ps.type == PREF_STRING) {
-                    prefs.setStringPref(ps.name, value);
-                    value = '"' + value + '"';
-                } else if (ps.type == PREF_INTEGER) {
-                    prefs.setIntPref(ps.name, value);
-                }
-                logger.info("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")");
-            } else {
-                prefs.clearUserPref(ps.name);
-                logger.info("RESTORE PREFERENCE pref(" + ps.name + ", <no value set>) (clearing user pref)");
+    if (!g.prefsToRestore.length) {
+        return;
+    }
+    var prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
+    var requiresRefresh = false;
+    g.prefsToRestore.reverse();
+    g.prefsToRestore.forEach(function(ps) {
+        requiresRefresh = requiresRefresh || ps.requiresRefresh;
+        if (ps.prefExisted) {
+            var value = ps.value;
+            if (ps.type == PREF_BOOLEAN) {
+                prefs.setBoolPref(ps.name, value);
+            } else if (ps.type == PREF_STRING) {
+                prefs.setStringPref(ps.name, value);
+                value = '"' + value + '"';
+            } else if (ps.type == PREF_INTEGER) {
+                prefs.setIntPref(ps.name, value);
             }
-        });
-        g.prefsToRestore = [];
+            logger.info("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")");
+        } else {
+            prefs.clearUserPref(ps.name);
+            logger.info("RESTORE PREFERENCE pref(" + ps.name + ", <no value set>) (clearing user pref)");
+        }
+    });
+
+    g.prefsToRestore = [];
+
+    if (requiresRefresh) {
+        await new Promise(resolve => g.containingWindow.requestAnimationFrame(resolve));
     }
 }
 
@@ -1666,9 +1691,9 @@ function RegisterMessageListenersAndLoadContentScript(aReload)
     });
 }
 
-function RecvAssertionCount(count)
+async function RecvAssertionCount(count)
 {
-    DoAssertionCheck(count);
+    await DoAssertionCheck(count);
 }
 
 function RecvContentReady(info)

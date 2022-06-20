@@ -70,7 +70,6 @@ module.exports = {
       "netflix.com",
       "microsoft.com",
       "instagram.com",
-      "panda.tv",
       "google.com.hk",
       "csdn.net",
       "bing.com",

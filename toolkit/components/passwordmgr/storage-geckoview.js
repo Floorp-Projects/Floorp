@@ -166,7 +166,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       }
     }
 
-    const [logins, ids] = this._searchLogins(
+    const [logins] = this._searchLogins(
       realMatchData,
       options,
       candidateLogins.map(this._vanillaLoginToStorageLogin)

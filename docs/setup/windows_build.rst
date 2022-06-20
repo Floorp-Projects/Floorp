@@ -80,11 +80,11 @@ the interactive setup process.
     python3 bootstrap.py
 .. note::
 
-    When running ``bootstrap.py`` there will be a UAC prompt (for PowerShell) after
+    When running ``bootstrap.py`` there will be a `UAC (User Account Control) prompt <https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works>`_ for PowerShell after
     selecting the destination directory for the source code clone. This is
     necessary to add the Microsoft Defender Antivirus exclusions automatically. You
     should select ``Yes`` on the UAC prompt, otherwise you will need
-    to `follow some manual steps below <https://firefox-source-docs.mozilla.org/setup/windows_build.html#set-antivirus-exclusions>`_.
+    to :ref:`follow some manual steps below <Ensure antivirus exclusions>`.
 
 .. note::
 
@@ -104,6 +104,8 @@ Choosing a build type
 If you aren't modifying the Firefox backend, then select one of the
 :ref:`Artifact Mode <Understanding Artifact Builds>` options. If you are
 building Firefox for Android, you should also see the :ref:`GeckoView Contributor Guide`.
+
+.. _Ensure antivirus exclusions:
 
 Ensure antivirus exclusions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -39,8 +39,6 @@ const LoginInfo = Components.Constructor(
   "init"
 );
 
-const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
-
 /**
  * The maximum age of the password in ms (using `timePasswordChanged`) whereby
  * a user can toggle the password visibility in a doorhanger to add a username to

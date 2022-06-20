@@ -6,6 +6,7 @@
 
 interface nsIHandlerInfo;
 interface nsISimpleEnumerator;
+interface nsIMIMEInfo;
 
 [scriptable, uuid(53f0ad17-ec62-46a1-adbc-efccc06babcd)]
 interface nsIHandlerService : nsISupports
@@ -143,16 +144,32 @@ interface nsIHandlerService : nsISupports
   boolean existsForProtocol(in ACString aProtocolScheme);
 
   /*
-   * Fill in a handler info object using information from the OS, taking into
-   * account the MIME type and file extension. When the OS handler
-   * for the MIME type and extension match, |aFound| is returned as true. If
-   * either the MIME type or extension is the empty string and a handler is
-   * found, |aFound| is returned as true.
+   * This method only exists for nsOSHelperAppServiceChild using
+   * the ContentHandlerService implementation.
+   *
+   * Returns an nsIMIMEInfo for the provided MIME type and extension
+   * obtained from an OS lookup. If no handler is found for the type and
+   * extension, returns a generic nsIMIMEInfo object. The MIME type and
+   * extension can be the empty string. When the type and extension don't
+   * map to the same handler, the semantics/resolution are platform
+   * specific. See the platform implementations for details.
+   *
+   * @param aType           The MIME type to get handler information for.
+   * @param aFileExtension  The filename extension to use either alone
+   *                        or with the MIME type to get handler information
+   *                        for. UTF-8 encoded.
+   * @param [out] aFound    Out param indicating whether a MIMEInfo could
+   *                        be found for the provided type and/or extension.
+   *                        Set to false when neither extension nor the MIME
+   *                        type are mapped to a handler.
+   * @return                A nsIMIMEInfo object. This function must return
+   *                        a MIMEInfo object if it can allocate one. The
+   *                        only justifiable reason for not returning one is
+   *                        an out-of-memory error.
    */
-  void getMIMEInfoFromOS(in nsIHandlerInfo aHandlerInfo,
-                         in ACString aMIMEType,
-                         in ACString aExtension,
-                         out bool aFound);
+  [noscript] nsIMIMEInfo getMIMEInfoFromOS(in ACString aType,
+                                           in ACString aFileExtension,
+                                           out boolean aFound);
 
   /*
    * Get a description for the application responsible for handling

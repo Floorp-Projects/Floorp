@@ -265,7 +265,7 @@ function transformConsoleAPICallResource(consoleMessageResource) {
 function transformNavigationMessagePacket(packet) {
   const { url } = packet;
   return new ConsoleMessage({
-    source: MESSAGE_SOURCE.CONSOLE_API,
+    source: MESSAGE_SOURCE.CONSOLE_FRONTEND,
     type: MESSAGE_TYPE.NAVIGATION_MARKER,
     level: MESSAGE_LEVEL.LOG,
     messageText: l10n.getFormatStr("webconsole.navigated", [url]),

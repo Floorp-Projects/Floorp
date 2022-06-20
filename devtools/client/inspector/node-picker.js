@@ -172,11 +172,15 @@ class NodePicker extends EventEmitter {
       onAvailable: this.#onTargetAvailable,
     });
 
+    const promises = [];
     for (const inspectorFront of this.#currentInspectorFronts) {
-      await this.#onInspectorFrontDestroyed(inspectorFront, {
-        isDestroyCodepath,
-      });
+      promises.push(
+        this.#onInspectorFrontDestroyed(inspectorFront, {
+          isDestroyCodepath,
+        })
+      );
     }
+    await Promise.all(promises);
 
     this.#currentInspectorFronts.clear();
 

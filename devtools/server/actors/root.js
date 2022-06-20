@@ -131,7 +131,8 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this.traits = {
       networkMonitor: true,
       resources: supportedResources,
-
+      // @backward-compat { version 103 } Clear resources not supported by old servers
+      supportsClearResources: true,
       // @backward-compat { version 84 } Expose the pref value to the client.
       // Services.prefs is undefined in xpcshell tests.
       workerConsoleApiMessagesDispatchedToMainThread: Services.prefs
@@ -560,11 +561,18 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
    * See WatcherActor.unwatchResources.
    */
   unwatchResources(resourceTypes) {
-    Resources.unwatchResources(
-      this,
-      Resources.getParentProcessResourceTypes(resourceTypes)
-    );
+    Resources.unwatchResources(this, resourceTypes);
   },
+
+  /**
+   * Clear resources of a list of resource types.
+   *
+   * See WatcherActor.clearResources.
+   */
+  clearResources(resourceTypes) {
+    Resources.clearResources(this, resourceTypes);
+  },
+
   /**
    * Called by Resource Watchers, when new resources are available.
    *

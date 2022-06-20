@@ -1701,6 +1701,10 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
           TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                          "delazification_concurrent_depth_first");
           break;
+        case JS::DelazificationOption::ConcurrentLargeFirst:
+          TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
+                         "delazification_concurrent_large_first");
+          break;
         case JS::DelazificationOption::ParseEverythingEagerly:
           TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                          "delazification_parse_everything_eagerly");

@@ -11,9 +11,6 @@ const { LoginManagerParent } = ChromeUtils.import(
 const { LoginManagerPrompter } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerPrompter.jsm"
 );
-const { PopupNotifications } = ChromeUtils.import(
-  "resource://gre/modules/PopupNotifications.jsm"
-);
 
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
