@@ -6483,23 +6483,27 @@ nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
     NS_WARNING("HTMLEditor::SplitTextNodesAtRangeEnd() failed");
     return splitTextNodesResult.inspectErr();
   }
-  if (AllowsTransactionsToChangeSelection() &&
-      splitTextNodesResult.inspect().IsSet()) {
-    nsresult rv = CollapseSelectionTo(splitTextNodesResult.inspect());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-      return rv;
+  const Result<EditorDOMPoint, nsresult> splitParentsResult =
+      SplitParentInlineElementsAtRangeEdges(aArrayOfRanges);
+  if (splitParentsResult.isErr()) {
+    NS_WARNING("HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
+    return splitParentsResult.inspectErr();
+  }
+  if (AllowsTransactionsToChangeSelection()) {
+    const EditorDOMPoint& pointToPutCaret =
+        splitParentsResult.inspect().IsSet() ? splitParentsResult.inspect()
+                                             : splitTextNodesResult.inspect();
+    if (pointToPutCaret.IsSet()) {
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
-  nsresult rv = SplitParentInlineElementsAtRangeEdges(aArrayOfRanges);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = CollectEditTargetNodes(aArrayOfRanges, aOutArrayOfContents,
-                              aEditSubAction, aCollectNonEditableNodes);
+  nsresult rv =
+      CollectEditTargetNodes(aArrayOfRanges, aOutArrayOfContents,
+                             aEditSubAction, aCollectNonEditableNodes);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollectEditTargetNodes() failed");
   if (NS_FAILED(rv)) {
@@ -6561,7 +6565,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SplitTextNodesAtRangeEnd(
   return pointToPutCaret;
 }
 
-nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges) {
   nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
   rangeItemArray.AppendElements(aArrayOfRanges.Length());
@@ -6575,12 +6580,18 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   }
   // Now bust up inlines.
   nsresult rv = NS_OK;
+  EditorDOMPoint pointToPutCaret;
   for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
     // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
-    rv = SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
-    if (NS_FAILED(rv)) {
+    Result<EditorDOMPoint, nsresult> splitParentsResult =
+        SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
+    if (MOZ_UNLIKELY(splitParentsResult.isErr())) {
       NS_WARNING("HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
+      rv = splitParentsResult.unwrapErr();
       break;
+    }
+    if (splitParentsResult.inspect().IsSet()) {
+      pointToPutCaret = splitParentsResult.unwrap();
     }
   }
   // Then unregister the ranges
@@ -6592,10 +6603,11 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     }
   }
 
+  // XXX Why do we ignore the other errors here??
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 nsresult HTMLEditor::CollectEditTargetNodes(
@@ -6800,15 +6812,16 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
   return nullptr;
 }
 
-nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
-    RangeItem& aRangeItem) {
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   RefPtr<Element> editingHost = ComputeEditingHost();
   if (NS_WARN_IF(!editingHost)) {
-    return NS_OK;
+    return EditorDOMPoint();  // XXX Why not an error?
   }
 
+  EditorDOMPoint pointToPutCaret;
   if (!aRangeItem.Collapsed() && aRangeItem.mEndContainer &&
       aRangeItem.mEndContainer->IsContent()) {
     nsCOMPtr<nsIContent> mostAncestorInlineContentAtEnd =
@@ -6823,22 +6836,18 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
-        return splitEndInlineResult.unwrapErr();
+        return Err(splitEndInlineResult.unwrapErr());
       }
-      // Unfortunately, we need to collapse selection here for
-      // ComputeEditingHost() since it refers selection.
-      nsresult rv = splitEndInlineResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-        return rv;
-      }
-      if (MOZ_UNLIKELY(editingHost != ComputeEditingHost())) {
+      splitEndInlineResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+      if (pointToPutCaret.IsInContentNode() &&
+          MOZ_UNLIKELY(
+              editingHost !=
+              ComputeEditingHost(*pointToPutCaret.GetContainerAsContent()))) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) caused changing editing host");
-        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       const EditorRawDOMPoint& splitPointAtEnd =
           splitEndInlineResult.AtSplitPoint<EditorRawDOMPoint>();
@@ -6846,7 +6855,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) didn't return split point");
-        return NS_ERROR_FAILURE;
+        return Err(NS_ERROR_FAILURE);
       }
       aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
       aRangeItem.mEndOffset = splitPointAtEnd.Offset();
@@ -6854,7 +6863,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
   }
 
   if (!aRangeItem.mStartContainer || !aRangeItem.mStartContainer->IsContent()) {
-    return NS_OK;
+    return pointToPutCaret;
   }
 
   nsCOMPtr<nsIContent> mostAncestorInlineContentAtStart =
@@ -6869,16 +6878,11 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) failed");
-      return splitStartInlineResult.unwrapErr();
+      return Err(splitStartInlineResult.unwrapErr());
     }
     // XXX Why don't we check editing host like above??
-    nsresult rv = splitStartInlineResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-      return rv;
-    }
+    splitStartInlineResult.MoveCaretPointTo(
+        pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     // XXX If we split only here because of collapsed range, we're modifying
     //     only start point of aRangeItem.  Shouldn't we modify end point here
     //     if it's collapsed?
@@ -6888,13 +6892,13 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) didn't return split point");
-      return NS_ERROR_FAILURE;
+      return Err(NS_ERROR_FAILURE);
     }
     aRangeItem.mStartContainer = splitPointAtStart.GetContainer();
     aRangeItem.mStartOffset = splitPointAtStart.Offset();
   }
 
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::SplitElementsAtEveryBRElement(
