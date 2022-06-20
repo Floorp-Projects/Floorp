@@ -245,7 +245,7 @@ function serialize(
       value: { pattern: value.source, flags: value.flags },
     };
   } else if (className == "Date") {
-    return { type: "date", value: value.toString() };
+    return { type: "date", value: value.toISOString() };
   } else if (className == "Map") {
     const remoteValue = { type: "map" };
 
