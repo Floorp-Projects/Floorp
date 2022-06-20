@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//webrtc.gni")
 import("//build/config/clang/clang.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/win/manifest.gni")
@@ -16,7 +17,8 @@ windows_manifest("default_exe_manifest") {
   ]
 }
 
-if (is_win) {
+build_with_mozilla = false
+if (is_win && !build_with_mozilla) {
   assert(host_os != "mac" || target_cpu != "x86",
          "Windows cross-builds from Mac must be 64-bit.")
 
