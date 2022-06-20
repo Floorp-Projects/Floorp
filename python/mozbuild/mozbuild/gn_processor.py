@@ -623,7 +623,7 @@ def generate_gn_config(
         ]
     )
     out_dir = mozpath.join(output, "gn-output")
-    gen_args = [config.substs["GN"], "gen", out_dir, gn_args, "--ide=json"]
+    gen_args = [gn_binary, "gen", out_dir, gn_args, "--ide=json"]
     print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
     subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
 
