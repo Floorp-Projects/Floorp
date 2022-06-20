@@ -161,6 +161,25 @@ class RootResourceCommand {
     }
   }
 
+  clearResources(resourceTypes) {
+    if (!Array.isArray(resourceTypes)) {
+      throw new Error("clearResources expects an array of resource types");
+    }
+    // Clear the cached resources of the type.
+    this._cache = this._cache.filter(
+      cachedResource => !resourceTypes.includes(cachedResource.resourceType)
+    );
+
+    if (
+      resourceTypes.length &&
+      // @backward-compat { version 103 } The clearResources functionality was added in 103 and
+      // not supported in old servers.
+      this.rootFront.traits.supportsClearResources
+    ) {
+      this.rootFront.clearResources(resourceTypes);
+    }
+  }
+
   async waitForNextResource(
     resourceType,
     { ignoreExistingResources = false, predicate } = {}
