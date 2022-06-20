@@ -114,10 +114,11 @@ config("feature_flags") {
 
 config("debug") {
   defines = [
-    "_DEBUG",
     "DYNAMIC_ANNOTATIONS_ENABLED=1",
   ]
-
+  if (!is_win) {
+   defines += [ "_DEBUG" ]
+  }
   if (is_nacl) {
     defines += [ "DYNAMIC_ANNOTATIONS_PREFIX=NACL_" ]
   }
