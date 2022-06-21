@@ -330,3 +330,23 @@ void ChromeProcessController::CancelAutoscroll(
 
   APZCCallbackHelper::CancelAutoscroll(aGuid.mScrollId);
 }
+
+void ChromeProcessController::NotifyScaleGestureComplete(
+    const ScrollableLayerGuid& aGuid, float aScale) {
+  if (!mUIThread->IsOnCurrentThread()) {
+    mUIThread->Dispatch(NewRunnableMethod<ScrollableLayerGuid, float>(
+        "layers::ChromeProcessController::NotifyScaleGestureComplete", this,
+        &ChromeProcessController::NotifyScaleGestureComplete, aGuid, aScale));
+    return;
+  }
+
+  if (mWidget) {
+    // Dispatch the call to APZCCallbackHelper::NotifyScaleGestureComplete
+    // to the main thread so that it runs asynchronously from the current call.
+    // This is because the call can run arbitrary JS code, which can also spin
+    // the event loop and cause undesirable re-entrancy in APZ.
+    mUIThread->Dispatch(NewRunnableFunction(
+        "layers::ChromeProcessController::NotifyScaleGestureComplete",
+        &APZCCallbackHelper::NotifyScaleGestureComplete, mWidget, aScale));
+  }
+}
