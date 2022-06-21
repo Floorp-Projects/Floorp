@@ -104,7 +104,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 // PluginManager is used in the listeners object below.
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line mozilla/valid-lazy
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PluginManager: "resource:///actors/PluginParent.jsm",
 });
