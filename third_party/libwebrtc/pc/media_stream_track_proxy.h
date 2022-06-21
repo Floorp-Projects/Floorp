@@ -53,6 +53,7 @@ PROXY_SECONDARY_METHOD2(void,
                         rtc::VideoSinkInterface<VideoFrame>*,
                         const rtc::VideoSinkWants&)
 PROXY_SECONDARY_METHOD1(void, RemoveSink, rtc::VideoSinkInterface<VideoFrame>*)
+PROXY_SECONDARY_METHOD0(void, RequestRefreshFrame)
 BYPASS_PROXY_CONSTMETHOD0(VideoTrackSourceInterface*, GetSource)
 
 PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)

@@ -38,6 +38,7 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
   void AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink) override;
+  void RequestRefreshFrame() override;
   VideoTrackSourceInterface* GetSource() const override;
 
   ContentHint content_hint() const override;
