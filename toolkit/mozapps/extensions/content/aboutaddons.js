@@ -3693,6 +3693,12 @@ class AddonCard extends HTMLElement {
 customElements.define("addon-card", AddonCard);
 
 class ColorwayClosetCard extends HTMLElement {
+  connectedCallback() {
+    if (this.childElementCount === 0) {
+      this.render();
+    }
+  }
+
   render() {
     let card = importTemplate("card").firstElementChild;
     let heading = card.querySelector(".addon-name-container");
@@ -4144,7 +4150,11 @@ class AddonList extends HTMLElement {
   }
 
   createSectionHeading(headingIndex) {
-    let { headingId, subheadingId } = this.sections[headingIndex];
+    let {
+      headingId,
+      subheadingId,
+      sectionPreambleCustomElement,
+    } = this.sections[headingIndex];
     let frag = document.createDocumentFragment();
     let heading = document.createElement("h2");
     heading.classList.add("list-section-heading");
@@ -4154,9 +4164,17 @@ class AddonList extends HTMLElement {
     if (subheadingId) {
       let subheading = document.createElement("h3");
       subheading.classList.add("list-section-subheading");
-      heading.className = "header-name";
       document.l10n.setAttributes(subheading, subheadingId);
+      // Preserve the old colorway section header styling
+      // while the colorway closet section is not yet ready to be enabled
+      if (!COLORWAY_CLOSET_ENABLED) {
+        heading.className = "header-name";
+      }
       frag.append(subheading);
+    }
+
+    if (sectionPreambleCustomElement) {
+      frag.append(document.createElement(sectionPreambleCustomElement));
     }
 
     return frag;
@@ -4190,9 +4208,12 @@ class AddonList extends HTMLElement {
   }
 
   updateSectionIfEmpty(section) {
-    // The header is added before any add-on cards, so if there's only one
-    // child then it's the header. In that case we should empty out the section.
-    if (section.children.length == 1) {
+    // We should empty out the section if there are no more cards to display,
+    // (unless the section is configured to stay visible and rendered even when
+    // there is no addon listed, e.g. the "Colorways Closet" section).
+    const sectionIndex = parseInt(section.getAttribute("section"));
+    const { shouldRenderIfEmpty } = this.sections[sectionIndex];
+    if (!this.getCards(section).length && !shouldRenderIfEmpty) {
       section.textContent = "";
     }
   }
@@ -4201,8 +4222,12 @@ class AddonList extends HTMLElement {
     let section = this.getSection(sectionIndex);
     let sectionCards = this.getCards(section);
 
-    // If this is the first card in the section, create the heading.
-    if (!sectionCards.length) {
+    const { shouldRenderIfEmpty } = this.sections[sectionIndex];
+
+    // If this is the first card in the section, and the section
+    // isn't configure to render the headers even when empty,
+    // we have to create the section heading first.
+    if (!shouldRenderIfEmpty && !sectionCards.length) {
       section.appendChild(this.createSectionHeading(sectionIndex));
     }
 
@@ -4392,7 +4417,7 @@ class AddonList extends HTMLElement {
   }
 
   renderSection(addons, index) {
-    const { sectionClass, sectionPreambleCustomElement } = this.sections[index];
+    const { sectionClass, shouldRenderIfEmpty } = this.sections[index];
 
     let section = document.createElement("section");
     section.setAttribute("section", index);
@@ -4401,20 +4426,15 @@ class AddonList extends HTMLElement {
     }
 
     // Render the heading and add-ons if there are any.
-    if (addons.length) {
-      if (sectionPreambleCustomElement) {
-        section.appendChild(
-          document.createElement(sectionPreambleCustomElement)
-        );
-      }
+    if (shouldRenderIfEmpty || addons.length) {
       section.appendChild(this.createSectionHeading(index));
+    }
 
-      for (let addon of addons) {
-        let card = document.createElement("addon-card");
-        card.setAddon(addon);
-        card.render();
-        section.appendChild(card);
-      }
+    for (let addon of addons) {
+      let card = document.createElement("addon-card");
+      card.setAddon(addon);
+      card.render();
+      section.appendChild(card);
     }
 
     return section;
@@ -4516,22 +4536,6 @@ class AddonList extends HTMLElement {
   }
 }
 customElements.define("addon-list", AddonList);
-
-class ColorwayClosetList extends HTMLElement {
-  connectedCallback() {
-    this.appendChild(importTemplate(this.template));
-    let frag = document.createDocumentFragment();
-    let card = document.createElement("colorways-card");
-    card.render();
-    frag.append(card);
-    this.append(frag);
-  }
-
-  get template() {
-    return "colorways-list";
-  }
-}
-customElements.define("colorways-list", ColorwayClosetList);
 
 class RecommendedAddonList extends HTMLElement {
   connectedCallback() {
@@ -4828,15 +4832,12 @@ gViewController.defineView("list", async type => {
     return null;
   }
 
-  // If monochromatic themes are enabled and any are builtin to Firefox, we
-  // display those themes together in a separate subsection.
   const areColorwayThemesInstalled = async () =>
     (await AddonManager.getAllAddons()).some(
       addon =>
         BuiltInThemes.isMonochromaticTheme(addon.id) &&
         !BuiltInThemes.themeIsExpired(addon.id)
     );
-
   let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
   list.type = type;
@@ -4848,43 +4849,68 @@ gViewController.defineView("list", async type => {
       filterFn: addon =>
         !addon.hidden && addon.isActive && !isPending(addon, "uninstall"),
     },
-    {
-      headingId: getL10nIdMapping(`${type}-disabled-heading`),
-      sectionClass: `${type}-disabled-section`,
+  ];
+
+  if (type == "theme" && COLORWAY_CLOSET_ENABLED) {
+    MozXULElement.insertFTLIfNeeded("preview/colorwaycloset.ftl");
+
+    const hasActiveColorways = !!BuiltInThemes.findActiveColorwayCollection?.();
+    sections.push({
+      headingId: "theme-monochromatic-heading",
+      subheadingId: "theme-monochromatic-subheading",
+      sectionClass: "colorways-section",
+      // Insert colorway closet card as the first element in the colorways
+      // section so that it is above any retained colorway themes.
+      sectionPreambleCustomElement: hasActiveColorways
+        ? "colorways-card"
+        : null,
+      // This section should also be rendered when there is no addons that
+      // match the filterFn, because we still want to show the headers and
+      // colorways-card. But, we only expect the colorways-card to be visible
+      // when there is an active colorway collection.
+      shouldRenderIfEmpty: hasActiveColorways,
       filterFn: addon =>
         !addon.hidden &&
         !addon.isActive &&
         !isPending(addon, "uninstall") &&
         // For performance related details about this check see the
         // documentation for themeIsExpired in BuiltInThemeConfig.jsm.
-        (!BuiltInThemes.isMonochromaticTheme(addon.id) ||
-          BuiltInThemes.isRetainedExpiredTheme(addon.id)),
-    },
-  ];
-
-  let colorwaysThemeInstalled;
-  if (type == "theme") {
-    colorwaysThemeInstalled = await areColorwayThemesInstalled();
-    if (colorwaysThemeInstalled && COLORWAY_CLOSET_ENABLED) {
-      // Avoid inserting colorway closet fluent strings in aboutaddons.html,
-      // considering that there is a dependency on a browser-only resource.
-      const fluentResourceId = "preview/colorwaycloset.ftl";
-      if (!document.head.querySelector(`link[href='${fluentResourceId}']`)) {
-        const fluentLink = document.createElement("link");
-        fluentLink.setAttribute("rel", "localization");
-        fluentLink.setAttribute("href", fluentResourceId);
-        document.head.appendChild(fluentLink);
-      }
-      // Insert colorway closet card as the first element so that
-      // it is positioned between the enabled and disabled sections.
-      sections[1].sectionPreambleCustomElement = "colorways-list";
-    }
+        BuiltInThemes.isMonochromaticTheme(addon.id) &&
+        BuiltInThemes.isRetainedExpiredTheme(addon.id),
+    });
   }
+
+  const disabledAddonsFilterFn = addon =>
+    !addon.hidden && !addon.isActive && !isPending(addon, "uninstall");
+
+  const disabledThemesFilterFn = addon =>
+    disabledAddonsFilterFn(addon) &&
+    ((BuiltInThemes.isRetainedExpiredTheme(addon.id) &&
+      !COLORWAY_CLOSET_ENABLED) ||
+      !BuiltInThemes.isMonochromaticTheme(addon.id));
+
+  sections.push({
+    headingId: getL10nIdMapping(`${type}-disabled-heading`),
+    sectionClass: `${type}-disabled-section`,
+    filterFn: addon => {
+      if (addon.type === "theme") {
+        return disabledThemesFilterFn(addon);
+      }
+      return disabledAddonsFilterFn(addon);
+    },
+  });
 
   list.setSections(sections);
   frag.appendChild(list);
 
-  if (type == "theme" && colorwaysThemeInstalled) {
+  // Add old colorways section if the new colorway closet is not enabled.
+  // If monochromatic themes are enabled and any are builtin to Firefox, we
+  // display those themes together in a separate subsection.
+  if (
+    type == "theme" &&
+    !COLORWAY_CLOSET_ENABLED &&
+    (await areColorwayThemesInstalled())
+  ) {
     let monochromaticList = document.createElement("addon-list");
     monochromaticList.classList.add("monochromatic-addon-list");
     monochromaticList.type = type;
