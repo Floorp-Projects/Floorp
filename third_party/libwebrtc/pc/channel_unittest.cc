@@ -126,8 +126,10 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
   ~ChannelTest() {
     if (network_thread_) {
-      network_thread_->Invoke<void>(
-          RTC_FROM_HERE, [this]() { network_thread_safety_->SetNotAlive(); });
+      network_thread_->Invoke<void>(RTC_FROM_HERE, [this]() {
+        network_thread_safety_->SetNotAlive();
+        DeinitChannels();
+      });
     }
   }
 
@@ -269,6 +271,22 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
                                           rtcp_dtls_transport);
       }
     }
+  }
+
+  // Unininitializes the channels on the network thread.
+  void DeinitChannels() {
+    if (!channel1_ && !channel2_)
+      return;
+    network_thread_->Invoke<void>(RTC_FROM_HERE, [this]() {
+      if (channel1_) {
+        RTC_DCHECK_RUN_ON(channel1_->network_thread());
+        channel1_->Deinit_n();
+      }
+      if (channel2_) {
+        RTC_DCHECK_RUN_ON(channel2_->network_thread());
+        channel2_->Deinit_n();
+      }
+    });
   }
 
   std::unique_ptr<webrtc::RtpTransport> CreateUnencryptedTransport(
@@ -918,6 +936,9 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_TRUE(SendAccept());
     SendRtp1();
     SendRtp2();
+
+    DeinitChannels();
+
     // Do not wait, destroy channels.
     channel1_.reset(nullptr);
     channel2_.reset(nullptr);
@@ -1427,7 +1448,10 @@ std::unique_ptr<cricket::VoiceChannel> ChannelTest<VoiceTraits>::CreateChannel(
       worker_thread, network_thread, signaling_thread, std::move(ch),
       cricket::CN_AUDIO, (flags & DTLS) != 0, webrtc::CryptoOptions(),
       &ssrc_generator_);
-  channel->Init_w(rtp_transport);
+  network_thread->Invoke<void>(RTC_FROM_HERE, [&]() {
+    RTC_DCHECK_RUN_ON(channel->network_thread());
+    channel->Init_n(rtp_transport);
+  });
   return channel;
 }
 
@@ -1510,7 +1534,10 @@ std::unique_ptr<cricket::VideoChannel> ChannelTest<VideoTraits>::CreateChannel(
       worker_thread, network_thread, signaling_thread, std::move(ch),
       cricket::CN_VIDEO, (flags & DTLS) != 0, webrtc::CryptoOptions(),
       &ssrc_generator_);
-  channel->Init_w(rtp_transport);
+  network_thread->Invoke<void>(RTC_FROM_HERE, [&]() {
+    RTC_DCHECK_RUN_ON(channel->network_thread());
+    channel->Init_n(rtp_transport);
+  });
   return channel;
 }
 

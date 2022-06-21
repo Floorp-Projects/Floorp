@@ -4711,11 +4711,14 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   if (!channel_manager()->media_engine())
     return nullptr;
 
+  // TODO(tommi): Avoid hop to network thread.
   RtpTransportInternal* rtp_transport = pc_->GetRtpTransport(mid);
 
   // TODO(bugs.webrtc.org/11992): CreateVoiceChannel internally switches to the
   // worker thread. We shouldn't be using the `call_ptr_` hack here but simply
   // be on the worker thread and use `call_` (update upstream code).
+  // TODO(tommi): This hops to the worker and from the worker to the network
+  // thread (blocking both signal and worker).
   return channel_manager()->CreateVoiceChannel(
       pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
       signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),

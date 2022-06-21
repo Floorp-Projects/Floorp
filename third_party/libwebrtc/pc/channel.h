@@ -86,10 +86,6 @@ struct CryptoParams;
 // and methods with _s suffix on signaling thread.
 // Network and worker threads may be the same thread.
 //
-// WARNING! SUBCLASSES MUST CALL Deinit() IN THEIR DESTRUCTORS!
-// This is required to avoid a data race between the destructor modifying the
-// vtable, and the media channel's thread using BaseChannel as the
-// NetworkInterface.
 
 class BaseChannel : public ChannelInterface,
                     // TODO(tommi): Remove has_slots inheritance.
@@ -114,11 +110,10 @@ class BaseChannel : public ChannelInterface,
               webrtc::CryptoOptions crypto_options,
               rtc::UniqueRandomIdGenerator* ssrc_generator);
   virtual ~BaseChannel();
-  virtual void Init_w(webrtc::RtpTransportInternal* rtp_transport);
 
-  // Deinit may be called multiple times and is simply ignored if it's already
-  // done.
-  void Deinit();
+  void Init_n(webrtc::RtpTransportInternal* rtp_transport)
+      RTC_RUN_ON(network_thread());
+  void Deinit_n() RTC_RUN_ON(network_thread());
 
   rtc::Thread* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() const { return network_thread_; }
