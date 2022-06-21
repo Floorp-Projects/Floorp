@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "102.15.0",
+  "version": "102.16.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -109,6 +109,7 @@
     "shims/empty-shim.txt",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
+    "shims/firebase.js",
     "shims/google-ads.js",
     "shims/google-analytics-and-tag-manager.js",
     "shims/google-analytics-ecommerce-plugin.js",

@@ -102,6 +102,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/empty-shim.txt",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
+    "shims/firebase.js",
     "shims/google-ads.js",
     "shims/google-analytics-and-tag-manager.js",
     "shims/google-analytics-ecommerce-plugin.js",
