@@ -8,10 +8,13 @@
 
 #include "gfxPlatform.h"  // For gfxPlatform::UseTiling
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -29,6 +32,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
+#include "nsPIDOMWindow.h"
 #include "nsRefreshDriver.h"
 #include "nsString.h"
 #include "nsView.h"
@@ -867,6 +871,38 @@ void APZCCallbackHelper::CancelAutoscroll(
   data.AppendInt(aScrollId);
   observerService->NotifyObservers(nullptr, "apz:cancel-autoscroll",
                                    data.get());
+}
+
+/* static */
+void APZCCallbackHelper::NotifyScaleGestureComplete(
+    const nsCOMPtr<nsIWidget>& aWidget, float aScale) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (nsView* view = nsView::GetViewFor(aWidget)) {
+    if (PresShell* presShell = view->GetPresShell()) {
+      dom::Document* doc = presShell->GetDocument();
+      MOZ_ASSERT(doc);
+      if (nsPIDOMWindowInner* win = doc->GetInnerWindow()) {
+        dom::AutoJSAPI jsapi;
+        if (!jsapi.Init(win)) {
+          return;
+        }
+
+        JSContext* cx = jsapi.cx();
+        JS::Rooted<JS::Value> detail(cx, JS::Float32Value(aScale));
+        RefPtr<dom::CustomEvent> event =
+            NS_NewDOMCustomEvent(doc, nullptr, nullptr);
+        event->InitCustomEvent(cx, u"MozScaleGestureComplete"_ns,
+                               /* CanBubble */ true,
+                               /* Cancelable */ false, detail);
+        event->SetTrusted(true);
+        AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(doc, event);
+        dispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
+
+        dispatcher->PostDOMEvent();
+      }
+    }
+  }
 }
 
 /* static */

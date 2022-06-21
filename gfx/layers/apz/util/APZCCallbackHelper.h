@@ -162,6 +162,8 @@ class APZCCallbackHelper {
       const ScrollableLayerGuid::ViewID& aScrollId);
 
   static void CancelAutoscroll(const ScrollableLayerGuid::ViewID& aScrollId);
+  static void NotifyScaleGestureComplete(const nsCOMPtr<nsIWidget>& aWidget,
+                                         float aScale);
 
   /*
    * Check if the scrollable frame is currently in the middle of a main thread
