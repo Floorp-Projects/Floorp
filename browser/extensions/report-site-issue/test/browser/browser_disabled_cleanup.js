@@ -4,50 +4,38 @@
 add_task(async function test_disabled() {
   await promiseAddonEnabled();
 
-  pinToURLBar();
-
   SpecialPowers.Services.prefs.setBoolPref(PREF_WC_REPORTER_ENABLED, false);
-  await promisePageActionRemoved();
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
     async function() {
-      await openPageActions();
+      const menu = new HelpMenuHelper();
+      await menu.open();
       is(
-        await isPanelItemPresent(),
-        false,
-        "Report Site Issue button is not shown on the popup panel."
+        menu.isItemHidden(),
+        true,
+        "Report Site Issue help menu item is hidden."
       );
-      is(
-        await isURLButtonPresent(),
-        false,
-        "Report Site Issue is not shown on the url bar."
-      );
+      await menu.close();
     }
   );
 
   await promiseAddonEnabled();
 
-  pinToURLBar();
-
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com" },
     async function() {
-      await openPageActions();
+      const menu = new HelpMenuHelper();
+      await menu.open();
       is(
-        await isPanelItemEnabled(),
-        true,
-        "Report Site Issue button is shown on the popup panel."
+        await menu.isItemHidden(),
+        false,
+        "Report Site Issue help menu item is visible."
       );
-      is(
-        await isURLButtonPresent(),
-        true,
-        "Report Site Issue is shown on the url bar."
-      );
+      await menu.close();
     }
   );
 
   // Shut down the addon at the end,or the new instance started when we re-enabled it will "leak".
   SpecialPowers.Services.prefs.setBoolPref(PREF_WC_REPORTER_ENABLED, false);
-  await promisePageActionRemoved();
 });
