@@ -44,6 +44,10 @@ add_task(async function test_newtab_tab_close_sends_ping() {
   );
   sendTriggerMessageSpy.resetHistory();
 
+  await BrowserTestUtils.waitForCondition(
+    () => !!Glean.newtab.opened.testGetValue("newtab"),
+    "We expect the newtab open to be recorded"
+  );
   let record = Glean.newtab.opened.testGetValue("newtab");
   Assert.equal(record.length, 1, "Should only be one open");
   const sessionId = record[0].extra.newtab_visit_id;
