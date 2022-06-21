@@ -499,7 +499,7 @@ bool BaseChannel::RegisterRtpDemuxerSink_w() {
   media_channel_->OnDemuxerCriteriaUpdatePending();
   // Copy demuxer criteria, since they're a worker-thread variable
   // and we want to pass them to the network thread
-  return network_thread_->Invoke<bool>(
+  bool ret = network_thread_->Invoke<bool>(
       RTC_FROM_HERE, [this, demuxer_criteria = demuxer_criteria_] {
         RTC_DCHECK_RUN_ON(network_thread());
         RTC_DCHECK(rtp_transport_);
@@ -510,9 +510,12 @@ bool BaseChannel::RegisterRtpDemuxerSink_w() {
         } else {
           previous_demuxer_criteria_ = {};
         }
-        media_channel_->OnDemuxerCriteriaUpdateComplete();
         return result;
       });
+
+  media_channel_->OnDemuxerCriteriaUpdateComplete();
+
+  return ret;
 }
 
 void BaseChannel::EnableMedia_w() {

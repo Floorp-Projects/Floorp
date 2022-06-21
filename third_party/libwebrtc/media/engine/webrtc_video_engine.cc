@@ -1593,11 +1593,8 @@ void WebRtcVideoChannel::OnDemuxerCriteriaUpdatePending() {
 }
 
 void WebRtcVideoChannel::OnDemuxerCriteriaUpdateComplete() {
-  RTC_DCHECK_RUN_ON(&network_thread_checker_);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [this] {
-    RTC_DCHECK_RUN_ON(&thread_checker_);
-    ++demuxer_criteria_completed_id_;
-  }));
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  ++demuxer_criteria_completed_id_;
 }
 
 bool WebRtcVideoChannel::SetSink(
