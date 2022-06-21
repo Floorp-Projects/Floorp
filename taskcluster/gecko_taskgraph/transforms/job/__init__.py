@@ -270,7 +270,11 @@ def use_fetches(config, jobs):
         elif isinstance(value, str):
             value = [value]
         for alias in value:
-            aliases[f"{kind}-{alias}"] = task["label"]
+            fully_qualified = f"{kind}-{alias}"
+            label = task["label"]
+            if fully_qualified == label:
+                raise Exception(f"The alias {alias} of task {label} points to itself!")
+            aliases[fully_qualified] = label
 
     artifact_prefixes = {}
     for job in order_tasks(config, jobs):
