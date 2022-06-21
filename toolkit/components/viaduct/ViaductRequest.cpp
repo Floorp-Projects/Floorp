@@ -185,6 +185,8 @@ nsCString ConvertMethod(
       return "OPTIONS"_ns;
     case Request_Method::Request_Method_TRACE:
       return "TRACE"_ns;
+    case Request_Method::Request_Method_PATCH:
+      return "PATCH"_ns;
   }
   return "UNKNOWN"_ns;
 }

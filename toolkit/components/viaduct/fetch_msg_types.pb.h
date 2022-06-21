@@ -94,11 +94,12 @@ enum Request_Method : int {
   Request_Method_DELETE = 4,
   Request_Method_CONNECT = 5,
   Request_Method_OPTIONS = 6,
-  Request_Method_TRACE = 7
+  Request_Method_TRACE = 7,
+  Request_Method_PATCH = 8
 };
 bool Request_Method_IsValid(int value);
 constexpr Request_Method Request_Method_Method_MIN = Request_Method_GET;
-constexpr Request_Method Request_Method_Method_MAX = Request_Method_TRACE;
+constexpr Request_Method Request_Method_Method_MAX = Request_Method_PATCH;
 constexpr int Request_Method_Method_ARRAYSIZE = Request_Method_Method_MAX + 1;
 
 const std::string& Request_Method_Name(Request_Method value);
@@ -125,7 +126,7 @@ public:
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_STRING,
     0 > SuperType;
   Request_HeadersEntry_DoNotUse();
-  explicit Request_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  Request_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
   void MergeFrom(const Request_HeadersEntry_DoNotUse& other);
   static const Request_HeadersEntry_DoNotUse* internal_default_instance() { return reinterpret_cast<const Request_HeadersEntry_DoNotUse*>(&_Request_HeadersEntry_DoNotUse_default_instance_); }
   static bool ValidateKey(void*) { return true; }
@@ -247,6 +248,8 @@ class Request :
     Request_Method_OPTIONS;
   static constexpr Method TRACE =
     Request_Method_TRACE;
+  static constexpr Method PATCH =
+    Request_Method_PATCH;
   static inline bool Method_IsValid(int value) {
     return Request_Method_IsValid(value);
   }
@@ -441,7 +444,7 @@ public:
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_STRING,
     0 > SuperType;
   Response_HeadersEntry_DoNotUse();
-  explicit Response_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  Response_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
   void MergeFrom(const Response_HeadersEntry_DoNotUse& other);
   static const Response_HeadersEntry_DoNotUse* internal_default_instance() { return reinterpret_cast<const Response_HeadersEntry_DoNotUse*>(&_Response_HeadersEntry_DoNotUse_default_instance_); }
   static bool ValidateKey(void*) { return true; }
