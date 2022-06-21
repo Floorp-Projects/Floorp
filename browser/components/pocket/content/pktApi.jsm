@@ -54,6 +54,11 @@ ChromeUtils.defineModuleGetter(
   "IndexedDB",
   "resource://gre/modules/IndexedDB.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -201,6 +206,9 @@ var pktApi = (function() {
     if (lazy.gCookieFirstPartyIsolate) {
       oa.firstPartyDomain = pocketSiteHost;
     }
+    oa.privateBrowsingId = lazy.PrivateBrowsingUtils.permanentPrivateBrowsing
+      ? 1
+      : 0;
     for (let cookie of Services.cookies.getCookiesFromHost(
       pocketSiteHost,
       oa
