@@ -215,8 +215,12 @@ rtc_library("rtc_internal_video_codecs") {
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
+    "../system_wrappers:field_trial",
     #"../test:fake_video_codecs",
   ]
+  if (rtc_include_dav1d_in_internal_decoder_factory) {
+    deps += [ "../modules/video_coding/codecs/av1:dav1d_decoder" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
