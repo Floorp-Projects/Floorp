@@ -94,7 +94,7 @@ int I420BufferInterface::ChromaHeight() const {
 }
 
 rtc::scoped_refptr<I420BufferInterface> I420BufferInterface::ToI420() {
-  return this;
+  return rtc::scoped_refptr<I420BufferInterface>(this);
 }
 
 const I420BufferInterface* I420BufferInterface::GetI420() const {

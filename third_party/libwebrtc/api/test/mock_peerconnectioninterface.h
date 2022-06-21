@@ -29,7 +29,7 @@ class MockPeerConnectionInterface
     : public rtc::RefCountedObject<webrtc::PeerConnectionInterface> {
  public:
   static rtc::scoped_refptr<MockPeerConnectionInterface> Create() {
-    return new MockPeerConnectionInterface();
+    return rtc::make_ref_counted<MockPeerConnectionInterface>();
   }
 
   // PeerConnectionInterface

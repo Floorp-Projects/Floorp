@@ -23,7 +23,7 @@ class MockRtpTransceiver final
     : public rtc::RefCountedObject<RtpTransceiverInterface> {
  public:
   static rtc::scoped_refptr<MockRtpTransceiver> Create() {
-    return new MockRtpTransceiver();
+    return rtc::scoped_refptr<MockRtpTransceiver>(new MockRtpTransceiver());
   }
 
   MOCK_METHOD(cricket::MediaType, media_type, (), (const, override));

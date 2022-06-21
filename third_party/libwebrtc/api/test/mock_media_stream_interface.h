@@ -22,7 +22,7 @@ class MockAudioSource final
     : public rtc::RefCountedObject<AudioSourceInterface> {
  public:
   static rtc::scoped_refptr<MockAudioSource> Create() {
-    return new MockAudioSource();
+    return rtc::scoped_refptr<MockAudioSource>(new MockAudioSource());
   }
 
   MOCK_METHOD(void,
@@ -55,7 +55,7 @@ class MockAudioSource final
 class MockAudioTrack final : public rtc::RefCountedObject<AudioTrackInterface> {
  public:
   static rtc::scoped_refptr<MockAudioTrack> Create() {
-    return new MockAudioTrack();
+    return rtc::scoped_refptr<MockAudioTrack>(new MockAudioTrack());
   }
 
   MOCK_METHOD(void,
