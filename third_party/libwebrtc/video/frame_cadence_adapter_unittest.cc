@@ -13,17 +13,20 @@
 #include <utility>
 #include <vector>
 
+#include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/timestamp.h"
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
+#include "rtc_base/event.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 #include "system_wrappers/include/ntp_time.h"
+#include "system_wrappers/include/sleep.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -877,6 +880,62 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinLtMaxConstraintIfSetOnFrame) {
       metrics::Samples(
           "WebRTC.Screenshare.FrameRateConstraints.60MinPlusMaxMinusOne"),
       ElementsAre(Pair(60 * 4.0 + 5.0 - 1, 1)));
+}
+
+TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
+  // This regression test must be performed in realtime because of limitations
+  // in GlobalSimulatedTimeController.
+  //
+  // We sleep for a long while in OnFrame when a repeat was scheduled which
+  // should reflect in accordingly increased ntp_time_ms() and timestamp_us() in
+  // the repeated frames.
+  auto factory = CreateDefaultTaskQueueFactory();
+  auto queue =
+      factory->CreateTaskQueue("test", TaskQueueFactory::Priority::NORMAL);
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  Clock* clock = Clock::GetRealTimeClock();
+  std::unique_ptr<FrameCadenceAdapterInterface> adapter;
+  int frame_counter = 0;
+  int64_t original_ntp_time_ms;
+  int64_t original_timestamp_us;
+  rtc::Event event;
+  queue->PostTask(ToQueuedTask([&] {
+    adapter = CreateAdapter(clock);
+    adapter->Initialize(&callback);
+    adapter->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+    adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 30});
+    auto frame = CreateFrame();
+    original_ntp_time_ms = clock->CurrentNtpInMilliseconds();
+    frame.set_ntp_time_ms(original_ntp_time_ms);
+    original_timestamp_us = clock->CurrentTime().us();
+    frame.set_timestamp_us(original_timestamp_us);
+    constexpr int kSleepMs = rtc::kNumMillisecsPerSec / 2;
+    EXPECT_CALL(callback, OnFrame)
+        .WillRepeatedly(
+            Invoke([&](Timestamp, int, const VideoFrame& incoming_frame) {
+              ++frame_counter;
+              // Avoid the first OnFrame and sleep on the second.
+              if (frame_counter == 2) {
+                SleepMs(kSleepMs);
+              } else if (frame_counter == 3) {
+                EXPECT_GE(incoming_frame.ntp_time_ms(),
+                          original_ntp_time_ms + kSleepMs);
+                EXPECT_GE(incoming_frame.timestamp_us(),
+                          original_timestamp_us + kSleepMs);
+                event.Set();
+              }
+            }));
+    adapter->OnFrame(frame);
+  }));
+  event.Wait(rtc::Event::kForever);
+  rtc::Event finalized;
+  queue->PostTask(ToQueuedTask([&] {
+    adapter = nullptr;
+    finalized.Set();
+  }));
+  finalized.Wait(rtc::Event::kForever);
 }
 
 }  // namespace

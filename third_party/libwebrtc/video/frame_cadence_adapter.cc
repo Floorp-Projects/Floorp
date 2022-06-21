@@ -132,13 +132,25 @@ class ZeroHertzAdapterMode : public AdapterMode {
   };
   // The state of a scheduled repeat.
   struct ScheduledRepeat {
-    ScheduledRepeat(Timestamp scheduled, bool idle)
-        : scheduled(scheduled), idle(idle) {}
+    ScheduledRepeat(Timestamp origin,
+                    int64_t origin_timestamp_us,
+                    int64_t origin_ntp_time_ms)
+        : scheduled(origin),
+          idle(false),
+          origin(origin),
+          origin_timestamp_us(origin_timestamp_us),
+          origin_ntp_time_ms(origin_ntp_time_ms) {}
     // The instant when the repeat was scheduled.
     Timestamp scheduled;
     // True if the repeat was scheduled as an idle repeat (long), false
     // otherwise.
     bool idle;
+    // The moment we decided to start repeating.
+    Timestamp origin;
+    // The timestamp_us of the frame when we started repeating.
+    int64_t origin_timestamp_us;
+    // The ntp_times_ms of the frame when we started repeating.
+    int64_t origin_ntp_time_ms;
   };
 
   // Returns true if all spatial layers can be considered to be converged in
@@ -372,7 +384,7 @@ bool ZeroHertzAdapterMode::ProcessKeyFrameRequest() {
   // refinement frames.
   ResetQualityConvergenceInfo();
 
-  // If we're not repeating, or we're repeating with non-idle duration, we will
+  // If we're not repeating, or we're repeating with short duration, we will
   // very soon send out a frame and don't need a refresh frame.
   if (!scheduled_repeat_.has_value() || !scheduled_repeat_->idle) {
     RTC_LOG(LS_INFO) << __func__ << " this " << this
@@ -449,7 +461,14 @@ void ZeroHertzAdapterMode::ProcessOnDelayedCadence() {
 void ZeroHertzAdapterMode::ScheduleRepeat(int frame_id, bool idle_repeat) {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this << " frame_id "
                        << frame_id;
-  scheduled_repeat_.emplace(clock_->CurrentTime(), idle_repeat);
+  Timestamp now = clock_->CurrentTime();
+  if (!scheduled_repeat_.has_value()) {
+    scheduled_repeat_.emplace(now, queued_frames_.front().timestamp_us(),
+                              queued_frames_.front().ntp_time_ms());
+  }
+  scheduled_repeat_->scheduled = now;
+  scheduled_repeat_->idle = idle_repeat;
+
   TimeDelta repeat_delay = RepeatDuration(idle_repeat);
   queue_->PostDelayedTask(
       ToQueuedTask(safety_,
@@ -478,15 +497,20 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(int frame_id) {
   empty_update_rect.MakeEmptyUpdate();
   frame.set_update_rect(empty_update_rect);
 
-  // Adjust timestamps of the frame of the repeat, accounting for the delay in
-  // scheduling this method.
+  // Adjust timestamps of the frame of the repeat, accounting for the actual
+  // delay since we started repeating.
+  //
   // NOTE: No need to update the RTP timestamp as the VideoStreamEncoder
   // overwrites it based on its chosen NTP timestamp source.
-  TimeDelta scheduled_delay = RepeatDuration(scheduled_repeat_->idle);
-  if (frame.timestamp_us() > 0)
-    frame.set_timestamp_us(frame.timestamp_us() + scheduled_delay.us());
-  if (frame.ntp_time_ms())
-    frame.set_ntp_time_ms(frame.ntp_time_ms() + scheduled_delay.ms());
+  TimeDelta total_delay = clock_->CurrentTime() - scheduled_repeat_->origin;
+  if (frame.timestamp_us() > 0) {
+    frame.set_timestamp_us(scheduled_repeat_->origin_timestamp_us +
+                           total_delay.us());
+  }
+  if (frame.ntp_time_ms()) {
+    frame.set_ntp_time_ms(scheduled_repeat_->origin_ntp_time_ms +
+                          total_delay.ms());
+  }
   SendFrameNow(frame);
 
   // Schedule another repeat.
@@ -495,7 +519,10 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(int frame_id) {
 
 // RTC_RUN_ON(&sequence_checker_)
 void ZeroHertzAdapterMode::SendFrameNow(const VideoFrame& frame) const {
-  RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this;
+  RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this << " timestamp "
+                       << frame.timestamp() << " timestamp_us "
+                       << frame.timestamp_us() << " ntp_time_ms "
+                       << frame.ntp_time_ms();
   // TODO(crbug.com/1255737): figure out if frames_scheduled_for_processing
   // makes sense to compute in this implementation.
   callback_->OnFrame(/*post_time=*/clock_->CurrentTime(),
