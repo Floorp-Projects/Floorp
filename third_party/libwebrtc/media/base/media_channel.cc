@@ -89,6 +89,11 @@ bool MediaChannel::ExtmapAllowMixed() const {
   return extmap_allow_mixed_;
 }
 
+bool MediaChannel::HasNetworkInterface() const {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  return network_interface_ != nullptr;
+}
+
 void MediaChannel::SetEncoderToPacketizerFrameTransformer(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {}

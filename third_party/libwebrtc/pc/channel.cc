@@ -192,6 +192,7 @@ void BaseChannel::Init_w(webrtc::RtpTransportInternal* rtp_transport) {
     SetRtpTransport(rtp_transport);
     // Both RTP and RTCP channels should be set, we can call SetInterface on
     // the media channel and it can set network options.
+    RTC_DCHECK(!media_channel_->HasNetworkInterface());
     media_channel_->SetInterface(this);
   });
 }
@@ -208,6 +209,7 @@ void BaseChannel::Deinit() {
     if (rtp_transport_) {
       DisconnectFromRtpTransport_n();
     }
+    RTC_DCHECK(!network_initialized());
   });
 }
 
@@ -797,6 +799,7 @@ bool BaseChannel::ClearHandledPayloadTypes() {
 
 void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
   RTC_DCHECK_RUN_ON(network_thread());
+  RTC_DCHECK(network_initialized());
   media_channel()->OnPacketSent(sent_packet);
 }
 

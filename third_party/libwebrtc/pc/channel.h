@@ -217,6 +217,10 @@ class BaseChannel : public ChannelInterface,
     return extensions_filter_;
   }
 
+  bool network_initialized() RTC_RUN_ON(network_thread()) {
+    return media_channel_->HasNetworkInterface();
+  }
+
   bool enabled() const RTC_RUN_ON(worker_thread()) { return enabled_; }
   rtc::Thread* signaling_thread() const { return signaling_thread_; }
 
