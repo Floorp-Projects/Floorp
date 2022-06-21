@@ -357,7 +357,8 @@ class BaseChannel : public ChannelInterface,
   webrtc::RtpDemuxerCriteria demuxer_criteria_;
   // Accessed on the worker thread, modified on the network thread from
   // RegisterRtpDemuxerSink_w's Invoke.
-  webrtc::RtpDemuxerCriteria previous_demuxer_criteria_;
+  webrtc::RtpDemuxerCriteria previous_demuxer_criteria_
+      RTC_GUARDED_BY(network_thread());
   // This generator is used to generate SSRCs for local streams.
   // This is needed in cases where SSRCs are not negotiated or set explicitly
   // like in Simulcast.
