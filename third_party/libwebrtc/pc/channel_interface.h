@@ -51,10 +51,10 @@ class ChannelInterface {
   // Channel control
   virtual bool SetLocalContent(const MediaContentDescription* content,
                                webrtc::SdpType type,
-                               std::string* error_desc) = 0;
+                               std::string& error_desc) = 0;
   virtual bool SetRemoteContent(const MediaContentDescription* content,
                                 webrtc::SdpType type,
-                                std::string* error_desc) = 0;
+                                std::string& error_desc) = 0;
   virtual bool SetPayloadTypeDemuxingEnabled(bool enabled) = 0;
 
   // Access to the local and remote streams that were set on the channel.

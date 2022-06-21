@@ -30,7 +30,7 @@
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/network_route.h"
-#include "rtc_base/strings/string_builder.h"
+#include "rtc_base/strings/string_format.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/to_queued_task.h"
@@ -39,6 +39,7 @@
 namespace cricket {
 namespace {
 
+using ::rtc::StringFormat;
 using ::rtc::UniqueRandomIdGenerator;
 using ::webrtc::PendingTaskSafetyFlag;
 using ::webrtc::SdpType;
@@ -78,12 +79,6 @@ struct StreamFinder {
 };
 
 }  // namespace
-
-static void SafeSetError(const std::string& message, std::string* error_desc) {
-  if (error_desc) {
-    *error_desc = message;
-  }
-}
 
 template <class Codec>
 void RtpParametersFromMediaDescription(
@@ -132,8 +127,9 @@ BaseChannel::BaseChannel(rtc::Thread* worker_thread,
       demuxer_criteria_(content_name),
       ssrc_generator_(ssrc_generator) {
   RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK(media_channel_);
   RTC_DCHECK(ssrc_generator_);
-  RTC_LOG(LS_INFO) << "Created channel: " << ToString();
+  RTC_DLOG(LS_INFO) << "Created channel: " << ToString();
 }
 
 BaseChannel::~BaseChannel() {
@@ -148,13 +144,8 @@ BaseChannel::~BaseChannel() {
 }
 
 std::string BaseChannel::ToString() const {
-  rtc::StringBuilder sb;
-  sb << "{mid: " << content_name();
-  if (media_channel_) {
-    sb << ", media_type: " << MediaTypeToString(media_channel_->media_type());
-  }
-  sb << "}";
-  return sb.Release();
+  return StringFormat("{mid: %s, media_type: %s}", content_name().c_str(),
+                      MediaTypeToString(media_channel_->media_type()).c_str());
 }
 
 bool BaseChannel::ConnectToRtpTransport_n() {
@@ -268,7 +259,7 @@ void BaseChannel::Enable(bool enable) {
 
 bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
                                   SdpType type,
-                                  std::string* error_desc) {
+                                  std::string& error_desc) {
   RTC_DCHECK_RUN_ON(worker_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetLocalContent");
   return SetLocalContent_w(content, type, error_desc);
@@ -276,7 +267,7 @@ bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
 
 bool BaseChannel::SetRemoteContent(const MediaContentDescription* content,
                                    SdpType type,
-                                   std::string* error_desc) {
+                                   std::string& error_desc) {
   RTC_DCHECK_RUN_ON(worker_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetRemoteContent");
   return SetRemoteContent_w(content, type, error_desc);
@@ -586,7 +577,7 @@ bool BaseChannel::SetPayloadTypeDemuxingEnabled_w(bool enabled) {
 
 bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
                                        SdpType type,
-                                       std::string* error_desc) {
+                                       std::string& error_desc) {
   // In the case of RIDs (where SSRCs are not negotiated), this method will
   // generate an SSRC for each layer in StreamParams. That representation will
   // be stored internally in `local_streams_`.
@@ -606,11 +597,10 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
       continue;
     }
     if (!media_channel()->RemoveSendStream(old_stream.first_ssrc())) {
-      rtc::StringBuilder desc;
-      desc << "Failed to remove send stream with ssrc "
-           << old_stream.first_ssrc() << " from m-section with mid='"
-           << content_name() << "'.";
-      SafeSetError(desc.str(), error_desc);
+      error_desc = StringFormat(
+          "Failed to remove send stream with ssrc %u from m-section with "
+          "mid='%s'.",
+          old_stream.first_ssrc(), content_name().c_str());
       ret = false;
     }
   }
@@ -633,11 +623,10 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
 
     RTC_DCHECK(new_stream.has_ssrcs() || new_stream.has_rids());
     if (new_stream.has_ssrcs() && new_stream.has_rids()) {
-      rtc::StringBuilder desc;
-      desc << "Failed to add send stream: " << new_stream.first_ssrc()
-           << " into m-section with mid='" << content_name()
-           << "'. Stream has both SSRCs and RIDs.";
-      SafeSetError(desc.str(), error_desc);
+      error_desc = StringFormat(
+          "Failed to add send stream: %u into m-section with mid='%s'. Stream "
+          "has both SSRCs and RIDs.",
+          new_stream.first_ssrc(), content_name().c_str());
       ret = false;
       continue;
     }
@@ -654,10 +643,9 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
       RTC_LOG(LS_INFO) << "Add send stream ssrc: " << new_stream.ssrcs[0]
                        << " into " << ToString();
     } else {
-      rtc::StringBuilder desc;
-      desc << "Failed to add send stream ssrc: " << new_stream.first_ssrc()
-           << " into m-section with mid='" << content_name() << "'";
-      SafeSetError(desc.str(), error_desc);
+      error_desc = StringFormat(
+          "Failed to add send stream ssrc: %u into m-section with mid='%s'",
+          new_stream.first_ssrc(), content_name().c_str());
       ret = false;
     }
   }
@@ -668,7 +656,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
 bool BaseChannel::UpdateRemoteStreams_w(
     const std::vector<StreamParams>& streams,
     SdpType type,
-    std::string* error_desc) {
+    std::string& error_desc) {
   // Check for streams that have been removed.
   bool ret = true;
   for (const StreamParams& old_stream : remote_streams_) {
@@ -684,11 +672,10 @@ bool BaseChannel::UpdateRemoteStreams_w(
         RTC_LOG(LS_INFO) << "Remove remote ssrc: " << old_stream.first_ssrc()
                          << " from " << ToString() << ".";
       } else {
-        rtc::StringBuilder desc;
-        desc << "Failed to remove remote stream with ssrc "
-             << old_stream.first_ssrc() << " from m-section with mid='"
-             << content_name() << "'.";
-        SafeSetError(desc.str(), error_desc);
+        error_desc = StringFormat(
+            "Failed to remove remote stream with ssrc %u from m-section with "
+            "mid='%s'.",
+            old_stream.first_ssrc(), content_name().c_str());
         ret = false;
       }
     }
@@ -708,13 +695,12 @@ bool BaseChannel::UpdateRemoteStreams_w(
                                  : "unsignaled")
                          << " to " << ToString();
       } else {
-        rtc::StringBuilder desc;
-        desc << "Failed to add remote stream ssrc: "
-             << (new_stream.has_ssrcs()
-                     ? std::to_string(new_stream.first_ssrc())
-                     : "unsignaled")
-             << " to " << ToString();
-        SafeSetError(desc.str(), error_desc);
+        error_desc =
+            StringFormat("Failed to add remote stream ssrc: %s to %s",
+                         new_stream.has_ssrcs()
+                             ? std::to_string(new_stream.first_ssrc()).c_str()
+                             : "unsignaled",
+                         ToString().c_str());
         ret = false;
       }
     }
@@ -801,7 +787,7 @@ void VoiceChannel::UpdateMediaSendRecvState_w() {
 
 bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
                                      SdpType type,
-                                     std::string* error_desc) {
+                                     std::string& error_desc) {
   TRACE_EVENT0("webrtc", "VoiceChannel::SetLocalContent_w");
   RTC_LOG(LS_INFO) << "Setting local voice description for " << ToString();
 
@@ -819,11 +805,10 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
       &recv_params);
 
   if (!media_channel()->SetRecvParameters(recv_params)) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set local audio description recv parameters for m-section "
-        "with mid='" +
-            content_name() + "'.",
-        error_desc);
+        "with mid='%s'.",
+        content_name().c_str());
     return false;
   }
 
@@ -834,6 +819,8 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
     // Need to re-register the sink to update the handled payload.
     if (!RegisterRtpDemuxerSink_w()) {
       RTC_LOG(LS_ERROR) << "Failed to set up audio demuxing for " << ToString();
+      error_desc = StringFormat("Failed to set up audio demuxing for mid='%s'.",
+                                content_name().c_str());
       return false;
     }
   }
@@ -845,11 +832,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
   // description too (without a remote description, we won't be able
   // to send them anyway).
   if (!UpdateLocalStreams_w(content->as_audio()->streams(), type, error_desc)) {
-    SafeSetError(
-        "Failed to set local audio description streams for m-section with "
-        "mid='" +
-            content_name() + "'.",
-        error_desc);
+    RTC_DCHECK(!error_desc.empty());
     return false;
   }
 
@@ -860,7 +843,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
 bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
                                       SdpType type,
-                                      std::string* error_desc) {
+                                      std::string& error_desc) {
   TRACE_EVENT0("webrtc", "VoiceChannel::SetRemoteContent_w");
   RTC_LOG(LS_INFO) << "Setting remote voice description for " << ToString();
 
@@ -877,11 +860,10 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
 
   bool parameters_applied = media_channel()->SetSendParameters(send_params);
   if (!parameters_applied) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set remote audio description send parameters for m-section "
-        "with mid='" +
-            content_name() + "'.",
-        error_desc);
+        "with mid='%s'.",
+        content_name().c_str());
     return false;
   }
   last_send_params_ = send_params;
@@ -902,11 +884,10 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
   // description too (without a local description, we won't be able to
   // recv them anyway).
   if (!UpdateRemoteStreams_w(audio->streams(), type, error_desc)) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set remote audio description streams for m-section with "
-        "mid='" +
-            content_name() + "'.",
-        error_desc);
+        "mid='%s'.",
+        content_name().c_str());
     return false;
   }
 
@@ -960,7 +941,7 @@ void VideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
 
 bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
                                      SdpType type,
-                                     std::string* error_desc) {
+                                     std::string& error_desc) {
   TRACE_EVENT0("webrtc", "VideoChannel::SetLocalContent_w");
   RTC_LOG(LS_INFO) << "Setting local video description for " << ToString();
 
@@ -987,11 +968,10 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
           send_codec.packetization.reset();
           needs_send_params_update = true;
         } else if (recv_codec->packetization != send_codec.packetization) {
-          SafeSetError(
+          error_desc = StringFormat(
               "Failed to set local answer due to invalid codec packetization "
-              "specified in m-section with mid='" +
-                  content_name() + "'.",
-              error_desc);
+              "specified in m-section with mid='%s'.",
+              content_name().c_str());
           return false;
         }
       }
@@ -999,11 +979,10 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   }
 
   if (!media_channel()->SetRecvParameters(recv_params)) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set local video description recv parameters for m-section "
-        "with mid='" +
-            content_name() + "'.",
-        error_desc);
+        "with mid='%s'.",
+        content_name().c_str());
     return false;
   }
 
@@ -1014,6 +993,8 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     // Need to re-register the sink to update the handled payload.
     if (!RegisterRtpDemuxerSink_w()) {
       RTC_LOG(LS_ERROR) << "Failed to set up video demuxing for " << ToString();
+      error_desc = StringFormat("Failed to set up video demuxing for mid='%s'.",
+                                content_name().c_str());
       return false;
     }
   }
@@ -1022,9 +1003,9 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   if (needs_send_params_update) {
     if (!media_channel()->SetSendParameters(send_params)) {
-      SafeSetError("Failed to set send parameters for m-section with mid='" +
-                       content_name() + "'.",
-                   error_desc);
+      error_desc = StringFormat(
+          "Failed to set send parameters for m-section with mid='%s'.",
+          content_name().c_str());
       return false;
     }
     last_send_params_ = send_params;
@@ -1035,11 +1016,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   // description too (without a remote description, we won't be able
   // to send them anyway).
   if (!UpdateLocalStreams_w(content->as_video()->streams(), type, error_desc)) {
-    SafeSetError(
-        "Failed to set local video description streams for m-section with "
-        "mid='" +
-            content_name() + "'.",
-        error_desc);
+    RTC_DCHECK(!error_desc.empty());
     return false;
   }
 
@@ -1050,7 +1027,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
 bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
                                       SdpType type,
-                                      std::string* error_desc) {
+                                      std::string& error_desc) {
   TRACE_EVENT0("webrtc", "VideoChannel::SetRemoteContent_w");
   RTC_LOG(LS_INFO) << "Setting remote video description for " << ToString();
 
@@ -1079,11 +1056,10 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
           recv_codec.packetization.reset();
           needs_recv_params_update = true;
         } else if (send_codec->packetization != recv_codec.packetization) {
-          SafeSetError(
+          error_desc = StringFormat(
               "Failed to set remote answer due to invalid codec packetization "
-              "specifid in m-section with mid='" +
-                  content_name() + "'.",
-              error_desc);
+              "specifid in m-section with mid='%s'.",
+              content_name().c_str());
           return false;
         }
       }
@@ -1091,20 +1067,19 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   }
 
   if (!media_channel()->SetSendParameters(send_params)) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set remote video description send parameters for m-section "
-        "with mid='" +
-            content_name() + "'.",
-        error_desc);
+        "with mid='%s'.",
+        content_name().c_str());
     return false;
   }
   last_send_params_ = send_params;
 
   if (needs_recv_params_update) {
     if (!media_channel()->SetRecvParameters(recv_params)) {
-      SafeSetError("Failed to set recv parameters for m-section with mid='" +
-                       content_name() + "'.",
-                   error_desc);
+      error_desc = StringFormat(
+          "Failed to set recv parameters for m-section with mid='%s'.",
+          content_name().c_str());
       return false;
     }
     last_recv_params_ = recv_params;
@@ -1126,11 +1101,10 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   // description too (without a local description, we won't be able to
   // recv them anyway).
   if (!UpdateRemoteStreams_w(video->streams(), type, error_desc)) {
-    SafeSetError(
+    error_desc = StringFormat(
         "Failed to set remote video description streams for m-section with "
-        "mid='" +
-            content_name() + "'.",
-        error_desc);
+        "mid='%s'.",
+        content_name().c_str());
     return false;
   }
   set_remote_content_direction(content->direction());
