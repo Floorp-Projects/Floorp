@@ -138,10 +138,16 @@ pub enum WrStackingContextClip {
 }
 
 impl WrStackingContextClip {
-    fn to_webrender(&self, pipeline_id: WrPipelineId) -> Option<ClipId> {
+    fn to_webrender(&self, pipeline_id: WrPipelineId) -> Option<ClipChainId> {
         match *self {
             WrStackingContextClip::None => None,
-            WrStackingContextClip::ClipChain(id) => Some(clip_chain_id_to_webrender(id, pipeline_id)),
+            WrStackingContextClip::ClipChain(id) => {
+                if id == ROOT_CLIP_CHAIN {
+                    None
+                } else {
+                    Some(ClipChainId(id, pipeline_id))
+                }
+            }
         }
     }
 }

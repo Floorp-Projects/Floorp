@@ -7,6 +7,10 @@ root:
       bounds: [0, 0, 0, 0]
       clip-rect: [0, 0, 0, 0]
       id: 2
+    -
+      type: "clip-chain"
+      id: 3
+      clips: [2]
     - image: checkerboard(2,14,14,14,14)
       bounds: 0 0 200 200
     - type: stacking-context
@@ -14,7 +18,7 @@ root:
       transform-origin: 100 100
       filters: identity
       wraps-backdrop-filter: true
-      clip-node: 2
+      clip-chain: 3
       items:
         - type: backdrop-filter
           bounds: 50 50 100 100
