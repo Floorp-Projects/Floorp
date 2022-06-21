@@ -2762,6 +2762,11 @@ dependencies = [
 [[package]]
 name = "jog"
 version = "0.1.0"
+dependencies = [
+ "fog",
+ "mozbuild",
+ "once_cell",
+]
 
 [[package]]
 name = "js-sys"
