@@ -1540,9 +1540,9 @@ TEST_F(AcmSenderBitExactnessNewApi, DISABLED_OpusManyChannels) {
   const auto opus_decoder =
       AudioDecoderMultiChannelOpus::MakeAudioDecoder(*decoder_config);
 
-  rtc::scoped_refptr<AudioDecoderFactory> decoder_factory =
+  rtc::scoped_refptr<AudioDecoderFactory> decoder_factory(
       new rtc::RefCountedObject<test::AudioDecoderProxyFactory>(
-          opus_decoder.get());
+          opus_decoder.get()));
 
   // Set up an EXTERNAL DECODER to parse 4 channels.
   Run(AcmReceiverBitExactnessOldApi::PlatformChecksum(  // audio checksum
