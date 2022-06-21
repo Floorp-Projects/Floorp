@@ -193,27 +193,39 @@ class BaseChannel : public ChannelInterface,
   }
 
  protected:
-  void set_local_content_direction(webrtc::RtpTransceiverDirection direction) {
-    RTC_DCHECK_RUN_ON(worker_thread());
+  void set_local_content_direction(webrtc::RtpTransceiverDirection direction)
+      RTC_RUN_ON(worker_thread()) {
     local_content_direction_ = direction;
   }
-  void set_remote_content_direction(webrtc::RtpTransceiverDirection direction) {
-    RTC_DCHECK_RUN_ON(worker_thread());
+
+  webrtc::RtpTransceiverDirection local_content_direction() const
+      RTC_RUN_ON(worker_thread()) {
+    return local_content_direction_;
+  }
+
+  void set_remote_content_direction(webrtc::RtpTransceiverDirection direction)
+      RTC_RUN_ON(worker_thread()) {
     remote_content_direction_ = direction;
   }
-  // These methods verify that:
+
+  webrtc::RtpTransceiverDirection remote_content_direction() const
+      RTC_RUN_ON(worker_thread()) {
+    return remote_content_direction_;
+  }
+
+  bool enabled() const RTC_RUN_ON(worker_thread()) { return enabled_; }
+  rtc::Thread* signaling_thread() const { return signaling_thread_; }
+
+  // Call to verify that:
   // * The required content description directions have been set.
   // * The channel is enabled.
-  // * And for sending:
-  //   - The SRTP filter is active if it's needed.
-  //   - The transport has been writable before, meaning it should be at least
-  //     possible to succeed in sending a packet.
+  // * The SRTP filter is active if it's needed.
+  // * The transport has been writable before, meaning it should be at least
+  //   possible to succeed in sending a packet.
   //
   // When any of these properties change, UpdateMediaSendRecvState_w should be
   // called.
-  bool IsReadyToReceiveMedia_w() const RTC_RUN_ON(worker_thread());
   bool IsReadyToSendMedia_w() const RTC_RUN_ON(worker_thread());
-  rtc::Thread* signaling_thread() const { return signaling_thread_; }
 
   // NetworkInterface implementation, called by MediaEngine
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
@@ -291,8 +303,8 @@ class BaseChannel : public ChannelInterface,
   std::string ToString() const;
 
  private:
-  bool ConnectToRtpTransport() RTC_RUN_ON(network_thread());
-  void DisconnectFromRtpTransport() RTC_RUN_ON(network_thread());
+  bool ConnectToRtpTransport_n() RTC_RUN_ON(network_thread());
+  void DisconnectFromRtpTransport_n() RTC_RUN_ON(network_thread());
   void SignalSentPacket_n(const rtc::SentPacket& sent_packet);
 
   rtc::Thread* const worker_thread_;
@@ -387,20 +399,22 @@ class VoiceChannel : public BaseChannel {
 
  private:
   // overrides from BaseChannel
-  void UpdateMediaSendRecvState_w() override;
+  void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,
                          webrtc::SdpType type,
-                         std::string* error_desc) override;
+                         std::string* error_desc)
+      RTC_RUN_ON(worker_thread()) override;
   bool SetRemoteContent_w(const MediaContentDescription* content,
                           webrtc::SdpType type,
-                          std::string* error_desc) override;
+                          std::string* error_desc)
+      RTC_RUN_ON(worker_thread()) override;
 
   // Last AudioSendParameters sent down to the media_channel() via
   // SetSendParameters.
-  AudioSendParameters last_send_params_;
+  AudioSendParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last AudioRecvParameters sent down to the media_channel() via
   // SetRecvParameters.
-  AudioRecvParameters last_recv_params_;
+  AudioRecvParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
 // VideoChannel is a specialization for video.
@@ -421,28 +435,30 @@ class VideoChannel : public BaseChannel {
     return static_cast<VideoMediaChannel*>(BaseChannel::media_channel());
   }
 
-  void FillBitrateInfo(BandwidthEstimationInfo* bwe_info);
-
   cricket::MediaType media_type() const override {
     return cricket::MEDIA_TYPE_VIDEO;
   }
 
+  void FillBitrateInfo(BandwidthEstimationInfo* bwe_info);
+
  private:
   // overrides from BaseChannel
-  void UpdateMediaSendRecvState_w() override;
+  void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,
                          webrtc::SdpType type,
-                         std::string* error_desc) override;
+                         std::string* error_desc)
+      RTC_RUN_ON(worker_thread()) override;
   bool SetRemoteContent_w(const MediaContentDescription* content,
                           webrtc::SdpType type,
-                          std::string* error_desc) override;
+                          std::string* error_desc)
+      RTC_RUN_ON(worker_thread()) override;
 
   // Last VideoSendParameters sent down to the media_channel() via
   // SetSendParameters.
-  VideoSendParameters last_send_params_;
+  VideoSendParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last VideoRecvParameters sent down to the media_channel() via
   // SetRecvParameters.
-  VideoRecvParameters last_recv_params_;
+  VideoRecvParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
 }  // namespace cricket
