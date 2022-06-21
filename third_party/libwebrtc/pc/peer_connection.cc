@@ -1938,8 +1938,6 @@ void PeerConnection::OnIceCandidateError(const std::string& address,
     return;
   }
   Observer()->OnIceCandidateError(address, port, url, error_code, error_text);
-  // Leftover not to break wpt test during migration to the new API.
-  Observer()->OnIceCandidateError(address + ":", url, error_code, error_text);
 }
 
 void PeerConnection::OnIceCandidatesRemoved(
