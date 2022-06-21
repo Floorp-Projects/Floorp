@@ -16,8 +16,6 @@ job-defaults:
 linux64-node-10:
     treeherder:
         symbol: TL(node-10)
-    run:
-        toolchain-alias: linux64-node-10
     fetches:
         fetch:
             - nodejs-10-linux64
@@ -35,8 +33,6 @@ linux64-node-12:
 linux64-node-16:
     treeherder:
         symbol: TL(node-16)
-    run:
-        toolchain-alias: linux64-node-16
     fetches:
         fetch:
             - nodejs-16-linux64
@@ -44,9 +40,6 @@ linux64-node-16:
 macosx64-node-10:
     treeherder:
         symbol: TM(node-10)
-    run:
-        toolchain-alias:
-            - macosx64-node-10
     fetches:
         fetch:
             - nodejs-10-macosx64
@@ -64,9 +57,6 @@ macosx64-node-12:
 macosx64-node-16:
     treeherder:
         symbol: TM(node-16)
-    run:
-        toolchain-alias:
-            - macosx64-node-16
     fetches:
         fetch:
             - nodejs-16-macosx64
@@ -84,8 +74,6 @@ macosx64-aarch64-node-16:
 win64-node-10:
     treeherder:
         symbol: TW64(node-10)
-    run:
-        toolchain-alias: win64-node-10
     fetches:
         fetch:
             - nodejs-10-win64
@@ -102,8 +90,6 @@ win64-node-12:
 win64-node-16:
     treeherder:
         symbol: TW64(node-16)
-    run:
-        toolchain-alias: win64-node-16
     fetches:
         fetch:
             - nodejs-16-win64
@@ -111,8 +97,6 @@ win64-node-16:
 win32-node-10:
     treeherder:
         symbol: TW32(node-10)
-    run:
-        toolchain-alias: win32-node-10
     fetches:
         fetch:
             - nodejs-10-win32
@@ -133,7 +117,6 @@ win32-node-16:
         symbol: TW32(node-16)
     run:
         toolchain-alias:
-            - win32-node-16
             - win64-aarch64-node-16
     fetches:
         fetch:
