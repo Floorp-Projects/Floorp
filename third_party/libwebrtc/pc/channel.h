@@ -122,7 +122,9 @@ class BaseChannel : public ChannelInterface,
 
   rtc::Thread* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() const { return network_thread_; }
-  const std::string& content_name() const override { return content_name_; }
+  const std::string& content_name() const override {
+    return demuxer_criteria_.mid();
+  }
   // TODO(deadbeef): This is redundant; remove this.
   absl::string_view transport_name() const override {
     RTC_DCHECK_RUN_ON(network_thread());
@@ -297,8 +299,6 @@ class BaseChannel : public ChannelInterface,
   rtc::Thread* const network_thread_;
   rtc::Thread* const signaling_thread_;
   rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_;
-
-  const std::string content_name_;
 
   std::function<void()> on_first_packet_received_
       RTC_GUARDED_BY(network_thread());
