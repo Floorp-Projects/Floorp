@@ -56,7 +56,7 @@ function injectValues(queryMap) {
 let advancedVisible = false;
 
 /**
- * Used to show or hide the "advanced" button based on the validity of the SSL certificate
+ * Used to show or hide the "accept" button based on the validity of the SSL certificate
  */
 function updateShowSSL(queryMap) {
     /** @type {'true' | 'false'} */
@@ -73,22 +73,15 @@ function updateShowSSL(queryMap) {
 };
 
 /**
- * Used to show or hide the "advanced" button based for the HSTS error page
+ * Used to show or hide the "accept" button based for the HSTS error page
  */
 function updateShowHSTS(queryMap) {
-    /** @type {'true' | 'false'} */
     const showHSTS = queryMap.showHSTS;
-    if (typeof document.addCertException === "undefined") {
-        document.getElementById('advancedButton').style.display='none';
-    } else {
-        if (showHSTS === 'true') {
-            document.getElementById('advancedButton').style.display='block';
-            document.getElementById('advancedPanelAcceptButton').style.display='none';
-        } else {
-            document.getElementById('advancedButton').style.display='none';
-        }
+    if (showHSTS === 'true') {
+        document.getElementById('advancedButton').style.display='block';
+        document.getElementById('advancedPanelAcceptButton').style.display='none';
     }
-}
+};
 
 /**
  * Used to display information about the SSL certificate in `error_pages.html`
