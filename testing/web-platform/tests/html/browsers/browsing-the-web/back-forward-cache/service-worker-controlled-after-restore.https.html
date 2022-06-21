@@ -30,7 +30,7 @@ promise_test(async t => {
         () => (navigator.serviceWorker.controller !== null)),
     'pageA should be controlled before navigation');
 
-  navigateAndThenBack(pageA, pageB, urlB);
+  await navigateAndThenBack(pageA, pageB, urlB);
   await assert_bfcached(pageA);
 
   assert_true(
