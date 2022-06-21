@@ -1699,21 +1699,25 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
-    // FormatBlockContainerWithTransaction() creates AutoSelectionRestorer.
-    // Therefore, even if it returns NS_OK, editor might have been destroyed
-    // at restoring Selection.
+    AutoRangeArray selectionRanges(SelectionRef());
     nsresult rv = FormatBlockContainerWithTransaction(
+        selectionRanges,
         MOZ_KnownLive(HTMLEditor::ToParagraphSeparatorTagName(separator)),
         aEditingHost);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
-        NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
+      return EditActionResult(rv);
     }
-    // We warn on failure, but don't handle it, because it might be harmless.
-    // Instead we just check that a new block was actually created.
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::FormatBlockContainerWithTransaction() "
-                         "failed, but ignored");
+    if (selectionRanges.HasSavedRanges()) {
+      selectionRanges.RestoreFromSavedRanges();
+    }
+    DebugOnly<nsresult> rvIgnored = selectionRanges.ApplyTo(SelectionRef());
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "AutoRangeArray::ApplyTo(SelectionRef()) failed, but ignored");
 
     firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
@@ -2955,19 +2959,19 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
   //     `<dd>` or `<dt>` by
   //     HTMLEditor::MakeDefinitionListItemWithTransaction().  But this
   //     difference may be a bug.  We should investigate this later.
-  IgnoredErrorResult ignoredError;
+  IgnoredErrorResult error;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this,
       &aListElementOrListItemElementTagName == nsGkAtoms::dd ||
               &aListElementOrListItemElementTagName == nsGkAtoms::dt
           ? EditSubAction::eCreateOrChangeDefinitionListItem
           : EditSubAction::eCreateOrChangeList,
-      nsIEditor::eNext, ignoredError);
-  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return EditActionResult(ignoredError.StealNSResult());
+      nsIEditor::eNext, error);
+  if (NS_WARN_IF(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return EditActionResult(error.StealNSResult());
   }
   NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
+      !error.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
@@ -3018,26 +3022,43 @@ EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
     return EditActionResult(NS_ERROR_INVALID_ARG);
   }
 
+  const RefPtr<Element> editingHost = ComputeEditingHost();
+  if (MOZ_UNLIKELY(!editingHost)) {
+    return EditActionIgnored(NS_SUCCESS_DOM_NO_OPERATION);
+  }
+
   // Expands selection range to include the immediate block parent, and then
   // further expands to include any ancestors whose children are all in the
   // range.
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), *editingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return EditActionResult(rv);
+      return EditActionResult(extendedRange.unwrapErr());
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    error.SuppressException();
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return EditActionResult(error.StealNSResult());
     }
   }
 
   // ChangeSelectedHardLinesToList() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  const RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(!editingHost)) {
-    return EditActionIgnored(NS_SUCCESS_DOM_NO_OPERATION);
-  }
   result = ChangeSelectedHardLinesToList(
       MOZ_KnownLive(*listTagName), MOZ_KnownLive(*listItemTagName), aBulletType,
       aSelectAllOfCurrentList, *editingHost);
@@ -3698,23 +3719,39 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
 
   AutoPlaceholderBatch treatAsOneTransaction(
       *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
-  IgnoredErrorResult ignoredError;
+  IgnoredErrorResult error;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eRemoveList, nsIEditor::eNext, ignoredError);
-  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+      *this, EditSubAction::eRemoveList, nsIEditor::eNext, error);
+  if (NS_WARN_IF(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return error.StealNSResult();
   }
   NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
+      !error.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return rv;
+      return extendedRange.unwrapErr();
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    error.SuppressException();
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return error.StealNSResult();
     }
   }
 
@@ -3806,50 +3843,61 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
 }
 
 nsresult HTMLEditor::FormatBlockContainerWithTransaction(
-    nsAtom& blockType, const Element& aEditingHost) {
+    AutoRangeArray& aSelectionRanges, nsAtom& blockType,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!aSelectionRanges.IsCollapsed() &&
+      aSelectionRanges.Ranges().Length() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            aSelectionRanges.FirstRangeRef(), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return rv;
+      return extendedRange.unwrapErr();
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use AutoRangeArray::SetStartAndEnd() here.
+    if (NS_FAILED(aSelectionRanges.SetBaseAndExtent(
+            extendedRange.inspect().StartRef(),
+            extendedRange.inspect().EndRef()))) {
+      NS_WARNING("AutoRangeArray::SetBaseAndExtent() failed");
+      return NS_ERROR_FAILURE;
     }
   }
 
-  AutoSelectionRestorer restoreSelectionLater(*this);
+  MOZ_ALWAYS_TRUE(aSelectionRanges.SaveAndTrackRanges(*this));
+
   // TODO: We don't need AutoTransactionsConserveSelection here in the normal
   //       cases, but removing this may cause the behavior with the legacy
   //       mutation event listeners.  We should try to delete this in a bug.
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  {
-    AutoRangeArray extendedSelectionRanges(SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrRemoveBlock, aEditingHost);
-    Result<EditorDOMPoint, nsresult> splitResult =
-        extendedSelectionRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
-    if (MOZ_UNLIKELY(splitResult.isErr())) {
-      NS_WARNING(
-          "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
-          "failed");
-      return splitResult.unwrapErr();
-    }
-    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
-        *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
-        AutoRangeArray::CollectNonEditableNodes::Yes);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-          "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
-      return rv;
-    }
+  aSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction::eCreateOrRemoveBlock, aEditingHost);
+  Result<EditorDOMPoint, nsresult> splitResult =
+      aSelectionRanges
+          .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+              *this);
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
+    NS_WARNING(
+        "AutoRangeArray::"
+        "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+        "failed");
+    return splitResult.unwrapErr();
+  }
+  nsresult rv = aSelectionRanges.CollectEditTargetNodes(
+      *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
+      AutoRangeArray::CollectNonEditableNodes::Yes);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
+        "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
+    return rv;
   }
 
   const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
@@ -3866,12 +3914,12 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
-    const nsRange* firstRange = SelectionRef().GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
+    if (NS_WARN_IF(aSelectionRanges.Ranges().IsEmpty())) {
       return NS_ERROR_FAILURE;
     }
 
-    EditorDOMPoint pointToInsertBlock(firstRange->StartRef());
+    auto pointToInsertBlock =
+        aSelectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
     if (&blockType == nsGkAtoms::normal || &blockType == nsGkAtoms::_empty) {
       if (!pointToInsertBlock.IsInContentNode()) {
         NS_WARNING(
@@ -3917,6 +3965,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
         return splitNodeResult.unwrapErr();
       }
+      splitNodeResult.IgnoreCaretPointSuggestion();
       // Put a <br> element at the split point
       const CreateElementResult insertBRElementResult = InsertBRElement(
           WithTransaction::Yes, splitNodeResult.AtSplitPoint<EditorDOMPoint>());
@@ -3925,14 +3974,11 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         return insertBRElementResult.unwrapErr();
       }
       MOZ_ASSERT(insertBRElementResult.GetNewNode());
-      // Don't restore the selection
-      restoreSelectionLater.Abort();
-      // Put selection at the split point
-      splitNodeResult.IgnoreCaretPointSuggestion();
-      nsresult rv = CollapseSelectionTo(
+      aSelectionRanges.ClearSavedRanges();
+      nsresult rv = aSelectionRanges.Collapse(
           EditorRawDOMPoint(insertBRElementResult.GetNewNode()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::CollapseSelectionTo() failed");
+                           "AutoRangeArray::Collapse() failed");
       return rv;
     }
 
@@ -3967,12 +4013,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
               .get());
       return createNewBlockElementResult.unwrapErr();
     }
-    // We'll update selection after deleting the content nodes and nobody refers
-    // selection until then.  Therefore, we don't need to update selection here.
     createNewBlockElementResult.IgnoreCaretPointSuggestion();
-    MOZ_ASSERT(restoreSelectionLater.MaybeRestoreSelectionLater());
-
     MOZ_ASSERT(createNewBlockElementResult.GetNewNode());
+
     // Remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
         createNewBlockElementResult.GetNewNode();
@@ -3988,15 +4031,11 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
       }
       arrayOfContents.RemoveElementAt(0);
     }
-    // Don't restore the selection
-    restoreSelectionLater.Abort();
     // Put selection in new block
-    // MOZ_KnownLive(createNewBlockElementResult.GetNewNode()) because it's
-    // grabbed by createNewBlockElementResult.
-    nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*createNewBlockElementResult.GetNewNode()));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::CollapseSelectionToStartOf() failed");
+    aSelectionRanges.ClearSavedRanges();
+    nsresult rv = aSelectionRanges.Collapse(
+        EditorRawDOMPoint(createNewBlockElementResult.GetNewNode(), 0u));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::Collapse() failed");
     return rv;
   }
   // Okay, now go through all the nodes and make the right kind of blocks, or
@@ -4012,8 +4051,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
           "failed");
       return wrapContentsInBlockquoteElementsResult.unwrapErr();
     }
-    // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-    // should ignore the suggested caret point.
     return NS_OK;
   }
   if (&blockType == nsGkAtoms::normal || &blockType == nsGkAtoms::_empty) {
@@ -4024,8 +4061,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
           "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
       removeBlockContainerElementsResult.unwrapErr();
     }
-    // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-    // should ignore the suggested caret point.
     return NS_OK;
   }
   Result<EditorDOMPoint, nsresult> wrapContentsInBlockElementResult =
@@ -4035,8 +4070,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
     NS_WARNING("HTMLEditor::CreateOrChangeBlockContainerElement() failed");
     return wrapContentsInBlockElementResult.unwrapErr();
   }
-  // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-  // should ignore the suggested caret point.
   return NS_OK;
 }
 
@@ -4308,13 +4341,29 @@ nsresult HTMLEditor::HandleCSSIndentAtSelection(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return rv;
+      return extendedRange.unwrapErr();
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    IgnoredErrorResult error;
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return error.StealNSResult();
     }
   }
 
@@ -4584,13 +4633,29 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelection(const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return rv;
+      return extendedRange.unwrapErr();
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    IgnoredErrorResult error;
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return error.StealNSResult();
     }
   }
 
@@ -4950,10 +5015,29 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EditActionHandled(rv);
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
+          "failed");
+      return EditActionResult(extendedRange.unwrapErr());
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    IgnoredErrorResult error;
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return EditActionResult(error.StealNSResult());
     }
   }
 
@@ -5841,13 +5925,29 @@ EditActionResult HTMLEditor::AlignAsSubAction(const nsAString& aAlignType,
     }
   }
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return EditActionResult(rv);
+      return EditActionResult(extendedRange.unwrapErr());
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    IgnoredErrorResult error;
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return EditActionResult(error.StealNSResult());
     }
   }
 
@@ -6408,7 +6508,9 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   return NS_OK;
 }
 
-nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
+Result<EditorRawDOMRange, nsresult>
+HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
+    const nsRange* aRange, const Element& aEditingHost) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // This tweaks selections to be more "natural".
@@ -6416,108 +6518,90 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   // breaks or block boundaries unless something editable beyond that boundary
   // is also selected.  This adjustment makes it much easier for the various
   // block operations to determine what nodes to act on.
-
-  // We don't need to mess with cell selections, and we assume multirange
-  // selections are those.
-  // XXX Why?  Even in <input>, user can select 2 or more ranges.
-  if (SelectionRef().RangeCount() != 1) {
-    return NS_OK;
+  if (NS_WARN_IF(!aRange) || NS_WARN_IF(!aRange->IsPositioned())) {
+    return Err(NS_ERROR_FAILURE);
   }
 
-  const RefPtr<nsRange> range = SelectionRef().GetRangeAt(0);
-  if (NS_WARN_IF(!range)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_WARN_IF(!range->IsPositioned())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  const EditorDOMPoint startPoint(range->StartRef());
+  const EditorRawDOMPoint startPoint(aRange->StartRef());
   if (NS_WARN_IF(!startPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
-  const EditorDOMPoint endPoint(range->EndRef());
+  const EditorRawDOMPoint endPoint(aRange->EndRef());
   if (NS_WARN_IF(!endPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // adjusted values default to original values
-  EditorDOMPoint newStartPoint(startPoint);
-  EditorDOMPoint newEndPoint(endPoint);
+  EditorRawDOMRange newRange(startPoint, endPoint);
 
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  WSRunScanner wsScannerAtEnd(ComputeEditingHost(), endPoint);
+  WSRunScanner wsScannerAtEnd(&aEditingHost, endPoint);
   WSScanResult scanResultAtEnd =
       wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint);
   if (scanResultAtEnd.Failed()) {
     NS_WARNING(
         "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   if (scanResultAtEnd.ReachedSomethingNonTextContent()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtEnd.StartsFromOtherBlockElement()) {
       // endpoint is just after the close of a block.
-      nsIContent* child = HTMLEditUtils::GetLastLeafContent(
-          *wsScannerAtEnd.StartReasonOtherBlockElementPtr(),
-          {LeafNodeType::LeafNodeOrChildBlock});
-      if (child) {
-        newEndPoint.SetAfter(child);
+      if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
+              *wsScannerAtEnd.StartReasonOtherBlockElementPtr(),
+              {LeafNodeType::LeafNodeOrChildBlock})) {
+        newRange.SetEnd(EditorRawDOMPoint::After(*child));
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsScannerAtEnd.StartsFromCurrentBlockBoundary()) {
-      if (wsScannerAtEnd.GetEditingHost()) {
-        // endpoint is just after start of this block
-        if (nsIContent* child = HTMLEditUtils::GetPreviousContent(
-                endPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                wsScannerAtEnd.GetEditingHost())) {
-          newEndPoint.SetAfter(child);
-        }
+      // endpoint is just after start of this block
+      if (nsIContent* child = HTMLEditUtils::GetPreviousContent(
+              endPoint, {WalkTreeOption::IgnoreNonEditableNode},
+              &aEditingHost)) {
+        newRange.SetEnd(EditorRawDOMPoint::After(*child));
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsScannerAtEnd.StartsFromBRElement()) {
       // endpoint is just after break.  lets adjust it to before it.
-      newEndPoint.Set(wsScannerAtEnd.StartReasonBRElementPtr());
+      newRange.SetEnd(
+          EditorRawDOMPoint(wsScannerAtEnd.StartReasonBRElementPtr()));
     }
   }
 
   // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  WSRunScanner wsScannerAtStart(wsScannerAtEnd.GetEditingHost(), startPoint);
+  WSRunScanner wsScannerAtStart(&aEditingHost, startPoint);
   WSScanResult scanResultAtStart =
       wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint);
   if (scanResultAtStart.Failed()) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   if (scanResultAtStart.ReachedSomethingNonTextContent()) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsScannerAtStart.EndsByOtherBlockElement()) {
       // startpoint is just before the start of a block.
-      nsINode* child = HTMLEditUtils::GetFirstLeafContent(
-          *wsScannerAtStart.EndReasonOtherBlockElementPtr(),
-          {LeafNodeType::LeafNodeOrChildBlock});
-      if (child) {
-        newStartPoint.Set(child);
+      if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
+              *wsScannerAtStart.EndReasonOtherBlockElementPtr(),
+              {LeafNodeType::LeafNodeOrChildBlock})) {
+        newRange.SetStart(EditorRawDOMPoint(child));
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsScannerAtStart.EndsByCurrentBlockBoundary()) {
-      if (wsScannerAtStart.GetEditingHost()) {
-        // startpoint is just before end of this block
-        if (nsIContent* child = HTMLEditUtils::GetNextContent(
-                startPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                wsScannerAtStart.GetEditingHost())) {
-          newStartPoint.Set(child);
-        }
+      // startpoint is just before end of this block
+      if (nsIContent* child = HTMLEditUtils::GetNextContent(
+              startPoint, {WalkTreeOption::IgnoreNonEditableNode},
+              &aEditingHost)) {
+        newRange.SetStart(EditorRawDOMPoint(child));
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsScannerAtStart.EndsByBRElement()) {
       // startpoint is just before a break.  lets adjust it to after it.
-      newStartPoint.SetAfter(wsScannerAtStart.EndReasonBRElementPtr());
+      newRange.SetStart(
+          EditorRawDOMPoint::After(*wsScannerAtStart.EndReasonBRElementPtr()));
     }
   }
 
@@ -6531,37 +6615,28 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   // start, or new start after old end.  If so then just leave things alone.
 
   Maybe<int32_t> comp = nsContentUtils::ComparePoints(
-      startPoint.ToRawRangeBoundary(), newEndPoint.ToRawRangeBoundary());
+      startPoint.ToRawRangeBoundary(), newRange.EndRef().ToRawRangeBoundary());
 
   if (NS_WARN_IF(!comp)) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   if (*comp == 1) {
-    return NS_OK;  // New end before old start.
+    return EditorRawDOMRange();  // New end before old start.
   }
 
-  comp = nsContentUtils::ComparePoints(newStartPoint.ToRawRangeBoundary(),
+  comp = nsContentUtils::ComparePoints(newRange.StartRef().ToRawRangeBoundary(),
                                        endPoint.ToRawRangeBoundary());
 
   if (NS_WARN_IF(!comp)) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   if (*comp == 1) {
-    return NS_OK;  // New start after old end.
+    return EditorRawDOMRange();  // New start after old end.
   }
 
-  // Otherwise set selection to new values.  Note that end point may be prior
-  // to start point.  So, we cannot use Selection::SetStartAndEndInLimit() here.
-  ErrorResult error;
-  SelectionRef().SetBaseAndExtentInLimiter(newStartPoint, newEndPoint, error);
-  if (NS_WARN_IF(Destroyed())) {
-    error = NS_ERROR_EDITOR_DESTROYED;
-  } else if (error.Failed()) {
-    NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
-  }
-  return error.StealNSResult();
+  return newRange;
 }
 
 template <typename EditorDOMRangeType>
@@ -9953,13 +10028,29 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction(
     return EditActionHandled();
   }
 
-  if (!SelectionRef().IsCollapsed()) {
-    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
-    if (NS_FAILED(rv)) {
+  // XXX Why do we do this only when there is only one selection range?
+  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+    Result<EditorRawDOMRange, nsresult> extendedRange =
+        GetRangeExtendedToHardLineEdgesForBlockEditAction(
+            SelectionRef().GetRangeAt(0u), aEditingHost);
+    if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() "
+          "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
           "failed");
-      return EditActionHandled(rv);
+      return EditActionResult(extendedRange.unwrapErr());
+    }
+    // Note that end point may be prior to start point.  So, we
+    // cannot use Selection::SetStartAndEndInLimit() here.
+    IgnoredErrorResult error;
+    SelectionRef().SetBaseAndExtentInLimiter(
+        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
+        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (error.Failed()) {
+      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
+      return EditActionResult(error.StealNSResult());
     }
   }
 
