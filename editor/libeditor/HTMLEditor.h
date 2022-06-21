@@ -1212,19 +1212,6 @@ class HTMLEditor final : public EditorBase,
       CollectNonEditableNodes aCollectNonEditableNodes) const;
 
   /**
-   * SplitInlinessAndCollectEditTargetNodes() splits text nodes and inline
-   * elements around aArrayOfRanges.  Then, collects edit target nodes to
-   * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
-   * <br> element in it.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SplitInlinesAndCollectEditTargetNodes(
-      nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
-      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-      EditSubAction aEditSubAction,
-      CollectNonEditableNodes aCollectNonEditableNodes);
-
-  /**
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
    * First, this collects all nodes in given ranges, then, modifies the
    * result for specific edit sub-actions.
