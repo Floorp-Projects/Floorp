@@ -65,11 +65,8 @@ class RtpDemuxerCriteria {
  private:
   // Intentionally private member variables to encourage specifying them via the
   // constructor and consider them to be const as much as possible.
-  // Post construction, reading the values needs to be done via accessors and if
-  // changing the value is required, that can still be done via the implicit
-  // assignment operator (which also reassigns all other member variables).
-  std::string mid_;
-  std::string rsid_;
+  const std::string mid_;
+  const std::string rsid_;
   flat_set<uint32_t> ssrcs_;
   flat_set<uint8_t> payload_types_;
 };

@@ -355,10 +355,6 @@ class BaseChannel : public ChannelInterface,
   // TODO(bugs.webrtc.org/12239): Modified on worker thread, accessed
   // on network thread in RegisterRtpDemuxerSink_n (called from Init_w)
   webrtc::RtpDemuxerCriteria demuxer_criteria_;
-  // Accessed on the worker thread, modified on the network thread from
-  // RegisterRtpDemuxerSink_w's Invoke.
-  webrtc::RtpDemuxerCriteria previous_demuxer_criteria_
-      RTC_GUARDED_BY(network_thread());
   // This generator is used to generate SSRCs for local streams.
   // This is needed in cases where SSRCs are not negotiated or set explicitly
   // like in Simulcast.

@@ -163,11 +163,7 @@ bool BaseChannel::ConnectToRtpTransport() {
 
   // We don't need to call OnDemuxerCriteriaUpdatePending/Complete because
   // there's no previous criteria to worry about.
-  bool result = rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this);
-  if (result) {
-    previous_demuxer_criteria_ = demuxer_criteria_;
-  } else {
-    previous_demuxer_criteria_ = {};
+  if (!rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this)) {
     RTC_LOG(LS_ERROR) << "Failed to set up demuxing for " << ToString();
     return false;
   }
@@ -493,18 +489,10 @@ bool BaseChannel::RegisterRtpDemuxerSink_w() {
   bool ret = network_thread_->Invoke<bool>(
       RTC_FROM_HERE, [this, demuxer_criteria = demuxer_criteria_] {
         RTC_DCHECK_RUN_ON(network_thread());
-        RTC_DCHECK(rtp_transport_);
-        if (demuxer_criteria_ == previous_demuxer_criteria_)
-          return true;
-
-        bool result =
-            rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria, this);
-        if (result) {
-          previous_demuxer_criteria_ = demuxer_criteria;
-        } else {
-          previous_demuxer_criteria_ = {};
-        }
-        return result;
+        // Note that RegisterRtpDemuxerSink first unregisters the sink if
+        // already registered. So this will change the state of the class
+        // whether the call succeeds or not.
+        return rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria, this);
       });
 
   media_channel_->OnDemuxerCriteriaUpdateComplete();
