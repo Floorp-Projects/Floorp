@@ -13,6 +13,7 @@
 #import "RTCConfiguration+Private.h"
 #import "RTCDataChannel+Private.h"
 #import "RTCIceCandidate+Private.h"
+#import "RTCIceCandidateErrorEvent+Private.h"
 #import "RTCLegacyStatsReport+Private.h"
 #import "RTCMediaConstraints+Private.h"
 #import "RTCMediaStream+Private.h"
@@ -224,6 +225,21 @@ void PeerConnectionDelegateAdapter::OnIceCandidate(
   RTC_OBJC_TYPE(RTCPeerConnection) *peer_connection = peer_connection_;
   [peer_connection.delegate peerConnection:peer_connection
                    didGenerateIceCandidate:iceCandidate];
+}
+
+void PeerConnectionDelegateAdapter::OnIceCandidateError(const std::string &address,
+                                                        int port,
+                                                        const std::string &url,
+                                                        int error_code,
+                                                        const std::string &error_text) {
+  RTC_OBJC_TYPE(RTCPeerConnection) *peer_connection = peer_connection_;
+  RTC_OBJC_TYPE(RTCIceCandidateErrorEvent) *event =
+      [[RTC_OBJC_TYPE(RTCIceCandidateErrorEvent) alloc] initWithAddress:address
+                                                                   port:port
+                                                                    url:url
+                                                              errorCode:error_code
+                                                              errorText:error_text];
+  [peer_connection.delegate peerConnection:peer_connection didFailToGatherIceCandidate:event];
 }
 
 void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
