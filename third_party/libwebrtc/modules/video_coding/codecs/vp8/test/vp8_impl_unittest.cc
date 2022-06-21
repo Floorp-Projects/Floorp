@@ -76,6 +76,9 @@ class TestVp8Impl : public VideoCodecUnitTest {
     webrtc::test::CodecSettings(kVideoCodecVP8, codec_settings);
     codec_settings->width = kWidth;
     codec_settings->height = kHeight;
+    codec_settings->VP8()->denoisingOn = true;
+    codec_settings->VP8()->frameDroppingOn = false;
+    codec_settings->VP8()->automaticResizeOn = false;
     codec_settings->VP8()->complexity = VideoCodecComplexity::kComplexityNormal;
   }
 
@@ -405,6 +408,7 @@ TEST_F(TestVp8Impl, EncoderWith2TemporalLayers) {
 }
 
 TEST_F(TestVp8Impl, ScalingDisabledIfAutomaticResizeOff) {
+  codec_settings_.VP8()->frameDroppingOn = true;
   codec_settings_.VP8()->automaticResizeOn = false;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             encoder_->InitEncode(&codec_settings_, kSettings));
@@ -415,6 +419,7 @@ TEST_F(TestVp8Impl, ScalingDisabledIfAutomaticResizeOff) {
 }
 
 TEST_F(TestVp8Impl, ScalingEnabledIfAutomaticResizeOn) {
+  codec_settings_.VP8()->frameDroppingOn = true;
   codec_settings_.VP8()->automaticResizeOn = true;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             encoder_->InitEncode(&codec_settings_, kSettings));
