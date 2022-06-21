@@ -5,7 +5,7 @@
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
 /* import-globals-from view-controller.js */
-/* global MozXULElement, windowRoot */
+/* global windowRoot */
 
 "use strict";
 
@@ -2241,25 +2241,6 @@ class FiveStarRating extends HTMLElement {
 }
 customElements.define("five-star-rating", FiveStarRating);
 
-class ContentSelectDropdown extends HTMLElement {
-  connectedCallback() {
-    if (this.children.length) {
-      return;
-    }
-    // This creates the menulist and menupopup elements needed for the inline
-    // browser to support <select> elements and context menus.
-    this.appendChild(
-      MozXULElement.parseXULToFragment(`
-      <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
-        <menupopup rolluponmousewheel="true" activateontab="true"
-                   position="after_start" level="parent"/>
-      </menulist>
-    `)
-    );
-  }
-}
-customElements.define("content-select-dropdown", ContentSelectDropdown);
-
 class ProxyContextMenu extends HTMLElement {
   openPopupAtScreen(...args) {
     // prettier-ignore
@@ -2357,7 +2338,6 @@ class InlineOptionsBrowser extends HTMLElement {
     browser.setAttribute("id", "addon-inline-options");
     browser.setAttribute("transparent", "true");
     browser.setAttribute("forcemessagemanager", "true");
-    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
 
     // The outer about:addons document listens for key presses to focus

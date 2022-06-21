@@ -71,17 +71,14 @@ add_task(async function() {
       ", which is some sane value"
   );
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   // First, get the position of the select popup when no translations have been applied.
-  await openSelectPopup(selectPopup);
+  const selectPopup = await openSelectPopup();
 
   let popup_initial_rect = selectPopup.getBoundingClientRect();
   let popupInitialX = popup_initial_rect.left;
   let popupInitialY = popup_initial_rect.top;
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   ok(popupInitialX > 0, "select position before zooming (x) " + popupInitialX);
   ok(popupInitialY > 0, "select position before zooming (y) " + popupInitialY);
@@ -114,7 +111,7 @@ add_task(async function() {
     return content.wrappedJSObject.getSelectRect();
   });
 
-  await openSelectPopup(selectPopup);
+  await openSelectPopup();
 
   let popupRect = selectPopup.getBoundingClientRect();
   ok(
@@ -192,7 +189,7 @@ add_task(async function() {
       popupRect.height
   );
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   BrowserTestUtils.removeTab(tab);
 });
