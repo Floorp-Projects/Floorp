@@ -28,12 +28,16 @@ We need to store several bits of information in the Perfect Hash Map Entry:
    so we need to verify these ourselves.
 2. Type information to instantiate the correct C++ class
 3. The metric's actual ID to lookup the underlying instance.
+4. Whether the metric is a "submetric" (generated per-label for labeled_* metrics)
+5. Whether the metric was registered at runtime
 
 We have 64 bits to play with, so we dedicate:
 
 1. 32 bit to the string table offset. More than enough for a large string table (~60M metrics).
 2. 5 bit for the type. That allows for 32 metric types. We're not even close to that yet.
-3. 27 bit for the metric ID. That allows for 130 million metrics. Let's not go there.
+3. 25 bit for the metric ID. That allows for 33.5 million metrics. Let's not go there.
+4. 1 bit for signifying that this metric is a submetric
+5. 1 bit for signifying that this metric was registered at runtime
 
 These values are interpolated into the template as well, so changing them here
 ensures the generated C++ code follows.
@@ -43,7 +47,9 @@ and adjust the constants below.
 """
 ENTRY_WIDTH = 64
 INDEX_BITS = 32
-ID_BITS = 27
+ID_BITS = 27  # Includes ID_SIGNAL_BITS
+ID_SIGNAL_BITS = 2
+TYPE_BITS = 5
 
 PING_INDEX_BITS = 16
 
@@ -135,8 +141,8 @@ def write_metrics(objs, output_fd, template_filename):
     )
 
     assert (
-        INDEX_BITS + ID_BITS < ENTRY_WIDTH
-    ), "INDEX_BITS or ID_BITS are larger than allowed"
+        INDEX_BITS + TYPE_BITS + ID_BITS <= ENTRY_WIDTH
+    ), "INDEX_BITS, TYPE_BITS, or ID_BITS are larger than allowed"
 
     get_metric_id = generate_metric_ids(objs)
     # Mapping from a metric's identifier to the entry (metric ID | type id | index)
@@ -208,6 +214,8 @@ def write_metrics(objs, output_fd, template_filename):
             entry_width=ENTRY_WIDTH,
             index_bits=INDEX_BITS,
             id_bits=ID_BITS,
+            type_bits=TYPE_BITS,
+            id_signal_bits=ID_SIGNAL_BITS,
             category_string_table=category_string_table,
             category_by_name_lookup=category_by_name_lookup,
             metric_string_table=metric_string_table,
