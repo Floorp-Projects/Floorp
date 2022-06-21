@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">Deactivar il modus privat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Tschertgar u endatar in\'adressa</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Endatar ils terms da tschertga</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tabs averts vegnan mussads qua.</string>
 
@@ -38,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Tschernì dacurt sco segnapagina</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Segnapaginas memorisads dacurt</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Mussar tut</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
@@ -234,8 +234,6 @@
     <string name="search_suggestions_onboarding_title">Permetter propostas da tschertga en sesidas privatas?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s vegn a trametter tut quai che ti tippas en la trav d\'adressas a tia maschina da tschertgar da standard.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Ulteriuras infurmaziuns</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Tschertgar cun %s</string>
@@ -424,6 +422,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Artitgels sponsurads</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Maletgs dal fund davos</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -720,7 +720,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Memorisar ils tabs en ina collecziun</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Menu dal tab</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu dal tab</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Stizzar la collecziun</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1167,39 +1167,12 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Stizzà la gruppa</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview è ussa Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly vegn actualisà mintga notg e cuntegna novas funcziuns experimentalas.
-        L\'applicaziun pudess dentant esser main stabla. Telechargia la versiun da beta dal navigatur sche ti prefereschas in conturn pli stabel.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Va per Firefox per Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly è vegnì spustà</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Questa app na retschaiva naginas actualisaziuns da segirezza pli. Igl è recumandabel da betg pli utilisar questa app e midar al nov Nightly.
-        \n\nPer dischlocar tes segnapaginas, tias datas d\'annunzia e tia cronologia en in\'autra app, creescha in conto da Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Midar al nov Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly è vegnì spustà</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Questa app na retschaiva naginas actualisaziuns da segirezza pli. Va per il nov Nightly e n\'utilisescha betg pli questa app.
-        \n\nPer transferir tes segnapaginas, tias datas d\'annunzia e tia cronologia en in\'autra app, creescha in conto da Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Installar il nov Nightly</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Bainvegni en %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sincronisescha Firefox sin differents apparats</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Sincronisescha %1$s tranter apparats</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Importescha segnapaginas, la cronologia e pleds-clav en %1$s sin quest apparat.</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1548,6 +1521,11 @@
     <string name="preferences_addresses_add_address">Agiuntar ina adressa</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Administrar las adressas</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Memorisar ed emplenir automaticamain las adressas</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Includer infurmaziuns sco numers, adressas dad e-mail ed adressas postalas</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Agiuntar ina carta</string>
     <!-- Title of the "Edit card" screen -->
@@ -1618,8 +1596,10 @@
     <string name="addresses_street_address">Via e numer da chasa</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Lieu</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Stadi</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Provinza</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Numer postal</string>
     <!-- The header for the country or region of an address -->
@@ -1685,20 +1665,6 @@
     <string name="search_edit_custom_engine_success_message">Memorisà %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Stizzà %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Bainvegni al %s cumplettamain nov</string>
-
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">In navigatur renovà da fund ensi ta spetga, cun meglra prestaziun e funcziuns che simplifitgeschan tia vita oline.\n\nSpetga per plaschair durant che %s vegn actualisà cun tes</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Actualisar %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Aviar %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migraziun cumplettada</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Pleds-clav</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Per lubir:</string>
@@ -1792,8 +1758,6 @@
     <string name="synced_tabs_enable_tab_syncing">Activescha p.pl. la sincronisaziun da tabs.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Ti n\'has nagins tabs da Firefox averts sin auters apparats.</string>
-    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Ti n\'has nagins tabs averts en %1$s sin tes auters apparats.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Mussar ina glista dals tabs da tes auters apparats.</string>
 
@@ -1846,6 +1810,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Serrar tut ils tabs inactivs</string>
 
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Expander ils tabs inactivs</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Reducir ils tabs inactivs</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Serrar automaticamain suenter in mais?</string>
@@ -1885,6 +1854,9 @@
     <string name="pocket_stories_feature_caption">Part da la paletta da products Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Ulteriuras infurmaziuns</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Sponsurisà</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Activar la telemetria per trametter datas.</string>
