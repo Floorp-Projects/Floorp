@@ -13,6 +13,10 @@ root:
         - type: clip
           bounds: 0 0 1884 1290
           id: 2
+        -
+          type: "clip-chain"
+          id: 3
+          clips: [2]
         - type: stacking-context
           transform: [
             1, 0, 0, 0,
@@ -22,7 +26,7 @@ root:
           ]
           items:
             - type: stacking-context
-              clip-node: 2
+              clip-chain: 3
               transform: [
                 1, 0, 0, 0,
                 0.3443276, 1, 0, 0,

@@ -10,6 +10,10 @@ root:
           image: solid-color(255,255,255,255,128,128)
           rect: [64, 64, 128, 128]
           repeat: false
+    -
+      type: "clip-chain"
+      id: 3
+      clips: [2]
     - type: stacking-context
       backdrop-root: true
       items:
@@ -17,7 +21,7 @@ root:
           bounds: 0 0 256 256
           color: red
         - type: stacking-context
-          clip-node: 2
+          clip-chain: 3
           wraps-backdrop-filter: true
           items:
           - type: backdrop-filter

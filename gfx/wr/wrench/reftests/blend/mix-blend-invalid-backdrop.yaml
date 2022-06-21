@@ -13,9 +13,13 @@ root:
       - type: clip
         id: 2
         bounds: [0, 0, 100, 100]
+      -
+        type: "clip-chain"
+        id: 3
+        clips: [2]
       - type: stacking-context
         blend-container: true
-        clip-node: 2
+        clip-chain: 3
         items:
           - type: rect
             bounds: [0, 0, 100, 100]

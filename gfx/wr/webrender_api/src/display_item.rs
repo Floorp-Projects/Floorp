@@ -879,7 +879,7 @@ pub struct PushStackingContextDisplayItem {
 pub struct StackingContext {
     pub transform_style: TransformStyle,
     pub mix_blend_mode: MixBlendMode,
-    pub clip_id: Option<ClipId>,
+    pub clip_chain_id: Option<ClipChainId>,
     pub raster_space: RasterSpace,
     pub flags: StackingContextFlags,
 }

@@ -1734,7 +1734,7 @@ impl DisplayListBuilder {
         origin: LayoutPoint,
         spatial_id: di::SpatialId,
         prim_flags: di::PrimitiveFlags,
-        clip_id: Option<di::ClipId>,
+        clip_chain_id: Option<di::ClipChainId>,
         transform_style: di::TransformStyle,
         mix_blend_mode: di::MixBlendMode,
         filters: &[di::FilterOp],
@@ -1752,7 +1752,7 @@ impl DisplayListBuilder {
             stacking_context: di::StackingContext {
                 transform_style,
                 mix_blend_mode,
-                clip_id,
+                clip_chain_id,
                 raster_space,
                 flags,
             },
