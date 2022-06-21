@@ -546,7 +546,7 @@ FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(Clock* clock,
     : clock_(clock),
       queue_(queue),
       zero_hertz_screenshare_enabled_(
-          field_trial::IsEnabled("WebRTC-ZeroHertzScreenshare")) {}
+          !field_trial::IsDisabled("WebRTC-ZeroHertzScreenshare")) {}
 
 FrameCadenceAdapterImpl::~FrameCadenceAdapterImpl() {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this;
