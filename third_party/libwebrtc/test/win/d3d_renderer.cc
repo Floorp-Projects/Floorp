@@ -34,10 +34,10 @@ D3dRenderer::D3dRenderer(size_t width, size_t height)
     : width_(width),
       height_(height),
       hwnd_(NULL),
-      d3d_(NULL),
-      d3d_device_(NULL),
-      texture_(NULL),
-      vertex_buffer_(NULL) {
+      d3d_(nullptr),
+      d3d_device_(nullptr),
+      texture_(nullptr),
+      vertex_buffer_(nullptr) {
   RTC_DCHECK_GT(width, 0);
   RTC_DCHECK_GT(height, 0);
 }
@@ -59,10 +59,10 @@ LRESULT WINAPI D3dRenderer::WindowProc(HWND hwnd,
 }
 
 void D3dRenderer::Destroy() {
-  texture_ = NULL;
-  vertex_buffer_ = NULL;
-  d3d_device_ = NULL;
-  d3d_ = NULL;
+  texture_ = nullptr;
+  vertex_buffer_ = nullptr;
+  d3d_device_ = nullptr;
+  d3d_ = nullptr;
 
   if (hwnd_ != NULL) {
     DestroyWindow(hwnd_);
@@ -82,7 +82,7 @@ bool D3dRenderer::Init(const char* window_title) {
   }
 
   d3d_ = Direct3DCreate9(D3D_SDK_VERSION);
-  if (d3d_ == NULL) {
+  if (d3d_ == nullptr) {
     Destroy();
     return false;
   }
