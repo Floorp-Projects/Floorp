@@ -12,8 +12,10 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
@@ -315,31 +317,16 @@ class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  *****************************************************************************/
 class MOZ_STACK_CLASS AutoRangeArray final {
  public:
-  explicit AutoRangeArray(const dom::Selection& aSelection) {
-    Initialize(aSelection);
-  }
-
+  explicit AutoRangeArray(const dom::Selection& aSelection);
   template <typename PointType>
-  explicit AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange) {
-    MOZ_ASSERT(aRange.IsPositionedAndValid());
-    RefPtr<nsRange> range = aRange.CreateRange(IgnoreErrors());
-    if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-      return;
-    }
-    mRanges.AppendElement(std::move(range));
-  }
-
+  explicit AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange);
   template <typename PT, typename CT>
-  explicit AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint) {
-    MOZ_ASSERT(aPoint.IsSetAndValid());
-    RefPtr<nsRange> range = aPoint.CreateCollapsedRange(IgnoreErrors());
-    if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-      return;
-    }
-    mRanges.AppendElement(std::move(range));
-  }
+  explicit AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint);
+
+  ~AutoRangeArray();
 
   void Initialize(const dom::Selection& aSelection) {
+    ClearSavedRanges();
     mDirection = aSelection.GetDirection();
     mRanges.Clear();
     for (const uint32_t i : IntegerRange(aSelection.RangeCount())) {
@@ -542,10 +529,23 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     mRanges.AppendElement(*mAnchorFocusRange);
     return NS_OK;
   }
+  template <typename SPT, typename SCT, typename EPT, typename ECT>
+  nsresult SetBaseAndExtent(const EditorDOMPointBase<SPT, SCT>& aAnchor,
+                            const EditorDOMPointBase<EPT, ECT>& aFocus) {
+    if (MOZ_UNLIKELY(!aAnchor.IsSet()) || MOZ_UNLIKELY(!aFocus.IsSet())) {
+      mRanges.Clear();
+      mAnchorFocusRange = nullptr;
+      return NS_ERROR_INVALID_ARG;
+    }
+    return aAnchor.EqualsOrIsBefore(aFocus) ? SetStartAndEnd(aAnchor, aFocus)
+                                            : SetStartAndEnd(aFocus, aAnchor);
+  }
   [[nodiscard]] const nsRange* GetAnchorFocusRange() const {
     return mAnchorFocusRange;
   }
   [[nodiscard]] nsDirection GetDirection() const { return mDirection; }
+
+  void SetDirection(nsDirection aDirection) { mDirection = aDirection; }
 
   [[nodiscard]] const RangeBoundary& AnchorRef() const {
     if (!mAnchorFocusRange) {
@@ -595,6 +595,42 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     mRanges.Clear();
     mAnchorFocusRange = nullptr;
     mDirection = nsDirection::eDirNext;
+  }
+
+  /**
+   * APIs to store ranges with only container node and offset in it, and track
+   * them with RangeUpdater.
+   */
+  [[nodiscard]] bool SaveAndTrackRanges(HTMLEditor& aHTMLEditor);
+  [[nodiscard]] bool HasSavedRanges() const { return mSavedRanges.isSome(); }
+  void ClearSavedRanges();
+  void RestoreFromSavedRanges() {
+    MOZ_DIAGNOSTIC_ASSERT(mSavedRanges.isSome());
+    if (mSavedRanges.isNothing()) {
+      return;
+    }
+    mSavedRanges->ApplyTo(*this);
+    ClearSavedRanges();
+  }
+
+  /**
+   * Apply mRanges and mDirection to aSelection.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult ApplyTo(dom::Selection& aSelection) {
+    dom::SelectionBatcher selectionBatcher(aSelection, __FUNCTION__);
+    aSelection.RemoveAllRanges(IgnoreErrors());
+    MOZ_ASSERT(!aSelection.RangeCount());
+    aSelection.SetDirection(mDirection);
+    IgnoredErrorResult error;
+    for (const OwningNonNull<nsRange>& range : mRanges) {
+      // MOZ_KnownLive(range) due to bug 1622253
+      aSelection.AddRangeAndSelectFramesAndNotifyListeners(MOZ_KnownLive(range),
+                                                           error);
+      if (error.Failed()) {
+        return error.StealNSResult();
+      }
+    }
+    return NS_OK;
   }
 
   /**
@@ -673,6 +709,8 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   AutoTArray<mozilla::OwningNonNull<nsRange>, 8> mRanges;
   RefPtr<nsRange> mAnchorFocusRange;
   nsDirection mDirection = nsDirection::eDirNext;
+  Maybe<SelectionState> mSavedRanges;
+  RefPtr<HTMLEditor> mTrackingHTMLEditor;
 };
 
 class EditorUtils final {
