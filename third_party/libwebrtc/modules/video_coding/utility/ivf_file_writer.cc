@@ -14,6 +14,7 @@
 
 #include "api/video_codecs/video_codec.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
+#include "modules/video_coding/utility/ivf_defines.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -21,8 +22,6 @@
 // (or get one)
 
 namespace webrtc {
-
-const size_t kIvfHeaderSize = 32;
 
 IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
     : codec_type_(kVideoCodecGeneric),
