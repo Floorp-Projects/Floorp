@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Image recognition test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <img src="image.png" />
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  const { TestUtils } = ChromeUtils.import(
+    "resource://testing-common/TestUtils.jsm"
+  );
+  SimpleTest.waitForExplicitFinish();
+
+  window.addEventListener("load", async () => {
+    try {
+      const img = document.querySelector("#content img");
+
+      info("Recognizing the image text");
+      const result = await img.recognizeCurrentImageText();
+      is(result.length, 2, "Two words were found.");
+      const mozilla = result.find(r => r.string === "Mozilla");
+      const firefox = result.find(r => r.string === "Firefox");
+
+      ok(mozilla, "The word Mozilla was found.");
+      ok(firefox, "The word Firefox was found.");
+
+      ok(mozilla.quad.p1.x < firefox.quad.p2.x, "The Mozilla text is left of Firefox");
+      ok(mozilla.quad.p1.y > firefox.quad.p2.y, "The Mozilla text is above Firefox");
+
+      const spans = await TestUtils.waitForCondition(
+        () => shadowRootQuerySelectorAll(img, "span"),
+        "Attempting to get image recognition spans."
+      );
+
+      const mozillaSpan = [...spans].find(s => s.innerText === "Mozilla");
+      const firefoxSpan = [...spans].find(s => s.innerText === "Firefox");
+
+      ok(mozillaSpan, "The word Mozilla span was found.");
+      ok(firefoxSpan, "The word Firefox span was found.");
+
+      ok(mozillaSpan.style.transform.startsWith("matrix3d("), "A matrix transform was applied");
+      ok(firefoxSpan.style.transform.startsWith("matrix3d("), "A matrix transform was applied");
+    } catch (error) {
+      ok(false, error.message + '\n' + error.stack);
+    }
+
+    SimpleTest.finish()
+  });
+</script>
+</pre>
+</body>
+</html>
