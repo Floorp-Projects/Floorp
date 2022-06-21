@@ -43,12 +43,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
-  ).getFxAccountsSingleton();
-});
-
 function ensureDirectory(path) {
   let basename = lazy.OS.Path.dirname(path);
   return lazy.OS.File.makeDir(basename, {

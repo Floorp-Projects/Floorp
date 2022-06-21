@@ -29,12 +29,6 @@ let { getChromeWindow } = ChromeUtils.import(
 );
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-const lazy = {};
-
-XPCOMUtils.defineLazyGetter(lazy, "FxAccountsCommon", function() {
-  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-});
-
 let log = ChromeUtils.import(
   "resource://gre/modules/Log.jsm"
 ).Log.repository.getLogger("Sync.RemoteTabs");

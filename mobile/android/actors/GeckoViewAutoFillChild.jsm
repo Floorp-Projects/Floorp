@@ -17,8 +17,6 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
-  GeckoViewAutofill: "resource://gre/modules/GeckoViewAutofill.jsm",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
 });
 
