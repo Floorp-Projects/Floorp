@@ -78,7 +78,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
-    DEFINES["_GNU_SOURCE"] = True
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
@@ -148,11 +147,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-    OS_LIBS += [
-        "android_support",
-        "unwind"
-    ]
-
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
@@ -177,6 +171,13 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     CXXFLAGS += [
@@ -187,10 +188,24 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "android_support"
     ]
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
     ]
+
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_GNU_SOURCE"] = True
 
 Library("audio_decoder_opus_gn")
