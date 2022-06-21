@@ -494,17 +494,13 @@ SocketState DcSctpSocket::state() const {
     case State::kClosed:
       return SocketState::kClosed;
     case State::kCookieWait:
-      ABSL_FALLTHROUGH_INTENDED;
     case State::kCookieEchoed:
       return SocketState::kConnecting;
     case State::kEstablished:
       return SocketState::kConnected;
     case State::kShutdownPending:
-      ABSL_FALLTHROUGH_INTENDED;
     case State::kShutdownSent:
-      ABSL_FALLTHROUGH_INTENDED;
     case State::kShutdownReceived:
-      ABSL_FALLTHROUGH_INTENDED;
     case State::kShutdownAckSent:
       return SocketState::kShuttingDown;
   }
