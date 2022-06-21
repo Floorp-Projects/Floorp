@@ -752,6 +752,7 @@ class MockFrameCadenceAdapter : public FrameCadenceAdapterInterface {
               UpdateLayerStatus,
               (int spatial_index, bool enabled),
               (override));
+  MOCK_METHOD(bool, ProcessKeyFrameRequest, (), (override));
 };
 
 class MockEncoderSelector
@@ -766,6 +767,20 @@ class MockEncoderSelector
               (const DataRate& rate),
               (override));
   MOCK_METHOD(absl::optional<SdpVideoFormat>, OnEncoderBroken, (), (override));
+};
+
+class MockVideoSourceInterface : public rtc::VideoSourceInterface<VideoFrame> {
+ public:
+  MOCK_METHOD(void,
+              AddOrUpdateSink,
+              (rtc::VideoSinkInterface<VideoFrame>*,
+               const rtc::VideoSinkWants&),
+              (override));
+  MOCK_METHOD(void,
+              RemoveSink,
+              (rtc::VideoSinkInterface<VideoFrame>*),
+              (override));
+  MOCK_METHOD(void, RequestRefreshFrame, (), (override));
 };
 
 }  // namespace
@@ -8947,6 +8962,45 @@ TEST(VideoStreamEncoderFrameCadenceTest, UpdatesQualityConvergence) {
   factory.DepleteTaskQueues();
   Mock::VerifyAndClearExpectations(adapter_ptr);
   Mock::VerifyAndClearExpectations(&factory.GetMockFakeEncoder());
+}
+
+TEST(VideoStreamEncoderFrameCadenceTest,
+     RequestsRefreshFramesWhenCadenceAdapterInstructs) {
+  auto adapter = std::make_unique<MockFrameCadenceAdapter>();
+  auto* adapter_ptr = adapter.get();
+  MockVideoSourceInterface mock_source;
+  SimpleVideoStreamEncoderFactory factory;
+  FrameCadenceAdapterInterface::Callback* video_stream_encoder_callback =
+      nullptr;
+  EXPECT_CALL(*adapter_ptr, Initialize)
+      .WillOnce(Invoke([&video_stream_encoder_callback](
+                           FrameCadenceAdapterInterface::Callback* callback) {
+        video_stream_encoder_callback = callback;
+      }));
+  TaskQueueBase* encoder_queue = nullptr;
+  auto video_stream_encoder =
+      factory.Create(std::move(adapter), &encoder_queue);
+  video_stream_encoder->SetSource(
+      &mock_source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  VideoEncoderConfig config;
+  config.content_type = VideoEncoderConfig::ContentType::kScreen;
+  test::FillEncoderConfiguration(kVideoCodecVP8, 1, &config);
+  video_stream_encoder->ConfigureEncoder(std::move(config), 0);
+  PassAFrame(encoder_queue, video_stream_encoder_callback, /*ntp_time_ms=*/2);
+  // Ensure the encoder is set up.
+  factory.DepleteTaskQueues();
+
+  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest).WillOnce(Return(true));
+  EXPECT_CALL(mock_source, RequestRefreshFrame);
+  video_stream_encoder->SendKeyFrame();
+  factory.DepleteTaskQueues();
+  Mock::VerifyAndClearExpectations(adapter_ptr);
+  Mock::VerifyAndClearExpectations(&mock_source);
+
+  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest).WillOnce(Return(false));
+  EXPECT_CALL(mock_source, RequestRefreshFrame).Times(0);
+  video_stream_encoder->SendKeyFrame();
+  factory.DepleteTaskQueues();
 }
 
 }  // namespace webrtc
