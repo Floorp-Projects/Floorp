@@ -34,6 +34,16 @@ function getElementWithinVideo(video, aValue) {
   return shadowRoot.getElementById(aValue);
 }
 
+/**
+ * Runs querySelectorAll on an element's shadow root.
+ * @param {Element} element
+ * @param {string} selector
+ */
+function shadowRootQuerySelectorAll(element, selector) {
+  const shadowRoot = SpecialPowers.wrap(element).openOrClosedShadowRoot;
+  return shadowRoot?.querySelectorAll(selector);
+}
+
 function executeTests() {
   return tests
     .map(fn => () => new Promise(fn))
