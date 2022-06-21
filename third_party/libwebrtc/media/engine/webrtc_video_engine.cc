@@ -684,7 +684,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoEncoderFactory* encoder_factory,
     webrtc::VideoDecoderFactory* decoder_factory,
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
-    : VideoMediaChannel(config, call->network_thread()),
+    : VideoMediaChannel(call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
       call_(call),
       unsignalled_ssrc_handler_(&default_unsignalled_ssrc_handler_),
