@@ -192,7 +192,7 @@ add_task(function test_isShareableURL() {
   if (!Preferences.get("services.sync.engine.tabs.filteredSchemes")) {
     Preferences.set(
       "services.sync.engine.tabs.filteredSchemes",
-      "about|resource|chrome|file|blob|moz-extension"
+      "about|resource|chrome|file|blob|moz-extension|data"
     );
   }
   // Empty shouldn't be sendable
@@ -204,5 +204,14 @@ add_task(function test_isShareableURL() {
   // Invalid
   Assert.ok(
     !BrowserUtils.isShareableURL(Services.io.newURI("file://path/to/pdf.pdf"))
+  );
+
+  // Invalid
+  Assert.ok(
+    !BrowserUtils.isShareableURL(
+      Services.io.newURI(
+        "data:application/json;base64,ewogICJ0eXBlIjogIm1haW4i=="
+      )
+    )
   );
 });

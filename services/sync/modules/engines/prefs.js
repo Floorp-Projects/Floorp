@@ -139,9 +139,9 @@ PrefsEngine.prototype = {
 
 // We don't use services.sync.engine.tabs.filteredSchemes since it includes
 // about: pages and the like, which we want to be syncable in preferences.
-// Blob and moz-extension uris are never safe to sync, so we limit our check
-// to those.
-const UNSYNCABLE_URL_REGEXP = /^(moz-extension|blob):/i;
+// Blob, moz-extension, data and file uris are never safe to sync,
+// so we limit our check to those.
+const UNSYNCABLE_URL_REGEXP = /^(moz-extension|blob|data|file):/i;
 function isUnsyncableURLPref(prefName) {
   if (Services.prefs.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_STRING) {
     return false;
