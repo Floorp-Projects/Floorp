@@ -551,12 +551,21 @@ rtc_library("desktop_capture_generic") {
   }
 
   if (rtc_use_pipewire) {
+    if (!build_with_mozilla) {
     sources += [
       "linux/wayland/base_capturer_pipewire.cc",
       "linux/wayland/base_capturer_pipewire.h",
       "linux/wayland/egl_dmabuf.cc",
       "linux/wayland/egl_dmabuf.h",
     ]
+    } else {
+    sources += [
+      "linux/wayland/moz_base_capturer_pipewire.cc",
+      "linux/wayland/moz_base_capturer_pipewire.h",
+      "linux/wayland/egl_dmabuf.cc",
+      "linux/wayland/egl_dmabuf.h",
+    ]
+    }
 
     configs += [
       #":pipewire_config",
