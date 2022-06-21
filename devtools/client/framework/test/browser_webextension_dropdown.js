@@ -37,8 +37,9 @@ add_task(async function runTest() {
   ok(panel, "found extension panel");
 
   const iframe = panel.firstChild;
-  const popup = iframe.contentDocument.getElementById("ContentSelectDropdown");
-  const popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
+  const popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(
+    iframe.contentWindow
+  );
 
   const browser = iframe.contentDocument.getElementById(
     "webext-panels-browser"

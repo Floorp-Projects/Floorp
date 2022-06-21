@@ -295,10 +295,7 @@ add_task(async function testPagesPerSheetCount() {
     ok(BrowserTestUtils.is_visible(pagesPerSheet), "Pages per sheet is shown");
     pagesPerSheet.focus();
 
-    let popupOpen = BrowserTestUtils.waitForEvent(
-      document.getElementById("ContentSelectDropdown"),
-      "popupshown"
-    );
+    let popupOpen = BrowserTestUtils.waitForSelectPopupShown(window);
 
     EventUtils.sendKey("space", helper.win);
 
