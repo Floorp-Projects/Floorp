@@ -31,6 +31,7 @@ from mozbuild.frontend.data import (
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     GeneratedFile,
+    GnProjectData,
     HostLibrary,
     HostSources,
     IPDLCollection,
@@ -197,6 +198,11 @@ class CommonBackend(BuildBackend):
             if objdir_files:
                 self._handle_generated_sources(objdir_files)
             return False
+
+        elif isinstance(obj, GnProjectData):
+            # These are only handled by special purpose build backends,
+            # ignore them here.
+            return True
 
         else:
             return False
