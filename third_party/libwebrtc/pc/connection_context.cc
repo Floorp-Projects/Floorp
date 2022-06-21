@@ -75,7 +75,8 @@ std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
 // Static
 rtc::scoped_refptr<ConnectionContext> ConnectionContext::Create(
     PeerConnectionFactoryDependencies* dependencies) {
-  return new ConnectionContext(dependencies);
+  return rtc::scoped_refptr<ConnectionContext>(
+      new ConnectionContext(dependencies));
 }
 
 ConnectionContext::ConnectionContext(

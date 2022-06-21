@@ -1192,7 +1192,8 @@ void SdpOfferAnswerHandler::SetLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   SetLocalDescription(
       rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
-          weak_ptr_factory_.GetWeakPtr(), observer));
+          weak_ptr_factory_.GetWeakPtr(),
+          rtc::scoped_refptr<SetSessionDescriptionObserver>(observer)));
 }
 
 void SdpOfferAnswerHandler::SetLocalDescription(
@@ -2238,8 +2239,8 @@ void SdpOfferAnswerHandler::SetAssociatedRemoteStreams(
   RTC_DCHECK_RUN_ON(signaling_thread());
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> media_streams;
   for (const std::string& stream_id : stream_ids) {
-    rtc::scoped_refptr<MediaStreamInterface> stream =
-        remote_streams_->find(stream_id);
+    rtc::scoped_refptr<MediaStreamInterface> stream(
+        remote_streams_->find(stream_id));
     if (!stream) {
       stream = MediaStreamProxy::Create(rtc::Thread::Current(),
                                         MediaStream::Create(stream_id));
@@ -2577,7 +2578,8 @@ bool SdpOfferAnswerHandler::AddStream(MediaStreamInterface* local_stream) {
     return false;
   }
 
-  local_streams_->AddStream(local_stream);
+  local_streams_->AddStream(
+      rtc::scoped_refptr<MediaStreamInterface>(local_stream));
   auto observer = std::make_unique<MediaStreamObserver>(
       local_stream,
       [this](AudioTrackInterface* audio_track,
@@ -4157,8 +4159,8 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
     const std::string& sender_id = params.id;
     uint32_t ssrc = params.first_ssrc();
 
-    rtc::scoped_refptr<MediaStreamInterface> stream =
-        remote_streams_->find(stream_id);
+    rtc::scoped_refptr<MediaStreamInterface> stream(
+        remote_streams_->find(stream_id));
     if (!stream) {
       // This is a new MediaStream. Create a new remote MediaStream.
       stream = MediaStreamProxy::Create(rtc::Thread::Current(),
@@ -4178,8 +4180,8 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
 
   // Add default sender if necessary.
   if (default_sender_needed) {
-    rtc::scoped_refptr<MediaStreamInterface> default_stream =
-        remote_streams_->find(kDefaultStreamId);
+    rtc::scoped_refptr<MediaStreamInterface> default_stream(
+        remote_streams_->find(kDefaultStreamId));
     if (!default_stream) {
       // Create the new default MediaStream.
       default_stream = MediaStreamProxy::Create(
@@ -4426,7 +4428,8 @@ void SdpOfferAnswerHandler::UpdateEndedRemoteMediaStreams() {
   for (size_t i = 0; i < remote_streams_->count(); ++i) {
     MediaStreamInterface* stream = remote_streams_->at(i);
     if (stream->GetAudioTracks().empty() && stream->GetVideoTracks().empty()) {
-      streams_to_remove.push_back(stream);
+      streams_to_remove.push_back(
+          rtc::scoped_refptr<MediaStreamInterface>(stream));
     }
   }
 

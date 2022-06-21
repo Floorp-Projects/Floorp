@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 
+#include <utility>
 #include <vector>
 
 #include "rtc_base/checks.h"
@@ -41,11 +42,13 @@ bool MediaStream::AddTrack(AudioTrackInterface* track) {
 }
 
 bool MediaStream::AddTrack(VideoTrackInterface* track) {
-  return AddTrack<VideoTrackVector, VideoTrackInterface>(&video_tracks_, track);
+  return AddTrack<VideoTrackVector, VideoTrackInterface>(
+      &video_tracks_, rtc::scoped_refptr<VideoTrackInterface>(track));
 }
 
 bool MediaStream::RemoveTrack(AudioTrackInterface* track) {
-  return RemoveTrack<AudioTrackVector>(&audio_tracks_, track);
+  return RemoveTrack<AudioTrackVector>(
+      &audio_tracks_, rtc::scoped_refptr<AudioTrackInterface>(track));
 }
 
 bool MediaStream::RemoveTrack(VideoTrackInterface* track) {
@@ -69,11 +72,12 @@ rtc::scoped_refptr<VideoTrackInterface> MediaStream::FindVideoTrack(
 }
 
 template <typename TrackVector, typename Track>
-bool MediaStream::AddTrack(TrackVector* tracks, Track* track) {
+bool MediaStream::AddTrack(TrackVector* tracks,
+                           rtc::scoped_refptr<Track> track) {
   typename TrackVector::iterator it = FindTrack(tracks, track->id());
   if (it != tracks->end())
     return false;
-  tracks->push_back(track);
+  tracks->emplace_back(std::move((track)));
   FireOnChanged();
   return true;
 }

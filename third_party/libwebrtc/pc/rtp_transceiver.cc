@@ -273,14 +273,14 @@ bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
 rtc::scoped_refptr<RtpSenderInternal> RtpTransceiver::sender_internal() const {
   RTC_DCHECK(unified_plan_);
   RTC_CHECK_EQ(1u, senders_.size());
-  return senders_[0]->internal();
+  return rtc::scoped_refptr<RtpSenderInternal>(senders_[0]->internal());
 }
 
 rtc::scoped_refptr<RtpReceiverInternal> RtpTransceiver::receiver_internal()
     const {
   RTC_DCHECK(unified_plan_);
   RTC_CHECK_EQ(1u, receivers_.size());
-  return receivers_[0]->internal();
+  return rtc::scoped_refptr<RtpReceiverInternal>(receivers_[0]->internal());
 }
 
 cricket::MediaType RtpTransceiver::media_type() const {

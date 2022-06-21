@@ -2456,8 +2456,8 @@ TEST_F(PeerConnectionInterfaceTestPlanB, CloseAndTestMethods) {
   CreateAnswerAsLocalDescription();
 
   ASSERT_EQ(1u, pc_->local_streams()->count());
-  rtc::scoped_refptr<MediaStreamInterface> local_stream =
-      pc_->local_streams()->at(0);
+  rtc::scoped_refptr<MediaStreamInterface> local_stream(
+      pc_->local_streams()->at(0));
 
   pc_->Close();
 

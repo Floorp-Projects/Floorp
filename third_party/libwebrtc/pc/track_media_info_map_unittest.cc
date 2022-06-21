@@ -125,7 +125,7 @@ class TrackMediaInfoMapTest : public ::testing::Test {
         local_track->kind() == MediaStreamTrackInterface::kAudioKind
             ? cricket::MEDIA_TYPE_AUDIO
             : cricket::MEDIA_TYPE_VIDEO,
-        ssrcs, local_track);
+        ssrcs, rtc::scoped_refptr<MediaStreamTrackInterface>(local_track));
     rtp_senders_.push_back(rtp_sender);
 
     if (local_track->kind() == MediaStreamTrackInterface::kAudioKind) {
@@ -154,7 +154,7 @@ class TrackMediaInfoMapTest : public ::testing::Test {
         remote_track->kind() == MediaStreamTrackInterface::kAudioKind
             ? cricket::MEDIA_TYPE_AUDIO
             : cricket::MEDIA_TYPE_VIDEO,
-        ssrcs, remote_track);
+        ssrcs, rtc::scoped_refptr<MediaStreamTrackInterface>(remote_track));
     rtp_receivers_.push_back(rtp_receiver);
 
     if (remote_track->kind() == MediaStreamTrackInterface::kAudioKind) {

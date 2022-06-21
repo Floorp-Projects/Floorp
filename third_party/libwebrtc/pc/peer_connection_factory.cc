@@ -284,7 +284,8 @@ rtc::scoped_refptr<AudioTrackInterface> PeerConnectionFactory::CreateAudioTrack(
     const std::string& id,
     AudioSourceInterface* source) {
   RTC_DCHECK(signaling_thread()->IsCurrent());
-  rtc::scoped_refptr<AudioTrackInterface> track(AudioTrack::Create(id, source));
+  rtc::scoped_refptr<AudioTrackInterface> track(
+      AudioTrack::Create(id, rtc::scoped_refptr<AudioSourceInterface>(source)));
   return AudioTrackProxy::Create(signaling_thread(), track);
 }
 

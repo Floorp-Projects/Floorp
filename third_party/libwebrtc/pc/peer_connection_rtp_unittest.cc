@@ -738,10 +738,12 @@ TEST_F(PeerConnectionRtpTestPlanB,
   // when the first callback is invoked.
   callee->pc()->SetRemoteDescription(
       std::move(srd1_sdp),
-      new OnSuccessObserver<decltype(srd1_callback)>(srd1_callback));
+      rtc::make_ref_counted<OnSuccessObserver<decltype(srd1_callback)>>(
+          srd1_callback));
   callee->pc()->SetRemoteDescription(
       std::move(srd2_sdp),
-      new OnSuccessObserver<decltype(srd2_callback)>(srd2_callback));
+      rtc::make_ref_counted<OnSuccessObserver<decltype(srd2_callback)>>(
+          srd2_callback));
   EXPECT_TRUE_WAIT(srd1_callback_called, kDefaultTimeout);
   EXPECT_TRUE_WAIT(srd2_callback_called, kDefaultTimeout);
 }
