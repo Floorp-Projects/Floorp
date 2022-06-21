@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -31,7 +32,18 @@ class FrameCadenceAdapterInterface
  public:
   // Averaging window spanning 90 frames at default 30fps, matching old media
   // optimization module defaults.
+  // TODO(crbug.com/1255737): Use TimeDelta.
   static constexpr int64_t kFrameRateAveragingWindowSizeMs = (1000 / 30) * 90;
+  // In zero-hertz mode, the idle repeat rate is a compromise between
+  // RTP receiver keyframe-requesting timeout (3s), other backend limitations
+  // and some worst case RTT.
+  static constexpr TimeDelta kZeroHertzIdleRepeatRatePeriod =
+      TimeDelta::Millis(1000);
+
+  struct ZeroHertzModeParams {
+    // The number of simulcast layers used in this configuration.
+    int num_simulcast_layers = 0;
+  };
 
   // Callback interface used to inform instance owners.
   class Callback {
@@ -68,8 +80,11 @@ class FrameCadenceAdapterInterface
   // Call before using the rest of the API.
   virtual void Initialize(Callback* callback) = 0;
 
-  // Pass true in |enabled| as a prerequisite to enable zero-hertz operation.
-  virtual void SetZeroHertzModeEnabled(bool enabled) = 0;
+  // Pass zero hertz parameters in |params| as a prerequisite to enable
+  // zero-hertz operation. If absl:::nullopt is passed, the cadence adapter will
+  // switch to passthrough mode.
+  virtual void SetZeroHertzModeEnabled(
+      absl::optional<ZeroHertzModeParams> params) = 0;
 
   // Returns the input framerate. This is measured by RateStatistics when
   // zero-hertz mode is off, and returns the max framerate in zero-hertz mode.
@@ -78,6 +93,13 @@ class FrameCadenceAdapterInterface
   // Updates frame rate. This is done unconditionally irrespective of adapter
   // mode.
   virtual void UpdateFrameRate() = 0;
+
+  // Updates quality convergence status for an enabled spatial layer.
+  virtual void UpdateLayerQualityConvergence(int spatial_index,
+                                             bool converged) = 0;
+
+  // Updates spatial layer enabled status.
+  virtual void UpdateLayerStatus(int spatial_index, bool enabled) = 0;
 };
 
 }  // namespace webrtc
