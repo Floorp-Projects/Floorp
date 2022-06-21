@@ -14,8 +14,11 @@ const {
   REMOTE_IMAGES_PATH,
   REMOTE_IMAGES_DB_PATH,
 } = ChromeUtils.import("resource://activity-stream/lib/RemoteImages.jsm");
-const { RemoteImagesTestUtils } = ChromeUtils.import(
+const { RemoteImagesTestUtils, RemoteSettingsServer } = ChromeUtils.import(
   "resource://testing-common/RemoteImagesTestUtils.jsm"
+);
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
 );
 
 function dbWriteFinished(db) {
@@ -160,7 +163,6 @@ add_task(async function test_remoteImages_expire() {
 
 add_task(async function test_remoteImages_migrate() {
   try {
-    await IOUtils.remove(REMOTE_IMAGES_DB_PATH);
     await RemoteImagesTestUtils.writeImage(
       RemoteImagesTestUtils.images.AboutRobots,
       RemoteImagesTestUtils.images.AboutRobots.filename
@@ -223,5 +225,88 @@ add_task(async function test_remoteImages_load_dedup() {
     await stop();
     await RemoteImagesTestUtils.triggerCleanup();
     sandbox.restore();
+  }
+});
+
+add_task(async function test_remoteImages_sync() {
+  const { images } = RemoteImagesTestUtils;
+  const sandbox = sinon.createSandbox();
+
+  const server = new RemoteSettingsServer();
+  server.start();
+  const client = RemoteSettings("ms-images");
+  client.verifySignatures = false;
+
+  try {
+    server.addRemoteImage(images.AboutRobots);
+
+    const downloadSpy = sandbox.spy(Downloader.prototype, "downloadAsBytes");
+    RemoteImages.unload(await RemoteImages.load(images.AboutRobots.recordId));
+
+    Assert.ok(downloadSpy.calledOnce);
+    downloadSpy.resetHistory();
+
+    const lastLoad = await RemoteImages.withDb(
+      db => db.data.images[images.AboutRobots.recordId].lastLoaded
+    );
+
+    {
+      const { filename, mimetype, hash, url, size } = images.Mountain;
+      const location = `main/ms-images/${images.AboutRobots.recordId}`;
+      Object.assign(server.attachments.get(location), { mimetype, size, url });
+
+      // This isn't strictly necessary because we won't be re-fetching the
+      // record from the server -- instead we will be relying on the cached
+      // database for the ms-images RemoteSettingsClient.
+      server.buckets
+        .update("main")
+        .update("ms-images")
+        .update(images.AboutRobots.recordId)
+        .set({
+          attachment: {
+            filename,
+            location,
+            hash,
+            mimetype,
+            size,
+          },
+        });
+    }
+
+    // Fake a Remote Settings sync. We update the client's database and then
+    // tell the client we've finished syncing. This will trigger RemoteImages
+    // to check the DB for updated records.
+    await client.db.importChanges(
+      {},
+      Date.now(),
+      [
+        server.buckets
+          .get("main")
+          .get("ms-images")
+          .get(images.AboutRobots.recordId).data,
+      ],
+      { clear: true }
+    );
+    await client.emit("sync", { data: {} });
+
+    Assert.ok(downloadSpy.calledOnce);
+
+    await RemoteImages.withDb(async db => {
+      Assert.equal(
+        db.data.images[images.AboutRobots.recordId].hash,
+        images.Mountain.hash
+      );
+
+      Assert.equal(
+        db.data.images[images.AboutRobots.recordId].lastLoaded,
+        lastLoad,
+        "Fetching an image should not change lastLoaded"
+      );
+    });
+  } finally {
+    await server.stop();
+    await RemoteImagesTestUtils.triggerCleanup();
+    sandbox.restore();
+    client.verifySignatures = true;
   }
 });
