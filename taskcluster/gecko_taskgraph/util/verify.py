@@ -4,19 +4,23 @@
 
 
 import logging
-import os
 import re
+import os
 import sys
 
 import attr
+
+from taskgraph.util.verify import (
+    VerificationSequence,
+)
+
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.util.attributes import (
-    ALL_PROJECTS,
     RELEASE_PROJECTS,
+    ALL_PROJECTS,
     RUN_ON_PROJECT_ALIASES,
 )
-from taskgraph.util.treeherder import join_symbol
-from taskgraph.util.verify import VerificationSequence
+from gecko_taskgraph.util.treeherder import join_symbol
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, "taskcluster", "docs")
