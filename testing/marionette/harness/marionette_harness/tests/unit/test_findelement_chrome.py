@@ -6,13 +6,9 @@ from __future__ import absolute_import
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
-from marionette_driver.marionette import CHROME_ELEMENT_KEY, HTMLElement
+from marionette_driver.marionette import HTMLElement
 
-from marionette_harness import MarionetteTestCase, parameterized, WindowManagerMixin
-
-
-PAGE_XHTML = "chrome://remote/content/marionette/test_no_xul.xhtml"
-PAGE_XUL = "chrome://remote/content/marionette/test.xhtml"
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
@@ -21,112 +17,69 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.set_context("chrome")
 
+        win = self.open_chrome_window("chrome://remote/content/marionette/test.xhtml")
+        self.marionette.switch_to_window(win)
+
     def tearDown(self):
         self.close_all_windows()
 
         super(TestElementsChrome, self).tearDown()
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_id(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_id(self):
         el = self.marionette.execute_script(
             "return window.document.getElementById('textInput');"
         )
         found_el = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_that_we_can_find_elements_from_css_selectors(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_that_we_can_find_elements_from_css_selectors(self):
         el = self.marionette.execute_script(
             "return window.document.getElementById('textInput');"
         )
         found_el = self.marionette.find_element(By.CSS_SELECTOR, "#textInput")
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_child_element(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_child_element(self):
         el = self.marionette.find_element(By.ID, "textInput")
         parent = self.marionette.find_element(By.ID, "things")
         found_el = parent.find_element(By.TAG_NAME, "input")
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_child_elements(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_child_elements(self):
         el = self.marionette.find_element(By.ID, "textInput3")
         parent = self.marionette.find_element(By.ID, "things")
         found_els = parent.find_elements(By.TAG_NAME, "input")
         self.assertTrue(el.id in [found_el.id for found_el in found_els])
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_tag_name(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_tag_name(self):
         el = self.marionette.execute_script(
             "return window.document.getElementsByTagName('vbox')[0];"
         )
         found_el = self.marionette.find_element(By.TAG_NAME, "vbox")
         self.assertEqual("vbox", found_el.tag_name)
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_class_name(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_class_name(self):
         el = self.marionette.execute_script(
             "return window.document.getElementsByClassName('asdf')[0];"
         )
         found_el = self.marionette.find_element(By.CLASS_NAME, "asdf")
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_xpath(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_xpath(self):
         el = self.marionette.execute_script(
             "return window.document.getElementById('testBox');"
         )
         found_el = self.marionette.find_element(By.XPATH, "id('testBox')")
         self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_not_found(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_not_found(self):
         self.marionette.timeout.implicit = 1
         self.assertRaises(
             NoSuchElementException,
@@ -142,12 +95,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             "I'm not on the page",
         )
 
-    @parameterized("XUL", PAGE_XUL)
-    @parameterized("XHTML", PAGE_XHTML)
-    def test_timeout(self, chrome_url):
-        win = self.open_chrome_window(chrome_url)
-        self.marionette.switch_to_window(win)
-
+    def test_timeout(self):
         self.assertRaises(
             NoSuchElementException, self.marionette.find_element, By.ID, "myid"
         )
@@ -160,10 +108,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
               document.getElementById('things').appendChild(b);
             }, 1000); """
         )
-        found_el = self.marionette.find_element(By.ID, "myid")
-        self.assertEqual(HTMLElement, type(found_el))
-        self.assertEqual(CHROME_ELEMENT_KEY, found_el.kind)
-
+        self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "myid")))
         self.marionette.execute_script(
             """
             var elem = window.document.getElementById('things');

@@ -18,16 +18,7 @@ class TestTitleChrome(WindowManagerMixin, MarionetteTestCase):
 
         super(TestTitleChrome, self).tearDown()
 
-    def test_get_title_xhtml(self):
-        win = self.open_chrome_window(
-            "chrome://remote/content/marionette/test_no_xul.xhtml"
-        )
-        self.marionette.switch_to_window(win)
-
-        expected_title = self.marionette.execute_script("return window.document.title;")
-        self.assertEqual(self.marionette.title, expected_title)
-
-    def test_get_title_xul(self):
+    def test_get_chrome_title(self):
         win = self.open_chrome_window("chrome://remote/content/marionette/test.xhtml")
         self.marionette.switch_to_window(win)
 

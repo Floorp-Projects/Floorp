@@ -103,13 +103,11 @@ class XULElement extends Element {
 
 const domEl = new DOMElement("p");
 const svgEl = new SVGElement("rect");
-const xulEl = new XULElement("text");
-
-const domElInPrivilegedDocument = new Element("input", {
-  nodePrincipal: { isSystemPrincipal: true },
-});
-const xulElInPrivilegedDocument = new XULElement("text", {
-  nodePrincipal: { isSystemPrincipal: true },
+const xulEl = new XULElement("browser");
+const domElInXULDocument = new DOMElement("input", {
+  ownerDocument: {
+    documentElement: { namespaceURI: XUL_NS },
+  },
 });
 
 class WindowProxy {
@@ -185,10 +183,9 @@ add_test(function test_isElement() {
 
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
-  ok(element.isDOMElement(domElInPrivilegedDocument));
+  ok(element.isDOMElement(domElInXULDocument));
   ok(element.isDOMElement(svgEl));
   ok(!element.isDOMElement(xulEl));
-  ok(!element.isDOMElement(xulElInPrivilegedDocument));
   ok(!element.isDOMElement(domWin));
   ok(!element.isDOMElement(domFrame));
   for (let typ of [true, 42, {}, [], undefined, null]) {
@@ -200,12 +197,11 @@ add_test(function test_isDOMElement() {
 
 add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
-  ok(element.isXULElement(xulElInPrivilegedDocument));
-  ok(!element.isXULElement(domElInPrivilegedDocument));
+  ok(!element.isXULElement(domElInXULDocument));
   ok(!element.isXULElement(domEl));
   ok(!element.isXULElement(svgEl));
-  ok(!element.isXULElement(domWin));
-  ok(!element.isXULElement(domFrame));
+  ok(!element.isDOMElement(domWin));
+  ok(!element.isDOMElement(domFrame));
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isXULElement(typ));
   }
@@ -217,7 +213,7 @@ add_test(function test_isDOMWindow() {
   ok(element.isDOMWindow(domWin));
   ok(element.isDOMWindow(domFrame));
   ok(!element.isDOMWindow(domEl));
-  ok(!element.isDOMWindow(domElInPrivilegedDocument));
+  ok(!element.isDOMWindow(domElInXULDocument));
   ok(!element.isDOMWindow(svgEl));
   ok(!element.isDOMWindow(xulEl));
   for (let typ of [true, 42, {}, [], undefined, null]) {
@@ -435,11 +431,10 @@ add_test(function test_WebElemenet_is() {
 
 add_test(function test_WebElement_from() {
   ok(WebElement.from(domEl) instanceof ContentWebElement);
-  ok(WebElement.from(xulEl) instanceof ContentWebElement);
   ok(WebElement.from(domWin) instanceof ContentWebWindow);
   ok(WebElement.from(domFrame) instanceof ContentWebFrame);
-  ok(WebElement.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
-  ok(WebElement.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
+  ok(WebElement.from(xulEl) instanceof ChromeWebElement);
+  ok(WebElement.from(domElInXULDocument) instanceof ChromeWebElement);
 
   Assert.throws(() => WebElement.from({}), /InvalidArgumentError/);
 
