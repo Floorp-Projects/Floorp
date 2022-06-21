@@ -1,0 +1,73 @@
+{
+  "target_dir": "third_party/libwebrtc",
+  "gn_target": "//:webrtc",
+  "gn_sandbox_variables": {
+    "COMPILE_FLAGS": {
+      "WARNINGS_AS_ERRORS": []
+    },
+    "FINAL_LIBRARY": "webrtc"
+  },
+  "mozilla_flags": [
+    "-fobjc-arc",
+    "-mavx2",
+    "-mfma",
+    "-mfpu=neon",
+    "-msse2"
+  ],
+  "write_mozbuild_variables": {
+    "INCLUDE_TK_CFLAGS_DIRS": [
+      "third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn"
+    ]
+  },
+  "non_unified_sources": [
+    "third_party/libwebrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc",
+    "third_party/libwebrtc/audio/channel_send_frame_transformer_delegate.cc",
+    "third_party/libwebrtc/common_audio/vad/vad_core.c",
+    "third_party/libwebrtc/common_audio/vad/webrtc_vad.c",
+    "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/decode_plc.c",
+    "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/lpc_masking_model.c",
+    "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c",
+    "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c",
+    "third_party/libwebrtc/modules/audio_coding/neteq/audio_vector.cc",
+    "third_party/libwebrtc/modules/audio_device/android/audio_manager.cc",
+    "third_party/libwebrtc/modules/audio_device/android/audio_record_jni.cc",
+    "third_party/libwebrtc/modules/audio_device/android/audio_track_jni.cc",
+    "third_party/libwebrtc/modules/audio_device/android/opensles_player.cc",
+    "third_party/libwebrtc/modules/audio_device/linux/audio_device_pulse_linux.cc",
+    "third_party/libwebrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc",
+    "third_party/libwebrtc/modules/audio_device/win/audio_device_core_win.cc",
+    "third_party/libwebrtc/modules/audio_processing/aecm/aecm_core.cc",
+    "third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc",
+    "third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_mips.cc",
+    "third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_neon.cc",
+    "third_party/libwebrtc/modules/audio_processing/aecm/echo_control_mobile.cc",
+    "third_party/libwebrtc/modules/audio_processing/echo_control_mobile_impl.cc",
+    "third_party/libwebrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.cc",
+    "third_party/libwebrtc/modules/audio_processing/gain_control_impl.cc",
+    "third_party/libwebrtc/modules/audio_processing/rms_level.cc",
+    "third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+    "third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc",
+    "third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_sender.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_format_vp8.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_egress.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_generator.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.cc",
+    "third_party/libwebrtc/modules/third_party/g722/g722_encode.c",
+    "third_party/libwebrtc/modules/video_capture/windows/device_info_ds.cc",
+    "third_party/libwebrtc/modules/video_capture/windows/help_functions_ds.cc",
+    "third_party/libwebrtc/modules/video_capture/windows/sink_filter_ds.cc",
+    "third_party/libwebrtc/modules/video_coding/codecs/vp8/screenshare_layers.cc",
+    "third_party/libwebrtc/third_party/abseil-cpp/absl/strings/numbers.cc",
+    "third_party/libwebrtc/third_party/abseil-cpp/absl/synchronization/blocking_counter.cc",
+    "third_party/libwebrtc/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_posix.cc",
+    "third_party/libwebrtc/third_party/abseil-cpp/absl/time/time.cc",
+    "third_party/libwebrtc/video/rtp_video_stream_receiver2.cc",
+    "third_party/libwebrtc/video/video_receive_stream.cc"
+  ]
+}
