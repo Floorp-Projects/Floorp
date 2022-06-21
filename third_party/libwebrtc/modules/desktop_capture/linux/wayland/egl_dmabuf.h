@@ -52,7 +52,6 @@ class EglDmaBuf {
 
  private:
   bool egl_initialized_ = false;
-  bool has_image_dma_buf_import_ext_ = false;
   int32_t drm_fd_ = -1;               // for GBM buffer mmap
   gbm_device* gbm_device_ = nullptr;  // for passed GBM buffer retrieval
 
