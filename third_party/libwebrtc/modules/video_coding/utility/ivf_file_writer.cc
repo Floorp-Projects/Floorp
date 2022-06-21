@@ -23,6 +23,12 @@
 
 namespace webrtc {
 
+namespace {
+
+constexpr int kDefaultWidth = 1280;
+constexpr int kDefaultHeight = 720;
+}  // namespace
+
 IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
     : codec_type_(kVideoCodecGeneric),
       bytes_written_(0),
@@ -121,10 +127,14 @@ bool IvfFileWriter::WriteHeader() {
 
 bool IvfFileWriter::InitFromFirstFrame(const EncodedImage& encoded_image,
                                        VideoCodecType codec_type) {
-  width_ = encoded_image._encodedWidth;
-  height_ = encoded_image._encodedHeight;
-  RTC_CHECK_GT(width_, 0);
-  RTC_CHECK_GT(height_, 0);
+  if (encoded_image._encodedWidth == 0 || encoded_image._encodedHeight == 0) {
+    width_ = kDefaultWidth;
+    height_ = kDefaultHeight;
+  } else {
+    width_ = encoded_image._encodedWidth;
+    height_ = encoded_image._encodedHeight;
+  }
+
   using_capture_timestamps_ = encoded_image.Timestamp() == 0;
 
   codec_type_ = codec_type;
