@@ -212,57 +212,126 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     // TODO: Instrument failures to find metrics by id.
     let ipc_payload: IPCPayload = bincode::deserialize(buf).map_err(|_| ())?;
     for (id, value) in ipc_payload.counters.into_iter() {
-        if let Some(metric) = __glean_metric_maps::COUNTER_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::COUNTER_MAP
+                .read()
+                .expect("Read lock for dynamic counter map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.add(value);
+            }
+        } else if let Some(metric) = __glean_metric_maps::COUNTER_MAP.get(&id) {
             metric.add(value);
         }
     }
     for (id, samples) in ipc_payload.custom_samples.into_iter() {
-        if let Some(metric) = __glean_metric_maps::CUSTOM_DISTRIBUTION_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::CUSTOM_DISTRIBUTION_MAP
+                .read()
+                .expect("Read lock for dynamic custom distribution map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.accumulate_samples_signed(samples);
+            }
+        } else if let Some(metric) = __glean_metric_maps::CUSTOM_DISTRIBUTION_MAP.get(&id) {
             metric.accumulate_samples_signed(samples);
         }
     }
     for (id, value) in ipc_payload.denominators.into_iter() {
-        if let Some(metric) = __glean_metric_maps::DENOMINATOR_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::DENOMINATOR_MAP
+                .read()
+                .expect("Read lock for dynamic denominator map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.add(value);
+            }
+        } else if let Some(metric) = __glean_metric_maps::DENOMINATOR_MAP.get(&id) {
             metric.add(value);
         }
     }
     for (id, records) in ipc_payload.events.into_iter() {
+        // TODO(bug XXX): Implement events in JOG
         for (timestamp, extra) in records.into_iter() {
             let _ = __glean_metric_maps::record_event_by_id_with_time(id, timestamp, extra);
         }
     }
     for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {
-        if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::LABELED_COUNTER_MAP
+                .read()
+                .expect("Read lock for dynamic labeled counter map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                for (label, count) in labeled_counts.into_iter() {
+                    metric.get(&label).add(count);
+                }
+            }
+        } else if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
             for (label, count) in labeled_counts.into_iter() {
                 metric.get(&label).add(count);
             }
         }
     }
     for (id, samples) in ipc_payload.memory_samples.into_iter() {
-        if let Some(metric) = __glean_metric_maps::MEMORY_DISTRIBUTION_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::MEMORY_DISTRIBUTION_MAP
+                .read()
+                .expect("Read lock for dynamic memory dist map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                samples
+                    .into_iter()
+                    .for_each(|sample| metric.accumulate(sample));
+            }
+        } else if let Some(metric) = __glean_metric_maps::MEMORY_DISTRIBUTION_MAP.get(&id) {
             samples
                 .into_iter()
                 .for_each(|sample| metric.accumulate(sample));
         }
     }
     for (id, value) in ipc_payload.numerators.into_iter() {
-        if let Some(metric) = __glean_metric_maps::NUMERATOR_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::NUMERATOR_MAP
+                .read()
+                .expect("Read lock for dynamic numerator map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.add_to_numerator(value);
+            }
+        } else if let Some(metric) = __glean_metric_maps::NUMERATOR_MAP.get(&id) {
             metric.add_to_numerator(value);
         }
     }
     for (id, (n, d)) in ipc_payload.rates.into_iter() {
-        if let Some(metric) = __glean_metric_maps::RATE_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::RATE_MAP
+                .read()
+                .expect("Read lock for dynamic rate map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.add_to_numerator(n);
+                metric.add_to_denominator(d);
+            }
+        } else if let Some(metric) = __glean_metric_maps::RATE_MAP.get(&id) {
             metric.add_to_numerator(n);
             metric.add_to_denominator(d);
         }
     }
     for (id, strings) in ipc_payload.string_lists.into_iter() {
-        if let Some(metric) = __glean_metric_maps::STRING_LIST_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::STRING_LIST_MAP
+                .read()
+                .expect("Read lock for dynamic string list map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                strings.iter().for_each(|s| metric.add(s));
+            }
+        } else if let Some(metric) = __glean_metric_maps::STRING_LIST_MAP.get(&id) {
             strings.iter().for_each(|s| metric.add(s));
         }
     }
     for (id, samples) in ipc_payload.timing_samples.into_iter() {
-        if let Some(metric) = __glean_metric_maps::TIMING_DISTRIBUTION_MAP.get(&id) {
+        if id.0 & (1 << crate::factory::DYNAMIC_METRIC_BIT) > 0 {
+            let map = crate::factory::__jog_metric_maps::TIMING_DISTRIBUTION_MAP
+                .read()
+                .expect("Read lock for dynamic timing distribution map was poisoned");
+            if let Some(metric) = map.get(&id) {
+                metric.accumulate_raw_samples_nanos(samples);
+            }
+        } else if let Some(metric) = __glean_metric_maps::TIMING_DISTRIBUTION_MAP.get(&id) {
             metric.accumulate_raw_samples_nanos(samples);
         }
     }
