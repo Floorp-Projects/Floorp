@@ -4175,22 +4175,6 @@ screenshots:
 
 # The following section is for tracking the number of failure for indexedDB.
 idb.failure:
-  fileinfo_error:
-    bug_numbers:
-      - 1432133
-    description: >
-      Tracking the number of failure due to missing fileInfo while doing
-      structured clone.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - ttung@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
   unknown_objectstore_empty_database:
     bug_numbers:
       - 1669730
