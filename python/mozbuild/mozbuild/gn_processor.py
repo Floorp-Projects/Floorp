@@ -178,8 +178,8 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
         "HOST_CPU_ARCH": cpus.get(input_vars["host_cpu"], input_vars["host_cpu"]),
         "CPU_ARCH": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
     }
-    if input_vars["target_os"] in ("linux", "android", "openbsd"):
-        mozbuild_args["MOZ_X11"] = "1" if input_vars.get("use_x11") else None
+    if "use_x11" in input_vars:
+        mozbuild_args["MOZ_X11"] = "1" if input_vars["use_x11"] else None
 
     gn_out["mozbuild_args"] = mozbuild_args
     all_deps = find_deps(gn_result["targets"], gn_target)
