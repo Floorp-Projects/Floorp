@@ -289,14 +289,23 @@ class BaseChannel : public ChannelInterface,
 
   // Add `payload_type` to `demuxer_criteria_` if payload type demuxing is
   // enabled.
-  void MaybeAddHandledPayloadType(int payload_type) RTC_RUN_ON(worker_thread());
+  // Returns true if the demuxer payload type changed and a re-registration
+  // is needed.
+  bool MaybeAddHandledPayloadType(int payload_type) RTC_RUN_ON(worker_thread());
 
-  // Returns true iff the demuxer payload type criteria was non-empty before
+  // Returns true if the demuxer payload type criteria was non-empty before
   // clearing.
   bool ClearHandledPayloadTypes() RTC_RUN_ON(worker_thread());
 
-  void UpdateRtpHeaderExtensionMap(
-      const RtpHeaderExtensions& header_extensions);
+  // Hops to the network thread to update the transport if an update is
+  // requested. If `update_demuxer` is false and `extensions` is not set, the
+  // function simply returns. If either of these is set, the function updates
+  // the transport with either or both of the demuxer criteria and the supplied
+  // rtp header extensions.
+  void MaybeUpdateDemuxerAndRtpExtensions_w(
+      bool update_demuxer,
+      absl::optional<RtpHeaderExtensions> extensions)
+      RTC_RUN_ON(worker_thread());
 
   bool RegisterRtpDemuxerSink_w() RTC_RUN_ON(worker_thread());
 
@@ -349,7 +358,9 @@ class BaseChannel : public ChannelInterface,
       worker_thread()) = webrtc::RtpTransceiverDirection::kInactive;
 
   // Cached list of payload types, used if payload type demuxing is re-enabled.
-  std::set<uint8_t> payload_types_ RTC_GUARDED_BY(worker_thread());
+  webrtc::flat_set<uint8_t> payload_types_ RTC_GUARDED_BY(worker_thread());
+  // A stored copy of the rtp header extensions as applied to the transport.
+  RtpHeaderExtensions rtp_header_extensions_ RTC_GUARDED_BY(worker_thread());
   // TODO(bugs.webrtc.org/12239): Modified on worker thread, accessed
   // on network thread in RegisterRtpDemuxerSink_n (called from Init_w)
   webrtc::RtpDemuxerCriteria demuxer_criteria_;
