@@ -137,40 +137,9 @@ void NoteAddIceCandidateResult(int result) {
                             kAddIceCandidateMax);
 }
 
-void NoteKeyProtocolAndMedia(KeyExchangeProtocolType protocol_type,
-                             cricket::MediaType media_type) {
-  // Array of structs needed to map {KeyExchangeProtocolType,
-  // cricket::MediaType} to KeyExchangeProtocolMedia without using std::map in
-  // order to avoid -Wglobal-constructors and -Wexit-time-destructors.
-  static constexpr struct {
-    KeyExchangeProtocolType protocol_type;
-    cricket::MediaType media_type;
-    KeyExchangeProtocolMedia protocol_media;
-  } kEnumCounterKeyProtocolMediaMap[] = {
-      {kEnumCounterKeyProtocolDtls, cricket::MEDIA_TYPE_AUDIO,
-       kEnumCounterKeyProtocolMediaTypeDtlsAudio},
-      {kEnumCounterKeyProtocolDtls, cricket::MEDIA_TYPE_VIDEO,
-       kEnumCounterKeyProtocolMediaTypeDtlsVideo},
-      {kEnumCounterKeyProtocolDtls, cricket::MEDIA_TYPE_DATA,
-       kEnumCounterKeyProtocolMediaTypeDtlsData},
-      {kEnumCounterKeyProtocolSdes, cricket::MEDIA_TYPE_AUDIO,
-       kEnumCounterKeyProtocolMediaTypeSdesAudio},
-      {kEnumCounterKeyProtocolSdes, cricket::MEDIA_TYPE_VIDEO,
-       kEnumCounterKeyProtocolMediaTypeSdesVideo},
-      {kEnumCounterKeyProtocolSdes, cricket::MEDIA_TYPE_DATA,
-       kEnumCounterKeyProtocolMediaTypeSdesData},
-  };
-
+void NoteKeyProtocol(KeyExchangeProtocolType protocol_type) {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.KeyProtocol", protocol_type,
                             kEnumCounterKeyProtocolMax);
-
-  for (const auto& i : kEnumCounterKeyProtocolMediaMap) {
-    if (i.protocol_type == protocol_type && i.media_type == media_type) {
-      RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.KeyProtocolByMedia",
-                                i.protocol_media,
-                                kEnumCounterKeyProtocolMediaTypeMax);
-    }
-  }
 }
 
 std::map<std::string, const cricket::ContentGroup*> GetBundleGroupsByMid(
@@ -365,9 +334,8 @@ RTCError VerifyCrypto(const SessionDescription* desc,
       continue;
     }
     // Note what media is used with each crypto protocol, for all sections.
-    NoteKeyProtocolAndMedia(dtls_enabled ? webrtc::kEnumCounterKeyProtocolDtls
-                                         : webrtc::kEnumCounterKeyProtocolSdes,
-                            content_info.media_description()->type());
+    NoteKeyProtocol(dtls_enabled ? webrtc::kEnumCounterKeyProtocolDtls
+                                 : webrtc::kEnumCounterKeyProtocolSdes);
     const std::string& mid = content_info.name;
     auto it = bundle_groups_by_mid.find(mid);
     const cricket::ContentGroup* bundle =
