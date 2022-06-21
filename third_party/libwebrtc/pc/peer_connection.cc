@@ -849,7 +849,7 @@ RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
 
 bool PeerConnection::RemoveTrack(RtpSenderInterface* sender) {
   TRACE_EVENT0("webrtc", "PeerConnection::RemoveTrack");
-  return RemoveTrackNew(sender).ok();
+  return RemoveTrackNew(rtc::scoped_refptr<RtpSenderInterface>(sender)).ok();
 }
 
 RTCError PeerConnection::RemoveTrackNew(
@@ -1181,7 +1181,8 @@ void PeerConnection::GetStats(RTCStatsCollectorCallback* callback) {
   RTC_DCHECK(stats_collector_);
   RTC_DCHECK(callback);
   RTC_LOG_THREAD_BLOCK_COUNT();
-  stats_collector_->GetStatsReport(callback);
+  stats_collector_->GetStatsReport(
+      rtc::scoped_refptr<RTCStatsCollectorCallback>(callback));
 }
 
 void PeerConnection::GetStats(

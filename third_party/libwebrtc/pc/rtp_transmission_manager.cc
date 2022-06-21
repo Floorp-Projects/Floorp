@@ -378,7 +378,8 @@ void RtpTransmissionManager::AddAudioTrack(AudioTrackInterface* track,
   }
 
   // Normal case; we've never seen this track before.
-  auto new_sender = CreateSender(cricket::MEDIA_TYPE_AUDIO, track->id(), track,
+  auto new_sender = CreateSender(cricket::MEDIA_TYPE_AUDIO, track->id(),
+                                 rtc::scoped_refptr<AudioTrackInterface>(track),
                                  {stream->id()}, {});
   new_sender->internal()->SetMediaChannel(voice_media_channel());
   GetAudioTransceiver()->internal()->AddSender(new_sender);
@@ -424,7 +425,8 @@ void RtpTransmissionManager::AddVideoTrack(VideoTrackInterface* track,
   }
 
   // Normal case; we've never seen this track before.
-  auto new_sender = CreateSender(cricket::MEDIA_TYPE_VIDEO, track->id(), track,
+  auto new_sender = CreateSender(cricket::MEDIA_TYPE_VIDEO, track->id(),
+                                 rtc::scoped_refptr<VideoTrackInterface>(track),
                                  {stream->id()}, {});
   new_sender->internal()->SetMediaChannel(video_media_channel());
   GetVideoTransceiver()->internal()->AddSender(new_sender);
