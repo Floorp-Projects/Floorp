@@ -125,6 +125,7 @@ features:
             NEVER: "false"
             I_AM_DEFAULT_BROWSER: "is_default_browser_string == 'true'"
             I_AM_NOT_DEFAULT_BROWSER: "is_default_browser_string == 'false'"
+            USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
           actions:
             ENABLE_PRIVATE_BROWSING: ://enable_private_browsing
             INSTALL_SEARCH_WIDGET: ://install_search_widget
@@ -164,7 +165,7 @@ features:
             default-browser:
               text: default_browser_experiment_card_text
               action: "MAKE_DEFAULT_BROWSER"
-              trigger: [ "I_AM_NOT_DEFAULT_BROWSER" ]
+              trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
               style: "DEFAULT"
               button-label: preferences_set_as_default_browser
 

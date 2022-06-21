@@ -6,6 +6,7 @@ package org.mozilla.fenix.gleanplumb
 
 import android.content.Context
 import org.json.JSONObject
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -27,7 +28,8 @@ object CustomAttributeProvider {
         return JSONObject(
             mapOf(
                 "is_default_browser_string" to BrowsersCache.all(context).isDefaultBrowser.toString(),
-                "date_string" to formatter.format(now.time)
+                "date_string" to formatter.format(now.time),
+                "number_of_app_launches" to context.settings().numberOfAppLaunches
             )
         )
     }
