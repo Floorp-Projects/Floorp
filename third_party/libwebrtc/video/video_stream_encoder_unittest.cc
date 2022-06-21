@@ -72,7 +72,6 @@ namespace webrtc {
 
 using ::testing::_;
 using ::testing::AllOf;
-using ::testing::AtLeast;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::Ge;
@@ -83,7 +82,6 @@ using ::testing::Lt;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::NiceMock;
-using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -8781,15 +8779,29 @@ TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {
   auto video_stream_encoder =
       factory.Create(std::move(adapter), &encoder_queue);
 
-  EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Not(Eq(absl::nullopt))));
+  // First a call before we know the frame size and hence cannot compute the
+  // number of simulcast layers.
+  EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Optional(Field(
+                                &FrameCadenceAdapterInterface::
+                                    ZeroHertzModeParams::num_simulcast_layers,
+                                Eq(0)))));
   VideoEncoderConfig config;
   test::FillEncoderConfiguration(kVideoCodecVP8, 1, &config);
   config.content_type = VideoEncoderConfig::ContentType::kScreen;
   video_stream_encoder->ConfigureEncoder(std::move(config), 0);
+  factory.DepleteTaskQueues();
+
+  // Then a call as we've computed the number of simulcast layers after a passed
+  // frame.
+  EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Optional(Field(
+                                &FrameCadenceAdapterInterface::
+                                    ZeroHertzModeParams::num_simulcast_layers,
+                                Gt(0)))));
   PassAFrame(encoder_queue, video_stream_encoder_callback, /*ntp_time_ms=*/1);
   factory.DepleteTaskQueues();
   Mock::VerifyAndClearExpectations(adapter_ptr);
 
+  // Expect a disabled zero-hertz mode after passing realtime video.
   EXPECT_CALL(*adapter_ptr, SetZeroHertzModeEnabled(Eq(absl::nullopt)));
   VideoEncoderConfig config2;
   test::FillEncoderConfiguration(kVideoCodecVP8, 1, &config2);
