@@ -6,29 +6,19 @@
 # it as task artifacts.
 
 
-import attr
-
-from mozbuild.shellutil import quote as shell_quote
-
 import os
 import re
 
-from voluptuous import (
-    Optional,
-    Required,
-    Extra,
-    Any,
-)
-
-from mozpack import path as mozpath
-
+import attr
 import gecko_taskgraph
+from mozbuild.shellutil import quote as shell_quote
+from mozpack import path as mozpath
+from taskgraph.util.treeherder import join_symbol
+from voluptuous import Any, Extra, Optional, Required
 
-from .base import TransformSequence
 from ..util.cached_tasks import add_optimization
 from ..util.schema import Schema, validate_schema
-from ..util.treeherder import join_symbol
-
+from .base import TransformSequence
 
 CACHE_TYPE = "content.v1"
 
