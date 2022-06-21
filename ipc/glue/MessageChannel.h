@@ -291,22 +291,6 @@ class MessageChannel : HasResultCodes {
 
   void CancelCurrentTransaction() EXCLUDES(*mMonitor);
 
-  // Force all calls to Send to defer actually sending messages. This will
-  // cause sync messages to block until another thread calls
-  // StopPostponingSends.
-  //
-  // This must be called from the worker thread.
-  void BeginPostponingSends() EXCLUDES(*mMonitor);
-
-  // Stop postponing sent messages, and immediately flush all postponed
-  // messages to the link. This may be called from any thread.
-  //
-  // Note that there are no ordering guarantees between two different
-  // MessageChannels. If channel B sends a message, then stops postponing
-  // channel A, messages from A may arrive before B. The easiest way to order
-  // this, if needed, is to make B send a sync message.
-  void StopPostponingSends() EXCLUDES(*mMonitor);
-
   // IsClosed and NumQueuedMessages are safe to call from any thread, but
   // may provide an out-of-date value.
   bool IsClosed() EXCLUDES(*mMonitor) {
@@ -751,11 +735,6 @@ class MessageChannel : HasResultCodes {
 
   // See SetChannelFlags
   ChannelFlags mFlags = REQUIRE_DEFAULT;
-
-  // Channels can enter messages are not sent immediately; instead, they are
-  // held in a queue until another thread deems it is safe to send them.
-  bool mIsPostponingSends GUARDED_BY(*mMonitor) = false;
-  std::vector<UniquePtr<Message>> mPostponedSends GUARDED_BY(*mMonitor);
 
   bool mBuildIDsConfirmedMatch GUARDED_BY(*mMonitor) = false;
 
