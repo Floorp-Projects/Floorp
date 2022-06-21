@@ -864,6 +864,7 @@ uint32_t LibvpxVp8Encoder::FrameDropThreshold(size_t spatial_idx) const {
   RTC_DCHECK(frame_buffer_controller_);
   RTC_DCHECK_LT(spatial_idx, frame_buffer_controller_->StreamCount());
   enable_frame_dropping =
+      enable_frame_dropping &&
       frame_buffer_controller_->SupportsEncoderFrameDropping(spatial_idx);
   return enable_frame_dropping ? 30 : 0;
 }
