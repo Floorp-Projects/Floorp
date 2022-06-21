@@ -525,6 +525,7 @@ void DcSctpTransport::OnTransportReadPacket(
     size_t length,
     const int64_t& /* packet_time_us */,
     int flags) {
+  RTC_DCHECK_RUN_ON(network_thread_);
   if (flags) {
     // We are only interested in SCTP packets.
     return;
