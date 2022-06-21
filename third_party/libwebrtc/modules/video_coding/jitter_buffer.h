@@ -19,7 +19,6 @@
 
 #include "modules/include/module_common_types.h"
 #include "modules/include/module_common_types_public.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/decoding_state.h"
 #include "modules/video_coding/event_wrapper.h"
 #include "modules/video_coding/include/video_coding.h"
