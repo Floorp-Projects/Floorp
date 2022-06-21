@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/base/attributes.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
@@ -115,6 +116,9 @@ class ZeroHertzAdapterMode : public AdapterMode {
   absl::optional<uint32_t> GetInputFrameRateFps() override;
   void UpdateFrameRate() override {}
 
+  // Returns true if a refresh frame should be requested from the video source.
+  ABSL_MUST_USE_RESULT bool ProcessKeyFrameRequest();
+
  private:
   // The tracking state of each spatial layer. Used for determining when to
   // stop repeating frames.
@@ -123,20 +127,41 @@ class ZeroHertzAdapterMode : public AdapterMode {
     // convergence status of the layer.
     absl::optional<bool> quality_converged;
   };
+  // The state of a scheduled repeat.
+  struct ScheduledRepeat {
+    ScheduledRepeat(Timestamp scheduled, bool idle)
+        : scheduled(scheduled), idle(idle) {}
+    // The instant when the repeat was scheduled.
+    Timestamp scheduled;
+    // True if the repeat was scheduled as an idle repeat (long), false
+    // otherwise.
+    bool idle;
+  };
 
+  // Returns true if all spatial layers can be considered to be converged in
+  // terms of quality.
+  // Convergence means QP has dropped to a low-enough level to warrant ceasing
+  // to send identical frames at high frequency.
+  bool HasQualityConverged() const RTC_RUN_ON(sequence_checker_);
   // Processes incoming frames on a delayed cadence.
   void ProcessOnDelayedCadence() RTC_RUN_ON(sequence_checker_);
   // Schedules a later repeat with delay depending on state of layer trackers.
-  void ScheduleRepeat(int frame_id) RTC_RUN_ON(sequence_checker_);
+  // If true is passed in `idle_repeat`, the repeat is going to be
+  // kZeroHertzIdleRepeatRatePeriod. Otherwise it'll be the value of
+  // `frame_delay`.
+  void ScheduleRepeat(int frame_id, bool idle_repeat)
+      RTC_RUN_ON(sequence_checker_);
   // Repeats a frame in the abscence of incoming frames. Slows down when quality
   // convergence is attained, and stops the cadence terminally when new frames
-  // have arrived. `scheduled_delay` specifies the delay by which to modify the
-  // repeate frame's timestamps when it's sent.
-  void ProcessRepeatedFrameOnDelayedCadence(int frame_id,
-                                            TimeDelta scheduled_delay)
+  // have arrived.
+  void ProcessRepeatedFrameOnDelayedCadence(int frame_id)
       RTC_RUN_ON(sequence_checker_);
   // Sends a frame, updating the timestamp to the current time.
-  void SendFrameNow(const VideoFrame& frame);
+  void SendFrameNow(const VideoFrame& frame) const
+      RTC_RUN_ON(sequence_checker_);
+  // Returns the repeat duration depending on if it's an idle repeat or not.
+  TimeDelta RepeatDuration(bool idle_repeat) const
+      RTC_RUN_ON(sequence_checker_);
 
   TaskQueueBase* const queue_;
   Clock* const clock_;
@@ -153,8 +178,9 @@ class ZeroHertzAdapterMode : public AdapterMode {
   // The current frame ID to use when starting to repeat frames. This is used
   // for cancelling deferred repeated frame processing happening.
   int current_frame_id_ RTC_GUARDED_BY(sequence_checker_) = 0;
-  // True when we are repeating frames.
-  bool is_repeating_ RTC_GUARDED_BY(sequence_checker_) = false;
+  // Has content when we are repeating frames.
+  absl::optional<ScheduledRepeat> scheduled_repeat_
+      RTC_GUARDED_BY(sequence_checker_);
   // Convergent state of each of the configured simulcast layers.
   std::vector<SpatialLayerTracker> layer_trackers_
       RTC_GUARDED_BY(sequence_checker_);
@@ -175,6 +201,7 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   void UpdateLayerQualityConvergence(int spatial_index,
                                      bool quality_converged) override;
   void UpdateLayerStatus(int spatial_index, bool enabled) override;
+  ABSL_MUST_USE_RESULT bool ProcessKeyFrameRequest() override;
 
   // VideoFrameSink overrides.
   void OnFrame(const VideoFrame& frame) override;
@@ -293,7 +320,7 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
   }
 
   // Remove stored repeating frame if needed.
-  if (is_repeating_) {
+  if (scheduled_repeat_.has_value()) {
     RTC_DCHECK(queued_frames_.size() == 1);
     RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this
                          << " cancel repeat and restart with original";
@@ -303,7 +330,7 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
   // Store the frame in the queue and schedule deferred processing.
   queued_frames_.push_back(frame);
   current_frame_id_++;
-  is_repeating_ = false;
+  scheduled_repeat_ = absl::nullopt;
   queue_->PostDelayedTask(ToQueuedTask(safety_,
                                        [this] {
                                          RTC_DCHECK_RUN_ON(&sequence_checker_);
@@ -315,6 +342,55 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
 absl::optional<uint32_t> ZeroHertzAdapterMode::GetInputFrameRateFps() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   return max_fps_;
+}
+
+bool ZeroHertzAdapterMode::ProcessKeyFrameRequest() {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+
+  // If no frame was ever passed to us, request a refresh frame from the source.
+  if (current_frame_id_ == 0) {
+    RTC_LOG(LS_INFO) << __func__ << " this " << this
+                     << " recommending requesting refresh frame due to no "
+                        "frames received yet.";
+    return true;
+  }
+
+  // If we're not repeating, or we're repeating with non-idle duration, we will
+  // very soon send out a frame and don't need a refresh frame.
+  if (!scheduled_repeat_.has_value() || !scheduled_repeat_->idle) {
+    RTC_LOG(LS_INFO) << __func__ << " this " << this
+                     << " ignoring key frame request because of recently "
+                        "incoming frame or short repeating.";
+    return false;
+  }
+
+  // If the repeat is scheduled within a short (i.e. frame_delay_) interval, we
+  // will very soon send out a frame and don't need a refresh frame.
+  Timestamp now = clock_->CurrentTime();
+  if (scheduled_repeat_->scheduled + RepeatDuration(/*idle_repeat=*/true) -
+          now <=
+      frame_delay_) {
+    RTC_LOG(LS_INFO)
+        << __func__ << " this " << this
+        << " ignoring key frame request because of soon happening idle repeat";
+    return false;
+  }
+
+  // Cancel the current repeat and reschedule a short repeat now. No need for a
+  // new refresh frame.
+  RTC_LOG(LS_INFO) << __func__ << " this " << this
+                   << " scheduling a short repeat due to key frame request";
+  ScheduleRepeat(++current_frame_id_, /*idle_repeat=*/false);
+  return false;
+}
+
+// RTC_RUN_ON(&sequence_checker_)
+bool ZeroHertzAdapterMode::HasQualityConverged() const {
+  const bool quality_converged =
+      absl::c_all_of(layer_trackers_, [](const SpatialLayerTracker& tracker) {
+        return tracker.quality_converged.value_or(true);
+      });
+  return quality_converged;
 }
 
 // RTC_RUN_ON(&sequence_checker_)
@@ -334,38 +410,26 @@ void ZeroHertzAdapterMode::ProcessOnDelayedCadence() {
   // There's only one frame to send. Schedule a repeat sequence, which is
   // cancelled by `current_frame_id_` getting incremented should new frames
   // arrive.
-  is_repeating_ = true;
-  ScheduleRepeat(current_frame_id_);
+  ScheduleRepeat(current_frame_id_, HasQualityConverged());
 }
 
 // RTC_RUN_ON(&sequence_checker_)
-void ZeroHertzAdapterMode::ScheduleRepeat(int frame_id) {
+void ZeroHertzAdapterMode::ScheduleRepeat(int frame_id, bool idle_repeat) {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this << " frame_id "
                        << frame_id;
-  // Determine if quality has converged. Adjust the time for the next repeat
-  // accordingly.
-  const bool quality_converged =
-      absl::c_all_of(layer_trackers_, [](const SpatialLayerTracker& tracker) {
-        return !tracker.quality_converged.has_value() ||
-               tracker.quality_converged.value();
-      });
-  TimeDelta repeat_delay =
-      quality_converged
-          ? FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod
-          : frame_delay_;
-  queue_->PostDelayedTask(ToQueuedTask(safety_,
-                                       [this, frame_id, repeat_delay] {
-                                         RTC_DCHECK_RUN_ON(&sequence_checker_);
-                                         ProcessRepeatedFrameOnDelayedCadence(
-                                             frame_id, repeat_delay);
-                                       }),
-                          repeat_delay.ms());
+  scheduled_repeat_.emplace(clock_->CurrentTime(), idle_repeat);
+  TimeDelta repeat_delay = RepeatDuration(idle_repeat);
+  queue_->PostDelayedTask(
+      ToQueuedTask(safety_,
+                   [this, frame_id] {
+                     RTC_DCHECK_RUN_ON(&sequence_checker_);
+                     ProcessRepeatedFrameOnDelayedCadence(frame_id);
+                   }),
+      repeat_delay.ms());
 }
 
 // RTC_RUN_ON(&sequence_checker_)
-void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(
-    int frame_id,
-    TimeDelta scheduled_delay) {
+void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(int frame_id) {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this << " frame_id "
                        << frame_id;
   RTC_DCHECK(!queued_frames_.empty());
@@ -373,6 +437,7 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(
   // Cancel this invocation if new frames turned up.
   if (frame_id != current_frame_id_)
     return;
+  RTC_DCHECK(scheduled_repeat_.has_value());
 
   VideoFrame& frame = queued_frames_.front();
 
@@ -385,6 +450,7 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(
   // scheduling this method.
   // NOTE: No need to update the RTP timestamp as the VideoStreamEncoder
   // overwrites it based on its chosen NTP timestamp source.
+  TimeDelta scheduled_delay = RepeatDuration(scheduled_repeat_->idle);
   if (frame.timestamp_us() > 0)
     frame.set_timestamp_us(frame.timestamp_us() + scheduled_delay.us());
   if (frame.ntp_time_ms())
@@ -392,15 +458,23 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(
   SendFrameNow(frame);
 
   // Schedule another repeat.
-  ScheduleRepeat(frame_id);
+  ScheduleRepeat(frame_id, HasQualityConverged());
 }
 
-void ZeroHertzAdapterMode::SendFrameNow(const VideoFrame& frame) {
+// RTC_RUN_ON(&sequence_checker_)
+void ZeroHertzAdapterMode::SendFrameNow(const VideoFrame& frame) const {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this;
   // TODO(crbug.com/1255737): figure out if frames_scheduled_for_processing
   // makes sense to compute in this implementation.
   callback_->OnFrame(/*post_time=*/clock_->CurrentTime(),
                      /*frames_scheduled_for_processing=*/1, frame);
+}
+
+// RTC_RUN_ON(&sequence_checker_)
+TimeDelta ZeroHertzAdapterMode::RepeatDuration(bool idle_repeat) const {
+  return idle_repeat
+             ? FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod
+             : frame_delay_;
 }
 
 FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(Clock* clock,
@@ -451,6 +525,14 @@ void FrameCadenceAdapterImpl::UpdateLayerStatus(int spatial_index,
                                                 bool enabled) {
   if (zero_hertz_adapter_.has_value())
     zero_hertz_adapter_->UpdateLayerStatus(spatial_index, enabled);
+}
+
+bool FrameCadenceAdapterImpl::ProcessKeyFrameRequest() {
+  RTC_DCHECK_RUN_ON(queue_);
+  if (zero_hertz_adapter_)
+    return zero_hertz_adapter_->ProcessKeyFrameRequest();
+  // We depend on min_fps not being zero for passthrough.
+  return false;
 }
 
 void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {

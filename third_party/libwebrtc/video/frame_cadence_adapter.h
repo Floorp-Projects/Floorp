@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "absl/base/attributes.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_frame.h"
@@ -95,11 +96,17 @@ class FrameCadenceAdapterInterface
   virtual void UpdateFrameRate() = 0;
 
   // Updates quality convergence status for an enabled spatial layer.
+  // Convergence means QP has dropped to a low-enough level to warrant ceasing
+  // to send identical frames at high frequency.
   virtual void UpdateLayerQualityConvergence(int spatial_index,
                                              bool converged) = 0;
 
   // Updates spatial layer enabled status.
   virtual void UpdateLayerStatus(int spatial_index, bool enabled) = 0;
+
+  // Returns true if a key frame request should cause generation of a new frame
+  // from the source.
+  virtual ABSL_MUST_USE_RESULT bool ProcessKeyFrameRequest() = 0;
 };
 
 }  // namespace webrtc

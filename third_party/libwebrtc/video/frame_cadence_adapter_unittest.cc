@@ -352,6 +352,111 @@ TEST(FrameCadenceAdapterTest, StopsRepeatingFramesDelayed) {
   time_controller.AdvanceTime(TimeDelta::Seconds(1));
 }
 
+TEST(FrameCadenceAdapterTest, RequestsRefreshFrameOnKeyFrameRequestWhenNew) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 10});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_TRUE(adapter->ProcessKeyFrameRequest());
+}
+
+TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 10});
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_FALSE(adapter->ProcessKeyFrameRequest());
+}
+
+TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestWhileShortRepeating) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{
+          /*num_simulcast_layers=*/1});
+  constexpr int kMaxFpsHz = 10;
+  constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(1000 / kMaxFpsHz);
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFpsHz});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  adapter->UpdateLayerStatus(0, true);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(2 * kMinFrameDelay);
+  EXPECT_FALSE(adapter->ProcessKeyFrameRequest());
+
+  // Expect repeating as ususal.
+  EXPECT_CALL(callback, OnFrame).Times(8);
+  time_controller.AdvanceTime(8 * kMinFrameDelay);
+}
+
+TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestJustBeforeIdleRepeating) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  constexpr int kMaxFpsHz = 10;
+  constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(1000 / kMaxFpsHz);
+  constexpr TimeDelta kIdleFrameDelay =
+      FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFpsHz});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(kIdleFrameDelay);
+
+  // We process the key frame request kMinFrameDelay before the first idle
+  // repeat should happen. The repeat should happen at T = kMinFrameDelay +
+  // kIdleFrameDelay as originally expected.
+  EXPECT_FALSE(adapter->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(kMinFrameDelay);
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(kIdleFrameDelay);
+}
+
+TEST(FrameCadenceAdapterTest,
+     IgnoresKeyFrameRequestShortRepeatsBeforeIdleRepeat) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  constexpr int kMaxFpsHz = 10;
+  constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(1000 / kMaxFpsHz);
+  constexpr TimeDelta kIdleFrameDelay =
+      FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFpsHz});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(2 * kMinFrameDelay);
+
+  // We process the key frame request 9 * kMinFrameDelay before the first idle
+  // repeat should happen. We should get a short repeat in kMinFrameDelay and an
+  // idle repeat after that.
+  EXPECT_FALSE(adapter->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(kMinFrameDelay);
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(kIdleFrameDelay);
+}
+
 class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
  public:
   static constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(100);
