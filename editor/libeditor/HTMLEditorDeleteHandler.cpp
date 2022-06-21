@@ -4812,14 +4812,31 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
         return MoveNodeResult(rv);
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         rangesToWrapTheLine.Ranges(), arrayOfContents,
         EditSubAction::eMergeBlockContents, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
           "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
       return MoveNodeResult(rv);
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eMergeBlockContents);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eMergeBlockContents) failed");
+      return MoveNodeResult(splitAtBRElementsResult.inspectErr());
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return MoveNodeResult(rv);
+      }
     }
   }
   if (!pointToInsert.IsSetAndValid()) {

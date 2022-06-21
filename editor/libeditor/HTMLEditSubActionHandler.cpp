@@ -3092,14 +3092,31 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         return EditActionResult(rv);
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return EditActionResult(rv);
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eCreateOrChangeList);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eCreateOrChangeList) failed");
+      return EditActionResult(splitAtBRElementsResult.inspectErr());
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return EditActionResult(rv);
+      }
     }
   }
 
@@ -3738,20 +3755,38 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eCreateOrChangeList);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eCreateOrChangeList) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
   // Remove all non-editable nodes.  Leave them be.
-  // XXX SplitInlinesAndCollectEditTargetNodes() should return only editable
-  //     contents when it's called with CollectNonEditableNodes::No.
+  // XXX CollectEditTargetNodes() should return only editable contents when it's
+  //     called with CollectNonEditableNodes::No, but checking it here, looks
+  //     like just wasting the runtime cost.
   for (int32_t i = arrayOfContents.Length() - 1; i >= 0; i--) {
     OwningNonNull<nsIContent>& content = arrayOfContents[i];
     if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
@@ -3829,14 +3864,31 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eCreateOrRemoveBlock, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
-          "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eCreateOrRemoveBlock);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eCreateOrRemoveBlock) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
@@ -4359,14 +4411,31 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eIndent, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "SplitInlinesAndCollectEditTargetNodes(EditSubAction::eIndent, "
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eIndent, "
           "CollectNonEditableNodes::Yes) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eIndent);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eIndent) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
@@ -4601,14 +4670,31 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal(
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eIndent, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(eIndent, "
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eIndent, "
           "CollectNonEditableNodes::Yes) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eIndent);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eIndent) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
@@ -5001,14 +5087,31 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
     AutoRangeArray extendedSelectionRanges(SelectionRef());
     extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
         EditSubAction::eOutdent, aEditingHost);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eOutdent, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
-          "eOutdent, CollectNonEditableNodes::Yes) failed");
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eOutdent, "
+          "CollectNonEditableNodes::Yes) failed");
       return SplitRangeOffFromNodeResult(rv);
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eOutdent);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eOutdent) failed");
+      return SplitRangeOffFromNodeResult(splitAtBRElementsResult.inspectErr());
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return SplitRangeOffFromNodeResult(rv);
+      }
     }
   }
 
@@ -5838,14 +5941,31 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eSetOrClearAlignment, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
           "eSetOrClearAlignment, CollectNonEditableNodes::Yes) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eSetOrClearAlignment);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eSetOrClearAlignment) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
@@ -6585,36 +6705,6 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
                       endPoint.ToRawRangeBoundary(), IgnoreErrors());
   NS_WARNING_ASSERTION(range, "nsRange::Create() failed");
   return range.forget();
-}
-
-nsresult HTMLEditor::SplitInlinesAndCollectEditTargetNodes(
-    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
-    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-    EditSubAction aEditSubAction,
-    CollectNonEditableNodes aCollectNonEditableNodes) {
-  nsresult rv =
-      CollectEditTargetNodes(aArrayOfRanges, aOutArrayOfContents,
-                             aEditSubAction, aCollectNonEditableNodes);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollectEditTargetNodes() failed");
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  const Result<EditorDOMPoint, nsresult> splitResult =
-      MaybeSplitElementsAtEveryBRElement(aOutArrayOfContents, aEditSubAction);
-  if (MOZ_UNLIKELY(splitResult.isErr())) {
-    NS_WARNING("HTMLEditor::MaybeSplitElementsAtEveryBRElement() failed");
-    return splitResult.inspectErr();
-  }
-  const EditorDOMPoint& pointToPutCaret = splitResult.inspect();
-  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
 }
 
 nsresult HTMLEditor::CollectEditTargetNodes(
@@ -10147,14 +10237,31 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         return rv;
       }
     }
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+    nsresult rv = CollectEditTargetNodes(
         extendedSelectionRanges.Ranges(), arrayOfContents,
         EditSubAction::eSetPositionToAbsolute, CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes("
+          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
           "eSetPositionToAbsolute, CollectNonEditableNodes::Yes) failed");
       return rv;
+    }
+    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(
+            arrayOfContents, EditSubAction::eSetPositionToAbsolute);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eSetPositionToAbsolute) failed");
+      return splitAtBRElementsResult.inspectErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        splitAtBRElementsResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
 
