@@ -147,9 +147,6 @@ class GeckoContentController {
 
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
 
-  virtual void NotifyScaleGestureComplete(const ScrollableLayerGuid& aGuid,
-                                          float aScale) = 0;
-
   virtual void UpdateOverscrollVelocity(const ScrollableLayerGuid& aGuid,
                                         float aX, float aY,
                                         bool aIsRootContent) {}

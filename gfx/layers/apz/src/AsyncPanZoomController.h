@@ -1081,10 +1081,6 @@ class AsyncPanZoomController {
   // to allow panning by moving multiple fingers (thus moving the focus point).
   ParentLayerPoint mLastZoomFocus;
 
-  // Stores the previous zoom level at which we last sent a ScaleGestureComplete
-  // notification.
-  CSSToParentLayerScale mLastNotifiedZoom;
-
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   UniquePtr<OverscrollEffectBase> mOverscrollEffect;

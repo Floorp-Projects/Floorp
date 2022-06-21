@@ -72,9 +72,6 @@ class ContentProcessController final : public GeckoContentController {
 
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
-  void NotifyScaleGestureComplete(const ScrollableLayerGuid& aGuid,
-                                  float aScale) override;
-
   bool IsRepaintThread() override;
 
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
