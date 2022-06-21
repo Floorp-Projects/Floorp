@@ -159,17 +159,15 @@ var FormAutofill = {
     );
   },
 
-  defineLazyLogGetter(scope, logPrefix) {
+  defineLogGetter(scope, logPrefix) {
     scope.debug = debug;
 
-    XPCOMUtils.defineLazyGetter(scope, "log", () => {
-      let { ConsoleAPI } = ChromeUtils.import(
-        "resource://gre/modules/Console.jsm"
-      );
-      return new ConsoleAPI({
-        maxLogLevelPref: "extensions.formautofill.loglevel",
-        prefix: logPrefix,
-      });
+    let { ConsoleAPI } = ChromeUtils.import(
+      "resource://gre/modules/Console.jsm"
+    );
+    return new ConsoleAPI({
+      maxLogLevelPref: "extensions.formautofill.loglevel",
+      prefix: logPrefix,
     });
   },
 };

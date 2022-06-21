@@ -259,7 +259,10 @@ class AutofillRecords {
     validComputedFields,
     schemaVersion
   ) {
-    FormAutofill.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
+    this.log = FormAutofill.defineLogGetter(
+      lazy,
+      "AutofillRecords:" + collectionName
+    );
 
     this.VALID_FIELDS = validFields;
     this.VALID_COMPUTED_FIELDS = validComputedFields;
