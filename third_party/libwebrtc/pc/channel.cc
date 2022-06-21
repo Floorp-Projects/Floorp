@@ -126,7 +126,6 @@ BaseChannel::BaseChannel(rtc::Thread* worker_thread,
       network_thread_(network_thread),
       signaling_thread_(signaling_thread),
       alive_(PendingTaskSafetyFlag::Create()),
-      content_name_(content_name),
       srtp_required_(srtp_required),
       crypto_options_(crypto_options),
       media_channel_(std::move(media_channel)),
@@ -150,7 +149,7 @@ BaseChannel::~BaseChannel() {
 
 std::string BaseChannel::ToString() const {
   rtc::StringBuilder sb;
-  sb << "{mid: " << content_name_;
+  sb << "{mid: " << content_name();
   if (media_channel_) {
     sb << ", media_type: " << MediaTypeToString(media_channel_->media_type());
   }
@@ -595,23 +594,15 @@ bool BaseChannel::SetPayloadTypeDemuxingEnabled_w(bool enabled) {
     // there is no straightforward way to identify those streams.
     media_channel()->ResetUnsignaledRecvStream();
     demuxer_criteria_.payload_types().clear();
-    if (!RegisterRtpDemuxerSink_w()) {
-      RTC_LOG(LS_ERROR) << "Failed to disable payload type demuxing for "
-                        << ToString();
-      return false;
-    }
   } else if (!payload_types_.empty()) {
     // TODO(tommi): Instead of 'insert', should this simply overwrite the value
     // of the criteria?
     demuxer_criteria_.payload_types().insert(payload_types_.begin(),
                                              payload_types_.end());
-    if (!RegisterRtpDemuxerSink_w()) {
-      RTC_LOG(LS_ERROR) << "Failed to enable payload type demuxing for "
-                        << ToString();
-      return false;
-    }
   }
-  return true;
+
+  // Note: This synchronously hops to the network thread.
+  return RegisterRtpDemuxerSink_w();
 }
 
 bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
