@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'dedf5771c9f4142b0c25e4a31b043fcf5698480e',
+  'chromium_revision': '0df5b7204c88f7823f8319f3af41ff59889e5aec',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,7 +23,7 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@9e1cb8c3f86de7c08c5016d8cf6564f8f360efe4',
+    'https://chromium.googlesource.com/chromium/src/base@78743ee6e34c4aed7e045ffd5f1cd0a025eeb72f',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@fb6d04622d5f0cf92b72d2cca6a73b9d17d4de4c',
   'src/buildtools':
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@72c35a4e8050110f70c7c9ad5004d16d49fc5d83',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@2eabb72a9183f137244b725d0932a88807463d62',
     'condition': 'checkout_ios',
   },
   'src/testing':
     'https://chromium.googlesource.com/chromium/src/testing@74b481df9791514e2335b9d441e5258980caecd3',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@cb0d9ce54fff0de09ab818462b6c5c897f07fcf4',
+    'https://chromium.googlesource.com/chromium/src/third_party@f00e4988fa4453e07efba36480da027d94f84697',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@12ddc4ff6ef88b49bcc0033fedef605e7ab83210',
+    'https://chromium.googlesource.com/chromium/src/tools@bd010f91749a560ed1682b7341de7a780433c856',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -384,7 +384,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': '5A6-vFfKBBqjWxMf3X5-bFSV_gRaWMhZwAKo7mR2WsgC',
+          'version': 'cvnN-qE6n5AuBxEsTtzpda1KG8oF_QAjRf62bBkmqhkC',
       },
     ],
     'condition': 'checkout_android',
