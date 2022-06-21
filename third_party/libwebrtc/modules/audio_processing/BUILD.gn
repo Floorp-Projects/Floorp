@@ -149,19 +149,9 @@ rtc_library("audio_processing") {
     "common.h",
     "echo_control_mobile_impl.cc",
     "echo_control_mobile_impl.h",
-    "echo_detector/circular_buffer.cc",
-    "echo_detector/circular_buffer.h",
-    "echo_detector/mean_variance_estimator.cc",
-    "echo_detector/mean_variance_estimator.h",
-    "echo_detector/moving_max.cc",
-    "echo_detector/moving_max.h",
-    "echo_detector/normalized_covariance_estimator.cc",
-    "echo_detector/normalized_covariance_estimator.h",
     "gain_control_impl.cc",
     "gain_control_impl.h",
     "render_queue_item_verifier.h",
-    "residual_echo_detector.cc",
-    "residual_echo_detector.h",
     "typing_detection.cc",
     "typing_detection.h",
   ]
@@ -241,6 +231,33 @@ rtc_library("voice_detection") {
     "../../common_audio:common_audio_c",
     "../../rtc_base:checks",
   ]
+}
+
+rtc_library("residual_echo_detector") {
+  poisonous = [ "default_echo_detector" ]
+  configs += [ ":apm_debug_dump" ]
+  sources = [
+    "echo_detector/circular_buffer.cc",
+    "echo_detector/circular_buffer.h",
+    "echo_detector/mean_variance_estimator.cc",
+    "echo_detector/mean_variance_estimator.h",
+    "echo_detector/moving_max.cc",
+    "echo_detector/moving_max.h",
+    "echo_detector/normalized_covariance_estimator.cc",
+    "echo_detector/normalized_covariance_estimator.h",
+    "residual_echo_detector.cc",
+    "residual_echo_detector.h",
+  ]
+  deps = [
+    ":api",
+    ":apm_logging",
+    "../../api:array_view",
+    "../../rtc_base:checks",
+    "../../rtc_base:logging",
+    "../../rtc_base:rtc_base_approved",
+    "../../system_wrappers:metrics",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("optionally_built_submodule_creators") {
@@ -368,6 +385,7 @@ if (rtc_include_tests) {
         "../../api:scoped_refptr",
         "../../api/audio:aec3_config",
         "../../api/audio:aec3_factory",
+        "../../api/audio:echo_detector_creator",
         "../../common_audio",
         "../../common_audio:common_audio_c",
         "../../rtc_base",
@@ -425,6 +443,7 @@ if (rtc_include_tests) {
           ":audioproc_test_utils",
           ":audioproc_unittest_proto",
           ":optionally_built_submodule_creators",
+          ":residual_echo_detector",
           ":rms_level",
           ":runtime_settings_protobuf_utils",
           "../../api/audio:audio_frame_api",
@@ -524,6 +543,7 @@ if (rtc_include_tests) {
         ":runtime_settings_protobuf_utils",
         "../../api/audio:aec3_config_json",
         "../../api/audio:aec3_factory",
+        "../../api/audio:echo_detector_creator",
         "../../common_audio",
         "../../rtc_base:checks",
         "../../rtc_base:ignore_wundef",

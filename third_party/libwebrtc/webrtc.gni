@@ -447,6 +447,9 @@ all_poison_types = [
   # Default task queue implementation.
   "default_task_queue",
 
+  # Default echo detector implementation.
+  "default_echo_detector",
+
   # JSON parsing should not be needed in the "slim and modular" WebRTC.
   "rtc_json",
 

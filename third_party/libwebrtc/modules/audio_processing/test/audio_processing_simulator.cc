@@ -20,6 +20,7 @@
 
 #include "api/audio/echo_canceller3_config_json.h"
 #include "api/audio/echo_canceller3_factory.h"
+#include "api/audio/echo_detector_creator.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/echo_control_mobile_impl.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -186,6 +187,10 @@ AudioProcessingSimulator::AudioProcessingSimulator(
 
       auto echo_control_factory = std::make_unique<EchoCanceller3Factory>(cfg);
       builder->SetEchoControlFactory(std::move(echo_control_factory));
+    }
+
+    if (settings_.use_ed && *settings.use_ed) {
+      builder->SetEchoDetector(CreateEchoDetector());
     }
 
     // Create an audio processing object.
@@ -567,10 +572,6 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
   if (settings_.analog_agc_disable_digital_adaptive) {
     apm_config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
         *settings_.analog_agc_disable_digital_adaptive;
-  }
-
-  if (settings_.use_ed) {
-    apm_config.residual_echo_detector.enabled = *settings_.use_ed;
   }
 
   if (settings_.maximum_internal_processing_rate) {

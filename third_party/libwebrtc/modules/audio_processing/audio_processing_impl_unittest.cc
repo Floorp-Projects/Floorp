@@ -554,7 +554,6 @@ TEST(AudioProcessingImplTest, RenderPreProcessorBeforeEchoDetector) {
           .Create();
   webrtc::AudioProcessing::Config apm_config;
   apm_config.pre_amplifier.enabled = true;
-  apm_config.residual_echo_detector.enabled = true;
   apm->ApplyConfig(apm_config);
 
   constexpr int16_t kAudioLevel = 1000;

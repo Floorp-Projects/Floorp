@@ -411,7 +411,6 @@ void WebRtcVoiceEngine::Init() {
     options.audio_jitter_buffer_min_delay_ms = 0;
     options.audio_jitter_buffer_enable_rtx_handling = false;
     options.experimental_agc = false;
-    options.residual_echo_detector = true;
     bool error = ApplyOptions(options);
     RTC_DCHECK(error);
   }
@@ -623,10 +622,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
 
   if (options.highpass_filter) {
     apm_config.high_pass_filter.enabled = *options.highpass_filter;
-  }
-
-  if (options.residual_echo_detector) {
-    apm_config.residual_echo_detector.enabled = *options.residual_echo_detector;
   }
 
   if (options.noise_suppression) {

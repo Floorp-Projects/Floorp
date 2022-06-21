@@ -160,7 +160,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // submodule resets, affecting the audio quality. Use the RuntimeSetting
   // construct for runtime configuration.
   struct RTC_EXPORT Config {
-
     // Sets the properties of the audio processing pipeline.
     struct RTC_EXPORT Pipeline {
       // Maximum allowed processing rate used internally. May only be set to
@@ -377,8 +376,10 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       } adaptive_digital;
     } gain_controller2;
 
+    // TODO(bugs.webrtc.org/11539): Deprecated. Delete this flag. Replaced by
+    // injectable submodule.
     struct ResidualEchoDetector {
-      bool enabled = true;
+      bool enabled = false;
     } residual_echo_detector;
 
     std::string ToString() const;
@@ -939,16 +940,12 @@ class EchoDetector : public rtc::RefCountInterface {
                           int render_sample_rate_hz,
                           int num_render_channels) = 0;
 
-  // Analysis (not changing) of the render signal.
+  // Analysis (not changing) of the first channel of the render signal.
   virtual void AnalyzeRenderAudio(rtc::ArrayView<const float> render_audio) = 0;
 
   // Analysis (not changing) of the capture signal.
   virtual void AnalyzeCaptureAudio(
       rtc::ArrayView<const float> capture_audio) = 0;
-
-  // Pack an AudioBuffer into a vector<float>.
-  static void PackRenderAudioBuffer(AudioBuffer* audio,
-                                    std::vector<float>* packed_buffer);
 
   struct Metrics {
     absl::optional<double> echo_likelihood;
