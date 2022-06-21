@@ -7152,115 +7152,129 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     return EditActionResult(NS_ERROR_FAILURE);
   }
 
-  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
-  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+  // TODO: Make this the second argument of this method.
+  const EditorDOMPoint aCandidatePointToSplit(firstRange->StartRef());
+  if (NS_WARN_IF(!aCandidatePointToSplit.IsSet())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
-  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+  MOZ_ASSERT(aCandidatePointToSplit.IsSetAndValid());
 
-  // We shouldn't create new anchor element which has non-empty href unless
-  // splitting middle of it because we assume that users don't want to create
-  // *same* anchor element across two or more paragraphs in most cases.
-  // So, adjust selection start if it's edge of anchor element(s).
-  // XXX We don't support white-space collapsing in these cases since it needs
-  //     some additional work with WhiteSpaceVisibilityKeeper but it's not usual
-  //     case. E.g., |<a href="foo"><b>foo []</b> </a>|
-  if (atStartOfSelection.IsStartOfContainer()) {
-    for (nsIContent* container = atStartOfSelection.GetContainerAsContent();
-         container && container != &aParentDivOrP;
-         container = container->GetParent()) {
-      if (HTMLEditUtils::IsLink(container)) {
-        // Found link should be only in right node.  So, we shouldn't split
-        // it.
-        atStartOfSelection.Set(container);
-        // Even if we found an anchor element, don't break because DOM API
-        // allows to nest anchor elements.
+  const EditorDOMPoint pointToSplitAvoidingEmptyNewLink = [&]() {
+    // We shouldn't create new anchor element which has non-empty href unless
+    // splitting middle of it because we assume that users don't want to create
+    // *same* anchor element across two or more paragraphs in most cases.
+    // So, adjust selection start if it's edge of anchor element(s).
+    // XXX We don't support white-space collapsing in these cases since it needs
+    //     some additional work with WhiteSpaceVisibilityKeeper but it's not
+    //     usual case. E.g., |<a href="foo"><b>foo []</b> </a>|
+    if (aCandidatePointToSplit.IsStartOfContainer()) {
+      EditorDOMPoint candidatePoint(aCandidatePointToSplit);
+      for (nsIContent* container =
+               aCandidatePointToSplit.GetContainerAsContent();
+           container && container != &aParentDivOrP;
+           container = container->GetParent()) {
+        if (HTMLEditUtils::IsLink(container)) {
+          // Found link should be only in right node.  So, we shouldn't split
+          // it.
+          candidatePoint.Set(container);
+          // Even if we found an anchor element, don't break because DOM API
+          // allows to nest anchor elements.
+        }
+        // If the container is middle of its parent, stop adjusting split point.
+        if (container->GetPreviousSibling()) {
+          // XXX Should we check if previous sibling is visible content?
+          //     E.g., should we ignore comment node, invisible <br> element?
+          break;
+        }
       }
-      // If the container is middle of its parent, stop adjusting split point.
-      if (container->GetPreviousSibling()) {
-        // XXX Should we check if previous sibling is visible content?
-        //     E.g., should we ignore comment node, invisible <br> element?
-        break;
-      }
+      return candidatePoint;
     }
-  }
-  // We also need to check if selection is at invisible <br> element at end
-  // of an <a href="foo"> element because editor inserts a <br> element when
-  // user types Enter key after a white-space which is at middle of
-  // <a href="foo"> element and when setting selection at end of the element,
-  // selection becomes referring the <br> element.  We may need to change this
-  // behavior later if it'd be standardized.
-  else if (atStartOfSelection.IsEndOfContainer() ||
-           atStartOfSelection.IsBRElementAtEndOfContainer()) {
-    // If there are 2 <br> elements, the first <br> element is visible.  E.g.,
-    // |<a href="foo"><b>boo[]<br></b><br></a>|, we should split the <a>
-    // element.  Otherwise, E.g., |<a href="foo"><b>boo[]<br></b></a>|,
-    // we should not split the <a> element and ignore inline elements in it.
-    bool foundBRElement = atStartOfSelection.IsBRElementAtEndOfContainer();
-    for (nsIContent* container = atStartOfSelection.GetContainerAsContent();
-         container && container != &aParentDivOrP;
-         container = container->GetParent()) {
-      if (HTMLEditUtils::IsLink(container)) {
-        // Found link should be only in left node.  So, we shouldn't split it.
-        atStartOfSelection.SetAfter(container);
-        // Even if we found an anchor element, don't break because DOM API
-        // allows to nest anchor elements.
-      }
-      // If the container is middle of its parent, stop adjusting split point.
-      if (nsIContent* nextSibling = container->GetNextSibling()) {
-        if (foundBRElement) {
-          // If we've already found a <br> element, we assume found node is
-          // visible <br> or something other node.
+
+    // We also need to check if selection is at invisible <br> element at end
+    // of an <a href="foo"> element because editor inserts a <br> element when
+    // user types Enter key after a white-space which is at middle of
+    // <a href="foo"> element and when setting selection at end of the element,
+    // selection becomes referring the <br> element.  We may need to change this
+    // behavior later if it'd be standardized.
+    if (aCandidatePointToSplit.IsEndOfContainer() ||
+        aCandidatePointToSplit.IsBRElementAtEndOfContainer()) {
+      // If there are 2 <br> elements, the first <br> element is visible.  E.g.,
+      // |<a href="foo"><b>boo[]<br></b><br></a>|, we should split the <a>
+      // element.  Otherwise, E.g., |<a href="foo"><b>boo[]<br></b></a>|,
+      // we should not split the <a> element and ignore inline elements in it.
+      bool foundBRElement =
+          aCandidatePointToSplit.IsBRElementAtEndOfContainer();
+      EditorDOMPoint candidatePoint(aCandidatePointToSplit);
+      for (nsIContent* container =
+               aCandidatePointToSplit.GetContainerAsContent();
+           container && container != &aParentDivOrP;
+           container = container->GetParent()) {
+        if (HTMLEditUtils::IsLink(container)) {
+          // Found link should be only in left node.  So, we shouldn't split it.
+          candidatePoint.SetAfter(container);
+          // Even if we found an anchor element, don't break because DOM API
+          // allows to nest anchor elements.
+        }
+        // If the container is middle of its parent, stop adjusting split point.
+        if (nsIContent* nextSibling = container->GetNextSibling()) {
+          if (foundBRElement) {
+            // If we've already found a <br> element, we assume found node is
+            // visible <br> or something other node.
+            // XXX Should we check if non-text data node like comment?
+            break;
+          }
+
           // XXX Should we check if non-text data node like comment?
-          break;
+          if (!nextSibling->IsHTMLElement(nsGkAtoms::br)) {
+            break;
+          }
+          foundBRElement = true;
         }
-
-        // XXX Should we check if non-text data node like comment?
-        if (!nextSibling->IsHTMLElement(nsGkAtoms::br)) {
-          break;
-        }
-        foundBRElement = true;
       }
+      return candidatePoint;
     }
-  }
+    return aCandidatePointToSplit;
+  }();
 
   bool doesCRCreateNewP = GetReturnInParagraphCreatesNewParagraph();
   bool splitAfterNewBR = false;
   RefPtr<HTMLBRElement> brElement;
 
-  EditorDOMPoint pointToSplitParentDivOrP(atStartOfSelection);
+  EditorDOMPoint pointToSplitParentDivOrP(pointToSplitAvoidingEmptyNewLink);
 
   EditorDOMPoint pointToInsertBR;
-  if (doesCRCreateNewP && atStartOfSelection.GetContainer() == &aParentDivOrP) {
+  if (doesCRCreateNewP &&
+      pointToSplitAvoidingEmptyNewLink.GetContainer() == &aParentDivOrP) {
     // We are at the edges of the block, so, we don't need to create new <br>.
     brElement = nullptr;
-  } else if (atStartOfSelection.IsInTextNode()) {
+  } else if (pointToSplitAvoidingEmptyNewLink.IsInTextNode()) {
     // at beginning of text node?
-    if (atStartOfSelection.IsStartOfContainer()) {
+    if (pointToSplitAvoidingEmptyNewLink.IsStartOfContainer()) {
       // is there a BR prior to it?
       brElement = HTMLBRElement::FromNodeOrNull(
-          atStartOfSelection.IsInContentNode()
+          pointToSplitAvoidingEmptyNewLink.IsInContentNode()
               ? HTMLEditUtils::GetPreviousSibling(
-                    *atStartOfSelection.ContainerAsContent(),
+                    *pointToSplitAvoidingEmptyNewLink.ContainerAsContent(),
                     {WalkTreeOption::IgnoreNonEditableNode})
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        pointToInsertBR.Set(atStartOfSelection.GetContainer());
+        pointToInsertBR.Set(pointToSplitAvoidingEmptyNewLink.GetContainer());
         brElement = nullptr;
       }
-    } else if (atStartOfSelection.IsEndOfContainer()) {
+    } else if (pointToSplitAvoidingEmptyNewLink.IsEndOfContainer()) {
       // we're at the end of text node...
       // is there a BR after to it?
       brElement = HTMLBRElement::FromNodeOrNull(
-          atStartOfSelection.IsInContentNode()
+          pointToSplitAvoidingEmptyNewLink.IsInContentNode()
               ? HTMLEditUtils::GetNextSibling(
-                    *atStartOfSelection.ContainerAsContent(),
+                    *pointToSplitAvoidingEmptyNewLink.ContainerAsContent(),
                     {WalkTreeOption::IgnoreNonEditableNode})
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        pointToInsertBR.SetAfter(atStartOfSelection.GetContainer());
+        pointToInsertBR.SetAfter(
+            pointToSplitAvoidingEmptyNewLink.GetContainer());
         NS_WARNING_ASSERTION(
             pointToInsertBR.IsSet(),
             "Failed to set to after the container  of selection start");
@@ -7316,7 +7330,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     Element* editingHost = ComputeEditingHost();
     brElement = HTMLBRElement::FromNodeOrNull(
         editingHost ? HTMLEditUtils::GetPreviousContent(
-                          atStartOfSelection,
+                          pointToSplitAvoidingEmptyNewLink,
                           {WalkTreeOption::IgnoreNonEditableNode}, editingHost)
                     : nullptr);
     if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
@@ -7325,12 +7339,12 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       brElement = HTMLBRElement::FromNodeOrNull(
           editingHost
               ? HTMLEditUtils::GetNextContent(
-                    atStartOfSelection, {WalkTreeOption::IgnoreNonEditableNode},
-                    editingHost)
+                    pointToSplitAvoidingEmptyNewLink,
+                    {WalkTreeOption::IgnoreNonEditableNode}, editingHost)
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-        pointToInsertBR = atStartOfSelection;
+        pointToInsertBR = pointToSplitAvoidingEmptyNewLink;
         splitAfterNewBR = true;
         brElement = nullptr;
       }
