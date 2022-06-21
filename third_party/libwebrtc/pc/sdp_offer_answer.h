@@ -236,6 +236,13 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       const std::map<std::string, const cricket::ContentGroup*>&
           bundle_groups_by_mid);
 
+  // Part of ApplyRemoteDescription steps specific to plan b.
+  void PlanBUpdateSendersAndReceivers(
+      const cricket::ContentInfo* audio_content,
+      const cricket::AudioContentDescription* audio_desc,
+      const cricket::ContentInfo* video_content,
+      const cricket::VideoContentDescription* video_desc);
+
   // Implementation of the offer/answer exchange operations. These are chained
   // onto the `operations_chain_` when the public CreateOffer(), CreateAnswer(),
   // SetLocalDescription() and SetRemoteDescription() methods are invoked.
