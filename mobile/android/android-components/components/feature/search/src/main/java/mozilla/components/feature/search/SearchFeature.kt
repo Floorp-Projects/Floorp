@@ -6,8 +6,6 @@ package mozilla.components.feature.search
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
@@ -16,6 +14,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.ext.toNullablePair
 
 /**
@@ -36,16 +35,10 @@ class SearchFeature(
 
     override fun start() {
         scope = store.flowScoped { flow ->
-            flow
-                .map { state ->
-                    val tab = state.findTabOrCustomTabOrSelectedTab(tabId)
-                    tab?.content?.searchRequest to tab?.id
-                }
+            flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
+                .ifChanged { it?.content?.searchRequest }
                 // Do nothing if searchRequest or sessionId is null
-                .mapNotNull { pair -> pair.toNullablePair() }
-                // We may see repeat values if other state changes before we handle the request.
-                // Filter these out.
-                .distinctUntilChangedBy { (searchRequest, _) -> searchRequest }
+                .mapNotNull { tab -> Pair(tab?.content?.searchRequest, tab?.id).toNullablePair() }
                 .collect { (searchRequest, sessionId) ->
                     performSearch(searchRequest, sessionId)
                     store.dispatch(ContentAction.ConsumeSearchRequestAction(sessionId))

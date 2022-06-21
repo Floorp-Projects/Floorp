@@ -109,4 +109,22 @@ class SearchFeatureTest {
 
         assertNull(store.state.selectedTab!!.content.searchRequest)
     }
+
+    @Test
+    fun `WHEN the same search is requested two times THEN both search requests are preformed and consumed`() {
+        val searchRequest = SearchRequest(isPrivate = false, query = "query")
+        verify(performSearch, times(0)).invoke(searchRequest, SELECTED_TAB_ID)
+
+        store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, searchRequest)).joinBlocking()
+        store.waitUntilIdle()
+
+        verify(performSearch, times(1)).invoke(searchRequest, SELECTED_TAB_ID)
+        assertNull(store.state.selectedTab!!.content.searchRequest)
+
+        store.dispatch(ContentAction.UpdateSearchRequestAction(SELECTED_TAB_ID, searchRequest)).joinBlocking()
+        store.waitUntilIdle()
+
+        verify(performSearch, times(2)).invoke(searchRequest, SELECTED_TAB_ID)
+        assertNull(store.state.selectedTab!!.content.searchRequest)
+    }
 }
