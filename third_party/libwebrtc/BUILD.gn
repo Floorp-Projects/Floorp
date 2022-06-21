@@ -632,6 +632,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "test:test_common",
       "test:test_main",
       "test:video_test_common",
+      "video:video_legacy_tests",
       "video:video_tests",
       "video/adaptation:video_adaptation_tests",
     ]

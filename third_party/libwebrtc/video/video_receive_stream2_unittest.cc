@@ -28,7 +28,6 @@
 #include "media/engine/fake_webrtc_call.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "rtc_base/event.h"
 #include "system_wrappers/include/clock.h"

@@ -19,7 +19,6 @@
 #include "api/call/transport.h"
 #include "call/video_receive_stream.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
-#include "modules/utility/include/process_thread.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/to_queued_task.h"
