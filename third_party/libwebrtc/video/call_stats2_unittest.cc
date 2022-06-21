@@ -60,6 +60,7 @@ class CallStats2Test : public ::testing::Test {
   }
 
   test::RunLoop loop_;
+  // TODO(nisse): Don't use process thread.
   std::unique_ptr<ProcessThread> process_thread_{
       ProcessThread::Create("CallStats")};
   // Note: Since rtc::Thread doesn't support injecting a Clock, we're going

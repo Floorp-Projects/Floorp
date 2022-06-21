@@ -27,7 +27,6 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/rtp_frame_reference_finder.h"

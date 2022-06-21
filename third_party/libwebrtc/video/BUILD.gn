@@ -618,7 +618,6 @@ if (rtc_include_tests) {
       "alignment_adjuster_unittest.cc",
       "buffered_frame_decryptor_unittest.cc",
       "call_stats2_unittest.cc",
-      "call_stats_unittest.cc",
       "cpu_scaling_tests.cc",
       "encoder_bitrate_adjuster_unittest.cc",
       "encoder_overshoot_detector_unittest.cc",
@@ -649,11 +648,9 @@ if (rtc_include_tests) {
       "quality_scaling_tests.cc",
       "quality_threshold_unittest.cc",
       "receive_statistics_proxy2_unittest.cc",
-      "receive_statistics_proxy_unittest.cc",
       "report_block_stats_unittest.cc",
       "rtp_video_stream_receiver2_unittest.cc",
       "rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc",
-      "rtp_video_stream_receiver_unittest.cc",
       "send_delay_stats_unittest.cc",
       "send_statistics_proxy_unittest.cc",
       "stats_counter_unittest.cc",
@@ -668,7 +665,6 @@ if (rtc_include_tests) {
     deps = [
       ":frame_cadence_adapter",
       ":video",
-      ":video_legacy",
       ":video_mocks",
       ":video_stream_decoder_impl",
       ":video_stream_encoder_impl",
@@ -786,5 +782,38 @@ if (rtc_include_tests) {
     if (!build_with_mozilla) {
       deps += [ "../media:rtc_media_base" ]
     }
+  }
+  rtc_library("video_legacy_tests") {
+    testonly = true
+    sources = [
+      "call_stats_unittest.cc",
+      "receive_statistics_proxy_unittest.cc",
+      "rtp_video_stream_receiver_unittest.cc",
+    ]
+    deps = [
+      ":video_legacy",
+      "../api:scoped_refptr",
+      "../api/video:video_frame",
+      "../api/video:video_frame_type",
+      "../api/video:video_rtp_headers",
+      "../call:mock_rtp_interfaces",
+      "../common_video",
+      "../media:rtc_media_base",
+      "../modules/rtp_rtcp",
+      "../modules/rtp_rtcp:rtp_rtcp_format",
+      "../modules/utility",
+      "../modules/video_coding",
+      "../modules/video_coding:video_codec_interface",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base/task_utils:to_queued_task",
+      "../system_wrappers",
+      "../system_wrappers:field_trial",
+      "../system_wrappers:metrics",
+      "../test:field_trial",
+      "../test:mock_frame_transformer",
+      "../test:mock_transport",
+      "../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }
