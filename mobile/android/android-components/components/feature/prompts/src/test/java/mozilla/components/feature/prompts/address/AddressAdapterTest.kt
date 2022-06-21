@@ -1,3 +1,6 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.feature.prompts.address
 
@@ -56,19 +59,21 @@ class AddressAdapterTest {
     @Test
     fun `WHEN an address is bound to the adapter THEN set the address display name`() {
         val view =
-            LayoutInflater.from(testContext).inflate(R.layout.mozac_feature_prompts_address_list_item, null)
+            LayoutInflater.from(testContext)
+                .inflate(R.layout.mozac_feature_prompts_address_list_item, null)
         val addressName: TextView = view.findViewById(R.id.address_name)
 
-        AddressViewHolder(view) {}.bind(address)
+        AddressViewHolder(view, onAddressSelected = {}).bind(address)
 
-        assertEquals(address.displayFormat(), addressName.text)
+        assertEquals(address.addressLabel, addressName.text)
     }
 
     @Test
     fun `WHEN an address item is clicked THEN call the onAddressSelected callback`() {
         var addressSelected = false
         val view =
-            LayoutInflater.from(testContext).inflate(R.layout.mozac_feature_prompts_address_list_item, null)
+            LayoutInflater.from(testContext)
+                .inflate(R.layout.mozac_feature_prompts_address_list_item, null)
         val onAddressSelect: (Address) -> Unit = { addressSelected = true }
 
         AddressViewHolder(view, onAddressSelect).bind(address)

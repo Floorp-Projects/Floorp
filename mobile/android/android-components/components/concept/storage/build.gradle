@@ -29,6 +29,7 @@ dependencies {
     api Dependencies.kotlin_coroutines
 
     implementation project(':support-ktx')
+    implementation Dependencies.androidx_annotation
 
     testImplementation project(':support-test')
     testImplementation Dependencies.testing_junit

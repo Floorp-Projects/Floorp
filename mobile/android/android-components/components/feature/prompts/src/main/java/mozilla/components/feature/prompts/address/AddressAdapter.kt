@@ -59,16 +59,10 @@ internal class AddressViewHolder(
 
     fun bind(address: Address) {
         this.address = address
-        itemView.findViewById<TextView>(R.id.address_name)?.text = address.displayFormat()
+        itemView.findViewById<TextView>(R.id.address_name)?.text = address.addressLabel
     }
 
     override fun onClick(v: View?) {
         onAddressSelected(address)
     }
 }
-
-/**
- * Format the address details to be displayed to the user.
- */
-fun Address.displayFormat(): String =
-    "${this.streetAddress}, ${this.addressLevel2}, ${this.addressLevel1}, ${this.postalCode}"

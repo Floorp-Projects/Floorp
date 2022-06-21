@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.storage
 
+import mozilla.components.concept.storage.Address.Companion.toOneLineAddress
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -42,6 +43,62 @@ class AddressTest {
         val fullName = address.fullName
 
         assertEquals(address.familyName, fullName)
+    }
+
+    @Test
+    fun `WHEN all address properties are present THEN full address present in label`() {
+        val address = generateAddress()
+        val expected =
+            "${address.streetAddress}, ${address.addressLevel3}, ${address.addressLevel2}, " +
+                "${address.organization}, ${address.addressLevel1}, ${address.country}, " +
+                "${address.postalCode}, ${address.tel}, ${address.email}"
+
+        assertEquals(expected, address.addressLabel)
+    }
+
+    @Test
+    fun `WHEN any address properties are missing THEN label only includes only properties that are available`() {
+        val address = generateAddress(
+            addressLevel3 = "",
+            organization = "",
+            email = "",
+        )
+        val expected =
+            "${address.streetAddress}, ${address.addressLevel2}, ${address.addressLevel1}, " +
+                "${address.country}, ${address.postalCode}, ${address.tel}"
+
+        assertEquals(expected, address.addressLabel)
+    }
+
+    @Test
+    fun `WHEN no address properties are present THEN label is the empty string`() {
+        val address = generateAddress(
+            givenName = "",
+            additionalName = "",
+            familyName = "",
+            organization = "",
+            streetAddress = "",
+            addressLevel3 = "",
+            addressLevel2 = "",
+            addressLevel1 = "",
+            postalCode = "",
+            country = "",
+            tel = "",
+            email = ""
+        )
+
+        assertEquals("", address.addressLabel)
+    }
+
+    @Test
+    fun `GIVEN multiline street address WHEN one line address is called THEN an one line address is returned`() {
+        val streetAddress = """
+            line1
+            line2
+            line3
+        """.trimIndent()
+
+        assertEquals("line1 line2 line3", streetAddress.toOneLineAddress())
     }
 
     private fun generateAddress(
