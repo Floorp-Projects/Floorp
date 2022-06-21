@@ -134,7 +134,6 @@ impl WrSpaceAndClipChain {
 #[repr(C)]
 pub enum WrStackingContextClip {
     None,
-    ClipId(WrClipId),
     ClipChain(u64),
 }
 
@@ -143,7 +142,6 @@ impl WrStackingContextClip {
         match *self {
             WrStackingContextClip::None => None,
             WrStackingContextClip::ClipChain(id) => Some(clip_chain_id_to_webrender(id, pipeline_id)),
-            WrStackingContextClip::ClipId(id) => Some(id.to_webrender(pipeline_id)),
         }
     }
 }
