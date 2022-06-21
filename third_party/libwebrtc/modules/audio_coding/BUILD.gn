@@ -993,7 +993,6 @@ rtc_library("neteq") {
   deps = [
     ":audio_coding_module_typedefs",
     ":webrtc_cng",
-    "..:module_api",
     "..:module_api_public",
     "../../api:array_view",
     "../../api:rtp_headers",
@@ -1440,7 +1439,6 @@ if (rtc_include_tests) {
 
     deps = audio_coding_deps + [
              "../../api:scoped_refptr",
-             "..:module_api",
              ":audio_coding",
              "../../api/audio_codecs:audio_codecs_api",
              "../../api/audio_codecs:builtin_audio_decoder_factory",
