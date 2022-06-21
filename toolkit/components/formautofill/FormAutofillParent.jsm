@@ -52,7 +52,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
+XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,

@@ -51,7 +51,9 @@ XPCOMUtils.defineLazyGetter(lazy, "reauthPasswordPromptMessage", () => {
   );
 });
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
+XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+);
 
 const { FIELD_STATES } = FormAutofillUtils;
 

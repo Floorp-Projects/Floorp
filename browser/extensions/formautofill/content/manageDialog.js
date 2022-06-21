@@ -55,7 +55,9 @@ XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
 });
 
 this.log = null;
-FormAutofill.defineLazyLogGetter(this, "manageAddresses");
+XPCOMUtils.defineLazyGetter(this, "log", () =>
+  FormAutofill.defineLogGetter(this, "manageAddresses")
+);
 
 class ManageRecords {
   constructor(subStorageName, elements) {

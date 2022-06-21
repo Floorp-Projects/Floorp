@@ -9,9 +9,6 @@ var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -24,8 +21,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "insecureWarningEnabled",
   "security.insecure_field_warning.contextual.enabled"
 );
-
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
 
 class ProfileAutoCompleteResult {
   constructor(
