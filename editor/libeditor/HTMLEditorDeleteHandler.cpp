@@ -4786,42 +4786,41 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   }
 
   EditorDOMPoint pointToInsert(aPointToInsert);
+  EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoTrackDOMPoint tackPointToInsert(RangeUpdaterRef(), &pointToInsert);
 
-    AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
-    rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eMergeBlockContents, aEditingHost);
-    Result<EditorDOMPoint, nsresult> splitResult =
-        rangesToWrapTheLine
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
-    if (MOZ_UNLIKELY(splitResult.isErr())) {
-      NS_WARNING(
-          "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
-          "failed");
-      return MoveNodeResult(splitResult.unwrapErr());
-    }
-    if (AllowsTransactionsToChangeSelection() &&
-        splitResult.inspect().IsSet()) {
-      nsresult rv = CollapseSelectionTo(splitResult.inspect());
+    {
+      AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
+      rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+          EditSubAction::eMergeBlockContents, aEditingHost);
+      Result<EditorDOMPoint, nsresult> splitResult =
+          rangesToWrapTheLine
+              .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+                  *this);
+      if (MOZ_UNLIKELY(splitResult.isErr())) {
+        NS_WARNING(
+            "AutoRangeArray::"
+            "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries()"
+            " failed");
+        return MoveNodeResult(splitResult.unwrapErr());
+      }
+      if (splitResult.inspect().IsSet()) {
+        pointToPutCaret = splitResult.unwrap();
+      }
+      nsresult rv = rangesToWrapTheLine.CollectEditTargetNodes(
+          *this, arrayOfContents, EditSubAction::eMergeBlockContents,
+          AutoRangeArray::CollectNonEditableNodes::Yes);
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        NS_WARNING(
+            "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
+            "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
         return MoveNodeResult(rv);
       }
     }
-    nsresult rv = rangesToWrapTheLine.CollectEditTargetNodes(
-        *this, arrayOfContents, EditSubAction::eMergeBlockContents,
-        AutoRangeArray::CollectNonEditableNodes::Yes);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-          "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
-      return MoveNodeResult(rv);
-    }
-    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+
+    Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
         MaybeSplitElementsAtEveryBRElement(arrayOfContents,
                                            EditSubAction::eMergeBlockContents);
     if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
@@ -4830,18 +4829,23 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
           "eMergeBlockContents) failed");
       return MoveNodeResult(splitAtBRElementsResult.inspectErr());
     }
-    if (AllowsTransactionsToChangeSelection() &&
-        splitAtBRElementsResult.inspect().IsSet()) {
-      nsresult rv = CollapseSelectionTo(splitAtBRElementsResult.inspect());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return MoveNodeResult(rv);
-      }
+    if (splitAtBRElementsResult.inspect().IsSet()) {
+      pointToPutCaret = splitAtBRElementsResult.unwrap();
     }
   }
+
   if (!pointToInsert.IsSetAndValid()) {
     return MoveNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return MoveNodeResult(rv);
+    }
+  }
+
   if (arrayOfContents.IsEmpty()) {
     return MoveNodeIgnored(std::move(pointToInsert));
   }
