@@ -182,6 +182,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   rtc::scoped_refptr<StreamCollectionInterface> remote_streams();
 
  private:
+  class RemoteDescriptionOperation;
   class ImplicitCreateSessionDescriptionObserver;
 
   friend class ImplicitCreateSessionDescriptionObserver;
@@ -259,8 +260,11 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       std::unique_ptr<SessionDescriptionInterface> desc,
       rtc::scoped_refptr<SetLocalDescriptionObserverInterface> observer);
   void DoSetRemoteDescription(
-      std::unique_ptr<SessionDescriptionInterface> desc,
-      rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer);
+      std::unique_ptr<RemoteDescriptionOperation> operation);
+
+  // Called after a DoSetRemoteDescription operation completes.
+  void SetRemoteDescriptionPostProcess(bool was_answer)
+      RTC_RUN_ON(signaling_thread());
 
   // Update the state, signaling if necessary.
   void ChangeSignalingState(
