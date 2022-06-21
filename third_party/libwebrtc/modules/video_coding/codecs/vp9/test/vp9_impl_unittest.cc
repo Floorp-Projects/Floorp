@@ -749,8 +749,9 @@ TEST_F(TestVp9Impl, DISABLED_DisableEnableBaseLayerTriggersKeyFrame) {
     EXPECT_EQ(encoded_frame[0]._frameType, expected_type);
   }
 }
-
-TEST(Vp9ImplTest, DisableEnableBaseLayerWithSvcControllerTriggersKeyFrame) {
+// TODO(bugs.webrtc.org/13442) Enable once a forward fix has landed in WebRTC.
+TEST(Vp9ImplTest,
+     DISABLED_DisableEnableBaseLayerWithSvcControllerTriggersKeyFrame) {
   // Configure encoder to produce N spatial layers. Encode frames for all
   // layers. Then disable all but the last layer. Then reenable all back again.
   const size_t num_spatial_layers = 3;
