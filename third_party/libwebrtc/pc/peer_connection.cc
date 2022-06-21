@@ -297,7 +297,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     bool disable_ipv6_on_wifi;
     int max_ipv6_networks;
     bool disable_link_local_networks;
-    bool enable_rtp_data_channel;
     absl::optional<int> screencast_min_bitrate;
     absl::optional<bool> combined_audio_video_bwe;
     absl::optional<bool> enable_dtls_srtp;
