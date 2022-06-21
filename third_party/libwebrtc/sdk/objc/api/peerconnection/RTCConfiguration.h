@@ -63,8 +63,15 @@ typedef NS_ENUM(NSInteger, RTCEncryptionKeyType) {
 
 /** Represents the chosen SDP semantics for the RTCPeerConnection. */
 typedef NS_ENUM(NSInteger, RTCSdpSemantics) {
+  // TODO(https://crbug.com/webrtc/13528): Remove support for Plan B.
   RTCSdpSemanticsPlanB,
   RTCSdpSemanticsUnifiedPlan,
+  // The default sdpSemantics value is about to change to Unified Plan. During
+  // a short transition period, NotSpecified is used to ensure clients that
+  // don't set sdpSemantics are aware of the change by CHECK-crashing.
+  // TODO(https://crbug.com/webrtc/11121): When the default has changed to
+  // UnifiedPlan, delete NotSpecified.
+  RTCSdpSemanticsNotSpecified,
 };
 
 NS_ASSUME_NONNULL_BEGIN
@@ -161,9 +168,10 @@ RTC_OBJC_EXPORT
  */
 @property(nonatomic, copy, nullable) NSNumber *iceCheckMinInterval;
 
-/** Configure the SDP semantics used by this PeerConnection. Note that the
- *  WebRTC 1.0 specification requires UnifiedPlan semantics. The
- *  RTCRtpTransceiver API is only available with UnifiedPlan semantics.
+/** Configure the SDP semantics used by this PeerConnection. The WebRTC 1.0
+ *  specification requires RTCSdpSemanticsUnifiedPlan semantics and the
+ *  RtpTransceiver API is only available in Unified Plan. RTCSdpSemanticsPlanB
+ *  is being deprecated and will be removed at a future date.
  *
  *  PlanB will cause RTCPeerConnection to create offers and answers with at
  *  most one audio and one video m= section with multiple RTCRtpSenders and
@@ -174,14 +182,18 @@ RTC_OBJC_EXPORT
  *  UnifiedPlan will cause RTCPeerConnection to create offers and answers with
  *  multiple m= sections where each m= section maps to one RTCRtpSender and one
  *  RTCRtpReceiver (an RTCRtpTransceiver), either both audio or both
- *  video. This will also cause RTCPeerConnection) to ignore all but the first a=ssrc
- *  lines that form a Plan B stream.
+ *  video. This will also cause RTCPeerConnection) to ignore all but the first
+ *  a=ssrc lines that form a Plan B stream.
  *
- *  For users who wish to send multiple audio/video streams and need to stay
- *  interoperable with legacy WebRTC implementations or use legacy APIs,
- *  specify PlanB.
+ *  For users who have to interwork with legacy WebRTC implementations, it
+ *  is possible to specify PlanB until the code is finally removed
+ *  (https://crbug.com/webrtc/13528).
  *
- *  For all other users, specify UnifiedPlan.
+ *  The default SdpSemantics value is about to change to UnifiedPlan. During a
+ *  short transition period, NotSpecified is used to ensure clients that don't
+ *  set SdpSemantics are aware of the change by CHECK-crashing.
+ *  TODO(https://crbug.com/webrtc/11121): When the default has changed to
+ *  UnifiedPlan, delete NotSpecified.
  */
 @property(nonatomic, assign) RTCSdpSemantics sdpSemantics;
 
