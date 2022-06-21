@@ -29,7 +29,6 @@
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
@@ -89,14 +88,15 @@ class MessageWithFunctor final : public MessageLikeTask {
   explicit MessageWithFunctor(FunctorT&& functor)
       : functor_(std::forward<FunctorT>(functor)) {}
 
+  MessageWithFunctor(const MessageWithFunctor&) = delete;
+  MessageWithFunctor& operator=(const MessageWithFunctor&) = delete;
+
   void Run() override { functor_(); }
 
  private:
   ~MessageWithFunctor() override {}
 
   typename std::remove_reference<FunctorT>::type functor_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(MessageWithFunctor);
 };
 
 }  // namespace rtc_thread_internal
@@ -152,6 +152,9 @@ class RTC_EXPORT ThreadManager {
   ThreadManager();
   ~ThreadManager();
 
+  ThreadManager(const ThreadManager&) = delete;
+  ThreadManager& operator=(const ThreadManager&) = delete;
+
   void SetCurrentThreadInternal(Thread* thread);
   void AddInternal(Thread* message_queue);
   void RemoveInternal(Thread* message_queue);
@@ -186,8 +189,6 @@ class RTC_EXPORT ThreadManager {
 
   // The thread to potentially autowrap.
   const PlatformThreadRef main_thread_ref_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ThreadManager);
 };
 
 // WARNING! SUBCLASSES MUST CALL Stop() IN THEIR DESTRUCTORS!  See ~Thread().
@@ -220,6 +221,9 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // between the destructor modifying the vtable, and the ThreadManager
   // calling Clear on the object from a different thread.
   ~Thread() override;
+
+  Thread(const Thread&) = delete;
+  Thread& operator=(const Thread&) = delete;
 
   static std::unique_ptr<Thread> CreateWithSocketServer();
   static std::unique_ptr<Thread> Create();
@@ -685,8 +689,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   friend class ThreadManager;
 
   int dispatch_warning_ms_ RTC_GUARDED_BY(this) = kSlowDispatchLoggingThreshold;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
 // AutoThread automatically installs itself at construction
@@ -700,8 +702,8 @@ class AutoThread : public Thread {
   AutoThread();
   ~AutoThread() override;
 
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(AutoThread);
+  AutoThread(const AutoThread&) = delete;
+  AutoThread& operator=(const AutoThread&) = delete;
 };
 
 // AutoSocketServerThread automatically installs itself at
@@ -714,10 +716,11 @@ class AutoSocketServerThread : public Thread {
   explicit AutoSocketServerThread(SocketServer* ss);
   ~AutoSocketServerThread() override;
 
+  AutoSocketServerThread(const AutoSocketServerThread&) = delete;
+  AutoSocketServerThread& operator=(const AutoSocketServerThread&) = delete;
+
  private:
   rtc::Thread* old_thread_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(AutoSocketServerThread);
 };
 }  // namespace rtc
 

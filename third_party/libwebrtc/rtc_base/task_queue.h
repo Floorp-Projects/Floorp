@@ -20,7 +20,6 @@
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
@@ -83,6 +82,9 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueue {
                                      webrtc::TaskQueueDeleter> task_queue);
   ~TaskQueue();
 
+  TaskQueue(const TaskQueue&) = delete;
+  TaskQueue& operator=(const TaskQueue&) = delete;
+
   // Used for DCHECKing the current queue.
   bool IsCurrent() const;
 
@@ -125,8 +127,6 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueue {
 
  private:
   webrtc::TaskQueueBase* const impl_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(TaskQueue);
 };
 
 }  // namespace rtc

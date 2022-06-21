@@ -27,8 +27,8 @@ class A {
  public:
   A() {}
 
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(A);
+  A(const A&) = delete;
+  A& operator=(const A&) = delete;
 };
 
 class RefClass : public RefCountInterface {

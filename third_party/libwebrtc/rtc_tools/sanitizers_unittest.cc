@@ -15,6 +15,7 @@
 #include <random>
 
 #include "rtc_base/checks.h"
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"

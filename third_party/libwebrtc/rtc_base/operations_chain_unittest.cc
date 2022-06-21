@@ -219,6 +219,9 @@ class SignalOnDestruction final {
     }
   }
 
+  SignalOnDestruction(const SignalOnDestruction&) = delete;
+  SignalOnDestruction& operator=(const SignalOnDestruction&) = delete;
+
   // Move operators.
   SignalOnDestruction(SignalOnDestruction&& other)
       : SignalOnDestruction(other.destructor_called_) {
@@ -232,8 +235,6 @@ class SignalOnDestruction final {
 
  private:
   bool* destructor_called_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(SignalOnDestruction);
 };
 
 TEST(OperationsChainTest, SynchronousOperation) {

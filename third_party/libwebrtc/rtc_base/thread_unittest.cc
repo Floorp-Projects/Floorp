@@ -204,6 +204,10 @@ struct FunctorD {
  public:
   explicit FunctorD(AtomicBool* flag) : flag_(flag) {}
   FunctorD(FunctorD&&) = default;
+
+  FunctorD(const FunctorD&) = delete;
+  FunctorD& operator=(const FunctorD&) = delete;
+
   FunctorD& operator=(FunctorD&&) = default;
   void operator()() {
     if (flag_)
@@ -212,7 +216,6 @@ struct FunctorD {
 
  private:
   AtomicBool* flag_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(FunctorD);
 };
 
 // See: https://code.google.com/p/webrtc/issues/detail?id=2409
