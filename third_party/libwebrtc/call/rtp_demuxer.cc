@@ -41,6 +41,11 @@ size_t RemoveFromMapByValue(Map* map, const Value& value) {
 
 }  // namespace
 
+RtpDemuxerCriteria::RtpDemuxerCriteria(
+    absl::string_view mid,
+    absl::string_view rsid /*= absl::string_view()*/)
+    : mid(mid), rsid(rsid) {}
+
 RtpDemuxerCriteria::RtpDemuxerCriteria() = default;
 RtpDemuxerCriteria::~RtpDemuxerCriteria() = default;
 

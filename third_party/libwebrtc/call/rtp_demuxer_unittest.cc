@@ -61,23 +61,19 @@ class RtpDemuxerTest : public ::testing::Test {
   }
 
   bool AddSinkOnlyRsid(const std::string& rsid, RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.rsid = rsid;
+    RtpDemuxerCriteria criteria(absl::string_view(), rsid);
     return AddSink(criteria, sink);
   }
 
   bool AddSinkOnlyMid(const std::string& mid, RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.mid = mid;
+    RtpDemuxerCriteria criteria(mid);
     return AddSink(criteria, sink);
   }
 
   bool AddSinkBothMidRsid(const std::string& mid,
                           const std::string& rsid,
                           RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.mid = mid;
-    criteria.rsid = rsid;
+    RtpDemuxerCriteria criteria(mid, rsid);
     return AddSink(criteria, sink);
   }
 
