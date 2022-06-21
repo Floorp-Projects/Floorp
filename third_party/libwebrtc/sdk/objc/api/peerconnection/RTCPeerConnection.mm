@@ -239,7 +239,10 @@ void PeerConnectionDelegateAdapter::OnIceCandidateError(const std::string &addre
                                                                     url:url
                                                               errorCode:error_code
                                                               errorText:error_text];
-  [peer_connection.delegate peerConnection:peer_connection didFailToGatherIceCandidate:event];
+  if ([peer_connection.delegate respondsToSelector:@selector(peerConnection:
+                                                             didFailToGatherIceCandidate:)]) {
+    [peer_connection.delegate peerConnection:peer_connection didFailToGatherIceCandidate:event];
+  }
 }
 
 void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
