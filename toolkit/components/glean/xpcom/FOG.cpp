@@ -10,6 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/glean/bindings/Common.h"
+#include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/MozPromise.h"
@@ -333,6 +334,18 @@ FOG::TestTriggerMetrics(uint32_t aProcessType, JSContext* aCx,
   glean::TestTriggerMetrics(aProcessType, promise);
 
   promise.forget(aOutPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FOG::TestRegisterRuntimeMetric(
+    const nsACString& aType, const nsACString& aCategory,
+    const nsACString& aName, const nsTArray<nsCString>& aPings,
+    const nsACString& aLifetime, const bool aDisabled,
+    const nsACString& aExtraArgs, uint32_t* aMetricIdOut) {
+  *aMetricIdOut = 0;
+  *aMetricIdOut = glean::jog::jog_test_register_metric(
+      &aType, &aCategory, &aName, &aPings, &aLifetime, aDisabled, &aExtraArgs);
   return NS_OK;
 }
 
