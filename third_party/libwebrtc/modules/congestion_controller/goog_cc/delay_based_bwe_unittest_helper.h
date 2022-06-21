@@ -113,9 +113,10 @@ class StreamGenerator {
 };
 }  // namespace test
 
-class DelayBasedBweTest : public ::testing::TestWithParam<std::string> {
+class DelayBasedBweTest : public ::testing::Test {
  public:
   DelayBasedBweTest();
+  explicit DelayBasedBweTest(const std::string& field_trial_string);
   ~DelayBasedBweTest() override;
 
  protected:

@@ -145,8 +145,11 @@ int64_t StreamGenerator::GenerateFrame(std::vector<PacketResult>* packets,
 }
 }  // namespace test
 
-DelayBasedBweTest::DelayBasedBweTest()
-    : field_trial(std::make_unique<test::ScopedFieldTrials>(GetParam())),
+DelayBasedBweTest::DelayBasedBweTest() : DelayBasedBweTest("") {}
+
+DelayBasedBweTest::DelayBasedBweTest(const std::string& field_trial_string)
+    : field_trial(
+          std::make_unique<test::ScopedFieldTrials>(field_trial_string)),
       clock_(100000000),
       acknowledged_bitrate_estimator_(
           AcknowledgedBitrateEstimatorInterface::Create(&field_trial_config_)),
