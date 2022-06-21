@@ -572,10 +572,16 @@ void BaseChannel::ChannelNotWritable_n() {
 }
 
 bool BaseChannel::SetPayloadTypeDemuxingEnabled_w(bool enabled) {
+  RTC_LOG_THREAD_BLOCK_COUNT();
+
   if (enabled == payload_type_demuxing_enabled_) {
     return true;
   }
+
   payload_type_demuxing_enabled_ = enabled;
+
+  bool config_changed = false;
+
   if (!enabled) {
     // TODO(crbug.com/11477): This will remove *all* unsignaled streams (those
     // without an explicitly signaled SSRC), which may include streams that
@@ -583,13 +589,24 @@ bool BaseChannel::SetPayloadTypeDemuxingEnabled_w(bool enabled) {
     // streams that were matched based on payload type alone, but currently
     // there is no straightforward way to identify those streams.
     media_channel()->ResetUnsignaledRecvStream();
-    demuxer_criteria_.payload_types().clear();
+    if (!demuxer_criteria_.payload_types().empty()) {
+      config_changed = true;
+      demuxer_criteria_.payload_types().clear();
+    }
   } else if (!payload_types_.empty()) {
-    // TODO(tommi): Instead of 'insert', should this simply overwrite the value
-    // of the criteria?
-    demuxer_criteria_.payload_types().insert(payload_types_.begin(),
-                                             payload_types_.end());
+    for (const auto& type : payload_types_) {
+      if (demuxer_criteria_.payload_types().insert(type).second) {
+        config_changed = true;
+      }
+    }
+  } else {
+    RTC_DCHECK(demuxer_criteria_.payload_types().empty());
   }
+
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
+
+  if (!config_changed)
+    return true;
 
   // Note: This synchronously hops to the network thread.
   return RegisterRtpDemuxerSink_w();
