@@ -110,11 +110,11 @@ Video::Iterator& Video::Iterator::operator++() {
 }
 
 Video::Iterator Video::begin() const {
-  return Iterator(this, 0);
+  return Iterator(rtc::scoped_refptr<const Video>(this), 0);
 }
 
 Video::Iterator Video::end() const {
-  return Iterator(this, number_of_frames());
+  return Iterator(rtc::scoped_refptr<const Video>(this), number_of_frames());
 }
 
 rtc::scoped_refptr<Video> OpenY4mFile(const std::string& file_name) {
