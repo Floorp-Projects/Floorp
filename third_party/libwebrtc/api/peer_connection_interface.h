@@ -805,23 +805,41 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
       const std::vector<std::string>& stream_ids) = 0;
 
-  // Remove an RtpSender from this PeerConnection.
-  // Returns true on success.
-  // TODO(steveanton): Replace with signature that returns RTCError.
-  virtual bool RemoveTrack(RtpSenderInterface* sender) = 0;
-
-  // Plan B semantics: Removes the RtpSender from this PeerConnection.
-  // Unified Plan semantics: Stop sending on the RtpSender and mark the
+  // Removes the connection between a MediaStreamTrack and the PeerConnection.
+  // Stops sending on the RtpSender and marks the
   // corresponding RtpTransceiver direction as no longer sending.
+  // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-removetrack
   //
   // Errors:
   // - INVALID_PARAMETER: `sender` is null or (Plan B only) the sender is not
   //       associated with this PeerConnection.
   // - INVALID_STATE: PeerConnection is closed.
+  //
+  // Plan B semantics: Removes the RtpSender from this PeerConnection.
+  //
   // TODO(bugs.webrtc.org/9534): Rename to RemoveTrack once the other signature
-  // is removed.
+  // is removed; remove default implementation once upstream is updated.
+  virtual RTCError RemoveTrackOrError(
+      rtc::scoped_refptr<RtpSenderInterface> sender) {
+    RTC_CHECK_NOTREACHED();
+    return RTCError();
+  }
+
+  // Legacy API for removing a track from the PeerConnection.
+  // Returns true on success.
+  // TODO(bugs.webrtc.org/9534): Replace with signature that returns RTCError.
+  ABSL_DEPRECATED("Use RemoveTrackOrError")
+  virtual bool RemoveTrack(RtpSenderInterface* sender) {
+    return RemoveTrackOrError(rtc::scoped_refptr<RtpSenderInterface>(sender))
+        .ok();
+  }
+
+  // Old name for the new API. Will be removed when clients are updated.
+  ABSL_DEPRECATED("Use RemoveTrackOrError")
   virtual RTCError RemoveTrackNew(
-      rtc::scoped_refptr<RtpSenderInterface> sender);
+      rtc::scoped_refptr<RtpSenderInterface> sender) {
+    return RemoveTrackOrError(sender);
+  }
 
   // AddTransceiver creates a new RtpTransceiver and adds it to the set of
   // transceivers. Adding a transceiver will cause future calls to CreateOffer

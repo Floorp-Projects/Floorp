@@ -50,7 +50,7 @@ class MockPeerConnectionInterface
               (override));
   MOCK_METHOD(bool, RemoveTrack, (RtpSenderInterface*), (override));
   MOCK_METHOD(RTCError,
-              RemoveTrackNew,
+              RemoveTrackOrError,
               (rtc::scoped_refptr<RtpSenderInterface>),
               (override));
   MOCK_METHOD(RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>>,
