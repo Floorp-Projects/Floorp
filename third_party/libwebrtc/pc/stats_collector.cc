@@ -887,7 +887,7 @@ StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
     if (channel) {
       stats.transport_names_by_mid[channel->content_name()] =
-          channel->transport_name();
+          std::string(channel->transport_name());
     }
   }
 

@@ -187,7 +187,7 @@ class MediaChannel {
   virtual void OnReadyToSend(bool ready) = 0;
   // Called when the network route used for sending packets changed.
   virtual void OnNetworkRouteChanged(
-      const std::string& transport_name,
+      absl::string_view transport_name,
       const rtc::NetworkRoute& network_route) = 0;
   // Creates a new outgoing media stream with SSRCs and CNAME as described
   // by sp.

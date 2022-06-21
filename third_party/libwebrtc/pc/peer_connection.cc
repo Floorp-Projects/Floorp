@@ -2666,8 +2666,8 @@ void PeerConnection::ReportTransportStats() {
       media_types_by_transport_name;
   for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
     if (transceiver->internal()->channel()) {
-      const std::string& transport_name =
-          transceiver->internal()->channel()->transport_name();
+      std::string transport_name(
+          transceiver->internal()->channel()->transport_name());
       media_types_by_transport_name[transport_name].insert(
           transceiver->media_type());
     }
@@ -2827,7 +2827,8 @@ bool PeerConnection::OnTransportChanged(
     if (dtls_transport) {
       signaling_thread()->PostTask(ToQueuedTask(
           signaling_thread_safety_.flag(),
-          [this, name = dtls_transport->internal()->transport_name()] {
+          [this,
+           name = std::string(dtls_transport->internal()->transport_name())] {
             RTC_DCHECK_RUN_ON(signaling_thread());
             sctp_transport_name_s_ = std::move(name);
           }));

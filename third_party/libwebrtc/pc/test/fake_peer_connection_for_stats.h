@@ -101,7 +101,7 @@ class VoiceChannelForTesting : public cricket::VoiceChannel {
         test_transport_name_(std::move(transport_name)) {}
 
  private:
-  const std::string& transport_name() const override {
+  absl::string_view transport_name() const override {
     return test_transport_name_;
   }
 
@@ -130,7 +130,7 @@ class VideoChannelForTesting : public cricket::VideoChannel {
         test_transport_name_(std::move(transport_name)) {}
 
  private:
-  const std::string& transport_name() const override {
+  absl::string_view transport_name() const override {
     return test_transport_name_;
   }
 
