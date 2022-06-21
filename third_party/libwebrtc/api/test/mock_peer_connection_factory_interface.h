@@ -23,7 +23,8 @@ class MockPeerConnectionFactoryInterface final
     : public rtc::RefCountedObject<webrtc::PeerConnectionFactoryInterface> {
  public:
   static rtc::scoped_refptr<MockPeerConnectionFactoryInterface> Create() {
-    return new MockPeerConnectionFactoryInterface();
+    return rtc::scoped_refptr<MockPeerConnectionFactoryInterface>(
+        new MockPeerConnectionFactoryInterface());
   }
 
   MOCK_METHOD(void, SetOptions, (const Options&), (override));
