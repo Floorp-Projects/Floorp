@@ -38,7 +38,8 @@ rtc::scoped_refptr<MediaStream> MediaStream::Create(const std::string& id) {
 MediaStream::MediaStream(const std::string& id) : id_(id) {}
 
 bool MediaStream::AddTrack(AudioTrackInterface* track) {
-  return AddTrack<AudioTrackVector, AudioTrackInterface>(&audio_tracks_, track);
+  return AddTrack<AudioTrackVector, AudioTrackInterface>(
+      &audio_tracks_, rtc::scoped_refptr<AudioTrackInterface>(track));
 }
 
 bool MediaStream::AddTrack(VideoTrackInterface* track) {
@@ -47,8 +48,7 @@ bool MediaStream::AddTrack(VideoTrackInterface* track) {
 }
 
 bool MediaStream::RemoveTrack(AudioTrackInterface* track) {
-  return RemoveTrack<AudioTrackVector>(
-      &audio_tracks_, rtc::scoped_refptr<AudioTrackInterface>(track));
+  return RemoveTrack<AudioTrackVector>(&audio_tracks_, track);
 }
 
 bool MediaStream::RemoveTrack(VideoTrackInterface* track) {
