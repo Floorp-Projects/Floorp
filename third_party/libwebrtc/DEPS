@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '707a3884d24d6702681fea4310904b4069c4b9e7',
+  'chromium_revision': '18d61d167349d0755df3583f3d8b3ee3129686ab',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,7 +23,7 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@0e6190bb089a8a4e7526e5256b6e2b66070cd4f7',
+    'https://chromium.googlesource.com/chromium/src/base@7caae1b5e3763ecaba0d26e534b22394eb8faf28',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@d2934323c16fb7da1bdbb4398d02e6db47924da1',
   'src/buildtools':
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@5a364356e215b350d743ff72e76f2b704a65ca55',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@0367bb1768a6bf5f08ec2fb96d7e78fd2f9fc342',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@3def6a024303b8487ea5f973b11fc49c9a0fe5be',
+    'https://chromium.googlesource.com/chromium/src/testing@ee36306ac28ec94fe3c86d642f0192b33766e8d8',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@39c66ea63623409c1469884f37f4cdbcbf83200b',
+    'https://chromium.googlesource.com/chromium/src/third_party@6b754d731db90c1b721410963c6416c7f69730e8',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@a95eedec4eda5bf009b1ef516f79c5c63868c56f',
+    'https://chromium.googlesource.com/chromium/src/tools@cafbb706ae53ed514191ea981b09dcf683725d23',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -384,7 +384,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': '72KhrVPMAimIlLbSf4qfoMjnvI2FmvCxSBB-rUtxn8UC',
+          'version': 'A2SRkmLGieck6AyFqq-ZI_WZV5i32fH-eIfxK5dytRIC',
       },
     ],
     'condition': 'checkout_android',
