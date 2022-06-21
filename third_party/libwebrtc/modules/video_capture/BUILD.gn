@@ -133,7 +133,6 @@ if (!build_with_chromium) {
         "../../test:test_main",
         "../../test:test_support",
         "../../test:video_test_common",
-        "../utility",
         "//testing/gtest",
         "//third_party/abseil-cpp/absl/memory",
       ]

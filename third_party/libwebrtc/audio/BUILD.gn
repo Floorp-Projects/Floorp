@@ -83,7 +83,6 @@ rtc_library("audio") {
     "../modules/pacing",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
-    "../modules/utility",
     "../rtc_base",
     "../rtc_base:audio_format_to_string",
     "../rtc_base:checks",
