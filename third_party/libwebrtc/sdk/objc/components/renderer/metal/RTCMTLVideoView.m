@@ -139,7 +139,8 @@
   NSAssert(view == self.metalView, @"Receiving draw callbacks from foreign instance.");
   RTC_OBJC_TYPE(RTCVideoFrame) *videoFrame = self.videoFrame;
   // Skip rendering if we've already rendered this frame.
-  if (!videoFrame || videoFrame.timeStampNs == self.lastFrameTimeNs) {
+  if (!videoFrame || videoFrame.width <= 0 || videoFrame.height <= 0 ||
+      videoFrame.timeStampNs == self.lastFrameTimeNs) {
     return;
   }
 
