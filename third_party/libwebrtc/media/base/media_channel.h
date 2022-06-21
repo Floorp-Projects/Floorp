@@ -260,6 +260,10 @@ class MediaChannel {
   void SetExtmapAllowMixed(bool extmap_allow_mixed);
   bool ExtmapAllowMixed() const;
 
+  // Returns `true` if a non-null NetworkInterface pointer is held.
+  // Must be called on the network thread.
+  bool HasNetworkInterface() const;
+
   virtual webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const = 0;
   virtual webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
