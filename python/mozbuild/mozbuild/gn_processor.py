@@ -656,10 +656,12 @@ def main():
             target_cpus = ["x64"]
             if target_os in ("android", "linux", "mac", "win"):
                 target_cpus.append("arm64")
-            if target_os == "android":
+            if target_os in ("android", "linux"):
                 target_cpus.append("arm")
             if target_os in ("android", "linux", "win"):
                 target_cpus.append("x86")
+            if target_os == "linux":
+                target_cpus.append("ppc64")
             for target_cpu in target_cpus:
                 vars = {
                     "host_cpu": "x64",
