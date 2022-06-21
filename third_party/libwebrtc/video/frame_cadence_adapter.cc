@@ -367,6 +367,11 @@ bool ZeroHertzAdapterMode::ProcessKeyFrameRequest() {
     return true;
   }
 
+  // The next frame encoded will be a key frame. Reset quality convergence so we
+  // don't get idle repeats shortly after, because key frames need a lot of
+  // refinement frames.
+  ResetQualityConvergenceInfo();
+
   // If we're not repeating, or we're repeating with non-idle duration, we will
   // very soon send out a frame and don't need a refresh frame.
   if (!scheduled_repeat_.has_value() || !scheduled_repeat_->idle) {
@@ -399,7 +404,12 @@ bool ZeroHertzAdapterMode::ProcessKeyFrameRequest() {
 
 // RTC_RUN_ON(&sequence_checker_)
 bool ZeroHertzAdapterMode::HasQualityConverged() const {
+  // 1. Define ourselves as unconverged with no spatial layers configured. This
+  // is to keep short repeating until the layer configuration comes.
+  // 2. Unset layers implicitly imply that they're converged to support
+  // disabling layers when they're not needed.
   const bool quality_converged =
+      !layer_trackers_.empty() &&
       absl::c_all_of(layer_trackers_, [](const SpatialLayerTracker& tracker) {
         return tracker.quality_converged.value_or(true);
       });
