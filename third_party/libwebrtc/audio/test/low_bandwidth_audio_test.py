@@ -15,6 +15,7 @@ output files will be performed.
 
 import argparse
 import collections
+import json
 import logging
 import os
 import re
@@ -62,6 +63,10 @@ def _ParseArgs():
       '--isolated-script-test-perf-output',
       default=None,
       help='Path to store perf results in histogram proto format.')
+  parser.add_argument(
+      '--isolated-script-test-output',
+      default=None,
+      help='Path to output an empty JSON file which Chromium infra requires.')
   parser.add_argument('--extra-test-args',
                       default=[],
                       action='append',
@@ -262,7 +267,6 @@ def _ConfigurePythonPath(args):
 
 
 def main():
-  # pylint: disable=W0101
   logging.basicConfig(level=logging.INFO)
   logging.info('Invoked with %s', str(sys.argv))
 
@@ -353,6 +357,10 @@ def main():
   if args.isolated_script_test_perf_output:
     with open(args.isolated_script_test_perf_output, 'wb') as f:
       f.write(histograms.AsProto().SerializeToString())
+
+  if args.isolated_script_test_output:
+    with open(args.isolated_script_test_output, 'w') as f:
+      json.dump({"version": 3}, f)
 
   return test_process.wait()
 
