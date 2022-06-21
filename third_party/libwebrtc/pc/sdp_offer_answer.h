@@ -236,6 +236,9 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       const std::map<std::string, const cricket::ContentGroup*>&
           bundle_groups_by_mid);
 
+  // Part of ApplyRemoteDescription steps specific to Unified Plan.
+  void ApplyRemoteDescriptionUpdateTransceiverState(SdpType sdp_type);
+
   // Part of ApplyRemoteDescription steps specific to plan b.
   void PlanBUpdateSendersAndReceivers(
       const cricket::ContentInfo* audio_content,
