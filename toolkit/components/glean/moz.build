@@ -52,17 +52,29 @@ EXPORTS.mozilla.glean.bindings += [
     "bindings/private/Uuid.h",
 ]
 
+EXPORTS.mozilla.glean.bindings.jog += [
+    "bindings/jog/JOG.h",
+]
+
 if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla.glean += [
         "!fog_ffi_generated.h",
     ]
 
+    EXPORTS.mozilla.glean.bindings.jog += [
+        "!jog_ffi_generated.h",
+    ]
+
     CbindgenHeader("fog_ffi_generated.h", inputs=["/toolkit/components/glean"])
+    CbindgenHeader(
+        "jog_ffi_generated.h", inputs=["/toolkit/components/glean/bindings/jog"]
+    )
 
 UNIFIED_SOURCES += [
     "bindings/Category.cpp",
     "bindings/Glean.cpp",
     "bindings/GleanPings.cpp",
+    "bindings/jog/JOG.cpp",
     "bindings/private/Boolean.cpp",
     "bindings/private/Common.cpp",
     "bindings/private/Counter.cpp",

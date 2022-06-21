@@ -71,6 +71,7 @@ gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 dom = { path = "../../../../dom/base/rust" }
 origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
+jog = { path = "../../../components/glean/bindings/jog" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
