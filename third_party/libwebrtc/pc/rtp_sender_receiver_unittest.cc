@@ -169,6 +169,10 @@ class RtpSenderReceiverTest
     local_stream_ = nullptr;
     video_track_ = nullptr;
     audio_track_ = nullptr;
+
+    channel_manager_->DestroyVoiceChannel(voice_channel_);
+    channel_manager_->DestroyVideoChannel(video_channel_);
+
     worker_thread_->Invoke<void>(RTC_FROM_HERE,
                                  [&]() { channel_manager_.reset(); });
   }
