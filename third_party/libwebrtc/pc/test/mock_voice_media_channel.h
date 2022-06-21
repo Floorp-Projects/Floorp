@@ -40,7 +40,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(void, OnReadyToSend, (bool ready), (override));
   MOCK_METHOD(void,
               OnNetworkRouteChanged,
-              (const std::string& transport_name,
+              (absl::string_view transport_name,
                const rtc::NetworkRoute& network_route),
               (override));
   MOCK_METHOD(bool, AddSendStream, (const StreamParams& sp), (override));

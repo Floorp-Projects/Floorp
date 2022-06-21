@@ -2284,14 +2284,15 @@ void WebRtcVoiceMediaChannel::OnPacketSent(const rtc::SentPacket& sent_packet) {
 }
 
 void WebRtcVoiceMediaChannel::OnNetworkRouteChanged(
-    const std::string& transport_name,
+    absl::string_view transport_name,
     const rtc::NetworkRoute& network_route) {
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
 
   call_->OnAudioTransportOverheadChanged(network_route.packet_overhead);
 
   worker_thread_->PostTask(ToQueuedTask(
-      task_safety_, [this, name = transport_name, route = network_route] {
+      task_safety_,
+      [this, name = std::string(transport_name), route = network_route] {
         RTC_DCHECK_RUN_ON(worker_thread_);
         call_->GetTransportControllerSend()->OnNetworkRouteChanged(name, route);
       }));

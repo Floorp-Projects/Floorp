@@ -232,8 +232,6 @@ bool BaseChannel::SetRtpTransport(webrtc::RtpTransportInternal* rtp_transport) {
 
   rtp_transport_ = rtp_transport;
   if (rtp_transport_) {
-    transport_name_ = rtp_transport_->transport_name();
-
     if (!ConnectToRtpTransport()) {
       RTC_LOG(LS_ERROR) << "Failed to connect to the new RtpTransport for "
                         << ToString() << ".";
@@ -369,7 +367,7 @@ void BaseChannel::OnNetworkRouteChanged(
   // use the same transport name and MediaChannel::OnNetworkRouteChanged cannot
   // work correctly. Intentionally leave it broken to simplify the code and
   // encourage the users to stop using non-muxing RTCP.
-  media_channel_->OnNetworkRouteChanged(transport_name_, new_route);
+  media_channel_->OnNetworkRouteChanged(transport_name(), new_route);
 }
 
 void BaseChannel::SetFirstPacketReceivedCallback(

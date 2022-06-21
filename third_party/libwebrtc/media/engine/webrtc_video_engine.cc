@@ -1864,11 +1864,12 @@ void WebRtcVideoChannel::OnReadyToSend(bool ready) {
 }
 
 void WebRtcVideoChannel::OnNetworkRouteChanged(
-    const std::string& transport_name,
+    absl::string_view transport_name,
     const rtc::NetworkRoute& network_route) {
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
   worker_thread_->PostTask(ToQueuedTask(
-      task_safety_, [this, name = transport_name, route = network_route] {
+      task_safety_,
+      [this, name = std::string(transport_name), route = network_route] {
         RTC_DCHECK_RUN_ON(&thread_checker_);
         webrtc::RtpTransportControllerSendInterface* transport =
             call_->GetTransportControllerSend();
