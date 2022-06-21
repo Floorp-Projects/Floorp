@@ -41,6 +41,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "sdk/android/generated_peerconnection_jni/CandidatePairChangeEvent_jni.h"
+#include "sdk/android/generated_peerconnection_jni/IceCandidateErrorEvent_jni.h"
 #include "sdk/android/generated_peerconnection_jni/PeerConnection_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/jni_helpers.h"
@@ -304,6 +305,19 @@ void PeerConnectionObserverJni::OnIceCandidate(
   JNIEnv* env = AttachCurrentThreadIfNeeded();
   Java_Observer_onIceCandidate(env, j_observer_global_,
                                NativeToJavaIceCandidate(env, *candidate));
+}
+
+void PeerConnectionObserverJni::OnIceCandidateError(
+    const std::string& address,
+    int port,
+    const std::string& url,
+    int error_code,
+    const std::string& error_text) {
+  JNIEnv* env = AttachCurrentThreadIfNeeded();
+  ScopedJavaLocalRef<jobject> event = Java_IceCandidateErrorEvent_Constructor(
+      env, NativeToJavaString(env, address), port, NativeToJavaString(env, url),
+      error_code, NativeToJavaString(env, error_text));
+  Java_Observer_onIceCandidateError(env, j_observer_global_, event);
 }
 
 void PeerConnectionObserverJni::OnIceCandidatesRemoved(

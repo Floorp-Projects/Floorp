@@ -46,6 +46,7 @@ import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
+import org.webrtc.IceCandidateErrorEvent;
 import org.webrtc.Logging;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
@@ -1211,6 +1212,13 @@ public class PeerConnectionClient {
     @Override
     public void onIceCandidate(final IceCandidate candidate) {
       executor.execute(() -> events.onIceCandidate(candidate));
+    }
+
+    @Override
+    public void onIceCandidateError(final IceCandidateErrorEvent event) {
+      Log.d(TAG,
+          "IceCandidateError address: " + event.address + ", port: " + event.port + ", url: "
+              + event.url + ", errorCode: " + event.errorCode + ", errorText: " + event.errorText);
     }
 
     @Override
