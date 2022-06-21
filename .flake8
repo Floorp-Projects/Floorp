@@ -17,7 +17,6 @@ exclude =
     netwerk/protocol/http/make_incoming_tables.py,
     python/devtools/migrate-l10n/migrate/main.py,
     python/l10n/fluent_migrations,
-    python/mozbuild/mozbuild/fork_interpose.py,
     security/manager/ssl/tests/unit,
     servo/components/style,
     testing/condprofile/condprof/android.py,

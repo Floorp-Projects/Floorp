@@ -4,7 +4,6 @@ black:
     exclude:
         - gfx/harfbuzz/src/meson.build
         - layout/style/ServoCSSPropList.mako.py
-        - python/mozbuild/mozbuild/fork_interpose.py
         - python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build
         - testing/mozharness/configs/test/test_malformed.py
         - testing/web-platform/tests
