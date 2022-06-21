@@ -55,14 +55,6 @@
     "label": "//net/dcsctp:dcsctp_unittests",
     "type": "console_test_launcher",
   },
-  "isac_fix_test": {
-    "label": "//modules/audio_coding:isac_fix_test",
-    "type": "console_test_launcher",
-    "args": [
-      "32000", "../../resources/speech_and_misc_wb.pcm",
-      "isac_speech_and_misc_wb.pcm",
-    ]
-  },
   "android_instrumentation_test_apk": {
     "label": "//sdk/android:android_instrumentation_test_apk",
     "type": "additional_compile_target",
