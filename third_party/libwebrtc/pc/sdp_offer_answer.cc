@@ -1584,8 +1584,11 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
   if (!error.ok()) {
     return error;
   }
+
+  const bool is_unified_plan = IsUnifiedPlan();
+
   // Transport and Media channels will be created only when offer is set.
-  if (IsUnifiedPlan()) {
+  if (is_unified_plan) {
     RTCError error = UpdateTransceiversAndDataChannels(
         cricket::CS_REMOTE, *remote_description(), local_description(),
         old_remote_description, bundle_groups_by_mid);
@@ -1674,7 +1677,7 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     data_channel_controller()->AllocateSctpSids(role);
   }
 
-  if (IsUnifiedPlan()) {
+  if (is_unified_plan) {
     std::vector<rtc::scoped_refptr<RtpTransceiverInterface>>
         now_receiving_transceivers;
     std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remove_list;
@@ -1786,10 +1789,6 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     }
   }
 
-  const cricket::ContentInfo* audio_content =
-      GetFirstAudioContent(remote_description()->description());
-  const cricket::ContentInfo* video_content =
-      GetFirstVideoContent(remote_description()->description());
   const cricket::AudioContentDescription* audio_desc =
       GetFirstAudioContentDescription(remote_description()->description());
   const cricket::VideoContentDescription* video_desc =
@@ -1803,59 +1802,10 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
     remote_peer_supports_msid_ = true;
   }
 
-  // We wait to signal new streams until we finish processing the description,
-  // since only at that point will new streams have all their tracks.
-  rtc::scoped_refptr<StreamCollection> new_streams(StreamCollection::Create());
-
-  if (!IsUnifiedPlan()) {
-    // TODO(steveanton): When removing RTP senders/receivers in response to a
-    // rejected media section, there is some cleanup logic that expects the
-    // voice/ video channel to still be set. But in this method the voice/video
-    // channel would have been destroyed by the SetRemoteDescription caller
-    // above so the cleanup that relies on them fails to run. The RemoveSenders
-    // calls should be moved to right before the DestroyChannel calls to fix
-    // this.
-
-    // Find all audio rtp streams and create corresponding remote AudioTracks
-    // and MediaStreams.
-    if (audio_content) {
-      if (audio_content->rejected) {
-        RemoveSenders(cricket::MEDIA_TYPE_AUDIO);
-      } else {
-        bool default_audio_track_needed =
-            !remote_peer_supports_msid_ &&
-            RtpTransceiverDirectionHasSend(audio_desc->direction());
-        UpdateRemoteSendersList(GetActiveStreams(audio_desc),
-                                default_audio_track_needed, audio_desc->type(),
-                                new_streams);
-      }
-    }
-
-    // Find all video rtp streams and create corresponding remote VideoTracks
-    // and MediaStreams.
-    if (video_content) {
-      if (video_content->rejected) {
-        RemoveSenders(cricket::MEDIA_TYPE_VIDEO);
-      } else {
-        bool default_video_track_needed =
-            !remote_peer_supports_msid_ &&
-            RtpTransceiverDirectionHasSend(video_desc->direction());
-        UpdateRemoteSendersList(GetActiveStreams(video_desc),
-                                default_video_track_needed, video_desc->type(),
-                                new_streams);
-      }
-    }
-
-    // Iterate new_streams and notify the observer about new MediaStreams.
-    auto observer = pc_->Observer();
-    for (size_t i = 0; i < new_streams->count(); ++i) {
-      MediaStreamInterface* new_stream = new_streams->at(i);
-      pc_->stats()->AddStream(new_stream);
-      observer->OnAddStream(
-          rtc::scoped_refptr<MediaStreamInterface>(new_stream));
-    }
-
-    UpdateEndedRemoteMediaStreams();
+  if (!is_unified_plan) {
+    PlanBUpdateSendersAndReceivers(
+        GetFirstAudioContent(remote_description()->description()), audio_desc,
+        GetFirstVideoContent(remote_description()->description()), video_desc);
   }
 
   if (type == SdpType::kAnswer &&
@@ -1865,6 +1815,67 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
   }
 
   return RTCError::OK();
+}
+
+void SdpOfferAnswerHandler::PlanBUpdateSendersAndReceivers(
+    const cricket::ContentInfo* audio_content,
+    const cricket::AudioContentDescription* audio_desc,
+    const cricket::ContentInfo* video_content,
+    const cricket::VideoContentDescription* video_desc) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK(!IsUnifiedPlan());
+
+  // We wait to signal new streams until we finish processing the description,
+  // since only at that point will new streams have all their tracks.
+  rtc::scoped_refptr<StreamCollection> new_streams(StreamCollection::Create());
+
+  // TODO(steveanton): When removing RTP senders/receivers in response to a
+  // rejected media section, there is some cleanup logic that expects the
+  // voice/ video channel to still be set. But in this method the voice/video
+  // channel would have been destroyed by the SetRemoteDescription caller
+  // above so the cleanup that relies on them fails to run. The RemoveSenders
+  // calls should be moved to right before the DestroyChannel calls to fix
+  // this.
+
+  // Find all audio rtp streams and create corresponding remote AudioTracks
+  // and MediaStreams.
+  if (audio_content) {
+    if (audio_content->rejected) {
+      RemoveSenders(cricket::MEDIA_TYPE_AUDIO);
+    } else {
+      bool default_audio_track_needed =
+          !remote_peer_supports_msid_ &&
+          RtpTransceiverDirectionHasSend(audio_desc->direction());
+      UpdateRemoteSendersList(GetActiveStreams(audio_desc),
+                              default_audio_track_needed, audio_desc->type(),
+                              new_streams);
+    }
+  }
+
+  // Find all video rtp streams and create corresponding remote VideoTracks
+  // and MediaStreams.
+  if (video_content) {
+    if (video_content->rejected) {
+      RemoveSenders(cricket::MEDIA_TYPE_VIDEO);
+    } else {
+      bool default_video_track_needed =
+          !remote_peer_supports_msid_ &&
+          RtpTransceiverDirectionHasSend(video_desc->direction());
+      UpdateRemoteSendersList(GetActiveStreams(video_desc),
+                              default_video_track_needed, video_desc->type(),
+                              new_streams);
+    }
+  }
+
+  // Iterate new_streams and notify the observer about new MediaStreams.
+  auto observer = pc_->Observer();
+  for (size_t i = 0; i < new_streams->count(); ++i) {
+    MediaStreamInterface* new_stream = new_streams->at(i);
+    pc_->stats()->AddStream(new_stream);
+    observer->OnAddStream(rtc::scoped_refptr<MediaStreamInterface>(new_stream));
+  }
+
+  UpdateEndedRemoteMediaStreams();
 }
 
 void SdpOfferAnswerHandler::DoSetLocalDescription(
