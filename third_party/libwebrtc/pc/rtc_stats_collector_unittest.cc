@@ -2329,7 +2329,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   expected_video.total_packet_send_delay = 10.0;
   expected_video.quality_limitation_reason = "bandwidth";
   expected_video.quality_limitation_durations = std::map<std::string, double>{
-      std::pair<std::string, double>{"bandwidth", 300.0},
+      std::pair<std::string, double>{"bandwidth", 0.3},
   };
   expected_video.quality_limitation_resolution_changes = 56u;
   expected_video.frame_width = 200u;
