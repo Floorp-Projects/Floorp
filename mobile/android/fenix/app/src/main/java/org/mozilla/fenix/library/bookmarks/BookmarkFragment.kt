@@ -103,7 +103,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
-                showTabTray = ::showTabTray
+                showTabTray = ::showTabTray,
+                settings = requireComponents.settings,
             )
         )
 

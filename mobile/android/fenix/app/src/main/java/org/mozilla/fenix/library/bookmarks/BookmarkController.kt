@@ -25,6 +25,7 @@ import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
+import org.mozilla.fenix.utils.Settings
 
 /**
  * [BookmarkFragment] controller.
@@ -76,7 +77,8 @@ class DefaultBookmarkController(
     private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
-    private val showTabTray: () -> Unit
+    private val showTabTray: () -> Unit,
+    private val settings: Settings,
 ) : BookmarkController {
 
     private val resources: Resources = activity.resources
@@ -195,8 +197,12 @@ class DefaultBookmarkController(
     }
 
     override fun handleSearch() {
-        val directions =
+        val directions = if (settings.showUnifiedSearchFeature) {
+            BookmarkFragmentDirections.actionGlobalSearchDialog(sessionId = null)
+        } else {
             BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkSearchDialogFragment()
+        }
+
         navController.navigateSafe(R.id.bookmarkFragment, directions)
     }
 

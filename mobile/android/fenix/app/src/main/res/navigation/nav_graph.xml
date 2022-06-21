@@ -274,12 +274,6 @@
             app:popUpToInclusive="true" />
 
         <action
-            android:id="@+id/action_global_search_dialog"
-            app:destination="@id/searchDialogFragment"
-            app:popUpTo="@id/searchDialogFragment"
-            app:popUpToInclusive="true" />
-
-        <action
             android:id="@+id/action_historyFragment_to_syncedHistoryFragment"
             app:destination="@id/syncedHistoryFragment" />
     </fragment>

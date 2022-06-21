@@ -72,6 +72,7 @@ import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
@@ -268,6 +269,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine))
                 }
             }
+            R.id.bookmarkFragment -> {
+                requireComponents.core.store.state.search.searchEngines.firstOrNull { searchEngine ->
+                    searchEngine.id == BOOKMARKS_SEARCH_ENGINE_ID
+                }?.let { searchEngine ->
+                    store.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine))
+                }
+            }
             else -> {}
         }
 
@@ -300,7 +308,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     false
                 }
             }
-            R.id.historyFragment -> {
+            R.id.historyFragment, R.id.bookmarkFragment -> {
                 binding.searchWrapper.setOnTouchListener { _, _ ->
                     dismissAllowingStateLoss()
                     true
