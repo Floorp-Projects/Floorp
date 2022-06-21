@@ -76,6 +76,41 @@ EditActionResult& EditActionResult::operator|=(
  * mozilla::AutoRangeArray
  *****************************************************************************/
 
+template AutoRangeArray::AutoRangeArray(const EditorDOMRange& aRange);
+template AutoRangeArray::AutoRangeArray(const EditorRawDOMRange& aRange);
+template AutoRangeArray::AutoRangeArray(const EditorDOMPoint& aRange);
+template AutoRangeArray::AutoRangeArray(const EditorRawDOMPoint& aRange);
+
+AutoRangeArray::AutoRangeArray(const dom::Selection& aSelection) {
+  Initialize(aSelection);
+}
+
+template <typename PointType>
+AutoRangeArray::AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange) {
+  MOZ_ASSERT(aRange.IsPositionedAndValid());
+  RefPtr<nsRange> range = aRange.CreateRange(IgnoreErrors());
+  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+    return;
+  }
+  mRanges.AppendElement(std::move(range));
+}
+
+template <typename PT, typename CT>
+AutoRangeArray::AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint) {
+  MOZ_ASSERT(aPoint.IsSetAndValid());
+  RefPtr<nsRange> range = aPoint.CreateCollapsedRange(IgnoreErrors());
+  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+    return;
+  }
+  mRanges.AppendElement(std::move(range));
+}
+
+AutoRangeArray::~AutoRangeArray() {
+  if (mSavedRanges.isSome()) {
+    ClearSavedRanges();
+  }
+}
+
 // static
 bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
                                      const Element& aEditingHost) {
@@ -430,6 +465,26 @@ AutoRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
   }
 
   return changed;
+}
+
+bool AutoRangeArray::SaveAndTrackRanges(HTMLEditor& aHTMLEditor) {
+  if (mSavedRanges.isSome()) {
+    return false;
+  }
+  mSavedRanges.emplace(*this);
+  aHTMLEditor.RangeUpdaterRef().RegisterSelectionState(mSavedRanges.ref());
+  mTrackingHTMLEditor = &aHTMLEditor;
+  return true;
+}
+
+void AutoRangeArray::ClearSavedRanges() {
+  if (mSavedRanges.isNothing()) {
+    return;
+  }
+  OwningNonNull<HTMLEditor> htmlEditor(std::move(mTrackingHTMLEditor));
+  MOZ_ASSERT(!mTrackingHTMLEditor);
+  htmlEditor->RangeUpdaterRef().DropSelectionState(mSavedRanges.ref());
+  mSavedRanges.reset();
 }
 
 // static

@@ -2668,12 +2668,24 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   if (MOZ_UNLIKELY(!editingHost)) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
-  rv = FormatBlockContainerWithTransaction(aTagName, *editingHost);
+  AutoRangeArray selectionRanges(SelectionRef());
+  rv = FormatBlockContainerWithTransaction(selectionRanges, aTagName,
+                                           *editingHost);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
+    return rv;
+  }
+
+  if (selectionRanges.HasSavedRanges()) {
+    selectionRanges.RestoreFromSavedRanges();
+  }
+
+  rv = selectionRanges.ApplyTo(SelectionRef());
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
+    NS_WARNING("AutoRangeArray::ApplyTo(SelectionRef()) failed, but ignored");
     return rv;
   }
 

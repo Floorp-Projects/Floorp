@@ -1429,9 +1429,10 @@ class HTMLEditor final : public EditorBase,
    * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
    * command of `Document.execCommand()`.  This applies block style or removes
    * it.
-   * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
-   *       return NS_OK, editor may have been destroyed.
    *
+   * @param aSelectionRanges    The ranges which are cloned by selection or
+   *                            updated from it with doing something before
+   *                            calling this.
    * @param aBlockType  New block tag name.
    *                    If nsGkAtoms::normal or nsGkAtoms::_empty,
    *                    RemoveBlockContainerElementsWithTransaction() will be
@@ -1444,7 +1445,8 @@ class HTMLEditor final : public EditorBase,
    * @param aEditingHost        The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerWithTransaction(
-      nsAtom& aBlockType, const Element& aEditingHost);
+      AutoRangeArray& aSelectionRanges, nsAtom& aBlockType,
+      const Element& aEditingHost);
 
   /**
    * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if

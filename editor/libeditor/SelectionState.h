@@ -99,6 +99,9 @@ struct RangeItem final {
 
 class SelectionState final {
  public:
+  SelectionState() = default;
+  explicit SelectionState(const AutoRangeArray& aRanges);
+
   /**
    * Same as the API as dom::Selection
    */
@@ -126,6 +129,11 @@ class SelectionState final {
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   RestoreSelection(dom::Selection& aSelection);
+
+  /**
+   * Setting aRanges to have all ranges stored by this instance.
+   */
+  void ApplyTo(AutoRangeArray& aRanges);
 
   /**
    * HasOnlyCollapsedRange() returns true only when there is a positioned range

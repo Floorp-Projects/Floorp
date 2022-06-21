@@ -1699,21 +1699,25 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
-    // FormatBlockContainerWithTransaction() creates AutoSelectionRestorer.
-    // Therefore, even if it returns NS_OK, editor might have been destroyed
-    // at restoring Selection.
+    AutoRangeArray selectionRanges(SelectionRef());
     nsresult rv = FormatBlockContainerWithTransaction(
+        selectionRanges,
         MOZ_KnownLive(HTMLEditor::ToParagraphSeparatorTagName(separator)),
         aEditingHost);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
-        NS_WARN_IF(Destroyed())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
+      return EditActionResult(rv);
     }
-    // We warn on failure, but don't handle it, because it might be harmless.
-    // Instead we just check that a new block was actually created.
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::FormatBlockContainerWithTransaction() "
-                         "failed, but ignored");
+    if (selectionRanges.HasSavedRanges()) {
+      selectionRanges.RestoreFromSavedRanges();
+    }
+    DebugOnly<nsresult> rvIgnored = selectionRanges.ApplyTo(SelectionRef());
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "AutoRangeArray::ApplyTo(SelectionRef()) failed, but ignored");
 
     firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
@@ -3839,14 +3843,16 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
 }
 
 nsresult HTMLEditor::FormatBlockContainerWithTransaction(
-    nsAtom& blockType, const Element& aEditingHost) {
+    AutoRangeArray& aSelectionRanges, nsAtom& blockType,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // XXX Why do we do this only when there is only one selection range?
-  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+  if (!aSelectionRanges.IsCollapsed() &&
+      aSelectionRanges.Ranges().Length() == 1u) {
     Result<EditorRawDOMRange, nsresult> extendedRange =
         GetRangeExtendedToHardLineEdgesForBlockEditAction(
-            SelectionRef().GetRangeAt(0u), aEditingHost);
+            aSelectionRanges.FirstRangeRef(), aEditingHost);
     if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
           "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
@@ -3854,51 +3860,44 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
       return extendedRange.unwrapErr();
     }
     // Note that end point may be prior to start point.  So, we
-    // cannot use Selection::SetStartAndEndInLimit() here.
-    IgnoredErrorResult error;
-    SelectionRef().SetBaseAndExtentInLimiter(
-        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
-        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (error.Failed()) {
-      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
-      return error.StealNSResult();
+    // cannot use AutoRangeArray::SetStartAndEnd() here.
+    if (NS_FAILED(aSelectionRanges.SetBaseAndExtent(
+            extendedRange.inspect().StartRef(),
+            extendedRange.inspect().EndRef()))) {
+      NS_WARNING("AutoRangeArray::SetBaseAndExtent() failed");
+      return NS_ERROR_FAILURE;
     }
   }
 
-  AutoSelectionRestorer restoreSelectionLater(*this);
+  MOZ_ALWAYS_TRUE(aSelectionRanges.SaveAndTrackRanges(*this));
+
   // TODO: We don't need AutoTransactionsConserveSelection here in the normal
   //       cases, but removing this may cause the behavior with the legacy
   //       mutation event listeners.  We should try to delete this in a bug.
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  {
-    AutoRangeArray extendedSelectionRanges(SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrRemoveBlock, aEditingHost);
-    Result<EditorDOMPoint, nsresult> splitResult =
-        extendedSelectionRanges
-            .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
-                *this);
-    if (MOZ_UNLIKELY(splitResult.isErr())) {
-      NS_WARNING(
-          "AutoRangeArray::"
-          "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
-          "failed");
-      return splitResult.unwrapErr();
-    }
-    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
-        *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
-        AutoRangeArray::CollectNonEditableNodes::Yes);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-          "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
-      return rv;
-    }
+  aSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+      EditSubAction::eCreateOrRemoveBlock, aEditingHost);
+  Result<EditorDOMPoint, nsresult> splitResult =
+      aSelectionRanges
+          .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+              *this);
+  if (MOZ_UNLIKELY(splitResult.isErr())) {
+    NS_WARNING(
+        "AutoRangeArray::"
+        "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries() "
+        "failed");
+    return splitResult.unwrapErr();
+  }
+  nsresult rv = aSelectionRanges.CollectEditTargetNodes(
+      *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
+      AutoRangeArray::CollectNonEditableNodes::Yes);
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
+        "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
+    return rv;
   }
 
   const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
@@ -3915,12 +3914,12 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
-    const nsRange* firstRange = SelectionRef().GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
+    if (NS_WARN_IF(aSelectionRanges.Ranges().IsEmpty())) {
       return NS_ERROR_FAILURE;
     }
 
-    EditorDOMPoint pointToInsertBlock(firstRange->StartRef());
+    auto pointToInsertBlock =
+        aSelectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
     if (&blockType == nsGkAtoms::normal || &blockType == nsGkAtoms::_empty) {
       if (!pointToInsertBlock.IsInContentNode()) {
         NS_WARNING(
@@ -3966,6 +3965,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
         return splitNodeResult.unwrapErr();
       }
+      splitNodeResult.IgnoreCaretPointSuggestion();
       // Put a <br> element at the split point
       const CreateElementResult insertBRElementResult = InsertBRElement(
           WithTransaction::Yes, splitNodeResult.AtSplitPoint<EditorDOMPoint>());
@@ -3974,14 +3974,11 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         return insertBRElementResult.unwrapErr();
       }
       MOZ_ASSERT(insertBRElementResult.GetNewNode());
-      // Don't restore the selection
-      restoreSelectionLater.Abort();
-      // Put selection at the split point
-      splitNodeResult.IgnoreCaretPointSuggestion();
-      nsresult rv = CollapseSelectionTo(
+      aSelectionRanges.ClearSavedRanges();
+      nsresult rv = aSelectionRanges.Collapse(
           EditorRawDOMPoint(insertBRElementResult.GetNewNode()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::CollapseSelectionTo() failed");
+                           "AutoRangeArray::Collapse() failed");
       return rv;
     }
 
@@ -4016,12 +4013,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
               .get());
       return createNewBlockElementResult.unwrapErr();
     }
-    // We'll update selection after deleting the content nodes and nobody refers
-    // selection until then.  Therefore, we don't need to update selection here.
     createNewBlockElementResult.IgnoreCaretPointSuggestion();
-    MOZ_ASSERT(restoreSelectionLater.MaybeRestoreSelectionLater());
-
     MOZ_ASSERT(createNewBlockElementResult.GetNewNode());
+
     // Remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
         createNewBlockElementResult.GetNewNode();
@@ -4037,15 +4031,11 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
       }
       arrayOfContents.RemoveElementAt(0);
     }
-    // Don't restore the selection
-    restoreSelectionLater.Abort();
     // Put selection in new block
-    // MOZ_KnownLive(createNewBlockElementResult.GetNewNode()) because it's
-    // grabbed by createNewBlockElementResult.
-    nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*createNewBlockElementResult.GetNewNode()));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::CollapseSelectionToStartOf() failed");
+    aSelectionRanges.ClearSavedRanges();
+    nsresult rv = aSelectionRanges.Collapse(
+        EditorRawDOMPoint(createNewBlockElementResult.GetNewNode(), 0u));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::Collapse() failed");
     return rv;
   }
   // Okay, now go through all the nodes and make the right kind of blocks, or
@@ -4061,8 +4051,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
           "failed");
       return wrapContentsInBlockquoteElementsResult.unwrapErr();
     }
-    // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-    // should ignore the suggested caret point.
     return NS_OK;
   }
   if (&blockType == nsGkAtoms::normal || &blockType == nsGkAtoms::_empty) {
@@ -4073,8 +4061,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
           "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
       removeBlockContainerElementsResult.unwrapErr();
     }
-    // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-    // should ignore the suggested caret point.
     return NS_OK;
   }
   Result<EditorDOMPoint, nsresult> wrapContentsInBlockElementResult =
@@ -4084,8 +4070,6 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
     NS_WARNING("HTMLEditor::CreateOrChangeBlockContainerElement() failed");
     return wrapContentsInBlockElementResult.unwrapErr();
   }
-  // Selection will be restored by `restoreSelectionLater`.  Therefore, we
-  // should ignore the suggested caret point.
   return NS_OK;
 }
 
