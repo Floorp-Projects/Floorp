@@ -2,12 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use fog::factory;
+use fog::private::Lifetime;
+
 /// Activate the JOG runtime registrar.
 /// This is where the Artefact Build support happens.
 ///
 /// returns whether it successfully found and processed metrics files.
 #[no_mangle]
 pub extern "C" fn jog_runtime_registrar() -> bool {
+    let _ = factory::create_and_register_metric(
+        "counter",
+        "category".into(),
+        "name".into(),
+        vec!["store1".into()],
+        Lifetime::Ping,
+        true,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    );
     false
 }
 

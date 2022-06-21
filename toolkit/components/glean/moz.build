@@ -122,6 +122,7 @@ deps = [
     "build_scripts/glean_parser_ext/templates/cpp_pings.jinja2",
     "build_scripts/glean_parser_ext/templates/gifft.jinja2",
     "build_scripts/glean_parser_ext/templates/gifft_events.jinja2",
+    "build_scripts/glean_parser_ext/templates/jog_factory.jinja2",
     "build_scripts/glean_parser_ext/templates/js.jinja2",
     "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
     "build_scripts/glean_parser_ext/templates/rust.jinja2",
@@ -199,6 +200,34 @@ GeneratedFile(
     flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
     inputs=deps + metrics_yamls + tags_yamls,
 )
+
+# JOG provides both the Rust factory for building runtime-registered metrics
+# and the YAML file used at runtime to register metrics for Artefact Builds.
+# The factory lives inside the `fog` crate to avoid a circular dependency.
+GeneratedFile(
+    "api/src/factory.rs",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="jog_factory",
+    flags=[CONFIG["MOZ_APP_VERSION"]],
+    inputs=deps + metrics_yamls + tags_yamls,
+)
+
+# Only generate artefact_metrics.yaml in Artefact Builds since
+# its presence triggers main-thread I/O (!MOZILLA_OFFICIAL builds only).
+if not CONFIG["COMPILE_ENVIRONMENT"]:
+    GeneratedFile(
+        "artefact_metrics.yaml",
+        script="build_scripts/glean_parser_ext/run_glean_parser.py",
+        entry_point="jog_yaml",
+        flags=[CONFIG["MOZ_APP_VERSION"]],
+        inputs=deps + metrics_yamls + tags_yamls,
+    )
+else:
+    # TODO: Remove artefact_metrics.yaml if exists?
+    # Otherwise a single artefact build will build artefact_metrics.yaml,
+    # meaning all subsequent builds (Artefact or not) will treat the list of
+    # metrics in artefact_metrics.yaml as authoritative.
+    pass
 
 DIRS += [
     "tests",  # Must be in DIRS, not TEST_DIRS or python-test won't find it.
