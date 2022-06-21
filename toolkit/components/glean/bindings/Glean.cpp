@@ -103,9 +103,12 @@ already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
 bool Glean::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void Glean::GetSupportedNames(nsTArray<nsString>& aNames) {
-  for (category_entry_t entry : sCategoryByNameLookupEntries) {
-    const char* categoryName = GetCategoryName(entry);
-    aNames.AppendElement()->AssignASCII(categoryName);
+  JOG::GetCategoryNames(aNames);
+  if (!JOG::AreRuntimeMetricsComprehensive()) {
+    for (category_entry_t entry : sCategoryByNameLookupEntries) {
+      const char* categoryName = GetCategoryName(entry);
+      aNames.AppendElement()->AssignASCII(categoryName);
+    }
   }
 }
 
