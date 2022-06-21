@@ -106,6 +106,8 @@ const char MediaConstraints::kTypingNoiseDetection[] =
 const char MediaConstraints::kAudioMirroring[] = "googAudioMirroring";
 const char MediaConstraints::kAudioNetworkAdaptorConfig[] =
     "googAudioNetworkAdaptorConfig";
+const char MediaConstraints::kInitAudioRecordingOnSend[] =
+    "InitAudioRecordingOnSend";
 
 // Constraint keys for CreateOffer / CreateAnswer defined in W3C specification.
 const char MediaConstraints::kOfferToReceiveAudio[] = "OfferToReceiveAudio";
@@ -211,6 +213,9 @@ void CopyConstraintsIntoAudioOptions(const MediaConstraints* constraints,
   if (options->audio_network_adaptor_config) {
     options->audio_network_adaptor = true;
   }
+  ConstraintToOptional<bool>(constraints,
+                             MediaConstraints::kInitAudioRecordingOnSend,
+                             &options->init_recording_on_send);
 }
 
 bool CopyConstraintsIntoOfferAnswerOptions(

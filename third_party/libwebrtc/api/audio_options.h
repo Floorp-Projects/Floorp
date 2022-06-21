@@ -83,6 +83,10 @@ struct RTC_EXPORT AudioOptions {
   absl::optional<bool> audio_network_adaptor;
   // Config string for audio network adaptor.
   absl::optional<std::string> audio_network_adaptor_config;
+  // Pre-initialize the ADM for recording when starting to send. Default to
+  // true.
+  // TODO(webrtc:13566): Remove this option. See issue for details.
+  absl::optional<bool> init_recording_on_send;
 };
 
 }  // namespace cricket
