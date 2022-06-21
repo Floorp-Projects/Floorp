@@ -148,7 +148,7 @@ template <typename T,
           typename std::enable_if<std::is_convertible_v<T*, RefCountInterface*>,
                                   T>::type* = nullptr>
 scoped_refptr<T> make_ref_counted(Args&&... args) {
-  return new RefCountedObject<T>(std::forward<Args>(args)...);
+  return scoped_refptr<T>(new RefCountedObject<T>(std::forward<Args>(args)...));
 }
 
 // `make_ref_counted` for complete classes that are not convertible to
@@ -175,7 +175,8 @@ template <
 
         T>::type* = nullptr>
 scoped_refptr<FinalRefCountedObject<T>> make_ref_counted(Args&&... args) {
-  return new FinalRefCountedObject<T>(std::forward<Args>(args)...);
+  return scoped_refptr<FinalRefCountedObject<T>>(
+      new FinalRefCountedObject<T>(std::forward<Args>(args)...));
 }
 
 // `Ref<>`, `Ref<>::Type` and `Ref<>::Ptr`:

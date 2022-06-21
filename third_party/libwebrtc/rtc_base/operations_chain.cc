@@ -37,10 +37,11 @@ void OperationsChain::CallbackHandle::OnOperationComplete() {
 
 // static
 scoped_refptr<OperationsChain> OperationsChain::Create() {
-  return new OperationsChain();
+  // Explicit new, to access private constructor.
+  return rtc::scoped_refptr<OperationsChain>(new OperationsChain());
 }
 
-OperationsChain::OperationsChain() : RefCountedObject() {
+OperationsChain::OperationsChain() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 }
 
@@ -63,8 +64,10 @@ bool OperationsChain::IsEmpty() const {
 }
 
 std::function<void()> OperationsChain::CreateOperationsChainCallback() {
-  return [handle = rtc::scoped_refptr<CallbackHandle>(
-              new CallbackHandle(this))]() { handle->OnOperationComplete(); };
+  return [handle = rtc::make_ref_counted<CallbackHandle>(
+              rtc::scoped_refptr<OperationsChain>(this))]() {
+    handle->OnOperationComplete();
+  };
 }
 
 void OperationsChain::OnOperationComplete() {
