@@ -375,22 +375,14 @@ bool BaseChannel::SendPacket(bool rtcp,
                              rtc::CopyOnWriteBuffer* packet,
                              const rtc::PacketOptions& options) {
   RTC_DCHECK_RUN_ON(network_thread());
-  // Until all the code is migrated to use RtpPacketType instead of bool.
-  RtpPacketType packet_type = rtcp ? RtpPacketType::kRtcp : RtpPacketType::kRtp;
-  // SendPacket gets called from MediaEngine, on a pacer or an encoder thread.
-  // If the thread is not our network thread, we will post to our network
-  // so that the real work happens on our network. This avoids us having to
-  // synchronize access to all the pieces of the send path, including
-  // SRTP and the inner workings of the transport channels.
-  // The only downside is that we can't return a proper failure code if
-  // needed. Since UDP is unreliable anyway, this should be a non-issue.
-
   TRACE_EVENT0("webrtc", "BaseChannel::SendPacket");
 
-  // Now that we are on the correct thread, ensure we have a place to send this
-  // packet before doing anything. (We might get RTCP packets that we don't
-  // intend to send.) If we've negotiated RTCP mux, send RTCP over the RTP
-  // transport.
+  // Until all the code is migrated to use RtpPacketType instead of bool.
+  RtpPacketType packet_type = rtcp ? RtpPacketType::kRtcp : RtpPacketType::kRtp;
+
+  // Ensure we have a place to send this packet before doing anything. We might
+  // get RTCP packets that we don't intend to send. If we've negotiated RTCP
+  // mux, send RTCP over the RTP transport.
   if (!rtp_transport_ || !rtp_transport_->IsWritable(rtcp)) {
     return false;
   }
@@ -408,24 +400,18 @@ bool BaseChannel::SendPacket(bool rtcp,
       // The audio/video engines may attempt to send RTCP packets as soon as the
       // streams are created, so don't treat this as an error for RTCP.
       // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=6809
-      if (rtcp) {
-        return false;
-      }
-      // However, there shouldn't be any RTP packets sent before SRTP is set up
-      // (and SetSend(true) is called).
-      RTC_LOG(LS_ERROR) << "Can't send outgoing RTP packet for " << ToString()
-                        << " when SRTP is inactive and crypto is required";
-      RTC_DCHECK_NOTREACHED();
+      // However, there shouldn't be any RTP packets sent before SRTP is set
+      // up (and SetSend(true) is called).
+      RTC_DCHECK(rtcp) << "Can't send outgoing RTP packet for " << ToString()
+                       << " when SRTP is inactive and crypto is required";
       return false;
     }
 
-    std::string packet_type = rtcp ? "RTCP" : "RTP";
-    RTC_DLOG(LS_WARNING) << "Sending an " << packet_type
+    RTC_DLOG(LS_WARNING) << "Sending an " << (rtcp ? "RTCP" : "RTP")
                          << " packet without encryption for " << ToString()
                          << ".";
   }
 
-  // Bon voyage.
   return rtcp ? rtp_transport_->SendRtcpPacket(packet, options, PF_SRTP_BYPASS)
               : rtp_transport_->SendRtpPacket(packet, options, PF_SRTP_BYPASS);
 }
