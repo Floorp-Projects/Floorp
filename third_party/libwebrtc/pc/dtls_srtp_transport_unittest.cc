@@ -88,7 +88,7 @@ class DtlsSrtpTransportTest : public ::testing::Test,
         &transport_observer2_, &webrtc::TransportObserver::OnReadyToSend);
     webrtc::RtpDemuxerCriteria demuxer_criteria;
     // 0x00 is the payload type used in kPcmuFrame.
-    demuxer_criteria.payload_types = {0x00};
+    demuxer_criteria.payload_types() = {0x00};
     dtls_srtp_transport1_->RegisterRtpDemuxerSink(demuxer_criteria,
                                                   &transport_observer1_);
     dtls_srtp_transport2_->RegisterRtpDemuxerSink(demuxer_criteria,

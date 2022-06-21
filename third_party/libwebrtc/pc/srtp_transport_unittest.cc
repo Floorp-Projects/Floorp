@@ -71,7 +71,7 @@ class SrtpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
 
     RtpDemuxerCriteria demuxer_criteria;
     // 0x00 is the payload type used in kPcmuFrame.
-    demuxer_criteria.payload_types = {0x00};
+    demuxer_criteria.payload_types().insert(0x00);
 
     srtp_transport1_->RegisterRtpDemuxerSink(demuxer_criteria, &rtp_sink1_);
     srtp_transport2_->RegisterRtpDemuxerSink(demuxer_criteria, &rtp_sink2_);

@@ -285,7 +285,7 @@ TEST(RtpTransportTest, SignalHandledRtpPayloadType) {
   TransportObserver observer(&transport);
   RtpDemuxerCriteria demuxer_criteria;
   // Add a handled payload type.
-  demuxer_criteria.payload_types = {0x11};
+  demuxer_criteria.payload_types().insert(0x11);
   transport.RegisterRtpDemuxerSink(demuxer_criteria, &observer);
 
   // An rtp packet.
@@ -309,7 +309,7 @@ TEST(RtpTransportTest, DontSignalUnhandledRtpPayloadType) {
   TransportObserver observer(&transport);
   RtpDemuxerCriteria demuxer_criteria;
   // Add an unhandled payload type.
-  demuxer_criteria.payload_types = {0x12};
+  demuxer_criteria.payload_types().insert(0x12);
   transport.RegisterRtpDemuxerSink(demuxer_criteria, &observer);
 
   const rtc::PacketOptions options;

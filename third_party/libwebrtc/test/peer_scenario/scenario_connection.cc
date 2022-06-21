@@ -178,13 +178,13 @@ void ScenarioIceConnectionImpl::SetRemoteSdp(SdpType type,
     if (content.media_description()->as_audio()) {
       for (const auto& codec :
            content.media_description()->as_audio()->codecs()) {
-        criteria.payload_types.insert(codec.id);
+        criteria.payload_types().insert(codec.id);
       }
     }
     if (content.media_description()->as_video()) {
       for (const auto& codec :
            content.media_description()->as_video()->codecs()) {
-        criteria.payload_types.insert(codec.id);
+        criteria.payload_types().insert(codec.id);
       }
     }
   }
@@ -219,8 +219,7 @@ bool ScenarioIceConnectionImpl::OnTransportChanged(
     if (rtp_transport_ != rtp_transport) {
       rtp_transport_ = rtp_transport;
     }
-    RtpDemuxerCriteria criteria;
-    criteria.mid = mid;
+    RtpDemuxerCriteria criteria(mid);
     rtp_transport_->RegisterRtpDemuxerSink(criteria, this);
   }
   return true;
