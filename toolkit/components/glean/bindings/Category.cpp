@@ -30,7 +30,7 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
   aFound = false;
 
   nsCString metricName;
-  metricName.AppendASCII(GetCategoryName(mId), mLength);
+  metricName.AppendASCII(mName);
   metricName.AppendLiteral(".");
   AppendUTF16toUTF8(aName, metricName);
 
@@ -48,21 +48,18 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
 bool Category::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void Category::GetSupportedNames(nsTArray<nsString>& aNames) {
-  const char* category = GetCategoryName(mId);
-
   for (metric_entry_t entry : sMetricByNameLookupEntries) {
-    const char* identifier = GetMetricIdentifier(entry);
+    const char* identifierBuf = GetMetricIdentifier(entry);
+    nsDependentCString identifier(identifierBuf);
 
     // We're iterating all metrics,
     // so we need to check for the ones in the right category.
     //
     // We need to ensure that we found _only_ the exact category by checking it
     // is followed by a dot.
-    // We need to check the category first to ensure the string is at least that
-    // long, so the check at `mLength` is valid.
-    if (strncmp(category, identifier, mLength) == 0 &&
-        identifier[mLength] == '.') {
-      const char* metricName = &identifier[mLength + 1];
+    if (identifier.Find(mName, false, 0, 1) == 0 &&
+        identifier.CharAt(mName.Length()) == '.') {
+      const char* metricName = &identifierBuf[mName.Length() + 1];
       aNames.AppendElement()->AssignASCII(metricName);
     }
   }

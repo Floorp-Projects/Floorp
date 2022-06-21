@@ -60,8 +60,8 @@ already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
   }
 
   aFound = true;
-  uint32_t length = strlen(&gCategoryStringTable[categoryIdx.value()]);
-  return MakeAndAddRef<Category>(categoryIdx.value(), length);
+  nsDependentCString name(&gCategoryStringTable[categoryIdx.value()]);
+  return MakeAndAddRef<Category>(std::move(name));
 }
 
 bool Glean::NameIsEnumerable(const nsAString& aName) { return false; }
