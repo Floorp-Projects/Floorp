@@ -199,14 +199,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun update(shouldUpdateAccountUIState: Boolean) {
+        val settings = requireContext().settings()
+
         val trackingProtectionPreference =
             requirePreference<Preference>(R.string.pref_key_tracking_protection_settings)
-        trackingProtectionPreference.summary = context?.let {
-            if (it.settings().shouldUseTrackingProtection) {
-                getString(R.string.tracking_protection_on)
-            } else {
-                getString(R.string.tracking_protection_off)
-            }
+        trackingProtectionPreference.summary = if (settings.shouldUseTrackingProtection) {
+            getString(R.string.tracking_protection_on)
+        } else {
+            getString(R.string.tracking_protection_off)
         }
 
         val aboutPreference = requirePreference<Preference>(R.string.pref_key_about)
@@ -215,17 +215,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val deleteBrowsingDataPreference =
             requirePreference<Preference>(R.string.pref_key_delete_browsing_data_on_quit_preference)
-        deleteBrowsingDataPreference.summary = context?.let {
-            if (it.settings().shouldDeleteBrowsingDataOnQuit) {
-                getString(R.string.delete_browsing_data_quit_on)
-            } else {
-                getString(R.string.delete_browsing_data_quit_off)
-            }
+        deleteBrowsingDataPreference.summary = if (settings.shouldDeleteBrowsingDataOnQuit) {
+            getString(R.string.delete_browsing_data_quit_on)
+        } else {
+            getString(R.string.delete_browsing_data_quit_off)
         }
 
         val tabSettingsPreference =
             requirePreference<Preference>(R.string.pref_key_tabs)
         tabSettingsPreference.summary = context?.settings()?.getTabTimeoutString()
+
+        val autofillPreference = requirePreference<Preference>(R.string.pref_key_credit_cards)
+        autofillPreference.title = if (settings.addressFeature) {
+            getString(R.string.preferences_autofill)
+        } else {
+            getString(R.string.preferences_credit_cards)
+        }
 
         setupPreferences()
 
