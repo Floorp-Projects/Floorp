@@ -350,6 +350,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   Maybe<nsRect> RetrieveCachedBounds() const;
   bool ApplyTransform(nsRect& aBounds) const;
   void ApplyScrollOffset(nsRect& aBounds) const;
+  void ApplyCrossProcOffset(nsRect& aBounds) const;
   LayoutDeviceIntRect BoundsWithOffset(Maybe<nsRect> aOffset) const;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
