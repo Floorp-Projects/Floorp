@@ -31,7 +31,6 @@ const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BookmarkValidator: "resource://services-sync/bookmark_validator.js",
   Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",

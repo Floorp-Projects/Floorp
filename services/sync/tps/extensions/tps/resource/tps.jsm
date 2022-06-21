@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BookmarkFolder: "resource://tps/modules/bookmarks.jsm",
   Livemark: "resource://tps/modules/bookmarks.jsm",
   Separator: "resource://tps/modules/bookmarks.jsm",
-  BookmarkValidator: "resource://services-sync/bookmark_validator.js",
+  BookmarkValidator: "resource://tps/modules/bookmarkValidator.jsm",
 
   Address: "resource://tps/modules/formautofill.jsm",
   DumpAddresses: "resource://tps/modules/formautofill.jsm",
