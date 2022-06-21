@@ -153,10 +153,10 @@ class BaseChannel : public ChannelInterface,
   // Channel control
   bool SetLocalContent(const MediaContentDescription* content,
                        webrtc::SdpType type,
-                       std::string* error_desc) override;
+                       std::string& error_desc) override;
   bool SetRemoteContent(const MediaContentDescription* content,
                         webrtc::SdpType type,
-                        std::string* error_desc) override;
+                        std::string& error_desc) override;
   // Controls whether this channel will receive packets on the basis of
   // matching payload type alone. This is needed for legacy endpoints that
   // don't signal SSRCs or use MID/RID, but doesn't make sense if there is
@@ -267,19 +267,19 @@ class BaseChannel : public ChannelInterface,
 
   bool UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
                             webrtc::SdpType type,
-                            std::string* error_desc)
+                            std::string& error_desc)
       RTC_RUN_ON(worker_thread());
   bool UpdateRemoteStreams_w(const std::vector<StreamParams>& streams,
                              webrtc::SdpType type,
-                             std::string* error_desc)
+                             std::string& error_desc)
       RTC_RUN_ON(worker_thread());
   virtual bool SetLocalContent_w(const MediaContentDescription* content,
                                  webrtc::SdpType type,
-                                 std::string* error_desc)
+                                 std::string& error_desc)
       RTC_RUN_ON(worker_thread()) = 0;
   virtual bool SetRemoteContent_w(const MediaContentDescription* content,
                                   webrtc::SdpType type,
-                                  std::string* error_desc)
+                                  std::string& error_desc)
       RTC_RUN_ON(worker_thread()) = 0;
 
   // Returns a list of RTP header extensions where any extension URI is unique.
@@ -402,11 +402,11 @@ class VoiceChannel : public BaseChannel {
   void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,
                          webrtc::SdpType type,
-                         std::string* error_desc)
+                         std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
   bool SetRemoteContent_w(const MediaContentDescription* content,
                           webrtc::SdpType type,
-                          std::string* error_desc)
+                          std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
 
   // Last AudioSendParameters sent down to the media_channel() via
@@ -446,11 +446,11 @@ class VideoChannel : public BaseChannel {
   void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
   bool SetLocalContent_w(const MediaContentDescription* content,
                          webrtc::SdpType type,
-                         std::string* error_desc)
+                         std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
   bool SetRemoteContent_w(const MediaContentDescription* content,
                           webrtc::SdpType type,
-                          std::string* error_desc)
+                          std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
 
   // Last VideoSendParameters sent down to the media_channel() via

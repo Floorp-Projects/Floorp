@@ -4271,8 +4271,8 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
           std::string error;
           bool success =
               (source == cricket::CS_LOCAL)
-                  ? entry.first->SetLocalContent(entry.second, type, &error)
-                  : entry.first->SetRemoteContent(entry.second, type, &error);
+                  ? entry.first->SetLocalContent(entry.second, type, error)
+                  : entry.first->SetRemoteContent(entry.second, type, error);
           if (!success) {
             LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
           }
