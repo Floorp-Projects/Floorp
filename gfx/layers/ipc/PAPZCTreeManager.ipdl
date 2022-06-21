@@ -83,8 +83,6 @@ child:
                            Modifiers aModifiers);
 
   async CancelAutoscroll(ViewID aScrollId);
-
-  async NotifyScaleGestureComplete(ViewID aScrollId, float aScale);
 };
 
 } // namespace gfx

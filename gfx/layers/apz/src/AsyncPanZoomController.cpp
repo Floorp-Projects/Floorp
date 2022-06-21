@@ -738,7 +738,6 @@ AsyncPanZoomController::AsyncPanZoomController(
                            kViewportMaxScale / ParentLayerToScreenScale(1)),
       mLastSampleTime(GetFrameTime()),
       mLastCheckerboardReport(GetFrameTime()),
-      mLastNotifiedZoom(),
       mOverscrollEffect(MakeUnique<OverscrollEffect>(*this)),
       mState(NOTHING),
       mX(this),
@@ -4386,14 +4385,6 @@ void AsyncPanZoomController::RequestContentRepaint(
   }
   RepaintRequest request(aFrameMetrics, aDisplayportMargins, aUpdateType,
                          animationType, mScrollGeneration);
-
-  if (request.IsRootContent() && request.GetZoom() != mLastNotifiedZoom &&
-      mState != PINCHING && mState != ANIMATING_ZOOM) {
-    controller->NotifyScaleGestureComplete(
-        GetGuid(),
-        (request.GetZoom() / request.GetDevPixelsPerCSSPixel()).scale);
-    mLastNotifiedZoom = request.GetZoom();
-  }
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
