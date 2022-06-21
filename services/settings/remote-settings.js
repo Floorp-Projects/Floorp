@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Utils: "resource://services-settings/Utils.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
 });
 
 const PREF_SETTINGS_BRANCH = "services.settings.";

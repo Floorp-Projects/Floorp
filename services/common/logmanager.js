@@ -14,11 +14,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
 
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"

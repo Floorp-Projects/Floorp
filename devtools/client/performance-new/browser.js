@@ -29,11 +29,6 @@ const { createLazyLoaders } = ChromeUtils.import(
 const lazy = createLazyLoaders({
   Chrome: () => require("chrome"),
   Services: () => require("Services"),
-  OS: () => ChromeUtils.import("resource://gre/modules/osfile.jsm"),
-  PerfSymbolication: () =>
-    ChromeUtils.import(
-      "resource://devtools/client/performance-new/symbolication.jsm.js"
-    ),
 });
 
 /** @type {PerformancePref["UIBaseUrl"]} */

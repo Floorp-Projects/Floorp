@@ -56,12 +56,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExperimentAPI",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
