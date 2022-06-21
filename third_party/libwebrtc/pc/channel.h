@@ -213,6 +213,10 @@ class BaseChannel : public ChannelInterface,
     return remote_content_direction_;
   }
 
+  webrtc::RtpExtension::Filter extensions_filter() const {
+    return extensions_filter_;
+  }
+
   bool enabled() const RTC_RUN_ON(worker_thread()) { return enabled_; }
   rtc::Thread* signaling_thread() const { return signaling_thread_; }
 
@@ -252,13 +256,8 @@ class BaseChannel : public ChannelInterface,
   void ChannelWritable_n() RTC_RUN_ON(network_thread());
   void ChannelNotWritable_n() RTC_RUN_ON(network_thread());
 
-  bool AddRecvStream_w(const StreamParams& sp) RTC_RUN_ON(worker_thread());
-  bool RemoveRecvStream_w(uint32_t ssrc) RTC_RUN_ON(worker_thread());
-  void ResetUnsignaledRecvStream_w() RTC_RUN_ON(worker_thread());
   bool SetPayloadTypeDemuxingEnabled_w(bool enabled)
       RTC_RUN_ON(worker_thread());
-  bool AddSendStream_w(const StreamParams& sp) RTC_RUN_ON(worker_thread());
-  bool RemoveSendStream_w(uint32_t ssrc) RTC_RUN_ON(worker_thread());
 
   // Should be called whenever the conditions for
   // IsReadyToReceiveMedia/IsReadyToSendMedia are satisfied (or unsatisfied).
@@ -269,7 +268,7 @@ class BaseChannel : public ChannelInterface,
                             webrtc::SdpType type,
                             std::string& error_desc)
       RTC_RUN_ON(worker_thread());
-  bool UpdateRemoteStreams_w(const std::vector<StreamParams>& streams,
+  bool UpdateRemoteStreams_w(const MediaContentDescription* content,
                              webrtc::SdpType type,
                              std::string& error_desc)
       RTC_RUN_ON(worker_thread());
@@ -292,7 +291,9 @@ class BaseChannel : public ChannelInterface,
   // enabled.
   void MaybeAddHandledPayloadType(int payload_type) RTC_RUN_ON(worker_thread());
 
-  void ClearHandledPayloadTypes() RTC_RUN_ON(worker_thread());
+  // Returns true iff the demuxer payload type criteria was non-empty before
+  // clearing.
+  bool ClearHandledPayloadTypes() RTC_RUN_ON(worker_thread());
 
   void UpdateRtpHeaderExtensionMap(
       const RtpHeaderExtensions& header_extensions);
@@ -327,24 +328,9 @@ class BaseChannel : public ChannelInterface,
   bool was_ever_writable_ RTC_GUARDED_BY(worker_thread()) = false;
   const bool srtp_required_ = true;
 
-  // TODO(tommi): This field shouldn't be necessary. It's a copy of
-  // PeerConnection::GetCryptoOptions(), which is const state. It's also only
-  // used to filter header extensions when calling
-  // `rtp_transport_->UpdateRtpHeaderExtensionMap()` when the local/remote
-  // content description is updated. Since the transport is actually owned
-  // by the transport controller that also gets updated whenever the content
-  // description changes, it seems we have two paths into the transports, along
-  // with several thread hops via various classes (such as the Channel classes)
-  // that only serve as additional layers and store duplicate state. The Jsep*
-  // family of classes already apply session description updates on the network
-  // thread every time it changes.
-  // For the Channel classes, we should be able to get rid of:
-  // * crypto_options (and fewer construction parameters)_
-  // * UpdateRtpHeaderExtensionMap
-  // * GetFilteredRtpHeaderExtensions
-  // * Blocking thread hop to the network thread for every call to set
-  //   local/remote content is updated.
-  const webrtc::CryptoOptions crypto_options_;
+  // Set to either kPreferEncryptedExtension or kDiscardEncryptedExtension
+  // based on the supplied CryptoOptions.
+  const webrtc::RtpExtension::Filter extensions_filter_;
 
   // MediaChannel related members that should be accessed from the worker
   // thread.
