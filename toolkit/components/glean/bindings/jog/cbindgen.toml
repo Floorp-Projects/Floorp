@@ -14,10 +14,10 @@ line_length = 100
 tab_width = 2
 language = "C++"
 namespaces = ["mozilla::glean::jog"]
-#includes = ["nsTArray.h", "nsString.h"]
+includes = ["nsTArray.h", "nsString.h"]
 
 [export.rename]
-#"ThinVec" = "nsTArray"
+"ThinVec" = "nsTArray"
 #"nsCStringRepr" = "nsCString"
 
 [parse]
