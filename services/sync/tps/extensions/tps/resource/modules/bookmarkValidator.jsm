@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file was moved to tps from the main production code as it was unused
+// after removal of the non-mirror bookmarks engine.
+// It used to have a test before it was moved:
+// https://searchfox.org/mozilla-central/rev/b1a5802e0f73bfd6d2096e5fefc2b47831a50b2d/services/sync/tests/unit/test_bookmark_validator.js
+
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(

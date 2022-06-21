@@ -18,7 +18,6 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES["services-sync"] += [
     "modules/addonsreconciler.js",
     "modules/addonutils.js",
-    "modules/bookmark_validator.js",
     "modules/bridged_engine.js",
     "modules/collection_validator.js",
     "modules/constants.js",
