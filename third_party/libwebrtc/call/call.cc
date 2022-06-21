@@ -580,8 +580,9 @@ SharedModuleThread::~SharedModuleThread() = default;
 rtc::scoped_refptr<SharedModuleThread> SharedModuleThread::Create(
     std::unique_ptr<ProcessThread> process_thread,
     std::function<void()> on_one_ref_remaining) {
-  return new SharedModuleThread(std::move(process_thread),
-                                std::move(on_one_ref_remaining));
+  // Using `new` to access a non-public constructor.
+  return rtc::scoped_refptr<SharedModuleThread>(new SharedModuleThread(
+      std::move(process_thread), std::move(on_one_ref_remaining)));
 }
 
 void SharedModuleThread::EnsureStarted() {
