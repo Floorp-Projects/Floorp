@@ -844,6 +844,7 @@ TEST_P(PeerConnectionIceTest, LocalDescriptionUpdatedWhenContinualGathering) {
   const SocketAddress kLocalAddress("1.1.1.1", 0);
 
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.continual_gathering_policy =
       PeerConnectionInterface::GATHER_CONTINUALLY;
   auto caller = CreatePeerConnectionWithAudioVideo(config);
@@ -866,6 +867,7 @@ TEST_P(PeerConnectionIceTest,
   const SocketAddress kLocalAddress("1.1.1.1", 0);
 
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.continual_gathering_policy =
       PeerConnectionInterface::GATHER_CONTINUALLY;
   auto caller = CreatePeerConnectionWithAudioVideo(config);
@@ -892,6 +894,7 @@ TEST_P(PeerConnectionIceTest,
   const SocketAddress kLocalAddress("1.1.1.1", 0);
 
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.continual_gathering_policy = PeerConnectionInterface::GATHER_ONCE;
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   caller->network()->AddInterface(kLocalAddress);
@@ -1392,6 +1395,7 @@ class PeerConnectionIceConfigTest : public ::testing::Test {
 
 TEST_F(PeerConnectionIceConfigTest, SetStunCandidateKeepaliveInterval) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.stun_candidate_keepalive_interval = 123;
   config.ice_candidate_pool_size = 1;
   CreatePeerConnection(config);
@@ -1408,6 +1412,7 @@ TEST_F(PeerConnectionIceConfigTest, SetStunCandidateKeepaliveInterval) {
 
 TEST_F(PeerConnectionIceConfigTest, SetStableWritableConnectionInterval) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.stable_writable_connection_ping_interval_ms = 3500;
   CreatePeerConnection(config);
   EXPECT_TRUE(pc_->SetConfiguration(config).ok());
@@ -1418,6 +1423,7 @@ TEST_F(PeerConnectionIceConfigTest, SetStableWritableConnectionInterval) {
 TEST_F(PeerConnectionIceConfigTest,
        SetStableWritableConnectionInterval_FailsValidation) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   CreatePeerConnection(config);
   ASSERT_TRUE(pc_->SetConfiguration(config).ok());
   config.stable_writable_connection_ping_interval_ms = 5000;
@@ -1428,6 +1434,7 @@ TEST_F(PeerConnectionIceConfigTest,
 TEST_F(PeerConnectionIceConfigTest,
        SetStableWritableConnectionInterval_DefaultValue_FailsValidation) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   CreatePeerConnection(config);
   ASSERT_TRUE(pc_->SetConfiguration(config).ok());
   config.ice_check_interval_strong_connectivity = 2500;
@@ -1438,6 +1445,7 @@ TEST_F(PeerConnectionIceConfigTest,
 
 TEST_P(PeerConnectionIceTest, IceCredentialsCreateOffer) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.ice_candidate_pool_size = 1;
   auto pc = CreatePeerConnectionWithAudioVideo(config);
   ASSERT_NE(pc->port_allocator_, nullptr);
@@ -1455,6 +1463,7 @@ TEST_P(PeerConnectionIceTest, IceCredentialsCreateOffer) {
 
 TEST_P(PeerConnectionIceTest, IceCredentialsCreateAnswer) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.ice_candidate_pool_size = 1;
   auto pc = CreatePeerConnectionWithAudioVideo(config);
   ASSERT_NE(pc->port_allocator_, nullptr);

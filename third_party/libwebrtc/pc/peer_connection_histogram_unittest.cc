@@ -243,8 +243,10 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
   }
 
   WrapperPtr CreatePeerConnection() {
+    RTCConfiguration config;
+    config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
     return CreatePeerConnection(
-        RTCConfiguration(), PeerConnectionFactoryInterface::Options(), nullptr);
+        config, PeerConnectionFactoryInterface::Options(), nullptr);
   }
 
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
@@ -275,6 +277,7 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
 
   WrapperPtr CreatePeerConnectionWithImmediateReport() {
     RTCConfiguration configuration;
+    configuration.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
     configuration.report_usage_pattern_delay_ms = 0;
     return CreatePeerConnection(
         configuration, PeerConnectionFactoryInterface::Options(), nullptr);
@@ -287,7 +290,9 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
 
     auto port_allocator =
         std::make_unique<cricket::BasicPortAllocator>(fake_network);
-    return CreatePeerConnection(RTCConfiguration(),
+    RTCConfiguration config;
+    config.sdp_semantics = SdpSemantics::kUnifiedPlan;
+    return CreatePeerConnection(config,
                                 PeerConnectionFactoryInterface::Options(),
                                 std::move(port_allocator));
   }
@@ -300,7 +305,9 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     auto port_allocator =
         std::make_unique<cricket::BasicPortAllocator>(fake_network);
 
-    return CreatePeerConnection(RTCConfiguration(),
+    RTCConfiguration config;
+    config.sdp_semantics = SdpSemantics::kUnifiedPlan;
+    return CreatePeerConnection(config,
                                 PeerConnectionFactoryInterface::Options(),
                                 std::move(port_allocator));
   }
@@ -420,6 +427,7 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintAudioVideo) {
 // candidate.
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintWithMdnsCaller) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   // Enable hostname candidates with mDNS names.
   auto caller = CreatePeerConnectionWithMdns(config);
@@ -461,6 +469,7 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintWithMdnsCaller) {
 // candidate.
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintWithMdnsCallee) {
   RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   // Enable hostname candidates with mDNS names.
   auto caller = CreatePeerConnection(config);
@@ -526,6 +535,7 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintDataOnly) {
 
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurn) {
   RTCConfiguration configuration;
+  configuration.sdp_semantics = SdpSemantics::kUnifiedPlan;
   PeerConnection::IceServer server;
   server.urls = {"stun:dummy.stun.server"};
   configuration.servers.push_back(server);
@@ -546,6 +556,7 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurn) {
 
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurnInReconfiguration) {
   RTCConfiguration configuration;
+  configuration.sdp_semantics = SdpSemantics::kUnifiedPlan;
   PeerConnection::IceServer server;
   server.urls = {"stun:dummy.stun.server"};
   configuration.servers.push_back(server);
@@ -641,7 +652,9 @@ TEST_F(PeerConnectionUsageHistogramTest,
   // signaled and we expect a connection with prflx remote candidates at the
   // caller side.
   auto caller = CreatePeerConnectionWithPrivateIpv6LocalAddresses();
-  auto callee = CreatePeerConnectionWithMdns(RTCConfiguration());
+  RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
+  auto callee = CreatePeerConnectionWithMdns(config);
   caller->CreateDataChannel("test_channel");
   ASSERT_TRUE(caller->SetLocalDescription(caller->CreateOffer()));
   // Wait until the gathering completes so that the session description would
