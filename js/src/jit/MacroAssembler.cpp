@@ -2019,10 +2019,8 @@ void MacroAssembler::guardStringToInt32(Register str, Register output,
 
 void MacroAssembler::generateBailoutTail(Register scratch,
                                          Register bailoutInfo) {
-  loadJSContext(scratch);
-  enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
-
-  branchIfFalseBool(ReturnReg, exceptionLabel());
+  Label bailoutFailed;
+  branchIfFalseBool(ReturnReg, &bailoutFailed);
 
   // Finish bailing out to Baseline.
   {
@@ -2091,6 +2089,17 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
 
     jump(jitcodeReg);
+  }
+
+  bind(&bailoutFailed);
+  {
+    // jit::Bailout or jit::InvalidationBailout failed and returned false. The
+    // Ion frame has already been discarded and the stack pointer points to the
+    // JitFrameLayout header. Turn it into an ExitFrameLayout, similar to
+    // EnsureUnwoundJitExitFrame, and call the exception handler.
+    loadJSContext(scratch);
+    enterFakeExitFrame(scratch, scratch, ExitFrameType::UnwoundJit);
+    jump(exceptionLabel());
   }
 }
 
