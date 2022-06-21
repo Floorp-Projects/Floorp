@@ -7,18 +7,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 from collections import defaultdict, deque
 from copy import deepcopy
 from pathlib import Path
-from shutil import which
-import argparse
+import glob
 import json
 import os
 import six
 import subprocess
 import sys
-import tempfile
 
+from mozbuild.backend.base import BuildBackend
 import mozpack.path as mozpath
-from mozbuild.bootstrap import bootstrap_toolchain
 from mozbuild.frontend.sandbox import alphabetical_sorted
+from mozbuild.frontend.data import GnProjectData
 from mozbuild.util import mkdir
 
 
@@ -158,7 +157,7 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
     gen_path = (Path(path) / "gen").resolve()
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
-    gn_out = {"targets": {}, "sandbox_vars": sandbox_vars}
+    gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
 
     cpus = {
         "arm64": "aarch64",
@@ -178,8 +177,8 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
         "HOST_CPU_ARCH": cpus.get(input_vars["host_cpu"], input_vars["host_cpu"]),
         "CPU_ARCH": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
     }
-    if "use_x11" in input_vars:
-        mozbuild_args["MOZ_X11"] = "1" if input_vars["use_x11"] else None
+    if input_vars["target_os"] in ("linux", "android", "openbsd"):
+        mozbuild_args["MOZ_X11"] = "1" if input_vars.get("use_x11") else None
 
     gn_out["mozbuild_args"] = mozbuild_args
     all_deps = find_deps(gn_result["targets"], gn_target)
@@ -206,9 +205,7 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
                 spec[spec_attr] = [
                     d
                     for d in spec[spec_attr]
-                    if "CR_XCODE_VERSION" not in d
-                    and "CR_SYSROOT_HASH" not in d
-                    and "_FORTIFY_SOURCE" not in d
+                    if "CR_XCODE_VERSION" not in d and "CR_SYSROOT_HASH" not in d
                 ]
             if spec_attr == "include_dirs":
                 spec[spec_attr] = [d for d in spec[spec_attr] if gen_path != Path(d)]
@@ -456,23 +453,25 @@ def write_mozbuild(
     topsrcdir,
     srcdir,
     non_unified_sources,
-    gn_configs,
+    gn_config_files,
     mozilla_flags,
     write_mozbuild_variables,
 ):
 
     all_mozbuild_results = []
 
-    for gn_config in gn_configs:
-        mozbuild_attrs = process_gn_config(
-            gn_config,
-            topsrcdir,
-            srcdir,
-            non_unified_sources,
-            gn_config["sandbox_vars"],
-            mozilla_flags,
-        )
-        all_mozbuild_results.append(mozbuild_attrs)
+    for path in sorted(gn_config_files):
+        with open(path, "r") as fh:
+            gn_config = json.load(fh)
+            mozbuild_attrs = process_gn_config(
+                gn_config,
+                topsrcdir,
+                srcdir,
+                non_unified_sources,
+                gn_config["sandbox_vars"],
+                mozilla_flags,
+            )
+            all_mozbuild_results.append(mozbuild_attrs)
 
     # Translate {config -> {dirs -> build info}} into
     #           {dirs -> [(config, build_info)]}
@@ -583,6 +582,7 @@ def write_mozbuild(
 
 def generate_gn_config(
     srcdir,
+    output,
     gn_binary,
     input_variables,
     sandbox_variables,
@@ -593,8 +593,8 @@ def generate_gn_config(
             return str(v).lower()
         return '"%s"' % v
 
-    input_variables = input_variables.copy()
-    input_variables.update(
+    gn_input_variables = input_variables.copy()
+    gn_input_variables.update(
         {
             "concurrent_links": 1,
             "action_pool_depth": 1,
@@ -602,7 +602,7 @@ def generate_gn_config(
     )
 
     if input_variables["target_os"] == "win":
-        input_variables.update(
+        gn_input_variables.update(
             {
                 "visual_studio_path": "/",
                 "visual_studio_version": 2015,
@@ -610,7 +610,7 @@ def generate_gn_config(
             }
         )
     if input_variables["target_os"] == "mac":
-        input_variables.update(
+        gn_input_variables.update(
             {
                 "mac_sdk_path": "/",
                 "enable_wmax_tokens": False,
@@ -618,87 +618,120 @@ def generate_gn_config(
         )
 
     gn_args = "--args=%s" % " ".join(
-        ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(input_variables)]
+        ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(gn_input_variables)]
     )
-    with tempfile.TemporaryDirectory() as tempdir:
-        gen_args = [gn_binary, "gen", tempdir, gn_args, "--ide=json"]
-        print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
-        subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
+    # Don't make use_x11 part of the string for openbsd to avoid creating
+    # new json files.
+    gn_arg_string = "_".join(
+        [
+            str(input_variables[k])
+            for k in sorted(input_variables.keys())
+            if k != "use_x11" or input_variables["target_os"] != "openbsd"
+        ]
+    )
+    out_dir = mozpath.join(output, "gn-output")
+    gen_args = [gn_binary, "gen", out_dir, gn_args, "--ide=json"]
+    print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
+    subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
 
-        gn_config_file = mozpath.join(tempdir, "project.json")
+    gn_config_file = mozpath.join(out_dir, "project.json")
 
-        with open(gn_config_file, "r") as fh:
-            gn_out = json.load(fh)
-            gn_out = filter_gn_config(
-                tempdir, gn_out, sandbox_variables, input_variables, gn_target
-            )
-            return gn_out
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config", help="configuration in json format")
-    args = parser.parse_args()
-
-    gn_binary = bootstrap_toolchain("gn/gn") or which("gn")
-    if not gn_binary:
-        raise Exception("The GN program must be present to generate GN configs.")
-
-    with open(args.config, "r") as fh:
-        config = json.load(fh)
-
-    topsrcdir = Path(__file__).parent.parent.parent.parent.resolve()
-
-    vars_set = []
-    for is_debug in (True, False):
-        for target_os in ("android", "linux", "mac", "openbsd", "win"):
-            target_cpus = ["x64"]
-            if target_os in ("android", "linux", "mac", "win", "openbsd"):
-                target_cpus.append("arm64")
-            if target_os in ("android", "linux"):
-                target_cpus.append("arm")
-            if target_os in ("android", "linux", "win"):
-                target_cpus.append("x86")
-            if target_os == "linux":
-                target_cpus.append("ppc64")
-            for target_cpu in target_cpus:
-                vars = {
-                    "host_cpu": "x64",
-                    "is_debug": is_debug,
-                    "target_cpu": target_cpu,
-                    "target_os": target_os,
-                }
-                if target_os == "linux":
-                    for use_x11 in (True, False):
-                        vars["use_x11"] = use_x11
-                        vars_set.append(vars.copy())
-                else:
-                    if target_os == "openbsd":
-                        vars["use_x11"] = True
-                    vars_set.append(vars)
-
-    gn_configs = []
-    for vars in vars_set:
-        gn_configs.append(
-            generate_gn_config(
-                topsrcdir / config["target_dir"],
-                gn_binary,
-                vars,
-                config["gn_sandbox_variables"],
-                config["gn_target"],
-            )
+    with open(gn_config_file, "r") as fh:
+        gn_out = json.load(fh)
+        gn_out = filter_gn_config(
+            out_dir, gn_out, sandbox_variables, input_variables, gn_target
         )
 
-    print("Writing moz.build files")
-    write_mozbuild(
-        topsrcdir,
-        topsrcdir / config["target_dir"],
-        config["non_unified_sources"],
-        gn_configs,
-        config["mozilla_flags"],
-        config["write_mozbuild_variables"],
-    )
+    os.remove(gn_config_file)
+
+    gn_out_file = mozpath.join(out_dir, gn_arg_string + ".json")
+    with open(gn_out_file, "w") as fh:
+        json.dump(gn_out, fh, indent=4, sort_keys=True, separators=(",", ": "))
+    print("Wrote gn config to %s" % gn_out_file)
 
 
-if __name__ == "__main__":
-    main()
+class GnConfigGenBackend(BuildBackend):
+    def consume_object(self, obj):
+        if isinstance(obj, GnProjectData):
+            gn_binary = obj.config.substs.get("GN")
+            if not gn_binary:
+                raise Exception(
+                    "The GN program must be present to generate GN configs."
+                )
+
+            vars_set = []
+            for is_debug in (True, False):
+                for target_os in ("android", "linux", "mac", "openbsd", "win"):
+                    target_cpus = ["x64"]
+                    if target_os in ("android", "linux", "mac", "win"):
+                        target_cpus.append("arm64")
+                    if target_os == "android":
+                        target_cpus.append("arm")
+                    if target_os in ("android", "linux", "win"):
+                        target_cpus.append("x86")
+                    for target_cpu in target_cpus:
+                        vars = {
+                            "host_cpu": "x64",
+                            "is_debug": is_debug,
+                            "target_cpu": target_cpu,
+                            "target_os": target_os,
+                        }
+                        if target_os == "linux":
+                            for use_x11 in (True, False):
+                                vars["use_x11"] = use_x11
+                                vars_set.append(vars.copy())
+                        else:
+                            if target_os == "openbsd":
+                                vars["use_x11"] = True
+                            vars_set.append(vars)
+
+            for vars in vars_set:
+                generate_gn_config(
+                    mozpath.join(obj.srcdir, obj.target_dir),
+                    mozpath.join(obj.objdir, obj.target_dir),
+                    gn_binary,
+                    vars,
+                    obj.gn_sandbox_variables,
+                    obj.gn_target,
+                )
+        return True
+
+    def consume_finished(self):
+        pass
+
+
+class GnMozbuildWriterBackend(BuildBackend):
+    def consume_object(self, obj):
+        if isinstance(obj, GnProjectData):
+            gn_config_files = glob.glob(
+                mozpath.join(obj.srcdir, "gn-configs", "*.json")
+            )
+            if not gn_config_files:
+                # Check the objdir for a gn-config in to aide debugging in cases
+                # someone is running both steps on the same machine and want to
+                # sanity check moz.build generation for a particular config.
+                gn_config_files = glob.glob(
+                    mozpath.join(obj.objdir, obj.target_dir, "gn-output", "*.json")
+                )
+            if gn_config_files:
+                print(
+                    "Writing moz.build files based on the following gn configs: %s"
+                    % gn_config_files
+                )
+                write_mozbuild(
+                    obj.config.topsrcdir,
+                    mozpath.join(obj.srcdir, obj.target_dir),
+                    obj.non_unified_sources,
+                    gn_config_files,
+                    obj.mozilla_flags,
+                    obj.write_mozbuild_variables,
+                )
+            else:
+                print(
+                    "Ignoring gn project '%s', no config files found in '%s'"
+                    % (obj.srcdir, mozpath.join(obj.srcdir, "gn-configs"))
+                )
+        return True
+
+    def consume_finished(self):
+        pass
