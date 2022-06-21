@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           # Documentation is generated using Python 3.9 due to spinx-js not
           # supporting 3.10: https://github.com/mozilla/sphinx-js/issues/186
