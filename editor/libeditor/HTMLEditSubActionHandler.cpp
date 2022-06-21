@@ -1877,10 +1877,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
       return result;
     }
     // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
-    MOZ_ASSERT(!result.Canceled(),
-               "HandleInsertParagraphInParagraph() canceled this edit action, "
-               "InsertParagraphSeparatorAsSubAction() needs to handle this "
-               "action instead");
+    MOZ_ASSERT(!result.Canceled());
+    MOZ_ASSERT(result.Rv() == NS_SUCCESS_DOM_NO_OPERATION);
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
@@ -7236,14 +7234,14 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     return aCandidatePointToSplit;
   }();
 
-  bool doesCRCreateNewP = GetReturnInParagraphCreatesNewParagraph();
+  const bool createNewParagraph = GetReturnInParagraphCreatesNewParagraph();
   bool splitAfterNewBR = false;
   RefPtr<HTMLBRElement> brElement;
 
   EditorDOMPoint pointToSplitParentDivOrP(pointToSplitAvoidingEmptyNewLink);
 
   EditorDOMPoint pointToInsertBR;
-  if (doesCRCreateNewP &&
+  if (createNewParagraph &&
       pointToSplitAvoidingEmptyNewLink.GetContainer() == &aParentDivOrP) {
     // We are at the edges of the block, so, we don't need to create new <br>.
     brElement = nullptr;
@@ -7259,7 +7257,13 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+        // If insertParagraph does not create a new paragraph, default to
+        // insertLineBreak.
+        if (!createNewParagraph) {
+          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+        }
         pointToInsertBR.Set(pointToSplitAvoidingEmptyNewLink.GetContainer());
+        MOZ_ASSERT(pointToInsertBR.IsSet());
         brElement = nullptr;
       }
     } else if (pointToSplitAvoidingEmptyNewLink.IsEndOfContainer()) {
@@ -7273,56 +7277,64 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+        // If insertParagraph does not create a new paragraph, default to
+        // insertLineBreak.
+        if (!createNewParagraph) {
+          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+        }
         pointToInsertBR.SetAfter(
             pointToSplitAvoidingEmptyNewLink.GetContainer());
-        NS_WARNING_ASSERTION(
-            pointToInsertBR.IsSet(),
-            "Failed to set to after the container  of selection start");
+        MOZ_ASSERT(pointToInsertBR.IsSet());
         brElement = nullptr;
       }
     } else {
-      if (doesCRCreateNewP) {
-        // XXX We split a text node here if caret is middle of it to insert
-        //     <br> element **before** splitting aParentDivOrP.  Then, if
-        //     the <br> element becomes unnecessary, it'll be removed again.
-        //     So this does much more complicated things than what we want to
-        //     do here.  We should handle this case separately to make the code
-        //     much simpler.
-        Result<EditorDOMPoint, nsresult> pointToSplitOrError =
-            WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-                *this, pointToSplitParentDivOrP, aParentDivOrP);
-        if (NS_WARN_IF(Destroyed())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (MOZ_UNLIKELY(pointToSplitOrError.isErr())) {
-          NS_WARNING(
-              "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
-              "failed");
-          return EditActionResult(pointToSplitOrError.unwrapErr());
-        }
-        MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
-        if (pointToSplitOrError.inspect().IsSet()) {
-          pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
-        }
-        const SplitNodeResult splitParentDivOrPResult =
-            SplitNodeWithTransaction(pointToSplitParentDivOrP);
-        if (splitParentDivOrPResult.isErr()) {
-          NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-          return EditActionResult(splitParentDivOrPResult.unwrapErr());
-        }
-        nsresult rv = splitParentDivOrPResult.SuggestCaretPointTo(
-            *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-        if (NS_FAILED(rv)) {
-          NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-          return EditActionHandled(rv);
-        }
-        pointToSplitParentDivOrP.SetToEndOf(
-            splitParentDivOrPResult.GetPreviousContent());
+      // If insertParagraph does not create a new paragraph, default to
+      // insertLineBreak.
+      if (!createNewParagraph) {
+        return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
       }
+
+      // XXX We split a text node here if caret is middle of it to insert
+      //     <br> element **before** splitting aParentDivOrP.  Then, if
+      //     the <br> element becomes unnecessary, it'll be removed again.
+      //     So this does much more complicated things than what we want to
+      //     do here.  We should handle this case separately to make the code
+      //     much simpler.
+      Result<EditorDOMPoint, nsresult> pointToSplitOrError =
+          WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+              *this, pointToSplitParentDivOrP, aParentDivOrP);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (MOZ_UNLIKELY(pointToSplitOrError.isErr())) {
+        NS_WARNING(
+            "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
+            "failed");
+        return EditActionResult(pointToSplitOrError.unwrapErr());
+      }
+      MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
+      if (pointToSplitOrError.inspect().IsSet()) {
+        pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
+      }
+      const SplitNodeResult splitParentDivOrPResult =
+          SplitNodeWithTransaction(pointToSplitParentDivOrP);
+      if (splitParentDivOrPResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return EditActionResult(splitParentDivOrPResult.unwrapErr());
+      }
+      nsresult rv = splitParentDivOrPResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return EditActionHandled(rv);
+      }
+      pointToSplitParentDivOrP.SetToEndOf(
+          splitParentDivOrPResult.GetPreviousContent());
 
       // We need to put new <br> after the left node if given node was split
       // above.
       pointToInsertBR.SetAfter(pointToSplitParentDivOrP.GetContainer());
+      MOZ_ASSERT(pointToInsertBR.IsSet());
     }
   } else {
     // not in a text node.
@@ -7344,6 +7356,11 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
               : nullptr);
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+        // If insertParagraph does not create a new paragraph, default to
+        // insertLineBreak.
+        if (!createNewParagraph) {
+          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+        }
         pointToInsertBR = pointToSplitAvoidingEmptyNewLink;
         splitAfterNewBR = true;
         brElement = nullptr;
@@ -7351,11 +7368,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     }
   }
   if (pointToInsertBR.IsSet()) {
-    // if CR does not create a new P, default to BR creation
-    if (NS_WARN_IF(!doesCRCreateNewP)) {
-      return EditActionResult(NS_OK);
-    }
-
+    MOZ_ASSERT(createNewParagraph);
     CreateElementResult insertBRElementResult =
         InsertBRElement(WithTransaction::Yes, pointToInsertBR);
     if (insertBRElementResult.isErr()) {
