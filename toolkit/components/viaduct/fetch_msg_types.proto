@@ -19,6 +19,7 @@ message Request {
         CONNECT = 5;
         OPTIONS = 6;
         TRACE = 7;
+        PATCH = 8;
     }
     required Method method = 1;
     required string url = 2;

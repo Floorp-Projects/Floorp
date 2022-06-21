@@ -410,7 +410,6 @@ add_test(function test_Capabilities_ctor() {
   ok(caps.has("browserVersion"));
   ok(caps.has("platformName"));
   ok(["linux", "mac", "windows", "android"].includes(caps.get("platformName")));
-  ok(caps.has("platformVersion"));
   equal(PageLoadStrategy.Normal, caps.get("pageLoadStrategy"));
   equal(false, caps.get("acceptInsecureCerts"));
   ok(caps.get("timeouts") instanceof Timeouts);
@@ -422,6 +421,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("moz:accessibilityChecks"));
   ok(caps.has("moz:buildID"));
   ok(caps.has("moz:debuggerAddress"));
+  ok(caps.has("moz:platformVersion"));
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
   equal(false, caps.get("moz:useNonSpecCompliantPointerOrigin"));
@@ -443,7 +443,6 @@ add_test(function test_Capabilities_toJSON() {
   equal(caps.get("browserName"), json.browserName);
   equal(caps.get("browserVersion"), json.browserVersion);
   equal(caps.get("platformName"), json.platformName);
-  equal(caps.get("platformVersion"), json.platformVersion);
   equal(caps.get("pageLoadStrategy"), json.pageLoadStrategy);
   equal(caps.get("acceptInsecureCerts"), json.acceptInsecureCerts);
   deepEqual(caps.get("proxy").toJSON(), json.proxy);
@@ -455,6 +454,7 @@ add_test(function test_Capabilities_toJSON() {
   equal(caps.get("moz:accessibilityChecks"), json["moz:accessibilityChecks"]);
   equal(caps.get("moz:buildID"), json["moz:buildID"]);
   equal(caps.get("moz:debuggerAddress"), json["moz:debuggerAddress"]);
+  equal(caps.get("moz:platformVersion"), json["moz:platformVersion"]);
   equal(caps.get("moz:processID"), json["moz:processID"]);
   equal(caps.get("moz:profile"), json["moz:profile"]);
   equal(

@@ -6,6 +6,7 @@
 #include "EditorUtils.h"
 
 #include "EditorDOMPoint.h"
+#include "EditorForwards.h"   // for CollectChildrenOptions
 #include "HTMLEditHelpers.h"  // for MoveNodeResult
 #include "HTMLEditUtils.h"    // for HTMLEditUtils
 #include "TextEditor.h"
@@ -855,6 +856,249 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+Result<EditorDOMPoint, nsresult> AutoRangeArray::
+    SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+        HTMLEditor& aHTMLEditor) {
+  // FYI: The following code is originated in
+  // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#6971
+
+  // Split text nodes. This is necessary, since given ranges may end in text
+  // nodes in case where part of a pre-formatted elements needs to be moved.
+  EditorDOMPoint pointToPutCaret;
+  IgnoredErrorResult ignoredError;
+  for (const OwningNonNull<nsRange>& range : mRanges) {
+    EditorDOMPoint atEnd(range->EndRef());
+    if (NS_WARN_IF(!atEnd.IsSet()) || !atEnd.IsInTextNode()) {
+      continue;
+    }
+
+    if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
+      // Split the text node.
+      SplitNodeResult splitAtEndResult =
+          aHTMLEditor.SplitNodeWithTransaction(atEnd);
+      if (splitAtEndResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtEndResult.unwrapErr());
+      }
+      splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
+                                        {SuggestCaret::OnlyIfHasSuggestion});
+
+      // Correct the range.
+      // The new end parent becomes the parent node of the text.
+      MOZ_ASSERT(!range->IsInSelection());
+      range->SetEnd(splitAtEndResult.AtNextContent<EditorRawDOMPoint>()
+                        .ToRawRangeBoundary(),
+                    ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "nsRange::SetEnd() failed, but ignored");
+      ignoredError.SuppressException();
+    }
+  }
+
+  // FYI: The following code is originated in
+  // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#7023
+  nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
+  rangeItemArray.AppendElements(mRanges.Length());
+
+  // First register ranges for special editor gravity
+  for (OwningNonNull<RangeItem>& rangeItem : rangeItemArray) {
+    rangeItem = new RangeItem();
+    rangeItem->StoreRange(*mRanges[0]);
+    aHTMLEditor.RangeUpdaterRef().RegisterRangeItem(*rangeItem);
+    // TODO: We should keep the array, and just update the ranges.
+    mRanges.RemoveElementAt(0);
+  }
+  // Now bust up inlines.
+  nsresult rv = NS_OK;
+  for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
+    // MOZ_KnownLive because 'rangeItemArray' is guaranteed to keep it alive.
+    Result<EditorDOMPoint, nsresult> splitParentsResult =
+        aHTMLEditor.SplitParentInlineElementsAtRangeEdges(MOZ_KnownLive(*item));
+    if (MOZ_UNLIKELY(splitParentsResult.isErr())) {
+      NS_WARNING("HTMLEditor::SplitParentInlineElementsAtRangeEdges() failed");
+      rv = splitParentsResult.unwrapErr();
+      break;
+    }
+    if (splitParentsResult.inspect().IsSet()) {
+      pointToPutCaret = splitParentsResult.unwrap();
+    }
+  }
+  // Then unregister the ranges
+  for (OwningNonNull<RangeItem>& item : rangeItemArray) {
+    aHTMLEditor.RangeUpdaterRef().DropRangeItem(item);
+    RefPtr<nsRange> range = item->GetRange();
+    if (range) {
+      mRanges.AppendElement(std::move(range));
+    }
+  }
+
+  // XXX Why do we ignore the other errors here??
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  return pointToPutCaret;
+}
+
+nsresult AutoRangeArray::CollectEditTargetNodes(
+    const HTMLEditor& aHTMLEditor,
+    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+    EditSubAction aEditSubAction,
+    CollectNonEditableNodes aCollectNonEditableNodes) const {
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+
+  // FYI: This was moved from
+  // https://searchfox.org/mozilla-central/rev/4bce7d85ba4796dd03c5dcc7cfe8eee0e4c07b3b/editor/libeditor/HTMLEditSubActionHandler.cpp#7060
+
+  // Gather up a list of all the nodes
+  for (const OwningNonNull<nsRange>& range : mRanges) {
+    DOMSubtreeIterator iter;
+    nsresult rv = iter.Init(*range);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("DOMSubtreeIterator::Init() failed");
+      return rv;
+    }
+    if (aOutArrayOfContents.IsEmpty()) {
+      iter.AppendAllNodesToArray(aOutArrayOfContents);
+    } else {
+      AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfTopChildren;
+      iter.AppendNodesToArray(
+          +[](nsINode& aNode, void* aArray) -> bool {
+            MOZ_ASSERT(aArray);
+            return !static_cast<nsTArray<OwningNonNull<nsIContent>>*>(aArray)
+                        ->Contains(&aNode);
+          },
+          arrayOfTopChildren, &aOutArrayOfContents);
+      aOutArrayOfContents.AppendElements(std::move(arrayOfTopChildren));
+    }
+    if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
+      for (size_t i : Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+        if (!EditorUtils::IsEditableContent(aOutArrayOfContents[i],
+                                            EditorUtils::EditorType::HTML)) {
+          aOutArrayOfContents.RemoveElementAt(i);
+        }
+      }
+    }
+  }
+
+  switch (aEditSubAction) {
+    case EditSubAction::eCreateOrRemoveBlock: {
+      // Certain operations should not act on li's and td's, but rather inside
+      // them.  Alter the list as needed.
+      CollectChildrenOptions options = {
+          CollectChildrenOption::CollectListChildren,
+          CollectChildrenOption::CollectTableChildren};
+      if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
+        options += CollectChildrenOption::IgnoreNonEditableChildren;
+      }
+      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+        if (HTMLEditUtils::IsListItem(content)) {
+          aOutArrayOfContents.RemoveElementAt(i);
+          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+                                         options);
+        }
+      }
+      // Empty text node shouldn't be selected if unnecessary
+      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
+        if (Text* text = aOutArrayOfContents[i]->GetAsText()) {
+          // Don't select empty text except to empty block
+          if (!HTMLEditUtils::IsVisibleTextNode(*text)) {
+            aOutArrayOfContents.RemoveElementAt(i);
+          }
+        }
+      }
+      break;
+    }
+    case EditSubAction::eCreateOrChangeList: {
+      // XXX aCollectNonEditableNodes is ignored here.  Maybe a bug.
+      CollectChildrenOptions options = {
+          CollectChildrenOption::CollectTableChildren};
+      for (size_t i = aOutArrayOfContents.Length(); i > 0; i--) {
+        // Scan for table elements.  If we find table elements other than
+        // table, replace it with a list of any editable non-table content
+        // because if a selection range starts from end in a table-cell and
+        // ends at or starts from outside the `<table>`, we need to make
+        // lists in each selected table-cells.
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[i - 1];
+        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
+          aOutArrayOfContents.RemoveElementAt(i - 1);
+          HTMLEditUtils::CollectChildren(content, aOutArrayOfContents, i - 1,
+                                         options);
+        }
+      }
+      // If there is only one node in the array, and it is a `<div>`,
+      // `<blockquote>` or a list element, then look inside of it until we
+      // find inner list or content.
+      if (aOutArrayOfContents.Length() != 1) {
+        break;
+      }
+      Element* deepestDivBlockquoteOrListElement =
+          HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
+              aOutArrayOfContents[0],
+              {HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode},
+              nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
+              nsGkAtoms::ol, nsGkAtoms::dl);
+      if (!deepestDivBlockquoteOrListElement) {
+        break;
+      }
+      if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
+              nsGkAtoms::div, nsGkAtoms::blockquote)) {
+        aOutArrayOfContents.Clear();
+        // XXX Before we're called, non-editable nodes are ignored.  However,
+        //     we may append non-editable nodes here.
+        HTMLEditUtils::CollectChildren(*deepestDivBlockquoteOrListElement,
+                                       aOutArrayOfContents, 0, {});
+        break;
+      }
+      aOutArrayOfContents.ReplaceElementAt(
+          0, OwningNonNull<nsIContent>(*deepestDivBlockquoteOrListElement));
+      break;
+    }
+    case EditSubAction::eOutdent:
+    case EditSubAction::eIndent:
+    case EditSubAction::eSetPositionToAbsolute: {
+      // Indent/outdent already do something special for list items, but we
+      // still need to make sure we don't act on table elements
+      CollectChildrenOptions options = {
+          CollectChildrenOption::CollectListChildren,
+          CollectChildrenOption::CollectTableChildren};
+      if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
+        options += CollectChildrenOption::IgnoreNonEditableChildren;
+      }
+      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
+        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
+          aOutArrayOfContents.RemoveElementAt(i);
+          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+                                         options);
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  // Outdent should look inside of divs.
+  if (aEditSubAction == EditSubAction::eOutdent &&
+      !aHTMLEditor.IsCSSEnabled()) {
+    CollectChildrenOptions options = {};
+    if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
+      options += CollectChildrenOption::IgnoreNonEditableChildren;
+    }
+    for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
+      OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
+      if (content->IsHTMLElement(nsGkAtoms::div)) {
+        aOutArrayOfContents.RemoveElementAt(i);
+        HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, i,
+                                       options);
+      }
+    }
+  }
+
   return NS_OK;
 }
 

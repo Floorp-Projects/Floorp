@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
+  OriginControls: "resource://gre/modules/ExtensionPermissions.jsm",
 });
 
 const DEFAULT_EXTENSION_ICON =
@@ -603,6 +604,74 @@ var ExtensionsUI = {
         options
       );
     });
+  },
+
+  // Populate extension toolbar popup menu with origin controls.
+  originControlsMenu(popup, extensionId) {
+    let policy = WebExtensionPolicy.getByID(extensionId);
+    if (!policy?.extension.originControls) {
+      return;
+    }
+
+    popup.ownerGlobal.MozXULElement.insertFTLIfNeeded(
+      "preview/originControls.ftl"
+    );
+
+    let uri = popup.ownerGlobal.gBrowser.currentURI;
+    let state = lazy.OriginControls.getState(policy, uri);
+
+    let doc = popup.ownerDocument;
+    let whenClicked, alwaysOn, allDomains;
+    let separator = doc.createXULElement("menuseparator");
+
+    let headerItem = doc.createXULElement("menuitem");
+    headerItem.setAttribute("disabled", true);
+
+    if (state.noAccess) {
+      doc.l10n.setAttributes(headerItem, "origin-controls-no-access");
+    } else {
+      doc.l10n.setAttributes(headerItem, "origin-controls-options");
+    }
+
+    if (state.allDomains) {
+      allDomains = doc.createXULElement("menuitem");
+      allDomains.setAttribute("type", "radio");
+      allDomains.setAttribute("checked", state.hasAccess);
+      doc.l10n.setAttributes(allDomains, "origin-controls-option-all-domains");
+    }
+
+    if (state.whenClicked) {
+      whenClicked = doc.createXULElement("menuitem");
+      whenClicked.setAttribute("type", "radio");
+      whenClicked.setAttribute("checked", !state.hasAccess);
+      doc.l10n.setAttributes(
+        whenClicked,
+        "origin-controls-option-when-clicked"
+      );
+      whenClicked.addEventListener("command", () =>
+        lazy.OriginControls.setWhenClicked(policy, uri)
+      );
+    }
+
+    if (state.alwaysOn) {
+      alwaysOn = doc.createXULElement("menuitem");
+      alwaysOn.setAttribute("type", "radio");
+      alwaysOn.setAttribute("checked", state.hasAccess);
+      doc.l10n.setAttributes(alwaysOn, "origin-controls-option-always-on", {
+        domain: uri.host,
+      });
+      alwaysOn.addEventListener("command", () =>
+        lazy.OriginControls.setAlwaysOn(policy, uri)
+      );
+    }
+
+    // Insert all before Manage Extension, after any extension's menu items.
+    let items = [headerItem, whenClicked, alwaysOn, allDomains, separator];
+    let manageItem = popup.querySelector(".customize-context-manageExtension");
+    items.forEach(item => item && popup.insertBefore(item, manageItem));
+
+    let cleanup = () => items.forEach(item => item?.remove());
+    popup.addEventListener("popuphidden", cleanup, { once: true });
   },
 };
 

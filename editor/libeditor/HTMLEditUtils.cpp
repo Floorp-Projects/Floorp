@@ -5,16 +5,17 @@
 
 #include "HTMLEditUtils.h"
 
-#include "CSSEditUtils.h"  // for CSSEditUtils
-#include "WSRunObject.h"   // for WSRunScanner
+#include "CSSEditUtils.h"    // for CSSEditUtils
+#include "EditAction.h"      // for EditAction
+#include "EditorBase.h"      // for EditorBase, EditorType
+#include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
+#include "EditorForwards.h"  // for CollectChildrenOptions
+#include "EditorUtils.h"     // for EditorUtils
+#include "WSRunObject.h"     // for WSRunScanner
 
-#include "mozilla/ArrayUtils.h"      // for ArrayLength
-#include "mozilla/Assertions.h"      // for MOZ_ASSERT, etc.
-#include "mozilla/EditAction.h"      // for EditAction
-#include "mozilla/EditorBase.h"      // for EditorBase, EditorType
-#include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint, etc.
-#include "mozilla/EditorUtils.h"     // for EditorUtils
-#include "mozilla/dom/Element.h"     // for Element, nsINode
+#include "mozilla/ArrayUtils.h"   // for ArrayLength
+#include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc.
+#include "mozilla/dom/Element.h"  // for Element, nsINode
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/Text.h"  // for Text
@@ -1792,6 +1793,35 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
 
   return forwardScanFromPointToInsertResult
       .template PointAfterContent<EditorDOMPointType>();
+}
+
+// static
+size_t HTMLEditUtils::CollectChildren(
+    nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+    size_t aIndexToInsertChildren, const CollectChildrenOptions& aOptions) {
+  // FYI: This was moved from
+  // https://searchfox.org/mozilla-central/rev/4bce7d85ba4796dd03c5dcc7cfe8eee0e4c07b3b/editor/libeditor/HTMLEditSubActionHandler.cpp#6261
+
+  size_t numberOfFoundChildren = 0;
+  for (nsIContent* content =
+           GetFirstChild(aNode, {WalkTreeOption::IgnoreNonEditableNode});
+       content; content = content->GetNextSibling()) {
+    if ((aOptions.contains(CollectChildrenOption::CollectListChildren) &&
+         (HTMLEditUtils::IsAnyListElement(content) ||
+          HTMLEditUtils::IsListItem(content))) ||
+        (aOptions.contains(CollectChildrenOption::CollectTableChildren) &&
+         HTMLEditUtils::IsAnyTableElement(content))) {
+      numberOfFoundChildren += HTMLEditUtils::CollectChildren(
+          *content, aOutArrayOfContents,
+          aIndexToInsertChildren + numberOfFoundChildren, aOptions);
+    } else if (!aOptions.contains(
+                   CollectChildrenOption::IgnoreNonEditableChildren) ||
+               EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
+      aOutArrayOfContents.InsertElementAt(
+          aIndexToInsertChildren + numberOfFoundChildren++, *content);
+    }
+  }
+  return numberOfFoundChildren;
 }
 
 }  // namespace mozilla
