@@ -6,14 +6,43 @@
 # The script uses a subsequent grep pass to remove #include files from .cc
 # that are also in the .h file, or are problematic to include.
 #
+# In order to handle include paths correctly, you need to provide
+# a compile DB (aka compile_commands.json).
+# You can create it in one of the following ways:
+# "gn gen --export-compile-commands path/to/out"
+# "tools/clang/scripts/generate_compdb.py -p path/to/out > compile_commands.json"
+#
 # To get iwyu on Debian/glinux, do "sudo apt-get install iwyu".
 
 set -e
 set -x
-FILE=$1
+
+IWYU_TOOL="${IWYU_TOOL:-/usr/bin/iwyu_tool}"
+FIX_INCLUDE="${FIX_INCLUDE:-/usr/bin/fix_include}"
 # If you want to exclude files that are in $FILE.h from $FILE.cc, set
 # the following variable to "yes". This is a style guide violation.
 REMOVE_CC_INCLUDES=no
+COMPILE_COMMANDS=''
+
+error() {
+  echo "$*" >&2
+  exit 1
+}
+
+while getopts 'c:r' opts; do
+  case "${opts}" in
+    c) COMPILE_COMMANDS="${OPTARG}" ;;
+    r) REMOVE_CC_INCLUDES=yes ;;
+    *) error "Unexpected option ${opts}" ;;
+  esac
+done
+shift $(expr $OPTIND - 1 )
+
+if [[ -z "$COMPILE_COMMANDS" ]]; then
+  error "compile_commands.json must be passed."
+fi
+
+FILE="$1"
 
 if [ ! -f $FILE ]; then
   # See if we have the root name of a .cc/.h pair
@@ -34,11 +63,8 @@ else
 fi
 
 # IWYU has a confusing set of exit codes. Discard it.
-iwyu -Xiwyu --no_fwd_decls -D__X86_64__  -DWEBRTC_POSIX -I . \
-  -I third_party/abseil-cpp \
-  -I third_party/googletest/src/googlemock/include \
-  -I third_party/googletest/src/googletest/include \
-  $FILE_CC >& /tmp/includefixes$$ || echo "IWYU done, code $?"
+"$IWYU_TOOL" -p "$COMPILE_COMMANDS" "$FILE_CC" \
+  >& /tmp/includefixes$$ || echo "IWYU done, code $?"
 
 if grep 'fatal error' /tmp/includefixes$$; then
   echo "iwyu run failed"
@@ -46,7 +72,11 @@ if grep 'fatal error' /tmp/includefixes$$; then
   rm /tmp/includefixes$$
   exit 1
 else
-  fix_include < /tmp/includefixes$$ || echo "Some files modified"
+  # In compile_commands.json, the file name is recorded
+  # as a relative path to the build directory.
+  pushd "$(dirname "$COMPILE_COMMANDS")" || error "pushd failed"
+  "$FIX_INCLUDE" < /tmp/includefixes$$ || echo "Some files modified"
+  popd
   rm /tmp/includefixes$$
 fi
 
@@ -70,5 +100,3 @@ if [ -n "$FILE_H" ]; then
 fi
 
 echo "Finished. Check diff, compile and git cl format before uploading."
-
-
