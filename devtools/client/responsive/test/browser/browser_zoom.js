@@ -13,12 +13,15 @@ addRDMTaskWithPreAndPost(
     // of ContentSettings, which would reset the zoom.
     FullZoom.setZoom(2.0, browser);
   },
-  async function task({ browser }) {
+  async function task({ browser, ui }) {
     is(
       ZoomManager.getZoomForBrowser(browser),
       2.0,
       "Zoom shouldn't have got lost"
     );
+
+    // wait for the list of devices to be loaded to prevent pending promises
+    await waitForDeviceAndViewportState(ui);
   },
   async function post() {}
 );
