@@ -1817,6 +1817,13 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   }
 }
 
+void VideoStreamEncoder::RequestRefreshFrame() {
+  worker_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
+    RTC_DCHECK_RUN_ON(worker_queue_);
+    video_source_sink_controller_.RequestRefreshFrame();
+  }));
+}
+
 void VideoStreamEncoder::SendKeyFrame() {
   if (!encoder_queue_.IsCurrent()) {
     encoder_queue_.PostTask([this] { SendKeyFrame(); });
@@ -1826,17 +1833,9 @@ void VideoStreamEncoder::SendKeyFrame() {
   TRACE_EVENT0("webrtc", "OnKeyFrameRequest");
   RTC_DCHECK(!next_frame_types_.empty());
 
-  if (frame_cadence_adapter_) {
-    if (frame_cadence_adapter_->ProcessKeyFrameRequest()) {
-      RTC_DLOG(LS_INFO) << __func__ << " RequestRefreshFrame().";
-      worker_queue_->PostTask(ToQueuedTask(task_safety_, [this] {
-        RTC_DCHECK_RUN_ON(worker_queue_);
-        video_source_sink_controller_.RequestRefreshFrame();
-      }));
-    } else {
-      RTC_DLOG(LS_INFO) << __func__ << " No RequestRefreshFrame().";
-    }
-  }
+  if (frame_cadence_adapter_)
+    frame_cadence_adapter_->ProcessKeyFrameRequest();
+
   if (!encoder_) {
     RTC_DLOG(LS_INFO) << __func__ << " no encoder.";
     return;  // Shutting down, or not configured yet.

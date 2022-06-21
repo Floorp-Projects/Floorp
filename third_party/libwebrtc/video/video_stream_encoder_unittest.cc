@@ -19,6 +19,7 @@
 #include "absl/memory/memory.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/mock_fec_controller_override.h"
 #include "api/test/mock_video_encoder.h"
@@ -118,18 +119,21 @@ const uint8_t kCodedFrameVp8Qp25[] = {
     0x02, 0x47, 0x08, 0x85, 0x85, 0x88, 0x85, 0x84, 0x88, 0x0c,
     0x82, 0x00, 0x0c, 0x0d, 0x60, 0x00, 0xfe, 0xfc, 0x5c, 0xd0};
 
+VideoFrame CreateSimpleNV12Frame() {
+  return VideoFrame::Builder()
+      .set_video_frame_buffer(rtc::make_ref_counted<NV12Buffer>(
+          /*width=*/16, /*height=*/16))
+      .build();
+}
+
 void PassAFrame(
     TaskQueueBase* encoder_queue,
     FrameCadenceAdapterInterface::Callback* video_stream_encoder_callback,
     int64_t ntp_time_ms) {
   encoder_queue->PostTask(
       ToQueuedTask([video_stream_encoder_callback, ntp_time_ms] {
-        video_stream_encoder_callback->OnFrame(
-            Timestamp::Millis(ntp_time_ms), 1,
-            VideoFrame::Builder()
-                .set_video_frame_buffer(rtc::make_ref_counted<NV12Buffer>(
-                    /*width=*/16, /*height=*/16))
-                .build());
+        video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms),
+                                               1, CreateSimpleNV12Frame());
       }));
 }
 
@@ -672,14 +676,9 @@ class SimpleVideoStreamEncoderFactory {
         bitrate_allocator_factory_.get();
   }
 
-  std::unique_ptr<AdaptedVideoStreamEncoder> Create(
+  std::unique_ptr<AdaptedVideoStreamEncoder> CreateWithEncoderQueue(
       std::unique_ptr<FrameCadenceAdapterInterface> zero_hertz_adapter,
-      TaskQueueBase** encoder_queue_ptr = nullptr) {
-    auto encoder_queue =
-        time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
-            "EncoderQueue", TaskQueueFactory::Priority::NORMAL);
-    if (encoder_queue_ptr)
-      *encoder_queue_ptr = encoder_queue.get();
+      std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue) {
     auto result = std::make_unique<AdaptedVideoStreamEncoder>(
         time_controller_.GetClock(),
         /*number_of_cores=*/1,
@@ -692,8 +691,24 @@ class SimpleVideoStreamEncoderFactory {
     return result;
   }
 
+  std::unique_ptr<AdaptedVideoStreamEncoder> Create(
+      std::unique_ptr<FrameCadenceAdapterInterface> zero_hertz_adapter,
+      TaskQueueBase** encoder_queue_ptr = nullptr) {
+    auto encoder_queue =
+        time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+            "EncoderQueue", TaskQueueFactory::Priority::NORMAL);
+    if (encoder_queue_ptr)
+      *encoder_queue_ptr = encoder_queue.get();
+    return CreateWithEncoderQueue(std::move(zero_hertz_adapter),
+                                  std::move(encoder_queue));
+  }
+
   void DepleteTaskQueues() { time_controller_.AdvanceTime(TimeDelta::Zero()); }
   MockFakeEncoder& GetMockFakeEncoder() { return mock_fake_encoder_; }
+
+  GlobalSimulatedTimeController* GetTimeController() {
+    return &time_controller_;
+  }
 
  private:
   class NullEncoderSink : public VideoStreamEncoderInterface::EncoderSink {
@@ -750,7 +765,7 @@ class MockFrameCadenceAdapter : public FrameCadenceAdapterInterface {
               UpdateLayerStatus,
               (int spatial_index, bool enabled),
               (override));
-  MOCK_METHOD(bool, ProcessKeyFrameRequest, (), (override));
+  MOCK_METHOD(void, ProcessKeyFrameRequest, (), (override));
 };
 
 class MockEncoderSelector
@@ -9002,16 +9017,53 @@ TEST(VideoStreamEncoderFrameCadenceTest,
   // Ensure the encoder is set up.
   factory.DepleteTaskQueues();
 
-  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest).WillOnce(Return(true));
+  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest)
+      .WillOnce(Invoke([video_stream_encoder_callback] {
+        video_stream_encoder_callback->RequestRefreshFrame();
+      }));
   EXPECT_CALL(mock_source, RequestRefreshFrame);
   video_stream_encoder->SendKeyFrame();
   factory.DepleteTaskQueues();
   Mock::VerifyAndClearExpectations(adapter_ptr);
   Mock::VerifyAndClearExpectations(&mock_source);
 
-  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest).WillOnce(Return(false));
+  EXPECT_CALL(*adapter_ptr, ProcessKeyFrameRequest);
   EXPECT_CALL(mock_source, RequestRefreshFrame).Times(0);
   video_stream_encoder->SendKeyFrame();
+  factory.DepleteTaskQueues();
+}
+
+TEST(VideoStreamEncoderFrameCadenceTest,
+     RequestsRefreshFrameForEarlyZeroHertzKeyFrameRequest) {
+  SimpleVideoStreamEncoderFactory factory;
+  auto encoder_queue =
+      factory.GetTimeController()->GetTaskQueueFactory()->CreateTaskQueue(
+          "EncoderQueue", TaskQueueFactory::Priority::NORMAL);
+
+  // Enables zero-hertz mode.
+  test::ScopedFieldTrials field_trials("WebRTC-ZeroHertzScreenshare/Enabled/");
+  auto adapter = FrameCadenceAdapterInterface::Create(
+      factory.GetTimeController()->GetClock(), encoder_queue.get());
+  FrameCadenceAdapterInterface* adapter_ptr = adapter.get();
+
+  MockVideoSourceInterface mock_source;
+  auto video_stream_encoder = factory.CreateWithEncoderQueue(
+      std::move(adapter), std::move(encoder_queue));
+
+  video_stream_encoder->SetSource(
+      &mock_source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  VideoEncoderConfig config;
+  config.content_type = VideoEncoderConfig::ContentType::kScreen;
+  test::FillEncoderConfiguration(kVideoCodecVP8, 1, &config);
+  video_stream_encoder->ConfigureEncoder(std::move(config), 0);
+
+  // Eventually expect a refresh frame request when requesting a key frame
+  // before initializing zero-hertz mode. This can happen in reality because the
+  // threads invoking key frame requests and constraints setup aren't
+  // synchronized.
+  EXPECT_CALL(mock_source, RequestRefreshFrame);
+  video_stream_encoder->SendKeyFrame();
+  adapter_ptr->OnConstraintsChanged(VideoTrackSourceConstraints{0, 30});
   factory.DepleteTaskQueues();
 }
 

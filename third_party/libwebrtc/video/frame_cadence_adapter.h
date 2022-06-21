@@ -68,6 +68,9 @@ class FrameCadenceAdapterInterface
 
     // Called when the source has discarded a frame.
     virtual void OnDiscardedFrame() = 0;
+
+    // Called when the adapter needs the source to send a refresh frame.
+    virtual void RequestRefreshFrame() = 0;
   };
 
   // Factory function creating a production instance. Deletion of the returned
@@ -104,9 +107,9 @@ class FrameCadenceAdapterInterface
   // Updates spatial layer enabled status.
   virtual void UpdateLayerStatus(int spatial_index, bool enabled) = 0;
 
-  // Returns true if a key frame request should cause generation of a new frame
-  // from the source.
-  virtual ABSL_MUST_USE_RESULT bool ProcessKeyFrameRequest() = 0;
+  // Conditionally requests a refresh frame via
+  // Callback::RequestRefreshFrame.
+  virtual void ProcessKeyFrameRequest() = 0;
 };
 
 }  // namespace webrtc
