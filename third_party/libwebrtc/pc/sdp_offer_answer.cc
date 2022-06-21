@@ -747,6 +747,176 @@ bool ContentHasHeaderExtension(const cricket::ContentInfo& content_info,
 
 }  // namespace
 
+// This class stores state related to a SetRemoteDescription operation, captures
+// and reports potential errors that migth occur and makes sure to notify the
+// observer of the operation and the operations chain of completion.
+class SdpOfferAnswerHandler::RemoteDescriptionOperation {
+ public:
+  RemoteDescriptionOperation(
+      SdpOfferAnswerHandler* handler,
+      std::unique_ptr<SessionDescriptionInterface> desc,
+      rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer,
+      std::function<void()> operations_chain_callback)
+      : handler_(handler),
+        desc_(std::move(desc)),
+        observer_(std::move(observer)),
+        operations_chain_callback_(std::move(operations_chain_callback)) {
+    if (!desc_) {
+      InvalidParam("SessionDescription is NULL.");
+    } else {
+      type_ = desc_->GetType();
+    }
+  }
+
+  ~RemoteDescriptionOperation() {
+    RTC_DCHECK_RUN_ON(handler_->signaling_thread());
+    SignalCompletion();
+    operations_chain_callback_();
+  }
+
+  bool ok() const { return error_.ok(); }
+
+  // Notifies the observer that the operation is complete and releases the
+  // reference to the observer.
+  void SignalCompletion() {
+    if (observer_) {
+      observer_->OnSetRemoteDescriptionComplete(error_);
+      observer_ = nullptr;  // Only fire the notification once.
+    }
+  }
+
+  // If a session error has occurred the PeerConnection is in a possibly
+  // inconsistent state so fail right away.
+  bool HaveSessionError() {
+    RTC_DCHECK(ok());
+    if (handler_->session_error() == SessionError::kNone)
+      return false;
+    SetError(RTCErrorType::INTERNAL_ERROR, handler_->GetSessionErrorMsg());
+    return true;
+  }
+
+  // Returns true if the operation was a rollback operation. If this function
+  // returns true, the caller should consider the operation complete. Otherwise
+  // proceed to the next step.
+  bool MaybeRollback() {
+    RTC_DCHECK_RUN_ON(handler_->signaling_thread());
+    RTC_DCHECK(ok());
+    if (type_ != SdpType::kRollback) {
+      // Check if we can do an implicit rollback.
+      if (type_ == SdpType::kOffer && handler_->IsUnifiedPlan() &&
+          handler_->pc_->configuration()->enable_implicit_rollback &&
+          handler_->signaling_state() ==
+              PeerConnectionInterface::kHaveLocalOffer) {
+        handler_->Rollback(type_);
+      }
+      return false;
+    }
+
+    if (handler_->IsUnifiedPlan()) {
+      error_ = handler_->Rollback(type_);
+    } else if (type_ == SdpType::kRollback) {
+      Unsupported("Rollback not supported in Plan B");
+    }
+
+    return true;
+  }
+
+  // Report to UMA the format of the received offer or answer.
+  void ReportOfferAnswerUma() {
+    RTC_DCHECK(ok());
+    if (type_ == SdpType::kOffer || type_ == SdpType::kAnswer) {
+      handler_->pc_->ReportSdpFormatReceived(*desc_.get());
+      handler_->pc_->ReportSdpBundleUsage(*desc_.get());
+    }
+  }
+
+  // Checks if the session description for the operation is valid. If not, the
+  // function captures error information and returns false. Note that if the
+  // return value is false, the operation should be considered done.
+  bool IsDescriptionValid() {
+    RTC_DCHECK_RUN_ON(handler_->signaling_thread());
+    RTC_DCHECK(ok());
+    RTC_DCHECK(bundle_groups_by_mid_.empty()) << "Already called?";
+    bundle_groups_by_mid_ = GetBundleGroupsByMid(description());
+    error_ = handler_->ValidateSessionDescription(
+        desc_.get(), cricket::CS_REMOTE, bundle_groups_by_mid_);
+    if (!error_.ok()) {
+      std::string error_message =
+          GetSetDescriptionErrorMessage(cricket::CS_REMOTE, type_, error_);
+      RTC_LOG(LS_ERROR) << error_message;
+      error_.set_message(std::move(error_message));
+      return false;
+    }
+
+    return true;
+  }
+
+  // TODO(tommi): Instead of calling `handler_->ApplyRemoteDescription` here,
+  // pass the ownership of `this` to that method and break down the steps
+  // currently implemented in that function into smaller methods implemented
+  // by this class. Once we have all of this broken down, we can start avoiding
+  // the embedded calls to Invoke() and apply the description asynchronously.
+  bool ApplyRemoteDescription() {
+    RTC_DCHECK_RUN_ON(handler_->signaling_thread());
+    RTC_DCHECK(ok());
+    // TODO(tommi): It's not ideal to move desc_ ownership.
+    error_ = handler_->ApplyRemoteDescription(std::move(desc_),
+                                              bundle_groups_by_mid());
+    // `desc` may be destroyed at this point.
+
+    if (!error_.ok()) {
+      // If ApplyRemoteDescription fails, the PeerConnection could be in an
+      // inconsistent state, so act conservatively here and set the session
+      // error so that future calls to SetLocalDescription/SetRemoteDescription
+      // fail.
+      handler_->SetSessionError(SessionError::kContent, error_.message());
+      std::string error_message =
+          GetSetDescriptionErrorMessage(cricket::CS_REMOTE, type_, error_);
+      RTC_LOG(LS_ERROR) << error_message;
+      error_.set_message(std::move(error_message));
+      return false;
+    }
+
+    return true;
+  }
+
+  // Convenience getter for desc_->GetType().
+  SdpType type() const { return type_; }
+
+  cricket::SessionDescription* description() { return desc_->description(); }
+
+  // Returns a reference to a cached map of bundle groups ordered by mid.
+  // Note that this will only be valid after a successful call to
+  // `IsDescriptionValid`.
+  const std::map<std::string, const cricket::ContentGroup*>&
+  bundle_groups_by_mid() const {
+    RTC_DCHECK(ok());
+    return bundle_groups_by_mid_;
+  }
+
+ private:
+  // Convenience methods for populating the embedded `error_` object.
+  void Unsupported(std::string message) {
+    SetError(RTCErrorType::UNSUPPORTED_OPERATION, std::move(message));
+  }
+
+  void InvalidParam(std::string message) {
+    SetError(RTCErrorType::INVALID_PARAMETER, std::move(message));
+  }
+
+  void SetError(RTCErrorType type, std::string message) {
+    RTC_DCHECK(ok()) << "Overwriting an existing error?";
+    error_ = RTCError(type, std::move(message));
+  }
+
+  SdpOfferAnswerHandler* const handler_;
+  std::unique_ptr<SessionDescriptionInterface> desc_;
+  rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer_;
+  std::function<void()> operations_chain_callback_;
+  RTCError error_ = RTCError::OK();
+  std::map<std::string, const cricket::ContentGroup*> bundle_groups_by_mid_;
+  SdpType type_;
+};
 // Used by parameterless SetLocalDescription() to create an offer or answer.
 // Upon completion of creating the session description, SetLocalDescription() is
 // invoked with the result.
@@ -1501,15 +1671,11 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
         // SetSessionDescriptionObserverAdapter takes care of making sure the
         // `observer_refptr` is invoked in a posted message.
         this_weak_ptr->DoSetRemoteDescription(
-            std::move(desc),
-            rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
-                this_weak_ptr, observer_refptr));
-        // For backwards-compatability reasons, we declare the operation as
-        // completed here (rather than in a post), so that the operation chain
-        // is not blocked by this operation when the observer is invoked. This
-        // allows the observer to trigger subsequent offer/answer operations
-        // synchronously if the operation chain is now empty.
-        operations_chain_callback();
+            std::make_unique<RemoteDescriptionOperation>(
+                this_weak_ptr.get(), std::move(desc),
+                rtc::make_ref_counted<SetSessionDescriptionObserverAdapter>(
+                    this_weak_ptr, observer_refptr),
+                std::move(operations_chain_callback)));
       });
 }
 
@@ -1524,6 +1690,12 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(), observer,
        desc = std::move(desc)](
           std::function<void()> operations_chain_callback) mutable {
+        if (!observer) {
+          RTC_DLOG(LS_ERROR) << "SetRemoteDescription - observer is NULL.";
+          operations_chain_callback();
+          return;
+        }
+
         // Abort early if `this_weak_ptr` is no longer valid.
         if (!this_weak_ptr) {
           observer->OnSetRemoteDescriptionComplete(RTCError(
@@ -1532,12 +1704,11 @@ void SdpOfferAnswerHandler::SetRemoteDescription(
           operations_chain_callback();
           return;
         }
-        this_weak_ptr->DoSetRemoteDescription(std::move(desc),
-                                              std::move(observer));
-        // DoSetRemoteDescription() is implemented as a synchronous operation.
-        // The `observer` will already have been informed that it completed, and
-        // we can mark this operation as complete without any loose ends.
-        operations_chain_callback();
+
+        this_weak_ptr->DoSetRemoteDescription(
+            std::make_unique<RemoteDescriptionOperation>(
+                this_weak_ptr.get(), std::move(desc), std::move(observer),
+                std::move(operations_chain_callback)));
       });
 }
 
@@ -1702,10 +1873,13 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
         GetFirstVideoContent(remote_description()->description()), video_desc);
   }
 
-  if (type == SdpType::kAnswer &&
-      local_ice_credentials_to_replace_->SatisfiesIceRestart(
-          *current_local_description_)) {
-    local_ice_credentials_to_replace_->ClearIceCredentials();
+  if (type == SdpType::kAnswer) {
+    if (local_ice_credentials_to_replace_->SatisfiesIceRestart(
+            *current_local_description_)) {
+      local_ice_credentials_to_replace_->ClearIceCredentials();
+    }
+
+    RemoveStoppedTransceivers();
   }
 
   return RTCError::OK();
@@ -2131,96 +2305,41 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
 }
 
 void SdpOfferAnswerHandler::DoSetRemoteDescription(
-    std::unique_ptr<SessionDescriptionInterface> desc,
-    rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer) {
+    std::unique_ptr<RemoteDescriptionOperation> operation) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::DoSetRemoteDescription");
 
-  if (!observer) {
-    RTC_LOG(LS_ERROR) << "SetRemoteDescription - observer is NULL.";
+  if (!operation->ok())
     return;
-  }
 
-  if (!desc) {
-    observer->OnSetRemoteDescriptionComplete(RTCError(
-        RTCErrorType::INVALID_PARAMETER, "SessionDescription is NULL."));
+  if (operation->HaveSessionError())
     return;
-  }
 
-  // If a session error has occurred the PeerConnection is in a possibly
-  // inconsistent state so fail right away.
-  if (session_error() != SessionError::kNone) {
-    std::string error_message = GetSessionErrorMsg();
-    RTC_LOG(LS_ERROR) << "SetRemoteDescription: " << error_message;
-    observer->OnSetRemoteDescriptionComplete(
-        RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error_message)));
+  if (operation->MaybeRollback())
     return;
-  }
-  if (IsUnifiedPlan()) {
-    if (pc_->configuration()->enable_implicit_rollback) {
-      if (desc->GetType() == SdpType::kOffer &&
-          signaling_state() == PeerConnectionInterface::kHaveLocalOffer) {
-        Rollback(desc->GetType());
-      }
-    }
-    // Explicit rollback.
-    if (desc->GetType() == SdpType::kRollback) {
-      observer->OnSetRemoteDescriptionComplete(Rollback(desc->GetType()));
-      return;
-    }
-  } else if (desc->GetType() == SdpType::kRollback) {
-    observer->OnSetRemoteDescriptionComplete(
-        RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
-                 "Rollback not supported in Plan B"));
+
+  operation->ReportOfferAnswerUma();
+
+  // Handle remote descriptions missing a=mid lines for interop with legacy
+  // end points.
+  FillInMissingRemoteMids(operation->description());
+  if (!operation->IsDescriptionValid())
     return;
-  }
-  if (desc->GetType() == SdpType::kOffer ||
-      desc->GetType() == SdpType::kAnswer) {
-    // Report to UMA the format of the received offer or answer.
-    pc_->ReportSdpFormatReceived(*desc);
-    pc_->ReportSdpBundleUsage(*desc);
-  }
 
-  // Handle remote descriptions missing a=mid lines for interop with legacy end
-  // points.
-  FillInMissingRemoteMids(desc->description());
-
-  std::map<std::string, const cricket::ContentGroup*> bundle_groups_by_mid =
-      GetBundleGroupsByMid(desc->description());
-  RTCError error = ValidateSessionDescription(desc.get(), cricket::CS_REMOTE,
-                                              bundle_groups_by_mid);
-  if (!error.ok()) {
-    std::string error_message = GetSetDescriptionErrorMessage(
-        cricket::CS_REMOTE, desc->GetType(), error);
-    RTC_LOG(LS_ERROR) << error_message;
-    observer->OnSetRemoteDescriptionComplete(
-        RTCError(error.type(), std::move(error_message)));
+  if (!operation->ApplyRemoteDescription())
     return;
-  }
 
-  // Grab the description type before moving ownership to
-  // ApplyRemoteDescription, which may destroy it before returning.
-  const SdpType type = desc->GetType();
+  // Consider the operation complete at this point.
+  operation->SignalCompletion();
 
-  error = ApplyRemoteDescription(std::move(desc), bundle_groups_by_mid);
-  // `desc` may be destroyed at this point.
+  SetRemoteDescriptionPostProcess(operation->type() == SdpType::kAnswer);
+}
 
-  if (!error.ok()) {
-    // If ApplyRemoteDescription fails, the PeerConnection could be in an
-    // inconsistent state, so act conservatively here and set the session error
-    // so that future calls to SetLocalDescription/SetRemoteDescription fail.
-    SetSessionError(SessionError::kContent, error.message());
-    std::string error_message =
-        GetSetDescriptionErrorMessage(cricket::CS_REMOTE, type, error);
-    RTC_LOG(LS_ERROR) << error_message;
-    observer->OnSetRemoteDescriptionComplete(
-        RTCError(error.type(), std::move(error_message)));
-    return;
-  }
+// Called after a DoSetRemoteDescription operation completes.
+void SdpOfferAnswerHandler::SetRemoteDescriptionPostProcess(bool was_answer) {
   RTC_DCHECK(remote_description());
 
-  if (type == SdpType::kAnswer) {
-    RemoveStoppedTransceivers();
+  if (was_answer) {
     // TODO(deadbeef): We already had to hop to the network thread for
     // MaybeStartGathering...
     pc_->network_thread()->Invoke<void>(
@@ -2229,12 +2348,11 @@ void SdpOfferAnswerHandler::DoSetRemoteDescription(
     ReportNegotiatedSdpSemantics(*remote_description());
   }
 
-  observer->OnSetRemoteDescriptionComplete(RTCError::OK());
   pc_->NoteUsageEvent(UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED);
 
   // Check if negotiation is needed. We must do this after informing the
-  // observer that SetRemoteDescription() has completed to ensure negotiation is
-  // not needed prior to the promise resolving.
+  // observer that SetRemoteDescription() has completed to ensure negotiation
+  // is not needed prior to the promise resolving.
   if (IsUnifiedPlan()) {
     bool was_negotiation_needed = is_negotiation_needed_;
     UpdateNegotiationNeeded();
@@ -2279,10 +2397,10 @@ void SdpOfferAnswerHandler::SetAssociatedRemoteStreams(
   }
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> previous_streams =
       receiver->streams();
-  // SetStreams() will add/remove the receiver's track to/from the streams. This
-  // differs from the spec - the spec uses an "addList" and "removeList" to
-  // update the stream-track relationships in a later step. We do this earlier,
-  // changing the order of things, but the end-result is the same.
+  // SetStreams() will add/remove the receiver's track to/from the streams.
+  // This differs from the spec - the spec uses an "addList" and "removeList"
+  // to update the stream-track relationships in a later step. We do this
+  // earlier, changing the order of things, but the end-result is the same.
   // TODO(hbos): When we remove remote_streams(), use set_stream_ids()
   // instead. https://crbug.com/webrtc/9480
   receiver->SetStreams(media_streams);
@@ -2293,8 +2411,8 @@ bool SdpOfferAnswerHandler::AddIceCandidate(
     const IceCandidateInterface* ice_candidate) {
   const AddIceCandidateResult result = AddIceCandidateInternal(ice_candidate);
   NoteAddIceCandidateResult(result);
-  // If the return value is kAddIceCandidateFailNotReady, the candidate has been
-  // added, although not 'ready', but that's a success.
+  // If the return value is kAddIceCandidateFailNotReady, the candidate has
+  // been added, although not 'ready', but that's a success.
   return result == kAddIceCandidateSuccess ||
          result == kAddIceCandidateFailNotReady;
 }
@@ -2350,9 +2468,9 @@ void SdpOfferAnswerHandler::AddIceCandidate(
     std::function<void(RTCError)> callback) {
   TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::AddIceCandidate");
   RTC_DCHECK_RUN_ON(signaling_thread());
-  // Chain this operation. If asynchronous operations are pending on the chain,
-  // this operation will be queued to be invoked, otherwise the contents of the
-  // lambda will execute immediately.
+  // Chain this operation. If asynchronous operations are pending on the
+  // chain, this operation will be queued to be invoked, otherwise the
+  // contents of the lambda will execute immediately.
   operations_chain_->ChainOperation(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(),
        candidate = std::move(candidate), callback = std::move(callback)](
@@ -2501,8 +2619,8 @@ RTCError SdpOfferAnswerHandler::UpdateSessionState(
         bundle_groups_by_mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
 
-  // If there's already a pending error then no state transition should happen.
-  // But all call-sites should be verifying this before calling us!
+  // If there's already a pending error then no state transition should
+  // happen. But all call-sites should be verifying this before calling us!
   RTC_DCHECK(session_error() == SessionError::kNone);
 
   // If this is answer-ish we're ready to let media flow.
@@ -2548,10 +2666,10 @@ bool SdpOfferAnswerHandler::ShouldFireNegotiationNeededEvent(
   // one obsolete.
   if (!operations_chain_->IsEmpty()) {
     // Since we just suppressed an event that would have been fired, if
-    // negotiation is still needed by the time the chain becomes empty again, we
-    // must make sure to generate another event if negotiation is needed then.
-    // This happens when `is_negotiation_needed_` goes from false to true, so we
-    // set it to false until UpdateNegotiationNeeded() is called.
+    // negotiation is still needed by the time the chain becomes empty again,
+    // we must make sure to generate another event if negotiation is needed
+    // then. This happens when `is_negotiation_needed_` goes from false to
+    // true, so we set it to false until UpdateNegotiationNeeded() is called.
     is_negotiation_needed_ = false;
     update_negotiation_needed_on_empty_chain_ = true;
     return false;
@@ -2777,8 +2895,8 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     pc_->Observer()->OnRemoveStream(stream);
   }
 
-  // The assumption is that in case of implicit rollback UpdateNegotiationNeeded
-  // gets called in SetRemoteDescription.
+  // The assumption is that in case of implicit rollback
+  // UpdateNegotiationNeeded gets called in SetRemoteDescription.
   if (desc_type == SdpType::kRollback) {
     UpdateNegotiationNeeded();
     if (is_negotiation_needed_) {
@@ -2800,9 +2918,9 @@ void SdpOfferAnswerHandler::OnOperationsChainEmpty() {
   if (pc_->IsClosed() || !update_negotiation_needed_on_empty_chain_)
     return;
   update_negotiation_needed_on_empty_chain_ = false;
-  // Firing when chain is empty is only supported in Unified Plan to avoid Plan
-  // B regressions. (In Plan B, onnegotiationneeded is already broken anyway, so
-  // firing it even more might just be confusing.)
+  // Firing when chain is empty is only supported in Unified Plan to avoid
+  // Plan B regressions. (In Plan B, onnegotiationneeded is already broken
+  // anyway, so firing it even more might just be confusing.)
   if (IsUnifiedPlan()) {
     UpdateNegotiationNeeded();
   }
@@ -2844,8 +2962,8 @@ void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
   }
 
   // In the spec, a task is queued here to run the following steps - this is
-  // meant to ensure we do not fire onnegotiationneeded prematurely if multiple
-  // changes are being made at once. In order to support Chromium's
+  // meant to ensure we do not fire onnegotiationneeded prematurely if
+  // multiple changes are being made at once. In order to support Chromium's
   // implementation where the JavaScript representation of the PeerConnection
   // lives on a separate thread though, the queuing of a task is instead
   // performed by the PeerConnectionObserver posting from the signaling thread
@@ -2868,8 +2986,8 @@ void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
   // "stable", as part of the steps for setting an RTCSessionDescription.
 
   // If the result of checking if negotiation is needed is false, clear the
-  // negotiation-needed flag by setting connection's [[NegotiationNeeded]] slot
-  // to false, and abort these steps.
+  // negotiation-needed flag by setting connection's [[NegotiationNeeded]]
+  // slot to false, and abort these steps.
   bool is_negotiation_needed = CheckIfNegotiationIsNeeded();
   if (!is_negotiation_needed) {
     is_negotiation_needed_ = false;
@@ -2892,16 +3010,16 @@ void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
   // If connection's [[NegotiationNeeded]] slot is false, abort these steps.
   // Fire an event named negotiationneeded at connection.
   pc_->Observer()->OnRenegotiationNeeded();
-  // Fire the spec-compliant version; when ShouldFireNegotiationNeededEvent() is
-  // used in the task queued by the observer, this event will only fire when the
-  // chain is empty.
+  // Fire the spec-compliant version; when ShouldFireNegotiationNeededEvent()
+  // is used in the task queued by the observer, this event will only fire
+  // when the chain is empty.
   GenerateNegotiationNeededEvent();
 }
 
 bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  // 1. If any implementation-specific negotiation is required, as described at
-  // the start of this section, return true.
+  // 1. If any implementation-specific negotiation is required, as described
+  // at the start of this section, return true.
 
   // 2. If connection.[[LocalIceCredentialsToReplace]] is not empty, return
   // true.
@@ -3048,9 +3166,8 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
     cricket::ContentSource source,
     const std::map<std::string, const cricket::ContentGroup*>&
         bundle_groups_by_mid) {
-  if (session_error() != SessionError::kNone) {
-    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR, GetSessionErrorMsg());
-  }
+  // An assumption is that a check for session error is done at a higher level.
+  RTC_DCHECK_EQ(SessionError::kNone, session_error());
 
   if (!sdesc || !sdesc->description()) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, kInvalidSdp);
@@ -3099,8 +3216,8 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
 
   // Verify m-lines in Answer when compared against Offer.
   if (type == SdpType::kPrAnswer || type == SdpType::kAnswer) {
-    // With an answer we want to compare the new answer session description with
-    // the offer's session description from the current negotiation.
+    // With an answer we want to compare the new answer session description
+    // with the offer's session description from the current negotiation.
     const cricket::SessionDescription* offer_desc =
         (source == cricket::CS_LOCAL) ? remote_description()->description()
                                       : local_description()->description();
@@ -3113,11 +3230,12 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
   } else {
     // The re-offers should respect the order of m= sections in current
     // description. See RFC3264 Section 8 paragraph 4 for more details.
-    // With a re-offer, either the current local or current remote descriptions
-    // could be the most up to date, so we would like to check against both of
-    // them if they exist. It could be the case that one of them has a 0 port
-    // for a media section, but the other does not. This is important to check
-    // against in the case that we are recycling an m= section.
+    // With a re-offer, either the current local or current remote
+    // descriptions could be the most up to date, so we would like to check
+    // against both of them if they exist. It could be the case that one of
+    // them has a 0 port for a media section, but the other does not. This is
+    // important to check against in the case that we are recycling an m=
+    // section.
     const cricket::SessionDescription* current_desc = nullptr;
     const cricket::SessionDescription* secondary_current_desc = nullptr;
     if (local_description()) {
@@ -3172,8 +3290,9 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels(
 
   if (new_session.GetType() == SdpType::kOffer) {
     // If the BUNDLE policy is max-bundle, then we know for sure that all
-    // transports will be bundled from the start. Return an error if max-bundle
-    // is specified but the session description does not have a BUNDLE group.
+    // transports will be bundled from the start. Return an error if
+    // max-bundle is specified but the session description does not have a
+    // BUNDLE group.
     if (pc_->configuration()->bundle_policy ==
             PeerConnectionInterface::kBundlePolicyMaxBundle &&
         bundle_groups_by_mid.empty()) {
