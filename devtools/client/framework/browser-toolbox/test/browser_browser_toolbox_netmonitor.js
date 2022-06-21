@@ -41,14 +41,30 @@ add_task(async function() {
 
     store.dispatch(Actions.batchEnable(false));
 
+    const emptyListNotice = document.querySelector(
+      ".request-list-empty-notice"
+    );
+
     ok(
-      !!document.querySelector(".request-list-empty-notice"),
+      !!emptyListNotice,
       "An empty notice should be displayed when the frontend is opened."
     );
+
+    is(
+      emptyListNotice.innerText,
+      "Perform a request to see detailed information about network activity.",
+      "The reload and perfomance analysis details should not be visible in the browser toolbox"
+    );
+
     is(
       store.getState().requests.requests.length,
       0,
       "The requests should be empty when the frontend is opened."
+    );
+
+    ok(
+      !document.querySelector(".requests-list-network-summary-button"),
+      "The perfomance analysis button should not be visible in the browser toolbox"
     );
   });
 
