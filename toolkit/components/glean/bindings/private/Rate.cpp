@@ -6,9 +6,11 @@
 
 #include "mozilla/glean/bindings/Rate.h"
 
+#include "jsapi.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/glean/bindings/Common.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
