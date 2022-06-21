@@ -776,38 +776,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg) {
 void MessageChannel::SendMessageToLink(UniquePtr<Message> aMsg) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
-  if (mIsPostponingSends) {
-    mPostponedSends.push_back(std::move(aMsg));
-    return;
-  }
   mLink->SendMessage(std::move(aMsg));
-}
-
-void MessageChannel::BeginPostponingSends() {
-  AssertWorkerThread();
-  mMonitor->AssertNotCurrentThreadOwns();
-
-  MonitorAutoLock lock(*mMonitor);
-  {
-    MOZ_ASSERT(!mIsPostponingSends);
-    mIsPostponingSends = true;
-  }
-}
-
-void MessageChannel::StopPostponingSends() {
-  // Note: this can be called from any thread.
-  MonitorAutoLock lock(*mMonitor);
-
-  MOZ_ASSERT(mIsPostponingSends);
-
-  for (UniquePtr<Message>& iter : mPostponedSends) {
-    mLink->SendMessage(std::move(iter));
-  }
-
-  // We unset this after SendMessage so we can make correct thread
-  // assertions in MessageLink.
-  mIsPostponingSends = false;
-  mPostponedSends.clear();
 }
 
 UniquePtr<MessageChannel::UntypedCallbackHolder> MessageChannel::PopCallback(
@@ -1247,7 +1216,6 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
   if (aMsg->nested_level() < DispatchingSyncMessageNestedLevel() ||
       aMsg->nested_level() < AwaitingSyncReplyNestedLevel()) {
     MOZ_RELEASE_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
-    MOZ_RELEASE_ASSERT(!mIsPostponingSends);
     IPC_LOG("Cancel from Send");
     auto cancel =
         MakeUnique<CancelMessage>(CurrentNestedInsideSyncTransaction());

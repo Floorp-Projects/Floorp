@@ -136,7 +136,6 @@ IPDL_SOURCES += [
     "PTestInterruptShutdownRace.ipdl",
     "PTestJSON.ipdl",
     "PTestLatency.ipdl",
-    "PTestLayoutThread.ipdl",
     "PTestManyChildAllocs.ipdl",
     "PTestManyChildAllocsSub.ipdl",
     "PTestMultiMgrs.ipdl",
