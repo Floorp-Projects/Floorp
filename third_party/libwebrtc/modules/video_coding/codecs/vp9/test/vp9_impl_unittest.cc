@@ -593,8 +593,8 @@ TEST(Vp9ImplTest, SpatialUpswitchNotAtGOFBoundary) {
   EXPECT_THAT(producer.SetNumInputFrames(1).Encode(),
               ElementsAre(GenericLayerIs(0, 0), GenericLayerIs(1, 0)));
 }
-
-TEST_F(TestVp9Impl, DisableEnableBaseLayerTriggersKeyFrame) {
+// TODO(bugs.webrtc.org/13442) Enable once a forward fix has landed in WebRTC.
+TEST_F(TestVp9Impl, DISABLED_DisableEnableBaseLayerTriggersKeyFrame) {
   // Configure encoder to produce N spatial layers. Encode frames for all
   // layers. Then disable all but the last layer. Then reenable all back again.
   test::ScopedFieldTrials override_field_trials(
