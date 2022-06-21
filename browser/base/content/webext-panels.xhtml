@@ -59,20 +59,5 @@
                               gContextMenu = null;">
 #include browser-context.inc
     </menupopup>
-
-    <!-- for select dropdowns. The menupopup is what shows the list of options,
-         and the popuponly menulist makes things like the menuactive attributes
-         work correctly on the menupopup. ContentSelectDropdown expects the
-         popuponly menulist to be its immediate parent. -->
-    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
-      <menupopup rolluponmousewheel="true"
-                 id="ContentSelectDropdownPopup"
-                 activateontab="true" position="after_start"
-                 level="parent"
-#ifdef XP_WIN
-                 consumeoutsideclicks="false" ignorekeys="shortcuts"
-#endif
-        />
-    </menulist>
   </popupset>
 </window>

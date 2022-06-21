@@ -1370,6 +1370,36 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Waits for the select popup to be shown. This is needed because the select
+   * dropdown is created lazily.
+   *
+   * @param {Window}
+   *        A window to expect the popup in.
+   *
+   * @return {Promise}
+   *        Resolves when the popup has been fully opened. The resolution value
+   *        is the select popup.
+   */
+  async waitForSelectPopupShown(win) {
+    let getMenulist = () =>
+      win.document.getElementById("ContentSelectDropdown");
+    let menulist = getMenulist();
+    if (!menulist) {
+      await this.waitForMutationCondition(
+        win.document,
+        { childList: true, subtree: true },
+        getMenulist
+      );
+      menulist = getMenulist();
+      if (menulist.menupopup.state == "open") {
+        return menulist.menupopup;
+      }
+    }
+    await this.waitForEvent(menulist.menupopup, "popupshown");
+    return menulist.menupopup;
+  },
+
+  /**
    * Adds a content event listener on the given browser
    * element. Similar to waitForContentEvent, but the listener will
    * fire until it is removed. A callable object is returned that,
