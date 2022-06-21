@@ -505,10 +505,6 @@ void AecDumpBasedSimulator::HandleMessage(
                 << msg.experiments_description() << std::endl;
     }
 
-    if (settings_.use_ed) {
-      apm_config.residual_echo_detector.enabled = *settings_.use_ed;
-    }
-
     ap_->ApplyConfig(apm_config);
   }
 }

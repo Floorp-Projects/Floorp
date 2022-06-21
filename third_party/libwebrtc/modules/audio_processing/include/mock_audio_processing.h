@@ -67,6 +67,27 @@ class MockEchoControl : public EchoControl {
   MOCK_METHOD(bool, ActiveProcessing, (), (const, override));
 };
 
+class MockEchoDetector : public EchoDetector {
+ public:
+  virtual ~MockEchoDetector() {}
+  MOCK_METHOD(void,
+              Initialize,
+              (int capture_sample_rate_hz,
+               int num_capture_channels,
+               int render_sample_rate_hz,
+               int num_render_channels),
+              (override));
+  MOCK_METHOD(void,
+              AnalyzeRenderAudio,
+              (rtc::ArrayView<const float> render_audio),
+              (override));
+  MOCK_METHOD(void,
+              AnalyzeCaptureAudio,
+              (rtc::ArrayView<const float> capture_audio),
+              (override));
+  MOCK_METHOD(Metrics, GetMetrics, (), (const, override));
+};
+
 class MockAudioProcessing : public AudioProcessing {
  public:
   MockAudioProcessing() {}

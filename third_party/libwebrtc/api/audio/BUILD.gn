@@ -97,6 +97,7 @@ rtc_source_set("echo_control") {
 
 rtc_source_set("echo_detector_creator") {
   visibility = [ "*" ]
+  allow_poison = [ "default_echo_detector" ]
   sources = [
     "echo_detector_creator.cc",
     "echo_detector_creator.h",
@@ -104,7 +105,7 @@ rtc_source_set("echo_detector_creator") {
   deps = [
     "../../api:scoped_refptr",
     "../../modules/audio_processing:api",
-    "../../modules/audio_processing:audio_processing",
+    "../../modules/audio_processing:residual_echo_detector",
     "../../rtc_base:refcount",
   ]
 }

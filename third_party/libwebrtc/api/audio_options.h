@@ -64,8 +64,11 @@ struct RTC_EXPORT AudioOptions {
   absl::optional<bool> typing_detection;
   absl::optional<bool> experimental_agc;
   absl::optional<bool> experimental_ns;
-  // Note that tx_agc_* only applies to non-experimental AGC.
+  // TODO(bugs.webrtc.org/11539): Deprecated, replaced by
+  // webrtc::CreateEchoDetector() and injection when creating the audio
+  // processing module.
   absl::optional<bool> residual_echo_detector;
+  // Note that tx_agc_* only applies to non-experimental AGC.
   absl::optional<uint16_t> tx_agc_target_dbov;
   absl::optional<uint16_t> tx_agc_digital_compression_gain;
   absl::optional<bool> tx_agc_limiter;
