@@ -224,25 +224,11 @@ TEST(Stacktrace, TestCurrentThread) {
       << "] not contained in: " << StackTraceToString(stack_trace);
 }
 
-// TODO(bugs.webrtc.org/13383): Re-enable once stack unwinding with
-// compiler-rt/libunwind works on Android arm64.
-#ifdef WEBRTC_ARCH_ARM64
-#define MAYBE_TestSpinLock DISABLED_TestSpinLock
-#else
-#define MAYBE_TestSpinLock TestSpinLock
-#endif
-TEST(Stacktrace, MAYBE_TestSpinLock) {
+TEST(Stacktrace, TestSpinLock) {
   TestStacktrace(std::make_unique<SpinDeadlock>());
 }
 
-// TODO(bugs.webrtc.org/13383): Re-enable once stack unwinding with
-// compiler-rt/libunwind works on Android arm64.
-#ifdef WEBRTC_ARCH_ARM64
-#define MAYBE_TestSleep DISABLED_TestSleep
-#else
-#define MAYBE_TestSleep TestSleep
-#endif
-TEST(Stacktrace, MAYBE_TestSleep) {
+TEST(Stacktrace, TestSleep) {
   TestStacktrace(std::make_unique<SleepDeadlock>());
 }
 
@@ -250,15 +236,11 @@ TEST(Stacktrace, MAYBE_TestSleep) {
 // traces for ARM 32.
 #ifdef WEBRTC_ARCH_ARM64
 
-// TODO(bugs.webrtc.org/13383): Re-enable once stack unwinding with
-// compiler-rt/libunwind works on Android arm64.
-TEST(Stacktrace, DISABLED_TestRtcEvent) {
+TEST(Stacktrace, TestRtcEvent) {
   TestStacktrace(std::make_unique<RtcEventDeadlock>());
 }
 
-// TODO(bugs.webrtc.org/13383): Re-enable once stack unwinding with
-// compiler-rt/libunwind works on Android arm64.
-TEST(Stacktrace, DISABLED_TestRtcCriticalSection) {
+TEST(Stacktrace, TestRtcCriticalSection) {
   TestStacktrace(std::make_unique<RtcCriticalSectionDeadlock>());
 }
 
