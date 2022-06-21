@@ -1359,17 +1359,22 @@ element.isXULElement = function(node) {
 };
 
 /**
- * Ascertains whether <var>node</var> is in a privileged document.
+ * Ascertains whether <var>node</var> is in a XUL document.
  *
  * @param {*} node
- *     Node to check.
+ *     Element to check
  *
  * @return {boolean}
- *     True if <var>node</var> is in a privileged document,
+ *     True if <var>node</var> is in a XUL document,
  *     false otherwise.
  */
-element.isInPrivilegedDocument = function(node) {
-  return !!node?.nodePrincipal?.isSystemPrincipal;
+element.isInXULDocument = function(node) {
+  return (
+    typeof node == "object" &&
+    node !== null &&
+    "ownerDocument" in node &&
+    node.ownerDocument.documentElement.namespaceURI === XUL_NS
+  );
 };
 
 /**
@@ -1506,14 +1511,14 @@ class WebElement {
   static from(node) {
     const uuid = WebElement.generateUUID();
 
-    if (element.isShadowRoot(node) && !element.isInPrivilegedDocument(node)) {
+    if (element.isShadowRoot(node) && !element.isInXULDocument(node)) {
       // When we support Chrome Shadowroots we will need to
-      // do a check here of shadowroot.host being in a privileged document
+      // do a check here of shadowroot.host being a XUL document
       // See Bug 1743541
       return new ContentShadowRoot(uuid);
     } else if (element.isElement(node)) {
-      if (element.isInPrivilegedDocument(node)) {
-        // If the node is in a priviledged document, we are in "chrome" context.
+      if (element.isInXULDocument(node)) {
+        // If the node is in a XUL document, we are in "chrome" context.
         return new ChromeWebElement(uuid);
       }
       return new ContentWebElement(uuid);
