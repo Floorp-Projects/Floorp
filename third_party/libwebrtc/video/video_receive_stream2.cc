@@ -223,8 +223,8 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  std::move(config_.frame_decryptor),
                                  std::move(config_.frame_transformer)),
       rtp_stream_sync_(call->worker_thread(), this),
-      max_wait_for_keyframe_ms_(DetermineMaxWaitForFrame(config, true)),
-      max_wait_for_frame_ms_(DetermineMaxWaitForFrame(config, false)),
+      max_wait_for_keyframe_ms_(DetermineMaxWaitForFrame(config_, true)),
+      max_wait_for_frame_ms_(DetermineMaxWaitForFrame(config_, false)),
       low_latency_renderer_enabled_("enabled", true),
       low_latency_renderer_include_predecode_buffer_("include_predecode_buffer",
                                                      true),
@@ -257,10 +257,10 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   if (config_.rtp.rtx_ssrc) {
     rtx_receive_stream_ = std::make_unique<RtxReceiveStream>(
-        &rtp_video_stream_receiver_, config.rtp.rtx_associated_payload_types,
+        &rtp_video_stream_receiver_, config_.rtp.rtx_associated_payload_types,
         config_.rtp.remote_ssrc, rtp_receive_statistics_.get());
   } else {
-    rtp_receive_statistics_->EnableRetransmitDetection(config.rtp.remote_ssrc,
+    rtp_receive_statistics_->EnableRetransmitDetection(config_.rtp.remote_ssrc,
                                                        true);
   }
 
