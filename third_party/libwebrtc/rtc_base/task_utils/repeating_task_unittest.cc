@@ -101,6 +101,12 @@ class FakeTaskQueue : public TaskQueueBase {
   absl::optional<uint32_t> last_delay_;
 };
 
+// NOTE: Since this utility class holds a raw pointer to a variable that likely
+// lives on the stack, it's important that any repeating tasks that use this
+// class be explicitly stopped when the test criteria have been met. If the
+// task is not stopped, an instance of this class can be deleted when the
+// pointed-to MockClosure has been deleted and we end up trying to call a
+// virtual method on a deleted object in the dtor.
 class MoveOnlyClosure {
  public:
   explicit MoveOnlyClosure(MockClosure* mock) : mock_(mock) {}
@@ -236,25 +242,30 @@ TEST(RepeatingTaskTest, TaskCanStopItself) {
 TEST(RepeatingTaskTest, ZeroReturnValueRepostsTheTask) {
   NiceMock<MockClosure> closure;
   rtc::Event done;
+  RepeatingTaskHandle handle;
   EXPECT_CALL(closure, Call())
       .WillOnce(Return(TimeDelta::Zero()))
-      .WillOnce(Invoke([&done] {
+      .WillOnce(Invoke([&] {
         done.Set();
+        handle.Stop();
         return kTimeout;
       }));
   TaskQueueForTest task_queue("queue");
-  RepeatingTaskHandle::Start(task_queue.Get(), MoveOnlyClosure(&closure));
+  handle =
+      RepeatingTaskHandle::Start(task_queue.Get(), MoveOnlyClosure(&closure));
   EXPECT_TRUE(done.Wait(kTimeout.ms()));
 }
 
 TEST(RepeatingTaskTest, StartPeriodicTask) {
   MockFunction<TimeDelta()> closure;
   rtc::Event done;
+  RepeatingTaskHandle handle;
   EXPECT_CALL(closure, Call())
       .WillOnce(Return(TimeDelta::Millis(20)))
       .WillOnce(Return(TimeDelta::Millis(20)))
-      .WillOnce(Invoke([&done] {
+      .WillOnce(Invoke([&] {
         done.Set();
+        handle.Stop();
         return kTimeout;
       }));
   TaskQueueForTest task_queue("queue");
