@@ -166,7 +166,9 @@ void MatchedFilterCore_SSE2(size_t x_start_index,
 
     // Initialize values for the accumulation.
     __m128 s_128 = _mm_set1_ps(0);
+    __m128 s_128_4 = _mm_set1_ps(0);
     __m128 x2_sum_128 = _mm_set1_ps(0);
+    __m128 x2_sum_128_4 = _mm_set1_ps(0);
     float x2_sum = 0.f;
     float s = 0;
 
@@ -179,20 +181,26 @@ void MatchedFilterCore_SSE2(size_t x_start_index,
     const int chunk2 = h_size - chunk1;
     for (int limit : {chunk1, chunk2}) {
       // Perform 128 bit vector operations.
-      const int limit_by_4 = limit >> 2;
-      for (int k = limit_by_4; k > 0; --k, h_p += 4, x_p += 4) {
+      const int limit_by_8 = limit >> 3;
+      for (int k = limit_by_8; k > 0; --k, h_p += 8, x_p += 8) {
         // Load the data into 128 bit vectors.
         const __m128 x_k = _mm_loadu_ps(x_p);
         const __m128 h_k = _mm_loadu_ps(h_p);
+        const __m128 x_k_4 = _mm_loadu_ps(x_p + 4);
+        const __m128 h_k_4 = _mm_loadu_ps(h_p + 4);
         const __m128 xx = _mm_mul_ps(x_k, x_k);
+        const __m128 xx_4 = _mm_mul_ps(x_k_4, x_k_4);
         // Compute and accumulate x * x and h * x.
         x2_sum_128 = _mm_add_ps(x2_sum_128, xx);
+        x2_sum_128_4 = _mm_add_ps(x2_sum_128_4, xx_4);
         const __m128 hx = _mm_mul_ps(h_k, x_k);
+        const __m128 hx_4 = _mm_mul_ps(h_k_4, x_k_4);
         s_128 = _mm_add_ps(s_128, hx);
+        s_128_4 = _mm_add_ps(s_128_4, hx_4);
       }
 
       // Perform non-vector operations for any remaining items.
-      for (int k = limit - limit_by_4 * 4; k > 0; --k, ++h_p, ++x_p) {
+      for (int k = limit - limit_by_8 * 8; k > 0; --k, ++h_p, ++x_p) {
         const float x_k = *x_p;
         x2_sum += x_k * x_k;
         s += *h_p * x_k;
@@ -202,8 +210,10 @@ void MatchedFilterCore_SSE2(size_t x_start_index,
     }
 
     // Combine the accumulated vector and scalar values.
+    x2_sum_128 = _mm_add_ps(x2_sum_128, x2_sum_128_4);
     float* v = reinterpret_cast<float*>(&x2_sum_128);
     x2_sum += v[0] + v[1] + v[2] + v[3];
+    s_128 = _mm_add_ps(s_128, s_128_4);
     v = reinterpret_cast<float*>(&s_128);
     s += v[0] + v[1] + v[2] + v[3];
 
