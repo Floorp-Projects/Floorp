@@ -42,6 +42,8 @@
 #ifdef MOZ_WAYLAND
 #  include "mozilla/widget/mozwayland.h"
 #  include "mozilla/widget/xdg-output-unstable-v1-client-protocol.h"
+#  include "prlink.h"
+#  include "va/va.h"
 #endif
 
 #ifdef MOZ_X11
@@ -174,6 +176,8 @@ static int write_end_of_the_pipe = -1;
 static char* glxtest_buf = nullptr;
 static int glxtest_bufsize = 0;
 static int glxtest_length = 0;
+
+static char* glxtest_render_device_path = nullptr;
 
 // C++ standard collides with C standard in that it doesn't allow casting void*
 // to function pointer types. So the work-around is to convert first to size_t.
@@ -339,6 +343,11 @@ static int get_pci_status() {
 }
 
 #ifdef MOZ_WAYLAND
+static void set_render_device_path(const char* render_device_path) {
+  record_value("DRM_RENDERDEVICE\n%s\n", render_device_path);
+  glxtest_render_device_path = strdup(render_device_path);
+}
+
 static bool device_has_name(const drmDevice* device, const char* name) {
   for (size_t i = 0; i < DRM_NODE_MAX; i++) {
     if (!(device->available_nodes & (1 << i))) {
@@ -408,7 +417,7 @@ static bool get_render_name(const char* name) {
   } else if (!(match->available_nodes & (1 << DRM_NODE_RENDER))) {
     record_warning("DRM device has no render node");
   } else {
-    record_value("DRM_RENDERDEVICE\n%s\n", match->nodes[DRM_NODE_RENDER]);
+    set_render_device_path(match->nodes[DRM_NODE_RENDER]);
     record_value(
         "MESA_VENDOR_ID\n0x%04x\n"
         "MESA_DEVICE_ID\n0x%04x\n",
@@ -552,7 +561,7 @@ static bool get_gles_status(EGLDisplay dpy,
         const char* renderNodeString =
             eglQueryDeviceStringEXT(device, EGL_DRM_RENDER_NODE_FILE_EXT);
         if (renderNodeString) {
-          record_value("DRM_RENDERDEVICE\n%s\n", renderNodeString);
+          set_render_device_path(renderNodeString);
         }
       }
 #endif
@@ -926,6 +935,203 @@ static void wayland_egltest() {
   wl_display_disconnect(dpy);
   record_value("TEST_TYPE\nEGL\n");
 }
+
+static constexpr struct {
+  VAProfile mVAProfile;
+  nsLiteralCString mName;
+} kVAAPiProfileName[] = {
+#  define MAP(v) \
+    { VAProfile##v, nsLiteralCString(#v) }
+    MAP(H264ConstrainedBaseline),
+    MAP(H264Main),
+    MAP(H264High),
+    MAP(VP8Version0_3),
+    MAP(VP9Profile0),
+    MAP(VP9Profile2),
+    MAP(AV1Profile0),
+    MAP(AV1Profile1),
+#  undef MAP
+};
+
+static const char* VAProfileName(VAProfile aVAProfile) {
+  for (const auto& profile : kVAAPiProfileName) {
+    if (profile.mVAProfile == aVAProfile) {
+      return profile.mName.get();
+    }
+  }
+  return nullptr;
+}
+
+int childvaapitest() {
+  int renderDeviceFD = -1;
+  VAProfile* profiles = nullptr;
+  VAEntrypoint* entryPoints = nullptr;
+  PRLibrary* libDrm = nullptr;
+  VADisplay display = nullptr;
+
+  auto autoRelease = mozilla::MakeScopeExit([&] {
+    if (renderDeviceFD > -1) {
+      close(renderDeviceFD);
+    }
+    delete[] profiles;
+    delete[] entryPoints;
+    if (display) {
+      vaTerminate(display);
+    }
+    if (libDrm) {
+      PR_UnloadLibrary(libDrm);
+    }
+  });
+
+  renderDeviceFD = open(glxtest_render_device_path, O_RDWR);
+  if (renderDeviceFD == -1) {
+    return 3;
+  }
+
+  PRLibSpec lspec;
+  lspec.type = PR_LibSpec_Pathname;
+  const char* libName = "libva-drm.so.2";
+  lspec.value.pathname = libName;
+  libDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  if (!libDrm) {
+    return 4;
+  }
+
+  static auto sVaGetDisplayDRM =
+      (void* (*)(int fd))PR_FindSymbol(libDrm, "vaGetDisplayDRM");
+  if (!sVaGetDisplayDRM) {
+    return 5;
+  }
+
+  display = sVaGetDisplayDRM(renderDeviceFD);
+  if (!display) {
+    return 6;
+  }
+
+  int major, minor;
+  VAStatus status = vaInitialize(display, &major, &minor);
+  if (status != VA_STATUS_SUCCESS) {
+    return 7;
+  }
+
+  int maxProfiles = vaMaxNumProfiles(display);
+  int maxEntryPoints = vaMaxNumEntrypoints(display);
+  if (MOZ_UNLIKELY(maxProfiles <= 0 || maxEntryPoints <= 0)) {
+    return 8;
+  }
+
+  profiles = new VAProfile[maxProfiles];
+  int numProfiles = 0;
+  status = vaQueryConfigProfiles(display, profiles, &numProfiles);
+  if (status != VA_STATUS_SUCCESS) {
+    return 9;
+  }
+  numProfiles = std::min(numProfiles, maxProfiles);
+
+  entryPoints = new VAEntrypoint[maxEntryPoints];
+  for (int p = 0; p < numProfiles; p++) {
+    VAProfile profile = profiles[p];
+
+    // Check only supported profiles
+    if (!VAProfileName(profile)) {
+      continue;
+    }
+
+    int numEntryPoints = 0;
+    status = vaQueryConfigEntrypoints(display, profile, entryPoints,
+                                      &numEntryPoints);
+    if (status != VA_STATUS_SUCCESS) {
+      continue;
+    }
+    numEntryPoints = std::min(numEntryPoints, maxEntryPoints);
+
+    for (int entry = 0; entry < numEntryPoints; entry++) {
+      if (entryPoints[entry] != VAEntrypointVLD) {
+        continue;
+      }
+      VAConfigID config = VA_INVALID_ID;
+      status = vaCreateConfig(display, profile, entryPoints[entry], nullptr, 0,
+                              &config);
+      if (status == VA_STATUS_SUCCESS) {
+        vaDestroyConfig(display, config);
+        return 0;
+      }
+    }
+  }
+  return 10;
+}
+
+static void vaapitest() {
+  if (!glxtest_render_device_path) {
+    return;
+  }
+
+  pid_t vaapitest_pid = fork();
+  if (vaapitest_pid == 0) {
+    int vaapirv = childvaapitest();
+    _exit(vaapirv);
+  } else if (vaapitest_pid > 0) {
+    int vaapitest_status = 0;
+    bool wait_for_vaapitest_process = true;
+
+    while (wait_for_vaapitest_process) {
+      if (waitpid(vaapitest_pid, &vaapitest_status, 0) == -1) {
+        wait_for_vaapitest_process = false;
+        record_warning(
+            "VA-API test failed: waiting for VA-API process failed.");
+      } else if (WIFEXITED(vaapitest_status) || WIFSIGNALED(vaapitest_status)) {
+        wait_for_vaapitest_process = false;
+      }
+    }
+
+    if (WIFEXITED(vaapitest_status)) {
+      switch (WEXITSTATUS(vaapitest_status)) {
+        case 0:
+          record_value("VAAPI_SUPPORTED\nTRUE\n");
+          break;
+        case 3:
+          record_warning(
+              "VA-API test failed: opening render device path failed.");
+          break;
+        case 4:
+          record_warning(
+              "VA-API test failed: missing or old libva-drm library.");
+          break;
+        case 5:
+          record_warning("VA-API test failed: missing vaGetDisplayDRM.");
+          break;
+        case 6:
+          record_warning("VA-API test failed: failed to get vaGetDisplayDRM.");
+          break;
+        case 7:
+          record_warning(
+              "VA-API test failed: failed to initialise VAAPI connection.");
+          break;
+        case 8:
+          record_warning(
+              "VA-API test failed: wrong VAAPI profiles/entry point nums.");
+          break;
+        case 9:
+          record_warning("VA-API test failed: vaQueryConfigProfiles() failed.");
+          break;
+        case 10:
+          record_warning(
+              "VA-API test failed: no supported VAAPI profile found.");
+          break;
+        default:
+          record_warning(
+              "VA-API test failed: Something unexpected went wrong.");
+          break;
+      }
+    } else {
+      record_warning(
+          "VA-API test failed: process crashed. Please check your VA-API "
+          "drivers.");
+    }
+  } else {
+    record_warning("VA-API test failed: Could not fork process.");
+  }
+}
 #endif
 
 int childgltest() {
@@ -953,6 +1159,10 @@ int childgltest() {
     }
 #endif
   }
+
+#ifdef MOZ_WAYLAND
+  vaapitest();
+#endif
 
   // Finally write buffered data to the pipe.
   record_flush();

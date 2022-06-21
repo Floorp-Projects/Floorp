@@ -51,6 +51,7 @@ nsresult GfxInfo::Init() {
   mIsXWayland = false;
   mHasMultipleGPUs = false;
   mGlxTestError = false;
+  mIsVAAPISupported = false;
   return GfxInfoBase::Init();
 }
 
@@ -162,6 +163,7 @@ void GfxInfo::GetData() {
   nsCString adapterRam;
 
   nsCString drmRenderDevice;
+  nsCString isVAAPISupported;
 
   nsCString ddxDriver;
 
@@ -207,6 +209,8 @@ void GfxInfo::GetData() {
       stringToFill = pciDevices.AppendElement();
     } else if (!strcmp(line, "DRM_RENDERDEVICE")) {
       stringToFill = &drmRenderDevice;
+    } else if (!strcmp(line, "VAAPI_SUPPORTED")) {
+      stringToFill = &isVAAPISupported;
     } else if (!strcmp(line, "TEST_TYPE")) {
       stringToFill = &testType;
     } else if (!strcmp(line, "WARNING")) {
@@ -268,6 +272,7 @@ void GfxInfo::GetData() {
   }
 
   mDrmRenderDevice = std::move(drmRenderDevice);
+  mIsVAAPISupported = isVAAPISupported.Equals("TRUE");
   mTestType = std::move(testType);
 
   // Mesa always exposes itself in the GL_VERSION string, but not always the
@@ -973,6 +978,12 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         return NS_OK;
       }
     }
+  }
+
+  if (aFeature == nsIGfxInfo::FEATURE_VAAPI && !mIsVAAPISupported) {
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+    aFailureId = "FEATURE_FAILURE_VAAPI_TEST_FAILED";
+    return NS_OK;
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(
