@@ -136,7 +136,9 @@ static inline Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
 }
 
 static inline bool IsSubmetricId(uint32_t aId) {
-  return aId > (1 << 27); // Kept in sync with js.py's ID_BITS, rust.py's min_submetric_id
+  // Submetrics have the 2^25 bit set.
+  // (ID_BITS - ID_SIGNAL_BITS, keep it in sync with js.py).
+  return (aId & (1 << 25)) > 0;
 }
 
 static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {

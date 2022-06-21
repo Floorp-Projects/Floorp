@@ -70,7 +70,7 @@ macro_rules! just_with_metric {
 /// * `$f`   - The expression to execute with the retrieved metric `$m`.
 macro_rules! maybe_labeled_with_metric {
     ($map:ident, $id:ident, $m:ident, $f:expr) => {
-        if $id >= $crate::metrics::__glean_metric_maps::submetric_maps::MIN_LABELED_SUBMETRIC_ID {
+        if $id & (1 << $crate::metrics::__glean_metric_maps::submetric_maps::SUBMETRIC_BIT) > 0 {
             let map = $crate::metrics::__glean_metric_maps::submetric_maps::$map
                 .read()
                 .expect("Read lock for labeled metric map was poisoned");

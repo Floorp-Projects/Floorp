@@ -181,6 +181,8 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
         template.render(
             ids_to_probes=ids_to_probes,
             probe_type=probe_type,
+            id_bits=js.ID_BITS,
+            id_signal_bits=js.ID_SIGNAL_BITS,
         )
     )
     output_fd.write("\n")
