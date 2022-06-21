@@ -1367,7 +1367,8 @@ void StatsCollector::UpdateTrackReports() {
   }
 }
 
-void StatsCollector::ClearUpdateStatsCacheForTest() {
+void StatsCollector::InvalidateCache() {
+  RTC_DCHECK_RUN_ON(pc_->signaling_thread());
   cache_timestamp_ms_ = 0;
 }
 
