@@ -26,14 +26,8 @@ VideoOptions::VideoOptions()
     : content_hint(VideoTrackInterface::ContentHint::kNone) {}
 VideoOptions::~VideoOptions() = default;
 
-MediaChannel::MediaChannel(const MediaConfig& config,
-                           TaskQueueBase* network_thread)
-    : enable_dscp_(config.enable_dscp),
-      network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
-      network_thread_(network_thread) {}
-
-MediaChannel::MediaChannel(TaskQueueBase* network_thread)
-    : enable_dscp_(false),
+MediaChannel::MediaChannel(TaskQueueBase* network_thread, bool enable_dscp)
+    : enable_dscp_(enable_dscp),
       network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
       network_thread_(network_thread) {}
 
