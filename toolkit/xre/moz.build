@@ -160,6 +160,14 @@ if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
         "glxtest.cpp",
     ]
 
+if CONFIG["MOZ_WAYLAND"]:
+    LOCAL_INCLUDES += [
+        "/media/mozva",
+    ]
+    USE_LIBS += [
+        "mozva",
+    ]
+
 if CONFIG["MOZ_INSTRUMENT_EVENT_LOOP"]:
     UNIFIED_SOURCES += [
         "EventTracer.cpp",

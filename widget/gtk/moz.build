@@ -94,7 +94,6 @@ if CONFIG["MOZ_WAYLAND"]:
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
         "nsWaylandDisplay.cpp",
-        "VAAPIUtils.cpp",
         "WaylandBuffer.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
@@ -103,14 +102,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
-        "VAAPIUtils.h",
         "WaylandBuffer.h",
-    ]
-    LOCAL_INCLUDES += [
-        "/media/mozva",
-    ]
-    USE_LIBS += [
-        "mozva",
     ]
 
 if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:

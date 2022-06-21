@@ -67,7 +67,6 @@
 #  include <gdk/gdkwayland.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
-#  include "mozilla/widget/VAAPIUtils.h"
 #  include "mozilla/StaticPrefs_widget.h"
 #endif
 
@@ -259,13 +258,6 @@ void gfxPlatformGtk::InitVAAPIConfig() {
   if (!gfxVars::UseEGL()) {
     feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
-  }
-
-  if (feature.IsEnabled()) {
-    if (!VAAPIIsSupported()) {
-      feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
-                           failureId);
-    }
   }
 #else
   feature.DisableByDefault(FeatureStatus::Unavailable,
