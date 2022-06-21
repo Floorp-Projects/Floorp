@@ -209,7 +209,10 @@ Two languages means two test suites.
   [`gtest/TestFog.cpp`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/gtest/TestFog.cpp).
     - For more details, peruse the [testing docs](testing.md).
 - **JS Tests (xpcshell)** - Add a small test case to
-  [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_Glean.js).
+  [`xpcshell/test_Glean.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_Glean.js)
+  and
+  [`xpcshell/test_JOG.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_JOG.js).
+  If your metric type has supported IPC operations, also add cases to the `IPC` variants of these test files.
     - For more details, peruse the [testing docs](testing.md).
 
 ### 7. API Documentation
