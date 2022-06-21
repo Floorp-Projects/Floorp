@@ -41,13 +41,14 @@ remote.jar:
   content/marionette/sync.js (sync.js)
   content/marionette/transport.js (transport.js)
 #ifdef ENABLE_TESTS
-  content/marionette/test.xhtml (chrome/test.xhtml)
-  content/marionette/test2.xhtml (chrome/test2.xhtml)
   content/marionette/test_dialog.dtd (chrome/test_dialog.dtd)
   content/marionette/test_dialog.properties (chrome/test_dialog.properties)
   content/marionette/test_dialog.xhtml (chrome/test_dialog.xhtml)
   content/marionette/test_menupopup.xhtml (chrome/test_menupopup.xhtml)
   content/marionette/test_nested_iframe.xhtml (chrome/test_nested_iframe.xhtml)
+  content/marionette/test_no_xul.xhtml (chrome/test_no_xul.xhtml)
+  content/marionette/test.xhtml (chrome/test.xhtml)
+  content/marionette/test2.xhtml (chrome/test2.xhtml)
 #ifdef MOZ_CODE_COVERAGE
   content/marionette/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
 #endif
