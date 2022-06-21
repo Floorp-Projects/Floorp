@@ -15,6 +15,7 @@
 #include <CoreAudio/CoreAudio.h>
 #include <mach/semaphore.h>
 
+#include <atomic>
 #include <memory>
 
 #include "modules/audio_device/audio_device_generic.h"
@@ -303,8 +304,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   bool _playIsInitialized;
 
   // Atomically set varaibles
-  int32_t _renderDeviceIsAlive;
-  int32_t _captureDeviceIsAlive;
+  std::atomic<int32_t> _renderDeviceIsAlive;
+  std::atomic<int32_t> _captureDeviceIsAlive;
 
   bool _twoDevices;
   bool _doStop;  // For play if not shared device or play+rec if shared device
@@ -324,8 +325,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   uint32_t _renderLatencyUs;
 
   // Atomically set variables
-  mutable int32_t _captureDelayUs;
-  mutable int32_t _renderDelayUs;
+  mutable std::atomic<int32_t> _captureDelayUs;
+  mutable std::atomic<int32_t> _renderDelayUs;
 
   int32_t _renderDelayOffsetSamples;
 

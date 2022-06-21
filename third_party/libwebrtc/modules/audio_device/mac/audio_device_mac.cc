@@ -11,7 +11,6 @@
 #include "modules/audio_device/mac/audio_device_mac.h"
 
 #include <ApplicationServices/ApplicationServices.h>
-#include <libkern/OSAtomic.h>  // OSAtomicCompareAndSwap()
 #include <mach/mach.h>         // mach_task_self()
 #include <sys/sysctl.h>        // sysctlbyname()
 
@@ -52,24 +51,6 @@ namespace webrtc {
   } while (0)
 
 enum { MaxNumberDevices = 64 };
-
-void AudioDeviceMac::AtomicSet32(int32_t* theValue, int32_t newValue) {
-  while (1) {
-    int32_t oldValue = *theValue;
-    if (OSAtomicCompareAndSwap32Barrier(oldValue, newValue, theValue) == true) {
-      return;
-    }
-  }
-}
-
-int32_t AudioDeviceMac::AtomicGet32(int32_t* theValue) {
-  while (1) {
-    int32_t value = *theValue;
-    if (OSAtomicCompareAndSwap32Barrier(value, value, theValue) == true) {
-      return value;
-    }
-  }
-}
 
 // CoreAudio errors are best interpreted as four character strings.
 void AudioDeviceMac::logCAMsg(const rtc::LoggingSeverity sev,
@@ -1339,7 +1320,7 @@ int32_t AudioDeviceMac::StopRecording() {
   }
 
   OSStatus err = noErr;
-  int32_t captureDeviceIsAlive = AtomicGet32(&_captureDeviceIsAlive);
+  int32_t captureDeviceIsAlive = _captureDeviceIsAlive;
   if (_twoDevices && captureDeviceIsAlive == 1) {
     // Recording side uses its own dedicated device and IOProc.
     if (_recording) {
@@ -1395,7 +1376,7 @@ int32_t AudioDeviceMac::StopRecording() {
   }
 
   // Setting this signal will allow the worker thread to be stopped.
-  AtomicSet32(&_captureDeviceIsAlive, 0);
+  _captureDeviceIsAlive = 0;
 
   if (!capture_worker_thread_.empty()) {
     mutex_.Unlock();
@@ -1472,7 +1453,7 @@ int32_t AudioDeviceMac::StopPlayout() {
   }
 
   OSStatus err = noErr;
-  int32_t renderDeviceIsAlive = AtomicGet32(&_renderDeviceIsAlive);
+  int32_t renderDeviceIsAlive = _renderDeviceIsAlive;
   if (_playing && renderDeviceIsAlive == 1) {
     // We signal a stop for a shared device even when capturing has not
     // yet ended. This is to ensure the IOProc will return early as
@@ -1509,7 +1490,7 @@ int32_t AudioDeviceMac::StopPlayout() {
   }
 
   // Setting this signal will allow the worker thread to be stopped.
-  AtomicSet32(&_renderDeviceIsAlive, 0);
+  _renderDeviceIsAlive = 0;
   if (!render_worker_thread_.empty()) {
     mutex_.Unlock();
     render_worker_thread_.Finalize();
@@ -1545,7 +1526,7 @@ int32_t AudioDeviceMac::StopPlayout() {
 }
 
 int32_t AudioDeviceMac::PlayoutDelay(uint16_t& delayMS) const {
-  int32_t renderDelayUs = AtomicGet32(&_renderDelayUs);
+  int32_t renderDelayUs = _renderDelayUs;
   delayMS =
       static_cast<uint16_t>(1e-3 * (renderDelayUs + _renderLatencyUs) + 0.5);
   return 0;
@@ -1954,7 +1935,7 @@ int32_t AudioDeviceMac::HandleDeviceChange() {
 
     if (err == kAudioHardwareBadDeviceError || deviceIsAlive == 0) {
       RTC_LOG(LS_WARNING) << "Capture device is not alive (probably removed)";
-      AtomicSet32(&_captureDeviceIsAlive, 0);
+      _captureDeviceIsAlive = 0;
       _mixerManager.CloseMicrophone();
     } else if (err != noErr) {
       logCAMsg(rtc::LS_ERROR, "Error in AudioDeviceGetProperty()",
@@ -1973,7 +1954,7 @@ int32_t AudioDeviceMac::HandleDeviceChange() {
 
     if (err == kAudioHardwareBadDeviceError || deviceIsAlive == 0) {
       RTC_LOG(LS_WARNING) << "Render device is not alive (probably removed)";
-      AtomicSet32(&_renderDeviceIsAlive, 0);
+      _renderDeviceIsAlive = 0;
       _mixerManager.CloseSpeaker();
     } else if (err != noErr) {
       logCAMsg(rtc::LS_ERROR, "Error in AudioDeviceGetProperty()",
@@ -2248,7 +2229,7 @@ OSStatus AudioDeviceMac::implDeviceIOProc(const AudioBufferList* inputData,
           _outDesiredFormat.mSampleRate +
       0.5);
 
-  AtomicSet32(&_renderDelayUs, renderDelayUs);
+  _renderDelayUs = renderDelayUs;
 
   return 0;
 }
@@ -2317,7 +2298,7 @@ OSStatus AudioDeviceMac::implInDeviceIOProc(const AudioBufferList* inputData,
                                              _inStreamFormat.mSampleRate +
                                          0.5);
 
-  AtomicSet32(&_captureDelayUs, captureDelayUs);
+  _captureDelayUs = captureDelayUs;
 
   RTC_DCHECK(inputData->mNumberBuffers == 1);
   PaRingBufferSize numSamples = inputData->mBuffers->mDataByteSize *
@@ -2347,7 +2328,7 @@ OSStatus AudioDeviceMac::implInConverterProc(UInt32* numberDataPackets,
 
     kern_return_t kernErr = semaphore_timedwait(_captureSemaphore, timeout);
     if (kernErr == KERN_OPERATION_TIMED_OUT) {
-      int32_t signal = AtomicGet32(&_captureDeviceIsAlive);
+      int32_t signal = _captureDeviceIsAlive;
       if (signal == 0) {
         // The capture device is no longer alive; stop the worker thread.
         *numberDataPackets = 0;
@@ -2386,7 +2367,7 @@ bool AudioDeviceMac::RenderWorkerThread() {
 
     kern_return_t kernErr = semaphore_timedwait(_renderSemaphore, timeout);
     if (kernErr == KERN_OPERATION_TIMED_OUT) {
-      int32_t signal = AtomicGet32(&_renderDeviceIsAlive);
+      int32_t signal = _renderDeviceIsAlive;
       if (signal == 0) {
         // The render device is no longer alive; stop the worker thread.
         return false;
@@ -2471,8 +2452,8 @@ bool AudioDeviceMac::CaptureWorkerThread() {
     int32_t msecOnPlaySide;
     int32_t msecOnRecordSide;
 
-    int32_t captureDelayUs = AtomicGet32(&_captureDelayUs);
-    int32_t renderDelayUs = AtomicGet32(&_renderDelayUs);
+    int32_t captureDelayUs = _captureDelayUs;
+    int32_t renderDelayUs = _renderDelayUs;
 
     msecOnPlaySide =
         static_cast<int32_t>(1e-3 * (renderDelayUs + _renderLatencyUs) + 0.5);
