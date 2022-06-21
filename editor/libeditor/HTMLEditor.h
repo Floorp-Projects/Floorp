@@ -1220,13 +1220,15 @@ class HTMLEditor final : public EditorBase,
   Element* GetParentListElementAtSelection() const;
 
   /**
-   * MaybeExtendSelectionToHardLineEdgesForBlockEditAction() adjust Selection if
-   * there is only one range.  If range start and/or end point is <br> node or
-   * something non-editable point, they should be moved to nearest text node or
-   * something where the other methods easier to handle edit action.
+   * GetRangeExtendedToHardLineEdgesForBlockEditAction() returns an extended
+   * range if aRange should be extended before handling a block level editing.
+   * If aRange start and/or end point <br> or something non-editable point, they
+   * should be moved to nearest text node or something where the other methods
+   * easier to handle edit action.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+  [[nodiscard]] Result<EditorRawDOMRange, nsresult>
+  GetRangeExtendedToHardLineEdgesForBlockEditAction(
+      const nsRange* aRange, const Element& aEditingHost) const;
 
   /**
    * InitializeInsertingElement is a callback type of methods which inserts
