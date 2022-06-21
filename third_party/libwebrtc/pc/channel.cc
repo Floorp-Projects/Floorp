@@ -302,6 +302,12 @@ bool BaseChannel::SetRemoteContent(const MediaContentDescription* content,
 }
 
 bool BaseChannel::SetPayloadTypeDemuxingEnabled(bool enabled) {
+  // TODO(bugs.webrtc.org/11993): The demuxer state needs to be managed on the
+  // network thread. At the moment there's a workaround for inconsistent state
+  // between the worker and network thread because of this (see
+  // OnDemuxerCriteriaUpdatePending elsewhere in this file) and
+  // SetPayloadTypeDemuxingEnabled_w has an Invoke over to the network thread
+  // to apply state updates.
   RTC_DCHECK_RUN_ON(worker_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetPayloadTypeDemuxingEnabled");
   return SetPayloadTypeDemuxingEnabled_w(enabled);
