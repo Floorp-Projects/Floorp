@@ -847,12 +847,7 @@ RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
   return sender_or_error;
 }
 
-bool PeerConnection::RemoveTrack(RtpSenderInterface* sender) {
-  TRACE_EVENT0("webrtc", "PeerConnection::RemoveTrack");
-  return RemoveTrackNew(rtc::scoped_refptr<RtpSenderInterface>(sender)).ok();
-}
-
-RTCError PeerConnection::RemoveTrackNew(
+RTCError PeerConnection::RemoveTrackOrError(
     rtc::scoped_refptr<RtpSenderInterface> sender) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!sender) {

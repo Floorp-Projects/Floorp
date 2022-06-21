@@ -93,7 +93,7 @@ TEST(GoogCcPeerScenarioTest, MAYBE_NoBweChangeFromVideoUnmute) {
 
   // Resume video but stop audio. Bandwidth should not drop.
   video.capturer->Start();
-  RTCError status = caller->pc()->RemoveTrackNew(audio.sender);
+  RTCError status = caller->pc()->RemoveTrackOrError(audio.sender);
   ASSERT_TRUE(status.ok());
   audio.track->set_enabled(false);
   for (int i = 0; i < 10; i++) {

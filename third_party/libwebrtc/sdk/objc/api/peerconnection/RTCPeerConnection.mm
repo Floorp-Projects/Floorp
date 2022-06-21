@@ -515,7 +515,7 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
 }
 
 - (BOOL)removeTrack:(RTC_OBJC_TYPE(RTCRtpSender) *)sender {
-  bool result = _peerConnection->RemoveTrack(sender.nativeRtpSender);
+  bool result = _peerConnection->RemoveTrackOrError(sender.nativeRtpSender).ok();
   if (!result) {
     RTCLogError(@"Failed to remote track %@", sender);
   }
