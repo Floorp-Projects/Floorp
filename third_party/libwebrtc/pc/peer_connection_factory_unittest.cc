@@ -190,6 +190,7 @@ TEST(PeerConnectionFactoryTestInternal, DISABLED_CreatePCUsingInternalModules) {
 
   NullPeerConnectionObserver observer;
   webrtc::PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
 
   std::unique_ptr<FakeRTCCertificateGenerator> cert_generator(
       new FakeRTCCertificateGenerator());
@@ -269,6 +270,7 @@ TEST_F(PeerConnectionFactoryTest, CheckRtpReceiverDataCapabilities) {
 // configuration. Also verifies the URL's parsed correctly as expected.
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingIceServers) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.uri = kStunIceServer;
   config.servers.push_back(ice_server);
@@ -304,6 +306,7 @@ TEST_F(PeerConnectionFactoryTest, CreatePCUsingIceServers) {
 // configuration. Also verifies the list of URL's parsed correctly as expected.
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingIceServersUrls) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.urls.push_back(kStunIceServer);
   ice_server.urls.push_back(kTurnIceServer);
@@ -333,6 +336,7 @@ TEST_F(PeerConnectionFactoryTest, CreatePCUsingIceServersUrls) {
 
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingNoUsernameInUri) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.uri = kStunIceServer;
   config.servers.push_back(ice_server);
@@ -357,6 +361,7 @@ TEST_F(PeerConnectionFactoryTest, CreatePCUsingNoUsernameInUri) {
 // has transport parameter in it.
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingTurnUrlWithTransportParam) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.uri = kTurnIceServerWithTransport;
   ice_server.username = kTurnUsername;
@@ -377,6 +382,7 @@ TEST_F(PeerConnectionFactoryTest, CreatePCUsingTurnUrlWithTransportParam) {
 
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingSecureTurnUrl) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.uri = kSecureTurnIceServer;
   ice_server.username = kTurnUsername;
@@ -414,6 +420,7 @@ TEST_F(PeerConnectionFactoryTest, CreatePCUsingSecureTurnUrl) {
 
 TEST_F(PeerConnectionFactoryTest, CreatePCUsingIPLiteralAddress) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   webrtc::PeerConnectionInterface::IceServer ice_server;
   ice_server.uri = kStunIceServerWithIPv4Address;
   config.servers.push_back(ice_server);

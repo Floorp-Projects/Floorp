@@ -169,9 +169,16 @@ class StatsObserver : public rtc::RefCountInterface {
 };
 
 enum class SdpSemantics {
+  // TODO(https://crbug.com/webrtc/13528): Remove support for kPlanB.
   kPlanB_DEPRECATED,
   kPlanB [[deprecated]] = kPlanB_DEPRECATED,
-  kUnifiedPlan
+  kUnifiedPlan,
+  // The default SdpSemantics value is about to change to kUnifiedPlan. During a
+  // short transition period, kNotSpecified is used to ensure clients that don't
+  // set SdpSemantics are aware of the change by CHECK-crashing.
+  // TODO(https://crbug.com/webrtc/11121): When the default has changed to
+  // kUnifiedPlan, delete kNotSpecified.
+  kNotSpecified
 };
 
 class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
@@ -639,10 +646,17 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // the same media type.
     //
     // For users who have to interwork with legacy WebRTC implementations,
-    // it is possible to specify kPlanB until the code is finally removed.
+    // it is possible to specify kPlanB until the code is finally removed
+    // (https://crbug.com/webrtc/13528).
     //
     // For all other users, specify kUnifiedPlan.
-    SdpSemantics sdp_semantics = SdpSemantics::kPlanB_DEPRECATED;
+    //
+    // The default SdpSemantics value is about to change to kUnifiedPlan. During
+    // a short transition period, kNotSpecified is used to ensure clients that
+    // don't set SdpSemantics are aware of the change by CHECK-crashing.
+    // TODO(https://crbug.com/webrtc/11121): When the default has changed to
+    // kUnifiedPlan, delete kNotSpecified.
+    SdpSemantics sdp_semantics = SdpSemantics::kNotSpecified;
 
     // TODO(bugs.webrtc.org/9891) - Move to crypto_options or remove.
     // Actively reset the SRTP parameters whenever the DTLS transports

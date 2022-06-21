@@ -774,6 +774,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       const PeerConnectionInterface::RTCConfiguration* config,
       webrtc::PeerConnectionDependencies dependencies) {
     PeerConnectionInterface::RTCConfiguration modified_config;
+    modified_config.sdp_semantics = sdp_semantics_;
     // If `config` is null, this will result in a default configuration being
     // used.
     if (config) {

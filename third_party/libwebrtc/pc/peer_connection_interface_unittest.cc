@@ -1332,6 +1332,7 @@ TEST_P(PeerConnectionInterfaceTest,
 // in the RTCConfiguration.
 TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   PeerConnectionInterface::IceServer server;
   server.uri = kStunAddressOnly;
   config.servers.push_back(server);
@@ -1375,6 +1376,7 @@ TEST_P(PeerConnectionInterfaceTest,
   // Create RTCConfiguration with some network-related fields relevant to
   // PortAllocator populated.
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.disable_ipv6_on_wifi = true;
   config.max_ipv6_networks = 10;
   config.tcp_candidate_policy =
@@ -1415,6 +1417,7 @@ TEST_P(PeerConnectionInterfaceTest,
 // constructed with, before SetConfiguration is called.
 TEST_P(PeerConnectionInterfaceTest, GetConfigurationAfterCreatePeerConnection) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.type = PeerConnectionInterface::kRelay;
   CreatePeerConnection(config);
 
@@ -1427,6 +1430,7 @@ TEST_P(PeerConnectionInterfaceTest, GetConfigurationAfterCreatePeerConnection) {
 // SetConfiguration.
 TEST_P(PeerConnectionInterfaceTest, GetConfigurationAfterSetConfiguration) {
   PeerConnectionInterface::RTCConfiguration starting_config;
+  starting_config.sdp_semantics = sdp_semantics_;
   starting_config.bundle_policy =
       webrtc::PeerConnection::kBundlePolicyMaxBundle;
   CreatePeerConnection(starting_config);
@@ -3009,6 +3013,7 @@ TEST_P(PeerConnectionInterfaceTest, OnAddTrackCallback) {
 // changing, the next offer causes an ICE restart.
 TEST_P(PeerConnectionInterfaceTest, SetConfigurationCausingIceRestart) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.type = PeerConnectionInterface::kRelay;
   CreatePeerConnection(config);
   config = pc_->GetConfiguration();
@@ -3043,6 +3048,7 @@ TEST_P(PeerConnectionInterfaceTest, SetConfigurationCausingIceRestart) {
 // changing, the next offer does *not* cause an ICE restart.
 TEST_P(PeerConnectionInterfaceTest, SetConfigurationNotCausingIceRestart) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.type = PeerConnectionInterface::kRelay;
   CreatePeerConnection(config);
   config = pc_->GetConfiguration();
@@ -3077,6 +3083,7 @@ TEST_P(PeerConnectionInterfaceTest, SetConfigurationNotCausingIceRestart) {
 //    that was already restarted.
 TEST_P(PeerConnectionInterfaceTest, SetConfigurationCausingPartialIceRestart) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.type = PeerConnectionInterface::kRelay;
   CreatePeerConnection(config);
   config = pc_->GetConfiguration();
@@ -3237,6 +3244,7 @@ TEST_P(PeerConnectionInterfaceTest, OffersAndAnswersHaveTrickleIceOption) {
 // RTCConfiguration.
 TEST_P(PeerConnectionInterfaceTest, IceRenominationNotOffered) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.enable_ice_renomination = false;
   CreatePeerConnection(config);
   AddAudioTrack("foo");
@@ -3253,6 +3261,7 @@ TEST_P(PeerConnectionInterfaceTest, IceRenominationNotOffered) {
 // if it's enabled in the PC's RTCConfiguration.
 TEST_P(PeerConnectionInterfaceTest, IceRenominationOptionInOfferAndAnswer) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.enable_ice_renomination = true;
   CreatePeerConnection(config);
   AddAudioTrack("foo");
@@ -3337,6 +3346,7 @@ TEST_P(PeerConnectionInterfaceTest,
        DISABLED_DataChannelOnlyOfferWithMaxBundlePolicy) {
 #endif  // WEBRTC_HAVE_SCTP
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = sdp_semantics_;
   config.bundle_policy = PeerConnectionInterface::kBundlePolicyMaxBundle;
   CreatePeerConnection(config);
 
@@ -3676,6 +3686,7 @@ class PeerConnectionMediaConfigTest : public ::testing::Test {
 // This sanity check validates the test infrastructure itself.
 TEST_F(PeerConnectionMediaConfigTest, TestCreateAndClose) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   rtc::scoped_refptr<PeerConnectionInterface> pc(
       pcf_->CreatePeerConnection(config, nullptr, nullptr, &observer_));
   EXPECT_TRUE(pc.get());
@@ -3688,6 +3699,7 @@ TEST_F(PeerConnectionMediaConfigTest, TestCreateAndClose) {
 // default RTCConfiguration.
 TEST_F(PeerConnectionMediaConfigTest, TestDefaults) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   const cricket::MediaConfig& media_config = TestCreatePeerConnection(config);
 
@@ -3702,6 +3714,7 @@ TEST_F(PeerConnectionMediaConfigTest, TestDefaults) {
 // propagated from RTCConfiguration to the PeerConnection.
 TEST_F(PeerConnectionMediaConfigTest, TestDisablePrerendererSmoothingTrue) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   config.set_prerenderer_smoothing(false);
   const cricket::MediaConfig& media_config = TestCreatePeerConnection(config);
@@ -3713,6 +3726,7 @@ TEST_F(PeerConnectionMediaConfigTest, TestDisablePrerendererSmoothingTrue) {
 // propagated from RTCConfiguration to the PeerConnection.
 TEST_F(PeerConnectionMediaConfigTest, TestEnableExperimentCpuLoadEstimator) {
   PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   config.set_experiment_cpu_load_estimator(true);
   const cricket::MediaConfig& media_config = TestCreatePeerConnection(config);
