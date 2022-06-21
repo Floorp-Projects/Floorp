@@ -20,7 +20,6 @@
 #include "absl/algorithm/container.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_tcp_socket.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -34,6 +33,9 @@ class TestEchoServer : public sigslot::has_slots<> {
  public:
   TestEchoServer(Thread* thread, const SocketAddress& addr);
   ~TestEchoServer() override;
+
+  TestEchoServer(const TestEchoServer&) = delete;
+  TestEchoServer& operator=(const TestEchoServer&) = delete;
 
   SocketAddress address() const { return server_socket_->GetLocalAddress(); }
 
@@ -64,7 +66,6 @@ class TestEchoServer : public sigslot::has_slots<> {
   typedef std::list<AsyncTCPSocket*> ClientList;
   std::unique_ptr<Socket> server_socket_;
   ClientList client_sockets_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(TestEchoServer);
 };
 
 }  // namespace rtc

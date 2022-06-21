@@ -18,7 +18,6 @@
 #include "absl/base/attributes.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/async_invoker_inl.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -94,6 +93,9 @@ class DEPRECATED_AsyncInvoker : public MessageHandlerAutoCleanup {
   DEPRECATED_AsyncInvoker();
   ~DEPRECATED_AsyncInvoker() override;
 
+  DEPRECATED_AsyncInvoker(const DEPRECATED_AsyncInvoker&) = delete;
+  DEPRECATED_AsyncInvoker& operator=(const DEPRECATED_AsyncInvoker&) = delete;
+
   // Call `functor` asynchronously on `thread`, with no callback upon
   // completion. Returns immediately.
   template <class ReturnT, class FunctorT>
@@ -159,8 +161,6 @@ class DEPRECATED_AsyncInvoker : public MessageHandlerAutoCleanup {
   std::atomic<bool> destroying_;
 
   friend class AsyncClosure;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DEPRECATED_AsyncInvoker);
 };
 
 }  // namespace rtc

@@ -62,7 +62,6 @@
 #include "absl/base/attributes.h"
 #include "absl/meta/type_traits.h"
 #include "absl/strings/string_view.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/system/inline.h"
 
@@ -451,6 +450,9 @@ class LogMessage {
              const std::string& tag);
   ~LogMessage();
 
+  LogMessage(const LogMessage&) = delete;
+  LogMessage& operator=(const LogMessage&) = delete;
+
   void AddTag(const char* tag);
   rtc::StringBuilder& stream();
   // Returns the time at which this function was called for the first time.
@@ -624,8 +626,6 @@ class LogMessage {
   static bool aec_debug_;
   static uint32_t aec_debug_size_;
   static std::string aec_filename_base_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
 
 //////////////////////////////////////////////////////////////////////

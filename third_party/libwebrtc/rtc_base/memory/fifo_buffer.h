@@ -29,6 +29,10 @@ class FifoBuffer final : public StreamInterface {
   // Creates a FIFO buffer with the specified capacity and owner
   FifoBuffer(size_t length, Thread* owner);
   ~FifoBuffer() override;
+
+  FifoBuffer(const FifoBuffer&) = delete;
+  FifoBuffer& operator=(const FifoBuffer&) = delete;
+
   // Gets the amount of data currently readable from the buffer.
   bool GetBuffered(size_t* data_len) const;
 
@@ -110,7 +114,6 @@ class FifoBuffer final : public StreamInterface {
   Thread* const owner_;
   // object lock
   mutable webrtc::Mutex mutex_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(FifoBuffer);
 };
 
 }  // namespace rtc

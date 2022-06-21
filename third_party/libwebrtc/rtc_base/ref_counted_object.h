@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "api/scoped_refptr.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/ref_counter.h"
 
@@ -41,6 +40,9 @@ template <class T>
 class RefCountedObject : public T {
  public:
   RefCountedObject() {}
+
+  RefCountedObject(const RefCountedObject&) = delete;
+  RefCountedObject& operator=(const RefCountedObject&) = delete;
 
   template <class P0>
   explicit RefCountedObject(P0&& p0) : T(std::forward<P0>(p0)) {}
@@ -73,8 +75,6 @@ class RefCountedObject : public T {
   ~RefCountedObject() override {}
 
   mutable webrtc::webrtc_impl::RefCounter ref_count_{0};
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(RefCountedObject);
 };
 
 template <class T>
