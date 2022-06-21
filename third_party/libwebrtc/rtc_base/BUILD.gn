@@ -499,6 +499,7 @@ rtc_source_set("rtc_operations_chain") {
     ":checks",
     ":macromagic",
     ":refcount",
+    "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "system:no_unique_address",

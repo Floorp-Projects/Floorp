@@ -93,6 +93,8 @@ class PendingTaskSafetyFlag final
   explicit PendingTaskSafetyFlag(bool alive) : alive_(alive) {}
 
  private:
+  static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateInternal(bool alive);
+
   bool alive_ = true;
   RTC_NO_UNIQUE_ADDRESS SequenceChecker main_sequence_;
 };

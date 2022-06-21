@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/types/optional.h"
+#include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
@@ -113,7 +114,7 @@ class OperationWithFunctor final : public Operation {
 // The OperationsChain is kept-alive through reference counting if there are
 // operations pending. This, together with the contract, guarantees that all
 // operations that are chained get executed.
-class OperationsChain final : public RefCountedObject<RefCountInterface> {
+class OperationsChain final : public RefCountedNonVirtual<OperationsChain> {
  public:
   static scoped_refptr<OperationsChain> Create();
   ~OperationsChain();
@@ -163,7 +164,7 @@ class OperationsChain final : public RefCountedObject<RefCountInterface> {
   // std::function<void()>, which is a copyable type. To allow the callback to
   // be copyable, it is backed up by this reference counted handle. See
   // CreateOperationsChainCallback().
-  class CallbackHandle final : public RefCountedObject<RefCountInterface> {
+  class CallbackHandle final : public RefCountedNonVirtual<CallbackHandle> {
    public:
     explicit CallbackHandle(scoped_refptr<OperationsChain> operations_chain);
     ~CallbackHandle();
