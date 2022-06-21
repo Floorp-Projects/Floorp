@@ -208,11 +208,14 @@ class MediaChannel {
   // Resets any cached StreamParams for an unsignaled RecvStream, and removes
   // any existing unsignaled streams.
   virtual void ResetUnsignaledRecvStream() = 0;
-  // Informs the media channel when the transport's demuxer criteria is updated.
+  // This is currently a workaround because of the demuxer state being managed
+  // across two separate threads. Once the state is consistently managed on
+  // the same thread (network), this workaround can be removed.
+  // These two notifications inform the media channel when the transport's
+  // demuxer criteria is being updated.
   // * OnDemuxerCriteriaUpdatePending() happens on the same thread that the
   //   channel's streams are added and removed (worker thread).
-  // * OnDemuxerCriteriaUpdateComplete() happens on the thread where the demuxer
-  //   lives (network thread).
+  // * OnDemuxerCriteriaUpdateComplete() happens on the same thread.
   // Because the demuxer is updated asynchronously, there is a window of time
   // where packets are arriving to the channel for streams that have already
   // been removed on the worker thread. It is important NOT to treat these as
