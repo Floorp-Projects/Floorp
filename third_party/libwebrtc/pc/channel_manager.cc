@@ -58,6 +58,8 @@ ChannelManager::ChannelManager(
 
 ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK(voice_channels_.empty());
+  RTC_DCHECK(video_channels_.empty());
 }
 
 void ChannelManager::GetSupportedAudioSendCodecs(
