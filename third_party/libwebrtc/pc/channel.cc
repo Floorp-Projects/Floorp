@@ -319,7 +319,7 @@ bool BaseChannel::IsReadyToSendMedia_w() const {
   return enabled_ &&
          webrtc::RtpTransceiverDirectionHasRecv(remote_content_direction_) &&
          webrtc::RtpTransceiverDirectionHasSend(local_content_direction_) &&
-         was_ever_writable();
+         was_ever_writable_;
 }
 
 bool BaseChannel::SendPacket(rtc::CopyOnWriteBuffer* packet,
