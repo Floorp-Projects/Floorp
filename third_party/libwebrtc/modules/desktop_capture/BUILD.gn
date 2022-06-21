@@ -403,7 +403,6 @@ rtc_library("desktop_capture_generic") {
 
   if (rtc_use_x11_extensions) {
     sources += [
-      "linux/shared_x_display.h",
       "linux/x11/mouse_cursor_monitor_x11.cc",
       "linux/x11/mouse_cursor_monitor_x11.h",
       "linux/x11/screen_capturer_x11.cc",
