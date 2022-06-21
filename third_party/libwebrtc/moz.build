@@ -389,16 +389,11 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DIRS += [
         "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
         "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
-        "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
-        "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
-        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
-        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
-        "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
+        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
@@ -559,6 +554,24 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
+        "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DIRS += [
+        "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
+        "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
+        "/third_party/libwebrtc/modules/video_processing/video_processing_neon_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DIRS += [
+        "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
+        "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
