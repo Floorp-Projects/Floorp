@@ -2902,8 +2902,12 @@ void MediaSessionDescriptionFactory::ComputeVideoCodecsIntersectionAndUnion() {
   video_sendrecv_codecs_.clear();
   all_video_codecs_.clear();
   // Compute the video codecs union.
+  // Keep track of payload types to avoid collisions.
+  UsedPayloadTypes used_payload_types;
   for (const VideoCodec& send : video_send_codecs_) {
-    all_video_codecs_.push_back(send);
+    VideoCodec send_mutable = send;
+    used_payload_types.FindAndSetIdUsed(&send_mutable);
+    all_video_codecs_.push_back(send_mutable);
     if (!FindMatchingCodec<VideoCodec>(video_send_codecs_, video_recv_codecs_,
                                        send, nullptr)) {
       // TODO(kron): This check is violated by the unit test:
@@ -2915,12 +2919,11 @@ void MediaSessionDescriptionFactory::ComputeVideoCodecsIntersectionAndUnion() {
       // RTC_DCHECK(!IsRtxCodec(send));
     }
   }
-  for (const VideoCodec& recv : video_recv_codecs_) {
-    if (!FindMatchingCodec<VideoCodec>(video_recv_codecs_, video_send_codecs_,
-                                       recv, nullptr)) {
-      all_video_codecs_.push_back(recv);
-    }
-  }
+  // Use MergeCodecs to merge the second half of our list as it already checks
+  // and fixes problems with duplicate payload types.
+  MergeCodecs<VideoCodec>(video_recv_codecs_, &all_video_codecs_,
+                          &used_payload_types);
+
   // Use NegotiateCodecs to merge our codec lists, since the operation is
   // essentially the same. Put send_codecs as the offered_codecs, which is the
   // order we'd like to follow. The reasoning is that encoding is usually more
