@@ -6,7 +6,7 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize("value", ["tab", "window"])
-async def test_type(bidi_session, current_session, wait_for_event, value):
+async def test_type(bidi_session, current_session, value):
     contexts = await bidi_session.browsing_context.get_tree(max_depth=0)
     assert len(contexts) == 1
 
