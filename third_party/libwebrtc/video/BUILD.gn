@@ -266,6 +266,7 @@ rtc_library("frame_cadence_adapter") {
   deps = [
     "../api:sequence_checker",
     "../api/task_queue",
+    "../api/units:time_delta",
     "../api/video:video_frame",
     "../rtc_base:logging",
     "../rtc_base:macromagic",

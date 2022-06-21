@@ -18,7 +18,9 @@
 #include "api/video/video_frame.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
+#include "system_wrappers/include/ntp_time.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -29,15 +31,24 @@ namespace {
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::Invoke;
 using ::testing::Mock;
 using ::testing::Pair;
-using ::testing::Ref;
-using ::testing::UnorderedElementsAre;
 
 VideoFrame CreateFrame() {
   return VideoFrame::Builder()
       .set_video_frame_buffer(
           rtc::make_ref_counted<NV12Buffer>(/*width=*/16, /*height=*/16))
+      .build();
+}
+
+VideoFrame CreateFrameWithTimestamps(
+    GlobalSimulatedTimeController* time_controller) {
+  return VideoFrame::Builder()
+      .set_video_frame_buffer(
+          rtc::make_ref_counted<NV12Buffer>(/*width=*/16, /*height=*/16))
+      .set_ntp_time_ms(time_controller->GetClock()->CurrentNtpInMilliseconds())
+      .set_timestamp_us(time_controller->GetClock()->CurrentTime().us())
       .build();
 }
 
@@ -184,6 +195,152 @@ TEST(FrameCadenceAdapterTest,
 
   EXPECT_EQ(rate.Rate(time_controller.GetClock()->TimeInMilliseconds()),
             adapter->GetInputFrameRateFps());
+}
+
+TEST(FrameCadenceAdapterTest, ForwardsFramesDelayed) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(true);
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+  constexpr int kNumFrames = 3;
+  NtpTime original_ntp_time = time_controller.GetClock()->CurrentNtpTime();
+  auto frame = CreateFrameWithTimestamps(&time_controller);
+  int64_t original_timestamp_us = frame.timestamp_us();
+  for (int index = 0; index != kNumFrames; ++index) {
+    EXPECT_CALL(callback, OnFrame).Times(0);
+    adapter->OnFrame(frame);
+    EXPECT_CALL(callback, OnFrame)
+        .WillOnce(Invoke([&](Timestamp post_time, int,
+                             const VideoFrame& frame) {
+          EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+          EXPECT_EQ(frame.timestamp_us(),
+                    original_timestamp_us + index * rtc::kNumMicrosecsPerSec);
+          EXPECT_EQ(frame.ntp_time_ms(), original_ntp_time.ToMs() +
+                                             index * rtc::kNumMillisecsPerSec);
+        }));
+    time_controller.AdvanceTime(TimeDelta::Seconds(1));
+    frame = CreateFrameWithTimestamps(&time_controller);
+  }
+}
+
+TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
+  // Logic in the frame cadence adapter avoids modifying frame NTP and render
+  // timestamps if these timestamps looks unset, which is the case when the
+  // clock is initialized running from 0. For this reason we choose the
+  // `time_controller` initialization constant to something arbitrary which is
+  // not 0.
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(47892223));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(true);
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+  NtpTime original_ntp_time = time_controller.GetClock()->CurrentNtpTime();
+
+  // Send one frame, expect 2 subsequent repeats.
+  auto frame = CreateFrameWithTimestamps(&time_controller);
+  int64_t original_timestamp_us = frame.timestamp_us();
+  adapter->OnFrame(frame);
+
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+        EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+        EXPECT_EQ(frame.timestamp_us(), original_timestamp_us);
+        EXPECT_EQ(frame.ntp_time_ms(), original_ntp_time.ToMs());
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+        EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+        EXPECT_EQ(frame.timestamp_us(),
+                  original_timestamp_us + rtc::kNumMicrosecsPerSec);
+        EXPECT_EQ(frame.ntp_time_ms(),
+                  original_ntp_time.ToMs() + rtc::kNumMillisecsPerSec);
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+        EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+        EXPECT_EQ(frame.timestamp_us(),
+                  original_timestamp_us + 2 * rtc::kNumMicrosecsPerSec);
+        EXPECT_EQ(frame.ntp_time_ms(),
+                  original_ntp_time.ToMs() + 2 * rtc::kNumMillisecsPerSec);
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+}
+
+TEST(FrameCadenceAdapterTest,
+     RepeatsFramesWithoutTimestampsWithUnsetTimestamps) {
+  // Logic in the frame cadence adapter avoids modifying frame NTP and render
+  // timestamps if these timestamps looks unset, which is the case when the
+  // clock is initialized running from 0. In this test we deliberately don't set
+  // it to zero, but select unset timestamps in the frames (via CreateFrame())
+  // and verify that the timestamp modifying logic doesn't depend on the current
+  // time.
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(4711));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(true);
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+
+  // Send one frame, expect a repeat.
+  adapter->OnFrame(CreateFrame());
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+        EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+        EXPECT_EQ(frame.timestamp_us(), 0);
+        EXPECT_EQ(frame.ntp_time_ms(), 0);
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+        EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
+        EXPECT_EQ(frame.timestamp_us(), 0);
+        EXPECT_EQ(frame.ntp_time_ms(), 0);
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+}
+
+TEST(FrameCadenceAdapterTest, StopsRepeatingFramesDelayed) {
+  // At 1s, the initially scheduled frame appears.
+  // At 2s, the repeated initial frame appears.
+  // At 2.5s, we schedule another new frame.
+  // At 3.5s, we receive this frame.
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(true);
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+  NtpTime original_ntp_time = time_controller.GetClock()->CurrentNtpTime();
+
+  // Send one frame, expect 1 subsequent repeat.
+  adapter->OnFrame(CreateFrameWithTimestamps(&time_controller));
+  EXPECT_CALL(callback, OnFrame).Times(2);
+  time_controller.AdvanceTime(TimeDelta::Seconds(2.5));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Send the new frame at 2.5s, which should appear after 3.5s.
+  adapter->OnFrame(CreateFrameWithTimestamps(&time_controller));
+  EXPECT_CALL(callback, OnFrame)
+      .WillOnce(Invoke([&](Timestamp, int, const VideoFrame& frame) {
+        EXPECT_EQ(frame.timestamp_us(), 5 * rtc::kNumMicrosecsPerSec / 2);
+        EXPECT_EQ(frame.ntp_time_ms(),
+                  original_ntp_time.ToMs() + 5u * rtc::kNumMillisecsPerSec / 2);
+      }));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
 }
 
 class FrameCadenceAdapterMetricsTest : public ::testing::Test {
