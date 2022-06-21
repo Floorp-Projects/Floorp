@@ -653,6 +653,18 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
       HTMLEditor& aHTMLEditor);
 
+  /**
+   * CollectEditTargetNodes() collects edit target nodes the ranges.
+   * First, this collects all nodes in given ranges, then, modifies the
+   * result for specific edit sub-actions.
+   */
+  enum class CollectNonEditableNodes { No, Yes };
+  nsresult CollectEditTargetNodes(
+      const HTMLEditor& aHTMLEditor,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+      EditSubAction aEditSubAction,
+      CollectNonEditableNodes aCollectNonEditableNodes) const;
+
  private:
   static nsresult ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
       nsRange& aRange, EditSubAction aEditSubAction,
