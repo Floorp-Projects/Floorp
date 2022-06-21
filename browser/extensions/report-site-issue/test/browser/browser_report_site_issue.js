@@ -1,8 +1,8 @@
 "use strict";
 
 async function clickToReportAndAwaitReportTabLoad() {
-  const helpMenu = new HelpMenuHelper();
-  await helpMenu.open();
+  await openPageActions();
+  await isPanelItemEnabled();
 
   // click on "report site issue" and wait for the new tab to open
   const tab = await new Promise(resolve => {
@@ -13,7 +13,7 @@ async function clickToReportAndAwaitReportTabLoad() {
       },
       { once: true }
     );
-    document.getElementById("help_reportSiteIssue").click();
+    document.getElementById(WC_PAGE_ACTION_PANEL_ID).click();
   });
 
   // wait for the new tab to acknowledge that it received a screenshot
@@ -24,8 +24,6 @@ async function clickToReportAndAwaitReportTabLoad() {
     null,
     true
   );
-
-  await helpMenu.close();
 
   return tab;
 }
@@ -102,21 +100,20 @@ add_task(async function test_opened_page() {
     ok(Array.isArray(details.consoleLog), "Details has a consoleLog array.");
 
     const log1 = details.consoleLog[0];
-    is(log1.log[0], null, "Can handle degenerate console logs");
-    is(log1.level, "log", "Reports correct log level");
-    is(log1.uri, URL, "Reports correct url");
-    is(log1.pos, "7:13", "Reports correct line and column");
+    ok(log1.log[0] === null, "Can handle degenerate console logs");
+    ok(log1.level === "log", "Reports correct log level");
+    ok(log1.uri === URL, "Reports correct url");
+    ok(log1.pos === "7:13", "Reports correct line and column");
 
     const log2 = details.consoleLog[1];
-    is(log2.log[0], "colored message", "Can handle fancy console logs");
-    is(log2.level, "error", "Reports correct log level");
-    is(log2.uri, URL, "Reports correct url");
-    is(log2.pos, "8:13", "Reports correct line and column");
+    ok(log2.log[0] === "colored message", "Can handle fancy console logs");
+    ok(log2.level === "error", "Reports correct log level");
+    ok(log2.uri === URL, "Reports correct url");
+    ok(log2.pos === "8:13", "Reports correct line and column");
 
     const log3 = details.consoleLog[2];
     const loggedObject = log3.log[0];
     is(loggedObject.testobj, "{...}", "Reports object inside object");
-    is(loggedObject.testSymbol, "Symbol(sym)", "Reports symbol inside object");
     is(loggedObject.testnumber, 1, "Reports number inside object");
     is(loggedObject.testArray, "(4)[...]", "Reports array inside object");
     is(loggedObject.testUndf, "undefined", "Reports undefined inside object");
@@ -133,9 +130,9 @@ add_task(async function test_opened_page() {
       10,
       "Preview has 10 keys inside object"
     );
-    is(log3.level, "log", "Reports correct log level");
-    is(log3.uri, URL, "Reports correct url");
-    is(log3.pos, "24:13", "Reports correct line and column");
+    ok(log3.level === "log", "Reports correct log level");
+    ok(log3.uri === URL, "Reports correct url");
+    ok(log3.pos === "23:13", "Reports correct line and column");
 
     const log4 = details.consoleLog[3];
     const loggedArray = log4.log[0];
@@ -157,9 +154,9 @@ add_task(async function test_opened_page() {
       log5.log[0].match(/TypeError: .*document\.access is undefined/),
       "Script errors are logged"
     );
-    is(log5.level, "error", "Reports correct log level");
-    is(log5.uri, URL, "Reports correct url");
-    is(log5.pos, "36:5", "Reports correct line and column");
+    ok(log5.level === "error", "Reports correct log level");
+    ok(log5.uri === URL, "Reports correct url");
+    ok(log5.pos === "35:5", "Reports correct line and column");
 
     ok(typeof details.buildID == "string", "Details has a buildID string.");
     ok(typeof details.channel == "string", "Details has a channel string.");
