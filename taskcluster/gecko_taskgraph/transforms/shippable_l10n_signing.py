@@ -11,7 +11,7 @@ from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.signed_artifacts import (
     generate_specifications_of_artifacts_to_sign,
 )
-from taskgraph.util.treeherder import join_symbol
+from gecko_taskgraph.util.treeherder import join_symbol
 
 transforms = TransformSequence()
 
