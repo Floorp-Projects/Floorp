@@ -3924,12 +3924,11 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
                                                *newContainer);
   {
     AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildren;
-    HTMLEditor::CollectChildren(
-        aOldContainer, arrayOfChildren, 0u, CollectListChildren::No,
-        CollectTableChildren::No,
+    HTMLEditUtils::CollectChildren(
+        aOldContainer, arrayOfChildren, 0u,
         // Move non-editable children too because its container, aElement, is
         // editable so that all children must be removable node.
-        CollectNonEditableNodes::Yes);
+        {});
     // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
     //       in normal cases.  However, it may be required for nested edit
     //       actions which may be caused by legacy mutation event listeners or
@@ -3992,12 +3991,11 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
                                          EditorRawDOMPoint(&aElement));
 
   AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildren;
-  HTMLEditor::CollectChildren(
-      aElement, arrayOfChildren, 0u, CollectListChildren::No,
-      CollectTableChildren::No,
+  HTMLEditUtils::CollectChildren(
+      aElement, arrayOfChildren, 0u,
       // Move non-editable children too because its container, aElement, is
       // editable so that all children must be removable node.
-      CollectNonEditableNodes::Yes);
+      {});
   const OwningNonNull<nsINode> parentNode = *aElement.GetParentNode();
   nsCOMPtr<nsIContent> previousChild = aElement.GetPreviousSibling();
   // For making all MoveNodeTransactions have a referenc node in the current

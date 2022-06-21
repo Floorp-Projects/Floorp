@@ -4812,12 +4812,12 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
         return MoveNodeResult(rv);
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        rangesToWrapTheLine.Ranges(), arrayOfContents,
-        EditSubAction::eMergeBlockContents, CollectNonEditableNodes::Yes);
+    nsresult rv = rangesToWrapTheLine.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eMergeBlockContents,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
       return MoveNodeResult(rv);
     }

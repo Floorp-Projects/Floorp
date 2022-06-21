@@ -3092,12 +3092,12 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         return EditActionResult(rv);
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eCreateOrChangeList,
+        AutoRangeArray::CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return EditActionResult(rv);
     }
@@ -3233,9 +3233,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
               nsGkAtoms::div, nsGkAtoms::blockquote)) {
         arrayOfContents.Clear();
-        CollectChildren(*deepestDivBlockquoteOrListElement, arrayOfContents, 0,
-                        CollectListChildren::No, CollectTableChildren::No,
-                        CollectNonEditableNodes::Yes);
+        HTMLEditUtils::CollectChildren(*deepestDivBlockquoteOrListElement,
+                                       arrayOfContents, 0, {});
       } else {
         arrayOfContents.ReplaceElementAt(
             0, OwningNonNull<nsIContent>(*deepestDivBlockquoteOrListElement));
@@ -3535,9 +3534,10 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     //     Then, we can change this `for` loop to ranged-for loop.
     if (content->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
-      CollectChildren(*content, arrayOfContents, i + 1,
-                      CollectListChildren::Yes, CollectTableChildren::Yes,
-                      CollectNonEditableNodes::Yes);
+      HTMLEditUtils::CollectChildren(
+          *content, arrayOfContents, i + 1,
+          {CollectChildrenOption::CollectListChildren,
+           CollectChildrenOption::CollectTableChildren});
       const Result<EditorDOMPoint, nsresult> unwrapDivElementResult =
           RemoveContainerWithTransaction(MOZ_KnownLive(*content->AsElement()));
       if (MOZ_UNLIKELY(unwrapDivElementResult.isErr())) {
@@ -3755,12 +3755,12 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eCreateOrChangeList, CollectNonEditableNodes::No);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eCreateOrChangeList,
+        AutoRangeArray::CollectNonEditableNodes::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
       return rv;
     }
@@ -3864,12 +3864,12 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eCreateOrRemoveBlock, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
       return rv;
     }
@@ -4411,12 +4411,12 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eIndent, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eIndent,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eIndent, "
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::eIndent, "
           "CollectNonEditableNodes::Yes) failed");
       return rv;
     }
@@ -4670,12 +4670,12 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal(
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eIndent, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eIndent,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eIndent, "
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::eIndent, "
           "CollectNonEditableNodes::Yes) failed");
       return rv;
     }
@@ -5087,12 +5087,12 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
     AutoRangeArray extendedSelectionRanges(SelectionRef());
     extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
         EditSubAction::eOutdent, aEditingHost);
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eOutdent, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eOutdent,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::eOutdent, "
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::eOutdent, "
           "CollectNonEditableNodes::Yes) failed");
       return SplitRangeOffFromNodeResult(rv);
     }
@@ -5941,12 +5941,12 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eSetOrClearAlignment, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eSetOrClearAlignment,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eSetOrClearAlignment, CollectNonEditableNodes::Yes) failed");
       return rv;
     }
@@ -6437,35 +6437,6 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   return NS_OK;
 }
 
-size_t HTMLEditor::CollectChildren(
-    nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-    size_t aIndexToInsertChildren, CollectListChildren aCollectListChildren,
-    CollectTableChildren aCollectTableChildren,
-    CollectNonEditableNodes aCollectNonEditableNodes) const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  size_t numberOfFoundChildren = 0;
-  for (nsIContent* content = HTMLEditUtils::GetFirstChild(
-           aNode, {WalkTreeOption::IgnoreNonEditableNode});
-       content; content = content->GetNextSibling()) {
-    if ((aCollectListChildren == CollectListChildren::Yes &&
-         (HTMLEditUtils::IsAnyListElement(content) ||
-          HTMLEditUtils::IsListItem(content))) ||
-        (aCollectTableChildren == CollectTableChildren::Yes &&
-         HTMLEditUtils::IsAnyTableElement(content))) {
-      numberOfFoundChildren += CollectChildren(
-          *content, aOutArrayOfContents,
-          aIndexToInsertChildren + numberOfFoundChildren, aCollectListChildren,
-          aCollectTableChildren, aCollectNonEditableNodes);
-    } else if (aCollectNonEditableNodes == CollectNonEditableNodes::Yes ||
-               EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
-      aOutArrayOfContents.InsertElementAt(
-          aIndexToInsertChildren + numberOfFoundChildren++, *content);
-    }
-  }
-  return numberOfFoundChildren;
-}
-
 nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -6705,146 +6676,6 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
                       endPoint.ToRawRangeBoundary(), IgnoreErrors());
   NS_WARNING_ASSERTION(range, "nsRange::Create() failed");
   return range.forget();
-}
-
-nsresult HTMLEditor::CollectEditTargetNodes(
-    nsTArray<OwningNonNull<nsRange>>& aArrayOfRanges,
-    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
-    EditSubAction aEditSubAction,
-    CollectNonEditableNodes aCollectNonEditableNodes) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  // Gather up a list of all the nodes
-  for (auto& range : aArrayOfRanges) {
-    DOMSubtreeIterator iter;
-    nsresult rv = iter.Init(*range);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("DOMSubtreeIterator::Init() failed");
-      return rv;
-    }
-    if (aOutArrayOfContents.IsEmpty()) {
-      iter.AppendAllNodesToArray(aOutArrayOfContents);
-    } else {
-      AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfTopChildren;
-      iter.AppendNodesToArray(
-          +[](nsINode& aNode, void* aArray) -> bool {
-            MOZ_ASSERT(aArray);
-            return !static_cast<nsTArray<OwningNonNull<nsIContent>>*>(aArray)
-                        ->Contains(&aNode);
-          },
-          arrayOfTopChildren, &aOutArrayOfContents);
-      aOutArrayOfContents.AppendElements(std::move(arrayOfTopChildren));
-    }
-    if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
-      for (size_t i = aOutArrayOfContents.Length(); i > 0; --i) {
-        if (!EditorUtils::IsEditableContent(aOutArrayOfContents[i - 1],
-                                            EditorType::HTML)) {
-          aOutArrayOfContents.RemoveElementAt(i - 1);
-        }
-      }
-    }
-  }
-
-  switch (aEditSubAction) {
-    case EditSubAction::eCreateOrRemoveBlock:
-      // Certain operations should not act on li's and td's, but rather inside
-      // them.  Alter the list as needed.
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
-        if (HTMLEditUtils::IsListItem(content)) {
-          aOutArrayOfContents.RemoveElementAt(i);
-          CollectChildren(*content, aOutArrayOfContents, i,
-                          CollectListChildren::Yes, CollectTableChildren::Yes,
-                          aCollectNonEditableNodes);
-        }
-      }
-      // Empty text node shouldn't be selected if unnecessary
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        if (Text* text = aOutArrayOfContents[i]->GetAsText()) {
-          // Don't select empty text except to empty block
-          if (!HTMLEditUtils::IsVisibleTextNode(*text)) {
-            aOutArrayOfContents.RemoveElementAt(i);
-          }
-        }
-      }
-      break;
-    case EditSubAction::eCreateOrChangeList: {
-      for (size_t i = aOutArrayOfContents.Length(); i > 0; i--) {
-        // Scan for table elements.  If we find table elements other than
-        // table, replace it with a list of any editable non-table content
-        // because if a selection range starts from end in a table-cell and
-        // ends at or starts from outside the `<table>`, we need to make
-        // lists in each selected table-cells.
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i - 1];
-        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
-          // XXX aCollectNonEditableNodes is ignored here.  Maybe a bug.
-          aOutArrayOfContents.RemoveElementAt(i - 1);
-          CollectChildren(content, aOutArrayOfContents, i - 1,
-                          CollectListChildren::No, CollectTableChildren::Yes,
-                          CollectNonEditableNodes::Yes);
-        }
-      }
-      // If there is only one node in the array, and it is a `<div>`,
-      // `<blockquote>` or a list element, then look inside of it until we
-      // find inner list or content.
-      if (aOutArrayOfContents.Length() != 1) {
-        break;
-      }
-      Element* deepestDivBlockquoteOrListElement =
-          HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
-              aOutArrayOfContents[0], {WalkTreeOption::IgnoreNonEditableNode},
-              nsGkAtoms::div, nsGkAtoms::blockquote, nsGkAtoms::ul,
-              nsGkAtoms::ol, nsGkAtoms::dl);
-      if (!deepestDivBlockquoteOrListElement) {
-        break;
-      }
-      if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
-              nsGkAtoms::div, nsGkAtoms::blockquote)) {
-        aOutArrayOfContents.Clear();
-        // XXX Before we're called, non-editable nodes are ignored.  However,
-        //     we may append non-editable nodes here.
-        CollectChildren(*deepestDivBlockquoteOrListElement, aOutArrayOfContents,
-                        0, CollectListChildren::No, CollectTableChildren::No,
-                        CollectNonEditableNodes::Yes);
-        break;
-      }
-      aOutArrayOfContents.ReplaceElementAt(
-          0, OwningNonNull<nsIContent>(*deepestDivBlockquoteOrListElement));
-      break;
-    }
-    case EditSubAction::eOutdent:
-    case EditSubAction::eIndent:
-    case EditSubAction::eSetPositionToAbsolute:
-      // Indent/outdent already do something special for list items, but we
-      // still need to make sure we don't act on table elements
-      for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
-        if (HTMLEditUtils::IsAnyTableElementButNotTable(content)) {
-          aOutArrayOfContents.RemoveElementAt(i);
-          CollectChildren(*content, aOutArrayOfContents, i,
-                          CollectListChildren::Yes, CollectTableChildren::Yes,
-                          aCollectNonEditableNodes);
-        }
-      }
-      break;
-    default:
-      break;
-  }
-
-  // Outdent should look inside of divs.
-  if (aEditSubAction == EditSubAction::eOutdent && !IsCSSEnabled()) {
-    for (int32_t i = aOutArrayOfContents.Length() - 1; i >= 0; i--) {
-      OwningNonNull<nsIContent> content = aOutArrayOfContents[i];
-      if (content->IsHTMLElement(nsGkAtoms::div)) {
-        aOutArrayOfContents.RemoveElementAt(i);
-        CollectChildren(*content, aOutArrayOfContents, i,
-                        CollectListChildren::No, CollectTableChildren::No,
-                        aCollectNonEditableNodes);
-      }
-    }
-  }
-
-  return NS_OK;
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::MaybeSplitElementsAtEveryBRElement(
@@ -10237,12 +10068,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         return rv;
       }
     }
-    nsresult rv = CollectEditTargetNodes(
-        extendedSelectionRanges.Ranges(), arrayOfContents,
-        EditSubAction::eSetPositionToAbsolute, CollectNonEditableNodes::Yes);
+    nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+        *this, arrayOfContents, EditSubAction::eSetPositionToAbsolute,
+        AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::CollectEditTargetNodes(EditSubAction::"
+          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
           "eSetPositionToAbsolute, CollectNonEditableNodes::Yes) failed");
       return rv;
     }
