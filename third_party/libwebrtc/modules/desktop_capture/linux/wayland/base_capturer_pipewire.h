@@ -45,6 +45,12 @@ class BaseCapturerPipeWire : public DesktopCapturer {
     kMetadata = 0b100
   };
 
+  struct PipeWireVersion {
+    int major = 0;
+    int minor = 0;
+    int micro = 0;
+  };
+
   explicit BaseCapturerPipeWire(CaptureSourceType source_type);
   ~BaseCapturerPipeWire() override;
 
@@ -66,6 +72,14 @@ class BaseCapturerPipeWire : public DesktopCapturer {
 
   spa_hook spa_core_listener_;
   spa_hook spa_stream_listener_;
+
+  // A number used to verify all previous methods and the resulting
+  // events have been handled.
+  int server_version_sync_ = 0;
+  // Version of the running PipeWire server we communicate with
+  PipeWireVersion pw_server_version_;
+  // Version of the library used to run our code
+  PipeWireVersion pw_client_version_;
 
   // event handlers
   pw_core_events pw_core_events_ = {};
@@ -121,6 +135,8 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                           int seq,
                           int res,
                           const char* message);
+  static void OnCoreDone(void* user_data, uint32_t id, int seq);
+  static void OnCoreInfo(void* user_data, const pw_core_info* info);
   static void OnStreamParamChanged(void* data,
                                    uint32_t id,
                                    const struct spa_pod* format);

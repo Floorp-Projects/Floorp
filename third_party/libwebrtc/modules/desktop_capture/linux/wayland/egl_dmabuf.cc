@@ -350,12 +350,11 @@ EglDmaBuf::EglDmaBuf() {
     egl_.extensions.push_back(std::string(extension));
   }
 
-  bool has_image_dma_buf_import_ext = false;
   bool has_image_dma_buf_import_modifiers_ext = false;
 
   for (const auto& extension : egl_.extensions) {
     if (extension == "EGL_EXT_image_dma_buf_import") {
-      has_image_dma_buf_import_ext = true;
+      has_image_dma_buf_import_ext_ = true;
       continue;
     } else if (extension == "EGL_EXT_image_dma_buf_import_modifiers") {
       has_image_dma_buf_import_modifiers_ext = true;
@@ -363,7 +362,7 @@ EglDmaBuf::EglDmaBuf() {
     }
   }
 
-  if (has_image_dma_buf_import_ext && has_image_dma_buf_import_modifiers_ext) {
+  if (has_image_dma_buf_import_ext_ && has_image_dma_buf_import_modifiers_ext) {
     EglQueryDmaBufFormatsEXT = (eglQueryDmaBufFormatsEXT_func)EglGetProcAddress(
         "eglQueryDmaBufFormatsEXT");
     EglQueryDmaBufModifiersEXT =
@@ -502,18 +501,18 @@ std::vector<uint64_t> EglDmaBuf::QueryDmaBufModifiers(uint32_t format) {
     return {};
   }
 
-  // Modifiers not supported, return just DRM_FORMAT_MOD_INVALID as we can still
-  // use modifier-less DMA-BUFs
+  // Explicit modifiers not supported, return just DRM_FORMAT_MOD_INVALID as we
+  // can still use modifier-less DMA-BUFs if we have required extension
   if (EglQueryDmaBufFormatsEXT == nullptr ||
       EglQueryDmaBufModifiersEXT == nullptr) {
-    return {DRM_FORMAT_MOD_INVALID};
+    return has_image_dma_buf_import_ext_
+               ? std::vector<uint64_t>{DRM_FORMAT_MOD_INVALID}
+               : std::vector<uint64_t>{};
   }
 
   uint32_t drm_format = SpaPixelFormatToDrmFormat(format);
-  if (drm_format == DRM_FORMAT_INVALID) {
-    RTC_LOG(LS_ERROR) << "Failed to find matching DRM format.";
-    return {DRM_FORMAT_MOD_INVALID};
-  }
+  // Should never happen as it's us who controls the list of supported formats
+  RTC_DCHECK(drm_format != DRM_FORMAT_INVALID);
 
   EGLint count = 0;
   EGLBoolean success =
