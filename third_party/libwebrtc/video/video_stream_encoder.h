@@ -155,6 +155,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
     void OnDiscardedFrame() override {
       video_stream_encoder_.OnDiscardedFrame();
     }
+    void RequestRefreshFrame() override {
+      video_stream_encoder_.RequestRefreshFrame();
+    }
 
    private:
     VideoStreamEncoder& video_stream_encoder_;
@@ -199,6 +202,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
                int frames_scheduled_for_processing,
                const VideoFrame& video_frame);
   void OnDiscardedFrame();
+  void RequestRefreshFrame();
 
   void MaybeEncodeVideoFrame(const VideoFrame& frame,
                              int64_t time_when_posted_in_ms);

@@ -67,6 +67,7 @@ class MockCallback : public FrameCadenceAdapterInterface::Callback {
  public:
   MOCK_METHOD(void, OnFrame, (Timestamp, int, const VideoFrame&), (override));
   MOCK_METHOD(void, OnDiscardedFrame, (), (override));
+  MOCK_METHOD(void, RequestRefreshFrame, (), (override));
 };
 
 class ZeroHertzFieldTrialDisabler : public test::ScopedFieldTrials {
@@ -366,7 +367,8 @@ TEST(FrameCadenceAdapterTest, RequestsRefreshFrameOnKeyFrameRequestWhenNew) {
       FrameCadenceAdapterInterface::ZeroHertzModeParams{});
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 10});
   time_controller.AdvanceTime(TimeDelta::Zero());
-  EXPECT_TRUE(adapter->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback, RequestRefreshFrame);
+  adapter->ProcessKeyFrameRequest();
 }
 
 TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
@@ -380,7 +382,8 @@ TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
   adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 10});
   adapter->OnFrame(CreateFrame());
   time_controller.AdvanceTime(TimeDelta::Zero());
-  EXPECT_FALSE(adapter->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  adapter->ProcessKeyFrameRequest();
 }
 
 class FrameCadenceAdapterSimulcastLayersParamTest
@@ -431,7 +434,8 @@ TEST_P(FrameCadenceAdapterSimulcastLayersParamTest,
   // Since we're unconverged we assume the process continues.
   adapter_->OnFrame(CreateFrame());
   time_controller_.AdvanceTime(2 * kMinFrameDelay);
-  EXPECT_FALSE(adapter_->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback_, RequestRefreshFrame).Times(0);
+  adapter_->ProcessKeyFrameRequest();
 
   // Expect short repeating as ususal.
   EXPECT_CALL(callback_, OnFrame).Times(8);
@@ -461,7 +465,8 @@ TEST_P(FrameCadenceAdapterSimulcastLayersParamTest,
   // We process the key frame request kMinFrameDelay before the first idle
   // repeat should happen. The resulting repeats should happen spaced by
   // kMinFrameDelay before we get new convergence info.
-  EXPECT_FALSE(adapter_->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback_, RequestRefreshFrame).Times(0);
+  adapter_->ProcessKeyFrameRequest();
   EXPECT_CALL(callback_, OnFrame).Times(kMaxFpsHz);
   time_controller_.AdvanceTime(kMaxFpsHz * kMinFrameDelay);
 }
@@ -488,7 +493,8 @@ TEST_P(FrameCadenceAdapterSimulcastLayersParamTest,
   // We process the key frame request (kMaxFpsHz - 1) * kMinFrameDelay before
   // the first idle repeat should happen. The resulting repeats should happen
   // spaced kMinFrameDelay before we get new convergence info.
-  EXPECT_FALSE(adapter_->ProcessKeyFrameRequest());
+  EXPECT_CALL(callback_, RequestRefreshFrame).Times(0);
+  adapter_->ProcessKeyFrameRequest();
   EXPECT_CALL(callback_, OnFrame).Times(kMaxFpsHz);
   time_controller_.AdvanceTime(kMaxFpsHz * kMinFrameDelay);
 }
