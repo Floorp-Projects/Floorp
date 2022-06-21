@@ -29,7 +29,6 @@ class TestSession(MarionetteTestCase):
         self.assertIn("browserName", caps)
         self.assertIn("browserVersion", caps)
         self.assertIn("platformName", caps)
-        self.assertIn("platformVersion", caps)
 
     def test_get_session_id(self):
         # Sends newSession

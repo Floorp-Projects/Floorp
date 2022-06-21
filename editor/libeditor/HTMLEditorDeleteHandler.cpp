@@ -4786,26 +4786,66 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   }
 
   EditorDOMPoint pointToInsert(aPointToInsert);
+  EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoTrackDOMPoint tackPointToInsert(RangeUpdaterRef(), &pointToInsert);
 
-    AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
-    rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eMergeBlockContents, aEditingHost);
-    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
-        rangesToWrapTheLine.Ranges(), arrayOfContents,
-        EditSubAction::eMergeBlockContents, CollectNonEditableNodes::Yes);
-    if (NS_FAILED(rv)) {
+    {
+      AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
+      rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+          EditSubAction::eMergeBlockContents, aEditingHost);
+      Result<EditorDOMPoint, nsresult> splitResult =
+          rangesToWrapTheLine
+              .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
+                  *this);
+      if (MOZ_UNLIKELY(splitResult.isErr())) {
+        NS_WARNING(
+            "AutoRangeArray::"
+            "SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries()"
+            " failed");
+        return MoveNodeResult(splitResult.unwrapErr());
+      }
+      if (splitResult.inspect().IsSet()) {
+        pointToPutCaret = splitResult.unwrap();
+      }
+      nsresult rv = rangesToWrapTheLine.CollectEditTargetNodes(
+          *this, arrayOfContents, EditSubAction::eMergeBlockContents,
+          AutoRangeArray::CollectNonEditableNodes::Yes);
+      if (NS_FAILED(rv)) {
+        NS_WARNING(
+            "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
+            "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
+        return MoveNodeResult(rv);
+      }
+    }
+
+    Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
+                                           EditSubAction::eMergeBlockContents);
+    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
       NS_WARNING(
-          "HTMLEditor::SplitInlinesAndCollectEditTargetNodes(EditSubAction::"
-          "eMergeBlockContents, CollectNonEditableNodes::Yes) failed");
-      return MoveNodeResult(rv);
+          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+          "eMergeBlockContents) failed");
+      return MoveNodeResult(splitAtBRElementsResult.inspectErr());
+    }
+    if (splitAtBRElementsResult.inspect().IsSet()) {
+      pointToPutCaret = splitAtBRElementsResult.unwrap();
     }
   }
+
   if (!pointToInsert.IsSetAndValid()) {
     return MoveNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return MoveNodeResult(rv);
+    }
+  }
+
   if (arrayOfContents.IsEmpty()) {
     return MoveNodeIgnored(std::move(pointToInsert));
   }

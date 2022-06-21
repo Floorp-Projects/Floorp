@@ -6711,6 +6711,15 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
                     nullptr, floatRS, aReflowStatus, aState);
   } while (clearanceFrame);
 
+  if (aFloat->IsLetterFrame()) {
+    // We never split floating first letters; an incomplete status for such
+    // frames simply means that there is more content to be reflowed on the
+    // line.
+    if (aReflowStatus.IsIncomplete()) {
+      aReflowStatus.Reset();
+    }
+  }
+
   if (!aReflowStatus.IsFullyComplete() && ShouldAvoidBreakInside(floatRS)) {
     aReflowStatus.SetInlineLineBreakBeforeAndReset();
   } else if (aReflowStatus.IsIncomplete() &&
@@ -6722,15 +6731,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
 
   if (aReflowStatus.NextInFlowNeedsReflow()) {
     aState.mReflowStatus.SetNextInFlowNeedsReflow();
-  }
-
-  if (aFloat->IsLetterFrame()) {
-    // We never split floating first letters; an incomplete state for
-    // such frames simply means that there is more content to be
-    // reflowed on the line.
-    if (aReflowStatus.IsIncomplete()) {
-      aReflowStatus.Reset();
-    }
   }
 
   // Capture the margin and offsets information for the caller

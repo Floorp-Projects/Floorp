@@ -3924,12 +3924,11 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
                                                *newContainer);
   {
     AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildren;
-    HTMLEditor::CollectChildren(
-        aOldContainer, arrayOfChildren, 0u, CollectListChildren::No,
-        CollectTableChildren::No,
+    HTMLEditUtils::CollectChildren(
+        aOldContainer, arrayOfChildren, 0u,
         // Move non-editable children too because its container, aElement, is
         // editable so that all children must be removable node.
-        CollectNonEditableNodes::Yes);
+        {});
     // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
     //       in normal cases.  However, it may be required for nested edit
     //       actions which may be caused by legacy mutation event listeners or
@@ -3992,12 +3991,11 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
                                          EditorRawDOMPoint(&aElement));
 
   AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildren;
-  HTMLEditor::CollectChildren(
-      aElement, arrayOfChildren, 0u, CollectListChildren::No,
-      CollectTableChildren::No,
+  HTMLEditUtils::CollectChildren(
+      aElement, arrayOfChildren, 0u,
       // Move non-editable children too because its container, aElement, is
       // editable so that all children must be removable node.
-      CollectNonEditableNodes::Yes);
+      {});
   const OwningNonNull<nsINode> parentNode = *aElement.GetParentNode();
   nsCOMPtr<nsIContent> previousChild = aElement.GetPreviousSibling();
   // For making all MoveNodeTransactions have a referenc node in the current
@@ -6233,14 +6231,40 @@ bool HTMLEditor::IsActiveInDOMWindow() const {
   return true;
 }
 
-Element* HTMLEditor::ComputeEditingHost(
-    LimitInBodyElement aLimitInBodyElement /* = LimitInBodyElement::Yes */)
-    const {
+Element* HTMLEditor::ComputeEditingHostInternal(
+    const nsIContent* aContent, LimitInBodyElement aLimitInBodyElement) const {
   Document* document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return nullptr;
   }
+
+  auto MaybeLimitInBodyElement =
+      [&](const Element* aCandidiateEditingHost) -> Element* {
+    if (!aCandidiateEditingHost) {
+      return nullptr;
+    }
+    if (aLimitInBodyElement != LimitInBodyElement::Yes) {
+      return const_cast<Element*>(aCandidiateEditingHost);
+    }
+    // By default, we should limit editing host to the <body> element for
+    // avoiding deleting or creating unexpected elements outside the <body>.
+    // However, this is incompatible with Chrome so that we should stop
+    // doing this with adding safety checks more.
+    if (document->GetBodyElement() &&
+        nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+            aCandidiateEditingHost, document->GetBodyElement())) {
+      return const_cast<Element*>(aCandidiateEditingHost);
+    }
+    // XXX If aContent is an editing host and has no parent node, we reach here,
+    //     but returing the <body> which is not connected to aContent is odd.
+    return document->GetBodyElement();
+  };
+
   if (IsInDesignMode()) {
+    // TODO: In this case, we need to compute editing host from aContent or the
+    //       focus node of selection, and it may be in an editing host in a
+    //       shadow DOM tree etc.  We need to do more complicated things.
+    //       See also InDesignMode().
     return document->GetBodyElement();
   }
 
@@ -6250,11 +6274,12 @@ Element* HTMLEditor::ComputeEditingHost(
     return nullptr;
   }
 
-  nsINode* focusNode = SelectionRef().GetFocusNode();
-  if (NS_WARN_IF(!focusNode) || NS_WARN_IF(!focusNode->IsContent())) {
+  const nsIContent* const content =
+      aContent ? aContent
+               : nsIContent::FromNodeOrNull(SelectionRef().GetFocusNode());
+  if (NS_WARN_IF(!content)) {
     return nullptr;
   }
-  nsIContent* content = focusNode->AsContent();
 
   // If the active content isn't editable, we're not active.
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
@@ -6271,17 +6296,8 @@ Element* HTMLEditor::ComputeEditingHost(
 
   // Note that `Selection` can be in <input> or <textarea>.  In the case, we
   // need to look for an ancestor which does not have editable parent.
-  Element* candidateEditingHost = content->GetEditingHost();
-  if (!candidateEditingHost) {
-    return nullptr;
-  }
-  // Currently, we don't support editing outside of `<body>` element.
-  return aLimitInBodyElement != LimitInBodyElement::Yes ||
-                 (document->GetBodyElement() &&
-                  nsContentUtils::ContentIsFlattenedTreeDescendantOf(
-                      candidateEditingHost, document->GetBodyElement()))
-             ? candidateEditingHost
-             : document->GetBodyElement();
+  return MaybeLimitInBodyElement(
+      const_cast<nsIContent*>(content)->GetEditingHost());
 }
 
 void HTMLEditor::NotifyEditingHostMaybeChanged() {

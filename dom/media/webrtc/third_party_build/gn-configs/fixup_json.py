@@ -21,12 +21,6 @@ def main():
     f = open(filein, "r")
     file = f.read()
 
-    # Remove references to CR_XCODE_VERSION and the output directory of the gn process.
-    # This change does not cause a change in the generated moz.build files.
-    file = re.sub(r' *"CR_XCODE_VERSION=[0-9]+",\n', r"", file)
-    file = re.sub(r' *"CR_SYSROOT_HASH=[0-9a-f]+",\n', r"", file)
-    file = re.sub(r',\n *"(.\:)?/.*/third_party/libwebrtc/gn-output/gen/"', r"", file)
-
     # In practice, almost all of the entries in the cflags section have no affect
     # on the moz.build output files when running ./mach build-backend -b GnMozbuildWriter
     # There are few exceptions which do: -msse2, -mavx2, -mfma, -fobjc-arc
@@ -34,9 +28,8 @@ def main():
     # machines, we only need remove the reference to osx sdk.  Removing it doesn't change
     # the generated moz.build files and makes diffs much easier to see.
     file = re.sub(
-        r' *"-isysroot",\n *"[\./]*/Applications/Xcode\.app/Contents'
-        "/Developer/Platforms/MacOSX\.platform/Developer/SDKs/"
-        'MacOSX([0-9][0-9]\.[0-9])?\.sdk",\n',
+        r' *"-isysroot",\n *".*/Contents/Developer/Platforms/MacOSX\.platform/Developer/SDKs/'
+        'MacOSX([0-9]+\.[0-9]+)?\.sdk",\n',
         r"",
         file,
     )

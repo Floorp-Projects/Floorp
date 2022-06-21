@@ -107,13 +107,14 @@ bool Request_Method_IsValid(int value) {
     case 5:
     case 6:
     case 7:
+    case 8:
       return true;
     default:
       return false;
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> Request_Method_strings[8] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> Request_Method_strings[9] = {};
 
 static const char Request_Method_names[] =
   "CONNECT"
@@ -121,6 +122,7 @@ static const char Request_Method_names[] =
   "GET"
   "HEAD"
   "OPTIONS"
+  "PATCH"
   "POST"
   "PUT"
   "TRACE";
@@ -131,20 +133,22 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry Request_Method_entries
   { {Request_Method_names + 13, 3}, 0 },
   { {Request_Method_names + 16, 4}, 1 },
   { {Request_Method_names + 20, 7}, 6 },
-  { {Request_Method_names + 27, 4}, 2 },
-  { {Request_Method_names + 31, 3}, 3 },
-  { {Request_Method_names + 34, 5}, 7 },
+  { {Request_Method_names + 27, 5}, 8 },
+  { {Request_Method_names + 32, 4}, 2 },
+  { {Request_Method_names + 36, 3}, 3 },
+  { {Request_Method_names + 39, 5}, 7 },
 };
 
 static const int Request_Method_entries_by_number[] = {
   2, // 0 -> GET
   3, // 1 -> HEAD
-  5, // 2 -> POST
-  6, // 3 -> PUT
+  6, // 2 -> POST
+  7, // 3 -> PUT
   1, // 4 -> DELETE
   0, // 5 -> CONNECT
   4, // 6 -> OPTIONS
-  7, // 7 -> TRACE
+  8, // 7 -> TRACE
+  5, // 8 -> PATCH
 };
 
 const std::string& Request_Method_Name(
@@ -153,12 +157,12 @@ const std::string& Request_Method_Name(
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
           Request_Method_entries,
           Request_Method_entries_by_number,
-          8, Request_Method_strings);
+          9, Request_Method_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
       Request_Method_entries,
       Request_Method_entries_by_number,
-      8, value);
+      9, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
                      Request_Method_strings[idx].get();
 }
@@ -166,7 +170,7 @@ bool Request_Method_Parse(
     const std::string& name, Request_Method* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      Request_Method_entries, 8, name, &int_value);
+      Request_Method_entries, 9, name, &int_value);
   if (success) {
     *value = static_cast<Request_Method>(int_value);
   }
@@ -181,6 +185,7 @@ constexpr Request_Method Request::DELETE;
 constexpr Request_Method Request::CONNECT;
 constexpr Request_Method Request::OPTIONS;
 constexpr Request_Method Request::TRACE;
+constexpr Request_Method Request::PATCH;
 constexpr Request_Method Request::Method_MIN;
 constexpr Request_Method Request::Method_MAX;
 constexpr int Request::Method_ARRAYSIZE;

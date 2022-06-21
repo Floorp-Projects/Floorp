@@ -36,6 +36,15 @@ class nsPresContext;
 
 namespace mozilla {
 
+enum class CollectChildrenOption {
+  // Ignore non-editable nodes
+  IgnoreNonEditableChildren,
+  // Collect list children too.
+  CollectListChildren,
+  // Collect table children too.
+  CollectTableChildren,
+};
+
 class HTMLEditUtils final {
   using AbstractRange = dom::AbstractRange;
   using Element = dom::Element;
@@ -1955,6 +1964,22 @@ class HTMLEditUtils final {
     }
     return false;
   }
+
+  /**
+   * CollectChildren() collects child nodes of aNode (starting from
+   * first editable child, but may return non-editable children after it).
+   *
+   * @param aNode               Parent node of retrieving children.
+   * @param aOutArrayOfContents [out] This method will inserts found children
+   *                            into this array.
+   * @param aIndexToInsertChildren      Starting from this index, found
+   *                                    children will be inserted to the array.
+   * @param aOptions            Options to scan the children.
+   * @return                    Number of found children.
+   */
+  static size_t CollectChildren(
+      nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+      size_t aIndexToInsertChildren, const CollectChildrenOptions& aOptions);
 
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);

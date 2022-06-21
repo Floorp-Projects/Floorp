@@ -194,14 +194,14 @@ DynamicImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
     return ImgDrawResult::SUCCESS;
   }
 
-  gfxSize scale(double(aSize.width) / drawableSize.width,
-                double(aSize.height) / drawableSize.height);
+  MatrixScalesDouble scale(double(aSize.width) / drawableSize.width,
+                           double(aSize.height) / drawableSize.height);
 
   ImageRegion region(aRegion);
-  region.Scale(1.0 / scale.width, 1.0 / scale.height);
+  region.Scale(1.0 / scale.xScale, 1.0 / scale.yScale);
 
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
-  aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
+  aContext->Multiply(gfxMatrix::Scaling(scale));
 
   gfxUtils::DrawPixelSnapped(aContext, mDrawable, SizeDouble(drawableSize),
                              region, SurfaceFormat::OS_RGBA, aSamplingFilter,
