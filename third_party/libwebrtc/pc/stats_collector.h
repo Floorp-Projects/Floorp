@@ -96,10 +96,11 @@ class StatsCollector : public StatsCollectorInterface {
   // A track is invalid if there is no report data for it.
   bool IsValidTrack(const std::string& track_id);
 
-  // Method used by the unittest to force a update of stats since UpdateStats()
-  // that occur less than kMinGatherStatsPeriod number of ms apart will be
-  // ignored.
-  void ClearUpdateStatsCacheForTest();
+  // Reset the internal cache timestamp to force an update of the stats next
+  // time UpdateStats() is called. This call needs to be made on the signaling
+  // thread and should be made every time configuration changes that affect
+  // stats have been made.
+  void InvalidateCache();
 
   bool UseStandardBytesStats() const { return use_standard_bytes_stats_; }
 
@@ -192,7 +193,7 @@ class StatsCollector : public StatsCollectorInterface {
   TrackIdMap track_ids_;
   // Raw pointer to the peer connection the statistics are gathered from.
   PeerConnectionInternal* const pc_;
-  int64_t cache_timestamp_ms_ = 0;
+  int64_t cache_timestamp_ms_ RTC_GUARDED_BY(pc_->signaling_thread()) = 0;
   double stats_gathering_started_;
   const bool use_standard_bytes_stats_;
 

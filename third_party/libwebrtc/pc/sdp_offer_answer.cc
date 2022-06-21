@@ -1259,9 +1259,10 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
-  // Update stats here so that we have the most recent stats for tracks and
-  // streams that might be removed by updating the session description.
-  pc_->stats()->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
+  // Invalidate the [legacy] stats cache to make sure that it gets updated next
+  // time getStats() gets called, as updating the session description affects
+  // the stats.
+  pc_->stats()->InvalidateCache();
 
   // Take a reference to the old local description since it's used below to
   // compare against the new local description. When setting the new local
@@ -1548,9 +1549,10 @@ RTCError SdpOfferAnswerHandler::ApplyRemoteDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(desc);
 
-  // Update stats here so that we have the most recent stats for tracks and
-  // streams that might be removed by updating the session description.
-  pc_->stats()->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
+  // Invalidate the [legacy] stats cache to make sure that it gets updated next
+  // time getStats() gets called, as updating the session description affects
+  // the stats.
+  pc_->stats()->InvalidateCache();
 
   // Take a reference to the old remote description since it's used below to
   // compare against the new remote description. When setting the new remote

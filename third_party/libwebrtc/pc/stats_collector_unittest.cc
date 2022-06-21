@@ -612,7 +612,7 @@ class StatsCollectorTest : public ::testing::Test {
                              const VoiceMediaInfo& voice_info,
                              StatsReports* reports) {
     stats->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
-    stats->ClearUpdateStatsCacheForTest();
+    stats->InvalidateCache();
     stats->GetStats(nullptr, reports);
 
     // Verify the existence of the track report.
@@ -1756,7 +1756,7 @@ TEST_P(StatsCollectorTrackTest, TwoLocalTracksWithSameSsrc) {
   stream_->AddTrack(new_audio_track);
 
   stats->AddLocalAudioTrack(new_audio_track, kSsrcOfTrack);
-  stats->ClearUpdateStatsCacheForTest();
+  stats->InvalidateCache();
 
   VoiceSenderInfo new_voice_sender_info;
   InitVoiceSenderInfo(&new_voice_sender_info);
