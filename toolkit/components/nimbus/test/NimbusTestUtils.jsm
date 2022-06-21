@@ -152,11 +152,6 @@ const ExperimentTestUtils = {
    */
   addTestFeatures(...features) {
     for (const feature of features) {
-      if (Object.hasOwn(lazy.NimbusFeatures, feature.featureId)) {
-        throw new Error(
-          `Cannot add feature ${feature.featureId} -- a feature with this ID already exists!`
-        );
-      }
       lazy.NimbusFeatures[feature.featureId] = feature;
     }
     return () => {

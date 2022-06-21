@@ -354,14 +354,10 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
     type: "object",
     properties: {
       testInt: {
-        type: "integer",
-      },
-      enabled: {
-        type: "boolean",
+        type: "number",
       },
     },
-    additionalProperties: false,
-    required: ["enabled", "testInt"],
+    additionalProperties: true,
   };
 
   sinon.spy(loader, "updateRecipes");
@@ -394,20 +390,10 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
     loader._generateVariablesOnlySchema.calledOnce,
     "Should have generated a schema for testFeature"
   );
-
-  {
-    const returned = loader._generateVariablesOnlySchema.returnValues[0];
-
-    // Ensure required is kept in sorted order, otherwise Assert.deepEqual will fail.
-    returned.required.sort();
-    EXPECTED_SCHEMA.required.sort();
-
-    Assert.deepEqual(
-      returned,
-      EXPECTED_SCHEMA,
-      "should have generated a schema with two fields"
-    );
-  }
+  ok(
+    loader._generateVariablesOnlySchema.returned(EXPECTED_SCHEMA),
+    "should have generated a schema with one field"
+  );
 
   info("Replacing recipe with an invalid one");
 
