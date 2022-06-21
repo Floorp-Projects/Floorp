@@ -15,10 +15,7 @@ async function changeRangeTo(helper, destination) {
 
   let input = BrowserTestUtils.waitForEvent(rangeSelect, "input");
 
-  let popupOpen = BrowserTestUtils.waitForEvent(
-    document.getElementById("ContentSelectDropdown"),
-    "popupshown"
-  );
+  let popupOpen = BrowserTestUtils.waitForSelectPopupShown(window);
 
   rangeSelect.focus();
   rangeSelect.scrollIntoView({ block: "center" });

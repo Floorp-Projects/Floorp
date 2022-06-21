@@ -5,6 +5,7 @@
 // This test tests <select> in a child process. This is different than
 // single-process as a <menulist> is used to implement the dropdown list.
 
+// FIXME(bug 1774835): This test should be split.
 requestLongerTimeout(2);
 
 const XHTML_DTD =
@@ -92,17 +93,13 @@ const PAGECONTENT_TRANSLATED =
   "</iframe>" +
   "</div></body></html>";
 
-function openSelectPopup(
-  selectPopup,
+async function openSelectPopup(
   mode = "key",
   selector = "select",
   win = window
 ) {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-
+  info("Opening select popup");
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(win);
   if (mode == "click" || mode == "mousedown") {
     let mousePromise;
     if (mode == "click") {
@@ -120,11 +117,10 @@ function openSelectPopup(
         win.gBrowser.selectedBrowser
       );
     }
-
-    return Promise.all([popupShownPromise, mousePromise]);
+    await mousePromise;
+  } else {
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
   }
-
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
   return popupShownPromise;
 }
 
@@ -150,10 +146,8 @@ async function doSelectTests(contentType, content) {
   const pageUrl = "data:" + contentType + "," + encodeURIComponent(content);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
-  await openSelectPopup(selectPopup);
+  let selectPopup = await openSelectPopup();
+  let menulist = selectPopup.parentNode;
 
   let isWindows = navigator.platform.includes("Win");
 
@@ -228,7 +222,7 @@ async function doSelectTests(contentType, content) {
   EventUtils.synthesizeKey("KEY_Backspace");
   window.removeEventListener("keypress", handleKeyPress);
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   is(menulist.selectedIndex, 3, "Item 3 still selected");
   is(await getInputEvents(), 1, "After closed - number of input events");
@@ -236,8 +230,8 @@ async function doSelectTests(contentType, content) {
   is(await getClickEvents(), 0, "After closed - number of click events");
 
   // Opening and closing the popup without changing the value should not fire a change event.
-  await openSelectPopup(selectPopup, "click");
-  await hideSelectPopup(selectPopup, "escape");
+  await openSelectPopup("click");
+  await hideSelectPopup("escape");
   is(
     await getInputEvents(),
     1,
@@ -271,9 +265,9 @@ async function doSelectTests(contentType, content) {
     "Tab away from select with no change - number of click events"
   );
 
-  await openSelectPopup(selectPopup, "click");
+  await openSelectPopup("click");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  await hideSelectPopup(selectPopup, "escape");
+  await hideSelectPopup("escape");
   is(
     await getInputEvents(),
     isWindows ? 2 : 1,
@@ -345,11 +339,8 @@ add_task(async function() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   // First, try it when a different <select> element than the one that is open is removed
-  await openSelectPopup(selectPopup, "click", "#one");
+  const selectPopup = await openSelectPopup("click", "#one");
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.body.removeChild(content.document.getElementById("two"));
@@ -360,10 +351,10 @@ add_task(async function() {
 
   is(selectPopup.state, "open", "Different popup did not affect open popup");
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   // Next, try it when the same <select> element than the one that is open is removed
-  await openSelectPopup(selectPopup, "click", "#three");
+  await openSelectPopup("click", "#three");
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(
     selectPopup,
@@ -377,7 +368,7 @@ add_task(async function() {
   ok(true, "Popup hidden when select is removed");
 
   // Finally, try it when the tab is closed while the select popup is open.
-  await openSelectPopup(selectPopup, "click", "#one");
+  await openSelectPopup("click", "#one");
 
   popupHiddenPromise = BrowserTestUtils.waitForEvent(
     selectPopup,
@@ -408,17 +399,14 @@ add_task(async function() {
     await focusPromise;
   });
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   // First, get the position of the select popup when no translations have been applied.
-  await openSelectPopup(selectPopup);
+  const selectPopup = await openSelectPopup();
 
   let rect = selectPopup.getBoundingClientRect();
   let expectedX = rect.left;
   let expectedY = rect.top;
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   // Iterate through a set of steps which each add more translation to the select's expected position.
   let steps = [
@@ -468,7 +456,7 @@ add_task(async function() {
       });
     });
 
-    await openSelectPopup(selectPopup);
+    await openSelectPopup();
 
     expectedX += step[2];
     expectedY += step[3];
@@ -477,7 +465,7 @@ add_task(async function() {
     is(popupRect.left, expectedX, "step " + (stepIndex + 1) + " x");
     is(popupRect.top, expectedY, "step " + (stepIndex + 1) + " y");
 
-    await hideSelectPopup(selectPopup);
+    await hideSelectPopup();
   }
 
   BrowserTestUtils.removeTab(tab);
@@ -492,9 +480,6 @@ add_task(async function test_event_order() {
       url: URL,
     },
     async function(browser) {
-      let menulist = document.getElementById("ContentSelectDropdown");
-      let selectPopup = menulist.menupopup;
-
       // According to https://html.spec.whatwg.org/#the-select-element,
       // we want to fire input, change, and then click events on the
       // <select> (in that order) when it has changed.
@@ -548,11 +533,7 @@ add_task(async function test_event_order() {
 
       for (let mode of ["enter", "click"]) {
         let expected = mode == "enter" ? expectedEnter : expectedClick;
-        await openSelectPopup(
-          selectPopup,
-          "click",
-          mode == "enter" ? "#one" : "#two"
-        );
+        await openSelectPopup("click", mode == "enter" ? "#one" : "#two");
 
         let eventsPromise = SpecialPowers.spawn(
           browser,
@@ -609,7 +590,7 @@ add_task(async function test_event_order() {
         );
 
         EventUtils.synthesizeKey("KEY_ArrowDown");
-        await hideSelectPopup(selectPopup, mode);
+        await hideSelectPopup(mode);
         await eventsPromise;
       }
     }
@@ -630,12 +611,9 @@ async function performLargePopupTests(win) {
     select.focus();
   });
 
-  let selectPopup = win.document.getElementById("ContentSelectDropdown")
-    .menupopup;
-  let browserRect = browser.getBoundingClientRect();
-
   // Check if a drag-select works and scrolls the list.
-  await openSelectPopup(selectPopup, "mousedown", "select", win);
+  const selectPopup = await openSelectPopup("mousedown", "select", win);
+  const browserRect = browser.getBoundingClientRect();
 
   let getScrollPos = () => selectPopup.scrollBox.scrollbox.scrollTop;
   let scrollPos = getScrollPos();
@@ -801,7 +779,7 @@ async function performLargePopupTests(win) {
     "scroll position at mousemove after mouseup should not change"
   );
 
-  await hideSelectPopup(selectPopup, "escape", win);
+  await hideSelectPopup("escape", win);
 
   let positions = [
     "margin-top: 300px;",
@@ -811,7 +789,7 @@ async function performLargePopupTests(win) {
 
   let position;
   while (positions.length) {
-    await openSelectPopup(selectPopup, "key", "select", win);
+    await openSelectPopup("key", "select", win);
 
     let rect = selectPopup.getBoundingClientRect();
     let marginBottom = parseFloat(getComputedStyle(selectPopup).marginBottom);
@@ -854,7 +832,7 @@ async function performLargePopupTests(win) {
       );
     }
 
-    await hideSelectPopup(selectPopup, "enter", win);
+    await hideSelectPopup("enter", win);
 
     position = positions.shift();
 
@@ -882,7 +860,7 @@ async function performLargePopupTests(win) {
       select.focus();
     });
 
-    await openSelectPopup(selectPopup, "key", "select", win);
+    await openSelectPopup("key", "select", win);
 
     ok(
       selectPopup.getBoundingClientRect().top >
@@ -890,7 +868,7 @@ async function performLargePopupTests(win) {
       "select popup appears over selected item"
     );
 
-    await hideSelectPopup(selectPopup, "escape", win);
+    await hideSelectPopup("escape", win);
   }
 }
 
@@ -949,9 +927,7 @@ async function performSelectSearchTests(win) {
     select.focus();
   });
 
-  let selectPopup = win.document.getElementById("ContentSelectDropdown")
-    .menupopup;
-  await openSelectPopup(selectPopup, false, "select", win);
+  let selectPopup = await openSelectPopup(false, "select", win);
 
   let searchElement = selectPopup.querySelector(
     ".contentSelectDropdown-searchbox"
@@ -1013,7 +989,7 @@ async function performSelectSearchTests(win) {
     "Option hidden by content should remain hidden"
   );
 
-  await hideSelectPopup(selectPopup, "escape", win);
+  await hideSelectPopup("escape", win);
 }
 
 // This test checks the functionality of search in select elements with groups
@@ -1038,18 +1014,7 @@ add_task(async function test_mousemove_correcttarget() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
-
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#one",
-    { type: "mousedown" },
-    gBrowser.selectedBrowser
-  );
-  await popupShownPromise;
+  const selectPopup = await openSelectPopup("mousedown");
 
   await new Promise(resolve => {
     window.addEventListener(
@@ -1073,11 +1038,11 @@ add_task(async function test_mousemove_correcttarget() {
     gBrowser.selectedBrowser
   );
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   // The popup should be closed when fullscreen mode is entered or exited.
   for (let steps = 0; steps < 2; steps++) {
-    await openSelectPopup(selectPopup, "click");
+    await openSelectPopup("click");
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(
       selectPopup,
       "popuphidden"
@@ -1099,20 +1064,9 @@ add_task(async function test_somehidden() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SOMEHIDDEN);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+  let selectPopup = await openSelectPopup("click");
 
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#one",
-    { type: "mousedown" },
-    gBrowser.selectedBrowser
-  );
-  await popupShownPromise;
-
-  // The exact number is not needed; just ensure the height is larger than 4 items to accomodate any popup borders.
+  // The exact number is not needed; just ensure the height is larger than 4 items to accommodate any popup borders.
   ok(
     selectPopup.getBoundingClientRect().height >=
       selectPopup.lastElementChild.getBoundingClientRect().height * 4,
@@ -1138,7 +1092,7 @@ add_task(async function test_somehidden() {
     child = child.nextElementSibling;
   }
 
-  await hideSelectPopup(selectPopup, "escape");
+  await hideSelectPopup("escape");
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -1160,10 +1114,7 @@ add_task(async function test_blur_hides_popup() {
     content.document.getElementById("one").focus();
   });
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
-  await openSelectPopup(selectPopup);
+  let selectPopup = await openSelectPopup();
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(
     selectPopup,
@@ -1186,11 +1137,8 @@ add_task(async function test_zoom() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   info("Opening the popup");
-  await openSelectPopup(selectPopup, "click");
+  const selectPopup = await openSelectPopup("click");
 
   info("Opened the popup");
   let nonZoomedFontSize = parseFloat(
@@ -1199,9 +1147,9 @@ add_task(async function test_zoom() {
   );
 
   info("font-size is " + nonZoomedFontSize);
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
-  info("Hid the popup");
+  info("Hide the popup");
 
   for (let i = 0; i < 2; ++i) {
     info("Testing with full zoom: " + ZoomManager.useFullZoom);
@@ -1210,7 +1158,7 @@ add_task(async function test_zoom() {
     FullZoom.setZoom(2.0, tab.linkedBrowser);
 
     info("Opening popup again");
-    await openSelectPopup(selectPopup, "click");
+    await openSelectPopup("click");
 
     let zoomedFontSize = parseFloat(
       getComputedStyle(selectPopup.querySelector("menuitem")).fontSize,
@@ -1224,7 +1172,7 @@ add_task(async function test_zoom() {
         `expected ${nonZoomedFontSize * 2.0}`
     );
 
-    await hideSelectPopup(selectPopup);
+    await hideSelectPopup();
     info("Hid the popup again");
 
     ZoomManager.toggleZoom();
@@ -1255,24 +1203,21 @@ add_task(async function test_handling_user_input() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   // Test onchange event when changing value via keyboard.
-  await openSelectPopup(selectPopup, "click", "#one");
+  const selectPopup = await openSelectPopup("click", "#one");
   let getPromise = getIsHandlingUserInput(tab.linkedBrowser, "one", "change");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
   is(await getPromise, true, "isHandlingUserInput should be true");
 
   // Test onchange event when changing value via mouse click
-  await openSelectPopup(selectPopup, "click", "#two");
+  await openSelectPopup("click", "#two");
   getPromise = getIsHandlingUserInput(tab.linkedBrowser, "two", "change");
   EventUtils.synthesizeMouseAtCenter(selectPopup.lastElementChild, {});
   is(await getPromise, true, "isHandlingUserInput should be true");
 
   // Test onclick event fired from clicking select popup.
-  await openSelectPopup(selectPopup, "click", "#three");
+  await openSelectPopup("click", "#three");
   getPromise = getIsHandlingUserInput(tab.linkedBrowser, "three", "click");
   EventUtils.synthesizeMouseAtCenter(selectPopup.firstElementChild, {});
   is(await getPromise, true, "isHandlingUserInput should be true");
@@ -1305,13 +1250,10 @@ let select = document.querySelector("select");
   const pageUrl = "data:text/html," + escape(PAGE_CONTENT);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
   // Test change and input events get handled consistently
-  await openSelectPopup(selectPopup, "click");
+  await openSelectPopup("click");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   is(
     await getChangeEvents(),
@@ -1339,10 +1281,7 @@ add_task(async function test_label_not_text() {
   const pageUrl = "data:text/html," + escape(PAGE_CONTENT);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
-  await openSelectPopup(selectPopup, "click");
+  const selectPopup = await openSelectPopup("click");
 
   is(
     selectPopup.children[0].label,

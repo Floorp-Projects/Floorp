@@ -332,19 +332,14 @@ async function openSelectPopup(select) {
 
   await computeLabels(tab);
 
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#one",
     { type: "mousedown" },
     gBrowser.selectedBrowser
   );
-  await popupShownPromise;
+  let selectPopup = await popupShownPromise;
+  let menulist = selectPopup.parentNode;
   return { tab, menulist, selectPopup };
 }
 
@@ -451,7 +446,7 @@ async function testSelectColors(selectID, itemCount, options) {
   }
 
   if (!options.leaveOpen) {
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(tab);
   }
 }
@@ -683,8 +678,8 @@ add_task(
 
     await testSelectColors("SELECT_LONG_WITH_TRANSITION", 76, options);
 
-    let menulist = document.getElementById("ContentSelectDropdown");
-    let selectPopup = menulist.menupopup;
+    let selectPopup = document.getElementById("ContentSelectDropdown")
+      .menupopup;
     let scrollBox = selectPopup.scrollBox;
     is(
       scrollBox.scrollTop,
@@ -692,7 +687,7 @@ add_task(
       "The popup should be scrolled to the bottom of the list (where the selected item is)"
     );
 
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 );
@@ -743,9 +738,7 @@ add_task(
       );
     }
 
-    let menulist = document.getElementById("ContentSelectDropdown");
-    let selectPopup = menulist.menupopup;
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 );
@@ -772,7 +765,7 @@ add_task(async function test_select_font_inherits_to_option() {
     "Second menuitem's font should be the author specified one"
   );
 
-  await hideSelectPopup(selectPopup, "escape");
+  await hideSelectPopup("escape");
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -790,7 +783,7 @@ add_task(async function test_scrollbar_props() {
   is(scrollBoxStyle.scrollbarWidth, "thin");
   is(scrollBoxStyle.scrollbarColor, "rgb(255, 0, 0) rgb(0, 0, 255)");
 
-  await hideSelectPopup(selectPopup, "escape");
+  await hideSelectPopup("escape");
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -812,17 +805,17 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     );
 
     // Check that by default, we use the dark mode styles:
-    let { tab, selectPopup } = await openSelectPopup(gSelects.DEFAULT_DARKMODE);
+    let { tab } = await openSelectPopup(gSelects.DEFAULT_DARKMODE);
 
     await testSelectColors("DEFAULT_DARKMODE", 3, {
       selectColor,
       selectBgColor,
     });
 
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(tab);
 
-    ({ tab, selectPopup } = await openSelectPopup(
+    ({ tab } = await openSelectPopup(
       gSelects.IDENTICAL_BG_DIFF_FG_OPTION_DARKMODE
     ));
 
@@ -834,12 +827,10 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
       selectBgColor: "rgb(255, 255, 255)",
     });
 
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(tab);
 
-    ({ tab, selectPopup } = await openSelectPopup(
-      gSelects.SPLIT_FG_BG_OPTION_DARKMODE
-    ));
+    ({ tab } = await openSelectPopup(gSelects.SPLIT_FG_BG_OPTION_DARKMODE));
 
     // Like the previous case, but here the bg colour is defined on the
     // select, and the fg colour on the option. The behaviour should be the
@@ -849,7 +840,7 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
       selectBgColor: "rgb(255, 255, 255)",
     });
 
-    await hideSelectPopup(selectPopup, "escape");
+    await hideSelectPopup("escape");
     BrowserTestUtils.removeTab(tab);
   });
 }

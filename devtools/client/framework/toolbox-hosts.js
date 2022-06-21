@@ -420,7 +420,6 @@ function createDevToolsFrame(doc, className) {
   frame.setAttribute("type", "content");
   frame.flex = 1; // Required to be able to shrink when the window shrinks
   frame.className = className;
-  frame.setAttribute("selectmenulist", "ContentSelectDropdown");
 
   const inXULDocument = doc.documentElement.namespaceURI === XUL_NS;
   if (inXULDocument) {

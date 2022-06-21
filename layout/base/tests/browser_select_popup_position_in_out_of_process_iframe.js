@@ -16,19 +16,14 @@ const PAGECONTENT_TRANSLATED =
   "</iframe>" +
   "</div></body></html>";
 
-function openSelectPopup(selectPopup, x, y, win) {
-  const popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-
+function openSelectPopup(x, y, win) {
+  const popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(win);
   EventUtils.synthesizeNativeMouseEvent({
     type: "click",
     target: win.document.documentElement,
     screenX: x,
     screenY: y,
   });
-
   return popupShownPromise;
 }
 
@@ -91,12 +86,8 @@ add_task(async function() {
     return content.document.querySelector("select").getBoundingClientRect();
   });
 
-  const menulist = newWin.document.getElementById("ContentSelectDropdown");
-  const selectPopup = menulist.menupopup;
-
   // Open the select popup.
-  await openSelectPopup(
-    selectPopup,
+  const selectPopup = await openSelectPopup(
     iframeX + selectRect.x + selectRect.width / 2,
     iframeY + selectRect.y + selectRect.height / 2,
     newWin
@@ -133,7 +124,7 @@ add_task(async function() {
     "y position of the popup"
   );
 
-  await hideSelectPopup(selectPopup, "enter", newWin);
+  await hideSelectPopup("enter", newWin);
 
   await BrowserTestUtils.closeWindow(newWin);
 });
