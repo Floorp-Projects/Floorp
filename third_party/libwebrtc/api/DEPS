@@ -168,6 +168,9 @@ specific_include_rules = {
     # For private member and constructor.
     "+rtc_base/system/file_wrapper.h",
   ],
+  "rtp_packet_infos\.h": [
+    "+rtc_base/ref_counted_object.h",
+  ],
   "rtp_receiver_interface\.h": [
     "+rtc_base/ref_count.h",
   ],
