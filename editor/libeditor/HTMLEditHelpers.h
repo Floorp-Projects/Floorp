@@ -540,6 +540,18 @@ class MOZ_STACK_CLASS SplitNodeResult final {
   SplitNodeResult& operator=(SplitNodeResult&&) = default;
 
   /**
+   * This constructor should be used for setting specific caret point instead of
+   * aSplitResult's one.
+   */
+  SplitNodeResult(SplitNodeResult&& aSplitResult,
+                  const EditorDOMPoint& aNewCaretPoint)
+      : SplitNodeResult(std::move(aSplitResult)) {
+    MOZ_ASSERT(isOk());
+    mCaretPoint = aNewCaretPoint;
+    mHandledCaretPoint = false;
+  }
+
+  /**
    * This constructor shouldn't be used by anybody except methods which
    * use this as result when it succeeds.
    *

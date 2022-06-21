@@ -23,6 +23,7 @@
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "nsContentUtils.h"
@@ -332,17 +333,27 @@ class HTMLEditUtils final {
    * last line in a block element visible, or an invisible <br> element.
    */
   static bool IsVisibleBRElement(const nsIContent& aContent) {
-    if (!aContent.IsHTMLElement(nsGkAtoms::br)) {
-      return false;
+    if (const dom::HTMLBRElement* brElement =
+            dom::HTMLBRElement::FromNode(&aContent)) {
+      return IsVisibleBRElement(*brElement);
     }
+    return false;
+  }
+  static bool IsVisibleBRElement(const dom::HTMLBRElement& aBRElement) {
     // If followed by a block boundary without visible content, it's invisible
     // <br> element.
     return !HTMLEditUtils::GetElementOfImmediateBlockBoundary(
-        aContent, WalkTreeDirection::Forward);
+        aBRElement, WalkTreeDirection::Forward);
   }
   static bool IsInvisibleBRElement(const nsIContent& aContent) {
-    return aContent.IsHTMLElement(nsGkAtoms::br) &&
-           !HTMLEditUtils::IsVisibleBRElement(aContent);
+    if (const dom::HTMLBRElement* brElement =
+            dom::HTMLBRElement::FromNode(&aContent)) {
+      return IsInvisibleBRElement(*brElement);
+    }
+    return false;
+  }
+  static bool IsInvisibleBRElement(const dom::HTMLBRElement& aBRElement) {
+    return !HTMLEditUtils::IsVisibleBRElement(aBRElement);
   }
 
   /**
