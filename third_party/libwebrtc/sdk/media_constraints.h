@@ -67,7 +67,8 @@ class MediaConstraints {
   static const char kTypingNoiseDetection[];  // googTypingNoiseDetection
   static const char kAudioMirroring[];        // googAudioMirroring
   static const char
-      kAudioNetworkAdaptorConfig[];  // goodAudioNetworkAdaptorConfig
+      kAudioNetworkAdaptorConfig[];  // googAudioNetworkAdaptorConfig
+  static const char kInitAudioRecordingOnSend[];  // InitAudioRecordingOnSend;
 
   // Constraint keys for CreateOffer / CreateAnswer
   // Specified by the W3C PeerConnection spec

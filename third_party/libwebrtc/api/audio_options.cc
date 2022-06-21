@@ -65,6 +65,7 @@ void AudioOptions::SetAll(const AudioOptions& change) {
   SetFrom(&combined_audio_video_bwe, change.combined_audio_video_bwe);
   SetFrom(&audio_network_adaptor, change.audio_network_adaptor);
   SetFrom(&audio_network_adaptor_config, change.audio_network_adaptor_config);
+  SetFrom(&init_recording_on_send, change.init_recording_on_send);
 }
 
 bool AudioOptions::operator==(const AudioOptions& o) const {
@@ -92,7 +93,8 @@ bool AudioOptions::operator==(const AudioOptions& o) const {
          tx_agc_limiter == o.tx_agc_limiter &&
          combined_audio_video_bwe == o.combined_audio_video_bwe &&
          audio_network_adaptor == o.audio_network_adaptor &&
-         audio_network_adaptor_config == o.audio_network_adaptor_config;
+         audio_network_adaptor_config == o.audio_network_adaptor_config &&
+         init_recording_on_send == o.init_recording_on_send;
 }
 
 std::string AudioOptions::ToString() const {
@@ -126,6 +128,7 @@ std::string AudioOptions::ToString() const {
   ToStringIfSet(&result, "tx_agc_limiter", tx_agc_limiter);
   ToStringIfSet(&result, "combined_audio_video_bwe", combined_audio_video_bwe);
   ToStringIfSet(&result, "audio_network_adaptor", audio_network_adaptor);
+  ToStringIfSet(&result, "init_recording_on_send", init_recording_on_send);
   result << "}";
   return result.str();
 }
