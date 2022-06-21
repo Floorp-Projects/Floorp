@@ -12,7 +12,6 @@
 
 #include <gio/gunixfdlist.h>
 #include <glib-object.h>
-#include <libdrm/drm_fourcc.h>
 #include <spa/param/format-utils.h>
 #include <spa/param/props.h>
 #include <sys/ioctl.h>
@@ -31,7 +30,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
-#include "rtc_base/string_to_number.h"
 
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
 #include "modules/desktop_capture/linux/wayland/pipewire_stubs.h"
@@ -58,10 +56,6 @@ const char kPipeWireLib[] = "libpipewire-0.3.so.0";
 const char kDrmLib[] = "libdrm.so.2";
 #endif
 
-constexpr BaseCapturerPipeWire::PipeWireVersion kDmaBufMinVersion = {0, 3, 24};
-constexpr BaseCapturerPipeWire::PipeWireVersion kDmaBufModifierMinVersion = {
-    0, 3, 33};
-
 #if !PW_CHECK_VERSION(0, 3, 29)
 #define SPA_POD_PROP_FLAG_MANDATORY (1u << 3)
 #endif
@@ -69,25 +63,31 @@ constexpr BaseCapturerPipeWire::PipeWireVersion kDmaBufModifierMinVersion = {
 #define SPA_POD_PROP_FLAG_DONT_FIXATE (1u << 4)
 #endif
 
-BaseCapturerPipeWire::PipeWireVersion ParsePipeWireVersion(
-    const char* version) {
+struct pw_version {
+  int major = 0;
+  int minor = 0;
+  int micro = 0;
+};
+
+bool CheckPipeWireVersion(pw_version required_version) {
   std::vector<std::string> parsed_version;
-  rtc::split(version, '.', &parsed_version);
+  std::string version_string = pw_get_library_version();
+  rtc::split(version_string, '.', &parsed_version);
 
   if (parsed_version.size() != 3) {
-    return {};
+    return false;
   }
 
-  absl::optional<int> major = rtc::StringToNumber<int>(parsed_version.at(0));
-  absl::optional<int> minor = rtc::StringToNumber<int>(parsed_version.at(1));
-  absl::optional<int> micro = rtc::StringToNumber<int>(parsed_version.at(2));
+  pw_version current_version = {std::stoi(parsed_version.at(0)),
+                                std::stoi(parsed_version.at(1)),
+                                std::stoi(parsed_version.at(2))};
 
-  // Return invalid version if we failed to parse it
-  if (!major || !minor || !micro) {
-    return {0, 0, 0};
-  }
-
-  return {major.value(), micro.value(), micro.value()};
+  return (current_version.major > required_version.major) ||
+         (current_version.major == required_version.major &&
+          current_version.minor > required_version.minor) ||
+         (current_version.major == required_version.major &&
+          current_version.minor == required_version.minor &&
+          current_version.micro >= required_version.micro);
 }
 
 spa_pod* BuildFormat(spa_pod_builder* builder,
@@ -107,9 +107,15 @@ spa_pod* BuildFormat(spa_pod_builder* builder,
   spa_pod_builder_add(builder, SPA_FORMAT_VIDEO_format, SPA_POD_Id(format), 0);
 
   if (modifiers.size()) {
-    spa_pod_builder_prop(
-        builder, SPA_FORMAT_VIDEO_modifier,
-        SPA_POD_PROP_FLAG_MANDATORY | SPA_POD_PROP_FLAG_DONT_FIXATE);
+    // SPA_POD_PROP_FLAG_DONT_FIXATE can be used with PipeWire >= 0.3.33
+    if (CheckPipeWireVersion(pw_version{0, 3, 33})) {
+      spa_pod_builder_prop(
+          builder, SPA_FORMAT_VIDEO_modifier,
+          SPA_POD_PROP_FLAG_MANDATORY | SPA_POD_PROP_FLAG_DONT_FIXATE);
+    } else {
+      spa_pod_builder_prop(builder, SPA_FORMAT_VIDEO_modifier,
+                           SPA_POD_PROP_FLAG_MANDATORY);
+    }
     spa_pod_builder_push_choice(builder, &frames[1], SPA_CHOICE_Enum, 0);
     // modifiers from the array
     for (int64_t val : modifiers) {
@@ -158,17 +164,6 @@ class ScopedBuf {
   uint8_t* map_ = static_cast<uint8_t*>(MAP_FAILED);
   int map_size_;
   int fd_;
-};
-
-class PipeWireThreadLoopLock {
- public:
-  explicit PipeWireThreadLoopLock(pw_thread_loop* loop) : loop_(loop) {
-    pw_thread_loop_lock(loop_);
-  }
-  ~PipeWireThreadLoopLock() { pw_thread_loop_unlock(loop_); }
-
- private:
-  pw_thread_loop* const loop_;
 };
 
 template <class T>
@@ -240,34 +235,6 @@ Scoped<GUnixFDList>::~Scoped() {
   }
 }
 
-bool operator>=(
-    const BaseCapturerPipeWire::PipeWireVersion& current_pw_version,
-    const BaseCapturerPipeWire::PipeWireVersion& required_pw_version) {
-  if (!current_pw_version.major && !current_pw_version.minor &&
-      !current_pw_version.micro) {
-    return false;
-  }
-
-  return std::tie(current_pw_version.major, current_pw_version.minor,
-                  current_pw_version.micro) >=
-         std::tie(required_pw_version.major, required_pw_version.minor,
-                  required_pw_version.micro);
-}
-
-bool operator<=(
-    const BaseCapturerPipeWire::PipeWireVersion& current_pw_version,
-    const BaseCapturerPipeWire::PipeWireVersion& required_pw_version) {
-  if (!current_pw_version.major && !current_pw_version.minor &&
-      !current_pw_version.micro) {
-    return false;
-  }
-
-  return std::tie(current_pw_version.major, current_pw_version.minor,
-                  current_pw_version.micro) <=
-         std::tie(required_pw_version.major, required_pw_version.minor,
-                  required_pw_version.micro);
-}
-
 void BaseCapturerPipeWire::OnCoreError(void* data,
                                        uint32_t id,
                                        int seq,
@@ -277,23 +244,6 @@ void BaseCapturerPipeWire::OnCoreError(void* data,
   RTC_DCHECK(that);
 
   RTC_LOG(LS_ERROR) << "PipeWire remote error: " << message;
-}
-
-void BaseCapturerPipeWire::OnCoreInfo(void* data, const pw_core_info* info) {
-  BaseCapturerPipeWire* capturer = static_cast<BaseCapturerPipeWire*>(data);
-  RTC_DCHECK(capturer);
-
-  capturer->pw_server_version_ = ParsePipeWireVersion(info->version);
-}
-
-void BaseCapturerPipeWire::OnCoreDone(void* data, uint32_t id, int seq) {
-  const BaseCapturerPipeWire* capturer =
-      static_cast<BaseCapturerPipeWire*>(data);
-  RTC_DCHECK(capturer);
-
-  if (id == PW_ID_CORE && capturer->server_version_sync_ == seq) {
-    pw_thread_loop_signal(capturer->pw_main_loop_, false);
-  }
 }
 
 // static
@@ -339,27 +289,20 @@ void BaseCapturerPipeWire::OnStreamParamChanged(void* data,
   auto size = height * stride;
 
   that->desktop_size_ = DesktopSize(width, height);
+#if PW_CHECK_VERSION(0, 3, 0)
+  that->modifier_ = that->spa_video_format_.modifier;
+#endif
 
   uint8_t buffer[1024] = {};
   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
 
   // Setup buffers and meta header for new format.
-
-  // When SPA_FORMAT_VIDEO_modifier is present we can use DMA-BUFs as
-  // the server announces support for it.
-  // See https://github.com/PipeWire/pipewire/blob/master/doc/dma-buf.dox
-  const bool has_modifier =
-      spa_pod_find_prop(format, nullptr, SPA_FORMAT_VIDEO_modifier);
-  that->modifier_ =
-      has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-
   const struct spa_pod* params[3];
   const int buffer_types =
-      has_modifier || (that->pw_server_version_ >= kDmaBufMinVersion)
+      spa_pod_find_prop(format, nullptr, SPA_FORMAT_VIDEO_modifier)
           ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd) |
                 (1 << SPA_DATA_MemPtr)
           : (1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr);
-
   params[0] = reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
       &builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
       SPA_PARAM_BUFFERS_dataType,
@@ -509,6 +452,8 @@ void BaseCapturerPipeWire::Init() {
 
   pw_main_loop_ = pw_thread_loop_new("pipewire-main-loop", nullptr);
 
+  pw_thread_loop_lock(pw_main_loop_);
+
   pw_context_ =
       pw_context_new(pw_thread_loop_get_loop(pw_main_loop_), nullptr, 0);
   if (!pw_context_) {
@@ -516,18 +461,14 @@ void BaseCapturerPipeWire::Init() {
     return;
   }
 
-  if (pw_thread_loop_start(pw_main_loop_) < 0) {
-    RTC_LOG(LS_ERROR) << "Failed to start main PipeWire loop";
-    portal_init_failed_ = true;
+  pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
+  if (!pw_core_) {
+    RTC_LOG(LS_ERROR) << "Failed to connect PipeWire context";
     return;
   }
 
-  pw_client_version_ = ParsePipeWireVersion(pw_get_library_version());
-
   // Initialize event handlers, remote end and stream-related.
   pw_core_events_.version = PW_VERSION_CORE_EVENTS;
-  pw_core_events_.info = &OnCoreInfo;
-  pw_core_events_.done = &OnCoreDone;
   pw_core_events_.error = &OnCoreError;
 
   pw_stream_events_.version = PW_VERSION_STREAM_EVENTS;
@@ -535,32 +476,22 @@ void BaseCapturerPipeWire::Init() {
   pw_stream_events_.param_changed = &OnStreamParamChanged;
   pw_stream_events_.process = &OnStreamProcess;
 
-  {
-    PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
+  pw_core_add_listener(pw_core_, &spa_core_listener_, &pw_core_events_, this);
 
-    pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
-    if (!pw_core_) {
-      RTC_LOG(LS_ERROR) << "Failed to connect PipeWire context";
-      portal_init_failed_ = true;
-      return;
-    }
-
-    pw_core_add_listener(pw_core_, &spa_core_listener_, &pw_core_events_, this);
-
-    server_version_sync_ =
-        pw_core_sync(pw_core_, PW_ID_CORE, server_version_sync_);
-
-    pw_thread_loop_wait(pw_main_loop_);
-
-    pw_stream_ = CreateReceivingStream();
-    if (!pw_stream_) {
-      RTC_LOG(LS_ERROR) << "Failed to create PipeWire stream";
-      portal_init_failed_ = true;
-      return;
-    }
-
-    RTC_LOG(LS_INFO) << "PipeWire remote opened.";
+  pw_stream_ = CreateReceivingStream();
+  if (!pw_stream_) {
+    RTC_LOG(LS_ERROR) << "Failed to create PipeWire stream";
+    return;
   }
+
+  if (pw_thread_loop_start(pw_main_loop_) < 0) {
+    RTC_LOG(LS_ERROR) << "Failed to start main PipeWire loop";
+    portal_init_failed_ = true;
+  }
+
+  pw_thread_loop_unlock(pw_main_loop_);
+
+  RTC_LOG(LS_INFO) << "PipeWire remote opened.";
 }
 
 pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
@@ -574,14 +505,12 @@ pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
   spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
 
   std::vector<const spa_pod*> params;
-  const bool has_required_pw_client_version =
-      pw_client_version_ >= kDmaBufModifierMinVersion;
-  const bool has_required_pw_server_version =
-      pw_server_version_ >= kDmaBufModifierMinVersion;
+  const bool has_required_pw_version =
+      CheckPipeWireVersion(pw_version{0, 3, 29});
   for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
                           SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
-    // Modifiers can be used with PipeWire >= 0.3.33
-    if (has_required_pw_client_version && has_required_pw_server_version) {
+    // Modifiers can be used with PipeWire >= 0.3.29
+    if (has_required_pw_version) {
 #if !defined(WEBRTC_MOZILLA_BUILD)
       modifiers = egl_dmabuf_->QueryDmaBufModifiers(format);
 
