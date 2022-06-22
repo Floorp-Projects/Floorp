@@ -1549,26 +1549,19 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     }
   }
 
-  AutoRangeArray selectionRanges(SelectionRef());
-  selectionRanges.EnsureOnlyEditableRanges(aEditingHost);
-  if (NS_WARN_IF(selectionRanges.Ranges().IsEmpty())) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
-
-  auto pointToInsert =
-      selectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-  if (NS_WARN_IF(!pointToInsert.IsInContentNode())) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
-
   if (IsMailEditor()) {
+    const auto pointToSplit = GetFirstSelectionStartPoint<EditorDOMPoint>();
+    if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
+      return EditActionIgnored(NS_ERROR_FAILURE);
+    }
+
     if (RefPtr<Element> mailCiteElement = GetMostDistantAncestorMailCiteElement(
-            *pointToInsert.ContainerAsContent())) {
+            *pointToSplit.ContainerAsContent())) {
       // Split any mailcites in the way.  Should we abort this if we encounter
       // table cell boundaries?
       Result<EditorDOMPoint, nsresult> atNewBRElementOrError =
-          HandleInsertParagraphInMailCiteElement(*mailCiteElement,
-                                                 pointToInsert, aEditingHost);
+          HandleInsertParagraphInMailCiteElement(*mailCiteElement, pointToSplit,
+                                                 aEditingHost);
       if (MOZ_UNLIKELY(atNewBRElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::HandleInsertParagraphInMailCiteElement() failed");
@@ -1586,6 +1579,24 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     }
   }
 
+  // Smart splitting rules
+  const nsRange* firstRange = SelectionRef().GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+
+  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
+  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    return EditActionIgnored(NS_ERROR_FAILURE);
+  }
+  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+
+  // Do nothing if the node is read-only
+  if (!HTMLEditUtils::IsSimplyEditableNode(
+          *atStartOfSelection.GetContainer())) {
+    return EditActionCanceled();
+  }
+
   // If the active editing host is an inline element, or if the active editing
   // host is the block parent itself and we're configured to use <br> as a
   // paragraph separator, just append a <br>.
@@ -1597,8 +1608,9 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   //     does it.
   if (aEditingHost.GetParentElement() &&
       HTMLEditUtils::IsSimplyEditableNode(*aEditingHost.GetParentElement()) &&
-      !nsContentUtils::ContentIsFlattenedTreeDescendantOf(
-          pointToInsert.ContainerAsContent(), &aEditingHost)) {
+      (!atStartOfSelection.IsInContentNode() ||
+       !nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+           atStartOfSelection.ContainerAsContent(), &aEditingHost))) {
     return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
   }
 
@@ -1652,22 +1664,24 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   // there is no block parent here because in such case, i.e., editing host
   // is an inline element, we should insert <br> simply.
   RefPtr<Element> editableBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorElement(
-          *pointToInsert.ContainerAsContent(),
-          HTMLEditUtils::ClosestEditableBlockElement);
+      atStartOfSelection.IsInContentNode()
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *atStartOfSelection.ContainerAsContent(),
+                HTMLEditUtils::ClosestEditableBlockElement)
+          : nullptr;
 
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element or a linefeed instead.
   const ParagraphSeparator separator = GetDefaultParagraphSeparator();
-  if (InsertLineBreakInstead(editableBlockElement, pointToInsert, separator,
-                             aEditingHost)) {
+  if (InsertLineBreakInstead(editableBlockElement, atStartOfSelection,
+                             separator, aEditingHost)) {
     // For backward compatibility, we should not insert a linefeed if
     // paragraph separator is set to "br" which is Gecko-specific mode.
     if (separator != ParagraphSeparator::br &&
-        HTMLEditUtils::ShouldInsertLinefeedCharacter(pointToInsert,
+        HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
                                                      aEditingHost)) {
       Result<EditorDOMPoint, nsresult> insertLineFeedResult =
-          HandleInsertLinefeed(pointToInsert, aEditingHost);
+          HandleInsertLinefeed(atStartOfSelection, aEditingHost);
       if (MOZ_UNLIKELY(insertLineFeedResult.isErr())) {
         NS_WARNING("HTMLEditor::HandleInsertLinefeed() failed");
         return EditActionResult(insertLineFeedResult.unwrapErr());
@@ -1681,7 +1695,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     }
 
     CreateElementResult insertBRElementResult =
-        HandleInsertBRElement(pointToInsert, aEditingHost);
+        HandleInsertBRElement(atStartOfSelection, aEditingHost);
     if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
       return EditActionHandled(insertBRElementResult.unwrapErr());
@@ -1699,6 +1713,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
+    AutoRangeArray selectionRanges(SelectionRef());
     nsresult rv = FormatBlockContainerWithTransaction(
         selectionRanges,
         MOZ_KnownLive(HTMLEditor::ToParagraphSeparatorTagName(separator)),
@@ -1710,14 +1725,27 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     if (selectionRanges.HasSavedRanges()) {
       selectionRanges.RestoreFromSavedRanges();
     }
-    pointToInsert = selectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-    if (NS_WARN_IF(!pointToInsert.IsInContentNode())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    DebugOnly<nsresult> rvIgnored = selectionRanges.ApplyTo(SelectionRef());
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    MOZ_ASSERT(pointToInsert.IsSetAndValid());
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "AutoRangeArray::ApplyTo(SelectionRef()) failed, but ignored");
+
+    firstRange = SelectionRef().GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
+      return EditActionIgnored(NS_ERROR_FAILURE);
+    }
+
+    atStartOfSelection = firstRange->StartRef();
+    if (NS_WARN_IF(!atStartOfSelection.IsInContentNode())) {
+      return EditActionIgnored(NS_ERROR_FAILURE);
+    }
+    MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
     editableBlockElement = HTMLEditUtils::GetInclusiveAncestorElement(
-        *pointToInsert.ContainerAsContent(),
+        *atStartOfSelection.ContainerAsContent(),
         HTMLEditUtils::ClosestEditableBlockElement);
     if (NS_WARN_IF(!editableBlockElement)) {
       return EditActionIgnored(NS_ERROR_UNEXPECTED);
@@ -1725,7 +1753,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     if (NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(*editableBlockElement))) {
       // Didn't create a new block for some reason, fall back to <br>
       CreateElementResult insertBRElementResult =
-          HandleInsertBRElement(pointToInsert, aEditingHost);
+          HandleInsertBRElement(atStartOfSelection, aEditingHost);
       if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
         return EditActionResult(insertBRElementResult.unwrapErr());
@@ -1755,6 +1783,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   if (HTMLEditUtils::IsEmptyBlockElement(
           *editableBlockElement,
           {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
+    AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     CreateElementResult insertBRElementResult = InsertBRElement(
         WithTransaction::Yes, EditorDOMPoint::AtEndOf(*editableBlockElement));
     if (insertBRElementResult.isErr()) {
@@ -1764,11 +1793,6 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     insertBRElementResult.IgnoreCaretPointSuggestion();
     MOZ_ASSERT(insertBRElementResult.GetNewNode());
     insertedPaddingBRElement = insertBRElementResult.UnwrapNewNode();
-
-    pointToInsert = selectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-    if (NS_WARN_IF(!pointToInsert.IsInContentNode())) {
-      return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-    }
   }
 
   RefPtr<Element> maybeNonEditableListItem =
@@ -1777,8 +1801,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   if (maybeNonEditableListItem &&
       HTMLEditUtils::IsSplittableNode(*maybeNonEditableListItem)) {
     Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-        HandleInsertParagraphInListItemElement(*maybeNonEditableListItem,
-                                               pointToInsert, aEditingHost);
+        HandleInsertParagraphInListItemElement(
+            *maybeNonEditableListItem, atStartOfSelection, aEditingHost);
     if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       if (NS_WARN_IF(pointToPutCaretOrError.unwrapErr() ==
                      NS_ERROR_EDITOR_DESTROYED)) {
@@ -1804,7 +1828,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
     SplitNodeResult splitHeadingElementResult =
         HandleInsertParagraphInHeadingElement(*editableBlockElement,
-                                              pointToInsert);
+                                              atStartOfSelection);
     if (MOZ_UNLIKELY(splitHeadingElementResult.isErr())) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInHeadingElement() failed");
       return EditActionHandled();
@@ -1834,11 +1858,19 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
       (separator != ParagraphSeparator::br &&
        editableBlockElement->IsAnyOfHTMLElements(nsGkAtoms::p,
                                                  nsGkAtoms::div))) {
+    // TODO: We should work this with atStartOfSelection rather than referring
+    //       current `Selection` again.
+    const auto firstRangeStartPoint =
+        EditorBase::GetFirstSelectionStartPoint<EditorDOMPoint>();
+    if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+
     // Paragraphs: special rules to look for <br>s
     const SplitNodeResult splitResult = HandleInsertParagraphInParagraph(
         *editableBlockElement,
         insertedPaddingBRElement ? EditorDOMPoint(insertedPaddingBRElement)
-                                 : pointToInsert,
+                                 : atStartOfSelection,
         aEditingHost);
     if (splitResult.isErr()) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
@@ -1861,14 +1893,14 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
     MOZ_ASSERT(!result.Canceled());
     MOZ_ASSERT(result.Rv() == NS_SUCCESS_DOM_NO_OPERATION);
-    MOZ_ASSERT(pointToInsert.IsSetAndValid(),
+    MOZ_ASSERT(atStartOfSelection.IsSetAndValid(),
                "HTMLEditor::HandleInsertParagraphInParagraph() shouldn't touch "
                "the DOM tree if it returns not-handled state");
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
   CreateElementResult insertBRElementResult =
-      HandleInsertBRElement(pointToInsert, aEditingHost);
+      HandleInsertBRElement(atStartOfSelection, aEditingHost);
   if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::HandleInsertBRElement() failed");
     return EditActionIgnored(insertBRElementResult.unwrapErr());
