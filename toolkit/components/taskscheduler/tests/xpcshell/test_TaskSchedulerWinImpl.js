@@ -16,7 +16,7 @@ const { TaskScheduler } = ChromeUtils.import(
   "resource://gre/modules/TaskScheduler.jsm"
 );
 
-const { _TaskSchedulerWinImpl: WinImpl } = ChromeUtils.import(
+const { WinImpl } = ChromeUtils.import(
   "resource://gre/modules/TaskSchedulerWinImpl.jsm"
 );
 
