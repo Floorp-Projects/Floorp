@@ -134,7 +134,6 @@ treeherder:
         'W-b': 'Web platform tests (backlog)'
         'W-b-fis': 'Web platform tests (backlog) with fission enabled'
         'X': 'Xpcshell tests'
-        'X-condprof-fis': 'Xpcshell tests with a conditioned profile and fission enabled'
         'X-nofis': 'Xpcshell tests without fission enabled'
         'X-fis': 'Xpcshell tests with fission enabled'
         'X-spi-nw': 'Xpcshell tests with networking on socket process'
