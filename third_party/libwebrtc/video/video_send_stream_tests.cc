@@ -3089,20 +3089,20 @@ class Vp9HeaderObserver : public test::SendTest {
   void VerifyTemporalLayerStructure0(const RTPVideoHeaderVP9& vp9) const {
     EXPECT_EQ(kNoTl0PicIdx, vp9.tl0_pic_idx);
     EXPECT_EQ(kNoTemporalIdx, vp9.temporal_idx);  // no tid
+    // Technically true, but layer indices not available.
     EXPECT_FALSE(vp9.temporal_up_switch);
   }
 
   void VerifyTemporalLayerStructure1(const RTPVideoHeaderVP9& vp9) const {
     EXPECT_NE(kNoTl0PicIdx, vp9.tl0_pic_idx);
     EXPECT_EQ(0, vp9.temporal_idx);  // 0,0,0,...
-    EXPECT_FALSE(vp9.temporal_up_switch);
   }
 
   void VerifyTemporalLayerStructure2(const RTPVideoHeaderVP9& vp9) const {
     EXPECT_NE(kNoTl0PicIdx, vp9.tl0_pic_idx);
     EXPECT_GE(vp9.temporal_idx, 0);  // 0,1,0,1,... (tid reset on I-frames).
     EXPECT_LE(vp9.temporal_idx, 1);
-    EXPECT_EQ(vp9.temporal_idx > 0, vp9.temporal_up_switch);
+    EXPECT_TRUE(vp9.temporal_up_switch);
     if (IsNewPictureId(vp9)) {
       uint8_t expected_tid =
           (!vp9.inter_pic_predicted || last_vp9_.temporal_idx == 1) ? 0 : 1;
@@ -3116,18 +3116,16 @@ class Vp9HeaderObserver : public test::SendTest {
     EXPECT_LE(vp9.temporal_idx, 2);
     if (IsNewPictureId(vp9) && vp9.inter_pic_predicted) {
       EXPECT_NE(vp9.temporal_idx, last_vp9_.temporal_idx);
+      EXPECT_TRUE(vp9.temporal_up_switch);
       switch (vp9.temporal_idx) {
         case 0:
-          EXPECT_EQ(2, last_vp9_.temporal_idx);
-          EXPECT_FALSE(vp9.temporal_up_switch);
+          EXPECT_EQ(last_vp9_.temporal_idx, 2);
           break;
         case 1:
-          EXPECT_EQ(2, last_vp9_.temporal_idx);
-          EXPECT_TRUE(vp9.temporal_up_switch);
+          EXPECT_EQ(last_vp9_.temporal_idx, 2);
           break;
         case 2:
           EXPECT_LT(last_vp9_.temporal_idx, 2);
-          EXPECT_TRUE(vp9.temporal_up_switch);
           break;
       }
     }
@@ -3192,8 +3190,12 @@ class Vp9HeaderObserver : public test::SendTest {
       EXPECT_FALSE(vp9.inter_pic_predicted);  // P
 
     if (!vp9.inter_pic_predicted) {
-      EXPECT_TRUE(vp9.temporal_idx == 0 || vp9.temporal_idx == kNoTemporalIdx);
-      EXPECT_FALSE(vp9.temporal_up_switch);
+      if (vp9.temporal_idx == kNoTemporalIdx) {
+        EXPECT_FALSE(vp9.temporal_up_switch);
+      } else {
+        EXPECT_EQ(vp9.temporal_idx, 0);
+        EXPECT_TRUE(vp9.temporal_up_switch);
+      }
     }
   }
 

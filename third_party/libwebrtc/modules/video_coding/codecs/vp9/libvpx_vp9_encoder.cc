@@ -960,7 +960,7 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
     const size_t gof_idx = (pics_since_key_ + 1) % gof_.num_frames_in_gof;
     layer_id.temporal_layer_id = gof_.temporal_idx[gof_idx];
 
-    if (VideoCodecMode::kScreensharing == codec_.mode) {
+    if (codec_.mode == VideoCodecMode::kScreensharing) {
       const uint32_t frame_timestamp_ms =
           1000 * input_image.timestamp() / kVideoPayloadTypeFrequency;
 
@@ -1263,8 +1263,7 @@ int LibvpxVp9Encoder::UpdateCodecFrameSize(
 
 bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                                              absl::optional<int>* spatial_idx,
-                                             const vpx_codec_cx_pkt& pkt,
-                                             uint32_t timestamp) {
+                                             const vpx_codec_cx_pkt& pkt) {
   RTC_CHECK(codec_specific != nullptr);
   codec_specific->codecType = kVideoCodecVP9;
   CodecSpecificInfoVP9* vp9_info = &(codec_specific->codecSpecific.VP9);
@@ -1299,9 +1298,6 @@ bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
     *spatial_idx = layer_id.spatial_layer_id;
   }
 
-  // TODO(asapersson): this info has to be obtained from the encoder.
-  vp9_info->temporal_up_switch = false;
-
   const bool is_key_pic = (pics_since_key_ == 0);
   const bool is_inter_layer_pred_allowed =
       (inter_layer_pred_ == InterLayerPredMode::kOn ||
@@ -1334,6 +1330,20 @@ bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                        vp9_info);
   if (vp9_info->flexible_mode) {
     vp9_info->gof_idx = kNoGofIdx;
+    if (!svc_controller_) {
+      if (num_temporal_layers_ == 1) {
+        vp9_info->temporal_up_switch = true;
+      } else {
+        // In flexible mode with > 1 temporal layer but no SVC controller we
+        // can't techincally determine if a frame is an upswitch point, use
+        // gof-based data as proxy for now.
+        // TODO(sprang): Remove once SVC controller is the only choice.
+        vp9_info->gof_idx =
+            static_cast<uint8_t>(pics_since_key_ % gof_.num_frames_in_gof);
+        vp9_info->temporal_up_switch =
+            gof_.temporal_up_switch[vp9_info->gof_idx];
+      }
+    }
   } else {
     vp9_info->gof_idx =
         static_cast<uint8_t>(pics_since_key_ % gof_.num_frames_in_gof);
@@ -1402,6 +1412,23 @@ bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                 svc_params_.scaling_factor_den[sid],
             /*height=*/codec_.height * svc_params_.scaling_factor_num[sid] /
                 svc_params_.scaling_factor_den[sid]);
+      }
+    }
+    if (is_flexible_mode_) {
+      // Populate data for legacy temporal-upswitch state.
+      // We can switch up to a higher temporal layer only if all temporal layers
+      // higher than this (within the current spatial layer) are switch points.
+      vp9_info->temporal_up_switch = true;
+      for (int i = layer_id.temporal_layer_id + 1; i < num_temporal_layers_;
+           ++i) {
+        // Assumes decode targets are always ordered first by spatial then by
+        // temporal id.
+        size_t dti_index =
+            (layer_id.spatial_layer_id * num_temporal_layers_) + i;
+        vp9_info->temporal_up_switch &=
+            (codec_specific->generic_frame_info
+                 ->decode_target_indications[dti_index] ==
+             DecodeTargetIndication::kSwitch);
       }
     }
   }
@@ -1479,8 +1506,6 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
     ref_buf_list.push_back(ref_buf_.at(0));
   }
 
-  size_t max_ref_temporal_layer_id = 0;
-
   std::vector<size_t> ref_pid_list;
 
   vp9_info->num_ref_pics = 0;
@@ -1512,9 +1537,6 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
 
       vp9_info->p_diff[vp9_info->num_ref_pics] = static_cast<uint8_t>(p_diff);
       ++vp9_info->num_ref_pics;
-
-      max_ref_temporal_layer_id =
-          std::max(max_ref_temporal_layer_id, ref_buf.temporal_layer_id);
     } else {
       RTC_DCHECK(inter_layer_predicted);
       // RTP spec only allows to use previous spatial layer for inter-layer
@@ -1522,10 +1544,6 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
       RTC_DCHECK_EQ(ref_buf.spatial_layer_id + 1, layer_id.spatial_layer_id);
     }
   }
-
-  vp9_info->temporal_up_switch =
-      (max_ref_temporal_layer_id <
-       static_cast<size_t>(layer_id.temporal_layer_id));
 }
 
 void LibvpxVp9Encoder::UpdateReferenceBuffers(const vpx_codec_cx_pkt& pkt,
@@ -1687,8 +1705,7 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
 
   codec_specific_ = {};
   absl::optional<int> spatial_index;
-  if (!PopulateCodecSpecific(&codec_specific_, &spatial_index, *pkt,
-                             input_image_->timestamp())) {
+  if (!PopulateCodecSpecific(&codec_specific_, &spatial_index, *pkt)) {
     // Drop the frame.
     encoded_image_.set_size(0);
     return;
