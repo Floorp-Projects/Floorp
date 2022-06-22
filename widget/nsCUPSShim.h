@@ -56,6 +56,7 @@ class nsCUPSShim {
   X(Optional::Yes, cupsLocalizeDestMedia)   \
   X(Optional::No, cupsGetDest)              \
   X(Optional::No, cupsGetDests)             \
+  X(Optional::No, cupsGetDests2)            \
   X(Optional::No, cupsGetNamedDest)         \
   X(Optional::No, cupsGetOption)            \
   X(Optional::No, cupsServer)               \
