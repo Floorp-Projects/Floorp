@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* This test records which services, JS components, frame scripts, process
- * scripts, and JS modules are loaded when creating a new content process.
+/* This test records which services, frame scripts, process scripts, and
+ * JS modules are loaded when creating a new content process.
  *
  * If you made changes that cause this test to fail, it's likely because you
  * are loading more JS code during content process startup. Please try to
@@ -132,14 +132,6 @@ add_task(async function() {
           "resource://gre/modules/AppConstants.jsm"
         );
         let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
-        let components = {};
-        for (let component of Cu.loadedComponents) {
-          /* Keep only the file name for components, as the path is an absolute file
-         URL rather than a resource:// URL like for modules. */
-          components[component.replace(/.*\//, "")] = collectStacks
-            ? Cu.getComponentLoadStack(component)
-            : "";
-        }
         let modules = {};
         for (let module of Cu.loadedModules) {
           modules[module] = collectStacks
@@ -157,7 +149,6 @@ add_task(async function() {
           } catch (e) {}
         }
         sendAsyncMessage("Test:LoadedScripts", {
-          components,
           modules,
           services,
         });

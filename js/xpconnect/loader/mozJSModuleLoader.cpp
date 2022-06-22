@@ -270,8 +270,7 @@ static nsresult MOZ_FORMAT_PRINTF(2, 3)
 NS_IMPL_ISUPPORTS(mozJSComponentLoader, nsIMemoryReporter)
 
 mozJSComponentLoader::mozJSComponentLoader()
-    : mModules(16),
-      mImports(16),
+    : mImports(16),
       mInProgressImports(16),
       mLocations(16),
       mInitialized(false),
@@ -404,102 +403,6 @@ mozJSComponentLoader::~mozJSComponentLoader() {
 
 StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 
-const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "Don't use JS components off the main thread");
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
-
-  nsCString spec;
-  aFile.GetURIString(spec);
-  ComponentLoaderInfo info(spec);
-  nsresult rv = info.EnsureURI();
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  mInitialized = true;
-
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("mozJSComponentLoader::LoadModule",
-                                        OTHER, spec);
-  AUTO_PROFILER_MARKER_TEXT("JS XPCOM", JS, MarkerStack::Capture(), spec);
-
-  ModuleEntry* mod;
-  if (mModules.Get(spec, &mod)) {
-    return mod;
-  }
-
-  dom::AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-
-  auto entry = MakeUnique<ModuleEntry>(RootingContext::get(cx));
-  RootedValue exn(cx);
-  rv = ObjectForLocation(info, file, &entry->obj, &entry->thisObjectKey,
-                         &entry->location, /* aPropagateExceptions */ false,
-                         &exn);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIComponentManager> cm;
-  rv = NS_GetComponentManager(getter_AddRefs(cm));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  JSAutoRealm ar(cx, entry->obj);
-  RootedObject entryObj(cx, entry->obj);
-
-  RootedObject NSGetFactoryHolder(
-      cx, ResolveModuleObjectProperty(cx, entryObj, "NSGetFactory"));
-  RootedValue NSGetFactory_val(cx);
-  if (!NSGetFactoryHolder ||
-      !JS_GetProperty(cx, NSGetFactoryHolder, "NSGetFactory",
-                      &NSGetFactory_val) ||
-      NSGetFactory_val.isUndefined()) {
-    return nullptr;
-  }
-
-  if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
-    /*
-     * spec's encoding is ASCII unless it's zip file, otherwise it's
-     * random encoding.  Latin1 variant is safe for random encoding.
-     */
-    JS_ReportErrorLatin1(
-        cx, "%s has NSGetFactory property that is not a function", spec.get());
-    return nullptr;
-  }
-
-  RootedObject jsGetFactoryObj(cx);
-  if (!JS_ValueToObject(cx, NSGetFactory_val, &jsGetFactoryObj) ||
-      !jsGetFactoryObj) {
-    /* XXX report error properly */
-    return nullptr;
-  }
-
-  rv = nsXPConnect::XPConnect()->WrapJS(cx, jsGetFactoryObj,
-                                        NS_GET_IID(xpcIJSGetFactory),
-                                        getter_AddRefs(entry->getfactoryobj));
-  if (NS_FAILED(rv)) {
-    /* XXX report error properly */
-#ifdef DEBUG
-    fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
-#endif
-    return nullptr;
-  }
-
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
-  if (Preferences::GetBool("browser.startup.record", false)) {
-    entry->importStack = xpc_PrintJSStack(cx, false, false, false).get();
-  }
-#endif
-
-  // Cache this module for later
-  mModules.InsertOrUpdate(spec, entry.get());
-
-  // The hash owns the ModuleEntry now, forget about it
-  return entry.release();
-}
-
 void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                             MutableHandleObject aTargetObject) {
   aTargetObject.set(JS::GetJSMEnvironmentOfScriptedCaller(aCx));
@@ -559,7 +462,6 @@ static size_t SizeOfTableExcludingThis(
 
 size_t mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   size_t n = aMallocSizeOf(this);
-  n += SizeOfTableExcludingThis(mModules, aMallocSizeOf);
   n += SizeOfTableExcludingThis(mImports, aMallocSizeOf);
   n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
@@ -620,14 +522,6 @@ mozJSComponentLoader::CollectReports(nsIHandleReportCallback* aHandleReport,
 
     aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
                             "Loaded JS modules"_ns, aData);
-  }
-
-  for (const auto& entry : mModules.Values()) {
-    nsAutoCString path("js-component-loader/components/");
-    path.Append(MangleURL(entry->location, aAnonymize));
-
-    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
-                            "Loaded JS components"_ns, aData);
   }
 
   return NS_OK;
@@ -1065,11 +959,6 @@ void mozJSComponentLoader::UnloadModules() {
   mInProgressImports.Clear();
   mImports.Clear();
   mLocations.Clear();
-
-  for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->Clear();
-    iter.Remove();
-  }
 }
 
 /* static */
@@ -1257,14 +1146,6 @@ nsresult mozJSComponentLoader::GetLoadedJSAndESModules(
   return NS_OK;
 }
 
-void mozJSComponentLoader::GetLoadedComponents(
-    nsTArray<nsCString>& aLoadedComponents) {
-  aLoadedComponents.SetCapacity(mModules.Count());
-  for (const auto& data : mModules.Values()) {
-    aLoadedComponents.AppendElement(data->location);
-  }
-}
-
 nsresult mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
                                                     nsACString& retval) {
 #ifdef STARTUP_RECORDER_ENABLED
@@ -1275,28 +1156,6 @@ nsresult mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
 
   ModuleEntry* mod;
   if (!mImports.Get(info.Key(), &mod)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  retval = mod->importStack;
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-nsresult mozJSComponentLoader::GetComponentLoadStack(
-    const nsACString& aLocation, nsACString& retval) {
-#ifdef STARTUP_RECORDER_ENABLED
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
-  MOZ_ASSERT(mInitialized);
-
-  ComponentLoaderInfo info(aLocation);
-  nsresult rv = info.EnsureURI();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ModuleEntry* mod;
-  if (!mModules.Get(info.Key(), &mod)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1729,21 +1588,6 @@ size_t mozJSComponentLoader::ModuleEntry::SizeOfIncludingThis(
   n += aMallocSizeOf(location);
 
   return n;
-}
-
-/* static */
-already_AddRefed<nsIFactory> mozJSComponentLoader::ModuleEntry::GetFactory(
-    const mozilla::Module& module, const mozilla::Module::CIDEntry& entry) {
-  const ModuleEntry& self = static_cast<const ModuleEntry&>(module);
-  MOZ_ASSERT(self.getfactoryobj, "Handing out an uninitialized module?");
-
-  nsCOMPtr<nsIFactory> f;
-  nsresult rv = self.getfactoryobj->Get(*entry.cid, getter_AddRefs(f));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return f.forget();
 }
 
 //----------------------------------------------------------------------

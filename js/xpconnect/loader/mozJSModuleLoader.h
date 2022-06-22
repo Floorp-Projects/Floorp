@@ -11,7 +11,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Module.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIMemoryReporter.h"
@@ -22,7 +21,6 @@
 #include "jsapi.h"
 #include "js/experimental/JSStencil.h"
 
-#include "xpcIJSGetFactory.h"
 #include "xpcpublic.h"
 
 class nsIFile;
@@ -50,13 +48,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   // Returns the list of all JSMs and ESMs.
   nsresult GetLoadedJSAndESModules(nsTArray<nsCString>& aLoadedModules);
 
-  void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
   nsresult GetModuleImportStack(const nsACString& aLocation,
                                 nsACString& aRetval);
-  nsresult GetComponentLoadStack(const nsACString& aLocation,
-                                 nsACString& aRetval);
-
-  const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);
 
   void FindTargetObject(JSContext* aCx, JS::MutableHandleObject aTargetObject);
 
@@ -150,31 +143,16 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   nsresult ImportInto(const nsACString& aLocation, JS::HandleObject targetObj,
                       JSContext* callercx, JS::MutableHandleObject vp);
 
-  nsCOMPtr<nsIComponentManager> mCompMgr;
-
-  class ModuleEntry : public mozilla::Module {
+  class ModuleEntry {
    public:
     explicit ModuleEntry(JS::RootingContext* aRootingCx)
-        : mozilla::Module(),
-          obj(aRootingCx),
-          exports(aRootingCx),
-          thisObjectKey(aRootingCx) {
-      mVersion = mozilla::Module::kVersion;
-      mCIDs = nullptr;
-      mContractIDs = nullptr;
-      mCategoryEntries = nullptr;
-      getFactoryProc = GetFactory;
-      loadProc = nullptr;
-      unloadProc = nullptr;
-
+        : obj(aRootingCx), exports(aRootingCx), thisObjectKey(aRootingCx) {
       location = nullptr;
     }
 
     ~ModuleEntry() { Clear(); }
 
     void Clear() {
-      getfactoryobj = nullptr;
-
       if (obj) {
         if (JS_HasExtensibleLexicalEnvironment(obj)) {
           JS::RootedObject lexicalEnv(mozilla::dom::RootingCx(),
@@ -200,10 +178,6 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-    static already_AddRefed<nsIFactory> GetFactory(
-        const mozilla::Module& module, const mozilla::Module::CIDEntry& entry);
-
-    nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
     JS::PersistentRootedObject obj;
     JS::PersistentRootedObject exports;
     JS::PersistentRootedScript thisObjectKey;
@@ -216,9 +190,6 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   nsresult ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
-
-  // Modules are intentionally leaked, but still cleared.
-  nsTHashMap<nsCStringHashKey, ModuleEntry*> mModules;
 
   nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
   nsTHashMap<nsCStringHashKey, ModuleEntry*> mInProgressImports;
