@@ -59,8 +59,6 @@ function getConsole() {
   });
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "console", getConsole);
-
 const BACKGROUND_SCRIPTS_VIEW_TYPES = ["background", "background_worker"];
 
 var ExtensionCommon;

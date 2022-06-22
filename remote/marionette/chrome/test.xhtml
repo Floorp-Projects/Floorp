@@ -13,15 +13,15 @@
                 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
       <vbox id="things">
-        <checkbox id="testBox"  label="box" />
         <input xmlns="http://www.w3.org/1999/xhtml" id="textInput"  size="6" value="test" label="input" />
         <input xmlns="http://www.w3.org/1999/xhtml" id="textInput2"  size="6" value="test" label="input" />
         <input xmlns="http://www.w3.org/1999/xhtml" id="textInput3" class="asdf" size="6" value="test" label="input" />
+        <checkbox id="testBox" label="box" />
       </vbox>
 
       <iframe id="iframe" name="iframename" src="chrome://remote/content/marionette/test2.xhtml"/>
       <iframe id="iframe" name="iframename" src="chrome://remote/content/marionette/test_nested_iframe.xhtml"/>
       <hbox id="testXulBox"/>
-      <browser id='aBrowser' src="chrome://remote/content/marionette/test2.xhtml"/>
+      <browser id="aBrowser" src="chrome://remote/content/marionette/test2.xhtml"/>
     </dialog>
 </window>

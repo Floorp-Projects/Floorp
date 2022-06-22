@@ -29,7 +29,6 @@ const SCREEN_ORIENTATION_LANDSCAPE = 1;
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",

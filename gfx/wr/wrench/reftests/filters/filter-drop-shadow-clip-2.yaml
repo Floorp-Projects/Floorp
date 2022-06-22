@@ -6,11 +6,15 @@ root:
     id: 2
     bounds: 10 0 300 300
     clip-rect: 10 0 300 300
+  -
+    type: "clip-chain"
+    id: 3
+    clips: [2]
   - type: stacking-context
     bounds: 30 30 0 0
     transform: rotate-z(-45)
     filters: drop-shadow([15, 0], 0, red)
-    clip-node: 2
+    clip-chain: 3
     items:
     - type: rect
       bounds: 0 0 100 100

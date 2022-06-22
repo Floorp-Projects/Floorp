@@ -20,7 +20,7 @@ For local development and try runs you can replace this Glean implementation wit
 
     ```
     glean = { path = "../glean/glean-core/rlb" }
-    glean_core = { path = "../glean/glean-core" }
+    glean-core = { path = "../glean/glean-core" }
     ```
 
 2. If the crate version in the patched repository is not

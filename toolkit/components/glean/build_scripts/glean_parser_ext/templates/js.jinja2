@@ -17,6 +17,7 @@ Jinja2 template is not. Please file bugs! #}
 #include "mozilla/glean/fog_ffi_generated.h"
 
 #define GLEAN_INDEX_BITS ({{index_bits}})
+#define GLEAN_TYPE_BITS ({{type_bits}})
 #define GLEAN_ID_BITS ({{id_bits}})
 #define GLEAN_TYPE_ID(id) ((id) >> GLEAN_ID_BITS)
 #define GLEAN_METRIC_ID(id) ((id) & ((1ULL << GLEAN_ID_BITS) - 1))
@@ -27,13 +28,21 @@ namespace mozilla::glean {
 // The category lookup table's entry type
 using category_entry_t = uint32_t;
 // The metric lookup table's entry type
+// This is a bitpacked type with {{index_bits}} bits available to index into
+// the string table, {{type_bits}} bits available to signify the metric type,
+// and the remaining {{id_bits}} bits devoted to {{id_signal_bits}} "signal"
+// bits to signify important characteristics (metric's a labeled metric's
+// submetric, metric's been registered at runtime) and {{id_bits - id_signal_bits}} bits
+// for built-in metric ids.
+// Gives room for {{2 ** (id_bits - id_signal_bits)}} of each combination of
+// characteristics (which hopefully will prove to be enough).
 using metric_entry_t = uint64_t;
 
-static_assert(GLEAN_INDEX_BITS + GLEAN_ID_BITS < sizeof(metric_entry_t) * 8, "Index and ID bits need to fit into an category_entry_t");
-static_assert(GLEAN_ID_BITS < sizeof(uint32_t) * 8, "Metric IDs need to fit into less than 32 bit");
+static_assert(GLEAN_INDEX_BITS + GLEAN_TYPE_BITS + GLEAN_ID_BITS == sizeof(metric_entry_t) * 8, "Index, Type, and ID bits need to fit into a metric_entry_t");
+static_assert(GLEAN_TYPE_BITS + GLEAN_ID_BITS <= sizeof(uint32_t) * 8, "Metric Types and IDs need to fit into at most 32 bits");
 static_assert({{ categories|length }} < UINT32_MAX, "Too many metric categories generated.");
-static_assert({{ metric_id_mapping|length }} < {{2 ** id_bits}}, "Too many metrics generated.");
-static_assert({{ metric_type_ids|length }} < {{2 ** (entry_width - index_bits - id_bits)}}, "Too many different metric types.");
+static_assert({{ metric_id_mapping|length }} < {{2 ** (id_bits - id_signal_bits)}}, "Too many metrics generated. Need room for {{id_signal_bits}} signal bits.");
+static_assert({{ metric_type_ids|length }} < {{2 ** type_bits}}, "Too many different metric types.");
 
 static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t typeId = GLEAN_TYPE_ID(id);

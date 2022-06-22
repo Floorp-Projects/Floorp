@@ -180,8 +180,8 @@ addAccessibleTask(
   runTests,
   {
     iframe: true,
-    remoteIframe: false, // Causes bounds failures for now, see bug 1772861
+    remoteIframe: true,
     // Ensure that all hittest elements are in view.
-    iframeAttrs: { style: "width: 600px; height: 600px;" },
+    iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
   }
 );

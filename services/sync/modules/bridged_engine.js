@@ -27,7 +27,6 @@ const { RawCryptoWrapper } = ChromeUtils.import(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Async: "resource://services-common/async.js",
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });

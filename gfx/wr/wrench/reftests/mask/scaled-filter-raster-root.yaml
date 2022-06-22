@@ -16,11 +16,15 @@ root:
             rect: [10, 10, 10, 10]
             repeat: false
             tile-size: 200
+        -
+          type: "clip-chain"
+          id: 3
+          clips: [2]
         - type: stacking-context
           filters: [opacity(0.5)]
           items:
             - type: stacking-context
-              clip-node: 2
+              clip-chain: 3
               items:
                 - type: rect
                   bounds: [10, 10, 10, 10]

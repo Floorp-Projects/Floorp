@@ -133,4 +133,28 @@ interface nsIFOG : nsISupports
    */
   [implicit_jscontext]
   Promise testTriggerMetrics(in unsigned long aProcessType);
+
+  /**
+   * ** Test-only Method **
+   *
+   * Register a metric.
+   *
+   * This function is deliberately not too friendly to use. You probably aren't
+   * supposed to use it unless you're testing metric registration itself.
+   *
+   * @param aType - The metric's type.
+   * @param aCategory - The metric's category.
+   * @param aName - The metric's name.
+   * @param aPings - The pings to send it in.
+   * @param aLifetime - The metric's lifetime.
+   * @param aDisabled - Whether the metric, though existing, isn't enabled.
+   * @param aExtraArgs - Optional JSON string of extra args.
+   */
+  uint32_t testRegisterRuntimeMetric(in ACString aType,
+                                 in ACString aCategory,
+                                 in ACString aName,
+                                 in Array<ACString> aPings,
+                                 in ACString aLifetime,
+                                 in boolean aDisabled,
+                                 [optional] in ACString aExtraArgs);
 };

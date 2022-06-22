@@ -34,11 +34,15 @@ if (typeof module == "object") {
   const { XPCOMUtils } = ChromeUtils.import(
     "resource://gre/modules/XPCOMUtils.jsm"
   );
+  // Ignore the "duplicate" definitions here as this are also defined
+  // in the if block above.
+  // eslint-disable-next-line mozilla/valid-lazy
   XPCOMUtils.defineLazyGetter(lazy, "validateBreakpointLocation", () => {
     return ChromeUtils.import(
       "resource://devtools/shared/validate-breakpoint.jsm"
     ).validateBreakpointLocation;
   });
+  // eslint-disable-next-line mozilla/valid-lazy
   XPCOMUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
     const { loader } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"

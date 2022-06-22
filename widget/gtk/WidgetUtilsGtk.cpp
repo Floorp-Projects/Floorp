@@ -90,6 +90,21 @@ GdkDevice* GdkGetPointer() {
   return gdk_device_manager_get_client_pointer(deviceManager);
 }
 
+static GdkEvent* sLastMousePressEvent = nullptr;
+GdkEvent* GetLastMousePressEvent() { return sLastMousePressEvent; }
+
+void SetLastMousePressEvent(GdkEvent* aEvent) {
+  if (sLastMousePressEvent) {
+    GUniquePtr<GdkEvent> event(sLastMousePressEvent);
+    sLastMousePressEvent = nullptr;
+  }
+  if (!aEvent) {
+    return;
+  }
+  GUniquePtr<GdkEvent> event(gdk_event_copy(aEvent));
+  sLastMousePressEvent = event.release();
+}
+
 bool IsRunningUnderFlatpak() {
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
   static bool sRunning = [] {

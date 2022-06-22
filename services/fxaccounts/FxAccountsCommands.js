@@ -26,8 +26,6 @@ const { Observers } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BulkKeyBundle: "resource://services-sync/keys.js",
-  CommonUtils: "resource://services-common/utils.js",
-  CryptoUtils: "resource://services-crypto/utils.js",
   CryptoWrapper: "resource://services-sync/record.js",
 });
 

@@ -139,8 +139,6 @@ const { getUniqueId, promiseTimeout } = ExtensionUtils;
 
 const { EventEmitter, updateAllowedOrigins } = ExtensionCommon;
 
-XPCOMUtils.defineLazyGetter(lazy, "console", ExtensionCommon.getConsole);
-
 XPCOMUtils.defineLazyGetter(
   lazy,
   "LocaleData",

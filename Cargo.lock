@@ -2194,6 +2194,7 @@ dependencies = [
  "geckoservo",
  "gkrust_utils",
  "http_sfv",
+ "jog",
  "jsrust_shared",
  "kvstore",
  "l10nregistry",
@@ -2756,6 +2757,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af25a77299a7f711a01975c35a6a424eb6862092cc2d6c72c4ed6cbc56dfc1fa"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "jog"
+version = "0.1.0"
+dependencies = [
+ "fog",
+ "log",
+ "mozbuild",
+ "nsstring",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thin-vec",
 ]
 
 [[package]]

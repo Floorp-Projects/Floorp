@@ -17,6 +17,9 @@ const { Module } = ChromeUtils.import(
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
+
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
@@ -38,6 +41,25 @@ class ScriptModule extends Module {
     this.#global = null;
   }
 
+  #toRawObject(maybeDebuggerObject) {
+    if (maybeDebuggerObject instanceof Debugger.Object) {
+      // Retrieve the referent for the provided Debugger.object.
+      // See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/debugger.object/index.html
+      const rawObject = maybeDebuggerObject.unsafeDereference();
+
+      // TODO: Getters for Maps and Sets iterators return "Opaque" objects and
+      // are not iterable. RemoteValue.jsm' serializer should handle calling
+      // waiveXrays on Maps/Sets/... and then unwaiveXrays on entries but since
+      // we serialize with maxDepth=1, calling waiveXrays once on the root
+      // object allows to return correctly serialized values.
+      return Cu.waiveXrays(rawObject);
+    }
+
+    // If maybeDebuggerObject was not a Debugger.Object, it is a primitive value
+    // which can be used as is.
+    return maybeDebuggerObject;
+  }
+
   /**
    * Evaluate a provided expression in the current window global.
    *
@@ -51,11 +73,17 @@ class ScriptModule extends Module {
    */
   evaluateExpression(options) {
     const { expression } = options;
-    this.#global.executeInGlobal(expression);
+    const rv = this.#global.executeInGlobal(expression);
 
-    return {
-      result: null,
-    };
+    if ("return" in rv) {
+      return {
+        result: lazy.serialize(this.#toRawObject(rv.return), 1),
+      };
+    }
+
+    throw new lazy.error.UnsupportedOperationError(
+      `Unsupported completion value for expression evaluation`
+    );
   }
 }
 

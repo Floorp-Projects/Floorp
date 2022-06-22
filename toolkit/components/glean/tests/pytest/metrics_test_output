@@ -673,8 +673,8 @@ pub(crate) mod __glean_metric_maps {
         };
         use super::*;
 
-        pub(crate) const MIN_LABELED_SUBMETRIC_ID: u32 = 134217729;
-        pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new(MIN_LABELED_SUBMETRIC_ID);
+        pub(crate) const SUBMETRIC_BIT: u32 = 25;
+        pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new((1 << SUBMETRIC_BIT) + 1);
         pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );

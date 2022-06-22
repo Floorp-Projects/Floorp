@@ -78,10 +78,6 @@ const { flushJarCache } = ExtensionUtils;
 
 const { instanceOf } = ExtensionCommon;
 
-XPCOMUtils.defineLazyGetter(lazy, "console", () =>
-  ExtensionCommon.getConsole()
-);
-
 var ExtensionTestCommon;
 
 /**

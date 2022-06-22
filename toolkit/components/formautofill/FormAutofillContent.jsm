@@ -123,7 +123,7 @@ AutocompleteFactory.prototype = {
  * @implements {nsIAutoCompleteSearch}
  */
 function AutofillProfileAutoCompleteSearch() {
-  lazy.FormAutofill.defineLazyLogGetter(
+  this.log = lazy.FormAutofill.defineLogGetter(
     this,
     "AutofillProfileAutoCompleteSearch"
   );
@@ -323,7 +323,7 @@ let ProfileAutocomplete = {
       return;
     }
 
-    lazy.FormAutofill.defineLazyLogGetter(this, "ProfileAutocomplete");
+    this.log = lazy.FormAutofill.defineLogGetter(this, "ProfileAutocomplete");
     this.debug("ensureRegistered");
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
@@ -474,7 +474,7 @@ var FormAutofillContent = {
   _autofillPending: false,
 
   init() {
-    lazy.FormAutofill.defineLazyLogGetter(this, "FormAutofillContent");
+    this.log = lazy.FormAutofill.defineLogGetter(this, "FormAutofillContent");
     this.debug("init");
 
     // eslint-disable-next-line mozilla/balanced-listeners

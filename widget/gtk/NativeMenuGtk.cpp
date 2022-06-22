@@ -7,6 +7,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/XULCommandEvent.h"
+#include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsPresContext.h"
 #include "nsIWidget.h"
@@ -380,7 +381,7 @@ void NativeMenuGtk::ShowAsContextMenu(nsPresContext* aPc,
   const GdkRectangle rect = {gdkPos.x, gdkPos.y, 1, 1};
   auto openFn = GetPopupAtRectFn();
   openFn(GTK_MENU(mNativeMenu.get()), win, &rect, GDK_GRAVITY_NORTH_WEST,
-         GDK_GRAVITY_NORTH_WEST, nullptr);
+         GDK_GRAVITY_NORTH_WEST, GetLastMousePressEvent());
 
   RefPtr pin{this};
   FireEvent(eXULPopupShown);

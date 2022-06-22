@@ -817,7 +817,7 @@ impl<'a> SceneBuilder<'a> {
                             info.stacking_context.transform_style,
                             info.prim_flags,
                             spatial_node_index,
-                            info.stacking_context.clip_id,
+                            info.stacking_context.clip_chain_id,
                             info.stacking_context.raster_space,
                             info.stacking_context.flags,
                             bc.pipeline_id,
@@ -2021,12 +2021,15 @@ impl<'a> SceneBuilder<'a> {
         transform_style: TransformStyle,
         prim_flags: PrimitiveFlags,
         spatial_node_index: SpatialNodeIndex,
-        clip_id: Option<ClipId>,
+        clip_chain_id: Option<api::ClipChainId>,
         requested_raster_space: RasterSpace,
         flags: StackingContextFlags,
         pipeline_id: PipelineId,
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
+
+        // TODO(gw): Port internal API to be ClipChain based, rather than ClipId once all callers updated
+        let clip_id = clip_chain_id.map(|id| ClipId::ClipChain(id));
 
         let new_space = match (self.raster_space_stack.last(), requested_raster_space) {
             // If no parent space, just use the requested space

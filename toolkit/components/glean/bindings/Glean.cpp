@@ -10,10 +10,20 @@
 #include "mozilla/glean/bindings/Glean.h"
 #include "mozilla/glean/bindings/Category.h"
 #include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
+#include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
+#include "mozilla/glean/bindings/jog/JOG.h"
 #include "MainThreadUtils.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 
 namespace mozilla::glean {
+
+// Whether the runtime-registered metrics should be treated as comprehensive,
+// or additive. If comprehensive, a metric not registered at runtime is a
+// metric that doesn't exist. If additive, a metric not registered at runtime
+// may still exist if it was registered at compile time.
+// If we're supporting Artefact Builds, we treat them as comprehensive.
+// Threading: Must only be read or written to on the main thread.
+static bool gRuntimeMetricsComprehensive = false;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Glean)
 
@@ -52,25 +62,60 @@ bool Glean::DefineGlean(JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
 
 already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
                                               bool& aFound) {
-  Maybe<uint32_t> categoryIdx =
-      CategoryByNameLookup(NS_ConvertUTF16toUTF8(aName));
+  MOZ_ASSERT(NS_IsMainThread());
+#ifndef MOZILLA_OFFICIAL
+  // We only entertain the idea this might be an artefact build if
+  // !MOZILLA_OFFICAL to avoid doing _main thread I/O_ (dun dun dunnn) on
+  // important builds.
+  static bool sRuntimeRegistrarRan = false;
+  if (!sRuntimeRegistrarRan) {
+    sRuntimeRegistrarRan = true;
+
+    // Run the runtime metrics registrar.
+    gRuntimeMetricsComprehensive = jog::jog_runtime_registrar();
+  }
+#endif  // MOZILLA_OFFICIAL
+
+  NS_ConvertUTF16toUTF8 categoryName(aName);
+  if (JOG::HasCategory(categoryName)) {
+    aFound = true;
+    return MakeAndAddRef<Category>(std::move(categoryName));
+  }
+
+  if (gRuntimeMetricsComprehensive) {
+    // This category might be built-in, but since the runtime metrics are
+    // comprehensive, that just signals that the category was removed locally.
+    aFound = false;
+    return nullptr;
+  }
+
+  Maybe<uint32_t> categoryIdx = CategoryByNameLookup(categoryName);
   if (categoryIdx.isNothing()) {
     aFound = false;
     return nullptr;
   }
 
   aFound = true;
-  uint32_t length = strlen(&gCategoryStringTable[categoryIdx.value()]);
-  return MakeAndAddRef<Category>(categoryIdx.value(), length);
+  nsDependentCString name(&gCategoryStringTable[categoryIdx.value()]);
+  return MakeAndAddRef<Category>(std::move(name));
 }
 
 bool Glean::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void Glean::GetSupportedNames(nsTArray<nsString>& aNames) {
-  for (category_entry_t entry : sCategoryByNameLookupEntries) {
-    const char* categoryName = GetCategoryName(entry);
-    aNames.AppendElement()->AssignASCII(categoryName);
+  JOG::GetCategoryNames(aNames);
+  if (!JOG::AreRuntimeMetricsComprehensive()) {
+    for (category_entry_t entry : sCategoryByNameLookupEntries) {
+      const char* categoryName = GetCategoryName(entry);
+      aNames.AppendElement()->AssignASCII(categoryName);
+    }
   }
+}
+
+// static
+void Glean::TestSetRuntimeMetricsComprehensive(bool aIsComprehensive) {
+  MOZ_ASSERT(NS_IsMainThread());
+  gRuntimeMetricsComprehensive = aIsComprehensive;
 }
 
 }  // namespace mozilla::glean

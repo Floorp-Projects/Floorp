@@ -71,6 +71,7 @@ gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 dom = { path = "../../../../dom/base/rust" }
 origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
+jog = { path = "../../../components/glean/bindings/jog" }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -123,7 +124,7 @@ new_xulstore = ["xulstore"]
 libfuzzer = ["neqo_glue/fuzzing"]
 webrtc = ["mdns_service"]
 glean_disable_upload = ["fog_control/disable_upload"]
-glean_with_gecko = ["fog_control/with_gecko"]
+glean_with_gecko = ["fog_control/with_gecko", "jog/with_gecko"]
 oxidized_breakpad = ["rust_minidump_writer_linux"]
 with_dbus = ["audio_thread_priority/with_dbus"]
 thread_sanitizer = ["xpcom/thread_sanitizer"]

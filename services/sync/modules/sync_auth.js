@@ -49,12 +49,6 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
-
 XPCOMUtils.defineLazyGetter(lazy, "log", function() {
   let log = Log.repository.getLogger("Sync.SyncAuthManager");
   log.manageLevelFromPref("services.sync.log.logger.identity");

@@ -410,6 +410,22 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::ApplyCrossProcOffset(
+    nsRect& aBounds) const {
+  Maybe<const nsTArray<int32_t>&> maybeOffset =
+      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::crossorigin);
+  if (!maybeOffset) {
+    return;
+  }
+
+  MOZ_ASSERT(maybeOffset->Length() == 2);
+  const nsTArray<int32_t>& offset = *maybeOffset;
+  // Our retrieved value is in app units, so we don't need to do any
+  // unit conversion here.
+  aBounds.MoveBy(offset[0], offset[1]);
+}
+
+template <class Derived>
 bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
   // First, attempt to retrieve the transform from the cache.
   Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
@@ -488,7 +504,7 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
 
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
-
+    const RemoteAccessibleBase<Derived>* recentAcc = this;
     while (acc && acc->IsRemote()) {
       RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
@@ -498,21 +514,30 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
         // presshell. This happens with async pinch zooming, among other
         // things. We can't reliably query this value in the parent process,
         // so we retrieve it from the document's cache.
-        Maybe<float> res;
         if (remoteAcc->IsDoc()) {
           // Apply the document's resolution to the bounds we've gathered
           // thus far. We do this before applying the document's offset
           // because document accs should not have their bounds scaled by
           // their own resolution. They should be scaled by the resolution
-          // of their containing document (if any). We also skip this in the
-          // case that remoteAcc == this, since that implies `bounds` should
-          // be scaled relative to its parent doc.
-          res = remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
-              nsGkAtoms::resolution);
+          // of their containing document (if any).
+          Maybe<float> res =
+              remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
+                  nsGkAtoms::resolution);
           MOZ_ASSERT(res, "No cached document resolution found.");
           bounds.ScaleRoundOut(res.valueOr(1.0f));
 
           topDoc = remoteAcc->AsDoc();
+        }
+
+        if (remoteAcc->IsOuterDoc()) {
+          if (recentAcc && recentAcc->IsDoc() &&
+              !recentAcc->AsDoc()->IsTopLevel() &&
+              recentAcc->AsDoc()->IsTopLevelInContentProcess()) {
+            // We're unable to account for the document offset of remote,
+            // cross process iframes when computing parent-relative bounds.
+            // Instead we store this value separately and apply it here.
+            remoteAcc->ApplyCrossProcOffset(remoteBounds);
+          }
         }
 
         // Apply scroll offset, if applicable. Only the contents of an
@@ -527,13 +552,13 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
         bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
         Unused << remoteAcc->ApplyTransform(bounds);
       }
-
+      recentAcc = remoteAcc;
       acc = acc->Parent();
     }
 
     MOZ_ASSERT(topDoc);
     if (topDoc) {
-      // We use the top documents app-unites-per-dev-pixel even though
+      // We use the top documents app-units-per-dev-pixel even though
       // theoretically nested docs can have different values. Practically,
       // that isn't likely since we only offer zoom controls for the top
       // document and all subdocuments inherit from it.

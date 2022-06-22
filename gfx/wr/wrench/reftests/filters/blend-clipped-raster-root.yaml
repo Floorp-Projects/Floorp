@@ -6,8 +6,12 @@ root:
       type: clip
       id: 3
     -
+      type: "clip-chain"
+      id: 4
+      clips: [3]
+    -
       bounds: [200, 200, 0, 0]
-      clip-node: 3
+      clip-chain: 4
       type: "stacking-context"
       transform: rotate(10)
       items:

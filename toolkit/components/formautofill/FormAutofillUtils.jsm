@@ -1291,8 +1291,6 @@ const LabelUtils = {
   },
 };
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
-
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle(
     "chrome://formautofill/locale/formautofill.properties"

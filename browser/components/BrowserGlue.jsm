@@ -103,9 +103,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
-// eslint-disable-next-line no-unused-vars
+// PluginManager is used in the listeners object below.
+// eslint-disable-next-line mozilla/valid-lazy
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
   PluginManager: "resource:///actors/PluginParent.jsm",
 });
 

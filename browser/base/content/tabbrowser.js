@@ -2094,7 +2094,6 @@
         contextmenu: "contentAreaContextMenu",
         message: "true",
         messagemanagergroup: "browsers",
-        selectmenulist: "ContentSelectDropdown",
         tooltip: "aHTMLTooltip",
         type: "content",
       };

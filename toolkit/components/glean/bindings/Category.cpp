@@ -8,6 +8,7 @@
 #include "mozilla/glean/bindings/Glean.h"
 #include "mozilla/glean/bindings/Category.h"
 #include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
+#include "mozilla/glean/bindings/jog/JOG.h"
 
 namespace mozilla::glean {
 
@@ -30,11 +31,14 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
   aFound = false;
 
   nsCString metricName;
-  metricName.AppendASCII(GetCategoryName(mId), mLength);
+  metricName.AppendASCII(mName);
   metricName.AppendLiteral(".");
   AppendUTF16toUTF8(aName, metricName);
 
-  Maybe<uint32_t> metricIdx = MetricByNameLookup(metricName);
+  Maybe<uint32_t> metricIdx = JOG::GetMetric(metricName);
+  if (metricIdx.isNothing() && !JOG::AreRuntimeMetricsComprehensive()) {
+    metricIdx = MetricByNameLookup(metricName);
+  }
 
   if (metricIdx.isNothing()) {
     aFound = false;
@@ -48,22 +52,22 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
 bool Category::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void Category::GetSupportedNames(nsTArray<nsString>& aNames) {
-  const char* category = GetCategoryName(mId);
+  // We don't get dynamic metric names because we don't want to store them.
+  if (!JOG::AreRuntimeMetricsComprehensive()) {
+    for (metric_entry_t entry : sMetricByNameLookupEntries) {
+      const char* identifierBuf = GetMetricIdentifier(entry);
+      nsDependentCString identifier(identifierBuf);
 
-  for (metric_entry_t entry : sMetricByNameLookupEntries) {
-    const char* identifier = GetMetricIdentifier(entry);
-
-    // We're iterating all metrics,
-    // so we need to check for the ones in the right category.
-    //
-    // We need to ensure that we found _only_ the exact category by checking it
-    // is followed by a dot.
-    // We need to check the category first to ensure the string is at least that
-    // long, so the check at `mLength` is valid.
-    if (strncmp(category, identifier, mLength) == 0 &&
-        identifier[mLength] == '.') {
-      const char* metricName = &identifier[mLength + 1];
-      aNames.AppendElement()->AssignASCII(metricName);
+      // We're iterating all metrics,
+      // so we need to check for the ones in the right category.
+      //
+      // We need to ensure that we found _only_ the exact category by checking
+      // it is followed by a dot.
+      if (identifier.Find(mName, false, 0, 1) == 0 &&
+          identifier.CharAt(mName.Length()) == '.') {
+        const char* metricName = &identifierBuf[mName.Length() + 1];
+        aNames.AppendElement()->AssignASCII(metricName);
+      }
     }
   }
 }

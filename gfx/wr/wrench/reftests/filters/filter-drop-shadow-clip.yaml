@@ -13,13 +13,16 @@ root:
     - type: clip
       id: 4
       bounds: [100, 100, 2000, 2000]
+    -
+      type: "clip-chain"
+      id: 6
+      clips: [4]
+    - type: stacking-context
+      bounds: [10, 10, 0, 0]
+      filters: drop-shadow([50, 50], 25, red)
+      clip-chain: 6
       items:
-        - type: stacking-context
-          bounds: [10, 10, 0, 0]
-          filters: drop-shadow([50, 50], 25, red)
-          clip-node: 4
-          items:
-            - type: rect
-              bounds: 0 0 256 256
-              color: green
-              clip-and-scroll: [root-scroll-node, 5]
+        - type: rect
+          bounds: 0 0 256 256
+          color: green
+          clip-and-scroll: [root-scroll-node, 5]

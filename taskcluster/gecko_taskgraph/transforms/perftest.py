@@ -5,20 +5,14 @@ This transform passes options from `mach perftest` to the corresponding task.
 """
 
 
+import json
 from copy import deepcopy
 from datetime import date, timedelta
-import json
-
-from voluptuous import (
-    Any,
-    Optional,
-    Extra,
-)
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
-from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
-
+from gecko_taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.treeherder import join_symbol, split_symbol
+from voluptuous import Any, Extra, Optional
 
 transforms = TransformSequence()
 

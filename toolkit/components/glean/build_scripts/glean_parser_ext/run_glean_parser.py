@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import cpp
+import jog
 import js
 import os
 import rust
@@ -97,7 +98,7 @@ def parse_with_options(input_files, options):
 
 
 # Must be kept in sync with the length of `deps` in moz.build.
-DEPS_LEN = 15
+DEPS_LEN = 16
 
 
 def main(output_fd, *args):
@@ -181,6 +182,8 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
         template.render(
             ids_to_probes=ids_to_probes,
             probe_type=probe_type,
+            id_bits=js.ID_BITS,
+            id_signal_bits=js.ID_SIGNAL_BITS,
         )
     )
     output_fd.write("\n")
@@ -192,6 +195,18 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
         template = env.get_template("gifft_events.jinja2")
         cpp_fd.write(template.render(all_objs=all_objs))
         cpp_fd.write("\n")
+
+
+def jog_factory(output_fd, *args):
+    args = args[DEPS_LEN:]
+    all_objs, options = parse(args)
+    jog.output_factory(all_objs, output_fd, options)
+
+
+def jog_yaml(output_fd, *args):
+    args = args[DEPS_LEN:]
+    all_objs, options = parse(args)
+    jog.output_yaml(all_objs, output_fd, options)
 
 
 if __name__ == "__main__":

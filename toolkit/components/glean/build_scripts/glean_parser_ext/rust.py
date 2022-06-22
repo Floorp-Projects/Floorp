@@ -13,6 +13,7 @@ import json
 
 import jinja2
 
+from js import ID_BITS, ID_SIGNAL_BITS
 from util import generate_metric_ids, generate_ping_ids, get_metrics
 from glean_parser import util
 from glean_parser.metrics import Rate
@@ -252,7 +253,7 @@ def output_rust(objs, output_fd, options={}):
             metric_by_type=objs_by_type,
             extra_args=util.extra_args,
             events_by_id=events_by_id,
-            min_submetric_id=2 ** 27 + 1,  # One more than 2**ID_BITS from js.py
+            submetric_bit=ID_BITS - ID_SIGNAL_BITS,
         )
     )
     output_fd.write("\n")

@@ -19,6 +19,10 @@ job-defaults:
         extra-options:
             - --setpref=toolkit.asyncshutdown.log=true
     test-manifest-loader: null  # don't load tests in the taskgraph
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     tier:
         by-variant:
             fission: default
