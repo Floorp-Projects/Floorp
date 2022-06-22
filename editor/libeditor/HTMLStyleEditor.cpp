@@ -768,13 +768,27 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
         !aContent.AsElement()->GetAttrCount()) {
       spanElement = aContent.AsElement();
     } else {
-      spanElement = InsertContainerWithTransaction(aContent, *nsGkAtoms::span);
-      if (!spanElement) {
+      CreateElementResult wrapWithSpanElementResult =
+          InsertContainerWithTransaction(aContent, *nsGkAtoms::span);
+      if (wrapWithSpanElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
             "failed");
-        return NS_ERROR_FAILURE;
+        return wrapWithSpanElementResult.unwrapErr();
       }
+      MOZ_ASSERT(wrapWithSpanElementResult.GetNewNode());
+      nsresult rv = wrapWithSpanElementResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+      spanElement = wrapWithSpanElementResult.UnwrapNewNode();
     }
 
     // Add the CSS styles corresponding to the HTML style request
@@ -816,12 +830,27 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
   }
 
   // ok, chuck it in its very own container
-  RefPtr<Element> newContainerElement = InsertContainerWithTransaction(
-      aContent, aProperty, aAttribute ? *aAttribute : *nsGkAtoms::_empty,
-      aValue);
-  NS_WARNING_ASSERTION(newContainerElement,
-                       "HTMLEditor::InsertContainerWithTransaction() failed");
-  return newContainerElement ? NS_OK : NS_ERROR_FAILURE;
+  const CreateElementResult wrapWithNewElementToFormatResult =
+      InsertContainerWithTransaction(
+          aContent, aProperty, aAttribute ? *aAttribute : *nsGkAtoms::_empty,
+          aValue);
+  if (wrapWithNewElementToFormatResult.isErr()) {
+    NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
+    return wrapWithNewElementToFormatResult.inspectErr();
+  }
+  MOZ_ASSERT(wrapWithNewElementToFormatResult.GetNewNode());
+  nsresult rv = wrapWithNewElementToFormatResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  return rv;
 }
 
 nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
@@ -1305,19 +1334,30 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
            aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_class))) {
         // Move `style` attribute and `class` element to span element before
         // removing aElement from the tree.
-        RefPtr<Element> spanElement =
+        CreateElementResult wrapWithSpanElementResult =
             InsertContainerWithTransaction(aElement, *nsGkAtoms::span);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (!spanElement) {
+        if (wrapWithSpanElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
               "failed");
-          return NS_ERROR_FAILURE;
+          return wrapWithSpanElementResult.unwrapErr();
         }
-        nsresult rv = CloneAttributeWithTransaction(*nsGkAtoms::style,
-                                                    *spanElement, aElement);
+        MOZ_ASSERT(wrapWithSpanElementResult.GetNewNode());
+        nsresult rv = wrapWithSpanElementResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+          return rv;
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+        const RefPtr<Element> spanElement =
+            wrapWithSpanElementResult.UnwrapNewNode();
+        rv = CloneAttributeWithTransaction(*nsGkAtoms::style, *spanElement,
+                                           aElement);
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -2676,10 +2716,11 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   }
 
   // Look for siblings that are correct type of node
-  nsAtom* nodeType = aDir == FontSize::incr ? nsGkAtoms::big : nsGkAtoms::small;
+  nsStaticAtom* const bigOrSmallTagName =
+      aDir == FontSize::incr ? nsGkAtoms::big : nsGkAtoms::small;
   nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
-  if (sibling && sibling->IsHTMLElement(nodeType)) {
+  if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Previous sib is already right kind of inline node; slide this over
     const MoveNodeResult moveTextNodeResult =
         MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
@@ -2702,7 +2743,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   }
   sibling = HTMLEditUtils::GetNextSibling(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
-  if (sibling && sibling->IsHTMLElement(nodeType)) {
+  if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Following sib is already right kind of inline node; slide this over
     const MoveNodeResult moveTextNodeResult = MoveNodeWithTransaction(
         *textNodeForTheRange, EditorDOMPoint(sibling, 0u));
@@ -2724,12 +2765,27 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     return NS_OK;
   }
 
-  // Else reparent the node inside font node with appropriate relative size
-  RefPtr<Element> newElement = InsertContainerWithTransaction(
-      *textNodeForTheRange, MOZ_KnownLive(*nodeType));
-  NS_WARNING_ASSERTION(newElement,
-                       "HTMLEditor::InsertContainerWithTransaction() failed");
-  return newElement ? NS_OK : NS_ERROR_FAILURE;
+  // Else wrap the node inside font node with appropriate relative size
+  const CreateElementResult wrapTextWithBigOrSmallElementResult =
+      InsertContainerWithTransaction(*textNodeForTheRange,
+                                     MOZ_KnownLive(*bigOrSmallTagName));
+  if (wrapTextWithBigOrSmallElementResult.isErr()) {
+    NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
+    return wrapTextWithBigOrSmallElementResult.inspectErr();
+  }
+  MOZ_ASSERT(wrapTextWithBigOrSmallElementResult.GetNewNode());
+  nsresult rv = wrapTextWithBigOrSmallElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  return rv;
 }
 
 nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
@@ -2800,12 +2856,8 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsAtom* atom;
-  if (aSizeChange == 1) {
-    atom = nsGkAtoms::big;
-  } else {
-    atom = nsGkAtoms::small;
-  }
+  nsStaticAtom* const bigOrSmallTagName =
+      aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
 
   // Is it the opposite of what we want?
   if ((aSizeChange == 1 && aNode->IsHTMLElement(nsGkAtoms::small)) ||
@@ -2835,7 +2887,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
   }
 
   // can it be put inside a "big" or "small"?
-  if (HTMLEditUtils::CanNodeContain(*atom, *aNode)) {
+  if (HTMLEditUtils::CanNodeContain(*bigOrSmallTagName, *aNode)) {
     // first populate any nested font tags that have the size attr set
     nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
     if (NS_FAILED(rv)) {
@@ -2848,7 +2900,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     // if we find one, move aNode into it.
     nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
         *aNode, {WalkTreeOption::IgnoreNonEditableNode});
-    if (sibling && sibling->IsHTMLElement(atom)) {
+    if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
       // previous sib is already right kind of inline node; slide this over into
       // it
       const MoveNodeResult moveNodeResult =
@@ -2873,7 +2925,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
 
     sibling = HTMLEditUtils::GetNextSibling(
         *aNode, {WalkTreeOption::IgnoreNonEditableNode});
-    if (sibling && sibling->IsHTMLElement(atom)) {
+    if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
       // following sib is already right kind of inline node; slide this over
       // into it
       const MoveNodeResult moveNodeResult =
@@ -2897,11 +2949,26 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     }
 
     // else insert it above aNode
-    RefPtr<Element> newElement =
-        InsertContainerWithTransaction(*aNode, MOZ_KnownLive(*atom));
-    NS_WARNING_ASSERTION(newElement,
-                         "HTMLEditor::InsertContainerWithTransaction() failed");
-    return newElement ? NS_OK : NS_ERROR_FAILURE;
+    const CreateElementResult wrapWithBigOrSmallElementResult =
+        InsertContainerWithTransaction(*aNode,
+                                       MOZ_KnownLive(*bigOrSmallTagName));
+    if (wrapWithBigOrSmallElementResult.isErr()) {
+      NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
+      return wrapWithBigOrSmallElementResult.inspectErr();
+    }
+    MOZ_ASSERT(wrapWithBigOrSmallElementResult.GetNewNode());
+    rv = wrapWithBigOrSmallElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return rv;
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    return rv;
   }
 
   // none of the above?  then cycle through the children.
