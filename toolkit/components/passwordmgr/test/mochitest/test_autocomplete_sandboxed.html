@@ -40,6 +40,10 @@ let pword;
 let hostname;
 
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["security.insecure_field_warning.contextual.enabled", true],
+  ]});
+
   let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
   // Can't use SimpleTest.promiseFocus as it doesn't work with the sandbox.
   await SimpleTest.promiseWaitForCondition(() => {

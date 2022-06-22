@@ -52,6 +52,12 @@ function promiseExecuteSoon() {
   return new Promise(SimpleTest.executeSoon);
 }
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["security.insecure_field_warning.contextual.enabled", true],
+  ]});
+});
+
 add_task(async function test_no_autofill_in_form() {
   sandboxed.src = "form_basic.html";
   let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;

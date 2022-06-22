@@ -349,8 +349,8 @@ class LoginAutoCompleteResult {
 
     this.searchString = aSearchString;
 
-    // Insecure field warning comes first.
-    if (!isSecure) {
+    // Insecure field warning comes first if it applies and is enabled.
+    if (!isSecure && lazy.LoginHelper.showInsecureFieldWarning) {
       this.#rows.push(new InsecureLoginFormAutocompleteItem());
     }
 

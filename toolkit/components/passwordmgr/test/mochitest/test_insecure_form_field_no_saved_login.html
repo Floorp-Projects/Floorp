@@ -33,6 +33,17 @@ let chromeScript = runChecksAfterCommonInit();
 
 /** Test for Login Manager: contextual insecure password warning without saved logins. **/
 
+// Set to pref before the document loads.
+let originalInsecureEnabled = SpecialPowers.getBoolPref(
+  "security.insecure_field_warning.contextual.enabled");
+SpecialPowers.setBoolPref(
+  "security.insecure_field_warning.contextual.enabled", true);
+
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.setBoolPref(
+    "security.insecure_field_warning.contextual.enabled", originalInsecureEnabled);
+});
+
 let uname = $_(1, "uname");
 let pword = $_(1, "pword");
 
