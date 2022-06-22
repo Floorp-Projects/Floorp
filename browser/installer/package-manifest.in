@@ -173,8 +173,6 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
-@RESPATH@/components/HandlerService.manifest
-@RESPATH@/components/HandlerService.js
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/servicesComponents.manifest
 @RESPATH@/components/servicesSettings.manifest
