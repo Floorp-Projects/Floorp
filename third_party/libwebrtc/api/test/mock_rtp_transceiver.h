@@ -70,10 +70,6 @@ class MockRtpTransceiver final
               HeaderExtensionsToOffer,
               (),
               (const, override));
-  MOCK_METHOD(std::vector<RtpHeaderExtensionCapability>,
-              HeaderExtensionsNegotiated,
-              (),
-              (const, override));
   MOCK_METHOD(webrtc::RTCError,
               SetOfferedRtpHeaderExtensions,
               (rtc::ArrayView<const RtpHeaderExtensionCapability>
