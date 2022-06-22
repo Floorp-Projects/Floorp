@@ -1685,18 +1685,6 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   encoded_image_.SetEncodedData(EncodedImageBuffer::Create(
       static_cast<const uint8_t*>(pkt->data.frame.buf), pkt->data.frame.sz));
 
-  const bool is_key_frame =
-      (pkt->data.frame.flags & VPX_FRAME_IS_KEY) ? true : false;
-  // Ensure encoder issued key frame on request.
-  RTC_DCHECK(is_key_frame || !force_key_frame_);
-
-  // Check if encoded frame is a key frame.
-  encoded_image_._frameType = VideoFrameType::kVideoFrameDelta;
-  if (is_key_frame) {
-    encoded_image_._frameType = VideoFrameType::kVideoFrameKey;
-    force_key_frame_ = false;
-  }
-
   codec_specific_ = {};
   absl::optional<int> spatial_index;
   if (!PopulateCodecSpecific(&codec_specific_, &spatial_index, *pkt,
@@ -1706,6 +1694,20 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
     return;
   }
   encoded_image_.SetSpatialIndex(spatial_index);
+
+  const bool is_key_frame =
+      ((pkt->data.frame.flags & VPX_FRAME_IS_KEY) ? true : false) &&
+      !codec_specific_.codecSpecific.VP9.inter_layer_predicted;
+
+  // Ensure encoder issued key frame on request.
+  RTC_DCHECK(is_key_frame || !force_key_frame_);
+
+  // Check if encoded frame is a key frame.
+  encoded_image_._frameType = VideoFrameType::kVideoFrameDelta;
+  if (is_key_frame) {
+    encoded_image_._frameType = VideoFrameType::kVideoFrameKey;
+    force_key_frame_ = false;
+  }
 
   UpdateReferenceBuffers(*pkt, pics_since_key_);
 
