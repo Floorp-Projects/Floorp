@@ -1616,6 +1616,52 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
   }
 
+  auto InsertLineBreakInstead =
+      [](const Element* aEditableBlockElement,
+         const EditorDOMPoint& aCandidatePointToSplit,
+         ParagraphSeparator aDefaultParagraphSeparator,
+         const Element& aEditingHost) {
+        // If there is no block parent in the editing host, i.e., the editing
+        // host itself is also a non-block element, we should insert a line
+        // break.
+        if (!aEditableBlockElement) {
+          // XXX Chromium checks if the CSS box of the editing host is a block.
+          return true;
+        }
+
+        // If the editable block element is not splittable, e.g., it's an
+        // editing host, and the default paragraph separator is <br> or the
+        // element cannot contain a <p> element, we should insert a <br>
+        // element.
+        if (!HTMLEditUtils::IsSplittableNode(*aEditableBlockElement)) {
+          return aDefaultParagraphSeparator == ParagraphSeparator::br ||
+                 !HTMLEditUtils::CanElementContainParagraph(aEditingHost) ||
+                 HTMLEditUtils::ShouldInsertLinefeedCharacter(
+                     aCandidatePointToSplit, aEditingHost);
+        }
+
+        // If the nearest block parent is a single-line container declared in
+        // the execCommand spec and not the editing host, we should separate the
+        // block even if the default paragraph separator is <br> element.
+        if (HTMLEditUtils::IsSingleLineContainer(*aEditableBlockElement)) {
+          return false;
+        }
+
+        // Otherwise, unless there is no block ancestor which can contain <p>
+        // element, we shouldn't insert a line break here.
+        for (const Element* editableBlockAncestor = aEditableBlockElement;
+             editableBlockAncestor;
+             editableBlockAncestor = HTMLEditUtils::GetAncestorElement(
+                 *editableBlockAncestor,
+                 HTMLEditUtils::ClosestEditableBlockElement)) {
+          if (HTMLEditUtils::CanElementContainParagraph(
+                  *editableBlockAncestor)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
   // Look for the nearest parent block.  However, don't return error even if
   // there is no block parent here because in such case, i.e., editing host
   // is an inline element, we should insert <br> simply.
@@ -1626,47 +1672,11 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
                 HTMLEditUtils::ClosestEditableBlockElement)
           : nullptr;
 
-  ParagraphSeparator separator = GetDefaultParagraphSeparator();
-  bool insertLineBreak;
-  // If there is no block parent in the editing host, i.e., the editing host
-  // itself is also a non-block element, we should insert a line break.
-  if (!editableBlockElement) {
-    // XXX Chromium checks if the CSS box of the editing host is a block.
-    insertLineBreak = true;
-  }
-  // If the editable block element is not splittable, e.g., it's an editing
-  // host, and the default paragraph separator is <br> or the element cannot
-  // contain a <p> element, we should insert a <br> element.
-  else if (!HTMLEditUtils::IsSplittableNode(*editableBlockElement)) {
-    insertLineBreak =
-        separator == ParagraphSeparator::br ||
-        !HTMLEditUtils::CanElementContainParagraph(aEditingHost) ||
-        HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
-                                                     aEditingHost);
-  }
-  // If the nearest block parent is a single-line container declared in
-  // the execCommand spec and not the editing host, we should separate the
-  // block even if the default paragraph separator is <br> element.
-  else if (HTMLEditUtils::IsSingleLineContainer(*editableBlockElement)) {
-    insertLineBreak = false;
-  }
-  // Otherwise, unless there is no block ancestor which can contain <p>
-  // element, we shouldn't insert a line break here.
-  else {
-    insertLineBreak = true;
-    for (const Element* editableBlockAncestor = editableBlockElement;
-         editableBlockAncestor && insertLineBreak;
-         editableBlockAncestor = HTMLEditUtils::GetAncestorElement(
-             *editableBlockAncestor,
-             HTMLEditUtils::ClosestEditableBlockElement)) {
-      insertLineBreak =
-          !HTMLEditUtils::CanElementContainParagraph(*editableBlockAncestor);
-    }
-  }
-
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element or a linefeed instead.
-  if (insertLineBreak) {
+  const ParagraphSeparator separator = GetDefaultParagraphSeparator();
+  if (InsertLineBreakInstead(editableBlockElement, atStartOfSelection,
+                             separator, aEditingHost)) {
     // For backward compatibility, we should not insert a linefeed if
     // paragraph separator is set to "br" which is Gecko-specific mode.
     if (separator != ParagraphSeparator::br &&
