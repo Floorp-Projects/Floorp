@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
-Cu.importGlobalProperties(['File']);
-
+var EXPORTED_SYMBOLS = ["TestFile"];
 
 const Assert = {
   ok(cond, text) {
@@ -16,11 +14,7 @@ const Assert = {
   }
 };
 
-function FileComponent() {
-  this.wrappedJSObject = this;
-}
-FileComponent.prototype =
-{
+var TestFile = {
   doTest: function(cb) {
     // throw if anything goes wrong
 
@@ -81,25 +75,4 @@ FileComponent.prototype =
       cb(true);
     });
   },
-
-  // nsIClassInfo + information for XPCOM registration code in
-  // ComponentUtils.jsm
-  classDescription: "File in components scope code",
-  classID: Components.ID("{da332370-91d4-464f-a730-018e14769cab}"),
-  contractID: "@mozilla.org/tests/component-file;1",
-
-  // nsIClassInfo
-  flags: 0,
-
-  interfaces: [Ci.nsIClassInfo],
-
-  getScriptableHelper: function getScriptableHelper() {
-    return null;
-  },
-
-  // nsISupports
-  QueryInterface: ChromeUtils.generateQI(["nsIClassInfo"])
 };
-
-var gComponentsArray = [FileComponent];
-this.NSGetFactory = ComponentUtils.generateNSGetFactory(gComponentsArray);
