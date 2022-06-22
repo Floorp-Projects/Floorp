@@ -38,7 +38,6 @@
 #include "ManifestParser.h"
 #include "nsNetUtil.h"
 #include "mozilla/Services.h"
-#include "mozJSComponentLoader.h"
 
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
@@ -665,15 +664,6 @@ void nsComponentManagerImpl::RegisterContractIDLocked(
   mContractIDs.InsertOrUpdate(AsLiteralCString(aEntry->contractid), f);
 }
 
-static void CutExtension(nsCString& aPath) {
-  int32_t dotPos = aPath.RFindChar('.');
-  if (kNotFound == dotPos) {
-    aPath.Truncate();
-  } else {
-    aPath.Cut(0, dotPos + 1);
-  }
-}
-
 static void DoRegisterManifest(NSLocationType aType, FileLocation& aFile,
                                bool aChromeOnly) {
   auto result = URLPreloader::Read(aFile);
@@ -698,80 +688,6 @@ void nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& aCx,
   char* file = aArgv[0];
   FileLocation f(aCx.mFile, file);
   RegisterManifest(aCx.mType, f, aCx.mChromeOnly);
-}
-
-void nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
-                                               int aLineNo,
-                                               char* const* aArgv) {
-  mLock.AssertNotCurrentThreadOwns();
-
-  char* id = aArgv[0];
-  char* file = aArgv[1];
-
-  nsID cid;
-  if (!cid.Parse(id)) {
-    LogMessageWithContext(aCx.mFile, aLineNo, "Malformed CID: '%s'.", id);
-    return;
-  }
-
-  // Precompute the hash/file data outside of the lock
-  FileLocation fl(aCx.mFile, file);
-  nsCString hash;
-  fl.GetURIString(hash);
-
-  Maybe<MonitorAutoLock> lock(std::in_place, mLock);
-  if (Maybe<EntryWrapper> f = LookupByCID(*lock, cid)) {
-    nsCString existing(f->ModuleDescription());
-
-    lock.reset();
-
-    LogMessageWithContext(
-        aCx.mFile, aLineNo,
-        "Trying to re-register CID '%s' already registered by %s.",
-        AutoIDString(cid).get(), existing.get());
-    return;
-  }
-
-  KnownModule* const km = mKnownModules.GetOrInsertNew(hash, fl);
-
-  void* place = mArena.Allocate(sizeof(nsCID));
-  nsID* permanentCID = static_cast<nsID*>(place);
-  *permanentCID = cid;
-
-  place = mArena.Allocate(sizeof(mozilla::Module::CIDEntry));
-  auto* e = new (KnownNotNull, place) mozilla::Module::CIDEntry();
-  e->cid = permanentCID;
-
-  mFactories.InsertOrUpdate(permanentCID, new nsFactoryEntry(e, km));
-}
-
-void nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& aCx,
-                                              int aLineNo, char* const* aArgv) {
-  mLock.AssertNotCurrentThreadOwns();
-
-  char* contract = aArgv[0];
-  char* id = aArgv[1];
-
-  nsID cid;
-  if (!cid.Parse(id)) {
-    LogMessageWithContext(aCx.mFile, aLineNo, "Malformed CID: '%s'.", id);
-    return;
-  }
-
-  Maybe<MonitorAutoLock> lock(std::in_place, mLock);
-  nsFactoryEntry* f = mFactories.Get(&cid);
-  if (!f) {
-    lock.reset();
-    LogMessageWithContext(aCx.mFile, aLineNo,
-                          "Could not map contract ID '%s' to CID %s because no "
-                          "implementation of the CID is registered.",
-                          contract, id);
-    return;
-  }
-
-  nsDependentCString contractString(contract);
-  StaticComponents::InvalidateContractID(nsDependentCString(contractString));
-  mContractIDs.InsertOrUpdate(contractString, f);
 }
 
 void nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& aCx,
@@ -801,22 +717,7 @@ bool nsComponentManagerImpl::KnownModule::Load() {
   if (mFailed) {
     return false;
   }
-  if (!mModule) {
-    nsCString extension;
-    mFile.GetURIString(extension);
-    CutExtension(extension);
-    if (!extension.Equals("js")) {
-      return false;
-    }
-
-    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
-    mModule = loader->LoadModule(mFile);
-
-    if (!mModule) {
-      mFailed = true;
-      return false;
-    }
-  }
+  MOZ_ASSERT(mModule);
   if (!mLoaded) {
     if (mModule->loadProc) {
       nsresult rv = mModule->loadProc();
@@ -831,13 +732,7 @@ bool nsComponentManagerImpl::KnownModule::Load() {
 }
 
 nsCString nsComponentManagerImpl::KnownModule::Description() const {
-  nsCString s;
-  if (mFile) {
-    mFile.GetURIString(s);
-  } else {
-    s = "<static module>";
-  }
-  return s;
+  return "<static module>"_ns;
 }
 
 nsresult nsComponentManagerImpl::Shutdown(void) {
@@ -854,7 +749,6 @@ nsresult nsComponentManagerImpl::Shutdown(void) {
   // Release all cached factories
   mContractIDs.Clear();
   mFactories.Clear();  // XXX release the objects, don't just clear
-  mKnownModules.Clear();
   mKnownStaticModules.Clear();
 
   StaticComponents::Shutdown();
@@ -1673,9 +1567,6 @@ size_t nsComponentManagerImpl::SizeOfIncludingThis(
   }
 
   n += mKnownStaticModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  n += mKnownModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
-
-  n += mArena.SizeOfExcludingThis(aMallocSizeOf);
 
   n += mPendingServices.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
@@ -1684,7 +1575,6 @@ size_t nsComponentManagerImpl::SizeOfIncludingThis(
   // - mMon
   // - sModuleLocations' entries
   // - mKnownStaticModules' entries?
-  // - mKnownModules' keys and values?
 
   return n;
 }
