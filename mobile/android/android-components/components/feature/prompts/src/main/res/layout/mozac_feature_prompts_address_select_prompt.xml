@@ -29,7 +29,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
                 android:paddingEnd="56dp"
-                android:text="@string/mozac_feature_prompts_select_address"
+                android:text="@string/mozac_feature_prompts_select_address_2"
                 android:textColor="?android:colorEdgeEffect"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
