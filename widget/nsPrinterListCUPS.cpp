@@ -98,18 +98,27 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   };
 
   nsTArray<PrinterInfo> printerInfoList;
-  if (CupsShim().cupsEnumDests(
-          CUPS_DEST_FLAGS_NONE,
-          int(StaticPrefs::print_cups_enum_dests_timeout_ms()),
-          nullptr /* cancel* */, CUPS_PRINTER_LOCAL,
-          CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER, &CupsDestCallback,
-          &printerInfoList)) {
+  // cupsGetDests2 returns list of found printers without duplicates, unlike
+  // cupsEnumDests
+  cups_dest_t* printers = nullptr;
+  const auto numPrinters = CupsShim().cupsGetDests2(nullptr, &printers);
+  if (numPrinters > 0) {
+    for (auto i : mozilla::IntegerRange(0, numPrinters)) {
+      cups_dest_t* ownedDest = nullptr;
+      mozilla::DebugOnly<const int> numCopied =
+          CupsShim().cupsCopyDest(printers + i, 0, &ownedDest);
+      MOZ_ASSERT(numCopied == 1);
+
+      nsString name;
+      GetDisplayNameForPrinter(*(printers + i), name);
+      printerInfoList.AppendElement(PrinterInfo{std::move(name), ownedDest});
+    }
+    CupsShim().cupsFreeDests(numPrinters, printers);
     return printerInfoList;
   }
 
   // An error occurred - retry with CUPS_PRINTER_DISCOVERED masked out (since
   // it looks like there are a lot of error cases for that in cupsEnumDests):
-  FreeDestsAndClear(printerInfoList);
   if (CupsShim().cupsEnumDests(
           CUPS_DEST_FLAGS_NONE,
           0 /* 0 timeout should be okay when masking CUPS_PRINTER_DISCOVERED */,
