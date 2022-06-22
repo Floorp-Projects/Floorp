@@ -18,8 +18,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_timing.h"
+#include "modules/video_coding/frame_helpers.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/jitter_estimator.h"
 #include "modules/video_coding/timing.h"
@@ -252,7 +254,8 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
   int64_t render_time_ms = first_frame.RenderTime();
   int64_t receive_time_ms = first_frame.ReceivedTime();
   // Gracefully handle bad RTP timestamps and render time issues.
-  if (HasBadRenderTiming(first_frame, now_ms)) {
+  if (FrameHasBadRenderTiming(first_frame.RenderTimeMs(), now_ms,
+                              timing_->TargetVideoDelay())) {
     jitter_estimator_.Reset();
     timing_->Reset();
     render_time_ms = timing_->RenderTimeMs(first_frame.Timestamp(), now_ms);
@@ -337,35 +340,6 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
   } else {
     return CombineAndDeleteFrames(std::move(frames_out));
   }
-}
-
-bool FrameBuffer::HasBadRenderTiming(const EncodedFrame& frame,
-                                     int64_t now_ms) {
-  // Assume that render timing errors are due to changes in the video stream.
-  int64_t render_time_ms = frame.RenderTimeMs();
-  // Zero render time means render immediately.
-  if (render_time_ms == 0) {
-    return false;
-  }
-  if (render_time_ms < 0) {
-    return true;
-  }
-  const int64_t kMaxVideoDelayMs = 10000;
-  if (std::abs(render_time_ms - now_ms) > kMaxVideoDelayMs) {
-    int frame_delay = static_cast<int>(std::abs(render_time_ms - now_ms));
-    RTC_LOG(LS_WARNING)
-        << "A frame about to be decoded is out of the configured "
-           "delay bounds ("
-        << frame_delay << " > " << kMaxVideoDelayMs
-        << "). Resetting the video jitter buffer.";
-    return true;
-  }
-  if (static_cast<int>(timing_->TargetVideoDelay()) > kMaxVideoDelayMs) {
-    RTC_LOG(LS_WARNING) << "The video target delay has grown larger than "
-                        << kMaxVideoDelayMs << " ms.";
-    return true;
-  }
-  return false;
 }
 
 void FrameBuffer::SetProtectionMode(VCMVideoProtection mode) {
@@ -716,39 +690,11 @@ void FrameBuffer::ClearFramesAndHistory() {
 std::unique_ptr<EncodedFrame> FrameBuffer::CombineAndDeleteFrames(
     std::vector<std::unique_ptr<EncodedFrame>> frames) const {
   RTC_DCHECK(!frames.empty());
-  size_t total_length = 0;
-  for (const auto& frame : frames) {
-    total_length += frame->size();
+  absl::InlinedVector<std::unique_ptr<EncodedFrame>, 4> inlined;
+  for (auto& frame : frames) {
+    inlined.push_back(std::move(frame));
   }
-  const EncodedFrame& last_frame = *frames.back();
-  std::unique_ptr<EncodedFrame> first_frame = std::move(frames[0]);
-  auto encoded_image_buffer = EncodedImageBuffer::Create(total_length);
-  uint8_t* buffer = encoded_image_buffer->data();
-  first_frame->SetSpatialLayerFrameSize(first_frame->SpatialIndex().value_or(0),
-                                        first_frame->size());
-  memcpy(buffer, first_frame->data(), first_frame->size());
-  buffer += first_frame->size();
-
-  // Spatial index of combined frame is set equal to spatial index of its top
-  // spatial layer.
-  first_frame->SetSpatialIndex(last_frame.SpatialIndex().value_or(0));
-
-  first_frame->video_timing_mutable()->network2_timestamp_ms =
-      last_frame.video_timing().network2_timestamp_ms;
-  first_frame->video_timing_mutable()->receive_finish_ms =
-      last_frame.video_timing().receive_finish_ms;
-
-  // Append all remaining frames to the first one.
-  for (size_t i = 1; i < frames.size(); ++i) {
-    // Let |next_frame| fall out of scope so it is deleted after copying.
-    std::unique_ptr<EncodedFrame> next_frame = std::move(frames[i]);
-    first_frame->SetSpatialLayerFrameSize(
-        next_frame->SpatialIndex().value_or(0), next_frame->size());
-    memcpy(buffer, next_frame->data(), next_frame->size());
-    buffer += next_frame->size();
-  }
-  first_frame->SetEncodedData(encoded_image_buffer);
-  return first_frame;
+  return webrtc::CombineAndDeleteFrames(std::move(inlined));
 }
 
 FrameBuffer::FrameInfo::FrameInfo() = default;

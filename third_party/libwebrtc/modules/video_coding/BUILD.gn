@@ -148,6 +148,18 @@ rtc_library("h264_packet_buffer") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("frame_helpers") {
+  sources = [
+    "frame_helpers.cc",
+    "frame_helpers.h",
+  ]
+  deps = [
+    "../../api/video:encoded_frame",
+    "../../rtc_base:logging",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
+}
+
 rtc_library("frame_buffer") {
   sources = [
     "frame_buffer3.cc",
@@ -229,6 +241,7 @@ rtc_library("video_coding") {
     ":codec_globals_headers",
     ":encoded_frame",
     ":frame_buffer",
+    ":frame_helpers",
     ":packet_buffer",
     ":video_codec_interface",
     ":video_coding_utility",
