@@ -6,7 +6,7 @@
 const { extensionStorageSync: rustImpl } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageSync.jsm"
 );
-const { extensionStorageSync: kintoImpl } = ChromeUtils.import(
+const { extensionStorageSyncKinto: kintoImpl } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );
 

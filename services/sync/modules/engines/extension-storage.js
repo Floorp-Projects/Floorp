@@ -25,18 +25,13 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LogAdapter: "resource://services-sync/bridged_engine.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
+  extensionStorageSyncKinto:
+    "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
   Observers: "resource://services-common/observers.js",
   Svc: "resource://services-sync/util.js",
   SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.js",
   MULTI_DEVICE_THRESHOLD: "resource://services-sync/constants.js",
 });
-
-XPCOMUtils.defineLazyModuleGetter(
-  lazy,
-  "extensionStorageSyncKinto",
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-  "extensionStorageSync"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
