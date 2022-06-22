@@ -455,13 +455,13 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs"
       );
     });
-    it("should return enough stories to fill a compact layout", async () => {
+    it("should return enough stories to fill a four card layout", async () => {
       feed.config.hardcoded_layout = true;
 
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
-            pocketConfig: { compactLayout: true },
+            pocketConfig: { fourCardLayout: true },
           },
         },
       });
