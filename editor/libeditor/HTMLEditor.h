@@ -1495,16 +1495,26 @@ class HTMLEditor final : public EditorBase,
   /**
    * HandleInsertParagraphInParagraph() does the right thing for Enter key
    * press or 'insertParagraph' command in aParentDivOrP.  aParentDivOrP will
-   * be split at start of first selection range.
+   * be split **around** aCandidatePointToSplit.  If this thinks that it should
+   * be handled to insert a <br> instead, this returns "not handled".
    *
    * @param aParentDivOrP   The parent block.  This must be <p> or <div>
    *                        element.
+   * @param aCandidatePointToSplit
+   *                        The point where the caller want to split
+   *                        aParentDivOrP.  However, in some cases, this is not
+   *                        used as-is.  E.g., this method avoids to create new
+   *                        empty <a href> in the right paragraph.  So this may
+   *                        be adjusted to proper position around it.
+   * @param aEditingHost    The editing host.
    * @return                Returns with NS_OK if this doesn't meat any
    *                        unexpected situation.  If this method tries to
    *                        split the paragraph, marked as handled.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleInsertParagraphInParagraph(Element& aParentDivOrP);
+  HandleInsertParagraphInParagraph(Element& aParentDivOrP,
+                                   const EditorDOMPoint& aCandidatePointToSplit,
+                                   const Element& aEditingHost);
 
   /**
    * HandleInsertParagraphInHeadingElement() handles insertParagraph command

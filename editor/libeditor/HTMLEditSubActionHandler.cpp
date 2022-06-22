@@ -1862,9 +1862,16 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
        editableBlockElement->IsAnyOfHTMLElements(nsGkAtoms::p,
                                                  nsGkAtoms::div))) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
+
+    const auto firstRangeStartPoint =
+        EditorBase::GetFirstSelectionStartPoint<EditorDOMPoint>();
+    if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result =
-        HandleInsertParagraphInParagraph(*editableBlockElement);
+    EditActionResult result = HandleInsertParagraphInParagraph(
+        *editableBlockElement, firstRangeStartPoint, aEditingHost);
     if (result.Failed()) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
       return result;
@@ -7142,19 +7149,9 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
 }
 
 EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
-    Element& aParentDivOrP) {
+    Element& aParentDivOrP, const EditorDOMPoint& aCandidatePointToSplit,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  nsRange* firstRange = SelectionRef().GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
-
-  // TODO: Make this the second argument of this method.
-  const EditorDOMPoint aCandidatePointToSplit(firstRange->StartRef());
-  if (NS_WARN_IF(!aCandidatePointToSplit.IsSet())) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
   MOZ_ASSERT(aCandidatePointToSplit.IsSetAndValid());
 
   const EditorDOMPoint pointToSplitAvoidingEmptyNewLink = [&]() {
@@ -7365,21 +7362,15 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   } else {
     // not in a text node.
     // is there a BR prior to it?
-    Element* editingHost = ComputeEditingHost();
-    brElement = HTMLBRElement::FromNodeOrNull(
-        editingHost ? HTMLEditUtils::GetPreviousContent(
-                          pointToSplitAvoidingEmptyNewLink,
-                          {WalkTreeOption::IgnoreNonEditableNode}, editingHost)
-                    : nullptr);
+    brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
+        pointToSplitAvoidingEmptyNewLink,
+        {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost));
     if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
         EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
       // is there a BR after it?
-      brElement = HTMLBRElement::FromNodeOrNull(
-          editingHost
-              ? HTMLEditUtils::GetNextContent(
-                    pointToSplitAvoidingEmptyNewLink,
-                    {WalkTreeOption::IgnoreNonEditableNode}, editingHost)
-              : nullptr);
+      brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
+          pointToSplitAvoidingEmptyNewLink,
+          {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
         // If insertParagraph does not create a new paragraph, default to
