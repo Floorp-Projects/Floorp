@@ -81,7 +81,6 @@ class ChannelManager final {
   // Creates a voice channel, to be associated with the specified session.
   VoiceChannel* CreateVoiceChannel(webrtc::Call* call,
                                    const MediaConfig& media_config,
-                                   webrtc::RtpTransportInternal* rtp_transport,
                                    rtc::Thread* signaling_thread,
                                    const std::string& content_name,
                                    bool srtp_required,
@@ -97,7 +96,6 @@ class ChannelManager final {
   VideoChannel* CreateVideoChannel(
       webrtc::Call* call,
       const MediaConfig& media_config,
-      webrtc::RtpTransportInternal* rtp_transport,
       rtc::Thread* signaling_thread,
       const std::string& content_name,
       bool srtp_required,

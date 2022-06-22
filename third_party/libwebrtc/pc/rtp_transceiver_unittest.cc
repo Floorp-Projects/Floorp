@@ -36,13 +36,19 @@ namespace webrtc {
 TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
   auto cm = cricket::ChannelManager::Create(
       nullptr, true, rtc::Thread::Current(), rtc::Thread::Current());
+  const std::string content_name("my_mid");
   RtpTransceiver transceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, cm.get());
   cricket::MockChannelInterface channel1;
   EXPECT_CALL(channel1, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
+  EXPECT_CALL(channel1, content_name()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(channel1, SetFirstPacketReceivedCallback(_));
+  EXPECT_CALL(channel1, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
-  transceiver.SetChannel(&channel1);
+  transceiver.SetChannel(&channel1, [&](const std::string& mid) {
+    EXPECT_EQ(mid, content_name);
+    return nullptr;
+  });
   EXPECT_EQ(&channel1, transceiver.channel());
 
   // Stop the transceiver.
@@ -54,7 +60,7 @@ TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
 
   // Channel can no longer be set, so this call should be a no-op.
-  transceiver.SetChannel(&channel2);
+  transceiver.SetChannel(&channel2, [](const std::string&) { return nullptr; });
   EXPECT_EQ(&channel1, transceiver.channel());
 }
 
@@ -62,14 +68,20 @@ TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
 TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   auto cm = cricket::ChannelManager::Create(
       nullptr, true, rtc::Thread::Current(), rtc::Thread::Current());
+  const std::string content_name("my_mid");
   RtpTransceiver transceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, cm.get());
   cricket::MockChannelInterface channel;
   EXPECT_CALL(channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
+  EXPECT_CALL(channel, content_name()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(channel, SetFirstPacketReceivedCallback(_))
       .WillRepeatedly(testing::Return());
+  EXPECT_CALL(channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
-  transceiver.SetChannel(&channel);
+  transceiver.SetChannel(&channel, [&](const std::string& mid) {
+    EXPECT_EQ(mid, content_name);
+    return nullptr;
+  });
   EXPECT_EQ(&channel, transceiver.channel());
 
   // Stop the transceiver.
@@ -77,7 +89,7 @@ TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   EXPECT_EQ(&channel, transceiver.channel());
 
   // Set the channel to `nullptr`.
-  transceiver.SetChannel(nullptr);
+  transceiver.SetChannel(nullptr, nullptr);
   EXPECT_EQ(nullptr, transceiver.channel());
 }
 
@@ -279,6 +291,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
 
 TEST_F(RtpTransceiverTestForHeaderExtensions,
        NoNegotiatedHdrExtsWithChannelWithoutNegotiation) {
+  const std::string content_name("my_mid");
   EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
   EXPECT_CALL(*receiver_.get(), StopAndEndTrack());
   EXPECT_CALL(*sender_.get(), SetMediaChannel(_));
@@ -289,11 +302,16 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
-  transceiver_.SetChannel(&mock_channel);
+  EXPECT_CALL(mock_channel, content_name())
+      .WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
+  transceiver_.SetChannel(&mock_channel,
+                          [](const std::string&) { return nullptr; });
   EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(), ElementsAre());
 }
 
 TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
+  const std::string content_name("my_mid");
   EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
   EXPECT_CALL(*receiver_.get(), StopAndEndTrack());
   EXPECT_CALL(*sender_.get(), SetMediaChannel(_));
@@ -305,6 +323,9 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(mock_channel, content_name())
+      .WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
   cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
                                              webrtc::RtpExtension("uri2", 2)};
@@ -312,7 +333,8 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
   description.set_rtp_header_extensions(extensions);
   transceiver_.OnNegotiationUpdate(SdpType::kAnswer, &description);
 
-  transceiver_.SetChannel(&mock_channel);
+  transceiver_.SetChannel(&mock_channel,
+                          [](const std::string&) { return nullptr; });
   EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
               ElementsAre(RtpHeaderExtensionCapability(
                               "uri1", 1, RtpTransceiverDirection::kSendRecv),

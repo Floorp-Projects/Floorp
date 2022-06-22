@@ -280,11 +280,11 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     network_thread_->Invoke<void>(RTC_FROM_HERE, [this]() {
       if (channel1_) {
         RTC_DCHECK_RUN_ON(channel1_->network_thread());
-        channel1_->Deinit_n();
+        channel1_->SetRtpTransport(nullptr);
       }
       if (channel2_) {
         RTC_DCHECK_RUN_ON(channel2_->network_thread());
-        channel2_->Deinit_n();
+        channel2_->SetRtpTransport(nullptr);
       }
     });
   }
@@ -1450,7 +1450,7 @@ std::unique_ptr<cricket::VoiceChannel> ChannelTest<VoiceTraits>::CreateChannel(
       &ssrc_generator_);
   network_thread->Invoke<void>(RTC_FROM_HERE, [&]() {
     RTC_DCHECK_RUN_ON(channel->network_thread());
-    channel->Init_n(rtp_transport);
+    channel->SetRtpTransport(rtp_transport);
   });
   return channel;
 }
@@ -1536,7 +1536,7 @@ std::unique_ptr<cricket::VideoChannel> ChannelTest<VideoTraits>::CreateChannel(
       &ssrc_generator_);
   network_thread->Invoke<void>(RTC_FROM_HERE, [&]() {
     RTC_DCHECK_RUN_ON(channel->network_thread());
-    channel->Init_n(rtp_transport);
+    channel->SetRtpTransport(rtp_transport);
   });
   return channel;
 }

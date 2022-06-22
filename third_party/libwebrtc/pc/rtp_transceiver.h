@@ -100,8 +100,36 @@ class RtpTransceiver final
   cricket::ChannelInterface* channel() const { return channel_; }
 
   // Sets the Voice/VideoChannel. The caller must pass in the correct channel
-  // implementation based on the type of the transceiver.
-  void SetChannel(cricket::ChannelInterface* channel);
+  // implementation based on the type of the transceiver.  The call must
+  // furthermore be made on the signaling thread.
+  //
+  // `channel`: The channel instance to be associated with the transceiver.
+  //     When a valid pointer is passed for `channel`, the state of the object
+  //     is expected to be newly constructed and not initalized for network
+  //     activity (see next parameter for more).
+  //
+  //     NOTE: For all practical purposes, the ownership of the channel
+  //     object should be considered to lie with the transceiver until
+  //     `SetChannel()` is called again with nullptr set as the new channel.
+  //     Moving forward, this parameter will change to either be a
+  //     std::unique_ptr<> or the full construction of the channel object will
+  //     be moved to happen within the context of the transceiver class.
+  //
+  // `transport_lookup`: When `channel` points to a valid channel object, this
+  //     callback function will be used to look up the `RtpTransport` object
+  //     to associate with the channel via `BaseChannel::SetRtpTransport`.
+  //     The lookup function will be called on the network thread, synchronously
+  //     during the call to `SetChannel`.  This means that the caller of
+  //     `SetChannel()` may provide a callback function that references state
+  //     that exists within the calling scope of SetChannel (e.g. a variable
+  //     on the stack).
+  //     The reason for this design is to limit the number of times we jump
+  //     synchronously to the network thread from the signaling thread.
+  //     The callback allows us to combine the transport lookup with network
+  //     state initialization of the channel object.
+  void SetChannel(cricket::ChannelInterface* channel,
+                  std::function<RtpTransportInternal*(const std::string&)>
+                      transport_lookup);
 
   // Adds an RtpSender of the appropriate type to be owned by this transceiver.
   // Must not be null.

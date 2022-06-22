@@ -122,14 +122,18 @@ class RtpSenderReceiverTest
     rtp_transport_ = CreateDtlsSrtpTransport();
 
     voice_channel_ = channel_manager_->CreateVoiceChannel(
-        &fake_call_, cricket::MediaConfig(), rtp_transport_.get(),
-        rtc::Thread::Current(), cricket::CN_AUDIO, srtp_required,
-        webrtc::CryptoOptions(), &ssrc_generator_, cricket::AudioOptions());
+        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
+        cricket::CN_AUDIO, srtp_required, webrtc::CryptoOptions(),
+        &ssrc_generator_, cricket::AudioOptions());
     video_channel_ = channel_manager_->CreateVideoChannel(
-        &fake_call_, cricket::MediaConfig(), rtp_transport_.get(),
-        rtc::Thread::Current(), cricket::CN_VIDEO, srtp_required,
-        webrtc::CryptoOptions(), &ssrc_generator_, cricket::VideoOptions(),
+        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
+        cricket::CN_VIDEO, srtp_required, webrtc::CryptoOptions(),
+        &ssrc_generator_, cricket::VideoOptions(),
         video_bitrate_allocator_factory_.get());
+
+    voice_channel_->SetRtpTransport(rtp_transport_.get());
+    video_channel_->SetRtpTransport(rtp_transport_.get());
+
     voice_channel_->Enable(true);
     video_channel_->Enable(true);
     voice_media_channel_ = media_engine_->GetVoiceChannel(0);
@@ -169,6 +173,9 @@ class RtpSenderReceiverTest
     local_stream_ = nullptr;
     video_track_ = nullptr;
     audio_track_ = nullptr;
+
+    voice_channel_->SetRtpTransport(nullptr);
+    video_channel_->SetRtpTransport(nullptr);
 
     channel_manager_->DestroyVoiceChannel(voice_channel_);
     channel_manager_->DestroyVideoChannel(video_channel_);
