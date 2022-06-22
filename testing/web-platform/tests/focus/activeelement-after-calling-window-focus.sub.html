@@ -16,10 +16,6 @@ function waitForEvent(target, event, checkFn) {
   });
 }
 
-function start(w) {
-  w.postMessage("start", "*");
-}
-
 function focusInnerInput(w) {
   w.postMessage("focusinnerinput", "*");
 }
@@ -55,7 +51,6 @@ async function runTest(t, url) {
   let w = window.open(url);
   t.add_cleanup(() => { w.close(); });
   await waitForEvent(window, "message", e => e.data === "ready");
-  start(w);
   // Calling input.focus() on inner iframe should move its document.activeElement to INPUT.
   focusInnerInput(w);
   assert_equals(await getLog(w), 'outerlog:windowblur,middlelog:innerlog:windowfocus,INPUT,');
