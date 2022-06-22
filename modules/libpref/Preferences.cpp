@@ -451,6 +451,10 @@ class Pref;
 static bool ShouldSanitizePreference(const Pref* const aPref,
                                      bool aIsWebContentProcess = true);
 
+// Note that this never changes in the parent process, and is only read in
+// content processes.
+static bool gContentProcessPrefsAreInited = false;
+
 class Pref {
  public:
   explicit Pref(const nsACString& aName)
@@ -532,7 +536,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -548,7 +552,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -565,7 +569,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -1039,7 +1043,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
         // This check will be performed in the above functions; but for NoneType
         // we need to do it explicitly, then fall-through.
         if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-            ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+            gContentProcessPrefsAreInited && ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
           MOZ_CRASH_UNSAFE_PRINTF(
               "Should not access the preference '%s' in the Content Processes",
               Name());
@@ -1056,7 +1060,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
     // WantValueKind may short-circuit GetValue functions and cause them to
     // return early, before this check occurs in GetFooValue()
     if (this->is<Pref*>() && !XRE_IsParentProcess() &&
-        sCrashOnBlocklistedPref &&
+        sCrashOnBlocklistedPref && gContentProcessPrefsAreInited &&
         ShouldSanitizePreference(this->as<Pref*>(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -1065,7 +1069,7 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
       // While we could use Name() above, and avoid the Variant checks, it
       // would less efficient than needed and we can instead do a debug-only
       // assert here to limit the inefficientcy
-      MOZ_ASSERT(!(!XRE_IsParentProcess() &&
+      MOZ_ASSERT(!(!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
                    ShouldSanitizePreference(Name(), XRE_IsContentProcess())),
                  "We should never have a sanitized SharedPrefMap::Pref.");
     }
@@ -1600,14 +1604,6 @@ static PrefSaveData pref_savePrefs() {
 
   return savedPrefs;
 }
-
-#ifdef DEBUG
-
-// Note that this never changes in the parent process, and is only read in
-// content processes.
-static bool gContentProcessPrefsAreInited = false;
-
-#endif  // DEBUG
 
 static Pref* pref_HashTableLookup(const char* aPrefName) {
   MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
@@ -3693,10 +3689,8 @@ void Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen) {
   // memory. (aPrefsLen includes the '\0'.)
   MOZ_ASSERT(p == aStr + aPrefsLen - 1);
 
-#ifdef DEBUG
   MOZ_ASSERT(!gContentProcessPrefsAreInited);
   gContentProcessPrefsAreInited = true;
-#endif
 }
 
 // Forward declarations.
@@ -5737,7 +5731,7 @@ static void InitStaticPrefsFromShared() {
   {                                                                            \
     StripAtomic<cpp_type> val;                                                 \
     if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        sCrashOnBlocklistedPref) {                                             \
+        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
@@ -5750,7 +5744,7 @@ static void InitStaticPrefsFromShared() {
   {                                                                            \
     cpp_type val;                                                              \
     if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        sCrashOnBlocklistedPref) {                                             \
+        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
