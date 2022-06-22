@@ -59,7 +59,11 @@ class RTC_EXPORT DesktopCapturer {
     virtual ~Callback() {}
   };
 
+#if defined(CHROMEOS)
+  typedef int64_t SourceId;
+#else
   typedef intptr_t SourceId;
+#endif
 
   static_assert(std::is_same<SourceId, ScreenId>::value,
                 "SourceId should be a same type as ScreenId.");
