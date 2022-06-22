@@ -29,11 +29,7 @@ loader.lazyRequireGetter(
   "devtools/client/shared/widgets/TableWidget",
   true
 );
-loader.lazyImporter(
-  this,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
 loader.lazyImporter(
   this,
   "VariablesView",
@@ -197,7 +193,11 @@ class StorageUI {
     this.onRefreshTable = this.onRefreshTable.bind(this);
     this.onAddItem = this.onAddItem.bind(this);
     this.onCopyItem = this.onCopyItem.bind(this);
-    this.onPanelWindowResize = this.#onPanelWindowResize.bind(this);
+    this.onPanelWindowResize = debounce(
+      this.#onLazyPanelResize,
+      LAZY_RESIZE_INTERVAL_MS,
+      this
+    );
     this.onRemoveItem = this.onRemoveItem.bind(this);
     this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
     this.onRemoveAll = this.onRemoveAll.bind(this);
@@ -459,7 +459,7 @@ class StorageUI {
     );
     this.sidebarToggleBtn = null;
 
-    this._window.removeEventListener("resize", this.#onPanelWindowResize, true);
+    this._window.removeEventListener("resize", this.#onLazyPanelResize, true);
 
     this._treePopup.removeEventListener(
       "popupshowing",
@@ -689,25 +689,6 @@ class StorageUI {
     if (added || deleted || changed) {
       this.emit("store-objects-edit");
     }
-  }
-
-  /**
-   * Debounce the window resize event by calling _onLazyPanelResize() if
-   * the required amount of time has passed.
-   */
-  #onPanelWindowResize() {
-    if (this._toolbox.currentToolId !== "storage") {
-      return;
-    }
-
-    if (!this._lazyResizeHandler) {
-      this._lazyResizeHandler = new DeferredTask(
-        this.#onLazyPanelResize.bind(this),
-        LAZY_RESIZE_INTERVAL_MS,
-        0
-      );
-    }
-    this._lazyResizeHandler.arm();
   }
 
   /**
@@ -1460,7 +1441,11 @@ class StorageUI {
    * Load the next batch of 50 items
    */
   async loadMoreItems() {
-    if (!this.shouldLoadMoreItems) {
+    if (
+      !this.shouldLoadMoreItems ||
+      this._toolbox.currentToolId !== "storage" ||
+      !this.tree.selectedItem
+    ) {
       return;
     }
     this.shouldLoadMoreItems = false;
