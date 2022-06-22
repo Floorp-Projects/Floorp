@@ -84,6 +84,7 @@ struct CacheResponse
   PrincipalInfo? principalInfo;
   uint32_t paddingInfo;
   int64_t paddingSize;
+  RequestCredentials credentials;
 };
 
 struct CacheRequestResponse
