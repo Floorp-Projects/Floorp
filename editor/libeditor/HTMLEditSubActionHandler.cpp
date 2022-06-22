@@ -7235,12 +7235,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   }();
 
   const bool createNewParagraph = GetReturnInParagraphCreatesNewParagraph();
-  bool splitAfterNewBR = false;
   RefPtr<HTMLBRElement> brElement;
-
-  EditorDOMPoint pointToSplitParentDivOrP(pointToSplitAvoidingEmptyNewLink);
-
-  EditorDOMPoint pointToInsertBR;
+  EditorDOMPoint pointToSplit(pointToSplitAvoidingEmptyNewLink);
   if (createNewParagraph &&
       pointToSplitAvoidingEmptyNewLink.GetContainer() == &aParentDivOrP) {
     // We are at the edges of the block, so, we don't need to create new <br>.
@@ -7249,12 +7245,10 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
     // at beginning of text node?
     if (pointToSplitAvoidingEmptyNewLink.IsStartOfContainer()) {
       // is there a BR prior to it?
-      brElement = HTMLBRElement::FromNodeOrNull(
-          pointToSplitAvoidingEmptyNewLink.IsInContentNode()
-              ? HTMLEditUtils::GetPreviousSibling(
-                    *pointToSplitAvoidingEmptyNewLink.ContainerAsContent(),
-                    {WalkTreeOption::IgnoreNonEditableNode})
-              : nullptr);
+      brElement =
+          HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
+              *pointToSplitAvoidingEmptyNewLink.ContainerAsText(),
+              {WalkTreeOption::IgnoreNonEditableNode}));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
         // If insertParagraph does not create a new paragraph, default to
@@ -7262,19 +7256,28 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        pointToInsertBR.Set(pointToSplitAvoidingEmptyNewLink.GetContainer());
+        const EditorDOMPoint pointToInsertBR =
+            pointToSplitAvoidingEmptyNewLink.ParentPoint();
         MOZ_ASSERT(pointToInsertBR.IsSet());
-        brElement = nullptr;
+        CreateElementResult insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes, pointToInsertBR);
+        if (insertBRElementResult.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+          return EditActionResult(insertBRElementResult.unwrapErr());
+        }
+        // We'll collapse `Selection` to the place suggested by
+        // SplitParagraphWithTransaction.
+        insertBRElementResult.IgnoreCaretPointSuggestion();
+        brElement =
+            HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
       }
     } else if (pointToSplitAvoidingEmptyNewLink.IsEndOfContainer()) {
       // we're at the end of text node...
       // is there a BR after to it?
-      brElement = HTMLBRElement::FromNodeOrNull(
-          pointToSplitAvoidingEmptyNewLink.IsInContentNode()
-              ? HTMLEditUtils::GetNextSibling(
-                    *pointToSplitAvoidingEmptyNewLink.ContainerAsContent(),
-                    {WalkTreeOption::IgnoreNonEditableNode})
-              : nullptr);
+      brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
+          *pointToSplitAvoidingEmptyNewLink.ContainerAsText(),
+          {WalkTreeOption::IgnoreNonEditableNode}));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
         // If insertParagraph does not create a new paragraph, default to
@@ -7282,10 +7285,21 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        pointToInsertBR.SetAfter(
-            pointToSplitAvoidingEmptyNewLink.GetContainer());
+        const EditorDOMPoint pointToInsertBR = EditorDOMPoint::After(
+            *pointToSplitAvoidingEmptyNewLink.ContainerAsText());
         MOZ_ASSERT(pointToInsertBR.IsSet());
-        brElement = nullptr;
+        CreateElementResult insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes, pointToInsertBR);
+        if (insertBRElementResult.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+          return EditActionResult(insertBRElementResult.unwrapErr());
+        }
+        // We'll collapse `Selection` to the place suggested by
+        // SplitParagraphWithTransaction.
+        insertBRElementResult.IgnoreCaretPointSuggestion();
+        brElement =
+            HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
       }
     } else {
       // If insertParagraph does not create a new paragraph, default to
@@ -7302,7 +7316,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       //     much simpler.
       Result<EditorDOMPoint, nsresult> pointToSplitOrError =
           WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-              *this, pointToSplitParentDivOrP, aParentDivOrP);
+              *this, pointToSplit, aParentDivOrP);
       if (NS_WARN_IF(Destroyed())) {
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -7314,27 +7328,39 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       }
       MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
       if (pointToSplitOrError.inspect().IsSet()) {
-        pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
+        pointToSplit = pointToSplitOrError.unwrap();
       }
       const SplitNodeResult splitParentDivOrPResult =
-          SplitNodeWithTransaction(pointToSplitParentDivOrP);
+          SplitNodeWithTransaction(pointToSplit);
       if (splitParentDivOrPResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
         return EditActionResult(splitParentDivOrPResult.unwrapErr());
       }
-      nsresult rv = splitParentDivOrPResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-        return EditActionHandled(rv);
+      // We'll collapse `Selection` to the place suggested by
+      // SplitParagraphWithTransaction.
+      splitParentDivOrPResult.IgnoreCaretPointSuggestion();
+
+      pointToSplit.SetToEndOf(splitParentDivOrPResult.GetPreviousContent());
+      if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
+        return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
-      pointToSplitParentDivOrP.SetToEndOf(
-          splitParentDivOrPResult.GetPreviousContent());
 
       // We need to put new <br> after the left node if given node was split
       // above.
-      pointToInsertBR.SetAfter(pointToSplitParentDivOrP.GetContainer());
+      const EditorDOMPoint pointToInsertBR =
+          EditorDOMPoint::After(*pointToSplit.ContainerAsContent());
       MOZ_ASSERT(pointToInsertBR.IsSet());
+      CreateElementResult insertBRElementResult =
+          InsertBRElement(WithTransaction::Yes, pointToInsertBR);
+      if (insertBRElementResult.isErr()) {
+        NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+        return EditActionResult(insertBRElementResult.unwrapErr());
+      }
+      // We'll collapse `Selection` to the place suggested by
+      // SplitParagraphWithTransaction.
+      insertBRElementResult.IgnoreCaretPointSuggestion();
+      brElement =
+          HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
     }
   } else {
     // not in a text node.
@@ -7361,43 +7387,29 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        pointToInsertBR = pointToSplitAvoidingEmptyNewLink;
-        splitAfterNewBR = true;
-        brElement = nullptr;
+        CreateElementResult insertBRElementResult = InsertBRElement(
+            WithTransaction::Yes, pointToSplitAvoidingEmptyNewLink);
+        if (insertBRElementResult.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+          return EditActionResult(insertBRElementResult.unwrapErr());
+        }
+        // We'll collapse `Selection` to the place suggested by
+        // SplitParagraphWithTransaction.
+        insertBRElementResult.IgnoreCaretPointSuggestion();
+        brElement =
+            HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
+        // We split the parent after the <br>.
+        pointToSplit.SetAfter(brElement);
+        if (NS_WARN_IF(!pointToSplit.IsSet())) {
+          return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+        }
       }
     }
   }
-  if (pointToInsertBR.IsSet()) {
-    MOZ_ASSERT(createNewParagraph);
-    CreateElementResult insertBRElementResult =
-        InsertBRElement(WithTransaction::Yes, pointToInsertBR);
-    if (insertBRElementResult.isErr()) {
-      NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-      return EditActionResult(insertBRElementResult.unwrapErr());
-    }
-    nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-      return EditActionResult(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-    MOZ_ASSERT(insertBRElementResult.GetNewNode());
-    if (splitAfterNewBR) {
-      // We split the parent after the br we've just inserted.
-      pointToSplitParentDivOrP.SetAfter(insertBRElementResult.GetNewNode());
-      NS_WARNING_ASSERTION(pointToSplitParentDivOrP.IsSet(),
-                           "Failed to set after the new <br>");
-    }
-    brElement =
-        HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
-  }
-  const SplitNodeResult splitParagraphResult = SplitParagraphWithTransaction(
-      aParentDivOrP, pointToSplitParentDivOrP, brElement);
+
+  const SplitNodeResult splitParagraphResult =
+      SplitParagraphWithTransaction(aParentDivOrP, pointToSplit, brElement);
   if (splitParagraphResult.isErr()) {
     NS_WARNING("HTMLEditor::SplitParagraphWithTransaction() failed");
     return EditActionResult(splitParagraphResult.inspectErr());
