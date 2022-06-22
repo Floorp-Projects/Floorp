@@ -311,8 +311,8 @@ class HTMLEditUtils final {
    * https://w3c.github.io/editing/execCommand.html#non-list-single-line-container
    * https://w3c.github.io/editing/execCommand.html#single-line-container
    */
-  static bool IsNonListSingleLineContainer(nsINode& aNode);
-  static bool IsSingleLineContainer(nsINode& aNode);
+  static bool IsNonListSingleLineContainer(const nsINode& aNode);
+  static bool IsSingleLineContainer(const nsINode& aNode);
 
   /**
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
@@ -421,8 +421,8 @@ class HTMLEditUtils final {
    * ShouldInsertLinefeedCharacter() returns true if the caller should insert
    * a linefeed character instead of <br> element.
    */
-  static bool ShouldInsertLinefeedCharacter(EditorDOMPoint& aPointToInsert,
-                                            const Element& aEditingHost);
+  static bool ShouldInsertLinefeedCharacter(
+      const EditorDOMPoint& aPointToInsert, const Element& aEditingHost);
 
   /**
    * IsEmptyNode() returns false if aNode has some visible content nodes,
