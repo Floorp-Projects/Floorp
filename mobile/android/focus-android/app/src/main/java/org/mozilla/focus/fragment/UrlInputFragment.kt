@@ -28,7 +28,6 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.service.glean.private.NoExtras
@@ -58,7 +57,6 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.StatusBarUtils
@@ -333,19 +331,12 @@ class UrlInputFragment :
             binding.menuView.visibility = View.VISIBLE
         }
 
-        val isDDG: Boolean =
-            requireComponents.store.state.search.selectedOrDefaultSearchEngine?.name == duckDuckGo
-
         tab?.let { tab ->
-            binding.browserToolbar.url =
-                if (tab.content.isSearch &&
-                    !isDDG &&
-                    Features.SEARCH_TERMS_OR_URL
-                ) {
-                    tab.content.searchTerms
-                } else {
-                    tab.content.url
-                }
+            binding.browserToolbar.url = if (tab.content.isSearch) {
+                tab.content.searchTerms
+            } else {
+                tab.content.url
+            }
 
             binding.searchViewContainer.visibility = View.GONE
             binding.menuView.visibility = View.GONE

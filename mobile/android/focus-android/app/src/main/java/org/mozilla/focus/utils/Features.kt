@@ -8,8 +8,6 @@ package org.mozilla.focus.utils
  * Simple feature flags.
  */
 object Features {
-    const val SEARCH_TERMS_OR_URL: Boolean = true
-
     /**
      * Delete all shortcuts when New Session Button from FingerPrint LockScreen is clicked
      */
