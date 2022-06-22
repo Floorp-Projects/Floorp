@@ -308,6 +308,41 @@ void MatchedFilterCore(size_t x_start_index,
   }
 }
 
+size_t MaxSquarePeakIndex(rtc::ArrayView<const float> h) {
+  if (h.size() < 2) {
+    return 0;
+  }
+  float max_element1 = h[0] * h[0];
+  float max_element2 = h[1] * h[1];
+  size_t lag_estimate1 = 0;
+  size_t lag_estimate2 = 1;
+  const size_t last_index = h.size() - 1;
+  // Keeping track of even & odd max elements separately typically allows the
+  // compiler to produce more efficient code.
+  for (size_t k = 2; k < last_index; k += 2) {
+    float element1 = h[k] * h[k];
+    float element2 = h[k + 1] * h[k + 1];
+    if (element1 > max_element1) {
+      max_element1 = element1;
+      lag_estimate1 = k;
+    }
+    if (element2 > max_element2) {
+      max_element2 = element2;
+      lag_estimate2 = k + 1;
+    }
+  }
+  if (max_element2 > max_element1) {
+    max_element1 = max_element2;
+    lag_estimate1 = lag_estimate2;
+  }
+  // In case of odd h size, we have not yet checked the last element.
+  float last_element = h[last_index] * h[last_index];
+  if (last_element > max_element1) {
+    return last_index;
+  }
+  return lag_estimate1;
+}
+
 }  // namespace aec3
 
 MatchedFilter::MatchedFilter(ApmDataDumper* data_dumper,
@@ -400,17 +435,15 @@ void MatchedFilter::Update(const DownsampledRenderBuffer& render_buffer,
     }
 
     // Compute anchor for the matched filter error.
-    const float error_sum_anchor =
-        std::inner_product(y.begin(), y.end(), y.begin(), 0.f);
+    float error_sum_anchor = 0.0f;
+    for (size_t k = 0; k < y.size(); ++k) {
+      error_sum_anchor += y[k] * y[k];
+    }
 
     // Estimate the lag in the matched filter as the distance to the portion in
     // the filter that contributes the most to the matched filter output. This
     // is detected as the peak of the matched filter.
-    const size_t lag_estimate = std::distance(
-        filters_[n].begin(),
-        std::max_element(
-            filters_[n].begin(), filters_[n].end(),
-            [](float a, float b) -> bool { return a * a < b * b; }));
+    const size_t lag_estimate = aec3::MaxSquarePeakIndex(filters_[n]);
 
     // Update the lag estimates for the matched filter.
     lag_estimates_[n] = LagEstimate(

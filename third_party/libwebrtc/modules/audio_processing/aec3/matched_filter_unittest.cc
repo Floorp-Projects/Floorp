@@ -176,6 +176,28 @@ TEST(MatchedFilter, TestAvx2Optimizations) {
 
 #endif
 
+// Verifies that the (optimized) function MaxSquarePeakIndex() produces output
+// equal to the corresponding std-functions.
+TEST(MatchedFilter, MaxSquarePeakIndex) {
+  Random random_generator(42U);
+  constexpr int kMaxLength = 128;
+  constexpr int kNumIterationsPerLength = 256;
+  for (int length = 1; length < kMaxLength; ++length) {
+    std::vector<float> y(length);
+    for (int i = 0; i < kNumIterationsPerLength; ++i) {
+      RandomizeSampleVector(&random_generator, y);
+
+      size_t lag_from_function = MaxSquarePeakIndex(y);
+      size_t lag_from_std = std::distance(
+          y.begin(),
+          std::max_element(y.begin(), y.end(), [](float a, float b) -> bool {
+            return a * a < b * b;
+          }));
+      EXPECT_EQ(lag_from_function, lag_from_std);
+    }
+  }
+}
+
 // Verifies that the matched filter produces proper lag estimates for
 // artificially
 // delayed signals.
