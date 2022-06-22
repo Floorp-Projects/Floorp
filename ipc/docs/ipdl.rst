@@ -1420,8 +1420,8 @@ option.
 Background actors can only be used in limited circumstances:
 
 * ``PBackground`` only supports the following process connections (where
-ordering is parent <-> child): main <-> main, main <-> content, main <-> socket
-and socket <-> content.
+  ordering is parent <-> child): main <-> main, main <-> content,
+  main <-> socket and socket <-> content.
 
 .. important::
 
@@ -1433,16 +1433,16 @@ and socket <-> content.
     worker threads.
 
 * Background actor creation is always initiated by the child.  Of course, a
-request to create one can be sent to the child by any other means.
+  request to create one can be sent to the child by any other means.
 * All parent background actors run in the same thread.  This thread is
-dedicated to serving as the worker for parent background actors.  While it has
-no other functions, it should remain responsive to all connected background
-actors.  For this reason, it is a bad idea to conduct long operations in parent
-background actors.  For such cases, create a top level actor and an independent
-thread on the parent side instead.
+  dedicated to serving as the worker for parent background actors.  While it
+  has no other functions, it should remain responsive to all connected
+  background actors.  For this reason, it is a bad idea to conduct long
+  operations in parent background actors.  For such cases, create a top level
+  actor and an independent thread on the parent side instead.
 * Background actors are currently *not* reference-counted.  IPDL's ownership
-has to be carefully respected and the (de-)allocators for the new actors have
-to be defined.  See `The Old Ways`_ for details.
+  has to be carefully respected and the (de-)allocators for the new actors have
+  to be defined.  See `The Old Ways`_ for details.
 
 A hypothetical layout of ``PBackground`` threads, demonstrating some of the
 process-type limitations, is shown in the diagram below.
