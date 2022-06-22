@@ -420,11 +420,22 @@ nsresult ReferrerInfo::HandleUserXOriginSendingPolicy(nsIURI* aURI,
   return NS_OK;
 }
 
+// This roughly implements Step 3.1. of
+// https://fetch.spec.whatwg.org/#append-a-request-origin-header
 /* static */
 bool ReferrerInfo::ShouldSetNullOriginHeader(net::HttpBaseChannel* aChannel,
                                              nsIURI* aOriginURI) {
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(aOriginURI);
+
+  // This code should not really be here, but we always need to send an Origin
+  // header for CORS requests that aren't GET or HEAD. Also see the comment
+  // in nsHttpChannel::SetOriginHeader.
+  uint32_t corsMode = nsIHttpChannelInternal::CORS_MODE_NO_CORS;
+  MOZ_ALWAYS_SUCCEEDS(aChannel->GetCorsMode(&corsMode));
+  if (corsMode == nsIHttpChannelInternal::CORS_MODE_CORS) {
+    return false;
+  }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   NS_ENSURE_SUCCESS(aChannel->GetReferrerInfo(getter_AddRefs(referrerInfo)),
