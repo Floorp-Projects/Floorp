@@ -1861,8 +1861,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
       (separator != ParagraphSeparator::br &&
        editableBlockElement->IsAnyOfHTMLElements(nsGkAtoms::p,
                                                  nsGkAtoms::div))) {
-    AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
-
+    // TODO: We should work this with atStartOfSelection rather than referring
+    //       current `Selection` again.
     const auto firstRangeStartPoint =
         EditorBase::GetFirstSelectionStartPoint<EditorDOMPoint>();
     if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
@@ -1870,22 +1870,32 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
     }
 
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result = HandleInsertParagraphInParagraph(
+    const SplitNodeResult splitResult = HandleInsertParagraphInParagraph(
         *editableBlockElement, firstRangeStartPoint, aEditingHost);
-    if (result.Failed()) {
+    if (splitResult.isErr()) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
-      return result;
+      return EditActionResult(splitResult.unwrapErr());
     }
-    if (result.Handled()) {
-      // Now, atStartOfSelection may be invalid because the left paragraph
-      // may have less children than its offset.  For avoiding warnings of
-      // validation of EditorDOMPoint, we should not touch it anymore.
-      lockOffset.Cancel();
-      return result;
+    if (splitResult.Handled()) {
+      nsresult rv = splitResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return EditActionResult(rv);
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "SplitNodeResult::SuggestCaretPointTo() failed, but ignored");
+      return EditActionHandled();
     }
+    MOZ_ASSERT(!splitResult.HasCaretPointSuggestion());
+
     // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
     MOZ_ASSERT(!result.Canceled());
     MOZ_ASSERT(result.Rv() == NS_SUCCESS_DOM_NO_OPERATION);
+    MOZ_ASSERT(atStartOfSelection.IsSetAndValid(),
+               "HTMLEditor::HandleInsertParagraphInParagraph() shouldn't touch "
+               "the DOM tree if it returns not-handled state");
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
@@ -7148,7 +7158,7 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   return EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u);
 }
 
-EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
+SplitNodeResult HTMLEditor::HandleInsertParagraphInParagraph(
     Element& aParentDivOrP, const EditorDOMPoint& aCandidatePointToSplit,
     const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -7259,7 +7269,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+          return SplitNodeResult::NotHandled(
+              pointToSplit, SplitNodeDirection::LeftNodeIsNewOne);
         }
         const EditorDOMPoint pointToInsertBR = pointToSplit.ParentPoint();
         MOZ_ASSERT(pointToInsertBR.IsSet());
@@ -7268,7 +7279,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return EditActionResult(insertBRElementResult.unwrapErr());
+          return SplitNodeResult(insertBRElementResult.unwrapErr());
         }
         // We'll collapse `Selection` to the place suggested by
         // SplitParagraphWithTransaction.
@@ -7292,7 +7303,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+          return SplitNodeResult::NotHandled(
+              pointToSplit, SplitNodeDirection::LeftNodeIsNewOne);
         }
         const EditorDOMPoint pointToInsertBR =
             EditorDOMPoint::After(*pointToSplit.ContainerAsText());
@@ -7302,7 +7314,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return EditActionResult(insertBRElementResult.unwrapErr());
+          return SplitNodeResult(insertBRElementResult.unwrapErr());
         }
         // We'll collapse `Selection` to the place suggested by
         // SplitParagraphWithTransaction.
@@ -7314,7 +7326,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       // If insertParagraph does not create a new paragraph, default to
       // insertLineBreak.
       if (!createNewParagraph) {
-        return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+        return SplitNodeResult::NotHandled(
+            pointToSplit, SplitNodeDirection::LeftNodeIsNewOne);
       }
 
       // If we're splitting the paragraph at middle of a text node, we should
@@ -7330,27 +7343,32 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       //     So this does much more complicated things than what we want to
       //     do here.  We should handle this case separately to make the code
       //     much simpler.
+
+      // Normalize collapsible white-spaces around the split point to keep
+      // them visible after the split.  Note that this does not touch
+      // selection because of using AutoTransactionsConserveSelection in
+      // WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes().
       Result<EditorDOMPoint, nsresult> pointToSplitOrError =
           WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
               *this, pointToSplit, aParentDivOrP);
       if (NS_WARN_IF(Destroyed())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+        return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (MOZ_UNLIKELY(pointToSplitOrError.isErr())) {
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
             "failed");
-        return EditActionResult(pointToSplitOrError.unwrapErr());
+        return SplitNodeResult(pointToSplitOrError.unwrapErr());
       }
       MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
       if (pointToSplitOrError.inspect().IsSet()) {
         pointToSplit = pointToSplitOrError.unwrap();
       }
-      const SplitNodeResult splitParentDivOrPResult =
+      SplitNodeResult splitParentDivOrPResult =
           SplitNodeWithTransaction(pointToSplit);
       if (splitParentDivOrPResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return EditActionResult(splitParentDivOrPResult.unwrapErr());
+        return splitParentDivOrPResult;
       }
       // We'll collapse `Selection` to the place suggested by
       // SplitParagraphWithTransaction.
@@ -7358,7 +7376,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
 
       pointToSplit.SetToEndOf(splitParentDivOrPResult.GetPreviousContent());
       if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
-        return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+        return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
 
       // We need to put new <br> after the left node if given node was split
@@ -7370,7 +7388,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
           InsertBRElement(WithTransaction::Yes, pointToInsertBR);
       if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return EditActionResult(insertBRElementResult.unwrapErr());
+        return SplitNodeResult(insertBRElementResult.unwrapErr());
       }
       // We'll collapse `Selection` to the place suggested by
       // SplitParagraphWithTransaction.
@@ -7400,14 +7418,15 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
+          return SplitNodeResult::NotHandled(
+              pointToSplit, SplitNodeDirection::LeftNodeIsNewOne);
         }
         CreateElementResult insertBRElementResult =
             InsertBRElement(WithTransaction::Yes, pointToSplit);
         if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return EditActionResult(insertBRElementResult.unwrapErr());
+          return SplitNodeResult(insertBRElementResult.unwrapErr());
         }
         // We'll collapse `Selection` to the place suggested by
         // SplitParagraphWithTransaction.
@@ -7417,35 +7436,27 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         // We split the parent after the <br>.
         pointToSplit.SetAfter(brElement);
         if (NS_WARN_IF(!pointToSplit.IsSet())) {
-          return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+          return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
         }
       }
     }
   }
 
-  const SplitNodeResult splitParagraphResult =
+  SplitNodeResult splitParagraphResult =
       SplitParagraphWithTransaction(aParentDivOrP, pointToSplit, brElement);
   if (splitParagraphResult.isErr()) {
     NS_WARNING("HTMLEditor::SplitParagraphWithTransaction() failed");
-    return EditActionResult(splitParagraphResult.inspectErr());
+    return splitParagraphResult;
   }
   if (MOZ_UNLIKELY(!splitParagraphResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitParagraphWithTransaction() didn't split the "
         "paragraph");
     splitParagraphResult.IgnoreCaretPointSuggestion();
-    return EditActionResult(NS_ERROR_FAILURE);
+    return SplitNodeResult(NS_ERROR_FAILURE);
   }
-  nsresult rv = splitParagraphResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-    return EditActionResult(rv);
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "SplitNodeResult::SuggestCaretPointTo() failed, but ignored");
-  return EditActionHandled();
+  MOZ_ASSERT(splitParagraphResult.Handled());
+  return splitParagraphResult;
 }
 
 SplitNodeResult HTMLEditor::SplitParagraphWithTransaction(
