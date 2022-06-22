@@ -5,8 +5,7 @@
 #ifndef nsComplexBreaker_h__
 #define nsComplexBreaker_h__
 
-#include "nsString.h"
-
+#include <stdint.h>
 /**
  * Find line break opportunities in aText[] of aLength characters,
  * filling boolean values indicating line break opportunities for

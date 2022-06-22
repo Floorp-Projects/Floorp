@@ -5,10 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/IntegerPrintfMacros.h"  // this must pick up <stdint.h>
 #include "mozilla/Sprintf.h"
 
 #include <string.h>
+#include <inttypes.h>
 
 /* Output array and poisoning method shared by all tests. */
 static char gOutput[32];

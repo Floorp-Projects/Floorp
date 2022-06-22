@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
 
 #include <cfloat>
 #include <cmath>
+#include <inttypes.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #if defined(__clang__)
 #  pragma clang diagnostic push

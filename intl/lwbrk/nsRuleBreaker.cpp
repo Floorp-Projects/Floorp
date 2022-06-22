@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsComplexBreaker.h"
+#include "nsDebug.h"
 
 #define TH_UNICODE
 #include "rulebrk.h"
