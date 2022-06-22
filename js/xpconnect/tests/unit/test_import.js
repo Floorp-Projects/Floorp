@@ -62,33 +62,6 @@ function run_test() {
   }
   Assert.ok(didThrow);
 
-  // try to create a component
-  do_load_manifest("component_import.manifest");
-  const contractID = "@mozilla.org/tests/module-importer;";
-  Assert.ok((contractID + "1") in Cc);
-  var foo = Cc[contractID + "1"]
-              .createInstance(Ci.nsIClassInfo);
-  Assert.ok(Boolean(foo));
-  Assert.ok(foo.contractID == contractID + "1");
-  // XXX the following check succeeds only if the test component wasn't
-  //     already registered. Need to figure out a way to force registration
-  //     (to manually force it, delete compreg.dat before running the test)
-  // do_check_true(foo.wrappedJSObject.postRegisterCalled);
-
-  // Call getInterfaces to test line numbers in JS components.  But as long as
-  // we're doing that, why not test what it returns too?
-  var interfaces = foo.interfaces;
-  Assert.ok(Array.isArray(interfaces));
-  Assert.equal(interfaces.length, 1);
-  Assert.ok(interfaces[0].equals(Ci.nsIClassInfo))
-
-  // try to create another component which doesn't directly implement QI
-  Assert.ok((contractID + "2") in Cc);
-  var bar = Cc[contractID + "2"]
-              .createInstance(Ci.nsIClassInfo);
-  Assert.ok(Boolean(bar));
-  Assert.ok(bar.contractID == contractID + "2");
-
   // make sure we throw when the URL scheme is not known
   var scope4 = {};
   const wrongScheme = "data:text/javascript,var a = {a:1}";

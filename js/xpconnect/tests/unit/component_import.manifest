@@ -1,5 +1,0 @@
-component {6b933fe6-6eba-4622-ac86-e4f654f1b474} component_import.js
-contract @mozilla.org/tests/module-importer;1 {6b933fe6-6eba-4622-ac86-e4f654f1b474}
-
-component {708a896a-b48d-4bff-906e-fc2fd134b296} component_import.js
-contract @mozilla.org/tests/module-importer;2 {708a896a-b48d-4bff-906e-fc2fd134b296}
