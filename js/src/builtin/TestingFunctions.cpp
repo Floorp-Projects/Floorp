@@ -4110,6 +4110,63 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool ReadGeckoInterpProfilingStack(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+
+  // Return boolean 'false' if profiler is not enabled.
+  if (!cx->runtime()->geckoProfiler().enabled()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // Array with information about each frame.
+  Rooted<JSObject*> stack(cx, NewDenseEmptyArray(cx));
+  if (!stack) {
+    return false;
+  }
+  uint32_t stackIndex = 0;
+
+  ProfilingStack* profStack = cx->geckoProfiler().getProfilingStack();
+  MOZ_ASSERT(profStack);
+
+  for (size_t i = 0; i < profStack->stackSize(); i++) {
+    const auto& frame = profStack->frames[i];
+    if (!frame.isJsFrame()) {
+      continue;
+    }
+
+    // Skip fake JS frame pushed for js::RunScript by GeckoProfilerEntryMarker.
+    if (!frame.dynamicString()) {
+      continue;
+    }
+
+    Rooted<PlainObject*> frameInfo(cx, NewPlainObject(cx));
+    if (!frameInfo) {
+      return false;
+    }
+
+    Rooted<JSString*> dynamicString(
+        cx, JS_NewStringCopyZ(cx, frame.dynamicString()));
+    if (!dynamicString) {
+      return false;
+    }
+    if (!JS_DefineProperty(cx, frameInfo, "dynamicString", dynamicString,
+                           JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    if (!JS_DefineElement(cx, stack, stackIndex, frameInfo, JSPROP_ENUMERATE)) {
+      return false;
+    }
+    stackIndex++;
+  }
+
+  args.rval().setObject(*stack);
+  return true;
+}
+
 static bool EnableOsiPointRegisterChecks(JSContext*, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -8277,7 +8334,11 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("readGeckoProfilingStack", ReadGeckoProfilingStack, 0, 0,
 "readGeckoProfilingStack()",
-"  Reads the jit stack using ProfilingFrameIterator."),
+"  Reads the JIT/Wasm stack using ProfilingFrameIterator. Skips non-JIT/Wasm frames."),
+
+    JS_FN_HELP("readGeckoInterpProfilingStack", ReadGeckoInterpProfilingStack, 0, 0,
+"readGeckoInterpProfilingStack()",
+"  Reads the C++ interpreter profiling stack. Skips JIT/Wasm frames."),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
 "enableOsiPointRegisterChecks()",
