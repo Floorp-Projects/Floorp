@@ -24,7 +24,7 @@ module.exports = {
     return {
       VariableDeclaration(node) {
         if (node.kind === "var") {
-          if (helpers.getIsTopLevelScript(context.getAncestors())) {
+          if (helpers.getIsGlobalScope(context.getAncestors())) {
             return;
           }
 
