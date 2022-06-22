@@ -863,10 +863,12 @@ class HTMLEditor final : public EditorBase,
   RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
                                uint32_t aStartOffset, uint32_t aEndOffset);
 
-  MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyOnNode(nsIContent& aNode,
-                                                      nsAtom& aProperty,
-                                                      nsAtom* aAttribute,
-                                                      const nsAString& aValue);
+  /**
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetInlinePropertyOnNode(nsIContent& aContent, nsAtom& aProperty,
+                          nsAtom* aAttribute, const nsAString& aValue);
 
   /**
    * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
@@ -4195,9 +4197,13 @@ class HTMLEditor final : public EditorBase,
                                     nsAtom* aAttribute,
                                     const nsAString* aValue);
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
+  /**
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetInlinePropertyOnNodeImpl(nsIContent& aContent, nsAtom& aProperty,
                               nsAtom* aAttribute, const nsAString& aValue);
+
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   MOZ_CAN_RUN_SCRIPT void DoContentInserted(
       nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);
