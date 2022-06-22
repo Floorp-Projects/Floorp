@@ -110,14 +110,14 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
-// We have to use the gCombinedDownloadIntegration identifier because, in this
-// module only, the DownloadIntegration identifier refers to the base version.
 Integration.downloads.defineModuleGetter(
   lazy,
-  "gCombinedDownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.jsm",
-  "DownloadIntegration"
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
 );
+XPCOMUtils.defineLazyGetter(lazy, "gCombinedDownloadIntegration", () => {
+  return lazy.DownloadIntegration;
+});
 
 const Timer = Components.Constructor(
   "@mozilla.org/timer;1",
