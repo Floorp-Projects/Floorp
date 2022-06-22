@@ -899,56 +899,13 @@ void WebRtcVideoChannel::RequestEncoderFallback() {
 }
 
 void WebRtcVideoChannel::RequestEncoderSwitch(
-    const EncoderSwitchRequestCallback::Config& conf) {
+    const webrtc::SdpVideoFormat& format,
+    bool allow_default_fallback) {
   if (!worker_thread_->IsCurrent()) {
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_, [this, conf] { RequestEncoderSwitch(conf); }));
-    return;
-  }
-
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-
-  if (!allow_codec_switching_) {
-    RTC_LOG(LS_INFO) << "Encoder switch requested but codec switching has"
-                        " not been enabled yet.";
-    requested_encoder_switch_ = conf;
-    return;
-  }
-
-  for (const VideoCodecSettings& codec_setting : negotiated_codecs_) {
-    if (codec_setting.codec.name == conf.codec_name) {
-      if (conf.param) {
-        auto it = codec_setting.codec.params.find(*conf.param);
-        if (it == codec_setting.codec.params.end())
-          continue;
-
-        if (conf.value && it->second != *conf.value)
-          continue;
-      }
-
-      if (send_codec_ == codec_setting) {
-        // Already using this codec, no switch required.
-        return;
-      }
-
-      ChangedSendParameters params;
-      params.send_codec = codec_setting;
-      ApplyChangedParams(params);
-      return;
-    }
-  }
-
-  RTC_LOG(LS_WARNING) << "Requested encoder with codec_name:" << conf.codec_name
-                      << ", param:" << conf.param.value_or("none")
-                      << " and value:" << conf.value.value_or("none")
-                      << "not found. No switch performed.";
-}
-
-void WebRtcVideoChannel::RequestEncoderSwitch(
-    const webrtc::SdpVideoFormat& format) {
-  if (!worker_thread_->IsCurrent()) {
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_, [this, format] { RequestEncoderSwitch(format); }));
+    worker_thread_->PostTask(
+        ToQueuedTask(task_safety_, [this, format, allow_default_fallback] {
+          RequestEncoderSwitch(format, allow_default_fallback);
+        }));
     return;
   }
 
@@ -974,8 +931,13 @@ void WebRtcVideoChannel::RequestEncoderSwitch(
     }
   }
 
-  RTC_LOG(LS_WARNING) << "Encoder switch failed: SdpVideoFormat "
-                      << format.ToString() << " not negotiated.";
+  RTC_LOG(LS_WARNING) << "Failed to switch encoder to: " << format.ToString()
+                      << ". Is default fallback allowed: "
+                      << allow_default_fallback;
+
+  if (allow_default_fallback) {
+    RequestEncoderFallback();
+  }
 }
 
 bool WebRtcVideoChannel::ApplyChangedParams(
@@ -1956,11 +1918,6 @@ void WebRtcVideoChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
   allow_codec_switching_ = enabled;
   if (allow_codec_switching_) {
     RTC_LOG(LS_INFO) << "Encoder switching enabled.";
-    if (requested_encoder_switch_) {
-      RTC_LOG(LS_INFO) << "Executing cached video encoder switch request.";
-      RequestEncoderSwitch(*requested_encoder_switch_);
-      requested_encoder_switch_.reset();
-    }
   }
 }
 
