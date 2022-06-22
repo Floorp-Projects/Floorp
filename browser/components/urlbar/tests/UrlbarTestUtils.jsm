@@ -115,31 +115,50 @@ var UrlbarTestUtils = {
     } else {
       await new Promise(resolve => waitForFocus(resolve, window));
     }
-    window.gURLBar.inputField.focus();
-    // Using the value setter in some cases may trim and fetch unexpected
-    // results, then pick an alternate path.
-    if (UrlbarPrefs.get("trimURLs") && value != BrowserUIUtils.trimURL(value)) {
-      window.gURLBar.inputField.value = value;
-      fireInputEvent = true;
-    } else {
-      window.gURLBar.value = value;
-    }
-    if (selectionStart >= 0 && selectionEnd >= 0) {
-      window.gURLBar.selectionEnd = selectionEnd;
-      window.gURLBar.selectionStart = selectionStart;
-    }
 
-    // An input event will start a new search, so be careful not to start a
-    // search if we fired an input event since that would start two searches.
-    if (fireInputEvent) {
-      // This is necessary to get the urlbar to set gBrowser.userTypedValue.
-      this.fireInputEvent(window);
-    } else {
-      window.gURLBar.setPageProxyState("invalid");
-      window.gURLBar.startQuery();
-    }
+    const setup = () => {
+      window.gURLBar.inputField.focus();
+      // Using the value setter in some cases may trim and fetch unexpected
+      // results, then pick an alternate path.
+      if (
+        UrlbarPrefs.get("trimURLs") &&
+        value != BrowserUIUtils.trimURL(value)
+      ) {
+        window.gURLBar.inputField.value = value;
+        fireInputEvent = true;
+      } else {
+        window.gURLBar.value = value;
+      }
+      if (selectionStart >= 0 && selectionEnd >= 0) {
+        window.gURLBar.selectionEnd = selectionEnd;
+        window.gURLBar.selectionStart = selectionStart;
+      }
 
-    return this.promiseSearchComplete(window);
+      // An input event will start a new search, so be careful not to start a
+      // search if we fired an input event since that would start two searches.
+      if (fireInputEvent) {
+        // This is necessary to get the urlbar to set gBrowser.userTypedValue.
+        this.fireInputEvent(window);
+      } else {
+        window.gURLBar.setPageProxyState("invalid");
+        window.gURLBar.startQuery();
+      }
+    };
+    setup();
+
+    // In Linux TV test, as there is case that the input field lost the focus
+    // until showing popup, timeout failure happens since the expected poup
+    // never be shown. To avoid this, if losing the focus, retry setup to open
+    // popup.
+    const blurListener = () => {
+      setup();
+    };
+    window.gURLBar.inputField.addEventListener("blur", blurListener, {
+      once: true,
+    });
+    const result = await this.promiseSearchComplete(window);
+    window.gURLBar.inputField.removeEventListener("blur", blurListener);
+    return result;
   },
 
   /**
