@@ -645,23 +645,6 @@ static const char* sObserverTopics[] = {
     DEFAULT_TIMEZONE_CHANGED_OBSERVER_TOPIC,
 };
 
-static const char kFissionEnforceBlockList[] =
-    "fission.enforceBlocklistedPrefsInSubprocesses";
-static const char kFissionOmitBlockListValues[] =
-    "fission.omitBlocklistedPrefsInSubprocesses";
-
-static void OnFissionBlocklistPrefChange(const char* aPref, void* aData) {
-  if (strcmp(aPref, kFissionEnforceBlockList) == 0) {
-    sCrashOnBlocklistedPref =
-        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses();
-  } else if (strcmp(aPref, kFissionOmitBlockListValues) == 0) {
-    sOmitBlocklistedPrefValues =
-        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses();
-  } else {
-    MOZ_CRASH("Unknown pref passed to callback");
-  }
-}
-
 // PreallocateProcess is called by the PreallocatedProcessManager.
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
 /*static*/ already_AddRefed<ContentParent>

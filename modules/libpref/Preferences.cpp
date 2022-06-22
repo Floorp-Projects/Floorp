@@ -5897,6 +5897,18 @@ bool ShouldSanitizePreference(const char* aPrefName,
 Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
 Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
 
+void OnFissionBlocklistPrefChange(const char* aPref, void* aData) {
+  if (strcmp(aPref, kFissionEnforceBlockList) == 0) {
+    sCrashOnBlocklistedPref =
+        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses();
+  } else if (strcmp(aPref, kFissionOmitBlockListValues) == 0) {
+    sOmitBlocklistedPrefValues =
+        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses();
+  } else {
+    MOZ_CRASH("Unknown pref passed to callback");
+  }
+}
+
 }  // namespace mozilla
 
 // This file contains the C wrappers for the C++ static pref getters, as used
