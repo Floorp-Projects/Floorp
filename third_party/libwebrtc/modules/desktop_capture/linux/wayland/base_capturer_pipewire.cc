@@ -882,7 +882,37 @@ void BaseCapturerPipeWire::OnSessionRequestResponseSignal(
     return;
   }
 
+  that->session_closed_signal_id_ = g_dbus_connection_signal_subscribe(
+      that->connection_, kDesktopBusName, kSessionInterfaceName, "Closed",
+      that->session_handle_, /*arg0=*/nullptr, G_DBUS_SIGNAL_FLAGS_NONE,
+      OnSessionClosedSignal, that, /*user_data_free_func=*/nullptr);
+
   that->SourcesRequest();
+}
+
+// static
+void BaseCapturerPipeWire::OnSessionClosedSignal(GDBusConnection* connection,
+                                                 const gchar* sender_name,
+                                                 const gchar* object_path,
+                                                 const gchar* interface_name,
+                                                 const gchar* signal_name,
+                                                 GVariant* parameters,
+                                                 gpointer user_data) {
+  BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
+  RTC_DCHECK(that);
+
+  RTC_LOG(LS_INFO) << "Received closed signal from session.";
+
+  if (that->pw_stream_) {
+    pw_stream_disconnect(that->pw_stream_);
+  }
+
+  // Unsubscribe from the signal and free the session handle to avoid calling
+  // Session::Close from the destructor since it's already closed
+  g_dbus_connection_signal_unsubscribe(that->connection_,
+                                       that->session_closed_signal_id_);
+  g_free(that->session_handle_);
+  that->session_handle_ = nullptr;
 }
 
 void BaseCapturerPipeWire::SourcesRequest() {
