@@ -19,34 +19,6 @@ const defaultUrl = {
   username: "",
 };
 
-const stripQueryCache = new Map();
-export function stripQuery(url) {
-  if (stripQueryCache.has(url)) {
-    return stripQueryCache.get(url);
-  }
-
-  let queryStart = url.indexOf("?");
-
-  let before = url;
-  let after = "";
-  if (queryStart >= 0) {
-    const hashStart = url.indexOf("#");
-    if (hashStart >= 0) {
-      if (hashStart < queryStart) {
-        queryStart = hashStart;
-      }
-
-      after = url.slice(hashStart);
-    }
-
-    before = url.slice(0, queryStart);
-  }
-
-  const result = before + after;
-  stripQueryCache.set(url, result);
-  return result;
-}
-
 const parseCache = new Map();
 export function parse(url) {
   if (parseCache.has(url)) {

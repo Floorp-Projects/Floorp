@@ -16,7 +16,6 @@ import {
   isJavaScript,
   removeThreadActorId,
 } from "../utils/source";
-import { stripQuery } from "../utils/url";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import { isFulfilled } from "../utils/async-value";
@@ -263,7 +262,6 @@ export const getDisplayedSources = createSelector(
   getMainThreadHost,
   (list, mainThreadHost) => {
     const result = {};
-    const entriesByNoQueryURL = {};
     for (const source of list) {
       const displayURL = getDisplayURL(source.url, mainThreadHost);
 
@@ -293,27 +291,6 @@ export const getDisplayedSources = createSelector(
         result[thread] = {};
       }
       result[thread][displayedSource.id] = displayedSource;
-
-      // Lets see if we have sources
-      // with query parameters in their URL that can be removed
-      const noQueryURL = stripQuery(displayedSource.url);
-      // This had query parameters to strip out
-      if (noQueryURL != displayedSource.url) {
-        if (!entriesByNoQueryURL[noQueryURL]) {
-          entriesByNoQueryURL[noQueryURL] = [];
-        }
-        entriesByNoQueryURL[noQueryURL].push(displayedSource);
-      }
-    }
-
-    // If the URL does not compete with another without the query string,
-    // we exclude the query string when rendering the source URL to keep the
-    // UI more easily readable.
-    for (const noQueryURL in entriesByNoQueryURL) {
-      const entries = entriesByNoQueryURL[noQueryURL];
-      if (entries.length === 1) {
-        entries[0].displayURL = getDisplayURL(noQueryURL, mainThreadHost);
-      }
     }
 
     return result;

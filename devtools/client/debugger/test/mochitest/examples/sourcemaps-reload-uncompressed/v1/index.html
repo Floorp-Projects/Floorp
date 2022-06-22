@@ -42,9 +42,12 @@
     <!-- Another script containing helper functions trigerred by the tests -->
     <script src="test-functions.js"></script>
 
-    <!-- Scripts with query strings, which are merged in the SourceTree -->
+    <!-- Scripts with query strings -->
+    <!-- * same file, distinct query -->
     <script src="query.js?x=1"></script>
     <script src="query.js?x=2"></script>
+    <!-- * unique file -->
+    <script src="query2.js?y=3"></script>
 
     <!-- A javascript: URL, which should not be shown in the SourceTree -->
     <script src="javascript:console.log('foo')"></script>
