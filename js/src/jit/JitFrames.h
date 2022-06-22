@@ -203,14 +203,11 @@ inline uint8_t* alignDoubleSpill(uint8_t* pointer) {
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
 class CommonFrameLayout {
+  uint8_t* callerFramePtr_;
   uint8_t* returnAddress_;
   uintptr_t descriptor_;
 
  public:
-  // All frames have the caller's frame pointer as first word (pushed after the
-  // return address is pushed).
-  static constexpr size_t FramePointerOffset = sizeof(void*);
-
   static constexpr size_t offsetOfDescriptor() {
     return offsetof(CommonFrameLayout, descriptor_);
   }
@@ -231,26 +228,21 @@ class CommonFrameLayout {
   uint8_t* returnAddress() const { return returnAddress_; }
   void setReturnAddress(uint8_t* addr) { returnAddress_ = addr; }
 
-  uint8_t* callerFramePtr() const {
-    auto* p = reinterpret_cast<const uintptr_t*>(this) - 1;
-    return reinterpret_cast<uint8_t*>(*p);
+  uint8_t* callerFramePtr() const { return callerFramePtr_; }
+  static constexpr size_t offsetOfCallerFramePtr() {
+    return offsetof(CommonFrameLayout, callerFramePtr_);
+  }
+  static constexpr size_t bytesPoppedAfterCall() {
+    // The return address and frame pointer are popped by the callee/call.
+    return 2 * sizeof(void*);
   }
 };
 
 class JitFrameLayout : public CommonFrameLayout {
   CalleeToken calleeToken_;
 
- protected:  // Silence Clang warning about unused private field.
-  uintptr_t unused_;
-
  public:
-  // TODO: removed in the next patch.
-  static constexpr uintptr_t UnusedValue = 0xbad0bad1;
-
-  CalleeToken calleeToken() const {
-    MOZ_ASSERT(unused_ == UnusedValue);
-    return calleeToken_;
-  }
+  CalleeToken calleeToken() const { return calleeToken_; }
   void replaceCalleeToken(CalleeToken calleeToken) {
     calleeToken_ = calleeToken;
   }
@@ -275,14 +267,8 @@ class JitFrameLayout : public CommonFrameLayout {
     return (JS::Value*)(this + 1);
   }
   uintptr_t numActualArgs() const {
-    MOZ_ASSERT(unused_ == UnusedValue);
     return descriptor() >> NUMACTUALARGS_SHIFT;
   }
-
-  // For IonJS frames: the distance from the JitFrameLayout to the first local
-  // slot. The caller's frame pointer is stored in this space. 32-bit platforms
-  // have 4 bytes of padding to ensure doubles are properly aligned.
-  static constexpr size_t IonFirstSlotOffset = 8;
 
   // Computes a reference to a stack or argument slot, where a slot is a
   // distance from the base frame pointer, as would be used for LStackSlot
@@ -335,14 +321,8 @@ class ExitFooterFrame {
   // VMFunctionData*.
   uintptr_t data_;
 
-  // Saved frame pointer. This must be the last word, so that this overlaps with
-  // CommonFrameLayout::FramePointerOffset.
- protected:  // Silence warning about unused private field.
-  static_assert(CommonFrameLayout::FramePointerOffset == sizeof(void*));
-  uint8_t* callerFP_;
-
  public:
-  static inline size_t Size() { return sizeof(ExitFooterFrame); }
+  static constexpr size_t Size() { return sizeof(ExitFooterFrame); }
   void setUnwoundJitExitFrame() {
     data_ = uintptr_t(ExitFrameType::UnwoundJit);
   }
@@ -379,10 +359,6 @@ class ExitFooterFrame {
   T* outParam() {
     uint8_t* address = alignedForABI();
     return reinterpret_cast<T*>(address - sizeof(T));
-  }
-
-  static constexpr size_t offsetOfCallerFP() {
-    return offsetof(ExitFooterFrame, callerFP_);
   }
 };
 
@@ -710,15 +686,14 @@ class BaselineStubFrameLayout : public CommonFrameLayout {
   // +-----------------------+
   // | - Descriptor          | => Marks end of FrameType::BaselineJS
   // | - Return address      |
+  // | - CallerFramePtr      |
   // +-----------------------+
-  // | - FramePtr            | Technically these last two fields are not part
-  // | - StubPtr             | of the frame layout.
-  // +-----------------------+
+  // | - StubPtr             | Technically this last field is not part
+  // +-----------------------+ of the frame layout.
 
  public:
-  static_assert(FramePointerOffset == sizeof(void*));
-  static constexpr size_t ICStubOffset = 2 * sizeof(void*);
-  static constexpr int ICStubOffsetFromFP = -int(sizeof(void*));
+  static constexpr size_t ICStubOffset = sizeof(void*);
+  static constexpr int ICStubOffsetFromFP = -int(ICStubOffset);
 
   static inline size_t Size() { return sizeof(BaselineStubFrameLayout); }
 

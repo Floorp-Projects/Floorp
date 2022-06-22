@@ -113,16 +113,11 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                "Trap exit stub needs 16-byte aligned stack pointer");
 #endif
   } else {
-    // Reserve space for frame pointer (and padding on 32-bit platforms).
-    offsetOfLocalSlots_ = JitFrameLayout::IonFirstSlotOffset;
-    frameDepth_ = offsetOfLocalSlots_;
-
     // Allocate space for local slots (register allocator spills). Round to
     // JitStackAlignment, and implicitly to sizeof(Value) as JitStackAlignment
     // is a multiple of sizeof(Value). This was originally implemented for
     // SIMD.js, but now lets us use faster ABI calls via setupAlignedABICall.
-    frameDepth_ += graph->localSlotsSize();
-    frameDepth_ = AlignBytes(frameDepth_, JitStackAlignment);
+    frameDepth_ = AlignBytes(graph->localSlotsSize(), JitStackAlignment);
 
     // Allocate space for argument Values passed to callee functions.
     offsetOfPassedArgSlots_ = frameDepth_;
@@ -141,12 +136,12 @@ bool CodeGeneratorShared::generatePrologue() {
   masm.pushReturnAddress();
 #endif
 
+  // Frame prologue.
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   // Ensure that the Ion frame is properly aligned.
   masm.assertStackAlignment(JitStackAlignment, 0);
-
-  // Frame prologue.
-  masm.Push(FramePointer);
-  masm.moveStackPtrTo(FramePointer);
 
   // If profiling, save the current frame pointer to a per-thread global field.
   if (isProfilerInstrumentationEnabled()) {
@@ -154,7 +149,7 @@ bool CodeGeneratorShared::generatePrologue() {
   }
 
   // Note that this automatically sets MacroAssembler::framePushed().
-  masm.reserveStack(frameSize() - sizeof(uintptr_t));
+  masm.reserveStack(frameSize());
   MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.checkStackAlignment();
 
@@ -358,7 +353,7 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx) {
 static inline int32_t ToStackIndex(LAllocation* a) {
   if (a->isStackSlot()) {
     MOZ_ASSERT(a->toStackSlot()->slot() >= 1);
-    return JitFrameLayout::IonFirstSlotOffset + a->toStackSlot()->slot();
+    return a->toStackSlot()->slot();
   }
   return -int32_t(sizeof(JitFrameLayout) + a->toArgument()->index());
 }

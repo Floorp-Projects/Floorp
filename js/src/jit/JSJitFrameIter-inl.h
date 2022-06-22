@@ -43,8 +43,7 @@ inline JSScript* JSJitProfilingFrameIterator::frameScript() const {
 
 inline BaselineFrame* JSJitFrameIter::baselineFrame() const {
   MOZ_ASSERT(isBaselineJS());
-  return (BaselineFrame*)(fp() - BaselineFrame::FramePointerOffset -
-                          BaselineFrame::Size());
+  return (BaselineFrame*)(fp() - BaselineFrame::Size());
 }
 
 inline uint32_t JSJitFrameIter::baselineFrameNumValueSlots() const {

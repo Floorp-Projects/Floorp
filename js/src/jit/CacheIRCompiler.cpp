@@ -8738,20 +8738,18 @@ void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   if (mode_ == Mode::Ion) {
     TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
     const VMFunctionData& fun = GetVMFunction(id);
-    uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*) +
-                         IonICCallFrameLayout::FramePointerOffset;
+    uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
     masm.PushFrameDescriptor(FrameType::IonICCall);
     masm.callJit(code);
 
-    // Remove rest of the frame left on the stack. We remove the return address
-    // which is implicitly popped when returning.
-    int framePop = sizeof(ExitFrameLayout) - sizeof(void*);
+    // Pop rest of the exit frame and the arguments left on the stack.
+    int framePop =
+        sizeof(ExitFrameLayout) - ExitFrameLayout::bytesPoppedAfterCall();
+    masm.implicitPop(frameSize + framePop);
 
-    // Pop arguments from framePushed and restore the frame pointer.
-    masm.implicitPop(frameSize + framePop -
-                     IonICCallFrameLayout::FramePointerOffset);
+    // Pop IonICCallFrameLayout.
     masm.Pop(FramePointer);
-    masm.freeStack(IonICCallFrameLayout::Size());
+    masm.freeStack(IonICCallFrameLayout::Size() - sizeof(void*));
     return;
   }
 

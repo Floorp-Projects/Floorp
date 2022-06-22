@@ -2063,6 +2063,7 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     // Enter exit frame for the FinishBailoutToBaseline call.
     pushFrameDescriptor(FrameType::BaselineJS);
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
+    push(FramePointer);
     // No GC things to mark on the stack, push a bare token.
     loadJSContext(scratch);
     enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);

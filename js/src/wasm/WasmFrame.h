@@ -420,39 +420,6 @@ static_assert(FrameWithInstances::sizeOfInstanceFields() == 2 * sizeof(void*),
 static_assert(sizeof(Frame) % 16 == 0, "frame is aligned");
 #endif
 
-// The JitEntry stub uses the following stack layout:
-//
-//   [JS JIT caller]
-//   [JitFrameLayout]     (frame descriptor, return address, etc)
-//   [JSJitToWasmFrame]   (saved frame pointer)
-//   [Wasm arguments]
-//
-// The caller's frame pointer is not yet stored in JitFrameLayout, so
-// JSJitToWasmFrame represents this space. On ARM64 it also has padding to
-// ensure SP is 16-byte aligned.
-class JSJitToWasmFrame {
- protected:  // Silence warning about unused padding_ field.
-#if defined(JS_CODEGEN_ARM64)
-  uintptr_t padding_;
-#endif
-  uint8_t* callerFP_;
-
- public:
-  static constexpr uint32_t callerFPOffset() {
-    return offsetof(JSJitToWasmFrame, callerFP_);
-  }
-  // Distance from frame pointer to the JitFrameLayout pushed by the caller.
-  static constexpr uint32_t jitFrameLayoutOffsetFromFP() {
-    return sizeof(JSJitToWasmFrame) - callerFPOffset();
-  }
-};
-#if defined(JS_CODEGEN_ARM64)
-static_assert(sizeof(JSJitToWasmFrame) % 16 == 0, "frame is aligned");
-#endif
-static_assert(JSJitToWasmFrame::jitFrameLayoutOffsetFromFP() == sizeof(void*),
-              "fp must point to caller fp followed by return address for "
-              "native stack walking to work");
-
 }  // namespace wasm
 }  // namespace js
 

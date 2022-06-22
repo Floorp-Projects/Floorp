@@ -927,14 +927,14 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
 
   GenerateJitEntryLoadInstance(masm, frameSize);
 
-  // The frame pointer is still set to FailFP. Restore it before entering the
-  // exit frame.
-  MOZ_ASSERT(frameSize >= JitFrameLayout::FramePointerOffset);
-  uint32_t offset = frameSize - JitFrameLayout::FramePointerOffset;
-  masm.loadPtr(Address(masm.getStackPointer(), offset), FramePointer);
-
   masm.freeStack(frameSize);
   MoveSPForJitABI(masm);
+
+  // The frame pointer is still set to FailFP. Restore it before entering the
+  // exit frame.
+  masm.loadPtr(
+      Address(masm.getStackPointer(), JitFrameLayout::offsetOfCallerFramePtr()),
+      FramePointer);
 
   masm.loadPtr(Address(InstanceReg, Instance::offsetOfCx()), ScratchIonEntry);
   masm.enterFakeExitFrameForWasm(ScratchIonEntry, ScratchIonEntry,
@@ -1011,10 +1011,10 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   // left):
   // <-- retAddr | descriptor | callee | argc | this | arg1..N
   //
-  // GenerateJitEntryPrologue has additionally pushed a JSJitToWasmFrame storing
-  // the caller's frame pointer.
+  // GenerateJitEntryPrologue has additionally pushed the caller's frame
+  // pointer. The stack pointer is now JitStackAlignment-aligned.
 
-  MOZ_ASSERT(masm.framePushed() == sizeof(JSJitToWasmFrame));
+  MOZ_ASSERT(masm.framePushed() == 0);
 
   unsigned normalBytesNeeded = StackArgBytesForWasmABI(fe.funcType());
 
@@ -1353,7 +1353,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         masm.jump(&exception);
         masm.bind(&done);
         // Un-fixup the stack for the benefit of the assertion below.
-        masm.setFramePushed(sizeof(JSJitToWasmFrame));
+        masm.setFramePushed(0);
         break;
       }
       case ValType::Rtt:
@@ -1369,7 +1369,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
           case RefType::Extern:
             // Per comment above, the call may have clobbered the instance
             // register, so reload since unboxing will need it.
-            GenerateJitEntryLoadInstance(masm, sizeof(JSJitToWasmFrame));
+            GenerateJitEntryLoadInstance(masm, 0);
             UnboxAnyrefIntoValueReg(masm, InstanceReg, ReturnReg,
                                     JSReturnOperand, WasmJitEntryReturnScratch);
             break;
@@ -1383,7 +1383,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   GenPrintf(DebugChannel::Function, masm, "\n");
 
-  MOZ_ASSERT(masm.framePushed() == sizeof(JSJitToWasmFrame));
+  MOZ_ASSERT(masm.framePushed() == 0);
 
   AssertExpectedSP(masm);
   GenerateJitEntryEpilogue(masm, offsets);
@@ -1460,12 +1460,11 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 
   // Push a special frame descriptor that indicates the frame size so we can
   // directly iterate from the current JIT frame without an extra call.
-  *callOffset = masm.buildFakeExitFrame(scratch);
-  masm.loadJSContext(scratch);
-
-  // Note: enterFakeExitFrame pushes an ExitFooterFrame containing the current
+  // Note: buildFakeExitFrame pushes an ExitFrameLayout containing the current
   // frame pointer. We also use this to restore the frame pointer after the
   // call.
+  *callOffset = masm.buildFakeExitFrame(scratch);
+  masm.loadJSContext(scratch);
   masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::DirectWasmJitCall);
   // FP := ExitFrameLayout* | ExitOrJitEntryFPTag
   masm.moveStackPtrTo(FramePointer);
@@ -1669,10 +1668,10 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
 
   GenPrintf(DebugChannel::Function, masm, "\n");
 
-  // Restore the frame pointer by loading it from the ExitFooterFrame.
-  masm.loadPtr(Address(masm.getStackPointer(),
-                       bytesNeeded + ExitFooterFrame::offsetOfCallerFP()),
-               FramePointer);
+  // Restore the frame pointer by loading it from the ExitFrameLayout.
+  size_t fpOffset = bytesNeeded + ExitFooterFrame::Size() +
+                    ExitFrameLayout::offsetOfCallerFramePtr();
+  masm.loadPtr(Address(masm.getStackPointer(), fpOffset), FramePointer);
 
   // Free args + frame descriptor.
   masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());
@@ -2261,35 +2260,28 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   //   ^
   //   +-- sp
   //
-  // Unlike most ABIs, the JIT ABI requires that sp be JitStackAlignment-
-  // aligned *after* pushing the return address.
+  // The JIT ABI requires that sp be JitStackAlignment-aligned after pushing
+  // the return address and frame pointer.
   static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
   const unsigned sizeOfInstanceSlot = sizeof(void*);
-  const unsigned sizeOfRetAddr = sizeof(void*);
+  const unsigned sizeOfRetAddrAndFP = 2 * sizeof(void*);
   const unsigned sizeOfPreFrame =
-      WasmToJSJitFrameLayout::Size() - sizeOfRetAddr;
+      WasmToJSJitFrameLayout::Size() - sizeOfRetAddrAndFP;
   const unsigned sizeOfThisAndArgs =
       (1 + fi.funcType().args().length()) * sizeof(Value);
-  const unsigned totalJitFrameBytes =
-      sizeOfRetAddr + sizeOfPreFrame + sizeOfThisAndArgs + sizeOfInstanceSlot;
+  const unsigned totalJitFrameBytes = sizeOfRetAddrAndFP + sizeOfPreFrame +
+                                      sizeOfThisAndArgs + sizeOfInstanceSlot;
   const unsigned jitFramePushed =
       StackDecrementForCall(JitStackAlignment,
                             sizeof(Frame),  // pushed by prologue
                             totalJitFrameBytes) -
-      sizeOfRetAddr;
+      sizeOfRetAddrAndFP;
 
-  // On ARM64 we must align the SP to a 16-byte boundary.
-#ifdef JS_CODEGEN_ARM64
-  const unsigned frameAlignExtra = sizeof(void*);
-#else
-  const unsigned frameAlignExtra = 0;
-#endif
-
-  GenerateJitExitPrologue(masm, jitFramePushed + frameAlignExtra, offsets);
+  GenerateJitExitPrologue(masm, jitFramePushed, offsets);
 
   // 1. Descriptor.
   unsigned argc = fi.funcType().args().length();
-  size_t argOffset = frameAlignExtra;
+  size_t argOffset = 0;
   uint32_t descriptor =
       MakeFrameDescriptorForJitCall(FrameType::WasmToJSJit, argc);
   masm.storePtr(ImmWord(uintptr_t(descriptor)),
@@ -2300,24 +2292,19 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // record offset here and set up callee later.
   size_t calleeArgOffset = argOffset;
   argOffset += sizeof(size_t);
+  MOZ_ASSERT(argOffset == sizeOfPreFrame);
 
-  // 3. unused_ field.
-  masm.storePtr(ImmWord(JitFrameLayout::UnusedValue),
-                Address(masm.getStackPointer(), argOffset));
-  argOffset += sizeof(size_t);
-  MOZ_ASSERT(argOffset == sizeOfPreFrame + frameAlignExtra);
-
-  // 4. |this| value.
+  // 3. |this| value.
   masm.storeValue(UndefinedValue(), Address(masm.getStackPointer(), argOffset));
   argOffset += sizeof(Value);
 
-  // 5. Fill the arguments.
+  // 4. Fill the arguments.
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
   FillArgumentArrayForJitExit(masm, InstanceReg, funcImportIndex, fi.funcType(),
                               argOffset, scratch, scratch2, throwLabel);
   argOffset += fi.funcType().args().length() * sizeof(Value);
-  MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
+  MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame);
 
   // Preserve instance because the JIT callee clobbers it.
   const size_t savedInstanceOffset = argOffset;
@@ -2334,36 +2321,28 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), calleeArgOffset));
 
-  // 6. Check if we need to rectify arguments.
+  // 5. Check if we need to rectify arguments.
   masm.loadFunctionArgCount(callee, scratch);
 
   Label rectify;
   masm.branch32(Assembler::Above, scratch, Imm32(fi.funcType().args().length()),
                 &rectify);
 
-  // 7. If we haven't rectified arguments, load callee executable entry point.
+  // 6. If we haven't rectified arguments, load callee executable entry point.
 
   masm.loadJitCodeRaw(callee, callee);
 
   Label rejoinBeforeCall;
   masm.bind(&rejoinBeforeCall);
 
-  AssertStackAlignment(masm, JitStackAlignment,
-                       sizeOfRetAddr + frameAlignExtra);
+  AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddrAndFP);
 #ifdef JS_CODEGEN_ARM64
   AssertExpectedSP(masm);
-  // Conform to JIT ABI.  Note this doesn't update PSP since SP is the active
-  // pointer.
-  masm.addToStackPtr(Imm32(8));
   // Manually resync PSP.  Omitting this causes eg tests/wasm/import-export.js
   // to segfault.
   masm.moveStackPtrTo(PseudoStackPointer);
 #endif
   masm.callJitNoProfiler(callee);
-#ifdef JS_CODEGEN_ARM64
-  // Conform to platform conventions - align the SP.
-  masm.subFromStackPtr(Imm32(8));
-#endif
 
   // Note that there might be a GC thing in the JSReturnOperand now.
   // In all the code paths from here:
@@ -2376,8 +2355,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // FramePointer, so restore those here. During this sequence of
   // instructions, FP can't be trusted by the profiling frame iterator.
   offsets->untrustedFPStart = masm.currentOffset();
-  AssertStackAlignment(masm, JitStackAlignment,
-                       sizeOfRetAddr + frameAlignExtra);
+  AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddrAndFP);
 
   masm.loadPtr(Address(masm.getStackPointer(), savedInstanceOffset),
                InstanceReg);
@@ -2385,17 +2363,12 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   masm.addPtr(Imm32(masm.framePushed()), FramePointer);
   offsets->untrustedFPEnd = masm.currentOffset();
 
-  // As explained above, the frame was aligned for the JIT ABI such that
-  //   (sp + sizeof(void*)) % JitStackAlignment == 0
+  // The frame was aligned for the JIT ABI such that
+  //   (sp - 2 * sizeof(void*)) % JitStackAlignment == 0
   // But now we possibly want to call one of several different C++ functions,
-  // so subtract the sizeof(void*) so that sp is aligned for an ABI call.
+  // so subtract 2 * sizeof(void*) so that sp is aligned for an ABI call.
   static_assert(ABIStackAlignment <= JitStackAlignment, "subsumes");
-#ifdef JS_CODEGEN_ARM64
-  // We've already allocated the extra space for frame alignment.
-  static_assert(sizeOfRetAddr == frameAlignExtra, "ARM64 SP alignment");
-#else
-  masm.reserveStack(sizeOfRetAddr);
-#endif
+  masm.reserveStack(sizeOfRetAddrAndFP);
   unsigned nativeFramePushed = masm.framePushed();
   AssertStackAlignment(masm, ABIStackAlignment);
 

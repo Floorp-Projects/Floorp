@@ -297,9 +297,7 @@ void MacroAssembler::PushFrameDescriptorForJitCall(FrameType type,
 }
 
 void MacroAssembler::loadNumActualArgs(Register framePtr, Register dest) {
-  static constexpr uint32_t Offset =
-      JitFrameLayout::FramePointerOffset + JitFrameLayout::offsetOfDescriptor();
-  loadPtr(Address(framePtr, Offset), dest);
+  loadPtr(Address(framePtr, JitFrameLayout::offsetOfDescriptor()), dest);
   rshift32(Imm32(NUMACTUALARGS_SHIFT), dest);
 }
 
@@ -335,6 +333,7 @@ uint32_t MacroAssembler::buildFakeExitFrame(Register scratch) {
 
   PushFrameDescriptor(FrameType::IonJS);
   uint32_t retAddr = pushFakeReturnAddress(scratch);
+  Push(FramePointer);
 
   MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
   return retAddr;
@@ -347,7 +346,6 @@ void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
                                     const VMFunctionData* f) {
   MOZ_ASSERT(f);
   linkExitFrame(cxreg, scratch);
-  Push(FramePointer);
   // Push VMFunction pointer, to mark arguments.
   Push(ImmPtr(f));
 }
@@ -355,7 +353,6 @@ void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
 void MacroAssembler::enterFakeExitFrame(Register cxreg, Register scratch,
                                         ExitFrameType type) {
   linkExitFrame(cxreg, scratch);
-  Push(FramePointer);
   Push(Imm32(int32_t(type)));
 }
 
