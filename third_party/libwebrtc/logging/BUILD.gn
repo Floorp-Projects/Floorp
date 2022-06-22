@@ -37,7 +37,6 @@ rtc_library("rtc_event_field") {
   sources = [
     "rtc_event_log/events/fixed_length_encoding_parameters_v3.cc",
     "rtc_event_log/events/fixed_length_encoding_parameters_v3.h",
-    "rtc_event_log/events/rtc_event_definition.h",
     "rtc_event_log/events/rtc_event_field_encoding.cc",
     "rtc_event_log/events/rtc_event_field_encoding.h",
     "rtc_event_log/events/rtc_event_field_encoding_parser.cc",
@@ -292,7 +291,6 @@ rtc_library("rtc_event_log_impl_encoder") {
       ":rtc_event_audio",
       ":rtc_event_begin_end",
       ":rtc_event_bwe",
-      ":rtc_event_field",
       ":rtc_event_frame_events",
       ":rtc_event_generic_packet_events",
       ":rtc_event_log2_proto",
@@ -312,8 +310,6 @@ rtc_library("rtc_event_log_impl_encoder") {
       "rtc_event_log/encoder/rtc_event_log_encoder_legacy.h",
       "rtc_event_log/encoder/rtc_event_log_encoder_new_format.cc",
       "rtc_event_log/encoder/rtc_event_log_encoder_new_format.h",
-      "rtc_event_log/encoder/rtc_event_log_encoder_v3.cc",
-      "rtc_event_log/encoder/rtc_event_log_encoder_v3.h",
     ]
   }
 }
