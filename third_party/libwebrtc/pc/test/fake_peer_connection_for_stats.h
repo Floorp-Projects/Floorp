@@ -208,7 +208,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         webrtc::CryptoOptions(), &ssrc_generator_, transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_AUDIO)
         ->internal()
-        ->SetChannel(voice_channel_.get());
+        ->SetChannel(voice_channel_.get(),
+                     [](const std::string&) { return nullptr; });
     return voice_media_channel_ptr;
   }
 
@@ -225,7 +226,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         webrtc::CryptoOptions(), &ssrc_generator_, transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_VIDEO)
         ->internal()
-        ->SetChannel(video_channel_.get());
+        ->SetChannel(video_channel_.get(),
+                     [](const std::string&) { return nullptr; });
     return video_media_channel_ptr;
   }
 

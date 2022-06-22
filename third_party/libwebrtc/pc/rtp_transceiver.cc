@@ -156,7 +156,9 @@ RtpTransceiver::~RtpTransceiver() {
   }
 }
 
-void RtpTransceiver::SetChannel(cricket::ChannelInterface* channel) {
+void RtpTransceiver::SetChannel(
+    cricket::ChannelInterface* channel,
+    std::function<RtpTransportInternal*(const std::string&)> transport_lookup) {
   RTC_DCHECK_RUN_ON(thread_);
   // Cannot set a non-null channel on a stopped transceiver.
   if (stopped_ && channel) {
@@ -164,6 +166,7 @@ void RtpTransceiver::SetChannel(cricket::ChannelInterface* channel) {
   }
 
   RTC_DCHECK(channel || channel_);
+  RTC_DCHECK(!channel || transport_lookup) << "lookup function not supplied";
 
   RTC_LOG_THREAD_BLOCK_COUNT();
 
@@ -189,11 +192,13 @@ void RtpTransceiver::SetChannel(cricket::ChannelInterface* channel) {
   channel_manager_->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     if (channel_) {
       channel_->SetFirstPacketReceivedCallback(nullptr);
+      channel_->SetRtpTransport(nullptr);
     }
 
     channel_ = channel;
 
     if (channel_) {
+      channel_->SetRtpTransport(transport_lookup(channel_->content_name()));
       channel_->SetFirstPacketReceivedCallback(
           [thread = thread_, flag = signaling_thread_safety_, this]() mutable {
             thread->PostTask(ToQueuedTask(
