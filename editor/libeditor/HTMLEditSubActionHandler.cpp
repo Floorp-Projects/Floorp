@@ -5850,16 +5850,28 @@ nsresult HTMLEditor::CreateStyleForInsertText(
       // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
       HTMLEditor::FontSize dir = relFontSize > 0 ? HTMLEditor::FontSize::incr
                                                  : HTMLEditor::FontSize::decr;
+      EditorDOMPoint pointToPutCaret;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
-        nsresult rv =
+        CreateElementResult wrapTextInBigOrSmallElementResult =
             RelativeFontChangeOnTextNode(dir, *newEmptyTextNode, 0, UINT32_MAX);
-        if (NS_WARN_IF(Destroyed())) {
+        if (wrapTextInBigOrSmallElementResult.isErr()) {
+          NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
+          return wrapTextInBigOrSmallElementResult.unwrapErr();
+        }
+        wrapTextInBigOrSmallElementResult.MoveCaretPointTo(
+            pointToPutCaret, *this,
+            {SuggestCaret::OnlyIfHasSuggestion,
+             SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      }
+      if (pointToPutCaret.IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaret);
+        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
           return NS_ERROR_EDITOR_DESTROYED;
         }
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
-          return rv;
-        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::CollapseSelectionTo() failed, but ignored");
       }
     }
 
