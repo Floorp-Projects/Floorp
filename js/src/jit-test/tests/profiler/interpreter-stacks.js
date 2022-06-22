@@ -77,8 +77,7 @@ function testGenerator() {
 
     assertEq(stacks.length, 3);
     for (var stack of stacks) {
-        // TODO: this is missing the "generator" frame.
-        assertStack(stack, ["testGenerator", "next"]);
+        assertStack(stack, ["testGenerator", "next", "generator"]);
     }
 }
 testGenerator();
@@ -92,13 +91,11 @@ async function testAsync() {
         stacks.push(readGeckoInterpProfilingStack());
     };
     await asyncFun();
-    // TODO: this is missing the "testAsync" frame.
-    assertStack(readGeckoInterpProfilingStack(), ["AsyncFunctionNext"]);
+    assertStack(readGeckoInterpProfilingStack(), ["AsyncFunctionNext", "testAsync"]);
 
     assertEq(stacks.length, 2);
     assertStack(stacks[0], ["testAsync", "asyncFun"]);
-    // TODO: this is missing the "asyncFun" frame.
-    assertStack(stacks[1], ["AsyncFunctionNext"]);
+    assertStack(stacks[1], ["AsyncFunctionNext", "asyncFun"]);
 }
 testAsync();
 drainJobQueue();
