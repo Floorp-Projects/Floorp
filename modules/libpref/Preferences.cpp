@@ -5913,6 +5913,14 @@ static bool ShouldSanitizePreference_Impl(const T& aPref,
   if (XRE_IsParentProcess()) {
     const char* prefName = aPref.Name();
 
+    // If a pref starts with this magic string, it is a Once-Initialized pref
+    // from Static Prefs. It should* not be in the above list and while it looks
+    // like a dnyamically named pref, it is not.
+    // * nothing enforces this
+    if (strncmp(prefName, "$$$", 3) == 0) {
+      return false;
+    }
+
     // First check against the denylist, the denylist is used for
     // all subprocesses to reduce IPC traffic.
     // The services pref is an annoying one - it's much easier to blocklist
@@ -5961,6 +5969,12 @@ namespace mozilla {
 bool ShouldSanitizePreference(const char* aPrefName,
                               bool aIsDestWebContentProcess) {
   if (!aIsDestWebContentProcess) {
+    return false;
+  }
+
+  // Perform this comparison (see notes above) early to avoid a lookup
+  // if we can avoid it.
+  if (strncmp(aPrefName, "$$$", 3) == 0) {
     return false;
   }
 
