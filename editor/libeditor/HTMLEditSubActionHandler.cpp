@@ -7599,12 +7599,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
         MOZ_ASSERT(!splitListItemParentResult.HasCaretPointSuggestion());
         return Err(NS_ERROR_FAILURE);
       }
-      nsresult rv = splitListItemParentResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-        return Err(rv);
-      }
+      splitListItemParentResult.IgnoreCaretPointSuggestion();
       leftListElement =
           Element::FromNode(splitListItemParentResult.GetPreviousContent());
       MOZ_DIAGNOSTIC_ASSERT(leftListElement);
@@ -7674,17 +7669,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
           "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
       return Err(createNewParagraphElementResult.unwrapErr());
     }
-    rv = createNewParagraphElementResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    createNewParagraphElementResult.IgnoreCaretPointSuggestion();
     MOZ_ASSERT(createNewParagraphElementResult.GetNewNode());
     return EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u);
   }
@@ -7711,14 +7696,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
     return Err(splitListItemResult.unwrapErr());
   }
-  nsresult rv = splitListItemResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-
+  splitListItemResult.IgnoreCaretPointSuggestion();
   if (MOZ_UNLIKELY(!aListItemElement.GetParent())) {
     NS_WARNING("Somebody disconnected the target listitem from the parent");
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -7754,7 +7732,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
           ") failed");
       return Err(insertPaddingBRElementResult.unwrapErr());
     }
-    // We're returing a candidate point to put caret so that we don't need to
+    // We're returning a candidate point to put caret so that we don't need to
     // update now.
     insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
     return EditorDOMPoint(&rightListItemElement, 0u);
@@ -7779,23 +7757,14 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
         return Err(createNewListItemElementResult.unwrapErr());
       }
-      nsresult rv = createNewListItemElementResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-        return Err(rv);
-      }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+      createNewListItemElementResult.IgnoreCaretPointSuggestion();
       RefPtr<Element> newListItemElement =
           createNewListItemElementResult.UnwrapNewNode();
       MOZ_ASSERT(newListItemElement);
       // MOZ_KnownLive(rightListItemElement) because it's grabbed by
       // splitListItemResult.
-      rv = DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
+      nsresult rv =
+          DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
         return Err(rv);
@@ -7836,7 +7805,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       forwardScanFromStartOfListItemResult.ReachedHRElement()) {
     auto atFoundElement =
         forwardScanFromStartOfListItemResult.PointAtContent<EditorDOMPoint>();
-    if (MOZ_UNLIKELY(NS_WARN_IF(!atFoundElement.IsSetAndValid()))) {
+    if (NS_WARN_IF(!atFoundElement.IsSetAndValid())) {
       return Err(NS_ERROR_FAILURE);
     }
     return atFoundElement;
