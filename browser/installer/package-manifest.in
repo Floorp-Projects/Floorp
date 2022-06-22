@@ -199,11 +199,6 @@
 @RESPATH@/components/TestInterfaceJS.manifest
 #endif
 
-#if defined(MOZ_DEBUG) || defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
-@RESPATH@/browser/components/testComponents.manifest
-@RESPATH@/browser/components/startupRecorder.js
-#endif
-
 ; [Extensions]
 @RESPATH@/components/extensions-toolkit.manifest
 @RESPATH@/browser/components/extensions-browser.manifest

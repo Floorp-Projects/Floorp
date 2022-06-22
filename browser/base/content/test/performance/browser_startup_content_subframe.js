@@ -36,6 +36,8 @@ const known_scripts = {
     // Loaded by this test
     actorModuleURI,
 
+    "resource:///modules/StartupRecorder.jsm",
+
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/DeferredTask.jsm",

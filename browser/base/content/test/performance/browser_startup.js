@@ -29,9 +29,9 @@ const startupPhases = {
     allowlist: {
       modules: new Set([
         "resource:///modules/BrowserGlue.jsm",
+        "resource:///modules/StartupRecorder.jsm",
         "resource://gre/modules/AppConstants.jsm",
         "resource://gre/modules/ActorManagerParent.jsm",
-        "resource://gre/modules/ComponentUtils.jsm",
         "resource://gre/modules/CustomElementsListener.jsm",
         "resource://gre/modules/MainProcessSingleton.jsm",
         "resource://gre/modules/XPCOMUtils.jsm",
@@ -155,13 +155,11 @@ add_task(async function() {
   // Keep only the file name for components, as the path is an absolute file
   // URL rather than a resource:// URL like for modules.
   for (let phase in data) {
-    data[phase].components = data[phase].components
-      .map(uri => {
-        let fileName = uri.replace(/.*\//, "");
-        componentStacks.set(fileName, Cu.getComponentLoadStack(uri));
-        return fileName;
-      })
-      .filter(c => c != "startupRecorder.js");
+    data[phase].components = data[phase].components.map(uri => {
+      let fileName = uri.replace(/.*\//, "");
+      componentStacks.set(fileName, Cu.getComponentLoadStack(uri));
+      return fileName;
+    });
   }
 
   function getStack(scriptType, name) {

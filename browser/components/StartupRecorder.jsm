@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["StartupRecorder"];
+
 const Cm = Components.manager;
 Cm.QueryInterface(Ci.nsIServiceManager);
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -53,7 +52,7 @@ let afterPaintListener = () => {
 };
 
 /**
- * The startupRecorder component observes notifications at various stages of
+ * The StartupRecorder component observes notifications at various stages of
  * startup and records the set of JS components and modules that were already
  * loaded at each of these points.
  * The records are meant to be used by startup tests in
@@ -61,7 +60,7 @@ let afterPaintListener = () => {
  * This component only exists in nightly and debug builds, it doesn't ship in
  * our release builds.
  */
-function startupRecorder() {
+function StartupRecorder() {
   this.wrappedJSObject = this;
   this.data = {
     images: {
@@ -76,9 +75,7 @@ function startupRecorder() {
     this._resolve = resolve;
   });
 }
-startupRecorder.prototype = {
-  classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
-
+StartupRecorder.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   record(name) {
@@ -100,7 +97,12 @@ startupRecorder.prototype = {
   },
 
   observe(subject, topic, data) {
-    if (topic == "app-startup") {
+    if (topic == "app-startup" || topic == "content-process-ready-for-script") {
+      // Don't do anything in xpcshell.
+      if (Services.appinfo.ID != "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}") {
+        return;
+      }
+
       if (
         !Services.prefs.getBoolPref("browser.startup.record", false) &&
         !Services.prefs.getBoolPref("browser.startup.recordImages", false)
@@ -232,5 +234,3 @@ startupRecorder.prototype = {
     }
   },
 };
-
-this.NSGetFactory = ComponentUtils.generateNSGetFactory([startupRecorder]);
