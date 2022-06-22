@@ -221,7 +221,11 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
       // Default Options.
       VerifyEchoCancellationSettings(/*enabled=*/true);
       EXPECT_TRUE(IsHighPassFilterEnabled());
+#if defined(WEBRTC_ANDROID)
+      EXPECT_FALSE(IsTypingDetectionEnabled());
+#else
       EXPECT_TRUE(IsTypingDetectionEnabled());
+#endif
       EXPECT_TRUE(apm_config_.noise_suppression.enabled);
       EXPECT_EQ(apm_config_.noise_suppression.level, kDefaultNsLevel);
       VerifyGainControlEnabledCorrectly();
@@ -3037,7 +3041,11 @@ TEST_P(WebRtcVoiceEngineTestFake, SetAudioOptions) {
   if (!use_null_apm_) {
     VerifyEchoCancellationSettings(/*enabled=*/true);
     EXPECT_TRUE(IsHighPassFilterEnabled());
+#if defined(WEBRTC_ANDROID)
+    EXPECT_FALSE(IsTypingDetectionEnabled());
+#else
     EXPECT_TRUE(IsTypingDetectionEnabled());
+#endif
   }
   EXPECT_EQ(200u, GetRecvStreamConfig(kSsrcY).jitter_buffer_max_packets);
   EXPECT_FALSE(GetRecvStreamConfig(kSsrcY).jitter_buffer_fast_accelerate);
@@ -3060,7 +3068,11 @@ TEST_P(WebRtcVoiceEngineTestFake, SetAudioOptions) {
   send_parameters_.options.typing_detection = true;
   SetSendParameters(send_parameters_);
   if (!use_null_apm_) {
+#if defined(WEBRTC_ANDROID)
+    EXPECT_FALSE(IsTypingDetectionEnabled());
+#else
     EXPECT_TRUE(IsTypingDetectionEnabled());
+#endif
   }
 
   // Turn echo cancellation off
