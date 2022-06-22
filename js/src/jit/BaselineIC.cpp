@@ -1790,8 +1790,10 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
 
   // Load passed-in ThisV into R1 just in case it's needed.  Need to do this
   // before we leave the stub frame since that info will be lost.
-  // Current stack:  [...., ThisV, ActualArgc, CalleeToken, Descriptor ]
-  masm.loadValue(Address(masm.getStackPointer(), 3 * sizeof(size_t)), R1);
+  // Current stack:  [...., ThisV, CalleeToken, Descriptor ]
+  size_t thisvOffset =
+      JitFrameLayout::offsetOfThis() - JitFrameLayout::bytesPoppedAfterCall();
+  masm.loadValue(Address(masm.getStackPointer(), thisvOffset), R1);
 
   leaveStubFrame(masm);
 

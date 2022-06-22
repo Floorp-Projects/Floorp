@@ -24,17 +24,16 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   profilerExitFrameTailOffset_ = startTrampolineCode(masm);
   masm.bind(profilerExitTail);
 
-  // Offset from frame pointer to CommonFrameLayout.
-  static constexpr size_t FPOffset = CommonFrameLayout::FramePointerOffset;
+  static constexpr size_t CallerFPOffset =
+      CommonFrameLayout::offsetOfCallerFramePtr();
 
   // Assert the caller frame's type is one of the types we expect.
   auto emitAssertPrevFrameType = [&masm](
                                      Register framePtr, Register scratch,
                                      std::initializer_list<FrameType> types) {
 #ifdef DEBUG
-    masm.loadPtr(
-        Address(framePtr, FPOffset + CommonFrameLayout::offsetOfDescriptor()),
-        scratch);
+    masm.loadPtr(Address(framePtr, CommonFrameLayout::offsetOfDescriptor()),
+                 scratch);
     masm.and32(Imm32(FRAMETYPE_MASK), scratch);
 
     Label checkOk;
@@ -61,8 +60,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   //
   // Thus the expected state is:
   //
-  //    [JitFrameLayout]
-  //    [CallerFramePtr] <-- FramePointer
+  //    [JitFrameLayout] <-- FramePointer
   //    [frame contents] <-- StackPointer
   //
   // The generated jitcode is responsible for overwriting the
@@ -134,9 +132,8 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
 
   // Load the frame descriptor into |scratch|, figure out what to do depending
   // on its type.
-  masm.loadPtr(
-      Address(fpScratch, FPOffset + JitFrameLayout::offsetOfDescriptor()),
-      scratch);
+  masm.loadPtr(Address(fpScratch, JitFrameLayout::offsetOfDescriptor()),
+               scratch);
   masm.and32(Imm32(FRAMETYPE_MASK), scratch);
 
   // Handling of each case is dependent on FrameDescriptor.type
@@ -171,13 +168,12 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
     // Returning directly to a Baseline or Ion frame.
 
     // lastProfilingCallSite := ReturnAddress
-    masm.loadPtr(
-        Address(fpScratch, FPOffset + JitFrameLayout::offsetOfReturnAddress()),
-        scratch);
+    masm.loadPtr(Address(fpScratch, JitFrameLayout::offsetOfReturnAddress()),
+                 scratch);
     masm.storePtr(scratch, lastProfilingCallSite);
 
     // lastProfilingFrame := CallerFrame
-    masm.loadPtr(Address(fpScratch, 0), scratch);
+    masm.loadPtr(Address(fpScratch, CallerFPOffset), scratch);
     masm.storePtr(scratch, lastProfilingFrame);
 
     masm.moveToStackPtr(FramePointer);
@@ -188,17 +184,16 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   // Shared implementation for BaselineStub and IonICCall frames.
   auto emitHandleStubFrame = [&](FrameType expectedPrevType) {
     // Load pointer to stub frame and assert type of its caller frame.
-    masm.loadPtr(Address(fpScratch, 0), fpScratch);
+    masm.loadPtr(Address(fpScratch, CallerFPOffset), fpScratch);
     emitAssertPrevFrameType(fpScratch, scratch, {expectedPrevType});
 
     // lastProfilingCallSite := StubFrame.ReturnAddress
-    masm.loadPtr(Address(fpScratch,
-                         FPOffset + CommonFrameLayout::offsetOfReturnAddress()),
+    masm.loadPtr(Address(fpScratch, CommonFrameLayout::offsetOfReturnAddress()),
                  scratch);
     masm.storePtr(scratch, lastProfilingCallSite);
 
     // lastProfilingFrame := StubFrame.CallerFrame
-    masm.loadPtr(Address(fpScratch, 0), scratch);
+    masm.loadPtr(Address(fpScratch, CallerFPOffset), scratch);
     masm.storePtr(scratch, lastProfilingFrame);
 
     masm.moveToStackPtr(FramePointer);
@@ -222,7 +217,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   {
     // There can be multiple previous frame types so just "unwrap" the arguments
     // rectifier frame and try again.
-    masm.loadPtr(Address(fpScratch, 0), fpScratch);
+    masm.loadPtr(Address(fpScratch, CallerFPOffset), fpScratch);
     emitAssertPrevFrameType(fpScratch, scratch,
                             {FrameType::IonJS, FrameType::BaselineStub,
                              FrameType::CppToJSJit, FrameType::WasmToJSJit});

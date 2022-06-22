@@ -892,13 +892,13 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
-  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.Push(scratch);
   masm.PushFrameDescriptorForJitCall(FrameType::IonICCall, /* argc = */ 0);
 
-  // Check stack alignment. Add sizeof(uintptr_t) for the return address.
-  MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
-             0);
+  // Check stack alignment. Add 2 * sizeof(uintptr_t) for the return address and
+  // frame pointer pushed by the call/callee.
+  MOZ_ASSERT(
+      ((masm.framePushed() + 2 * sizeof(uintptr_t)) % JitStackAlignment) == 0);
 
   MOZ_ASSERT(target->hasJitEntry());
   masm.loadJitCodeRaw(scratch, scratch);
@@ -1540,13 +1540,13 @@ bool IonCacheIRCompiler::emitCallScriptedSetter(ObjOperandId receiverId,
 
   masm.movePtr(ImmGCPtr(target), scratch);
 
-  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.Push(scratch);
   masm.PushFrameDescriptorForJitCall(FrameType::IonICCall, /* argc = */ 1);
 
-  // Check stack alignment. Add sizeof(uintptr_t) for the return address.
-  MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
-             0);
+  // Check stack alignment. Add 2 * sizeof(uintptr_t) for the return address and
+  // frame pointer pushed by the call/callee.
+  MOZ_ASSERT(
+      ((masm.framePushed() + 2 * sizeof(uintptr_t)) % JitStackAlignment) == 0);
 
   MOZ_ASSERT(target->hasJitEntry());
   masm.loadJitCodeRaw(scratch, scratch);
@@ -1944,7 +1944,6 @@ bool IonCacheIRCompiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
 
-  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.Push(callee);
   masm.PushFrameDescriptorForJitCall(FrameType::IonICCall, /* argc = */ 0);
 

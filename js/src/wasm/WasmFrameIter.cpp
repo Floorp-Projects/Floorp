@@ -199,8 +199,7 @@ void WasmFrameIter::popFrame() {
     //
     // The next value of FP is just a regular jit frame used as a marker to
     // know that we should transition to a JSJit frame iterator.
-    unwoundJitCallerFP_ = reinterpret_cast<uint8_t*>(fp_) +
-                          JSJitToWasmFrame::jitFrameLayoutOffsetFromFP();
+    unwoundJitCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
     unwoundJitFrameType_ = FrameType::JSJitToWasm;
 
     fp_ = nullptr;
@@ -829,8 +828,9 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm,
     offsets->begin = masm.currentOffset();
     static_assert(BeforePushRetAddr == 0);
     // Subtract from SP first as SP must be aligned before offsetting.
-    masm.Sub(sp, sp, 8 + sizeof(JSJitToWasmFrame));
-    masm.Str(ARMRegister(lr, 64), MemOperand(sp, sizeof(JSJitToWasmFrame)));
+    masm.Sub(sp, sp, 16);
+    static_assert(JitFrameLayout::offsetOfReturnAddress() == 8);
+    masm.Str(ARMRegister(lr, 64), MemOperand(sp, 8));
 #else
     // The x86/x64 call instruction pushes the return address.
     offsets->begin = masm.currentOffset();
@@ -840,25 +840,19 @@ void wasm::GenerateJitEntryPrologue(MacroAssembler& masm,
 
     // Save jit frame pointer, so unwinding from wasm to jit frames is trivial.
 #if defined(JS_CODEGEN_ARM64)
-    masm.Str(ARMRegister(FramePointer, 64),
-             MemOperand(sp, JSJitToWasmFrame::callerFPOffset()));
+    static_assert(JitFrameLayout::offsetOfCallerFramePtr() == 0);
+    masm.Str(ARMRegister(FramePointer, 64), MemOperand(sp, 0));
 #else
-    static_assert(sizeof(JSJitToWasmFrame) == sizeof(uintptr_t));
     masm.Push(FramePointer);
 #endif
     MOZ_ASSERT_IF(!masm.oom(),
                   PushedFP == masm.currentOffset() - offsets->begin);
 
-#if defined(JS_CODEGEN_ARM64)
-    masm.Add(ARMRegister(FramePointer, 64), sp,
-             JSJitToWasmFrame::callerFPOffset());
-#else
     masm.moveStackPtrTo(FramePointer);
-#endif
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - offsets->begin);
   }
 
-  masm.setFramePushed(sizeof(JSJitToWasmFrame));
+  masm.setFramePushed(0);
 }
 
 void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm,
@@ -868,11 +862,11 @@ void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm,
   RegisterOrSP sp = masm.getStackPointer();
   AutoForbidPoolsAndNops afp(&masm,
                              /* number of instructions in scope = */ 5);
-  masm.loadPtr(Address(sp, sizeof(JSJitToWasmFrame)), lr);
-  masm.loadPtr(Address(sp, JSJitToWasmFrame::callerFPOffset()), FramePointer);
+  masm.loadPtr(Address(sp, 8), lr);
+  masm.loadPtr(Address(sp, 0), FramePointer);
   poppedFP = masm.currentOffset();
 
-  masm.addToStackPtr(Imm32(8 + sizeof(JSJitToWasmFrame)));
+  masm.addToStackPtr(Imm32(2 * sizeof(void*)));
   // Copy SP into PSP to enforce return-point invariants (SP == PSP).
   // `addToStackPtr` won't sync them because SP is the active pointer here.
   // For the same reason, we can't use initPseudoStackPtr to do the sync, so
@@ -888,8 +882,7 @@ void wasm::GenerateJitEntryEpilogue(MacroAssembler& masm,
   AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 2);
 #  endif
 
-  static_assert(sizeof(JSJitToWasmFrame) == sizeof(uintptr_t));
-  masm.Pop(FramePointer);
+  masm.pop(FramePointer);
   poppedFP = masm.currentOffset();
 
   offsets->ret = masm.currentOffset();
@@ -1009,8 +1002,7 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
     case CodeRange::JitEntry:
       callerPC_ = nullptr;
       callerFP_ = nullptr;
-      unwoundJitCallerFP_ =
-          fp->rawCaller() + JSJitToWasmFrame::jitFrameLayoutOffsetFromFP();
+      unwoundJitCallerFP_ = fp->rawCaller();
       break;
     case CodeRange::Function:
       fp = fp->wasmCaller();
@@ -1338,9 +1330,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       }
       // Set fixedFP to the address of the JitFrameLayout on the stack.
       if (offsetFromEntry < SetFP) {
-        fixedFP = reinterpret_cast<uint8_t*>(sp) + sizeof(JSJitToWasmFrame);
+        fixedFP = reinterpret_cast<uint8_t*>(sp);
       } else {
-        fixedFP = fp + JSJitToWasmFrame::jitFrameLayoutOffsetFromFP();
+        fixedFP = fp;
       }
       fixedPC = nullptr;
       break;
@@ -1474,8 +1466,7 @@ void ProfilingFrameIterator::operator++() {
   MOZ_ASSERT(codeRange_);
 
   if (codeRange_->isJitEntry()) {
-    unwoundJitCallerFP_ =
-        callerFP_ + JSJitToWasmFrame::jitFrameLayoutOffsetFromFP();
+    unwoundJitCallerFP_ = callerFP_;
     MOZ_ASSERT(!done());
     return;
   }

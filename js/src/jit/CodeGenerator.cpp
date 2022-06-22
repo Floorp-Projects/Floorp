@@ -361,12 +361,11 @@ void CodeGenerator::callVMInternal(VMFunctionId id, LInstruction* ins) {
   }
 #endif
 
-  // Remove rest of the frame left on the stack. We remove the return address
-  // which is implicitly poped when returning.
-  int framePop = sizeof(ExitFrameLayout) - sizeof(void*);
-
-  // Pop arguments from framePushed.
+  // Pop rest of the exit frame and the arguments left on the stack.
+  int framePop =
+      sizeof(ExitFrameLayout) - ExitFrameLayout::bytesPoppedAfterCall();
   masm.implicitPop(fun.explicitStackSlots() * sizeof(void*) + framePop);
+
   // Stack is:
   //    ... frame ...
 }
@@ -3722,16 +3721,15 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.setFramePushed(0);
 
-  // Frame prologue.
-  masm.Push(FramePointer);
-  masm.moveStackPtrTo(FramePointer);
+  // The Baseline code ensured both the frame pointer and stack pointer point to
+  // the JitFrameLayout on the stack.
 
   // If profiling, save the current frame pointer to a per-thread global field.
   if (isProfilerInstrumentationEnabled()) {
     masm.profilerEnterFrame(FramePointer, temp);
   }
 
-  masm.reserveStack(frameSize() - sizeof(uintptr_t));
+  masm.reserveStack(frameSize());
   MOZ_ASSERT(masm.framePushed() == frameSize());
 
   // Ensure that the Ion frames is properly aligned.
@@ -5423,7 +5421,6 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   masm.freeStack(unusedStack);
 
   // Construct the JitFrameLayout.
-  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
   masm.PushFrameDescriptorForJitCall(FrameType::IonJS, call->numActualArgs());
 
@@ -5458,9 +5455,10 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
     masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
   }
 
-  // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-  // The return address has already been removed from the Ion frame.
-  int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void*);
+  // Restore stack pointer: pop JitFrameLayout fields still left on the stack
+  // and undo the earlier |freeStack(unusedStack)|.
+  int prefixGarbage =
+      sizeof(JitFrameLayout) - JitFrameLayout::bytesPoppedAfterCall();
   masm.adjustStack(prefixGarbage - unusedStack);
   masm.jump(&end);
 
@@ -5528,7 +5526,6 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   masm.freeStack(unusedStack);
 
   // Construct the JitFrameLayout.
-  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
   masm.PushFrameDescriptorForJitCall(FrameType::IonJS, call->numActualArgs());
 
@@ -5542,9 +5539,10 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
     masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
   }
 
-  // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-  // The return address has already been removed from the Ion frame.
-  int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void*);
+  // Restore stack pointer: pop JitFrameLayout fields still left on the stack
+  // and undo the earlier |freeStack(unusedStack)|.
+  int prefixGarbage =
+      sizeof(JitFrameLayout) - JitFrameLayout::bytesPoppedAfterCall();
   masm.adjustStack(prefixGarbage - unusedStack);
 
   // If the return value of the constructing function is Primitive,
@@ -5691,7 +5689,7 @@ void CodeGenerator::emitRestoreStackPointerFromFP() {
 
   MOZ_ASSERT(masm.framePushed() == frameSize());
 
-  int32_t offset = -int32_t(frameSize() - JitFrameLayout::FramePointerOffset);
+  int32_t offset = -int32_t(frameSize());
   masm.computeEffectiveAddress(Address(FramePointer, offset),
                                masm.getStackPointer());
 }
@@ -5714,9 +5712,8 @@ void CodeGenerator::emitPushArguments(Register argcreg, Register scratch,
 
   // Compute the source and destination offsets into the stack.
   Register argvSrcBase = FramePointer;
-  size_t argvSrcOffset = JitFrameLayout::FramePointerOffset +
-                         JitFrameLayout::offsetOfActualArgs() +
-                         extraFormals * sizeof(JS::Value);
+  size_t argvSrcOffset =
+      JitFrameLayout::offsetOfActualArgs() + extraFormals * sizeof(JS::Value);
   size_t argvDstOffset = 0;
 
   Register argvIndex = scratch;
@@ -5981,7 +5978,6 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Knowing that calleereg is a non-native function, load jitcode.
     masm.loadJitCodeRaw(calleereg, objreg);
 
-    masm.Push(ImmWord(JitFrameLayout::UnusedValue));
     masm.PushCalleeToken(calleereg, constructing);
     masm.PushFrameDescriptorForJitCall(FrameType::IonJS, argcreg, scratch);
 
@@ -6024,9 +6020,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
       masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
     }
 
-    // Discard JitFrameLayout. The return address has already been removed from
-    // the Ion frame.
-    masm.freeStack(sizeof(JitFrameLayout) - sizeof(void*));
+    // Discard JitFrameLayout fields still left on the stack.
+    masm.freeStack(sizeof(JitFrameLayout) -
+                   JitFrameLayout::bytesPoppedAfterCall());
     masm.jump(&end);
   }
 
@@ -10687,6 +10683,7 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.Push(FramePointer);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
   Register temp0 = regs.takeAny();
@@ -10704,7 +10701,8 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
   masm.callWithABI<Fn, LazyLinkTopActivation>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-  masm.leaveExitFrame();
+  // Discard exit frame and frame pointer.
+  masm.leaveExitFrame(sizeof(void*));
 
 #ifdef JS_USE_LINK_REGISTER
   // Restore the return address such that the emitPrologue function of the
@@ -10722,6 +10720,7 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.Push(FramePointer);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
   Register temp0 = regs.takeAny();
@@ -10740,13 +10739,16 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
-  masm.leaveExitFrame();
+
+  // Discard exit frame and frame pointer.
+  masm.leaveExitFrame(sizeof(void*));
 
   // InvokeFromInterpreterStub stores the return value in argv[0], where the
-  // caller stored |this|.
-  masm.loadValue(
-      Address(masm.getStackPointer(), JitFrameLayout::offsetOfThis()),
-      JSReturnOperand);
+  // caller stored |this|. Subtract |sizeof(void*)| for the frame pointer we
+  // just popped.
+  masm.loadValue(Address(masm.getStackPointer(),
+                         JitFrameLayout::offsetOfThis() - sizeof(void*)),
+                 JSReturnOperand);
   masm.ret();
 }
 

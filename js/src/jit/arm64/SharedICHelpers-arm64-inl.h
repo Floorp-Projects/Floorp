@@ -23,7 +23,6 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 
   // Store frame size without VMFunction arguments for debug assertions.
   masm.Sub(x0, FramePointer64, masm.GetStackPointer64());
-  masm.Add(w0, w0, Operand(BaselineFrame::FramePointerOffset));
   masm.Sub(w0, w0, Operand(argSize));
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
@@ -52,10 +51,7 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 
 #ifdef DEBUG
   // Compute frame size.
-  masm.Add(ARMRegister(scratch, 64), FramePointer64,
-           Operand(BaselineFrame::FramePointerOffset));
-  masm.Sub(ARMRegister(scratch, 64), ARMRegister(scratch, 64),
-           masm.GetStackPointer64());
+  masm.Sub(ARMRegister(scratch, 64), FramePointer64, masm.GetStackPointer64());
 
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());

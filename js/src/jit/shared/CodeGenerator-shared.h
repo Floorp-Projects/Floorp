@@ -139,10 +139,6 @@ class CodeGeneratorShared : public LElementVisitor {
   // spills.
   uint32_t frameDepth_;
 
-  // Offset in bytes of the stack region reserved for values spilled by the
-  // register allocator.
-  uint32_t offsetOfLocalSlots_ = 0;
-
   // Offset in bytes of the stack region reserved for passed argument Values.
   uint32_t offsetOfPassedArgSlots_ = 0;
 

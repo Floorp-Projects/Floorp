@@ -151,12 +151,7 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
 
 Value* JSJitFrameIter::actualArgs() const { return jsFrame()->argv() + 1; }
 
-uint8_t* JSJitFrameIter::prevFp() const {
-  if (current()->prevType() == FrameType::WasmToJSJit) {
-    return current()->callerFramePtr();
-  }
-  return current()->callerFramePtr() + CommonFrameLayout::FramePointerOffset;
-}
+uint8_t* JSJitFrameIter::prevFp() const { return current()->callerFramePtr(); }
 
 // Compute the size of a Baseline frame excluding pushed VMFunction arguments or
 // callee frame headers. This is used to calculate the number of Value slots in
@@ -164,8 +159,7 @@ uint8_t* JSJitFrameIter::prevFp() const {
 static uint32_t ComputeBaselineFrameSize(const JSJitFrameIter& frame) {
   MOZ_ASSERT(frame.prevType() == FrameType::BaselineJS);
 
-  uint32_t frameSize = frame.current()->callerFramePtr() +
-                       CommonFrameLayout::FramePointerOffset - frame.fp();
+  uint32_t frameSize = frame.current()->callerFramePtr() - frame.fp();
 
   if (frame.isBaselineStub()) {
     return frameSize - BaselineStubFrameLayout::Size();
@@ -556,11 +550,7 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
 
 template <typename ReturnType = CommonFrameLayout*>
 static inline ReturnType GetPreviousRawFrame(CommonFrameLayout* frame) {
-  if (frame->prevType() == FrameType::WasmToJSJit) {
-    return ReturnType(frame->callerFramePtr());
-  }
-  static constexpr size_t FPOffset = CommonFrameLayout::FramePointerOffset;
-  return ReturnType(frame->callerFramePtr() + FPOffset);
+  return ReturnType(frame->callerFramePtr());
 }
 
 JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(
@@ -656,9 +646,7 @@ const char* JSJitProfilingFrameIterator::baselineInterpreterLabel() const {
 void JSJitProfilingFrameIterator::baselineInterpreterScriptPC(
     JSScript** script, jsbytecode** pc, uint64_t* realmID) const {
   MOZ_ASSERT(type_ == FrameType::BaselineJS);
-  BaselineFrame* blFrame =
-      (BaselineFrame*)(fp_ - BaselineFrame::FramePointerOffset -
-                       BaselineFrame::Size());
+  BaselineFrame* blFrame = (BaselineFrame*)(fp_ - BaselineFrame::Size());
   *script = frameScript();
   *pc = (*script)->code();
 

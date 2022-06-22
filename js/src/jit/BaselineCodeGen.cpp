@@ -674,10 +674,9 @@ void BaselineCompilerCodeGen::computeFrameSize(Register dest) {
 
 template <>
 void BaselineInterpreterCodeGen::computeFrameSize(Register dest) {
-  // dest = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
+  // dest := FramePointer - StackPointer.
   MOZ_ASSERT(!inCall_, "must not be called in the middle of a VM call");
-  masm.computeEffectiveAddress(
-      Address(FramePointer, BaselineFrame::FramePointerOffset), dest);
+  masm.mov(FramePointer, dest);
   masm.subStackPtrFrom(dest);
 }
 
@@ -707,10 +706,8 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
     uint32_t argSize, Register scratch) {
 #ifdef DEBUG
   // Store the frame size without VMFunction arguments in debug builds.
-  // scratch := FramePointer + BaselineFrame::FramePointerOffset - StackPointer
-  //            - argSize.
-  masm.computeEffectiveAddress(
-      Address(FramePointer, BaselineFrame::FramePointerOffset), scratch);
+  // scratch := FramePointer - StackPointer - argSize.
+  masm.mov(FramePointer, scratch);
   masm.subStackPtrFrom(scratch);
   masm.sub32(Imm32(argSize), scratch);
   masm.store32(scratch, frame.addressOfDebugFrameSize());
@@ -1468,10 +1465,9 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     }
 #endif
 
-    // Restore the stack pointer so that the return address is on top of
+    // Restore the stack pointer so that the saved frame pointer is on top of
     // the stack.
     masm.moveToStackPtr(FramePointer);
-    masm.pop(FramePointer);
 
     // Jump into Ion.
     masm.loadPtr(Address(osrDataReg, IonOsrTempData::offsetOfBaselineFrame()),
@@ -5859,13 +5855,11 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
 
 #ifdef DEBUG
   // Update BaselineFrame debugFrameSize field.
-  masm.computeEffectiveAddress(
-      Address(FramePointer, BaselineFrame::FramePointerOffset), scratch2);
+  masm.mov(FramePointer, scratch2);
   masm.subStackPtrFrom(scratch2);
   masm.store32(scratch2, frame.addressOfDebugFrameSize());
 #endif
 
-  masm.push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(callee, /* constructing = */ false);
   masm.pushFrameDescriptorForJitCall(FrameType::BaselineJS, /* argc = */ 0);
 
@@ -6327,11 +6321,12 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 #ifdef JS_USE_LINK_REGISTER
   // Push link register from generateEnterJIT()'s BLR.
   masm.pushReturnAddress();
-  masm.checkStackAlignment();
 #endif
 
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
+
+  masm.checkStackAlignment();
 
   emitProfilerEnterFrame();
 

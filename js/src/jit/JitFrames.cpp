@@ -215,12 +215,11 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   Value& rval = rematFrame->returnValue();
   MOZ_RELEASE_ASSERT(!rval.isMagic());
 
-  // Set both framePointer and stackPointer to the address of the saved frame
-  // pointer. The profiler's exit frame trampoline will use this frame pointer.
+  // Set both framePointer and stackPointer to the address of the
+  // JitFrameLayout.
   rfe->kind = ExceptionResumeKind::ForcedReturnIon;
-  uint8_t* fp = frame.frame().fp() - CommonFrameLayout::FramePointerOffset;
-  rfe->framePointer = fp;
-  rfe->stackPointer = fp;
+  rfe->framePointer = frame.frame().fp();
+  rfe->stackPointer = frame.frame().fp();
   rfe->exception = rval;
 
   act->removeIonFrameRecovery(frame.frame().jsFrame());
@@ -354,7 +353,7 @@ static void OnLeaveBaselineFrame(JSContext* cx, const JSJitFrameIter& frame,
   bool returnFromThisFrame = jit::DebugEpilogue(cx, baselineFrame, pc, frameOk);
   if (returnFromThisFrame) {
     rfe->kind = ExceptionResumeKind::ForcedReturnBaseline;
-    rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
+    rfe->framePointer = frame.fp();
     rfe->stackPointer = reinterpret_cast<uint8_t*>(baselineFrame);
   }
 }
@@ -363,7 +362,7 @@ static inline void BaselineFrameAndStackPointersFromTryNote(
     const TryNote* tn, const JSJitFrameIter& frame, uint8_t** framePointer,
     uint8_t** stackPointer) {
   JSScript* script = frame.baselineFrame()->script();
-  *framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
+  *framePointer = frame.fp();
   *stackPointer = *framePointer - BaselineFrame::Size() -
                   (script->nfixed() + tn->stackDepth) * sizeof(Value);
 }
@@ -631,10 +630,8 @@ static JitFrameLayout* GetLastProfilingFrame(ResumeFromException* rfe) {
     case ExceptionResumeKind::Catch:
     case ExceptionResumeKind::Finally:
     case ExceptionResumeKind::ForcedReturnBaseline:
-    case ExceptionResumeKind::ForcedReturnIon: {
-      uint8_t* fp = rfe->framePointer + CommonFrameLayout::FramePointerOffset;
-      return reinterpret_cast<JitFrameLayout*>(fp);
-    }
+    case ExceptionResumeKind::ForcedReturnIon:
+      return reinterpret_cast<JitFrameLayout*>(rfe->framePointer);
 
     // When resuming into a bailed-out ion frame, use the bailout info to
     // find the frame we are resuming into.
@@ -801,7 +798,8 @@ void HandleException(ResumeFromException* rfe) {
   if (iter.isJSJit()) {
     MOZ_ASSERT(rfe->kind == ExceptionResumeKind::EntryFrame);
     rfe->framePointer = iter.asJSJit().current()->callerFramePtr();
-    rfe->stackPointer = iter.asJSJit().fp();
+    rfe->stackPointer =
+        iter.asJSJit().fp() + CommonFrameLayout::offsetOfReturnAddress();
   }
 }
 
@@ -866,7 +864,7 @@ CalleeToken TraceCalleeToken(JSTracer* trc, CalleeToken token) {
 
 uintptr_t* JitFrameLayout::slotRef(SafepointSlotEntry where) {
   if (where.stack) {
-    return (uintptr_t*)((uint8_t*)this - IonFirstSlotOffset - where.slot);
+    return (uintptr_t*)((uint8_t*)this - where.slot);
   }
   return (uintptr_t*)((uint8_t*)argv() + where.slot);
 }
@@ -2472,10 +2470,9 @@ void AssertJitStackInvariants(JSContext* cx) {
                              "The rectifier frame should keep the alignment");
 
           size_t expectedFrameSize =
-              sizeof(void*) /* frame pointer */
-              + sizeof(Value) *
-                    (frames.callee()->nargs() + 1 /* |this| argument */ +
-                     frames.isConstructing() /* new.target */) +
+              sizeof(Value) *
+                  (frames.callee()->nargs() + 1 /* |this| argument */ +
+                   frames.isConstructing() /* new.target */) +
               sizeof(JitFrameLayout);
           MOZ_RELEASE_ASSERT(frameSize >= expectedFrameSize,
                              "The frame is large enough to hold all arguments");
