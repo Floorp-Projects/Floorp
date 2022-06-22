@@ -136,6 +136,8 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
+use style::values::animated::color::AnimatedRGBA;
+use style::values::generics::color::ColorInterpolationMethod;
 use style::values::computed::easing::ComputedLinearStop;
 use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily, FontWeight, FontStyle, FontStretch};
 use style::values::computed::{self, Context, ToComputedValue};
@@ -799,7 +801,7 @@ pub extern "C" fn Servo_AnimationValue_Color(
     color: structs::nscolor,
 ) -> Strong<RawServoAnimationValue> {
     use style::gecko::values::convert_nscolor_to_rgba;
-    use style::values::animated::color::{Color, RGBA as AnimatedRGBA};
+    use style::values::animated::color::Color;
 
     let property = LonghandId::from_nscsspropertyid(color_property)
         .expect("We don't have shorthand property animation value");
@@ -7497,7 +7499,7 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CreatePiecewiseLinearFunction(
+pub extern "C" fn Servo_CreatePiecewiseLinearFunction(
     entries: &style::OwnedSlice<ComputedLinearStop>,
     result: &mut PiecewiseLinearFunction,
 ) {
@@ -7509,9 +7511,26 @@ pub unsafe extern "C" fn Servo_CreatePiecewiseLinearFunction(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_PiecewiseLinearFunctionAt(
+pub extern "C" fn Servo_PiecewiseLinearFunctionAt(
     function: &PiecewiseLinearFunction,
     progress: f32,
 ) -> f32 {
     function.at(progress)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_InterpolateColor(
+    interpolation: &ColorInterpolationMethod,
+    left: &AnimatedRGBA,
+    right: &AnimatedRGBA,
+    progress: f32,
+) -> AnimatedRGBA {
+    style::values::animated::color::Color::mix(
+        interpolation,
+        left,
+        progress,
+        right,
+        1.0 - progress,
+        /* normalize_weights = */ false,
+    )
 }
