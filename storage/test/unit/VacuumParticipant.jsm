@@ -4,9 +4,8 @@
 
 // This testing component is used in test_vacuum* tests.
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
+var EXPORTED_SYMBOLS = ["VacuumParticipant"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
@@ -27,16 +26,12 @@ function getDatabase(aFile) {
   return Services.storage.openDatabase(aFile);
 }
 
-function vacuumParticipant() {
+function VacuumParticipant() {
   this._dbConn = getDatabase(new_db_file("testVacuum"));
   Services.obs.addObserver(this, "test-options");
 }
 
-vacuumParticipant.prototype = {
-  classDescription: "vacuumParticipant",
-  classID: Components.ID("{52aa0b22-b82f-4e38-992a-c3675a3355d2}"),
-  contractID: "@unit.test.com/test-vacuum-participant;1",
-
+VacuumParticipant.prototype = {
   get expectedDatabasePageSize() {
     return this._dbConn.defaultPageSize;
   },
@@ -105,6 +100,3 @@ vacuumParticipant.prototype = {
     "nsIObserver",
   ]),
 };
-
-var gComponentsArray = [vacuumParticipant];
-this.NSGetFactory = ComponentUtils.generateNSGetFactory(gComponentsArray);
