@@ -1,16 +1,12 @@
 # WebRTC coding style guide
 
 <?% config.freshness.owner = 'danilchap' %?>
-<?% config.freshness.reviewed = '2021-05-12' %?>
+<?% config.freshness.reviewed = '2022-01-17' %?>
 
 ## General advice
 
 Some older parts of the code violate the style guide in various ways.
-
-* If making small changes to such code, follow the style guide when it's
-  reasonable to do so, but in matters of formatting etc., it is often better to
-  be consistent with the surrounding code.
-* If making large changes to such code, consider first cleaning it up in a
+If making large changes to such code, consider first cleaning it up in a
   separate CL.
 
 ## C++
@@ -141,9 +137,7 @@ The following smart pointer types are recommended:
    * `rtc::scoped_refptr` for all objects with shared ownership
 
 Use of `std::shared_ptr` is *not permitted*. It is banned in the Chromium style
-guide (overriding the Google style guide), and offers no compelling advantage
-over `rtc::scoped_refptr` (which is cloned from the corresponding Chromium
-type). See the
+guide (overriding the Google style guide). See the
 [list of banned C++ library features in Chromium][chr-std-shared-ptr] for more
 information.
 
@@ -152,7 +146,7 @@ In most cases, one will want to explicitly control lifetimes, and therefore use
 exist both from the API users and internally, with no way to invalidate pointers
 held by the API user, `rtc::scoped_refptr` can be appropriate.
 
-[chr-std-shared-ptr]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md#shared-pointers
+[chr-std-shared-ptr]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md#shared-pointers-banned
 
 ### `std::bind`
 
@@ -180,11 +174,8 @@ headers you need.
 There's a substantial chunk of legacy C code in WebRTC, and a lot of it is old
 enough that it violates the parts of the C++ style guide that also applies to C
 (naming etc.) for the simple reason that it pre-dates the use of the current C++
-style guide for this code base.
-
-* If making small changes to C code, mimic the style of the surrounding code.
-* If making large changes to C code, consider converting the whole thing to C++
-  first.
+style guide for this code base. If making large changes to C code, consider
+converting the whole thing to C++ first.
 
 ## Java
 
