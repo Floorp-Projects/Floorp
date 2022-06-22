@@ -216,7 +216,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
         // Second argument is either a source URL (string)
         // or a Source object.
         if (typeof sourceOrUrl == "string") {
-          if (!source.url.includes(sourceOrUrl)) {
+          if (!source.url.includes(encodeURI(sourceOrUrl))) {
             return false;
           }
         } else if (source.id != sourceOrUrl.id) {

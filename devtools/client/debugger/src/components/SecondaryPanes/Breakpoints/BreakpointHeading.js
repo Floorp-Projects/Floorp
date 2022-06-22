@@ -15,7 +15,6 @@ import {
   getFileURL,
 } from "../../../utils/source";
 import {
-  getHasSiblingOfSameName,
   getBreakpointsForSource,
   getContext,
   getThread,
@@ -31,7 +30,6 @@ class BreakpointHeading extends PureComponent {
       cx: PropTypes.object.isRequired,
       sources: PropTypes.array.isRequired,
       source: PropTypes.object.isRequired,
-      hasSiblingOfSameName: PropTypes.bool.isRequired,
       selectSource: PropTypes.func.isRequired,
       thread: PropTypes.object.isRequired,
     };
@@ -41,17 +39,10 @@ class BreakpointHeading extends PureComponent {
   };
 
   render() {
-    const {
-      cx,
-      sources,
-      source,
-      hasSiblingOfSameName,
-      selectSource,
-      thread,
-    } = this.props;
+    const { cx, sources, source, selectSource, thread } = this.props;
 
     const path = getDisplayPath(source, sources);
-    const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
+    const query = getSourceQueryString(source);
 
     return (
       <div
@@ -77,7 +68,6 @@ class BreakpointHeading extends PureComponent {
 
 const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
-  hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   breakpointsForSource: getBreakpointsForSource(state, source.id),
   thread: getThread(state, source.thread),
 });

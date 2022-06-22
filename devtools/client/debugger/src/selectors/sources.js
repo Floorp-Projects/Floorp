@@ -136,14 +136,6 @@ export function getSourcesUrlsInSources(state, url) {
   return getPlainUrls(state)[plainUrl] || [];
 }
 
-export function getHasSiblingOfSameName(state, source) {
-  if (!source) {
-    return false;
-  }
-
-  return getSourcesUrlsInSources(state, source.url).length > 1;
-}
-
 // This is only used externaly by tabs and breakpointSources selectors
 export function getSourcesMap(state) {
   return state.sources.sources;
