@@ -87,8 +87,6 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = "xul"
 
-# DEFINES['ENABLE_VOID_MENUITEM'] = True
-
 LOCAL_INCLUDES += [
     "/dom/base",
 ]

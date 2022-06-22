@@ -27,11 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "PageMenuChild", () => {
-  let pageMenu = ChromeUtils.import("resource://gre/modules/PageMenu.jsm");
-  return new pageMenu.PageMenuChild();
-});
-
 let contextMenus = new WeakMap();
 
 class ContextMenuChild extends JSWindowActorChild {
@@ -80,15 +75,6 @@ class ContextMenuChild extends JSWindowActorChild {
             resolve(blobURL);
           });
         });
-      }
-
-      case "ContextMenu:DoCustomCommand": {
-        lazy.E10SUtils.wrapHandlingUserInput(
-          this.contentWindow,
-          message.data.handlingUserInput,
-          () => lazy.PageMenuChild.executeMenu(message.data.generatedItemId)
-        );
-        break;
       }
 
       case "ContextMenu:Hiding": {
@@ -639,7 +625,6 @@ class ContextMenuChild extends JSWindowActorChild {
     let spellInfo = null;
     let editFlags = null;
     let principal = null;
-    let customMenuItems = null;
 
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
       Ci.nsIReferrerInfo
@@ -695,7 +680,6 @@ class ContextMenuChild extends JSWindowActorChild {
       loginFillInfo,
       selectionInfo,
       userContextId,
-      customMenuItems,
       contentDisposition,
       frameID,
       frameBrowsingContextID,
@@ -712,10 +696,6 @@ class ContextMenuChild extends JSWindowActorChild {
       data.linkReferrerInfo = lazy.E10SUtils.serializeReferrerInfo(
         linkReferrerInfo
       );
-    }
-
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      data.customMenuItems = lazy.PageMenuChild.build(aEvent.composedTarget);
     }
 
     Services.obs.notifyObservers(

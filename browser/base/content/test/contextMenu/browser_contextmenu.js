@@ -118,10 +118,6 @@ add_task(async function test_xul_text_link_label() {
 add_task(async function test_setup_html() {
   let url = example_base + "subtst_contextmenu.html";
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.menuitem.enabled", true]],
-  });
-
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
@@ -1177,90 +1173,6 @@ add_task(async function test_copylinkcommand() {
         // Don't keep focus, because that may affect clipboard commands in
         // subsequently-opened menus.
         input.blur();
-      });
-    },
-  });
-});
-
-add_task(async function test_pagemenu() {
-  let pagemenuItems = [
-    "+Plain item",
-    { type: "", icon: "", checked: false, disabled: false },
-    "+Disabled item",
-    { type: "", icon: "", checked: false, disabled: true },
-    "+Item w/ textContent",
-    { type: "", icon: "", checked: false, disabled: false },
-    "---",
-    null,
-    "+Checkbox",
-    { type: "checkbox", icon: "", checked: true, disabled: false },
-    "---",
-    null,
-    "+Radio1",
-    { type: "checkbox", icon: "", checked: true, disabled: false },
-    "+Radio2",
-    { type: "checkbox", icon: "", checked: false, disabled: false },
-    "+Radio3",
-    { type: "checkbox", icon: "", checked: false, disabled: false },
-    "---",
-    null,
-    "+Item w/ icon",
-    { type: "", icon: "favicon.ico", checked: false, disabled: false },
-    "+Item w/ bad icon",
-    { type: "", icon: "", checked: false, disabled: false },
-    "---",
-    null,
-    "generated-submenu-1",
-    true,
-    [
-      "+Radio1",
-      { type: "checkbox", icon: "", checked: false, disabled: false },
-      "+Radio2",
-      { type: "checkbox", icon: "", checked: true, disabled: false },
-      "+Radio3",
-      { type: "checkbox", icon: "", checked: false, disabled: false },
-      "---",
-      null,
-      "+Checkbox",
-      { type: "checkbox", icon: "", checked: false, disabled: false },
-    ],
-    null,
-    "---",
-    null,
-    "context-savepage",
-    true,
-    ...(hasPocket ? ["context-pocket", true] : []),
-    "context-selectall",
-    true,
-    "---",
-    null,
-    "context-take-screenshot",
-    true,
-    "---",
-    null,
-    "context-viewsource",
-    true,
-  ];
-  pagemenuItems = NAVIGATION_ITEMS.concat(pagemenuItems);
-  if (AppConstants.platform == "macosx") {
-    // Take out the bookmarks page menu:
-    let bookmarkItemIndex = pagemenuItems.indexOf("context-bookmarkpage");
-    let bookmarksItemAndSeparator = pagemenuItems.splice(bookmarkItemIndex, 2);
-    // Put it back before the save page item:
-    pagemenuItems.splice(
-      pagemenuItems.indexOf("context-savepage"),
-      0,
-      ...bookmarksItemAndSeparator
-    );
-  }
-  await test_contextmenu("#test-pagemenu", pagemenuItems, {
-    async postCheckContextMenuFn() {
-      let item = contextMenu.getElementsByAttribute("generateditemid", "1")[0];
-      ok(item, "Got generated XUL menu item");
-      item.doCommand();
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-        let pagemenu = content.document.getElementById("test-pagemenu");
-        Assert.ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
       });
     },
   });

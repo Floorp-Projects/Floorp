@@ -41,41 +41,6 @@ document.getElementById("shadow-host-in-link").attachShadow({ mode: "closed" }).
 <div id="test-contenteditable" contenteditable="true">chssseefsbbbie</div> <!-- a more weird word which generates no suggestions -->
 <div id="test-contenteditable-spellcheck-false" contenteditable="true" spellcheck="false">test</div> <!-- No Check Spelling menu item -->
 <div id="test-dom-full-screen">DOM full screen FTW</div>
-<div contextmenu="myMenu">
-  <p id="test-pagemenu" hopeless="true">I've got a context menu!</p>
-  <menu id="myMenu" type="context">
-    <menuitem label="Plain item" onclick="document.getElementById('test-pagemenu').removeAttribute('hopeless');"></menuitem>
-    <menuitem label="Disabled item" disabled></menuitem>
-    <menuitem> Item w/ textContent</menuitem>
-    <menu>
-      <menuitem type="checkbox" label="Checkbox" checked></menuitem>
-    </menu>
-    <menu>
-      <menuitem type="radio" label="Radio1" checked></menuitem>
-      <menuitem type="radio" label="Radio2"></menuitem>
-      <menuitem type="radio" label="Radio3"></menuitem>
-    </menu>
-    <menu>
-      <menuitem label="Item w/ icon" icon="favicon.ico"></menuitem>
-      <menuitem label="Item w/ bad icon" icon="http://example.com%0a%23.google.com/"></menuitem>
-    </menu>
-    <menu label="Submenu">
-      <menuitem type="radio" label="Radio1" radiogroup="rg"></menuitem>
-      <menuitem type="radio" label="Radio2" checked radiogroup="rg"></menuitem>
-      <menuitem type="radio" label="Radio3" radiogroup="rg"></menuitem>
-      <menu>
-        <menuitem type="checkbox" label="Checkbox"></menuitem>
-      </menu>
-    </menu>
-    <menu hidden>
-      <menuitem label="Bogus item"></menuitem>
-    </menu>
-    <menu>
-    </menu>
-    <menuitem label="Hidden item" hidden></menuitem>
-    <menuitem></menuitem>
-  </menu>
-</div>
 <div id="test-select-text">Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</div>
 <div id="test-select-text-link">http://mozilla.com</div>
 <a id="test-image-link" href="#"><img src="ctxmenu-image.png"></a>

@@ -53,20 +53,12 @@ function getVisibleMenuItems(aMenu, aData) {
       key = key.toLowerCase();
     }
 
-    var isPageMenuItem = item.hasAttribute("generateditemid");
-
     if (item.nodeName == "menuitem") {
       var isGenerated =
         item.classList.contains("spell-suggestion") ||
         item.classList.contains("sendtab-target");
       if (isGenerated) {
         is(item.id, "", "child menuitem #" + i + " is generated");
-      } else if (isPageMenuItem) {
-        is(
-          item.id,
-          "",
-          "child menuitem #" + i + " is a generated page menu item"
-        );
       } else {
         ok(item.id, "child menuitem #" + i + " has an ID");
       }
@@ -75,8 +67,6 @@ function getVisibleMenuItems(aMenu, aData) {
       if (isGenerated) {
         is(key, "", "Generated items shouldn't have an access key");
         items.push("*" + label);
-      } else if (isPageMenuItem) {
-        items.push("+" + label);
       } else if (
         item.id.indexOf("spell-check-dictionary-") != 0 &&
         item.id != "spell-no-suggestions" &&
@@ -100,38 +90,24 @@ function getVisibleMenuItems(aMenu, aData) {
           accessKeys[key] = item.id;
         }
       }
-      if (!isGenerated && !isPageMenuItem) {
+      if (!isGenerated) {
         items.push(item.id);
       }
-      if (isPageMenuItem) {
-        var p = {};
-        p.type = item.getAttribute("type");
-        p.icon = item.getAttribute("image");
-        p.checked = item.hasAttribute("checked");
-        p.disabled = item.hasAttribute("disabled");
-        items.push(p);
-      } else {
-        items.push(!item.disabled);
-      }
+      items.push(!item.disabled);
     } else if (item.nodeName == "menuseparator") {
       ok(true, "--- seperator id is " + item.id);
       items.push("---");
       items.push(null);
     } else if (item.nodeName == "menu") {
-      if (isPageMenuItem) {
-        item.id = "generated-submenu-" + aData.generatedSubmenuId++;
-      }
       ok(item.id, "child menu #" + i + " has an ID");
-      if (!isPageMenuItem) {
-        ok(key, "menu has an access key");
-        if (accessKeys[key]) {
-          ok(
-            false,
-            "menu " + item.id + " has same accesskey as " + accessKeys[key]
-          );
-        } else {
-          accessKeys[key] = item.id;
-        }
+      ok(key, "menu has an access key");
+      if (accessKeys[key]) {
+        ok(
+          false,
+          "menu " + item.id + " has same accesskey as " + accessKeys[key]
+        );
+      } else {
+        accessKeys[key] = item.id;
       }
       items.push(item.id);
       items.push(!item.disabled);
