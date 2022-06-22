@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "102.16.0",
+  "version": "102.17.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -134,6 +134,7 @@
     "shims/nielsen.js",
     "shims/optimizely.js",
     "shims/play.svg",
+    "shims/private-browsing-web-api-fixes.js",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
     "shims/stackblitz.js",
