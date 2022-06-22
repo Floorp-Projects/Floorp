@@ -1620,7 +1620,7 @@ Maybe<PrefWrapper> pref_Lookup(const char* aPrefName,
     return Some(*gCallbackPref);
   }
   if (Pref* pref = pref_HashTableLookup(aPrefName)) {
-    if (aIncludeTypeNone || !pref->IsTypeNone()) {
+    if (aIncludeTypeNone || !pref->IsTypeNone() || pref->IsSanitized()) {
       return Some(pref);
     }
   } else if (gSharedMap) {
@@ -3951,7 +3951,8 @@ void Preferences::SetPreference(const dom::Pref& aDomPref) {
   //   `pref` will be valueless. We will end up adding and removing the value
   //   needlessly, but that's ok because this case is rare.
   //
-  if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
+  if (!pref->HasDefaultValue() && !pref->HasUserValue() &&
+      !pref->IsSanitized()) {
     // If the preference exists in the shared map, we need to keep the dynamic
     // entry around to mask it.
     if (gSharedMap->Has(pref->Name())) {
@@ -5104,7 +5105,11 @@ nsresult Preferences::ClearUser(const char* aPrefName) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      if (!gSharedMap || !gSharedMap->Has(pref->Name())) {
+      MOZ_ASSERT(
+          !gSharedMap || !pref->IsSanitized() || !gSharedMap->Has(pref->Name()),
+          "A sanitized pref should never be in the shared pref map.");
+      if (!pref->IsSanitized() &&
+          (!gSharedMap || !gSharedMap->Has(pref->Name()))) {
         HashTable()->remove(aPrefName);
       } else {
         pref->SetType(PrefType::None);
