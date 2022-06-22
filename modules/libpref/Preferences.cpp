@@ -5808,7 +5808,9 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.urlbar"),
     PREF_LIST_ENTRY("browser.urlbar.resultGroups"),
     PREF_LIST_ENTRY("devtools.debugger.pending-selected-location"),
-    PREF_LIST_ENTRY("identity.fxaccounts."),
+    PREF_LIST_ENTRY("identity.fxaccounts.account.device.name"),
+    PREF_LIST_ENTRY("identity.fxaccounts.account.telemetry.sanitized_uid"),
+    PREF_LIST_ENTRY("identity.fxaccounts.lastSignedInUserHash"),
     PREF_LIST_ENTRY("services."),
 
     // Remove UUIDs
@@ -5829,7 +5831,6 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.laterrun.bookkeeping.profileCreationTime"),
     PREF_LIST_ENTRY("browser.newtabpage.activity-stream.discoverystream."),
     PREF_LIST_ENTRY("browser.region.update.updated"),
-    PREF_LIST_ENTRY("browser.safebrowsing.provider"),
     PREF_LIST_ENTRY("browser.sessionstore.upgradeBackup.latestBuildID"),
     PREF_LIST_ENTRY("browser.shell.mostRecentDateSetAsDefault"),
     PREF_LIST_ENTRY("fission.experiment.max-origins.last-"),
@@ -5850,7 +5851,40 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
 };
 
 static const PrefListEntry sDynamicPrefOverrideList[]{
+    PREF_LIST_ENTRY("browser.contentblocking.category"),
+    PREF_LIST_ENTRY("browser.search.region"),
+    PREF_LIST_ENTRY(
+        "browser.tabs.remote.testOnly.failPBrowserCreation.browsingContext"),
+    PREF_LIST_ENTRY("browser.translation.bing.authURL"),
+    PREF_LIST_ENTRY("browser.translation.bing.clientIdOverride"),
+    PREF_LIST_ENTRY("browser.translation.bing.translateArrayURL"),
+    PREF_LIST_ENTRY("browser.translation.bing.apiKeyOverride"),
+    PREF_LIST_ENTRY("browser.translation.yandex.apiKeyOverride"),
+    PREF_LIST_ENTRY("browser.translation.yandex.translateURLOverride"),
+    PREF_LIST_ENTRY("dom.securecontext.allowlist"),
+    PREF_LIST_ENTRY("extensions.foobaz"),
+    PREF_LIST_ENTRY("general.appname.override"),
+    PREF_LIST_ENTRY("general.appversion.override"),
+    PREF_LIST_ENTRY("general.useragent.override"),
+    PREF_LIST_ENTRY("general.platform.override"),
+    PREF_LIST_ENTRY("gfx.blacklist.hardwarevideodecoding.failureid"),
+    PREF_LIST_ENTRY("marionette.log.level"),
+    PREF_LIST_ENTRY("media.audio_loopback_dev"),
+    PREF_LIST_ENTRY("media.getusermedia.fake-camera-name"),
+    PREF_LIST_ENTRY("media.hls.server.url"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.filtering_type"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.mapping_type"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.redirect_address"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.redirect_targets"),
+    PREF_LIST_ENTRY("media.video_loopback_dev"),
+    PREF_LIST_ENTRY("media.webspeech.service.endpoint"),
     PREF_LIST_ENTRY("print.printer_"),
+    PREF_LIST_ENTRY("places.interactions.customBlocklist"),
+    PREF_LIST_ENTRY("spellchecker.dictionary"),
+    PREF_LIST_ENTRY("test.char"),
+    PREF_LIST_ENTRY("toolkit.mozprotocol.url"),
+    PREF_LIST_ENTRY("toolkit.telemetry.log.level"),
+    PREF_LIST_ENTRY("ui.-moz-fieldtext.dark"),
 };
 
 #undef PREF_LIST_ENTRY
@@ -5881,9 +5915,19 @@ static bool ShouldSanitizePreference_Impl(const T& aPref,
 
     // First check against the denylist, the denylist is used for
     // all subprocesses to reduce IPC traffic.
+    // The services pref is an annoying one - it's much easier to blocklist
+    // the whole branch and then add this one check to let this one annoying
+    // pref through.
     for (const auto& entry : sParentOnlyPrefBranchList) {
       if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
-        return true;
+        auto p = prefName;  // This avoids clang-format doing ugly things.
+        if (strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
+            strncmp("services.settings.last_update_seconds", p, 37) == 0 ||
+            strncmp("services.settings.server", p, 24) == 0) {
+          return false;
+        } else {
+          return true;
+        }
       }
     }
 

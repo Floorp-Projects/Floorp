@@ -206,6 +206,7 @@ avoid-blacklist-and-whitelist:
         - mfbt/Attributes.h
         - mobile/android/app/geckoview-prefs.js
         - mobile/android/app/mobile.js
+        - modules/libpref/Preferences.cpp
         - modules/libpref/docs/index.md
         - modules/libpref/init/all.js
         - mozglue/baseprofiler/core/platform.cpp
