@@ -10,10 +10,10 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_ok">Va\'a</string>
 
-    <string name="action_save">Chika vaà</string>
+    <string name="action_save">Tyika vaà</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
-    <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
+    <string name="urlbar_hint">Ndukú a tyaa ña kunu kuncheu</string>
 
     <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
 
@@ -277,8 +277,9 @@
     <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -474,6 +475,19 @@
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">Ni kitsau yoo %1$s!</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Donde el incógnito se encuentra con lo invisible</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s es un navegador que prioriza la privacidad con seguimiento extrafuerte y protección de cookies integrada.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Kuntye tya koo la ni yaa</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Kitsaà Ndaduku</string>
