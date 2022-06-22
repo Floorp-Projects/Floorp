@@ -7,10 +7,10 @@ Adjust dependencies to not exceed MAX_DEPENDENCIES
 
 from copy import deepcopy
 
-import gecko_taskgraph.transforms.release_deps as release_deps
-from gecko_taskgraph import MAX_DEPENDENCIES
 from gecko_taskgraph.transforms.base import TransformSequence
-from taskgraph.util.treeherder import add_suffix
+import gecko_taskgraph.transforms.release_deps as release_deps
+from gecko_taskgraph.util.treeherder import add_suffix
+from gecko_taskgraph import MAX_DEPENDENCIES
 
 transforms = TransformSequence()
 

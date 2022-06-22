@@ -10,14 +10,24 @@ treeherder configuration and attributes for that platform.
 import copy
 import os
 
+from taskgraph.util.attributes import keymatch
+from voluptuous import (
+    Any,
+    Extra,
+    Optional,
+    Required,
+)
+
 import gecko_taskgraph
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.util.hg import get_json_automationrelevance
-from gecko_taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
-from taskgraph.util.attributes import keymatch
-from taskgraph.util.treeherder import join_symbol, split_symbol
-from voluptuous import Any, Extra, Optional, Required
+from gecko_taskgraph.util.schema import (
+    resolve_keyed_by,
+    optionally_keyed_by,
+    Schema,
+)
+from gecko_taskgraph.util.treeherder import join_symbol, split_symbol
 
 source_test_description_schema = Schema(
     {

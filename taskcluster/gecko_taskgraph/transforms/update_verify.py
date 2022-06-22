@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import task_name
-from taskgraph.util.treeherder import add_suffix, inherit_treeherder_from_dep
+from gecko_taskgraph.util.treeherder import add_suffix, inherit_treeherder_from_dep
 
 transforms = TransformSequence()
 
