@@ -23,23 +23,9 @@ using namespace mozilla::widget;
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-static void AccentColorPrefChanged(const char*, void*) {
-  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
-}
+nsLookAndFeel::nsLookAndFeel() = default;
 
-nsLookAndFeel::nsLookAndFeel() {
-  Preferences::RegisterCallback(
-      AccentColorPrefChanged,
-      nsDependentCString(
-          StaticPrefs::GetPrefName_widget_non_native_theme_use_theme_accent()));
-}
-
-nsLookAndFeel::~nsLookAndFeel() {
-  Preferences::UnregisterCallback(
-      AccentColorPrefChanged,
-      nsDependentCString(
-          StaticPrefs::GetPrefName_widget_non_native_theme_use_theme_accent()));
-}
+nsLookAndFeel::~nsLookAndFeel() = default;
 
 nsresult nsLookAndFeel::GetSystemColors() {
   if (!jni::IsAvailable()) {
@@ -126,8 +112,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
   // XXX we'll want to use context.obtainStyledAttributes on the java side to
   // get all of these; see TextView.java for a good example.
   auto UseNativeAccent = [this] {
-    return mSystemColors.colorAccent &&
-           StaticPrefs::widget_non_native_theme_use_theme_accent();
+    return mSystemColors.colorAccent && StaticPrefs::widget_use_theme_accent();
   };
 
   switch (aID) {
@@ -188,14 +173,16 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::Selecteditem:
     case ColorID::Accentcolor:
       aColor = UseNativeAccent() ? mSystemColors.colorAccent
-                                 : widget::sDefaultAccent.ToABGR();
+                                 : GetStandinForNativeColor(
+                                       ColorID::Accentcolor, aColorScheme);
       break;
     case ColorID::MozCellhighlighttext:
     case ColorID::Selecteditemtext:
     case ColorID::Accentcolortext:
       aColor = UseNativeAccent() ? ThemeColors::ComputeCustomAccentForeground(
                                        mSystemColors.colorAccent)
-                                 : widget::sDefaultAccentForeground.ToABGR();
+                                 : GetStandinForNativeColor(
+                                       ColorID::Accentcolortext, aColorScheme);
       break;
     case ColorID::Fieldtext:
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);

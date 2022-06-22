@@ -27,7 +27,7 @@ struct ColorPalette {
 
   constexpr static ColorPalette Default() {
     return ColorPalette(
-        sDefaultAccent, sDefaultAccentForeground,
+        sDefaultAccent, sDefaultAccentText,
         sRGBColor::UnusualFromARGB(0x4d008deb),  // Luminance: 25.04791%
         sRGBColor::UnusualFromARGB(0xff0250bb),  // Luminance: 9.33808%
         sRGBColor::UnusualFromARGB(0xff054096)   // Luminance: 5.90106%
@@ -83,8 +83,7 @@ struct ColorPalette {
   sRGBColor mAccentDarker;
 };
 
-static nscolor ThemedAccentColor(bool aBackground, ColorScheme aScheme) {
-  MOZ_ASSERT(StaticPrefs::widget_non_native_theme_use_theme_accent());
+static nscolor GetAccentColor(bool aBackground, ColorScheme aScheme) {
   return ColorPalette::EnsureOpaque(
       LookAndFeel::Color(aBackground ? LookAndFeel::ColorID::Accentcolor
                                      : LookAndFeel::ColorID::Accentcolortext,
@@ -188,18 +187,12 @@ ColorScheme ThemeColors::ColorSchemeForWidget(const nsIFrame* aFrame,
 void ThemeColors::RecomputeAccentColors() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::widget_non_native_theme_use_theme_accent()) {
-    sDefaultLightPalette = sDefaultDarkPalette = ColorPalette::Default();
-    return;
-  }
-
   sDefaultLightPalette =
-      ColorPalette(ThemedAccentColor(true, ColorScheme::Light),
-                   ThemedAccentColor(false, ColorScheme::Light));
+      ColorPalette(GetAccentColor(true, ColorScheme::Light),
+                   GetAccentColor(false, ColorScheme::Light));
 
-  sDefaultDarkPalette =
-      ColorPalette(ThemedAccentColor(true, ColorScheme::Dark),
-                   ThemedAccentColor(false, ColorScheme::Dark));
+  sDefaultDarkPalette = ColorPalette(GetAccentColor(true, ColorScheme::Dark),
+                                     GetAccentColor(false, ColorScheme::Dark));
 }
 
 /*static*/
@@ -237,8 +230,8 @@ nscolor ThemeColors::ComputeCustomAccentForeground(nscolor aColor) {
   return RelativeLuminanceUtils::Adjust(aColor, targetLuminance);
 }
 
-nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
-                                                       ElementState aStates) {
+nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(
+    nscolor aFaceColor, dom::ElementState aStates) {
   // In Windows 10, scrollbar thumb has the following colors:
   //
   // State  | Color    | Luminance
@@ -248,8 +241,8 @@ nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
   // Active | Gray 96  |     11.7%
   //
   // This function is written based on the ratios between the values.
-  bool isActive = aStates.HasState(ElementState::ACTIVE);
-  bool isHover = aStates.HasState(ElementState::HOVER);
+  bool isActive = aStates.HasState(dom::ElementState::ACTIVE);
+  bool isHover = aStates.HasState(dom::ElementState::HOVER);
   if (!isActive && !isHover) {
     return aFaceColor;
   }
