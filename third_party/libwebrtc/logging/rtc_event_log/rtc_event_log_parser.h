@@ -584,6 +584,7 @@ class ParsedRtcEventLog {
 
  private:
   ABSL_MUST_USE_RESULT ParseStatus ParseStreamInternal(absl::string_view s);
+  ABSL_MUST_USE_RESULT ParseStatus ParseStreamInternalV3(absl::string_view s);
 
   ABSL_MUST_USE_RESULT ParseStatus
   StoreParsedLegacyEvent(const rtclog::Event& event);
