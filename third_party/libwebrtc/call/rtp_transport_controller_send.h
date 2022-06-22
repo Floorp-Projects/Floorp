@@ -32,7 +32,6 @@
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/pacing/task_queue_paced_sender.h"
 #include "modules/utility/include/process_thread.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/task_queue.h"
@@ -62,6 +61,10 @@ class RtpTransportControllerSend final
       TaskQueueFactory* task_queue_factory,
       const WebRtcKeyValueConfig* trials);
   ~RtpTransportControllerSend() override;
+
+  RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;
+  RtpTransportControllerSend& operator=(const RtpTransportControllerSend&) =
+      delete;
 
   // TODO(tommi): Change to std::unique_ptr<>.
   RtpVideoSenderInterface* CreateRtpVideoSender(
@@ -215,7 +218,6 @@ class RtpTransportControllerSend final
   // `task_queue_` is defined last to ensure all pending tasks are cancelled
   // and deleted before any other members.
   rtc::TaskQueue task_queue_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(RtpTransportControllerSend);
 };
 
 }  // namespace webrtc

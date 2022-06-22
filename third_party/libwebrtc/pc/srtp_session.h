@@ -15,7 +15,6 @@
 
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 
 // Forward declaration to avoid pulling in libsrtp headers here
@@ -34,6 +33,9 @@ class SrtpSession {
  public:
   SrtpSession();
   ~SrtpSession();
+
+  SrtpSession(const SrtpSession&) = delete;
+  SrtpSession& operator=(const SrtpSession&) = delete;
 
   // Configures the session for sending data using the specified
   // cipher-suite and key. Receiving must be done by a separate session.
@@ -141,7 +143,6 @@ class SrtpSession {
   bool external_auth_enabled_ = false;
   int decryption_failure_count_ = 0;
   bool dump_plain_rtp_ = false;
-  RTC_DISALLOW_COPY_AND_ASSIGN(SrtpSession);
 };
 
 }  // namespace cricket

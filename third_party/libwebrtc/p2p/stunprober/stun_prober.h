@@ -17,7 +17,6 @@
 
 #include "api/sequence_checker.h"
 #include "rtc_base/byte_buffer.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/network.h"
 #include "rtc_base/socket_address.h"
@@ -100,6 +99,9 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
              rtc::Thread* thread,
              const rtc::NetworkManager::NetworkList& networks);
   ~StunProber() override;
+
+  StunProber(const StunProber&) = delete;
+  StunProber& operator=(const StunProber&) = delete;
 
   // Begin performing the probe test against the `servers`. If
   // `shared_socket_mode` is false, each request will be done with a new socket.
@@ -241,8 +243,6 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
   rtc::NetworkManager::NetworkList networks_;
 
   webrtc::ScopedTaskSafety task_safety_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(StunProber);
 };
 
 }  // namespace stunprober

@@ -56,7 +56,6 @@
 #include "p2p/base/transport_description.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/dscp.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
@@ -123,6 +122,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
       webrtc::RtcEventLog* event_log = nullptr,
       IceControllerFactoryInterface* ice_controller_factory = nullptr);
   ~P2PTransportChannel() override;
+
+  P2PTransportChannel(const P2PTransportChannel&) = delete;
+  P2PTransportChannel& operator=(const P2PTransportChannel&) = delete;
 
   // From TransportChannelImpl:
   IceTransportState GetState() const override;
@@ -494,8 +496,6 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   int64_t last_data_received_ms_ = 0;
 
   IceFieldTrials field_trials_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(P2PTransportChannel);
 };
 
 }  // namespace cricket
