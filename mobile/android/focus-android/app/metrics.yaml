@@ -1828,6 +1828,7 @@ nimbus_experiments:
     description: >
       Measures the time spent to download the nimbus experiments
     time_unit: millisecond
+    lifetime: application
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/6847
     data_reviews:
