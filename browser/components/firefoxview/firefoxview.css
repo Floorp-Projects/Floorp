@@ -507,7 +507,7 @@ body > main > aside {
   background-size: cover;
 }
 
-.favicon, .icon, .synced-tab-li-favicon {
+.favicon, .icon {
   width: 16px;
   height: 16px;
 }

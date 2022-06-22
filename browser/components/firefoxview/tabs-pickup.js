@@ -277,8 +277,12 @@ class TabsPickupContainer extends HTMLElement {
     }
     tabsElem.hidden = false;
 
-    if (stateIndex == 4) {
-      tabsElem.classList.toggle("loading", false);
+    const tabPickupList = document.querySelector("tab-pickup-list");
+    if (stateIndex == 4 && !tabPickupList.tabsList.hasChildNodes()) {
+      if (tabsElem) {
+        tabsElem.classList.toggle("loading", false);
+      }
+      tabPickupList.getSyncedTabData();
     }
   }
 }
