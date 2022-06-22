@@ -2,18 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { stripQuery, parse } from "../url";
+import { parse } from "../url";
 
 describe("url", () => {
-  describe("stripQuery", () => {
-    it("strips properly", () => {
-      expect(stripQuery("/file/path")).toBe("/file/path");
-      expect(stripQuery("/file/path?param")).toBe("/file/path");
-      expect(stripQuery("/file/path#hash")).toBe("/file/path#hash");
-      expect(stripQuery("/file/path?param#hash")).toBe("/file/path#hash");
-    });
-  });
-
   describe("parse", () => {
     it("parses an absolute URL", () => {
       const val = parse("http://example.com:8080/path/file.js");

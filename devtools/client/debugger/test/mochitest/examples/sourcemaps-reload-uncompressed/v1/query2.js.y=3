@@ -1,0 +1,1 @@
+function query() {console.log("query2 y=3");}
