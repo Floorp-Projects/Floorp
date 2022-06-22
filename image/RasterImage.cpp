@@ -339,12 +339,25 @@ LookupResult RasterImage::LookupFrame(const OrientedIntSize& aSize,
     return LookupResult(MatchType::NOT_FOUND);
   }
 
+  // We want to trigger a decode if and only if:
+  // 1) There is no pending decode
+  // 2) There is no acceptable size decoded
+  // 3) The pending decode has not produced a frame yet, a sync decode is
+  // requested, and we have all the source data. Without the source data, we
+  // will just trigger another async decode anyways.
+  //
+  // TODO(aosmond): We should better handle case 3. We should actually return
+  // TEMPORARY_ERROR or NOT_READY if we don't have all the source data and a
+  // sync decode is requested. If there is a pending decode and we have all the
+  // source data, we should always be able to block on the frame's monitor --
+  // perhaps this could be accomplished by preallocating the first frame buffer
+  // when we create the decoder.
   const bool syncDecode = aFlags & FLAG_SYNC_DECODE;
   const bool avoidRedecode = aFlags & FLAG_AVOID_REDECODE_FOR_SIZE;
   if (result.Type() == MatchType::NOT_FOUND ||
       (result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND &&
        !avoidRedecode) ||
-      (syncDecode && !avoidRedecode && !result)) {
+      (syncDecode && !avoidRedecode && !result && LoadAllSourceData())) {
     // We don't have a copy of this frame, and there's no decoder working on
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
