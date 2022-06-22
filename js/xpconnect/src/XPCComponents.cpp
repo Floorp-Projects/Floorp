@@ -2542,13 +2542,6 @@ nsXPCComponents_Utils::GetLoadedModules(nsTArray<nsCString>& aLoadedModules) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetLoadedComponents(
-    nsTArray<nsCString>& aLoadedComponents) {
-  mozJSComponentLoader::Get()->GetLoadedComponents(aLoadedComponents);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::GetLoadedJSModules(
     nsTArray<nsCString>& aLoadedJSModules) {
   mozJSComponentLoader::Get()->GetLoadedModules(aLoadedJSModules);
@@ -2565,12 +2558,6 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::GetModuleImportStack(const nsACString& aLocation,
                                             nsACString& aRetval) {
   return mozJSComponentLoader::Get()->GetModuleImportStack(aLocation, aRetval);
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::GetComponentLoadStack(const nsACString& aLocation,
-                                             nsACString& aRetval) {
-  return mozJSComponentLoader::Get()->GetComponentLoadStack(aLocation, aRetval);
 }
 
 /***************************************************************************/
