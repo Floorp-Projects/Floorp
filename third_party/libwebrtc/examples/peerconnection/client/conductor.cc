@@ -85,8 +85,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
       capturer = absl::WrapUnique(
           webrtc::test::VcmCapturer::Create(kWidth, kHeight, kFps, i));
       if (capturer) {
-        return new rtc::RefCountedObject<CapturerTrackSource>(
-            std::move(capturer));
+        return rtc::make_ref_counted<CapturerTrackSource>(std::move(capturer));
       }
     }
 

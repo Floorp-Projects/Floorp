@@ -36,9 +36,9 @@ rtc::scoped_refptr<SharedXDisplay> SharedXDisplay::Create(
       XOpenDisplay(display_name.empty() ? NULL : display_name.c_str());
   if (!display) {
     RTC_LOG(LS_ERROR) << "Unable to open display";
-    return NULL;
+    return nullptr;
   }
-  return new SharedXDisplay(display);
+  return rtc::scoped_refptr<SharedXDisplay>(new SharedXDisplay(display));
 }
 
 // static
