@@ -53,12 +53,6 @@
       return ParsedRtcEventLog::ParseStatus::Error(#X, __FILE__, __LINE__); \
   } while (0)
 
-#define RTC_PARSE_CHECK_OR_RETURN_MESSAGE(X, M)                              \
-  do {                                                                       \
-    if (!(X))                                                                \
-      return ParsedRtcEventLog::ParseStatus::Error((M), __FILE__, __LINE__); \
-  } while (0)
-
 #define RTC_PARSE_CHECK_OR_RETURN_OP(OP, X, Y)                          \
   do {                                                                  \
     if (!((X)OP(Y)))                                                    \
@@ -1273,34 +1267,18 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
     absl::string_view s) {
   constexpr uint64_t kMaxEventSize = 10000000;  // Sanity check.
-  // Protobuf defines the message tag as
-  // (field_number << 3) | wire_type. In the legacy encoding, the field number
-  // is supposed to be 1 and the wire type for a length-delimited field is 2.
-  // In the new encoding we still expect the wire type to be 2, but the field
-  // number will be greater than 1.
-  constexpr uint64_t kExpectedV1Tag = (1 << 3) | 2;
-  bool success = false;
-
-  // "Peek" at the first varint.
-  absl::string_view event_start = s;
-  uint64_t tag = 0;
-  std::tie(success, std::ignore) = DecodeVarInt(s, &tag);
-  if (!success) {
-    RTC_LOG(LS_WARNING) << "Failed to read varint from beginning of event log.";
-    RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
-                                         kIncompleteLogError);
-    return ParseStatus::Error("Failed to read field tag varint", __FILE__,
-                              __LINE__);
-  }
-  s = event_start;
-
-  if (tag >> 1 == static_cast<uint64_t>(RtcEvent::Type::BeginV3Log)) {
-    return ParseStreamInternalV3(s);
-  }
 
   while (!s.empty()) {
-    // If not, "reset" event_start and read the field tag for the next event.
-    event_start = s;
+    absl::string_view event_start = s;
+    bool success = false;
+
+    // Read the next message tag. Protobuf defines the message tag as
+    // (field_number << 3) | wire_type. In the legacy encoding, the field number
+    // is supposed to be 1 and the wire type for a length-delimited field is 2.
+    // In the new encoding we still expect the wire type to be 2, but the field
+    // number will be greater than 1.
+    constexpr uint64_t kExpectedV1Tag = (1 << 3) | 2;
+    uint64_t tag = 0;
     std::tie(success, s) = DecodeVarInt(s, &tag);
     if (!success) {
       RTC_LOG(LS_WARNING)
@@ -1310,7 +1288,6 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
       return ParseStatus::Error("Failed to read field tag varint", __FILE__,
                                 __LINE__);
     }
-
     constexpr uint64_t kWireTypeMask = 0x07;
     const uint64_t wire_type = tag & kWireTypeMask;
     if (wire_type != 2) {
@@ -1377,58 +1354,6 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
       RTC_RETURN_IF_ERROR(status);
     }
   }
-  return ParseStatus::Success();
-}
-
-ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternalV3(
-    absl::string_view s) {
-  constexpr uint64_t kMaxEventSize = 10000000;  // Sanity check.
-  bool expect_begin_log_event = true;
-  bool success = false;
-
-  while (!s.empty()) {
-    // Read event type.
-    uint64_t event_tag = 0;
-    std::tie(success, s) = DecodeVarInt(s, &event_tag);
-    RTC_PARSE_CHECK_OR_RETURN_MESSAGE(success, "Failed to read event type.");
-    bool batched = event_tag & 1;
-    uint64_t event_type = event_tag >> 1;
-
-    // Read event size
-    uint64_t event_size_bytes = 0;
-    std::tie(success, s) = DecodeVarInt(s, &event_size_bytes);
-    RTC_PARSE_CHECK_OR_RETURN_MESSAGE(success, "Failed to read event size.");
-    if (event_size_bytes > kMaxEventSize || event_size_bytes > s.size()) {
-      RTC_LOG(LS_WARNING) << "Event size is too large.";
-      RTC_PARSE_CHECK_OR_RETURN_LE(event_size_bytes, kMaxEventSize);
-      RTC_PARSE_CHECK_OR_RETURN_LE(event_size_bytes, s.size());
-    }
-
-    // Read remaining event fields into a buffer.
-    absl::string_view event_fields = s.substr(0, event_size_bytes);
-    s = s.substr(event_size_bytes);
-
-    if (expect_begin_log_event) {
-      RTC_PARSE_CHECK_OR_RETURN_EQ(
-          event_type, static_cast<uint32_t>(RtcEvent::Type::BeginV3Log));
-      expect_begin_log_event = false;
-    }
-
-    switch (event_type) {
-      case static_cast<uint32_t>(RtcEvent::Type::BeginV3Log):
-        RtcEventBeginLog::Parse(event_fields, batched, start_log_events_);
-        break;
-      case static_cast<uint32_t>(RtcEvent::Type::EndV3Log):
-        RtcEventEndLog::Parse(event_fields, batched, stop_log_events_);
-        expect_begin_log_event = true;
-        break;
-      case static_cast<uint32_t>(RtcEvent::Type::AlrStateEvent):
-        RtcEventAlrState::Parse(event_fields, batched, alr_state_events_);
-        break;
-        // ADD NEW EVENTS HERE
-    }
-  }
-
   return ParseStatus::Success();
 }
 
