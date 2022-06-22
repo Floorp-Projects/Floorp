@@ -160,6 +160,15 @@ class PromptFactory {
 
     const dismissPrompt = () => prompt.dismiss();
     aElement.addEventListener("blur", dismissPrompt, { mozSystemGroup: true });
+    const hidedropdown = event => {
+      if (aElement === event.target) {
+        prompt.dismiss();
+      }
+    };
+    const chromeEventHandler = aElement.ownerGlobal.docShell.chromeEventHandler;
+    chromeEventHandler.addEventListener("mozhidedropdown", hidedropdown, {
+      mozSystemGroup: true,
+    });
 
     prompt.asyncShowPrompt(
       {
@@ -173,6 +182,11 @@ class PromptFactory {
         aElement.removeEventListener("blur", dismissPrompt, {
           mozSystemGroup: true,
         });
+        chromeEventHandler.removeEventListener(
+          "mozhidedropdown",
+          hidedropdown,
+          { mozSystemGroup: true }
+        );
 
         if (aIsDropDown) {
           aElement.openInParentProcess = false;
