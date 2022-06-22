@@ -97,6 +97,12 @@ void ContentProcessController::CancelAutoscroll(
   MOZ_ASSERT_UNREACHABLE("Unexpected message to content process");
 }
 
+void ContentProcessController::NotifyScaleGestureComplete(
+    const ScrollableLayerGuid& aGuid, float aScale) {
+  // This should never get called
+  MOZ_ASSERT_UNREACHABLE("Unexpected message to content process");
+}
+
 bool ContentProcessController::IsRepaintThread() { return NS_IsMainThread(); }
 
 void ContentProcessController::DispatchToRepaintThread(

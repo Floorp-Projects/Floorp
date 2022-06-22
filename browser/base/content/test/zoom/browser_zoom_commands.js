@@ -60,6 +60,10 @@ add_task(async () => {
   const TEST_PAGE_URL =
     "data:text/html;charset=utf-8,<body>test_zoom_levels</body>";
 
+  const winUtils = Services.wm.getMostRecentWindow("").windowUtils;
+  const layerManager = winUtils.layerManagerType;
+  const softwareWebRenderEnabled = layerManager == "WebRender (Software)";
+
   await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async browser => {
     let currentZoom = await FullZoomHelper.getGlobalValue();
     Assert.equal(
@@ -79,6 +83,15 @@ add_task(async () => {
     // and the other without.
     for (let textZoom of [true, false]) {
       info(`Running variation with textZoom set to ${textZoom}`);
+
+      if (!textZoom && softwareWebRenderEnabled) {
+        todo(
+          false,
+          "Skipping full zoom when using software WebRender (bug 1775498)"
+        );
+        continue;
+      }
+
       await SpecialPowers.pushPrefEnv({
         set: [["browser.zoom.full", !textZoom]],
       });
