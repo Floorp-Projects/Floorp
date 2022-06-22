@@ -24,7 +24,7 @@
 #include "system_wrappers/include/field_trial.h"
 
 #if defined(RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY)
-#include "modules/video_coding/codecs/av1/dav1d_decoder.h"
+#include "modules/video_coding/codecs/av1/dav1d_decoder.h"  // nogncheck
 #endif
 
 namespace webrtc {
