@@ -13500,11 +13500,7 @@
 # Whether we should use the default accent color or the theme-provided one.
 - name: widget.use-theme-accent
   type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX) || defined(ANDROID)
   value: true
-#else
-  value: false
-#endif
   mirror: always
 
 # Whether we should try to use WebRender to render widgets.
