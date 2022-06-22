@@ -110,8 +110,14 @@ void CaptureTask::NotifyRealtimeTrackData(MediaTrackGraph* aGraph,
    public:
     explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
+    bool CanBeDeletedOnAnyThread() override {
+      // EncodeComplete is used from the main thread only.
+      return false;
+    }
+
     nsresult ReceiveBlobImpl(
         already_AddRefed<dom::BlobImpl> aBlobImpl) override {
+      MOZ_ASSERT(NS_IsMainThread());
       RefPtr<dom::BlobImpl> blobImpl(aBlobImpl);
       mTask->TaskComplete(blobImpl.forget(), NS_OK);
       mTask = nullptr;

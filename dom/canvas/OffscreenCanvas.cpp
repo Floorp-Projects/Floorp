@@ -6,12 +6,14 @@
 
 #include "OffscreenCanvas.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Telemetry.h"
@@ -277,11 +279,21 @@ OffscreenCanvas::CreateEncodeCompleteCallback(Promise* aPromise) {
   // Encoder callback when encoding is complete.
   class EncodeCallback : public EncodeCompleteCallback {
    public:
-    explicit EncodeCallback(Promise* aPromise) : mPromise(aPromise) {}
+    explicit EncodeCallback(Promise* aPromise)
+        : mPromise(aPromise), mCanceled(false) {
+      WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+      if (wp) {
+        mWorkerRef = WeakWorkerRef::Create(
+            wp, [self = RefPtr{this}]() { self->Cancel(); });
+        if (!mWorkerRef) {
+          Cancel();
+        }
+      }
+    }
 
-    // This is called on main thread.
     nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
       RefPtr<BlobImpl> blobImpl = aBlobImpl;
+      mWorkerRef = nullptr;
 
       if (mPromise) {
         RefPtr<nsIGlobalObject> global = mPromise->GetGlobalObject();
@@ -302,7 +314,17 @@ OffscreenCanvas::CreateEncodeCompleteCallback(Promise* aPromise) {
       return NS_OK;
     }
 
+    bool CanBeDeletedOnAnyThread() override { return mCanceled; }
+
+    void Cancel() {
+      mPromise = nullptr;
+      mWorkerRef = nullptr;
+      mCanceled = true;
+    }
+
     RefPtr<Promise> mPromise;
+    RefPtr<WeakWorkerRef> mWorkerRef;
+    Atomic<bool> mCanceled;
   };
 
   return MakeAndAddRef<EncodeCallback>(aPromise);

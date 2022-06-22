@@ -39,6 +39,8 @@ void CanvasRenderingContextHelper::ToBlob(
     // This is called on main thread.
     MOZ_CAN_RUN_SCRIPT
     nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
+      MOZ_ASSERT(NS_IsMainThread());
+
       RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
       RefPtr<Blob> blob;
@@ -56,6 +58,11 @@ void CanvasRenderingContextHelper::ToBlob(
       MOZ_ASSERT(!mBlobCallback);
 
       return rv.StealNSResult();
+    }
+
+    bool CanBeDeletedOnAnyThread() override {
+      // EncodeCallback is used from the main thread only.
+      return false;
     }
 
     nsCOMPtr<nsIGlobalObject> mGlobal;
