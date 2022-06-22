@@ -1002,3 +1002,35 @@
    ...
    fun:_ZN11gfxPlatform4InitEv
 }
+
+# Suppression for a dynamic-atom leak related to DOMLocalization. See bug 1762046.
+#
+# 28 bytes in 1 blocks are definitely lost in loss record 5,420 of 21,361
+#   at 0x48397B5: malloc+117 (vg_replace_malloc.c:381)
+#   by 0x12DB70: moz_xmalloc+16 (checkouts/gecko/memory/mozalloc/mozalloc.cpp:52)
+#   by 0xAF7808C: nsDynamicAtom::Create(nsTSubstring<char16_t> const&, unsigned int)+140 (checkouts/gecko/xpcom/ds/nsAtomTable.cpp:90)
+#   by 0xAF7915B: nsAtomTable::Atomize(nsTSubstring<char16_t> const&)+315 (checkouts/gecko/xpcom/ds/nsAtomTable.cpp:595)
+#   by 0xBE6E0F2: nsAttrValue::ParseAtom(nsTSubstring<char16_t> const&)+34 (checkouts/gecko/dom/base/nsAttrValue.cpp:1169)
+#   by 0xBDE6F18: mozilla::dom::Element::ParseAttribute(int, nsAtom*, nsTSubstring<char16_t> const&, nsIPrincipal*, nsAttrValue&)+88 (checkouts/gecko/dom/base/Element.cpp:0)
+#   by 0xBDE3A8C: mozilla::dom::Element::SetAttr(int, nsAtom*, nsAtom*, nsTSubstring<char16_t> const&, nsIPrincipal*, bool)+412 (checkouts/gecko/dom/base/Element.cpp:2432)
+#   by 0xD919226: SetAttr (dist/include/mozilla/dom/Element.h:947)
+#   by 0xD919226: SetAttr (dist/include/mozilla/dom/Element.h:943)
+#   by 0xD919226: mozilla::dom::DOMLocalization::SetRootInfo(mozilla::dom::Element*)+230 (checkouts/gecko/dom/l10n/DOMLocalization.cpp:456)
+#   by 0xD91AE40: mozilla::dom::DocumentL10n::InitialTranslationCompleted(bool)+48 (checkouts/gecko/dom/l10n/DocumentL10n.cpp:314)
+#   by 0xD91F579: L10nReadyHandler::ResolvedCallback(JSContext*, JS::Handle<JS::Value>, mozilla::ErrorResult&)+25 (checkouts/gecko/dom/l10n/DocumentL10n.cpp:75)
+#   by 0xD6EBCAD: mozilla::dom::(anonymous namespace)::PromiseNativeHandlerShim::ResolvedCallback(JSContext*, JS::Handle<JS::Value>, mozilla::ErrorResult&)+29 (checkouts/gecko/dom/promise/Promise.cpp:407)
+#   by 0xD6EBFB9: mozilla::dom::NativeHandlerCallback(JSContext*, unsigned int, JS::Value*)+441 (dist/include/js/RootingAPI.h:0)
+#   by 0xEF9D780: js::InternalCallOrConstruct(JSContext*, JS::CallArgs const&, js::MaybeConstruct, js::CallReason)+768 (checkouts/gecko/js/src/vm/Interpreter.cpp:425)
+#   by 0xEF9E27C: js::Call(JSContext*, JS::Handle<JS::Value>, JS::Handle<JS::Value>, js::AnyInvokeArgs const&, JS::MutableHandle<JS::Value>, js::CallReason)+156 (checkouts/gecko/js/src/vm/Interpreter.cpp:572)
+{
+   Bug 1762046
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:moz_xmalloc
+   fun:_ZN13nsDynamicAtom6CreateERK12nsTSubstringIDsEj*
+   fun:_ZN11nsAtomTable7AtomizeERK12nsTSubstringIDsE*
+   fun:_ZN11nsAttrValue9ParseAtomERK12nsTSubstringIDsE*
+   ...
+   fun:_ZN7mozilla3dom7Element7SetAttrEiP6nsAtomS3_RK12nsTSubstringIDsEP12nsIPrincipalb
+}
