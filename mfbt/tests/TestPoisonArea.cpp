@@ -79,15 +79,12 @@
  *    at all.  Thus, it is not used here.
  */
 
-#include "mozilla/IntegerPrintfMacros.h"
-
 // MAP_ANON(YMOUS) is not in any standard.  Add defines as necessary.
 #define _GNU_SOURCE 1
 #define _DARWIN_C_SOURCE 1
 
-#include <stddef.h>
-
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,10 +93,7 @@
 #  include <windows.h>
 #else
 #  include <sys/types.h>
-#  include <fcntl.h>
-#  include <signal.h>
 #  include <unistd.h>
-#  include <sys/stat.h>
 #  include <sys/wait.h>
 
 #  include <sys/mman.h>

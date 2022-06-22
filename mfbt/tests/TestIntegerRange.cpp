@@ -8,7 +8,6 @@
 #include "mozilla/IntegerRange.h"
 
 #include <stddef.h>
-#include <type_traits>
 
 using mozilla::IntegerRange;
 using mozilla::Reversed;

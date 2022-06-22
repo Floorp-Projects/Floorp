@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/TextUtils.h"
+#include "mozilla/Span.h"
 
 using mozilla::ArrayLength;
 using mozilla::AsChars;

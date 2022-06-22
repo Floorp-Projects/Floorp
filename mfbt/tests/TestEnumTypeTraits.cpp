@@ -5,7 +5,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumTypeTraits.h"
-#include "mozilla/IntegerTypeTraits.h"
+
+#include <cstdint>
 
 using namespace mozilla;
 

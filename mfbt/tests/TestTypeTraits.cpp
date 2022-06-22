@@ -6,7 +6,6 @@
 
 #include <type_traits>
 
-#include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
 using mozilla::IsDestructible;
