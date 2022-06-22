@@ -28,7 +28,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
+XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+);
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 const PREF_SECTION_ENABLED = "extensions.formautofill.section.enabled";

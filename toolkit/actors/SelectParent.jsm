@@ -732,30 +732,51 @@ class SelectParent extends JSWindowActorParent {
     return bc.isContent ? bc.topFrameElement : bc.embedderElement;
   }
 
+  get _document() {
+    return this.relevantBrowser.ownerDocument;
+  }
+
+  get _menulist() {
+    return this._document.getElementById("ContentSelectDropdown");
+  }
+
+  _createMenulist() {
+    let document = this._document;
+    let menulist = document.createXULElement("menulist");
+    menulist.setAttribute("id", "ContentSelectDropdown");
+    menulist.setAttribute("popuponly", "true");
+    menulist.setAttribute("hidden", "true");
+
+    let popup = menulist.appendChild(document.createXULElement("menupopup"));
+    popup.setAttribute("id", "ContentSelectDropdownPopup");
+    popup.setAttribute("activateontab", "true");
+    popup.setAttribute("position", "after_start");
+    popup.setAttribute("level", "parent");
+    if (AppConstants.platform == "win") {
+      popup.setAttribute("consumeoutsideclicks", "false");
+      popup.setAttribute("ignorekeys", "shortcuts");
+    }
+
+    let container =
+      document.getElementById("mainPopupSet") ||
+      document.querySelector("popupset") ||
+      document.documentElement.appendChild(
+        document.createXULElement("popupset")
+      );
+
+    container.appendChild(menulist);
+    return menulist;
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "Forms:ShowDropDown": {
         let browser = this.relevantBrowser;
-
-        if (!browser.hasAttribute("selectmenulist")) {
-          return;
-        }
-
-        let document = browser.ownerDocument;
-        let menulist = document.getElementById(
-          browser.getAttribute("selectmenulist")
-        );
-
-        if (!this._menulist) {
-          // Cache the menulist to have access to it
-          // when the document is gone (eg: Tab closed)
-          this._menulist = menulist;
-        }
+        let menulist = this._menulist || this._createMenulist();
 
         let data = message.data;
         menulist.menupopup.style.direction = data.style.direction;
 
-        let { ZoomManager } = browser.browsingContext.topChromeWindow;
         SelectParentHelper.populate(
           menulist,
           data.options.options,
@@ -763,7 +784,7 @@ class SelectParent extends JSWindowActorParent {
           data.selectedIndex,
           // We only want to apply the full zoom. The text zoom is already
           // applied in the font-size.
-          ZoomManager.getFullZoomForBrowser(browser),
+          this.manager.browsingContext.fullZoom,
           data.defaultStyle,
           data.style
         );

@@ -16,12 +16,16 @@ root:
             bounds: [0, 0, 324, 295]
             type: clip
             id: 2
+          -
+            type: "clip-chain"
+            id: 3
+            clips: [2]
           # note it's important that we use clip-node here; clip-and-scroll in yaml
           # defaults to push/pop, but we want to specifically attach this clip-chain
           # to the stacking context and not the children (as gecko does in the bug)
           -
             bounds: [0, 0, 0, 0]
-            clip-node: 2
+            clip-chain: 3
             type: "stacking-context"
             filters: ["contrast(1.1)"] # any blend-style filter will do
             items:

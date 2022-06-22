@@ -175,7 +175,6 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
     mozbuild_args = {
         "MOZ_DEBUG": "1" if input_vars.get("is_debug") else None,
         "OS_TARGET": oses[input_vars["target_os"]],
-        "HOST_CPU_ARCH": cpus.get(input_vars["host_cpu"], input_vars["host_cpu"]),
         "CPU_ARCH": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
     }
     if "use_x11" in input_vars:
@@ -506,6 +505,7 @@ def write_mozbuild(
             # Start with attributes that will be a part of the mozconfig
             # for every configuration, then factor by other potentially useful
             # combinations.
+            # FIXME: this is a time-bomb. See bug 1775202.
             for attrs in (
                 (),
                 ("MOZ_DEBUG",),
@@ -514,8 +514,9 @@ def write_mozbuild(
                 ("MOZ_DEBUG", "OS_TARGET"),
                 ("OS_TARGET", "MOZ_X11"),
                 ("OS_TARGET", "CPU_ARCH"),
+                ("OS_TARGET", "CPU_ARCH", "MOZ_X11"),
                 ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG"),
-                ("MOZ_DEBUG", "OS_TARGET", "CPU_ARCH", "HOST_CPU_ARCH"),
+                ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG", "MOZ_X11"),
             ):
                 conditions = set()
                 for args in all_args:
@@ -653,12 +654,14 @@ def main():
     for is_debug in (True, False):
         for target_os in ("android", "linux", "mac", "openbsd", "win"):
             target_cpus = ["x64"]
-            if target_os in ("android", "linux", "mac", "win"):
+            if target_os in ("android", "linux", "mac", "win", "openbsd"):
                 target_cpus.append("arm64")
-            if target_os == "android":
+            if target_os in ("android", "linux"):
                 target_cpus.append("arm")
             if target_os in ("android", "linux", "win"):
                 target_cpus.append("x86")
+            if target_os == "linux":
+                target_cpus.append("ppc64")
             for target_cpu in target_cpus:
                 vars = {
                     "host_cpu": "x64",

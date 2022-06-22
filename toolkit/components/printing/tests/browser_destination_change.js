@@ -28,10 +28,8 @@ async function setupPrinters(helper) {
 async function changeDestination(helper, dir) {
   let picker = helper.get("printer-picker");
   let changed = BrowserTestUtils.waitForEvent(picker, "change");
-  let pickerOpened = BrowserTestUtils.waitForEvent(
-    document.getElementById("ContentSelectDropdown"),
-    "popupshown"
-  );
+
+  let pickerOpened = BrowserTestUtils.waitForSelectPopupShown(window);
   picker.focus();
   EventUtils.sendKey("space", helper.win);
   await pickerOpened;

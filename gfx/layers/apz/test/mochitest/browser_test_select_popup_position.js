@@ -66,10 +66,7 @@ async function runPopupPositionTest(parentDocumentFileName) {
     await focusPromise;
   });
 
-  const menulist = document.getElementById("ContentSelectDropdown");
-  const selectPopup = menulist.menupopup;
-
-  await openSelectPopup(selectPopup);
+  const selectPopup = await openSelectPopup();
 
   const popup_rect = selectPopup.getBoundingClientRect();
   const popupMarginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
@@ -98,7 +95,7 @@ async function runPopupPositionTest(parentDocumentFileName) {
     );
   }
 
-  await hideSelectPopup(selectPopup);
+  await hideSelectPopup();
 
   BrowserTestUtils.removeTab(tab);
 }

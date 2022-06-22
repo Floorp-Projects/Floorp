@@ -13,9 +13,13 @@ root:
           rect: [0, 0, 200, 200]
           tile-size: 10
           repeat: false
+    -
+      type: "clip-chain"
+      id: 3
+      clips: [2]
     - type: stacking-context
       bounds: [0, 0, 200, 200]
-      clip-node: 2
+      clip-chain: 3
       items:
       - type: rect
         bounds: [0, 0, 100, 100]

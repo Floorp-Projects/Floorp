@@ -48,16 +48,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 const { nsIBlocklistService } = Ci;
 
-// These are injected from XPIProvider.jsm
-for (let sym of [
-  "BOOTSTRAP_REASONS",
-  "DB_SCHEMA",
-  "XPIStates",
-  "migrateAddonLoader",
-]) {
-  XPCOMUtils.defineLazyGetter(lazy, sym, () => lazy.XPIInternal[sym]);
-}
-
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
@@ -1695,9 +1685,9 @@ const XPIDatabase = {
         // successfully save the database.
         logger.debug(
           "XPI Database saved, setting schema version preference to " +
-            lazy.DB_SCHEMA
+            lazy.XPIInternal.DB_SCHEMA
         );
-        Services.prefs.setIntPref(PREF_DB_SCHEMA, lazy.DB_SCHEMA);
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, lazy.XPIInternal.DB_SCHEMA);
         this._schemaVersionSet = true;
 
         // Reading the DB worked once, so we don't need the load error
@@ -1763,7 +1753,7 @@ const XPIDatabase = {
     }
 
     let toSave = {
-      schemaVersion: lazy.DB_SCHEMA,
+      schemaVersion: lazy.XPIInternal.DB_SCHEMA,
       addons: Array.from(this.addonDB.values()).filter(
         addon => !addon.location.isTemporary
       ),
@@ -1821,9 +1811,9 @@ const XPIDatabase = {
       if (aInputAddons.schemaVersion <= 27) {
         // Types were translated in bug 857456.
         for (let addon of aInputAddons.addons) {
-          lazy.migrateAddonLoader(addon);
+          lazy.XPIInternal.migrateAddonLoader(addon);
         }
-      } else if (aInputAddons.schemaVersion != lazy.DB_SCHEMA) {
+      } else if (aInputAddons.schemaVersion != lazy.XPIInternal.DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
@@ -1831,7 +1821,7 @@ const XPIDatabase = {
           `schemaMismatch-${aInputAddons.schemaVersion}`
         );
         logger.debug(
-          `JSON schema mismatch: expected ${lazy.DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
+          `JSON schema mismatch: expected ${lazy.XPIInternal.DB_SCHEMA}, actual ${aInputAddons.schemaVersion}`
         );
       }
 
@@ -1853,7 +1843,9 @@ const XPIDatabase = {
             );
           }
         }
-        loadedAddon.location = lazy.XPIStates.getLocation(loadedAddon.location);
+        loadedAddon.location = lazy.XPIInternal.XPIStates.getLocation(
+          loadedAddon.location
+        );
 
         let newAddon = new AddonInternal(loadedAddon);
         if (loadedAddon.location) {
@@ -1959,7 +1951,7 @@ const XPIDatabase = {
     this.addonDB = new Map();
     this.initialized = true;
 
-    if (lazy.XPIStates.size == 0) {
+    if (lazy.XPIInternal.XPIStates.size == 0) {
       // No extensions installed, so we're done
       logger.debug("Rebuilding XPI database with no extensions");
       return;
@@ -2509,7 +2501,7 @@ const XPIDatabase = {
     let state = addon.location && addon.location.get(addon.id);
     if (state) {
       state.syncWithDB(addon);
-      lazy.XPIStates.save();
+      lazy.XPIInternal.XPIStates.save();
     }
   },
 
@@ -2787,7 +2779,9 @@ const XPIDatabase = {
         await bootstrap.disable();
         lazy.AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
-        await bootstrap.startup(lazy.BOOTSTRAP_REASONS.ADDON_ENABLE);
+        await bootstrap.startup(
+          lazy.XPIInternal.BOOTSTRAP_REASONS.ADDON_ENABLE
+        );
         lazy.AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
@@ -2868,7 +2862,7 @@ const XPIDatabaseReconcile = {
   flattenByID(addonMap, hideLocation) {
     let map = new Map();
 
-    for (let loc of lazy.XPIStates.locations()) {
+    for (let loc of lazy.XPIInternal.XPIStates.locations()) {
       if (loc.name == hideLocation) {
         continue;
       }
@@ -3414,7 +3408,7 @@ const XPIDatabaseReconcile = {
     // present we re-use the add-on objects from the database and update their
     // details directly
     let addonStates = new Map();
-    for (let location of lazy.XPIStates.locations()) {
+    for (let location of lazy.XPIInternal.XPIStates.locations()) {
       let locationAddons = currentAddons.get(location.name);
 
       // Get all the on-disk XPI states for this location, and keep track of which
@@ -3474,7 +3468,7 @@ const XPIDatabaseReconcile = {
     // Validate the updated system add-ons
     let hideLocation;
     {
-      let systemAddonLocation = lazy.XPIStates.getLocation(
+      let systemAddonLocation = lazy.XPIInternal.XPIStates.getLocation(
         KEY_APP_SYSTEM_ADDONS
       );
       let addons = currentAddons.get(systemAddonLocation.name);
@@ -3536,11 +3530,11 @@ const XPIDatabaseReconcile = {
     // Finally update XPIStates to match everything
     for (let [locationName, locationAddons] of currentAddons) {
       for (let [id, addon] of locationAddons) {
-        let xpiState = lazy.XPIStates.getAddon(locationName, id);
+        let xpiState = lazy.XPIInternal.XPIStates.getAddon(locationName, id);
         xpiState.syncWithDB(addon);
       }
     }
-    lazy.XPIStates.save();
+    lazy.XPIInternal.XPIStates.save();
     XPIDatabase.saveChanges();
     XPIDatabase.rebuildingDatabase = false;
 

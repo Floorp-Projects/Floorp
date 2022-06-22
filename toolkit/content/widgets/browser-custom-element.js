@@ -1051,15 +1051,11 @@
       LazyModules.SessionStore?.maybeExitCrashedState(this);
 
       // Make sure that any open select is closed.
-      if (this.hasAttribute("selectmenulist")) {
-        let menulist = document.getElementById(
-          this.getAttribute("selectmenulist")
-        );
-        if (menulist && menulist.open) {
-          let resourcePath = "resource://gre/actors/SelectParent.jsm";
-          let { SelectParentHelper } = ChromeUtils.import(resourcePath);
-          SelectParentHelper.hide(menulist, this);
-        }
+      let menulist = document.getElementById("ContentSelectDropdown");
+      if (menulist?.open) {
+        let resourcePath = "resource://gre/actors/SelectParent.jsm";
+        let { SelectParentHelper } = ChromeUtils.import(resourcePath);
+        SelectParentHelper.hide(menulist, this);
       }
 
       this.resetFields();

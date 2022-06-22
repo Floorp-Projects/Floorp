@@ -6,7 +6,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       windowtype="Toolkit:PictureInPicture"
-      chromemargin="0,0,0,0">
+      chromemargin="0,0,0,0"
+    #ifdef XP_MACOSX
+      macnativefullscreen="true"
+    #endif
+      >
   <head>
     <meta charset="utf-8"/>
     <link rel="stylesheet" type="text/css"

@@ -3,16 +3,229 @@
 
 "use strict";
 
-const { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
-);
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { RemoteImages, REMOTE_IMAGES_PATH } = ChromeUtils.import(
   "resource://activity-stream/lib/RemoteImages.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const RS_SERVER_PREF = "services.settings.server";
+
+class RemoteSettingsRecord {
+  constructor(id) {
+    this.data = {
+      id,
+      last_modified: Date.now(),
+    };
+  }
+
+  set(attrs) {
+    const { id } = this.data;
+    Object.assign(this.data, attrs, {
+      id,
+      last_modified: Date.now(),
+    });
+  }
+
+  toJSON() {
+    return { data: this.data };
+  }
+}
+
+class RemoteSettingsCollection {
+  get ChildType() {
+    return RemoteSettingsRecord;
+  }
+
+  constructor(id) {
+    this.data = {
+      id,
+      last_modified: Date.now(),
+    };
+
+    this.children = new Map();
+  }
+
+  get(id) {
+    return this.children.get(id);
+  }
+
+  getOrCreate(id, { update = false } = {}) {
+    return (update ? this.update(id) : this.get(id)) ?? this.create(id);
+  }
+
+  create(id) {
+    if (this.get(id)) {
+      throw new Error(`already have child ${id}`);
+    }
+
+    let child = new this.ChildType(id);
+    this.children.set(id, child);
+    this.data.last_modified = Date.now();
+    return child;
+  }
+
+  update(id) {
+    let child = this.get(id);
+    if (child) {
+      this.data.last_modified = Date.now();
+    }
+    return child;
+  }
+
+  toJSON() {
+    return {
+      data: Array.from(this.children.values()).map(child => ({
+        id: child.data.id,
+        last_modified: child.data.last_modified,
+      })),
+    };
+  }
+}
+
+class RemoteSettingsBucket extends RemoteSettingsCollection {
+  get ChildType() {
+    return RemoteSettingsCollection;
+  }
+}
+
+class RemoteSettingsRoot extends RemoteSettingsCollection {
+  get ChildType() {
+    return RemoteSettingsBucket;
+  }
+  constructor() {
+    super("root");
+  }
+}
+
+class RemoteSettingsAttachment {
+  constructor(attrs) {
+    Object.assign(this, attrs);
+  }
+
+  writeTo(response) {
+    const stream = NetUtil.newChannel({
+      uri: NetUtil.newURI(this.url),
+      loadUsingSystemPrincipal: true,
+    }).open();
+
+    try {
+      response.setHeader("Content-Type", this.mimetype);
+      response.bodyOutputStream.writeFrom(stream, this.size);
+      response.setStatusLine(null, 200, "OK");
+    } finally {
+      stream.close();
+    }
+  }
+}
+
+class RemoteSettingsServer {
+  constructor() {
+    this.server = new HttpServer();
+    this.buckets = new RemoteSettingsRoot();
+    this.attachments = new Map();
+
+    this.server.registerPathHandler("/v1/", (request, response) => {
+      response.setHeader("Content-Type", "application/json; charset=UTF-8");
+      response.setStatusLine(null, 200, "OK");
+      response.write(
+        JSON.stringify({
+          capabilities: {
+            attachments: {
+              base_url: `${this.baseURL}attachments`,
+            },
+          },
+        })
+      );
+    });
+
+    const recordRegex = new RegExp(
+      "/v1/buckets/(?<bucketId>[^/]+)/collections/(?<collectionId>[^/]+)/records/(?<recordId>[^/]+)"
+    );
+    this.server.registerPrefixHandler("/v1/buckets/", (request, response) => {
+      const match = recordRegex.exec(request.path);
+      if (!match) {
+        response.setStatusLine(null, 404, "Not Found");
+        response.write("404");
+        return;
+      }
+
+      const record = this.buckets
+        .get(match.groups.bucketId)
+        ?.get(match.groups.collectionId)
+        ?.get(match.groups.recordId);
+      if (!record) {
+        response.setStatusLine(null, 404, "Not Found");
+        response.write("404");
+        return;
+      }
+
+      response.setHeader("Content-Type", "application/json; charset=UTF-8");
+      response.setStatusLine(null, 200, "OK");
+      response.write(JSON.stringify(record));
+    });
+
+    const ATTACHMENTS_PREFIX = "/attachments/";
+    this.server.registerPrefixHandler(
+      ATTACHMENTS_PREFIX,
+      (request, response) => {
+        const attachmentId = request.path.substring(ATTACHMENTS_PREFIX.length);
+        const attachment = this.attachments.get(attachmentId);
+
+        if (!attachment) {
+          response.setStatusLine(null, 400, "Not Found");
+          response.write("404");
+          return;
+        }
+
+        attachment.writeTo(response);
+      }
+    );
+  }
+
+  start() {
+    this.server.start(-1);
+    Services.prefs.setCharPref(RS_SERVER_PREF, `${this.baseURL}v1`);
+  }
+
+  async stop() {
+    await new Promise(resolve => this.server.stop(resolve));
+    Services.prefs.clearUserPref(RS_SERVER_PREF);
+  }
+
+  get baseURL() {
+    return `http://localhost:${this.server.identity.primaryPort}/`;
+  }
+
+  addRemoteImage(imageInfo) {
+    const { filename, recordId, mimetype, hash, url, size } = imageInfo;
+
+    const location = `main/ms-images/${recordId}`;
+
+    this.buckets
+      .getOrCreate("main", { update: true })
+      .getOrCreate("ms-images", { update: true })
+      .create(recordId)
+      .set({
+        attachment: {
+          filename,
+          location,
+          hash,
+          mimetype,
+          size,
+        },
+      });
+
+    this.attachments.set(
+      location,
+      new RemoteSettingsAttachment({
+        mimetype,
+        size,
+        url,
+      })
+    );
+  }
+}
 
 const RemoteImagesTestUtils = {
   /**
@@ -24,78 +237,17 @@ const RemoteImagesTestUtils = {
    * @returns A promise yielding a cleanup function. This function will stop the
    *          internal HTTP server and clean up all Remote Images state.
    */
-  async serveRemoteImages(...imageInfos) {
-    const server = new HttpServer();
-    server.start(-1);
-
-    const baseURL = `http://localhost:${server.identity.primaryPort}/`;
+  serveRemoteImages(...imageInfos) {
+    const server = new RemoteSettingsServer();
 
     for (const imageInfo of imageInfos) {
-      const { filename, recordId, mimetype, hash, url, size } = imageInfo;
-
-      const arrayBuffer = await fetch(url, { credentials: "omit" }).then(rsp =>
-        rsp.arrayBuffer()
-      );
-
-      server.registerPathHandler("/v1/", (request, response) => {
-        response.write(
-          JSON.stringify({
-            capabilities: {
-              attachments: {
-                base_url: `${baseURL}cdn`,
-              },
-            },
-          })
-        );
-
-        response.setHeader("Content-Type", "application/json; charset=UTF-8");
-        response.setStatusLine(null, 200, "OK");
-      });
-
-      server.registerPathHandler(
-        `/v1/buckets/main/collections/ms-images/records/${recordId}`,
-        (request, response) => {
-          response.write(
-            JSON.stringify({
-              data: {
-                attachment: {
-                  filename,
-                  location: `main/ms-images/${recordId}`,
-                  hash,
-                  mimetype,
-                  size,
-                },
-              },
-              id: "image-id",
-              last_modified: Date.now(),
-            })
-          );
-
-          response.setHeader("Content-Type", "application/json; charset=UTF-8");
-          response.setStatusLine(null, 200, "OK");
-        }
-      );
-
-      server.registerPathHandler(
-        `/cdn/main/ms-images/${recordId}`,
-        async (request, response) => {
-          const stream = Cc[
-            "@mozilla.org/io/arraybuffer-input-stream;1"
-          ].createInstance(Ci.nsIArrayBufferInputStream);
-          stream.setData(arrayBuffer, 0, arrayBuffer.byteLength);
-
-          response.bodyOutputStream.writeFrom(stream, size);
-          response.setHeader("Content-Type", mimetype);
-          response.setStatusLine(null, 200, "OK");
-        }
-      );
+      server.addRemoteImage(imageInfo);
     }
 
-    Services.prefs.setCharPref(RS_SERVER_PREF, `${baseURL}v1`);
+    server.start();
 
     return async () => {
-      await new Promise(resolve => server.stop(() => resolve()));
-      Services.prefs.clearUserPref(RS_SERVER_PREF);
+      await server.stop();
       await RemoteImagesTestUtils.wipeCache();
     };
   },
@@ -114,13 +266,9 @@ const RemoteImagesTestUtils = {
 
   /**
    * Trigger RemoteImages cleanup.
-   *
-   * Remote Images cleanup is triggered by an observer, but its cleanup function
-   * is async, so we must wait for a notification that cleanup is complete.
    */
-  async triggerCleanup() {
-    Services.obs.notifyObservers(null, "remote-settings:changes-poll-end");
-    await BrowserUtils.promiseObserved("remote-images:cleanup-finished");
+  triggerCleanup() {
+    return RemoteImages.forceCleanup();
   },
 
   /**
@@ -190,4 +338,4 @@ const RemoteImagesTestUtils = {
   },
 };
 
-const EXPORTED_SYMBOLS = ["RemoteImagesTestUtils"];
+const EXPORTED_SYMBOLS = ["RemoteImagesTestUtils", "RemoteSettingsServer"];

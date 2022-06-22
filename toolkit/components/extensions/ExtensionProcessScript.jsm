@@ -35,10 +35,6 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "console", () =>
-  lazy.ExtensionCommon.getConsole()
-);
-
 const { DefaultWeakMap } = ExtensionUtils;
 
 const { sharedData } = Services.cpmm;

@@ -842,7 +842,7 @@ section:not(:empty) ~ #empty-addons-message {
   font-weight: bolder;
 }
 
-#colorways-section-heading {
+.colorways-section > .list-section-heading {
   margin-bottom: 0;
 }
 

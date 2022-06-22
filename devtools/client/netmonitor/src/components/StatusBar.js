@@ -75,10 +75,11 @@ class StatusBar extends Component {
   }
 
   render() {
-    const { openStatistics, summary, timingMarkers } = this.props;
+    const { openStatistics, summary, timingMarkers, connector } = this.props;
     const { count, contentSize, transferredSize, ms } = summary;
     const { DOMContentLoaded, load } = timingMarkers;
 
+    const toolbox = connector.getToolbox();
     const countText =
       count === 0
         ? REQUESTS_COUNT_EMPTY
@@ -98,14 +99,16 @@ class StatusBar extends Component {
 
     return div(
       { className: "devtools-toolbar devtools-toolbar-bottom" },
-      button(
-        {
-          className: "devtools-button requests-list-network-summary-button",
-          title: TOOLTIP_PERF,
-          onClick: openStatistics,
-        },
-        div({ className: "summary-info-icon" })
-      ),
+      !toolbox.isBrowserToolbox
+        ? button(
+            {
+              className: "devtools-button requests-list-network-summary-button",
+              title: TOOLTIP_PERF,
+              onClick: openStatistics,
+            },
+            div({ className: "summary-info-icon" })
+          )
+        : null,
       div(
         {
           className: "status-bar-label requests-list-network-summary-count",

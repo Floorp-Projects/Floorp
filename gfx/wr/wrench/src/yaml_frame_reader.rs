@@ -496,6 +496,19 @@ impl YamlFrameReader {
         }
     }
 
+    fn to_clip_chain_id(&self, item: &Yaml) -> Option<ClipChainId> {
+        match *item {
+            Yaml::Integer(value) => {
+                let clip_id = self.user_clip_id_map[&(value as u64)];
+                match clip_id {
+                    ClipId::ClipChain(id) => Some(id),
+                    ClipId::Clip(..) => panic!("bug: must be a valid clip-chain id"),
+                }
+            }
+            _ => None,
+        }
+    }
+
     fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> SpatialId {
         match *item {
             Yaml::Integer(value) => self.user_spatial_id_map[&(value as u64)],
@@ -2016,7 +2029,7 @@ impl YamlFrameReader {
                 false
             };
 
-        let clip_node_id = self.to_clip_id(&yaml["clip-node"], dl.pipeline_id);
+        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"]);
 
         let transform_style = yaml["transform-style"]
             .as_transform_style()
@@ -2055,7 +2068,7 @@ impl YamlFrameReader {
             bounds.min,
             *self.spatial_id_stack.last().unwrap(),
             info.flags,
-            clip_node_id,
+            clip_chain_id,
             transform_style,
             mix_blend_mode,
             &filters,

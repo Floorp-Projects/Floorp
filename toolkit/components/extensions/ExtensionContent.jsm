@@ -67,8 +67,6 @@ const {
 
 const { BrowserExtensionContent, ChildAPIManager, Messenger } = ExtensionChild;
 
-XPCOMUtils.defineLazyGetter(lazy, "console", ExtensionCommon.getConsole);
-
 XPCOMUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
   return (
     Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT ||

@@ -31,7 +31,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
 });
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
+XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+);
 
 const GetStringFromName = FormAutofillUtils.stringBundle.GetStringFromName;
 const formatStringFromName =

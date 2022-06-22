@@ -31,6 +31,7 @@ extern crate fog_control;
 extern crate gecko_profiler;
 extern crate gkrust_utils;
 extern crate http_sfv;
+extern crate jog;
 extern crate jsrust_shared;
 extern crate kvstore;
 extern crate mapped_hyph;

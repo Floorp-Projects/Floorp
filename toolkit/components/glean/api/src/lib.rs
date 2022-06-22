@@ -16,6 +16,7 @@ pub use private::{DistributionData, ErrorType, RecordedEvent};
 #[macro_use]
 mod ffi;
 
+pub mod factory;
 pub mod metrics;
 pub mod pings;
 pub mod private;

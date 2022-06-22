@@ -23,7 +23,7 @@ class Category final : public nsISupports, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject() { return nullptr; }
 
-  Category(uint32_t id, uint32_t length) : mId(id), mLength(length) {}
+  explicit Category(nsCString&& aName) : mName(aName) {}
 
   already_AddRefed<nsISupports> NamedGetter(const nsAString& aName,
                                             bool& aFound);
@@ -31,8 +31,7 @@ class Category final : public nsISupports, public nsWrapperCache {
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
  private:
-  uint32_t mId;
-  uint32_t mLength;
+  nsCString mName;
 
  protected:
   virtual ~Category() = default;

@@ -12,7 +12,6 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 /**

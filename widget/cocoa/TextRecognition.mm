@@ -71,7 +71,8 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface) -> RefPtr<Nat
               // CPU call.
               NSError* error = nil;
               VNImageRequestHandler* requestHandler =
-                  [[VNImageRequestHandler alloc] initWithCGImage:imageRef options:@{}];
+                  [[[VNImageRequestHandler alloc] initWithCGImage:imageRef
+                                                          options:@{}] autorelease];
 
               [requestHandler performRequests:@[ textRecognitionRequest ] error:&error];
               if (error != nil) {

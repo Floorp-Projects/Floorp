@@ -7,9 +7,13 @@ root:
   - type: clip
     id: 2
     bounds: [50, 50, 50, 100]
+  -
+    type: "clip-chain"
+    id: 3
+    clips: [2]
   - type: stacking-context
     bounds: [50, 50, 100, 100]
-    clip-node: 2
+    clip-chain: 3
     items:
       - type: iframe
         id: [1, 3]

@@ -70,11 +70,16 @@ function fakeSvcWinMediator() {
   return logs;
 }
 
+function fakeGetTabState(tab) {
+  return tab;
+}
+
 add_task(async function run_test() {
   let engine = Service.engineManager.get("tabs");
 
   _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
+  tracker.getTabState = fakeGetTabState;
 
   Assert.ok(tracker.modified);
   Assert.ok(
@@ -90,10 +95,9 @@ add_task(async function run_test() {
   tracker.start();
   Assert.equal(logs.length, 2);
   for (let log of logs) {
-    Assert.equal(log.addTopics.length, 4);
+    Assert.equal(log.addTopics.length, 3);
     Assert.ok(log.addTopics.includes("TabOpen"));
     Assert.ok(log.addTopics.includes("TabClose"));
-    Assert.ok(log.addTopics.includes("TabSelect"));
     Assert.ok(log.addTopics.includes("unload"));
     Assert.equal(log.remTopics.length, 0);
     Assert.equal(log.numAPL, 1, "Added 1 progress listener");
@@ -106,23 +110,26 @@ add_task(async function run_test() {
   Assert.equal(logs.length, 2);
   for (let log of logs) {
     Assert.equal(log.addTopics.length, 0);
-    Assert.equal(log.remTopics.length, 4);
+    Assert.equal(log.remTopics.length, 3);
     Assert.ok(log.remTopics.includes("TabOpen"));
     Assert.ok(log.remTopics.includes("TabClose"));
-    Assert.ok(log.remTopics.includes("TabSelect"));
     Assert.ok(log.remTopics.includes("unload"));
     Assert.equal(log.numAPL, 0, "Didn't add a progress listener");
     Assert.equal(log.numRPL, 1, "Removed 1 progress listener");
   }
 
   _("Test tab listener");
-  for (let evttype of ["TabOpen", "TabClose", "TabSelect"]) {
+  for (let evttype of ["TabOpen", "TabClose"]) {
     // Pretend we just synced.
     await tracker.clearChangedIDs();
     Assert.ok(!tracker.modified);
 
     // Send a fake tab event
-    tracker.onTab({ type: evttype, originalTarget: evttype });
+    tracker.onTab({
+      type: evttype,
+      originalTarget: evttype,
+      target: { entries: [], currentURI: "about:config" },
+    });
     Assert.ok(tracker.modified);
     Assert.ok(
       Utils.deepEquals(Object.keys(await engine.getChangedIDs()), [
@@ -135,7 +142,11 @@ add_task(async function run_test() {
   await tracker.clearChangedIDs();
   Assert.ok(!tracker.modified);
 
-  tracker.onTab({ type: "TabOpen", originalTarget: "TabOpen" });
+  tracker.onTab({
+    type: "TabOpen",
+    originalTarget: "TabOpen",
+    target: { entries: [], currentURI: "about:config" },
+  });
   Assert.ok(
     Utils.deepEquals(Object.keys(await engine.getChangedIDs()), [
       clientsEngine.localID,
@@ -162,8 +173,7 @@ add_task(async function run_test() {
   tracker.onLocationChange(
     { isTopLevel: true },
     undefined,
-    Services.io.newURI("https://www.mozilla.org"),
-    Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD
+    Services.io.newURI("https://www.mozilla.org")
   );
   Assert.ok(
     tracker.modified,
@@ -211,6 +221,7 @@ add_task(async function run_sync_on_tab_change_test() {
 
   _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
+  tracker.getTabState = fakeGetTabState;
 
   Assert.ok(tracker.modified);
   Assert.ok(
@@ -222,16 +233,35 @@ add_task(async function run_sync_on_tab_change_test() {
   _("Test sync is scheduled after a tab change if experiment is enabled");
   for (let evttype of ["TabOpen", "TabClose", "TabSelect"]) {
     // Send a fake tab event
-    tracker.onTab({ type: evttype, originalTarget: evttype });
+    tracker.onTab({
+      type: evttype,
+      originalTarget: evttype,
+      target: { entries: [], currentURI: "about:config" },
+    });
     // Ensure the tracker fired
     Assert.ok(tracker.modified);
     // We should be scheduling <= experiment value
     Assert.ok(scheduler.nextSync - Date.now() <= testExperimentDelay);
   }
 
-  _("Test navigating within the same tab triggers a sync");
+  _("Test sync is NOT scheduled after an unsupported tab open");
+  for (let evttype of ["TabOpen"]) {
+    // Send a fake tab event
+    tracker.onTab({
+      type: evttype,
+      originalTarget: evttype,
+      target: { entries: ["about:newtab"], currentURI: null },
+    });
+    // Ensure the tracker fired
+    Assert.ok(tracker.modified);
+    // We should be scheduling <= experiment value
+    Assert.ok(scheduler.nextSync - Date.now() <= testExperimentDelay);
+  }
+
+  _("Test navigating within the same tab does NOT trigger a sync");
   // Pretend we just synced
   await tracker.clearChangedIDs();
+  scheduler.nextSync = Date.now() + scheduler.idleInterval;
 
   tracker.onLocationChange(
     { isTopLevel: true },
@@ -240,12 +270,12 @@ add_task(async function run_sync_on_tab_change_test() {
     Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD
   );
   Assert.ok(
-    tracker.modified,
-    "location change for a new top-level document flagged as modified"
+    !tracker.modified,
+    "location change for reloading doesn't trigger a sync"
   );
   Assert.ok(
-    scheduler.nextSync - Date.now() <= testExperimentDelay,
-    "top level document change triggers a sync when experiment is enabled"
+    scheduler.nextSync - Date.now() > testExperimentDelay,
+    "reload does not trigger a sync"
   );
 
   // Pretend we just synced
@@ -301,8 +331,7 @@ add_task(async function run_sync_on_tab_change_test() {
   tracker.onLocationChange(
     { isTopLevel: true },
     undefined,
-    Services.io.newURI("https://www.mozilla.org"),
-    Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD
+    Services.io.newURI("https://www.mozilla.org")
   );
   Assert.ok(
     tracker.modified,
@@ -325,7 +354,11 @@ add_task(async function run_sync_on_tab_change_test() {
   scheduler.updateClientMode();
   Assert.equal(scheduler.numClients, 2);
   // Fire ontab event
-  tracker.onTab({ type: evttype, originalTarget: evttype });
+  tracker.onTab({
+    type: evttype,
+    originalTarget: evttype,
+    target: { entries: [], currentURI: "about:config" },
+  });
 
   // Ensure the tracker fired
   Assert.ok(tracker.modified);
@@ -350,7 +383,11 @@ add_task(async function run_sync_on_tab_change_test() {
 
   // Fire ontab event
   evttype = "TabOpen";
-  tracker.onTab({ type: evttype, originalTarget: evttype });
+  tracker.onTab({
+    type: evttype,
+    originalTarget: evttype,
+    target: { entries: [], currentURI: "about:config" },
+  });
   // Ensure the tracker fired
   Assert.ok(tracker.modified);
 

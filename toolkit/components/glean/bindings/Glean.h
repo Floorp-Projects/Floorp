@@ -31,6 +31,17 @@ class Glean final : public nsISupports, public nsWrapperCache {
   bool NameIsEnumerable(const nsAString& aName);
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
+  /*
+   * Test-only method.
+   *
+   * Set whether we should treat runtime-registered metrics as the
+   * comprehensive list of all metrics, or whether compile-time-registered
+   * metrics are allowed to count too.
+   *
+   * Allows us to test Artifact Build support flexibly.
+   */
+  static void TestSetRuntimeMetricsComprehensive(bool aIsComprehensive);
+
  protected:
   virtual ~Glean() = default;
 };

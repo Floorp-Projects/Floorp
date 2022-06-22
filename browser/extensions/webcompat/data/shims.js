@@ -520,6 +520,19 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Firebase",
+    platform: "all",
+    name: "Firebase",
+    bug: "1668408",
+    onlyIfPrivateBrowsing: true,
+    runFirst: "firebase.js",
+    matches: [
+      "*://www.gstatic.com/firebasejs/*/firebase-messaging.js*",
+      "*://orangerie.eu/js/vendor*.js*",
+      "*://web.whatsapp.com/vendor*bootstrap_qr*.js*",
+    ],
+  },
+  {
     id: "StackBlitz",
     platform: "all",
     name: "StackBlitz",

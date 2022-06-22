@@ -22,6 +22,7 @@
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
+#include "OuterDocAccessible.h"
 #include "Pivot.h"
 #include "Relation.h"
 #include "Role.h"
@@ -3284,6 +3285,26 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // do an initial cache push.
     MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial || mBounds.isSome(),
                "Incremental cache push but mBounds is not set!");
+
+    if (OuterDocAccessible* doc = AsOuterDoc()) {
+      if (nsIFrame* docFrame = doc->GetFrame()) {
+        const nsMargin& newOffset = docFrame->GetUsedBorderAndPadding();
+        Maybe<nsMargin> currOffset = doc->GetCrossProcOffset();
+        if (!currOffset || *currOffset != newOffset) {
+          // OOP iframe docs can't compute their position within their
+          // cross-proc parent, so we have to manually cache that offset
+          // on the parent (outer doc) itself. We do that here.
+          // Similar to bounds, we maintain a local cache and a remote cache
+          // to avoid sending redundant updates.
+          doc->SetCrossProcOffset(newOffset);
+          nsTArray<int32_t> offsetArray(2);
+          offsetArray.AppendElement(newOffset.Side(eSideLeft));  // X offset
+          offsetArray.AppendElement(newOffset.Side(eSideTop));   // Y offset
+          fields->SetAttribute(nsGkAtoms::crossorigin, std::move(offsetArray));
+        }
+      }
+    }
+
     boundsChanged = aUpdateType == CacheUpdateType::Initial ||
                     !newBoundsRect.IsEqualEdges(mBounds.value());
     if (boundsChanged) {

@@ -13,7 +13,11 @@ root:
           type: clip
           id: 2
         -
-          clip-node: 2
+          type: "clip-chain"
+          id: 3
+          clips: [2]
+        -
+          clip-chain: 3
           type: "stacking-context"
           filters: [identity]
           items:

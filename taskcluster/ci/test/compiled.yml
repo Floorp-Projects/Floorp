@@ -8,6 +8,10 @@ job-defaults:
     variants:
         - 1proc
     virtualization: virtual
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     mozharness:
         script:
             by-test-platform:
