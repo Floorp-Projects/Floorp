@@ -1,5 +1,14 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+function categoryExists(category, entry) {
+  try {
+    Services.catMan.getCategoryEntry(category, entry);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function run_test() {
   Components.manager.autoRegister(
     do_get_file("data/process_directive.manifest")
@@ -8,27 +17,6 @@ function run_test() {
   let isChild =
     Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
-  if (isChild) {
-    Assert.equal(
-      false,
-      "@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1" in Cc
-    );
-  } else {
-    let svc = Cc[
-      "@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1"
-    ].createInstance(Ci.nsIProperty);
-    Assert.equal(svc.name, "main process");
-  }
-
-  if (!isChild) {
-    Assert.equal(
-      false,
-      "@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1" in Cc
-    );
-  } else {
-    let svc = Cc[
-      "@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1"
-    ].createInstance(Ci.nsIProperty);
-    Assert.equal(svc.name, "child process");
-  }
+  Assert.equal(categoryExists("directives-test", "main-process"), !isChild);
+  Assert.equal(categoryExists("directives-test", "content-process"), isChild);
 }
