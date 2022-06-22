@@ -52,7 +52,10 @@ class RepeatingTaskBase : public QueuedTask {
       RTC_GUARDED_BY(task_queue_);
 };
 
-// The template closure pattern is based on rtc::ClosureTask.
+// The template closure pattern is based on rtc::ClosureTask. The provided
+// closure should have a TimeDelta return value, specifing the desired
+// non-negative interval to next repetition, or TimeDelta::PlusInfinity to
+// indicate that the task should be deleted and not called again.
 template <class Closure>
 class RepeatingTaskImpl final : public RepeatingTaskBase {
  public:
