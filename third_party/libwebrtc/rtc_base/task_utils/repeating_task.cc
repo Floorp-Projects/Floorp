@@ -38,13 +38,14 @@ bool RepeatingTaskBase::Run() {
     return true;
 
   TimeDelta delay = RunClosure();
+  RTC_DCHECK_GE(delay, TimeDelta::Zero());
 
-  // The closure might have stopped this task, in which case we return true to
-  // destruct this object.
-  if (!alive_flag_->alive())
+  // A delay of +infinity means that the task should not be run again.
+  // Alternatively, the closure might have stopped this task. In either which
+  // case we return true to destruct this object.
+  if (delay.IsPlusInfinity() || !alive_flag_->alive())
     return true;
 
-  RTC_DCHECK(delay.IsFinite());
   TimeDelta lost_time = clock_->CurrentTime() - next_run_time_;
   next_run_time_ += delay;
   delay -= lost_time;
