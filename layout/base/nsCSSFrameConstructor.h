@@ -14,7 +14,6 @@
 
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ContainStyleScopeManager.h"
 #include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -24,6 +23,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
+#include "nsQuoteList.h"
+#include "nsCounterManager.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
 #include "nsIFrame.h"
@@ -335,9 +336,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 #if defined(ACCESSIBILITY) || defined(MOZ_LAYOUT_DEBUGGER)
   // Exposed only for nsLayoutUtils::GetMarkerSpokenText and
   // nsLayoutDebuggingTools to use.
-  mozilla::ContainStyleScopeManager& GetContainStyleScopeManager() {
-    return mContainStyleScopeManager;
-  }
+  const nsCounterManager* CounterManager() const { return &mCounterManager; }
 #endif
 
  private:
@@ -454,22 +453,20 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * @param aContentIndex is the index of the content item to create
    */
   already_AddRefed<nsIContent> CreateGeneratedContent(
-      nsFrameConstructorState& aState, Element& aOriginatingElement,
+      nsFrameConstructorState& aState, const Element& aOriginatingElement,
       ComputedStyle& aComputedStyle, uint32_t aContentIndex);
 
   /**
    * Create child content nodes for a ::marker from its 'list-style-*' values.
    */
   void CreateGeneratedContentFromListStyle(
-      nsFrameConstructorState& aState, Element& aOriginatingElement,
-      const ComputedStyle& aPseudoStyle,
+      nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
       const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
   /**
    * Create child content nodes for a ::marker from its 'list-style-type'.
    */
   void CreateGeneratedContentFromListStyleType(
-      nsFrameConstructorState& aState, Element& aOriginatingElement,
-      const ComputedStyle& aPseudoStyle,
+      nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
       const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
 
   // aParentFrame may be null; this method doesn't use it directly in any case.
@@ -2163,8 +2160,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   FreeFCItemLink* mFirstFreeFCItem;
   size_t mFCItemsInUse;
 
-  mozilla::ContainStyleScopeManager mContainStyleScopeManager;
-
+  nsQuoteList mQuoteList;
+  nsCounterManager mCounterManager;
   // Current ProcessChildren depth.
   uint16_t mCurrentDepth;
   bool mQuotesDirty : 1;

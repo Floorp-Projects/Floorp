@@ -938,8 +938,8 @@ void nsLayoutUtils::GetMarkerSpokenText(const nsIContent* aContent,
 
   frame->PresContext()
       ->FrameConstructor()
-      ->GetContainStyleScopeManager()
-      .GetSpokenCounterText(frame, aText);
+      ->CounterManager()
+      ->GetSpokenCounterText(frame, aText);
 }
 #endif
 
