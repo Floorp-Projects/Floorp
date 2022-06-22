@@ -168,7 +168,7 @@ class VideoCaptureTest : public ::testing::Test {
     rtc::scoped_refptr<VideoCaptureModule> module(
         VideoCaptureFactory::Create(unique_name));
     if (module.get() == NULL)
-      return NULL;
+      return nullptr;
 
     EXPECT_FALSE(module->CaptureStarted());
 

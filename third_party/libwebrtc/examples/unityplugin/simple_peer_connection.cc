@@ -61,7 +61,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
     if (!capturer) {
       return nullptr;
     }
-    return new rtc::RefCountedObject<CapturerTrackSource>(std::move(capturer));
+    return rtc::make_ref_counted<CapturerTrackSource>(std::move(capturer));
   }
 
  protected:

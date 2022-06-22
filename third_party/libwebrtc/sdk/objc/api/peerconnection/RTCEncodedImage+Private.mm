@@ -20,7 +20,7 @@ namespace {
 class ObjCEncodedImageBuffer : public webrtc::EncodedImageBufferInterface {
  public:
   static rtc::scoped_refptr<ObjCEncodedImageBuffer> Create(NSData *data) {
-    return new rtc::RefCountedObject<ObjCEncodedImageBuffer>(data);
+    return rtc::make_ref_counted<ObjCEncodedImageBuffer>(data);
   }
   const uint8_t *data() const override { return static_cast<const uint8_t *>(data_.bytes); }
   // TODO(bugs.webrtc.org/9378): delete this non-const data method.

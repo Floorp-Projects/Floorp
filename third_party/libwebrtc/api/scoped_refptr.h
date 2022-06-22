@@ -75,6 +75,8 @@ class scoped_refptr {
 
   scoped_refptr() : ptr_(nullptr) {}
 
+  // TODO(bugs.webrtc.org/13464): Implicit construction is deprecated. Mark
+  // explicit, and add a new implicit constructor accepting a nullptr_t.
   scoped_refptr(T* p) : ptr_(p) {  // NOLINT(runtime/explicit)
     if (ptr_)
       ptr_->AddRef();

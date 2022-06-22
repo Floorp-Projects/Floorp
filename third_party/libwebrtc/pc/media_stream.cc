@@ -59,7 +59,7 @@ rtc::scoped_refptr<AudioTrackInterface> MediaStream::FindAudioTrack(
     const std::string& track_id) {
   AudioTrackVector::iterator it = FindTrack(&audio_tracks_, track_id);
   if (it == audio_tracks_.end())
-    return NULL;
+    return nullptr;
   return *it;
 }
 
@@ -67,7 +67,7 @@ rtc::scoped_refptr<VideoTrackInterface> MediaStream::FindVideoTrack(
     const std::string& track_id) {
   VideoTrackVector::iterator it = FindTrack(&video_tracks_, track_id);
   if (it == video_tracks_.end())
-    return NULL;
+    return nullptr;
   return *it;
 }
 
