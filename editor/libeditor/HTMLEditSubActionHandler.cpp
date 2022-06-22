@@ -1823,29 +1823,23 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   }
 
   if (HTMLEditUtils::IsHeader(*editableBlockElement)) {
-    // Headers: close (or split) header
-    Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+    SplitNodeResult splitHeadingElementResult =
         HandleInsertParagraphInHeadingElement(*editableBlockElement,
                                               atStartOfSelection);
-    if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-      if (NS_WARN_IF(pointToPutCaretOrError.unwrapErr() ==
-                     NS_ERROR_EDITOR_DESTROYED)) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING(
-          "HTMLEditor::HandleInsertParagraphInHeadingElement() failed, but "
-          "ignored");
+    if (MOZ_UNLIKELY(splitHeadingElementResult.isErr())) {
+      NS_WARNING("HTMLEditor::HandleInsertParagraphInHeadingElement() failed");
       return EditActionHandled();
     }
-    nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.unwrap());
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destroying the editor");
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    nsresult rv = splitHeadingElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return EditActionHandled(rv);
     }
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "SplitNodeResult::SuggestCaretPointTo() failed, but ignored");
     return EditActionHandled();
   }
 
@@ -6964,52 +6958,48 @@ void HTMLEditor::MakeTransitionList(
   }
 }
 
-Result<EditorDOMPoint, nsresult>
-HTMLEditor::HandleInsertParagraphInHeadingElement(
+SplitNodeResult HTMLEditor::HandleInsertParagraphInHeadingElement(
     Element& aHeadingElement, const EditorDOMPoint& aPointToSplit) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  const SplitNodeResult splitHeadingResult =
-      [this, &aPointToSplit, &aHeadingElement]() MOZ_CAN_RUN_SCRIPT {
-        // Get ws code to adjust any ws
-        Result<EditorDOMPoint, nsresult> preparationResult =
-            WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-                *this, aPointToSplit, aHeadingElement);
-        if (MOZ_UNLIKELY(preparationResult.isErr())) {
-          NS_WARNING(
-              "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
-              "failed");
-          return SplitNodeResult(preparationResult.unwrapErr());
-        }
-        EditorDOMPoint pointToSplit = preparationResult.unwrap();
-        MOZ_ASSERT(pointToSplit.IsInContentNode());
+  SplitNodeResult splitHeadingResult = [this, &aPointToSplit,
+                                        &aHeadingElement]() MOZ_CAN_RUN_SCRIPT {
+    // Normalize collapsible white-spaces around the split point to keep
+    // them visible after the split.  Note that this does not touch
+    // selection because of using AutoTransactionsConserveSelection in
+    // WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes().
+    Result<EditorDOMPoint, nsresult> preparationResult =
+        WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+            *this, aPointToSplit, aHeadingElement);
+    if (MOZ_UNLIKELY(preparationResult.isErr())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
+          "failed");
+      return SplitNodeResult(preparationResult.unwrapErr());
+    }
+    EditorDOMPoint pointToSplit = preparationResult.unwrap();
+    MOZ_ASSERT(pointToSplit.IsInContentNode());
 
-        // Split the header
-        SplitNodeResult splitResult = SplitNodeDeepWithTransaction(
-            aHeadingElement, pointToSplit,
-            SplitAtEdges::eAllowToCreateEmptyContainer);
-        NS_WARNING_ASSERTION(
-            splitResult.isOk(),
-            "HTMLEditor::SplitNodeDeepWithTransaction(aHeadingElement, "
-            "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
-        return splitResult;
-      }();
+    // Split the header
+    SplitNodeResult splitResult = SplitNodeDeepWithTransaction(
+        aHeadingElement, pointToSplit,
+        SplitAtEdges::eAllowToCreateEmptyContainer);
+    NS_WARNING_ASSERTION(
+        splitResult.isOk(),
+        "HTMLEditor::SplitNodeDeepWithTransaction(aHeadingElement, "
+        "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
+    return splitResult;
+  }();
   if (splitHeadingResult.isErr()) {
     NS_WARNING("Failed to splitting aHeadingElement");
-    return Err(splitHeadingResult.unwrapErr());
+    return splitHeadingResult;
   }
-  nsresult rv = splitHeadingResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
+  splitHeadingResult.IgnoreCaretPointSuggestion();
   if (MOZ_UNLIKELY(!splitHeadingResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
         "eAllowToCreateEmptyContainer) didn't split aHeadingElement");
-    return Err(NS_ERROR_FAILURE);
+    return SplitNodeResult(NS_ERROR_FAILURE);
   }
 
   // If the left heading element is empty, put a padding <br> element for empty
@@ -7032,19 +7022,9 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
       NS_WARNING(
           "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
           ") failed");
-      return Err(insertPaddingBRElementResult.unwrapErr());
+      return SplitNodeResult(insertPaddingBRElementResult.unwrapErr());
     }
-    nsresult rv = insertPaddingBRElementResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
   }
 
   // Put caret at start of the right head element if it's not empty.
@@ -7054,16 +7034,19 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
              "SplitNodeResult::GetNextContent() should return something if "
              "DidSplit() returns true");
   if (!HTMLEditUtils::IsEmptyBlockElement(*rightHeadingElement, {})) {
-    return EditorDOMPoint(rightHeadingElement, 0u);
+    return SplitNodeResult(std::move(splitHeadingResult),
+                           EditorDOMPoint(rightHeadingElement, 0u));
   }
 
   // If the right heading element is empty, delete it.
+  // TODO: If we know the new heading element becomes empty, we stop spliting
+  //       the heading element.
   // MOZ_KnownLive(rightHeadingElement) because it's grabbed by
   // splitHeadingResult.
-  rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
+  nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return Err(rv);
+    return SplitNodeResult(rv);
   }
 
   // Layout tells the caret to blink in a weird place if we don't place a
@@ -7084,17 +7067,20 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
     if (nextEditableSibling &&
         nextEditableSibling->IsHTMLElement(nsGkAtoms::br)) {
       auto afterEditableBRElement = EditorDOMPoint::After(*nextEditableSibling);
-      if (MOZ_UNLIKELY(NS_WARN_IF(!afterEditableBRElement.IsSet()))) {
-        return Err(NS_ERROR_FAILURE);
+      if (NS_WARN_IF(!afterEditableBRElement.IsSet())) {
+        return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       // Put caret at the <br> element.
-      return afterEditableBRElement;
+      return SplitNodeResult(
+          SplitNodeResult::HandledButDidNotSplitDueToEndOfContainer(
+              *leftHeadingElement, SplitNodeDirection::LeftNodeIsNewOne),
+          afterEditableBRElement);
     }
   }
 
   if (MOZ_UNLIKELY(!leftHeadingElement->IsInComposedDoc())) {
     NS_WARNING("The left heading element was unexpectedly removed");
-    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
@@ -7139,23 +7125,15 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   if (createNewParagraphElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return Err(createNewParagraphElementResult.unwrapErr());
+    return SplitNodeResult(createNewParagraphElementResult.unwrapErr());
   }
-  rv = createNewParagraphElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-  MOZ_ASSERT(createNewParagraphElementResult.GetNewNode());
-
   // Put caret at the <br> element in the following paragraph.
-  return EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u);
+  createNewParagraphElementResult.IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(createNewParagraphElementResult.GetNewNode());
+  return SplitNodeResult(
+      *leftHeadingElement, *createNewParagraphElementResult.GetNewNode(),
+      SplitNodeDirection::LeftNodeIsNewOne,
+      Some(EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u)));
 }
 
 SplitNodeResult HTMLEditor::HandleInsertParagraphInParagraph(
