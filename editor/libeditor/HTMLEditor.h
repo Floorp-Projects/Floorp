@@ -1495,16 +1495,25 @@ class HTMLEditor final : public EditorBase,
   /**
    * HandleInsertParagraphInParagraph() does the right thing for Enter key
    * press or 'insertParagraph' command in aParentDivOrP.  aParentDivOrP will
-   * be split at start of first selection range.
+   * be split **around** aCandidatePointToSplit.  If this thinks that it should
+   * be handled to insert a <br> instead, this returns "not handled".
    *
    * @param aParentDivOrP   The parent block.  This must be <p> or <div>
    *                        element.
-   * @return                Returns with NS_OK if this doesn't meat any
-   *                        unexpected situation.  If this method tries to
-   *                        split the paragraph, marked as handled.
+   * @param aCandidatePointToSplit
+   *                        The point where the caller want to split
+   *                        aParentDivOrP.  However, in some cases, this is not
+   *                        used as-is.  E.g., this method avoids to create new
+   *                        empty <a href> in the right paragraph.  So this may
+   *                        be adjusted to proper position around it.
+   * @param aEditingHost    The editing host.
+   * @return                If the caller should default to inserting <br>
+   *                        element, returns "not handled".
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  HandleInsertParagraphInParagraph(Element& aParentDivOrP);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  HandleInsertParagraphInParagraph(Element& aParentDivOrP,
+                                   const EditorDOMPoint& aCandidatePointToSplit,
+                                   const Element& aEditingHost);
 
   /**
    * HandleInsertParagraphInHeadingElement() handles insertParagraph command
@@ -1515,9 +1524,8 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aHeadingElement     The heading element to be split.
    * @param aPointToSplit       The point to split aHeadingElement.
-   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   HandleInsertParagraphInHeadingElement(Element& aHeadingElement,
                                         const EditorDOMPoint& aPointToSplit);
 

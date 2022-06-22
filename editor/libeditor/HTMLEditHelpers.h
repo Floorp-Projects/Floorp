@@ -19,6 +19,7 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"  // for SuggestCaretOption(s)
 #include "mozilla/IntegerRange.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/StaticRange.h"
@@ -559,34 +560,40 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * @param aSplitNode  The node which was split.
    * @param aDirection  The split direction which the HTML editor tried to split
    *                    a node with.
-   * @param aDeeperSplitNodeResult
-   *                    If the splitter has already split a child or a
-   *                    descendant of the latest split node, the split node
-   *                    result should be specified.
+   * @param aNewCaretPoint
+   *                    An optional new caret position.  If this is omitted,
+   *                    the point between new node and split node will be
+   *                    suggested.
    */
   SplitNodeResult(nsIContent& aNewNode, nsIContent& aSplitNode,
-                  SplitNodeDirection aDirection)
+                  SplitNodeDirection aDirection,
+                  const Maybe<EditorDOMPoint>& aNewCaretPoint = Nothing())
       : mPreviousNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                           ? &aNewNode
                           : &aSplitNode),
         mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                       ? &aSplitNode
                       : &aNewNode),
-        mCaretPoint(EditorDOMPoint::AtEndOf(mPreviousNode)),
+        mCaretPoint(aNewCaretPoint.isSome()
+                        ? aNewCaretPoint.ref()
+                        : EditorDOMPoint::AtEndOf(mPreviousNode)),
         mRv(NS_OK),
         mDirection(aDirection) {}
   SplitNodeResult(nsCOMPtr<nsIContent>&& aNewNode,
                   nsCOMPtr<nsIContent>&& aSplitNode,
-                  SplitNodeDirection aDirection)
+                  SplitNodeDirection aDirection,
+                  const Maybe<EditorDOMPoint>& aNewCaretPoint = Nothing())
       : mPreviousNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                           ? std::move(aNewNode)
                           : std::move(aSplitNode)),
         mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                       ? std::move(aSplitNode)
                       : std::move(aNewNode)),
-        mCaretPoint(MOZ_LIKELY(mPreviousNode)
-                        ? EditorDOMPoint::AtEndOf(mPreviousNode)
-                        : EditorDOMPoint()),
+        mCaretPoint(aNewCaretPoint.isSome()
+                        ? aNewCaretPoint.ref()
+                        : (MOZ_LIKELY(mPreviousNode)
+                               ? EditorDOMPoint::AtEndOf(mPreviousNode)
+                               : EditorDOMPoint())),
         mRv(NS_OK),
         mDirection(aDirection) {
     MOZ_DIAGNOSTIC_ASSERT(mPreviousNode);
@@ -615,6 +622,15 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     return result;
   }
 
+  /**
+   * The following factory methods creates a SplitNodeResult instance for the
+   * special cases.
+   *
+   * @param aDeeperSplitNodeResult
+   *                    If the splitter has already split a child or a
+   *                    descendant of the latest split node, the split node
+   *                    result should be specified.
+   */
   static inline SplitNodeResult HandledButDidNotSplitDueToEndOfContainer(
       nsIContent& aNotSplitNode, SplitNodeDirection aDirection,
       const SplitNodeResult* aDeeperSplitNodeResult = nullptr) {

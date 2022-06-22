@@ -738,8 +738,7 @@ urlbar:
         "typed", "dropped", "pasted", "topsites"
     bug_numbers: [1559136, 1671404]
     notification_emails:
-      - "tbrooks@mozilla.com"
-      - "fx-search@mozilla.com"
+      - "fx-search-telemetry@mozilla.com"
     expiry_version: never
     extra_keys:
       elapsed: engagement time in milliseconds.
@@ -766,8 +765,7 @@ urlbar:
         "typed", "dropped", "pasted", "topsites"
     bug_numbers: [1559136]
     notification_emails:
-      - "rharter@mozilla.com"
-      - "fx-search@mozilla.com"
+      - "fx-search-telemetry@mozilla.com"
     expiry_version: never
     extra_keys:
       elapsed: abandonement time in milliseconds.
@@ -3083,7 +3081,7 @@ contextservices.quicksuggest:
       toggled.
     bug_numbers: [1735976]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   enable_toggled:
@@ -3098,7 +3096,7 @@ contextservices.quicksuggest:
       toggled.
     bug_numbers: [1693126]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   sponsored_toggled:
@@ -3112,7 +3110,7 @@ contextservices.quicksuggest:
       boolean pref is toggled.
     bug_numbers: [1728430, 1733687]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   opt_in_dialog:
@@ -3137,7 +3135,7 @@ contextservices.quicksuggest:
       out),
     bug_numbers: [1723860, 1745026, 1761171]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   impression_cap:
@@ -3185,7 +3183,7 @@ contextservices.quicksuggest:
     record_in_processes: ["main"]
     bug_numbers: [1761058]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   engagement:
@@ -3212,7 +3210,7 @@ contextservices.quicksuggest:
     record_in_processes: ["main"]
     bug_numbers: [1761059]
     notification_emails:
-      - fx-search@mozilla.com
+      - fx-search-telemetry@mozilla.com
       - adw@mozilla.com
     expiry_version: never
 

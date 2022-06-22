@@ -1080,31 +1080,6 @@ const TEST_DATA = [
     },
   },
   {
-    description: "Turn the pref off",
-    pref: false,
-    visitHistory: ["http://example.com/test"],
-    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
-    userInput: "exa",
-    expected: {
-      autofilled: "example.com/",
-      completed: "http://example.com/",
-      hasAutofillTitle: false,
-      results: [
-        context =>
-          makeVisitResult(context, {
-            uri: "http://example.com/",
-            title: "example.com",
-            heuristic: true,
-          }),
-        context =>
-          makeVisitResult(context, {
-            uri: "http://example.com/test",
-            title: "test visit for http://example.com/test",
-          }),
-      ],
-    },
-  },
-  {
     description:
       "With history and bookmarks sources, foreign_count == 0, frecency <= 0: No adaptive history autofill",
     pref: true,
@@ -1188,6 +1163,56 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Empty input string",
+    pref: true,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      hasAutofillTitle: false,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
+            heuristic: true,
+          }),
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/test",
+            title: "test visit for http://example.com/test",
+          }),
+      ],
+    },
+  },
+  {
+    description: "Turn the pref off",
+    pref: false,
+    visitHistory: ["http://example.com/test"],
+    inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+    userInput: "exa",
+    expected: {
+      autofilled: "example.com/",
+      completed: "http://example.com/",
+      hasAutofillTitle: false,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://example.com/",
+            title: "example.com",
             heuristic: true,
           }),
         context =>

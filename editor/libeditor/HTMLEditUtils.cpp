@@ -676,7 +676,7 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
 }
 
 bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
-    EditorDOMPoint& aPointToInsert, const Element& aEditingHost) {
+    const EditorDOMPoint& aPointToInsert, const Element& aEditingHost) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (!aPointToInsert.IsInContentNode()) {
@@ -1043,14 +1043,14 @@ bool HTMLEditUtils::IsContainerNode(nsHTMLTag aTagId) {
   return kElements[aTagId - 1].mIsContainer;
 }
 
-bool HTMLEditUtils::IsNonListSingleLineContainer(nsINode& aNode) {
+bool HTMLEditUtils::IsNonListSingleLineContainer(const nsINode& aNode) {
   return aNode.IsAnyOfHTMLElements(
       nsGkAtoms::address, nsGkAtoms::div, nsGkAtoms::h1, nsGkAtoms::h2,
       nsGkAtoms::h3, nsGkAtoms::h4, nsGkAtoms::h5, nsGkAtoms::h6,
       nsGkAtoms::listing, nsGkAtoms::p, nsGkAtoms::pre, nsGkAtoms::xmp);
 }
 
-bool HTMLEditUtils::IsSingleLineContainer(nsINode& aNode) {
+bool HTMLEditUtils::IsSingleLineContainer(const nsINode& aNode) {
   return IsNonListSingleLineContainer(aNode) ||
          aNode.IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::dt, nsGkAtoms::dd);
 }
