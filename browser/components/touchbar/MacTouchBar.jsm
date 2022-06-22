@@ -2,34 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
+var EXPORTED_SYMBOLS = ["TouchBarHelper", "TouchBarInput"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gTouchBarUpdater",
+  lazy,
+  "touchBarUpdater",
   "@mozilla.org/widget/touchbarupdater;1",
   "nsITouchBarUpdater"
 );
 
 // For accessing TouchBarHelper methods from static contexts in this file.
 XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gTouchBarHelper",
+  lazy,
+  "touchBarHelper",
   "@mozilla.org/widget/touchbarhelper;1",
   "nsITouchBarHelper"
 );
@@ -103,7 +100,7 @@ var gBuiltInInputs = {
     image: "chrome://browser/skin/home.svg",
     type: kInputTypes.BUTTON,
     callback: () => {
-      let win = BrowserWindowTracker.getTopWindow();
+      let win = lazy.BrowserWindowTracker.getTopWindow();
       win.BrowserHome();
     },
   },
@@ -130,7 +127,7 @@ var gBuiltInInputs = {
     image: "chrome://browser/skin/sidebars.svg",
     type: kInputTypes.BUTTON,
     callback: () => {
-      let win = BrowserWindowTracker.getTopWindow();
+      let win = lazy.BrowserWindowTracker.getTopWindow();
       win.SidebarUI.toggle();
     },
   },
@@ -180,32 +177,32 @@ var gBuiltInInputs = {
             title: "search-bookmarks",
             type: kInputTypes.BUTTON,
             callback: () =>
-              gTouchBarHelper.insertRestrictionInUrlbar(
-                UrlbarTokenizer.RESTRICT.BOOKMARK
+              lazy.touchBarHelper.insertRestrictionInUrlbar(
+                lazy.UrlbarTokenizer.RESTRICT.BOOKMARK
               ),
           },
           OpenTabs: {
             title: "search-opentabs",
             type: kInputTypes.BUTTON,
             callback: () =>
-              gTouchBarHelper.insertRestrictionInUrlbar(
-                UrlbarTokenizer.RESTRICT.OPENPAGE
+              lazy.touchBarHelper.insertRestrictionInUrlbar(
+                lazy.UrlbarTokenizer.RESTRICT.OPENPAGE
               ),
           },
           History: {
             title: "search-history",
             type: kInputTypes.BUTTON,
             callback: () =>
-              gTouchBarHelper.insertRestrictionInUrlbar(
-                UrlbarTokenizer.RESTRICT.HISTORY
+              lazy.touchBarHelper.insertRestrictionInUrlbar(
+                lazy.UrlbarTokenizer.RESTRICT.HISTORY
               ),
           },
           Tags: {
             title: "search-tags",
             type: kInputTypes.BUTTON,
             callback: () =>
-              gTouchBarHelper.insertRestrictionInUrlbar(
-                UrlbarTokenizer.RESTRICT.TAG
+              lazy.touchBarHelper.insertRestrictionInUrlbar(
+                lazy.UrlbarTokenizer.RESTRICT.TAG
               ),
           },
         },
@@ -298,7 +295,7 @@ class TouchBarHelper {
   }
 
   static get window() {
-    return BrowserWindowTracker.getTopWindow();
+    return lazy.BrowserWindowTracker.getTopWindow();
   }
 
   get document() {
@@ -354,7 +351,7 @@ class TouchBarHelper {
         if (this._inputsNotUpdated) {
           this._inputsNotUpdated.delete(inputName);
         }
-        gTouchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, [
+        lazy.touchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, [
           item,
         ]);
       }
@@ -384,7 +381,10 @@ class TouchBarHelper {
       inputs.push(input);
     }
 
-    gTouchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, inputs);
+    lazy.touchBarUpdater.updateTouchBarInputs(
+      TouchBarHelper.baseWindow,
+      inputs
+    );
   }
 
   /**
@@ -403,7 +403,9 @@ class TouchBarHelper {
       TouchBarHelper.window.gURLBar.getAttribute("pageproxystate") != "valid"
     ) {
       searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
-      if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
+      if (
+        Object.values(lazy.UrlbarTokenizer.RESTRICT).includes(searchString[0])
+      ) {
         searchString = searchString.substring(1).trimStart();
       }
     }
@@ -464,7 +466,7 @@ class TouchBarHelper {
         if (!this._searchPopover) {
           this._searchPopover = this.getTouchBarInput("SearchPopover");
         }
-        gTouchBarUpdater.showPopover(
+        lazy.touchBarUpdater.showPopover(
           TouchBarHelper.baseWindow,
           this._searchPopover,
           true
@@ -474,7 +476,7 @@ class TouchBarHelper {
         if (!this._searchPopover) {
           this._searchPopover = this.getTouchBarInput("SearchPopover");
         }
-        gTouchBarUpdater.showPopover(
+        lazy.touchBarUpdater.showPopover(
           TouchBarHelper.baseWindow,
           this._searchPopover,
           false
@@ -500,9 +502,6 @@ class TouchBarHelper {
 }
 
 const helperProto = TouchBarHelper.prototype;
-helperProto.classDescription = "Services the Mac Touch Bar";
-helperProto.classID = Components.ID("{ea109912-3acc-48de-b679-c23b6a122da5}");
-helperProto.contractID = "@mozilla.org/widget/touchbarhelper;1";
 helperProto.QueryInterface = ChromeUtils.generateQI(["nsITouchBarHelper"]);
 helperProto._l10n = new Localization(["browser/touchbar/touchbar.ftl"]);
 
@@ -635,17 +634,13 @@ class TouchBarInput {
       localizedStrings[child.key] = child.title;
     });
 
-    gTouchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, children);
+    lazy.touchBarUpdater.updateTouchBarInputs(
+      TouchBarHelper.baseWindow,
+      children
+    );
   }
 }
 
-const inputProto = TouchBarInput.prototype;
-inputProto.classDescription = "Represents an input on the Mac Touch Bar";
-inputProto.classID = Components.ID("{77441d17-f29c-49d7-982f-f20a5ab5a900}");
-inputProto.contractID = "@mozilla.org/widget/touchbarinput;1";
-inputProto.QueryInterface = ChromeUtils.generateQI(["nsITouchBarInput"]);
-
-this.NSGetFactory = ComponentUtils.generateNSGetFactory([
-  TouchBarHelper,
-  TouchBarInput,
+TouchBarInput.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsITouchBarInput",
 ]);

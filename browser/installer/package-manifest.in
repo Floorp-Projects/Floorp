@@ -175,10 +175,6 @@
 @RESPATH@/components/ProcessSingleton.manifest
 @RESPATH@/components/HandlerService.manifest
 @RESPATH@/components/HandlerService.js
-#ifdef XP_MACOSX
-@RESPATH@/browser/components/MacTouchBar.manifest
-@RESPATH@/browser/components/MacTouchBar.js
-#endif
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/servicesComponents.manifest
 @RESPATH@/components/servicesSettings.manifest
