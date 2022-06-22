@@ -13820,7 +13820,7 @@
 # Whether to disable SwipeTracker (e.g. swipe-to-nav).
 - name: widget.disable-swipe-tracker
   type: bool
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   value: @IS_NOT_EARLY_BETA_OR_EARLIER@
 #else
   value: false
@@ -13838,12 +13838,16 @@
   value: 0.05f
   mirror: always
 
+# The values for this pref are derived from trial and error in an effort to
+# match the existing behavior on the respective platforms.
 - name: widget.swipe.whole-page-pixel-size
   type: float
 #if defined(XP_WIN)
   value: 1100.0f
-#else
+#elif defined(XP_MACOSX)
   value: 550.0f
+#else
+  value: 40.0f
 #endif
   mirror: always
 
