@@ -132,7 +132,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Selecteditem:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
       break;
-    case ColorID::MozAccentColorForeground:
+    case ColorID::Accentcolortext:
     case ColorID::MozMenuhovertext:
     case ColorID::Selecteditemtext:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlTextColor);
@@ -339,7 +339,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::MozMacActiveMenuitem:
     case ColorID::MozMacActiveSourceListSelection:
-    case ColorID::MozAccentColor:
+    case ColorID::Accentcolor:
       color = GetColorFromNSColor(ControlAccentColor());
       break;
     default:

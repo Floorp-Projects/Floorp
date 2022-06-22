@@ -42,10 +42,10 @@
   --button-hover-bgcolor: color-mix(in srgb, currentColor 17%, transparent);
   --button-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
   --button-color: currentColor;
-  --button-primary-bgcolor: -moz-accent-color;
-  --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, -moz-accent-color);
-  --button-primary-active-bgcolor: color-mix(in srgb, black 20%, -moz-accent-color);
-  --button-primary-color: -moz-accent-color-foreground;
+  --button-primary-bgcolor: AccentColor;
+  --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, AccentColor);
+  --button-primary-active-bgcolor: color-mix(in srgb, black 20%, AccentColor);
+  --button-primary-color: AccentColorText;
 
   --buttons-destructive-bgcolor: #e22850;
   --buttons-destructive-hover-bgcolor: #c50042;

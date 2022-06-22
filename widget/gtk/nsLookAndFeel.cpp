@@ -538,11 +538,11 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::Selecteditemtext:
       aColor = mSelectedItemText;
       break;
-    case ColorID::MozAccentColor:
+    case ColorID::Accentcolor:
       aColor = mAccentColor;
       break;
-    case ColorID::MozAccentColorForeground:
-      aColor = mAccentColorForeground;
+    case ColorID::Accentcolortext:
+      aColor = mAccentColorText;
       break;
     case ColorID::MozCellhighlight:
       aColor = mMozCellHighlightBackground;
@@ -1297,7 +1297,7 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
 
     if (StaticPrefs::widget_gtk_alt_theme_accent()) {
       mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
-      mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
+      mAltTheme.mAccentColorText = mSystemTheme.mAccentColorText;
     }
   }
 
@@ -1315,7 +1315,7 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
     auto& light = mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
 
     dark.mAccentColor = light.mAccentColor;
-    dark.mAccentColorForeground = light.mAccentColorForeground;
+    dark.mAccentColorText = light.mAccentColorText;
   }
 
   // Right now we're using the opposite color-scheme theme, make sure to record
@@ -1914,13 +1914,13 @@ void nsLookAndFeel::PerThemeData::Init() {
     //
     //   https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html#accent-colors
     if (!GetNamedColorPair(style, "accent_bg_color", "accent_fg_color",
-                           &mAccentColor, &mAccentColorForeground)) {
+                           &mAccentColor, &mAccentColorText)) {
       mAccentColor = mSelectedItem;
-      mAccentColorForeground = mSelectedItemText;
+      mAccentColorText = mSelectedItemText;
     }
 
-    EnsureColorPairIsOpaque(mAccentColor, mAccentColorForeground);
-    PreferDarkerBackground(mAccentColor, mAccentColorForeground);
+    EnsureColorPairIsOpaque(mAccentColor, mAccentColorText);
+    PreferDarkerBackground(mAccentColor, mAccentColorText);
   }
 
   // Button text color

@@ -5,7 +5,7 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  --toolbarbutton-icon-fill-attention: -moz-accent-color;
+  --toolbarbutton-icon-fill-attention: AccentColor;
   --warning-icon-bgcolor: #FFA436;
 }
 

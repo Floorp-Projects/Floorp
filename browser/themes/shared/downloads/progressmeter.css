@@ -5,7 +5,7 @@
 /*** Common-styled progressmeter ***/
 
 :root {
-  --download-progress-fill-color: -moz-accent-color;
+  --download-progress-fill-color: AccentColor;
   --download-progress-paused-color: GrayText;
   --download-progress-flare-color: rgba(255,255,255,0.75);
 }
@@ -56,7 +56,7 @@ toolbar[brighttext]:-moz-lwtheme {
 /* Ensure we have contrast in selected download items */
 #downloadsListBox.allDownloadsListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
   --download-progress-fill-color: currentColor;
-  --download-progress-flare-color: -moz-accent-color;
+  --download-progress-flare-color: AccentColor;
 }
 
 .downloadProgress::-moz-progress-bar {
