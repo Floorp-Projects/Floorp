@@ -27,7 +27,7 @@ template <typename T>
 struct BSPPolygon {
   explicit BSPPolygon(T* aData) : data(aData) {}
 
-  BSPPolygon<T>(T* aData, gfx::Polygon&& aGeometry)
+  BSPPolygon(T* aData, gfx::Polygon&& aGeometry)
       : data(aData), geometry(Some(std::move(aGeometry))) {}
 
   BSPPolygon(T* aData, nsTArray<gfx::Point4D>&& aPoints,
