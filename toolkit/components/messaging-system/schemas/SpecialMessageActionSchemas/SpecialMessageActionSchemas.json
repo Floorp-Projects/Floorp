@@ -327,6 +327,16 @@
             "type": {
               "type": "string",
               "enum": ["PIN_FIREFOX_TO_TASKBAR"]
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "privatePin": {
+                  "type": "boolean",
+                  "description": "Whether or not to pin private browsing mode"
+                }
+              }, 
+              "additionalProperties": false
             }
           },
           "required": ["type"],
