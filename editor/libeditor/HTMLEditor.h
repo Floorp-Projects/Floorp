@@ -1507,11 +1507,10 @@ class HTMLEditor final : public EditorBase,
    *                        empty <a href> in the right paragraph.  So this may
    *                        be adjusted to proper position around it.
    * @param aEditingHost    The editing host.
-   * @return                Returns with NS_OK if this doesn't meat any
-   *                        unexpected situation.  If this method tries to
-   *                        split the paragraph, marked as handled.
+   * @return                If the caller should default to inserting <br>
+   *                        element, returns "not handled".
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   HandleInsertParagraphInParagraph(Element& aParentDivOrP,
                                    const EditorDOMPoint& aCandidatePointToSplit,
                                    const Element& aEditingHost);
