@@ -82,6 +82,24 @@ add_task(async function test_defaultEngine() {
   });
 });
 
+add_task(async function test_telemetry_empty_submission_url() {
+  let engine = await Services.search.addOpenSearchEngine(
+    gDataUrl + "../opensearch/simple.xml",
+    null
+  );
+  Services.search.defaultPrivateEngine = engine;
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "other-simple",
+      displayName: "simple",
+      loadPath: "[http]localhost/simple.xml",
+      submissionUrl: "blank:",
+      verified: "verified",
+    },
+  });
+});
+
 add_task(async function test_switch_with_invalid_overriddenBy() {
   engine1.wrappedJSObject.setAttr("overriddenBy", "random@id");
 
