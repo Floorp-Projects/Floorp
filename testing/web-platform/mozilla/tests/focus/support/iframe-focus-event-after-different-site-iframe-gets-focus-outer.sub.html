@@ -7,7 +7,11 @@ let outerlog = "outerlog:";
 
 let iframe = document.querySelector("iframe");
 window.onmessage = function(e) {
-  if (e.data == "iframefocus") {
+  if (e.data == "start") {
+    window.onfocus = function() {
+      outerlog += "windowfocus,";
+    };
+  } else if (e.data == "iframefocus") {
     iframe.focus();
   } else if (e.data == "iframecontentWindowfocus") {
     iframe.contentWindow.focus();
@@ -21,10 +25,6 @@ window.onmessage = function(e) {
 };
 
 window.onload = function() {
-  window.onfocus = function() {
-    outerlog += "windowfocus,";
-  };
-
   window.onblur = function() {
     outerlog += "windowblur,";
   };
