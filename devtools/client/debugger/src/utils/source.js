@@ -585,8 +585,3 @@ export function isExtensionDirectoryPath(url) {
     return !urlArr[extensionIndex + 2];
   }
 }
-
-export function getPlainUrl(url) {
-  const queryStart = url.indexOf("?");
-  return queryStart !== -1 ? url.slice(0, queryStart) : url;
-}

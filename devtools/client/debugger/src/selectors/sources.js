@@ -11,7 +11,6 @@ import {
   getPrettySourceURL,
   isDescendantOfRoot,
   isGenerated,
-  getPlainUrl,
   isPretty,
   isJavaScript,
   removeThreadActorId,
@@ -126,16 +125,6 @@ export function hasPrettySource(state, id) {
   return !!getPrettySource(state, id);
 }
 
-// This is only used by jest tests
-export function getSourcesUrlsInSources(state, url) {
-  if (!url) {
-    return [];
-  }
-
-  const plainUrl = getPlainUrl(url);
-  return getPlainUrls(state)[plainUrl] || [];
-}
-
 // This is only used externaly by tabs and breakpointSources selectors
 export function getSourcesMap(state) {
   return state.sources.sources;
@@ -143,10 +132,6 @@ export function getSourcesMap(state) {
 
 function getUrls(state) {
   return state.sources.urls;
-}
-
-function getPlainUrls(state) {
-  return state.sources.plainUrls;
 }
 
 export const getSourceList = createSelector(
