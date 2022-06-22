@@ -129,7 +129,10 @@ function nonBrowserWindowDelayedStartup() {
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
 
-  if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+  if (
+    AppConstants.NIGHTLY_BUILD &&
+    !Services.prefs.getBoolPref("browser.tabs.firefox-view")
+  ) {
     document.getElementById("menu_openFirefoxView").hidden = true;
   }
 }
