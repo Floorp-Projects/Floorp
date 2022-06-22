@@ -282,7 +282,8 @@ class RenderThread final {
   /// Can only be called from the render thread.
   bool SyncObjectNeeded();
 
-  size_t RendererCount();
+  size_t RendererCount() const;
+  size_t ActiveRendererCount() const;
 
   void BeginRecordingForWindow(wr::WindowId aWindowId,
                                const TimeStamp& aRecordingStart,

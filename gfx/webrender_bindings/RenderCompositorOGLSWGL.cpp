@@ -151,8 +151,14 @@ void RenderCompositorOGLSWGL::DestroyEGLSurface() {
   // Release EGLSurface of back buffer before calling ResizeBuffers().
   if (mEGLSurface) {
     gle->SetEGLSurfaceOverride(EGL_NO_SURFACE);
-    egl->fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    egl->fDestroySurface(mEGLSurface);
+    if (!egl->fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+      const EGLint err = egl->mLib->fGetError();
+      gfxCriticalNote << "Error in eglMakeCurrent: " << gfx::hexa(err);
+    }
+    if (!egl->fDestroySurface(mEGLSurface)) {
+      const EGLint err = egl->mLib->fGetError();
+      gfxCriticalNote << "Error in eglDestroySurface: " << gfx::hexa(err);
+    }
     mEGLSurface = EGL_NO_SURFACE;
   }
 }
