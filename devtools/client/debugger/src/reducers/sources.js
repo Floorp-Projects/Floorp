@@ -7,7 +7,7 @@
  * @module reducers/sources
  */
 
-import { getRelativeUrl, getPlainUrl } from "../utils/source";
+import { getRelativeUrl } from "../utils/source";
 import { prefs } from "../utils/prefs";
 
 export function initialSourcesState(state) {
@@ -26,15 +26,6 @@ export function initialSourcesState(state) {
      * Dictionary(url => array<source id>)
      */
     urls: {},
-
-    /**
-     * All full URLs belonging to a given plain (query string stripped) URL.
-     * Query strings are only shown in the Sources tab if they are required for
-     * disambiguation.
-     *
-     * Dictionary(plain url => array<source url>)
-     */
-    plainUrls: {},
 
     /**
      * List of all source ids whose source has a url attribute defined
@@ -223,7 +214,6 @@ function addSources(state, sources) {
   state = {
     ...state,
     urls: { ...state.urls },
-    plainUrls: { ...state.plainUrls },
   };
 
   const newSourceMap = new Map(state.sources);
@@ -236,14 +226,8 @@ function addSources(state, sources) {
       state.urls[source.url] = [...existing, source.id];
     }
 
-    // 2. Update the plain url map
+    // 2. Update the sourcesWithUrls map
     if (source.url) {
-      const plainUrl = getPlainUrl(source.url);
-      const existingPlainUrls = state.plainUrls[plainUrl] || [];
-      if (!existingPlainUrls.includes(source.url)) {
-        state.plainUrls[plainUrl] = [...existingPlainUrls, source.url];
-      }
-
       // NOTE: we only want to copy the list once
       if (originalState.sourcesWithUrls === state.sourcesWithUrls) {
         state.sourcesWithUrls = [...state.sourcesWithUrls];
@@ -263,7 +247,6 @@ function removeSourcesAndActors(state, sources) {
   state = {
     ...state,
     urls: { ...state.urls },
-    plainUrls: { ...state.plainUrls },
   };
 
   const newSourceMap = new Map(state.sources);
@@ -279,20 +262,6 @@ function removeSourcesAndActors(state, sources) {
       }
       if (state.urls[source.url]?.length == 0) {
         delete state.urls[source.url];
-      }
-
-      // plainUrls
-      const plainUrl = getPlainUrl(source.url);
-      if (state.plainUrls[plainUrl]) {
-        // This also handles multiple sources with same urls, we should remove
-        // only one occurence at each point.
-        const index = state.plainUrls[plainUrl].findIndex(
-          url => url === source.url
-        );
-        state.plainUrls[plainUrl].splice(index, 1);
-      }
-      if (state.plainUrls[plainUrl]?.length == 0) {
-        delete state.plainUrls[plainUrl];
       }
 
       // sourcesWithUrls
