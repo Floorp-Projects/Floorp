@@ -14,6 +14,11 @@ add_task(async function() {
   await ui.editors[0].getSourceEditor();
   info("first editor selected");
 
+  await waitFor(
+    () => ui.editors[0].sourceEditor.hasFocus(),
+    "Wait until the initially selected editor grabs the focus"
+  );
+
   info("Left-clicking on the second editor link.");
   await clickOnStyleSheetLink(ui.editors[1], 0);
 
