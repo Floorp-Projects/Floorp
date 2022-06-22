@@ -7154,7 +7154,9 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aCandidatePointToSplit.IsSetAndValid());
 
-  const EditorDOMPoint pointToSplitAvoidingEmptyNewLink = [&]() {
+  // First, get a better split point to avoid to create a new empty link in the
+  // right paragraph.
+  EditorDOMPoint pointToSplit = [&]() {
     // We shouldn't create new anchor element which has non-empty href unless
     // splitting middle of it because we assume that users don't want to create
     // *same* anchor element across two or more paragraphs in most cases.
@@ -7233,18 +7235,24 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
 
   const bool createNewParagraph = GetReturnInParagraphCreatesNewParagraph();
   RefPtr<HTMLBRElement> brElement;
-  EditorDOMPoint pointToSplit(pointToSplitAvoidingEmptyNewLink);
-  if (createNewParagraph &&
-      pointToSplitAvoidingEmptyNewLink.GetContainer() == &aParentDivOrP) {
-    // We are at the edges of the block, so, we don't need to create new <br>.
+  if (createNewParagraph && pointToSplit.GetContainer() == &aParentDivOrP) {
+    // We are try to split only the current paragraph.  Therefore, we don't need
+    // to create new <br> elements around it (if left and/or right paragraph
+    // becomes empty, it'll be treated by SplitParagraphWithTransaction().
     brElement = nullptr;
-  } else if (pointToSplitAvoidingEmptyNewLink.IsInTextNode()) {
-    // at beginning of text node?
-    if (pointToSplitAvoidingEmptyNewLink.IsStartOfContainer()) {
-      // is there a BR prior to it?
+  } else if (pointToSplit.IsInTextNode()) {
+    if (pointToSplit.IsStartOfContainer()) {
+      // If we're splitting the paragraph at start of a text node and there is
+      // no preceding visible <br> element, we need to create a <br> element to
+      // keep the inline elements containing this text node.
+      // TODO: If the parent of the text node is the splitting paragraph,
+      //       obviously we don't need to do this because empty paragraphs will
+      //       be treated by SplitParagraphWithTransaction().  In this case, we
+      //       just need to update pointToSplit for using the same path as the
+      //       previous `if` block.
       brElement =
           HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
-              *pointToSplitAvoidingEmptyNewLink.ContainerAsText(),
+              *pointToSplit.ContainerAsText(),
               {WalkTreeOption::IgnoreNonEditableNode}));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
@@ -7253,8 +7261,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        const EditorDOMPoint pointToInsertBR =
-            pointToSplitAvoidingEmptyNewLink.ParentPoint();
+        const EditorDOMPoint pointToInsertBR = pointToSplit.ParentPoint();
         MOZ_ASSERT(pointToInsertBR.IsSet());
         CreateElementResult insertBRElementResult =
             InsertBRElement(WithTransaction::Yes, pointToInsertBR);
@@ -7269,11 +7276,16 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         brElement =
             HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
       }
-    } else if (pointToSplitAvoidingEmptyNewLink.IsEndOfContainer()) {
-      // we're at the end of text node...
-      // is there a BR after to it?
+    } else if (pointToSplit.IsEndOfContainer()) {
+      // If we're splitting the paragraph at end of a text node and there is not
+      // following visible <br> element, we need to create a <br> element after
+      // the text node to make current style specified by parent inline elements
+      // keep in the right paragraph.
+      // TODO: Same as above, we don't need to do this if the text node is a
+      //       direct child of the paragraph.  For using the simplest path, we
+      //       just need to update `pointToSplit` in the case.
       brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
-          *pointToSplitAvoidingEmptyNewLink.ContainerAsText(),
+          *pointToSplit.ContainerAsText(),
           {WalkTreeOption::IgnoreNonEditableNode}));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
@@ -7282,8 +7294,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        const EditorDOMPoint pointToInsertBR = EditorDOMPoint::After(
-            *pointToSplitAvoidingEmptyNewLink.ContainerAsText());
+        const EditorDOMPoint pointToInsertBR =
+            EditorDOMPoint::After(*pointToSplit.ContainerAsText());
         MOZ_ASSERT(pointToInsertBR.IsSet());
         CreateElementResult insertBRElementResult =
             InsertBRElement(WithTransaction::Yes, pointToInsertBR);
@@ -7304,6 +7316,13 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       if (!createNewParagraph) {
         return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
       }
+
+      // If we're splitting the paragraph at middle of a text node, we should
+      // split the text node here and put a <br> element next to the left text
+      // node.
+      // XXX Why? I think that this should be handled in
+      //     SplitParagraphWithTransaction() directly because I don't find
+      //     the necessary case of the <br> element.
 
       // XXX We split a text node here if caret is middle of it to insert
       //     <br> element **before** splitting aParentDivOrP.  Then, if
@@ -7360,17 +7379,22 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
           HTMLBRElement::FromNodeOrNull(insertBRElementResult.GetNewNode());
     }
   } else {
-    // not in a text node.
-    // is there a BR prior to it?
+    // If we're splitting in a child element of the paragraph, and there is no
+    // <br> element around it, we should insert a <br> element at the split
+    // point and keep splitting the paragraph after the new <br> element.
+    // XXX Why? We probably need to do this if we're splitting in an inline
+    //     element which and whose parents provide some styles, we should put
+    //     the <br> element for making a placeholder in the left paragraph for
+    //     moving to the caret, but I think that this could be handled in fewer
+    //     cases than this.
     brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
-        pointToSplitAvoidingEmptyNewLink,
-        {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost));
+        pointToSplit, {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost));
     if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
         EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
       // is there a BR after it?
       brElement = HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
-          pointToSplitAvoidingEmptyNewLink,
-          {WalkTreeOption::IgnoreNonEditableNode}, &aEditingHost));
+          pointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
+          &aEditingHost));
       if (!brElement || HTMLEditUtils::IsInvisibleBRElement(*brElement) ||
           EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
         // If insertParagraph does not create a new paragraph, default to
@@ -7378,8 +7402,8 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (!createNewParagraph) {
           return EditActionResult(NS_SUCCESS_DOM_NO_OPERATION);
         }
-        CreateElementResult insertBRElementResult = InsertBRElement(
-            WithTransaction::Yes, pointToSplitAvoidingEmptyNewLink);
+        CreateElementResult insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes, pointToSplit);
         if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
