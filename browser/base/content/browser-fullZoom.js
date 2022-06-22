@@ -50,6 +50,7 @@ var FullZoom = {
   init: function FullZoom_init() {
     gBrowser.addEventListener("DoZoomEnlargeBy10", this);
     gBrowser.addEventListener("DoZoomReduceBy10", this);
+    window.addEventListener("MozScaleGestureComplete", this);
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
@@ -86,6 +87,7 @@ var FullZoom = {
     this._cps2.removeObserverForName(this.name, this);
     gBrowser.removeEventListener("DoZoomEnlargeBy10", this);
     gBrowser.removeEventListener("DoZoomReduceBy10", this);
+    window.removeEventListener("MozScaleGestureComplete", this);
   },
 
   // Event Handlers
@@ -100,6 +102,11 @@ var FullZoom = {
       case "DoZoomReduceBy10":
         this.changeZoomBy(this._getTargetedBrowser(event), -0.1);
         break;
+      case "MozScaleGestureComplete": {
+        let nonDefaultScalingZoom = event.detail != 1.0;
+        this.updateCommands(nonDefaultScalingZoom);
+        break;
+      }
     }
   },
 
@@ -323,7 +330,18 @@ var FullZoom = {
 
   // update state of zoom menu items
 
-  updateCommands: function FullZoom_updateCommands() {
+  /**
+   * Updates the current windows Zoom commands for zooming in, zooming out
+   * and resetting the zoom level. Dispatches a ZoomCommandsUpdated event on
+   * the window when the commands have been updated.
+   *
+   * @param {boolean} [forceResetEnabled=false]
+   *   Set to true if the zoom reset command should be enabled regardless of
+   *   whether or not the ZoomManager.zoom level is at 1.0. This is specifically
+   *   for when using scaling zoom via the pinch gesture which doesn't cause
+   *   the ZoomManager.zoom level to change.
+   */
+  updateCommands: function FullZoom_updateCommands(forceResetEnabled = false) {
     let zoomLevel = ZoomManager.zoom;
     let reduceCmd = document.getElementById("cmd_fullZoomReduce");
     if (zoomLevel == ZoomManager.MIN) {
@@ -340,7 +358,7 @@ var FullZoom = {
     }
 
     let resetCmd = document.getElementById("cmd_fullZoomReset");
-    if (zoomLevel == 1) {
+    if (zoomLevel == 1 && !forceResetEnabled) {
       resetCmd.setAttribute("disabled", "true");
     } else {
       resetCmd.removeAttribute("disabled");
