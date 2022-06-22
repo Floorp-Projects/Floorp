@@ -6,7 +6,6 @@
 
 #include "NativeFontResourceFreeType.h"
 #include "UnscaledFontFreeType.h"
-#include "Logging.h"
 
 namespace mozilla::gfx {
 

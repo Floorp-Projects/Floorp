@@ -8,7 +8,6 @@
 #include "SourceSurfaceSkia.h"
 #include "HelpersSkia.h"
 #include "DrawTargetSkia.h"
-#include "DataSurfaceHelpers.h"
 #include "skia/include/core/SkData.h"
 #include "skia/include/core/SkImage.h"
 #include "skia/include/core/SkSurface.h"

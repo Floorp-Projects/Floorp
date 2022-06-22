@@ -6,7 +6,6 @@
 
 #include "ScaledFontFontconfig.h"
 #include "UnscaledFontFreeType.h"
-#include "NativeFontResourceFreeType.h"
 #include "Logging.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/WebRenderTypes.h"

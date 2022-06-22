@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_SOURCESURFACESKIA_H_
 
 #include "2D.h"
-#include <vector>
 #include "mozilla/Mutex.h"
 #include "skia/include/core/SkRefCnt.h"
 
