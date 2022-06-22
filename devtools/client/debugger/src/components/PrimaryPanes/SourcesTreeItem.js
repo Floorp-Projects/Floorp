@@ -13,7 +13,6 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import {
   getGeneratedSourceByURL,
-  getHasSiblingOfSameName,
   hasPrettyTab as checkHasPrettyTab,
   getContext,
   getExtensionNameBySourceUrl,
@@ -422,7 +421,6 @@ const mapStateToProps = (state, props) => {
   return {
     cx: getContext(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettyTab: source ? checkHasPrettyTab(state, source.url) : false,
     sourceContent: source ? getSourceContentValue(state, source) : null,
     extensionName:

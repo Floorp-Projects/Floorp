@@ -29,7 +29,6 @@ import {
   getSelectedSource,
   getActiveSearch,
   getSourcesForTabs,
-  getHasSiblingOfSameName,
   getContext,
 } from "../../selectors";
 
@@ -43,7 +42,6 @@ class Tab extends PureComponent {
       closeTabs: PropTypes.func.isRequired,
       copyToClipboard: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
-      hasSiblingOfSameName: PropTypes.bool.isRequired,
       onDragEnd: PropTypes.func.isRequired,
       onDragOver: PropTypes.func.isRequired,
       onDragStart: PropTypes.func.isRequired,
@@ -182,7 +180,6 @@ class Tab extends PureComponent {
       closeTab,
       source,
       tabSources,
-      hasSiblingOfSameName,
       onDragOver,
       onDragStart,
       onDragEnd,
@@ -212,7 +209,7 @@ class Tab extends PureComponent {
     });
 
     const path = getDisplayPath(source, tabSources);
-    const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
+    const query = getSourceQueryString(source);
 
     return (
       <div
@@ -255,7 +252,6 @@ const mapStateToProps = (state, { source }) => {
     tabSources: getSourcesForTabs(state),
     selectedSource,
     activeSearch: getActiveSearch(state),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   };
 };
 
