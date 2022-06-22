@@ -6865,7 +6865,7 @@
     "expires_in_version" : "never",
     "kind": "enumerated",
     "n_values": 4,
-    "alert_emails": ["fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "bug_numbers": [1053467],
     "description": "The possible types of the 'sizes' attribute for <link rel=icon>. 0: Attribute not specified, 1: 'any', 2: Integer dimensions, 3: Invalid value."
   },
@@ -6876,7 +6876,7 @@
     "kind": "linear",
     "high": 513,
     "n_buckets" : 64,
-    "alert_emails": ["fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "bug_numbers": [1053467],
     "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
   },
@@ -6968,7 +6968,7 @@
   "PLACES_DATABASE_FAVICONS_FILESIZE_MB": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mak@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["mak@mozilla.com", "fx-search-telemetry@mozilla.com"],
     "bug_numbers": [1346554],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -6988,7 +6988,7 @@
   "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
@@ -6999,7 +6999,7 @@
   "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8736,7 +8736,7 @@
   "FX_URLBAR_MERINO_LATENCY_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -8748,7 +8748,7 @@
   "FX_URLBAR_MERINO_RESPONSE": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
@@ -8764,7 +8764,7 @@
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
@@ -8776,7 +8776,7 @@
   "FX_URLBAR_SELECTED_RESULT_METHOD": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["dzeber@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["dzeber@mozilla.com", "fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -10233,7 +10233,7 @@
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["fx-search@mozilla.com", "rev-data@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "rev-data@mozilla.com"],
     "bug_numbers": [1089670, 1475571, 1482158, 1499193, 1545172, 1572500, 1654680],
     "description": "Records search counts for search access points and in-content searches. For search access points in general, the format is: <engine-name>.<search-access-point> For the urlbar when in search mode, the format is <engine name>.urlbar-searchmode For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in-content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]",
     "record_into_store": ["main", "account-ecosystem"]
@@ -10241,7 +10241,7 @@
   "SEARCH_SERVICE_INIT_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -10253,7 +10253,7 @@
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "n_buckets": 30,
@@ -10263,7 +10263,7 @@
   "SEARCH_SERVICE_COUNTRY_FETCH_RESULT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
@@ -10272,7 +10272,7 @@
   "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if the fetched country-code indicates US but the time-zone heuristic doesn't"
@@ -10280,7 +10280,7 @@
   "SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if the time-zone heuristic indicates US but the fetched country code doesn't"
@@ -10288,7 +10288,7 @@
   "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_OSX": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "If we are on OSX and either the OSX countryCode or the geoip countryCode indicates we are in the US, set to false if they both do or true otherwise"
@@ -10296,7 +10296,7 @@
   "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_OSX": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "If we are on OSX and neither the OSX countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
@@ -10304,7 +10304,7 @@
   "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_PLATFORM_WIN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "If we are on Windows and either the Windows countryCode or the geoip countryCode indicates we are in the US, set to false if they both do or true otherwise"
@@ -10312,7 +10312,7 @@
   "SEARCH_SERVICE_NONUS_COUNTRY_MISMATCHED_PLATFORM_WIN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mdeboer@mozilla.com", "fx-search@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "If we are on Windows and neither the Windows countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
@@ -10320,7 +10320,7 @@
   "SEARCH_SUGGESTIONS_LATENCY_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com", "adw@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
