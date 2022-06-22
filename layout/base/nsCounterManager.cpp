@@ -8,19 +8,21 @@
 
 #include "nsCounterManager.h"
 
-#include "mozilla/Likely.h"
+#include "mozilla/AutoRestore.h"
+#include "mozilla/ContainStyleScopeManager.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Text.h"
+#include "nsContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIFrame.h"
-#include "nsContainerFrame.h"
 #include "nsTArray.h"
-#include "mozilla/dom/Text.h"
 
 using namespace mozilla;
 
@@ -49,8 +51,11 @@ bool nsCounterUseNode::InitTextFrame(nsGenConList* aList,
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
 void nsCounterUseNode::Calc(nsCounterList* aList, bool aNotify) {
-  NS_ASSERTION(!aList->IsDirty(), "Why are we calculating with a dirty list?");
+  NS_ASSERTION(aList->IsRecalculatingAll() || !aList->IsDirty(),
+               "Why are we calculating with a dirty list?");
+
   mValueAfter = nsCounterList::ValueBefore(this);
+
   if (mText) {
     nsAutoString contentString;
     GetText(contentString);
@@ -61,7 +66,8 @@ void nsCounterUseNode::Calc(nsCounterList* aList, bool aNotify) {
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
 void nsCounterChangeNode::Calc(nsCounterList* aList) {
-  NS_ASSERTION(!aList->IsDirty(), "Why are we calculating with a dirty list?");
+  NS_ASSERTION(aList->IsRecalculatingAll() || !aList->IsDirty(),
+               "Why are we calculating with a dirty list?");
   if (IsContentBasedReset()) {
     // RecalcAll takes care of this case.
   } else if (mType == RESET || mType == SET) {
@@ -147,6 +153,14 @@ static const nsIContent* GetParentContentForScope(nsIFrame* frame) {
   return content;
 }
 
+bool nsCounterList::IsDirty() const {
+  return mScope->GetScopeManager().CounterDirty(mCounterName);
+}
+
+void nsCounterList::SetDirty() {
+  mScope->GetScopeManager().SetCounterDirty(mCounterName);
+}
+
 void nsCounterList::SetScope(nsCounterNode* aNode) {
   // This function is responsible for setting |mScopeStart| and
   // |mScopePrev| (whose purpose is described in nsCounterManager.h).
@@ -161,12 +175,13 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
   auto setNullScopeFor = [](nsCounterNode* aNode) {
     aNode->mScopeStart = nullptr;
     aNode->mScopePrev = nullptr;
+    aNode->mCrossesContainStyleBoundaries = false;
     if (aNode->IsUnitializedIncrementNode()) {
       aNode->ChangeNode()->mChangeValue = 1;
     }
   };
 
-  if (aNode == First()) {
+  if (aNode == First() && aNode->mType != nsCounterNode::USE) {
     setNullScopeFor(aNode);
     return;
   }
@@ -176,7 +191,7 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
       return;
     }
     if (aNode->mScopeStart->IsContentBasedReset()) {
-      mDirty = true;
+      SetDirty();
     }
     if (aNode->IsUnitializedIncrementNode()) {
       aNode->ChangeNode()->mChangeValue =
@@ -202,6 +217,7 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
       }
       aNode->mScopeStart = counter;
       aNode->mScopePrev = counter;
+      aNode->mCrossesContainStyleBoundaries = false;
       for (nsCounterNode* prev = Prev(aNode); prev; prev = prev->mScopePrev) {
         if (prev->mScopeStart == counter) {
           aNode->mScopePrev =
@@ -229,44 +245,93 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
   // mPseudoFrame. That's why this uses GetInFlowParent() instead
   // of GetFlattenedTreeParent().
   const nsIContent* nodeContent = GetParentContentForScope(aNode->mPseudoFrame);
-  for (nsCounterNode *prev = Prev(aNode), *start; prev;
-       prev = start->mScopePrev) {
-    // If |prev| starts a scope (because it's a real or implied
-    // reset), we want it as the scope start rather than the start
-    // of its enclosing scope.  Otherwise, there's no enclosing
-    // scope, so the next thing in prev's scope shares its scope
-    // start.
-    start = (prev->mType == nsCounterNode::RESET || !prev->mScopeStart)
-                ? prev
-                : prev->mScopeStart;
+  if (SetScopeByWalkingBackwardThroughList(aNode, nodeContent, Prev(aNode))) {
+    aNode->mCrossesContainStyleBoundaries = false;
+    didSetScopeFor(aNode);
+    return;
+  }
 
-    // |startContent| is analogous to |nodeContent| (see above).
-    const nsIContent* startContent =
-        GetParentContentForScope(start->mPseudoFrame);
-    NS_ASSERTION(nodeContent || !startContent,
-                 "null check on startContent should be sufficient to "
-                 "null check nodeContent as well, since if nodeContent "
-                 "is for the root, startContent (which is before it) "
-                 "must be too");
-
-    // A reset's outer scope can't be a scope created by a sibling.
-    if (!(aNode->mType == nsCounterNode::RESET &&
-          nodeContent == startContent) &&
-        // everything is inside the root (except the case above,
-        // a second reset on the root)
-        (!startContent ||
-         nodeContent->IsInclusiveFlatTreeDescendantOf(startContent))) {
-      aNode->mScopeStart = start;
-      aNode->mScopePrev = prev;
-      didSetScopeFor(aNode);
-      return;
+  // If this is a USE node there's a possibility that its counter scope starts
+  // in a parent `contain: style` scope. Look upward in the `contain: style`
+  // scope tree to find an appropriate node with which this node shares a
+  // counter scope.
+  if (aNode->mType == nsCounterNode::USE && aNode == First()) {
+    for (auto* scope = mScope->GetParent(); scope; scope = scope->GetParent()) {
+      if (auto* counterList =
+              scope->GetCounterManager().GetCounterList(mCounterName)) {
+        if (auto* node = static_cast<nsCounterNode*>(
+                mScope->GetPrecedingElementInGenConList(counterList))) {
+          if (SetScopeByWalkingBackwardThroughList(aNode, nodeContent, node)) {
+            aNode->mCrossesContainStyleBoundaries = true;
+            didSetScopeFor(aNode);
+            return;
+          }
+        }
+      }
     }
   }
 
   setNullScopeFor(aNode);
 }
 
+bool nsCounterList::SetScopeByWalkingBackwardThroughList(
+    nsCounterNode* aNodeToSetScopeFor, const nsIContent* aNodeContent,
+    nsCounterNode* aNodeToBeginLookingAt) {
+  for (nsCounterNode *prev = aNodeToBeginLookingAt, *start; prev;
+       prev = start->mScopePrev) {
+    // There are two possibilities here:
+    // 1. |prev| starts a new counter scope. This happens when:
+    //  a. It's a reset node.
+    //  b. It's an implied reset node which we know because mScopeStart is null.
+    //  c. It follows one or more USE nodes at the start of the list which have
+    //     a scope that starts in a parent `contain: style` context.
+    //  In all of these cases, |prev| should be the start of this node's counter
+    //  scope.
+    // 2. |prev| does not start a new counter scope and this node should share a
+    //   counter scope start with |prev|.
+    start =
+        (prev->mType == nsCounterNode::RESET || !prev->mScopeStart ||
+         (prev->mScopePrev && prev->mScopePrev->mCrossesContainStyleBoundaries))
+            ? prev
+            : prev->mScopeStart;
+
+    const nsIContent* startContent =
+        GetParentContentForScope(start->mPseudoFrame);
+    NS_ASSERTION(aNodeContent || !startContent,
+                 "null check on startContent should be sufficient to "
+                 "null check aNodeContent as well, since if aNodeContent "
+                 "is for the root, startContent (which is before it) "
+                 "must be too");
+
+    // A reset's outer scope can't be a scope created by a sibling.
+    if (!(aNodeToSetScopeFor->mType == nsCounterNode::RESET &&
+          aNodeContent == startContent) &&
+        // everything is inside the root (except the case above,
+        // a second reset on the root)
+        (!startContent ||
+         aNodeContent->IsInclusiveFlatTreeDescendantOf(startContent))) {
+      //  If this node is a USE node and the previous node was also a USE node
+      //  which has a scope that starts in a parent `contain: style` context,
+      //  this node's scope shares the same scope and crosses `contain: style`
+      //  scope boundaries.
+      if (aNodeToSetScopeFor->mType == nsCounterNode::USE) {
+        aNodeToSetScopeFor->mCrossesContainStyleBoundaries =
+            prev->mCrossesContainStyleBoundaries;
+      }
+
+      aNodeToSetScopeFor->mScopeStart = start;
+      aNodeToSetScopeFor->mScopePrev = prev;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void nsCounterList::RecalcAll() {
+  AutoRestore<bool> restoreRecalculatingAll(mRecalculatingAll);
+  mRecalculatingAll = true;
+
   // Setup the scope and calculate the default start value for content-based
   // reversed() counters.  We need to track the last increment for each of
   // those scopes so that we can add it in an extra time at the end.
@@ -306,7 +371,6 @@ void nsCounterList::RecalcAll() {
     iter.Key()->mValueAfter += iter.Data();
   }
 
-  mDirty = false;
   for (nsCounterNode* node = First(); node; node = Next(node)) {
     node->Calc(this, /* aNotify = */ true);
   }
@@ -318,7 +382,8 @@ static bool AddCounterChangeNode(nsCounterManager& aManager, nsIFrame* aFrame,
                                  nsCounterNode::Type aType) {
   auto* node = new nsCounterChangeNode(aFrame, aType, aPair.value, aIndex,
                                        aPair.is_reversed);
-  nsCounterList* counterList = aManager.CounterListFor(aPair.name.AsAtom());
+  nsCounterList* counterList =
+      aManager.GetOrCreateCounterList(aPair.name.AsAtom());
   counterList->Insert(node);
   if (!counterList->IsLast(node)) {
     // Tell the caller it's responsible for recalculating the entire list.
@@ -404,9 +469,14 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
   return dirty;
 }
 
-nsCounterList* nsCounterManager::CounterListFor(nsAtom* aCounterName) {
+nsCounterList* nsCounterManager::GetOrCreateCounterList(nsAtom* aCounterName) {
   MOZ_ASSERT(aCounterName);
-  return mNames.GetOrInsertNew(aCounterName);
+  return mNames.GetOrInsertNew(aCounterName, aCounterName, mScope);
+}
+
+nsCounterList* nsCounterManager::GetCounterList(nsAtom* aCounterName) {
+  MOZ_ASSERT(aCounterName);
+  return mNames.Get(aCounterName);
 }
 
 void nsCounterManager::RecalcAll() {
@@ -437,37 +507,19 @@ bool nsCounterManager::DestroyNodesFor(nsIFrame* aFrame) {
 }
 
 #ifdef ACCESSIBILITY
-void nsCounterManager::GetSpokenCounterText(nsIFrame* aFrame,
-                                            nsAString& aText) const {
-  CounterValue ordinal = 1;
+bool nsCounterManager::GetFirstCounterValueForFrame(
+    nsIFrame* aFrame, CounterValue& aOrdinal) const {
   if (const auto* list = mNames.Get(nsGkAtoms::list_item)) {
     for (nsCounterNode* n = list->GetFirstNodeFor(aFrame);
          n && n->mPseudoFrame == aFrame; n = list->Next(n)) {
       if (n->mType == nsCounterNode::USE) {
-        ordinal = n->mValueAfter;
-        break;
+        aOrdinal = n->mValueAfter;
+        return true;
       }
     }
   }
-  CounterStyle* counterStyle =
-      aFrame->PresContext()->CounterStyleManager()->ResolveCounterStyle(
-          aFrame->StyleList()->mCounterStyle);
-  nsAutoString text;
-  bool isBullet;
-  counterStyle->GetSpokenCounterText(ordinal, aFrame->GetWritingMode(), text,
-                                     isBullet);
-  if (isBullet) {
-    aText = text;
-    if (!counterStyle->IsNone()) {
-      aText.Append(' ');
-    }
-  } else {
-    counterStyle->GetPrefix(aText);
-    aText += text;
-    nsAutoString suffix;
-    counterStyle->GetSuffix(suffix);
-    aText += suffix;
-  }
+
+  return false;
 }
 #endif
 
