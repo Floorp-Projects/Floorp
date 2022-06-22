@@ -5876,16 +5876,16 @@ nsresult HTMLEditor::CreateStyleForInsertText(
     }
 
     while (item) {
-      nsresult rv = SetInlinePropertyOnNode(
+      Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
           MOZ_KnownLive(*pointToPutCaret.GetContainerAsContent()),
           MOZ_KnownLive(*item->tag), MOZ_KnownLive(item->attr), item->value);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
+      if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
-        return rv;
+        return setStyleResult.unwrapErr();
       }
+      // We don't need to update here because we'll put caret to
+      // pointToPutCaret below.
+      MOZ_ASSERT(putCaret);
       item = mTypeInState->TakeSetProperty();
     }
   }
