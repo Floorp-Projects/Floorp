@@ -266,6 +266,9 @@ void RenderThread::AddRenderer(wr::WindowId aWindowId,
   }
 
   mRenderers[aWindowId] = std::move(aRenderer);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GraphicsNumRenderers,
+      (unsigned int)mRenderers.size());
 
   auto windows = mWindowInfos.Lock();
   windows->emplace(AsUint64(aWindowId), new WindowInfo());
@@ -281,6 +284,9 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   }
 
   mRenderers.erase(aWindowId);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GraphicsNumRenderers,
+      (unsigned int)mRenderers.size());
 
   if (mRenderers.empty()) {
     if (mHandlingDeviceReset) {
@@ -311,9 +317,20 @@ RendererOGL* RenderThread::GetRenderer(wr::WindowId aWindowId) {
   return it->second.get();
 }
 
-size_t RenderThread::RendererCount() {
+size_t RenderThread::RendererCount() const {
   MOZ_ASSERT(IsInRenderThread());
   return mRenderers.size();
+}
+
+size_t RenderThread::ActiveRendererCount() const {
+  MOZ_ASSERT(IsInRenderThread());
+  size_t num_active = 0;
+  for (const auto& it : mRenderers) {
+    if (!it.second->IsPaused()) {
+      num_active++;
+    }
+  }
+  return num_active;
 }
 
 void RenderThread::BeginRecordingForWindow(wr::WindowId aWindowId,
@@ -597,10 +614,16 @@ void RenderThread::Pause(wr::WindowId aWindowId) {
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
   if (it == mRenderers.end()) {
+    gfxCriticalNote << "RenderThread cannot find renderer for window "
+                    << gfx::hexa(aWindowId) << " to pause.";
     return;
   }
   auto& renderer = it->second;
   renderer->Pause();
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GraphicsNumActiveRenderers,
+      (unsigned int)ActiveRendererCount());
 }
 
 bool RenderThread::Resume(wr::WindowId aWindowId) {
@@ -610,10 +633,18 @@ bool RenderThread::Resume(wr::WindowId aWindowId) {
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
   if (it == mRenderers.end()) {
+    gfxCriticalNote << "RenderThread cannot find renderer for window "
+                    << gfx::hexa(aWindowId) << " to resume.";
     return false;
   }
   auto& renderer = it->second;
-  return renderer->Resume();
+  bool resumed = renderer->Resume();
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::GraphicsNumActiveRenderers,
+      (unsigned int)ActiveRendererCount());
+
+  return resumed;
 }
 
 bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
