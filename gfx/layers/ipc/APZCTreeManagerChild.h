@@ -85,6 +85,9 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
   mozilla::ipc::IPCResult RecvCancelAutoscroll(
       const ScrollableLayerGuid::ViewID& aScrollId);
 
+  mozilla::ipc::IPCResult RecvNotifyScaleGestureComplete(
+      const ScrollableLayerGuid::ViewID& aScrollId, float aScale);
+
   virtual ~APZCTreeManagerChild();
 
  private:
