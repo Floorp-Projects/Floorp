@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
+var EXPORTED_SYMBOLS = ["HandlerService"];
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -23,13 +22,15 @@ const {
 
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 
+const lazy = {};
+
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
-  this,
+  lazy,
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
@@ -37,26 +38,25 @@ const { Integration } = ChromeUtils.import(
   "resource://gre/modules/Integration.jsm"
 );
 
-/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(
-  this,
+  lazy,
   "DownloadIntegration",
   "resource://gre/modules/DownloadIntegration.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gExternalProtocolService",
+  lazy,
+  "externalProtocolService",
   "@mozilla.org/uriloader/external-protocol-service;1",
   "nsIExternalProtocolService"
 );
 XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gMIMEService",
+  lazy,
+  "MIMEService",
   "@mozilla.org/mime;1",
   "nsIMIMEService"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   kHandlerList: "resource://gre/modules/handlers/HandlerList.jsm",
   kHandlerListVersion: "resource://gre/modules/handlers/HandlerList.jsm",
 });
@@ -67,7 +67,6 @@ function HandlerService() {
 }
 
 HandlerService.prototype = {
-  classID: Components.ID("{220cc253-b60f-41f6-b9cf-fdcb325f970f}"),
   QueryInterface: ChromeUtils.generateQI([
     "nsISupportsWeakReference",
     "nsIHandlerService",
@@ -77,7 +76,7 @@ HandlerService.prototype = {
   __store: null,
   get _store() {
     if (!this.__store) {
-      this.__store = new JSONFile({
+      this.__store = new lazy.JSONFile({
         path: PathUtils.join(
           Services.dirsvc.get("ProfD", Ci.nsIFile).path,
           "handlers.json"
@@ -132,11 +131,11 @@ HandlerService.prototype = {
         "gecko.handlerService.defaultHandlersVersion",
         0
       );
-      if (defaultHandlersVersion < kHandlerListVersion) {
+      if (defaultHandlersVersion < lazy.kHandlerListVersion) {
         this._injectDefaultProtocolHandlers();
         Services.prefs.setIntPref(
           "gecko.handlerService.defaultHandlersVersion",
-          kHandlerListVersion
+          lazy.kHandlerListVersion
         );
         // Now save the result:
         this._store.saveSoon();
@@ -150,10 +149,11 @@ HandlerService.prototype = {
     let locale = Services.locale.appLocaleAsBCP47;
 
     // Initialize handlers to default and update based on locale.
-    let localeHandlers = kHandlerList.default;
-    if (kHandlerList[locale]) {
-      for (let scheme in kHandlerList[locale].schemes) {
-        localeHandlers.schemes[scheme] = kHandlerList[locale].schemes[scheme];
+    let localeHandlers = lazy.kHandlerList.default;
+    if (lazy.kHandlerList[locale]) {
+      for (let scheme in lazy.kHandlerList[locale].schemes) {
+        localeHandlers.schemes[scheme] =
+          lazy.kHandlerList[locale].schemes[scheme];
       }
     }
 
@@ -213,7 +213,7 @@ HandlerService.prototype = {
     const kMigrations = {
       "30boxes": () => {
         const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
-        let webcalHandler = gExternalProtocolService.getProtocolHandlerInfo(
+        let webcalHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
           "webcal"
         );
         if (this.exists(webcalHandler)) {
@@ -280,7 +280,7 @@ HandlerService.prototype = {
           }
           return false;
         }
-        let mailHandler = gExternalProtocolService.getProtocolHandlerInfo(
+        let mailHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
           "mailto"
         );
         if (this.exists(mailHandler)) {
@@ -350,7 +350,7 @@ HandlerService.prototype = {
   // nsIHandlerService
   asyncInit() {
     if (!this.__store) {
-      this.__store = new JSONFile({
+      this.__store = new lazy.JSONFile({
         path: PathUtils.join(
           Services.dirsvc.get("ProfD", Ci.nsIFile).path,
           "handlers.json"
@@ -396,7 +396,7 @@ HandlerService.prototype = {
     ) {
       for (let [type, mimeInfo] of Object.entries(this._store.data.mimeTypes)) {
         let isViewableInternally =
-          DownloadIntegration.shouldViewDownloadInternally(type) &&
+          lazy.DownloadIntegration.shouldViewDownloadInternally(type) &&
           !this._noInternalHandlingDefault.has(type);
         let isAskOnly = mimeInfo && mimeInfo.ask;
 
@@ -450,7 +450,7 @@ HandlerService.prototype = {
     );
     for (let [type, typeInfo] of Object.entries(this._store.data.mimeTypes)) {
       let primaryExtension = typeInfo.extensions?.[0] ?? null;
-      let handler = gMIMEService.getFromTypeAndExtension(
+      let handler = lazy.MIMEService.getFromTypeAndExtension(
         type,
         primaryExtension
       );
@@ -471,7 +471,7 @@ HandlerService.prototype = {
           type,
           get _handlerInfo() {
             delete this._handlerInfo;
-            return (this._handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
+            return (this._handlerInfo = lazy.externalProtocolService.getProtocolHandlerInfo(
               type
             ));
           },
@@ -604,7 +604,7 @@ HandlerService.prototype = {
       handlerInfo.alwaysAskBeforeHandling = !!storedHandlerInfo.ask;
     } else {
       // If we've got a stub, ensure the defaults are still set:
-      gExternalProtocolService.setProtocolHandlerDefaults(
+      lazy.externalProtocolService.setProtocolHandlerDefaults(
         handlerInfo,
         handlerInfo.hasDefaultHandler
       );
@@ -705,7 +705,7 @@ HandlerService.prototype = {
     let handlerApp;
     if ("path" in handlerObj) {
       try {
-        let file = new FileUtils.File(handlerObj.path);
+        let file = new lazy.FileUtils.File(handlerObj.path);
         if (!file.exists()) {
           return null;
         }
@@ -847,5 +847,3 @@ HandlerService.prototype = {
     };
   },
 };
-
-this.NSGetFactory = ComponentUtils.generateNSGetFactory([HandlerService]);
