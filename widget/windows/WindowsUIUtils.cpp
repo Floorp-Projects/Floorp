@@ -382,6 +382,20 @@ static IInspectable* GetUISettings() {
       (void)NS_WARN_IF(FAILED(uiSettings2->add_TextScaleFactorChanged(
           callback.Get(), &unusedToken)));
     }
+
+    ComPtr<IUISettings3> uiSettings3;
+    if (SUCCEEDED(sUiSettingsAsInspectable.As(&uiSettings3))) {
+      EventRegistrationToken unusedToken;
+      auto callback =
+          Callback<ITypedEventHandler<UISettings*, IInspectable*>>([](auto...) {
+            // System color changes change style only.
+            LookAndFeel::NotifyChangedAllWindows(
+                widget::ThemeChangeKind::Style);
+            return S_OK;
+          });
+      (void)NS_WARN_IF(FAILED(
+          uiSettings3->add_ColorValuesChanged(callback.Get(), &unusedToken)));
+    }
   }
 
   return sUiSettingsAsInspectable.Get();
@@ -390,6 +404,89 @@ static IInspectable* GetUISettings() {
 #endif
 }
 
+Maybe<nscolor> WindowsUIUtils::GetAccentColor(int aTone) {
+  MOZ_ASSERT(aTone >= -3);
+  MOZ_ASSERT(aTone <= 3);
+#ifndef __MINGW32__
+  ComPtr<IInspectable> settings = GetUISettings();
+  if (NS_WARN_IF(!settings)) {
+    return Nothing();
+  }
+  ComPtr<IUISettings3> uiSettings3;
+  if (NS_WARN_IF(FAILED(settings.As(&uiSettings3)))) {
+    return Nothing();
+  }
+  Color color;
+  auto colorType = UIColorType(int(UIColorType_Accent) + aTone);
+  if (NS_WARN_IF(FAILED(uiSettings3->GetColorValue(colorType, &color)))) {
+    return Nothing();
+  }
+  return Some(NS_RGBA(color.R, color.G, color.B, color.A));
+#else
+  return Nothing();
+#endif
+}
+
+Maybe<nscolor> WindowsUIUtils::GetSystemColor(ColorScheme aScheme,
+                                              int aSysColor) {
+#ifndef __MINGW32__
+  if (!StaticPrefs::widget_windows_uwp_system_colors_enabled()) {
+    return Nothing();
+  }
+
+  // https://docs.microsoft.com/en-us/windows/apps/design/style/color
+  // Is a useful resource to see which values have decent contrast.
+  if (aSysColor == COLOR_HIGHLIGHT) {
+    int tone = aScheme == ColorScheme::Light ? 0 : -1;
+    if (auto c = GetAccentColor(tone)) {
+      return c;
+    }
+  }
+  if (aSysColor == COLOR_HIGHLIGHTTEXT && GetAccentColor()) {
+    return Some(NS_RGBA(255, 255, 255, 255));
+  }
+  auto knownType = [&]() -> Maybe<UIElementType> {
+#  define MAP(_win32, _uwp) \
+    case COLOR_##_win32:    \
+      return Some(UIElementType_##_uwp)
+    switch (aSysColor) {
+      MAP(HIGHLIGHT, Highlight);
+      MAP(HIGHLIGHTTEXT, HighlightText);
+      MAP(ACTIVECAPTION, ActiveCaption);
+      MAP(BTNFACE, ButtonFace);
+      MAP(BTNTEXT, ButtonText);
+      MAP(CAPTIONTEXT, CaptionText);
+      MAP(GRAYTEXT, GrayText);
+      MAP(HOTLIGHT, Hotlight);
+      MAP(INACTIVECAPTION, InactiveCaption);
+      MAP(INACTIVECAPTIONTEXT, InactiveCaptionText);
+      MAP(WINDOW, Window);
+      MAP(WINDOWTEXT, WindowText);
+      default:
+        return Nothing();
+    }
+#  undef MAP
+  }();
+  if (!knownType) {
+    return Nothing();
+  }
+  ComPtr<IInspectable> settings = GetUISettings();
+  if (NS_WARN_IF(!settings)) {
+    return Nothing();
+  }
+  ComPtr<IUISettings> uiSettings;
+  if (NS_WARN_IF(FAILED(settings.As(&uiSettings)))) {
+    return Nothing();
+  }
+  Color color;
+  if (NS_WARN_IF(FAILED(uiSettings->UIElementColor(*knownType, &color)))) {
+    return Nothing();
+  }
+  return Some(NS_RGBA(color.R, color.G, color.B, color.A));
+#else
+  return Nothing();
+#endif
+}
 bool WindowsUIUtils::ComputeOverlayScrollbars() {
 #ifndef __MINGW32__
   if (!IsWin11OrLater()) {
