@@ -149,6 +149,10 @@ mochitest-a11y:
     treeherder-symbol: M(a11y)
     schedules-component: mochitest-a11y
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     loopback-video: true
     run-without-variant: false
     variants:
@@ -258,6 +262,10 @@ mochitest-browser-a11y:
     description: "Mochitest browser-a11y run"
     suite:
         name: mochitest-browser-a11y
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(ba)
     schedules-component: mochitest-browser-a11y
     loopback-video: true
