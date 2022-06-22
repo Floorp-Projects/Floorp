@@ -126,7 +126,7 @@ public:
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_STRING,
     0 > SuperType;
   Request_HeadersEntry_DoNotUse();
-  Request_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  explicit Request_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
   void MergeFrom(const Request_HeadersEntry_DoNotUse& other);
   static const Request_HeadersEntry_DoNotUse* internal_default_instance() { return reinterpret_cast<const Request_HeadersEntry_DoNotUse*>(&_Request_HeadersEntry_DoNotUse_default_instance_); }
   static bool ValidateKey(void*) { return true; }
@@ -444,7 +444,7 @@ public:
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_STRING,
     0 > SuperType;
   Response_HeadersEntry_DoNotUse();
-  Response_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  explicit Response_HeadersEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena);
   void MergeFrom(const Response_HeadersEntry_DoNotUse& other);
   static const Response_HeadersEntry_DoNotUse* internal_default_instance() { return reinterpret_cast<const Response_HeadersEntry_DoNotUse*>(&_Response_HeadersEntry_DoNotUse_default_instance_); }
   static bool ValidateKey(void*) { return true; }
