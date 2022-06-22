@@ -876,7 +876,7 @@ if (current_os == "linux" || is_android) {
       ":generated_libaom_av1_jni",
       ":video_jni",
       "../../modules/video_coding/codecs/av1:libaom_av1_decoder",
-      "../../modules/video_coding/codecs/av1:libaom_av1_encoder",
+      "../../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
     ]
   }
 

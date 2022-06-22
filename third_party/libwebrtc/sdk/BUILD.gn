@@ -732,7 +732,7 @@ if (is_ios || is_mac) {
         ":wrapped_native_codec_objc",
         "../media:rtc_media_base",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-        "../modules/video_coding/codecs/av1:libaom_av1_encoder",
+        "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
       ]
     }
 

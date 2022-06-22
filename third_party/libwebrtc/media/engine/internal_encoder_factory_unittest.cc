@@ -14,7 +14,7 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "media/base/media_constants.h"
-#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
