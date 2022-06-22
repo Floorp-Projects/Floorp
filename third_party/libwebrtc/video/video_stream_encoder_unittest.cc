@@ -40,7 +40,7 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "media/base/video_adapter.h"
 #include "media/engine/webrtc_video_engine.h"
-#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/multiplex/include/multiplex_encoder_adapter.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
@@ -8439,7 +8439,7 @@ class VideoStreamEncoderWithRealEncoderTest
         encoder = VP9Encoder::Create();
         break;
       case kVideoCodecAV1:
-        encoder = CreateLibaomAv1Encoder();
+        encoder = CreateLibaomAv1EncoderIfSupported();
         break;
       case kVideoCodecH264:
         encoder =
