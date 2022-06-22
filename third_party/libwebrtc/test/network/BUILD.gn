@@ -157,6 +157,7 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":emulated_network",
+      "../../api/transport:network_control",
       "../../api/transport:test_feedback_generator_interface",
       "../../call:simulated_network",
       "../../rtc_base:checks",
