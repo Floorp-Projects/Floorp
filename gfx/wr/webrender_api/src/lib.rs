@@ -159,6 +159,8 @@ impl PipelineId {
     pub fn dummy() -> Self {
         PipelineId(!0, !0)
     }
+
+    pub const INVALID: Self = PipelineId(!0, !0);
 }
 
 

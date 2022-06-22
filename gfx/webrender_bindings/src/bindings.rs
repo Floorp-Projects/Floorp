@@ -3014,22 +3014,27 @@ pub extern "C" fn wr_dp_push_hit_test(
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let space_and_clip = parent.to_webrender(state.pipeline_id);
-
     let clip_rect = clip.intersection(&rect);
     if clip_rect.is_none() {
         return;
     }
     let tag = (scroll_id, hit_info);
 
-    let prim_info = CommonItemProperties {
-        clip_rect: clip_rect.unwrap(),
-        clip_id: space_and_clip.clip_id,
-        spatial_id: space_and_clip.spatial_id,
-        flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
+    let spatial_id = parent.space.to_webrender(state.pipeline_id);
+
+    let clip_chain_id = if parent.clip_chain == ROOT_CLIP_CHAIN {
+        ClipChainId::INVALID
+    } else {
+        ClipChainId(parent.clip_chain, state.pipeline_id)
     };
 
-    state.frame_builder.dl_builder.push_hit_test(&prim_info, tag);
+    state.frame_builder.dl_builder.push_hit_test(
+        clip_rect.unwrap(),
+        clip_chain_id,
+        spatial_id,
+        prim_flags(is_backface_visible, false),
+        tag,
+    );
 }
 
 #[no_mangle]

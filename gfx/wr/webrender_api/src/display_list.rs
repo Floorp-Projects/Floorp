@@ -1350,11 +1350,17 @@ impl DisplayListBuilder {
 
     pub fn push_hit_test(
         &mut self,
-        common: &di::CommonItemProperties,
+        rect: LayoutRect,
+        clip_chain_id: di::ClipChainId,
+        spatial_id: di::SpatialId,
+        flags: di::PrimitiveFlags,
         tag: di::ItemTag,
     ) {
         let item = di::DisplayItem::HitTest(di::HitTestDisplayItem {
-            common: *common,
+            rect,
+            clip_chain_id,
+            spatial_id,
+            flags,
             tag,
         });
         self.push_item(&item);

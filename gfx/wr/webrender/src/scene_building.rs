@@ -762,6 +762,13 @@ impl<'a> SceneBuilder<'a> {
             kind: ContextKind<'a>,
         }
 
+        let invalid_clip_chain_id = ClipId::ClipChain(api::ClipChainId::INVALID);
+        self.clip_store.register_clip_template(
+            invalid_clip_chain_id,
+            invalid_clip_chain_id,
+            &[],
+        );
+
         let root_clip_id = ClipId::root(root_pipeline.pipeline_id);
         self.clip_store.register_clip_template(root_clip_id, root_clip_id, &[]);
         self.clip_store.push_clip_root(Some(root_clip_id), false);
@@ -1356,20 +1363,28 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::HitTest(ref info) => {
                 profile_scope!("hit_test");
 
-                // TODO(gw): We could skip building the clip-chain here completely, as it's not used by
-                //           hit-test items.
-                let (layout, _, spatial_node_index, _) = self.process_common_properties(
-                    &info.common,
-                    None,
+                let spatial_node_index = self.get_space(info.spatial_id);
+                let current_offset = self.current_offset(spatial_node_index);
+                let unsnapped_rect = info.rect.translate(current_offset);
+
+                let rect = self.snap_rect(
+                    &unsnapped_rect,
+                    spatial_node_index,
                 );
 
-                // Don't add transparent rectangles to the draw list,
-                // but do consider them for hit testing. This allows
-                // specifying invisible hit testing areas.
+                let layout = LayoutPrimitiveInfo {
+                    rect,
+                    clip_rect: rect,
+                    flags: info.flags,
+                };
+
+                // TODO(gw): Port internal API to be ClipChain based, rather than ClipId once all callers updated
+                let clip_id = ClipId::ClipChain(info.clip_chain_id);
+
                 self.add_primitive_to_hit_testing_list(
                     &layout,
                     spatial_node_index,
-                    info.common.clip_id,
+                    clip_id,
                     info.tag,
                 );
             }
