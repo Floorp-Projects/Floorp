@@ -525,9 +525,6 @@
       return webrtc::SdpSemantics::kPlanB_DEPRECATED;
     case RTCSdpSemanticsUnifiedPlan:
       return webrtc::SdpSemantics::kUnifiedPlan;
-    default:
-      RTC_DCHECK_NOTREACHED();
-      return webrtc::SdpSemantics::kUnifiedPlan;
   }
 }
 
@@ -536,9 +533,6 @@
     case webrtc::SdpSemantics::kPlanB_DEPRECATED:
       return RTCSdpSemanticsPlanB;
     case webrtc::SdpSemantics::kUnifiedPlan:
-      return RTCSdpSemanticsUnifiedPlan;
-    default:
-      RTC_DCHECK_NOTREACHED();
       return RTCSdpSemanticsUnifiedPlan;
   }
 }
