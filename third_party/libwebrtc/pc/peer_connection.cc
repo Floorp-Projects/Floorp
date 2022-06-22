@@ -418,19 +418,11 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
     std::unique_ptr<Call> call,
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies dependencies) {
-  // Prior to adding this CHECK, the default value was kPlanB. Because kPlanB is
-  // about to be deprecated in favor of the spec-compliant kUnifiedPlan, the
-  // default will soon change to kUnifiedPlan. This CHECK ensures that anybody
-  // implicitly relying on the default being kPlanB is made aware of the change.
-  // To avoid crashing, you can overwrite sdp_semantics to kPlanB for the old
-  // behavior, but you will need to migrate to kUnifiedPlan before kPlanB is
-  // removed.
-  // TODO(https://crbug.com/webrtc/11121): When the default is kUnifiedPlan,
-  // delete kNotSpecified.
   // TODO(https://crbug.com/webrtc/13528): Remove support for kPlanB.
-  RTC_CHECK(configuration.sdp_semantics != SdpSemantics::kNotSpecified)
-      << "Please specify sdp_semantics. The default is about to change to "
-      << "kUnifiedPlan.";
+  if (configuration.sdp_semantics == SdpSemantics::kPlanB_DEPRECATED) {
+    RTC_LOG(LS_WARNING)
+        << "PeerConnection constructed with legacy SDP semantics!";
+  }
 
   RTCError config_error = cricket::P2PTransportChannel::ValidateIceConfig(
       ParseIceConfig(configuration));

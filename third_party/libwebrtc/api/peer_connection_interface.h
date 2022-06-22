@@ -173,12 +173,6 @@ enum class SdpSemantics {
   kPlanB_DEPRECATED,
   kPlanB [[deprecated]] = kPlanB_DEPRECATED,
   kUnifiedPlan,
-  // The default SdpSemantics value is about to change to kUnifiedPlan. During a
-  // short transition period, kNotSpecified is used to ensure clients that don't
-  // set SdpSemantics are aware of the change by CHECK-crashing.
-  // TODO(https://crbug.com/webrtc/11121): When the default has changed to
-  // kUnifiedPlan, delete kNotSpecified.
-  kNotSpecified
 };
 
 class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
@@ -629,34 +623,26 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // cost.
     absl::optional<rtc::AdapterType> network_preference;
 
-    // Configure the SDP semantics used by this PeerConnection. Note that the
-    // WebRTC 1.0 specification requires kUnifiedPlan semantics. The
-    // RtpTransceiver API is only available with kUnifiedPlan semantics.
+    // Configure the SDP semantics used by this PeerConnection. By default, this
+    // is Unified Plan which is compliant to the WebRTC 1.0 specification. It is
+    // possible to overrwite this to the deprecated Plan B SDP format, but note
+    // that kPlanB will be deleted at some future date, see
+    // https://crbug.com/webrtc/13528.
     //
-    // kUnifiedPlan will cause PeerConnection to create offers and answers with
-    // multiple m= sections where each m= section maps to one RtpSender and one
-    // RtpReceiver (an RtpTransceiver), either both audio or both video. This
-    // will also cause PeerConnection to ignore all but the first a=ssrc lines
-    // that form a Plan B stream.
+    // kUnifiedPlan will cause the PeerConnection to create offers and answers
+    // with multiple m= sections where each m= section maps to one RtpSender and
+    // one RtpReceiver (an RtpTransceiver), either both audio or both video.
+    // This will also cause the PeerConnection to ignore all but the first
+    // a=ssrc lines that form a Plan B streams (if the PeerConnection is given
+    // Plan B SDP to process).
     //
-    // kPlanB will cause PeerConnection to create offers and answers with at
+    // kPlanB will cause the PeerConnection to create offers and answers with at
     // most one audio and one video m= section with multiple RtpSenders and
     // RtpReceivers specified as multiple a=ssrc lines within the section. This
     // will also cause PeerConnection to ignore all but the first m= section of
-    // the same media type.
-    //
-    // For users who have to interwork with legacy WebRTC implementations,
-    // it is possible to specify kPlanB until the code is finally removed
-    // (https://crbug.com/webrtc/13528).
-    //
-    // For all other users, specify kUnifiedPlan.
-    //
-    // The default SdpSemantics value is about to change to kUnifiedPlan. During
-    // a short transition period, kNotSpecified is used to ensure clients that
-    // don't set SdpSemantics are aware of the change by CHECK-crashing.
-    // TODO(https://crbug.com/webrtc/11121): When the default has changed to
-    // kUnifiedPlan, delete kNotSpecified.
-    SdpSemantics sdp_semantics = SdpSemantics::kNotSpecified;
+    // the same media type (if the PeerConnection is given Unified Plan SDP to
+    // process).
+    SdpSemantics sdp_semantics = SdpSemantics::kUnifiedPlan;
 
     // TODO(bugs.webrtc.org/9891) - Move to crypto_options or remove.
     // Actively reset the SRTP parameters whenever the DTLS transports
