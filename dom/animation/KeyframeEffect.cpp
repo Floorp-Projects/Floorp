@@ -1862,6 +1862,8 @@ void KeyframeEffect::SetAnimation(Animation* aAnimation) {
 
   mAnimation = aAnimation;
 
+  UpdateNormalizedTiming();
+
   // The order of these function calls is important:
   // NotifyAnimationTimingUpdated() need the updated mIsRelevant flag to check
   // if it should create the effectSet or not, and MarkCascadeNeedsUpdate()

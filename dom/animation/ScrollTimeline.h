@@ -12,7 +12,6 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/PairHash.h"
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
 
 class nsIScrollableFrame;
@@ -177,8 +176,6 @@ class ScrollTimeline final : public AnimationTimeline {
 
   bool ScrollingDirectionIsAvailable() const;
 
-  static constexpr const TimingParams& GetTiming() { return sTiming; }
-
  protected:
   virtual ~ScrollTimeline() { Teardown(); }
 
@@ -208,11 +205,6 @@ class ScrollTimeline final : public AnimationTimeline {
   // nearest scroller.
   Scroller mSource;
   StyleScrollAxis mAxis;
-
-  // Note: it's unfortunate TimingParams cannot be a const variable because
-  // we have to use StickyTimingDuration::FromMilliseconds() in its
-  // constructor.
-  static TimingParams sTiming;
 };
 
 /**

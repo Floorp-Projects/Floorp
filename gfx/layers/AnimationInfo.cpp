@@ -427,7 +427,7 @@ void AnimationInfo::AddAnimationForProperty(
                                      ? AddAnimationForNextTransaction()
                                      : AddAnimation();
 
-  const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
+  const TimingParams& timing = aAnimation->GetEffect()->NormalizedTiming();
 
   // If we are starting a new transition that replaces an existing transition
   // running on the compositor, it is possible that the animation on the
