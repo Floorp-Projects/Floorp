@@ -12,8 +12,6 @@
  * and back conversion package.
  */
 
-#include <stddef.h>
-
 struct DtoaState;
 
 namespace js {

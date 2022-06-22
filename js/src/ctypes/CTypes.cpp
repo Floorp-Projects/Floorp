@@ -8,7 +8,6 @@
 #include "js/experimental/CTypes.h"  // JS::CTypesActivity{Callback,Type}, JS::InitCTypesClass, JS::SetCTypesActivityCallback, JS::SetCTypesCallbacks
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
@@ -25,7 +24,6 @@
 #  include <ieeefp.h>
 #endif
 #include <limits>
-#include <math.h>
 #include <stdint.h>
 #ifdef HAVE_SSIZE_T
 #  include <sys/types.h>
@@ -38,7 +36,6 @@
 
 #include "ctypes/Library.h"
 #include "gc/GCContext.h"
-#include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferData,GetArrayBuffer{ByteLength,Data}}
