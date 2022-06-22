@@ -2,12 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package mozilla.components.support.ktx.kotlin
 
+import android.net.InetAddresses
 import android.net.Uri
+import android.os.Build
+import android.util.Patterns
+import android.webkit.URLUtil
+import androidx.core.net.toUri
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.util.URLStringUtils
 import java.io.File
+import java.net.IDN
 import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLEncoder
@@ -36,6 +45,86 @@ private const val LAST_VISIBLE_DIGITS_COUNT = 4
 // slowing down UI rendering e.g. in case of a bookmarklet or a data URI.
 // https://github.com/mozilla-mobile/android-components/issues/5249
 const val MAX_URI_LENGTH = 25000
+
+private const val FILE_PREFIX = "file://"
+private const val MAX_VALID_PORT = 65_535
+
+/**
+ * Shortens URLs to be more user friendly.
+ *
+ * The algorithm used to generate these strings is a combination of FF desktop 'top sites',
+ * feedback from the security team, and documentation regarding url elision.  See
+ * StringTest.kt for details.
+ *
+ * This method is complex because URLs have a lot of edge cases. Be sure to thoroughly unit
+ * test any changes you make to it.
+ */
+// Unused Parameter: We may resume stripping eTLD, depending on conversations between security and UX
+// Return count: This is a complex method, but it would not be more understandable if broken up
+// ComplexCondition: Breaking out the complex condition would make this logic harder to follow
+@Suppress("UNUSED_PARAMETER", "ReturnCount", "ComplexCondition")
+fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
+    val inputString = this
+    val uri = inputString.toUri()
+
+    if (
+        inputString.isEmpty() ||
+        !URLUtil.isValidUrl(inputString) ||
+        inputString.startsWith(FILE_PREFIX) ||
+        uri.port !in -1..MAX_VALID_PORT
+    ) {
+        return inputString
+    }
+
+    if (uri.host?.isIpv4OrIpv6() == true ||
+        // If inputString is just a hostname and not a FQDN, use the entire hostname.
+        uri.host?.contains(".") == false
+    ) {
+        return uri.host ?: inputString
+    }
+
+    fun String.stripUserInfo(): String {
+        val userInfo = this.toUri().encodedUserInfo
+        return if (userInfo != null) {
+            val infoIndex = this.indexOf(userInfo)
+            this.removeRange(infoIndex..infoIndex + userInfo.length)
+        } else {
+            this
+        }
+    }
+    fun String.stripPrefixes(): String = this.toUri().hostWithoutCommonPrefixes ?: this
+    fun String.toUnicode() = IDN.toUnicode(this)
+
+    return inputString
+        .stripUserInfo()
+        .lowercase(Locale.getDefault())
+        .stripPrefixes()
+        .toUnicode()
+}
+
+// impl via FFTV https://searchfox.org/mozilla-mobile/source/firefox-echo-show/app/src/main/java/org/mozilla/focus/utils/FormattedDomain.java#129
+@Suppress("DEPRECATION")
+internal fun String.isIpv4(): Boolean = Patterns.IP_ADDRESS.matcher(this).matches()
+
+// impl via FFiOS: https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L292
+// True IPv6 validation is difficult. This is slightly better than nothing
+internal fun String.isIpv6(): Boolean {
+    return this.isNotEmpty() && this.contains(":")
+}
+
+/**
+ * Returns true if the string represents a valid Ipv4 or Ipv6 IP address.
+ * Note: does not validate a dual format Ipv6 ( "y:y:y:y:y:y:x.x.x.x" format).
+ *
+ */
+@Suppress("TooManyFunctions")
+fun String.isIpv4OrIpv6(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        InetAddresses.isNumericAddress(this)
+    } else {
+        this.isIpv4() || this.isIpv6()
+    }
+}
 
 /**
  * Checks if this String is a URL.

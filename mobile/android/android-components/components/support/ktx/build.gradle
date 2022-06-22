@@ -33,6 +33,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation project(':support-base')
     implementation project(':support-utils')
+    implementation project(':lib-publicsuffixlist')
 
     implementation Dependencies.androidx_core
     implementation Dependencies.androidx_core_ktx
