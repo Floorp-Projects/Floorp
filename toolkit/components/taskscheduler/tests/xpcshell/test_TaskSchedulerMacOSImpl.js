@@ -21,7 +21,7 @@ updateAppInfo();
 const { TaskScheduler } = ChromeUtils.import(
   "resource://gre/modules/TaskScheduler.jsm"
 );
-const { _TaskSchedulerMacOSImpl: MacOSImpl } = ChromeUtils.import(
+const { MacOSImpl } = ChromeUtils.import(
   "resource://gre/modules/TaskSchedulerMacOSImpl.jsm"
 );
 
