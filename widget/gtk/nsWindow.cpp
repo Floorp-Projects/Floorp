@@ -35,6 +35,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/HelpersCairo.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -56,6 +57,7 @@
 #include "mozilla/StaticPrefs_mozilla.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
@@ -4657,7 +4659,11 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
                                            : PanGestureInput::PANDELTA_PIXEL;
           panEvent.mSimulateMomentum = true;
 
-          DispatchPanGestureInput(panEvent);
+          panEvent
+              .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
+              SwipeTracker::CanTriggerSwipe(panEvent);
+
+          DispatchPanGesture(panEvent);
 
           return;
         }
@@ -4701,6 +4707,43 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
   wheelEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
   DispatchInputEvent(&wheelEvent);
+}
+
+void nsWindow::DispatchPanGesture(PanGestureInput& aPanInput) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mSwipeTracker) {
+    // Give the swipe tracker a first pass at the event. If a new pan gesture
+    // has been started since the beginning of the swipe, the swipe tracker
+    // will know to ignore the event.
+    nsEventStatus status = mSwipeTracker->ProcessEvent(aPanInput);
+    if (status == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+  }
+
+  APZEventResult result;
+  if (mAPZC) {
+    MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+
+    result = mAPZC->InputBridge()->ReceiveInputEvent(aPanInput);
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+  }
+
+  WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+  bool canTriggerSwipe = SwipeTracker::CanTriggerSwipe(aPanInput);
+  if (!mAPZC) {
+    if (MayStartSwipeForNonAPZ(aPanInput, CanTriggerSwipe{canTriggerSwipe})) {
+      return;
+    }
+  } else {
+    event = MayStartSwipeForAPZ(aPanInput, result,
+                                CanTriggerSwipe{canTriggerSwipe});
+  }
+
+  ProcessUntransformedAPZEvent(&event, result);
 }
 
 void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
