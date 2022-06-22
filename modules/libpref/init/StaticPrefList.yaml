@@ -4742,6 +4742,17 @@
   value: false
   mirror: always
 
+# Temporary prefs to be used for a few weeks, then removed
+- name: fission.omitBlocklistedPrefsInSubprocesses.tmp
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: fission.enforceBlocklistedPrefsInSubprocesses.tmp
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
