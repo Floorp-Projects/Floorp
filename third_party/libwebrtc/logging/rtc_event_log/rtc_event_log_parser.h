@@ -15,7 +15,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <utility>  // pair
 #include <vector>
 
 #include "absl/base/attributes.h"
@@ -27,10 +26,12 @@
 #include "logging/rtc_event_log/events/rtc_event_audio_playout.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_receive_stream_config.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
+#include "logging/rtc_event_log/events/rtc_event_begin_log.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "logging/rtc_event_log/events/rtc_event_dtls_transport_state.h"
 #include "logging/rtc_event_log/events/rtc_event_dtls_writable_state.h"
+#include "logging/rtc_event_log/events/rtc_event_end_log.h"
 #include "logging/rtc_event_log/events/rtc_event_frame_decoded.h"
 #include "logging/rtc_event_log/events/rtc_event_generic_ack_received.h"
 #include "logging/rtc_event_log/events/rtc_event_generic_packet_received.h"
@@ -240,48 +241,11 @@ class ParsedRtcEventLog {
     kDontParse,
     kAttemptWebrtcDefaultConfig
   };
-  class ParseStatus {
-   public:
-    static ParseStatus Success() { return ParseStatus(); }
-    static ParseStatus Error(std::string error, std::string file, int line) {
-      return ParseStatus(error, file, line);
-    }
 
-    bool ok() const { return error_.empty() && file_.empty() && line_ == 0; }
-    std::string message() const {
-      return error_ + " failed at " + file_ + " line " + std::to_string(line_);
-    }
-
-    ABSL_DEPRECATED("Use ok() instead") operator bool() const { return ok(); }
-
-   private:
-    ParseStatus() : error_(), file_(), line_(0) {}
-    ParseStatus(std::string error, std::string file, int line)
-        : error_(error), file_(file), line_(line) {}
-    std::string error_;
-    std::string file_;
-    int line_;
-  };
+  using ParseStatus = RtcEventLogParseStatus;
 
   template <typename T>
-  class ParseStatusOr {
-   public:
-    ParseStatusOr(const ParseStatus& error)  // NOLINT
-        : status_(error), value_() {}
-    ParseStatusOr(const T& value)  // NOLINT
-        : status_(ParseStatus::Success()), value_(value) {}
-    bool ok() const { return status_.ok(); }
-    const T& value() const& {
-      RTC_DCHECK(status_.ok());
-      return value_;
-    }
-    std::string message() const { return status_.message(); }
-    const ParseStatus& status() const { return status_; }
-
-   private:
-    ParseStatus status_;
-    T value_;
-  };
+  using ParseStatusOr = RtcEventLogParseStatusOr<T>;
 
   struct LoggedRtpStreamIncoming {
     LoggedRtpStreamIncoming();

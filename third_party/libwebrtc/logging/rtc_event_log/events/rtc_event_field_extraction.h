@@ -17,6 +17,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_common.h"
 #include "rtc_base/logging.h"
 
@@ -179,6 +180,29 @@ void PopulateRtcEventMember(const rtc::ArrayView<absl::string_view> values,
   for (size_t i = 0; i < batch_size; ++i) {
     output[i].*member = values[i];
   }
+}
+
+template <typename E>
+void PopulateRtcEventTimestamp(const rtc::ArrayView<uint64_t>& values,
+                               Timestamp E::*timestamp,
+                               rtc::ArrayView<E> output) {
+  size_t batch_size = values.size();
+  RTC_CHECK_EQ(batch_size, output.size());
+  for (size_t i = 0; i < batch_size; ++i) {
+    output[i].*timestamp =
+        Timestamp::Millis(DecodeFromUnsignedToType<int64_t>(values[i]));
+  }
+}
+
+template <typename E>
+rtc::ArrayView<E> ExtendLoggedBatch(std::vector<E>& output,
+                                    size_t new_elements) {
+  size_t old_size = output.size();
+  output.insert(output.end(), old_size + new_elements, E());
+  rtc::ArrayView<E> output_batch = output;
+  output_batch.subview(old_size);
+  RTC_DCHECK_EQ(output_batch.size(), new_elements);
+  return output_batch;
 }
 
 }  // namespace webrtc
