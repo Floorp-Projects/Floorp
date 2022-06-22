@@ -59,7 +59,6 @@ class SearchBar extends Component {
       selectedSource: PropTypes.object.isRequired,
       setActiveSearch: PropTypes.func.isRequired,
       showClose: PropTypes.bool,
-      size: PropTypes.string,
       toggleFileSearchModifier: PropTypes.func.isRequired,
       traverseResults: PropTypes.func.isRequired,
     };
@@ -283,7 +282,6 @@ class SearchBar extends Component {
       searchResults: { count },
       searchOn,
       showClose = true,
-      size = "big",
     } = this.props;
 
     if (!searchOn) {
@@ -314,7 +312,7 @@ class SearchBar extends Component {
           {showClose && (
             <React.Fragment>
               <span className="pipe-divider" />
-              <CloseButton handleClick={this.closeSearch} buttonClass={size} />
+              <CloseButton handleClick={this.closeSearch} buttonClass={"big"} />
             </React.Fragment>
           )}
         </div>
