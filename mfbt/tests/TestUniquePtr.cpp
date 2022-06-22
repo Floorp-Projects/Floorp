@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"

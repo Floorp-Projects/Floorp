@@ -9,7 +9,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include <stddef.h>
-#include <stdio.h>
+#include <stdint.h>
 
 using mozilla::BitBloomFilter;
 using mozilla::CountingBloomFilter;
