@@ -825,7 +825,6 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
       if (params_.video[video_idx].codec == "VP8") {
         VideoCodecVP8 vp8_settings = VideoEncoder::GetDefaultVp8Settings();
         vp8_settings.denoisingOn = false;
-        vp8_settings.frameDroppingOn = false;
         vp8_settings.numberOfTemporalLayers = static_cast<unsigned char>(
             params_.video[video_idx].num_temporal_layers);
         video_encoder_configs_[video_idx].encoder_specific_settings =
@@ -834,7 +833,6 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
       } else if (params_.video[video_idx].codec == "VP9") {
         VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
         vp9_settings.denoisingOn = false;
-        vp9_settings.frameDroppingOn = false;
         vp9_settings.automaticResizeOn = false;
         vp9_settings.numberOfTemporalLayers = static_cast<unsigned char>(
             params_.video[video_idx].num_temporal_layers);
