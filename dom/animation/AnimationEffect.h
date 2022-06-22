@@ -41,7 +41,7 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   bool IsCurrent() const;
   bool IsInEffect() const;
   bool HasFiniteActiveDuration() const {
-    return SpecifiedTiming().ActiveDuration() != TimeDuration::Forever();
+    return NormalizedTiming().ActiveDuration() != TimeDuration::Forever();
   }
 
   // AnimationEffect interface
@@ -50,16 +50,22 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   virtual void UpdateTiming(const OptionalEffectTiming& aTiming,
                             ErrorResult& aRv);
 
-  const TimingParams& SpecifiedTiming() const {
-    return mAnimation && mAnimation->UsingScrollTimeline()
-               // This returns the TimingParams which is used for getting
-               // ComputedTiming. For now, we assume all the callers of
-               // SpecifiedTiming() want to use this for scroll-timelines
-               // (and let the animation events be an undefined part).
-               ? ScrollTimeline::GetTiming()
-               : mTiming;
-  }
+  const TimingParams& SpecifiedTiming() const { return mTiming; }
   void SetSpecifiedTiming(TimingParams&& aTiming);
+
+  const TimingParams& NormalizedTiming() const {
+    MOZ_ASSERT((mAnimation && mAnimation->UsingScrollTimeline() &&
+                mNormalizedTiming) ||
+                   !mNormalizedTiming,
+               "We do normalization only for progress-based timeline");
+    return mNormalizedTiming ? *mNormalizedTiming : mTiming;
+  }
+
+  // There are 3 conditions where we have to update the normalized timing:
+  // 1. mAnimation is changed, or
+  // 2. the timeline of mAnimation is changed, or
+  // 3. mTiming is changed.
+  void UpdateNormalizedTiming();
 
   // This function takes as input the timing parameters of an animation and
   // returns the computed timing at the specified local time.
@@ -98,6 +104,7 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   RefPtr<Document> mDocument;
   RefPtr<Animation> mAnimation;
   TimingParams mTiming;
+  Maybe<TimingParams> mNormalizedTiming;
 };
 
 }  // namespace dom

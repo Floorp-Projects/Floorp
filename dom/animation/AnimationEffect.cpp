@@ -75,6 +75,8 @@ void AnimationEffect::SetSpecifiedTiming(TimingParams&& aTiming) {
 
   mTiming = aTiming;
 
+  UpdateNormalizedTiming();
+
   if (mAnimation) {
     Maybe<nsAutoAnimationMutationBatch> mb;
     if (AsKeyframeEffect() && AsKeyframeEffect()->GetAnimationTarget()) {
@@ -91,6 +93,7 @@ void AnimationEffect::SetSpecifiedTiming(TimingParams&& aTiming) {
       AsKeyframeEffect()->RequestRestyle(EffectCompositor::RestyleType::Layer);
     }
   }
+
   // For keyframe effects, NotifyEffectTimingUpdated above will eventually
   // cause KeyframeEffect::NotifyAnimationTimingUpdated to be called so it can
   // update its registration with the target element as necessary.
@@ -266,7 +269,7 @@ ComputedTiming AnimationEffect::GetComputedTiming(
     const TimingParams* aTiming) const {
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   return GetComputedTimingAt(
-      GetLocalTime(), aTiming ? *aTiming : SpecifiedTiming(), playbackRate);
+      GetLocalTime(), aTiming ? *aTiming : NormalizedTiming(), playbackRate);
 }
 
 // Helper function for generating an (Computed)EffectTiming dictionary
@@ -331,6 +334,17 @@ void AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
   }
 
   SetSpecifiedTiming(std::move(timing));
+}
+
+void AnimationEffect::UpdateNormalizedTiming() {
+  mNormalizedTiming.reset();
+
+  if (!mAnimation || !mAnimation->UsingScrollTimeline()) {
+    return;
+  }
+
+  mNormalizedTiming.emplace(mTiming);
+  mNormalizedTiming->Normalize();
 }
 
 Nullable<TimeDuration> AnimationEffect::GetLocalTime() const {

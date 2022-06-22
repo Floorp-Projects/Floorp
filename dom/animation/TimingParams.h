@@ -21,6 +21,8 @@
 #include "mozilla/dom/AnimationEffectBinding.h"  // for FillMode
                                                  // and PlaybackDirection
 
+#define PROGRESS_TIMELINE_DURATION_MILLISEC 100000
+
 namespace mozilla {
 
 namespace dom {
@@ -201,6 +203,8 @@ struct TimingParams {
   const Maybe<ComputedTimingFunction>& TimingFunction() const {
     return mFunction;
   }
+
+  void Normalize();
 
  private:
   void Update() {

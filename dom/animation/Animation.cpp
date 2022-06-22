@@ -255,6 +255,11 @@ void Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline) {
   }
 
   mTimeline = aTimeline;
+
+  if (mEffect) {
+    mEffect->UpdateNormalizedTiming();
+  }
+
   if (!mStartTime.IsNull()) {
     mHoldTime.SetNull();
   }
@@ -992,7 +997,7 @@ TimeStamp Animation::AnimationTimeToTimeStamp(
 TimeStamp Animation::ElapsedTimeToTimeStamp(
     const StickyTimeDuration& aElapsedTime) const {
   TimeDuration delay =
-      mEffect ? mEffect->SpecifiedTiming().Delay() : TimeDuration();
+      mEffect ? mEffect->NormalizedTiming().Delay() : TimeDuration();
   return AnimationTimeToTimeStamp(aElapsedTime + delay);
 }
 
@@ -1792,7 +1797,7 @@ StickyTimeDuration Animation::EffectEnd() const {
     return StickyTimeDuration(0);
   }
 
-  return mEffect->SpecifiedTiming().EndTime();
+  return mEffect->NormalizedTiming().EndTime();
 }
 
 Document* Animation::GetRenderedDocument() const {
@@ -1916,7 +1921,7 @@ StickyTimeDuration Animation::IntervalStartTime(
              "Should be called for CSS animations or transitions");
   static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
   return std::max(
-      std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().Delay()),
+      std::min(StickyTimeDuration(-mEffect->NormalizedTiming().Delay()),
                aActiveDuration),
       zeroDuration);
 }
@@ -1932,7 +1937,7 @@ StickyTimeDuration Animation::IntervalEndTime(
              "Should be called for CSS animations or transitions");
 
   static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
-  return std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().Delay()),
+  return std::max(std::min((EffectEnd() - mEffect->NormalizedTiming().Delay()),
                            aActiveDuration),
                   zeroDuration);
 }
