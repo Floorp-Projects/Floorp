@@ -431,11 +431,9 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
 
   // Load the information that the rectifier needs from the stack.
   constexpr size_t FrameOffset = sizeof(void*);  // Frame pointer.
-  constexpr size_t NargsOffset =
-      FrameOffset + RectifierFrameLayout::offsetOfNumActualArgs();
   constexpr size_t TokenOffset =
       FrameOffset + RectifierFrameLayout::offsetOfCalleeToken();
-  masm.Ldr(w0, MemOperand(masm.GetStackPointer64(), NargsOffset));
+  masm.loadNumActualArgs(FramePointer, r0);
   masm.Ldr(x1, MemOperand(masm.GetStackPointer64(), TokenOffset));
 
   // Extract a JSFunction pointer from the callee token and keep the

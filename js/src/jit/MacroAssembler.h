@@ -846,6 +846,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void pushFrameDescriptor(FrameType type);
   inline void PushFrameDescriptor(FrameType type);
 
+  // Load the number of actual arguments from the frame's JitFrameLayout.
+  inline void loadNumActualArgs(Register framePtr, Register dest);
+
   // Push the callee token of a JSFunction which pointer is stored in the
   // |callee| register. The callee token is packed with a |constructing| flag
   // which correspond to the fact that the JS function is called with "new" or

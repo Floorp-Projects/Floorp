@@ -266,6 +266,12 @@ void MacroAssembler::PushFrameDescriptor(FrameType type) {
   Push(Imm32(descriptor));
 }
 
+void MacroAssembler::loadNumActualArgs(Register framePtr, Register dest) {
+  static constexpr uint32_t Offset = JitFrameLayout::FramePointerOffset +
+                                     JitFrameLayout::offsetOfNumActualArgs();
+  loadPtr(Address(framePtr, Offset), dest);
+}
+
 void MacroAssembler::PushCalleeToken(Register callee, bool constructing) {
   if (constructing) {
     orPtr(Imm32(CalleeToken_FunctionConstructing), callee);

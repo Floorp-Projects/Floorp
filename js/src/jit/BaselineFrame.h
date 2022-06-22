@@ -174,10 +174,7 @@ class BaselineFrame {
     return *valueSlot(i);
   }
 
-  unsigned numActualArgs() const {
-    return *(size_t*)(reinterpret_cast<const uint8_t*>(this) +
-                      BaselineFrame::Size() + offsetOfNumActualArgs());
-  }
+  unsigned numActualArgs() const { return framePrefix()->numActualArgs(); }
   unsigned numFormalArgs() const { return script()->function()->nargs(); }
   Value& thisArgument() const {
     MOZ_ASSERT(isFunctionFrame());
@@ -344,10 +341,6 @@ class BaselineFrame {
   static size_t offsetOfArg(size_t index) {
     return FramePointerOffset +
            js::jit::JitFrameLayout::offsetOfActualArg(index);
-  }
-  static size_t offsetOfNumActualArgs() {
-    return FramePointerOffset +
-           js::jit::JitFrameLayout::offsetOfNumActualArgs();
   }
   static size_t Size() { return sizeof(BaselineFrame); }
 
