@@ -407,10 +407,10 @@ typedef HRESULT(WINAPI* SetThreadDescriptionPtr)(HANDLE hThread,
 
 // static
 DWORD ExceptionHandler::ExceptionHandlerThreadMain(void* lpParameter) {
-  static auto SetThreadDescriptionFunc =
-      reinterpret_cast<SetThreadDescriptionPtr>(::GetProcAddress(
-          ::GetModuleHandle(L"Kernel32.dll"), "SetThreadDescription"));
-  if (SetThreadDescriptionFunc) {
+  HMODULE handle = ::GetModuleHandle(L"Kernel32.dll");
+  if (FARPROC address = ::GetProcAddress(handle, "SetThreadDescription")) {
+    auto SetThreadDescriptionFunc =
+      reinterpret_cast<SetThreadDescriptionPtr>(address);
     SetThreadDescriptionFunc(::GetCurrentThread(),
                              L"Breakpad ExceptionHandler");
   }
