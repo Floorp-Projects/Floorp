@@ -6,16 +6,13 @@
 
 "use strict";
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
+var EXPORTED_SYMBOLS = ["TestInterfaceJS"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function TestInterfaceJS(anyArg, objectArg) {}
+function TestInterfaceJS() {}
 
 TestInterfaceJS.prototype = {
-  classID: Components.ID("{2ac4e026-cf25-47d5-b067-78d553c3cad8}"),
-  contractID: "@mozilla.org/dom/test-interface-js;1",
   QueryInterface: ChromeUtils.generateQI([
     "nsIDOMGlobalPropertyInitializer",
     "mozITestInterfaceJS",
@@ -227,5 +224,3 @@ TestInterfaceJS.prototype = {
     this.__DOM_IMPL__.setEventHandler("onsomething", val);
   },
 };
-
-this.NSGetFactory = ComponentUtils.generateNSGetFactory([TestInterfaceJS]);

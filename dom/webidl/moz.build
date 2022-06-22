@@ -1112,6 +1112,9 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "TestInterfaceJSMaplikeSetlikeIterable.webidl",
         "TestInterfaceObservableArray.webidl",
     ]
+    XPCOM_MANIFESTS += [
+        "components.conf",
+    ]
 
 WEBIDL_FILES += [
     "InstallTrigger.webidl",
