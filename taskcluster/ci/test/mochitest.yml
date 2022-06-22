@@ -397,6 +397,11 @@ mochitest-devtools-chrome:
         name: mochitest-devtools-chrome
     schedules-component: mochitest-browser-chrome
     treeherder-symbol: M(dt)
+    worker-type:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     loopback-video: true
     variants:
         - a11y-checks+fission
