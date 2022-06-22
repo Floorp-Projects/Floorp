@@ -859,7 +859,7 @@ class HTMLEditor final : public EditorBase,
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
                                uint32_t aStartOffset, uint32_t aEndOffset);
 

@@ -176,6 +176,10 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   // isErr() must not required to wrap with them.
   bool isOk() const { return NS_SUCCEEDED(mRv); }
   bool isErr() const { return NS_FAILED(mRv); }
+  bool Handled() const {
+    MOZ_ASSERT_IF(mRv == NS_SUCCESS_DOM_NO_OPERATION, !mNode);
+    return isOk() && mRv == NS_SUCCESS_DOM_NO_OPERATION;
+  }
   constexpr nsresult inspectErr() const { return mRv; }
   constexpr nsresult unwrapErr() const { return inspectErr(); }
   constexpr bool EditorDestroyed() const {
@@ -220,8 +224,6 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
                         const EditorBase& aEditorBase,
                         const SuggestCaretOptions& aOptions);
 
-  CreateNodeResultBase() = delete;
-
   explicit CreateNodeResultBase(nsresult aRv) : mRv(aRv) {
     MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
   }
@@ -252,6 +254,25 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
         mCaretPoint(std::move(aCandidateCaretPoint)),
         mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
 
+  [[nodiscard]] static SelfType NotHandled() {
+    SelfType result;
+    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
+    return result;
+  }
+  [[nodiscard]] static SelfType NotHandled(
+      const EditorDOMPoint& aPointToPutCaret) {
+    SelfType result;
+    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
+    result.mCaretPoint = aPointToPutCaret;
+    return result;
+  }
+  [[nodiscard]] static SelfType NotHandled(EditorDOMPoint&& aPointToPutCaret) {
+    SelfType result;
+    result.mRv = NS_SUCCESS_DOM_NO_OPERATION;
+    result.mCaretPoint = std::move(aPointToPutCaret);
+    return result;
+  }
+
 #ifdef DEBUG
   ~CreateNodeResultBase() {
     MOZ_ASSERT_IF(isOk(), !mCaretPoint.IsSet() || mHandledCaretPoint);
@@ -264,9 +285,11 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   SelfType& operator=(SelfType&& aOther) = default;
 
  private:
+  CreateNodeResultBase() = default;
+
   RefPtr<NodeType> mNode;
   EditorDOMPoint mCaretPoint;
-  nsresult mRv;
+  nsresult mRv = NS_OK;
   bool mutable mHandledCaretPoint = false;
 };
 
