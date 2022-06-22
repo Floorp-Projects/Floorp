@@ -115,6 +115,7 @@ body {
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 42px;
 }
 
@@ -125,8 +126,7 @@ body {
 }
 
 .category-name {
-  padding: 9px 0;
-  vertical-align: middle;
+  padding: 13px 0;
 }
 
 .category-subsection {
