@@ -1077,13 +1077,12 @@ class HTMLEditor final : public EditorBase,
   /**
    * CreateStyleForInsertText() sets CSS properties which are stored in
    * TypeInState to proper element node.
-   * XXX This modifies Selection, but should return insertion point instead.
    *
-   * @param aAbstractRange      Set current selection range where new text
-   *                            should be inserted.
+   * @param aPointToInsertText  The point to insert text.
+   * @return                    A suggest point to put caret or unset point.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CreateStyleForInsertText(const dom::AbstractRange& aAbstractRange);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  CreateStyleForInsertText(const EditorDOMPoint& aPointToInsertText);
 
   /**
    * GetMostDistantAncestorMailCiteElement() returns most-ancestor mail cite
