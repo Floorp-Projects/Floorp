@@ -6,7 +6,6 @@
 #ifndef ProxyAutoConfigChild_h__
 #define ProxyAutoConfigChild_h__
 
-#include <functional>
 #include "mozilla/LinkedList.h"
 #include "mozilla/net/PProxyAutoConfigChild.h"
 #include "mozilla/StaticPtr.h"

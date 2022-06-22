@@ -12,7 +12,6 @@
 #include "mozStorageError.h"
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageBindingParams.h"
-#include "mozStorageBindingParamsArray.h"
 #include "Variant.h"
 
 namespace mozilla::storage {

@@ -8,7 +8,6 @@
 #include "HttpLog.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Tokenizer.h"
 #include "nsHttpChannelAuthProvider.h"
