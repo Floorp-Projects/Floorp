@@ -916,8 +916,7 @@ struct CrossOriginEmbedderPolicyValidator {
 
   static bool IsLegalValue(const IntegralType e) {
     return AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_NULL) ||
-           AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) ||
-           AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS);
+           AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP);
   }
 
  private:

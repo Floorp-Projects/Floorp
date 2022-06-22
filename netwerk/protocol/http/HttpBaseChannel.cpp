@@ -2401,13 +2401,12 @@ nsresult HttpBaseChannel::ProcessCrossOriginEmbedderPolicyHeader() {
     return NS_OK;
   }
 
-  // https://html.spec.whatwg.org/multipage/origin.html#coep
+  // https://mikewest.github.io/corpp/#abstract-opdef-process-navigation-response
   if (mLoadInfo->GetExternalContentPolicyType() ==
           ExtContentPolicy::TYPE_SUBDOCUMENT &&
       mLoadInfo->GetLoadingEmbedderPolicy() !=
           nsILoadInfo::EMBEDDER_POLICY_NULL &&
-      resultPolicy != nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP &&
-      resultPolicy != nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS) {
+      resultPolicy != nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
     return NS_ERROR_DOM_COEP_FAILED;
   }
 
@@ -2459,29 +2458,13 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
                                      content);
 
   if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-    if (content.IsEmpty()) {
-      if (mLoadInfo->GetLoadingEmbedderPolicy() ==
-              nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS &&
-          StaticPrefs::browser_tabs_remote_coep_credentialless()) {
-        bool requestIncludesCredentials = false;
-        nsresult rv = GetCorsIncludeCredentials(&requestIncludesCredentials);
-        if (NS_FAILED(rv)) {
-          return NS_OK;
-        }
-        // COEP: Set policy to `same-origin` if: response’s
-        // request-includes-credentials is true, or forNavigation is true.
-        if (requestIncludesCredentials ||
-            extContentPolicyType == ExtContentPolicyType::TYPE_SUBDOCUMENT) {
-          content = "same-origin"_ns;
-        }
-      } else if (mLoadInfo->GetLoadingEmbedderPolicy() ==
-                 nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
-        // COEP 3.2.1.6 If policy is null, and embedder policy is
-        // "require-corp", set policy to "same-origin". Note that we treat
-        // invalid value as "cross-origin", which spec indicates. We might want
-        // to make that stricter.
-        content = "same-origin"_ns;
-      }
+    // COEP 3.2.1.6 If policy is null, and embedder policy is "require-corp",
+    // set policy to "same-origin".
+    // Note that we treat invalid value as "cross-origin", which spec
+    // indicates. We might want to make that stricter.
+    if (content.IsEmpty() && mLoadInfo->GetLoadingEmbedderPolicy() ==
+                                 nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
+      content = "same-origin"_ns;
     }
   }
 
@@ -5743,8 +5726,7 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginEmbedderPolicy coep =
         nsILoadInfo::EMBEDDER_POLICY_NULL;
     if (NS_SUCCEEDED(GetResponseEmbedderPolicy(&coep)) &&
-        (coep == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP ||
-         coep == nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS)) {
+        coep == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
       policy =
           nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
     }
