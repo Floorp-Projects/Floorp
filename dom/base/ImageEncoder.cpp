@@ -125,6 +125,11 @@ class EncodingCompleteEvent final : public DiscardableRunnable {
     return mCreationEventTarget;
   }
 
+  bool CanBeDeletedOnAnyThread() {
+    return !mEncodeCompleteCallback ||
+           mEncodeCompleteCallback->CanBeDeletedOnAnyThread();
+  }
+
  private:
   uint64_t mImgSize;
   nsAutoString mType;
@@ -192,8 +197,10 @@ class EncodingRunnable : public Runnable {
     rv = mEncodingCompleteEvent->GetCreationThreadEventTarget()->Dispatch(
         mEncodingCompleteEvent, nsIThread::DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
-      // Better to leak than to crash.
-      Unused << mEncodingCompleteEvent.forget();
+      if (!mEncodingCompleteEvent->CanBeDeletedOnAnyThread()) {
+        // Better to leak than to crash.
+        Unused << mEncodingCompleteEvent.forget();
+      }
       return rv;
     }
 
