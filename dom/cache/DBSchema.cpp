@@ -1794,8 +1794,7 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
           "entries.response_body_id, "
           "entries.response_principal_info, "
           "entries.response_padding_size, "
-          "security_info.data, "
-          "entries.request_credentials "
+          "security_info.data "
           "FROM entries "
           "LEFT OUTER JOIN security_info "
           "ON entries.response_security_info_id=security_info.id "
@@ -1896,11 +1895,6 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
 
   QM_TRY(MOZ_TO_RESULT(state->GetBlobAsUTF8String(
       7, savedResponse.mValue.channelInfo().securityInfo())));
-
-  QM_TRY_INSPECT(const int32_t& credentials,
-                 MOZ_TO_RESULT_INVOKE_MEMBER(*state, GetInt32, 8));
-  savedResponse.mValue.credentials() =
-      static_cast<RequestCredentials>(credentials);
 
   {
     QM_TRY_INSPECT(const auto& state,

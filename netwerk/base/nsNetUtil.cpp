@@ -2626,14 +2626,9 @@ NS_GetCrossOriginEmbedderPolicyFromHeader(const nsACString& aHeader) {
     return nsILoadInfo::EMBEDDER_POLICY_NULL;
   }
 
-  if (embedderPolicy.EqualsLiteral("require-corp")) {
-    return nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
-  } else if (embedderPolicy.EqualsLiteral("credentialless") &&
-             StaticPrefs::browser_tabs_remote_coep_credentialless()) {
-    return nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS;
-  }
-
-  return nsILoadInfo::EMBEDDER_POLICY_NULL;
+  return embedderPolicy.EqualsLiteral("require-corp")
+             ? nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP
+             : nsILoadInfo::EMBEDDER_POLICY_NULL;
 }
 
 /** Given the first (disposition) token from a Content-Disposition header,
