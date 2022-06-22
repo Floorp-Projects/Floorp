@@ -662,7 +662,8 @@ class ProviderAutofill extends UrlbarProvider {
           h.id AS id
         FROM moz_places h
         JOIN moz_inputhistory i ON i.place_id = h.id
-        WHERE :searchString BETWEEN i.input AND i.input || X'FFFF'
+        WHERE LENGTH(i.input) != 0
+          AND :searchString BETWEEN i.input AND i.input || X'FFFF'
           AND ${sourceCondition}
           AND i.use_count >= :useCountThreshold
           AND ${urlCondition}
