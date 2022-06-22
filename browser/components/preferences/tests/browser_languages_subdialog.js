@@ -9,15 +9,14 @@ add_task(async function() {
     );
     contentDocument.getElementById("chooseLanguage").click();
     const win = await promiseSubDialogLoaded;
-    win.Preferences.forceEnableInstantApply();
     dialogOverlay = content.gSubDialog._topDialog._overlay;
     ok(!BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is visible.");
     return win;
   }
 
-  function closeLanguagesSubdialog() {
-    const closeBtn = dialogOverlay.querySelector(".dialogClose");
-    closeBtn.doCommand();
+  function acceptLanguagesSubdialog(win) {
+    const button = win.document.querySelector("dialog").getButton("accept");
+    button.doCommand();
   }
 
   ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
@@ -26,7 +25,7 @@ add_task(async function() {
     win.document.getElementById("spoofEnglish").hidden,
     "The 'Request English' checkbox is hidden."
   );
-  closeLanguagesSubdialog();
+  acceptLanguagesSubdialog(win);
   ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
 
   await SpecialPowers.pushPrefEnv({
@@ -62,7 +61,7 @@ add_task(async function() {
     2,
     "The privacy.spoof_english pref is set to 2."
   );
-  closeLanguagesSubdialog();
+  acceptLanguagesSubdialog(win);
 
   win = await languagesSubdialogOpened();
   ok(
@@ -90,7 +89,7 @@ add_task(async function() {
     1,
     "The privacy.spoof_english pref is set to 1."
   );
-  closeLanguagesSubdialog();
+  acceptLanguagesSubdialog(win);
 
   win = await languagesSubdialogOpened();
   ok(
@@ -106,7 +105,7 @@ add_task(async function() {
     1,
     "The privacy.spoof_english pref is set to 1."
   );
-  closeLanguagesSubdialog();
+  acceptLanguagesSubdialog(win);
 
   gBrowser.removeCurrentTab();
 });
