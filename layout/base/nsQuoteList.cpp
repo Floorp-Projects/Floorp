@@ -12,7 +12,6 @@
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsContainerFrame.h"
-#include "mozilla/ContainStyleScopeManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/intl/Quotes.h"
@@ -100,21 +99,9 @@ nsString nsQuoteNode::Text() {
   return result;
 }
 
-static int32_t GetDepthBeforeFirstQuoteNode(ContainStyleScope* aScope) {
-  for (auto* ancestor = aScope->GetParent(); ancestor;
-       ancestor = ancestor->GetParent()) {
-    auto& quoteList = ancestor->GetQuoteList();
-    if (auto* node = static_cast<nsQuoteNode*>(
-            aScope->GetPrecedingElementInGenConList(&quoteList))) {
-      return node->DepthAfter();
-    }
-  }
-  return 0;
-}
-
 void nsQuoteList::Calc(nsQuoteNode* aNode) {
   if (aNode == FirstNode()) {
-    aNode->mDepthBefore = GetDepthBeforeFirstQuoteNode(mScope);
+    aNode->mDepthBefore = 0;
   } else {
     aNode->mDepthBefore = Prev(aNode)->DepthAfter();
   }

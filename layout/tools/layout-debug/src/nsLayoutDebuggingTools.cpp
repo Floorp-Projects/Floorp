@@ -255,7 +255,7 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpCounterManager() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
   if (PresShell* presShell = GetPresShell(mDocShell)) {
-    presShell->FrameConstructor()->GetContainStyleScopeManager().DumpCounters();
+    presShell->FrameConstructor()->CounterManager()->Dump();
   }
   return NS_OK;
 }

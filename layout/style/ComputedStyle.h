@@ -165,10 +165,6 @@ class ComputedStyle {
     return bool(Flags() & Flag::IS_IN_PSEUDO_ELEMENT_SUBTREE);
   }
 
-  bool SelfOrAncestorHasContainStyle() const {
-    return bool(Flags() & Flag::SELF_OR_ANCESTOR_HAS_CONTAIN_STYLE);
-  }
-
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?

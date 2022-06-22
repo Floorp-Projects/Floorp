@@ -12,12 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenConList.h"
 
-namespace mozilla {
-
-class ContainStyleScope;
-
-}  // namespace mozilla
-
 struct nsQuoteNode : public nsGenConNode {
   // open-quote, close-quote, no-open-quote, or no-close-quote
   const StyleContentType mType;
@@ -75,8 +69,6 @@ class nsQuoteList : public nsGenConList {
   }
 
  public:
-  explicit nsQuoteList(mozilla::ContainStyleScope* aScope) : mScope(aScope) {}
-
   // assign the correct |mDepthBefore| value to a node that has been inserted
   // Should be called immediately after calling |Insert|.
   void Calc(nsQuoteNode* aNode);
@@ -92,9 +84,6 @@ class nsQuoteList : public nsGenConList {
 #ifdef DEBUG
   void PrintChain();
 #endif
-
- private:
-  mozilla::ContainStyleScope* mScope;
 };
 
 #endif /* nsQuoteList_h___ */

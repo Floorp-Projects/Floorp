@@ -9,12 +9,10 @@
 #ifndef nsGenConList_h___
 #define nsGenConList_h___
 
-#include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "nsStyleStruct.h"
 #include "nsCSSPseudoElements.h"
 #include "nsTextNode.h"
-#include <functional>
 
 class nsGenConList;
 class nsIFrame;
@@ -96,13 +94,6 @@ class nsGenConList {
 
   // Return true if |aNode1| is after |aNode2|.
   static bool NodeAfter(const nsGenConNode* aNode1, const nsGenConNode* aNode2);
-
-  // Find the first element in the list for which the given comparator returns
-  // true. This does a binary search on the list contents.
-  nsGenConNode* BinarySearch(
-      const mozilla::FunctionRef<bool(nsGenConNode*)>& aIsAfter);
-
-  nsGenConNode* GetLast() { return mList.getLast(); }
 
   bool IsFirst(nsGenConNode* aNode) {
     MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
