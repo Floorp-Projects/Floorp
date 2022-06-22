@@ -58,20 +58,12 @@
 
 #include "SourceSurfaceRawData.h"
 
-#include "DrawEventRecorder.h"
-
-#include "Logging.h"
-
 #include "mozilla/CheckedInt.h"
-
-#include "mozilla/layers/TextureClient.h"
 
 #ifdef MOZ_ENABLE_FREETYPE
 #  include "ft2build.h"
 #  include FT_FREETYPE_H
 #endif
-#include "MainThreadUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
 #if defined(MOZ_LOGGING)

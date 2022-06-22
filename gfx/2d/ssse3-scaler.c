@@ -31,7 +31,6 @@
  */
 
 #include <stdlib.h>
-#include <mmintrin.h>
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <tmmintrin.h>

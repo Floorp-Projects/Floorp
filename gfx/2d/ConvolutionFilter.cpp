@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "2D.h"
 #include "ConvolutionFilter.h"
 #include "skia/src/core/SkBitmapFilter.h"
 #include "skia/src/core/SkConvolver.h"

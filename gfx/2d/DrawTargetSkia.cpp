@@ -10,7 +10,6 @@
 #include "FilterNodeSoftware.h"
 #include "HelpersSkia.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Vector.h"
 
@@ -26,7 +25,6 @@
 #include "Blur.h"
 #include "Logging.h"
 #include "Tools.h"
-#include "DataSurfaceHelpers.h"
 #include "PathHelpers.h"
 #include "PathSkia.h"
 #include "Swizzle.h"
