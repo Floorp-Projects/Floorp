@@ -19,10 +19,9 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/TraceLoggerAPI.h"
-#include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
 #include "vm/MutexIDs.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"

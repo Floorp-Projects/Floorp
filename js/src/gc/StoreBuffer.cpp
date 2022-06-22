@@ -9,8 +9,6 @@
 #include "mozilla/Assertions.h"
 
 #include "gc/Statistics.h"
-#include "vm/ArgumentsObject.h"
-#include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
 #include "vm/Runtime.h"
 
