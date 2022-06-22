@@ -3678,29 +3678,42 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
 
     // If current node is not a paragraph, wrap current node with new list
     // item element and move it into current list element.
-    RefPtr<Element> newListItemElement =
+    const CreateElementResult wrapContentInListItemElementResult =
         InsertContainerWithTransaction(*content, aListItemElementTagName);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (!newListItemElement) {
+    if (wrapContentInListItemElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
-      return EditActionResult(NS_ERROR_FAILURE);
+      return EditActionResult(wrapContentInListItemElementResult.unwrapErr());
     }
+    MOZ_ASSERT(wrapContentInListItemElementResult.GetNewNode());
+    nsresult rv = wrapContentInListItemElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return EditActionResult(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
     // If current node is not a block element, new list item should have
     // following inline nodes too.
     if (HTMLEditUtils::IsInlineElement(content)) {
-      prevListItem = newListItemElement;
+      prevListItem = wrapContentInListItemElementResult.GetNewNode();
     } else {
       prevListItem = nullptr;
     }
+    // MOZ_KnownLive(wrapContentInListItemElementResult.GetNewNode()): The
+    // result is grabbed by wrapContentInListItemElementResult.
     const MoveNodeResult moveListItemElementResult =
-        MoveNodeToEndWithTransaction(*newListItemElement, *curList);
+        MoveNodeToEndWithTransaction(
+            MOZ_KnownLive(*wrapContentInListItemElementResult.GetNewNode()),
+            *curList);
     if (moveListItemElementResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return EditActionResult(moveListItemElementResult.unwrapErr());
     }
-    nsresult rv = moveListItemElementResult.SuggestCaretPointTo(
+    rv = moveListItemElementResult.SuggestCaretPointTo(
         *this, {SuggestCaret::OnlyIfHasSuggestion,
                 SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
                 SuggestCaret::AndIgnoreTrivialError});
