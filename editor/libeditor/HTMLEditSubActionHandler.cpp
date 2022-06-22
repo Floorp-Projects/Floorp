@@ -1765,31 +1765,20 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
   // contains the word "text".  The user selects "text" and types return.
   // "Text" is deleted leaving an empty block.  We want to put in one br to
   // make block have a line.  Then code further below will put in a second br.)
+  RefPtr<Element> insertedPaddingBRElement;
   if (HTMLEditUtils::IsEmptyBlockElement(
           *editableBlockElement,
           {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
-    EditorDOMPoint endOfBlockParent;
-    endOfBlockParent.SetToEndOf(editableBlockElement);
-    const CreateElementResult insertBRElementResult =
-        InsertBRElement(WithTransaction::Yes, endOfBlockParent);
+    CreateElementResult insertBRElementResult = InsertBRElement(
+        WithTransaction::Yes, EditorDOMPoint::AtEndOf(*editableBlockElement));
     if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
       return EditActionIgnored(insertBRElementResult.unwrapErr());
     }
-    // XXX Is this intentional selection change?
-    nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-      return EditActionHandled(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    insertBRElementResult.IgnoreCaretPointSuggestion();
     MOZ_ASSERT(insertBRElementResult.GetNewNode());
+    insertedPaddingBRElement = insertBRElementResult.UnwrapNewNode();
   }
 
   RefPtr<Element> maybeNonEditableListItem =
@@ -1865,7 +1854,10 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction(
 
     // Paragraphs: special rules to look for <br>s
     const SplitNodeResult splitResult = HandleInsertParagraphInParagraph(
-        *editableBlockElement, firstRangeStartPoint, aEditingHost);
+        *editableBlockElement,
+        insertedPaddingBRElement ? EditorDOMPoint(insertedPaddingBRElement)
+                                 : atStartOfSelection,
+        aEditingHost);
     if (splitResult.isErr()) {
       NS_WARNING("HTMLEditor::HandleInsertParagraphInParagraph() failed");
       return EditActionResult(splitResult.unwrapErr());
