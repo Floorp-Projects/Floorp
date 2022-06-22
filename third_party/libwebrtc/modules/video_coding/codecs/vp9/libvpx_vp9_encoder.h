@@ -70,8 +70,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
 
   bool PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              absl::optional<int>* spatial_idx,
-                             const vpx_codec_cx_pkt& pkt,
-                             uint32_t timestamp);
+                             const vpx_codec_cx_pkt& pkt);
   void FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
                             const size_t pic_num,
                             const bool inter_layer_predicted,
