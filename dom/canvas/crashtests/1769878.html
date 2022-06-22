@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script id="w1">
+    self.onmessage = async () => {
+      try { self.close() } catch (e) {}
+      let a = new OffscreenCanvas(143, 178)
+      a.convertToBlob({ })
+    }
+    </script>
+<script>
+    window.addEventListener('load', async () => {
+      const blob = new Blob([document.querySelector('#w1').textContent], { type: "text/javascript" })
+      const worker = new Worker(window.URL.createObjectURL(blob))
+      worker.postMessage([], [])
+    })
+</script>
