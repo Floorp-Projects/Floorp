@@ -8,7 +8,6 @@
 
 #define PATH_MAX_TOSTRING(x) #x
 #define PATH_MAX_STRING(x) PATH_MAX_TOSTRING(x)
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -16,11 +15,9 @@
 #include <fstream>
 #include "platform.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <arpa/inet.h>
-#include <dlfcn.h>
 #include <elf.h>
 #include <fcntl.h>
 #if defined(GP_OS_linux) || defined(GP_OS_android)

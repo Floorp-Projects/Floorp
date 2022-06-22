@@ -10,11 +10,9 @@
  * Author: Kipp E.B. Hickman
  */
 
-#include "double-conversion/double-conversion.h"
+#include "double-conversion/double-to-string.h"
 #include "mozilla/AllocPolicy.h"
-#include "mozilla/Likely.h"
 #include "mozilla/Printf.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 

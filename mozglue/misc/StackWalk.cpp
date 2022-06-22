@@ -7,7 +7,6 @@
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
