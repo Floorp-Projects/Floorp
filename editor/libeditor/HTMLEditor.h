@@ -3897,9 +3897,10 @@ class HTMLEditor final : public EditorBase,
    *       tree.
    *
    * @param aSpecifiedStyle  Whether the class and style attributes should
-   *                         be preserved or discareded.
+   *                         be preserved or discarded.
+   * @return                 A suggest point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
                     SpecifiedStyle aSpecifiedStyle);
 

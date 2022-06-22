@@ -865,12 +865,23 @@ nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
 
   OwningNonNull<nsINode> parent = *aNode.GetParentNode();
   if (aNode.IsElement()) {
-    nsresult rv =
+    Result<EditorDOMPoint, nsresult> removeStyleResult =
         RemoveStyleInside(MOZ_KnownLive(*aNode.AsElement()), &aProperty,
                           aAttribute, SpecifiedStyle::Preserve);
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
-      return rv;
+      return removeStyleResult.unwrapErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        removeStyleResult.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(removeStyleResult.inspect());
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
     }
   }
 
@@ -1271,58 +1282,64 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToPutCaret);
     // MOZ_KnownLive(previousElementOfSplitPoint):
     // It's grabbed by splitResultAtStartOfNextNode.
-    nsresult rv = RemoveStyleInside(MOZ_KnownLive(*previousElementOfSplitPoint),
-                                    aProperty, aAttribute, aSpecifiedStyle);
-    if (NS_FAILED(rv)) {
+    Result<EditorDOMPoint, nsresult> removeStyleResult =
+        RemoveStyleInside(MOZ_KnownLive(*previousElementOfSplitPoint),
+                          aProperty, aAttribute, aSpecifiedStyle);
+    if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
-      return EditResult(rv);
+      return EditResult(removeStyleResult.unwrapErr());
     }
+    // We'll suggest caret position so that we don't need to update selection
+    // here.
   }
   return EditResult(pointToPutCaret);
 }
 
-nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
-                                       nsAtom* aAttribute,
-                                       SpecifiedStyle aSpecifiedStyle) {
+Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
+    Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
+    SpecifiedStyle aSpecifiedStyle) {
   // First, handle all descendants.
-  RefPtr<nsIContent> child = aElement.GetFirstChild();
-  while (child) {
-    // cache next sibling since we might remove child
-    // XXX Well, the next sibling is moved from `aElement`, shouldn't we skip
-    //     it here?
-    nsCOMPtr<nsIContent> nextSibling = child->GetNextSibling();
-    if (child->IsElement()) {
-      nsresult rv = RemoveStyleInside(MOZ_KnownLive(*child->AsElement()),
-                                      aProperty, aAttribute, aSpecifiedStyle);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
-        return rv;
-      }
+  AutoTArray<OwningNonNull<nsIContent>, 32> arrayOfChildContents;
+  HTMLEditor::GetChildNodesOf(aElement, arrayOfChildContents);
+  EditorDOMPoint pointToPutCaret;
+  for (const OwningNonNull<nsIContent>& child : arrayOfChildContents) {
+    if (!child->IsElement()) {
+      continue;
     }
-    child = ToRefPtr(std::move(nextSibling));
+    Result<EditorDOMPoint, nsresult> removeStyleResult =
+        RemoveStyleInside(MOZ_KnownLive(*child->AsElement()), aProperty,
+                          aAttribute, aSpecifiedStyle);
+    if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
+      NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
+      return removeStyleResult;
+    }
+    if (removeStyleResult.inspect().IsSet()) {
+      pointToPutCaret = removeStyleResult.unwrap();
+    }
   }
 
   // Next, remove the element or its attribute.
-  bool removeHTMLStyle = false;
-  if (aProperty) {
-    removeHTMLStyle =
-        // If the element is a presentation element of aProperty
-        aElement.NodeInfo()->NameAtom() == aProperty ||
-        // or an `<a>` element with `href` attribute
-        (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aElement)) ||
-        // or an `<a>` element with `name` attribute
-        (aProperty == nsGkAtoms::name &&
-         HTMLEditUtils::IsNamedAnchor(&aElement));
-  }
-  // XXX Why do we check if aElement is editable only when aProperty is
-  //     nullptr?
-  else if (EditorUtils::IsEditableContent(aElement, EditorType::HTML)) {
-    // or removing all styles and the element is a presentation element.
-    removeHTMLStyle = HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
-  }
+  auto ShouldRemoveHTMLStyle = [&]() {
+    if (aProperty) {
+      return
+          // If the element is a presentation element of aProperty
+          aElement.NodeInfo()->NameAtom() == aProperty ||
+          // or an `<a>` element with `href` attribute
+          (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aElement)) ||
+          // or an `<a>` element with `name` attribute
+          (aProperty == nsGkAtoms::name &&
+           HTMLEditUtils::IsNamedAnchor(&aElement));
+    }
+    // XXX Why do we check if aElement is editable only when aProperty is
+    //     nullptr?
+    if (EditorUtils::IsEditableContent(aElement, EditorType::HTML)) {
+      // or removing all styles and the element is a presentation element.
+      return HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
+    }
+    return false;
+  };
 
-  EditorDOMPoint pointToPutCaret;
-  if (removeHTMLStyle) {
+  if (ShouldRemoveHTMLStyle()) {
     // If aAttribute is nullptr, we want to remove any matching inline styles
     // entirely.
     if (!aAttribute) {
@@ -1340,50 +1357,41 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
           NS_WARNING(
               "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
               "failed");
-          return wrapWithSpanElementResult.unwrapErr();
+          return Err(wrapWithSpanElementResult.unwrapErr());
         }
         MOZ_ASSERT(wrapWithSpanElementResult.GetNewNode());
-        nsresult rv = wrapWithSpanElementResult.SuggestCaretPointTo(
-            *this, {SuggestCaret::OnlyIfHasSuggestion,
-                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                    SuggestCaret::AndIgnoreTrivialError});
-        if (NS_FAILED(rv)) {
-          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-          return rv;
-        }
-        NS_WARNING_ASSERTION(
-            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+        wrapWithSpanElementResult.MoveCaretPointTo(
+            pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         const RefPtr<Element> spanElement =
             wrapWithSpanElementResult.UnwrapNewNode();
-        rv = CloneAttributeWithTransaction(*nsGkAtoms::style, *spanElement,
-                                           aElement);
+        nsresult rv = CloneAttributeWithTransaction(*nsGkAtoms::style,
+                                                    *spanElement, aElement);
         if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "EditorBase::CloneAttributeWithTransaction(nsGkAtoms::style) "
               "failed");
-          return rv;
+          return Err(rv);
         }
         rv = CloneAttributeWithTransaction(*nsGkAtoms::_class, *spanElement,
                                            aElement);
         if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "EditorBase::CloneAttributeWithTransaction(nsGkAtoms::_class) "
               "failed");
-          return rv;
+          return Err(rv);
         }
       }
       Result<EditorDOMPoint, nsresult> unwrapElementResult =
           RemoveContainerWithTransaction(aElement);
       if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
         NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return unwrapElementResult.unwrapErr();
+        return unwrapElementResult.propagateErr();
       }
       if (AllowsTransactionsToChangeSelection() &&
           unwrapElementResult.inspect().IsSet()) {
@@ -1398,30 +1406,21 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
             RemoveContainerWithTransaction(aElement);
         if (MOZ_UNLIKELY(unwrapElementResult.isErr())) {
           NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-          return unwrapElementResult.unwrapErr();
+          return unwrapElementResult.propagateErr();
         }
-        if (AllowsTransactionsToChangeSelection() &&
-            unwrapElementResult.inspect().IsSet()) {
+        if (unwrapElementResult.inspect().IsSet()) {
           pointToPutCaret = unwrapElementResult.unwrap();
         }
       } else {
         nsresult rv = RemoveAttributeWithTransaction(aElement, *aAttribute);
         if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::RemoveAttributeWithTransaction() failed");
-          return rv;
+          return Err(rv);
         }
       }
-    }
-  }
-
-  if (pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-      return rv;
     }
   }
 
@@ -1434,7 +1433,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
                                                         aAttribute);
     if (elementHasSpecifiedCSSEquivalentStylesOrError.isErr()) {
       NS_WARNING("CSSEditUtils::HaveSpecifiedCSSEquivalentStyles() failed");
-      return elementHasSpecifiedCSSEquivalentStylesOrError.unwrapErr();
+      return elementHasSpecifiedCSSEquivalentStylesOrError.propagateErr();
     }
     if (elementHasSpecifiedCSSEquivalentStylesOrError.unwrap()) {
       if (nsStyledElement* styledElement =
@@ -1449,7 +1448,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
           NS_WARNING(
               "CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction() "
               "destroyed the editor");
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
@@ -1466,24 +1465,14 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
                          unwrapSpanOrFontElementResult.inspectErr() ==
                              NS_ERROR_EDITOR_DESTROYED)) {
           NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(
             unwrapSpanOrFontElementResult.isOk(),
             "HTMLEditor::RemoveContainerWithTransaction() failed, but ignored");
-        if (MOZ_LIKELY(unwrapSpanOrFontElementResult.isOk())) {
+        if (MOZ_LIKELY(unwrapSpanOrFontElementResult.isOk()) &&
+            unwrapSpanOrFontElementResult.inspect().IsSet()) {
           pointToPutCaret = unwrapSpanOrFontElementResult.unwrap();
-          if (AllowsTransactionsToChangeSelection() &&
-              pointToPutCaret.IsSet()) {
-            nsresult rv = CollapseSelectionTo(pointToPutCaret);
-            if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-              NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-              return NS_ERROR_EDITOR_DESTROYED;
-            }
-            NS_WARNING_ASSERTION(
-                NS_SUCCEEDED(rv),
-                "EditorBase::CollapseSelectionTo() failed, but ignored");
-          }
         }
       }
     }
@@ -1491,26 +1480,16 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
 
   if (aProperty != nsGkAtoms::font || aAttribute != nsGkAtoms::size ||
       !aElement.IsAnyOfHTMLElements(nsGkAtoms::big, nsGkAtoms::small)) {
-    return NS_OK;
+    return pointToPutCaret;
   }
 
   // Finally, remove aElement if it's a `<big>` or `<small>` element and
   // we're removing `<font size>`.
   Result<EditorDOMPoint, nsresult> unwrapBigOrSmallElementResult =
       RemoveContainerWithTransaction(aElement);
-  if (MOZ_UNLIKELY(unwrapBigOrSmallElementResult.isErr())) {
-    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-    return unwrapBigOrSmallElementResult.unwrapErr();
-  }
-  pointToPutCaret = unwrapBigOrSmallElementResult.unwrap();
-  if (!AllowsTransactionsToChangeSelection() || !pointToPutCaret.IsSet()) {
-    return NS_OK;
-  }
-  nsresult rv = CollapseSelectionTo(pointToPutCaret);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-
-  return rv;
+  NS_WARNING_ASSERTION(unwrapBigOrSmallElementResult.isOk(),
+                       "HTMLEditor::RemoveContainerWithTransaction() failed");
+  return unwrapBigOrSmallElementResult;
 }
 
 bool HTMLEditor::IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute) {
@@ -2273,14 +2252,18 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
 
         for (OwningNonNull<nsIContent>& content : arrayOfContents) {
           if (content->IsElement()) {
-            nsresult rv = RemoveStyleInside(
-                MOZ_KnownLive(*content->AsElement()),
-                MOZ_KnownLive(style.mProperty), MOZ_KnownLive(style.mAttribute),
-                SpecifiedStyle::Preserve);
-            if (NS_FAILED(rv)) {
+            Result<EditorDOMPoint, nsresult> removeStyleResult =
+                RemoveStyleInside(MOZ_KnownLive(*content->AsElement()),
+                                  MOZ_KnownLive(style.mProperty),
+                                  MOZ_KnownLive(style.mAttribute),
+                                  SpecifiedStyle::Preserve);
+            if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
               NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
-              return rv;
+              return removeStyleResult.unwrapErr();
             }
+            // There is AutoTransactionsConserveSelection instance here so that
+            // we don't need to update selection with removeStyleResult here.
+
             // If the element was removed from the DOM tree by
             // RemoveStyleInside, we need nothing to do for it anymore.
             if (!content->GetParentNode()) {
