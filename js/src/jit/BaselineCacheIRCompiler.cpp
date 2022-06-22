@@ -496,9 +496,9 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterShared(
     masm.storeICScriptInJSContext(scratch);
   }
 
-  masm.Push(Imm32(0));  // ActualArgc is 0
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.Push(callee);
-  masm.PushFrameDescriptor(FrameType::BaselineStub);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, /* argc = */ 0);
 
   // Handle arguments underflow.
   Label noUnderflow;
@@ -1579,13 +1579,13 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetterShared(
   masm.Push(val);
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(receiver)));
 
-  masm.Push(Imm32(1));  // ActualArgc
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
 
   // Push callee.
   masm.Push(callee);
 
   // Push frame descriptor.
-  masm.PushFrameDescriptor(FrameType::BaselineStub);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, /* argc = */ 1);
 
   if (isInlined) {
     // Store icScript in the context.
@@ -2901,9 +2901,9 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
 
   // Note that we use Push, not push, so that callJit will align the stack
   // properly on ARM.
-  masm.Push(argcReg);
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleeReg, isConstructing);
-  masm.PushFrameDescriptor(FrameType::BaselineStub);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
   // Handle arguments underflow.
   Label noUnderflow;
@@ -3009,9 +3009,9 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
 
   // Note that we use Push, not push, so that callJit will align the stack
   // properly on ARM.
-  masm.Push(argcReg);
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleeReg, isConstructing);
-  masm.PushFrameDescriptor(FrameType::BaselineStub);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
   // Handle arguments underflow.
   Label noUnderflow;
@@ -3184,9 +3184,9 @@ bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
     masm.pushValue(UndefinedValue());
   }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(iter)));
-  masm.Push(Imm32(0));  // argc is 0
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.Push(callee);
-  masm.PushFrameDescriptor(FrameType::BaselineStub);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, /* argc = */ 0);
 
   masm.callJit(code);
 

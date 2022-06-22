@@ -993,8 +993,8 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   // rectifier frame, save the framePushed values here for later use.
   size_t endOfBaselineStubArgs = framePushed();
 
-  // Push actual argc
-  if (!writeWord(actualArgc, "ActualArgc")) {
+  // Push unused_ field.
+  if (!writeWord(JitFrameLayout::UnusedValue, "Unused")) {
     return false;
   }
 
@@ -1009,7 +1009,8 @@ bool BaselineStackBuilder::buildStubFrame(uint32_t frameSize,
   setNextCallee(calleeFun);
 
   // Push BaselineStub frame descriptor
-  size_t baselineStubFrameDescr = MakeFrameDescriptor(FrameType::BaselineStub);
+  size_t baselineStubFrameDescr =
+      MakeFrameDescriptorForJitCall(FrameType::BaselineStub, actualArgc);
   if (!writeWord(baselineStubFrameDescr, "Descriptor")) {
     return false;
   }
@@ -1111,8 +1112,8 @@ bool BaselineStackBuilder::buildRectifierFrame(uint32_t actualArgc,
   memcpy(pointerAtStackOffset<uint8_t>(0).get(), stubArgsEnd.get(),
          (actualArgc + 1) * sizeof(Value));
 
-  // Push actualArgc
-  if (!writeWord(actualArgc, "ActualArgc")) {
+  // Push unused_ field.
+  if (!writeWord(JitFrameLayout::UnusedValue, "Unused")) {
     return false;
   }
 
@@ -1122,7 +1123,8 @@ bool BaselineStackBuilder::buildRectifierFrame(uint32_t actualArgc,
   }
 
   // Push rectifier frame descriptor
-  size_t rectifierFrameDescr = MakeFrameDescriptor(FrameType::Rectifier);
+  size_t rectifierFrameDescr =
+      MakeFrameDescriptorForJitCall(FrameType::Rectifier, actualArgc);
   if (!writeWord(rectifierFrameDescr, "Descriptor")) {
     return false;
   }

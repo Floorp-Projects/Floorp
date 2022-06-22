@@ -42,7 +42,8 @@ struct VMFunctionData;
 // header, minimally, contains a returnAddress word and a descriptor word (See
 // CommonFrameLayout). The descriptor describes the type of the older (caller)
 // frame, whereas the returnAddress describes the address the newer (callee)
-// frame will return to.
+// frame will return to. For JitFrameLayout, the descriptor also stores the
+// number of arguments passed from the caller to the callee frame.
 //
 // Special Frames:
 //
@@ -68,9 +69,12 @@ struct VMFunctionData;
 //
 // A frame descriptor word has the following data:
 //
-//    high bits: [ has-cached-saved-frame bit |
+//    high bits: [ numActualArgs |
+//                 has-cached-saved-frame bit |
 //    low bits:    frame type ]
 //
+// * numActualArgs: for JitFrameLayout, the number of arguments passed by the
+//   caller.
 // * Has-cache-saved-frame bit: Used to power the LiveSavedFrameCache
 //   optimization. See the comment in Activation.h
 // * Frame Type: BaselineJS, Exit, etc. (jit::FrameType)
@@ -79,6 +83,8 @@ struct VMFunctionData;
 static const uintptr_t FRAMETYPE_BITS = 4;
 static const uintptr_t FRAMETYPE_MASK = (1 << FRAMETYPE_BITS) - 1;
 static const uintptr_t HASCACHEDSAVEDFRAME_BIT = 1 << FRAMETYPE_BITS;
+static const uintptr_t NUMACTUALARGS_SHIFT =
+    FRAMETYPE_BITS + 1 /* HASCACHEDSAVEDFRAME_BIT */;
 
 struct BaselineBailoutInfo;
 
@@ -171,6 +177,17 @@ static inline uint32_t MakeFrameDescriptor(FrameType type) {
   return uint32_t(type);
 }
 
+// For JitFrameLayout, the descriptor also stores the number of arguments passed
+// by the caller. Note that |type| is the type of the *older* frame and |argc|
+// is the number of arguments passed to the *newer* frame.
+static inline uint32_t MakeFrameDescriptorForJitCall(FrameType type,
+                                                     uint32_t argc) {
+  uint32_t descriptor = (argc << NUMACTUALARGS_SHIFT) | uint32_t(type);
+  MOZ_ASSERT((descriptor >> NUMACTUALARGS_SHIFT) == argc,
+             "argc must fit in descriptor");
+  return descriptor;
+}
+
 // Returns the JSScript associated with the topmost JIT frame.
 JSScript* GetTopJitJSScript(JSContext* cx);
 
@@ -194,11 +211,11 @@ class CommonFrameLayout {
   // return address is pushed).
   static constexpr size_t FramePointerOffset = sizeof(void*);
 
-  static size_t offsetOfDescriptor() {
+  static constexpr size_t offsetOfDescriptor() {
     return offsetof(CommonFrameLayout, descriptor_);
   }
   uintptr_t descriptor() const { return descriptor_; }
-  static size_t offsetOfReturnAddress() {
+  static constexpr size_t offsetOfReturnAddress() {
     return offsetof(CommonFrameLayout, returnAddress_);
   }
   FrameType prevType() const { return FrameType(descriptor_ & FRAMETYPE_MASK); }
@@ -222,19 +239,24 @@ class CommonFrameLayout {
 
 class JitFrameLayout : public CommonFrameLayout {
   CalleeToken calleeToken_;
-  uintptr_t numActualArgs_;
+
+ protected:  // Silence Clang warning about unused private field.
+  uintptr_t unused_;
 
  public:
-  CalleeToken calleeToken() const { return calleeToken_; }
+  // TODO: removed in the next patch.
+  static constexpr uintptr_t UnusedValue = 0xbad0bad1;
+
+  CalleeToken calleeToken() const {
+    MOZ_ASSERT(unused_ == UnusedValue);
+    return calleeToken_;
+  }
   void replaceCalleeToken(CalleeToken calleeToken) {
     calleeToken_ = calleeToken;
   }
 
   static constexpr size_t offsetOfCalleeToken() {
     return offsetof(JitFrameLayout, calleeToken_);
-  }
-  static constexpr size_t offsetOfNumActualArgs() {
-    return offsetof(JitFrameLayout, numActualArgs_);
   }
   static constexpr size_t offsetOfThis() { return sizeof(JitFrameLayout); }
   static constexpr size_t offsetOfActualArgs() {
@@ -252,7 +274,10 @@ class JitFrameLayout : public CommonFrameLayout {
     MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
     return (JS::Value*)(this + 1);
   }
-  uintptr_t numActualArgs() const { return numActualArgs_; }
+  uintptr_t numActualArgs() const {
+    MOZ_ASSERT(unused_ == UnusedValue);
+    return descriptor() >> NUMACTUALARGS_SHIFT;
+  }
 
   // For IonJS frames: the distance from the JitFrameLayout to the first local
   // slot. The caller's frame pointer is stored in this space. 32-bit platforms

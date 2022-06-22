@@ -168,20 +168,22 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   }
   masm.checkStackAlignment();
 
-  // Push the number of actual arguments and the calleeToken.
+  // Push the calleeToken and the frame descriptor.
   // The result address is used to store the actual number of arguments
   // without adding an argument to EnterJIT.
   {
     vixl::UseScratchRegisterScope temps(&masm.asVIXL());
     MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
     temps.Exclude(ScratchReg64);
-    masm.unboxInt32(Address(reg_vp, 0x0), ScratchReg64.asUnsized());
-    masm.push(ScratchReg64.asUnsized(), reg_callee);
-  }
-  masm.checkStackAlignment();
+    Register scratch = ScratchReg64.asUnsized();
+    masm.movePtr(ImmWord(JitFrameLayout::UnusedValue), scratch);
+    masm.push(scratch, reg_callee);
+    masm.checkStackAlignment();
 
-  // Push the descriptor.
-  masm.PushFrameDescriptor(FrameType::CppToJSJit);
+    // Push the descriptor.
+    masm.unboxInt32(Address(reg_vp, 0x0), scratch);
+    masm.PushFrameDescriptorForJitCall(FrameType::CppToJSJit, scratch, scratch);
+  }
 
   Label osrReturnPoint;
   {
@@ -502,9 +504,9 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
     masm.B(&copyLoopTop, Assembler::NotSigned);
   }
 
-  masm.push(r0,   // Number of actual arguments.
-            r1);  // Callee token.
-  masm.pushFrameDescriptor(FrameType::Rectifier);
+  masm.push(ImmWord(JitFrameLayout::UnusedValue));
+  masm.push(r1);  // Callee token.
+  masm.pushFrameDescriptorForJitCall(FrameType::Rectifier, r0, r0);
 
   // Call the target function.
   switch (kind) {
