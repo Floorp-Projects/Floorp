@@ -24,6 +24,7 @@ pw_properties * pw_properties_new_string(const char *args);
 // stream.h
 void pw_stream_add_listener(pw_stream *stream, spa_hook *listener, const pw_stream_events *events, void *data);
 int pw_stream_connect(pw_stream *stream, enum pw_direction direction, uint32_t target_id, enum pw_stream_flags flags, const spa_pod **params, uint32_t n_params);
+int pw_stream_disconnect(pw_stream *stream);
 pw_buffer *pw_stream_dequeue_buffer(pw_stream *stream);
 void pw_stream_destroy(pw_stream *stream);
 pw_stream * pw_stream_new(pw_core *core, const char *name, pw_properties *props);

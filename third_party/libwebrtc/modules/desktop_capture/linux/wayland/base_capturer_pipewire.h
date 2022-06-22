@@ -105,6 +105,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   guint session_request_signal_id_ = 0;
   guint sources_request_signal_id_ = 0;
   guint start_request_signal_id_ = 0;
+  guint session_closed_signal_id_ = 0;
 
   int64_t modifier_;
   DesktopSize video_size_;
@@ -169,6 +170,13 @@ class BaseCapturerPipeWire : public DesktopCapturer {
                                              const gchar* signal_name,
                                              GVariant* parameters,
                                              gpointer user_data);
+  static void OnSessionClosedSignal(GDBusConnection* connection,
+                                    const gchar* sender_name,
+                                    const gchar* object_path,
+                                    const gchar* interface_name,
+                                    const gchar* signal_name,
+                                    GVariant* parameters,
+                                    gpointer user_data);
 
   void SourcesRequest();
   static void OnSourcesRequested(GDBusProxy* proxy,
