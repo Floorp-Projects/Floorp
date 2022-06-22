@@ -7,7 +7,7 @@ Transform the signing task into an actual task description.
 
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from taskgraph.util.treeherder import join_symbol
+from gecko_taskgraph.util.treeherder import join_symbol
 
 transforms = TransformSequence()
 

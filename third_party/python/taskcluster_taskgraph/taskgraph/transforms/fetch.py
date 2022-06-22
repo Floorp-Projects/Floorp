@@ -6,18 +6,31 @@
 # it as task artifacts.
 
 
+import attr
+
 import os
 import re
 
-import attr
-import taskgraph
-from taskgraph.util.treeherder import join_symbol
-from voluptuous import Extra, Optional, Required
+from voluptuous import (
+    Optional,
+    Required,
+    Extra,
+)
 
-from ..util import path
-from ..util.cached_tasks import add_optimization
+import taskgraph
+
+from .base import (
+    TransformSequence,
+)
+from ..util.cached_tasks import (
+    add_optimization,
+)
 from ..util.schema import Schema, validate_schema
-from .base import TransformSequence
+from ..util.treeherder import (
+    join_symbol,
+)
+from ..util import path
+
 
 CACHE_TYPE = "content.v1"
 
