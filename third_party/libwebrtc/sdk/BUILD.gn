@@ -1326,6 +1326,7 @@ if (is_ios || is_mac) {
           ":audio_objc",
           ":base_objc",
           ":default_codec_factory_objc",
+          ":metal_objc",
           ":native_api",
           ":native_video",
           ":peerconnectionfactory_base_objc",
