@@ -7,9 +7,12 @@ with Files("**"):
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-EXTRA_COMPONENTS += [
-    "MacTouchBar.js",
-    "MacTouchBar.manifest",
+EXTRA_JS_MODULES += [
+    "MacTouchBar.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]
 
 SPHINX_TREES["/browser/touchbar"] = "docs"
