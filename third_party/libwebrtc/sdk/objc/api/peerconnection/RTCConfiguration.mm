@@ -68,7 +68,7 @@
 - (instancetype)init {
   // Copy defaults.
   webrtc::PeerConnectionInterface::RTCConfiguration config;
-  config.sdp_semantics = webrtc::SdpSemantics::kNotSpecified;
+  config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   return [self initWithNativeConfiguration:config];
 }
 
@@ -525,8 +525,9 @@
       return webrtc::SdpSemantics::kPlanB_DEPRECATED;
     case RTCSdpSemanticsUnifiedPlan:
       return webrtc::SdpSemantics::kUnifiedPlan;
-    case RTCSdpSemanticsNotSpecified:
-      return webrtc::SdpSemantics::kNotSpecified;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      return webrtc::SdpSemantics::kUnifiedPlan;
   }
 }
 
@@ -536,8 +537,9 @@
       return RTCSdpSemanticsPlanB;
     case webrtc::SdpSemantics::kUnifiedPlan:
       return RTCSdpSemanticsUnifiedPlan;
-    case webrtc::SdpSemantics::kNotSpecified:
-      return RTCSdpSemanticsNotSpecified;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      return RTCSdpSemanticsUnifiedPlan;
   }
 }
 
@@ -547,8 +549,6 @@
       return @"PLAN_B";
     case RTCSdpSemanticsUnifiedPlan:
       return @"UNIFIED_PLAN";
-    case RTCSdpSemanticsNotSpecified:
-      return @"NOT_SPECIFIED";
   }
 }
 
