@@ -13498,10 +13498,7 @@
   mirror: always
 
 # Whether we should use the default accent color or the theme-provided one.
-#
-# TODO(emilio): This should probably do the right thing in most other
-# platforms, but stick to the standard colors on those.
-- name: widget.non-native-theme.use-theme-accent
+- name: widget.use-theme-accent
   type: RelaxedAtomicBool
 #if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX) || defined(ANDROID)
   value: true
