@@ -13758,6 +13758,12 @@
   value: true
   mirror: always
 
+# Whether we allow accessing the UWP system color pallete.
+- name: widget.windows.uwp-system-colors.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
   type: bool
   value: false

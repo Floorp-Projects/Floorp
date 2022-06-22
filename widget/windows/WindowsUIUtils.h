@@ -8,10 +8,16 @@
 
 #include "nsIWindowsUIUtils.h"
 #include "nsString.h"
+#include "nsColor.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 
 using SharePromise =
     mozilla::MozPromise<bool, nsresult, /* IsExclusive */ true>;
+
+namespace mozilla {
+enum class ColorScheme : uint8_t;
+}
 
 class WindowsUIUtils final : public nsIWindowsUIUtils {
  public:
@@ -25,6 +31,12 @@ class WindowsUIUtils final : public nsIWindowsUIUtils {
 
   static void UpdateInTabletMode();
   static bool GetInTabletMode();
+
+  // Gets the system accent color, or one of the darker / lighter variants
+  // (darker = -1/2/3, lighter=+1/2/3, values outside of that range are
+  // disallowed).
+  static mozilla::Maybe<nscolor> GetAccentColor(int aTone = 0);
+  static mozilla::Maybe<nscolor> GetSystemColor(mozilla::ColorScheme, int);
 
   // Use LookAndFeel for a cached getter.
   static bool ComputeOverlayScrollbars();

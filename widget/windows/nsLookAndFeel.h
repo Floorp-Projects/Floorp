@@ -58,22 +58,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
 
  private:
-  /**
-   * Fetches the Windows accent color from the Windows settings if
-   * the accent color is set to apply to the title bar, otherwise
-   * returns an error code.
-   */
-  nsresult GetAccentColor(nscolor& aColor);
-
-  /**
-   * If the Windows accent color from the Windows settings is set
-   * to apply to the title bar, this computes the color that should
-   * be used for text that is to be written over a background that has
-   * the accent color.  Otherwise, (if the accent color should not
-   * apply to the title bar) this returns an error code.
-   */
-  nsresult GetAccentColorText(nscolor& aColor);
-
   nscolor GetColorForSysColorIndex(int index);
 
   LookAndFeelFont GetLookAndFeelFontInternal(const LOGFONTW& aLogFont,
@@ -82,20 +66,18 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   LookAndFeelFont GetLookAndFeelFont(LookAndFeel::FontID anID);
 
   // Cached colors and flags indicating success in their retrieval.
-  nscolor mColorMenuHoverText;
-  bool mHasColorMenuHoverText;
-  nscolor mColorAccent;
-  bool mHasColorAccent;
-  nscolor mColorAccentText;
-  bool mHasColorAccentText;
-  nscolor mColorMediaText;
-  bool mHasColorMediaText;
-  nscolor mColorCommunicationsText;
-  bool mHasColorCommunicationsText;
+  mozilla::Maybe<nscolor> mColorMenuHoverText;
+  mozilla::Maybe<nscolor> mColorAccent;
+  mozilla::Maybe<nscolor> mColorAccentText;
+  mozilla::Maybe<nscolor> mColorMediaText;
+  mozilla::Maybe<nscolor> mColorCommunicationsText;
+
+  mozilla::Maybe<nscolor> mDarkHighlight;
+  mozilla::Maybe<nscolor> mDarkHighlightText;
 
   nscolor mSysColorTable[SYS_COLOR_COUNT];
 
-  bool mInitialized;
+  bool mInitialized = false;
 
   void EnsureInit();
 
