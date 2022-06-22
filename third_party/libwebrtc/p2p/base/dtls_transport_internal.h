@@ -25,7 +25,6 @@
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "rtc_base/callback_list.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/ssl_stream_adapter.h"
@@ -47,6 +46,9 @@ enum PacketFlags {
 class DtlsTransportInternal : public rtc::PacketTransportInternal {
  public:
   ~DtlsTransportInternal() override;
+
+  DtlsTransportInternal(const DtlsTransportInternal&) = delete;
+  DtlsTransportInternal& operator=(const DtlsTransportInternal&) = delete;
 
   virtual webrtc::DtlsTransportState dtls_state() const = 0;
 
@@ -135,7 +137,6 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
   DtlsTransportInternal();
 
  private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(DtlsTransportInternal);
   webrtc::CallbackList<const rtc::SSLHandshakeError>
       dtls_handshake_error_callback_list_;
   webrtc::CallbackList<DtlsTransportInternal*, const webrtc::DtlsTransportState>

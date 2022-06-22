@@ -51,7 +51,6 @@
 #include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/fec_controller_default.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -208,6 +207,9 @@ class Call final : public webrtc::Call,
        rtc::scoped_refptr<SharedModuleThread> module_process_thread,
        TaskQueueFactory* task_queue_factory);
   ~Call() override;
+
+  Call(const Call&) = delete;
+  Call& operator=(const Call&) = delete;
 
   // Implements webrtc::Call.
   PacketReceiver* Receiver() override;
@@ -469,8 +471,6 @@ class Call final : public webrtc::Call,
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sent_packet_sequence_checker_;
   absl::optional<rtc::SentPacket> last_sent_packet_
       RTC_GUARDED_BY(sent_packet_sequence_checker_);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(Call);
 };
 }  // namespace internal
 
