@@ -2892,7 +2892,7 @@ class SearchService {
       info.defaultSearchEngineData.loadPath
     );
     Glean.searchEngineDefault.submissionUrl.set(
-      info.defaultSearchEngineData.submissionURL
+      info.defaultSearchEngineData.submissionURL ?? "blank:"
     );
     Glean.searchEngineDefault.verified.set(info.defaultSearchEngineData.origin);
 
@@ -2908,7 +2908,7 @@ class SearchService {
         info.defaultPrivateSearchEngineData.loadPath
       );
       Glean.searchEnginePrivate.submissionUrl.set(
-        info.defaultPrivateSearchEngineData.submissionURL
+        info.defaultPrivateSearchEngineData.submissionURL ?? "blank:"
       );
       Glean.searchEnginePrivate.verified.set(
         info.defaultPrivateSearchEngineData.origin
