@@ -169,3 +169,35 @@ async function installAndStartContentScriptExtension() {
 
   return extension;
 }
+
+/**
+ * Return the text content for a given line in the Source Tree.
+ *
+ * @param {Object} dbg
+ * @param {Number} index
+ *        Line number in the source tree
+ */
+function getSourceTreeLabel(dbg, index) {
+  return (
+    findElement(dbg, "sourceNode", index)
+      .textContent.trim()
+      // There is some special whitespace character which aren't removed by trim()
+      .replace(/^[\s\u200b]*/g, "")
+  );
+}
+
+/**
+ * Find and assert the source tree node with the specified text
+ * exists on the source tree.
+ *
+ * @param {Object} dbg
+ * @param {String} text The node text displayed
+ */
+async function assertSourceTreeNode(dbg, text) {
+  let node = null;
+  await waitUntil(() => {
+    node = findSourceNodeWithText(dbg, text);
+    return !!node;
+  });
+  ok(!!node, `Source tree node with text "${text}" exists`);
+}
