@@ -61,6 +61,10 @@ class RtcEventLogEncoderTest
       case RtcEventLog::EncodingType::NewFormat:
         encoder_ = std::make_unique<RtcEventLogEncoderNewFormat>();
         break;
+      case RtcEventLog::EncodingType::ProtoFree:
+        // TODO(terelius): Enable test once the format has been wired up.
+        RTC_CHECK_NOTREACHED();
+        break;
     }
     encoded_ =
         encoder_->EncodeLogStart(rtc::TimeMillis(), rtc::TimeUTCMillis());
@@ -1284,6 +1288,10 @@ class RtcEventLogEncoderSimpleTest
         break;
       case RtcEventLog::EncodingType::NewFormat:
         encoder_ = std::make_unique<RtcEventLogEncoderNewFormat>();
+        break;
+      case RtcEventLog::EncodingType::ProtoFree:
+        // TODO(terelius): Enable test once the format has been wired up.
+        RTC_CHECK_NOTREACHED();
         break;
     }
     encoded_ =

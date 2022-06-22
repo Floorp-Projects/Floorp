@@ -239,31 +239,6 @@ struct LoggedRtcpPacketBye {
   rtcp::Bye bye;
 };
 
-struct LoggedStartEvent {
-  explicit LoggedStartEvent(Timestamp timestamp)
-      : LoggedStartEvent(timestamp, timestamp) {}
-
-  LoggedStartEvent(Timestamp timestamp, Timestamp utc_start_time)
-      : timestamp(timestamp), utc_start_time(utc_start_time) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp utc_time() const { return utc_start_time; }
-
-  Timestamp timestamp;
-  Timestamp utc_start_time;
-};
-
-struct LoggedStopEvent {
-  explicit LoggedStopEvent(Timestamp timestamp) : timestamp(timestamp) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp;
-};
-
 struct InferredRouteChangeEvent {
   int64_t log_time_ms() const { return log_time.ms(); }
   int64_t log_time_us() const { return log_time.us(); }

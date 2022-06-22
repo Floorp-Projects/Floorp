@@ -18,6 +18,7 @@ if (is_android) {
 group("logging") {
   deps = [
     ":rtc_event_audio",
+    ":rtc_event_begin_end",
     ":rtc_event_bwe",
     ":rtc_event_log_impl_encoder",
     ":rtc_event_pacing",
@@ -48,6 +49,7 @@ rtc_library("rtc_event_field") {
     ":rtc_event_number_encodings",
     "../api:array_view",
     "../api/rtc_event_log",
+    "../api/units:timestamp",
     "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:logging",
@@ -78,7 +80,7 @@ rtc_library("rtc_event_pacing") {
   ]
 
   deps = [
-    "../api:scoped_refptr",
+    ":rtc_event_field",
     "../api/rtc_event_log",
     "../api/units:timestamp",
   ]
@@ -99,13 +101,28 @@ rtc_library("rtc_event_audio") {
 
   deps = [
     ":rtc_stream_config",
-    "../api:scoped_refptr",
     "../api/rtc_event_log",
     "../api/units:timestamp",
     "../modules/audio_coding:audio_network_adaptor_config",
     "../rtc_base:checks",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+}
+
+rtc_library("rtc_event_begin_end") {
+  sources = [
+    "rtc_event_log/events/rtc_event_begin_log.cc",
+    "rtc_event_log/events/rtc_event_begin_log.h",
+    "rtc_event_log/events/rtc_event_end_log.cc",
+    "rtc_event_log/events/rtc_event_end_log.h",
+  ]
+  deps = [
+    ":rtc_event_field",
+    "../api:array_view",
+    "../api/rtc_event_log",
+    "../api/units:timestamp",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("rtc_event_bwe") {
@@ -127,7 +144,6 @@ rtc_library("rtc_event_bwe") {
 
   deps = [
     "../api:network_state_predictor_api",
-    "../api:scoped_refptr",
     "../api/rtc_event_log",
     "../api/units:data_rate",
     "../api/units:timestamp",
@@ -190,7 +206,6 @@ rtc_library("rtc_event_rtp_rtcp") {
 
   deps = [
     "../api:array_view",
-    "../api:scoped_refptr",
     "../api/rtc_event_log",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:checks",
@@ -209,7 +224,6 @@ rtc_library("rtc_event_video") {
 
   deps = [
     ":rtc_stream_config",
-    "../api:scoped_refptr",
     "../api/rtc_event_log",
     "../api/units:timestamp",
     "../rtc_base:checks",
@@ -275,6 +289,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     deps += [
       ":ice_log",
       ":rtc_event_audio",
+      ":rtc_event_begin_end",
       ":rtc_event_bwe",
       ":rtc_event_frame_events",
       ":rtc_event_generic_packet_events",
@@ -376,6 +391,7 @@ if (rtc_enable_protobuf) {
     deps = [
       ":ice_log",
       ":rtc_event_audio",
+      ":rtc_event_begin_end",
       ":rtc_event_bwe",
       ":rtc_event_frame_events",
       ":rtc_event_generic_packet_events",
