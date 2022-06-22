@@ -248,17 +248,21 @@ class StyleEditorUI extends EventEmitter {
 
     const eventListenersConfig = { signal: this.#uiAbortController.signal };
 
-    this.#root.querySelector(".style-editor-newButton").addEventListener(
-      "click",
-      async () => {
-        const stylesheetsFront = await this.currentTarget.getFront(
-          "stylesheets"
-        );
-        stylesheetsFront.addStyleSheet(null);
-        this.#clearFilterInput();
-      },
-      eventListenersConfig
-    );
+    // Add click event on the "new stylesheet" button in the toolbar and on the
+    // "append a new stylesheet" link (visible when there are no stylesheets).
+    for (const el of this.#root.querySelectorAll(".style-editor-newButton")) {
+      el.addEventListener(
+        "click",
+        async () => {
+          const stylesheetsFront = await this.currentTarget.getFront(
+            "stylesheets"
+          );
+          stylesheetsFront.addStyleSheet(null);
+          this.#clearFilterInput();
+        },
+        eventListenersConfig
+      );
+    }
 
     this.#root.querySelector(".style-editor-importButton").addEventListener(
       "click",
