@@ -470,12 +470,10 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.movq(rsp, FramePointer);
 
   // Load argc.
-  constexpr size_t FrameOffset = sizeof(void*);  // Frame pointer.
-  constexpr size_t NargsOffset =
-      FrameOffset + RectifierFrameLayout::offsetOfNumActualArgs();
-  masm.loadPtr(Address(rsp, NargsOffset), r8);
+  masm.loadNumActualArgs(FramePointer, r8);
 
   // Load |nformals| into %rcx.
+  constexpr size_t FrameOffset = sizeof(void*);  // Frame pointer.
   constexpr size_t TokenOffset =
       FrameOffset + RectifierFrameLayout::offsetOfCalleeToken();
   masm.loadPtr(Address(rsp, TokenOffset), rax);

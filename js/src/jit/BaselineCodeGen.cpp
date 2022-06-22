@@ -4241,8 +4241,7 @@ bool BaselineCodeGen<Handler>::emit_NewTarget() {
   {
     Register argvLen = R0.scratchReg();
     Register nformals = R1.scratchReg();
-    Address actualArgs(FramePointer, BaselineFrame::offsetOfNumActualArgs());
-    masm.loadPtr(actualArgs, argvLen);
+    masm.loadNumActualArgs(FramePointer, argvLen);
 
     // If argvLen < nformals, set argvlen := nformals.
     loadNumFormalArguments(nformals);

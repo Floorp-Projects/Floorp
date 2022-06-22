@@ -11737,10 +11737,7 @@ void CodeGenerator::visitFrameArgumentsSlice(LFrameArgumentsSlice* lir) {
   Register output = ToRegister(lir->output());
 
 #ifdef DEBUG
-  Address numActualArgs(masm.getStackPointer(),
-                        frameSize() + JitFrameLayout::offsetOfNumActualArgs());
-  masm.loadPtr(numActualArgs, temp);
-
+  masm.loadNumActualArgs(FramePointer, temp);
   emitAssertArgumentsSliceBounds(RegisterOrInt32(begin), RegisterOrInt32(count),
                                  temp);
 #endif
@@ -12124,10 +12121,7 @@ void CodeGenerator::visitIteratorEnd(LIteratorEnd* lir) {
 void CodeGenerator::visitArgumentsLength(LArgumentsLength* lir) {
   // read number of actual arguments from the JS frame.
   Register argc = ToRegister(lir->output());
-  Address ptr(masm.getStackPointer(),
-              frameSize() + JitFrameLayout::offsetOfNumActualArgs());
-
-  masm.loadPtr(ptr, argc);
+  masm.loadNumActualArgs(FramePointer, argc);
 }
 
 void CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir) {
@@ -15730,10 +15724,7 @@ void CodeGenerator::visitNewTarget(LNewTarget* ins) {
                      Imm32(CalleeToken_FunctionConstructing), &notConstructing);
 
   Register argvLen = output.scratchReg();
-
-  Address actualArgsPtr(masm.getStackPointer(),
-                        frameSize() + JitFrameLayout::offsetOfNumActualArgs());
-  masm.loadPtr(actualArgsPtr, argvLen);
+  masm.loadNumActualArgs(FramePointer, argvLen);
 
   Label useNFormals;
 

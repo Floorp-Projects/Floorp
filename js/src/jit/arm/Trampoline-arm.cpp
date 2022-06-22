@@ -441,13 +441,11 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   masm.push(FramePointer);  // Padding.
 
   // Copy number of actual arguments into r0 and r8.
-  constexpr size_t FrameOffset = 2 * sizeof(void*);  // Frame pointer + padding.
-  constexpr size_t NargsOffset =
-      FrameOffset + RectifierFrameLayout::offsetOfNumActualArgs();
-  masm.ma_ldr(DTRAddr(sp, DtrOffImm(NargsOffset)), r0);
+  masm.loadNumActualArgs(FramePointer, r0);
   masm.mov(r0, r8);
 
   // Load the number of |undefined|s to push into r6.
+  constexpr size_t FrameOffset = 2 * sizeof(void*);  // Frame pointer + padding.
   constexpr size_t TokenOffset =
       FrameOffset + RectifierFrameLayout::offsetOfCalleeToken();
   masm.ma_ldr(DTRAddr(sp, DtrOffImm(TokenOffset)), r1);
