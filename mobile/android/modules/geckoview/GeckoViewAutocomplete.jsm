@@ -48,11 +48,11 @@ class LoginEntry {
     timePasswordChanged,
     timesUsed,
   }) {
-    this.origin = origin ?? null;
+    this.origin = origin ?? "";
     this.formActionOrigin = formActionOrigin ?? null;
     this.httpRealm = httpRealm ?? null;
-    this.username = username ?? null;
-    this.password = password ?? null;
+    this.username = username ?? "";
+    this.password = password ?? "";
 
     // Metadata.
     this.guid = guid ?? null;
@@ -132,19 +132,19 @@ class Address {
     timesUsed,
     version,
   }) {
-    this.name = name ?? null;
-    this.givenName = givenName ?? null;
-    this.additionalName = additionalName ?? null;
-    this.familyName = familyName ?? null;
-    this.organization = organization ?? null;
-    this.streetAddress = streetAddress ?? null;
-    this.addressLevel1 = addressLevel1 ?? null;
-    this.addressLevel2 = addressLevel2 ?? null;
-    this.addressLevel3 = addressLevel3 ?? null;
-    this.postalCode = postalCode ?? null;
-    this.country = country ?? null;
-    this.tel = tel ?? null;
-    this.email = email ?? null;
+    this.name = name ?? "";
+    this.givenName = givenName ?? "";
+    this.additionalName = additionalName ?? "";
+    this.familyName = familyName ?? "";
+    this.organization = organization ?? "";
+    this.streetAddress = streetAddress ?? "";
+    this.addressLevel1 = addressLevel1 ?? "";
+    this.addressLevel2 = addressLevel2 ?? "";
+    this.addressLevel3 = addressLevel3 ?? "";
+    this.postalCode = postalCode ?? "";
+    this.country = country ?? "";
+    this.tel = tel ?? "";
+    this.email = email ?? "";
 
     // Metadata.
     this.guid = guid ?? null;
@@ -158,9 +158,9 @@ class Address {
 
   isValid() {
     return (
-      (this.name ?? this.givenName ?? this.familyName) !== null &&
-      this.streetAddress !== null &&
-      this.postalCode !== null
+      (this.name ?? this.givenName ?? this.familyName) !== "" &&
+      this.streetAddress !== "" &&
+      this.postalCode !== ""
     );
   }
 
@@ -230,11 +230,11 @@ class CreditCard {
     timesUsed,
     version,
   }) {
-    this.name = name ?? null;
-    this.number = number ?? null;
-    this.expMonth = expMonth ?? null;
-    this.expYear = expYear ?? null;
-    this.type = type ?? null;
+    this.name = name ?? "";
+    this.number = number ?? "";
+    this.expMonth = expMonth ?? "";
+    this.expYear = expYear ?? "";
+    this.type = type ?? "";
 
     // Metadata.
     this.guid = guid ?? null;
@@ -248,10 +248,10 @@ class CreditCard {
 
   isValid() {
     return (
-      this.name !== null &&
-      this.number !== null &&
-      this.expMonth !== null &&
-      this.expYear !== null
+      this.name !== "" &&
+      this.number !== "" &&
+      this.expMonth !== "" &&
+      this.expYear !== ""
     );
   }
 
