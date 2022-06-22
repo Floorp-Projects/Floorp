@@ -10,6 +10,9 @@ const { EventEmitter } = ChromeUtils.import(
   "resource:///modules/syncedtabs/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -24,11 +27,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "XPCOMUtils",
-  "resource://gre/modules/XPCOMUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -47,13 +45,13 @@ var webrtcUI = {
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
       this.initialized = true;
 
-      lazy.XPCOMUtils.defineLazyPreferenceGetter(
+      XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "useLegacyGlobalIndicator",
         "privacy.webrtc.legacyGlobalIndicator",
         true
       );
-      lazy.XPCOMUtils.defineLazyPreferenceGetter(
+      XPCOMUtils.defineLazyPreferenceGetter(
         this,
         "deviceGracePeriodTimeoutMs",
         "privacy.webrtc.deviceGracePeriodTimeoutMs"
