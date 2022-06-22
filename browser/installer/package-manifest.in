@@ -194,11 +194,6 @@
 @RESPATH@/chrome/remote.manifest
 #endif
 
-#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
-@RESPATH@/components/TestInterfaceJS.js
-@RESPATH@/components/TestInterfaceJS.manifest
-#endif
-
 ; [Extensions]
 @RESPATH@/components/extensions-toolkit.manifest
 @RESPATH@/browser/components/extensions-browser.manifest
