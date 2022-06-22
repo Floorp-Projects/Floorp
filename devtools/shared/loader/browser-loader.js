@@ -12,9 +12,6 @@ const { require: devtoolsRequire, loader } = ChromeUtils.import(
 const flags = devtoolsRequire("devtools/shared/flags");
 const { joinURI } = devtoolsRequire("devtools/shared/path");
 const { assert } = devtoolsRequire("devtools/shared/DevToolsUtils");
-const { AppConstants } = devtoolsRequire(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
 const lazy = {};
 
@@ -121,25 +118,11 @@ function BrowserLoaderBuilder({
   );
 
   const loaderOptions = devtoolsRequire("@loader/options");
-  const dynamicPaths = {};
-
-  if (AppConstants.DEBUG_JS_MODULES) {
-    dynamicPaths["devtools/client/shared/vendor/react"] =
-      "resource://devtools/client/shared/vendor/react-dev";
-    dynamicPaths["devtools/client/shared/vendor/react-dom"] =
-      "resource://devtools/client/shared/vendor/react-dom-dev";
-    dynamicPaths["devtools/client/shared/vendor/react-dom-server"] =
-      "resource://devtools/client/shared/vendor/react-dom-server-dev";
-    dynamicPaths["devtools/client/shared/vendor/react-prop-types"] =
-      "resource://devtools/client/shared/vendor/react-prop-types-dev";
-    dynamicPaths["devtools/client/shared/vendor/react-dom-test-utils"] =
-      "resource://devtools/client/shared/vendor/react-dom-test-utils-dev";
-  }
 
   const opts = {
     sandboxPrototype: window,
     sandboxName: "DevTools (UI loader)",
-    paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
+    paths: loaderOptions.paths,
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     // Make sure `define` function exists.  This allows defining some modules
     // in AMD format while retaining CommonJS compatibility through this hook.
