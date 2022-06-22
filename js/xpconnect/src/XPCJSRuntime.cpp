@@ -18,7 +18,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
-#include "mozJSComponentLoader.h"
+#include "mozJSModuleLoader.h"
 #include "nsNetUtil.h"
 #include "nsContentSecurityUtils.h"
 
@@ -2298,8 +2298,8 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
   XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
   XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(cx, &sizeInfo);
 
-  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
-  size_t jsComponentLoaderSize =
+  mozJSModuleLoader* loader = mozJSModuleLoader::Get();
+  size_t jsModuleLoaderSize =
       loader ? loader->SizeOfIncludingThis(JSMallocSizeOf) : 0;
 
   // This is the second step (see above).  First we report stuff in the
@@ -2530,8 +2530,8 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
                sizeInfo.mProtoAndIfaceCacheSize,
                "Prototype and interface binding caches.");
 
-  REPORT_BYTES("explicit/xpconnect/js-component-loader"_ns, KIND_HEAP,
-               jsComponentLoaderSize, "XPConnect's JS component loader.");
+  REPORT_BYTES("explicit/xpconnect/js-module-loader"_ns, KIND_HEAP,
+               jsModuleLoaderSize, "XPConnect's JS module loader.");
 
   // Report tracelogger (global).
 
@@ -3298,7 +3298,7 @@ void XPCJSRuntime::DeleteSingletonScopes() {
 
 JSObject* XPCJSRuntime::LoaderGlobal() {
   if (!mLoaderGlobal) {
-    RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
+    RefPtr loader = mozJSModuleLoader::Get();
 
     dom::AutoJSAPI jsapi;
     jsapi.Init();

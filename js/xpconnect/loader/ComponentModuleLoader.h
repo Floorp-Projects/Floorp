@@ -10,7 +10,7 @@
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ModuleLoaderBase.h"
 
-class mozJSComponentLoader;
+class mozJSModuleLoader;
 
 namespace mozilla {
 namespace loader {

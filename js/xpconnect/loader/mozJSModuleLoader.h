@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozJSComponentLoader_h
-#define mozJSComponentLoader_h
+#ifndef mozJSModuleLoader_h
+#define mozJSModuleLoader_h
 
 #include "ComponentModuleLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -24,7 +24,7 @@
 #include "xpcpublic.h"
 
 class nsIFile;
-class ComponentLoaderInfo;
+class ModuleLoaderInfo;
 
 namespace mozilla {
 class ScriptPreloader;
@@ -34,7 +34,7 @@ class ScriptPreloader;
 #  define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSComponentLoader final : public nsIMemoryReporter {
+class mozJSModuleLoader final : public nsIMemoryReporter {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -57,8 +57,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   static void Unload();
   static void Shutdown();
 
-  static mozJSComponentLoader* Get() {
-    MOZ_ASSERT(sSelf, "Should have already created the component loader");
+  static mozJSModuleLoader* Get() {
+    MOZ_ASSERT(sSelf, "Should have already created the module loader");
     return sSelf;
   }
 
@@ -97,13 +97,13 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  protected:
-  mozJSComponentLoader();
-  ~mozJSComponentLoader();
+  mozJSModuleLoader();
+  ~mozJSModuleLoader();
 
   friend class XPCJSRuntime;
 
  private:
-  static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
+  static mozilla::StaticRefPtr<mozJSModuleLoader> sSelf;
 
   void UnloadModules();
 
@@ -116,11 +116,10 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   static bool LocationIsRealFile(nsIURI* aURI);
 
-  JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aComponentFile,
-                                     nsIURI* aComponent, bool aRealFile);
+  JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aModuleFile,
+                                     nsIURI* aURI, bool aRealFile);
 
-  nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
-                             nsIFile* aComponentFile,
+  nsresult ObjectForLocation(ModuleLoaderInfo& aInfo, nsIFile* aModuleFile,
                              JS::MutableHandleObject aObject,
                              JS::MutableHandleScript aTableScript,
                              char** aLocation, bool aCatchException,
@@ -128,9 +127,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   // Get the script for a given location, either from a cached stencil or by
   // compiling it from source.
-  static nsresult GetScriptForLocation(JSContext* aCx,
-                                       ComponentLoaderInfo& aInfo,
-                                       nsIFile* aComponentFile, bool aUseMemMap,
+  static nsresult GetScriptForLocation(JSContext* aCx, ModuleLoaderInfo& aInfo,
+                                       nsIFile* aModuleFile, bool aUseMemMap,
                                        JS::MutableHandleScript aScriptOut,
                                        char** aLocationOut = nullptr);
 
@@ -188,7 +186,7 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 #endif
   };
 
-  nsresult ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
+  nsresult ExtractExports(JSContext* aCx, ModuleLoaderInfo& aInfo,
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
 
   nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;

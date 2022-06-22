@@ -8,7 +8,6 @@
 
 #include "AutoplayPolicy.h"
 #include "nsContentUtils.h"
-#include "mozJSComponentLoader.h"
 #include "mozilla/Components.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/Logging.h"
