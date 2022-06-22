@@ -7,6 +7,8 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+Cu.importGlobalProperties(["structuredClone"]);
+
 var EXPORTED_SYMBOLS = ["ReportSiteIssueHelperChild"];
 
 const PREVIEW_MAX_ITEMS = 10;
@@ -14,6 +16,9 @@ const LOG_LEVELS = ["debug", "info", "warn", "error"];
 
 function getPreview(value) {
   switch (typeof value) {
+    case "symbol":
+      return value.toString();
+
     case "function":
       return "function ()";
 
@@ -32,6 +37,12 @@ function getPreview(value) {
       return "undefined";
 
     default:
+      try {
+        structuredClone(value);
+      } catch (_) {
+        return `${value}` || "?";
+      }
+
       return value;
   }
 }
