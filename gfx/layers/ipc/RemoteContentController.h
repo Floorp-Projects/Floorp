@@ -81,9 +81,6 @@ class RemoteContentController : public GeckoContentController,
 
   void CancelAutoscroll(const ScrollableLayerGuid& aScrollId) override;
 
-  void NotifyScaleGestureComplete(const ScrollableLayerGuid& aGuid,
-                                  float aScale) override;
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void Destroy() override;
@@ -109,10 +106,6 @@ class RemoteContentController : public GeckoContentController,
 
   void CancelAutoscrollInProcess(const ScrollableLayerGuid& aScrollId);
   void CancelAutoscrollCrossProcess(const ScrollableLayerGuid& aScrollId);
-  void NotifyScaleGestureCompleteInProcess(const ScrollableLayerGuid& aGuid,
-                                           float aScale);
-  void NotifyScaleGestureCompleteCrossProcess(const ScrollableLayerGuid& aGuid,
-                                              float aScale);
 };
 
 }  // namespace layers
