@@ -26,16 +26,13 @@ module.exports = {
   create(context) {
     return {
       AwaitExpression(node) {
-        if (!helpers.getIsTopLevelScript(context.getAncestors())) {
+        if (!helpers.getIsGlobalScope(context.getAncestors())) {
           return;
         }
         context.report({ node, messageId: "rejectTopLevelAwait" });
       },
       ForOfStatement(node) {
-        if (
-          !node.await ||
-          !helpers.getIsTopLevelScript(context.getAncestors())
-        ) {
+        if (!node.await || !helpers.getIsGlobalScope(context.getAncestors())) {
           return;
         }
         context.report({ node, messageId: "rejectTopLevelAwait" });

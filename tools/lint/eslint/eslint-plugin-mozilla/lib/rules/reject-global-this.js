@@ -8,11 +8,26 @@
 
 "use strict";
 
-const helpers = require("../helpers");
-
 // -----------------------------------------------------------------------------
 // Rule Definition
 // -----------------------------------------------------------------------------
+
+function isGlobalThis(context, node) {
+  for (let ancestor of context.getAncestors()) {
+    if (
+      ancestor.type == "FunctionDeclaration" ||
+      ancestor.type == "FunctionExpression" ||
+      ancestor.type == "ClassProperty" ||
+      ancestor.type == "ClassPrivateProperty" ||
+      ancestor.type == "PropertyDefinition" ||
+      ancestor.type == "StaticBlock"
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 module.exports = {
   meta: {
@@ -26,7 +41,7 @@ module.exports = {
   create(context) {
     return {
       ThisExpression(node) {
-        if (!helpers.getIsGlobalThis(context.getAncestors())) {
+        if (!isGlobalThis(context, node)) {
           return;
         }
 

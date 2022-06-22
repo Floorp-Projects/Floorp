@@ -483,30 +483,26 @@ module.exports = {
   },
 
   /**
-   * Check whether it's inside top-level script.
+   * Check whether a node is a function.
    *
-   * @param {Array} ancestors
-   *        The parents of the current node.
+   * @param {Object} node
+   *        The AST node to check
    *
    * @return {Boolean}
    *         True or false
    */
-  getIsTopLevelScript(ancestors) {
-    for (let parent of ancestors) {
-      switch (parent.type) {
-        case "ArrowFunctionExpression":
-        case "FunctionDeclaration":
-        case "FunctionExpression":
-        case "PropertyDefinition":
-        case "StaticBlock":
-          return false;
-      }
+  getIsFunctionNode(node) {
+    switch (node.type) {
+      case "ArrowFunctionExpression":
+      case "FunctionDeclaration":
+      case "FunctionExpression":
+        return true;
     }
-    return true;
+    return false;
   },
 
   /**
-   * Check whether `this` expression points the global this.
+   * Check whether the context is the global scope.
    *
    * @param {Array} ancestors
    *        The parents of the current node.
@@ -514,14 +510,10 @@ module.exports = {
    * @return {Boolean}
    *         True or false
    */
-  getIsGlobalThis(ancestors) {
+  getIsGlobalScope(ancestors) {
     for (let parent of ancestors) {
-      switch (parent.type) {
-        case "FunctionDeclaration":
-        case "FunctionExpression":
-        case "PropertyDefinition":
-        case "StaticBlock":
-          return false;
+      if (this.getIsFunctionNode(parent)) {
+        return false;
       }
     }
     return true;
