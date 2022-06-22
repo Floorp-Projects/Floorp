@@ -48,7 +48,7 @@
       @media (-moz-windows-default-theme) {
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
-            border-top: .5px solid -moz-accent-color;
+            border-top: .5px solid AccentColor;
           }
         }
 

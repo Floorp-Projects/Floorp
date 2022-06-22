@@ -327,7 +327,7 @@ menuitem.bookmark-item {
 
 @media (-moz-windows-default-theme: 0) {
   /* Windows HCM conventions use these colors for chiclets. We can't use them on
-     other platforms because -moz-accent-color can be shown atop SelectedItem,
+     other platforms because AccentColor can be shown atop SelectedItem,
      which has zero contrast. */
   :root {
     --urlbar-box-hover-bgcolor: SelectedItem;

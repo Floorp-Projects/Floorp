@@ -294,8 +294,8 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-source-list-selection",
     "ui.-moz-mac-active-source-list-selection",
     "ui.-moz-mac-tooltip",
-    "ui.-moz-accent-color",
-    "ui.-moz-accent-color-foreground",
+    "ui.accentcolor",
+    "ui.accentcolortext",
     "ui.-moz-autofill-background",
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
@@ -567,8 +567,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
     case ColorID::IMERawInputUnderline:
     case ColorID::IMEConvertedTextUnderline:
       return NS_40PERCENT_FOREGROUND_COLOR;
-      COLOR(MozAccentColor, 53, 132, 228)
-      COLOR(MozAccentColorForeground, 0xff, 0xff, 0xff)
+      COLOR(Accentcolor, 53, 132, 228)
+      COLOR(Accentcolortext, 0xff, 0xff, 0xff)
       COLOR(SpellCheckerUnderline, 0xff, 0x00, 0x00)
       COLOR(TextSelectDisabledBackground, 0xaa, 0xaa, 0xaa)
 

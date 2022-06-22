@@ -30,7 +30,7 @@
 
 #TabsToolbar:not(:-moz-lwtheme),
 #TabsToolbar[brighttext]:not(:-moz-lwtheme) {
-  --attention-icon-color: -moz-accent-color;
+  --attention-icon-color: AccentColor;
 }
 
 :root:-moz-lwtheme {

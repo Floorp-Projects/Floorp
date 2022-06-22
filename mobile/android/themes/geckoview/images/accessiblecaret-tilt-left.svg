@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg width="66px" height="66px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
   <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <g transform="translate(-564.000000, -1723.000000)" fill="-moz-accent-color" opacity="0.95">
+    <g transform="translate(-564.000000, -1723.000000)" fill="AccentColor" opacity="0.95">
       <path d="M564,1756 C564,1737.7746 578.770596,1723 597,1723 L630,1723 L630,1756 C630,1774.2254 615.229404,1789 597,1789 C578.774603,1789 564,1774.2294 564,1756 L564,1756 Z"></path>
     </g>
   </g>

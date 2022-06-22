@@ -260,7 +260,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozDialog:
       idx = COLOR_3DFACE;
       break;
-    case ColorID::MozAccentColor:
+    case ColorID::Accentcolor:
       if (mHasColorAccent) {
         aColor = mColorAccent;
       } else {
@@ -268,7 +268,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
         aColor = NS_RGB(0, 120, 215);
       }
       return NS_OK;
-    case ColorID::MozAccentColorForeground:
+    case ColorID::Accentcolortext:
       if (mHasColorAccentText) {
         aColor = mColorAccentText;
       } else {

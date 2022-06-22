@@ -85,10 +85,10 @@ struct ColorPalette {
 
 static nscolor ThemedAccentColor(bool aBackground, ColorScheme aScheme) {
   MOZ_ASSERT(StaticPrefs::widget_non_native_theme_use_theme_accent());
-  return ColorPalette::EnsureOpaque(LookAndFeel::Color(
-      aBackground ? LookAndFeel::ColorID::MozAccentColor
-                  : LookAndFeel::ColorID::MozAccentColorForeground,
-      aScheme, LookAndFeel::UseStandins::No));
+  return ColorPalette::EnsureOpaque(
+      LookAndFeel::Color(aBackground ? LookAndFeel::ColorID::Accentcolor
+                                     : LookAndFeel::ColorID::Accentcolortext,
+                         aScheme, LookAndFeel::UseStandins::No));
 }
 
 static ColorPalette sDefaultLightPalette = ColorPalette::Default();
