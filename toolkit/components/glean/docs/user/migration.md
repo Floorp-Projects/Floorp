@@ -484,8 +484,7 @@ urlbar:
     kind: uint
     keyed: true
     notification_emails:
-      - fx-search@mozilla.com
-      - tbrooks@mozilla.com
+      - email@example.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -511,8 +510,7 @@ urlbar:
       - interaction
     expires: never
     notification_emails:
-      - fx-search@mozilla.com
-      - tbrooks@mozilla.com
+      - email@example.com
 ```
 
 Now, if your Keyed Scalar has a list of known keys,
