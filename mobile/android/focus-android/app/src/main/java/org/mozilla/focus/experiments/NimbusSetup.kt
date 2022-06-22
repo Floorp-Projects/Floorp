@@ -13,12 +13,14 @@ import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.NimbusInterface
+import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.GleanMetrics.NimbusExperiments
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.nimbus.FocusNimbus
 
 @Suppress("TooGenericExceptionCaught")
 fun createNimbus(context: Context, url: String?): NimbusApi {
@@ -66,6 +68,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             channel = BuildConfig.BUILD_TYPE
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
+            register(EventsObserver)
             // This performs the minimal amount of work required to load branch and enrolment data
             // into memory. If `getExperimentBranch` is called from another thread between here
             // and the next nimbus disk write (setting `globalUserParticipation` or
@@ -83,12 +86,12 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
                 setExperimentsLocally(R.raw.initial_experiments)
             }
 
-            applyPendingExperiments()
             NimbusExperiments.nimbusInitialFetch.start()
             fetchExperiments()
 
             register(object : NimbusInterface.Observer {
                 override fun onExperimentsFetched() {
+                    applyPendingExperiments()
                     NimbusExperiments.nimbusInitialFetch.stop()
                     // Remove lingering observer when we're done fetching experiments on startup.
                     unregister(this)
@@ -122,5 +125,17 @@ fun NimbusException.isReportableError(): Boolean {
         is NimbusException.RequestException,
         is NimbusException.ResponseException -> false
         else -> true
+    }
+}
+
+/**
+ * Focus specific observer of Nimbus events.
+ *
+ * The generated code `FocusNimbus` provides a cache which should be invalidated
+ * when the experiments recipes are updated.
+ */
+private object EventsObserver : NimbusInterface.Observer {
+    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+        FocusNimbus.invalidateCachedValues()
     }
 }
