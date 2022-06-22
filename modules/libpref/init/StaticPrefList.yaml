@@ -2794,11 +2794,6 @@
   value: 2.0f
   mirror: always
 
-- name: dom.menuitem.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Enable meta-viewport support in remote APZ-enabled frames.
 - name: dom.meta-viewport.enabled
   type: RelaxedAtomicBool

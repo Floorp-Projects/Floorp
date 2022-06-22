@@ -311,7 +311,6 @@ class nsHtml5ElementName {
   static nsHtml5ElementName* ELT_ACRONYM;
   static nsHtml5ElementName* ELT_EM;
   static nsHtml5ElementName* ELT_FORM;
-  static nsHtml5ElementName* ELT_MENUITEM;
   static nsHtml5ElementName* ELT_PARAM;
   static nsHtml5ElementName* ELT_ANIMATEMOTION;
   static nsHtml5ElementName* ELT_BUTTON;

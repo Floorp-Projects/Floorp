@@ -2,39 +2,29 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=418756
-https://bugzilla.mozilla.org/show_bug.cgi?id=617528
 -->
 <head>
-  <title>Test for Bug 418756 and 617528</title>
+  <title>Test for Bug 418756</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 Mozilla bug
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=418756">418756</a>
-and
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=617528">617528</a>
 <p id="display"></p>
 <div id="content">
   <form id="f1">
   </form>
   <form id="f2">
   </form>
-  <menu id="m1">
-  </menu>
-  <menu id="m2">
-  </menu>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 418756 and 617528 **/
+/** Test for Bug 418756 **/
 var group1;
 var group2;
 var group3;
-
-var tags = ["input", "menuitem"];
-for (let tag of tags) {
 
 function bounce(node) {
   let n = node.nextSibling;
@@ -64,13 +54,13 @@ var id = 0;
 
 // type can be 'c' for 'checkbox' and 'r' for 'radio'
 function createNode(type, name, checked) {
-  let node = document.createElement(tag);
+  let node = document.createElement("input");
   node.setAttribute("type",  typeMapper[type]);
   if (checked) {
     node.setAttribute("checked", "checked");
   }
   node.setAttribute("id", type + (++id));
-  node.setAttribute(tag == "input" ? "name" : "radiogroup", name);
+  node.setAttribute("name", name);
   createdNodes.push(node);
   return node;
 }
@@ -111,7 +101,7 @@ cleanup();
 // effect
 for (let type of types) {
   let n = createNode(type, 'test1', true);
-  $(tag == "input" ? "f1" : "m1").appendChild(n);
+  $("f1").appendChild(n);
   n.checked = false;
   n.defaultChecked = false;
   bounce(n);
@@ -133,13 +123,13 @@ group3 = [ createNode('r', 'g1', false),
            createNode('r', 'g1', false),
            createNode('r', 'g1', false) ];
 for (let g of group1) {
-  $(tag == "input" ? "f1" : "m1").appendChild(g);
+  $("f1").appendChild(g);
 }
 for (let g of group2) {
-  $(tag == "input" ? "f1" : "m1").appendChild(g);
+  $("f1").appendChild(g);
 }
 for (let g of group3) {
-  $(tag == "input" ? "f2" : "m2").appendChild(g);
+  $("f2").appendChild(g);
 }
 
 for (let n of [1, 2, 3]) {
@@ -342,7 +332,7 @@ for (let n of [1, 2, 3]) {
        "] defaultChecked wrong pass 15");
     is(g.checked, (n == 1 && (group1.indexOf(g) == 1 ||
                               group1.indexOf(g) == 0)) ||
-                  (n == 2 && group2.indexOf(g) == 0), 
+                  (n == 2 && group2.indexOf(g) == 0),
        "group" + n + "[" + window["group"+n].indexOf(g) +
        "] checked wrong pass 15");
   }
@@ -350,7 +340,6 @@ for (let n of [1, 2, 3]) {
 
 cleanup();
 
-}
 </script>
 </pre>
 </body>

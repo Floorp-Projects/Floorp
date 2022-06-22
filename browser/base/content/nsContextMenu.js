@@ -43,7 +43,6 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     spellInfo,
     principal,
     storagePrincipal,
-    customMenuItems: data.customMenuItems,
     documentURIObject,
     docLocation: data.docLocation,
     charSet: data.charSet,
@@ -105,15 +104,8 @@ class nsContextMenu {
       return;
     }
 
-    this.hasPageMenu = false;
     this.isContentSelected = !this.selectionInfo.docSelectionIsCollapsed;
     if (!aIsShift) {
-      this.hasPageMenu = PageMenuParent.addToPopup(
-        this.contentData.customMenuItems,
-        this.browser,
-        aXulMenu
-      );
-
       let tab =
         gBrowser && gBrowser.getTabForBrowser
           ? gBrowser.getTabForBrowser(this.browser)
@@ -329,7 +321,6 @@ class nsContextMenu {
   }
 
   initItems(aXulMenu) {
-    this.initPageMenuSeparator();
     this.initOpenItems();
     this.initNavigationItems();
     this.initViewItems();
@@ -357,10 +348,6 @@ class nsContextMenu {
         this.showHideSeparators(aXulMenu);
       };
     }
-  }
-
-  initPageMenuSeparator() {
-    this.showItem("page-menu-separator", this.hasPageMenu);
   }
 
   initOpenItems() {
@@ -2350,10 +2337,6 @@ class nsContextMenu {
       excludeUserContextId: this.contentData.userContextId,
     };
     return createUserContextMenu(aEvent, createMenuOptions);
-  }
-
-  doCustomCommand(generatedItemId, handlingUserInput) {
-    this.actor.doCustomCommand(generatedItemId, handlingUserInput);
   }
 }
 

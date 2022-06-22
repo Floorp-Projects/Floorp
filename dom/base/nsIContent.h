@@ -471,8 +471,7 @@ class nsIContent : public nsINode {
                                                  nsAtom* aName) {
     if (aNamespace == kNameSpaceID_XHTML &&
         (aName == nsGkAtoms::input || aName == nsGkAtoms::button ||
-         aName == nsGkAtoms::menuitem || aName == nsGkAtoms::audio ||
-         aName == nsGkAtoms::video)) {
+         aName == nsGkAtoms::audio || aName == nsGkAtoms::video)) {
       MOZ_ASSERT(
           !RequiresDoneAddingChildren(aNamespace, aName),
           "Both DoneCreatingElement and DoneAddingChildren on a same element "

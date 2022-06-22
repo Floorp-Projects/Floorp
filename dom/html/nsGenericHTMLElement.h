@@ -36,7 +36,6 @@ class PresState;
 namespace dom {
 class ElementInternals;
 class HTMLFormElement;
-class HTMLMenuElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -160,7 +159,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    */
   uint32_t EditableInclusiveDescendantCount();
 
-  mozilla::dom::HTMLMenuElement* GetContextMenu() const;
   bool Spellcheck();
   void SetSpellcheck(bool aSpellcheck, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::spellcheck, aSpellcheck ? u"true"_ns : u"false"_ns,
@@ -1361,7 +1359,6 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Link)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Marquee)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Map)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Menu)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(MenuItem)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meta)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Meter)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Object)

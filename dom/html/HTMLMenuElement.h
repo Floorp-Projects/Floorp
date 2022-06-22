@@ -10,8 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-class nsIMenuBuilder;
-
 namespace mozilla::dom {
 
 class HTMLMenuElement final : public nsGenericHTMLElement {
@@ -24,61 +22,19 @@ class HTMLMenuElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMenuElement, nsGenericHTMLElement)
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-
-  uint8_t GetType() const { return mType; }
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-
-  void GetType(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
-  void SetType(const nsAString& aType, ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::type, aType, aError);
-  }
-
-  void GetLabel(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::label, aValue); }
-  void SetLabel(const nsAString& aLabel, ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
-  }
-
   bool Compact() const { return GetBoolAttr(nsGkAtoms::compact); }
   void SetCompact(bool aCompact, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, aError);
   }
 
-  MOZ_CAN_RUN_SCRIPT void SendShowEvent();
-
-  already_AddRefed<nsIMenuBuilder> CreateBuilder() const;
-
-  void Build(nsIMenuBuilder* aBuilder);
-
  protected:
   virtual ~HTMLMenuElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
-
- protected:
-  static bool CanLoadIcon(nsIContent* aContent, const nsAString& aIcon);
-
-  void BuildSubmenu(const nsAString& aLabel, nsIContent* aContent,
-                    nsIMenuBuilder* aBuilder);
-
-  void TraverseContent(nsIContent* aContent, nsIMenuBuilder* aBuilder,
-                       int8_t& aSeparator);
-
-  void AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator);
-
-  uint8_t mType;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 };
 
 }  // namespace mozilla::dom
