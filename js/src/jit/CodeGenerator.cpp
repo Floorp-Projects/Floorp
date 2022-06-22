@@ -5423,9 +5423,9 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   masm.freeStack(unusedStack);
 
   // Construct the JitFrameLayout.
-  masm.Push(Imm32(call->numActualArgs()));
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.PushFrameDescriptor(FrameType::IonJS);
+  masm.PushFrameDescriptorForJitCall(FrameType::IonJS, call->numActualArgs());
 
   // Check whether the provided arguments satisfy target argc.
   // We cannot have lowered to LCallGeneric with a known target. Assert that we
@@ -5528,9 +5528,9 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   masm.freeStack(unusedStack);
 
   // Construct the JitFrameLayout.
-  masm.Push(Imm32(call->numActualArgs()));
+  masm.Push(ImmWord(JitFrameLayout::UnusedValue));
   masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.PushFrameDescriptor(FrameType::IonJS);
+  masm.PushFrameDescriptorForJitCall(FrameType::IonJS, call->numActualArgs());
 
   // Finally call the function in objreg.
   uint32_t callOffset = masm.callJit(objreg);
@@ -5981,9 +5981,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     // Knowing that calleereg is a non-native function, load jitcode.
     masm.loadJitCodeRaw(calleereg, objreg);
 
-    masm.Push(argcreg);
+    masm.Push(ImmWord(JitFrameLayout::UnusedValue));
     masm.PushCalleeToken(calleereg, constructing);
-    masm.PushFrameDescriptor(FrameType::IonJS);
+    masm.PushFrameDescriptorForJitCall(FrameType::IonJS, argcreg, scratch);
 
     Label underflow, rejoin;
 

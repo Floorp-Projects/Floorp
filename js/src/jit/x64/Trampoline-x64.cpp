@@ -200,18 +200,19 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
-  // Push the number of actual arguments.  |result| is used to store the
+  // Load the number of actual arguments.  |result| is used to store the
   // actual number of arguments without adding an extra argument to the enter
   // JIT.
   masm.movq(result, reg_argc);
   masm.unboxInt32(Operand(reg_argc, 0), reg_argc);
-  masm.push(reg_argc);
+
+  masm.push(ImmWord(JitFrameLayout::UnusedValue));
 
   // Push the callee token.
   masm.push(token);
 
   // Push the descriptor.
-  masm.pushFrameDescriptor(FrameType::CppToJSJit);
+  masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, reg_argc, reg_argc);
 
   CodeLabel returnLabel;
   Label oomReturnLabel;
@@ -594,9 +595,9 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   //
 
   // Construct JitFrameLayout.
-  masm.push(rdx);  // numActualArgs
+  masm.push(ImmWord(JitFrameLayout::UnusedValue));
   masm.push(rax);  // callee token
-  masm.pushFrameDescriptor(FrameType::Rectifier);
+  masm.pushFrameDescriptorForJitCall(FrameType::Rectifier, rdx, rdx);
 
   // Call the target function.
   masm.andq(Imm32(uint32_t(CalleeTokenMask)), rax);

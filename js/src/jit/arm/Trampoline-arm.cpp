@@ -199,17 +199,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
-  // Create the frame descriptor.
-  masm.move32(Imm32(MakeFrameDescriptor(FrameType::CppToJSJit)), r8);
+  masm.push(ImmWord(JitFrameLayout::UnusedValue));
 
-  aasm->as_sub(sp, sp, Imm8(sizeof(JitFrameLayout)));
+  // Push the callee token.
+  masm.push(r9);
 
-  masm.startDataTransferM(IsStore, sp, IB, NoWriteBack);
-  // [sp]    = return address (written later)
-  masm.transferReg(r8);   // [sp',4] = descriptor, argc*8+20
-  masm.transferReg(r9);   // [sp',8]  = callee token
-  masm.transferReg(r10);  // [sp',12]  = actual arguments
-  masm.finishDataTransfer();
+  // Push the frame descriptor.
+  masm.pushFrameDescriptorForJitCall(FrameType::CppToJSJit, r10, r10);
 
   Label returnLabel;
   {
@@ -235,13 +231,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     // so we can't use it here to get the return address. Instead, we use pc
     // + a fixed offset to a jump to returnLabel. The pc register holds pc +
     // 8, so we add the size of 2 instructions to skip the instructions
-    // emitted by storePtr and jump(&skipJump).
+    // emitted by push and jump(&skipJump).
     {
       AutoForbidPoolsAndNops afp(&masm, 5);
       Label skipJump;
       masm.mov(pc, scratch);
       masm.addPtr(Imm32(2 * sizeof(uint32_t)), scratch);
-      masm.storePtr(scratch, Address(sp, 0));
+      masm.push(scratch);
       masm.jump(&skipJump);
       masm.jump(&returnLabel);
       masm.bind(&skipJump);
@@ -317,11 +313,6 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.loadPtr(Address(r11, offsetof(EnterJITStack, scopeChain)),
                  R1.scratchReg());
   }
-
-  // The Data transfer is pushing 4 words, which already account for the
-  // return address space of the Jit frame.  We have to undo what the data
-  // transfer did before making the call.
-  masm.addPtr(Imm32(sizeof(uintptr_t)), sp);
 
   // The callee will push the return address on the stack, thus we check that
   // the stack would be aligned once the call is complete.
@@ -506,9 +497,9 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm,
   }
 
   // Construct JitFrameLayout.
-  masm.ma_push(r0);  // actual arguments.
+  masm.push(ImmWord(JitFrameLayout::UnusedValue));
   masm.ma_push(r1);  // callee token
-  masm.pushFrameDescriptor(FrameType::Rectifier);
+  masm.pushFrameDescriptorForJitCall(FrameType::Rectifier, r0, r0);
 
   // Call the target function.
   masm.andPtr(Imm32(CalleeTokenMask), r1);

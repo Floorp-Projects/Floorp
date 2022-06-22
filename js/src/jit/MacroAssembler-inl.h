@@ -266,10 +266,41 @@ void MacroAssembler::PushFrameDescriptor(FrameType type) {
   Push(Imm32(descriptor));
 }
 
+void MacroAssembler::pushFrameDescriptorForJitCall(FrameType type,
+                                                   uint32_t argc) {
+  uint32_t descriptor = MakeFrameDescriptorForJitCall(type, argc);
+  push(Imm32(descriptor));
+}
+
+void MacroAssembler::PushFrameDescriptorForJitCall(FrameType type,
+                                                   uint32_t argc) {
+  uint32_t descriptor = MakeFrameDescriptorForJitCall(type, argc);
+  Push(Imm32(descriptor));
+}
+
+void MacroAssembler::pushFrameDescriptorForJitCall(FrameType type,
+                                                   Register argc,
+                                                   Register scratch) {
+  if (argc != scratch) {
+    mov(argc, scratch);
+  }
+  lshift32(Imm32(NUMACTUALARGS_SHIFT), scratch);
+  or32(Imm32(int32_t(type)), scratch);
+  push(scratch);
+}
+
+void MacroAssembler::PushFrameDescriptorForJitCall(FrameType type,
+                                                   Register argc,
+                                                   Register scratch) {
+  pushFrameDescriptorForJitCall(type, argc, scratch);
+  framePushed_ += sizeof(uintptr_t);
+}
+
 void MacroAssembler::loadNumActualArgs(Register framePtr, Register dest) {
-  static constexpr uint32_t Offset = JitFrameLayout::FramePointerOffset +
-                                     JitFrameLayout::offsetOfNumActualArgs();
+  static constexpr uint32_t Offset =
+      JitFrameLayout::FramePointerOffset + JitFrameLayout::offsetOfDescriptor();
   loadPtr(Address(framePtr, Offset), dest);
+  rshift32(Imm32(NUMACTUALARGS_SHIFT), dest);
 }
 
 void MacroAssembler::PushCalleeToken(Register callee, bool constructing) {
