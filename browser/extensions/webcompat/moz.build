@@ -127,6 +127,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/nielsen.js",
     "shims/optimizely.js",
     "shims/play.svg",
+    "shims/private-browsing-web-api-fixes.js",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
     "shims/stackblitz.js",
