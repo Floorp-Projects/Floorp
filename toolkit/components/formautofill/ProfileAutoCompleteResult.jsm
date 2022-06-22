@@ -5,11 +5,9 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
 );
 const lazy = {};
 
@@ -18,7 +16,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
-FormAutofill.defineLazyLogGetter(lazy, EXPORTED_SYMBOLS[0]);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "insecureWarningEnabled",
+  "security.insecure_field_warning.contextual.enabled"
+);
 
 class ProfileAutoCompleteResult {
   constructor(
@@ -380,6 +382,9 @@ class CreditCardResult extends ProfileAutoCompleteResult {
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
     if (!this._isSecure) {
+      if (!lazy.insecureWarningEnabled) {
+        return [];
+      }
       let brandName = lazy.FormAutofillUtils.brandBundle.GetStringFromName(
         "brandShortName"
       );
@@ -470,7 +475,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
 
   getStyleAt(index) {
     this._checkIndexBounds(index);
-    if (!this._isSecure) {
+    if (!this._isSecure && lazy.insecureWarningEnabled) {
       return "autofill-insecureWarning";
     }
 
