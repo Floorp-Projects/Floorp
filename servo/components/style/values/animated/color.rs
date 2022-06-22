@@ -19,7 +19,7 @@ use std::f32::consts::PI;
 /// range `[0.0, 1.0]`.
 #[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToAnimatedZero, ToAnimatedValue)]
 #[repr(C)]
-pub struct AnimatedRGBA {
+pub struct RGBA {
     /// The red component.
     pub red: f32,
     /// The green component.
@@ -29,8 +29,6 @@ pub struct AnimatedRGBA {
     /// The alpha component.
     pub alpha: f32,
 }
-
-use self::AnimatedRGBA as RGBA;
 
 const RAD_PER_DEG: f32 = PI / 180.0;
 const DEG_PER_RAD: f32 = 180.0 / PI;

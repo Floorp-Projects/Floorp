@@ -374,7 +374,6 @@ class gfxUtils {
 namespace mozilla {
 
 struct StyleRGBA;
-struct StyleAnimatedRGBA;
 
 namespace gfx {
 
@@ -385,12 +384,9 @@ namespace gfx {
  * color is returned unchanged (other than a type change to Moz2D Color, if
  * applicable).
  */
-DeviceColor ToDeviceColor(const sRGBColor&);
-DeviceColor ToDeviceColor(const StyleRGBA&);
-DeviceColor ToDeviceColor(const StyleAnimatedRGBA&);
-DeviceColor ToDeviceColor(nscolor);
-
-sRGBColor ToSRGBColor(const StyleAnimatedRGBA&);
+DeviceColor ToDeviceColor(const sRGBColor& aColor);
+DeviceColor ToDeviceColor(const StyleRGBA& aColor);
+DeviceColor ToDeviceColor(nscolor aColor);
 
 /**
  * Performs a checked multiply of the given width, height, and bytes-per-pixel
