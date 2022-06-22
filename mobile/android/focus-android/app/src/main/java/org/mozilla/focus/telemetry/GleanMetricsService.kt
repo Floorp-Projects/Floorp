@@ -124,7 +124,7 @@ class GleanMetricsService(context: Context) : MetricsService {
         // tracking protection metrics
         TrackingProtection.hasAdvertisingBlocked.set(settings.hasAdvertisingBlocked())
         TrackingProtection.hasAnalyticsBlocked.set(settings.hasAnalyticsBlocked())
-        TrackingProtection.hasContentBlocked.set(settings.hasContentBlocked())
+        TrackingProtection.hasContentBlocked.set(settings.shouldBlockOtherTrackers())
         TrackingProtection.hasSocialBlocked.set(settings.hasSocialBlocked())
 
         // theme telemetry

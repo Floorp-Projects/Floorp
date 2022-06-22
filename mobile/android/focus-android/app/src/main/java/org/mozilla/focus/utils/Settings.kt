@@ -336,11 +336,6 @@ class Settings(
         true
     )
 
-    fun hasContentBlocked() = preferences.getBoolean(
-        getPreferenceKey(R.string.pref_key_privacy_block_other3),
-        true
-    )
-
     var lightThemeSelected = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_light_theme),
         false
