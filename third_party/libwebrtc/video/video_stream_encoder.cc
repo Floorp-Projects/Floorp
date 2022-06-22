@@ -28,6 +28,7 @@
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_layers_allocation.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/video_stream_adapter.h"
@@ -64,6 +65,11 @@ const int64_t kFrameLogIntervalMs = 60000;
 const int64_t kPendingFrameTimeoutMs = 1000;
 
 constexpr char kFrameDropperFieldTrial[] = "WebRTC-FrameDropper";
+
+// TODO(bugs.webrtc.org/13572): Remove this kill switch after deploying the
+// feature.
+constexpr char kSwitchEncoderOnInitializationFailuresFieldTrial[] =
+    "WebRTC-SwitchEncoderOnInitializationFailures";
 
 const size_t kDefaultPayloadSize = 1440;
 
@@ -660,6 +666,8 @@ VideoStreamEncoder::VideoStreamEncoder(
           !field_trial::IsEnabled("WebRTC-DefaultBitrateLimitsKillSwitch")),
       qp_parsing_allowed_(
           !field_trial::IsEnabled("WebRTC-QpParsingKillSwitch")),
+      switch_encoder_on_init_failures_(!field_trial::IsDisabled(
+          kSwitchEncoderOnInitializationFailuresFieldTrial)),
       encoder_queue_(std::move(encoder_queue)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
   RTC_DCHECK_RUN_ON(worker_queue_);
@@ -1133,7 +1141,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   // Encoder creation block is split in two since EncoderInfo needed to start
   // CPU adaptation with the correct settings should be polled after
   // encoder_->InitEncode().
-  bool success = true;
   if (encoder_reset_required) {
     ReleaseEncoder();
     const size_t max_data_payload_length = max_data_payload_length_ > 0
@@ -1148,7 +1155,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
                         << CodecTypeToPayloadString(send_codec_.codecType)
                         << " (" << send_codec_.codecType << ")";
       ReleaseEncoder();
-      success = false;
     } else {
       encoder_initialized_ = true;
       encoder_->RegisterEncodeCompleteCallback(this);
@@ -1167,7 +1173,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   // Inform dependents of updated encoder settings.
   OnEncoderSettingsChanged();
 
-  if (success) {
+  if (encoder_initialized_) {
     RTC_LOG(LS_VERBOSE) << " max bitrate " << codec.maxBitrate
                         << " start bitrate " << codec.startBitrate
                         << " max frame rate " << codec.maxFramerate
@@ -1253,6 +1259,49 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   stream_resource_manager_.ConfigureQualityScaler(info);
   stream_resource_manager_.ConfigureBandwidthQualityScaler(info);
+
+  if (!encoder_initialized_) {
+    RTC_LOG(LS_WARNING) << "Failed to initialize "
+                        << CodecTypeToPayloadString(codec.codecType)
+                        << " encoder."
+                        << "switch_encoder_on_init_failures: "
+                        << switch_encoder_on_init_failures_;
+
+    if (switch_encoder_on_init_failures_) {
+      RequestEncoderSwitch();
+    }
+  }
+}
+
+void VideoStreamEncoder::RequestEncoderSwitch() {
+  bool is_encoder_switching_supported =
+      settings_.encoder_switch_request_callback != nullptr;
+  bool is_encoder_selector_available = encoder_selector_ != nullptr;
+
+  RTC_LOG(LS_INFO) << "RequestEncoderSwitch."
+                   << " is_encoder_selector_available: "
+                   << is_encoder_selector_available
+                   << " is_encoder_switching_supported: "
+                   << is_encoder_switching_supported;
+
+  if (!is_encoder_switching_supported) {
+    return;
+  }
+
+  // If encoder selector is available, switch to the encoder it prefers.
+  // Otherwise try switching to VP8 (default WebRTC codec).
+  absl::optional<SdpVideoFormat> preferred_fallback_encoder;
+  if (is_encoder_selector_available) {
+    preferred_fallback_encoder = encoder_selector_->OnEncoderBroken();
+  }
+
+  if (!preferred_fallback_encoder) {
+    preferred_fallback_encoder =
+        SdpVideoFormat(CodecTypeToPayloadString(kVideoCodecVP8));
+  }
+
+  settings_.encoder_switch_request_callback->RequestEncoderSwitch(
+      *preferred_fallback_encoder, /*allow_default_fallback=*/true);
 }
 
 void VideoStreamEncoder::OnEncoderSettingsChanged() {
@@ -1651,7 +1700,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   // If the encoder fail we can't continue to encode frames. When this happens
   // the WebrtcVideoSender is notified and the whole VideoSendStream is
   // recreated.
-  if (encoder_failed_)
+  if (encoder_failed_ || !encoder_initialized_)
     return;
 
   // It's possible that EncodeVideoFrame can be called after we've completed
@@ -1789,21 +1838,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
     if (encode_status == WEBRTC_VIDEO_CODEC_ENCODER_FAILURE) {
       RTC_LOG(LS_ERROR) << "Encoder failed, failing encoder format: "
                         << encoder_config_.video_format.ToString();
-
-      if (settings_.encoder_switch_request_callback) {
-        if (encoder_selector_) {
-          if (auto encoder = encoder_selector_->OnEncoderBroken()) {
-            settings_.encoder_switch_request_callback->RequestEncoderSwitch(
-                *encoder);
-          }
-        } else {
-          encoder_failed_ = true;
-          settings_.encoder_switch_request_callback->RequestEncoderFallback();
-        }
-      } else {
-        RTC_LOG(LS_ERROR)
-            << "Encoder failed but no encoder fallback callback is registered";
-      }
+      RequestEncoderSwitch();
     } else {
       RTC_LOG(LS_ERROR) << "Failed to encode frame. Error code: "
                         << encode_status;
@@ -2059,7 +2094,8 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   if (!video_is_suspended && settings_.encoder_switch_request_callback &&
       encoder_selector_) {
     if (auto encoder = encoder_selector_->OnAvailableBitrate(link_allocation)) {
-      settings_.encoder_switch_request_callback->RequestEncoderSwitch(*encoder);
+      settings_.encoder_switch_request_callback->RequestEncoderSwitch(
+          *encoder, /*allow_default_fallback=*/false);
     }
   }
 
