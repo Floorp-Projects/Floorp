@@ -41,6 +41,7 @@
 #include "nsIPrincipal.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsMimeTypes.h"
+#include "nsIMIMEService.h"
 #include "imgIEncoder.h"
 #include "imgITools.h"
 #include "WinUtils.h"
@@ -1088,6 +1089,21 @@ nsDataObj ::GetFileContents(FORMATETC& aFE, STGMEDIUM& aSTG) {
 
 }  // GetFileContents
 
+// Ensure that the supplied name doesn't have invalid characters.
+static void ValidateFilename(nsString& aFilename) {
+  nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
+  if (NS_WARN_IF(!mimeService)) {
+    aFilename.Truncate();
+    return;
+  }
+
+  nsAutoString outFilename;
+  mimeService->ValidateFileNameForSaving(aFilename, EmptyCString(),
+                                         nsIMIMEService::VALIDATE_SANITIZE_ONLY,
+                                         outFilename);
+  aFilename = outFilename;
+}
+
 //
 // Given a unicode string, convert it down to a valid local charset filename
 // with the supplied extension. This ensures that we do not cut MBCS characters
@@ -1097,10 +1113,7 @@ nsDataObj ::GetFileContents(FORMATETC& aFE, STGMEDIUM& aSTG) {
 //
 static bool CreateFilenameFromTextA(nsString& aText, const char* aExtension,
                                     char* aFilename, uint32_t aFilenameLen) {
-  // ensure that the supplied name doesn't have invalid characters. If
-  // a valid mangled filename couldn't be created then it will leave the
-  // text empty.
-  nsLocalFile::CheckForReservedFileName(aText);
+  ValidateFilename(aText);
   if (aText.IsEmpty()) return false;
 
   // repeatably call WideCharToMultiByte as long as the title doesn't fit in the
@@ -1129,10 +1142,7 @@ static bool CreateFilenameFromTextA(nsString& aText, const char* aExtension,
 
 static bool CreateFilenameFromTextW(nsString& aText, const wchar_t* aExtension,
                                     wchar_t* aFilename, uint32_t aFilenameLen) {
-  // ensure that the supplied name doesn't have invalid characters. If
-  // a valid mangled filename couldn't be created then it will leave the
-  // text empty.
-  nsLocalFile::CheckForReservedFileName(aText);
+  ValidateFilename(aText);
   if (aText.IsEmpty()) return false;
 
   const int extensionLen = wcslen(aExtension);
@@ -2151,10 +2161,10 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
     NS_UnescapeURL(urlFileName);
     CopyUTF8toUTF16(urlFileName, srcFileName);
   }
-  if (srcFileName.IsEmpty()) return E_FAIL;
 
   // make the name safe for the filesystem
-  nsLocalFile::CheckForReservedFileName(srcFileName);
+  ValidateFilename(srcFileName);
+  if (srcFileName.IsEmpty()) return E_FAIL;
 
   sourceURI.swap(*aSourceURI);
   aFilename = srcFileName;
