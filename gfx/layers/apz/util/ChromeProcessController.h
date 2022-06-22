@@ -75,6 +75,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   void NotifyAsyncAutoscrollRejected(
       const ScrollableLayerGuid::ViewID& aScrollId) override;
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
+  void NotifyScaleGestureComplete(const ScrollableLayerGuid& aGuid,
+                                  float aScale) override;
 
   PresShell* GetTopLevelPresShell() const override { return GetPresShell(); }
 

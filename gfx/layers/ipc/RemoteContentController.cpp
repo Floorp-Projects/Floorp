@@ -399,6 +399,56 @@ void RemoteContentController::CancelAutoscrollCrossProcess(
   }
 }
 
+void RemoteContentController::NotifyScaleGestureComplete(
+    const ScrollableLayerGuid& aGuid, float aScale) {
+  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+    NotifyScaleGestureCompleteCrossProcess(aGuid, aScale);
+  } else {
+    NotifyScaleGestureCompleteInProcess(aGuid, aScale);
+  }
+}
+
+void RemoteContentController::NotifyScaleGestureCompleteInProcess(
+    const ScrollableLayerGuid& aGuid, float aScale) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NewRunnableMethod<ScrollableLayerGuid, float>(
+        "layers::RemoteContentController::NotifyScaleGestureCompleteInProcess",
+        this, &RemoteContentController::NotifyScaleGestureCompleteInProcess,
+        aGuid, aScale));
+    return;
+  }
+
+  RefPtr<GeckoContentController> rootController =
+      CompositorBridgeParent::GetGeckoContentControllerForRoot(aGuid.mLayersId);
+  if (rootController) {
+    rootController->NotifyScaleGestureComplete(aGuid, aScale);
+  }
+}
+
+void RemoteContentController::NotifyScaleGestureCompleteCrossProcess(
+    const ScrollableLayerGuid& aGuid, float aScale) {
+  MOZ_ASSERT(XRE_IsGPUProcess());
+
+  if (!mCompositorThread->IsOnCurrentThread()) {
+    mCompositorThread->Dispatch(NewRunnableMethod<ScrollableLayerGuid, float>(
+        "layers::RemoteContentController::"
+        "NotifyScaleGestureCompleteCrossProcess",
+        this, &RemoteContentController::NotifyScaleGestureCompleteCrossProcess,
+        aGuid, aScale));
+    return;
+  }
+
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
+  // compositor thread.
+  if (APZCTreeManagerParent* parent =
+          CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
+              aGuid.mLayersId)) {
+    Unused << parent->SendNotifyScaleGestureComplete(aGuid.mScrollId, aScale);
+  }
+}
+
 void RemoteContentController::ActorDestroy(ActorDestroyReason aWhy) {
   // This controller could possibly be kept alive longer after this
   // by a RefPtr, but it is no longer valid to send messages.
