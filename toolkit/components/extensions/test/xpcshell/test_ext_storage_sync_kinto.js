@@ -13,7 +13,7 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 const {
-  ExtensionStorageSync,
+  ExtensionStorageSyncKinto: ExtensionStorageSync,
   KintoStorageTestUtils: {
     cleanUpForContext,
     CollectionKeyEncryptionRemoteTransformer,

@@ -9,7 +9,7 @@ const {
   ExtensionStorageEngineKinto: ExtensionStorageEngine,
 } = ChromeUtils.import("resource://services-sync/engines/extension-storage.js");
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { extensionStorageSync } = ChromeUtils.import(
+const { extensionStorageSyncKinto: extensionStorageSync } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );
 

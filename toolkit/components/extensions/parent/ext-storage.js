@@ -16,11 +16,16 @@ var { ignoreEvent } = ExtensionCommon;
 
 XPCOMUtils.defineLazyGetter(this, "extensionStorageSync", () => {
   // TODO bug 1637465: Remove Kinto-based implementation.
-  let url = Services.prefs.getBoolPref("webextensions.storage.sync.kinto")
-    ? "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
-    : "resource://gre/modules/ExtensionStorageSync.jsm";
+  if (Services.prefs.getBoolPref("webextensions.storage.sync.kinto")) {
+    const { extensionStorageSyncKinto } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
+    );
+    return extensionStorageSyncKinto;
+  }
 
-  const { extensionStorageSync } = ChromeUtils.import(url);
+  const { extensionStorageSync } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionStorageSync.jsm"
+  );
   return extensionStorageSync;
 });
 
