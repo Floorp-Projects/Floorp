@@ -8860,7 +8860,13 @@ void nsHttpChannel::SetOriginHeader() {
   // "websocket", then append (`Origin`, serializedOrigin) to request’s header
   // list.
   //
-  // Note: We don't handle WebSocket here.
+  // Warning: The current spec isn't web-compatible see
+  // https://github.com/whatwg/fetch/issues/1022.
+  //
+  // But we can't just switch to using `request’s mode is "cors" here`,
+  // because that would also send the Origin header for same-origin
+  // GET requests with CORS. Instead we maintain our old behavior and
+  // move the check into ReferrerInfo::ShouldSetNullOriginHeader.
   if (mLoadInfo->GetTainting() == mozilla::LoadTainting::CORS) {
     MOZ_ALWAYS_SUCCEEDS(mRequestHead.SetHeader(nsHttp::Origin, serializedOrigin,
                                                false /* merge */));
