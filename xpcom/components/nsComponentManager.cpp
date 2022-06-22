@@ -264,7 +264,7 @@ nsresult nsComponentManagerImpl::Create(REFNSIID aIID, void** aResult) {
   return gComponentManager->QueryInterface(aIID, aResult);
 }
 
-static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 32;
+static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 16;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(CONTRACTID_HASHTABLE_INITIAL_LENGTH),
