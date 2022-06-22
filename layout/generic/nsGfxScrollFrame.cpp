@@ -1293,10 +1293,14 @@ static void GetScrollableOverflowForPerspective(
 
         // Scale according to rightDelta/bottomDelta to adjust for the different
         // scroll rates.
-        overhang.top /= bottomDelta;
-        overhang.right /= rightDelta;
-        overhang.bottom /= bottomDelta;
-        overhang.left /= rightDelta;
+        overhang.top = NSCoordSaturatingMultiply(
+            overhang.top, static_cast<float>(1 / bottomDelta));
+        overhang.right = NSCoordSaturatingMultiply(
+            overhang.right, static_cast<float>(1 / rightDelta));
+        overhang.bottom = NSCoordSaturatingMultiply(
+            overhang.bottom, static_cast<float>(1 / bottomDelta));
+        overhang.left = NSCoordSaturatingMultiply(
+            overhang.left, static_cast<float>(1 / rightDelta));
 
         // Take the minimum overflow rect that would allow the current scroll
         // position, using the size of the scroll port and offset by the
