@@ -139,26 +139,24 @@ void ScenarioIceConnectionImpl::SendRtpPacket(
     rtc::ArrayView<const uint8_t> packet_view) {
   rtc::CopyOnWriteBuffer packet(packet_view.data(), packet_view.size(),
                                 ::cricket::kMaxRtpPacketLen);
-  network_thread_->PostTask(
-      RTC_FROM_HERE, [this, packet = std::move(packet)]() mutable {
-        RTC_DCHECK_RUN_ON(network_thread_);
-        if (rtp_transport_ != nullptr)
-          rtp_transport_->SendRtpPacket(&packet, rtc::PacketOptions(),
-                                        cricket::PF_SRTP_BYPASS);
-      });
+  network_thread_->PostTask([this, packet = std::move(packet)]() mutable {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    if (rtp_transport_ != nullptr)
+      rtp_transport_->SendRtpPacket(&packet, rtc::PacketOptions(),
+                                    cricket::PF_SRTP_BYPASS);
+  });
 }
 
 void ScenarioIceConnectionImpl::SendRtcpPacket(
     rtc::ArrayView<const uint8_t> packet_view) {
   rtc::CopyOnWriteBuffer packet(packet_view.data(), packet_view.size(),
                                 ::cricket::kMaxRtpPacketLen);
-  network_thread_->PostTask(
-      RTC_FROM_HERE, [this, packet = std::move(packet)]() mutable {
-        RTC_DCHECK_RUN_ON(network_thread_);
-        if (rtp_transport_ != nullptr)
-          rtp_transport_->SendRtcpPacket(&packet, rtc::PacketOptions(),
-                                         cricket::PF_SRTP_BYPASS);
-      });
+  network_thread_->PostTask([this, packet = std::move(packet)]() mutable {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    if (rtp_transport_ != nullptr)
+      rtp_transport_->SendRtcpPacket(&packet, rtc::PacketOptions(),
+                                     cricket::PF_SRTP_BYPASS);
+  });
 }
 void ScenarioIceConnectionImpl::SetRemoteSdp(SdpType type,
                                              const std::string& remote_sdp) {
@@ -189,7 +187,7 @@ void ScenarioIceConnectionImpl::SetRemoteSdp(SdpType type,
     }
   }
 
-  network_thread_->PostTask(RTC_FROM_HERE, [this, criteria]() {
+  network_thread_->PostTask([this, criteria]() {
     RTC_DCHECK_RUN_ON(network_thread_);
     RTC_DCHECK(rtp_transport_);
     rtp_transport_->RegisterRtpDemuxerSink(criteria, this);

@@ -499,7 +499,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     explicit ScopedCallThread(FunctorT&& functor)
         : thread_(rtc::Thread::Create()) {
       thread_->Start();
-      thread_->PostTask(RTC_FROM_HERE, std::forward<FunctorT>(functor));
+      thread_->PostTask(std::forward<FunctorT>(functor));
     }
 
     ~ScopedCallThread() { thread_->Stop(); }
@@ -1237,12 +1237,12 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_FALSE(media_channel1()->ready_to_send());
 
     network_thread_->PostTask(
-        RTC_FROM_HERE, [this] { channel1_->OnTransportReadyToSend(true); });
+        [this] { channel1_->OnTransportReadyToSend(true); });
     WaitForThreads();
     EXPECT_TRUE(media_channel1()->ready_to_send());
 
     network_thread_->PostTask(
-        RTC_FROM_HERE, [this] { channel1_->OnTransportReadyToSend(false); });
+        [this] { channel1_->OnTransportReadyToSend(false); });
     WaitForThreads();
     EXPECT_FALSE(media_channel1()->ready_to_send());
   }

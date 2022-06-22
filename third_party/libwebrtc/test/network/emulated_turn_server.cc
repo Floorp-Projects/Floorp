@@ -165,7 +165,7 @@ rtc::AsyncPacketSocket* EmulatedTURNServer::Wrap(EmulatedEndpoint* endpoint) {
 
 void EmulatedTURNServer::OnPacketReceived(webrtc::EmulatedIpPacket packet) {
   // Copy from EmulatedEndpoint to rtc::AsyncPacketSocket.
-  thread_->PostTask(RTC_FROM_HERE, [this, packet(std::move(packet))]() {
+  thread_->PostTask([this, packet(std::move(packet))]() {
     RTC_DCHECK_RUN_ON(thread_.get());
     auto it = sockets_.find(packet.to);
     if (it != sockets_.end()) {

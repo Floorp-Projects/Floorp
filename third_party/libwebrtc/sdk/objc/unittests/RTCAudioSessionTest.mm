@@ -288,7 +288,7 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
   rtc::Event waitLock;
   rtc::Event waitCleanup;
   constexpr int timeoutMs = 5000;
-  thread->PostTask(RTC_FROM_HERE, [audioSession, &waitLock, &waitCleanup] {
+  thread->PostTask([audioSession, &waitLock, &waitCleanup] {
     [audioSession lockForConfiguration];
     waitLock.Set();
     waitCleanup.Wait(timeoutMs);

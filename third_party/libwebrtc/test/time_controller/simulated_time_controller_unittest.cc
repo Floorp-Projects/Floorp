@@ -13,12 +13,11 @@
 #include <atomic>
 #include <memory>
 
+#include "rtc_base/event.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-
-#include "rtc_base/event.h"
 
 // NOTE: Since these tests rely on real time behavior, they will be flaky
 // if run on heavily loaded systems.
@@ -134,7 +133,7 @@ TEST(SimulatedTimeControllerTest, ThreadYeildsOnInvoke) {
   bool task_has_run = false;
   // Posting a task to the main thread, this should not run until AdvanceTime is
   // called.
-  main_thread->PostTask(RTC_FROM_HERE, [&] { task_has_run = true; });
+  main_thread->PostTask([&] { task_has_run = true; });
   t2->Invoke<void>(RTC_FROM_HERE, [] {
     rtc::Event yield_event;
     // Wait() triggers YieldExecution() which will runs message processing on

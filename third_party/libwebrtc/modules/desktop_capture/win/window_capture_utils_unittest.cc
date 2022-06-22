@@ -39,7 +39,7 @@ std::unique_ptr<rtc::Thread> SetUpUnresponsiveWindow(std::mutex& mtx,
 
   // Intentionally create a deadlock to cause the window to become unresponsive.
   mtx.lock();
-  window_thread->PostTask(RTC_FROM_HERE, [&mtx]() {
+  window_thread->PostTask([&mtx]() {
     mtx.lock();
     mtx.unlock();
   });
