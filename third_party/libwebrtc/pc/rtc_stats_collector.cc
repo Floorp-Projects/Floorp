@@ -1252,7 +1252,6 @@ void RTCStatsCollector::GetStatsReportInternal(
     network_report_event_.Reset();
     rtc::scoped_refptr<RTCStatsCollector> collector(this);
     network_thread_->PostTask(
-        RTC_FROM_HERE,
         [collector, sctp_transport_name = pc_->sctp_transport_name(),
          timestamp_us]() mutable {
           collector->ProducePartialResultsOnNetworkThread(
@@ -1341,7 +1340,7 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
   network_report_event_.Set();
   rtc::scoped_refptr<RTCStatsCollector> collector(this);
   signaling_thread_->PostTask(
-      RTC_FROM_HERE, [collector] { collector->MergeNetworkReport_s(); });
+      [collector] { collector->MergeNetworkReport_s(); });
 }
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThreadImpl(

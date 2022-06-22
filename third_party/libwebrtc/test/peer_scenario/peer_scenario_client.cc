@@ -364,9 +364,8 @@ void PeerScenarioClient::SetSdpOfferAndGetAnswer(
     std::string remote_offer,
     std::function<void(std::string)> answer_handler) {
   if (!signaling_thread_->IsCurrent()) {
-    signaling_thread_->PostTask(RTC_FROM_HERE, [=] {
-      SetSdpOfferAndGetAnswer(remote_offer, answer_handler);
-    });
+    signaling_thread_->PostTask(
+        [=] { SetSdpOfferAndGetAnswer(remote_offer, answer_handler); });
     return;
   }
   RTC_DCHECK_RUN_ON(signaling_thread_);
@@ -397,7 +396,7 @@ void PeerScenarioClient::SetSdpAnswer(
     std::function<void(const SessionDescriptionInterface&)> done_handler) {
   if (!signaling_thread_->IsCurrent()) {
     signaling_thread_->PostTask(
-        RTC_FROM_HERE, [=] { SetSdpAnswer(remote_answer, done_handler); });
+        [=] { SetSdpAnswer(remote_answer, done_handler); });
     return;
   }
   RTC_DCHECK_RUN_ON(signaling_thread_);

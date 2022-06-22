@@ -50,9 +50,8 @@ void VideoQualityAnalyzer::HandleFramePair(VideoFramePair sample) {
     psnr = I420PSNR(*sample.captured->ToI420(), *sample.decoded->ToI420());
 
   if (config_.thread) {
-    config_.thread->PostTask(RTC_FROM_HERE, [this, sample, psnr] {
-      HandleFramePair(std::move(sample), psnr);
-    });
+    config_.thread->PostTask(
+        [this, sample, psnr] { HandleFramePair(std::move(sample), psnr); });
   } else {
     HandleFramePair(std::move(sample), psnr);
   }

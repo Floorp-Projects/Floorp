@@ -792,7 +792,10 @@ rtc_library("threading") {
     "thread.h",
     "thread_message.h",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+  ]
   deps = [
     ":async_resolver_interface",
     ":atomicops",

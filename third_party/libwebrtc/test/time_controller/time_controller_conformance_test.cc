@@ -88,8 +88,8 @@ TEST_P(SimulatedRealTimeControllerConformanceTest, ThreadPostOrderTest) {
   // Tasks on thread have to be executed in order in which they were
   // posted.
   ExecutionOrderKeeper execution_order;
-  thread->PostTask(RTC_FROM_HERE, [&]() { execution_order.Executed(1); });
-  thread->PostTask(RTC_FROM_HERE, [&]() { execution_order.Executed(2); });
+  thread->PostTask([&]() { execution_order.Executed(1); });
+  thread->PostTask([&]() { execution_order.Executed(2); });
   time_controller->AdvanceTime(TimeDelta::Millis(100));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
   // Destroy `thread` before `execution_order` to be sure `execution_order`
@@ -121,7 +121,7 @@ TEST_P(SimulatedRealTimeControllerConformanceTest, ThreadPostInvokeOrderTest) {
   // Tasks on thread have to be executed in order in which they were
   // posted/invoked.
   ExecutionOrderKeeper execution_order;
-  thread->PostTask(RTC_FROM_HERE, [&]() { execution_order.Executed(1); });
+  thread->PostTask([&]() { execution_order.Executed(1); });
   thread->Invoke<void>(RTC_FROM_HERE, [&]() { execution_order.Executed(2); });
   time_controller->AdvanceTime(TimeDelta::Millis(100));
   EXPECT_THAT(execution_order.order(), ElementsAreArray({1, 2}));
@@ -139,8 +139,8 @@ TEST_P(SimulatedRealTimeControllerConformanceTest,
   // If task is invoked from thread X on thread X it has to be executed
   // immediately.
   ExecutionOrderKeeper execution_order;
-  thread->PostTask(RTC_FROM_HERE, [&]() {
-    thread->PostTask(RTC_FROM_HERE, [&]() { execution_order.Executed(2); });
+  thread->PostTask([&]() {
+    thread->PostTask([&]() { execution_order.Executed(2); });
     thread->Invoke<void>(RTC_FROM_HERE, [&]() { execution_order.Executed(1); });
   });
   time_controller->AdvanceTime(TimeDelta::Millis(100));
