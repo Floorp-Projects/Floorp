@@ -452,12 +452,19 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // Example - Calling a lambda function:
   // thread->PostTask(RTC_FROM_HERE,
   //                  [&x, &y] { x.TrackComputations(y.Compute()); });
+  //
+  // TODO(https://crbug.com/webrtc/13582): Deprecate and remove in favor of the
+  // PostTask() method inherited from TaskQueueBase. Stop using it inside
+  // third_party/webrtc and add ABSL_DEPRECATED("bugs.webrtc.org/13582").
   template <class FunctorT>
   void PostTask(const Location& posted_from, FunctorT&& functor) {
     Post(posted_from, GetPostTaskMessageHandler(), /*id=*/0,
          new rtc_thread_internal::MessageWithFunctor<FunctorT>(
              std::forward<FunctorT>(functor)));
   }
+  // TODO(https://crbug.com/webrtc/13582): Deprecate and remove in favor of the
+  // PostTask() method inherited from TaskQueueBase. Stop using it inside
+  // third_party/webrtc and add ABSL_DEPRECATED("bugs.webrtc.org/13582").
   template <class FunctorT>
   void PostDelayedTask(const Location& posted_from,
                        FunctorT&& functor,
@@ -472,6 +479,8 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   void PostTask(std::unique_ptr<webrtc::QueuedTask> task) override;
   void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
                        uint32_t milliseconds) override;
+  void PostDelayedHighPrecisionTask(std::unique_ptr<webrtc::QueuedTask> task,
+                                    uint32_t milliseconds) override;
   void Delete() override;
 
   // ProcessMessages will process I/O and dispatch messages until:
