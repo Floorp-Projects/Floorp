@@ -3131,7 +3131,7 @@
 # Reporting API.
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.reporting.testing.enabled
