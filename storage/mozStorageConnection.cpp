@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>
-
-#include "nsError.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
@@ -44,8 +41,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "nsProxyRelease.h"
 #include "nsURLHelper.h"
-
-#include <algorithm>
 
 #define MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH 524288000  // 500 MiB
 

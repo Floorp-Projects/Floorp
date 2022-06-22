@@ -9,7 +9,6 @@
 #include "nsIAuthModule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Attributes.h"
 
 /* This class is implemented using the nsAuthGSSAPI class, and the same
  * thread safety constraints which are documented in nsAuthGSSAPI.h

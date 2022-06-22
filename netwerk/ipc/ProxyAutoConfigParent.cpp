@@ -6,7 +6,6 @@
 #include "ProxyAutoConfigParent.h"
 
 #include "mozilla/ipc/Endpoint.h"
-#include "nsIConsoleService.h"
 
 namespace mozilla::net {
 
