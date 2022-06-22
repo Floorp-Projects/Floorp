@@ -19,6 +19,11 @@ add_task(async function() {
     "simple2.js"
   );
 
+  info(
+    "Open a tab for a source in the top document to assert it doesn't disappear"
+  );
+  await selectSource(dbg, "simple1.js");
+
   info("Add breakpoint to the source (simple2.js) in the remote frame");
   await selectSource(dbg, "simple2.js");
   await addBreakpoint(dbg, "simple2.js", 3);
@@ -27,6 +32,12 @@ add_task(async function() {
 
   const oldSource = findSource(dbg, "simple2.js");
   assertBreakpointsList(dbg, oldSource);
+
+  is(
+    countTabs(dbg),
+    2,
+    "We see the tabs for the sources of both top and iframe documents"
+  );
 
   const onBreakpointSet = waitForDispatch(dbg.store, "SET_BREAKPOINT");
 
@@ -67,6 +78,8 @@ add_task(async function() {
 
   const newSource = findSource(dbg, "simple2.js");
   assertBreakpointsList(dbg, newSource);
+
+  is(countTabs(dbg), 2, "We still see the tabs for the two sources");
 
   await removeBreakpoint(dbg, newSource.id, 3);
 });
