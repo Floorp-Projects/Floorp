@@ -6,20 +6,9 @@
 
 const EXPORTED_SYMBOLS = ["log"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-});
 
 class LogModule extends Module {
   destroy() {}
@@ -29,37 +18,11 @@ class LogModule extends Module {
    */
 
   _subscribeEvent(params) {
-    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
-    // class.
-    switch (params.event) {
-      case "log.entryAdded":
-        return this.messageHandler.addSessionData({
-          moduleName: "log",
-          category: "event",
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.All,
-          },
-          values: ["log.entryAdded"],
-        });
-      default:
-        throw new Error(`Unsupported event for log module ${params.event}`);
-    }
+    return this.addEventSessionData("log", params.event);
   }
 
   _unsubscribeEvent(params) {
-    switch (params.event) {
-      case "log.entryAdded":
-        return this.messageHandler.removeSessionData({
-          moduleName: "log",
-          category: "event",
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.All,
-          },
-          values: ["log.entryAdded"],
-        });
-      default:
-        throw new Error(`Unsupported event for log module ${params.event}`);
-    }
+    return this.removeEventSessionData("log", params.event);
   }
 
   static get supportedEvents() {
